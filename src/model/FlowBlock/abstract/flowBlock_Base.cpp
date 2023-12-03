@@ -1,0 +1,13 @@
+//
+// Created by tanawin on 2/12/2566.
+//
+
+#include "flowBlock_Base.h"
+#include "model/controller/controller.h"
+
+namespace kathryn{
+
+
+    FlowBlockBase::FlowBlockBase(): ctrl(getControllerPtr()) {}
+
+}
