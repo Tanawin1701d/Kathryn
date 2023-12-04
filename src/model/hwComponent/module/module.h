@@ -14,6 +14,7 @@
 #include "model/hwComponent/wire/wire.h"
 #include "model/hwComponent/expression/expression.h"
 #include "model/hwComponent/value/value.h"
+#include "model/FlowBlock/abstract/flowBlock_Base.h"
 
 
 namespace kathryn{
@@ -32,13 +33,14 @@ namespace kathryn{
     private:
         /**all slave object that belong to this elements*/
         /** register that user to represent state*/
-        std::vector<RegPtr>        _stateRegs;
+        std::vector<Reg*>        _stateRegs;
+        std::vector<FlowBlockBase*> _flowBlockBases;
         /** user component*/
-        std::vector<RegPtr>        _userRegs;
-        std::vector<WirePtr>       _userWires;
-        std::vector<expressionPtr> _userExpressions;
-        std::vector<ValPtr>        _userVals;
-        std::vector<ModulePtr>     _userSubModule;
+        std::vector<Reg*>        _userRegs;
+        std::vector<Wire*>       _userWires;
+        std::vector<expression*> _userExpressions;
+        std::vector<Val*>        _userVals;
+        std::vector<Module*>     _userSubModule;
 
         /** when hardware components require data from outside class
          * the system must handle wire routing while synthesis
@@ -55,14 +57,22 @@ namespace kathryn{
 
     public:
         explicit Module();
+        ~Module();
+        template<typename T>
+        void deleteSubElement(std::vector<T*> subEleVec){
+            for (auto ele: subEleVec){
+                delete ele;
+            }
+        }
 
-        void addStateReg(const RegPtr& reg);
-        void addUserReg(const RegPtr& reg);
-        void addUserWires(const WirePtr& wire);
-        void addUserExpression(const expressionPtr& expr);
-        void addUserVal(const ValPtr& val);
-        void addUserSubModule(const ModulePtr& smd);
-        /** This allow user to interact with system*/
+        void addStateReg      (Reg* reg);
+        void addFlowBlock     (FlowBlockBase* fb);
+        void addUserReg       (Reg* reg);
+        void addUserWires     (Wire* wire);
+        void addUserExpression(expression* expr);
+        void addUserVal       (Val* val);
+        void addUserSubModule (Module* smd);
+        /** This allow user to custom module design flow*/
         virtual void flow() = 0;
 
     };

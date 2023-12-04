@@ -29,7 +29,7 @@ namespace kathryn{
         /** todo we will deal with it later*/
         [[maybe_unused]]
         /** todo assign it  */
-        std::shared_ptr<expression> operator <<= (Operable& b){ assert(true);};
+        expression& operator <<= (Operable& b){ assert(true);};
         Val& operator = (std::string& b){return *this;};
         Val& operator = (ull v){return *this;};
 
@@ -42,8 +42,6 @@ namespace kathryn{
         Val operator() (int idx) {return Val(1, "0b00");}
 
     };
-
-    typedef std::shared_ptr<Val> ValPtr;
 
 
 }

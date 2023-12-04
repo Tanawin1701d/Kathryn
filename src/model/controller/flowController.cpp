@@ -4,8 +4,13 @@
 #include "controller.h"
 namespace kathryn{
 
-    void Controller::tryPopFromStack(const FlowBlockBasePtr &flowPtr,
-                                     std::stack<FlowBlockBasePtr>&srcSt) {
+    FlowBlockBase* Controller::getTopFlowBlock(){
+        assert(!flowBlockStack.empty());
+        return flowBlockStack.top();
+    }
+
+    void Controller::tryPopFromStack(FlowBlockBase* flowPtr,
+                                     std::stack<FlowBlockBase*>& srcSt) {
         /**skip when empty skip when not match*/
         if (srcSt.empty() || (srcSt.top() != flowPtr))
             return;
@@ -14,7 +19,7 @@ namespace kathryn{
 
     }
 
-    void Controller::tryPopCtrlFlowFromAllStack(const FlowBlockBasePtr& flowPtr){
+    void Controller::tryPopCtrlFlowFromAllStack(FlowBlockBase* flowPtr){
         tryPopFromStack(flowPtr, flowBlockStack);
         tryPopFromStack(flowPtr, patternFlowBlockStack);
         tryPopFromStack(flowPtr, condStlessFlowBlockStack);
@@ -22,12 +27,16 @@ namespace kathryn{
 
 
 
-    void Controller::on_attach_flowBlock(const FlowBlockBasePtr& fb) {
-        /**
-         * todo integrity check
-         * */
-         FLOW_BLOCK_TYPE flowType = fb->getFlowType();
+    void Controller::on_attach_flowBlock(FlowBlockBase* fb) {
 
+        assert(fb != nullptr);
+
+        if (!flowBlockStack.empty()){
+            /** we must save head of flow block for deleting and debugging*/
+            getTargetModuleEle().md->addFlowBlock(fb);
+        }
+
+         FLOW_BLOCK_TYPE flowType = fb->getFlowType();
          flowBlockStack.push(fb);
 
          /** push to stack in each case*/
@@ -45,16 +54,14 @@ namespace kathryn{
 
     }
 
-    void Controller::on_detach_flowBlock(const FlowBlockBasePtr& fb) {
-
-        assert(!flowBlockStack.empty());
-        auto top= flowBlockStack.top();
-        assert(fb == top);
-
+    void Controller::on_detach_flowBlock(FlowBlockBase* fb) {
+        assert(fb != nullptr);
+        auto top= getTopFlowBlock();
+        assert(top == fb);
         tryPopCtrlFlowFromAllStack(fb);
 
         if (!flowBlockStack.empty()){
-            flowBlockStack.top()->addElementInFlowBlock(top);
+            getTopFlowBlock()->addSubFlowBlock(fb);
         }
 
 

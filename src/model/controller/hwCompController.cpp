@@ -8,79 +8,96 @@
 namespace kathryn{
 
 
-    ModulePtr Controller::getTargetModulePtr() {
+    Module* Controller::getTargetModulePtr() {
+        assert(!moduleStack.empty());
         /** base line must me */
         return moduleStack.top().md;
     }
 
+    Module_Stack_Element& Controller::getTargetModuleEle() {
+        assert(!moduleStack.empty());
+        return moduleStack.top();
+    }
+
     /** register handling*/
-    void Controller::on_reg_init(const RegPtr& ptr) {
+    void Controller::on_reg_init(Reg* ptr) {
+        assert(ptr != nullptr);
         /** assign reg to module */
-        ModulePtr targetModule = getTargetModulePtr();
+        Module* targetModule = getTargetModulePtr();
+        /** localize necessary destination*/
         targetModule->addUserReg(ptr);
+        ptr->setParent(targetModule);
 
     }
 
-    void Controller::on_reg_update(const std::shared_ptr<UpdateEvent>& upEvent){
+    void Controller::on_reg_update(UpdateEvent* upEvent){
         /**
          * please note that UpdateEvent should fill update value/ and slice
          * but it must let update condition and state as nullptr to let block fill
          * to it
          * */
         /*** do not add to module any more*/
-        auto node = std::make_shared<Node>(upEvent);
+        auto node = new Node(upEvent);
         assert(!flowBlockStack.empty());
         auto fb = flowBlockStack.top();
         fb->addElementInFlowBlock(node);
     }
 
     /** wire handling*/
-    void Controller::on_wire_init(const WirePtr& ptr) {
-        ModulePtr targetModule = getTargetModulePtr();
+    void Controller::on_wire_init(Wire* ptr) {
+        assert(ptr != nullptr);
+        Module* targetModule = getTargetModulePtr();
+        /** localize necessary destination*/
         targetModule->addUserWires(ptr);
+        ptr->setParent(targetModule);
     }
 
-    void Controller::on_wire_update(const std::shared_ptr<UpdateEvent>& upEvent) {
+    void Controller::on_wire_update(UpdateEvent* upEvent) {
         /**
          * please note that UpdateEvent should fill update value/ and slice
          * but it must let update condition and state as nullptr to let block fill
          * to it
          * */
         /*** do not add to module any more*/
-        auto node = std::make_shared<Node>(upEvent);
+        auto node = new Node(upEvent);
         assert(!flowBlockStack.empty());
         auto fb = flowBlockStack.top();
         fb->addElementInFlowBlock(node);
     }
 
     /** expression*/
-    void Controller::on_expression_init(const expressionPtr& ptr) {
-        ModulePtr targetModule = getTargetModulePtr();
+    void Controller::on_expression_init(expression* ptr) {
+        Module* targetModule = getTargetModulePtr();
+        /** localize necessary destination*/
         targetModule->addUserExpression(ptr);
+        ptr->setParent(targetModule);
     }
     /** value*/
-    void Controller::on_value_init(const ValPtr &ptr) {
-        ModulePtr targetModule = getTargetModulePtr();
+    void Controller::on_value_init(Val* ptr) {
+        Module* targetModule = getTargetModulePtr();
+        /** localize necessary destination*/
         targetModule->addUserVal(ptr);
+        ptr->setParent(targetModule);
     }
 
     /**
      * module
      * */
-    void Controller::on_module_init_components(const ModulePtr& ptr) {
+    void Controller::on_module_init_components(Module* ptr) {
+        /**check that module initialization is in construct state not in designflow constructing*/
+        assert(getTargetModuleEle().state == MODULE_COMPONENT_CONSTRUCT);
         /** previous module*/
-        ModulePtr targetModule = getTargetModulePtr();
+        Module* targetModule = getTargetModulePtr();
         targetModule->addUserSubModule(ptr);
         /** current module*/
         /**at least module must be other submodule*/
-        assert(moduleStack.top().state != MODULE_FINISHED_CONSTRUCT);
+        assert(getTargetModuleEle().state != MODULE_FINISHED_CONSTRUCT);
         moduleStack.push(Module_Stack_Element{ptr, MODULE_COMPONENT_CONSTRUCT});
 
     }
 
-
-    void Controller::on_module_init_designFlow(ModulePtr ptr) {
-        ModulePtr topModule = getTargetModulePtr();
+    void Controller::on_module_init_designFlow(Module* ptr) {
+        Module* topModule = getTargetModulePtr();
         assert(topModule == ptr);
         moduleStack.top().state = MODULE_DESIGN_FLOW_CONSTRUCT;
         /** flow the program*/
@@ -88,8 +105,7 @@ namespace kathryn{
 
     }
 
-
-    void Controller::on_module_final(ModulePtr ptr) {
+    void Controller::on_module_final(Module* ptr) {
         assert(!moduleStack.empty() && ( moduleStack.top().md == ptr ));
         moduleStack.top().state = MODULE_FINISHED_CONSTRUCT;
         assert(isAllFlowStackEmpty());

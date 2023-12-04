@@ -41,8 +41,6 @@ namespace kathryn{
 
     };
 
-    typedef std::shared_ptr<Wire> WirePtr;
-
 }
 
 #endif //KATHRYN_WIRE_H

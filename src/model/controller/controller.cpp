@@ -19,7 +19,7 @@ namespace kathryn{
         }
         /// if global module was not init, then init it
         if (globalModulePtr == nullptr){
-            globalModulePtr = std::make_shared<Module>();
+            globalModulePtr = new Module();
             centralControllerPtr->on_module_init_components(globalModulePtr);
         }
         return centralControllerPtr;

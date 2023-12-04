@@ -16,13 +16,25 @@ namespace kathryn{
     /** reg/wire update meta data*/
 
     struct UpdateEvent{
-        std::shared_ptr<Operable> updateCondition; /// which condition that allow this value to update.
-        std::shared_ptr<Operable> updateState; /// which state that need to update.
-        std::shared_ptr<Operable> updateValue; /// value to update.
+        Operable* updateCondition; /// which condition that allow this value to update.
+        Operable* updateState; /// which state that need to update.
+        Operable* updateValue; /// value to update.
         Slice                     updateSlice; /// slice to update
         int priority = 9;
         ///priority for circuit if there are attention to update same register at a time 0 is highest 9 is lowest
     };
+
+    /**Reg[desSlc] <= srcVal*/
+    UpdateEvent* genUpEventValueAndSlice(Slice desSlc, Operable* srcVal){
+        assert(srcVal != nullptr);
+        assert(srcVal->getOperableSlice().getSize() == desSlc.getSize());
+        return new UpdateEvent({nullptr,
+                                nullptr,
+                                srcVal,
+                                desSlc,
+                                9});
+
+    }
 
     /**
      * Assignable represent hardware component that can memorize logic value or
@@ -32,19 +44,24 @@ namespace kathryn{
     template<typename RET_TYPE>
     class Assignable{
     protected:
-        std::vector<UpdateEvent> _updateMeta;
+        std::vector<UpdateEvent*> _updateMeta;
 
     public:
 
         explicit Assignable(){};
+        ~Assignable(){
+            for (auto eventPtr: _updateMeta){
+                delete eventPtr;
+            }
+        }
 
         /** assignable value*/
         virtual RET_TYPE& operator <<= (Operable& b) = 0;
         virtual RET_TYPE& operator =   (Operable& b) = 0;
 
         /** update event management*/
-        std::vector<UpdateEvent>& getUpdateMeta(){ return _updateMeta; }
-        std::vector<UpdateEvent>& addUpdateMeta(const UpdateEvent& event){
+        std::vector<UpdateEvent*>& getUpdateMeta(){ return _updateMeta; }
+        void addUpdateMeta(UpdateEvent* event){
             _updateMeta.push_back(event);
         }
 

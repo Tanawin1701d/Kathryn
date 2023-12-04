@@ -26,6 +26,7 @@ namespace kathryn{
 
     public:
         explicit Reg(int size);
+        ~Reg();
 
         /** assignable override*/
         Reg& operator <<= (Operable& b) override;
@@ -48,10 +49,6 @@ namespace kathryn{
 
 
     };
-
-    typedef std::shared_ptr<Reg> RegPtr;
-
-
 
 
 }

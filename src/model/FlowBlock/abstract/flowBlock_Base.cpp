@@ -8,6 +8,9 @@
 namespace kathryn{
 
 
-    FlowBlockBase::FlowBlockBase(): ctrl(getControllerPtr()) {}
+    FlowBlockBase::FlowBlockBase(FLOW_BLOCK_TYPE type):
+    _type(type),
+    ctrl(getControllerPtr()) {}
+
 
 }

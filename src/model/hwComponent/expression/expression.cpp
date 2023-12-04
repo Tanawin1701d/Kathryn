@@ -15,9 +15,9 @@ namespace kathryn{
      * */
 
     expression::expression(LOGIC_OP op,
-                           std::shared_ptr<Operable> a,
+                           Operable* a,
                            Slice aSlice,
-                           std::shared_ptr<Operable> b,
+                           Operable* b,
                            Slice bSlice,
                            int exp_size):
    Assignable<expression>(),
@@ -25,27 +25,42 @@ namespace kathryn{
     Slicable<expression>({0, exp_size}),
     Identifiable(TYPE_EXPRESSION),
     _op(op),
-    _a(std::move(a)),
+    _a(a),
     _aSlice(aSlice),
-    _b(std::move(b)),
+    _b(b),
     _bSlice(bSlice)
     {
         com_init();
     }
 
+    expression::expression():
+    Assignable<expression>(),
+    Operable(),
+    Slicable<expression>(Slice()),
+    Identifiable(TYPE_EXPRESSION),
+    _op(ASSIGN),
+    _a(nullptr),
+    _aSlice(Slice()),
+    _b(nullptr),
+    _bSlice(Slice()){
+        com_init();
+    }
+
+
     void expression::com_init() {
-        ctrl->on_expression_init(expressionPtr (this));
+        ctrl->on_expression_init(this);
     }
 
     expression& expression::operator=(Operable &b) {
+        _a = &b;
+        Slice proxySlice({0, b.getOperableSlice().getSize()});
+        _aSlice = proxySlice;
+        setSlice(proxySlice);
         return *this;
     }
 
     SliceAgent<expression>& expression::operator()(int start, int stop) {
-        auto ret =  std::make_shared<SliceAgent<expression>>(
-                                std::shared_ptr<expression>(this),
-                                getSlice()
-                );
+        auto ret =  new SliceAgent<expression>(this,getSlice());
         return *ret;
     }
 

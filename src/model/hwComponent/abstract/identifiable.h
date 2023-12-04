@@ -37,7 +37,7 @@ namespace kathryn {
         /// name for debugging
 
         /** local variable*/
-        std::shared_ptr<Module> _parent; /// if it is nullptr it is not localized
+        Module* _parent; /// if it is nullptr it is not localized
         ull                     _localId; /// id that use in the component
         /// it will share among the same module
 
@@ -53,8 +53,8 @@ namespace kathryn {
             {};
 
         template<typename T>
-        std::shared_ptr<T> cast(){
-            return std::make_shared<T>(this);
+        T* cast(){
+            return (T*)this;
         }
 
         bool isLocalized() {return _parent != nullptr;}
@@ -71,8 +71,8 @@ namespace kathryn {
         ull getGlobalId() const {return _globalId;}
         /// global id can not be set it permanent when class is initialized void setGlobalId(ull globalId) {_globalId = globalId;}
 
-        std::shared_ptr<Module> getParent(){return _parent;}
-        void setParent(std::shared_ptr<Module> parent) {_parent = std::move(parent);}
+        Module* getParent(){return _parent;}
+        void setParent(Module* parent) {_parent = std::move(parent);}
 
         ull  getLocalId(ull id) const{return _localId;}
         void setLocalId(ull id)      {_localId = id; }

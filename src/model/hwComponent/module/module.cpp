@@ -18,23 +18,34 @@ namespace kathryn{
         com_init();
     }
 
+    Module::~Module() {
+        deleteSubElement(_stateRegs);
+        deleteSubElement(_flowBlockBases);
+        deleteSubElement(_userRegs);
+        deleteSubElement(_userWires);
+        deleteSubElement(_userExpressions);
+        deleteSubElement(_userVals);
+        deleteSubElement(_userSubModule);
+
+    }
+
     void Module::com_init() {
-        ctrl->on_module_init_components(std::shared_ptr<Module>(this));
+        ctrl->on_module_init_components(this);
         /**post finalize component must be handle when object is buit finish*/
     }
 
     void Module::com_final() {
         /** invoke controller for design flow acknowledgement*/
-        ctrl->on_module_init_designFlow(std::shared_ptr<Module>(this));
+        ctrl->on_module_init_designFlow(this);
         /** fix slave elements to belong to this module*/
-        ctrl->on_module_final(std::shared_ptr<Module>(this));
+        ctrl->on_module_final(this);
     }
 
     template<typename T>
     void Module::localizeSlaveVector(std::vector<T> &_vec) {
         for (size_t i = 0; i < _vec.size(); i++){
             _vec[i]->setLocalId((ull)i);
-            _vec[i]->setParent(std::shared_ptr<Module>(this));
+            _vec[i]->setParent(this);
         }
     }
 
@@ -48,41 +59,44 @@ namespace kathryn{
         localizeSlaveVector(_userSubModule);
     }
 
-
-
     /**
      *
      * meta data pusher
      *
      * */
     /** todo may be check their are reg in the system */
-    void Module::addStateReg(const RegPtr& reg) {
+    void Module::addStateReg(Reg* reg) {
         assert(reg != nullptr); /// can't be nullptr
         _stateRegs.push_back(reg);
 
     }
 
-    void Module::addUserReg(const RegPtr& reg) {
+    void Module::addFlowBlock(FlowBlockBase* fb) {
+        assert(fb != nullptr);
+        _flowBlockBases.push_back(fb);
+    }
+
+    void Module::addUserReg(Reg* reg) {
         assert(reg != nullptr);
         _userRegs.push_back(reg);
     }
 
-    void Module::addUserWires(const WirePtr& wire) {
+    void Module::addUserWires(Wire* wire) {
         assert(wire != nullptr);
         _userWires.push_back(wire);
     }
 
-    void Module::addUserExpression(const expressionPtr& expr) {
+    void Module::addUserExpression(expression* expr) {
         assert(expr != nullptr);
         _userExpressions.push_back(expr);
     }
 
-    void Module::addUserVal(const ValPtr &val) {
+    void Module::addUserVal(Val* val) {
         assert(val != nullptr);
         _userVals.push_back(val);
     }
 
-    void Module::addUserSubModule(const ModulePtr &smd) {
+    void Module::addUserSubModule(Module* smd) {
         assert(smd != nullptr);
         _userSubModule.push_back(smd);
     }

@@ -18,19 +18,18 @@ namespace kathryn {
     private:
         /** entrance represent UpdateEvent which refer to node wire that be head of the subblock*/
         /** note that expression must not be here due to the abstract of the system*/
-        std::vector<std::shared_ptr<UpdateEvent>> entranceElements;
+        std::vector<UpdateEvent*> entranceElements;
         /** the exit condition that allow next building block run*/
-        expressionPtr exitExpr;
+        expression* exitExpr;
 
     };
 
     /** it is basic node that only have one event at a node */
     struct Node{
     private:
-        std::shared_ptr<UpdateEvent> updateElement; /** the register or wire that update in this cycle*/
+        UpdateEvent* updateElement; /** the register or wire that update in this cycle*/
     public:
-        explicit Node(): updateElement(std::make_shared<UpdateEvent>()){}
-        explicit Node(const std::shared_ptr<UpdateEvent>& ue): updateElement(ue){}
+        explicit Node(UpdateEvent* ue): updateElement(ue){}
 
 
     };
@@ -46,26 +45,25 @@ namespace kathryn {
         NO_STATE_IF,
         WHILE,
         DO_WHILE,
-
     };
 
     class FlowBlockBase;
 
-    typedef std::shared_ptr<FlowBlockBase> FlowBlockBasePtr;
-
     class FlowBlockBase {
     protected:
+        std::vector<FlowBlockBase*> subBlocks;
         FLOW_BLOCK_TYPE _type;
         ControllerPtr ctrl;
     public:
-        explicit FlowBlockBase(FLOW_BLOCK_TYPE type): _type(type){};
+        explicit FlowBlockBase(FLOW_BLOCK_TYPE type);
+
         /**
          * entrance to make controller interact with
          * */
         /** when basic behavior describe in flow block*/
-        virtual void addElementInFlowBlock(std::shared_ptr<Node> node) = 0;
+        virtual void addElementInFlowBlock(Node* node) = 0;
         /** when inside complex element such as sub flow block is finish, user must add here*/
-        virtual void addElementInFlowBlock(FlowBlockBasePtr subBlock) = 0;
+        virtual void addSubFlowBlock(FlowBlockBase* subBlock){ subBlocks.push_back(subBlock);};
         /** when every thing is finish call this to get sumarisation*/
         virtual std::shared_ptr<NodeWrapper> sumarizeBlock() = 0;
 
@@ -77,6 +75,12 @@ namespace kathryn {
          virtual void onDetachBlock() = 0;
 
          FLOW_BLOCK_TYPE getFlowType(){return _type;}
+
+         /**
+          * for module communicate with
+          * */
+
+
 
 
 

@@ -38,9 +38,9 @@ namespace kathryn {
 
         /** meta data that contain bi operation*/
         LOGIC_OP _op;
-        std::shared_ptr<Operable> _a;
+        Operable* _a;
         Slice _aSlice{};
-        std::shared_ptr<Operable> _b;
+        Operable* _b;
         Slice _bSlice{};
 
     protected:
@@ -50,12 +50,13 @@ namespace kathryn {
     public:
         /** constructor auto get id of the system*/
         explicit expression(LOGIC_OP,
-                            std::shared_ptr<Operable> a,
+                            Operable* a,
                             Slice aSlice,
-                            std::shared_ptr<Operable> b,
+                            Operable* b,
                             Slice bSlice,
                             int exp_size
                             );
+        explicit expression();
         /** override assignable*/
         expression& operator <<= (Operable& b) override {std::cout << "we not support <<= operator in expression";};
         expression& operator =   (Operable& b) override;
@@ -71,9 +72,6 @@ namespace kathryn {
         expression& callBackNonBlockAssignFromAgent(Operable& b, Slice absSlice) override;
 
     };
-
-    typedef std::shared_ptr<expression> expressionPtr;
-
 
 
 }

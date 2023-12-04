@@ -14,7 +14,7 @@ namespace kathryn{
                          Identifiable(TYPE_REG) {}
 
     void Reg::com_init() {
-        ctrl->on_reg_init(std::shared_ptr<Reg>(this));
+        ctrl->on_reg_init(this);
     }
 
     Reg& Reg::operator<<=(Operable &b) {
@@ -22,11 +22,15 @@ namespace kathryn{
          * given information and condition of updating value
         /* we will call model building to comunicate with it*/
         //** todo return agent of this type*/
+        UpdateEvent* event = genUpEventValueAndSlice(getSlice(), &b);
+        addUpdateMeta(event);
+        ctrl->on_reg_update(event);
         return *this;
     }
 
     Reg& Reg::operator=(Operable &b) {
         /** todo first version we not support this operator*/
+        assert(true);
         return *this;
     }
 
@@ -34,9 +38,8 @@ namespace kathryn{
 
 
     SliceAgent<Reg>& Reg::operator()(int start, int stop) {
-        auto ret =  std::make_shared<SliceAgent<Reg>>(
-                                            std::shared_ptr<Reg>(this),
-                                            Slice{start, stop});
+        auto ret =  new SliceAgent<Reg>(this,
+                                        Slice{start, stop});
         return *ret;
     }
 
@@ -45,14 +48,14 @@ namespace kathryn{
     }
 
     Reg& Reg::callBackBlockAssignFromAgent(Operable &b, Slice absSlice) {
-        /** todo this must call model control system to determine
-         * given information and condition of updating value
-        /* we will call model building to comunicate with it*/
-        //** todo return agent of this type*/
+        UpdateEvent* event = genUpEventValueAndSlice(absSlice, &b);
+        addUpdateMeta(event);
+        ctrl->on_reg_update(event);
         return *this;
     }
 
     Reg &Reg::callBackNonBlockAssignFromAgent(Operable &b, Slice absSlice) {
+        assert(true);
         return *this;
     }
 

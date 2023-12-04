@@ -20,37 +20,38 @@ namespace kathryn{
 
 
     void Wire::com_init() {
-        ctrl->on_wire_init(std::shared_ptr<Wire>(this));
+        ctrl->on_wire_init(this);
     }
 
     Wire& Wire::operator=(Operable &b) {
-        /** todo communicate with commustack to assign */
+        UpdateEvent* event = genUpEventValueAndSlice(getSlice(), &b);
+        addUpdateMeta(event);
+        ctrl->on_reg_update(event);
         return *this;
     }
 
     SliceAgent<Wire>& Wire::operator()(int start, int stop) {
-        auto ret = std::make_shared<SliceAgent<Wire>>(
-                            std::shared_ptr<Wire>(this),
-                            getNextSlice(start, stop, getSlice())
-                            );
+        auto ret = new SliceAgent<Wire>(
+                        this,
+                        getNextSlice(start, stop, getSlice())
+                        );
         return *ret;
     }
 
-    SliceAgent<Wire> &Wire::operator()(int idx) {
+    SliceAgent<Wire>& Wire::operator()(int idx) {
         return operator()(idx, idx+1);
     }
 
     /** override callback*/
 
-    Wire &Wire::callBackBlockAssignFromAgent(Operable &b, Slice absSlice) {
-        /** todo this must call model control system to determine
-        * given information and condition of updating value
-        /* we will call model building to comunicate with it*/
-        //** todo return agent of this type*/
-        return *this;
+    Wire& Wire::callBackBlockAssignFromAgent(Operable &b, Slice absSlice) {
+        assert(true);
     }
 
-    Wire &Wire::callBackNonBlockAssignFromAgent(Operable &b, Slice absSlice) {
+    Wire& Wire::callBackNonBlockAssignFromAgent(Operable &b, Slice absSlice) {
+        UpdateEvent* event = genUpEventValueAndSlice(absSlice, &b);
+        addUpdateMeta(event);
+        ctrl->on_reg_update(event);
         return *this;
     }
 

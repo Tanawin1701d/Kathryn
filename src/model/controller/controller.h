@@ -21,7 +21,7 @@ namespace kathryn {
     };
 
     struct Module_Stack_Element{
-        ModulePtr md;
+        Module* md;
         MODULE_BUILDING_STATE state;
     };
 
@@ -33,17 +33,19 @@ namespace kathryn {
         bool hwCompAllocLock = true; /** this is used to indicate whether make<> is used or not only make<> can unlock*/
         /** building stack*/
         std::stack<Module_Stack_Element>  moduleStack;
-        std::stack<FlowBlockBasePtr>      flowBlockStack; //// collect stack of all flowblock
-        std::stack<FlowBlockBasePtr>      patternFlowBlockStack; //// stack of only seq or parallel
-        std::stack<FlowBlockBasePtr>      condStlessFlowBlockStack; /// stack of only cif or celif celse
+        std::stack<FlowBlockBase*>        flowBlockStack; //// collect stack of all flowblock
+        std::stack<FlowBlockBase*>        patternFlowBlockStack; //// stack of only seq or parallel
+        std::stack<FlowBlockBase*>        condStlessFlowBlockStack; /// stack of only cif or celif celse
         /////// pattern flow block is subset of flowBlockStack
 
     protected:
         /** get module that response we now consider*/
-        ModulePtr getTargetModulePtr();
+        Module* getTargetModulePtr();
+        Module_Stack_Element& getTargetModuleEle();
+        FlowBlockBase* getTopFlowBlock();
 
-        void tryPopFromStack(const FlowBlockBasePtr& flowPtr, std::stack<FlowBlockBasePtr>& srcSt);
-        void tryPopCtrlFlowFromAllStack(const FlowBlockBasePtr& flowPtr);
+        void tryPopFromStack(FlowBlockBase* flowPtr, std::stack<FlowBlockBase*>& srcSt);
+        void tryPopCtrlFlowFromAllStack(FlowBlockBase* flowPtr);
 
         bool isAllFlowStackEmpty() {return  flowBlockStack.empty() &&
                                             patternFlowBlockStack.empty() &&
@@ -57,23 +59,23 @@ namespace kathryn {
          * */
 
         /** register handling*/
-        void on_reg_init(const RegPtr& ptr);
-        void on_reg_update(const std::shared_ptr<UpdateEvent>& upEvent);
+        void on_reg_init(Reg* ptr);
+        void on_reg_update(UpdateEvent* upEvent);
         /** wire handling*/
-        void on_wire_init(const WirePtr& ptr);
-        void on_wire_update(const std::shared_ptr<UpdateEvent>& upEvent);
+        void on_wire_init(Wire* ptr);
+        void on_wire_update(UpdateEvent* upEvent);
         /** expression handling*/
-        void on_expression_init(const expressionPtr& ptr);
+        void on_expression_init(expression* ptr);
         /** value handling*/
-        void on_value_init(const ValPtr& ptr);
+        void on_value_init(Val* ptr);
         /** module handling*/
-        void on_module_init_components(const ModulePtr& ptr);
-        void on_module_init_designFlow(ModulePtr ptr); /** todo make design flow implement correctly*/
-        void on_module_final(ModulePtr ptr);
+        void on_module_init_components(Module* ptr);
+        void on_module_init_designFlow(Module* ptr); /** todo make design flow implement correctly*/
+        void on_module_final(Module* ptr);
 
         /** control flow block handler*/
-        void on_attach_flowBlock(const FlowBlockBasePtr& fb);
-        void on_detach_flowBlock(const FlowBlockBasePtr& fb);
+        void on_attach_flowBlock(FlowBlockBase* fb);
+        void on_detach_flowBlock(FlowBlockBase* fb);
 
         /** lock allocation*/
         void lockAllocation() {hwCompAllocLock = true;};

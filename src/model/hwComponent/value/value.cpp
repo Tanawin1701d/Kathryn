@@ -17,7 +17,7 @@ Val::Val(int size, std::string v): Operable(),
 }
 
 void Val::com_init() {
-    ctrl->on_value_init(std::shared_ptr<Val>(this));
+    ctrl->on_value_init(this);
 }
 
 
