@@ -65,7 +65,7 @@ namespace kathryn {
         /** when inside complex element such as sub flow block is finish, user must add here*/
         virtual void addSubFlowBlock(FlowBlockBase* subBlock){ subBlocks.push_back(subBlock);};
         /** when every thing is finish call this to get sumarisation*/
-        virtual std::shared_ptr<NodeWrapper> sumarizeBlock() = 0;
+        virtual NodeWrapper* sumarizeBlock() = 0;
 
         /**
          * communicator to controller
@@ -79,10 +79,7 @@ namespace kathryn {
          /**
           * for module communicate with
           * */
-
-
-
-
+          virtual void buildHwComponent() = 0;
 
     };
 

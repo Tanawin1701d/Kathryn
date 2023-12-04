@@ -35,4 +35,7 @@ add_executable(Kathryn main.cpp
         src/model/FlowBlock/abstract/flowBlock_Base.h
         src/model/controller/flowController.cpp
         src/model/controller/hwCompController.cpp
+        src/model/FlowBlock/par/par.cpp
+        src/model/FlowBlock/par/par.h
+        src/model/FlowBlock/abstract/loopStMacro.h
 )
