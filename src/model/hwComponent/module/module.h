@@ -48,7 +48,6 @@ namespace kathryn{
     protected:
         /** communicate to controller*/
         void com_init() override;
-        void com_final() override;
         /** localize slave element to belong to this node*/
         template<typename T>
         void localizeSlaveVector(std::vector<T>& _vec);
@@ -64,6 +63,8 @@ namespace kathryn{
                 delete ele;
             }
         }
+
+        void com_final() override;
 
         void addStateReg      (Reg* reg);
         void addFlowBlock     (FlowBlockBase* fb);

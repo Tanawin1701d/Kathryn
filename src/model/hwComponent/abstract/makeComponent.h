@@ -13,6 +13,10 @@
 #include "model/hwComponent/abstract/identifiable.h"
 
 
+#define makeWire( name, argument) Wire& name = _make<Wire>(argument)
+#define makeReg( name, argument)  Reg& name = _make<Reg>(argument)
+#define makeMod(name, TypeName, ...) Module& name = _make<TypeName>(__VA_ARGS__)
+
 
 namespace kathryn {
 
@@ -27,7 +31,7 @@ namespace kathryn {
 
     /** todo for now it is used for creating module but we will make it compatable in the future */
     template<typename T, typename... Args>
-    T& make(Args&&... args){
+    T& _make(Args&&... args){
         static_assert(std::is_base_of<HwCompControllerItf, T>::value,
                 "make model component must base on Controller controllable"
                 );
