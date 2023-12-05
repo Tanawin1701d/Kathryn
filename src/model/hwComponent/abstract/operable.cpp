@@ -13,7 +13,7 @@ namespace kathryn {
      * */
 
 /** bitwise operators*/
-    expression& Operable::operator&(Operable &b) {
+    expression& Operable::operator&(const Operable &b) {
         auto ret =  new expression(BITWISE_AND,
                                             std::shared_ptr<Operable>(&this->getExactOperable()),
                                             this->getOperableSlice(),
@@ -24,7 +24,7 @@ namespace kathryn {
         return *ret;
     }
 
-    expression& Operable::operator|(Operable &b) {
+    expression& Operable::operator|(const Operable &b) {
         auto ret =  new expression(BITWISE_OR,
                                                  std::shared_ptr<Operable>(&this->getExactOperable()),
                                                  this->getOperableSlice(),
@@ -35,7 +35,7 @@ namespace kathryn {
         return *ret;
     }
 
-    expression& Operable::operator^(Operable &b) {
+    expression& Operable::operator^(const Operable &b) {
         auto ret =  new expression(BITWISE_XOR,
                                                  std::shared_ptr<Operable>(&this->getExactOperable()),
                                                  this->getOperableSlice(),
@@ -57,7 +57,7 @@ namespace kathryn {
         return *ret;
     }
 
-    expression& Operable::operator<<(Operable &b) {
+    expression& Operable::operator<<(const Operable &b) {
         auto ret =  new expression(BITWISE_SHL,
                                                  std::shared_ptr<Operable>(&this->getExactOperable()),
                                                  this->getOperableSlice(),
@@ -68,7 +68,7 @@ namespace kathryn {
         return *ret;
     }
 
-    expression& Operable::operator>>(Operable &b) {
+    expression& Operable::operator>>(const Operable &b) {
         auto ret =  new expression(BITWISE_SHR,
                                                  std::shared_ptr<Operable>(&this->getExactOperable()),
                                                  this->getOperableSlice(),
@@ -82,7 +82,7 @@ namespace kathryn {
 
     /** logical operators*/
 
-    expression& Operable::operator&&(Operable &b) {
+    expression& Operable::operator&&(const Operable &b) {
         auto ret =  new expression(LOGICAL_AND,
                                                  std::shared_ptr<Operable>(&this->getExactOperable()),
                                                  this->getOperableSlice(),
@@ -93,7 +93,7 @@ namespace kathryn {
         return *ret;
     }
 
-    expression& Operable::operator||(Operable &b) {
+    expression& Operable::operator||(const Operable &b) {
         auto ret =  new expression(LOGICAL_OR,
                                                  std::shared_ptr<Operable>(&this->getExactOperable()),
                                                  this->getOperableSlice(),
@@ -117,7 +117,7 @@ namespace kathryn {
 
     /** relational operator*/
 
-    expression& Operable::operator==(Operable &b) {
+    expression& Operable::operator==(const Operable &b) {
         auto ret =  new expression(RELATION_EQ,
                                                  std::shared_ptr<Operable>(&this->getExactOperable()),
                                                  this->getOperableSlice(),
@@ -128,7 +128,7 @@ namespace kathryn {
         return *ret;
     }
 
-    expression& Operable::operator!=(Operable &b) {
+    expression& Operable::operator!=(const Operable &b) {
         auto ret =  new expression(RELATION_NEQ,
                                                  std::shared_ptr<Operable>(&this->getExactOperable()),
                                                  this->getOperableSlice(),
@@ -139,7 +139,7 @@ namespace kathryn {
         return *ret;
     }
 
-    expression& Operable::operator<(Operable &b) {
+    expression& Operable::operator<(const Operable &b) {
         auto ret =  new expression(RELATION_LE,
                                  std::shared_ptr<Operable>(&this->getExactOperable()),
                                  this->getOperableSlice(),
@@ -150,7 +150,7 @@ namespace kathryn {
         return *ret;
     }
 
-    expression& Operable::operator<=(Operable &b) {
+    expression& Operable::operator<=(const Operable &b) {
         auto ret =  new expression(RELATION_LEQ,
                                                  std::shared_ptr<Operable>(&this->getExactOperable()),
                                                  this->getOperableSlice(),
@@ -161,7 +161,7 @@ namespace kathryn {
         return *ret;
     }
 
-    expression& Operable::operator>(Operable &b) {
+    expression& Operable::operator>(const Operable &b) {
         auto ret =  new expression(RELATION_GE,
                                                  std::shared_ptr<Operable>(&this->getExactOperable()),
                                                  this->getOperableSlice(),
@@ -172,7 +172,7 @@ namespace kathryn {
         return *ret;
     }
 
-    expression& Operable::operator>=(Operable &b) {
+    expression& Operable::operator>=(const Operable &b) {
         auto ret =  new expression(RELATION_GEQ,
                                                  std::shared_ptr<Operable>(&this->getExactOperable()),
                                                  this->getOperableSlice(),
@@ -185,7 +185,7 @@ namespace kathryn {
 
     /** arithmetic operators*/
 
-    expression& Operable::operator+(Operable &b) {
+    expression& Operable::operator+(const Operable &b) {
         auto ret =  new expression(ARITH_PLUS,
                                                  std::shared_ptr<Operable>(&this->getExactOperable()),
                                                  this->getOperableSlice(),
@@ -197,7 +197,7 @@ namespace kathryn {
         return *ret;
     }
 
-    expression& Operable::operator-(Operable &b) {
+    expression& Operable::operator-(const Operable &b) {
         auto ret =  new expression(ARITH_MINUS,
                                              std::shared_ptr<Operable>(&this->getExactOperable()),
                                              this->getOperableSlice(),
@@ -208,7 +208,7 @@ namespace kathryn {
         return *ret;
     }
 
-    expression& Operable::operator*(Operable &b) {
+    expression& Operable::operator*(const Operable &b) {
         auto ret =  new expression(ARITH_MUL,
                                                  std::shared_ptr<Operable>(&this->getExactOperable()),
                                                  this->getOperableSlice(),
@@ -219,7 +219,7 @@ namespace kathryn {
         return *ret;
     }
 
-    expression& Operable::operator/(Operable &b) {
+    expression& Operable::operator/(const Operable &b) {
         auto ret =  new expression(ARITH_DIV,
                                                  std::shared_ptr<Operable>(&this->getExactOperable()),
                                                  this->getOperableSlice(),
@@ -230,7 +230,7 @@ namespace kathryn {
         return *ret;
     }
 
-    expression& Operable::operator%(Operable &b) {
+    expression& Operable::operator%(const Operable &b) {
         auto ret =  new expression(ARITH_DIV,
                                                  std::shared_ptr<Operable>(&this->getExactOperable()),
                                                  this->getOperableSlice(),

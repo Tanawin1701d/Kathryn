@@ -10,6 +10,7 @@
 
 #include "model/hwComponent/module/module.h"
 #include "model/FlowBlock/abstract/flowBlock_Base.h"
+#include "model/FlowBlock/par/par.h"
 #include "model/FlowBlock/abstract/stateReg.h"
 
 

@@ -61,8 +61,10 @@ namespace kathryn {
         expression& operator <<= (Operable& b) override {std::cout << "we not support <<= operator in expression";};
         expression& operator =   (Operable& b) override;
         /**override operable*/
-        Operable& getExactOperable() override { return *(Operable*)(this); };
-        Slice getOperableSlice() override { return getSlice(); }
+        [[nodiscard]]
+        Operable& getExactOperable() const override { return *(Operable*)(this); };
+        [[nodiscard]]
+        Slice getOperableSlice() const override  { return getSlice(); }
         /** override slicable*/
         SliceAgent<expression>& operator() (int start, int stop) override;
         SliceAgent<expression>& operator() (int idx) override;

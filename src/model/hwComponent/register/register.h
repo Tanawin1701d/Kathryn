@@ -34,8 +34,8 @@ namespace kathryn{
         Reg& operator =   (Operable& b) override;
 
         /** Operable override*/
-        Slice getOperableSlice() override {return getSlice();};
-        Operable& getExactOperable() override {return *(Operable*)this; };
+        Slice getOperableSlice() const override {return getSlice();};
+        Operable& getExactOperable() const override {return *(Operable*)this; };
 
         /** Slicable*/
         SliceAgent<Reg>& operator() (int start, int stop) override;

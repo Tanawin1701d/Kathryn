@@ -27,7 +27,7 @@ namespace kathryn {
 
     /** todo for now it is used for creating module but we will make it compatable in the future */
     template<typename T, typename... Args>
-    std::shared_ptr<T> make(Args&&... args){
+    T& make(Args&&... args){
         static_assert(std::is_base_of<HwCompControllerItf, T>::value,
                 "make model component must base on Controller controllable"
                 );
@@ -37,10 +37,10 @@ namespace kathryn {
 
         /** make initializer*/
         getControllerPtr()->unlockAllocation();
-        auto objPtr = std::make_shared<T>(std::forward<Args>(args)...);
+        auto objPtr = new T(std::forward<Args>(args)...);
         objPtr->com_final();
         objPtr->setTypeName(typeid(T).name());
-        return objPtr;
+        return *objPtr;
     }
 
 

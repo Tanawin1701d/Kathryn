@@ -34,8 +34,10 @@ namespace kathryn{
         Val& operator = (ull v){return *this;};
 
         /** override operable*/
-        Slice getOperableSlice() { return Slice{0, _size};}
-        Operable& getExactOperable() {return *this;}
+        [[nodiscard]]
+        Slice getOperableSlice() const override { return Slice{0, _size};}
+        [[nodiscard]]
+        Operable& getExactOperable() const override {return (Operable &) *this;}
 
         /** assign todo we will assign it later*/
         Val operator() (int start, int stop) {return Val(stop-start, "b000");}

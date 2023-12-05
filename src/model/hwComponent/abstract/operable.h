@@ -23,34 +23,36 @@ namespace kathryn {
     public:
         explicit Operable() = default;
         /** bitwise operators*/
-        virtual expression& operator &  (Operable& b);
-        virtual expression& operator |  (Operable& b);
-        virtual expression& operator ^  (Operable& b);
+        virtual expression& operator &  (const Operable& b);
+        virtual expression& operator |  (const Operable& b);
+        virtual expression& operator ^  (const Operable& b);
         virtual expression& operator ~  ();
-        virtual expression& operator << (Operable& b);
-        virtual expression& operator >> (Operable& b);
+        virtual expression& operator << (const Operable& b);
+        virtual expression& operator >> (const Operable& b);
         /** logical operators*/
-        virtual expression& operator && (Operable& b);
-        virtual expression& operator || (Operable& b);
+        virtual expression& operator && (const Operable& b);
+        virtual expression& operator || (const Operable& b);
         virtual expression& operator !  ();
         /** relational operator*/
-        virtual expression& operator == (Operable& b);
-        virtual expression& operator != (Operable& b);
-        virtual expression& operator <  (Operable& b);
-        virtual expression& operator <= (Operable& b);
-        virtual expression& operator >  (Operable& b);
-        virtual expression& operator >= (Operable& b);
+        virtual expression& operator == (const Operable& b);
+        virtual expression& operator != (const Operable& b);
+        virtual expression& operator <  (const Operable& b);
+        virtual expression& operator <= (const Operable& b);
+        virtual expression& operator >  (const Operable& b);
+        virtual expression& operator >= (const Operable& b);
         /** arithmetic operators*/
-        virtual expression& operator +  (Operable& b);
-        virtual expression& operator -  (Operable& b);
-        virtual expression& operator *  (Operable& b);
-        virtual expression& operator /  (Operable& b);
-        virtual expression& operator %  (Operable& b);
+        virtual expression& operator +  (const Operable& b);
+        virtual expression& operator -  (const Operable& b);
+        virtual expression& operator *  (const Operable& b);
+        virtual expression& operator /  (const Operable& b);
+        virtual expression& operator %  (const Operable& b);
         /** todo for now self assign operation such as += is not permit */
 
         /** due to slice operable maybe change*/
-        virtual Slice getOperableSlice() = 0;
-        virtual Operable& getExactOperable() = 0;
+        [[nodiscard]]
+        virtual Slice getOperableSlice() const = 0;
+        [[nodiscard]]
+        virtual Operable& getExactOperable () const = 0;
     };
 
 

@@ -48,7 +48,7 @@ namespace kathryn {
                 return Slice{oldSlice.start + start, oldSlice.start + stop};
         }
 
-        Slice getSlice(){ return _absSlice; }
+        Slice getSlice() const { return _absSlice; }
         void  setSlice(Slice slc) {_absSlice =  slc;}
 
     };
@@ -67,9 +67,9 @@ namespace kathryn {
 
         /** operable override*/
 
-        Operable& getExactOperable() override { return *std::shared_ptr<Operable>(_master); }
+        Operable& getExactOperable() const override { return *std::shared_ptr<Operable>(_master); }
 
-        Slice getOperableSlice() override { return  Slicable<T>::getSlice(); }
+        Slice getOperableSlice() const override { return  Slicable<T>::getSlice(); }
 
         /** slicable overload*/
 
