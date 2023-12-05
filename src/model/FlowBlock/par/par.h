@@ -8,12 +8,20 @@
 
 #include "model/FlowBlock/abstract/flowBlock_Base.h"
 #include "model/FlowBlock/abstract/loopStMacro.h"
+#include "model/FlowBlock/abstract/stateReg.h"
 
 namespace kathryn {
 
     class FlowBlockPar : public FlowBlockBase, public LoopStMacro{
 
+        /** meta element*/
         std::vector<Node*> _simpleAsm;
+        StateReg* stReg = nullptr;
+        std::vector<StateReg*> synState;
+
+        /** io element*/
+        std::vector<UpdateEvent*> entranceEvent;
+        expression* outputExpression;
 
     public:
 
@@ -22,20 +30,20 @@ namespace kathryn {
         /** override flow block base*/
 
         /** for controller add the local element to this sub block*/
-        void addElementInFlowBlock(Node* node);
+        void addElementInFlowBlock(Node* node) override;
         NodeWrapper* sumarizeBlock(); /// to interact from parrent block call
 
         /** on this block is start interact to controller*/
-        void onAttachBlock();
+        void onAttachBlock() override;
         /** on leave this block*/
-        void onDetachBlock();
+        void onDetachBlock() override;
 
         /** for module to build hardware component*/
-        void buildHwComponent();
+        void buildHwComponent() override;
 
         /** Loop*/
-        void doPreFunction();
-        void doPostFunction();
+        void doPreFunction() override;
+        void doPostFunction() override;
 
     };
 

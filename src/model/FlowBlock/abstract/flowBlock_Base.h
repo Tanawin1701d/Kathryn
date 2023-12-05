@@ -15,7 +15,7 @@
 namespace kathryn {
 
     struct NodeWrapper {
-    private:
+    public:
         /** entrance represent UpdateEvent which refer to node wire that be head of the subblock*/
         /** note that expression must not be here due to the abstract of the system*/
         std::vector<UpdateEvent*> entranceElements;
@@ -56,6 +56,7 @@ namespace kathryn {
         ControllerPtr ctrl;
     public:
         explicit FlowBlockBase(FLOW_BLOCK_TYPE type);
+        virtual ~FlowBlockBase();
 
         /**
          * entrance to make controller interact with

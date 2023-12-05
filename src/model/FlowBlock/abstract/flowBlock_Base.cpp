@@ -12,5 +12,12 @@ namespace kathryn{
     _type(type),
     ctrl(getControllerPtr()) {}
 
+    FlowBlockBase::~FlowBlockBase(){
+        for (auto sub_fb: subBlocks){
+            delete sub_fb;
+
+        }
+    }
+
 
 }

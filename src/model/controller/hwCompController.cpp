@@ -43,6 +43,14 @@ namespace kathryn{
         fb->addElementInFlowBlock(node);
     }
 
+    /** state register handling */
+    void Controller::on_state_reg_init(StateReg* ptr) {
+        assert(ptr != nullptr);
+        Module* tagetModule = getTargetModulePtr();
+        /**localize necessary destination*/
+        tagetModule->addStateReg(ptr);
+    }
+
     /** wire handling*/
     void Controller::on_wire_init(Wire* ptr) {
         assert(ptr != nullptr);

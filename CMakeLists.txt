@@ -38,4 +38,6 @@ add_executable(Kathryn main.cpp
         src/model/FlowBlock/par/par.cpp
         src/model/FlowBlock/par/par.h
         src/model/FlowBlock/abstract/loopStMacro.h
+        src/model/FlowBlock/abstract/stateReg.h
+        src/model/FlowBlock/abstract/stateReg.cpp
 )

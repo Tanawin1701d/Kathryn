@@ -8,6 +8,7 @@
 #include <string>
 #include <utility>
 #include <memory>
+#include <cassert>
 
 typedef unsigned long long int ull;
 
@@ -51,6 +52,19 @@ namespace kathryn {
             _parent(nullptr),
             _localId(-1)
             {};
+
+        Identifiable& operator = (const Identifiable& ident){
+            if (this == &ident){
+                return *this;
+            }
+            _type = ident._type;
+            _typeName = UNNAME_STR;
+            _globalName = UNNAME_STR;
+            _globalId = LAST_IDENT_ID++;
+            _parent = nullptr;
+            _localId = -1;
+            return *this;
+        }
 
         template<typename T>
         T* cast(){

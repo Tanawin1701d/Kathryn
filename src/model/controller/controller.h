@@ -10,6 +10,7 @@
 
 #include "model/hwComponent/module/module.h"
 #include "model/FlowBlock/abstract/flowBlock_Base.h"
+#include "model/FlowBlock/abstract/stateReg.h"
 
 
 namespace kathryn {
@@ -61,6 +62,8 @@ namespace kathryn {
         /** register handling*/
         void on_reg_init(Reg* ptr);
         void on_reg_update(UpdateEvent* upEvent);
+        /** state register handling*/
+        void on_state_reg_init(StateReg* ptr);
         /** wire handling*/
         void on_wire_init(Wire* ptr);
         void on_wire_update(UpdateEvent* upEvent);
