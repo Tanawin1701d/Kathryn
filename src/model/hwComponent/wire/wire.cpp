@@ -26,7 +26,7 @@ namespace kathryn{
     Wire& Wire::operator=(Operable &b) {
         UpdateEvent* event = genUpEventValueAndSlice(getSlice(), &b);
         addUpdateMeta(event);
-        ctrl->on_reg_update(event);
+        ctrl->on_wire_update(event);
         return *this;
     }
 
