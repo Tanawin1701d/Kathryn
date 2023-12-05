@@ -22,6 +22,18 @@ namespace kathryn {
         /** the exit condition that allow next building block run*/
         expression* exitExpr;
 
+        void join(NodeWrapper* rhs){
+            assert(rhs != nullptr);
+            assert(exitExpr != nullptr);
+
+            /**left node send data to right node */
+            for (auto rhsUpdateEntrance: entranceElements){
+                assert(rhsUpdateEntrance->updateState != nullptr);
+                rhsUpdateEntrance->updateState =
+                        &(*rhsUpdateEntrance->updateState | *exitExpr);
+            }
+        }
+
     };
 
     /** it is basic node that only have one event at a node */
@@ -81,6 +93,8 @@ namespace kathryn {
           * for module communicate with
           * */
           virtual void buildHwComponent() = 0;
+
+
 
     };
 

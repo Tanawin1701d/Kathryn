@@ -40,4 +40,6 @@ add_executable(Kathryn main.cpp
         src/model/FlowBlock/abstract/loopStMacro.h
         src/model/FlowBlock/abstract/stateReg.h
         src/model/FlowBlock/abstract/stateReg.cpp
+        src/model/FlowBlock/seq/seq.cpp
+        src/model/FlowBlock/seq/seq.h
 )

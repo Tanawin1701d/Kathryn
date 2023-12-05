@@ -26,12 +26,11 @@ int main() {
         auto& test = *(new Wire(5));
     }
 
-    int a = 10;
-    int& b = a;
-
     Val myVal(2,"b2");
     makeWire(z, 3) = myVal;
-    makeMod(ttMod, testModule,1,2);
+    var yy = z;
+    var zz = _make<Reg>(3);
+    makeMod(myMo, testModule,1,2);
 
 
 

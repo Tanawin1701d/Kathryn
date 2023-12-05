@@ -27,12 +27,17 @@ namespace kathryn {
     public:
 
         explicit FlowBlockPar();
+        virtual ~FlowBlockPar(){
+            for (auto nd: _simpleAsm){
+                delete nd;
+            }
+        }
 
         /** override flow block base*/
 
         /** for controller add the local element to this sub block*/
         void addElementInFlowBlock(Node* node) override;
-        NodeWrapper* sumarizeBlock(); /// to interact from parrent block call
+        NodeWrapper* sumarizeBlock() override; /// to interact from parrent block call
 
         /** on this block is start interact to controller*/
         void onAttachBlock() override;
@@ -42,7 +47,7 @@ namespace kathryn {
         /** for module to build hardware component*/
         void buildHwComponent() override;
 
-        /** Loop*/
+        /** Loop macro to notice position of system*/
         void doPreFunction() override;
         void doPostFunction() override;
 

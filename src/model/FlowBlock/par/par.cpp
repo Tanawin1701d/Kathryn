@@ -79,9 +79,11 @@ namespace kathryn{
             }
             /** wrap synchronization to output expression*/
             assert(!synState.empty());
-            for (auto synReg: synState){
-                *outputExpression = (*outputExpression) | (*synReg);
+            *outputExpression = *synState[0];
+            for (int i = 1; i < synState.size(); i++){
+                outputExpression = &((*outputExpression) | (*synState[i]));
             }
+
         }else{
             assert(stReg != nullptr);
             *outputExpression = *stReg;

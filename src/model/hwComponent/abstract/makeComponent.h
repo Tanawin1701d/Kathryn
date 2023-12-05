@@ -16,6 +16,7 @@
 #define makeWire( name, argument) Wire& name = _make<Wire>(argument)
 #define makeReg( name, argument)  Reg& name = _make<Reg>(argument)
 #define makeMod(name, TypeName, ...) Module& name = _make<TypeName>(__VA_ARGS__)
+#define var auto&
 
 
 namespace kathryn {
