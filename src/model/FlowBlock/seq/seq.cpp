@@ -69,7 +69,7 @@ namespace kathryn{
         for (size_t idx = 0; (idx+1) < _subSeqMetas.size(); idx++){
             auto lhsNodeWrapper = _subSeqMetas[idx].getNodeWrapper();
             auto rhsNodeWrapper = _subSeqMetas[idx+1].getNodeWrapper();
-            lhsNodeWrapper->join(rhsNodeWrapper);
+            lhsNodeWrapper->join(rhsNodeWrapper, BITWISE_AND);
         }
 
     }

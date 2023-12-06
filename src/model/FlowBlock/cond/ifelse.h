@@ -2,33 +2,39 @@
 // Created by tanawin on 6/12/2566.
 //
 
-#ifndef KATHRYN_CWHILE_H
-#define KATHRYN_CWHILE_H
+#ifndef KATHRYN_IFELSE_H
+#define KATHRYN_IFELSE_H
 
 #include "model/FlowBlock/abstract/flowBlock_Base.h"
 #include "model/FlowBlock/abstract/loopStMacro.h"
 
-#define cwhile(expr) for(auto kathrynBlock = new FlowBlockCwhile(expr); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 
 namespace kathryn{
 
-    class FlowBlockCwhile : public FlowBlockBase, public LoopStMacro{
+    class FlowBlockElif;
+    class FlowBlockElse;
+
+
+    class FlowBlockIf: public FlowBlockBase, public LoopStMacro{
     private:
-        expression* _condExpr = nullptr;
+        expression* _cond;
+        /** order of elif is sorted from design flow*/
+        std::vector<FlowBlockElif*> elifClasses;
+        FlowBlockElse* elseClass;
+
+        std::vector<expression*>  elifConds;
+        std::vector<NodeWrapper*> elifNws;
+        NodeWrapper* elseNw;
+
         bool isGetFlowBlockYet = false;
 
-        NodeWrapper* resultNodeWrapper = nullptr;
-
     public:
-
-        explicit FlowBlockCwhile(expression& condExpr);
-        virtual ~FlowBlockCwhile();
+        explicit FlowBlockIf(expression& cond);
 
         /** for controller add the local element to this sub block*/
         void addElementInFlowBlock(Node* node) override;
         void addSubFlowBlock(FlowBlockBase* subBlock) override;
         NodeWrapper* sumarizeBlock() override;
-
         /** on this block is start interact to controller*/
         void onAttachBlock() override;
         /** on leave this block*/
@@ -39,10 +45,13 @@ namespace kathryn{
         void doPreFunction() override;
         void doPostFunction() override;
 
-
+        /**add elif element*/
+        void addElifElement(FlowBlockElif* elifClass);
+        /**ad else Element*/
+        void addElseElement(FlowBlockElse* elseClass);
 
     };
 
 }
 
-#endif //KATHRYN_CWHILE_H
+#endif //KATHRYN_IFELSE_H

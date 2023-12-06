@@ -22,7 +22,7 @@ namespace kathryn {
         /** the exit condition that allow next building block run*/
         expression* exitExpr;
 
-        void join(NodeWrapper* rhs){
+        void join(NodeWrapper* rhs, LOGIC_OP op){
             assert(rhs != nullptr);
             assert(exitExpr != nullptr);
 
@@ -33,8 +33,13 @@ namespace kathryn {
                     rhsUpdateEntrance->updateState = exitExpr;
                 }else {
                     assert(rhsUpdateEntrance->updateState != nullptr);
-                    rhsUpdateEntrance->updateState =
-                            &(*rhsUpdateEntrance->updateState | *exitExpr);
+                    if (op == BITWISE_AND){
+                        rhsUpdateEntrance->updateState = &(*rhsUpdateEntrance->updateState & *exitExpr);
+                    }else if (op == BITWISE_OR) {
+                        rhsUpdateEntrance->updateState = &(*rhsUpdateEntrance->updateState | *exitExpr);
+                    }else{
+                        assert(true);
+                    }
                 }
             }
         }
@@ -58,20 +63,21 @@ namespace kathryn {
     enum FLOW_BLOCK_TYPE{
         SEQUENTIAL,
         PARALLEL,
-        STATE_IF,
-        NO_STATE_IF,
+        IF,
+        ELIF,
+        ELSE,
         WHILE,
         DO_WHILE,
         DUMMY_BLOCK
     };
-
-    class FlowBlockBase;
 
     class FlowBlockBase {
     protected:
         std::vector<FlowBlockBase*> subBlocks;
         FLOW_BLOCK_TYPE _type;
         ControllerPtr ctrl;
+        /** generate implicit subblock typically used with if and while block*/
+        FlowBlockBase* genImplicitSubBlk(FLOW_BLOCK_TYPE defaultType);
     public:
         explicit FlowBlockBase(FLOW_BLOCK_TYPE type);
         virtual ~FlowBlockBase();

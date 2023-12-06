@@ -23,6 +23,8 @@ namespace kathryn{
     }
 
     void FlowBlockCwhile::addSubFlowBlock(FlowBlockBase *subBlock) {
+        assert(!isGetFlowBlockYet);
+        isGetFlowBlockYet = true;
         FlowBlockBase::addSubFlowBlock(subBlock);
     }
 
@@ -32,29 +34,14 @@ namespace kathryn{
     }
 
     void FlowBlockCwhile::onAttachBlock() {
-        /** determine next flow block*/
-        FLOW_BLOCK_TYPE nextFbType = ctrl->get_top_pattern_flow_block_type();
-        if (nextFbType == DUMMY_BLOCK){
-            nextFbType = PARALLEL;
-        }
-        /** create subblock*/
-        if (nextFbType == PARALLEL){
-            toDoPostBlock = new FlowBlockPar();
-            toDoPostBlock->doPrePostFunction();
-        }else if (nextFbType == SEQUENTIAL){
-            toDoPostBlock = new FlowBlockSeq();
-            toDoPostBlock->doPrePostFunction();
-        }else{
-            assert(true); /** can't determine flow type*/
-        }
-
-
+        auto sb = genImplicitSubBlk(PARALLEL);
+        sb->onAttachBlock();
 
     }
 
     void FlowBlockCwhile::onDetachBlock() {
-        toDoPostBlock->step();
-        toDoPostBlock->doPrePostFunction();
+        assert(isGetFlowBlockYet);
+        subBlocks[0]->onDetachBlock();
         ctrl->on_detach_flowBlock(this);
 
     }
@@ -65,6 +52,8 @@ namespace kathryn{
         /** build subblock*/
         subBlocks[0]->buildHwComponent();
         NodeWrapper* wrapperOfSubBlock = subBlocks[0]->sumarizeBlock();
+
+        /**to fix*/
 
         /**join loop if condition is true*/
         NodeWrapper* nextNodeWrapper = new NodeWrapper({{},

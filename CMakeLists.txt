@@ -44,4 +44,6 @@ add_executable(Kathryn main.cpp
         src/model/FlowBlock/seq/seq.h
         src/model/FlowBlock/loop/cwhile.cpp
         src/model/FlowBlock/loop/cwhile.h
+        src/model/FlowBlock/cond/ifelse.cpp
+        src/model/FlowBlock/cond/ifelse.h
 )
