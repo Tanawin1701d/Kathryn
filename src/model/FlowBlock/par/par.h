@@ -18,7 +18,7 @@ namespace kathryn {
         /** meta element*/
         std::vector<Node*> _simpleAsm;
         StateReg* stReg = nullptr;
-        std::vector<StateReg*> synState;
+        StateReg* synReg = nullptr;
 
         /** io element*/
         std::vector<UpdateEvent*> entranceEvent;

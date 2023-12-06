@@ -54,40 +54,48 @@ namespace kathryn{
         if (!_simpleAsm.empty()) {
             stReg = new StateReg();
             entranceEvent.push_back(stReg->genUpdateEvent());
+            /** sent update asignment to be connect to this element*/
+            for (auto node : _simpleAsm){
+                node->updateElement->setUpdateState(stReg);
+            }
         }
+
+        /** build syn register*/
+        /** we must syn of it is empty*/
+        if (!subBlocks.empty())
+            synReg = new StateReg((int)subBlocks.size() + stReg != nullptr);
+
         /** state for subblock and implement output expression*/
         if (!subBlocks.empty()){
             /** for now we know that synchronization is need*/
             if (stReg != nullptr) {
                 /** build synchonizer for basic block*/
-                auto synStateForBasic = new StateReg();
-                synStateForBasic->genUpdateEvent(stReg);
-                synState.push_back(synStateForBasic);
+                synReg->genUpdateEvent(stReg, 0);
             }
             /** for subblock synchonization*/
+            int nextSynBit = 1;
             for (auto sb: subBlocks){
                 auto wrapper = sb->sumarizeBlock();
+                /** deal with input of block*/
                 for (auto subEntrance: wrapper->entranceElements){
                     assert(subEntrance != nullptr);
                     entranceEvent.push_back(subEntrance);
                 }
-                auto synSt = new StateReg();
-                synSt->genUpdateEvent(wrapper->exitExpr);
-                synState.push_back(synSt);
+                /** deal with output of block*/
+                /** don't have to use node wrapper this work with this
+                 * because it is single asignment
+                 * */
+                synReg->genUpdateEvent(wrapper->exitExpr,
+                                       nextSynBit++);
                 delete wrapper;
-
             }
-            /** wrap synchronization to output expression*/
-            assert(!synState.empty());
-            *outputExpression = *synState[0];
-            for (int i = 1; i < synState.size(); i++){
-                outputExpression = &((*outputExpression) | (*synState[i]));
-            }
-
-        }else{
-            assert(stReg != nullptr);
-            *outputExpression = *stReg;
         }
+
+        /***/
+        outputExpression = synReg != nullptr ? synReg->genOutputExpression() :
+                                                stReg->genOutputExpression() ;
+
+
     }
 
     void

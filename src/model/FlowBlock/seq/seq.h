@@ -5,10 +5,10 @@
 #ifndef KATHRYN_SEQ_H
 #define KATHRYN_SEQ_H
 
+#define seq for(auto kathrynBlock = new FlowBlockSeq(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 
 #include "model/FlowBlock/abstract/flowBlock_Base.h"
 #include "model/FlowBlock/abstract/loopStMacro.h"
-
 
 namespace kathryn {
 
@@ -17,6 +17,7 @@ namespace kathryn {
         /**assignment block*/
         Node* _simpleAsm = nullptr;
         FlowBlockBase* _subBlock = nullptr;
+
         NodeWrapper* nodeWrapper = nullptr;
         bool isGenHwYet          = false;
 
@@ -38,7 +39,7 @@ namespace kathryn {
 
     };
 
-    class Seq : public FlowBlockBase, public LoopStMacro{
+    class FlowBlockSeq : public FlowBlockBase, public LoopStMacro{
     private:
 
         std::vector<SeqenceMeta> _subSeqMetas;

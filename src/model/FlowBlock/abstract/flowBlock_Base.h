@@ -28,9 +28,14 @@ namespace kathryn {
 
             /**left node send data to right node */
             for (auto rhsUpdateEntrance: entranceElements){
-                assert(rhsUpdateEntrance->updateState != nullptr);
-                rhsUpdateEntrance->updateState =
-                        &(*rhsUpdateEntrance->updateState | *exitExpr);
+                /** assign first expression if it is null*/
+                if (rhsUpdateEntrance->updateState == nullptr){
+                    rhsUpdateEntrance->updateState = exitExpr;
+                }else {
+                    assert(rhsUpdateEntrance->updateState != nullptr);
+                    rhsUpdateEntrance->updateState =
+                            &(*rhsUpdateEntrance->updateState | *exitExpr);
+                }
             }
         }
 
@@ -38,9 +43,9 @@ namespace kathryn {
 
     /** it is basic node that only have one event at a node */
     struct Node{
-    private:
-        UpdateEvent* updateElement; /** the register or wire that update in this cycle*/
+
     public:
+        UpdateEvent* updateElement; /** the register or wire that update in this cycle*/
         explicit Node(UpdateEvent* ue): updateElement(ue){}
 
 

@@ -14,45 +14,48 @@ namespace kathryn{
         assert(_simpleAsm != nullptr ^ _subBlock != nullptr);
         isGenHwYet = true;
 
+        /** for simple node*/
         if (_simpleAsm != nullptr){
-            auto stReg = new StateReg();
-            auto outExp = new expression();
-            *outExp = *stReg;
-            nodeWrapper = new NodeWrapper({{stReg->genUpdateEvent()}, outExp});
+            /**create state register*/
+            auto stReg  = new StateReg();
+            nodeWrapper = new NodeWrapper({{stReg->genUpdateEvent()},
+                                           stReg->genOutputExpression()});
+            /** bind register*/
+            _simpleAsm->updateElement->setUpdateState(stReg);
             return;
         }
         nodeWrapper = _subBlock->sumarizeBlock();
     }
 
 
-    void Seq::addElementInFlowBlock(Node *node) {
+    void FlowBlockSeq::addElementInFlowBlock(Node *node) {
         assert(node != nullptr);
         _subSeqMetas.emplace_back(node);
     }
 
-    void Seq::addSubFlowBlock(FlowBlockBase *subBlock) {
+    void FlowBlockSeq::addSubFlowBlock(FlowBlockBase *subBlock) {
         assert(subBlock != nullptr);
         _subSeqMetas.emplace_back(subBlock);
         /** base function to notice existence of sub flow block*/
         FlowBlockBase::addSubFlowBlock(subBlock);
     }
 
-    NodeWrapper *Seq::sumarizeBlock() {
+    NodeWrapper* FlowBlockSeq::sumarizeBlock() {
         assert(!_subSeqMetas.empty());
         return new NodeWrapper({_subSeqMetas[0].getNodeWrapper()->entranceElements,
                                 _subSeqMetas[_subSeqMetas.size()-1].getNodeWrapper()->exitExpr
                                 });
     }
 
-    void Seq::onAttachBlock() {
+    void FlowBlockSeq::onAttachBlock() {
         ctrl->on_attach_flowBlock(this);
     }
 
-    void Seq::onDetachBlock() {
+    void FlowBlockSeq::onDetachBlock() {
         ctrl->on_detach_flowBlock(this);
     }
 
-    void Seq::buildHwComponent() {
+    void FlowBlockSeq::buildHwComponent() {
         assert(!_subSeqMetas.empty());
         /** generate hardware*/
         for (auto& seqMeta: _subSeqMetas) {
@@ -67,11 +70,11 @@ namespace kathryn{
 
     }
 
-    void Seq::doPreFunction() {
+    void FlowBlockSeq::doPreFunction() {
         onAttachBlock();
     }
 
-    void Seq::doPostFunction() {
+    void FlowBlockSeq::doPostFunction() {
         onDetachBlock();
     }
 

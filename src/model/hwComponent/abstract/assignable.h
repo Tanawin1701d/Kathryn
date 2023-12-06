@@ -22,6 +22,10 @@ namespace kathryn{
         Slice                     updateSlice; /// slice to update
         int priority = 9;
         ///priority for circuit if there are attention to update same register at a time 0 is highest 9 is lowest
+        void setUpdateState(Operable* ptr){
+            assert(ptr != nullptr);
+            updateState = ptr;
+        }
     };
 
     /**Reg[desSlc] <= srcVal*/
@@ -64,6 +68,8 @@ namespace kathryn{
         void addUpdateMeta(UpdateEvent* event){
             _updateMeta.push_back(event);
         }
+
+
 
 
     };
