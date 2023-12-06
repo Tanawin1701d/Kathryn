@@ -9,6 +9,10 @@
 
 namespace kathryn{
 
+    FlowBlockSeq::FlowBlockSeq(): FlowBlockBase(SEQUENTIAL) {
+
+    }
+
     void SeqenceMeta::genHw() {
         assert(!isGenHwYet);
         assert(_simpleAsm != nullptr ^ _subBlock != nullptr);

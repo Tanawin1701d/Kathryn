@@ -62,6 +62,7 @@ namespace kathryn {
         NO_STATE_IF,
         WHILE,
         DO_WHILE,
+        DUMMY_BLOCK
     };
 
     class FlowBlockBase;

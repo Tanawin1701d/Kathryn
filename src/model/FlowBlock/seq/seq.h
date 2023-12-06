@@ -32,7 +32,7 @@ namespace kathryn {
         }
 
         ~SeqenceMeta(){
-            /** subBlock master node will handle it */
+            /** toDoPostBlock master node will handle it */
             delete _simpleAsm;
             delete nodeWrapper;
         }
@@ -45,7 +45,7 @@ namespace kathryn {
         std::vector<SeqenceMeta> _subSeqMetas;
 
     public:
-
+        explicit FlowBlockSeq();
         /** for controller add the local element to this sub block*/
         void addElementInFlowBlock(Node* node) override;
         void addSubFlowBlock(FlowBlockBase* subBlock) override;

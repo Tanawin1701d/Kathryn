@@ -11,7 +11,6 @@ namespace kathryn{
 
     FlowBlockPar::FlowBlockPar(): FlowBlockBase(PARALLEL) {
 
-
     }
 
     void

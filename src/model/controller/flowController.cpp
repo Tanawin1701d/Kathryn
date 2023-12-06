@@ -63,10 +63,13 @@ namespace kathryn{
         if (!flowBlockStack.empty()){
             getTopFlowBlock()->addSubFlowBlock(fb);
         }
+    }
 
-
-
-
+    FLOW_BLOCK_TYPE Controller::get_top_pattern_flow_block_type(){
+        if (patternFlowBlockStack.empty()){
+            return DUMMY_BLOCK;
+        }
+        return getTopFlowBlock()->getFlowType();
     }
 
 

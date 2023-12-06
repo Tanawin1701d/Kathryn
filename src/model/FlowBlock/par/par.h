@@ -27,7 +27,7 @@ namespace kathryn {
     public:
 
         explicit FlowBlockPar();
-        virtual ~FlowBlockPar(){
+        ~FlowBlockPar() override{
             for (auto nd: _simpleAsm){
                 delete nd;
             }

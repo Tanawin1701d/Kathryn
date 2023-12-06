@@ -80,6 +80,7 @@ namespace kathryn {
         /** control flow block handler*/
         void on_attach_flowBlock(FlowBlockBase* fb);
         void on_detach_flowBlock(FlowBlockBase* fb);
+        FLOW_BLOCK_TYPE get_top_pattern_flow_block_type();
 
         /** lock allocation*/
         void lockAllocation() {hwCompAllocLock = true;};
