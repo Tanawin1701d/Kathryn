@@ -51,6 +51,7 @@ namespace kathryn{
         /** get node wrap */
         subBlockNodeWrap = subBlocks[0]->sumarizeBlock();
         assert(subBlockNodeWrap != nullptr);
+        /** copy node*/
         loopNodeWrap = new NodeWrap(*subBlockNodeWrap);
 
 
@@ -60,6 +61,7 @@ namespace kathryn{
         psuedoNode->condition = &(!*_condExpr);
         resultNodeWrapper->entranceNodes.push_back(psuedoNode);
         for (auto node: loopNodeWrap->entranceNodes){
+            node->addCondtion(_condExpr, BITWISE_AND);
             resultNodeWrapper->entranceNodes.push_back(node);
         }
 

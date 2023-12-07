@@ -21,8 +21,9 @@ namespace kathryn{
         FlowBlockBase::addSubFlowBlock(subBlock);
     }
 
-    NodeWrapper *FlowBlockIf::sumarizeBlock() {
-        new NodeWrapper({});
+    NodeWrap* FlowBlockIf::sumarizeBlock() {
+        assert(resultNodeWrapper != nullptr);
+        return resultNodeWrapper;
     }
 
     void FlowBlockIf::onAttachBlock() {

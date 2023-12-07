@@ -17,16 +17,11 @@ namespace kathryn{
 
     class FlowBlockIf: public FlowBlockBase, public LoopStMacro{
     private:
-        expression* _cond;
-        /** order of elif is sorted from design flow*/
-        std::vector<FlowBlockElif*> elifClasses;
-        FlowBlockElse* elseClass;
-
-        std::vector<expression*>  elifConds;
-        std::vector<NodeWrapper*> elifNws;
-        NodeWrapper* elseNw;
-
         bool isGetFlowBlockYet = false;
+        Operable* _cond;
+        std::vector<NodeWrap*> allStatement; /// include current block and else block
+        std::vector<Operable*>  allCondes
+        NodeWrap* resultNodeWrapper = nullptr;
 
     public:
         explicit FlowBlockIf(expression& cond);
@@ -34,7 +29,8 @@ namespace kathryn{
         /** for controller add the local element to this sub block*/
         void addElementInFlowBlock(Node* node) override;
         void addSubFlowBlock(FlowBlockBase* subBlock) override;
-        NodeWrapper* sumarizeBlock() override;
+        void addElifNodeWrap
+        NodeWrap* sumarizeBlock() override;
         /** on this block is start interact to controller*/
         void onAttachBlock() override;
         /** on leave this block*/
