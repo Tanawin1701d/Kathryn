@@ -6,12 +6,23 @@
 
 #include "model/controller/controller.h"
 
+
 namespace kathryn {
 
     void StateReg::com_init() {
         ctrl->on_state_reg_init(this);
     }
 
+    Node* StateReg::generateStateNode() {
+
+        auto asmMeta = generateAssignMeta(upState, Slice({0,1}));
+        auto nd = new Node(asmMeta);
+        return nd;
+    }
+
+    Operable* StateReg::generateEndExpr(){
+        return (Operable *) ((*this) == (*upFullState));
+    }
 
 
 }

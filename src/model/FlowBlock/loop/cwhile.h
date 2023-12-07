@@ -14,20 +14,24 @@ namespace kathryn{
 
     class FlowBlockCwhile : public FlowBlockBase, public LoopStMacro{
     private:
-        expression* _condExpr = nullptr;
+        Operable* _condExpr = nullptr;
         bool isGetFlowBlockYet = false;
 
-        NodeWrapper* resultNodeWrapper = nullptr;
+        NodeWrap* resultNodeWrapper = nullptr;
+        //// it is wrap is as same as result but it is used for loop assignment
+        NodeWrap* loopNodeWrap = nullptr;
+
+        NodeWrap* subBlockNodeWrap = nullptr;
 
     public:
 
-        explicit FlowBlockCwhile(expression& condExpr);
+        explicit FlowBlockCwhile(Operable& condExpr);
         virtual ~FlowBlockCwhile();
 
         /** for controller add the local element to this sub block*/
         void addElementInFlowBlock(Node* node) override;
         void addSubFlowBlock(FlowBlockBase* subBlock) override;
-        NodeWrapper* sumarizeBlock() override;
+        NodeWrap* sumarizeBlock() override;
 
         /** on this block is start interact to controller*/
         void onAttachBlock() override;

@@ -28,22 +28,20 @@ namespace kathryn{
         }
     };
 
-    /**Reg[desSlc] <= srcVal*/
-    UpdateEvent* genUpEventValueAndSlice(Slice desSlc, Operable* srcVal){
-        assert(srcVal != nullptr);
-        assert(srcVal->getOperableSlice().getSize() == desSlc.getSize());
-        return new UpdateEvent({nullptr,
-                                nullptr,
-                                srcVal,
-                                desSlc,
-                                9});
-
-    }
+    /* This is used to describe what and where to update that send to controller and let flow block determine*/
+    struct AssignMeta{
+        std::vector<UpdateEvent*>& updateEventsPool;
+        Operable& valueToAssign;
+        Slice desSlice;
+        AssignMeta(std::vector<UpdateEvent*>& u, Operable& v, Slice s): updateEventsPool(u),
+                                                                        valueToAssign(v),
+                                                                        desSlice(s){}
+    };
 
     /**
-     * Assignable represent hardware component that can memorize logic value or
-     *
-     * */
+    * Assignable represent hardware component that can memorize logic value or
+    *
+    * */
 
     template<typename RET_TYPE>
     class Assignable{
@@ -68,11 +66,16 @@ namespace kathryn{
         void addUpdateMeta(UpdateEvent* event){
             _updateMeta.push_back(event);
         }
+        /** generate update meta*/
+        AssignMeta* generateAssignMeta(Operable& assignValue, Slice assignSlice){
+            return new AssignMeta(_updateMeta, assignValue, assignSlice);
+        }
 
 
 
 
     };
+
 
     template<typename RET_TYPE>
     class AssignCallbackFromAgent{

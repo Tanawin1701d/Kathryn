@@ -24,9 +24,7 @@ namespace kathryn{
     }
 
     Wire& Wire::operator=(Operable &b) {
-        UpdateEvent* event = genUpEventValueAndSlice(getSlice(), &b);
-        addUpdateMeta(event);
-        ctrl->on_wire_update(event);
+        ctrl->on_wire_update(AssignMeta(_updateMeta, b, getSlice()));
         return *this;
     }
 
@@ -49,9 +47,7 @@ namespace kathryn{
     }
 
     Wire& Wire::callBackNonBlockAssignFromAgent(Operable &b, Slice absSlice) {
-        UpdateEvent* event = genUpEventValueAndSlice(absSlice, &b);
-        addUpdateMeta(event);
-        ctrl->on_reg_update(event);
+        ctrl->on_reg_update(AssignMeta(_updateMeta, b, absSlice));
         return *this;
     }
 

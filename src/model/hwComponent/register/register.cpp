@@ -22,9 +22,7 @@ namespace kathryn{
          * given information and condition of updating value
         /* we will call model building to comunicate with it*/
         //** todo return agent of this type*/
-        UpdateEvent* event = genUpEventValueAndSlice(getSlice(), &b);
-        addUpdateMeta(event);
-        ctrl->on_reg_update(event);
+        ctrl->on_reg_update(AssignMeta(_updateMeta, b, getSlice()));
         return *this;
     }
 
@@ -48,9 +46,7 @@ namespace kathryn{
     }
 
     Reg& Reg::callBackBlockAssignFromAgent(Operable &b, Slice absSlice) {
-        UpdateEvent* event = genUpEventValueAndSlice(absSlice, &b);
-        addUpdateMeta(event);
-        ctrl->on_reg_update(event);
+        ctrl->on_reg_update(AssignMeta(_updateMeta, b, absSlice));
         return *this;
     }
 

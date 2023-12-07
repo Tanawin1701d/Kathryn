@@ -9,47 +9,44 @@
 
 #include "model/FlowBlock/abstract/flowBlock_Base.h"
 #include "model/FlowBlock/abstract/loopStMacro.h"
+#include "model/FlowBlock/abstract/stateReg.h"
 
 namespace kathryn {
 
-    class SeqenceMeta{
+    class SequenceEle{
     public:
         /**assignment block*/
         Node* _simpleAsm = nullptr;
         FlowBlockBase* _subBlock = nullptr;
 
-        NodeWrapper* nodeWrapper = nullptr;
-        bool isGenHwYet          = false;
+        /**the thing that represent state*/
+        ///// state for simple assignment
+        StateReg* stReg = nullptr;
+        Node*     stateNode = nullptr;
+        ///// state for complex assignment
+        NodeWrap* complexNode = nullptr;
 
-        explicit SeqenceMeta(Node* simpleAsm):_simpleAsm(simpleAsm){}
-        explicit SeqenceMeta(FlowBlockBase* subBlock): _subBlock(subBlock){}
+        explicit SequenceEle(Node* simpleNode);
+        explicit SequenceEle(FlowBlockBase* fbBase);
+        void genHardware();
 
-        void genHw();
-
-        NodeWrapper* getNodeWrapper() const{
-            assert(isGenHwYet);
-            return nodeWrapper;
-        }
-
-        ~SeqenceMeta(){
-            /** toDoPostBlock master node will handle it */
-            delete _simpleAsm;
-            delete nodeWrapper;
-        }
-
+        void setDependDent(SequenceEle* predecessor);
+        Operable* getStateFinishIden() const;
+        std::vector<Node*> getEntranceNodes();
     };
 
     class FlowBlockSeq : public FlowBlockBase, public LoopStMacro{
     private:
 
-        std::vector<SeqenceMeta> _subSeqMetas;
+        std::vector<SequenceEle> _subSeqMetas;
+        NodeWrap* resultNodeWrap;
 
     public:
         explicit FlowBlockSeq();
         /** for controller add the local element to this sub block*/
         void addElementInFlowBlock(Node* node) override;
         void addSubFlowBlock(FlowBlockBase* subBlock) override;
-        NodeWrapper* sumarizeBlock() override;
+        NodeWrap* sumarizeBlock() override;
 
         /** on this block is start interact to controller*/
         void onAttachBlock() override;

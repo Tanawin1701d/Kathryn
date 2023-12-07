@@ -37,7 +37,7 @@ namespace kathryn {
         std::stack<Module_Stack_Element>  moduleStack;
         std::stack<FlowBlockBase*>        flowBlockStack; //// collect stack of all flowblock
         std::stack<FlowBlockBase*>        patternFlowBlockStack; //// stack of only seq or parallel
-        std::stack<FlowBlockBase*>        condStlessFlowBlockStack; /// stack of only cif or celif celse
+        std::stack<FlowBlockBase*>        condFlowBlockStack; /// stack of only cif or celif celse
         /////// pattern flow block is subset of flowBlockStack
 
     protected:
@@ -51,7 +51,7 @@ namespace kathryn {
 
         bool isAllFlowStackEmpty() {return  flowBlockStack.empty() &&
                                             patternFlowBlockStack.empty() &&
-                                            condStlessFlowBlockStack.empty();}
+                                            condFlowBlockStack.empty();}
 
 
     public:
@@ -62,12 +62,12 @@ namespace kathryn {
 
         /** register handling*/
         void on_reg_init(Reg* ptr);
-        void on_reg_update(UpdateEvent* upEvent);
+        void on_reg_update(AssignMeta asmMeta);
         /** state register handling*/
         void on_state_reg_init(StateReg* ptr);
         /** wire handling*/
         void on_wire_init(Wire* ptr);
-        void on_wire_update(UpdateEvent* upEvent);
+        void on_wire_update(AssignMeta asmMeta);
         /** expression handling*/
         void on_expression_init(expression* ptr);
         /** value handling*/

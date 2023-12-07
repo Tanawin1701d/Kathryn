@@ -34,7 +34,7 @@ namespace kathryn {
         virtual expression& operator || (const Operable& b);
         virtual expression& operator !  ();
         /** relational operator*/
-        virtual expression& operator == (const Operable& b);
+        virtual Operable * operator == (const Operable& b);
         virtual expression& operator != (const Operable& b);
         virtual expression& operator <  (const Operable& b);
         virtual expression& operator <= (const Operable& b);

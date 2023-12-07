@@ -13,18 +13,10 @@ namespace kathryn{
 
     }
 
-    void
-    FlowBlockPar::addElementInFlowBlock(Node* node){
-        assert(node != nullptr);
-        _simpleAsm.push_back(node);
-    }
-
-
-    NodeWrapper*
+    NodeWrap*
     FlowBlockPar::sumarizeBlock() {
-        assert(outputExpression != nullptr);
-        assert(!entranceEvent.empty());
-        return new NodeWrapper({entranceEvent, outputExpression});
+        assert(resultNodeWrap != nullptr);
+        return resultNodeWrap;
     }
 
 
@@ -40,59 +32,64 @@ namespace kathryn{
 
     void
     FlowBlockPar::buildHwComponent() {
-        assert((!_simpleAsm.empty()) || (!subBlocks.empty()));
+        assert((!basicNodes.empty()) || (!subBlocks.empty()));
 
         /** build sub component*/
         for (auto sb : subBlocks){
             sb->buildHwComponent();
         }
-        /** initialize output expression*/
-        outputExpression = new expression();
 
-        /** state for basic assignment */
-        if (!_simpleAsm.empty()) {
-            stReg = new StateReg();
-            entranceEvent.push_back(stReg->genUpdateEvent());
-            /** sent update asignment to be connect to this element*/
-            for (auto node : _simpleAsm){
-                node->updateElement->setUpdateState(stReg);
+        /**build result node wrap*/
+        resultNodeWrap = new NodeWrap();
+
+        /** build state register for basic node if needed*/
+        if (!basicNodes.empty()){
+            basicStReg = new StateReg();
+            /** for basic assignment */
+            for (auto nd: basicNodes){
+                nd->addDependState(basicStReg, BITWISE_AND);
+                nd->assign();
+            }
+            /** for result Node Wrap*/
+            basicStNode = basicStReg->generateStateNode();
+            resultNodeWrap->addEntraceNode(basicStNode);
+        }
+
+
+        /** get node warp */
+
+        for (auto sb: subBlocks){
+            nodeWrapOfSubBlock.push_back(sb->sumarizeBlock());
+        }
+
+        /** add sub node to entrance to result*/
+        for (auto nw: nodeWrapOfSubBlock){
+            assert(nw != nullptr);
+            for (auto node: nw->entranceNodes){
+                resultNodeWrap->addEntraceNode(node);
             }
         }
 
-        /** build syn register*/
-        /** we must syn of it is empty*/
-        if (!subBlocks.empty())
-            synReg = new StateReg((int)subBlocks.size() + stReg != nullptr);
-
-        /** state for subblock and implement output expression*/
         if (!subBlocks.empty()){
-            /** for now we know that synchronization is need*/
-            if (stReg != nullptr) {
-                /** build synchonizer for basic block*/
-                synReg->genUpdateEvent(stReg, 0);
+            auto syncReg = new StateReg((int)subBlocks.size() + (!basicNodes.empty()));
+            //// assign state for sync register from basic State
+            if (!basicNodes.empty()){
+                assert(basicStReg != nullptr);
+                syncReg->addUpdateEvent(basicStReg, 0);
             }
-            /** for subblock synchonization*/
-            int nextSynBit = 1;
-            for (auto sb: subBlocks){
-                auto wrapper = sb->sumarizeBlock();
-                /** deal with input of block*/
-                for (auto subEntrance: wrapper->entranceElements){
-                    assert(subEntrance != nullptr);
-                    entranceEvent.push_back(subEntrance);
-                }
-                /** deal with output of block*/
-                /** don't have to use node wrapper this work with this
-                 * because it is single asignment
-                 * */
-                synReg->genUpdateEvent(wrapper->exitExpr,
-                                       nextSynBit++);
-                delete wrapper;
+            int assignNo = 1;
+            for (auto nw: nodeWrapOfSubBlock){
+                //// assign state for sync register from complex subblock
+                syncReg->addUpdateEvent(nw->exitOpr, assignNo++);
             }
+            //// assign sync register to Nodewarp
+            resultNodeWrap->addExitOpr(syncReg->generateEndExpr());
+        }else{
+            resultNodeWrap->addExitOpr(basicStReg->generateEndExpr());
         }
 
-        /***/
-        outputExpression = synReg != nullptr ? synReg->genOutputExpression() :
-                                                stReg->genOutputExpression() ;
+
+
 
 
     }

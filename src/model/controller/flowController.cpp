@@ -48,7 +48,7 @@ namespace kathryn{
                  patternFlowBlockStack.push(fb);
                  break;
              case NO_STATE_IF :
-                 condStlessFlowBlockStack.push(fb);
+                 condFlowBlockStack.push(fb);
                  break;
          }
 

@@ -16,28 +16,17 @@ namespace kathryn {
     class FlowBlockPar : public FlowBlockBase, public LoopStMacro{
 
         /** meta element*/
-        std::vector<Node*> _simpleAsm;
-        StateReg* stReg = nullptr;
-        StateReg* synReg = nullptr;
+        NodeWrap* resultNodeWrap = nullptr;
+        StateReg* basicStReg = nullptr;
 
-        /** io element*/
-        std::vector<UpdateEvent*> entranceEvent;
-        expression* outputExpression;
+        std::vector<NodeWrap*> nodeWrapOfSubBlock;
+        Node* basicStNode = nullptr;
 
     public:
 
         explicit FlowBlockPar();
-        ~FlowBlockPar() override{
-            for (auto nd: _simpleAsm){
-                delete nd;
-            }
-        }
-
         /** override flow block base*/
-
-        /** for controller add the local element to this sub block*/
-        void addElementInFlowBlock(Node* node) override;
-        NodeWrapper* sumarizeBlock() override; /// to interact from parrent block call
+        NodeWrap* sumarizeBlock() override; /// to interact from parrent block call
 
         /** on this block is start interact to controller*/
         void onAttachBlock() override;

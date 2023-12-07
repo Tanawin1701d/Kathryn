@@ -9,32 +9,87 @@
 
 namespace kathryn{
 
+    /** sequenceElement*/
+
+
+    SequenceEle::SequenceEle(Node *simpleNode) {
+        assert(simpleNode != nullptr);
+        _simpleAsm = simpleNode;
+    }
+
+    SequenceEle::SequenceEle(FlowBlockBase *fbBase) {
+        assert(fbBase != nullptr);
+        _subBlock  =fbBase;
+    }
+
+    void SequenceEle::genHardware() {
+
+        assert( (_simpleAsm != nullptr) ^ (_subBlock != nullptr));
+
+        ///// it is the basic assignment
+        if (_simpleAsm != nullptr){
+            stReg = new StateReg();
+            stateNode = stReg->generateStateNode();
+            _simpleAsm->addDependState(stReg, BITWISE_AND);
+        }else if (_subBlock != nullptr){
+            complexNode = _subBlock->sumarizeBlock();
+        }else{
+            assert(true);
+        }
+    }
+
+    void SequenceEle::setDependDent(SequenceEle *predecessor) {
+        assert(predecessor != nullptr);
+        assert((_simpleAsm != nullptr) ^ (_subBlock != nullptr));
+
+        if (_simpleAsm != nullptr){
+            stateNode->addDependState(predecessor->getStateFinishIden(), BITWISE_AND);
+            stateNode->assign();
+        }else if (_subBlock != nullptr){
+            for (auto node: complexNode->entranceNodes){
+                node->addDependState(predecessor->getStateFinishIden(), BITWISE_AND);
+            }
+        }else{
+            assert(true);
+        }
+
+    }
+
+    Operable* SequenceEle::getStateFinishIden() const {
+        assert( (_simpleAsm != nullptr) ^ (_subBlock != nullptr));
+        if (_simpleAsm != nullptr){
+            return stReg;
+        }else if (_subBlock != nullptr){
+            return complexNode->exitOpr;
+        }
+        assert(true);
+    }
+
+    std::vector<Node *> SequenceEle::getEntranceNodes() {
+        assert( (_simpleAsm != nullptr) ^ (_subBlock != nullptr));
+        if (_simpleAsm != nullptr){
+            return {stateNode};
+        }else if (_subBlock != nullptr){
+            return complexNode->entranceNodes;
+        }
+    }
+
+
+    /**
+     * sequence flow
+     * */
+
+
+
     FlowBlockSeq::FlowBlockSeq(): FlowBlockBase(SEQUENTIAL) {
 
     }
 
-    void SeqenceMeta::genHw() {
-        assert(!isGenHwYet);
-        assert(_simpleAsm != nullptr ^ _subBlock != nullptr);
-        isGenHwYet = true;
-
-        /** for simple node*/
-        if (_simpleAsm != nullptr){
-            /**create state register*/
-            auto stReg  = new StateReg();
-            nodeWrapper = new NodeWrapper({{stReg->genUpdateEvent()},
-                                           stReg->genOutputExpression()});
-            /** bind register*/
-            _simpleAsm->updateElement->setUpdateState(stReg);
-            return;
-        }
-        nodeWrapper = _subBlock->sumarizeBlock();
-    }
-
-
-    void FlowBlockSeq::addElementInFlowBlock(Node *node) {
+    void FlowBlockSeq::addElementInFlowBlock(Node* node) {
         assert(node != nullptr);
         _subSeqMetas.emplace_back(node);
+        /** base function to notice existence of sub flow element*/
+        FlowBlockBase::addElementInFlowBlock(node);
     }
 
     void FlowBlockSeq::addSubFlowBlock(FlowBlockBase *subBlock) {
@@ -44,11 +99,9 @@ namespace kathryn{
         FlowBlockBase::addSubFlowBlock(subBlock);
     }
 
-    NodeWrapper* FlowBlockSeq::sumarizeBlock() {
-        assert(!_subSeqMetas.empty());
-        return new NodeWrapper({_subSeqMetas[0].getNodeWrapper()->entranceElements,
-                                _subSeqMetas[_subSeqMetas.size()-1].getNodeWrapper()->exitExpr
-                                });
+    NodeWrap* FlowBlockSeq::sumarizeBlock() {
+        assert(resultNodeWrap != nullptr);
+        return resultNodeWrap;
     }
 
     void FlowBlockSeq::onAttachBlock() {
@@ -63,14 +116,18 @@ namespace kathryn{
         assert(!_subSeqMetas.empty());
         /** generate hardware*/
         for (auto& seqMeta: _subSeqMetas) {
-            seqMeta.genHw();
+            seqMeta.genHardware();
         }
         /** connect  chain*/
         for (size_t idx = 0; (idx+1) < _subSeqMetas.size(); idx++){
-            auto lhsNodeWrapper = _subSeqMetas[idx].getNodeWrapper();
-            auto rhsNodeWrapper = _subSeqMetas[idx+1].getNodeWrapper();
-            lhsNodeWrapper->join(rhsNodeWrapper, BITWISE_AND);
+            auto& lhsNodeWrapper = _subSeqMetas[idx];
+            auto& rhsNodeWrapper = _subSeqMetas[idx+1];
+            rhsNodeWrapper.setDependDent(&lhsNodeWrapper);
         }
+        /** build new result NodeWrap*/
+        resultNodeWrap = new NodeWrap();
+        resultNodeWrap->entranceNodes = _subSeqMetas.begin()->getEntranceNodes();
+        resultNodeWrap->exitOpr       = _subSeqMetas.rbegin()->getStateFinishIden();
 
     }
 
@@ -81,6 +138,5 @@ namespace kathryn{
     void FlowBlockSeq::doPostFunction() {
         onDetachBlock();
     }
-
 
 }

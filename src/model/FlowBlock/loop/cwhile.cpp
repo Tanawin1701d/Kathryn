@@ -4,17 +4,13 @@
 
 #include "cwhile.h"
 #include "model/controller/controller.h"
-#include "model/FlowBlock/par/par.h"
-#include "model/FlowBlock/seq/seq.h"
-
 
 namespace kathryn{
 
-    FlowBlockCwhile::FlowBlockCwhile(expression& condExpr): _condExpr(&condExpr),
+    FlowBlockCwhile::FlowBlockCwhile(Operable& condExpr): _condExpr(&condExpr),
                                                             FlowBlockBase(WHILE) {}
 
     FlowBlockCwhile::~FlowBlockCwhile() {
-        delete resultNodeWrapper;
     }
 
     void FlowBlockCwhile::addElementInFlowBlock(Node *node) {
@@ -28,7 +24,7 @@ namespace kathryn{
         FlowBlockBase::addSubFlowBlock(subBlock);
     }
 
-    NodeWrapper *FlowBlockCwhile::sumarizeBlock() {
+    NodeWrap* FlowBlockCwhile::sumarizeBlock() {
         assert(resultNodeWrapper != nullptr);
         return resultNodeWrapper;
     }
@@ -51,30 +47,36 @@ namespace kathryn{
 
         /** build subblock*/
         subBlocks[0]->buildHwComponent();
-        NodeWrapper* wrapperOfSubBlock = subBlocks[0]->sumarizeBlock();
 
-        /**to fix*/
+        /** get node wrap */
+        subBlockNodeWrap = subBlocks[0]->sumarizeBlock();
+        assert(subBlockNodeWrap != nullptr);
+        loopNodeWrap = new NodeWrap(*subBlockNodeWrap);
 
-        /**join loop if condition is true*/
-        NodeWrapper* nextNodeWrapper = new NodeWrapper({{},
-                                                        &((*wrapperOfSubBlock->exitExpr) & (*_condExpr))});
-        nextNodeWrapper->join(wrapperOfSubBlock);
 
-        /** summarize this block*/
-        resultNodeWrapper = new NodeWrapper();
-        resultNodeWrapper->entranceElements = wrapperOfSubBlock->entranceElements;
-        resultNodeWrapper->exitExpr = &((*wrapperOfSubBlock->exitExpr) & !(*_condExpr));
+        /**assign to result node wrap*/
+        resultNodeWrapper = new NodeWrap();
+        auto psuedoNode = new Node();
+        psuedoNode->condition = &(!*_condExpr);
+        resultNodeWrapper->entranceNodes.push_back(psuedoNode);
+        for (auto node: loopNodeWrap->entranceNodes){
+            resultNodeWrapper->entranceNodes.push_back(node);
+        }
 
-        /** free memory*/
-        delete wrapperOfSubBlock;
-        delete nextNodeWrapper;
+        resultNodeWrapper->exitOpr = &(((*subBlockNodeWrap->exitOpr  ) & !(*_condExpr)) |
+                                       ((*psuedoNode->psudoAssignMeta) & !(*_condExpr) ));
 
+        /**assign for loop back assignment*/
+        for (auto nd : loopNodeWrap->entranceNodes){
+            nd->addDependState(subBlockNodeWrap->exitOpr, BITWISE_AND);
+            nd->addCondtion( _condExpr, BITWISE_AND);
+            nd->assign();
+        }
     }
 
     void FlowBlockCwhile::doPreFunction() {
         onAttachBlock();
     }
-
     void FlowBlockCwhile::doPostFunction() {
         onDetachBlock();
     }

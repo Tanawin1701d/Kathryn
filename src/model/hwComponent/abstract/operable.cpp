@@ -117,7 +117,7 @@ namespace kathryn {
 
     /** relational operator*/
 
-    expression& Operable::operator==(const Operable &b) {
+    Operable * Operable::operator==(const Operable &b) {
         auto ret =  new expression(RELATION_EQ,
                                                  std::shared_ptr<Operable>(&this->getExactOperable()),
                                                  this->getOperableSlice(),

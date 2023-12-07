@@ -10,7 +10,12 @@
 #include "model/hwComponent/expression/expression.h"
 #include "model/hwComponent/value/value.h"
 
+
+
 namespace kathryn {
+
+
+    class Node;
 
     class StateReg: public Reg{
         Val upState = Val(1, "b1");
@@ -28,7 +33,7 @@ namespace kathryn {
         /** state register system must handle updateEvent themself*/
         Reg& operator <<= (Operable& b) override {assert(true);}
 
-        UpdateEvent* genUpdateEvent(Operable* dependStateCon = nullptr, int bit = 0){
+        UpdateEvent* addUpdateEvent(Operable* dependStateCon = nullptr, int bit = 0){
             auto* event = new UpdateEvent({nullptr,
                                            dependStateCon,
                                            &upState,
@@ -38,12 +43,9 @@ namespace kathryn {
             return event;
         }
 
-        expression* genOutputExpression(){
-            auto outExp = new expression();
-            *outExp = *this == *upFullState;
-            return outExp;
-        }
 
+        Node* generateStateNode();
+        Operable* generateEndExpr();
     };
 
 
