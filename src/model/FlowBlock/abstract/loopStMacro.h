@@ -7,7 +7,6 @@
 
 namespace kathryn{
 
-
     class LoopStMacro{
 
     private:
@@ -34,7 +33,6 @@ namespace kathryn{
         }
 
     };
-
 
 }
 

@@ -81,9 +81,8 @@ namespace kathryn{
 
 
 
-    FlowBlockSeq::FlowBlockSeq(): FlowBlockBase(SEQUENTIAL) {
-
-    }
+    FlowBlockSeq::FlowBlockSeq(): FlowBlockBase(SEQUENTIAL),
+                                  resultNodeWrap(nullptr) {}
 
     void FlowBlockSeq::addElementInFlowBlock(Node* node) {
         assert(node != nullptr);

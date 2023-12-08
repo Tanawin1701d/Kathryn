@@ -67,7 +67,7 @@ namespace kathryn{
         }
 
         /** prepare return node wrap*/
-        resultNodeWrapper = new NodeWrap;
+        resultNodeWrapper = new NodeWrap();
         for (auto nw : allStatement){
             resultNodeWrapper->transferNodeFrom(nw);
         }
@@ -81,10 +81,10 @@ namespace kathryn{
 
         Operable* exitCond = allStatement[0]->exitOpr;
         for (int i = 1; i < allStatement.size(); i++){
-            exitCond = &( (*exitCond) & (*allStatement[i]->exitOpr));
+            exitCond = &((*exitCond) | (*allStatement[i]->exitOpr));
         }
         if (psuedoNode != nullptr){
-            exitCond = &( (*exitCond) & (*psuedoNode->psudoAssignMeta));
+            exitCond = &((*exitCond) | (*psuedoNode->psudoAssignMeta));
         }
         resultNodeWrapper->addExitOpr(exitCond);
 

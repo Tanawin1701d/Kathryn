@@ -9,9 +9,7 @@
 namespace kathryn{
 
 
-    FlowBlockPar::FlowBlockPar(): FlowBlockBase(PARALLEL) {
-
-    }
+    FlowBlockPar::FlowBlockPar(): FlowBlockBase(PARALLEL) {}
 
     NodeWrap*
     FlowBlockPar::sumarizeBlock() {
@@ -65,9 +63,7 @@ namespace kathryn{
         /** add sub node to entrance to result*/
         for (auto nw: nodeWrapOfSubBlock){
             assert(nw != nullptr);
-            for (auto node: nw->entranceNodes){
-                resultNodeWrap->addEntraceNode(node);
-            }
+            resultNodeWrap->transferNodeFrom(nw);
         }
 
         if (!subBlocks.empty()){
@@ -88,10 +84,6 @@ namespace kathryn{
             resultNodeWrap->addExitOpr(basicStReg->generateEndExpr());
         }
 
-
-
-
-
     }
 
     void
@@ -103,7 +95,5 @@ namespace kathryn{
     FlowBlockPar::doPostFunction(){
         onDetachBlock();
     }
-
-
 
 }

@@ -21,8 +21,7 @@ namespace kathryn {
     }
 
     Operable* StateReg::generateEndExpr(){
-        return (Operable *) ((*this) == (*upFullState));
+        return (Operable*)(&((*this) == (*upFullState)));
     }
-
 
 }

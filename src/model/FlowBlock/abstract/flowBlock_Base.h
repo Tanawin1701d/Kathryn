@@ -29,22 +29,29 @@ namespace kathryn {
 
     /** atomic node for assigning */
     struct Node{
-    ///// f
-    bool psudoNode = false;
-    Operable* psudoAssignMeta{};
-    AssignMeta* assignMeta;
-    Operable* condition = nullptr;
-    Operable* dependState = nullptr;
 
-    Node(): psudoNode(true), assignMeta(nullptr), psudoAssignMeta(new expression()){}
+    bool        pseudoNode      = false;
+    Operable*   psudoAssignMeta = nullptr;
+    AssignMeta* assignMeta      = nullptr; //// AssignMeta is must not use the same assign meta
+    Operable*   condition       = nullptr;
+    Operable*   dependState     = nullptr;
 
+    /** This constructor is use for psuedo Node */
+    Node(): pseudoNode(true), assignMeta(nullptr),
+            psudoAssignMeta(new expression()){}
+    Node(Node& rhs){ operator=(rhs); }
     explicit Node(AssignMeta* asmMeta): assignMeta(asmMeta){}
+    ~Node(){ delete assignMeta; }
 
-//    Node(const Node& rhs){
-//        assignMeta = rhs.assignMeta;
-//        condition  = rhs.condition;
-//        dependState = rhs.dependState;
-//    }
+    Node& operator = (const Node& rhs){
+        if (&rhs == this)
+            return *this;
+        pseudoNode       = rhs.pseudoNode;
+        psudoAssignMeta  = rhs.psudoAssignMeta;
+        assignMeta       = new AssignMeta(*rhs.assignMeta);
+        condition        = rhs.condition;
+        dependState      = rhs.dependState;
+    }
 
     static void addLogic(Operable*& desLogic,Operable* opr, LOGIC_OP op){
         assert(op == BITWISE_AND || op == BITWISE_OR);
@@ -60,18 +67,18 @@ namespace kathryn {
             desLogic = &((*desLogic) | (*opr));
         }
     }
-
+    /** add condition for assignment*/
     void addCondtion(Operable* opr, LOGIC_OP op){
         addLogic(condition, opr, op);
     }
-
+    /** add dependState for assignment*/
     void addDependState(Operable* opr, LOGIC_OP op){
         addLogic(dependState, opr, op);
     }
-
+    /** assign data to register*/
     void assign(){
-        if (psudoNode){
-            *psudoAssignMeta = *dependState & *condition;
+        if (pseudoNode){
+            (*psudoAssignMeta) = *(Operable*)(&(*dependState & *condition));
         }else {
             auto resultUpEvent = new UpdateEvent({
                                         condition,
@@ -79,7 +86,7 @@ namespace kathryn {
                                         &assignMeta->valueToAssign,
                                         assignMeta->desSlice,
                                         9
-                                                 });
+                                    });
 
             assignMeta->updateEventsPool.push_back(resultUpEvent);
         }
@@ -105,7 +112,6 @@ namespace kathryn {
             exitOpr = opr;
         }
 
-
         void addConditionToAllNode(Operable* cond, LOGIC_OP op){
             assert(cond != nullptr);
             for (auto node: entranceNodes){
@@ -120,9 +126,7 @@ namespace kathryn {
             for (auto node: nw->entranceNodes){
                 entranceNodes.push_back(node);
             }
-
         }
-
 
         NodeWrap& operator = (const NodeWrap& rhs){
             if (&rhs == this){
@@ -142,7 +146,7 @@ namespace kathryn {
             *this = rhs;
         }
 
-        NodeWrap()= default;
+        NodeWrap() = default;
 
     };
 
@@ -151,10 +155,10 @@ namespace kathryn {
     class FlowBlockBase {
     protected:
         std::vector<FlowBlockBase*> subBlocks;
-        std::vector<Node*> basicNodes;
-        FLOW_BLOCK_TYPE _type;
-        ControllerPtr ctrl;
-        bool lazyDeletedRequired = false;
+        std::vector<Node*>          basicNodes;
+        FLOW_BLOCK_TYPE             _type;
+        ControllerPtr               ctrl;
+        bool                        lazyDeletedRequired = false;
         /** generate implicit subblock typically used with if and while block*/
         FlowBlockBase* genImplicitSubBlk(FLOW_BLOCK_TYPE defaultType);
     public:
@@ -195,8 +199,6 @@ namespace kathryn {
         void setLazyDelete() {
             lazyDeletedRequired = true;
         }
-
-
 
     };
 

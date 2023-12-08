@@ -18,8 +18,8 @@ namespace kathryn{
     FlowBlockBase::~FlowBlockBase(){
         for (auto sub_fb: subBlocks){
             delete sub_fb;
-
         }
+        ///// we don't delete basicNode because it is used by other fb
     }
 
     FlowBlockBase* FlowBlockBase::genImplicitSubBlk(FLOW_BLOCK_TYPE defaultType) {

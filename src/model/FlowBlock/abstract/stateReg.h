@@ -14,7 +14,6 @@
 
 namespace kathryn {
 
-
     class Node;
 
     class StateReg: public Reg{
@@ -27,7 +26,7 @@ namespace kathryn {
     public:
 
         explicit StateReg(int size = 1): Reg(size){
-            upFullState = new Val(size, "b" + std::to_string((1 << size) - 1));
+            upFullState = new Val(size, "b" + (std::to_string((1 << size) - 1)));
         };
 
         /** state register system must handle updateEvent themself*/
@@ -47,7 +46,6 @@ namespace kathryn {
         Node* generateStateNode();
         Operable* generateEndExpr();
     };
-
 
 }
 

@@ -43,6 +43,7 @@ namespace kathryn {
 
     public:
         explicit FlowBlockSeq();
+        virtual ~FlowBlockSeq();
         /** for controller add the local element to this sub block*/
         void addElementInFlowBlock(Node* node) override;
         void addSubFlowBlock(FlowBlockBase* subBlock) override;

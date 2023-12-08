@@ -8,9 +8,12 @@
 namespace kathryn{
 
     FlowBlockCwhile::FlowBlockCwhile(Operable& condExpr): _condExpr(&condExpr),
-                                                            FlowBlockBase(WHILE) {}
+                                                          FlowBlockBase(WHILE) {}
 
     FlowBlockCwhile::~FlowBlockCwhile() {
+        for (auto node: loopNodeWrap->entranceNodes){
+            delete node;
+        }
     }
 
     void FlowBlockCwhile::addElementInFlowBlock(Node *node) {
@@ -32,18 +35,16 @@ namespace kathryn{
     void FlowBlockCwhile::onAttachBlock() {
         auto sb = genImplicitSubBlk(PARALLEL);
         sb->onAttachBlock();
-
     }
 
     void FlowBlockCwhile::onDetachBlock() {
         assert(isGetFlowBlockYet);
         subBlocks[0]->onDetachBlock();
         ctrl->on_detach_flowBlock(this);
-
     }
 
     void FlowBlockCwhile::buildHwComponent() {
-        assert(!subBlocks.size() == 1);
+        assert(subBlocks.size() == 1);
 
         /** build subblock*/
         subBlocks[0]->buildHwComponent();
@@ -58,7 +59,7 @@ namespace kathryn{
         /**assign to result node wrap*/
         resultNodeWrapper = new NodeWrap();
         auto psuedoNode = new Node();
-        psuedoNode->condition = &(!*_condExpr);
+        psuedoNode->addCondtion(&(!*_condExpr), BITWISE_AND);
         resultNodeWrapper->entranceNodes.push_back(psuedoNode);
         for (auto node: loopNodeWrap->entranceNodes){
             node->addCondtion(_condExpr, BITWISE_AND);
