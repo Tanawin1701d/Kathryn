@@ -25,7 +25,7 @@ namespace kathryn {
 
     public:
 
-        explicit StateReg(int size = 1): Reg(size){
+        explicit StateReg(int size = 1): Reg(size, false){
             upFullState = new Val(size, "b" + (std::to_string((1 << size) - 1)));
         };
 

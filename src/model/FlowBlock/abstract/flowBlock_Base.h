@@ -119,6 +119,19 @@ namespace kathryn {
             }
         }
 
+        void addDependStateToAllNode(Operable* st, LOGIC_OP op){
+            assert(st != nullptr);
+            for (auto node: entranceNodes){
+                node->addDependState(st, op);
+            }
+        }
+
+        void assignAllNode(){
+            for (auto node: entranceNodes){
+                node->assign();
+            }
+        }
+
         /** copy node pointer to this wrap*/
         /// todo we will make it copy node if need but for now we don't
         void transferNodeFrom(NodeWrap* nw){

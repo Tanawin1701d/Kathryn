@@ -9,10 +9,13 @@
 
 namespace kathryn{
 
-    Reg::Reg(int size) : Assignable(),Operable(),
+    /** constructor need to init communication with controller*/
+    Reg::Reg(int size, bool initCom) : Assignable(),Operable(),
                          Slicable<Reg>(Slice{0, size}),
                          Identifiable(TYPE_REG) {
-        com_init();
+        if (initCom) {
+            com_init();
+        }
     }
 
     void Reg::com_init() {

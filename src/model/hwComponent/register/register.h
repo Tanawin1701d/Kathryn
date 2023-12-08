@@ -25,7 +25,7 @@ namespace kathryn{
         void com_init() override;
 
     public:
-        explicit Reg(int size);
+        explicit Reg(int size, bool initCom = true);
         ~Reg() = default;
 
         /** assignable override*/

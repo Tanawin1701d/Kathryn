@@ -27,7 +27,6 @@ namespace kathryn{
         /** localize necessary destination*/
         targetModule->addUserReg(ptr);
         ptr->setParent(targetModule);
-
     }
 
     void Controller::on_reg_update(AssignMeta* asmMeta){
@@ -114,6 +113,7 @@ namespace kathryn{
         moduleStack.top().state = MODULE_DESIGN_FLOW_CONSTRUCT;
         /** flow the program*/
         topModule->flow();
+        topModule->buildHardware();
     }
 
     void Controller::on_module_final(Module* ptr) {

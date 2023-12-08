@@ -97,4 +97,25 @@ namespace kathryn{
         _userSubModule.push_back(smd);
     }
 
+    void Module::buildHardware() {
+        /** build all hardware to flowBlock*/
+        for (auto flowBlockPtr: _flowBlockBases){
+            flowBlockPtr->buildHwComponent();
+        }
+
+        /** create nodewrap of all flowblock*/
+        std::vector<NodeWrap*> frontNodeWrap;
+
+        for (auto fb: _flowBlockBases){
+            frontNodeWrap.push_back(fb->sumarizeBlock());
+        }
+        for (auto nw: frontNodeWrap){
+            nw->addDependStateToAllNode(&startWire, BITWISE_AND);
+            nw->assignAllNode();
+            delete nw;
+        }
+
+    }
+
+
 }

@@ -19,6 +19,9 @@
 
 namespace kathryn{
 
+
+    auto& startWire = *new Wire(1);
+
     class Module;
 
     typedef std::shared_ptr<Module> ModulePtr;
@@ -74,7 +77,8 @@ namespace kathryn{
         void addUserVal       (Val* val);
         void addUserSubModule (Module* smd);
         /** This allow user to custom module design flow*/
-        virtual void flow() = 0;
+        virtual void flow(){};
+        virtual void buildHardware();
 
     };
 
