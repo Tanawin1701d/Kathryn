@@ -1,35 +1,31 @@
 //
-// Created by tanawin on 6/12/2566.
+// Created by tanawin on 8/12/2566.
 //
 
-#ifndef KATHRYN_IFELSE_H
-#define KATHRYN_IFELSE_H
-
+#ifndef KATHRYN_ELIF_H
+#define KATHRYN_ELIF_H
 #include "model/FlowBlock/abstract/flowBlock_Base.h"
 #include "model/FlowBlock/abstract/loopStMacro.h"
 
+#define celif(expr) for(auto kathrynBlock = new FlowBlockElif(expr); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define celse for(auto kathrynBlock = new FlowBlockElif(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 
 namespace kathryn{
 
-    class FlowBlockElif;
-    class FlowBlockElse;
-
-
-    class FlowBlockIf: public FlowBlockBase, public LoopStMacro{
+    class FlowBlockElif: public FlowBlockBase, public LoopStMacro{
     private:
-        bool isGetFlowBlockYet = false;
-        Operable* _cond;
-        std::vector<NodeWrap*> allStatement; /// include current block and else block
-        std::vector<Operable*>  allCondes
         NodeWrap* resultNodeWrapper = nullptr;
+        Operable* _cond = nullptr;
 
     public:
-        explicit FlowBlockIf(expression& cond);
+        explicit FlowBlockElif(Operable& cond);
+        explicit FlowBlockElif();
+
+        ~FlowBlockElif();
 
         /** for controller add the local element to this sub block*/
         void addElementInFlowBlock(Node* node) override;
         void addSubFlowBlock(FlowBlockBase* subBlock) override;
-        void addElifNodeWrap
         NodeWrap* sumarizeBlock() override;
         /** on this block is start interact to controller*/
         void onAttachBlock() override;
@@ -41,13 +37,15 @@ namespace kathryn{
         void doPreFunction() override;
         void doPostFunction() override;
 
-        /**add elif element*/
-        void addElifElement(FlowBlockElif* elifClass);
-        /**ad else Element*/
-        void addElseElement(FlowBlockElse* elseClass);
+        [[nodiscard]]
+        Operable* getCondition() const{
+            return _cond;
+        }
+
 
     };
 
+
 }
 
-#endif //KATHRYN_IFELSE_H
+#endif //KATHRYN_ELIF_H

@@ -30,13 +30,15 @@ namespace kathryn{
 
     }
 
-    void Controller::on_reg_update(AssignMeta asmMeta){
+    void Controller::on_reg_update(AssignMeta* asmMeta){
         /**
          * please note that UpdateEvent should fill update value/ and slice
          * but it must let update condition and state as nullptr to let block fill
          * to it
          * */
         /*** do not add to module any more*/
+        assert(asmMeta != nullptr);
+        purifyFlowStack();
         auto node = new Node(asmMeta);
         assert(!flowBlockStack.empty());
         auto fb = flowBlockStack.top();
@@ -60,13 +62,15 @@ namespace kathryn{
         ptr->setParent(targetModule);
     }
 
-    void Controller::on_wire_update(AssignMeta asmMeta) {
+    void Controller::on_wire_update(AssignMeta* asmMeta) {
         /**
          * please note that UpdateEvent should fill update value/ and slice
          * but it must let update condition and state as nullptr to let block fill
          * to it
          * */
         /*** do not add to module any more*/
+        assert(asmMeta != nullptr);
+        purifyFlowStack();
         auto node = new Node(asmMeta);
         assert(!flowBlockStack.empty());
         auto fb = flowBlockStack.top();
@@ -110,7 +114,6 @@ namespace kathryn{
         moduleStack.top().state = MODULE_DESIGN_FLOW_CONSTRUCT;
         /** flow the program*/
         topModule->flow();
-
     }
 
     void Controller::on_module_final(Module* ptr) {
@@ -119,6 +122,5 @@ namespace kathryn{
         assert(isAllFlowStackEmpty());
         moduleStack.pop();
     }
-
 
 }

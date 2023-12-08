@@ -11,6 +11,9 @@
 #include "model/hwComponent/module/module.h"
 #include "model/FlowBlock/abstract/flowBlock_Base.h"
 #include "model/FlowBlock/par/par.h"
+#include "model/FlowBlock/cond/if.h"
+#include "model/FlowBlock/cond/elif.h"
+#include "model/FlowBlock/loop/cwhile.h"
 #include "model/FlowBlock/abstract/stateReg.h"
 
 
@@ -34,10 +37,13 @@ namespace kathryn {
     private:
         bool hwCompAllocLock = true; /** this is used to indicate whether make<> is used or not only make<> can unlock*/
         /** building stack*/
+        ////// module stack
         std::stack<Module_Stack_Element>  moduleStack;
+
+        ////// flow describe stack
         std::stack<FlowBlockBase*>        flowBlockStack; //// collect stack of all flowblock
         std::stack<FlowBlockBase*>        patternFlowBlockStack; //// stack of only seq or parallel
-        std::stack<FlowBlockBase*>        condFlowBlockStack; /// stack of only cif or celif celse
+        std::stack<FlowBlockIf*>          ifBlockStack; /// stack of only cif or celif celse
         /////// pattern flow block is subset of flowBlockStack
 
     protected:
@@ -46,13 +52,19 @@ namespace kathryn {
         Module_Stack_Element& getTargetModuleEle();
         FlowBlockBase* getTopFlowBlock();
 
-        void tryPopFromStack(FlowBlockBase* flowPtr, std::stack<FlowBlockBase*>& srcSt);
+        static void tryPopFbBaseFromStack(FlowBlockBase* flowPtr,
+                                   std::stack<FlowBlockBase*>& srcSt);
+        static void tryPopFbIfFromStack(FlowBlockBase* flowPtr,
+                                 std::stack<FlowBlockIf*>& srcSt);
         void tryPopCtrlFlowFromAllStack(FlowBlockBase* flowPtr);
 
         bool isAllFlowStackEmpty() {return  flowBlockStack.empty() &&
                                             patternFlowBlockStack.empty() &&
-                                            condFlowBlockStack.empty();}
+                                            ifBlockStack.empty();}
 
+        void removeLazyFbFromTopStack();
+        void purifyFlowStack();
+        ////  check that stack rule before add or remove any event
 
     public:
 
@@ -62,12 +74,12 @@ namespace kathryn {
 
         /** register handling*/
         void on_reg_init(Reg* ptr);
-        void on_reg_update(AssignMeta asmMeta);
+        void on_reg_update(AssignMeta* asmMeta);
         /** state register handling*/
         void on_state_reg_init(StateReg* ptr);
         /** wire handling*/
         void on_wire_init(Wire* ptr);
-        void on_wire_update(AssignMeta asmMeta);
+        void on_wire_update(AssignMeta* asmMeta);
         /** expression handling*/
         void on_expression_init(expression* ptr);
         /** value handling*/
@@ -80,6 +92,12 @@ namespace kathryn {
         /** control flow block handler*/
         void on_attach_flowBlock(FlowBlockBase* fb);
         void on_detach_flowBlock(FlowBlockBase* fb);
+
+        void on_attach_flowBlock_if(FlowBlockIf* fb);
+
+        void on_attach_flowBlock_elif(FlowBlockElif* fb);
+        void on_detach_flowBlock_elif(FlowBlockElif* fb);
+
         FLOW_BLOCK_TYPE get_top_pattern_flow_block_type();
 
         /** lock allocation*/

@@ -22,7 +22,7 @@ namespace kathryn{
          * given information and condition of updating value
         /* we will call model building to comunicate with it*/
         //** todo return agent of this type*/
-        ctrl->on_reg_update(AssignMeta(_updateMeta, b, getSlice()));
+        ctrl->on_reg_update(generateAssignMeta(b, getSlice()));
         return *this;
     }
 
@@ -46,7 +46,7 @@ namespace kathryn{
     }
 
     Reg& Reg::callBackBlockAssignFromAgent(Operable &b, Slice absSlice) {
-        ctrl->on_reg_update(AssignMeta(_updateMeta, b, absSlice));
+        ctrl->on_reg_update(generateAssignMeta(b, absSlice));
         return *this;
     }
 

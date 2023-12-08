@@ -11,7 +11,9 @@ namespace kathryn{
 
     FlowBlockBase::FlowBlockBase(FLOW_BLOCK_TYPE type):
     _type(type),
-    ctrl(getControllerPtr()) {}
+    ctrl(getControllerPtr()),
+    lazyDeletedRequired(false)
+    {}
 
     FlowBlockBase::~FlowBlockBase(){
         for (auto sub_fb: subBlocks){

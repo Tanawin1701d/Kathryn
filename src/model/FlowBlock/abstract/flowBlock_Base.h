@@ -14,19 +14,29 @@
 #include "model/hwComponent/abstract/operation.h"
 
 namespace kathryn {
-
-
+    /** it is basic node that only have one event at a node */
+    class Controller;
+    enum FLOW_BLOCK_TYPE{
+        SEQUENTIAL,
+        PARALLEL,
+        IF,
+        ELIF,
+        ELSE,
+        WHILE,
+        DO_WHILE,
+        DUMMY_BLOCK
+    };
 
     /** atomic node for assigning */
     struct Node{
     ///// f
     bool psudoNode = false;
-    Operable* psudoAssignMeta;
+    Operable* psudoAssignMeta{};
     AssignMeta* assignMeta;
     Operable* condition = nullptr;
     Operable* dependState = nullptr;
 
-    Node(): psudoNode(true), assignMeta(nullptr){}
+    Node(): psudoNode(true), assignMeta(nullptr), psudoAssignMeta(new expression()){}
 
     explicit Node(AssignMeta* asmMeta): assignMeta(asmMeta){}
 
@@ -36,7 +46,7 @@ namespace kathryn {
 //        dependState = rhs.dependState;
 //    }
 
-    static void addLogic(Operable* desLogic,Operable* opr, LOGIC_OP op){
+    static void addLogic(Operable*& desLogic,Operable* opr, LOGIC_OP op){
         assert(op == BITWISE_AND || op == BITWISE_OR);
         assert(opr != nullptr);
         if(desLogic == nullptr){
@@ -95,7 +105,29 @@ namespace kathryn {
             exitOpr = opr;
         }
 
+
+        void addConditionToAllNode(Operable* cond, LOGIC_OP op){
+            assert(cond != nullptr);
+            for (auto node: entranceNodes){
+                node->addCondtion(cond, op);
+            }
+        }
+
+        /** copy node pointer to this wrap*/
+        /// todo we will make it copy node if need but for now we don't
+        void transferNodeFrom(NodeWrap* nw){
+            assert(nw != nullptr);
+            for (auto node: nw->entranceNodes){
+                entranceNodes.push_back(node);
+            }
+
+        }
+
+
         NodeWrap& operator = (const NodeWrap& rhs){
+            if (&rhs == this){
+                return *this;
+            }
             ///// change node location
             for (auto nd: rhs.entranceNodes){
                 Node* preInsert = new Node(*nd);
@@ -110,25 +142,11 @@ namespace kathryn {
             *this = rhs;
         }
 
-        NodeWrap(){};
+        NodeWrap()= default;
 
     };
 
-    /** it is basic node that only have one event at a node */
-    class Controller;
-    typedef std::shared_ptr<Controller> ControllerPtr;
 
-
-    enum FLOW_BLOCK_TYPE{
-        SEQUENTIAL,
-        PARALLEL,
-        IF,
-        ELIF,
-        ELSE,
-        WHILE,
-        DO_WHILE,
-        DUMMY_BLOCK
-    };
 
     class FlowBlockBase {
     protected:
@@ -136,12 +154,12 @@ namespace kathryn {
         std::vector<Node*> basicNodes;
         FLOW_BLOCK_TYPE _type;
         ControllerPtr ctrl;
+        bool lazyDeletedRequired = false;
         /** generate implicit subblock typically used with if and while block*/
         FlowBlockBase* genImplicitSubBlk(FLOW_BLOCK_TYPE defaultType);
     public:
         explicit FlowBlockBase(FLOW_BLOCK_TYPE type);
         virtual ~FlowBlockBase();
-
         /**
          * entrance to make controller interact with
          * */
@@ -155,22 +173,28 @@ namespace kathryn {
             assert(subBlock != nullptr);
             subBlocks.push_back(subBlock);
         };
+        /**
+         * For custome block
+         * */
         /** when every thing is finish call this to get sumarisation*/
         virtual NodeWrap* sumarizeBlock() = 0;
-
-        /**
-         * communicator to controller
-         * */
-         /** todo make it communicate with controller */
+        /*** communicator to controller*/
          virtual void onAttachBlock() = 0; //// it is supposed to acknowledge controller whether this block is declared
          virtual void onDetachBlock() = 0;
-
-         FLOW_BLOCK_TYPE getFlowType(){return _type;}
-
-         /**
-          * for module communicate with
-          * */
+         /*** for module communicate with* */
           virtual void buildHwComponent() = 0;
+
+        ////// getter/setter
+        FLOW_BLOCK_TYPE getFlowType(){return _type;}
+        std::vector<FlowBlockBase*>& getSubBlocks(){
+            return subBlocks;
+        }
+        bool isLazyDelete() const{
+            return lazyDeletedRequired;
+        }
+        void setLazyDelete() {
+            lazyDeletedRequired = true;
+        }
 
 
 
