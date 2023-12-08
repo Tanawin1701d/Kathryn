@@ -45,7 +45,6 @@ namespace kathryn{
 
     };
 
-
 }
 
 #endif //KATHRYN_VALUE_H

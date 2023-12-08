@@ -23,7 +23,6 @@ namespace kathryn {
         TYPE_EXPRESSION,
         TYPE_MODULE,
         TYPE_VAL
-
     };
 
     class Module;
@@ -39,7 +38,7 @@ namespace kathryn {
 
         /** local variable*/
         Module* _parent; /// if it is nullptr it is not localized
-        ull                     _localId; /// id that use in the component
+        ull     _localId; /// id that use in the component
         /// it will share among the same module
 
     public:
@@ -66,32 +65,24 @@ namespace kathryn {
             return *this;
         }
 
-        template<typename T>
-        T* cast(){
-            return (T*)this;
-        }
-
         bool isLocalized() {return _parent != nullptr;}
 
         /** get set method*/
-        HW_COMPONENT_TYPE getType() const {return _type;}
-
-        const std::string& getTypeName() const {return _typeName;}
+        [[nodiscard]] HW_COMPONENT_TYPE getType() const {return _type;}
+        [[nodiscard]] const std::string& getTypeName() const {return _typeName;}
         void setTypeName(std::string typeName) {_typeName = std::move(typeName);}
 
-        const std::string& getGlobalName() const {return _globalName;}
+        [[nodiscard]] const std::string& getGlobalName() const {return _globalName;}
         void setGlobalName(const std::string& globalName) {_globalName = globalName;}
 
-        ull getGlobalId() const {return _globalId;}
+        [[nodiscard]] ull getGlobalId() const {return _globalId;}
         /// global id can not be set it permanent when class is initialized void setGlobalId(ull globalId) {_globalId = globalId;}
 
         Module* getParent(){return _parent;}
-        void setParent(Module* parent) {_parent = std::move(parent);}
+        void setParent(Module* parent) {_parent = parent;}
 
-        ull  getLocalId(ull id) const{return _localId;}
+        [[nodiscard]] ull  getLocalId(ull id) const{return _localId;}
         void setLocalId(ull id)      {_localId = id; }
-
-
 
     };
 

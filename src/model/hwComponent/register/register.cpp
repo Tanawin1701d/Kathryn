@@ -11,7 +11,9 @@ namespace kathryn{
 
     Reg::Reg(int size) : Assignable(),Operable(),
                          Slicable<Reg>(Slice{0, size}),
-                         Identifiable(TYPE_REG) {}
+                         Identifiable(TYPE_REG) {
+        com_init();
+    }
 
     void Reg::com_init() {
         ctrl->on_reg_init(this);

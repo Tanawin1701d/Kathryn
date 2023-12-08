@@ -26,11 +26,6 @@ namespace kathryn {
      * it must set from made and
      **/
 
-
-    /** This is used for represent */
-    void* declaredAddr;
-
-    /** todo for now it is used for creating module but we will make it compatable in the future */
     template<typename T, typename... Args>
     T& _make(Args&&... args){
         static_assert(std::is_base_of<HwCompControllerItf, T>::value,
@@ -47,7 +42,6 @@ namespace kathryn {
         objPtr->setTypeName(typeid(T).name());
         return *objPtr;
     }
-
 
 }
 

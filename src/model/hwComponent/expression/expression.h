@@ -45,11 +45,12 @@ namespace kathryn {
 
     protected:
         void com_init() override;
+        void com_final() override {};
 
 
     public:
         /** constructor auto get id of the system*/
-        explicit expression(LOGIC_OP,
+        explicit expression(LOGIC_OP op,
                             Operable* a,
                             Slice aSlice,
                             Operable* b,

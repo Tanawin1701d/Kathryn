@@ -18,7 +18,6 @@ namespace kathryn {
      * */
     class expression;
     class Operable{
-    private:
 
     public:
         explicit Operable() = default;
@@ -34,7 +33,7 @@ namespace kathryn {
         virtual expression& operator || (const Operable& b);
         virtual expression& operator !  ();
         /** relational operator*/
-        virtual Operable * operator == (const Operable& b);
+        virtual expression& operator == (const Operable& b);
         virtual expression& operator != (const Operable& b);
         virtual expression& operator <  (const Operable& b);
         virtual expression& operator <= (const Operable& b);

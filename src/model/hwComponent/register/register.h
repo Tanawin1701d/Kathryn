@@ -16,17 +16,17 @@ namespace kathryn{
 
 
     class Reg : public Assignable<Reg>, public Operable,
-            public Slicable<Reg>,
-            public AssignCallbackFromAgent<Reg>,
-            public Identifiable,
-            public HwCompControllerItf{
+                public Slicable<Reg>,
+                public AssignCallbackFromAgent<Reg>,
+                public Identifiable,
+                public HwCompControllerItf{
 
     protected:
         void com_init() override;
 
     public:
         explicit Reg(int size);
-        ~Reg();
+        ~Reg() = default;
 
         /** assignable override*/
         Reg& operator <<= (Operable& b) override;

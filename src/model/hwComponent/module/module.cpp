@@ -12,9 +12,6 @@ namespace kathryn{
     Module::Module(): Identifiable(TYPE_MODULE),
                       HwCompControllerItf()
     {
-        /**todo we will upgrade to control interface class but reg/wire did't tend to use make*/
-        assert(!ctrl->isAllocationLock());
-        ctrl->lockAllocation();
         com_init();
     }
 
@@ -26,7 +23,6 @@ namespace kathryn{
         deleteSubElement(_userExpressions);
         deleteSubElement(_userVals);
         deleteSubElement(_userSubModule);
-
     }
 
     void Module::com_init() {

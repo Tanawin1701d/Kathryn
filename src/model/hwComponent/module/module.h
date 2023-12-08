@@ -78,9 +78,6 @@ namespace kathryn{
 
     };
 
-
-
-
 }
 
 #endif //KATHRYN_MODULE_H

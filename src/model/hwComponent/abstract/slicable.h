@@ -36,16 +36,12 @@ namespace kathryn {
             agentHolders.push_back(agent);
         }
 
-        /** utility*/
-        static bool checkValidSlice(Slice x){
-            return x.checkValidSlice();
-        }
         Slice getNextSlice(int start, int stop, Slice oldSlice){
             /** todo next check integrity*/
             if (oldSlice.isEntireSection()){
                 return Slice{start, stop};
             }
-                return Slice{oldSlice.start + start, oldSlice.start + stop};
+            return Slice{oldSlice.start + start, oldSlice.start + stop};
         }
 
         Slice getSlice() const { return _absSlice; }
@@ -66,10 +62,8 @@ namespace kathryn {
         };
 
         /** operable override*/
-
-        Operable& getExactOperable() const override { return *std::shared_ptr<Operable>(_master); }
-
-        Slice getOperableSlice() const override { return  Slicable<T>::getSlice(); }
+        [[nodiscard]] Operable& getExactOperable() const override { return *(Operable*)_master; }
+        [[nodiscard]] Slice getOperableSlice() const override { return  Slicable<T>::getSlice(); }
 
         /** slicable overload*/
 

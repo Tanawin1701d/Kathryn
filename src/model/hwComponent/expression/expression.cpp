@@ -60,7 +60,8 @@ namespace kathryn{
     }
 
     SliceAgent<expression>& expression::operator()(int start, int stop) {
-        auto ret =  new SliceAgent<expression>(this,getSlice());
+        auto ret =  new SliceAgent<expression>(this,
+                                               getNextSlice(start, stop, getSlice()));
         return *ret;
     }
 
