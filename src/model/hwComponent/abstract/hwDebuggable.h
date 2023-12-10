@@ -13,7 +13,7 @@ namespace kathryn{
     class HwCompDebuggable{
 
     public:
-        virtual std::string getDebugAssignmentValue() = 0;
+        virtual std::vector<std::string> getDebugAssignmentValue() = 0;
 
     };
 

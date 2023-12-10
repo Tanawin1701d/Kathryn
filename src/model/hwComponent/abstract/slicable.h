@@ -98,6 +98,10 @@ namespace kathryn {
             return *this;
         }
 
+        Identifiable* castToIdent() override{
+            return nullptr;
+        }
+
     };
 }
 

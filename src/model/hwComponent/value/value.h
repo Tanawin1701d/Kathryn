@@ -21,6 +21,8 @@ namespace kathryn{
     class Val: public LogicComp<Val>{
     protected:
         int _size;
+
+
         void com_init() override;
     public:
         /** todo we will make value save the value and range more precisly*/
@@ -50,6 +52,7 @@ namespace kathryn{
         [[noreturn]]
         Val& callBackNonBlockAssignFromAgent(Operable& b, Slice absSlice) override{assert(true);};
 
+        std::vector<std::string> getDebugAssignmentValue() override;
 
     };
 

@@ -59,6 +59,17 @@ namespace kathryn{
         return *this;
     }
 
+    std::vector<std::string> Reg::getDebugAssignmentValue() {
+        std::vector<std::string> results;
+        for (auto upEvent: _updateMeta){
+            assert(upEvent != nullptr);
+            results.push_back(upEvent->getDebugString());
+        }
+        return results;
+    }
+
+
+
 
 
     /** assign call back*/

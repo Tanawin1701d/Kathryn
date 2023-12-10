@@ -22,6 +22,17 @@ namespace kathryn{
         Slice     updateSlice; /// slice to update
         int priority = 9;
         ///priority for circuit if there are attention to update same register at a time 0 is highest 9 is lowest
+
+        [[nodiscard]] std::string getDebugString() const{
+            return updateValue->castToIdent()->getGlobalName() +
+            "[" +
+            std::to_string(updateSlice.start) +
+            std::to_string(updateSlice.stop) +
+            "] when state = " +
+            ((updateState != nullptr) ? updateState->castToIdent()->getGlobalName(): "none") +
+            " cond = " +
+            ((updateCondition != nullptr) ? updateCondition->castToIdent()->getGlobalName(): "none");
+        }
     };
 
     /* This is used to describe what and where to update that send to controller and let flow block determine*/

@@ -75,13 +75,13 @@ namespace kathryn{
         return *this;
     }
 
-    std::string expression::getDebugAssignmentValue() {
+    std::vector<std::string> expression::getDebugAssignmentValue() {
         if (_op == ASSIGN){
-            return _a->castBackIdentifiable()->getGlobalName();
+            return {_a->castToIdent()->getGlobalName()};
         }else{
-            std::string aName = _a->castBackIdentifiable()->getGlobalName();
-            std::string bName = _b->castBackIdentifiable()->getGlobalName();
-            return aName + lop_to_string(_op) + bName;
+            std::string aName = _a->castToIdent()->getGlobalName();
+            std::string bName = _b->castToIdent()->getGlobalName();
+            return {aName + lop_to_string(_op) + bName};
         }
     }
 

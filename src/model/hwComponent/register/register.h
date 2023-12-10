@@ -39,8 +39,7 @@ namespace kathryn{
         Reg& callBackBlockAssignFromAgent(Operable& b, Slice absSlice) override;
         Reg& callBackNonBlockAssignFromAgent(Operable& b, Slice absSlice) override;
 
-
-
+        std::vector<std::string> getDebugAssignmentValue() override;
 
     };
 

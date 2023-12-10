@@ -31,6 +31,8 @@ namespace kathryn{
         Wire& callBackBlockAssignFromAgent(Operable& b, Slice absSlice) override;
         Wire& callBackNonBlockAssignFromAgent(Operable& b, Slice absSlice) override;
 
+        std::vector<std::string> getDebugAssignmentValue() override;
+
 
     };
 
