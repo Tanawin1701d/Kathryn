@@ -10,9 +10,8 @@
 namespace kathryn{
 
     /** constructor need to init communication with controller*/
-    Reg::Reg(int size, bool initCom) : Assignable(),Operable(),
-                         Slicable<Reg>(Slice{0, size}),
-                         Identifiable(TYPE_REG) {
+    Reg::Reg(int size, bool initCom, HW_COMPONENT_TYPE hwType) :
+            LogicComp({0, size}, hwType){
         if (initCom) {
             com_init();
         }

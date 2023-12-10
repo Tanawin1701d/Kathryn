@@ -11,14 +11,12 @@
 namespace kathryn {
 
     class Controller;
-    typedef std::shared_ptr<Controller> ControllerPtr;
-
     /**
      * This is used for hardware element to interface with comtroller
      * */
     class HwCompControllerItf {
     protected:
-        ControllerPtr ctrl;
+        Controller* ctrl;
     public:
         explicit HwCompControllerItf();
 

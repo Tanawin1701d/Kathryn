@@ -4,6 +4,9 @@
 
 #ifndef KATHRYN_OPERATION_H
 #define KATHRYN_OPERATION_H
+
+#include <map>
+
 namespace kathryn {
     enum LOGIC_OP {
         /** bitwise operators*/
@@ -35,8 +38,19 @@ namespace kathryn {
         /** other operator*/
         DUMMY,
         LOGIC_OP_COUNT
-
     };
+
+    std::string lop_to_string(LOGIC_OP op){
+        std::string mapper[LOGIC_OP_COUNT] = {
+                "&", "|", "^", "~", "<<",
+                ">>", "&&", "||", "!", "==",
+                "!=", "<", "<=", ">", ">=",
+                "+", "-", "*", "/", "%",
+                "=", "DUMMYOP"
+        };
+        assert(op < LOGIC_OP_COUNT);
+        return mapper[op];
+    }
 
     const int LOGICAL_SIZE = 1;
 

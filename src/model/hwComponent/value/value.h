@@ -13,23 +13,25 @@
 #include "model/hwComponent/abstract/identifiable.h"
 #include "model/controller/conInterf/controllerItf.h"
 #include "model/hwComponent/abstract/slicable.h"
+#include "model/hwComponent/abstract/logicComp.h"
 
 namespace kathryn{
 
     /** This class act as constant value */
-    class Val: public Operable,
-               public Identifiable,
-               HwCompControllerItf{
+    class Val: public LogicComp<Val>{
     protected:
         int _size;
         void com_init() override;
     public:
         /** todo we will make value save the value and range more precisly*/
         explicit Val(int size, std::string v);
-        /** todo we will deal with it later*/
-        [[maybe_unused]]
-        /** todo assign it  */
-        expression& operator <<= (Operable& b){ assert(true);};
+
+
+        /**
+         * override assignable
+         * */
+        Val& operator <<= (Operable& b) override { assert(true); return *this;}
+        Val& operator =   (Operable& b) override { assert(true); return *this;}
         Val& operator = (std::string& b){return *this;};
         Val& operator = (ull v){return *this;};
 
@@ -40,8 +42,14 @@ namespace kathryn{
         Operable& getExactOperable() const override {return (Operable &) *this;}
 
         /** assign todo we will assign it later*/
-        Val operator() (int start, int stop) {return Val(stop-start, "b000");}
-        Val operator() (int idx) {return Val(1, "0b00");}
+        SliceAgent<Val>& operator() (int start, int stop) override;
+        SliceAgent<Val>& operator() (int idx) override;
+
+        [[noreturn]]
+        Val& callBackBlockAssignFromAgent(Operable& b, Slice absSlice) override {assert(true);};
+        [[noreturn]]
+        Val& callBackNonBlockAssignFromAgent(Operable& b, Slice absSlice) override{assert(true);};
+
 
     };
 

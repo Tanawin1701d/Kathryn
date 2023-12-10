@@ -20,10 +20,7 @@ namespace kathryn{
                            Operable* b,
                            Slice bSlice,
                            int exp_size):
-   Assignable<expression>(),
-    Operable(),
-    Slicable<expression>({0, exp_size}),
-    Identifiable(TYPE_EXPRESSION),
+    LogicComp<expression>({0, exp_size}, TYPE_EXPRESSION),
     _op(op),
     _a(a),
     _aSlice(aSlice),
@@ -34,10 +31,7 @@ namespace kathryn{
     }
 
     expression::expression():
-    Assignable<expression>(),
-    Operable(),
-    Slicable<expression>(Slice()),
-    Identifiable(TYPE_EXPRESSION),
+    LogicComp<expression>(Slice(), TYPE_EXPRESSION),
     _op(ASSIGN),
     _a(nullptr),
     _aSlice(Slice()),
@@ -80,5 +74,16 @@ namespace kathryn{
         assert(true);
         return *this;
     }
+
+    std::string expression::getDebugAssignmentValue() {
+        if (_op == ASSIGN){
+            return _a->castBackIdentifiable()->getGlobalName();
+        }else{
+            std::string aName = _a->castBackIdentifiable()->getGlobalName();
+            std::string bName = _b->castBackIdentifiable()->getGlobalName();
+            return aName + lop_to_string(_op) + bName;
+        }
+    }
+
 
 }

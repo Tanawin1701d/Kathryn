@@ -10,11 +10,7 @@
 namespace kathryn{
 
 
-    Wire::Wire(int size) : Assignable(), Operable(),
-                           Slicable(Slice{0, size}),
-                           AssignCallbackFromAgent<Wire>(),
-                           Identifiable(TYPE_WIRE),
-                           HwCompControllerItf(){
+    Wire::Wire(int size) : LogicComp({0, size}, TYPE_WIRE){
         com_init();
     }
 
@@ -44,6 +40,7 @@ namespace kathryn{
 
     Wire& Wire::callBackBlockAssignFromAgent(Operable &b, Slice absSlice) {
         assert(true);
+        return *this;
     }
 
     Wire& Wire::callBackNonBlockAssignFromAgent(Operable &b, Slice absSlice) {

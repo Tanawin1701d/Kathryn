@@ -5,28 +5,21 @@
 #ifndef KATHRYN_REGISTER_H
 #define KATHRYN_REGISTER_H
 
-#include "model/hwComponent/abstract/slicable.h"
-#include "model/hwComponent/abstract/assignable.h"
-#include "model/hwComponent/abstract/operable.h"
-#include "model/hwComponent/abstract/identifiable.h"
+#include "model/hwComponent/abstract/logicComp.h"
 #include "model/controller/conInterf/controllerItf.h"
 
 namespace kathryn{
 
 
 
-    class Reg : public Assignable<Reg>, public Operable,
-                public Slicable<Reg>,
-                public AssignCallbackFromAgent<Reg>,
-                public Identifiable,
-                public HwCompControllerItf{
+    class Reg : public LogicComp<Reg>{
 
     protected:
         void com_init() override;
 
     public:
-        explicit Reg(int size, bool initCom = true);
-        ~Reg() = default;
+        explicit Reg(int size, bool initCom = true, HW_COMPONENT_TYPE hwType = TYPE_REG);
+        ~Reg() override = default;
 
         /** assignable override*/
         Reg& operator <<= (Operable& b) override;
@@ -45,6 +38,7 @@ namespace kathryn{
 
         Reg& callBackBlockAssignFromAgent(Operable& b, Slice absSlice) override;
         Reg& callBackNonBlockAssignFromAgent(Operable& b, Slice absSlice) override;
+
 
 
 

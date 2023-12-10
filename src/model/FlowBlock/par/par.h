@@ -5,11 +5,13 @@
 #ifndef KATHRYN_PAR_H
 #define KATHRYN_PAR_H
 
-#define par for(auto kathrynBlock = new FlowBlockPar(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 
 #include "model/FlowBlock/abstract/flowBlock_Base.h"
 #include "model/FlowBlock/abstract/loopStMacro.h"
 #include "model/FlowBlock/abstract/stateReg.h"
+
+#define par for(auto kathrynBlock = new FlowBlockPar(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+
 
 namespace kathryn {
 

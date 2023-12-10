@@ -8,14 +8,14 @@
 namespace kathryn{
 
     /** central initializer*/
-    ControllerPtr    centralControllerPtr = nullptr;
-    ModulePtr        globalModulePtr = nullptr;
+    Controller*    centralControllerPtr = nullptr;
+    Module*        globalModulePtr = nullptr;
 
-    ControllerPtr getControllerPtr(){
+    Controller* getControllerPtr(){
         /// initiate controller before return
         /***lazy initializer*/
         if (centralControllerPtr == nullptr){
-            centralControllerPtr = std::make_shared<Controller>();
+            centralControllerPtr = new Controller();
         }
         /// if global module was not init, then init it
         if (globalModulePtr == nullptr){

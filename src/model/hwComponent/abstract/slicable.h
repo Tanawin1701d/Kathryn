@@ -98,7 +98,6 @@ namespace kathryn {
             return *this;
         }
 
-
     };
 }
 

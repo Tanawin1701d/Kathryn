@@ -5,11 +5,13 @@
 #ifndef KATHRYN_SEQ_H
 #define KATHRYN_SEQ_H
 
-#define seq for(auto kathrynBlock = new FlowBlockSeq(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 
 #include "model/FlowBlock/abstract/flowBlock_Base.h"
 #include "model/FlowBlock/abstract/loopStMacro.h"
 #include "model/FlowBlock/abstract/stateReg.h"
+
+#define seq for(auto kathrynBlock = new FlowBlockSeq(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+
 
 namespace kathryn {
 
@@ -43,7 +45,7 @@ namespace kathryn {
 
     public:
         explicit FlowBlockSeq();
-        virtual ~FlowBlockSeq();
+        virtual ~FlowBlockSeq() = default;
         /** for controller add the local element to this sub block*/
         void addElementInFlowBlock(Node* node) override;
         void addSubFlowBlock(FlowBlockBase* subBlock) override;

@@ -29,7 +29,6 @@ int main() {
     Val myVal(2,"b2");
     makeWire(z, 3) = myVal;
     var yy = z;
-    var zz = _make<Reg>(3);
     makeMod(myMo, testModule,1,2);
 
 

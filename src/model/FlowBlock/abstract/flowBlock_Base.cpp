@@ -36,6 +36,7 @@ namespace kathryn{
         }else{
             assert(true); /** can't determine flow type*/
         }
+        return nullptr;
     }
 
 

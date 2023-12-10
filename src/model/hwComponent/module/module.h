@@ -20,11 +20,7 @@
 namespace kathryn{
 
 
-    auto& startWire = *new Wire(1);
-
-    class Module;
-
-    typedef std::shared_ptr<Module> ModulePtr;
+    extern Wire* startWire;
 
     class Module : public Identifiable, public HwCompControllerItf{
         /** todo we must make this class com_init with stack
@@ -76,6 +72,15 @@ namespace kathryn{
         void addUserExpression(expression* expr);
         void addUserVal       (Val* val);
         void addUserSubModule (Module* smd);
+
+
+        auto& getStateRegs(){return _stateRegs;}
+        auto& getFlowBlocks(){return _flowBlockBases;}
+        auto& getUserRegs(){return _userRegs; }
+        auto& getUserWiress(){return _userWires; }
+        auto& getUserExpressions(){return _userExpressions; }
+        auto& getUserVals(){return _userVals; }
+        auto& getUserSubModules(){return _userSubModule; }
         /** This allow user to custom module design flow*/
         virtual void flow(){};
         virtual void buildHardware();

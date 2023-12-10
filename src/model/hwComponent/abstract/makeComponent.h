@@ -8,14 +8,13 @@
 #include <typeinfo>
 #include <memory>
 #include <type_traits>
-#include "model/controller/controller.h"
 #include "model/controller/conInterf/controllerItf.h"
 #include "model/hwComponent/abstract/identifiable.h"
 
 
-#define makeWire( name, argument) Wire& name = _make<Wire>(argument)
-#define makeReg( name, argument)  Reg& name = _make<Reg>(argument)
-#define makeMod(name, TypeName, ...) Module& name = _make<TypeName>(__VA_ARGS__)
+#define makeWire( name, argument) Wire& name = _make<Wire>(#name,argument)
+#define makeReg( name, argument)  Reg& name = _make<Reg>(#name, argument)
+#define makeMod(name, TypeName, ...) Module& name = _make<TypeName>(#name, __VA_ARGS__)
 #define var auto&
 
 
@@ -27,7 +26,7 @@ namespace kathryn {
      **/
 
     template<typename T, typename... Args>
-    T& _make(Args&&... args){
+    T& _make(const std::string name,Args&&... args){
         static_assert(std::is_base_of<HwCompControllerItf, T>::value,
                 "make model component must base on Controller controllable"
                 );
@@ -40,6 +39,7 @@ namespace kathryn {
         auto objPtr = new T(std::forward<Args>(args)...);
         objPtr->com_final();
         objPtr->setTypeName(typeid(T).name());
+        objPtr->setTypeName(name);
         return *objPtr;
     }
 

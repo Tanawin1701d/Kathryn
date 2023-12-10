@@ -10,12 +10,9 @@
 #include <string>
 #include <iostream>
 #include <utility>
-#include "model/hwComponent/abstract/slicable.h"
-#include "model/hwComponent/abstract/operation.h"
-#include "model/hwComponent/abstract/assignable.h"
-#include "model/hwComponent/abstract/operable.h"
-#include "model/hwComponent/abstract/identifiable.h"
+
 #include "model/controller/conInterf/controllerItf.h"
+#include "model/hwComponent/abstract/logicComp.h"
 
 
 /**
@@ -29,11 +26,7 @@ namespace kathryn {
 
 
 
-    class expression : public Assignable<expression>, public Operable,
-                       public Slicable<expression>,
-                       public AssignCallbackFromAgent<expression>,
-                       public Identifiable,
-                       public HwCompControllerItf{
+    class expression : public LogicComp<expression>{
     private:
 
         /** meta data that contain bi operation*/
@@ -59,13 +52,14 @@ namespace kathryn {
                             );
         explicit expression();
         /** override assignable*/
-        expression& operator <<= (Operable& b) override {std::cout << "we not support <<= operator in expression";};
+        expression& operator <<= (Operable& b) override {std::cout << "we not support <<= operator in expression"; return *this;};
         expression& operator =   (Operable& b) override;
         /**override operable*/
         [[nodiscard]]
         Operable& getExactOperable() const override { return *(Operable*)(this); };
         [[nodiscard]]
         Slice getOperableSlice() const override  { return getSlice(); }
+
         /** override slicable*/
         SliceAgent<expression>& operator() (int start, int stop) override;
         SliceAgent<expression>& operator() (int idx) override;
@@ -73,6 +67,9 @@ namespace kathryn {
         [[maybe_unused]]
         expression& callBackBlockAssignFromAgent(Operable& b, Slice absSlice) override;
         expression& callBackNonBlockAssignFromAgent(Operable& b, Slice absSlice) override;
+        /** override debugg message*/
+        std::string getDebugAssignmentValue() override;
+        /** override identifiable*/
 
     };
 

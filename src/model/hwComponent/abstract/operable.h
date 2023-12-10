@@ -8,6 +8,7 @@
 #include<memory>
 #include "Slice.h"
 #include "operation.h"
+#include "identifiable.h"
 
 namespace kathryn {
 
@@ -16,6 +17,8 @@ namespace kathryn {
      * logic value
      *
      * */
+     template<typename T>
+     class LogicComp;
     class expression;
     class Operable{
 
@@ -52,6 +55,8 @@ namespace kathryn {
         virtual Slice getOperableSlice() const = 0;
         [[nodiscard]]
         virtual Operable& getExactOperable () const = 0;
+
+        virtual Identifiable* castToIdent() = 0;
     };
 
 

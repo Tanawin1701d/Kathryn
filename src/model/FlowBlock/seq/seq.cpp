@@ -63,6 +63,7 @@ namespace kathryn{
             return complexNode->exitOpr;
         }
         assert(true);
+        return nullptr;
     }
 
     std::vector<Node *> SequenceEle::getEntranceNodes() {
@@ -72,6 +73,8 @@ namespace kathryn{
         }else if (_subBlock != nullptr){
             return complexNode->entranceNodes;
         }
+        assert(true);
+        return {};
     }
 
 

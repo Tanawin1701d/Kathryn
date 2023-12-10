@@ -18,12 +18,22 @@ namespace kathryn {
 
 
     enum HW_COMPONENT_TYPE{
-        TYPE_REG,
-        TYPE_WIRE,
-        TYPE_EXPRESSION,
-        TYPE_MODULE,
-        TYPE_VAL
+        TYPE_REG = 0,
+        TYPE_STATE_REG = 1,
+        TYPE_WIRE = 2,
+        TYPE_EXPRESSION = 3,
+        TYPE_MODULE = 4,
+        TYPE_VAL = 5,
+        TYPE_COUNT = 6
     };
+
+    std::string GLOBAL_PREFIX[TYPE_COUNT] = {"R",
+                                             "S",
+                                             "W",
+                                             "E",
+                                             "M",
+                                             "V"
+                                             };
 
     class Module;
     class Identifiable {
@@ -46,11 +56,15 @@ namespace kathryn {
         explicit Identifiable(HW_COMPONENT_TYPE type) :
             _type(type),
             _typeName(UNNAME_STR),
-            _globalName(UNNAME_STR),
-            _globalId(LAST_IDENT_ID++),
+            //_globalName(UNNAME_STR),
+            _globalId(LAST_IDENT_ID),
             _parent(nullptr),
             _localId(-1)
-            {};
+            {
+            _globalName = GLOBAL_PREFIX[type] + std::to_string(LAST_IDENT_ID);
+            LAST_IDENT_ID++;
+
+            };
 
         Identifiable& operator = (const Identifiable& ident){
             if (this == &ident){
@@ -67,14 +81,15 @@ namespace kathryn {
 
         bool isLocalized() {return _parent != nullptr;}
 
-        /** get set method*/
+        /** get hardware component type*/
         [[nodiscard]] HW_COMPONENT_TYPE getType() const {return _type;}
+        void setIdentType(HW_COMPONENT_TYPE identType){_type = identType;}
+        /** get/set typeName (variable name)*/
         [[nodiscard]] const std::string& getTypeName() const {return _typeName;}
         void setTypeName(std::string typeName) {_typeName = std::move(typeName);}
-
+        /** set global name*/
         [[nodiscard]] const std::string& getGlobalName() const {return _globalName;}
         void setGlobalName(const std::string& globalName) {_globalName = globalName;}
-
         [[nodiscard]] ull getGlobalId() const {return _globalId;}
         /// global id can not be set it permanent when class is initialized void setGlobalId(ull globalId) {_globalId = globalId;}
 

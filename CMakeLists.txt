@@ -48,4 +48,8 @@ add_executable(Kathryn main.cpp
         src/model/FlowBlock/cond/if.h
         src/model/FlowBlock/cond/elif.cpp
         src/model/FlowBlock/cond/elif.h
+        src/application/visualizer/vis.cpp
+        src/application/visualizer/vis.h
+        src/model/hwComponent/abstract/hwDebuggable.h
+        src/model/hwComponent/abstract/logicComp.h
 )

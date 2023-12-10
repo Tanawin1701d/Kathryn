@@ -25,12 +25,12 @@ namespace kathryn {
 
     public:
 
-        explicit StateReg(int size = 1): Reg(size, false){
+        explicit StateReg(int size = 1): Reg(size, false, TYPE_STATE_REG){
             upFullState = new Val(size, "b" + (std::to_string((1 << size) - 1)));
         };
 
         /** state register system must handle updateEvent themself*/
-        Reg& operator <<= (Operable& b) override {assert(true);}
+        Reg& operator <<= (Operable& b) override {std::cout << "we not support = operator in register"; return *this;}
 
         UpdateEvent* addUpdateEvent(Operable* dependStateCon = nullptr, int bit = 0){
             auto* event = new UpdateEvent({nullptr,

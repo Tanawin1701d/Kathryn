@@ -8,17 +8,29 @@
 
 namespace kathryn{
 
-Val::Val(int size, std::string v): Operable(),
-                                   Identifiable(TYPE_VAL),
-                                   HwCompControllerItf(),
-                                   _size(size)
-                                   {
-                                       com_init();
-}
+    Val::Val(int size, std::string v):
+                                    LogicComp({0, size}, TYPE_VAL),
+                                    _size(size)
+                                    {
+                                        com_init();
+    }
 
-void Val::com_init() {
-    ctrl->on_value_init(this);
-}
+    void Val::com_init() {
+        ctrl->on_value_init(this);
+    }
+
+    SliceAgent<Val>& Val::operator()(int start, int stop){
+
+        auto ret = new SliceAgent<Val>(
+                    this,
+                    getNextSlice(start, stop, getSlice())
+                );
+        return *ret;
+    }
+
+    SliceAgent<Val>& Val::operator() (int idx){
+        operator() (idx, idx+1);
+    }
 
 
 }

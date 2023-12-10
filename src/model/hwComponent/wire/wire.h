@@ -5,20 +5,13 @@
 #ifndef KATHRYN_WIRE_H
 #define KATHRYN_WIRE_H
 
-#include <iostream>
-#include "model/hwComponent/abstract/slicable.h"
-#include "model/hwComponent/abstract/assignable.h"
-#include "model/hwComponent/abstract/operable.h"
-#include "model/hwComponent/abstract/identifiable.h"
+#include<iostream>
+#include "model/hwComponent/abstract/logicComp.h"
 #include "model/controller/conInterf/controllerItf.h"
 
 namespace kathryn{
 
-    class Wire : public Assignable<Wire>, public Operable,
-            public Slicable<Wire>,
-            public AssignCallbackFromAgent<Wire>,
-            public Identifiable,
-            public HwCompControllerItf{
+    class Wire : public LogicComp<Wire>{
     protected:
         void com_init() override;
     public:
@@ -26,7 +19,7 @@ namespace kathryn{
 
         /**override assignable*/
         [[maybe_unused]]
-        Wire& operator <<= (Operable& b) override {std::cout << "we not support <<= operator in wire";};
+        Wire& operator <<= (Operable& b) override {std::cout << "we not support <<= operator in wire"; return *this;};
         Wire& operator =   (Operable& b) override;
         /**override operable*/
         Operable& getExactOperable() const override {return *(Operable*)(this);}

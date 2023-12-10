@@ -5,9 +5,12 @@
 #include "module.h"
 
 #include "model/controller/controller.h"
+#include "model/hwComponent/abstract/makeComponent.h"
 
 
 namespace kathryn{
+
+    Wire* startWire = &_make<Wire>( "startWire", 1);
 
     Module::Module(): Identifiable(TYPE_MODULE),
                       HwCompControllerItf()
@@ -110,7 +113,7 @@ namespace kathryn{
             frontNodeWrap.push_back(fb->sumarizeBlock());
         }
         for (auto nw: frontNodeWrap){
-            nw->addDependStateToAllNode(&startWire, BITWISE_AND);
+            nw->addDependStateToAllNode(startWire, BITWISE_AND);
             nw->assignAllNode();
             delete nw;
         }

@@ -107,11 +107,9 @@ namespace kathryn {
 
     };
 
-
-    typedef std::shared_ptr<Controller> ControllerPtr;
     /** this is entrace for every device to com_init with controller*/
-    ControllerPtr getControllerPtr();
-    void          freeControllerPtr();
+    Controller* getControllerPtr();
+    void        freeControllerPtr();
 
 
 

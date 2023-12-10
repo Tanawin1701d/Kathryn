@@ -51,6 +51,7 @@ namespace kathryn {
         assignMeta       = new AssignMeta(*rhs.assignMeta);
         condition        = rhs.condition;
         dependState      = rhs.dependState;
+        return *this;
     }
 
     static void addLogic(Operable*& desLogic,Operable* opr, LOGIC_OP op){
@@ -170,7 +171,7 @@ namespace kathryn {
         std::vector<FlowBlockBase*> subBlocks;
         std::vector<Node*>          basicNodes;
         FLOW_BLOCK_TYPE             _type;
-        ControllerPtr               ctrl;
+        Controller*                 ctrl;
         bool                        lazyDeletedRequired = false;
         /** generate implicit subblock typically used with if and while block*/
         FlowBlockBase* genImplicitSubBlk(FLOW_BLOCK_TYPE defaultType);
