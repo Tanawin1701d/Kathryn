@@ -16,7 +16,7 @@
 
 
 /**
- * expression is the class that represent the value from hardware
+ * exprMetas is the class that represent the value from hardware
  * component such as register and wire
  *
  * */
@@ -52,7 +52,7 @@ namespace kathryn {
                             );
         explicit expression();
         /** override assignable*/
-        expression& operator <<= (Operable& b) override {std::cout << "we not support <<= operator in expression"; return *this;};
+        expression& operator <<= (Operable& b) override {std::cout << "we not support <<= operator in exprMetas"; return *this;};
         expression& operator =   (Operable& b) override;
         /**override operable*/
         [[nodiscard]]
@@ -69,7 +69,12 @@ namespace kathryn {
         expression& callBackNonBlockAssignFromAgent(Operable& b, Slice absSlice) override;
         /** override debugg message*/
         std::vector<std::string> getDebugAssignmentValue() override;
-        /** override identifiable*/
+
+        /** get set method */
+        LOGIC_OP getOp() const {return _op;};
+        Operable* getOperandA() const {return _a;}
+        Operable* getOperandB() const {return _b;}
+
 
     };
 

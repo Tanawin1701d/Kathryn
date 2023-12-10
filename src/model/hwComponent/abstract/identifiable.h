@@ -99,9 +99,9 @@ namespace kathryn {
         [[nodiscard]] ull  getLocalId(ull id) const{return _localId;}
         void setLocalId(ull id)      {_localId = id; }
 
-    };
+        virtual bool castDownAble(){return true;}
 
-    typedef std::shared_ptr<Identifiable> IdentifiablePtr;
+    };
 
 }
 

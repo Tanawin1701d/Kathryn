@@ -8,8 +8,8 @@
 namespace kathryn{
 
 
-    Vis::Vis(Module *sampleModel): _sampleModel(sampleModel) {
-        assert(_sampleModel != nullptr);
+    Vis::Vis(Module *sampleModel): _sampleModule(sampleModel) {
+        assert(_sampleModule != nullptr);
     }
 
 
@@ -18,29 +18,16 @@ namespace kathryn{
         /** retrieve all states register */
         retrieveStateReg();
         /** get register*/
-        retrieveReg();
+        retrieveSimpleAsm(_sampleModule->getUserRegs(), regMetas);
         /** get wire*/
-        retrieveWire();
-        /** get expression*/
-        retrieveExpr();
+        retrieveSimpleAsm(_sampleModule->getUserWires(), wireMetas);
+        /** get exprMetas*/
+        retrieveSimpleAsm(_sampleModule->getUserExpressions(), exprMetas);
     }
 
     void Vis::print() {
 
     }
 
-    void Vis::retrieveReg() {
-
-        for ()
-
-    }
-
-    void Vis::retrieveWire() {
-
-    }
-
-    void Vis::retrieveExpr() {
-
-    }
 
 }

@@ -77,7 +77,7 @@ namespace kathryn{
         auto& getStateRegs(){return _stateRegs;}
         auto& getFlowBlocks(){return _flowBlockBases;}
         auto& getUserRegs(){return _userRegs; }
-        auto& getUserWiress(){return _userWires; }
+        auto& getUserWires(){return _userWires; }
         auto& getUserExpressions(){return _userExpressions; }
         auto& getUserVals(){return _userVals; }
         auto& getUserSubModules(){return _userSubModule; }

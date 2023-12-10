@@ -12,7 +12,6 @@
 
 #define seq for(auto kathrynBlock = new FlowBlockSeq(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 
-
 namespace kathryn {
 
     class SequenceEle{

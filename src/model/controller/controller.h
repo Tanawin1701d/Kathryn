@@ -80,7 +80,7 @@ namespace kathryn {
         /** wire handling*/
         void on_wire_init(Wire* ptr);
         void on_wire_update(AssignMeta* asmMeta);
-        /** expression handling*/
+        /** exprMetas handling*/
         void on_expression_init(expression* ptr);
         /** value handling*/
         void on_value_init(Val* ptr);

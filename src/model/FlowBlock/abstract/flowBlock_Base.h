@@ -99,7 +99,7 @@ namespace kathryn {
     struct NodeWrap {
     public:
         /** entrance represent UpdateEvent which refer to node wire that be head of the subblock*/
-        /** note that expression must not be here due to the abstract of the system*/
+        /** note that exprMetas must not be here due to the abstract of the system*/
         std::vector<Node*> entranceNodes;
         /** the exit condition that allow next building block run*/
         Operable* exitOpr = nullptr;

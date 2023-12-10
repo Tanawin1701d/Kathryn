@@ -24,24 +24,11 @@ namespace kathryn{
     };
 
     /**
-     *  meta data for wire and register (non state register)
-     *  the value and depend cond is not recufrsively get
+     * metadata for exprMetas , normal reg, normal wire not recursively get value
      * */
-    struct compMeta{
-        struct AsMeta{
-            std::string value;
-            std::string dependCond;
-        };
-        std::string regName;
-        std::vector<AsMeta> asMetas;
-    };
-
-    /**
-     * metadata for expression not recursively get value
-     * */
-    struct NonMemorizeComp{
+    struct CompDebugMessage{
         std::string compName;
-        std::string value;
+        std::vector<std::string> values;
     };
 
     /** Vis is used for print out state and
@@ -50,21 +37,22 @@ namespace kathryn{
     class Vis{
 
     private:
-        Module* _sampleModel;
+        Module* _sampleModule;
         std::vector<StateMeta> stateMetas;
-        std::vector<compMeta> regMetas;
-        std::vector<compMeta> wireMetas;
-        std::vector<NonMemorizeComp> expression;
+        std::vector<CompDebugMessage> regMetas;
+        std::vector<CompDebugMessage> wireMetas;
+        std::vector<CompDebugMessage> exprMetas;
 
     protected:
-        void retrieveStateReg();
-        void retrieveReg();
-        void retrieveWire();
-        void retrieveExpr();
-
-
-
-
+        template<typename T>
+        void retrieveSimpleAsm(T& srcHwComp, std::vector<CompDebugMessage>& desStore){
+            for (auto hwCompPtr: srcHwComp){
+                CompDebugMessage dbgMsg;
+                dbgMsg.compName = hwCompPtr->getGlobalName();
+                dbgMsg.values = hwCompPtr->getDebugAssignmentValue();
+                desStore.push_back(dbgMsg);
+            }
+        }
 
     public:
         explicit Vis(Module* sampleModel);

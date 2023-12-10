@@ -192,7 +192,7 @@ namespace kathryn {
                                      &b.getExactOperable(),
                                      b.getOperableSlice(),
                                      getOperableSlice().getSize() + 1);
-        /** size + 1 because we provide carry for expression*/
+        /** size + 1 because we provide carry for exprMetas*/
 
         return *ret;
     }

@@ -76,6 +76,7 @@ namespace kathryn{
         AssignMeta* generateAssignMeta(Operable& assignValue, Slice assignSlice){
             return new AssignMeta(_updateMeta, assignValue, assignSlice);
         }
+
     };
 
 

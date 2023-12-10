@@ -52,4 +52,5 @@ add_executable(Kathryn main.cpp
         src/application/visualizer/vis.h
         src/model/hwComponent/abstract/hwDebuggable.h
         src/model/hwComponent/abstract/logicComp.h
+        src/model/util/StateRegUtil.h
 )

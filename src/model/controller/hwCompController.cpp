@@ -76,7 +76,7 @@ namespace kathryn{
         fb->addElementInFlowBlock(node);
     }
 
-    /** expression*/
+    /** exprMetas*/
     void Controller::on_expression_init(expression* ptr) {
         Module* targetModule = getTargetModulePtr();
         /** localize necessary destination*/

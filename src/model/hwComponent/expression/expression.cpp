@@ -11,7 +11,7 @@
 namespace kathryn{
 
     /**
-     * expression
+     * exprMetas
      * */
 
     expression::expression(LOGIC_OP op,
@@ -64,13 +64,13 @@ namespace kathryn{
     }
 
     expression& expression::callBackBlockAssignFromAgent(Operable &b, Slice absSlice) {
-        std::cout << "expression should not be assign in slice mode" << std::endl;
+        std::cout << "exprMetas should not be assign in slice mode" << std::endl;
         assert(true);
         return *this;
     }
 
     expression& expression::callBackNonBlockAssignFromAgent(Operable &b, Slice absSlice) {
-        std::cout << "expression should not be assign in slice mode" << std::endl;
+        std::cout << "exprMetas should not be assign in slice mode" << std::endl;
         assert(true);
         return *this;
     }
