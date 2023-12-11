@@ -33,13 +33,57 @@ namespace kathryn{
 
     };
 
+    class testMod2: public Module{
+        makeReg(a, 32);
+        makeReg(b, 64);
+        makeReg(c, 16);
+    public:
+        explicit testMod2(int x): Module(){
+
+        }
+
+        void flow() override {
+            par{
+                a <<= b;
+                b <<= c;
+                c <<= a;
+            }
+        }
+
+    };
+
+    class testMod3: public Module{
+        makeReg(a, 32);
+        makeReg(b, 64);
+        makeReg(c, 16);
+    public:
+        explicit testMod3(int x): Module(){
+
+        }
+
+        void flow() override {
+            seq {
+                par {
+                    a <<= b;
+                    b <<= c;
+                    c <<= a;
+                }
+                par{
+                    b <<= c;
+                };
+
+            }
+        }
+
+    };
+
     class test1: public Test{
 
     public:
         void test() override{
-            makeMod(test1Mod, testMod, 0);
+            makeMod(tm, testMod3, 0);
 
-            auto testVis = Vis(&test1Mod);
+            auto testVis = Vis(&tm);
             testVis.execute();
             testVis.print();
 
