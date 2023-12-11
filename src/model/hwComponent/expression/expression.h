@@ -29,7 +29,7 @@ namespace kathryn {
     class expression : public LogicComp<expression>{
     private:
 
-        /** meta data that contain bi operation*/
+        /** metas data that contain bi operation*/
         LOGIC_OP _op;
         Operable* _a;
         Slice _aSlice{};

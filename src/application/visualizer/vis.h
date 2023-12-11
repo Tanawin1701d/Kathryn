@@ -8,6 +8,7 @@
 #include <string>
 
 #include "model/hwComponent/module/module.h"
+#include "model/util/StateRegUtil.h"
 
 namespace kathryn{
 
@@ -15,12 +16,17 @@ namespace kathryn{
      * dependState recursively get until got state reg or register
      * */
     struct StateMeta{
-        struct Trmeta{
-            std::string dependState;
-            std::string dependCondition;
-        };
         std::string stateName;
-        std::vector<Trmeta> trMetas;
+        std::vector<StResMeta> metas;
+
+        std::string getDebugString(){
+            std::string ret = stateName + " : \n";
+            for (auto& meta: metas){
+                ret += "        " + meta.getDebugString() + "\n";
+            }
+            return ret;
+        }
+
     };
 
     /**
@@ -29,6 +35,13 @@ namespace kathryn{
     struct CompDebugMessage{
         std::string compName;
         std::vector<std::string> values;
+        std::string getDebugString() {
+            std::string ret = compName + " : \n";
+            for (const auto& value: values) {
+                compName += "       " + value + "\n";
+            }
+            return ret;
+        }
     };
 
     /** Vis is used for print out state and
@@ -43,6 +56,8 @@ namespace kathryn{
         std::vector<CompDebugMessage> wireMetas;
         std::vector<CompDebugMessage> exprMetas;
 
+        bool retrieveYet = false;
+
     protected:
         template<typename T>
         void retrieveSimpleAsm(T& srcHwComp, std::vector<CompDebugMessage>& desStore){
@@ -54,12 +69,21 @@ namespace kathryn{
             }
         }
 
+        void retrieveStateReg();
+
     public:
         explicit Vis(Module* sampleModel);
 
         void execute();
 
         void print();
+
+        static void printSimpleAsm(std::vector<CompDebugMessage>& dbgMsgs){
+            for (auto& meta: dbgMsgs){
+                std::cout << meta.getDebugString();
+                std::cout << "----------\n";
+            }
+        }
 
     };
 

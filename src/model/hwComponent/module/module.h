@@ -15,6 +15,7 @@
 #include "model/hwComponent/expression/expression.h"
 #include "model/hwComponent/value/value.h"
 #include "model/FlowBlock/abstract/flowBlock_Base.h"
+#include "model/FlowBlock/abstract/stateReg.h"
 
 
 namespace kathryn{
@@ -32,7 +33,7 @@ namespace kathryn{
     private:
         /**all slave object that belong to this elements*/
         /** register that user to represent state*/
-        std::vector<Reg*>        _stateRegs;
+        std::vector<StateReg*>        _stateRegs;
         std::vector<FlowBlockBase*> _flowBlockBases;
         /** user component*/
         std::vector<Reg*>        _userRegs;
@@ -65,7 +66,7 @@ namespace kathryn{
 
         void com_final() override;
 
-        void addStateReg      (Reg* reg);
+        void addStateReg      (StateReg* reg);
         void addFlowBlock     (FlowBlockBase* fb);
         void addUserReg       (Reg* reg);
         void addUserWires     (Wire* wire);

@@ -17,7 +17,7 @@ namespace kathryn {
 
     class FlowBlockPar : public FlowBlockBase, public LoopStMacro{
 
-        /** meta element*/
+        /** metas element*/
         NodeWrap* resultNodeWrap = nullptr;
         StateReg* basicStReg = nullptr;
 

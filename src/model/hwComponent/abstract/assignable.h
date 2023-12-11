@@ -13,7 +13,7 @@
 
 namespace kathryn{
 
-    /** reg/wire update meta data*/
+    /** reg/wire update metas data*/
 
     struct UpdateEvent{
         Operable* updateCondition{}; /// which condition that allow this value to update.
@@ -72,7 +72,7 @@ namespace kathryn{
         void addUpdateMeta(UpdateEvent* event){
             _updateMeta.push_back(event);
         }
-        /** generate update meta*/
+        /** generate update metas*/
         AssignMeta* generateAssignMeta(Operable& assignValue, Slice assignSlice){
             return new AssignMeta(_updateMeta, assignValue, assignSlice);
         }

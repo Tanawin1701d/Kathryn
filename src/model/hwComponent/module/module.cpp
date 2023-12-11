@@ -60,11 +60,11 @@ namespace kathryn{
 
     /**
      *
-     * meta data pusher
+     * metas data pusher
      *
      * */
     /** todo may be check their are reg in the system */
-    void Module::addStateReg(Reg* reg) {
+    void Module::addStateReg(StateReg* reg) {
         assert(reg != nullptr); /// can't be nullptr
         _stateRegs.push_back(reg);
 

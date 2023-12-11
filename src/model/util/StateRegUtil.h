@@ -42,6 +42,19 @@ namespace kathryn{
     struct StResMeta{
         Operable* condition = nullptr;
         std::vector<Operable*> dependState;
+
+        std::string getDebugString(){
+            std::string result =  "depend on state ";
+            for (auto dep: dependState){
+                result += dep->castToIdent()->getGlobalName() + ",";
+            }
+            result += "when " + ((condition != nullptr) ?
+                    condition->castToIdent()->getGlobalName() :
+                    "none"
+                    );
+            return result;
+
+        }
     };
 
     std::vector<StResMeta> getStateInfo(StateReg* stRegPtr){

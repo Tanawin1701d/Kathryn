@@ -32,7 +32,7 @@ namespace kathryn {
 
     bool        pseudoNode      = false;
     Operable*   psudoAssignMeta = nullptr;
-    AssignMeta* assignMeta      = nullptr; //// AssignMeta is must not use the same assign meta
+    AssignMeta* assignMeta      = nullptr; //// AssignMeta is must not use the same assign metas
     Operable*   condition       = nullptr;
     Operable*   dependState     = nullptr;
 
