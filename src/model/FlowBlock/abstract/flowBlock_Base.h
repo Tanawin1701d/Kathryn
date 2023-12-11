@@ -98,11 +98,31 @@ namespace kathryn {
     /* use for inner block return to outter block**/
     struct NodeWrap {
     public:
-        /** entrance represent UpdateEvent which refer to node wire that be head of the subblock*/
+        /** entrance represent UpdateEvent which refers to node that be head of the subblock*/
         /** note that exprMetas must not be here due to the abstract of the system*/
         std::vector<Node*> entranceNodes;
         /** the exit condition that allow next building block run*/
         Operable* exitOpr = nullptr;
+
+        NodeWrap(const NodeWrap& rhs){
+            exitOpr = nullptr;
+            *this = rhs;
+        }
+
+        NodeWrap() = default;
+
+        NodeWrap& operator = (const NodeWrap& rhs){
+            if (&rhs == this){
+                return *this;
+            }
+            ///// change node location
+            for (auto nd: rhs.entranceNodes){
+                Node* preInsert = new Node(*nd);
+                entranceNodes.push_back(preInsert);
+            }
+            exitOpr = rhs.exitOpr;
+            return *this;
+        }
 
         void addEntraceNode(Node* nd){
             assert(nd != nullptr);
@@ -142,25 +162,11 @@ namespace kathryn {
             }
         }
 
-        NodeWrap& operator = (const NodeWrap& rhs){
-            if (&rhs == this){
-                return *this;
+        void deleteNodesInWrap(){
+            for (auto nd: entranceNodes){
+                delete nd;
             }
-            ///// change node location
-            for (auto nd: rhs.entranceNodes){
-                Node* preInsert = new Node(*nd);
-                entranceNodes.push_back(preInsert);
-            }
-            exitOpr = rhs.exitOpr;
-            return *this;
         }
-
-        NodeWrap(const NodeWrap& rhs){
-            exitOpr = nullptr;
-            *this = rhs;
-        }
-
-        NodeWrap() = default;
 
     };
 

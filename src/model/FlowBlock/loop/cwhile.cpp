@@ -22,6 +22,7 @@ namespace kathryn{
     }
 
     void FlowBlockCwhile::addSubFlowBlock(FlowBlockBase *subBlock) {
+        assert(subBlock != nullptr);
         assert(!isGetFlowBlockYet);
         isGetFlowBlockYet = true;
         FlowBlockBase::addSubFlowBlock(subBlock);
@@ -33,6 +34,8 @@ namespace kathryn{
     }
 
     void FlowBlockCwhile::onAttachBlock() {
+        ctrl->on_attach_flowBlock(this);
+        /** in cwhile we implcitcally add sub block to system*/
         auto sb = genImplicitSubBlk(PARALLEL);
         sb->onAttachBlock();
     }
@@ -45,36 +48,30 @@ namespace kathryn{
 
     void FlowBlockCwhile::buildHwComponent() {
         assert(subBlocks.size() == 1);
-
-        /** build subblock*/
-        subBlocks[0]->buildHwComponent();
-
         /** get node wrap */
         subBlockNodeWrap = subBlocks[0]->sumarizeBlock();
         assert(subBlockNodeWrap != nullptr);
-        /** copy node*/
+
+
+        /** copy node and node wrap*/
         loopNodeWrap = new NodeWrap(*subBlockNodeWrap);
 
 
         /**assign to result node wrap*/
+        /** node wrap no assign because we must sent to upper block*/
         resultNodeWrapper = new NodeWrap();
         auto psuedoNode = new Node();
         psuedoNode->addCondtion(&(!*_condExpr), BITWISE_AND);
         resultNodeWrapper->entranceNodes.push_back(psuedoNode);
-        for (auto node: loopNodeWrap->entranceNodes){
-            node->addCondtion(_condExpr, BITWISE_AND);
-            resultNodeWrapper->entranceNodes.push_back(node);
-        }
-
+        resultNodeWrapper->transferNodeFrom(subBlockNodeWrap);
         resultNodeWrapper->exitOpr = &(((*subBlockNodeWrap->exitOpr  ) & !(*_condExpr)) |
                                        ((*psuedoNode->psudoAssignMeta) & !(*_condExpr) ));
 
+
         /**assign for loop back assignment*/
-        for (auto nd : loopNodeWrap->entranceNodes){
-            nd->addDependState(subBlockNodeWrap->exitOpr, BITWISE_AND);
-            nd->addCondtion( _condExpr, BITWISE_AND);
-            nd->assign();
-        }
+        loopNodeWrap->addDependStateToAllNode(subBlockNodeWrap->exitOpr, BITWISE_AND);
+        loopNodeWrap->addConditionToAllNode(_condExpr, BITWISE_AND);
+        loopNodeWrap->assignAllNode();
     }
 
     void FlowBlockCwhile::doPreFunction() {

@@ -43,8 +43,6 @@ namespace kathryn{
         void doPreFunction() override;
         void doPostFunction() override;
 
-
-
     };
 
 }

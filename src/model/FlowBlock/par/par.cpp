@@ -33,9 +33,9 @@ namespace kathryn{
         assert((!basicNodes.empty()) || (!subBlocks.empty()));
 
         /** build sub component*/
-        for (auto sb : subBlocks){
-            sb->buildHwComponent();
-        }
+//        for (auto sb : subBlocks){
+//            sb->buildHwComponent();
+//        }
 
         /**build result node wrap*/
         resultNodeWrap = new NodeWrap();

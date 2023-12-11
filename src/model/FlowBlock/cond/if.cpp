@@ -43,7 +43,6 @@ namespace kathryn{
     void FlowBlockIf::buildHwComponent() {
         assert(!allCondes.empty());
         assert(!allStatement.empty());
-        subBlocks[0]->buildHwComponent();
         allStatement.insert(allStatement.begin(), subBlocks[0]->sumarizeBlock());
 
         /**add condition to state*/
@@ -73,7 +72,7 @@ namespace kathryn{
         }
         ///// build proxy node to prevent state lost
         Node* psuedoNode = nullptr;
-        if ( allCondes.size() < allStatement.size() ) {
+        if ( allCondes.size() == allStatement.size() ) {
             psuedoNode = new Node();
             psuedoNode->addCondtion(prevFalse, BITWISE_AND);
             resultNodeWrapper->addEntraceNode(psuedoNode);

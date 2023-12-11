@@ -104,10 +104,6 @@ namespace kathryn{
     void Module::buildFlow() {
         /** build all hardware to flowBlock*/
         /** every flowblock will auto build when block is detach*/
-//        for (auto flowBlockPtr: _flowBlockBases){
-//            flowBlockPtr->buildHwComponent();
-//        }
-
         /** create nodewrap of all flowblock*/
         std::vector<NodeWrap*> frontNodeWrap;
 
@@ -117,6 +113,8 @@ namespace kathryn{
         for (auto nw: frontNodeWrap){
             nw->addDependStateToAllNode(startWire, BITWISE_AND);
             nw->assignAllNode();
+            /** assume that node wrap that appear to module is not used anymore. */
+            nw->deleteNodesInWrap();
             delete nw;
         }
 
