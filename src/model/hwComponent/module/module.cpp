@@ -12,10 +12,11 @@ namespace kathryn{
 
     Wire* startWire = &_make<Wire>( "startWire", 1);
 
-    Module::Module(): Identifiable(TYPE_MODULE),
+    Module::Module(bool initComp): Identifiable(TYPE_MODULE),
                       HwCompControllerItf()
     {
-        com_init();
+        if (initComp)
+            com_init();
     }
 
     Module::~Module() {
@@ -100,11 +101,12 @@ namespace kathryn{
         _userSubModule.push_back(smd);
     }
 
-    void Module::buildHardware() {
+    void Module::buildFlow() {
         /** build all hardware to flowBlock*/
-        for (auto flowBlockPtr: _flowBlockBases){
-            flowBlockPtr->buildHwComponent();
-        }
+        /** every flowblock will auto build when block is detach*/
+//        for (auto flowBlockPtr: _flowBlockBases){
+//            flowBlockPtr->buildHwComponent();
+//        }
 
         /** create nodewrap of all flowblock*/
         std::vector<NodeWrap*> frontNodeWrap;

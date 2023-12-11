@@ -25,8 +25,9 @@ namespace kathryn {
 
     public:
 
-        explicit StateReg(int size = 1): Reg(size, false, TYPE_STATE_REG){
+        explicit StateReg(int size = 1): Reg(size, false, TYPE_STATE_REG, false){
             upFullState = new Val(size, "b" + (std::to_string((1 << size) - 1)));
+            com_init();
         };
 
         /** state register system must handle updateEvent themself*/

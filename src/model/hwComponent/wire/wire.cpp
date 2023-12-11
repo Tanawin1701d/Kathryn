@@ -10,7 +10,7 @@
 namespace kathryn{
 
 
-    Wire::Wire(int size) : LogicComp({0, size}, TYPE_WIRE){
+    Wire::Wire(int size) : LogicComp({0, size}, TYPE_WIRE, true){
         com_init();
     }
 
@@ -53,6 +53,7 @@ namespace kathryn{
         for (auto upEvent: _updateMeta){
             results.push_back(upEvent->getDebugString());
         }
+        return results;
     }
 
 

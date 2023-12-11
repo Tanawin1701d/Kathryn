@@ -20,7 +20,7 @@ namespace kathryn{
                            Operable* b,
                            Slice bSlice,
                            int exp_size):
-    LogicComp<expression>({0, exp_size}, TYPE_EXPRESSION),
+    LogicComp<expression>({0, exp_size}, TYPE_EXPRESSION, false),
     _op(op),
     _a(a),
     _aSlice(aSlice),
@@ -31,7 +31,7 @@ namespace kathryn{
     }
 
     expression::expression():
-    LogicComp<expression>(Slice(), TYPE_EXPRESSION),
+    LogicComp<expression>(Slice(), TYPE_EXPRESSION, false),
     _op(ASSIGN),
     _a(nullptr),
     _aSlice(Slice()),

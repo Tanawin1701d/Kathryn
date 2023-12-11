@@ -31,6 +31,7 @@ namespace kathryn{
             stReg = new StateReg();
             stateNode = stReg->generateStateNode();
             _simpleAsm->addDependState(stReg, BITWISE_AND);
+            _simpleAsm->assign();
         }else if (_subBlock != nullptr){
             complexNode = _subBlock->sumarizeBlock();
         }else{

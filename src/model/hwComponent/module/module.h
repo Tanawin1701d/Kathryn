@@ -55,7 +55,7 @@ namespace kathryn{
 
 
     public:
-        explicit Module();
+        explicit Module(bool initComp = true);
         ~Module();
         template<typename T>
         void deleteSubElement(std::vector<T*> subEleVec){
@@ -84,7 +84,7 @@ namespace kathryn{
         auto& getUserSubModules(){return _userSubModule; }
         /** This allow user to custom module design flow*/
         virtual void flow(){};
-        virtual void buildHardware();
+        virtual void buildFlow();
 
     };
 

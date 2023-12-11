@@ -38,7 +38,7 @@ namespace kathryn{
         std::string getDebugString() {
             std::string ret = compName + " : \n";
             for (const auto& value: values) {
-                compName += "       " + value + "\n";
+                ret += "       " + value + "\n";
             }
             return ret;
         }

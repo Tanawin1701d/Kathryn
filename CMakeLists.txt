@@ -53,4 +53,10 @@ add_executable(Kathryn main.cpp
         src/model/hwComponent/abstract/hwDebuggable.h
         src/model/hwComponent/abstract/logicComp.h
         src/model/util/StateRegUtil.h
+        src/test/test.cpp
+        src/test/test.h
+        src/test/modelTest1.cpp
+        src/test/modelTest1.h
+        src/model/hwComponent/abstract/operation.cpp
+        src/model/util/stateRegUtil.cpp
 )

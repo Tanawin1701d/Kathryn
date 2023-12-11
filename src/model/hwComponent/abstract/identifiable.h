@@ -27,13 +27,13 @@ namespace kathryn {
         TYPE_COUNT = 6
     };
 
-    std::string GLOBAL_PREFIX[TYPE_COUNT] = {"R",
-                                             "S",
-                                             "W",
-                                             "E",
-                                             "M",
-                                             "V"
-                                             };
+    static const std::string GLOBAL_PREFIX[TYPE_COUNT] = {"R",
+                                                          "S",
+                                                          "W",
+                                                          "E",
+                                                          "M",
+                                                          "V"
+                                                        };
 
     class Module;
     class Identifiable {

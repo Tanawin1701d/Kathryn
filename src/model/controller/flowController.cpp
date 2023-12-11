@@ -58,7 +58,7 @@ namespace kathryn{
         purifyFlowStack();
 
         /** we must save head of flow block for deleting and debugging*/
-        if (!flowBlockStack.empty()){
+        if (flowBlockStack.empty()){
             getTargetModuleEle().md->addFlowBlock(fb);
         }
 
@@ -83,6 +83,9 @@ namespace kathryn{
         purifyFlowStack();
         auto top= getTopFlowBlock();
         assert(top == fb);
+
+        /**we must build hardware component because sub element require module position*/
+        fb->buildHwComponent();
 
         tryPopCtrlFlowFromAllStack(fb);
         if (!flowBlockStack.empty()){

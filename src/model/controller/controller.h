@@ -85,6 +85,7 @@ namespace kathryn {
         /** value handling*/
         void on_value_init(Val* ptr);
         /** module handling*/
+        void on_globalModule_init_component(Module* globalMod);
         void on_module_init_components(Module* ptr);
         void on_module_init_designFlow(Module* ptr); /** todo make design flow implement correctly*/
         void on_module_final(Module* ptr);

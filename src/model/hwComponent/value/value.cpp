@@ -9,7 +9,7 @@
 namespace kathryn{
 
     Val::Val(int size, std::string v):
-                                    LogicComp({0, size}, TYPE_VAL),
+                                    LogicComp({0, size}, TYPE_VAL, false),
                                     _size(size)
                                     {
                                         com_init();
@@ -29,7 +29,7 @@ namespace kathryn{
     }
 
     SliceAgent<Val>& Val::operator() (int idx){
-        operator() (idx, idx+1);
+        return operator() (idx, idx+1);
     }
 
     std::vector<std::string> Val::getDebugAssignmentValue() {

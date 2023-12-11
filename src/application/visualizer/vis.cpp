@@ -18,6 +18,7 @@ namespace kathryn{
             StateMeta result;
             result.stateName = stReg->getGlobalName();
             result.metas = getStateInfo(stReg);
+            stateMetas.push_back(result);
         }
 
     }

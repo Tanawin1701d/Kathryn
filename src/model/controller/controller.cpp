@@ -16,11 +16,15 @@ namespace kathryn{
         /***lazy initializer*/
         if (centralControllerPtr == nullptr){
             centralControllerPtr = new Controller();
+        }else{
+            return centralControllerPtr;
         }
         /// if global module was not init, then init it
         if (globalModulePtr == nullptr){
-            globalModulePtr = new Module();
-            centralControllerPtr->on_module_init_components(globalModulePtr);
+            centralControllerPtr->unlockAllocation();
+            globalModulePtr = new Module(false);
+            globalModulePtr->setTypeName("globeMod");
+            centralControllerPtr->on_globalModule_init_component(globalModulePtr);
         }
         return centralControllerPtr;
     }

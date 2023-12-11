@@ -94,6 +94,14 @@ namespace kathryn{
     /**
      * module
      * */
+
+
+    void Controller::on_globalModule_init_component(Module* globalMod) {
+        assert(globalMod != nullptr);
+        moduleStack.push(Module_Stack_Element{globalMod, MODULE_COMPONENT_CONSTRUCT});
+    }
+
+
     void Controller::on_module_init_components(Module* ptr) {
         /**check that module initialization is in construct state not in designflow constructing*/
         assert(getTargetModuleEle().state == MODULE_COMPONENT_CONSTRUCT);
@@ -113,7 +121,7 @@ namespace kathryn{
         moduleStack.top().state = MODULE_DESIGN_FLOW_CONSTRUCT;
         /** flow the program*/
         topModule->flow();
-        topModule->buildHardware();
+        topModule->buildFlow();
     }
 
     void Controller::on_module_final(Module* ptr) {
@@ -122,5 +130,6 @@ namespace kathryn{
         assert(isAllFlowStackEmpty());
         moduleStack.pop();
     }
+
 
 }

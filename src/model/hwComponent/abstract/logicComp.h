@@ -24,12 +24,12 @@ namespace kathryn{
                       public HwCompControllerItf,
                       public HwCompDebuggable{
     public:
-        explicit LogicComp(Slice slc, HW_COMPONENT_TYPE hwType):
+        explicit LogicComp(Slice slc, HW_COMPONENT_TYPE hwType, bool requiredAllocCheck):
                             Assignable<T>(),
                             Operable(),
                             Slicable<T>(slc),
                             Identifiable(hwType),
-                            HwCompControllerItf(),
+                            HwCompControllerItf(requiredAllocCheck),
                             HwCompDebuggable()
                             {}
 

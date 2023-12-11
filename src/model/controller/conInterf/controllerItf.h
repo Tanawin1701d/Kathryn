@@ -18,7 +18,7 @@ namespace kathryn {
     protected:
         Controller* ctrl;
     public:
-        explicit HwCompControllerItf();
+        explicit HwCompControllerItf(bool requiredAllocCheck = true);
 
         /** use while constructor is invoke*/
         virtual void com_init() { assert(true); }

@@ -37,9 +37,9 @@ namespace kathryn {
         /** make initializer*/
         getControllerPtr()->unlockAllocation();
         auto objPtr = new T(std::forward<Args>(args)...);
-        objPtr->com_final();
-        objPtr->setTypeName(typeid(T).name());
         objPtr->setTypeName(name);
+        objPtr->com_final();
+
         return *objPtr;
     }
 

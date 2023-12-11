@@ -47,10 +47,8 @@ namespace kathryn{
         SliceAgent<Val>& operator() (int start, int stop) override;
         SliceAgent<Val>& operator() (int idx) override;
 
-        [[noreturn]]
-        Val& callBackBlockAssignFromAgent(Operable& b, Slice absSlice) override {assert(true);};
-        [[noreturn]]
-        Val& callBackNonBlockAssignFromAgent(Operable& b, Slice absSlice) override{assert(true);};
+        Val& callBackBlockAssignFromAgent(Operable& b, Slice absSlice) override {assert(true); return *this;};
+        Val& callBackNonBlockAssignFromAgent(Operable& b, Slice absSlice) override{assert(true); return *this;};
 
         std::vector<std::string> getDebugAssignmentValue() override;
 

@@ -26,7 +26,7 @@ namespace kathryn{
         [[nodiscard]] std::string getDebugString() const{
             return updateValue->castToIdent()->getGlobalName() +
             "[" +
-            std::to_string(updateSlice.start) +
+            std::to_string(updateSlice.start) + ":"+
             std::to_string(updateSlice.stop) +
             "] when state = " +
             ((updateState != nullptr) ? updateState->castToIdent()->getGlobalName(): "none") +
