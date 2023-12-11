@@ -17,23 +17,23 @@ namespace kathryn {
     class SequenceEle{
     public:
         /**assignment block*/
-        Node* _simpleAsm = nullptr;
-        FlowBlockBase* _subBlock = nullptr;
+        Node*          _simpleAsm = nullptr;
+        FlowBlockBase* _subBlock  = nullptr;
 
         /**the thing that represent state*/
         ///// state for simple assignment
-        StateReg* stReg = nullptr;
-        Node*     stateNode = nullptr;
+        StateReg* stReg           = nullptr;
+        Node*     stateNode       = nullptr;
         ///// state for complex assignment
-        NodeWrap* complexNode = nullptr;
+        NodeWrap* complexNode     = nullptr;
 
-        explicit SequenceEle(Node* simpleNode);
-        explicit SequenceEle(FlowBlockBase* fbBase);
-        void genHardware();
+        explicit SequenceEle(Node*          simpleNode);
+        explicit SequenceEle(FlowBlockBase* fbBase    );
 
-        void setDependDent(SequenceEle* predecessor);
-        Operable* getStateFinishIden() const;
-        std::vector<Node*> getEntranceNodes();
+        void               genHardware       ();
+        void               assignDependDent     (SequenceEle* predecessor) const;
+        Operable*          getStateFinishIden() const;
+        std::vector<Node*> getEntranceNodes  ();
     };
 
     class FlowBlockSeq : public FlowBlockBase, public LoopStMacro{

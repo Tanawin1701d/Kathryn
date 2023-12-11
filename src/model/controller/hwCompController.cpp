@@ -3,7 +3,6 @@
 //
 
 #include "controller.h"
-#include "model/FlowBlock/abstract/flowBlock_Base.h"
 
 namespace kathryn{
 
@@ -47,9 +46,10 @@ namespace kathryn{
     /** state register handling */
     void Controller::on_state_reg_init(StateReg* ptr) {
         assert(ptr != nullptr);
-        Module* tagetModule = getTargetModulePtr();
+        Module* targetModule = getTargetModulePtr();
         /**localize necessary destination*/
-        tagetModule->addStateReg(ptr);
+        targetModule->addStateReg(ptr);
+        ptr->setParent(targetModule);
     }
 
     /** wire handling*/
@@ -78,6 +78,7 @@ namespace kathryn{
 
     /** exprMetas*/
     void Controller::on_expression_init(expression* ptr) {
+        assert(ptr != nullptr);
         Module* targetModule = getTargetModulePtr();
         /** localize necessary destination*/
         targetModule->addUserExpression(ptr);
@@ -85,6 +86,7 @@ namespace kathryn{
     }
     /** value*/
     void Controller::on_value_init(Val* ptr) {
+        assert(ptr != nullptr);
         Module* targetModule = getTargetModulePtr();
         /** localize necessary destination*/
         targetModule->addUserVal(ptr);
@@ -97,6 +99,7 @@ namespace kathryn{
 
 
     void Controller::on_globalModule_init_component(Module* globalMod) {
+        /** for global module for initialize project*/
         assert(globalMod != nullptr);
         moduleStack.push(Module_Stack_Element{globalMod, MODULE_COMPONENT_CONSTRUCT});
     }
@@ -112,6 +115,7 @@ namespace kathryn{
         /**at least module must be other submodule*/
         assert(getTargetModuleEle().state != MODULE_FINISHED_CONSTRUCT);
         moduleStack.push(Module_Stack_Element{ptr, MODULE_COMPONENT_CONSTRUCT});
+        ptr->setParent(targetModule);
 
     }
 

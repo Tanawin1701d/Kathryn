@@ -38,7 +38,16 @@ namespace kathryn{
         }
 
         if (flowBlockStack.top()->isLazyDelete()){
+            auto ifFlowBlock = ifBlockStack.top();
+            assert(ifFlowBlock != nullptr);
+            /** build hardware component */
+            ifFlowBlock->buildHwComponent();
+            /** try pop from stack*/
             tryPopCtrlFlowFromAllStack(flowBlockStack.top());
+            /** addElement to master of this block */
+            if (!flowBlockStack.empty()){
+                getTopFlowBlock()->addSubFlowBlock(ifFlowBlock);
+            }
         }
     }
 
@@ -117,9 +126,12 @@ namespace kathryn{
         assert(!flowBlockStack.empty());
         assert(!ifBlockStack.empty());
         assert(fb == getTopFlowBlock());
+        /**build hardware component*/
+        fb->buildHwComponent();
+        /***pop this block from hardware stach*/
         tryPopCtrlFlowFromAllStack(fb);
+        /** transfer data to master if block*/
         ifBlockStack.top()->addElifNodeWrap(fb);
-
     }
 
     FLOW_BLOCK_TYPE Controller::get_top_pattern_flow_block_type(){

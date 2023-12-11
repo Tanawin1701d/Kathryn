@@ -9,7 +9,13 @@
 
 namespace kathryn{
 
-    /** sequenceElement*/
+    /**
+     *
+     *
+     * sequenceElement
+     *
+     *
+     * */
 
 
     SequenceEle::SequenceEle(Node *simpleNode) {
@@ -19,7 +25,7 @@ namespace kathryn{
 
     SequenceEle::SequenceEle(FlowBlockBase *fbBase) {
         assert(fbBase != nullptr);
-        _subBlock  =fbBase;
+        _subBlock  = fbBase;
     }
 
     void SequenceEle::genHardware() {
@@ -28,7 +34,7 @@ namespace kathryn{
 
         ///// it is the basic assignment
         if (_simpleAsm != nullptr){
-            stReg = new StateReg();
+            stReg     = new StateReg();
             stateNode = stReg->generateStateNode();
             _simpleAsm->addDependState(stReg, BITWISE_AND);
             _simpleAsm->assign();
@@ -39,17 +45,16 @@ namespace kathryn{
         }
     }
 
-    void SequenceEle::setDependDent(SequenceEle *predecessor) {
+    void SequenceEle::assignDependDent(SequenceEle *predecessor) const {
         assert(predecessor != nullptr);
         assert((_simpleAsm != nullptr) ^ (_subBlock != nullptr));
 
         if (_simpleAsm != nullptr){
             stateNode->addDependState(predecessor->getStateFinishIden(), BITWISE_AND);
-            stateNode->assign();
+            stateNode->assign();   ///// assign state node to actual value
         }else if (_subBlock != nullptr){
-            for (auto node: complexNode->entranceNodes){
-                node->addDependState(predecessor->getStateFinishIden(), BITWISE_AND);
-            }
+            complexNode->addDependStateToAllNode(predecessor->getStateFinishIden(), BITWISE_AND);
+            complexNode->assignAllNode();
         }else{
             assert(true);
         }
@@ -80,7 +85,11 @@ namespace kathryn{
 
 
     /**
+     *
+     *
      * sequence flow
+     *
+     *
      * */
 
 
@@ -125,7 +134,7 @@ namespace kathryn{
         for (size_t idx = 0; (idx+1) < _subSeqMetas.size(); idx++){
             auto& lhsNodeWrapper = _subSeqMetas[idx];
             auto& rhsNodeWrapper = _subSeqMetas[idx+1];
-            rhsNodeWrapper.setDependDent(&lhsNodeWrapper);
+            rhsNodeWrapper.assignDependDent(&lhsNodeWrapper);
         }
         /** build new result NodeWrap*/
         resultNodeWrap = new NodeWrap();
