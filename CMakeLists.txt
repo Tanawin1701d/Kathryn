@@ -62,4 +62,6 @@ add_executable(Kathryn main.cpp
         src/model/FlowBlock/abstract/node.cpp
         src/model/FlowBlock/abstract/node.h
         src/test/modelTest2.h
+        src/util/logger/logger.cpp
+        src/util/logger/logger.h
 )
