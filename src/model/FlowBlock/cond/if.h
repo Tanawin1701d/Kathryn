@@ -17,7 +17,7 @@ namespace kathryn{
 
     class FlowBlockIf: public FlowBlockBase, public LoopStMacro{
     private:
-
+        FlowBlockBase* implicitFlowBlock = nullptr;
         std::vector<NodeWrap*> allStatement; /// include current block and else block
         std::vector<Operable*>  allCondes; /// include condition of if block and elif block except else block
 

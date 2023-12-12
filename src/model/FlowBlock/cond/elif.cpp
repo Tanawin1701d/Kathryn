@@ -37,11 +37,12 @@ namespace kathryn{
     void FlowBlockElif::onAttachBlock() {
         ctrl->on_attach_flowBlock_elif(this);
         auto sb = genImplicitSubBlk(PARALLEL);
+        implicitSubBlock = sb;
         sb->onAttachBlock();
     }
 
     void FlowBlockElif::onDetachBlock() {
-        subBlocks[0]->onDetachBlock();
+        implicitSubBlock->onDetachBlock();
         ctrl->on_detach_flowBlock_elif(this);
     }
 

@@ -37,12 +37,14 @@ namespace kathryn{
         ctrl->on_attach_flowBlock(this);
         /** in cwhile we implcitcally add sub block to system*/
         auto sb = genImplicitSubBlk(PARALLEL);
+        implicitFlowBlock = sb;
         sb->onAttachBlock();
     }
 
     void FlowBlockCwhile::onDetachBlock() {
+        assert(implicitFlowBlock != nullptr);
+        implicitFlowBlock->onDetachBlock();
         assert(isGetFlowBlockYet);
-        subBlocks[0]->onDetachBlock();
         ctrl->on_detach_flowBlock(this);
     }
 

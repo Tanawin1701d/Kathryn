@@ -114,7 +114,7 @@ namespace kathryn{
 
     void Controller::on_attach_flowBlock_elif(FlowBlockElif *fb) {
         assert(fb != nullptr);
-        assert(fb->getFlowType() == ELIF);
+        assert(fb->getFlowType() == ELIF || fb->getFlowType() == ELSE);
         assert(!flowBlockStack.empty());
         /*** do not purify flow stack*/
         flowBlockStack.push(fb);
@@ -122,7 +122,7 @@ namespace kathryn{
 
     void Controller::on_detach_flowBlock_elif(FlowBlockElif *fb) {
         assert(fb != nullptr);
-        assert(fb->getFlowType() == ELIF);
+        assert(fb->getFlowType() == ELIF || fb->getFlowType() == ELSE);
         assert(!flowBlockStack.empty());
         assert(!ifBlockStack.empty());
         assert(fb == getTopFlowBlock());
@@ -138,7 +138,7 @@ namespace kathryn{
         if (patternFlowBlockStack.empty()){
             return DUMMY_BLOCK;
         }
-        return getTopFlowBlock()->getFlowType();
+        return patternFlowBlockStack.top()->getFlowType();
     }
 
 

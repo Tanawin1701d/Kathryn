@@ -42,6 +42,8 @@ namespace kathryn {
     };
 
     std::string lop_to_string(LOGIC_OP op);
+    bool isSingleOpr(LOGIC_OP op);
+    bool isDoubleOpr(LOGIC_OP op);
 
     const int LOGICAL_SIZE = 1;
 

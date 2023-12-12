@@ -14,6 +14,7 @@ namespace kathryn{
 
     class FlowBlockElif: public FlowBlockBase, public LoopStMacro{
     private:
+        FlowBlockBase* implicitSubBlock = nullptr;
         NodeWrap* resultNodeWrapper = nullptr;
         Operable* _cond = nullptr;
 

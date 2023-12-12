@@ -63,7 +63,7 @@ namespace kathryn {
                                             ifBlockStack.empty();}
 
         void removeLazyFbFromTopStack();
-        void purifyFlowStack();
+
         ////  check that stack rule before add or remove any event
 
     public:
@@ -91,6 +91,7 @@ namespace kathryn {
         void on_module_final(Module* ptr);
 
         /** control flow block handler*/
+        void purifyFlowStack();
         void on_attach_flowBlock(FlowBlockBase* fb);
         void on_detach_flowBlock(FlowBlockBase* fb);
 

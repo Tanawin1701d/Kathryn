@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "test/modelTest1.h"
+#include "test/modelTest2.h"
 
 
 using namespace kathryn;
@@ -8,7 +8,7 @@ using namespace kathryn;
 
 int main() {
 
-    auto t = test1();
+    auto t = test2();
     t.test();
 
 

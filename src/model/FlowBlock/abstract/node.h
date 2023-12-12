@@ -19,7 +19,7 @@ namespace kathryn {
     struct Node {
 
         bool pseudoNode = false;
-        Operable *psudoAssignMeta = nullptr;
+        expression* psudoAssignMeta = nullptr;
         AssignMeta *assignMeta = nullptr; //// AssignMeta is must not use the same assign metas
         Operable *condition = nullptr;
         Operable *dependState = nullptr;
@@ -73,6 +73,9 @@ namespace kathryn {
         /** assign data to register*/
         void assign() {
             if (pseudoNode) {
+                /**typically pseudo node must have condition and depend state
+                 * because pseudoNode used on remain condition for if and while block
+                 * */
                 (*psudoAssignMeta) = *(Operable *) (&(*dependState & *condition));
             } else {
                 auto resultUpEvent = new UpdateEvent({

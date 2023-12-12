@@ -31,19 +31,22 @@ namespace kathryn{
     void FlowBlockIf::onAttachBlock() {
         ctrl->on_attach_flowBlock_if(this);
         auto sb = genImplicitSubBlk(PARALLEL);
+        implicitFlowBlock = sb;
         sb->onAttachBlock();
     }
 
     void FlowBlockIf::onDetachBlock() {
-        subBlocks[0]->onDetachBlock();
+        assert(implicitFlowBlock != nullptr);
+        implicitFlowBlock->onDetachBlock();
         ////// we will hold this end block will handle it
         setLazyDelete();
     }
 
     void FlowBlockIf::buildHwComponent() {
         assert(!allCondes.empty());
-        assert(!allStatement.empty());
         allStatement.insert(allStatement.begin(), subBlocks[0]->sumarizeBlock());
+
+        assert(!allStatement.empty());
 
         /**add condition to state*/
         Operable* prevFalse = &(!(*allCondes[0]));

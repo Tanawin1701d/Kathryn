@@ -18,4 +18,12 @@ namespace kathryn{
         return mapper[op];
     }
 
+    bool isSingleOpr(LOGIC_OP op){
+        return (op == ASSIGN) || (op == BITWISE_INVR) || (op == LOGICAL_NOT);
+    }
+
+    bool isDoubleOpr(LOGIC_OP op){
+        return !isSingleOpr(op);
+    }
+
 }

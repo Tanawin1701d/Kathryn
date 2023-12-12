@@ -61,4 +61,5 @@ add_executable(Kathryn main.cpp
         src/model/util/stateRegUtil.cpp
         src/model/FlowBlock/abstract/node.cpp
         src/model/FlowBlock/abstract/node.h
+        src/test/modelTest2.h
 )
