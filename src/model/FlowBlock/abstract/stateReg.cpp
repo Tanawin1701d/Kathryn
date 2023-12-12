@@ -5,8 +5,6 @@
 #include "stateReg.h"
 
 #include "model/controller/controller.h"
-#include "node.h"
-
 
 namespace kathryn {
 

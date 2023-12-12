@@ -9,7 +9,7 @@
 #include "model/FlowBlock/abstract/flowBlock_Base.h"
 #include "model/FlowBlock/abstract/loopStMacro.h"
 #include "model/FlowBlock/abstract/stateReg.h"
-#include "node.h"
+#include "model/FlowBlock/abstract/node.h"
 
 #define seq for(auto kathrynBlock = new FlowBlockSeq(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 
@@ -32,7 +32,8 @@ namespace kathryn {
         explicit SequenceEle(FlowBlockBase* fbBase    );
 
         void               genHardware       ();
-        void               assignDependDent     (SequenceEle* predecessor) const;
+        void               addToCycleDet     (NodeWrapCycleDet& deter) const;
+        void               assignDependDent  (SequenceEle* predecessor) const;
         Operable*          getStateFinishIden() const;
         std::vector<Node*> getEntranceNodes  ();
     };

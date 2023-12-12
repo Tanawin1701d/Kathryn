@@ -151,7 +151,7 @@ namespace kathryn{
             if (!basicNodes.empty()) {
                 cycleDet.addToDet(basicStNode);
             }
-            int cycleUsed = cycleDet.getCycleHorizon();
+            int cycleUsed = cycleDet.getMaxCycleHorizon();
 
             if (cycleUsed == NodeWrap::IN_CONSIST_CYCLE_USED){
                 int assignNo = 0;
@@ -167,14 +167,26 @@ namespace kathryn{
                 }
                 resultNodeWrap->addExitOpr(syncReg->generateEndExpr());
             }else{
-                /** cycle consistent*/
-                if (!basicNodes.empty()){
-                    resultNodeWrap->addExitOpr(basicStReg->generateEndExpr());
-                }else if (!subBlocks.empty()){
-                    resultNodeWrap->addExitOpr(nodeWrapOfSubBlock[0]->exitOpr);
-                }else{
-                    assert(true);
+                /** cycle used is consistent*/
+                Operable* exitOpr = nullptr;
+                /** in case it is state node*/
+                if (basicStNode != nullptr){
+                    Node* matchNode = cycleDet.getMatchNode({basicStNode}, cycleUsed);
+                    if (matchNode == basicStNode){
+                        exitOpr = basicStReg->generateEndExpr();
+                    }
                 }
+                /** in case it is flow block*/
+                if (exitOpr == nullptr){
+                    NodeWrap* matchNw = cycleDet.getMatchNodeWrap(
+                            nodeWrapOfSubBlock, cycleUsed);
+                    if (matchNw != nullptr){
+                        exitOpr = matchNw->exitOpr;
+                    }
+                }
+                assert(exitOpr != nullptr);
+                resultNodeWrap->setCycleUsed(cycleUsed);
+                resultNodeWrap->addExitOpr(exitOpr);
             }
 
             //// assign sync register to Nodewarp

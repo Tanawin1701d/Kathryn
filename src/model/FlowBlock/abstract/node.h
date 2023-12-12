@@ -210,7 +210,7 @@ namespace kathryn {
             samplingVec.push_back(nw->cycleUsed);
         }
 
-        int getCycleHorizon(){
+        int getMaxCycleHorizon(){
             assert(!samplingVec.empty());
             int testVal = samplingVec[0];
 
@@ -220,17 +220,63 @@ namespace kathryn {
                     return NodeWrap::IN_CONSIST_CYCLE_USED;
                 }
                 /** check that it is equal to other*/
-                if (testVal != cycle){
-                    return NodeWrap::IN_CONSIST_CYCLE_USED;
-                }
+
+                testVal = std::max(testVal, cycle);
             }
-            assert(testVal > 0);
+            assert(testVal >= 0);
             /** return only when sampling is all equal*/
             return testVal;
         }
 
+        int getSameCycleHorizon(){
+            assert(!samplingVec.empty());
+            int testVal = samplingVec[0];
+            for (auto cycle: samplingVec){
+                if (cycle == NodeWrap::IN_CONSIST_CYCLE_USED){
+                    return NodeWrap::IN_CONSIST_CYCLE_USED;
+                }
+                if (testVal != cycle){
+                    return NodeWrap::IN_CONSIST_CYCLE_USED;
+                }
+            }
+            return testVal;
+        }
+
         int getCycleVertical(){
-            assert()
+            assert(!samplingVec.empty());
+            int cycleUsed = 0;
+            for (auto subCycle: samplingVec){
+                if (subCycle == NodeWrap::IN_CONSIST_CYCLE_USED){
+                    return NodeWrap::IN_CONSIST_CYCLE_USED;
+                }
+                cycleUsed += subCycle;
+
+            }
+            return cycleUsed;
+        }
+
+        Node* getMatchNode(std::vector<Node*> nds, int cycle){
+            assert(cycle != NodeWrap::IN_CONSIST_CYCLE_USED);
+            for (auto nd : nds){
+                assert(nd != nullptr);
+                if ( (cycle == 0) && nd->isPseudoNode()){
+                    return nd;
+                }
+                if ((cycle == 1) && (!nd->isPseudoNode())){
+                    return nd;
+                }
+            }
+            return nullptr;
+        }
+
+        NodeWrap* getMatchNodeWrap(std::vector<NodeWrap*> nws, int cycle){
+            assert(cycle != NodeWrap::IN_CONSIST_CYCLE_USED);
+            for (auto nw: nws){
+                if (cycle == nw->cycleUsed){
+                    return nw;
+                }
+            }
+            return nullptr;
         }
 
     };

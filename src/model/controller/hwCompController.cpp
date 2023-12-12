@@ -3,7 +3,6 @@
 //
 
 #include "controller.h"
-#include "node.h"
 
 namespace kathryn{
 

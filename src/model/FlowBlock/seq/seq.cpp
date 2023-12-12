@@ -4,8 +4,6 @@
 
 #include "seq.h"
 #include "model/controller/controller.h"
-#include "node.h"
-
 
 namespace kathryn{
 
@@ -40,6 +38,16 @@ namespace kathryn{
             _simpleAsm->assign();
         }else if (_subBlock != nullptr){
             complexNode = _subBlock->sumarizeBlock();
+        }else{
+            assert(true);
+        }
+    }
+
+    void SequenceEle::addToCycleDet(NodeWrapCycleDet &deter) const {
+        if (stateNode != nullptr){
+            deter.addToDet(stateNode);
+        } else if (complexNode != nullptr){
+            deter.addToDet(complexNode);
         }else{
             assert(true);
         }
@@ -84,6 +92,8 @@ namespace kathryn{
     }
 
 
+
+
     /**
      *
      *
@@ -126,9 +136,11 @@ namespace kathryn{
 
     void FlowBlockSeq::buildHwComponent() {
         assert(!_subSeqMetas.empty());
+        NodeWrapCycleDet cycleDet;
         /** generate hardware*/
         for (auto& seqMeta: _subSeqMetas) {
             seqMeta.genHardware();
+            seqMeta.addToCycleDet(cycleDet);
         }
         /** connect  chain*/
         for (size_t idx = 0; (idx+1) < _subSeqMetas.size(); idx++){
@@ -140,6 +152,7 @@ namespace kathryn{
         resultNodeWrap = new NodeWrap();
         resultNodeWrap->entranceNodes = _subSeqMetas.begin()->getEntranceNodes();
         resultNodeWrap->exitOpr       = _subSeqMetas.rbegin()->getStateFinishIden();
+        resultNodeWrap->setCycleUsed(cycleDet.getCycleVertical());
 
     }
 

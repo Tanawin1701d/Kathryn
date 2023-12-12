@@ -6,7 +6,6 @@
 
 #include "model/controller/controller.h"
 #include "model/hwComponent/abstract/makeComponent.h"
-#include "node.h"
 
 
 namespace kathryn{

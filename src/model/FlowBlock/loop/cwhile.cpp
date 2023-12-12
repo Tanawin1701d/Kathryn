@@ -4,7 +4,6 @@
 
 #include "cwhile.h"
 #include "model/controller/controller.h"
-#include "node.h"
 
 namespace kathryn{
 
@@ -63,6 +62,7 @@ namespace kathryn{
         resultNodeWrapper = new NodeWrap();
         auto psuedoNode = new Node();
         psuedoNode->addCondtion(&(!*_condExpr), BITWISE_AND);
+
         resultNodeWrapper->entranceNodes.push_back(psuedoNode);
         resultNodeWrapper->transferNodeFrom(subBlockNodeWrap);
         resultNodeWrapper->exitOpr = &(((*subBlockNodeWrap->exitOpr  ) & !(*_condExpr)) |

@@ -5,7 +5,6 @@
 #include "elif.h"
 #include "model/controller/controller.h"
 #include "model/FlowBlock/cond/if.h"
-#include "node.h"
 
 
 namespace kathryn{

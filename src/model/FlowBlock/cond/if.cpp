@@ -5,7 +5,6 @@
 #include "if.h"
 #include "model/controller/controller.h"
 #include "model/FlowBlock/cond/elif.h"
-#include "node.h"
 
 
 namespace kathryn{
@@ -79,6 +78,7 @@ namespace kathryn{
             resultNodeWrapper->addEntraceNode(psuedoNode);
         }
 
+        /**exit condition of node wrap*/
         Operable* exitCond = allStatement[0]->exitOpr;
         for (int i = 1; i < allStatement.size(); i++){
             exitCond = &((*exitCond) | (*allStatement[i]->exitOpr));
@@ -87,6 +87,13 @@ namespace kathryn{
             exitCond = &((*exitCond) | (*psuedoNode->psudoAssignMeta));
         }
         resultNodeWrapper->addExitOpr(exitCond);
+        /** determine node wrap cycle */
+        NodeWrapCycleDet deter;
+        deter.addToDet(allStatement);
+        if (psuedoNode != nullptr){
+            deter.addToDet(psuedoNode);
+        }
+        resultNodeWrapper->setCycleUsed(deter.getSameCycleHorizon());
 
     }
 

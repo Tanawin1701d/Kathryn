@@ -7,15 +7,13 @@
 
 #include "model/FlowBlock/abstract/flowBlock_Base.h"
 #include "model/FlowBlock/abstract/loopStMacro.h"
-#include "node.h"
+#include "model/FlowBlock/abstract/node.h"
 
 #define cif(expr) for(auto kathrynBlock = new FlowBlockIf(expr); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 
 namespace kathryn{
 
     class FlowBlockElif;
-    class FlowBlockElse;
-
 
     class FlowBlockIf: public FlowBlockBase, public LoopStMacro{
     private:

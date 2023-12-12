@@ -7,7 +7,7 @@
 
 #include "model/FlowBlock/abstract/flowBlock_Base.h"
 #include "model/FlowBlock/abstract/loopStMacro.h"
-#include "node.h"
+#include "model/FlowBlock/abstract/node.h"
 
 #define cwhile(expr) for(auto kathrynBlock = new FlowBlockCwhile(expr); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 
