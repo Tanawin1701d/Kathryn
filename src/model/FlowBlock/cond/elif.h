@@ -6,6 +6,7 @@
 #define KATHRYN_ELIF_H
 #include "model/FlowBlock/abstract/flowBlock_Base.h"
 #include "model/FlowBlock/abstract/loopStMacro.h"
+#include "node.h"
 
 #define celif(expr) for(auto kathrynBlock = new FlowBlockElif(expr); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 #define celse for(auto kathrynBlock = new FlowBlockElif(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())

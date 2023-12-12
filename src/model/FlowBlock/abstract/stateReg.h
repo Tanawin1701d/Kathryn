@@ -9,7 +9,7 @@
 #include "model/hwComponent/register/register.h"
 #include "model/hwComponent/expression/expression.h"
 #include "model/hwComponent/value/value.h"
-
+#include "node.h"
 
 
 namespace kathryn {

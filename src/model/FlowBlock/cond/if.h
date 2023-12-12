@@ -7,6 +7,7 @@
 
 #include "model/FlowBlock/abstract/flowBlock_Base.h"
 #include "model/FlowBlock/abstract/loopStMacro.h"
+#include "node.h"
 
 #define cif(expr) for(auto kathrynBlock = new FlowBlockIf(expr); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 
