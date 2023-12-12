@@ -9,7 +9,7 @@
 
 namespace kathryn{
 
-    logMeta logStorage[LOG_COUNT];
+    //logMeta logStorage[LOG_COUNT];
 
     void log(const char* format, ...){
         constexpr size_t bufferSize = 1024;
@@ -20,11 +20,11 @@ namespace kathryn{
         vsnprintf(buffer, bufferSize, format, args);
         va_end(args);
         std::string result(buffer);
-        std::cout << result;
+        std::cout << result << std::endl;
     }
 
-
-
-
+    void logStr(std::string msg){
+        std::cout << msg << std::endl;
+    }
 
 }

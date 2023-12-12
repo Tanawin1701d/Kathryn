@@ -2,6 +2,8 @@
 // Created by tanawin on 3/12/2566.
 //
 #include "controller.h"
+
+#include "util/logger/logger.h"
 namespace kathryn{
 
     FlowBlockBase* Controller::getTopFlowBlock(){
@@ -15,6 +17,7 @@ namespace kathryn{
         if (srcSt.empty() || (srcSt.top() != flowPtr))
             return;
         srcSt.pop();
+        /** debug */
 
     }
 
@@ -26,6 +29,8 @@ namespace kathryn{
     }
 
     void Controller::tryPopCtrlFlowFromAllStack(FlowBlockBase* flowPtr){
+        /** debug*/
+        logStr("[FB] try to delete from all stack which fb is " + flowPtr->getFlowBlockDebugIdentValue());
         tryPopFbBaseFromStack(flowPtr, flowBlockStack);
         tryPopFbBaseFromStack(flowPtr, patternFlowBlockStack);
         tryPopFbIfFromStack(flowPtr, ifBlockStack);
@@ -39,6 +44,8 @@ namespace kathryn{
 
         if (flowBlockStack.top()->isLazyDelete()){
             auto ifFlowBlock = ifBlockStack.top();
+            /** debug*/
+            logStr("[FB] detect Lazy del block" + ifFlowBlock->getFlowBlockDebugIdentValue());
             assert(ifFlowBlock != nullptr);
             /** build hardware component */
             ifFlowBlock->buildHwComponent();
@@ -73,13 +80,18 @@ namespace kathryn{
 
         flowBlockStack.push(fb);
 
+        /**debug*/
+        logStr("[FB] push FlowBlock to base stack" + fb->getFlowBlockDebugIdentValue());
+
          /** push to stack in each case*/
         FLOW_BLOCK_TYPE flowType = fb->getFlowType();
          switch (flowType){
              case SEQUENTIAL :
-             case PARALLEL   :
+             case PARALLEL   : {
+                 logStr("[FB] push FlowBlock to pattern" + fb->getFlowBlockDebugIdentValue());
                  patternFlowBlockStack.push(fb);
                  break;
+             }
          }
 
     }
@@ -109,6 +121,9 @@ namespace kathryn{
         purifyFlowStack();
         flowBlockStack.push(fb);
         ifBlockStack.push(fb);
+        /**debug*/
+        logStr("[FB] push FlowBlock to base stack" + fb->getFlowBlockDebugIdentValue());
+        logStr("[FB] push FlowBlock to if stsack" + fb->getFlowBlockDebugIdentValue());
 
     }
 
@@ -118,6 +133,8 @@ namespace kathryn{
         assert(!flowBlockStack.empty());
         /*** do not purify flow stack*/
         flowBlockStack.push(fb);
+        logStr("[FB] push FlowBlock to base stack" + fb->getFlowBlockDebugIdentValue());
+
     }
 
     void Controller::on_detach_flowBlock_elif(FlowBlockElif *fb) {
@@ -132,6 +149,8 @@ namespace kathryn{
         tryPopCtrlFlowFromAllStack(fb);
         /** transfer data to master if block*/
         ifBlockStack.top()->addElifNodeWrap(fb);
+        /**debug*/
+        logStr("[FB] push elifBlock to if host" + fb->getFlowBlockDebugIdentValue());
     }
 
     FLOW_BLOCK_TYPE Controller::get_top_pattern_flow_block_type(){

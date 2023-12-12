@@ -39,5 +39,20 @@ namespace kathryn{
         return nullptr;
     }
 
+    std::string FBT_to_string(FLOW_BLOCK_TYPE fbt){
+        std::string mapper[FLOW_BLOCK_COUNT] = {
+                "SEQUENTIAL",
+                "PARALLEL",
+                "IF",
+                "ELIF",
+                "ELSE",
+                "WHILE",
+                "DO_WHILE",
+                "DUMMY_BLOCK"
+        };
+        assert(fbt < FLOW_BLOCK_COUNT);
+        return mapper[fbt];
+    }
+
 
 }

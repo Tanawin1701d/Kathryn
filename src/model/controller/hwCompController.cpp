@@ -4,6 +4,8 @@
 
 #include "controller.h"
 
+#include "util/logger/logger.h"
+
 namespace kathryn{
 
 
@@ -22,10 +24,15 @@ namespace kathryn{
     void Controller::on_reg_init(Reg* ptr) {
         assert(ptr != nullptr);
         /** assign reg to module */
-        Module* targetModule = getTargetModulePtr();
+        Module* targetModulePtr = getTargetModulePtr();
         /** localize necessary destination*/
-        targetModule->addUserReg(ptr);
-        ptr->setParent(targetModule);
+        targetModulePtr->addUserReg(ptr);
+        ptr->setParent(targetModulePtr);
+        /** debug value*/
+        logStr("reg "+ ptr->getDebugIdentValue() +
+                " init and set parent to " +
+                targetModulePtr->getIdentDebugValue()
+                );
     }
 
     void Controller::on_reg_update(AssignMeta* asmMeta){
@@ -41,24 +48,35 @@ namespace kathryn{
         assert(!flowBlockStack.empty());
         auto fb = flowBlockStack.top();
         fb->addElementInFlowBlock(node);
+        logStr("reg update @fb " + fb->getFlowBlockDebugIdentValue());
     }
 
     /** state register handling */
     void Controller::on_state_reg_init(StateReg* ptr) {
         assert(ptr != nullptr);
-        Module* targetModule = getTargetModulePtr();
+        Module* targetModulePtr = getTargetModulePtr();
         /**localize necessary destination*/
-        targetModule->addStateReg(ptr);
-        ptr->setParent(targetModule);
+        targetModulePtr->addStateReg(ptr);
+        ptr->setParent(targetModulePtr);
+        /** debug value*/
+        logStr("stateReg "+ ptr->getDebugIdentValue() +
+               " init and set parent to " +
+               targetModulePtr->getIdentDebugValue()
+        );
     }
 
     /** wire handling*/
     void Controller::on_wire_init(Wire* ptr) {
         assert(ptr != nullptr);
-        Module* targetModule = getTargetModulePtr();
+        Module* targetModulePtr = getTargetModulePtr();
         /** localize necessary destination*/
-        targetModule->addUserWires(ptr);
-        ptr->setParent(targetModule);
+        targetModulePtr->addUserWires(ptr);
+        ptr->setParent(targetModulePtr);
+        /** debug value*/
+        logStr("wire "+ ptr->getDebugIdentValue() +
+               " init and set parent to " +
+               targetModulePtr->getIdentDebugValue()
+        );
     }
 
     void Controller::on_wire_update(AssignMeta* asmMeta) {
@@ -74,23 +92,34 @@ namespace kathryn{
         assert(!flowBlockStack.empty());
         auto fb = flowBlockStack.top();
         fb->addElementInFlowBlock(node);
+        logStr("wire update @fb " + fb->getFlowBlockDebugIdentValue());
     }
 
     /** exprMetas*/
     void Controller::on_expression_init(expression* ptr) {
         assert(ptr != nullptr);
-        Module* targetModule = getTargetModulePtr();
+        Module* targetModulePtr = getTargetModulePtr();
         /** localize necessary destination*/
-        targetModule->addUserExpression(ptr);
-        ptr->setParent(targetModule);
+        targetModulePtr->addUserExpression(ptr);
+        ptr->setParent(targetModulePtr);
+        /** debug value*/
+        logStr("expr "+ ptr->getDebugIdentValue() +
+               " init and set parent to " +
+               targetModulePtr->getIdentDebugValue()
+        );
     }
     /** value*/
     void Controller::on_value_init(Val* ptr) {
         assert(ptr != nullptr);
-        Module* targetModule = getTargetModulePtr();
+        Module* targetModulePtr = getTargetModulePtr();
         /** localize necessary destination*/
-        targetModule->addUserVal(ptr);
-        ptr->setParent(targetModule);
+        targetModulePtr->addUserVal(ptr);
+        ptr->setParent(targetModulePtr);
+        /** debug value*/
+        logStr("val "+ ptr->getDebugIdentValue() +
+               " init and set parent to " +
+               targetModulePtr->getIdentDebugValue()
+        );
     }
 
     /**
@@ -109,13 +138,19 @@ namespace kathryn{
         /**check that module initialization is in construct state not in designflow constructing*/
         assert(getTargetModuleEle().state == MODULE_COMPONENT_CONSTRUCT);
         /** previous module*/
-        Module* targetModule = getTargetModulePtr();
-        targetModule->addUserSubModule(ptr);
+        Module* targetModulePtr = getTargetModulePtr();
+        targetModulePtr->addUserSubModule(ptr);
         /** current module*/
         /**at least module must be other submodule*/
         assert(getTargetModuleEle().state != MODULE_FINISHED_CONSTRUCT);
         moduleStack.push(Module_Stack_Element{ptr, MODULE_COMPONENT_CONSTRUCT});
-        ptr->setParent(targetModule);
+        ptr->setParent(targetModulePtr);
+        /** debug value*/
+        logStr("md "+ ptr->getIdentDebugValue() +
+               " init and set parent to " +
+               targetModulePtr->getIdentDebugValue()
+        );
+
 
     }
 
@@ -123,9 +158,12 @@ namespace kathryn{
         Module* topModule = getTargetModulePtr();
         assert(topModule == ptr);
         moduleStack.top().state = MODULE_DESIGN_FLOW_CONSTRUCT;
+        /** debug value*/
+        logStr("md " + ptr->getIdentDebugValue() + " initing design flow");
         /** flow the program*/
         topModule->flow();
         topModule->buildFlow();
+
     }
 
     void Controller::on_module_final(Module* ptr) {
@@ -133,6 +171,7 @@ namespace kathryn{
         moduleStack.top().state = MODULE_FINISHED_CONSTRUCT;
         assert(isAllFlowStackEmpty());
         moduleStack.pop();
+        logStr("md " + ptr->getIdentDebugValue() + " finalizeds design flow");
     }
 
 

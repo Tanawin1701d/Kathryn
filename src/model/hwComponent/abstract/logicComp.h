@@ -39,6 +39,12 @@ namespace kathryn{
             return static_cast<Identifiable*>(this);
         }
 
+        std::string getDebugIdentValue() override{
+            return getIdentDebugValue();
+        }
+
+
+
     };
 
 }

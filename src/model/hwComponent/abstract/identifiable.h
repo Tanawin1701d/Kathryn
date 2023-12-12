@@ -96,10 +96,16 @@ namespace kathryn {
         Module* getParent(){return _parent;}
         void setParent(Module* parent) {_parent = parent;}
 
-        [[nodiscard]] ull  getLocalId(ull id) const{return _localId;}
+        [[nodiscard]] ull  getLocalId() const{return _localId;}
         void setLocalId(ull id)      {_localId = id; }
 
         virtual bool castDownAble(){return true;}
+
+        /** get debug value*/
+        [[nodiscard]]std::string
+        getIdentDebugValue() const{
+            return getGlobalName() + "_localId_" + std::to_string(getLocalId());
+        }
 
     };
 

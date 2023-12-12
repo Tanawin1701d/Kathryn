@@ -9,10 +9,10 @@ using namespace kathryn;
 
 int main() {
 
-//    auto t = test2();
-//    t.test();
+    auto t = test2();
+    t.test();
 
-    log("%d %d %d", 5, 6,7);
+//    log("%d %d %d", 5, 6,7);
 
 
 }

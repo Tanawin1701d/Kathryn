@@ -25,8 +25,11 @@ namespace kathryn {
         ELSE,
         WHILE,
         DO_WHILE,
-        DUMMY_BLOCK
+        DUMMY_BLOCK,
+        FLOW_BLOCK_COUNT
     };
+
+    std::string FBT_to_string(FLOW_BLOCK_TYPE fbt);
 
 
     class FlowBlockBase {
@@ -66,7 +69,7 @@ namespace kathryn {
           virtual void buildHwComponent() = 0;
 
         ////// getter/setter
-        FLOW_BLOCK_TYPE getFlowType(){return _type;}
+        FLOW_BLOCK_TYPE getFlowType() const {return _type;}
         std::vector<FlowBlockBase*>& getSubBlocks(){
             return subBlocks;
         }
@@ -75,6 +78,10 @@ namespace kathryn {
         }
         void setLazyDelete() {
             lazyDeletedRequired = true;
+        }
+
+        std::string getFlowBlockDebugIdentValue() const{
+            return "FB_TYPE_" + FBT_to_string(getFlowType()) + "_@" + std::to_string((ull) this);
         }
 
     };

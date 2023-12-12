@@ -10,27 +10,22 @@
 
 namespace kathryn{
 
-
-
-    enum LOG_TYPE{
-
-        LOG_FLOWBLOCK = 0,
-        LOG_COUNT = 1
-
-    };
-
-    struct logMeta{
-        unsigned long long id;
-        std::string debugMsg;
-    };
-
-
-    extern logMeta logStorage[LOG_COUNT];
+//    enum LOG_TYPE{
+//
+//        LOG_FLOWBLOCK = 0,
+//        LOG_COUNT = 1
+//
+//    };
+//
+//    struct logMeta{
+//        unsigned long long id;
+//        std::string debugMsg;
+//    };
+//
+//    extern logMeta logStorage[LOG_COUNT];
 
     void log(const char* format, ...);
-
-
-
+    void logStr(std::string msg);
 
 }
 

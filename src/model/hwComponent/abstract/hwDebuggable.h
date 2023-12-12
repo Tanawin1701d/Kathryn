@@ -14,6 +14,9 @@ namespace kathryn{
 
     public:
         virtual std::vector<std::string> getDebugAssignmentValue() = 0;
+        /** this is used to retrieve everything
+         * that used to identify hardware component*/
+        virtual std::string getDebugIdentValue() = 0;
 
     };
 
