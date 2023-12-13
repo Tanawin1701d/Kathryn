@@ -20,7 +20,8 @@ namespace kathryn{
     }
 
     Wire& Wire::operator=(Operable &b) {
-        ctrl->on_wire_update(generateAssignMeta(b, getSlice()));
+        Slice resultSlice = getSlice().getWeakAssignSlice({0, b.getOperableSlice().getSize()});
+        ctrl->on_wire_update(generateAssignMeta(b, resultSlice));
         return *this;
     }
 
@@ -38,13 +39,14 @@ namespace kathryn{
 
     /** override callback*/
 
-    Wire& Wire::callBackBlockAssignFromAgent(Operable &b, Slice absSlice) {
+    Wire& Wire::callBackBlockAssignFromAgent(Operable &b, Slice absSliceOfHost) {
         assert(true);
         return *this;
     }
 
-    Wire& Wire::callBackNonBlockAssignFromAgent(Operable &b, Slice absSlice) {
-        ctrl->on_wire_update(generateAssignMeta(b, absSlice));
+    Wire& Wire::callBackNonBlockAssignFromAgent(Operable &b, Slice absSliceOfHost) {
+        Slice resultSlice = absSliceOfHost.getWeakAssignSlice({0, b.getOperableSlice().getSize()});
+        ctrl->on_wire_update(generateAssignMeta(b, resultSlice));
         return *this;
     }
 

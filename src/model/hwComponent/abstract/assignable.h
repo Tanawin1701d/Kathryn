@@ -9,12 +9,12 @@
 
 #include "operable.h"
 #include "model/hwComponent/abstract/operable.h"
+#include "model/hwComponent/abstract/Slice.h"
 
 
 namespace kathryn{
 
     /** reg/wire update metas data*/
-
     struct UpdateEvent{
         Operable* updateCondition{}; /// which condition that allow this value to update.
         Operable* updateState{}; /// which state that need to update.
@@ -83,8 +83,8 @@ namespace kathryn{
     template<typename RET_TYPE>
     class AssignCallbackFromAgent{
     public:
-        virtual RET_TYPE& callBackBlockAssignFromAgent(Operable& b, Slice absSlice)    = 0;
-        virtual RET_TYPE& callBackNonBlockAssignFromAgent(Operable& b, Slice absSlice) = 0;
+        virtual RET_TYPE& callBackBlockAssignFromAgent(Operable& b, Slice absSliceOfHost)    = 0;
+        virtual RET_TYPE& callBackNonBlockAssignFromAgent(Operable& b, Slice absSliceOfHost) = 0;
     };
 }
 

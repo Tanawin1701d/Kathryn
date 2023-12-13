@@ -22,11 +22,8 @@ namespace kathryn{
     }
 
     Reg& Reg::operator<<=(Operable &b) {
-        /** todo this must call model control system to determine
-         * given information and condition of updating value
-        /* we will call model building to comunicate with it*/
-        //** todo return agent of this type*/
-        ctrl->on_reg_update(generateAssignMeta(b, getSlice()));
+        Slice absSlice = getSlice().getWeakAssignSlice({0, b.getOperableSlice().getSize()});
+        ctrl->on_reg_update(generateAssignMeta(b, absSlice));
         return *this;
     }
 
@@ -49,12 +46,13 @@ namespace kathryn{
         return operator() (idx, idx+1);
     }
 
-    Reg& Reg::callBackBlockAssignFromAgent(Operable &b, Slice absSlice) {
-        ctrl->on_reg_update(generateAssignMeta(b, absSlice));
+    Reg& Reg::callBackBlockAssignFromAgent(Operable &b, Slice absSliceOfHost) {
+        Slice resultSlice = absSliceOfHost.getWeakAssignSlice({0, b.getOperableSlice().getSize()});
+        ctrl->on_reg_update(generateAssignMeta(b, resultSlice));
         return *this;
     }
 
-    Reg &Reg::callBackNonBlockAssignFromAgent(Operable &b, Slice absSlice) {
+    Reg &Reg::callBackNonBlockAssignFromAgent(Operable &b, Slice absSliceOfHost) {
         assert(true);
         return *this;
     }
@@ -67,16 +65,4 @@ namespace kathryn{
         }
         return results;
     }
-
-
-
-
-
-    /** assign call back*/
-
-
-
-
-
-
 }

@@ -37,11 +37,7 @@ namespace kathryn {
         }
 
         Slice getNextSlice(int start, int stop, Slice oldSlice){
-            /** todo next check integrity*/
-            if (oldSlice.isEntireSection()){
-                return Slice{start, stop};
-            }
-            return Slice{oldSlice.start + start, oldSlice.start + stop};
+            return oldSlice.getSubSlice({start, stop});
         }
 
         Slice getSlice() const { return _absSlice; }
