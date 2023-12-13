@@ -64,4 +64,6 @@ add_executable(Kathryn main.cpp
         src/test/modelTest2.h
         src/util/logger/logger.cpp
         src/util/logger/logger.h
+        src/model/logicRep/valRep.cpp
+        src/model/logicRep/valRep.h
 )
