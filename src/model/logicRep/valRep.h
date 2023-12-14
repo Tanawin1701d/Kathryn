@@ -23,9 +23,10 @@ namespace kathryn{
      */
     class ValRep{
     private:
-        size_t _len = -1;
+        int _len = -1;
         int lenValArr = -1;
         ull*  _val = nullptr;
+        const int bitInUll = sizeof(ull) << 3;
 
     public:
         explicit ValRep(int len);
@@ -33,28 +34,46 @@ namespace kathryn{
 
         ValRep(const ValRep& rhs);
 
-        ValRep& operator = (const ValRep& rhs);
-        ValRep& operator & (const ValRep& rhs);
-        ValRep& operator | (const ValRep& rhs);
-        ValRep& operator ^ (const ValRep& rhs);
-        ValRep& operator ~ ();
-        ValRep& operator << (const ValRep& rhs);
-        ValRep& operator >> (const ValRep& rhs);
+        static int shinkSize(int lena, int lenb){
+            assert(lena > 0 && lenb > 0);
+            return std::min(lena, lenb);
+        }
 
-        ValRep& operator && (const ValRep& rhs);
-        ValRep& operator || (const ValRep& rhs);
-        ValRep& operator !  ();
-        ValRep& operator == (const ValRep& rhs);
-        ValRep& operator != (const ValRep& rhs);
-        ValRep& operator <  (const ValRep& rhs);
-        ValRep& operator <= (const ValRep& rhs);
-        ValRep& operator >  (const ValRep& rhs);
-        ValRep& operator >= (const ValRep& rhs);
-        ValRep& operator +  (const ValRep& rhs);
-        ValRep& operator -  (const ValRep& rhs);
-        ValRep& operator *  (const ValRep& rhs);
-        ValRep& operator /  (const ValRep& rhs);
-        ValRep& operator %  (const ValRep& rhs);
+        int getLen() const{
+            return _len;
+        }
+        int getLenValArr() const{
+            return lenValArr;
+        }
+
+        ull* getVal() const{
+            return _val;
+        }
+
+        bool checkCurrent() const;
+
+        ValRep& operator = (const ValRep& rhs);
+        ValRep operator & (const ValRep& rhs);
+        ValRep operator | (const ValRep& rhs);
+        ValRep operator ^ (const ValRep& rhs);
+        ValRep operator ~ ();
+        ValRep operator << (const ValRep& rhs);
+        ValRep operator >> (const ValRep& rhs);
+
+        ValRep operator && (const ValRep& rhs);
+        ValRep operator || (const ValRep& rhs);
+        ValRep operator !  ();
+        ValRep operator == (const ValRep& rhs);
+        ValRep operator != (const ValRep& rhs);
+        ValRep operator <  (const ValRep& rhs);
+        ValRep operator <= (const ValRep& rhs);
+        ValRep operator >  (const ValRep& rhs);
+        ValRep operator >= (const ValRep& rhs);
+        ValRep operator +  (const ValRep& rhs);
+        ValRep operator -  (const ValRep& rhs);
+        ValRep operator *  (const ValRep& rhs);
+        ValRep operator /  (const ValRep& rhs);
+        ValRep operator %  (const ValRep& rhs);
 
     };
 
