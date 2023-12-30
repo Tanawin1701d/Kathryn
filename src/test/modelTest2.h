@@ -26,14 +26,10 @@ namespace kathryn{
         }
 
         void flow() override {
-            seq{
-                a <<= b;
-                cwhile(a < b){
-                    par{
-                        c <<= a;
-                        d <<= a;
-                    }
-                }
+            par{
+
+
+                
             }
         }
     };

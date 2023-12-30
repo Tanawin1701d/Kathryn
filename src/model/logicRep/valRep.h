@@ -23,57 +23,75 @@ namespace kathryn{
      */
     class ValRep{
     private:
-        int _len = -1;
-        int lenValArr = -1;
-        ull*  _val = nullptr;
-        const int bitInUll = sizeof(ull) << 3;
+        int   _len             = -1;
+        int   _valSize         = -1; //// size of array that contain ull
+        ull*  _val             = nullptr;
+        const int bitSizeOfUll = sizeof(ull) << 3;
 
     public:
         explicit ValRep(int len);
+
         ~ValRep();
 
         ValRep(const ValRep& rhs);
 
-        static int shinkSize(int lena, int lenb){
-            assert(lena > 0 && lenb > 0);
-            return std::min(lena, lenb);
-        }
-
         int getLen() const{
             return _len;
         }
-        int getLenValArr() const{
-            return lenValArr;
+        int getValArrSize() const{
+            return _valSize;
         }
 
         ull* getVal() const{
             return _val;
         }
 
-        bool checkCurrent() const;
+        ValRep getZeroExtend(int targetSize);
+
+        inline bool checkEqualBit(const ValRep& rhs) const{
+            return _len == rhs._len;
+        }
+
+        ValRep bwOperator(const ValRep& rhs,
+                          const std::function<ull(ull, ull)>& operation);
+        ValRep eqOperator(const ValRep& rhs, bool checkEq);
+        bool   getLogicalValue() const;
+        ValRep logicalOperator(const ValRep& rhs,
+                               const std::function<bool(bool, bool)>& operation) const;
+        ValRep cmpOperator(const ValRep& rhs,
+                           const std::function<bool(ull* a, ull* b, int size)>& operation);
+
 
         ValRep& operator = (const ValRep& rhs);
+
+        //////// required equal bit operator
         ValRep operator & (const ValRep& rhs);
         ValRep operator | (const ValRep& rhs);
         ValRep operator ^ (const ValRep& rhs);
-        ValRep operator ~ ();
-        ValRep operator << (const ValRep& rhs);
-        ValRep operator >> (const ValRep& rhs);
-
-        ValRep operator && (const ValRep& rhs);
-        ValRep operator || (const ValRep& rhs);
-        ValRep operator !  ();
         ValRep operator == (const ValRep& rhs);
         ValRep operator != (const ValRep& rhs);
+        //////// only one operand
+        ValRep operator ~ ();
+
+        //////// not required equal bit operator
+        ////////////// but need zero extend
+        ValRep operator && (const ValRep& rhs) const;
+        ValRep operator || (const ValRep& rhs) const;
+        ValRep operator !  () const;
         ValRep operator <  (const ValRep& rhs);
         ValRep operator <= (const ValRep& rhs);
         ValRep operator >  (const ValRep& rhs);
         ValRep operator >= (const ValRep& rhs);
+
+        ///// not required equal bit operator
         ValRep operator +  (const ValRep& rhs);
         ValRep operator -  (const ValRep& rhs);
-        ValRep operator *  (const ValRep& rhs);
-        ValRep operator /  (const ValRep& rhs);
-        ValRep operator %  (const ValRep& rhs);
+        ValRep operator *  (const ValRep& rhs){assert(false); return ValRep(0);};
+        ValRep operator /  (const ValRep& rhs){assert(false); return ValRep(0);};
+        ValRep operator %  (const ValRep& rhs){assert(false); return ValRep(0);};
+        ValRep operator << (const ValRep& rhs);
+        ValRep operator >> (const ValRep& rhs);
+
 
     };
 
