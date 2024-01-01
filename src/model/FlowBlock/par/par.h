@@ -21,10 +21,12 @@ namespace kathryn {
 
         /** metas element*/
         NodeWrap* resultNodeWrap = nullptr;
-        StateReg* basicStReg = nullptr;
 
+        /** check that subblock or basic node contain control flow operation*/
         std::vector<NodeWrap*> nodeWrapOfSubBlock;
-        Node* basicStNode = nullptr;
+
+        StateNode* basicStNode = nullptr;
+        SynNode*   synNode     = nullptr;
 
     public:
 

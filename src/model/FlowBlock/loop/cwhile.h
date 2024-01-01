@@ -20,8 +20,11 @@ namespace kathryn{
         bool isGetFlowBlockYet = false;
 
 
-        NodeWrap* resultNodeWrapper = nullptr;
-        NodeWrap* loopNodeWrap = nullptr;
+        NodeWrap*    resultNodeWrapper = nullptr;
+        NodeWrap*    loopNodeWrap      = nullptr;
+        PseudoNode*  exitNode          = nullptr;
+        PseudoNode*  byPassExitNode    = nullptr;
+        PseudoNode*  subBlockExitNode  = nullptr;
         //// it is wrap is as same as result but it is used for loop assignment
 
         NodeWrap* subBlockNodeWrap = nullptr;

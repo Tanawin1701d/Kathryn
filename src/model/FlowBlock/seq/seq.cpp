@@ -16,9 +16,9 @@ namespace kathryn{
      * */
 
 
-    SequenceEle::SequenceEle(Node *simpleNode) {
-        assert(simpleNode != nullptr);
-        _simpleAsm = simpleNode;
+    SequenceEle::SequenceEle(Node *asmNode) {
+        assert(asmNode != nullptr);
+        _asmNode = asmNode;
     }
 
     SequenceEle::SequenceEle(FlowBlockBase *fbBase) {
@@ -28,26 +28,25 @@ namespace kathryn{
 
     void SequenceEle::genHardware() {
 
-        assert( (_simpleAsm != nullptr) ^ (_subBlock != nullptr));
+        assert( (_asmNode != nullptr) ^ (_subBlock != nullptr));
 
         ///// it is the basic assignment
-        if (_simpleAsm != nullptr){
-            stReg     = new StateReg();
-            stateNode = stReg->generateStateNode();
-            _simpleAsm->addDependState(stReg, BITWISE_AND);
-            _simpleAsm->assign();
+        if (_asmNode != nullptr){
+            _stateNode = new StateNode();
+            _asmNode->addDependNode(_stateNode);
+            _asmNode->assign();
         }else if (_subBlock != nullptr){
-            complexNode = _subBlock->sumarizeBlock();
+            _complexNode = _subBlock->sumarizeBlock();
         }else{
-            assert(true);
+            assert(false);
         }
     }
 
     void SequenceEle::addToCycleDet(NodeWrapCycleDet &deter) const {
-        if (stateNode != nullptr){
-            deter.addToDet(stateNode);
-        } else if (complexNode != nullptr){
-            deter.addToDet(complexNode);
+        if (_asmNode != nullptr){
+            deter.addToDet(_asmNode);
+        } else if (_subBlock != nullptr){
+            deter.addToDet(_complexNode);
         }else{
             assert(true);
         }
@@ -55,44 +54,40 @@ namespace kathryn{
 
     void SequenceEle::assignDependDent(SequenceEle *predecessor) const {
         assert(predecessor != nullptr);
-        assert((_simpleAsm != nullptr) ^ (_subBlock != nullptr));
+        assert((_asmNode != nullptr) ^ (_subBlock != nullptr));
 
-        if (_simpleAsm != nullptr){
-            stateNode->addDependState(predecessor->getStateFinishIden(), BITWISE_AND);
-            stateNode->assign();   ///// assign state node to actual value
+        if (_asmNode != nullptr){
+            _stateNode->addDependNode(predecessor->getStateFinishIden());
+            _stateNode->assign();   ///// assign state node to actual value
         }else if (_subBlock != nullptr){
-            complexNode->addDependStateToAllNode(predecessor->getStateFinishIden(), BITWISE_AND);
-            complexNode->assignAllNode();
+            _complexNode->addDependStateToAllNode(predecessor->getStateFinishIden(), BITWISE_AND);
+            _complexNode->assignAllNode();
         }else{
             assert(true);
         }
 
     }
 
-    Operable* SequenceEle::getStateFinishIden() const {
-        assert( (_simpleAsm != nullptr) ^ (_subBlock != nullptr));
-        if (_simpleAsm != nullptr){
-            return stReg;
+    Node* SequenceEle::getStateFinishIden() const {
+        assert( (_asmNode != nullptr) ^ (_subBlock != nullptr));
+        if (_asmNode != nullptr){
+            return _stateNode;
         }else if (_subBlock != nullptr){
-            return complexNode->exitOpr;
+            return _complexNode->getExitNode();
         }
         assert(true);
         return nullptr;
     }
 
     std::vector<Node *> SequenceEle::getEntranceNodes() {
-        assert( (_simpleAsm != nullptr) ^ (_subBlock != nullptr));
-        if (_simpleAsm != nullptr){
-            return {stateNode};
+        assert( (_asmNode != nullptr) ^ (_subBlock != nullptr));
+        if (_asmNode != nullptr){
+            return {_stateNode};
         }else if (_subBlock != nullptr){
-            return complexNode->entranceNodes;
+            return _complexNode->entranceNodes;
         }
-        assert(true);
-        return {};
+        assert(false);
     }
-
-
-
 
     /**
      *
@@ -101,8 +96,6 @@ namespace kathryn{
      *
      *
      * */
-
-
 
     FlowBlockSeq::FlowBlockSeq(): FlowBlockBase(SEQUENTIAL),
                                   resultNodeWrap(nullptr) {}
@@ -150,8 +143,8 @@ namespace kathryn{
         }
         /** build new result NodeWrap*/
         resultNodeWrap = new NodeWrap();
-        resultNodeWrap->entranceNodes = _subSeqMetas.begin()->getEntranceNodes();
-        resultNodeWrap->exitOpr       = _subSeqMetas.rbegin()->getStateFinishIden();
+        resultNodeWrap->addEntraceNodes(_subSeqMetas.begin()->getEntranceNodes());
+        resultNodeWrap->addExitNode(_subSeqMetas.rbegin()->getStateFinishIden());
         resultNodeWrap->setCycleUsed(cycleDet.getCycleVertical());
 
     }

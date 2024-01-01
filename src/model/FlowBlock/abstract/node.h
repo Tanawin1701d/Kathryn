@@ -9,41 +9,35 @@
 #include "model/hwComponent/expression/expression.h"
 #include "model/hwComponent/register/register.h"
 #include "model/hwComponent/abstract/assignable.h"
+#include "stateReg.h"
 #include<vector>
 #include<memory>
+#include <queue>
 
 namespace kathryn {
+
+
+    struct NodeWrap;
 
 
 /** atomic node for assigning */
     struct Node {
 
-        bool pseudoNode = false;
-        expression* psudoAssignMeta = nullptr;
-        AssignMeta *assignMeta = nullptr; //// AssignMeta is must not use the same assign metas
-        Operable *condition = nullptr;
-        Operable *dependState = nullptr;
+        Operable* condition = nullptr;
+        std::vector<Node*> dependNodes;
+        LOGIC_OP dependStateRaiseCond;
 
-        /** This constructor is use for psuedo Node */
-        Node() : pseudoNode(true), assignMeta(nullptr),
-                 psudoAssignMeta(new expression()) {}
-
-        Node(Node &rhs) { operator=(rhs); }
-
-        explicit Node(AssignMeta *asmMeta) : assignMeta(asmMeta) {}
-
-        ~Node() { delete assignMeta; }
-
-        Node &operator=(const Node &rhs) {
-            if (&rhs == this)
-                return *this;
-            pseudoNode = rhs.pseudoNode;
-            psudoAssignMeta = rhs.psudoAssignMeta;
-            assignMeta = new AssignMeta(*rhs.assignMeta);
+        Node(Node &rhs) {
             condition = rhs.condition;
-            dependState = rhs.dependState;
-            return *this;
+            dependNodes = rhs.dependNodes;
+            dependStateRaiseCond = rhs.dependStateRaiseCond;
         }
+
+        explicit Node() = default;
+
+        virtual ~Node() = default;
+
+        virtual Node* clone() = 0;
 
         static void addLogic(Operable *&desLogic, Operable *opr, LOGIC_OP op) {
             assert(op == BITWISE_AND || op == BITWISE_OR);
@@ -61,228 +55,192 @@ namespace kathryn {
         }
 
         /** add condition for assignment*/
-        void addCondtion(Operable *opr, LOGIC_OP op) {
+        virtual void addCondtion(Operable* opr, LOGIC_OP op) {
             addLogic(condition, opr, op);
         }
 
-        /** add dependState for assignment*/
-        void addDependState(Operable *opr, LOGIC_OP op) {
-            addLogic(dependState, opr, op);
+        /** add dependNode for assignment*/
+        void addDependNode(Node* srcNode) {
+            assert(srcNode != nullptr);
+            dependNodes.push_back(srcNode);
         }
 
-        /** assign data to register*/
-        void assign() {
-            if (pseudoNode) {
-                /**typically pseudo node must have condition and depend state
-                 * because pseudoNode used on remain condition for if and while block
-                 * */
-                (*psudoAssignMeta) = *(Operable *) (&(*dependState & *condition));
-            } else {
-                auto resultUpEvent = new UpdateEvent({
-                                                             condition,
-                                                             dependState,
-                                                             &assignMeta->valueToAssign,
-                                                             assignMeta->desSlice,
-                                                             9
-                                                     });
+        std::vector<Node*>& getDependNodes() {return dependNodes; }
 
-                assignMeta->updateEventsPool.push_back(resultUpEvent);
+        /** join depend node to usealble expression*/
+        Operable* getAllDependNodeOpr(){
+            Operable* resultOpr = nullptr;
+            for (auto nd : dependNodes){
+                addLogic(resultOpr, nd->getExitOpr(), dependStateRaiseCond);
             }
+            assert(resultOpr != nullptr);
+            return resultOpr;
         }
-
-        bool isPseudoNode() const{return pseudoNode;}
+        /** set that how to join node to make this node valid*/
+        virtual void setDependStateJoinOp(LOGIC_OP op){
+            dependStateRaiseCond = op;
+        }
+        /** provided src state data*/
+        virtual Operable* getExitOpr(){ return nullptr; };
+        /** assign value*/
+        virtual void assign() = 0;
+        /** cycle that is use in this node*/
+        virtual int getCycleUsed() = 0;
+        /** is Stateful node (reffer to node that consume at least 1 cycle from machine)*/
+        virtual bool isStateFullNode(){ return true; }
 
     };
 
-    /* use for inner block return to outter block**/
-    struct NodeWrap {
-    public:
-        static const int IN_CONSIST_CYCLE_USED = -1;
-        /** entrance represent UpdateEvent which refers to node that be head of the subblock*/
-        /** note that exprMetas must not be here due to the abstract of the system*/
-        std::vector<Node *> entranceNodes;
-        /** the exit condition that allow next building block run*/
-        Operable *exitOpr = nullptr;
-        /** number of cycle required in this subblock*/
-        int cycleUsed = IN_CONSIST_CYCLE_USED;
+    struct AsmNode : Node{
+        AssignMeta* _assignMeta = nullptr; //// AssignMeta is must not use the same assign metas
 
-        NodeWrap(const NodeWrap &rhs) {
-            exitOpr = nullptr;
-            *this = rhs;
+        explicit AsmNode(AssignMeta* assignMeta) :
+            Node(),
+            _assignMeta(assignMeta){
+            assert(_assignMeta != nullptr);
         }
 
-        NodeWrap() = default;
-
-        NodeWrap &operator=(const NodeWrap &rhs) {
-            if (&rhs == this) {
-                return *this;
-            }
-            ///// change node location
-            for (auto nd: rhs.entranceNodes) {
-                Node *preInsert = new Node(*nd);
-                entranceNodes.push_back(preInsert);
-            }
-            exitOpr = rhs.exitOpr;
-            return *this;
+        Node* clone() override{
+            auto clNode = new AsmNode(*this);
+            return clNode;
         }
 
-        void addEntraceNode(Node *nd) {
-            assert(nd != nullptr);
-            entranceNodes.push_back(nd);
+        void assign() override{
+            auto resultUpEvent = new UpdateEvent({
+                                                         condition,
+                                                         getAllDependNodeOpr(),
+                                                         &_assignMeta->valueToAssign,
+                                                         _assignMeta->desSlice,
+                                                         9
+                                                 });
+            _assignMeta->updateEventsPool.push_back(resultUpEvent);
         }
 
-        void addExitOpr(Operable *opr) {
-            assert(opr != nullptr);
-            exitOpr = opr;
-        }
-
-        void addConditionToAllNode(Operable *cond, LOGIC_OP op) {
-            assert(cond != nullptr);
-            for (auto node: entranceNodes) {
-                node->addCondtion(cond, op);
-            }
-        }
-
-        void addDependStateToAllNode(Operable *st, LOGIC_OP op) {
-            assert(st != nullptr);
-            for (auto node: entranceNodes) {
-                node->addDependState(st, op);
-            }
-        }
-
-        void assignAllNode() {
-            for (auto node: entranceNodes) {
-                node->assign();
-            }
-        }
-
-        /** copy node pointer to this wrap*/
-        /// todo we will make it copy node if need but for now we don't
-        void transferNodeFrom(NodeWrap *nw) {
-            assert(nw != nullptr);
-            for (auto node: nw->entranceNodes) {
-                entranceNodes.push_back(node);
-            }
-        }
-
-        void deleteNodesInWrap() {
-            for (auto nd: entranceNodes) {
-                delete nd;
-            }
-        }
-
-        void setCycleUsed(int cycle){
-            assert(cycle == -1 || cycle > 0);
-            cycleUsed = cycle;
-        }
+        int getCycleUsed() override { return 1; }
 
     };
 
-    /** this struct is used to determine numbers of cycle
-     * that is used in multiple subblock
-     * if return -1 means can determine exact value
-     * else x > 0 means these sub flow block use x cycle to
-     * complete their work equally
+    /**
+     * state that represent status of each register in the circuit
      * */
 
-    struct NodeWrapCycleDet{
-        std::vector<int> samplingVec;
+    struct StateNode : Node{
+        StateReg* _stateReg;
 
-        void addToDet(std::vector<Node*>& nodes){
-            for (auto nd: nodes){
-                addToDet(nd);
+        explicit StateNode() :
+            Node(),
+            _stateReg(new StateReg()){}
+
+        Node* clone() override{
+            auto clNode = new StateNode(*this);
+            return clNode;
+        }
+
+        Operable* getExitOpr() override{
+            assert(_stateReg != nullptr);
+            return _stateReg->generateEndExpr();
+        }
+
+        void assign() override{
+            auto dependNodeOpr = getAllDependNodeOpr();
+            assert(dependNodeOpr != nullptr);
+            _stateReg->addUpdateEvent(dependNodeOpr);
+        }
+
+        int getCycleUsed() override {return 1;}
+    };
+
+    /**
+     * node that represent syn status of each register in the circuit
+     * usually used in parallel block with unknown exact cycle
+     * */
+
+    struct SynNode : Node{
+        StateReg* _synReg;
+
+        /**in SynNode condition and dependState is disengage*/
+        explicit SynNode(int synSize) : _synReg(new StateReg(synSize)){}
+
+        Node* clone() override{
+            /** syn node is not supposed to be copy*/
+            assert(false);
+        }
+
+        void addCondtion(Operable* opr, LOGIC_OP op) override{ assert(false);}
+
+        void addDependState(NodeWrap* srcNw, LOGIC_OP op);
+
+        Operable* getExitOpr() override{return _synReg->generateEndExpr();}
+
+        void assign() override{
+            for (size_t i = 0; i < dependNodes.size(); i++){
+                _synReg->addUpdateEvent(dependNodes[i]->getExitOpr()
+                                        , (int)i);
             }
         }
 
-        void addToDet(std::vector<NodeWrap*>& nws){
-            for (auto nw: nws){
-                addToDet(nw);
-            }
-        }
-
-        void addToDet(Node* nd){
-            assert(nd != nullptr);
-            if (nd->isPseudoNode()) {
-                samplingVec.push_back(0);
-            }else{
-                samplingVec.push_back(1);
-            }
-        }
-        void addToDet(NodeWrap* nw){
-            assert(nw != nullptr);
-            samplingVec.push_back(nw->cycleUsed);
-        }
-
-        int getMaxCycleHorizon(){
-            assert(!samplingVec.empty());
-            int testVal = samplingVec[0];
-
-            for (auto cycle: samplingVec){
-                /**case detect in consistent in sub block*/
-                if (cycle == NodeWrap::IN_CONSIST_CYCLE_USED){
-                    return NodeWrap::IN_CONSIST_CYCLE_USED;
-                }
-                /** check that it is equal to other*/
-
-                testVal = std::max(testVal, cycle);
-            }
-            assert(testVal >= 0);
-            /** return only when sampling is all equal*/
-            return testVal;
-        }
-
-        int getSameCycleHorizon(){
-            assert(!samplingVec.empty());
-            int testVal = samplingVec[0];
-            for (auto cycle: samplingVec){
-                if (cycle == NodeWrap::IN_CONSIST_CYCLE_USED){
-                    return NodeWrap::IN_CONSIST_CYCLE_USED;
-                }
-                if (testVal != cycle){
-                    return NodeWrap::IN_CONSIST_CYCLE_USED;
-                }
-            }
-            return testVal;
-        }
-
-        int getCycleVertical(){
-            assert(!samplingVec.empty());
-            int cycleUsed = 0;
-            for (auto subCycle: samplingVec){
-                if (subCycle == NodeWrap::IN_CONSIST_CYCLE_USED){
-                    return NodeWrap::IN_CONSIST_CYCLE_USED;
-                }
-                cycleUsed += subCycle;
-
-            }
-            return cycleUsed;
-        }
-
-        Node* getMatchNode(std::vector<Node*> nds, int cycle){
-            assert(cycle != NodeWrap::IN_CONSIST_CYCLE_USED);
-            for (auto nd : nds){
-                assert(nd != nullptr);
-                if ( (cycle == 0) && nd->isPseudoNode()){
-                    return nd;
-                }
-                if ((cycle == 1) && (!nd->isPseudoNode())){
-                    return nd;
-                }
-            }
-            return nullptr;
-        }
-
-        NodeWrap* getMatchNodeWrap(std::vector<NodeWrap*> nws, int cycle){
-            assert(cycle != NodeWrap::IN_CONSIST_CYCLE_USED);
-            for (auto nw: nws){
-                if (cycle == nw->cycleUsed){
-                    return nw;
-                }
-            }
-            return nullptr;
-        }
+        int getCycleUsed() override{ return 1; }
 
     };
+
+    struct PseudoNode : Node{
+        expression* _pseudoAssignMeta = nullptr;
+
+        explicit PseudoNode() :
+            Node(),
+            _pseudoAssignMeta(new expression()){}
+
+        Node* clone() override{
+            auto clNode = new PseudoNode(*this);
+            return clNode;
+        }
+
+        void assign() override{
+            _pseudoAssignMeta = &(*getAllDependNodeOpr() & *condition);
+        }
+        int getCycleUsed() override { return 0; };
+
+        bool isStateFullNode() override{ return false; }
+
+    };
+
+    /** This function is used to checked that start node is hard wired to some node in
+     * nds if it is match return true
+     *
+     * please bear in mind that copy node that used in while loop can't be detect by this
+     * function
+     * */
+    bool thereAreStateLessConnection(std::vector<Node*> nds, Node* startNode){
+        assert(!startNode->isStateFullNode());
+        std::queue<Node*> toCheckingNode;
+
+        /**fill checking node from nds*/
+        toCheckingNode.push(startNode);
+
+        while (!toCheckingNode.empty()){
+            auto frontNode = toCheckingNode.front();
+            toCheckingNode.pop();
+            /** check depend matched node*/
+            for (auto checkNode: nds){
+                if (checkNode == frontNode){
+                    return true;
+                }
+            }
+            /**add dependNode to next iteration*/
+            for (auto depNode : frontNode->getDependNodes()){
+                assert(depNode != nullptr);
+                if (!depNode->isStateFullNode()){
+                    toCheckingNode.push(depNode);
+                }
+            }
+
+        }
+
+        return false;
+
+
+    }
+
 }
 
 #endif //KATHRYN_NODE_H

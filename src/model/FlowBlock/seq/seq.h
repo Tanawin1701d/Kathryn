@@ -17,16 +17,13 @@ namespace kathryn {
 
     class SequenceEle{
     public:
-        /**assignment block*/
-        Node*          _simpleAsm = nullptr;
+        /**node and flow block*/
+        Node*          _asmNode = nullptr;
         FlowBlockBase* _subBlock  = nullptr;
 
-        /**the thing that represent state*/
-        ///// state for simple assignment
-        StateReg* stReg           = nullptr;
-        Node*     stateNode       = nullptr;
-        ///// state for complex assignment
-        NodeWrap* complexNode     = nullptr;
+        /**state representation*/
+        StateNode* _stateNode       = nullptr;
+        NodeWrap*  _complexNode     = nullptr;
 
         explicit SequenceEle(Node*          simpleNode);
         explicit SequenceEle(FlowBlockBase* fbBase    );
@@ -34,7 +31,7 @@ namespace kathryn {
         void               genHardware       ();
         void               addToCycleDet     (NodeWrapCycleDet& deter) const;
         void               assignDependDent  (SequenceEle* predecessor) const;
-        Operable*          getStateFinishIden() const;
+        Node*          getStateFinishIden() const;
         std::vector<Node*> getEntranceNodes  ();
     };
 

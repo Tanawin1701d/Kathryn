@@ -3,9 +3,9 @@
 //
 
 #include "node.h"
+#include "nodeWrap.h"
 
 namespace kathryn{
-
 
 
 

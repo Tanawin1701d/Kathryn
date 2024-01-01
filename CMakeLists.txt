@@ -66,4 +66,6 @@ add_executable(Kathryn main.cpp
         src/util/logger/logger.h
         src/model/logicRep/valRep.cpp
         src/model/logicRep/valRep.h
+        src/model/FlowBlock/abstract/nodeWrap.cpp
+        src/model/FlowBlock/abstract/nodeWrap.h
 )

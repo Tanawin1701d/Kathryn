@@ -62,17 +62,36 @@ namespace kathryn{
         /**assign to result node wrap*/
         /** node wrap no assign because we must sent to upper block*/
         resultNodeWrapper = new NodeWrap();
-        auto psuedoNode = new Node();
-        psuedoNode->addCondtion(&(!*_condExpr), BITWISE_AND);
+        byPassExitNode = new PseudoNode();
+        exitNode = new PseudoNode();
 
-        resultNodeWrapper->entranceNodes.push_back(psuedoNode);
+        /**
+         *
+         * export nodeWrap to bigger block through result node warp
+         *
+         * */
+
+        /** in case it is not match at first time*/
+        resultNodeWrapper->addEntraceNode(byPassExitNode);
+        byPassExitNode->addCondtion(&(!*_condExpr), BITWISE_AND);
+        /** in case exit from sublock*/
+        subBlockExitNode->addCondtion(&(!*_condExpr), BITWISE_OR);
+        subBlockExitNode->addDependNode(subBlockNodeWrap->getExitNode());
+        subBlockExitNode->assign();
+        /** pool exit node and put to result node wrap*/
+        exitNode->addDependNode(subBlockExitNode);
+        exitNode->addDependNode(byPassExitNode);
+        exitNode->assign();
+        resultNodeWrapper->addExitNode(exitNode);
+        /** complete resultNodeWrap*/
         resultNodeWrapper->transferNodeFrom(subBlockNodeWrap);
-        resultNodeWrapper->exitOpr = &(((*subBlockNodeWrap->exitOpr  ) & !(*_condExpr)) |
-                                       ((*psuedoNode->psudoAssignMeta) & !(*_condExpr) ));
 
+        /**
+         * loop back condition to make block repeat
+         * */
 
         /**assign for loop back assignment*/
-        loopNodeWrap->addDependStateToAllNode(subBlockNodeWrap->exitOpr, BITWISE_AND);
+        loopNodeWrap->addDependStateToAllNode(subBlockNodeWrap->getExitNode(), BITWISE_AND);
         loopNodeWrap->addConditionToAllNode(_condExpr, BITWISE_AND);
         loopNodeWrap->assignAllNode();
     }

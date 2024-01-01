@@ -4,8 +4,6 @@
 
 #include "if.h"
 #include "model/controller/controller.h"
-#include "model/FlowBlock/cond/elif.h"
-
 
 namespace kathryn{
 
@@ -74,28 +72,26 @@ namespace kathryn{
             resultNodeWrapper->transferNodeFrom(nw);
         }
         ///// build proxy node to prevent state lost
-        Node* psuedoNode = nullptr;
         if ( allCondes.size() == allStatement.size() ) {
-            psuedoNode = new Node();
-            psuedoNode->addCondtion(prevFalse, BITWISE_AND);
-            resultNodeWrapper->addEntraceNode(psuedoNode);
+            psuedoElseNode = new PseudoNode();
+            psuedoElseNode->addCondtion(prevFalse, BITWISE_AND);
+            resultNodeWrapper->addEntraceNode(psuedoElseNode);
         }
 
         /**exit condition of node wrap*/
-        Operable* exitCond = allStatement[0]->exitOpr;
-        for (int i = 1; i < allStatement.size(); i++){
-            exitCond = &((*exitCond) | (*allStatement[i]->exitOpr));
+        exitNode = new PseudoNode();
+        for (auto nw : allStatement){
+            exitNode->addDependState(nw->getExitNode(), BITWISE_OR);
         }
-        if (psuedoNode != nullptr){
-            exitCond = &((*exitCond) | (*psuedoNode->psudoAssignMeta));
-        }
-        resultNodeWrapper->addExitOpr(exitCond);
-        /** determine node wrap cycle */
+        if (psuedoElseNode != nullptr)
+            exitNode->addDependState(psuedoElseNode, BITWISE_OR);
+
         NodeWrapCycleDet deter;
         deter.addToDet(allStatement);
-        if (psuedoNode != nullptr){
-            deter.addToDet(psuedoNode);
+        if (psuedoElseNode != nullptr){
+            deter.addToDet(psuedoElseNode);
         }
+        /**cycle determiner for node wrap*/
         resultNodeWrapper->setCycleUsed(deter.getSameCycleHorizon());
 
     }

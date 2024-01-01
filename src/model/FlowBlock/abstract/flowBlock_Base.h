@@ -13,6 +13,8 @@
 #include "model/hwComponent/expression/expression.h"
 #include "model/hwComponent/abstract/operation.h"
 #include "node.h"
+#include "model/FlowBlock/abstract/nodeWrap.h"
+
 
 namespace kathryn {
     /** it is basic node that only have one event at a node */
@@ -60,7 +62,7 @@ namespace kathryn {
         /**
          * For custome block
          * */
-        /** when every thing is finish call this to get sumarisation*/
+        /** when everything is finish call this to get sumarisation*/
         virtual NodeWrap* sumarizeBlock() = 0;
         /*** communicator to controller*/
          virtual void onAttachBlock() = 0; //// it is supposed to acknowledge controller whether this block is declared
@@ -70,6 +72,7 @@ namespace kathryn {
 
         ////// getter/setter
         FLOW_BLOCK_TYPE getFlowType() const {return _type;}
+
         std::vector<FlowBlockBase*>& getSubBlocks(){
             return subBlocks;
         }
