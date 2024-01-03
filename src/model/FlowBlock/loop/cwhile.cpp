@@ -75,12 +75,14 @@ namespace kathryn{
         resultNodeWrapper->addEntraceNode(byPassExitNode);
         byPassExitNode->addCondtion(&(!*_condExpr), BITWISE_AND);
         /** in case exit from sublock*/
-        subBlockExitNode->addCondtion(&(!*_condExpr), BITWISE_OR);
+        subBlockExitNode->addCondtion(&(!*_condExpr), BITWISE_AND);
         subBlockExitNode->addDependNode(subBlockNodeWrap->getExitNode());
+        subBlockExitNode->setDependStateJoinOp(BITWISE_AND);
         subBlockExitNode->assign();
         /** pool exit node and put to result node wrap*/
         exitNode->addDependNode(subBlockExitNode);
         exitNode->addDependNode(byPassExitNode);
+        exitNode->setDependStateJoinOp(BITWISE_OR);
         exitNode->assign();
         resultNodeWrapper->addExitNode(exitNode);
         /** complete resultNodeWrap*/
@@ -91,7 +93,8 @@ namespace kathryn{
          * */
 
         /**assign for loop back assignment*/
-        loopNodeWrap->addDependStateToAllNode(subBlockNodeWrap->getExitNode(), BITWISE_AND);
+        loopNodeWrap->addDependNodeToAllNode(subBlockNodeWrap->getExitNode());
+        loopNodeWrap->setDependNodeCond(BITWISE_AND);
         loopNodeWrap->addConditionToAllNode(_condExpr, BITWISE_AND);
         loopNodeWrap->assignAllNode();
     }

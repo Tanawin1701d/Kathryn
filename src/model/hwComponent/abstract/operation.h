@@ -37,7 +37,7 @@ namespace kathryn {
         /** assign for build new variable*/
         ASSIGN,       // =
         /** other operator*/
-        DUMMY,
+        OP_DUMMY,
         LOGIC_OP_COUNT
     };
 

@@ -37,7 +37,8 @@ namespace kathryn{
         if (!basicNodes.empty()){
             basicStNode = new StateNode();
             for (auto nd : basicNodes){
-                nd->addDependState(basicStNode, BITWISE_AND);
+                nd->addDependNode(basicStNode);
+                nd->setDependStateJoinOp(BITWISE_AND);
                 nd->assign();
             }
         }
@@ -61,10 +62,10 @@ namespace kathryn{
         assert(synSize > 0);
         synNode = new SynNode(synSize);
         if (basicStNode != nullptr){
-            synNode->addDependState(basicStNode, BITWISE_AND);
+            synNode->addDependNode(basicStNode);
         }
         for (auto nw : nodeWrapOfSubBlock){
-            synNode->addDependState(nw, BITWISE_AND);
+            synNode->addDependNode(nw->getExitNode());
         }
         ////// assign sync reg
         synNode->assign();
@@ -106,10 +107,10 @@ namespace kathryn{
         if (!basicNodes.empty()){
             basicStNode = new StateNode();
             for (auto nd : basicNodes){
-                nd->addDependState(basicStNode, BITWISE_AND);
+                nd->addDependNode(basicStNode);
+                nd->setDependStateJoinOp(BITWISE_AND);
                 nd->assign();
             }
-            basicStNode->assign();
         }
         /**build node wrap for flowblock*/
         for (auto fb : subBlocks){
@@ -131,11 +132,12 @@ namespace kathryn{
             int synSize = (basicStNode != nullptr) + (int)nodeWrapOfSubBlock.size();
             assert(synSize > 0);
             synNode = new SynNode(synSize);
+            /**syn node don't need to specify join operation due to it used own logic or*/
             if (basicStNode != nullptr){
-                synNode->addDependState(basicStNode, BITWISE_AND);
+                synNode->addDependNode(basicStNode);
             }
             for (auto nw : nodeWrapOfSubBlock){
-                synNode->addDependState(nw, BITWISE_AND);
+                synNode->addDependNode(nw->getExitNode());
             }
             ////// assign sync reg
             synNode->assign();

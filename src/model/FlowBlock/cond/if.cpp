@@ -80,11 +80,12 @@ namespace kathryn{
 
         /**exit condition of node wrap*/
         exitNode = new PseudoNode();
+        exitNode->setDependStateJoinOp(BITWISE_OR);
         for (auto nw : allStatement){
-            exitNode->addDependState(nw->getExitNode(), BITWISE_OR);
+            exitNode->addDependNode(nw->getExitNode());
         }
         if (psuedoElseNode != nullptr)
-            exitNode->addDependState(psuedoElseNode, BITWISE_OR);
+            exitNode->addDependNode(psuedoElseNode);
 
         NodeWrapCycleDet deter;
         deter.addToDet(allStatement);

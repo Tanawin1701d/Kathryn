@@ -5,14 +5,15 @@
 #ifndef KATHRYN_NODE_H
 #define KATHRYN_NODE_H
 
+#include<vector>
+#include<memory>
+#include <queue>
 #include "model/hwComponent/abstract/operation.h"
 #include "model/hwComponent/expression/expression.h"
 #include "model/hwComponent/register/register.h"
 #include "model/hwComponent/abstract/assignable.h"
-#include "stateReg.h"
-#include<vector>
-#include<memory>
-#include <queue>
+#include "model/FlowBlock/abstract/spReg/stateReg.h"
+
 
 namespace kathryn {
 
@@ -25,7 +26,7 @@ namespace kathryn {
 
         Operable* condition = nullptr;
         std::vector<Node*> dependNodes;
-        LOGIC_OP dependStateRaiseCond;
+        LOGIC_OP dependStateRaiseCond = OP_DUMMY;
 
         Node(Node &rhs) {
             condition = rhs.condition;
@@ -144,7 +145,7 @@ namespace kathryn {
         void assign() override{
             auto dependNodeOpr = getAllDependNodeOpr();
             assert(dependNodeOpr != nullptr);
-            _stateReg->addUpdateEvent(dependNodeOpr);
+            _stateReg->addDependStateUpdateEvent(dependNodeOpr);
         }
 
         int getCycleUsed() override {return 1;}
@@ -168,14 +169,11 @@ namespace kathryn {
 
         void addCondtion(Operable* opr, LOGIC_OP op) override{ assert(false);}
 
-        void addDependState(NodeWrap* srcNw, LOGIC_OP op);
-
         Operable* getExitOpr() override{return _synReg->generateEndExpr();}
 
         void assign() override{
             for (size_t i = 0; i < dependNodes.size(); i++){
-                _synReg->addUpdateEvent(dependNodes[i]->getExitOpr()
-                                        , (int)i);
+                _synReg->addDependStateUpdateEvent(dependNodes[i]->getExitOpr(), (int) i);
             }
         }
 
@@ -202,6 +200,21 @@ namespace kathryn {
 
         bool isStateFullNode() override{ return false; }
 
+    };
+
+    struct WaitCondNode : Node{
+        ///// todo
+
+        WaitCondNode(Operable* exitCond){
+
+        }
+
+    };
+
+    struct WaitCycleNode : Node{
+        WaitCycleNode(int cycle){
+
+        }
     };
 
     /** This function is used to checked that start node is hard wired to some node in

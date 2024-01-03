@@ -20,11 +20,12 @@ namespace kathryn {
     enum HW_COMPONENT_TYPE{
         TYPE_REG = 0,
         TYPE_STATE_REG = 1,
-        TYPE_WIRE = 2,
-        TYPE_EXPRESSION = 3,
-        TYPE_MODULE = 4,
-        TYPE_VAL = 5,
-        TYPE_COUNT = 6
+        TYPE_WAIT_STATE_REG = 2,
+        TYPE_WIRE = 3,
+        TYPE_EXPRESSION = 4,
+        TYPE_MODULE = 5,
+        TYPE_VAL = 6,
+        TYPE_COUNT = 7
     };
 
     static const std::string GLOBAL_PREFIX[TYPE_COUNT] = {"R",

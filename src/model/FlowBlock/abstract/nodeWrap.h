@@ -23,13 +23,13 @@ namespace kathryn{
         /** number of cycle required in this subblock*/
         int cycleUsed = IN_CONSIST_CYCLE_USED;
 
-        NodeWrap(const NodeWrap &rhs) {
+        NodeWrap(const NodeWrap& rhs) {
             *this = rhs;
         }
 
         NodeWrap() = default;
 
-        NodeWrap &operator=(const NodeWrap &rhs) {
+        NodeWrap &operator=(const NodeWrap& rhs) {
             if (&rhs == this) {
                 return *this;
             }
@@ -67,10 +67,16 @@ namespace kathryn{
             }
         }
 
-        void addDependStateToAllNode(Node* st, LOGIC_OP op) {
+        void addDependNodeToAllNode(Node* st) {
             assert(st != nullptr);
             for (auto node: entranceNodes) {
-                node->addDependState(st, op);
+                node->addDependNode(st);
+            }
+        }
+
+        void setDependNodeCond(LOGIC_OP op){
+            for (auto node: entranceNodes){
+                node->setDependStateJoinOp(op);
             }
         }
 

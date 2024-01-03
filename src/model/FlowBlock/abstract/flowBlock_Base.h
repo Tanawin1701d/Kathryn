@@ -26,6 +26,8 @@ namespace kathryn {
         ELIF,
         ELSE,
         WHILE,
+        CONDWAIT,
+        CLKWAIT,
         DO_WHILE,
         DUMMY_BLOCK,
         FLOW_BLOCK_COUNT

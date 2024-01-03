@@ -1,0 +1,100 @@
+//
+// Created by tanawin on 3/1/2567.
+//
+
+#ifndef KATHRYN_WAITREG_H
+#define KATHRYN_WAITREG_H
+
+#include <iostream>
+#include <cmath>
+#include "ctrlFlowRegBase.h"
+#include "model/hwComponent/expression/expression.h"
+#include "model/hwComponent/value/value.h"
+
+namespace kathryn{
+
+    /**
+      *
+      * conditional wait state register
+      *
+      * */
+
+    class CondWaitStateReg : public CtrlFlowRegBase{
+
+        Val _upState = Val(1, "b1");
+        Val _downState = Val(1, "b0");
+        Operable* _condOpr = nullptr;
+
+    protected:
+
+        void com_init() override;
+
+    public:
+        /** constructor*/
+        explicit CondWaitStateReg(Operable* condOpr);
+        /** add depend State*/
+        UpdateEvent* addDependStateUpdateEvent(Operable* dependStateCon);
+
+        /** generate reset event*/
+        void makeResetEvent() override;
+        /** generate out expression*/
+        Operable* generateEndExpr() override;
+        /** oevrride operator to prevent false input*/
+        Reg& operator <<= (Operable& b) override {
+            std::cout << "we not support = operator in register";
+            return *this;
+        }
+
+
+    };
+
+    /**
+      *
+      * cycle count wait state register
+      *
+      * */
+
+    class CycleWaitStateReg : public CtrlFlowRegBase{
+    private:
+        /**wait cycle meta data*/
+        int _waitCycle = -1;
+        int _bitSz     = -1;
+        /**when counter is reached exit expression will be set*/
+        Operable* _IdleCnt     = nullptr;
+        Operable* _startCnt    = nullptr;
+        Operable* _endCnt      = nullptr;
+    protected:
+
+        void com_init() override;
+
+    public:
+        /** constructor*/
+        explicit CycleWaitStateReg(int waitCycle);
+        explicit CycleWaitStateReg(Operable& endCnt);
+
+        /** add depend State */
+        UpdateEvent* addDependStateUpdateEvent(Operable* dependStateCon);
+        /** reset event*/
+        void makeResetEvent() override;
+        /** generate out expression*/
+        Operable* generateEndExpr() override;
+        /** oevrride operator to prevent false input*/
+        Reg& operator <<= (Operable& b) override {
+            std::cout << "we not support = operator in register";
+            return *this;
+        }
+
+    };
+
+    static int calBitUsed(int maxNumber){
+        assert(maxNumber > 0);
+        int amtNumberUsed = maxNumber + 1;
+        /** time 2 and minus 1 to make ceiling of the number*/
+        return (int) log2(amtNumberUsed * 2 - 1);
+    }
+
+
+
+}
+
+#endif //KATHRYN_WAITREG_H

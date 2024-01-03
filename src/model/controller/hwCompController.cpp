@@ -44,7 +44,7 @@ namespace kathryn{
         /*** do not add to module any more*/
         assert(asmMeta != nullptr);
         purifyFlowStack();
-        auto node = new Node(asmMeta);
+        auto node = new AsmNode(asmMeta);
         assert(!flowBlockStack.empty());
         auto fb = flowBlockStack.top();
         fb->addElementInFlowBlock(node);
@@ -88,7 +88,7 @@ namespace kathryn{
         /*** do not add to module any more*/
         assert(asmMeta != nullptr);
         purifyFlowStack();
-        auto node = new Node(asmMeta);
+        auto node = new AsmNode(asmMeta);
         assert(!flowBlockStack.empty());
         auto fb = flowBlockStack.top();
         fb->addElementInFlowBlock(node);
@@ -150,8 +150,6 @@ namespace kathryn{
                " init and set parent to " +
                targetModulePtr->getIdentDebugValue()
         );
-
-
     }
 
     void Controller::on_module_init_designFlow(Module* ptr) {

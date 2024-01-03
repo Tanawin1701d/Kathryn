@@ -38,8 +38,8 @@ add_executable(Kathryn main.cpp
         src/model/FlowBlock/par/par.cpp
         src/model/FlowBlock/par/par.h
         src/model/FlowBlock/abstract/loopStMacro.h
-        src/model/FlowBlock/abstract/stateReg.h
-        src/model/FlowBlock/abstract/stateReg.cpp
+        src/model/FlowBlock/abstract/spReg/stateReg.h
+        src/model/FlowBlock/abstract/spReg/stateReg.cpp
         src/model/FlowBlock/seq/seq.cpp
         src/model/FlowBlock/seq/seq.h
         src/model/FlowBlock/loop/cwhile.cpp
@@ -68,4 +68,9 @@ add_executable(Kathryn main.cpp
         src/model/logicRep/valRep.h
         src/model/FlowBlock/abstract/nodeWrap.cpp
         src/model/FlowBlock/abstract/nodeWrap.h
+        src/model/FlowBlock/time/wait.cpp
+        src/model/FlowBlock/time/wait.h
+        src/model/FlowBlock/abstract/spReg/waitReg.cpp
+        src/model/FlowBlock/abstract/spReg/waitReg.h
+        src/model/FlowBlock/abstract/spReg/ctrlFlowRegBase.h
 )

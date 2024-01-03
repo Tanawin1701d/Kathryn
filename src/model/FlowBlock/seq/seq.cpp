@@ -34,6 +34,7 @@ namespace kathryn{
         if (_asmNode != nullptr){
             _stateNode = new StateNode();
             _asmNode->addDependNode(_stateNode);
+            _asmNode->setDependStateJoinOp(BITWISE_AND);
             _asmNode->assign();
         }else if (_subBlock != nullptr){
             _complexNode = _subBlock->sumarizeBlock();
@@ -58,9 +59,11 @@ namespace kathryn{
 
         if (_asmNode != nullptr){
             _stateNode->addDependNode(predecessor->getStateFinishIden());
+            _stateNode->setDependStateJoinOp(BITWISE_AND);
             _stateNode->assign();   ///// assign state node to actual value
         }else if (_subBlock != nullptr){
-            _complexNode->addDependStateToAllNode(predecessor->getStateFinishIden(), BITWISE_AND);
+            _complexNode->addDependNodeToAllNode(predecessor->getStateFinishIden());
+            _complexNode->setDependNodeCond(BITWISE_AND);
             _complexNode->assignAllNode();
         }else{
             assert(true);
@@ -75,8 +78,7 @@ namespace kathryn{
         }else if (_subBlock != nullptr){
             return _complexNode->getExitNode();
         }
-        assert(true);
-        return nullptr;
+        assert(false);
     }
 
     std::vector<Node *> SequenceEle::getEntranceNodes() {
