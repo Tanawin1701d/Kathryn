@@ -18,17 +18,21 @@ namespace kathryn {
                                                   false),
                                   upState(1, "b1"),
                                   upFullState(size, genConseBinaryValue(true, size)),
-                                  downFullState(size, genConseBinaryValue(false, size))
+                                  downFullState(size, genConseBinaryValue(false, size)),
+                                  nextFillActivateId(0)
     {
         com_init();
     };
 
-    UpdateEvent* StateReg::addDependStateUpdateEvent(Operable* dependStateCon, int bit){
-        auto* event = new UpdateEvent({nullptr,
-                                       dependStateCon,
+    UpdateEvent* StateReg::addDependState(Operable* dependState, Operable* activateCond){
+        assert(dependState != nullptr);
+        auto* event = new UpdateEvent({activateCond,
+                                       dependState,
                                        &upState,
-                                       Slice({bit, bit + 1}),
+                                       Slice({nextFillActivateId, nextFillActivateId + 1}),
                                        9});
+        nextFillActivateId++;
+        assert(nextFillActivateId <= getSlice().getSize());
         addUpdateMeta(event);
         return event;
     }

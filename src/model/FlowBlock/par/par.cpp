@@ -125,9 +125,13 @@ namespace kathryn{
             cycleDet.addToDet(basicStNode);
         cycleDet.addToDet(nodeWrapOfSubBlock);
         int cycleUsed = cycleDet.getMaxCycleHorizon();
+        size_t amt_block = basicNodes.size() + subBlocks.size();
+
 
         /** build syn node if need*/
-        if ( cycleUsed == IN_CONSIST_CYCLE_USED ){
+        if ( (cycleUsed == IN_CONSIST_CYCLE_USED) &&
+             (amt_block > 1) /** incase amt_block == 1 we don't have to sync*/
+        ){
             /////// syn reg needed
             int synSize = (basicStNode != nullptr) + (int)nodeWrapOfSubBlock.size();
             assert(synSize > 0);
@@ -143,10 +147,13 @@ namespace kathryn{
             synNode->assign();
         }
 
-        /** set result node wrap set */
+        /**
+         * set result node wrap set
+         * */
 
         /*** entrance node management*/
-        resultNodeWrap->addEntraceNode(basicStNode);
+        if (basicStNode != nullptr)
+            resultNodeWrap->addEntraceNode(basicStNode);
         for (auto nw : nodeWrapOfSubBlock){
             resultNodeWrap->transferNodeFrom(nw);
         }
@@ -155,11 +162,18 @@ namespace kathryn{
             resultNodeWrap->addExitNode(synNode);
         }else{
             /** get Match allow nullptr*/
-            assert(cycleUsed > 0);
-            Node* exitNode = getMatchExitExpr({basicStNode},
-                                                 nodeWrapOfSubBlock,
-                                                 cycleUsed
-                                                 );
+            Node* exitNode = nullptr;
+            if (cycleUsed >= 0){
+                assert(cycleUsed >= 0);
+                exitNode = getMatchNodeFromNdsOrNws({basicStNode},
+                                                    nodeWrapOfSubBlock,
+                                                    cycleUsed
+                );
+            }else{
+                assert(amt_block == 1);
+                exitNode = getAnyNodeFromNdsOrNws({basicStNode},
+                                                  nodeWrapOfSubBlock);
+            }
             assert(exitNode != nullptr);
             resultNodeWrap->addExitNode(exitNode);
         }

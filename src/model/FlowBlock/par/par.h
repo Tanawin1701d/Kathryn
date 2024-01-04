@@ -10,6 +10,7 @@
 #include "model/FlowBlock/abstract/loopStMacro.h"
 #include "model/FlowBlock/abstract/spReg/stateReg.h"
 #include "model/FlowBlock/abstract/nodes/node.h"
+#include "model/FlowBlock/abstract/nodes/stateNode.h"
 
 #define par for(auto kathrynBlock = new FLowBlockParAuto(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 

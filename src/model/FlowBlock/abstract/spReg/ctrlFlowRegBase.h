@@ -25,6 +25,8 @@ namespace kathryn{
                     requireAlloc
             ){}
 
+        /** add depend State register return update event*/
+        virtual UpdateEvent* addDependState(Operable* dependState, Operable* activateCond) = 0;
         /** build register representation when leaving this state */
         virtual void      makeResetEvent() = 0;
         /***generate expression that represent state is finish*/

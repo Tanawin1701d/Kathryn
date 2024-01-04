@@ -4,6 +4,7 @@
 
 #include "cwhile.h"
 #include "model/controller/controller.h"
+#include "stateNode.h"
 
 namespace kathryn{
 

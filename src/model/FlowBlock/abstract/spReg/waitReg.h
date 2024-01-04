@@ -32,9 +32,8 @@ namespace kathryn{
     public:
         /** constructor*/
         explicit CondWaitStateReg(Operable* condOpr);
-        /** add depend State*/
-        UpdateEvent* addDependStateUpdateEvent(Operable* dependStateCon);
-
+        /** add prior state that trigger this state*/
+        UpdateEvent* addDependState(Operable* dependState, Operable* activateCond) override;
         /** generate reset event*/
         void makeResetEvent() override;
         /** generate out expression*/
@@ -72,8 +71,8 @@ namespace kathryn{
         explicit CycleWaitStateReg(int waitCycle);
         explicit CycleWaitStateReg(Operable* endCnt);
 
-        /** add depend State */
-        UpdateEvent* addDependStateUpdateEvent(Operable* dependStateCon);
+        /** add prior state that trigger this state*/
+        UpdateEvent* addDependState(Operable* dependState, Operable* activateCond) override;
         /** reset event*/
         void makeResetEvent() override;
         /** generate out expression*/

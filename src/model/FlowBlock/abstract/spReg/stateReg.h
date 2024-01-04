@@ -20,6 +20,7 @@ namespace kathryn {
         Val upState;
         Val upFullState;
         Val downFullState;
+        int nextFillActivateId;
     protected:
         /**override data to init state regiter*/
         void com_init() override;
@@ -31,7 +32,7 @@ namespace kathryn {
             return *this;
         }
         /** add prior state that trigger this state*/
-        UpdateEvent* addDependStateUpdateEvent(Operable* dependStateCon = nullptr, int bit = 0);
+        UpdateEvent* addDependState(Operable* dependState, Operable* activateCond) override;
         /** reset event*/
         void makeResetEvent() override;
         /** exit expression*/

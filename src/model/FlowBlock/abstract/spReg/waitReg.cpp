@@ -21,28 +21,29 @@ namespace kathryn{
                     false,
                     TYPE_COND_WAIT_STATE_REG,
                     false
-    ){
+    ),
+    _condOpr(condOpr)
+    {
         /** init comunication to system*/
         com_init();
         /** generate update event for exit event*/
 
     }
 
-
     void CondWaitStateReg::com_init() {
         ctrl->on_cond_wait_reg_init(this);
     }
 
-    UpdateEvent* CondWaitStateReg::addDependStateUpdateEvent(Operable* dependStateCon){
-        auto* event = new UpdateEvent({nullptr,
-                                       dependStateCon,
+    UpdateEvent* CondWaitStateReg::addDependState(Operable* dependState, Operable* activateCond){
+        assert(dependState != nullptr);
+        auto* event = new UpdateEvent({activateCond,
+                                       dependState,
                                        &_upState,
                                        Slice({0, 1}),
                                        9});
         addUpdateMeta(event);
         return event;
     }
-
 
     void CondWaitStateReg::makeResetEvent() {
         auto* resetEvent = new UpdateEvent({    _condOpr,
@@ -102,9 +103,10 @@ namespace kathryn{
         ctrl->on_cycle_wait_reg_init(this);
     }
 
-    UpdateEvent* CycleWaitStateReg::addDependStateUpdateEvent(Operable* dependStateCon){
-        auto* event = new UpdateEvent({nullptr,
-                                       dependStateCon,
+    UpdateEvent* CycleWaitStateReg::addDependState(Operable* dependState, Operable* activateCond){
+        assert(dependState != nullptr);
+        auto* event = new UpdateEvent({activateCond,
+                                       dependState,
                                        _startCnt,
                                        Slice({0, _bitSz}),
                                        9});

@@ -8,6 +8,7 @@
 #include "model/FlowBlock/abstract/flowBlock_Base.h"
 #include "model/FlowBlock/abstract/loopStMacro.h"
 #include "model/FlowBlock/abstract/nodes/node.h"
+#include "stateNode.h"
 
 #define cwhile(expr) for(auto kathrynBlock = new FlowBlockCwhile(expr); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 

@@ -191,7 +191,7 @@ namespace kathryn{
             return cycleUsed;
         }
 
-        /** search for node that have match to input cycle*/
+        /** search for node that have match to input cycle skip if node is nullptr*/
         static Node* getMatchNode(const std::vector<Node*>& nds, int cycle){
             assert(cycle != IN_CONSIST_CYCLE_USED);
             ////// we do not allow in consist cycle to be matched with node
@@ -206,7 +206,7 @@ namespace kathryn{
             return nullptr;
         }
 
-        /** search for node wrap that have match to input cycle*/
+        /** search for node wrap that have match to input cycle skip if node is nullptr*/
         static NodeWrap* getMatchNodeWrap(const std::vector<NodeWrap*>& nws, int cycle){
             assert(cycle != IN_CONSIST_CYCLE_USED);
             for (auto nw: nws){
@@ -222,10 +222,10 @@ namespace kathryn{
 
     };
 
-    /** get the exit operable of matched node/nodeWrap that got same cycle used*/
-    static Node* getMatchExitExpr(const std::vector<Node*>& nds,
-                                      const std::vector<NodeWrap*>& nws,
-                                      int cycle
+    /** get the exit node of matched node that got same cycle used*/
+    static Node* getMatchNodeFromNdsOrNws(const std::vector<Node*>& nds,
+                                          const std::vector<NodeWrap*>& nws,
+                                          int cycle
     ){
 
         assert(cycle >= 0);
@@ -245,6 +245,21 @@ namespace kathryn{
 
     }
 
+    /** get the any exit node that first*/
+    static Node* getAnyNodeFromNdsOrNws(const std::vector<Node*>& nds,
+                                        const std::vector<NodeWrap*>& nws){
+        for (auto nd : nds){
+            if (nd != nullptr){
+                return nd;
+            }
+        }
+        for (auto nw : nws){
+            if (nw != nullptr){
+                return nw->getExitNode();
+            }
+        }
+        return nullptr;
+    }
 
 }
 

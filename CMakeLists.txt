@@ -74,4 +74,5 @@ add_executable(Kathryn main.cpp
         src/model/FlowBlock/abstract/spReg/waitReg.h
         src/model/FlowBlock/abstract/spReg/ctrlFlowRegBase.h
         src/model/FlowBlock/abstract/nodes/waitNode.h
+        src/model/FlowBlock/abstract/nodes/stateNode.h
 )
