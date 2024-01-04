@@ -9,7 +9,7 @@
 #include "ctrlFlowRegBase.h"
 #include "model/hwComponent/expression/expression.h"
 #include "model/hwComponent/value/value.h"
-#include "model/FlowBlock/abstract/node.h"
+#include "model/FlowBlock/abstract/nodes/node.h"
 
 
 namespace kathryn {

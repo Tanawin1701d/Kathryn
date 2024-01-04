@@ -15,6 +15,7 @@
 #include "model/FlowBlock/abstract/spReg/stateReg.h"
 
 
+
 namespace kathryn {
 
 
@@ -202,20 +203,6 @@ namespace kathryn {
 
     };
 
-    struct WaitCondNode : Node{
-        ///// todo
-
-        WaitCondNode(Operable* waitCond){
-
-        }
-
-    };
-
-    struct WaitCycleNode : Node{
-        WaitCycleNode(int cycle){
-
-        }
-    };
 
     /** This function is used to checked that start node is hard wired to some node in
      * nds if it is match return true

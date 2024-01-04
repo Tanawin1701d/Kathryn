@@ -1,0 +1,88 @@
+//
+// Created by tanawin on 4/1/2567.
+//
+
+#ifndef KATHRYN_WAITNODE_H
+#define KATHRYN_WAITNODE_H
+
+#include "node.h"
+#include "model/FlowBlock/abstract/spReg/waitReg.h"
+
+namespace kathryn{
+
+
+
+
+
+    struct WaitCondNode : Node{
+        ///// todo
+        CondWaitStateReg* _condWaitStateReg = nullptr;
+
+        explicit WaitCondNode(Operable* waitCond):
+                Node(){
+            assert(waitCond != nullptr);
+            _condWaitStateReg = new CondWaitStateReg(waitCond);
+        }
+
+        Node* clone() override{
+            auto clNode = new WaitCondNode(*this);
+            return clNode;
+        }
+
+        Operable* getExitOpr() override{
+            assert(_condWaitStateReg != nullptr);
+            return _condWaitStateReg->generateEndExpr();
+        }
+
+        void assign() override{
+            auto dependNodeOpr = getAllDependNodeOpr();
+            assert(dependNodeOpr != nullptr);
+            _condWaitStateReg->addDependStateUpdateEvent(dependNodeOpr);
+        }
+
+        int getCycleUsed() override {return -1;}
+
+
+
+    };
+
+    struct WaitCycleNode : Node{
+        int _cycle = -1;
+        CycleWaitStateReg* _cycleWaitStateReg = nullptr;
+
+        explicit WaitCycleNode(int cycle):
+                Node(),
+                _cycle(cycle){
+
+            _cycleWaitStateReg = new CycleWaitStateReg(cycle);
+        }
+
+        explicit WaitCycleNode(Operable* opr):
+                Node()
+        {
+            _cycleWaitStateReg = new CycleWaitStateReg(opr);
+        }
+
+        Node* clone() override{
+            auto clNode = new WaitCycleNode(*this);
+            return clNode;
+        }
+
+        Operable* getExitOpr() override{
+            assert(_cycleWaitStateReg != nullptr);
+            return _cycleWaitStateReg->generateEndExpr();
+        }
+
+        void assign() override{
+            auto dependNodeOpr = getAllDependNodeOpr();
+            assert(dependNodeOpr != nullptr);
+            _cycleWaitStateReg->addDependStateUpdateEvent(dependNodeOpr);
+        }
+
+        int getCycleUsed() override {return _cycle;}
+
+    };
+
+}
+
+#endif //KATHRYN_WAITNODE_H

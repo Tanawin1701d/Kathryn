@@ -21,8 +21,8 @@ namespace kathryn{
 
     class CondWaitStateReg : public CtrlFlowRegBase{
 
-        Val _upState = Val(1, "b1");
-        Val _downState = Val(1, "b0");
+        Val _upState       = Val(1, "b1");
+        Val _downState     = Val(1, "b0");
         Operable* _condOpr = nullptr;
 
     protected:
@@ -70,7 +70,7 @@ namespace kathryn{
     public:
         /** constructor*/
         explicit CycleWaitStateReg(int waitCycle);
-        explicit CycleWaitStateReg(Operable& endCnt);
+        explicit CycleWaitStateReg(Operable* endCnt);
 
         /** add depend State */
         UpdateEvent* addDependStateUpdateEvent(Operable* dependStateCon);

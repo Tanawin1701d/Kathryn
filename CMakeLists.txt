@@ -59,8 +59,8 @@ add_executable(Kathryn main.cpp
         src/test/modelTest1.h
         src/model/hwComponent/abstract/operation.cpp
         src/model/util/stateRegUtil.cpp
-        src/model/FlowBlock/abstract/node.cpp
-        src/model/FlowBlock/abstract/node.h
+        src/model/FlowBlock/abstract/nodes/node.cpp
+        src/model/FlowBlock/abstract/nodes/node.h
         src/test/modelTest2.h
         src/util/logger/logger.cpp
         src/util/logger/logger.h
@@ -73,4 +73,5 @@ add_executable(Kathryn main.cpp
         src/model/FlowBlock/abstract/spReg/waitReg.cpp
         src/model/FlowBlock/abstract/spReg/waitReg.h
         src/model/FlowBlock/abstract/spReg/ctrlFlowRegBase.h
+        src/model/FlowBlock/abstract/nodes/waitNode.h
 )

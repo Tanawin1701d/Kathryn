@@ -9,7 +9,7 @@
 #include "model/FlowBlock/abstract/flowBlock_Base.h"
 #include "model/FlowBlock/abstract/loopStMacro.h"
 #include "model/FlowBlock/abstract/spReg/stateReg.h"
-#include "model/FlowBlock/abstract/node.h"
+#include "model/FlowBlock/abstract/nodes/node.h"
 
 #define seq for(auto kathrynBlock = new FlowBlockSeq(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 

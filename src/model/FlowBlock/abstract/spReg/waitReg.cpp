@@ -81,17 +81,17 @@ namespace kathryn{
         assert(_bitSz > 0);
      }
 
-    CycleWaitStateReg::CycleWaitStateReg(Operable& endCnt):
+    CycleWaitStateReg::CycleWaitStateReg(Operable* endCnt):
     CtrlFlowRegBase(
-        endCnt.getOperableSlice().getSize(),
+        endCnt->getOperableSlice().getSize(),
         false,
         TYPE_CYCLE_WAIT_STATE_REG,
         false
     ),
-    _bitSz(endCnt.getOperableSlice().getSize()),
+    _bitSz(endCnt->getOperableSlice().getSize()),
     _IdleCnt   (new Val(_bitSz,"d0")),
     _startCnt  (new Val(_bitSz,"d1")),
-    _endCnt    (&endCnt)
+    _endCnt    (endCnt)
     {
         com_init();
         assert(_bitSz > 0);

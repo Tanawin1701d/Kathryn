@@ -6,14 +6,23 @@
 #define KATHRYN_WAIT_H
 
 #include "model/FlowBlock/abstract/flowBlock_Base.h"
+#include "model/FlowBlock/abstract/nodes/node.h"
+#include "model/FlowBlock/abstract/nodes/waitNode.h"
+#include "model/FlowBlock/abstract/loopStMacro.h"
 
-
-#define wait(cycle)
+#define cdWait( cond) for(auto kathrynBlock = new FlowBlockCondWait(cond);   kathrynBlock->doPrePostFunction(); kathrynBlock->step());
+#define cyWait(cycle) for(auto kathrynBlock = new FlowBlockCycleWait(cycle); kathrynBlock->doPrePostFunction(); kathrynBlock->step());
 
 namespace kathryn{
 
+    /**
+     *
+     * conditional wait flow block
+     *
+     * */
 
-    class FlowBlockCondWait : public FlowBlockBase{
+
+    class FlowBlockCondWait : public FlowBlockBase, public LoopStMacro{
     protected:
         /**result node wrap to sumarize this block*/
         NodeWrap* _resultNodeWrap = nullptr;
@@ -29,26 +38,39 @@ namespace kathryn{
         void onAttachBlock() override;
         void onDetachBlock() override;
         void buildHwComponent() override;
+        /** Loop macro to notice position of system*/
+        void doPreFunction() override;
+        void doPostFunction() override;
     };
 
-    class FlowBlockCycleWait : public FlowBlockBase{
+    /***
+     *
+     * cycle wait flowBlock
+     *
+     * */
+
+    class FlowBlockCycleWait : public FlowBlockBase, public LoopStMacro{
     protected:
         /** result node wrap to summarize this block*/
         NodeWrap* _resultNodeWrap = nullptr;
-        /**number cycle used*/
-        int _cycleUsed = -1;
         /** wait cycle node*/
         WaitCycleNode* _waitNode = nullptr;
+        /** wait meta Data*/
+        int cycle = -1;
+        Operable* cnt = nullptr;
 
     public:
 
         explicit FlowBlockCycleWait(int cycleUsed);
+        explicit FlowBlockCycleWait(Operable* opr);
 
         NodeWrap* sumarizeBlock() override;
         void onAttachBlock() override;
         void onDetachBlock() override;
         void buildHwComponent() override;
-
+        /** Loop macro to notice position of system*/
+        void doPreFunction() override;
+        void doPostFunction() override;
     };
 
 }

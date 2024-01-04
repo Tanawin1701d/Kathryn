@@ -5,7 +5,7 @@
 #ifndef KATHRYN_NODEWRAP_H
 #define KATHRYN_NODEWRAP_H
 
-#include "node.h"
+#include "model/FlowBlock/abstract/nodes/node.h"
 
 namespace kathryn{
 

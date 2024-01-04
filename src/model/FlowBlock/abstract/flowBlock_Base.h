@@ -12,7 +12,7 @@
 #include "model/hwComponent/register/register.h"
 #include "model/hwComponent/expression/expression.h"
 #include "model/hwComponent/abstract/operation.h"
-#include "node.h"
+#include "model/FlowBlock/abstract/nodes/node.h"
 #include "model/FlowBlock/abstract/nodeWrap.h"
 
 
