@@ -68,7 +68,16 @@ namespace kathryn{
     void Module::addStateReg(StateReg* reg) {
         assert(reg != nullptr); /// can't be nullptr
         _stateRegs.push_back(reg);
+    }
 
+    void Module::addCondWaitStateReg(CondWaitStateReg *reg) {
+        assert(reg != nullptr);
+        _condWaitStateRegs.push_back(reg);
+    }
+
+    void Module::addCycleWaitStateReg(CycleWaitStateReg *reg) {
+        assert(reg != nullptr);
+        _cycleWaitStateRegs.push_back(reg);
     }
 
     void Module::addFlowBlock(FlowBlockBase* fb) {
@@ -113,6 +122,7 @@ namespace kathryn{
             frontNodeWrap.push_back(fb->sumarizeBlock());
         }
         for (auto nw: frontNodeWrap){
+            /** we will have start wire node to start node*/
             nw->addDependStateToAllNode(startWire, BITWISE_AND);
             nw->assignAllNode();
             /** assume that node wrap that appear to module is not used anymore. */

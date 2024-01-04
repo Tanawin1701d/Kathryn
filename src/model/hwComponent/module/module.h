@@ -14,8 +14,10 @@
 #include "model/hwComponent/wire/wire.h"
 #include "model/hwComponent/expression/expression.h"
 #include "model/hwComponent/value/value.h"
+
 #include "model/FlowBlock/abstract/flowBlock_Base.h"
-#include "model/FlowBlock/abstract/stateReg.h"
+#include "model/FlowBlock/abstract/spReg/stateReg.h"
+#include "model/FlowBlock/abstract/spReg/waitReg.h"
 
 
 namespace kathryn{
@@ -24,17 +26,14 @@ namespace kathryn{
     extern Wire* startWire;
 
     class Module : public Identifiable, public HwCompControllerItf{
-        /** todo we must make this class com_init with stack
-         *  for now we assume that every register is constructed when
-         *  systems are in initiating process
-         *  but In the future we will make it initiat in design flow
-         *
-         * */
+
     private:
         /**all slave object that belong to this elements*/
         /** register that user to represent state*/
-        std::vector<StateReg*>        _stateRegs;
-        std::vector<FlowBlockBase*> _flowBlockBases;
+        std::vector<StateReg*>          _stateRegs; ////// state/ cond/cycle wait use same ctrlflowRegbase class
+        std::vector<CondWaitStateReg*>  _condWaitStateRegs;
+        std::vector<CycleWaitStateReg*> _cycleWaitStateRegs;
+        std::vector<FlowBlockBase*>     _flowBlockBases;
         /** user component*/
         std::vector<Reg*>        _userRegs;
         std::vector<Wire*>       _userWires;
@@ -66,26 +65,35 @@ namespace kathryn{
 
         void com_final() override;
 
-        void addStateReg      (StateReg* reg);
-        void addFlowBlock     (FlowBlockBase* fb);
-        void addUserReg       (Reg* reg);
-        void addUserWires     (Wire* wire);
-        void addUserExpression(expression* expr);
-        void addUserVal       (Val* val);
-        void addUserSubModule (Module* smd);
+        /**implicit element that is built from design flow*/
+        void addStateReg          (StateReg* reg);
+        void addCondWaitStateReg  (CondWaitStateReg* reg);
+        void addCycleWaitStateReg (CycleWaitStateReg* reg);
+        void addFlowBlock         (FlowBlockBase* fb);
 
+        /**explicit element that is buillt from user declaration*/
+        void addUserReg           (Reg* reg);
+        void addUserWires         (Wire* wire);
+        void addUserExpression    (expression* expr);
+        void addUserVal           (Val* val);
+        void addUserSubModule     (Module* smd);
 
+        /**implicit element that is built from design flow*/
         auto& getStateRegs(){return _stateRegs;}
+        auto& getCondWaitStateReg (){return _condWaitStateRegs; };
+        auto& getCycleWaitStateReg(){return _cycleWaitStateRegs;};
         auto& getFlowBlocks(){return _flowBlockBases;}
+
+        /**explicit element that is buillt from user declaration*/
         auto& getUserRegs(){return _userRegs; }
         auto& getUserWires(){return _userWires; }
         auto& getUserExpressions(){return _userExpressions; }
         auto& getUserVals(){return _userVals; }
         auto& getUserSubModules(){return _userSubModule; }
-        /** This allow user to custom module design flow*/
-        virtual void flow(){};
-        virtual void buildFlow();
 
+        /** Functions which allow user to custom  their module design flow*/
+        virtual void flow(){}; //// user must inherit this function to build thier flow
+        virtual void buildFlow();
     };
 
 }

@@ -205,7 +205,7 @@ namespace kathryn {
     struct WaitCondNode : Node{
         ///// todo
 
-        WaitCondNode(Operable* exitCond){
+        WaitCondNode(Operable* waitCond){
 
         }
 

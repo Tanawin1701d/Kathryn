@@ -14,7 +14,7 @@
 #include "model/FlowBlock/cond/if.h"
 #include "model/FlowBlock/cond/elif.h"
 #include "model/FlowBlock/loop/cwhile.h"
-#include "model/FlowBlock/abstract/stateReg.h"
+#include "model/FlowBlock/abstract/spReg/stateReg.h"
 
 
 namespace kathryn {
@@ -72,11 +72,13 @@ namespace kathryn {
          * event handling function
          * */
 
+        /** state register handling*/
+        void on_state_reg_init(StateReg* ptr);
+        void on_cond_wait_reg_init(CondWaitStateReg* ptr);
+        void on_cycle_wait_reg_init(CycleWaitStateReg* ptr);
         /** register handling*/
         void on_reg_init(Reg* ptr);
         void on_reg_update(AssignMeta* asmMeta);
-        /** state register handling*/
-        void on_state_reg_init(StateReg* ptr);
         /** wire handling*/
         void on_wire_init(Wire* ptr);
         void on_wire_update(AssignMeta* asmMeta);

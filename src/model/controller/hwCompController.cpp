@@ -20,6 +20,51 @@ namespace kathryn{
         return moduleStack.top();
     }
 
+
+    /**
+     * state register handling
+     *
+     * */
+    void Controller::on_state_reg_init(StateReg* ptr) {
+        assert(ptr != nullptr);
+        Module* targetModulePtr = getTargetModulePtr();
+        /**localize necessary destination*/
+        targetModulePtr->addStateReg(ptr);
+        ptr->setParent(targetModulePtr);
+        /** debug value*/
+        logStr("stateReg "+ ptr->getDebugIdentValue() +
+               " init and set parent to " +
+               targetModulePtr->getIdentDebugValue()
+        );
+    }
+
+
+    void Controller::on_cond_wait_reg_init(CondWaitStateReg* ptr) {
+        assert(ptr != nullptr);
+        Module* targetModulePtr = getTargetModulePtr();
+        /**localize necessary destination*/
+        targetModulePtr->addCondWaitStateReg(ptr);
+        ptr->setParent(targetModulePtr);
+        /** debug value*/
+        logStr("condition wait stateReg "+ ptr->getDebugIdentValue() +
+               " init and set parent to " +
+               targetModulePtr->getIdentDebugValue()
+        );
+    }
+
+    void Controller::on_cycle_wait_reg_init(CycleWaitStateReg* ptr) {
+        assert(ptr != nullptr);
+        Module* targetModulePtr = getTargetModulePtr();
+        /**localize necessary destination*/
+        targetModulePtr->addCycleWaitStateReg(ptr);
+        ptr->setParent(targetModulePtr);
+        /** debug value*/
+        logStr("cycle wait stateReg "+ ptr->getDebugIdentValue() +
+               " init and set parent to " +
+               targetModulePtr->getIdentDebugValue()
+        );
+    }
+
     /** register handling*/
     void Controller::on_reg_init(Reg* ptr) {
         assert(ptr != nullptr);
@@ -51,21 +96,12 @@ namespace kathryn{
         logStr("reg update @fb " + fb->getFlowBlockDebugIdentValue());
     }
 
-    /** state register handling */
-    void Controller::on_state_reg_init(StateReg* ptr) {
-        assert(ptr != nullptr);
-        Module* targetModulePtr = getTargetModulePtr();
-        /**localize necessary destination*/
-        targetModulePtr->addStateReg(ptr);
-        ptr->setParent(targetModulePtr);
-        /** debug value*/
-        logStr("stateReg "+ ptr->getDebugIdentValue() +
-               " init and set parent to " +
-               targetModulePtr->getIdentDebugValue()
-        );
-    }
 
-    /** wire handling*/
+    /**
+     *
+     * wire handling
+     *
+     * */
     void Controller::on_wire_init(Wire* ptr) {
         assert(ptr != nullptr);
         Module* targetModulePtr = getTargetModulePtr();

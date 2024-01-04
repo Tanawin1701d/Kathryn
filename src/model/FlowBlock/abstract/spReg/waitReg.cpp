@@ -3,6 +3,7 @@
 //
 
 #include "waitReg.h"
+#include "model/controller/controller.h"
 
 
 namespace kathryn{
@@ -18,13 +19,18 @@ namespace kathryn{
     CondWaitStateReg::CondWaitStateReg(Operable *condOpr) :
     CtrlFlowRegBase(1,
                     false,
-                    TYPE_WAIT_STATE_REG,
+                    TYPE_COND_WAIT_STATE_REG,
                     false
     ){
         /** init comunication to system*/
         com_init();
         /** generate update event for exit event*/
 
+    }
+
+
+    void CondWaitStateReg::com_init() {
+        ctrl->on_cond_wait_reg_init(this);
     }
 
     UpdateEvent* CondWaitStateReg::addDependStateUpdateEvent(Operable* dependStateCon){
@@ -52,9 +58,6 @@ namespace kathryn{
         return (Operable*) (&( (*_condOpr) & ((*this) == _upState) ) );
     }
 
-
-
-
     /**
      *
      * cycle count wait state register
@@ -65,7 +68,7 @@ namespace kathryn{
     CycleWaitStateReg::CycleWaitStateReg(int waitCycle):
     CtrlFlowRegBase( calBitUsed(waitCycle),
          false,
-         TYPE_WAIT_STATE_REG,
+         TYPE_CYCLE_WAIT_STATE_REG,
          false
      ),
      _waitCycle(waitCycle),
@@ -82,7 +85,7 @@ namespace kathryn{
     CtrlFlowRegBase(
         endCnt.getOperableSlice().getSize(),
         false,
-        TYPE_WAIT_STATE_REG,
+        TYPE_CYCLE_WAIT_STATE_REG,
         false
     ),
     _bitSz(endCnt.getOperableSlice().getSize()),
@@ -93,6 +96,10 @@ namespace kathryn{
         com_init();
         assert(_bitSz > 0);
         /** generate update event for reset register*/
+    }
+
+    void CycleWaitStateReg::com_init() {
+        ctrl->on_cycle_wait_reg_init(this);
     }
 
     UpdateEvent* CycleWaitStateReg::addDependStateUpdateEvent(Operable* dependStateCon){
@@ -121,6 +128,7 @@ namespace kathryn{
     Operable* CycleWaitStateReg::generateEndExpr() {
         return &((*this) == (*_endCnt));
     }
+
 
 
 }
