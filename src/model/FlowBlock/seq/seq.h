@@ -34,13 +34,18 @@ namespace kathryn {
         void               assignDependDent  (SequenceEle* predecessor) const;
         Node*              getStateFinishIden() const;
         std::vector<Node*> getEntranceNodes  ();
+        bool               isThereForceExitNode() const;
+        Node*              getForceExitNode() const;
+
     };
 
     class FlowBlockSeq : public FlowBlockBase, public LoopStMacro{
     private:
 
         std::vector<SequenceEle> _subSeqMetas;
-        NodeWrap* resultNodeWrap;
+        NodeWrap*                resultNodeWrap;
+        bool                     _areThereForceExitNode = false;
+        PseudoNode*              _forceExitNode = nullptr;
 
     public:
         explicit FlowBlockSeq();

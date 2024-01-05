@@ -84,7 +84,7 @@ namespace kathryn{
     };
 
     struct PseudoNode : Node{
-        expression* _pseudoAssignMeta = nullptr;
+        Operable* _pseudoAssignMeta = nullptr;
 
         explicit PseudoNode() :
             Node(),
@@ -96,13 +96,47 @@ namespace kathryn{
         }
 
         void assign() override{
-            _pseudoAssignMeta = &(*getAllDependNodeOpr() & *condition);
+            if (condition == nullptr)
+                _pseudoAssignMeta = getAllDependNodeOpr();
+            else
+                _pseudoAssignMeta = &(*getAllDependNodeOpr() & *condition);
         }
-        int getCycleUsed() override { return 0; };
+        int getCycleUsed() override { return 0; }
+
+        Operable* getExitOpr() override{return _pseudoAssignMeta;}
 
         bool isStateFullNode() override{ return false; }
 
     };
+
+    struct DummyNode : Node{
+        Val* _value = nullptr;
+
+        explicit DummyNode(Val* value) :
+            Node(),
+            _value(value){
+            assert(_value != nullptr);
+        }
+
+        Node* clone() override{
+            auto clNode = new DummyNode(*this);
+            return clNode;
+        }
+
+        void assign() override{
+            /** we don't support assign from condition or depend state*/
+            assert(dependNodes.empty());
+            assert(condition == nullptr);
+        }
+
+        int getCycleUsed() override{ return 0; }
+
+        Operable* getExitOpr() override{return _value;}
+
+        bool isStateFullNode() override{return false;}
+
+    };
+
 }
 
 

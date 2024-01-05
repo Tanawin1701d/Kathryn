@@ -91,6 +91,17 @@ namespace kathryn{
         assert(false);
     }
 
+    bool SequenceEle::isThereForceExitNode() const{
+        return (_complexNode != nullptr)  &&
+                (_complexNode->getForceExitNode() != nullptr);
+    }
+
+    Node *SequenceEle::getForceExitNode() const {
+        assert(isThereForceExitNode());
+        return _complexNode->getForceExitNode();
+    }
+
+
     /**
      *
      *
@@ -136,6 +147,20 @@ namespace kathryn{
         for (auto& seqMeta: _subSeqMetas) {
             seqMeta.genHardware();
             seqMeta.addToCycleDet(cycleDet);
+        }
+        /** generate forceExit Node*/
+            /***check areThere forceExitNode*/
+        for(auto seqEle: _subSeqMetas){
+            _areThereForceExitNode |= seqEle.isThereForceExitNode();
+        }
+        if (_areThereForceExitNode) {
+            _forceExitNode = new PseudoNode();
+            for(auto seqEle: _subSeqMetas){
+                if (seqEle.isThereForceExitNode())
+                    _forceExitNode->addDependNode(seqEle.getForceExitNode());
+            }
+            _forceExitNode->setDependStateJoinOp(BITWISE_OR);
+            _forceExitNode->assign();
         }
         /** connect  chain*/
         for (size_t idx = 0; (idx+1) < _subSeqMetas.size(); idx++){

@@ -106,26 +106,46 @@ namespace kathryn{
         /** build node for basicNode*/
         if (!basicNodes.empty()){
             basicStNode = new StateNode();
+            /** add basic assignment to depend on stateNode*/
             for (auto nd : basicNodes){
                 nd->addDependNode(basicStNode);
                 nd->setDependStateJoinOp(BITWISE_AND);
                 nd->assign();
             }
         }
-        /**build node wrap for flowblock*/
+        /**build node wrap for flowblock and keepTrack that node have forceExitOpr*/
         for (auto fb : subBlocks){
             NodeWrap* nw = fb->sumarizeBlock();
             assert(nw != nullptr);
             nodeWrapOfSubBlock.push_back(nw);
+            thereIsForceExitNode |= (nw->getForceExitNode() != nullptr);
+        }
+        /** force exit node */
+        if (thereIsForceExitNode){
+            forceExitNode = new PseudoNode();
+            for(auto nw : nodeWrapOfSubBlock){
+                Node* forceExitNode = nw->getForceExitNode();
+                if (forceExitNode != nullptr){
+                    forceExitNode->addDependNode(forceExitNode);
+                }
+            }
+
+            forceExitNode->setDependStateJoinOp(BITWISE_OR);
+            forceExitNode->assign();
         }
 
-        /**determine cycle used*/
+        /**
+         *
+         * determine cycle used
+         *
+         * */
         NodeWrapCycleDet cycleDet;
         if (basicStNode != nullptr)
             cycleDet.addToDet(basicStNode);
         cycleDet.addToDet(nodeWrapOfSubBlock);
         int cycleUsed = cycleDet.getMaxCycleHorizon();
         size_t amt_block = basicNodes.size() + subBlocks.size();
+        resultNodeWrap->setCycleUsed(cycleUsed);
 
 
         /** build syn node if need*/
@@ -143,12 +163,17 @@ namespace kathryn{
             for (auto nw : nodeWrapOfSubBlock){
                 synNode->addDependNode(nw->getExitNode());
             }
-            ////// assign sync reg
+            ////// assign sync reg and sync node don't have to set join op because
+            /////////// sync register will handle it
             synNode->assign();
         }
 
         /**
+         *
+         *
          * set result node wrap set
+         *
+         *
          * */
 
         /*** entrance node management*/
@@ -157,7 +182,7 @@ namespace kathryn{
         for (auto nw : nodeWrapOfSubBlock){
             resultNodeWrap->transferNodeFrom(nw);
         }
-        /*** exit node*/
+        /*** norm exit node*/
         if (synNode != nullptr){
             resultNodeWrap->addExitNode(synNode);
         }else{
@@ -177,6 +202,12 @@ namespace kathryn{
             assert(exitNode != nullptr);
             resultNodeWrap->addExitNode(exitNode);
         }
+        /*** force exit node*/
+        if (forceExitNode != nullptr){
+            resultNodeWrap->addForceExitNode(forceExitNode);
+        }
+
+
 
     }
 

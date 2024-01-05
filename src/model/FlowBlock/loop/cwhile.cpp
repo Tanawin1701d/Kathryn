@@ -4,7 +4,6 @@
 
 #include "cwhile.h"
 #include "model/controller/controller.h"
-#include "stateNode.h"
 
 namespace kathryn{
 
@@ -18,7 +17,7 @@ namespace kathryn{
     }
 
     void FlowBlockCwhile::addElementInFlowBlock(Node *node) {
-        assert(true);
+        assert(false);
         /** cwhile not not except simple node due to implict added flowblock inside*/
     }
 
@@ -63,8 +62,9 @@ namespace kathryn{
         /**assign to result node wrap*/
         /** node wrap no assign because we must sent to upper block*/
         resultNodeWrapper = new NodeWrap();
-        byPassExitNode = new PseudoNode();
-        exitNode = new PseudoNode();
+        exitNode          = new PseudoNode();
+        byPassExitNode    = new PseudoNode();
+        subBlockExitNode  = new PseudoNode();
 
         /**
          *

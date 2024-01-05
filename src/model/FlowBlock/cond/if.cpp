@@ -43,7 +43,6 @@ namespace kathryn{
     void FlowBlockIf::buildHwComponent() {
         assert(!allCondes.empty());
         allStatement.insert(allStatement.begin(), subBlocks[0]->sumarizeBlock());
-
         assert(!allStatement.empty());
 
         /**add condition to state*/
@@ -86,7 +85,25 @@ namespace kathryn{
         }
         if (psuedoElseNode != nullptr)
             exitNode->addDependNode(psuedoElseNode);
+        exitNode->assign();
 
+        /**force exit condition*/
+        for (auto nw : allStatement){
+            areThereForceExit |= (nw->getForceExitNode() != nullptr);
+        }
+        if (areThereForceExit){
+            forceExitNode = new PseudoNode;
+            for (auto nw : allStatement){
+                if (nw->getForceExitNode() != nullptr){
+                    forceExitNode->addDependNode(nw->getForceExitNode());
+                }
+            }
+            forceExitNode->setDependStateJoinOp(BITWISE_OR);
+            forceExitNode->assign();
+            resultNodeWrapper->addForceExitNode(forceExitNode);
+        }
+
+        /**cycle determiner*/
         NodeWrapCycleDet deter;
         deter.addToDet(allStatement);
         if (psuedoElseNode != nullptr){

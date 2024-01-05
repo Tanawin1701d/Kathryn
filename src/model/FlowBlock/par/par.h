@@ -26,8 +26,11 @@ namespace kathryn {
         /** check that subblock or basic node contain control flow operation*/
         std::vector<NodeWrap*> nodeWrapOfSubBlock;
 
-        StateNode* basicStNode = nullptr;
-        SynNode*   synNode     = nullptr;
+        bool thereIsForceExitNode = false;
+
+        StateNode* basicStNode  = nullptr;
+        SynNode*   synNode      = nullptr;
+        PseudoNode* forceExitNode = nullptr;
 
     public:
 

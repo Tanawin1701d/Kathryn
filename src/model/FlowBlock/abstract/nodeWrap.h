@@ -20,6 +20,8 @@ namespace kathryn{
         std::vector<Node*> entranceNodes;
         /** the exit condition that allow next building block run*/
         Node* exitNode  = nullptr;
+        /** force exit Node is the node that indicate exit expression without concerning of flowBlock behaviour*/
+        Node* forceExitNode = nullptr;
         /** number of cycle required in this subblock*/
         int cycleUsed = IN_CONSIST_CYCLE_USED;
 
@@ -58,6 +60,11 @@ namespace kathryn{
         void addExitNode(Node* nd) {
             assert(nd != nullptr);
             exitNode = nd;
+        }
+
+        void addForceExitNode(Node* nd){
+            assert(nd != nullptr);
+            forceExitNode = nd;
         }
 
         void addConditionToAllNode(Operable *cond, LOGIC_OP op) {
@@ -102,6 +109,7 @@ namespace kathryn{
         }
 
         Node* getExitNode () const { return exitNode; }
+        Node* getForceExitNode() const {return forceExitNode;}
 
         void setCycleUsed(int cycle){
             assert(cycle == -1 || cycle > 0);
