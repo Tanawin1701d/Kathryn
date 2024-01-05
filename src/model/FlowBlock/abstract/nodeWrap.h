@@ -109,6 +109,8 @@ namespace kathryn{
         }
 
         Node* getExitNode () const { return exitNode; }
+
+        bool  isThereForceExitNode() const {return forceExitNode != nullptr;}
         Node* getForceExitNode() const {return forceExitNode;}
 
         void setCycleUsed(int cycle){

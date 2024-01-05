@@ -68,12 +68,17 @@ namespace kathryn{
 
         /**
          *
-         * export nodeWrap to bigger block through result node warp
+         * result node wrap
          *
          * */
 
+        /** entrance result nodewrap*/
+        resultNodeWrapper->transferNodeFrom(subBlockNodeWrap);
         /** in case it is not match at first time*/
         resultNodeWrapper->addEntraceNode(byPassExitNode);
+
+
+        /**exit node wrap*/
         byPassExitNode->addCondtion(&(!*_condExpr), BITWISE_AND);
         /** in case exit from sublock*/
         subBlockExitNode->addCondtion(&(!*_condExpr), BITWISE_AND);
@@ -86,8 +91,9 @@ namespace kathryn{
         exitNode->setDependStateJoinOp(BITWISE_OR);
         exitNode->assign();
         resultNodeWrapper->addExitNode(exitNode);
-        /** complete resultNodeWrap*/
-        resultNodeWrapper->transferNodeFrom(subBlockNodeWrap);
+
+
+
 
         /**
          * loop back condition to make block repeat
@@ -96,7 +102,13 @@ namespace kathryn{
         /**assign for loop back assignment*/
         loopNodeWrap->addDependNodeToAllNode(subBlockNodeWrap->getExitNode());
         loopNodeWrap->setDependNodeCond(BITWISE_AND);
-        loopNodeWrap->addConditionToAllNode(_condExpr, BITWISE_AND);
+        if (subBlockNodeWrap->isThereForceExitNode()) {
+            Operable *allowLoopCond = &((*_condExpr) & (!*subBlockNodeWrap->getForceExitNode()->getExitOpr()));
+            loopNodeWrap->addConditionToAllNode(allowLoopCond, BITWISE_AND);
+        }
+        else {
+            loopNodeWrap->addConditionToAllNode(_condExpr, BITWISE_AND);
+        }
         loopNodeWrap->assignAllNode();
     }
 
