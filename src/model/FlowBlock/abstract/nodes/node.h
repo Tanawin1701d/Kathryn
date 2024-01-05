@@ -78,10 +78,17 @@ namespace kathryn {
             assert(resultOpr != nullptr);
             return resultOpr;
         }
+
+        /**
+         * function that allow sp node custom their behavior
+         * **/
+
         /** set that how to join node to make this node valid*/
         virtual void setDependStateJoinOp(LOGIC_OP op){
             dependStateRaiseCond = op;
         }
+        /** reset event*/
+        virtual void makeUnsetStateEvent(){ assert(false); };
         /** provided src state data*/
         virtual Operable* getExitOpr(){ return nullptr; };
         /** assign value*/

@@ -10,12 +10,8 @@
 
 namespace kathryn{
 
-
-
-
-
     struct WaitCondNode : Node{
-        ///// todo
+
         CondWaitStateReg* _condWaitStateReg = nullptr;
 
         explicit WaitCondNode(Operable* waitCond):
@@ -29,6 +25,11 @@ namespace kathryn{
             return clNode;
         }
 
+        void makeUnsetStateEvent() override{
+            assert(_condWaitStateReg != nullptr);
+            _condWaitStateReg->makeUnSetStateEvent();
+        }
+
         Operable* getExitOpr() override{
             assert(_condWaitStateReg != nullptr);
             return _condWaitStateReg->generateEndExpr();
@@ -37,7 +38,8 @@ namespace kathryn{
         void assign() override{
             auto dependNodeOpr = getAllDependNodeOpr();
             assert(dependNodeOpr != nullptr);
-            _condWaitStateReg->addDependStateUpdateEvent(dependNodeOpr);
+            _condWaitStateReg->addDependState(dependNodeOpr, condition);
+            makeUnsetStateEvent();
         }
 
         int getCycleUsed() override {return -1;}
@@ -68,6 +70,11 @@ namespace kathryn{
             return clNode;
         }
 
+        void makeUnsetStateEvent() override{
+            assert(_cycleWaitStateReg != nullptr);
+            _cycleWaitStateReg->makeUnSetStateEvent();
+        }
+
         Operable* getExitOpr() override{
             assert(_cycleWaitStateReg != nullptr);
             return _cycleWaitStateReg->generateEndExpr();
@@ -76,7 +83,8 @@ namespace kathryn{
         void assign() override{
             auto dependNodeOpr = getAllDependNodeOpr();
             assert(dependNodeOpr != nullptr);
-            _cycleWaitStateReg->addDependStateUpdateEvent(dependNodeOpr);
+            _cycleWaitStateReg->addDependState(dependNodeOpr, condition);
+            makeUnsetStateEvent();
         }
 
         int getCycleUsed() override {return _cycle;}

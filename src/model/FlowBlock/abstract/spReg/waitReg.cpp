@@ -45,7 +45,7 @@ namespace kathryn{
         return event;
     }
 
-    void CondWaitStateReg::makeResetEvent() {
+    void CondWaitStateReg::makeUnSetStateEvent() {
         auto* resetEvent = new UpdateEvent({    _condOpr,
                                                 (&((*this) == _upState)),
                                                 &_downState,
@@ -114,7 +114,7 @@ namespace kathryn{
         return event;
     }
 
-    void CycleWaitStateReg::makeResetEvent() {
+    void CycleWaitStateReg::makeUnSetStateEvent() {
         /**reset event*/
         auto* resetEvent = new UpdateEvent({
                                                    nullptr,

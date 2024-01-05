@@ -37,7 +37,7 @@ namespace kathryn {
         return event;
     }
 
-    void StateReg::makeResetEvent() {
+    void StateReg::makeUnSetStateEvent() {
         auto* event = new UpdateEvent({
             nullptr,
             &((*this) == upFullState),

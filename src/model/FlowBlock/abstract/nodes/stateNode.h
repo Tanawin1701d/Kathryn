@@ -27,6 +27,11 @@ namespace kathryn{
             return clNode;
         }
 
+        void makeUnsetStateEvent() override{
+            assert(_stateReg != nullptr);
+            _stateReg->makeUnSetStateEvent();
+        }
+
         Operable* getExitOpr() override{
             assert(_stateReg != nullptr);
             return _stateReg->generateEndExpr();
@@ -36,6 +41,7 @@ namespace kathryn{
             auto dependNodeOpr = getAllDependNodeOpr();
             assert(dependNodeOpr != nullptr);
             _stateReg->addDependState(dependNodeOpr, condition);
+            makeUnsetStateEvent();
         }
 
         int getCycleUsed() override {return 1;}
@@ -59,12 +65,18 @@ namespace kathryn{
 
         void addCondtion(Operable* opr, LOGIC_OP op) override{ assert(false);}
 
+        void makeUnsetStateEvent() override{
+            assert(_synReg != nullptr);
+            _synReg->makeUnSetStateEvent();
+        }
+
         Operable* getExitOpr() override{return _synReg->generateEndExpr();}
 
         void assign() override{
             for (auto dependNode : dependNodes){
                 _synReg->addDependState(dependNode->getExitOpr(), condition);
             }
+            makeUnsetStateEvent();
         }
 
         int getCycleUsed() override{ return 1; }

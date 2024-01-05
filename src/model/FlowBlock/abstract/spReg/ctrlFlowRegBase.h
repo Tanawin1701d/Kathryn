@@ -28,7 +28,7 @@ namespace kathryn{
         /** add depend State register return update event*/
         virtual UpdateEvent* addDependState(Operable* dependState, Operable* activateCond) = 0;
         /** build register representation when leaving this state */
-        virtual void      makeResetEvent() = 0;
+        virtual void      makeUnSetStateEvent() = 0;
         /***generate expression that represent state is finish*/
         virtual Operable* generateEndExpr() = 0;
 
