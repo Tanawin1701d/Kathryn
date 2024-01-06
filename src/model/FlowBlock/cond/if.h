@@ -28,6 +28,7 @@ namespace kathryn{
 
     public:
         explicit FlowBlockIf(Operable& cond);
+        ~FlowBlockIf();
 
         /** for controller add the local element to this sub block*/
         void addElementInFlowBlock(Node* node) override;

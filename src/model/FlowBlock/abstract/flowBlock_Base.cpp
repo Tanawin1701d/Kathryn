@@ -16,10 +16,14 @@ namespace kathryn{
     {}
 
     FlowBlockBase::~FlowBlockBase(){
+        for (auto basicNode : basicNodes){
+            delete basicNode;
+        }
         for (auto sub_fb: subBlocks){
             delete sub_fb;
         }
-        ///// we don't delete basicNode because it is used by other fb
+        delete forceExitNode;
+        /////// it is safe to delete nullptr
     }
 
     FlowBlockBase* FlowBlockBase::genImplicitSubBlk(FLOW_BLOCK_TYPE defaultType) {

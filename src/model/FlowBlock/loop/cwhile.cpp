@@ -11,9 +11,12 @@ namespace kathryn{
                                                           FlowBlockBase(WHILE) {}
 
     FlowBlockCwhile::~FlowBlockCwhile() {
-        for (auto node: loopNodeWrap->entranceNodes){
-            delete node;
-        }
+        delete resultNodeWrapper;
+        loopNodeWrap->deleteNodesInWrap();
+        delete loopNodeWrap;
+        delete exitNode;
+        delete byPassExitNode;
+        delete subBlockExitNode;
     }
 
     void FlowBlockCwhile::addElementInFlowBlock(Node *node) {

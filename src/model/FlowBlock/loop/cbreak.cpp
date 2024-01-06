@@ -16,7 +16,9 @@ namespace kathryn{
     }
 
     FlowBlockCBreak::~FlowBlockCBreak(){
-
+        delete resultNodeWrap;
+        delete breakNode;
+        delete normExitNode;
     }
 
     void FlowBlockCBreak::addElementInFlowBlock(Node *node) {

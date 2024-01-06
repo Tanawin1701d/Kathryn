@@ -37,11 +37,10 @@ namespace kathryn {
          * did not synthesize the node
          * */
 
-
-
     public:
 
         explicit FlowBlockPar(FLOW_BLOCK_TYPE fbType);
+        ~FlowBlockPar();
         /** override flow block base*/
         NodeWrap* sumarizeBlock() override; /// to interact from parrent block call
 

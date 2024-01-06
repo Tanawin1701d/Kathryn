@@ -14,6 +14,13 @@ namespace kathryn{
                (fbType == PARALLEL_NO_SYN));
     }
 
+    FlowBlockPar::~FlowBlockPar(){
+        delete resultNodeWrap;
+        delete basicStNode;
+        delete synNode;
+        delete pseudoExitNode;
+    }
+
     NodeWrap*
     FlowBlockPar::sumarizeBlock() {
         assert(resultNodeWrap != nullptr);

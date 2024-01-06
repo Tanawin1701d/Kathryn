@@ -42,6 +42,7 @@ namespace kathryn{
             }
             /** exit expression is not copied*/
             exitNode  = rhs.exitNode;
+            forceExitNode = rhs.forceExitNode;
             return *this;
         }
 
@@ -105,6 +106,7 @@ namespace kathryn{
             for (auto nd: entranceNodes) {
                 delete nd;
             }
+            /**exit node and force exitNode will be not deleted because it is only pointer it will be not clone*/
         }
 
         Node* getExitNode () const { return exitNode; }

@@ -26,6 +26,10 @@ namespace kathryn{
         _subBlock  = fbBase;
     }
 
+    SequenceEle::~SequenceEle() {
+        delete _stateNode;
+    }
+
     void SequenceEle::genHardware() {
 
         assert( (_asmNode != nullptr) ^ (_subBlock != nullptr));
@@ -118,6 +122,8 @@ namespace kathryn{
     }
 
 
+
+
     /**
      *
      *
@@ -128,6 +134,10 @@ namespace kathryn{
 
     FlowBlockSeq::FlowBlockSeq(): FlowBlockBase(SEQUENTIAL),
                                   resultNodeWrap(nullptr) {}
+
+    FlowBlockSeq::~FlowBlockSeq(){
+        delete resultNodeWrap;
+    }
 
     void FlowBlockSeq::addElementInFlowBlock(Node* node) {
         assert(node != nullptr);

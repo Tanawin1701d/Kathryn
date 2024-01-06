@@ -12,6 +12,12 @@ namespace kathryn{
         allCondes.push_back(&cond);
     }
 
+    FlowBlockIf::~FlowBlockIf(){
+        delete psuedoElseNode;
+        delete exitNode;
+        delete resultNodeWrapper;
+    }
+
     void FlowBlockIf::addElementInFlowBlock(Node *node) {
         assert(true); /** this flow type will generate single par or seq block*/
     }
@@ -117,8 +123,7 @@ namespace kathryn{
         if (fb->getCondition() != nullptr)
             allCondes.push_back(fb->getCondition());
         assert(fb->getSubBlocks()[0] != nullptr);
-        subBlocks.push_back(fb->getSubBlocks()[0]);
-        delete fb;
+        subBlocks.push_back(fb);
     }
 
 

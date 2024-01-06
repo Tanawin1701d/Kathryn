@@ -56,6 +56,7 @@ namespace kathryn {
     public:
         explicit FlowBlockBase(FLOW_BLOCK_TYPE type);
         virtual ~FlowBlockBase();
+
         /**
          * entrance to make controller interact with
          * */
@@ -86,6 +87,10 @@ namespace kathryn {
         std::vector<FlowBlockBase*>& getSubBlocks(){
             return subBlocks;
         }
+        /** lazy delete is the variable that tell controller whether
+         * block should be pop from building stack when purifier is done
+         * not when block is detach. Usually, It is used in if block
+         * */
         bool isLazyDelete() const{
             return lazyDeletedRequired;
         }
@@ -93,8 +98,10 @@ namespace kathryn {
             lazyDeletedRequired = true;
         }
 
+        /** debug string*/
         std::string getFlowBlockDebugIdentValue() const{
-            return "FB_TYPE_" + FBT_to_string(getFlowType()) + "_@" + std::to_string((ull) this);
+            return "FB_TYPE_" + FBT_to_string(getFlowType()) +
+                   "_@" + std::to_string((ull) this);
         }
 
     };

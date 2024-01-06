@@ -16,10 +16,7 @@ namespace kathryn{
 
     FlowBlockElif::FlowBlockElif(): FlowBlockBase(ELSE) {}
 
-    FlowBlockElif::~FlowBlockElif(){
-        //// elif is just the proxy so do not delete subblock
-        subBlocks.clear();
-    }
+    FlowBlockElif::~FlowBlockElif() = default;
 
     void FlowBlockElif::addElementInFlowBlock(Node *node) {
         assert(false); //// due to implicit sublock declaration

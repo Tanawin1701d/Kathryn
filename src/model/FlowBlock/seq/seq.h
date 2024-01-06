@@ -28,6 +28,7 @@ namespace kathryn {
 
         explicit SequenceEle(Node*          simpleNode);
         explicit SequenceEle(FlowBlockBase* fbBase    );
+        ~SequenceEle();
 
         void               genHardware       ();
         void               addToCycleDet     (NodeWrapCycleDet& deter) const;
@@ -48,12 +49,12 @@ namespace kathryn {
     private:
 
         std::vector<SequenceEle> _subSeqMetas;
-        NodeWrap*                resultNodeWrap;
+        NodeWrap*                resultNodeWrap = nullptr;
 
 
     public:
         explicit FlowBlockSeq();
-        virtual ~FlowBlockSeq() = default;
+        ~FlowBlockSeq() override;
         /** for controller add the local element to this sub block*/
         void addElementInFlowBlock(Node* node) override;
         void addSubFlowBlock(FlowBlockBase* subBlock) override;
