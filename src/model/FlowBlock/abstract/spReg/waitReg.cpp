@@ -75,9 +75,9 @@ namespace kathryn{
      ),
      _waitCycle(waitCycle),
     _bitSz     (calBitUsed(waitCycle)),
-    _IdleCnt   (new Val(_bitSz,"d0")),
-    _startCnt  (new Val(_bitSz,"d1")),
-    _endCnt    (new Val(_bitSz,"d" +  std::to_string(waitCycle)))
+    IdleCnt   (&_make<Val>("IdleCnt" ,_bitSz,"d0")),
+    _startCnt  (&_make<Val>("startCnt",_bitSz,"d1")),
+    _endCnt    (&_make<Val>("endCnt"  ,_bitSz,"d" +  std::to_string(waitCycle)))
      {
         com_init();
         makeIncStateEvent();
@@ -91,9 +91,9 @@ namespace kathryn{
         TYPE_CYCLE_WAIT_STATE_REG,
         false
     ),
-    _bitSz(endCnt->getOperableSlice().getSize()),
-    _IdleCnt   (new Val(_bitSz,"d0")),
-    _startCnt  (new Val(_bitSz,"d1")),
+    _bitSz     (endCnt->getOperableSlice().getSize()),
+    IdleCnt   (&_make<Val>("IdleCnt" ,_bitSz,"d0")),
+    _startCnt  (&_make<Val>("startCnt",_bitSz,"d1")),
     _endCnt    (endCnt)
     {
         com_init();
@@ -134,7 +134,7 @@ namespace kathryn{
         auto* resetEvent = new UpdateEvent({
                                                    nullptr,
                                                    (&((*this) == (*_endCnt))),
-                                                   _IdleCnt,
+                                                   IdleCnt,
                                                    Slice({0, _bitSz}),
                                                    9
                                            });

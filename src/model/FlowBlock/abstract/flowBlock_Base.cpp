@@ -59,13 +59,17 @@ namespace kathryn{
     std::string FBT_to_string(FLOW_BLOCK_TYPE fbt){
         std::string mapper[FLOW_BLOCK_COUNT] = {
                 "SEQUENTIAL",
-                "PARALLEL",
+                "PARALLEL_AUTO_SYNC",
+                "PARALLEL_NO_SYN",
                 "IF",
                 "ELIF",
                 "ELSE",
                 "WHILE",
+                "EXITWHILE",
+                "CONDWAIT",
+                "CLKWAIT",
                 "DO_WHILE",
-                "DUMMY_BLOCK"
+                "DUMMY_BLOCK",
         };
         assert(fbt < FLOW_BLOCK_COUNT);
         return mapper[fbt];

@@ -22,7 +22,7 @@ namespace kathryn{
     }
 
     void FlowBlockElif::addElementInFlowBlock(Node *node) {
-        assert(true); //// due to implicit sublock declaration
+        assert(false); //// due to implicit sublock declaration
     }
 
     void FlowBlockElif::addSubFlowBlock(FlowBlockBase *subBlock) {

@@ -10,6 +10,7 @@
 #include "ctrlFlowRegBase.h"
 #include "model/hwComponent/expression/expression.h"
 #include "model/hwComponent/value/value.h"
+#include "model/hwComponent/abstract/makeComponent.h"
 
 namespace kathryn{
 
@@ -21,8 +22,8 @@ namespace kathryn{
 
     class CondWaitStateReg : public CtrlFlowRegBase{
 
-        Val _upState       = Val(1, "b1");
-        Val _downState     = Val(1, "b0");
+        makeVal(_upState,1, "b1");
+        makeVal(_downState,1, "b0");
         Operable* _condOpr = nullptr;
 
     protected:
@@ -44,7 +45,6 @@ namespace kathryn{
             return *this;
         }
 
-
     };
 
     /**
@@ -59,7 +59,7 @@ namespace kathryn{
         int _waitCycle = -1;
         int _bitSz     = -1;
         /**when counter is reached exit expression will be set*/
-        Operable* _IdleCnt     = nullptr;
+        Operable* IdleCnt     = nullptr;
         Operable* _startCnt    = nullptr;
         Operable* _endCnt      = nullptr;
     protected:

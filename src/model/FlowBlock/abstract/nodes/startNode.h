@@ -6,12 +6,13 @@
 #define KATHRYN_STARTNODE_H
 
 #include "node.h"
+#include "model/hwComponent/abstract/makeComponent.h"
 
 namespace kathryn{
 
     struct StartNode : Node{
-        Val upState   = Val(1, "b1");
-        Val downState = Val(1, "b0");
+        makeVal(upState, 1, "b1");
+        makeVal(downState, 1, "b0");
 
         StateReg* _delayReset = nullptr;
         Operable* _rstSig     = nullptr;

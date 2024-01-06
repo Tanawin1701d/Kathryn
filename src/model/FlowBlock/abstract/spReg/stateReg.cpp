@@ -16,10 +16,10 @@ namespace kathryn {
                                                   false,
                                                   TYPE_STATE_REG,
                                                   false),
-                                  upState(1, "b1"),
-                                  upFullState(size, genConseBinaryValue(true, size)),
-                                  downFullState(size, genConseBinaryValue(false, size)),
-                                  nextFillActivateId(0)
+              upState      (_make<Val>("upState"      , 1  , "b1")),
+              upFullState  (_make<Val>("upFullState"  ,size, genConseBinaryValue(true, size))),
+              downFullState(_make<Val>("downFullState",size, genConseBinaryValue(false, size))),
+              nextFillActivateId(0)
     {
         com_init();
     };

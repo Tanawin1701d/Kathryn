@@ -17,9 +17,9 @@ namespace kathryn {
     class Node;
 
     class StateReg: public CtrlFlowRegBase{
-        Val upState;
-        Val upFullState;
-        Val downFullState;
+        Val& upState;
+        Val& upFullState;
+        Val& downFullState;
         int nextFillActivateId;
     protected:
         /**override data to init state regiter*/

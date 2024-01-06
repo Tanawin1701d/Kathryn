@@ -14,6 +14,7 @@
 
 #define makeWire( name, argument) Wire& name = _make<Wire>(#name,argument)
 #define makeReg( name, argument)  Reg& name = _make<Reg>(#name, argument)
+#define makeVal(name, size, initVal) Val& name = _make<Val>(#name, size, initVal)
 #define makeMod(name, TypeName, ...) Module& name = _make<TypeName>(#name, __VA_ARGS__)
 #define var auto&
 
@@ -25,6 +26,8 @@ namespace kathryn {
      * it must set from made and
      **/
 
+    void unlockAlloc();
+
     template<typename T, typename... Args>
     T& _make(const std::string name,Args&&... args){
         static_assert(std::is_base_of<HwCompControllerItf, T>::value,
@@ -35,7 +38,7 @@ namespace kathryn {
                 );
 
         /** make initializer*/
-        getControllerPtr()->unlockAllocation();
+        unlockAlloc();
         auto objPtr = new T(std::forward<Args>(args)...);
         objPtr->setTypeName(name);
         objPtr->com_final();
