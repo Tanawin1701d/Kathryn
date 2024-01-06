@@ -29,15 +29,32 @@ namespace kathryn{
             nextFbType = defaultType;
         }
         /** create subblock*/
-        if (nextFbType == PARALLEL){
-            return new FlowBlockPar();
+        if ( (nextFbType == PARALLEL_NO_SYN) || (nextFbType == PARALLEL_AUTO_SYNC)){
+            return new FlowBlockParNoSync();
         }else if (nextFbType == SEQUENTIAL){
             return new FlowBlockSeq();
         }else{
-            assert(true); /** can't determine flow type*/
+            assert(false); /** can't determine flow type*/
         }
-        return nullptr;
     }
+
+    void FlowBlockBase::genSumForceExitNode(std::vector<NodeWrap *> &nws) {
+        for (auto nw : nws){
+            areThereForceExit |= (nw->getForceExitNode() != nullptr);
+        }
+        if (areThereForceExit){
+            forceExitNode = new PseudoNode;
+            for (auto nw : nws){
+                if (nw->getForceExitNode() != nullptr){
+                    forceExitNode->addDependNode(nw->getForceExitNode());
+                }
+            }
+            forceExitNode->setDependStateJoinOp(BITWISE_OR);
+            forceExitNode->assign();
+
+        }
+    }
+
 
     std::string FBT_to_string(FLOW_BLOCK_TYPE fbt){
         std::string mapper[FLOW_BLOCK_COUNT] = {

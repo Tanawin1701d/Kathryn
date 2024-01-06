@@ -28,7 +28,7 @@ namespace kathryn{
 
     void FlowBlockIf::onAttachBlock() {
         ctrl->on_attach_flowBlock_if(this);
-        auto sb = genImplicitSubBlk(PARALLEL);
+        auto sb = genImplicitSubBlk(PARALLEL_NO_SYN);
         implicitFlowBlock = sb;
         sb->onAttachBlock();
     }
@@ -68,7 +68,7 @@ namespace kathryn{
         /** prepare return node wrap*/
         resultNodeWrapper = new NodeWrap();
         for (auto nw : allStatement){
-            resultNodeWrapper->transferNodeFrom(nw);
+            resultNodeWrapper->transferEntNodeFrom(nw);
         }
         ///// build proxy node to prevent state lost
         if ( allCondes.size() == allStatement.size() ) {
@@ -88,20 +88,9 @@ namespace kathryn{
         exitNode->assign();
 
         /**force exit condition*/
-        for (auto nw : allStatement){
-            areThereForceExit |= (nw->getForceExitNode() != nullptr);
-        }
-        if (areThereForceExit){
-            forceExitNode = new PseudoNode;
-            for (auto nw : allStatement){
-                if (nw->getForceExitNode() != nullptr){
-                    forceExitNode->addDependNode(nw->getForceExitNode());
-                }
-            }
-            forceExitNode->setDependStateJoinOp(BITWISE_OR);
-            forceExitNode->assign();
+        genSumForceExitNode(allStatement);
+        if (areThereForceExit)
             resultNodeWrapper->addForceExitNode(forceExitNode);
-        }
 
         /**cycle determiner*/
         NodeWrapCycleDet deter;

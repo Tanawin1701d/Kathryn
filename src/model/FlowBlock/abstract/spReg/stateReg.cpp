@@ -49,7 +49,7 @@ namespace kathryn {
     }
 
     Operable* StateReg::generateEndExpr(){
-        return (Operable*)(&((*this) == upFullState));
+        return (&((*this) == upFullState));
     }
 
 

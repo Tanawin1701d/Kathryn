@@ -38,7 +38,7 @@ namespace kathryn{
         }
 
         void assign() override{
-            auto dependNodeOpr = getAllDependNodeOpr();
+            Operable* dependNodeOpr = transformAllDepNodeToOpr();
             assert(dependNodeOpr != nullptr);
             _stateReg->addDependState(dependNodeOpr, condition);
             makeUnsetStateEvent();
@@ -59,7 +59,7 @@ namespace kathryn{
         explicit SynNode(int synSize) : _synReg(new StateReg(synSize)){}
 
         Node* clone() override{
-            /** syn node is not supposed to be copy*/
+            /** syn node is not supposed to be copied*/
             assert(false);
         }
 
@@ -97,9 +97,9 @@ namespace kathryn{
 
         void assign() override{
             if (condition == nullptr)
-                _pseudoAssignMeta = getAllDependNodeOpr();
+                _pseudoAssignMeta = transformAllDepNodeToOpr();
             else
-                _pseudoAssignMeta = &(*getAllDependNodeOpr() & *condition);
+                _pseudoAssignMeta = &(*transformAllDepNodeToOpr() & *condition);
         }
         int getCycleUsed() override { return 0; }
 

@@ -36,7 +36,7 @@ namespace kathryn{
     void FlowBlockCwhile::onAttachBlock() {
         ctrl->on_attach_flowBlock(this);
         /** in cwhile we implcitcally add sub block to system*/
-        auto sb = genImplicitSubBlk(PARALLEL);
+        auto sb = genImplicitSubBlk(PARALLEL_NO_SYN);
         implicitFlowBlock = sb;
         sb->onAttachBlock();
     }
@@ -73,10 +73,9 @@ namespace kathryn{
          * */
 
         /** entrance result nodewrap*/
-        resultNodeWrapper->transferNodeFrom(subBlockNodeWrap);
+        resultNodeWrapper->transferEntNodeFrom(subBlockNodeWrap);
         /** in case it is not match at first time*/
         resultNodeWrapper->addEntraceNode(byPassExitNode);
-
 
         /**exit node wrap*/
         byPassExitNode->addCondtion(&(!*_condExpr), BITWISE_AND);
@@ -93,15 +92,13 @@ namespace kathryn{
         resultNodeWrapper->addExitNode(exitNode);
 
 
-
-
         /**
          * loop back condition to make block repeat
          * */
 
         /**assign for loop back assignment*/
         loopNodeWrap->addDependNodeToAllNode(subBlockNodeWrap->getExitNode());
-        loopNodeWrap->setDependNodeCond(BITWISE_AND);
+        loopNodeWrap->setAllDependNodeCond(BITWISE_AND);
         if (subBlockNodeWrap->isThereForceExitNode()) {
             Operable *allowLoopCond = &((*_condExpr) & (!*subBlockNodeWrap->getForceExitNode()->getExitOpr()));
             loopNodeWrap->addConditionToAllNode(allowLoopCond, BITWISE_AND);

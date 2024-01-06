@@ -52,8 +52,7 @@ namespace kathryn{
 
         void addEntraceNodes(std::vector<Node*> nds){
             for (auto nd : nds){
-                assert(nd != nullptr);
-                entranceNodes.push_back(nd);
+                addEntraceNode(nd);
             }
         }
 
@@ -81,7 +80,7 @@ namespace kathryn{
             }
         }
 
-        void setDependNodeCond(LOGIC_OP op){
+        void setAllDependNodeCond(LOGIC_OP op){
             for (auto node: entranceNodes){
                 node->setDependStateJoinOp(op);
             }
@@ -95,7 +94,7 @@ namespace kathryn{
 
         /** copy node pointer to this wrap*/
         /// todo we will make it copy node if need but for now we don't
-        void transferNodeFrom(NodeWrap *nw) {
+        void transferEntNodeFrom(NodeWrap *nw) {
             assert(nw != nullptr);
             for (auto node: nw->entranceNodes) {
                 entranceNodes.push_back(node);

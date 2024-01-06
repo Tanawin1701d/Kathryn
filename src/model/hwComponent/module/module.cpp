@@ -10,7 +10,8 @@
 
 namespace kathryn{
 
-    Wire* startWire = &_make<Wire>( "startWire", 1);
+    Wire* rstWire = &_make<Wire>("rstWire", 1);
+    StartNode* startNode = new StartNode(rstWire);
 
     Module::Module(bool initComp): Identifiable(TYPE_MODULE),
                       HwCompControllerItf()
@@ -123,11 +124,10 @@ namespace kathryn{
         }
         for (auto nw: frontNodeWrap){
             /** we will have start wire node to start node*/
-            nw->addDependStateToAllNode(startWire, BITWISE_AND);
+            nw->addDependNodeToAllNode(startNode);
+            nw->setAllDependNodeCond(BITWISE_AND);
             nw->assignAllNode();
             /** assume that node wrap that appear to module is not used anymore. */
-            nw->deleteNodesInWrap();
-            delete nw;
         }
 
     }

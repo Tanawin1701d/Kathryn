@@ -49,7 +49,7 @@ namespace kathryn{
         } else if (_subBlock != nullptr){
             deter.addToDet(_complexNode);
         }else{
-            assert(true);
+            assert(false);
         }
     }
 
@@ -63,7 +63,7 @@ namespace kathryn{
             _stateNode->assign();   ///// assign state node to actual value
         }else if (_subBlock != nullptr){
             _complexNode->addDependNodeToAllNode(predecessor->getStateFinishIden());
-            _complexNode->setDependNodeCond(BITWISE_AND);
+            _complexNode->setAllDependNodeCond(BITWISE_AND);
             _complexNode->assignAllNode();
         }else{
             assert(true);
@@ -93,12 +93,28 @@ namespace kathryn{
 
     bool SequenceEle::isThereForceExitNode() const{
         return (_complexNode != nullptr)  &&
-                (_complexNode->getForceExitNode() != nullptr);
+                (_complexNode->isThereForceExitNode());
     }
 
     Node *SequenceEle::getForceExitNode() const {
         assert(isThereForceExitNode());
         return _complexNode->getForceExitNode();
+    }
+
+    bool SequenceEle::isNodeWrap() const{
+        return _complexNode != nullptr;
+    }
+
+    bool SequenceEle::isBasicNode() const{
+        return _stateNode != nullptr;
+    }
+
+    NodeWrap *SequenceEle::getNodeWrap() const {
+        return _complexNode;
+    }
+
+    StateNode *SequenceEle::getBasicNode() const {
+        return _stateNode;
     }
 
 
@@ -150,19 +166,14 @@ namespace kathryn{
         }
         /** generate forceExit Node*/
             /***check areThere forceExitNode*/
+        std::vector<NodeWrap*> allNw;
         for(auto seqEle: _subSeqMetas){
-            _areThereForceExitNode |= seqEle.isThereForceExitNode();
-        }
-        if (_areThereForceExitNode) {
-            _forceExitNode = new PseudoNode();
-            for(auto seqEle: _subSeqMetas){
-                if (seqEle.isThereForceExitNode())
-                    _forceExitNode->addDependNode(seqEle.getForceExitNode());
+            if (seqEle.isNodeWrap()){
+                allNw.push_back(seqEle.getNodeWrap());
             }
-            _forceExitNode->setDependStateJoinOp(BITWISE_OR);
-            _forceExitNode->assign();
         }
-        /** connect  chain*/
+        genSumForceExitNode(allNw);
+        /** connect depend node chain*/
         for (size_t idx = 0; (idx+1) < _subSeqMetas.size(); idx++){
             auto& lhsNodeWrapper = _subSeqMetas[idx];
             auto& rhsNodeWrapper = _subSeqMetas[idx+1];
@@ -173,6 +184,8 @@ namespace kathryn{
         resultNodeWrap->addEntraceNodes(_subSeqMetas.begin()->getEntranceNodes());
         resultNodeWrap->addExitNode(_subSeqMetas.rbegin()->getStateFinishIden());
         resultNodeWrap->setCycleUsed(cycleDet.getCycleVertical());
+        if (areThereForceExit)
+            resultNodeWrap->addForceExitNode(forceExitNode);
 
     }
 

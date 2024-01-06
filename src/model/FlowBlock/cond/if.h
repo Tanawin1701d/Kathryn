@@ -23,9 +23,6 @@ namespace kathryn{
         std::vector<Operable*>  allCondes; /// include condition of if block and elif block except else block
         PseudoNode* psuedoElseNode = nullptr;
         PseudoNode* exitNode       = nullptr;
-        PseudoNode* forceExitNode  = nullptr;
-
-        bool areThereForceExit     = false;
 
         NodeWrap* resultNodeWrapper = nullptr;
 

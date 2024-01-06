@@ -18,12 +18,14 @@
 #include "model/FlowBlock/abstract/flowBlock_Base.h"
 #include "model/FlowBlock/abstract/spReg/stateReg.h"
 #include "model/FlowBlock/abstract/spReg/waitReg.h"
+#include "model/FlowBlock/abstract/nodes/startNode.h"
 
 
 namespace kathryn{
 
 
-    extern Wire* startWire;
+    extern Wire* rstWire;
+    extern StartNode* startNode;
 
     class Module : public Identifiable, public HwCompControllerItf{
 

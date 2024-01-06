@@ -19,8 +19,8 @@ namespace kathryn {
     class SequenceEle{
     public:
         /**node and flow block*/
-        Node*          _asmNode = nullptr;
-        FlowBlockBase* _subBlock  = nullptr;
+        Node*          _asmNode  = nullptr;
+        FlowBlockBase* _subBlock = nullptr;
 
         /**state representation*/
         StateNode* _stateNode       = nullptr;
@@ -36,6 +36,11 @@ namespace kathryn {
         std::vector<Node*> getEntranceNodes  ();
         bool               isThereForceExitNode() const;
         Node*              getForceExitNode() const;
+        bool               isNodeWrap() const;
+        NodeWrap*          getNodeWrap() const;
+        bool               isBasicNode() const;
+        StateNode*         getBasicNode() const;
+
 
     };
 
@@ -44,8 +49,7 @@ namespace kathryn {
 
         std::vector<SequenceEle> _subSeqMetas;
         NodeWrap*                resultNodeWrap;
-        bool                     _areThereForceExitNode = false;
-        PseudoNode*              _forceExitNode = nullptr;
+
 
     public:
         explicit FlowBlockSeq();

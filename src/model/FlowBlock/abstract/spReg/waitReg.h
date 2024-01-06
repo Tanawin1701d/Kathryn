@@ -65,6 +65,7 @@ namespace kathryn{
     protected:
 
         void com_init() override;
+        void makeIncStateEvent();
 
     public:
         /** constructor*/

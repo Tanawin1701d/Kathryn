@@ -14,6 +14,7 @@
 #include "model/hwComponent/abstract/operation.h"
 #include "model/FlowBlock/abstract/nodes/node.h"
 #include "model/FlowBlock/abstract/nodeWrap.h"
+#include "model/FlowBlock/abstract/nodes/stateNode.h"
 
 
 namespace kathryn {
@@ -21,7 +22,8 @@ namespace kathryn {
     class Controller;
     enum FLOW_BLOCK_TYPE{
         SEQUENTIAL,
-        PARALLEL,
+        PARALLEL_AUTO_SYNC,
+        PARALLEL_NO_SYN,
         IF,
         ELIF,
         ELSE,
@@ -42,10 +44,15 @@ namespace kathryn {
         std::vector<FlowBlockBase*> subBlocks;
         std::vector<Node*>          basicNodes;
         FLOW_BLOCK_TYPE             _type;
-        Controller*                 ctrl;
+        Controller*                 ctrl = nullptr;
         bool                        lazyDeletedRequired = false;
+        /*** for exit management*/
+        bool                        areThereForceExit = false;
+        PseudoNode*                 forceExitNode = nullptr;
+
         /** generate implicit subblock typically used with if and while block*/
         FlowBlockBase* genImplicitSubBlk(FLOW_BLOCK_TYPE defaultType);
+        void genSumForceExitNode(std::vector<NodeWrap*>& nws);
     public:
         explicit FlowBlockBase(FLOW_BLOCK_TYPE type);
         virtual ~FlowBlockBase();
@@ -91,9 +98,6 @@ namespace kathryn {
         }
 
     };
-
-
-
 
 }
 

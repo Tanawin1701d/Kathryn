@@ -59,7 +59,6 @@ add_executable(Kathryn main.cpp
         src/test/modelTest1.h
         src/model/hwComponent/abstract/operation.cpp
         src/model/util/stateRegUtil.cpp
-        src/model/FlowBlock/abstract/nodes/node.cpp
         src/model/FlowBlock/abstract/nodes/node.h
         src/test/modelTest2.h
         src/util/logger/logger.cpp
@@ -77,4 +76,5 @@ add_executable(Kathryn main.cpp
         src/model/FlowBlock/abstract/nodes/stateNode.h
         src/model/FlowBlock/loop/cbreak.cpp
         src/model/FlowBlock/loop/cbreak.h
+        src/model/FlowBlock/abstract/nodes/startNode.h
 )

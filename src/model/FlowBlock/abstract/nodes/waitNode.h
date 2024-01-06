@@ -36,7 +36,7 @@ namespace kathryn{
         }
 
         void assign() override{
-            auto dependNodeOpr = getAllDependNodeOpr();
+            auto dependNodeOpr = transformAllDepNodeToOpr();
             assert(dependNodeOpr != nullptr);
             _condWaitStateReg->addDependState(dependNodeOpr, condition);
             makeUnsetStateEvent();
@@ -81,7 +81,7 @@ namespace kathryn{
         }
 
         void assign() override{
-            auto dependNodeOpr = getAllDependNodeOpr();
+            auto dependNodeOpr = transformAllDepNodeToOpr();
             assert(dependNodeOpr != nullptr);
             _cycleWaitStateReg->addDependState(dependNodeOpr, condition);
             makeUnsetStateEvent();

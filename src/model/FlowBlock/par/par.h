@@ -12,10 +12,13 @@
 #include "model/FlowBlock/abstract/nodes/node.h"
 #include "model/FlowBlock/abstract/nodes/stateNode.h"
 
-#define par for(auto kathrynBlock = new FLowBlockParAuto(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define par    for(auto kathrynBlock = new FlowBlockParAuto(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define parMan for(auto kathrynBlock = new FlowBlockParNoSync(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 
 
 namespace kathryn {
+
+
 
     class FlowBlockPar : public FlowBlockBase, public LoopStMacro{
     protected:
@@ -25,16 +28,20 @@ namespace kathryn {
 
         /** check that subblock or basic node contain control flow operation*/
         std::vector<NodeWrap*> nodeWrapOfSubBlock;
+        int cycleUsed = -1;
 
-        bool thereIsForceExitNode = false;
+        StateNode*  basicStNode    = nullptr;
+        SynNode*    synNode        = nullptr;
+        PseudoNode* pseudoExitNode = nullptr;
+        /** pseudo exit node will be null if this class
+         * did not synthesize the node
+         * */
 
-        StateNode* basicStNode  = nullptr;
-        SynNode*   synNode      = nullptr;
-        PseudoNode* forceExitNode = nullptr;
+
 
     public:
 
-        explicit FlowBlockPar();
+        explicit FlowBlockPar(FLOW_BLOCK_TYPE fbType);
         /** override flow block base*/
         NodeWrap* sumarizeBlock() override; /// to interact from parrent block call
 
@@ -50,18 +57,30 @@ namespace kathryn {
         void doPreFunction() override;
         void doPostFunction() override;
 
+        /** build sync Node according to parallel policies*/
+        virtual void buildSyncNode() = 0;
+        virtual void assignExitToRnw() = 0; /// Rnw <= result node wrap
+        virtual void assignCycleUsedToRnw();
+        virtual void assignForceExitToRnw();
+
     };
 
-    /** this parallel block auto check system*/
-    class FLowBlockParAuto: public FlowBlockPar{
-
+    /** this parallel block auto build synchronizer*/
+    class FlowBlockParAuto: public FlowBlockPar{
     public:
-
-        explicit FLowBlockParAuto(): FlowBlockPar(){}
-
-        void buildHwComponent() override;
-
+        explicit FlowBlockParAuto(): FlowBlockPar(PARALLEL_AUTO_SYNC){}
+        void buildSyncNode() override;
+        void assignExitToRnw() override; /// Rnw <= result node wrap
     };
+    /** this parallel block no sync at all*/
+    class FlowBlockParNoSync: public FlowBlockPar{
+    public:
+        explicit FlowBlockParNoSync(): FlowBlockPar(PARALLEL_NO_SYN){}
+        void buildSyncNode() override{/** we don't build sync Node*/};
+        void assignExitToRnw() override;
+    };
+
+
 
 }
 

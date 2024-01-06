@@ -9,7 +9,10 @@
 namespace kathryn{
 
 
-    FlowBlockPar::FlowBlockPar(): FlowBlockBase(PARALLEL) {}
+    FlowBlockPar::FlowBlockPar(FLOW_BLOCK_TYPE fbType): FlowBlockBase(fbType) {
+        assert((fbType == PARALLEL_AUTO_SYNC) ||
+               (fbType == PARALLEL_NO_SYN));
+    }
 
     NodeWrap*
     FlowBlockPar::sumarizeBlock() {
@@ -31,79 +34,8 @@ namespace kathryn{
     void
     FlowBlockPar::buildHwComponent() {
         assert((!basicNodes.empty()) || (!subBlocks.empty()));
-        /**build result node wrap*/
-        resultNodeWrap = new NodeWrap();
-        /** build node for basicNode*/
-        if (!basicNodes.empty()){
-            basicStNode = new StateNode();
-            for (auto nd : basicNodes){
-                nd->addDependNode(basicStNode);
-                nd->setDependStateJoinOp(BITWISE_AND);
-                nd->assign();
-            }
-        }
-        /**build node wrap for flowblock*/
-        for (auto fb : subBlocks){
-            NodeWrap* nw = fb->sumarizeBlock();
-            assert(nw != nullptr);
-            nodeWrapOfSubBlock.push_back(nw);
-        }
 
-        /**determine cycle used*/
-        NodeWrapCycleDet cycleDet;
-        if (basicStNode != nullptr)
-            cycleDet.addToDet(basicStNode);
-        cycleDet.addToDet(nodeWrapOfSubBlock);
-        int cycleUsed = cycleDet.getMaxCycleHorizon();
-
-        /** build syn node if need*/
-        /////// syn reg needed
-        int synSize = (basicStNode != nullptr) + (int)nodeWrapOfSubBlock.size();
-        assert(synSize > 0);
-        synNode = new SynNode(synSize);
-        if (basicStNode != nullptr){
-            synNode->addDependNode(basicStNode);
-        }
-        for (auto nw : nodeWrapOfSubBlock){
-            synNode->addDependNode(nw->getExitNode());
-        }
-        ////// assign sync reg
-        synNode->assign();
-
-        /*** entrance node management*/
-        resultNodeWrap->addEntraceNode(basicStNode);
-        for (auto nw : nodeWrapOfSubBlock){
-            resultNodeWrap->transferNodeFrom(nw);
-        }
-        /*** exit node*/
-        resultNodeWrap->addExitNode(synNode);
-
-
-    }
-
-    void
-    FlowBlockPar::doPreFunction() {
-        onAttachBlock();
-    }
-
-    void
-    FlowBlockPar::doPostFunction(){
-        onDetachBlock();
-    }
-
-    /**
-     *
-     *
-     * parallel block auto
-     *
-     *
-     * */
-    void
-    FLowBlockParAuto::buildHwComponent() {
-        assert((!basicNodes.empty()) || (!subBlocks.empty()));
-        /**build result node wrap*/
-        resultNodeWrap = new NodeWrap();
-        /** build node for basicNode*/
+        /** build node for basic assignment*/
         if (!basicNodes.empty()){
             basicStNode = new StateNode();
             /** add basic assignment to depend on stateNode*/
@@ -118,43 +50,78 @@ namespace kathryn{
             NodeWrap* nw = fb->sumarizeBlock();
             assert(nw != nullptr);
             nodeWrapOfSubBlock.push_back(nw);
-            thereIsForceExitNode |= (nw->getForceExitNode() != nullptr);
         }
         /** force exit node */
-        if (thereIsForceExitNode){
-            forceExitNode = new PseudoNode();
-            for(auto nw : nodeWrapOfSubBlock){
-                Node* forceExitNode = nw->getForceExitNode();
-                if (forceExitNode != nullptr){
-                    forceExitNode->addDependNode(forceExitNode);
-                }
-            }
-
-            forceExitNode->setDependStateJoinOp(BITWISE_OR);
-            forceExitNode->assign();
-        }
+        genSumForceExitNode(nodeWrapOfSubBlock);
 
         /**
          *
-         * determine cycle used
+         * determine basic cycle used
          *
          * */
         NodeWrapCycleDet cycleDet;
         if (basicStNode != nullptr)
             cycleDet.addToDet(basicStNode);
         cycleDet.addToDet(nodeWrapOfSubBlock);
-        int cycleUsed = cycleDet.getMaxCycleHorizon();
-        size_t amt_block = basicNodes.size() + subBlocks.size();
+        cycleUsed = cycleDet.getMaxCycleHorizon();
+        /**
+         *
+         * build result node wrap entrance
+         * */
+        /*** entrance node management*/
+        resultNodeWrap = new NodeWrap();
+        if (basicStNode != nullptr)
+            resultNodeWrap->addEntraceNode(basicStNode);
+        for (auto nw : nodeWrapOfSubBlock){
+            resultNodeWrap->transferEntNodeFrom(nw);
+        }
+
+        buildSyncNode();
+        assignExitToRnw();
+        assignCycleUsedToRnw();
+        assignForceExitToRnw();
+    }
+
+
+    void FlowBlockPar::assignCycleUsedToRnw(){
         resultNodeWrap->setCycleUsed(cycleUsed);
+    }
+
+    void FlowBlockPar::assignForceExitToRnw() {
+        if (areThereForceExit){
+            resultNodeWrap->addForceExitNode(forceExitNode);
+        }
+    }
+
+    void
+    FlowBlockPar::doPreFunction() {
+        onAttachBlock();
+    }
+
+    void
+    FlowBlockPar::doPostFunction(){
+        onDetachBlock();
+    }
 
 
+
+    /**
+     *
+     *
+     * parallel block auto
+     *
+     *
+     * */
+
+    void FlowBlockParAuto::buildSyncNode() {
+        int amt_block = ((basicStNode != nullptr) ? 1 : 0) +
+                        (int)(nodeWrapOfSubBlock.size());
         /** build syn node if need*/
         if ( (cycleUsed == IN_CONSIST_CYCLE_USED) &&
              (amt_block > 1) /** incase amt_block == 1 we don't have to sync*/
-        ){
+                ){
             /////// syn reg needed
-            int synSize = (basicStNode != nullptr) + (int)nodeWrapOfSubBlock.size();
-            assert(synSize > 0);
+            int synSize = amt_block;
             synNode = new SynNode(synSize);
             /**syn node don't need to specify join operation due to it used own logic or*/
             if (basicStNode != nullptr){
@@ -168,32 +135,22 @@ namespace kathryn{
             synNode->assign();
         }
 
-        /**
-         *
-         *
-         * set result node wrap set
-         *
-         *
-         * */
+    }
 
-        /*** entrance node management*/
-        if (basicStNode != nullptr)
-            resultNodeWrap->addEntraceNode(basicStNode);
-        for (auto nw : nodeWrapOfSubBlock){
-            resultNodeWrap->transferNodeFrom(nw);
-        }
-        /*** norm exit node*/
+    void FlowBlockParAuto::assignExitToRnw() {
+
+        int amt_block = ((basicStNode != nullptr) ? 1 : 0) +
+                        (int)(nodeWrapOfSubBlock.size());
+
         if (synNode != nullptr){
             resultNodeWrap->addExitNode(synNode);
         }else{
             /** get Match allow nullptr*/
             Node* exitNode = nullptr;
             if (cycleUsed >= 0){
-                assert(cycleUsed >= 0);
                 exitNode = getMatchNodeFromNdsOrNws({basicStNode},
                                                     nodeWrapOfSubBlock,
-                                                    cycleUsed
-                );
+                                                    cycleUsed);
             }else{
                 assert(amt_block == 1);
                 exitNode = getAnyNodeFromNdsOrNws({basicStNode},
@@ -202,13 +159,44 @@ namespace kathryn{
             assert(exitNode != nullptr);
             resultNodeWrap->addExitNode(exitNode);
         }
-        /*** force exit node*/
-        if (forceExitNode != nullptr){
-            resultNodeWrap->addForceExitNode(forceExitNode);
-        }
-
-
 
     }
 
+    /**
+     *
+     *
+     * parallel block no sync
+     *
+     *
+     * */
+    void FlowBlockParNoSync::assignExitToRnw() {
+
+        int amt_block = ((basicStNode != nullptr) ? 1 : 0) +
+                        (int)(nodeWrapOfSubBlock.size());
+
+        /** get Match allow nullptr*/
+        Node* exitNode = nullptr;
+        if (cycleUsed >= 0){
+            exitNode = getMatchNodeFromNdsOrNws({basicStNode},
+                                                nodeWrapOfSubBlock,
+                                                cycleUsed);
+        }else if (amt_block == 1){
+            assert(amt_block == 1);
+            exitNode = getAnyNodeFromNdsOrNws({basicStNode},
+                                              nodeWrapOfSubBlock);
+        }else{
+            assert(amt_block > 1);
+            pseudoExitNode = new PseudoNode();
+            if (basicStNode != nullptr)
+                pseudoExitNode->addDependNode(basicStNode);
+            for (auto nw : nodeWrapOfSubBlock){
+                pseudoExitNode->addDependNode(nw->getExitNode());
+            }
+            pseudoExitNode->setDependStateJoinOp(BITWISE_OR);
+            pseudoExitNode->assign();
+            exitNode  = pseudoExitNode;
+        }
+        assert(exitNode != nullptr);
+        resultNodeWrap->addExitNode(exitNode);
+    }
 }

@@ -21,17 +21,15 @@ namespace kathryn {
 
     struct NodeWrap;
 
-
-/** atomic node for assigning */
     struct Node {
 
         Operable* condition = nullptr;
         std::vector<Node*> dependNodes;
         LOGIC_OP dependStateRaiseCond = OP_DUMMY;
 
-        Node(Node &rhs) {
-            condition = rhs.condition;
-            dependNodes = rhs.dependNodes;
+        Node(Node& rhs) {
+            condition            = rhs.condition;
+            dependNodes          = rhs.dependNodes;
             dependStateRaiseCond = rhs.dependStateRaiseCond;
         }
 
@@ -41,7 +39,7 @@ namespace kathryn {
 
         virtual Node* clone() = 0;
 
-        static void addLogic(Operable *&desLogic, Operable *opr, LOGIC_OP op) {
+        static void addLogic(Operable* &desLogic, Operable *opr, LOGIC_OP op) {
             assert(op == BITWISE_AND || op == BITWISE_OR);
             assert(opr != nullptr);
             if (desLogic == nullptr) {
@@ -70,7 +68,7 @@ namespace kathryn {
         std::vector<Node*>& getDependNodes() {return dependNodes; }
 
         /** join depend node to usealble expression*/
-        Operable* getAllDependNodeOpr(){
+        Operable* transformAllDepNodeToOpr(){
             Operable* resultOpr = nullptr;
             for (auto nd : dependNodes){
                 addLogic(resultOpr, nd->getExitOpr(), dependStateRaiseCond);
@@ -87,12 +85,12 @@ namespace kathryn {
         virtual void setDependStateJoinOp(LOGIC_OP op){
             dependStateRaiseCond = op;
         }
-        /** reset event*/
+        /** unset event when state is raised there must be condition that bring this down*/
         virtual void makeUnsetStateEvent(){ assert(false); };
         /** provided src state data*/
         virtual Operable* getExitOpr(){ return nullptr; };
-        /** assign value*/
-        virtual void assign() = 0;
+        /** assign value with proper condition*/
+        virtual void assign() = 0; /** please make sure that makeunsetState is called*/
         /** cycle that is use in this node*/
         virtual int getCycleUsed() = 0;
         /** is Stateful node (reffer to node that consume at least 1 cycle from machine)*/
@@ -109,6 +107,10 @@ namespace kathryn {
             assert(_assignMeta != nullptr);
         }
 
+        AsmNode(const AsmNode& other): Node((Node&) other){
+            _assignMeta = other._assignMeta;
+        }
+
         Node* clone() override{
             auto clNode = new AsmNode(*this);
             return clNode;
@@ -117,7 +119,7 @@ namespace kathryn {
         void assign() override{
             auto resultUpEvent = new UpdateEvent({
                                                          condition,
-                                                         getAllDependNodeOpr(),
+                                                         transformAllDepNodeToOpr(),
                                                          &_assignMeta->valueToAssign,
                                                          _assignMeta->desSlice,
                                                          9

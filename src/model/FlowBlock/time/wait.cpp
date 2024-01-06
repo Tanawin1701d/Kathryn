@@ -22,7 +22,9 @@ namespace kathryn{
     _resultNodeWrap(nullptr),
     _exitCond(exitCond),
     _waitNode(nullptr)
-    {}
+    {
+        assert(exitCond != nullptr);
+    }
 
 
     NodeWrap *FlowBlockCondWait::sumarizeBlock() {
@@ -31,11 +33,11 @@ namespace kathryn{
     }
 
     void FlowBlockCondWait::onAttachBlock() {
-        ////// todo communicate to control flow block
+        ctrl->on_attach_flowBlock(this);
     }
 
     void FlowBlockCondWait::onDetachBlock() {
-        ////// todo communicate to control flow block
+        ctrl->on_detach_flowBlock(this);
     }
     /** buildHwComponent*/
     void FlowBlockCondWait::buildHwComponent() {

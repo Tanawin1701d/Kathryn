@@ -25,6 +25,7 @@ namespace kathryn{
     _condOpr(condOpr)
     {
         /** init comunication to system*/
+        assert(condOpr != nullptr);
         com_init();
         /** generate update event for exit event*/
 
@@ -47,7 +48,7 @@ namespace kathryn{
 
     void CondWaitStateReg::makeUnSetStateEvent() {
         auto* resetEvent = new UpdateEvent({    _condOpr,
-                                                (&((*this) == _upState)),
+                                                &((*this) == _upState),
                                                 &_downState,
                                                 Slice({0,1}),
                                                 9
@@ -56,7 +57,7 @@ namespace kathryn{
     }
 
     Operable* CondWaitStateReg::generateEndExpr() {
-        return (Operable*) (&( (*_condOpr) & ((*this) == _upState) ) );
+        return &((*_condOpr) & ((*this) == _upState));
     }
 
     /**
@@ -79,6 +80,7 @@ namespace kathryn{
     _endCnt    (new Val(_bitSz,"d" +  std::to_string(waitCycle)))
      {
         com_init();
+        makeIncStateEvent();
         assert(_bitSz > 0);
      }
 
@@ -95,8 +97,21 @@ namespace kathryn{
     _endCnt    (endCnt)
     {
         com_init();
+        makeIncStateEvent();
         assert(_bitSz > 0);
         /** generate update event for reset register*/
+    }
+
+
+    void CycleWaitStateReg::makeIncStateEvent() {
+        auto* event = new UpdateEvent({
+            nullptr,
+            &(((*this) < (*_endCnt)) & ((*this) >= (*_startCnt))),
+            &((*this) + (*_startCnt)),
+            Slice({0, _bitSz}),
+            9
+        });
+        addUpdateMeta(event);
     }
 
     void CycleWaitStateReg::com_init() {
@@ -130,7 +145,5 @@ namespace kathryn{
     Operable* CycleWaitStateReg::generateEndExpr() {
         return &((*this) == (*_endCnt));
     }
-
-
 
 }
