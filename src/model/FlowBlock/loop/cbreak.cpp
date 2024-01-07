@@ -19,6 +19,7 @@ namespace kathryn{
         delete resultNodeWrap;
         delete breakNode;
         delete normExitNode;
+        FlowBlockBase::~FlowBlockBase();
     }
 
     void FlowBlockCBreak::addElementInFlowBlock(Node *node) {
@@ -54,6 +55,12 @@ namespace kathryn{
         resultNodeWrap->addForceExitNode(breakNode);
         resultNodeWrap->addExitNode(normExitNode);
 
+    }
+
+    std::string FlowBlockCBreak::getDescribe(){
+        std::string ret;
+        ret += "[breakNode is]"+ (breakNode != nullptr ? breakNode->getDescribe() : "") + "\n";
+        return ret;
     }
 
     void FlowBlockCBreak::doPreFunction() {

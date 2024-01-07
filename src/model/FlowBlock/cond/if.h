@@ -28,7 +28,7 @@ namespace kathryn{
 
     public:
         explicit FlowBlockIf(Operable& cond);
-        ~FlowBlockIf();
+        ~FlowBlockIf() override;
 
         /** for controller add the local element to this sub block*/
         void addElementInFlowBlock(Node* node) override;
@@ -41,6 +41,8 @@ namespace kathryn{
         void onDetachBlock() override;
         /** for module to build hardware component*/
         void buildHwComponent() override;
+        /** get describe*/
+        std::string getDescribe() override;
         /** Loop macro to notice position of system*/
         void doPreFunction() override;
         void doPostFunction() override;

@@ -16,7 +16,9 @@ namespace kathryn{
 
     FlowBlockElif::FlowBlockElif(): FlowBlockBase(ELSE) {}
 
-    FlowBlockElif::~FlowBlockElif() = default;
+    FlowBlockElif::~FlowBlockElif(){
+        FlowBlockBase::~FlowBlockBase();
+    };
 
     void FlowBlockElif::addElementInFlowBlock(Node *node) {
         assert(false); //// due to implicit sublock declaration
@@ -56,5 +58,9 @@ namespace kathryn{
         onDetachBlock();
     }
 
-
+    std::string FlowBlockElif::getDescribe() {
+        std::string ret;
+        ret += "[elif implicitFlowBlock]" + implicitSubBlock->getDescribe() + "\n";
+        return ret;
+    }
 }

@@ -16,6 +16,7 @@ namespace kathryn{
         delete psuedoElseNode;
         delete exitNode;
         delete resultNodeWrapper;
+        FlowBlockBase::~FlowBlockBase();
     }
 
     void FlowBlockIf::addElementInFlowBlock(Node *node) {
@@ -109,6 +110,16 @@ namespace kathryn{
 
     }
 
+
+    std::string FlowBlockIf::getDescribe() {
+        std::string ret;
+        ret += "[implicitFlowBlock]" + implicitFlowBlock->getDescribe() + "\n";
+        ret += "exitNode is " + ((exitNode != nullptr) ? exitNode->getDescribe(): "") + "\n";
+        return ret;
+    }
+
+
+
     void FlowBlockIf::doPreFunction() {
         onAttachBlock();
     }
@@ -125,6 +136,7 @@ namespace kathryn{
         assert(fb->getSubBlocks()[0] != nullptr);
         subBlocks.push_back(fb);
     }
+
 
 
 }

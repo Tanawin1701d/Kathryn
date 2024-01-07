@@ -26,8 +26,13 @@ namespace kathryn{
         assert(exitCond != nullptr);
     }
 
+    FlowBlockCondWait::~FlowBlockCondWait(){
+        delete _waitNode;
+        delete _resultNodeWrap;
+        FlowBlockBase::~FlowBlockBase();
+    }
 
-    NodeWrap *FlowBlockCondWait::sumarizeBlock() {
+    NodeWrap* FlowBlockCondWait::sumarizeBlock() {
         assert(_resultNodeWrap != nullptr);
         return _resultNodeWrap;
     }
@@ -49,6 +54,14 @@ namespace kathryn{
         _resultNodeWrap->addEntraceNode(_waitNode);
         _resultNodeWrap->addExitNode(_waitNode);
 
+    }
+
+    std::string FlowBlockCondWait::getDescribe(){
+        std::string ret;
+        ret += "\n";
+        ret += "exitCond is " + _exitCond->castToIdent()->getIdentDebugValue() + "\n";
+        ret += "_waitNode is " + _waitNode->getDescribe() + "\n";
+        return ret;
     }
 
     void FlowBlockCondWait::doPreFunction() {
@@ -88,6 +101,12 @@ namespace kathryn{
         assert(opr != nullptr);
     }
 
+    FlowBlockCycleWait::~FlowBlockCycleWait(){
+        delete _waitNode;
+        delete _resultNodeWrap;
+        FlowBlockBase::~FlowBlockBase();
+    }
+
     NodeWrap* FlowBlockCycleWait::sumarizeBlock() {
         assert(_resultNodeWrap != nullptr);
         return _resultNodeWrap;
@@ -114,6 +133,14 @@ namespace kathryn{
         _resultNodeWrap->addEntraceNode(_waitNode);
         _resultNodeWrap->addExitNode(_waitNode);
 
+    }
+
+    std::string FlowBlockCycleWait::getDescribe(){
+        std::string ret;
+        ret += "\n";
+        ret += "[_waitNode] is " + _waitNode->getDescribe() + "\n";
+        ret += "[cnt] is " + cnt->castToIdent()->getIdentDebugValue()+ "\n";
+        return ret;
     }
 
     void FlowBlockCycleWait::doPreFunction() {

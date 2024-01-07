@@ -47,6 +47,8 @@ namespace kathryn{
         void onDetachBlock() override;
         /** for module to build hardware component*/
         void buildHwComponent() override;
+        /** get describe*/
+        std::string getDescribe() override;
         /** Loop macro to notice position of system*/
         void doPreFunction() override;
         void doPostFunction() override;

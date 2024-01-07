@@ -17,6 +17,7 @@ namespace kathryn{
         delete exitNode;
         delete byPassExitNode;
         delete subBlockExitNode;
+        FlowBlockBase::~FlowBlockBase();
     }
 
     void FlowBlockCwhile::addElementInFlowBlock(Node *node) {
@@ -112,11 +113,21 @@ namespace kathryn{
         loopNodeWrap->assignAllNode();
     }
 
+
+    std::string FlowBlockCwhile::getDescribe() {
+        std::string ret;
+        ret += "[cwhile]implicitFlowBlock " + implicitFlowBlock->getFlowBlockDebugIdentValue() + "\n";
+        ret += implicitFlowBlock->getDescribe() + "\n";
+        ret += "[cwhile]exitNode" + ((exitNode != nullptr) ? exitNode->getDescribe() + "\n" : "\n");
+        return ret;
+    }
+
     void FlowBlockCwhile::doPreFunction() {
         onAttachBlock();
     }
     void FlowBlockCwhile::doPostFunction() {
         onDetachBlock();
     }
+
 
 }

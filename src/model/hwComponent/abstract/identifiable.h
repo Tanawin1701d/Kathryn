@@ -106,7 +106,7 @@ namespace kathryn {
         /** get debug value*/
         [[nodiscard]]std::string
         getIdentDebugValue() const{
-            return getGlobalName() + "_localId_" + std::to_string(getLocalId());
+            return getGlobalName() + "_localName_" + getTypeName();
         }
 
     };

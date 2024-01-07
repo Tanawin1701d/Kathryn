@@ -124,6 +124,10 @@ namespace kathryn{
             return cycleUsed;
         }
 
+        std::string getDescribe(){
+
+        }
+
     };
 
     /** this struct is used to determine numbers of cycle

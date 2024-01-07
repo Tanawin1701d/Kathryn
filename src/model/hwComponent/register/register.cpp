@@ -23,7 +23,7 @@ namespace kathryn{
 
     Reg& Reg::operator<<=(Operable &b) {
         Slice absSlice = getSlice().getWeakAssignSlice({0, b.getOperableSlice().getSize()});
-        ctrl->on_reg_update(generateAssignMeta(b, absSlice));
+        ctrl->on_reg_update(generateAssignMeta(b, absSlice), this);
         return *this;
     }
 
@@ -48,13 +48,12 @@ namespace kathryn{
 
     Reg& Reg::callBackBlockAssignFromAgent(Operable &b, Slice absSliceOfHost) {
         Slice resultSlice = absSliceOfHost.getWeakAssignSlice({0, b.getOperableSlice().getSize()});
-        ctrl->on_reg_update(generateAssignMeta(b, resultSlice));
+        ctrl->on_reg_update(generateAssignMeta(b, resultSlice), this);
         return *this;
     }
 
     Reg &Reg::callBackNonBlockAssignFromAgent(Operable &b, Slice absSliceOfHost) {
-        assert(true);
-        return *this;
+        assert(false);
     }
 
     std::vector<std::string> Reg::getDebugAssignmentValue() {

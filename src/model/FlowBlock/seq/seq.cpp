@@ -28,6 +28,7 @@ namespace kathryn{
 
     SequenceEle::~SequenceEle() {
         delete _stateNode;
+
     }
 
     void SequenceEle::genHardware() {
@@ -121,6 +122,16 @@ namespace kathryn{
         return _stateNode;
     }
 
+    std::string SequenceEle::getDescribe(){
+
+        if (isBasicNode()){
+            return _stateNode->getDescribe();
+        }else if (isNodeWrap()){
+            return _complexNode->getDescribe();
+        }
+
+    }
+
 
 
 
@@ -137,6 +148,7 @@ namespace kathryn{
 
     FlowBlockSeq::~FlowBlockSeq(){
         delete resultNodeWrap;
+        FlowBlockBase::~FlowBlockBase();
     }
 
     void FlowBlockSeq::addElementInFlowBlock(Node* node) {
@@ -196,6 +208,19 @@ namespace kathryn{
         resultNodeWrap->setCycleUsed(cycleDet.getCycleVertical());
         if (areThereForceExit)
             resultNodeWrap->addForceExitNode(forceExitNode);
+
+    }
+
+    std::string FlowBlockSeq::getDescribe() {
+
+        std::string ret;
+        int eleCnt = 0;
+        for (auto seqEle: _subSeqMetas){
+            ret += "[ seqEle " + std::to_string(eleCnt) +"] " +
+                    seqEle.getDescribe() + "\n";
+            eleCnt++;
+        }
+        return ret;
 
     }
 

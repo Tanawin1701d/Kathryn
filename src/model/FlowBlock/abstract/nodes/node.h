@@ -95,7 +95,8 @@ namespace kathryn {
         virtual int getCycleUsed() = 0;
         /** is Stateful node (reffer to node that consume at least 1 cycle from machine)*/
         virtual bool isStateFullNode(){ return true; }
-
+        /** get describe value*/
+        virtual std::string getDescribe(){assert(false);}
     };
 
     struct AsmNode : Node{

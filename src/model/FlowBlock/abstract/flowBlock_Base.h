@@ -38,6 +38,7 @@ namespace kathryn {
 
     std::string FBT_to_string(FLOW_BLOCK_TYPE fbt);
 
+    extern int nextFbIdx;
 
     class FlowBlockBase {
     protected:
@@ -46,6 +47,7 @@ namespace kathryn {
         FLOW_BLOCK_TYPE             _type;
         Controller*                 ctrl = nullptr;
         bool                        lazyDeletedRequired = false;
+        int                         _fbId;
         /*** for exit management*/
         bool                        areThereForceExit = false;
         PseudoNode*                 forceExitNode = nullptr;
@@ -79,11 +81,13 @@ namespace kathryn {
          virtual void onAttachBlock() = 0; //// it is supposed to acknowledge controller whether this block is declared
          virtual void onDetachBlock() = 0;
          /*** for module communicate with* */
-          virtual void buildHwComponent() = 0;
+         virtual void buildHwComponent() = 0;
+         /** return information */
+         virtual std::string getDescribe();
 
         ////// getter/setter
         FLOW_BLOCK_TYPE getFlowType() const {return _type;}
-
+        int getFlowBlockId() const{return _fbId;}
         std::vector<FlowBlockBase*>& getSubBlocks(){
             return subBlocks;
         }
@@ -91,17 +95,13 @@ namespace kathryn {
          * block should be pop from building stack when purifier is done
          * not when block is detach. Usually, It is used in if block
          * */
-        bool isLazyDelete() const{
-            return lazyDeletedRequired;
-        }
-        void setLazyDelete() {
-            lazyDeletedRequired = true;
-        }
+        bool isLazyDelete() const{ return lazyDeletedRequired; }
+        void setLazyDelete() { lazyDeletedRequired = true;}
 
         /** debug string*/
+        [[nodiscard]]
         std::string getFlowBlockDebugIdentValue() const{
-            return "FB_TYPE_" + FBT_to_string(getFlowType()) +
-                   "_@" + std::to_string((ull) this);
+            return FBT_to_string(getFlowType()) + "_blockId_" + std::to_string(_fbId);
         }
 
     };

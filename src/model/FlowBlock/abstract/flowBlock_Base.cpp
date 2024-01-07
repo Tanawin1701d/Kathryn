@@ -12,7 +12,10 @@ namespace kathryn{
     FlowBlockBase::FlowBlockBase(FLOW_BLOCK_TYPE type):
     _type(type),
     ctrl(getControllerPtr()),
-    lazyDeletedRequired(false)
+    lazyDeletedRequired(false),
+    _fbId(nextFbIdx++),
+    areThereForceExit(false),
+    forceExitNode(nullptr)
     {}
 
     FlowBlockBase::~FlowBlockBase(){
@@ -57,6 +60,10 @@ namespace kathryn{
             forceExitNode->assign();
 
         }
+    }
+
+    std::string getDescribe(){
+        assert(false);
     }
 
 

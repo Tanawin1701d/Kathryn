@@ -1,30 +1,47 @@
 //
 // Created by tanawin on 12/12/2566.
 //
-#include <cstdio>
-#include <cstdarg>
 #include <iostream>
 #include "logger.h"
 
 
 namespace kathryn{
 
-    //logMeta logStorage[LOG_COUNT];
-
-    void log(const char* format, ...){
-        constexpr size_t bufferSize = 1024;
-        char buffer[bufferSize];
-        /**start args*/
-        va_list args;
-        va_start(args, format);
-        vsnprintf(buffer, bufferSize, format, args);
-        va_end(args);
-        std::string result(buffer);
-        std::cout << result << std::endl;
+    void initDebugger(const std::string& filePath){
+        outPath = filePath;
+        outFile = new std::ofstream(outPath);
     }
 
-    void logStr(std::string msg){
-        std::cout << msg << std::endl;
+    void finalizeDebugger(){
+        outFile->close();
+        delete outFile;
     }
+
+    std::string lastMF_ident = "$";
+
+    void logMF(const std::string& ident,
+               const std::string& debugMsg){
+
+        if (lastMF_ident != ident){
+            *outFile << "----------------------------------\n";
+            lastMF_ident = ident;
+        }
+        *outFile << "[ "<< ident << " ] " << debugMsg << "\n";
+
+    }
+
+    std::string lastMD_ident = "$";
+
+    void logMD(const std::string& ident,
+               const std::string& debugMsg){
+
+        if (lastMF_ident != ident){
+            *outFile << "----------------------------------\n";
+            lastMD_ident = ident;
+        }
+        *outFile << "[ "<< ident << " ] " << debugMsg << "\n";
+
+    }
+
 
 }

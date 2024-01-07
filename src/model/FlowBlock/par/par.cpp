@@ -19,6 +19,7 @@ namespace kathryn{
         delete basicStNode;
         delete synNode;
         delete pseudoExitNode;
+        FlowBlockBase::~FlowBlockBase();
     }
 
     NodeWrap*
@@ -110,6 +111,23 @@ namespace kathryn{
         onDetachBlock();
     }
 
+    std::string FlowBlockPar::getDescribe() {
+        std::string ret;
+
+        ret += "basicStateNode is " +
+                ((basicStNode != nullptr) ? basicStNode->getDescribe(): "") +
+                "\n";
+
+        ret += "synNode is " +
+                ((synNode != nullptr) ? synNode->getDescribe(): "") +
+                "\n";
+
+        ret += "pseudoExitNode is " +
+                ((pseudoExitNode != nullptr) ? pseudoExitNode->getDescribe(): "") +
+                "\n";
+
+        return ret;
+    }
 
 
     /**
@@ -168,6 +186,7 @@ namespace kathryn{
         }
 
     }
+
 
     /**
      *

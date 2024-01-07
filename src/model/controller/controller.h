@@ -78,10 +78,10 @@ namespace kathryn {
         void on_cycle_wait_reg_init(CycleWaitStateReg* ptr);
         /** register handling*/
         void on_reg_init(Reg* ptr);
-        void on_reg_update(AssignMeta* asmMeta);
+        void on_reg_update(AssignMeta* asmMeta, Reg* srcReg);
         /** wire handling*/
         void on_wire_init(Wire* ptr);
-        void on_wire_update(AssignMeta* asmMeta);
+        void on_wire_update(AssignMeta* asmMeta, Wire* srcWire);
         /** exprMetas handling*/
         void on_expression_init(expression* ptr);
         /** value handling*/
