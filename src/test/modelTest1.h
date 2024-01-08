@@ -106,11 +106,13 @@ namespace kathryn{
 
     public:
         void test() override{
-            makeMod(tm, testMod4, 0);
+            makeMod(tm, testMod, 0);
 
             auto testVis = Vis(&tm);
             testVis.execute();
             testVis.print();
+
+            tm.log();
 
         }
 

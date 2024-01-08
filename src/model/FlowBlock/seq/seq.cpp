@@ -129,6 +129,7 @@ namespace kathryn{
         }else if (isNodeWrap()){
             return _complexNode->getDescribe();
         }
+        assert(false);
 
     }
 

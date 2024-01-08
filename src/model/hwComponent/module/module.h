@@ -20,6 +20,8 @@
 #include "model/FlowBlock/abstract/spReg/waitReg.h"
 #include "model/FlowBlock/abstract/nodes/startNode.h"
 
+#include "util/logger/logger.h"
+
 
 namespace kathryn{
 
@@ -96,6 +98,7 @@ namespace kathryn{
         /** Functions which allow user to custom  their module design flow*/
         virtual void flow(){}; //// user must inherit this function to build thier flow
         virtual void buildFlow();
+        virtual void log();
     };
 
 }

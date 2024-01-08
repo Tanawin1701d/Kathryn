@@ -5,7 +5,6 @@
 #include "module.h"
 
 #include "model/controller/controller.h"
-#include "model/hwComponent/abstract/makeComponent.h"
 
 
 namespace kathryn{
@@ -129,6 +128,49 @@ namespace kathryn{
             nw->assignAllNode();
             /** assume that node wrap that appear to module is not used anymore. */
         }
+
+    }
+
+    void Module::log(){
+        /***dfs in all flowBLock and sub FLow block*/
+        struct DFS_STATUS{
+            FlowBlockBase* fbb = nullptr;
+            int nextId = 0;
+        };
+
+        std::stack<DFS_STATUS> dfsSt;
+        ///std::string ret = "[ MODULE " + getIdentDebugValue() + " ]\n";
+        std::string ret;
+        for (auto fbbIter = _flowBlockBases.rbegin();
+            fbbIter != _flowBlockBases.rend();
+            fbbIter++
+        ){
+            dfsSt.push({*fbbIter, -1});
+        }
+
+        while (!dfsSt.empty()){
+            auto& top = dfsSt.top();
+
+            if (top.nextId == -1){
+                ret += top.fbb->getDescribe();
+                ret += "\n";
+            }
+
+            top.nextId++;
+
+            if (top.nextId == top.fbb->getSubBlocks().size()){
+                dfsSt.pop();
+            }else{
+                dfsSt.push({top.fbb->getSubBlocks()[top.nextId],
+                            -1});
+            }
+
+
+        }
+
+        std::string ident = "MODULE " + getIdentDebugValue();
+
+        logMD(ident,ret);
 
     }
 

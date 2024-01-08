@@ -7,8 +7,10 @@
 
 namespace kathryn{
 
-    void initDebugger(const std::string& filePath){
-        outPath = filePath;
+    std::string outPath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/test.txt";
+    std::ofstream* outFile = nullptr;
+
+    void initDebugger(){
         outFile = new std::ofstream(outPath);
     }
 
@@ -22,6 +24,10 @@ namespace kathryn{
     void logMF(const std::string& ident,
                const std::string& debugMsg){
 
+        if (outFile == nullptr){
+            initDebugger();
+        }
+
         if (lastMF_ident != ident){
             *outFile << "----------------------------------\n";
             lastMF_ident = ident;
@@ -34,6 +40,10 @@ namespace kathryn{
 
     void logMD(const std::string& ident,
                const std::string& debugMsg){
+
+        if (outFile == nullptr){
+            initDebugger();
+        }
 
         if (lastMF_ident != ident){
             *outFile << "----------------------------------\n";

@@ -13,16 +13,16 @@ namespace kathryn{
 
     /*** In the future we will build debug model more efficiently*/
     extern std::string outPath;
-    extern std::ofstream* outFile = nullptr;
+    extern std::ofstream* outFile;
     ////// MF model formation
 
-    void initDebugger(const std::string& filePath);
+    void initDebugger();
 
     void finalizeDebugger();
 
     void logMF(const std::string& ident, const std::string& debugMsg);
 
-    void logMD(std::string ident, std::string debugMsg);
+    void logMD(const std::string& ident, const std::string& debugMsg);
 
 }
 

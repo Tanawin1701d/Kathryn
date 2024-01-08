@@ -8,6 +8,8 @@
 
 namespace kathryn{
 
+    int nextFbIdx = 0;
+
 
     FlowBlockBase::FlowBlockBase(FLOW_BLOCK_TYPE type):
     _type(type),

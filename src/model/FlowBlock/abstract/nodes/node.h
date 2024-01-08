@@ -164,36 +164,7 @@ namespace kathryn {
      * please bear in mind that copy node that used in while loop can't be detect by this
      * function
      * */
-    bool thereAreStateLessConnection(std::vector<Node*> nds, Node* startNode){
-        assert(!startNode->isStateFullNode());
-        std::queue<Node*> toCheckingNode;
-
-        /**fill checking node from nds*/
-        toCheckingNode.push(startNode);
-
-        while (!toCheckingNode.empty()){
-            auto frontNode = toCheckingNode.front();
-            toCheckingNode.pop();
-            /** check depend matched node*/
-            for (auto checkNode: nds){
-                if (checkNode == frontNode){
-                    return true;
-                }
-            }
-            /**add dependNode to next iteration*/
-            for (auto depNode : frontNode->getDependNodes()){
-                assert(depNode != nullptr);
-                if (!depNode->isStateFullNode()){
-                    toCheckingNode.push(depNode);
-                }
-            }
-
-        }
-
-        return false;
-
-
-    }
+    bool thereAreStateLessConnection(std::vector<Node*> nds, Node* startNode);
 
 }
 

@@ -83,7 +83,7 @@ namespace kathryn {
          /*** for module communicate with* */
          virtual void buildHwComponent() = 0;
          /** return information */
-         virtual std::string getDescribe();
+         virtual std::string getDescribe() = 0;
 
         ////// getter/setter
         FLOW_BLOCK_TYPE getFlowType() const {return _type;}

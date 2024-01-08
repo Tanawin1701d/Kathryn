@@ -6,7 +6,7 @@
 #define KATHRYN_STATEREGUTIL_H
 
 
-#include "model/FlowBlock/abstract/stateReg.h"
+#include "model/FlowBlock/abstract/spReg/stateReg.h"
 
 namespace kathryn{
 

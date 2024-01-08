@@ -5,6 +5,7 @@
 #ifndef KATHRYN_SLICE_H
 #define KATHRYN_SLICE_H
 
+#include<cassert>
 
 namespace kathryn{
 

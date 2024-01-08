@@ -126,10 +126,30 @@ namespace kathryn{
 
     }
 
+    ValRep &ValRep::operator=(const ValRep &rhs) {
+
+        if (&rhs == this){
+            return *this;
+        }
+
+        _len = rhs._len;
+        _valSize = rhs._valSize;
+        if (_valSize > 0){
+            _val = new ull[_valSize];
+            std::copy(rhs._val, rhs._val + _valSize, _val);
+        }else{
+            _val = nullptr;
+        }
+
+        return *this;
+    }
+
 
     /////////////////////////////////////////////////////////////
     //////////// bitwise operator ///////////////////////////////
     /////////////////////////////////////////////////////////////
+
+
 
     ValRep ValRep::operator&(const ValRep &rhs) {
         return bwOperator(rhs, [](ull a, ull b) -> ull
