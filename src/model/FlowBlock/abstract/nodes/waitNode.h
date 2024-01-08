@@ -15,7 +15,7 @@ namespace kathryn{
         CondWaitStateReg* _condWaitStateReg = nullptr;
 
         explicit WaitCondNode(Operable* waitCond):
-                Node(){
+                Node(WAITCOND_NODE){
             assert(waitCond != nullptr);
             _condWaitStateReg = new CondWaitStateReg(waitCond);
         }
@@ -53,14 +53,14 @@ namespace kathryn{
         CycleWaitStateReg* _cycleWaitStateReg = nullptr;
 
         explicit WaitCycleNode(int cycle):
-                Node(),
+                Node(WAITCYCLE_NODE),
                 _cycle(cycle){
 
             _cycleWaitStateReg = new CycleWaitStateReg(cycle);
         }
 
         explicit WaitCycleNode(Operable* opr):
-                Node()
+                Node(WAITCYCLE_NODE)
         {
             _cycleWaitStateReg = new CycleWaitStateReg(opr);
         }

@@ -18,7 +18,7 @@ namespace kathryn{
         Operable* _rstSig     = nullptr;
 
         explicit StartNode(Operable* rstSig):
-            Node(),
+            Node(START_NODE),
             _delayReset(new StateReg()),
             _rstSig(rstSig){
             assert(_rstSig != nullptr);

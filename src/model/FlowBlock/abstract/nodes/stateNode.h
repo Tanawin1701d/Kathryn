@@ -19,7 +19,7 @@ namespace kathryn{
         StateReg* _stateReg;
 
         explicit StateNode() :
-            Node(),
+            Node(STATE_NODE),
             _stateReg(new StateReg()){}
 
         Node* clone() override{
@@ -56,7 +56,9 @@ namespace kathryn{
         StateReg* _synReg;
 
         /**in SynNode condition and dependState is disengage*/
-        explicit SynNode(int synSize) : _synReg(new StateReg(synSize)){}
+        explicit SynNode(int synSize) :
+            Node(SYN_NODE),
+            _synReg(new StateReg(synSize)){}
 
         Node* clone() override{
             /** syn node is not supposed to be copied*/
@@ -87,7 +89,7 @@ namespace kathryn{
         Operable* _pseudoAssignMeta = nullptr;
 
         explicit PseudoNode() :
-            Node(),
+            Node(PSEUDO_NODE),
             _pseudoAssignMeta(new expression()){}
 
         Node* clone() override{
@@ -113,7 +115,7 @@ namespace kathryn{
         Val* _value = nullptr;
 
         explicit DummyNode(Val* value) :
-            Node(),
+            Node(DUMMY_NODE),
             _value(value){
             assert(_value != nullptr);
         }

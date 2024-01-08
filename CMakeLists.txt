@@ -78,4 +78,5 @@ add_executable(Kathryn main.cpp
         src/model/FlowBlock/loop/cbreak.h
         src/model/FlowBlock/abstract/nodes/startNode.h
         src/model/hwComponent/abstract/makeComponent.cpp
+        src/model/FlowBlock/abstract/nodes/node.cpp
 )

@@ -125,7 +125,15 @@ namespace kathryn{
         }
 
         std::string getDescribe(){
-
+            std::string ret;
+            ret += "[nodeWrap @" + std::to_string((ull)this) + " ] hasEntranceNode ";
+            for (auto entranceNode : entranceNodes){
+                ret += entranceNode->getDescribe();
+                ret += " has exitNode ";
+                ret += exitNode->getDescribe();
+                ret += "use cycle " + std::to_string(cycleUsed);
+            }
+            return ret;
         }
 
     };

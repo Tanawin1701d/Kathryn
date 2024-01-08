@@ -7,7 +7,8 @@
 
 #include<vector>
 #include<memory>
-#include <queue>
+#include<queue>
+#include<map>
 #include "model/hwComponent/abstract/operation.h"
 #include "model/hwComponent/expression/expression.h"
 #include "model/hwComponent/register/register.h"
@@ -18,22 +19,39 @@
 
 namespace kathryn {
 
-
     struct NodeWrap;
 
-    struct Node {
+    enum NODE_TYPE{
+        ASM_NODE,
+        STATE_NODE,
+        SYN_NODE,
+        PSEUDO_NODE,
+        DUMMY_NODE,
+        START_NODE,
+        WAITCOND_NODE,
+        WAITCYCLE_NODE,
+        NODE_TYPE_CNT
+    };
 
+    std::string NT_to_string(NODE_TYPE nt);
+
+    struct Node {
+        NODE_TYPE nodeType = NODE_TYPE_CNT;
         Operable* condition = nullptr;
         std::vector<Node*> dependNodes;
         LOGIC_OP dependStateRaiseCond = OP_DUMMY;
 
         Node(Node& rhs) {
+            nodeType             = rhs.nodeType;
             condition            = rhs.condition;
             dependNodes          = rhs.dependNodes;
             dependStateRaiseCond = rhs.dependStateRaiseCond;
         }
 
-        explicit Node() = default;
+        explicit Node(NODE_TYPE nt):
+            nodeType(nt),
+            condition(nullptr),
+            dependStateRaiseCond(OP_DUMMY){};
 
         virtual ~Node() = default;
 
@@ -96,14 +114,21 @@ namespace kathryn {
         /** is Stateful node (reffer to node that consume at least 1 cycle from machine)*/
         virtual bool isStateFullNode(){ return true; }
         /** get describe value*/
-        virtual std::string getDescribe(){assert(false);}
+        virtual std::string getDescribe(){
+            std::string ret = "[node type "+ NT_to_string(nodeType) + " " +
+                              std::to_string((ull)this) +" ] set depend to ";
+            for (auto dependNode : dependNodes){
+                ret += std::to_string((ull) dependNode) + " ";
+            }
+            return ret;
+        }
     };
 
     struct AsmNode : Node{
         AssignMeta* _assignMeta = nullptr; //// AssignMeta is must not use the same assign metas
 
         explicit AsmNode(AssignMeta* assignMeta) :
-            Node(),
+            Node(ASM_NODE),
             _assignMeta(assignMeta){
             assert(_assignMeta != nullptr);
         }
