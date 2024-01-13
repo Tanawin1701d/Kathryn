@@ -11,6 +11,7 @@
 #include "model/hwComponent/module/module.h"
 #include "model/hwComponent/abstract/makeComponent.h"
 #include "application/visualizer/vis.h"
+#include "util/logger/logger.h"
 
 namespace kathryn{
 
@@ -106,11 +107,12 @@ namespace kathryn{
 
     public:
         void test() override{
-            makeMod(tm, testMod, 0);
+            makeMod(tm, testMod4, 0);
 
             //tm.getMdDescribe();
             auto mdLogVal = new MdLogVal();
             tm.addMdLog(mdLogVal);
+            logMD("tm", mdLogVal);
 
         }
 

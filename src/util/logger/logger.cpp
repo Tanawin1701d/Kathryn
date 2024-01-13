@@ -40,9 +40,6 @@ namespace kathryn{
             }
             *outFileMD << val << "\n";
         }
-        for (int identCnt = 0; identCnt < ident; identCnt++) {
-            *outFileMD << " ";
-        }
         ident += 4;
         for (auto subMdLog: mdLogVal->subVal)
             printMdLogVal(mdFile, ident, subMdLog);

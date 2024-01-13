@@ -119,7 +119,7 @@ namespace kathryn {
 
         /** get debugger value*/
         std::string getMdDescribe() override{
-            std::string ret = getMdIdentVal() + "  have node dep [ ";
+            std::string ret = "  have node dep [ ";
             for (auto depNode : dependNodes){
                 ret += depNode->getMdIdentVal();
                 ret += ", ";

@@ -52,7 +52,7 @@ namespace kathryn{
 
     void logMF(ModelDebuggable* mdDebug, const std::string& debugMsg);
 
-    void logMd(std::string mdName, MdLogVal* val);
+    void logMD(const std::string& mdName, MdLogVal* val);
 
 
 }

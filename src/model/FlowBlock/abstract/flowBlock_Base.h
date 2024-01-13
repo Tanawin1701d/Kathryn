@@ -105,6 +105,8 @@ namespace kathryn {
         }
 
         void addMdLogRecur(MdLogVal *mdLogVal){
+            if (subBlocks.empty())
+                return;
             mdLogVal->addVal("-----sub block------");
             for (auto sb: subBlocks){
                 auto subStruct = mdLogVal->makeNewSubVal();

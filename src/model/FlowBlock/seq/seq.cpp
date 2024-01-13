@@ -125,7 +125,7 @@ namespace kathryn{
     std::string SequenceEle::getDescribe(){
 
         if (isBasicNode()){
-            return _stateNode->getMdIdentVal() + _stateNode->getMdDescribe();
+            return _stateNode->getMdIdentVal() + " " + _stateNode->getMdDescribe();
         }else if (isNodeWrap()){
             return _complexNode->getMdIdentVal() + _complexNode->getMdDescribe();
         }

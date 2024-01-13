@@ -157,6 +157,12 @@ namespace kathryn{
                           pseudoExitNode->getMdIdentVal() + "  " + pseudoExitNode->getMdDescribe():
                           ""));
 
+        Node* exitNode = resultNodeWrap->getExitNode();
+        mdLogVal->addVal("exit node is " +
+                        ( (exitNode != nullptr) ?
+                            exitNode->getMdIdentVal() + "  " + exitNode->getMdDescribe():
+                            ""));
+
         addMdLogRecur(mdLogVal);
     }
 
