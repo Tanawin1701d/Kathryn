@@ -114,12 +114,23 @@ namespace kathryn{
     }
 
 
-    std::string FlowBlockCwhile::getDescribe() {
-        std::string ret;
-        ret += "[cwhile]implicitFlowBlock " + implicitFlowBlock->getFlowBlockDebugIdentValue() + "\n";
-        ret += implicitFlowBlock->getDescribe() + "\n";
-        ret += "[cwhile]exitNode" + ((exitNode != nullptr) ? exitNode->getDescribe() + "\n" : "\n");
+    std::string FlowBlockCwhile::getMdDescribe() {
+        std::string ret = FlowBlockBase::getMdIdentVal() + "\n";
+        ret += "[cwhile]implicitFlowBlock " + implicitFlowBlock->getMdDescribe() + "\n";
+        ret += "[cwhile]exitNode " + ((exitNode != nullptr) ? exitNode->getMdIdentVal() + "  " + exitNode->getMdDescribe() + "\n" : "\n");
         return ret;
+    }
+
+    void FlowBlockCwhile::addMdLog(MdLogVal *mdLogVal) {
+        mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() + " ]");
+        mdLogVal->addVal("exitNode " + ((exitNode != nullptr) ?
+                                             exitNode->getMdIdentVal() + "  " +
+                                             exitNode->getMdDescribe() + "\n" :
+                                             "\n"));
+        mdLogVal->addVal("implicitSubBlock");
+        auto subLog = mdLogVal->makeNewSubVal();
+        implicitFlowBlock->addMdLog(subLog);
+
     }
 
     void FlowBlockCwhile::doPreFunction() {

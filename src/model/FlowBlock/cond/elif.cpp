@@ -58,9 +58,17 @@ namespace kathryn{
         onDetachBlock();
     }
 
-    std::string FlowBlockElif::getDescribe() {
+    std::string FlowBlockElif::getMdDescribe() {
         std::string ret;
-        ret += "[elif implicitFlowBlock]" + implicitSubBlock->getDescribe() + "\n";
+        ret += "[ " + FlowBlockBase::getMdIdentVal() + " ]\n";
+        ret += "[elif implicitFlowBlock]" + implicitSubBlock->getMdDescribe() + "\n";
         return ret;
     }
+
+    void FlowBlockElif::addMdLog(MdLogVal *mdLogVal) {
+        mdLogVal->addVal("[ Elif" + FlowBlockBase::getMdIdentVal() + " ]");
+        addMdLogRecur(mdLogVal);
+    }
+
+
 }

@@ -8,21 +8,52 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <vector>
 
 namespace kathryn{
 
     /*** In the future we will build debug model more efficiently*/
+
+    class ModelDebuggable;
+
+    struct mFValue{
+        ModelDebuggable* mdDebug;
+        std::string      debugMsg;
+    };
+
+    struct MdLogVal{
+        std::vector<std::string> vals;
+        std::vector<MdLogVal*>   subVal;
+
+        void addVal(const std::string& val){ vals.push_back(val); }
+
+        MdLogVal* makeNewSubVal(){
+            auto sub = new MdLogVal();
+            subVal.push_back(sub);
+            return sub;
+        }
+
+
+    };
+
     extern std::string outPath;
-    extern std::ofstream* outFile;
+    extern std::vector<mFValue> mfStorage;
+    extern std::vector<MdLogVal*> mdStorageVals;
+    extern std::vector<std::string> mdStorageName;//// key
+    /////extern std::ofstream* outFileMF;
     ////// MF model formation
 
-    void initDebugger();
+    void initMdDebugger();
+    void initMfDebugger();
 
-    void finalizeDebugger();
+    void finalizeMdDebugger();
+    void finalizeMfDebugger();
 
-    void logMF(const std::string& ident, const std::string& debugMsg);
 
-    void logMD(const std::string& ident, const std::string& debugMsg);
+    void logMF(ModelDebuggable* mdDebug, const std::string& debugMsg);
+
+    void logMd(std::string mdName, MdLogVal* val);
+
 
 }
 

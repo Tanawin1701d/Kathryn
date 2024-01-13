@@ -61,7 +61,10 @@ namespace kathryn {
         virtual void assignExitToRnw() = 0; /// Rnw <= result node wrap
         virtual void assignCycleUsedToRnw();
         virtual void assignForceExitToRnw();
-        std::string getDescribe() override;
+
+        std::string getMdDescribe() override;
+        void        addMdLog(MdLogVal *mdLogVal) override;
+
 
 
     };

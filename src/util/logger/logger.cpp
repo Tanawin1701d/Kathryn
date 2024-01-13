@@ -2,55 +2,86 @@
 // Created by tanawin on 12/12/2566.
 //
 #include <iostream>
+#include <cassert>
 #include "logger.h"
+#include "model/debugger/modelDebugger.h"
 
 
 namespace kathryn{
 
-    std::string outPath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/test.txt";
-    std::ofstream* outFile = nullptr;
 
-    void initDebugger(){
-        outFile = new std::ofstream(outPath);
+    std::ofstream* outFileMF = nullptr;
+    std::ofstream* outFileMD = nullptr;
+
+    std::vector<mFValue> mfStorage;
+
+    std::vector<std::string> mdStorageName;//// key
+    std::vector<MdLogVal*> mdStorageVals;
+
+    void initMdDebugger(){
+        outFileMD = new std::ofstream("/media/tanawin/tanawin1701e/project2/Kathryn/KOut/MD.txt");
     }
 
-    void finalizeDebugger(){
-        outFile->close();
-        delete outFile;
+    void initMfDebugger(){
+
+        outFileMF = new std::ofstream("/media/tanawin/tanawin1701e/project2/Kathryn/KOut/MF.txt");
+
     }
 
-    std::string lastMF_ident = "$";
+    void printMdLogVal(std::ofstream* mdFile, int ident, MdLogVal* mdLogVal){
 
-    void logMF(const std::string& ident,
+        assert(mdFile != nullptr);
+        assert(mdLogVal != nullptr);
+
+        for (auto &val: mdLogVal->vals) {
+            /** print ident*/
+            for (int identCnt = 0; identCnt < ident; identCnt++) {
+                *outFileMD << " ";
+            }
+            *outFileMD << val << "\n";
+        }
+        for (int identCnt = 0; identCnt < ident; identCnt++) {
+            *outFileMD << " ";
+        }
+        ident += 4;
+        for (auto subMdLog: mdLogVal->subVal)
+            printMdLogVal(mdFile, ident, subMdLog);
+
+    }
+
+    void finalizeMdDebugger(){
+
+        for (int i = 0; i < mdStorageName.size(); i++){
+            *outFileMD << "[ " << mdStorageVals[i] << " ]\n";
+            printMdLogVal(outFileMD, 0, mdStorageVals[i]);
+            *outFileMD << "------------------------------\n";
+        }
+
+        outFileMD->close();
+        delete outFileMD;
+    }
+
+    void finalizeMfDebugger(){
+        for (auto& mfValue : mfStorage){
+            *outFileMF << "[ " << mfValue.mdDebug->getMdIdentVal()
+                       << " ]    " << mfValue.debugMsg << "\n";
+            *outFileMF << "---------------------------\n";
+        }
+        outFileMF->close();
+        delete outFileMF;
+    }
+
+    void logMF(ModelDebuggable* mdDebug,
                const std::string& debugMsg){
-
-        if (outFile == nullptr){
-            initDebugger();
-        }
-
-        if (lastMF_ident != ident){
-            *outFile << "----------------------------------\n";
-            lastMF_ident = ident;
-        }
-        *outFile << "[ "<< ident << " ] " << debugMsg << "\n";
-
+        mFValue x = { mdDebug, debugMsg};
+        mfStorage.push_back(x);
     }
 
-    std::string lastMD_ident = "$";
-
-    void logMD(const std::string& ident,
-               const std::string& debugMsg){
-
-        if (outFile == nullptr){
-            initDebugger();
-        }
-
-        if (lastMF_ident != ident){
-            *outFile << "----------------------------------\n";
-            lastMD_ident = ident;
-        }
-        *outFile << "[ "<< ident << " ] " << debugMsg << "\n";
-
+    void logMD(const std::string& mdName,
+               MdLogVal* val){
+        assert(val != nullptr);
+        mdStorageName.push_back(mdName);
+        mdStorageVals.push_back(val);
     }
 
 

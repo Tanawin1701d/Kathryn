@@ -11,6 +11,15 @@ int main() {
 
     auto t = test1();
     t.test();
-    finalizeDebugger();
+
+
+
+    /**debugger*/
+    initMdDebugger();
+    initMfDebugger();
+    finalizeMdDebugger();
+    finalizeMfDebugger();
+    ////////////////////////////////////
+
 
 }

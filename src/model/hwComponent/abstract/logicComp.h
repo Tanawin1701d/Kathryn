@@ -11,8 +11,8 @@
 #include "model/hwComponent/abstract/assignable.h"
 #include "model/hwComponent/abstract/operable.h"
 #include "model/hwComponent/abstract/identifiable.h"
-#include "model/hwComponent/abstract/hwDebuggable.h"
 #include "model/controller/conInterf/controllerItf.h"
+#include "model/debugger/modelDebugger.h"
 
 namespace kathryn{
 
@@ -22,7 +22,7 @@ namespace kathryn{
                       public AssignCallbackFromAgent<T>,
                       public Identifiable,
                       public HwCompControllerItf,
-                      public HwCompDebuggable{
+                      public ModelDebuggable{
     public:
         explicit LogicComp(Slice slc, HW_COMPONENT_TYPE hwType, bool requiredAllocCheck):
                             Assignable<T>(),
@@ -30,7 +30,7 @@ namespace kathryn{
                             Slicable<T>(slc),
                             Identifiable(hwType),
                             HwCompControllerItf(requiredAllocCheck),
-                            HwCompDebuggable()
+                            ModelDebuggable()
                             {}
 
         virtual ~LogicComp() = default;
@@ -39,11 +39,9 @@ namespace kathryn{
             return static_cast<Identifiable*>(this);
         }
 
-        std::string getDebugIdentValue() override{
+        std::string getMdIdentVal() override{
             return getIdentDebugValue();
         }
-
-
 
     };
 

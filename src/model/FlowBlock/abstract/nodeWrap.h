@@ -12,7 +12,7 @@ namespace kathryn{
     static const int IN_CONSIST_CYCLE_USED = -1;
 
     /* use for inner block return to outter block**/
-    struct NodeWrap {
+    struct NodeWrap : ModelDebuggable {
     public:
 
         /** entrance represent UpdateEvent which refers to node that be head of the subblock*/
@@ -110,7 +110,6 @@ namespace kathryn{
         }
 
         Node* getExitNode () const { return exitNode; }
-
         bool  isThereForceExitNode() const {return forceExitNode != nullptr;}
         Node* getForceExitNode() const {return forceExitNode;}
 
@@ -124,19 +123,34 @@ namespace kathryn{
             return cycleUsed;
         }
 
-        std::string getDescribe(){
+        std::string getMdDescribe() override{
             std::string ret;
-            ret += "[nodeWrap @" + std::to_string((ull)this) + " ] hasEntranceNode ";
+            ret += "hasEntranceNode [";
             for (auto entranceNode : entranceNodes){
-                ret += entranceNode->getDescribe();
-                ret += " has exitNode ";
-                ret += exitNode->getDescribe();
-                ret += "use cycle " + std::to_string(cycleUsed);
+                ret += entranceNode->getMdIdentVal();
+                ret += ", ";
             }
+
+            ret += "] has exitNode ";
+            ret += exitNode->getMdIdentVal();
+
+            if (isThereForceExitNode()){
+                ret += "has force exit Node ";
+                ret += forceExitNode->getMdIdentVal();
+            }
+
+            ret += " use cycle " + std::to_string(cycleUsed);
+
             return ret;
         }
 
+        std::string getMdIdentVal() override{
+            return "[nodeWrap @" + std::to_string((ull)this) + " ]";
+        }
+
     };
+
+
 
     /** this struct is used to determine numbers of cycle
      * that is used in multiple subblock

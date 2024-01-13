@@ -57,10 +57,16 @@ namespace kathryn{
 
     }
 
-    std::string FlowBlockCBreak::getDescribe(){
+    std::string FlowBlockCBreak::getMdDescribe(){
         std::string ret;
-        ret += "[breakNode is]"+ (breakNode != nullptr ? breakNode->getDescribe() : "") + "\n";
+        ret += "[breakNode is]"+ (breakNode != nullptr ? breakNode->getMdDescribe() : "") + "\n";
         return ret;
+    }
+
+    void FlowBlockCBreak::addMdLog(MdLogVal *mdLogVal) {
+        mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() + " ]");
+        mdLogVal->addVal("breakNode is " +
+                             (breakNode != nullptr ? breakNode->getMdDescribe() : ""));
     }
 
     void FlowBlockCBreak::doPreFunction() {
@@ -70,6 +76,7 @@ namespace kathryn{
     void FlowBlockCBreak::doPostFunction() {
         onDetachBlock();
     }
+
 
 
 }

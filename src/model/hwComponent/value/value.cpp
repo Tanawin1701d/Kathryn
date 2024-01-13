@@ -32,9 +32,9 @@ namespace kathryn{
         return operator() (idx, idx+1);
     }
 
-    std::vector<std::string> Val::getDebugAssignmentValue() {
-        return {"0"};
-    }
+//    std::vector<std::string> Val::getDebugAssignmentValue() {
+//        return {"0"};
+//    }
 
 
 }

@@ -50,7 +50,7 @@ namespace kathryn{
         Val& callBackBlockAssignFromAgent(Operable& b, Slice absSlice) override {assert(false);};
         Val& callBackNonBlockAssignFromAgent(Operable& b, Slice absSlice) override{assert(false);};
 
-        std::vector<std::string> getDebugAssignmentValue() override;
+        //std::vector<std::string> getDebugAssignmentValue() override;
 
     };
 

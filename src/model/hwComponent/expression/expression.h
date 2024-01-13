@@ -68,7 +68,7 @@ namespace kathryn {
         expression& callBackBlockAssignFromAgent(Operable& b, Slice absSlice) override;
         expression& callBackNonBlockAssignFromAgent(Operable& b, Slice absSlice) override;
         /** override debugg message*/
-        std::vector<std::string> getDebugAssignmentValue() override;
+        //std::vector<std::string> getDebugAssignmentValue() override;
 
         /** get set method */
         LOGIC_OP getOp() const {return _op;};

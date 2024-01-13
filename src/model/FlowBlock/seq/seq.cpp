@@ -125,9 +125,9 @@ namespace kathryn{
     std::string SequenceEle::getDescribe(){
 
         if (isBasicNode()){
-            return _stateNode->getDescribe();
+            return _stateNode->getMdIdentVal() + _stateNode->getMdDescribe();
         }else if (isNodeWrap()){
-            return _complexNode->getDescribe();
+            return _complexNode->getMdIdentVal() + _complexNode->getMdDescribe();
         }
         assert(false);
 
@@ -150,18 +150,21 @@ namespace kathryn{
     FlowBlockSeq::~FlowBlockSeq(){
         delete resultNodeWrap;
         FlowBlockBase::~FlowBlockBase();
+        for (auto seqEle : _subSeqMetas){
+            delete seqEle;
+        }
     }
 
     void FlowBlockSeq::addElementInFlowBlock(Node* node) {
         assert(node != nullptr);
-        _subSeqMetas.emplace_back(node);
+        _subSeqMetas.push_back(new SequenceEle(node));
         /** base function to notice existence of sub flow element*/
         FlowBlockBase::addElementInFlowBlock(node);
     }
 
     void FlowBlockSeq::addSubFlowBlock(FlowBlockBase *subBlock) {
         assert(subBlock != nullptr);
-        _subSeqMetas.emplace_back(subBlock);
+        _subSeqMetas.emplace_back(new SequenceEle(subBlock));
         /** base function to notice existence of sub flow block*/
         FlowBlockBase::addSubFlowBlock(subBlock);
     }
@@ -184,44 +187,56 @@ namespace kathryn{
         NodeWrapCycleDet cycleDet;
         /** generate hardware*/
         for (auto& seqMeta: _subSeqMetas) {
-            seqMeta.genHardware();
-            seqMeta.addToCycleDet(cycleDet);
+            seqMeta->genHardware();
+            seqMeta->addToCycleDet(cycleDet);
         }
         /** generate forceExit Node*/
             /***check areThere forceExitNode*/
         std::vector<NodeWrap*> allNw;
         for(auto seqEle: _subSeqMetas){
-            if (seqEle.isNodeWrap()){
-                allNw.push_back(seqEle.getNodeWrap());
+            if (seqEle->isNodeWrap()){
+                allNw.push_back(seqEle->getNodeWrap());
             }
         }
         genSumForceExitNode(allNw);
         /** connect depend node chain*/
         for (size_t idx = 0; (idx+1) < _subSeqMetas.size(); idx++){
-            auto& lhsNodeWrapper = _subSeqMetas[idx];
-            auto& rhsNodeWrapper = _subSeqMetas[idx+1];
-            rhsNodeWrapper.assignDependDent(&lhsNodeWrapper);
+            auto lhsNodeWrapper = _subSeqMetas[idx];
+            auto rhsNodeWrapper = _subSeqMetas[idx+1];
+            rhsNodeWrapper->assignDependDent(lhsNodeWrapper);
         }
         /** build new result NodeWrap*/
         resultNodeWrap = new NodeWrap();
-        resultNodeWrap->addEntraceNodes(_subSeqMetas.begin()->getEntranceNodes());
-        resultNodeWrap->addExitNode(_subSeqMetas.rbegin()->getStateFinishIden());
+        resultNodeWrap->addEntraceNodes((*_subSeqMetas.begin())->getEntranceNodes());
+        resultNodeWrap->addExitNode((*_subSeqMetas.rbegin())->getStateFinishIden());
         resultNodeWrap->setCycleUsed(cycleDet.getCycleVertical());
         if (areThereForceExit)
             resultNodeWrap->addForceExitNode(forceExitNode);
 
     }
 
-    std::string FlowBlockSeq::getDescribe() {
+    std::string FlowBlockSeq::getMdDescribe() {
 
         std::string ret;
         int eleCnt = 0;
+        ret += "[ " + FlowBlockBase::getMdIdentVal() + " ]\n";
         for (auto seqEle: _subSeqMetas){
-            ret += "[ seqEle " + std::to_string(eleCnt) +"] " +
-                    seqEle.getDescribe() + "\n";
+            ret += seqEle->getDescribe() + "\n";
             eleCnt++;
         }
+        ret += getMdDescribeRecur();
         return ret;
+
+    }
+
+    void FlowBlockSeq::addMdLog(MdLogVal *mdLogVal) {
+
+        mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() + " ]");
+        for (auto seqEle: _subSeqMetas){
+            mdLogVal->addVal(seqEle->getDescribe());
+        }
+
+        addMdLogRecur(mdLogVal);
 
     }
 

@@ -40,7 +40,7 @@ namespace kathryn {
 
     extern int nextFbIdx;
 
-    class FlowBlockBase {
+    class FlowBlockBase: public ModelDebuggable {
     protected:
         std::vector<FlowBlockBase*> subBlocks;
         std::vector<Node*>          basicNodes;
@@ -54,11 +54,10 @@ namespace kathryn {
 
         /** generate implicit subblock typically used with if and while block*/
         FlowBlockBase* genImplicitSubBlk(FLOW_BLOCK_TYPE defaultType);
-        void genSumForceExitNode(std::vector<NodeWrap*>& nws);
+        void            genSumForceExitNode(std::vector<NodeWrap*>& nws);
     public:
-        explicit FlowBlockBase(FLOW_BLOCK_TYPE type);
-        virtual ~FlowBlockBase();
-
+        explicit  FlowBlockBase(FLOW_BLOCK_TYPE type);
+        virtual  ~FlowBlockBase();
         /**
          * entrance to make controller interact with
          * */
@@ -73,21 +72,18 @@ namespace kathryn {
             subBlocks.push_back(subBlock);
         };
         /**
-         * For custome block
+         * For custom block
          * */
         /** when everything is finish call this to get sumarisation*/
-        virtual NodeWrap* sumarizeBlock() = 0;
+        virtual NodeWrap*   sumarizeBlock() = 0;
         /*** communicator to controller*/
-         virtual void onAttachBlock() = 0; //// it is supposed to acknowledge controller whether this block is declared
-         virtual void onDetachBlock() = 0;
-         /*** for module communicate with* */
-         virtual void buildHwComponent() = 0;
-         /** return information */
-         virtual std::string getDescribe() = 0;
-
+        virtual void        onAttachBlock() = 0; //// it is supposed to acknowledge controller whether this block is declared
+        virtual void        onDetachBlock() = 0;
+        /*** for module controller build node and other elements*/
+        virtual void        buildHwComponent() = 0;
         ////// getter/setter
-        FLOW_BLOCK_TYPE getFlowType() const {return _type;}
-        int getFlowBlockId() const{return _fbId;}
+        FLOW_BLOCK_TYPE     getFlowType() const {return _type;}
+        int                 getFlowBlockId() const{return _fbId;}
         std::vector<FlowBlockBase*>& getSubBlocks(){
             return subBlocks;
         }
@@ -98,9 +94,25 @@ namespace kathryn {
         bool isLazyDelete() const{ return lazyDeletedRequired; }
         void setLazyDelete() { lazyDeletedRequired = true;}
 
-        /** debug string*/
-        [[nodiscard]]
-        std::string getFlowBlockDebugIdentValue() const{
+        /** debug method*/
+        std::string getMdDescribeRecur() {
+            std::string ret = "----------- sub Block --------\n";
+            for (auto sb : subBlocks){
+                ret += sb->getMdDescribe();
+                ret += "\n";
+            }
+            return ret;
+        }
+
+        void addMdLogRecur(MdLogVal *mdLogVal){
+            mdLogVal->addVal("-----sub block------");
+            for (auto sb: subBlocks){
+                auto subStruct = mdLogVal->makeNewSubVal();
+                sb->addMdLog(subStruct);
+            }
+        }
+
+        [[nodiscard]]std::string getMdIdentVal() override{
             return FBT_to_string(getFlowType()) + "_blockId_" + std::to_string(_fbId);
         }
 

@@ -111,14 +111,26 @@ namespace kathryn{
     }
 
 
-    std::string FlowBlockIf::getDescribe() {
+    std::string FlowBlockIf::getMdDescribe() {
         std::string ret;
-        ret += "[implicitFlowBlock]" + implicitFlowBlock->getDescribe() + "\n";
-        ret += "exitNode is " + ((exitNode != nullptr) ? exitNode->getDescribe(): "") + "\n";
+        ret += "[ " + FlowBlockBase::getMdIdentVal() +" ]\n";
+        ret += "exitNode is " + ((exitNode != nullptr) ? exitNode->getMdIdentVal()+ "  " + exitNode->getMdDescribe(): "") + "\n";
+        ret += "[implicitFlowBlock]" + implicitFlowBlock->getMdDescribe() + "\n";
         return ret;
     }
 
-
+    void FlowBlockIf::addMdLog(MdLogVal *mdLogVal) {
+        mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() +" ]");
+        int cnt = 0;
+        for (auto sb : subBlocks){
+            mdLogVal->addVal("----> subblock " + std::to_string(cnt));
+            if (cnt < allCondes.size()) {
+                mdLogVal->addVal("--------> condition " + allCondes[cnt]->castToIdent()->getIdentDebugValue() );
+            }
+            sb->addMdLog(mdLogVal);
+            cnt++;
+        }
+    }
 
     void FlowBlockIf::doPreFunction() {
         onAttachBlock();

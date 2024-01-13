@@ -50,13 +50,13 @@ namespace kathryn{
         return *this;
     }
 
-    std::vector<std::string> Wire::getDebugAssignmentValue() {
-        std::vector<std::string> results;
-        for (auto upEvent: _updateMeta){
-            results.push_back(upEvent->getDebugString());
-        }
-        return results;
-    }
+//    std::vector<std::string> Wire::getDebugAssignmentValue() {
+//        std::vector<std::string> results;
+//        for (auto upEvent: _updateMeta){
+//            results.push_back(upEvent->getDebugString());
+//        }
+//        return results;
+//    }
 
 
 }

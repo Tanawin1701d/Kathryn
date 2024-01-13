@@ -56,20 +56,26 @@ namespace kathryn{
 
     }
 
-    std::string FlowBlockCondWait::getDescribe(){
-        std::string ret;
-        ret += "\n";
-        ret += "exitCond is " + _exitCond->castToIdent()->getIdentDebugValue() + "\n";
-        ret += "_waitNode is " + _waitNode->getDescribe() + "\n";
-        return ret;
-    }
-
     void FlowBlockCondWait::doPreFunction() {
         onAttachBlock();
     }
 
     void FlowBlockCondWait::doPostFunction() {
         onDetachBlock();
+    }
+
+    std::string FlowBlockCondWait::getMdDescribe(){
+        std::string ret;
+        ret += "[ " + getMdIdentVal() + " ]\n";
+        ret += "exitCond is " + _exitCond->castToIdent()->getIdentDebugValue() + "\n";
+        ret += "_waitNode is " +_waitNode->getMdIdentVal()+ " " +_waitNode->getMdDescribe() + "\n";
+        return ret;
+    }
+
+    void FlowBlockCondWait::addMdLog(MdLogVal *mdLogVal) {
+        mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() + "]");
+        mdLogVal->addVal("exitVal cond is " + _exitCond->castToIdent()->getIdentDebugValue());
+        mdLogVal->addVal("waitNode is " + _waitNode->getMdIdentVal()+ " " +_waitNode->getMdDescribe());
     }
 
 
@@ -135,20 +141,26 @@ namespace kathryn{
 
     }
 
-    std::string FlowBlockCycleWait::getDescribe(){
-        std::string ret;
-        ret += "\n";
-        ret += "[_waitNode] is " + _waitNode->getDescribe() + "\n";
-        ret += "[cnt] is " + cnt->castToIdent()->getIdentDebugValue()+ "\n";
-        return ret;
-    }
-
     void FlowBlockCycleWait::doPreFunction() {
         onAttachBlock();
     }
 
     void FlowBlockCycleWait::doPostFunction() {
         onDetachBlock();
+    }
+
+    std::string FlowBlockCycleWait::getMdDescribe(){
+        std::string ret;
+        ret += "\n";
+        ret += "[_waitNode] is " + _waitNode->getMdIdentVal() + "  " + _waitNode->getMdDescribe() + "\n";
+        ret += "[cnt] is " + cnt->castToIdent()->getIdentDebugValue()+ "\n";
+        return ret;
+    }
+
+    void FlowBlockCycleWait::addMdLog(MdLogVal *mdLogVal) {
+        mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() + "]");
+        mdLogVal->addVal( "wait Node is " + _waitNode->getMdIdentVal() + "  " + _waitNode->getMdDescribe());
+        mdLogVal->addVal("counter" + cnt->castToIdent()->getIdentDebugValue());
     }
 
 

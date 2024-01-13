@@ -75,15 +75,15 @@ namespace kathryn{
         return *this;
     }
 
-    std::vector<std::string> expression::getDebugAssignmentValue() {
-        if (isSingleOpr(_op)){
-            return {lop_to_string(_op) + _a->castToIdent()->getGlobalName()};
-        }else{
-            std::string aName = _a->castToIdent()->getGlobalName();
-            std::string bName = _b->castToIdent()->getGlobalName();
-            return {aName + lop_to_string(_op) + bName};
-        }
-    }
+//    std::vector<std::string> expression::getDebugAssignmentValue() {
+//        if (isSingleOpr(_op)){
+//            return {lop_to_string(_op) + _a->castToIdent()->getGlobalName()};
+//        }else{
+//            std::string aName = _a->castToIdent()->getGlobalName();
+//            std::string bName = _b->castToIdent()->getGlobalName();
+//            return {aName + lop_to_string(_op) + bName};
+//        }
+//    }
 
 
 }

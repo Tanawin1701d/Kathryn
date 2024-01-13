@@ -111,22 +111,53 @@ namespace kathryn{
         onDetachBlock();
     }
 
-    std::string FlowBlockPar::getDescribe() {
+    std::string FlowBlockPar::getMdDescribe() {
         std::string ret;
 
         ret += "basicStateNode is " +
-                ((basicStNode != nullptr) ? basicStNode->getDescribe(): "") +
-                "\n";
+                ((basicStNode != nullptr) ?
+                basicStNode->getMdIdentVal() + "  " + basicStNode->getMdDescribe():
+                ""
+                ) +"\n";
 
         ret += "synNode is " +
-                ((synNode != nullptr) ? synNode->getDescribe(): "") +
-                "\n";
+                ((synNode != nullptr) ?
+                synNode->getMdIdentVal() + "  " + synNode->getMdDescribe():
+                "") + "\n";
 
         ret += "pseudoExitNode is " +
-                ((pseudoExitNode != nullptr) ? pseudoExitNode->getDescribe(): "") +
-                "\n";
+                ((pseudoExitNode != nullptr) ?
+                pseudoExitNode->getMdIdentVal() + "  " + pseudoExitNode->getMdDescribe():
+                "") + "\n";
+
+        ret += getMdDescribeRecur();
+        ret += "\n";
 
         return ret;
+    }
+
+    void FlowBlockPar::addMdLog(MdLogVal *mdLogVal) {
+
+
+        mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() + " ]");
+
+        mdLogVal->addVal("basicStateNode is " +
+                         ((basicStNode != nullptr) ?
+                          basicStNode->getMdIdentVal() + "  " + basicStNode->getMdDescribe():
+                          ""
+                         ));
+
+        mdLogVal->addVal("synNode is " +
+                         ((synNode != nullptr) ?
+                          synNode->getMdIdentVal() + "  " + synNode->getMdDescribe():
+                          ""));
+
+        mdLogVal->addVal("pseudoExitNode is " +
+                         ((pseudoExitNode != nullptr) ?
+                          pseudoExitNode->getMdIdentVal() + "  " + pseudoExitNode->getMdDescribe():
+                          ""));
+
+        addMdLogRecur(mdLogVal);
     }
 
 

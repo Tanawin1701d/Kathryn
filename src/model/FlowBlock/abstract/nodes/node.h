@@ -14,6 +14,7 @@
 #include "model/hwComponent/register/register.h"
 #include "model/hwComponent/abstract/assignable.h"
 #include "model/FlowBlock/abstract/spReg/stateReg.h"
+#include "model/debugger/modelDebugger.h"
 
 
 
@@ -35,7 +36,7 @@ namespace kathryn {
 
     std::string NT_to_string(NODE_TYPE nt);
 
-    struct Node {
+    struct Node : public ModelDebuggable{
         NODE_TYPE nodeType = NODE_TYPE_CNT;
         Operable* condition = nullptr;
         std::vector<Node*> dependNodes;
@@ -113,50 +114,48 @@ namespace kathryn {
         virtual int getCycleUsed() = 0;
         /** is Stateful node (reffer to node that consume at least 1 cycle from machine)*/
         virtual bool isStateFullNode(){ return true; }
-        /** get describe value*/
-        virtual std::string getDescribe(){
-            std::string ret = "[node type "+ NT_to_string(nodeType) + " " +
-                              std::to_string((ull)this) +" ] set depend to ";
-            for (auto dependNode : dependNodes){
-                ret += std::to_string((ull) dependNode) + " ";
+
+
+
+        /** get debugger value*/
+        std::string getMdDescribe() override{
+            std::string ret = getMdIdentVal() + "  have node dep [ ";
+            for (auto depNode : dependNodes){
+                ret += depNode->getMdIdentVal();
+                ret += ", ";
             }
+            /** condition*/
+            ret += "] with condition [ ";
+            if (condition != nullptr) {
+                ret += condition->castToIdent()->getIdentDebugValue();
+            }
+            ret += " ] with dep join condition [ ";
+            ret += lop_to_string(dependStateRaiseCond);
+            ret += " ]";
             return ret;
         }
-    };
 
-    struct AsmNode : Node{
-        AssignMeta* _assignMeta = nullptr; //// AssignMeta is must not use the same assign metas
-
-        explicit AsmNode(AssignMeta* assignMeta) :
-            Node(ASM_NODE),
-            _assignMeta(assignMeta){
-            assert(_assignMeta != nullptr);
+        std::string getMdIdentVal() override{
+            std::string ret = NT_to_string(nodeType) + " @ " + std::to_string((ull)this);
+            return ret;
         }
 
-        AsmNode(const AsmNode& other): Node((Node&) other){
-            _assignMeta = other._assignMeta;
+        void addMdLog(MdLogVal* mdLogVal) override{
+            mdLogVal->addVal("[Node] " + getMdIdentVal() +  "have node dep");
+            for (auto depNode : dependNodes){
+                mdLogVal->addVal(depNode->getMdIdentVal());
+            }
+            mdLogVal->addVal("----> condition");
+            if (condition != nullptr) {
+                mdLogVal->addVal(condition->castToIdent()->getIdentDebugValue());
+            }
+            mdLogVal->addVal("----> dep join condition");
+            mdLogVal->addVal(lop_to_string(dependStateRaiseCond));
         }
 
-        Node* clone() override{
-            auto clNode = new AsmNode(*this);
-            return clNode;
-        }
 
-        void assign() override{
-            auto resultUpEvent = new UpdateEvent({
-                                                         condition,
-                                                         transformAllDepNodeToOpr(),
-                                                         &_assignMeta->valueToAssign,
-                                                         _assignMeta->desSlice,
-                                                         9
-                                                 });
-            _assignMeta->updateEventsPool.push_back(resultUpEvent);
-        }
-
-        int getCycleUsed() override { return 1; }
 
     };
-
 
     /** This function is used to checked that start node is hard wired to some node in
      * nds if it is match return true

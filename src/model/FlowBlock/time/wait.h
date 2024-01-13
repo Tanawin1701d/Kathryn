@@ -39,10 +39,12 @@ namespace kathryn{
         void onAttachBlock() override;
         void onDetachBlock() override;
         void buildHwComponent() override;
-        std::string getDescribe() override;
         /** Loop macro to notice position of system*/
         void doPreFunction() override;
         void doPostFunction() override;
+        /** debug method*/
+        std::string getMdDescribe() override;
+        void addMdLog(MdLogVal* mdLogVal) override;
     };
 
     /***
@@ -71,10 +73,13 @@ namespace kathryn{
         void onAttachBlock() override;
         void onDetachBlock() override;
         void buildHwComponent() override;
-        std::string getDescribe() override;
         /** Loop macro to notice position of system*/
         void doPreFunction() override;
         void doPostFunction() override;
+        /** debugger*/
+        std::string getMdDescribe() override;
+        void addMdLog(MdLogVal* mdLogVal) override;
+
     };
 
 }

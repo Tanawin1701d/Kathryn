@@ -20,6 +20,7 @@
 #include "model/FlowBlock/abstract/spReg/waitReg.h"
 #include "model/FlowBlock/abstract/nodes/startNode.h"
 
+#include "model/debugger/modelDebugger.h"
 #include "util/logger/logger.h"
 
 
@@ -29,7 +30,9 @@ namespace kathryn{
     extern Wire* rstWire;
     extern StartNode* startNode;
 
-    class Module : public Identifiable, public HwCompControllerItf{
+    class Module : public Identifiable,
+                   public HwCompControllerItf,
+                   public ModelDebuggable{
 
     private:
         /**all slave object that belong to this elements*/
@@ -98,7 +101,11 @@ namespace kathryn{
         /** Functions which allow user to custom  their module design flow*/
         virtual void flow(){}; //// user must inherit this function to build thier flow
         virtual void buildFlow();
-        virtual void log();
+
+        [[maybe_unused]]
+        std::string getMdDescribe() override;
+        void addMdLog(MdLogVal* mdLogVal) override;
+        std::string getMdIdentVal() override{return getIdentDebugValue();};
     };
 
 }

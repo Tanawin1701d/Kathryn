@@ -131,48 +131,70 @@ namespace kathryn{
 
     }
 
-    void Module::log(){
-        /***dfs in all flowBLock and sub FLow block*/
-        struct DFS_STATUS{
-            FlowBlockBase* fbb = nullptr;
-            int nextId = 0;
-        };
 
-        std::stack<DFS_STATUS> dfsSt;
-        ///std::string ret = "[ MODULE " + getIdentDebugValue() + " ]\n";
-        std::string ret;
-        for (auto fbbIter = _flowBlockBases.rbegin();
-            fbbIter != _flowBlockBases.rend();
-            fbbIter++
-        ){
-            dfsSt.push({*fbbIter, -1});
+    std::string
+    Module::getMdDescribe(){
+
+        for (auto fb: _flowBlockBases){
+            //logMD(fb->getMdIdentVal(), fb->getMdDescribe());
         }
 
-        while (!dfsSt.empty()){
-            auto& top = dfsSt.top();
-
-            if (top.nextId == -1){
-                ret += top.fbb->getDescribe();
-                ret += "\n";
-            }
-
-            top.nextId++;
-
-            if (top.nextId == top.fbb->getSubBlocks().size()){
-                dfsSt.pop();
-            }else{
-                dfsSt.push({top.fbb->getSubBlocks()[top.nextId],
-                            -1});
-            }
-
-
-        }
-
-        std::string ident = "MODULE " + getIdentDebugValue();
-
-        logMD(ident,ret);
+        return "";
 
     }
+
+    void Module::addMdLog(MdLogVal *mdLogVal) {
+        mdLogVal->addVal("[ " + getMdIdentVal() + " ]");
+        for (auto sb : _flowBlockBases){
+            auto subLog = mdLogVal->makeNewSubVal();
+            sb->addMdLog(subLog);
+        }
+
+    }
+
+
+
+//    void Module::log(){
+//        /***dfs in all flowBLock and sub FLow block*/
+//        struct DFS_STATUS{
+//            FlowBlockBase* fbb = nullptr;
+//            int nextId = 0;
+//        };
+//
+//        std::stack<DFS_STATUS> dfsSt;
+//        ///std::string ret = "[ MODULE " + getIdentDebugValue() + " ]\n";
+//        std::string ret;
+//        for (auto fbbIter = _flowBlockBases.rbegin();
+//            fbbIter != _flowBlockBases.rend();
+//            fbbIter++
+//        ){
+//            dfsSt.push({*fbbIter, -1});
+//        }
+//
+//        while (!dfsSt.empty()){
+//            auto& top = dfsSt.top();
+//
+//            if (top.nextId == -1){
+//                ret += top.fbb->getDescribe();
+//                ret += "\n";
+//            }
+//
+//            top.nextId++;
+//
+//            if (top.nextId == top.fbb->getSubBlocks().size()){
+//                dfsSt.pop();
+//            }else{
+//                dfsSt.push({top.fbb->getSubBlocks()[top.nextId],
+//                            -1});
+//            }
+//
+//        }
+//
+//        std::string ident = "MODULE " + getIdentDebugValue();
+//
+//        logMD(ident,ret);
+//
+//    }
 
 
 }

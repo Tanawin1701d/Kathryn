@@ -32,8 +32,8 @@ namespace kathryn{
         targetModulePtr->addStateReg(ptr);
         ptr->setParent(targetModulePtr);
         /** debug value*/
-        logMF("STATE_REG " + ptr->getIdentDebugValue(),
-              "stateReg is initialized and set parent to " + targetModulePtr->getIdentDebugValue());
+        logMF(ptr,
+              "[STATE_REG] is initialized and set parent to " + targetModulePtr->getIdentDebugValue());
 
     }
 
@@ -45,8 +45,8 @@ namespace kathryn{
         targetModulePtr->addCondWaitStateReg(ptr);
         ptr->setParent(targetModulePtr);
         /** debug value*/
-        logMF("CONDWAIT_REG " + ptr->getIdentDebugValue(),
-              "stateReg is initialized and set parent to " + targetModulePtr->getIdentDebugValue());
+        logMF(ptr,
+              "CONDWAIT_REG is initialized and set parent to " + targetModulePtr->getIdentDebugValue());
     }
 
     void Controller::on_cycle_wait_reg_init(CycleWaitStateReg* ptr) {
@@ -56,8 +56,8 @@ namespace kathryn{
         targetModulePtr->addCycleWaitStateReg(ptr);
         ptr->setParent(targetModulePtr);
         /** debug value*/
-        logMF("CYWAIT_REG " + ptr->getIdentDebugValue(),
-              "stateReg is initialized and set parent to " + targetModulePtr->getIdentDebugValue());
+        logMF(ptr,
+              "CONDCY_REG is initialized and set parent to " + targetModulePtr->getIdentDebugValue());
     }
 
     /** register handling*/
@@ -69,8 +69,8 @@ namespace kathryn{
         targetModulePtr->addUserReg(ptr);
         ptr->setParent(targetModulePtr);
         /** debug value*/
-        logMF("USER_REG " + ptr->getIdentDebugValue(),
-              "user Reg is initialized and set parent to " + targetModulePtr->getIdentDebugValue());
+        logMF(ptr,
+              "USER_REG is initialized and set parent to " + targetModulePtr->getIdentDebugValue());
     }
 
     void Controller::on_reg_update(AssignMeta* asmMeta, Reg* srcReg){
@@ -86,8 +86,8 @@ namespace kathryn{
         assert(!flowBlockStack.empty());
         auto fb = flowBlockStack.top();
         fb->addElementInFlowBlock(node);
-        logMF("USER_REG " + srcReg->getIdentDebugValue(),
-              "user Reg is updating value @ fb block " + fb->getFlowBlockDebugIdentValue());
+        logMF(srcReg,
+              "user Reg is updating value @ fb block " + fb->getMdIdentVal());
     }
 
 
@@ -103,7 +103,7 @@ namespace kathryn{
         targetModulePtr->addUserWires(ptr);
         ptr->setParent(targetModulePtr);
         /** debug value*/
-        logMF("USER_Wire " + ptr->getIdentDebugValue(),
+        logMF(ptr,
               "user wire is initialized and set parent to " + targetModulePtr->getIdentDebugValue());
     }
 
@@ -120,8 +120,8 @@ namespace kathryn{
         assert(!flowBlockStack.empty());
         auto fb = flowBlockStack.top();
         fb->addElementInFlowBlock(node);
-        logMF("USER_Wire " + srcWire->getIdentDebugValue(),
-              "user wire is updating @ fb " + fb->getFlowBlockDebugIdentValue());
+        logMF(srcWire,
+              "user wire is updating @ fb " + fb->getMdIdentVal());
     }
 
     /** exprMetas*/
@@ -132,7 +132,7 @@ namespace kathryn{
         targetModulePtr->addUserExpression(ptr);
         ptr->setParent(targetModulePtr);
         /** debug value*/
-        logMF("Expr " + ptr->getIdentDebugValue(),
+        logMF(ptr,
               "expr is initializing and set parent to " + targetModulePtr->getIdentDebugValue());
     }
     /** value*/
@@ -143,7 +143,7 @@ namespace kathryn{
         targetModulePtr->addUserVal(ptr);
         ptr->setParent(targetModulePtr);
         /** debug value*/
-        logMF("Val " + ptr->getIdentDebugValue(),
+        logMF(ptr,
               "val is initializing and set parent to " + targetModulePtr->getIdentDebugValue());
     }
 
@@ -171,7 +171,7 @@ namespace kathryn{
         moduleStack.push(Module_Stack_Element{ptr, MODULE_COMPONENT_CONSTRUCT});
         ptr->setParent(targetModulePtr);
         /** debug value*/
-        logMF("USER_MODULE " + ptr->getIdentDebugValue(),
+        logMF(ptr,
               "module is initializing and set parent to " + targetModulePtr->getIdentDebugValue());
     }
 
@@ -180,7 +180,7 @@ namespace kathryn{
         assert(topModule == ptr);
         moduleStack.top().state = MODULE_DESIGN_FLOW_CONSTRUCT;
         /** debug value*/
-        logMF("USER_MODULE " + ptr->getIdentDebugValue(),
+        logMF(ptr,
               "module is initializing design flow");
         /** flow the program*/
         topModule->flow();
@@ -193,7 +193,7 @@ namespace kathryn{
         moduleStack.top().state = MODULE_FINISHED_CONSTRUCT;
         assert(isAllFlowStackEmpty());
         moduleStack.pop();
-        logMF("USER_MODULE " + ptr->getIdentDebugValue(),
+        logMF(ptr,
               "module is finalized design flow");
     }
 

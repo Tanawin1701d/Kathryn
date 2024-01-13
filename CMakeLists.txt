@@ -50,7 +50,6 @@ add_executable(Kathryn main.cpp
         src/model/FlowBlock/cond/elif.h
         src/application/visualizer/vis.cpp
         src/application/visualizer/vis.h
-        src/model/hwComponent/abstract/hwDebuggable.h
         src/model/hwComponent/abstract/logicComp.h
         src/model/util/StateRegUtil.h
         src/test/test.cpp
@@ -79,4 +78,7 @@ add_executable(Kathryn main.cpp
         src/model/FlowBlock/abstract/nodes/startNode.h
         src/model/hwComponent/abstract/makeComponent.cpp
         src/model/FlowBlock/abstract/nodes/node.cpp
+        src/model/debugger/modelDebugger.cpp
+        src/model/debugger/modelDebugger.h
+        src/model/FlowBlock/abstract/nodes/asmNode.h
 )

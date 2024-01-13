@@ -108,11 +108,9 @@ namespace kathryn{
         void test() override{
             makeMod(tm, testMod, 0);
 
-            auto testVis = Vis(&tm);
-            testVis.execute();
-            testVis.print();
-
-            tm.log();
+            //tm.getMdDescribe();
+            auto mdLogVal = new MdLogVal();
+            tm.addMdLog(mdLogVal);
 
         }
 

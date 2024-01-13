@@ -70,9 +70,9 @@ namespace kathryn{
         void test() override{
             makeMod(tm, testMod6, 0);
 
-            auto testVis = Vis(&tm);
-            testVis.execute();
-            testVis.print();
+//            auto testVis = Vis(&tm);
+//            testVis.execute();
+//            testVis.print();
 
         }
 
