@@ -14,6 +14,7 @@
 #include "model/hwComponent/register/register.h"
 #include "model/hwComponent/abstract/assignable.h"
 #include "model/FlowBlock/abstract/spReg/stateReg.h"
+#include "model/FlowBlock/abstract/spReg/syncReg.h"
 #include "model/debugger/modelDebugger.h"
 
 

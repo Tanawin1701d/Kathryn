@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "test/modelTest1.h"
+#include "test/modelTest3.h"
 #include "util/logger/logger.h"
 
 
@@ -9,7 +9,7 @@ using namespace kathryn;
 
 int main() {
 
-    auto t = test1();
+    auto t = test3();
     t.test();
 
 

@@ -17,6 +17,7 @@
 
 #include "model/FlowBlock/abstract/flowBlock_Base.h"
 #include "model/FlowBlock/abstract/spReg/stateReg.h"
+#include "model/FlowBlock/abstract/spReg/syncReg.h"
 #include "model/FlowBlock/abstract/spReg/waitReg.h"
 #include "model/FlowBlock/abstract/nodes/startNode.h"
 
@@ -38,6 +39,7 @@ namespace kathryn{
         /**all slave object that belong to this elements*/
         /** register that user to represent state*/
         std::vector<StateReg*>          _stateRegs; ////// state/ cond/cycle wait use same ctrlflowRegbase class
+        std::vector<SyncReg*>           _syncRegs;
         std::vector<CondWaitStateReg*>  _condWaitStateRegs;
         std::vector<CycleWaitStateReg*> _cycleWaitStateRegs;
         std::vector<FlowBlockBase*>     _flowBlockBases;
@@ -74,6 +76,7 @@ namespace kathryn{
 
         /**implicit element that is built from design flow*/
         void addStateReg          (StateReg* reg);
+        void addSyncReg           (SyncReg*  reg);
         void addCondWaitStateReg  (CondWaitStateReg* reg);
         void addCycleWaitStateReg (CycleWaitStateReg* reg);
         void addFlowBlock         (FlowBlockBase* fb);

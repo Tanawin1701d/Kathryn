@@ -16,6 +16,7 @@
 #include "model/FlowBlock/cond/elif.h"
 #include "model/FlowBlock/loop/cwhile.h"
 #include "model/FlowBlock/abstract/spReg/stateReg.h"
+#include "model/FlowBlock/abstract/spReg/syncReg.h"
 
 
 namespace kathryn {
@@ -75,6 +76,7 @@ namespace kathryn {
 
         /** state register handling*/
         void on_state_reg_init(StateReg* ptr);
+        void on_sync_reg_init(SyncReg* ptr);
         void on_cond_wait_reg_init(CondWaitStateReg* ptr);
         void on_cycle_wait_reg_init(CycleWaitStateReg* ptr);
         /** register handling*/

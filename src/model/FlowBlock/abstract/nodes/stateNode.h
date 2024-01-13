@@ -53,12 +53,12 @@ namespace kathryn{
          * */
 
     struct SynNode : Node{
-        StateReg* _synReg;
+        SyncReg* _synReg;
 
         /**in SynNode condition and dependState is disengage*/
         explicit SynNode(int synSize) :
             Node(SYN_NODE),
-            _synReg(new StateReg(synSize)){}
+            _synReg(new SyncReg(synSize)){}
 
         Node* clone() override{
             /** syn node is not supposed to be copied*/

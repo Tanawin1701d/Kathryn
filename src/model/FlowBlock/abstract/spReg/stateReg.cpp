@@ -12,14 +12,12 @@ namespace kathryn {
         ctrl->on_state_reg_init(this);
     }
 
-    StateReg::StateReg(int size): CtrlFlowRegBase(size,
+    StateReg::StateReg(): CtrlFlowRegBase(        1,
                                                   false,
                                                   TYPE_STATE_REG,
                                                   false),
-              upState      (_make<Val>("upState"      , 1  , "b1")),
-              upFullState  (_make<Val>("upFullState"  ,size, genConseBinaryValue(true, size))),
-              downFullState(_make<Val>("downFullState",size, genConseBinaryValue(false, size))),
-              nextFillActivateId(0)
+              upFullState  (_make<Val>("upFullState"  ,1, "1b1")),
+              downFullState(_make<Val>("downFullState",1, "1b0"))
     {
         com_init();
     };
@@ -28,11 +26,9 @@ namespace kathryn {
         assert(dependState != nullptr);
         auto* event = new UpdateEvent({activateCond,
                                        dependState,
-                                       &upState,
-                                       Slice({nextFillActivateId, nextFillActivateId + 1}),
+                                       &upFullState,
+                                       Slice({0, 1}),
                                        9});
-        nextFillActivateId++;
-        assert(nextFillActivateId <= getSlice().getSize());
         addUpdateMeta(event);
         return event;
     }
@@ -43,25 +39,13 @@ namespace kathryn {
             &((*this) == upFullState),
             &downFullState,
             Slice({0, getSlice().getSize()}),
-            9
+            8
         });
         addUpdateMeta(event);
     }
 
     Operable* StateReg::generateEndExpr(){
         return (&((*this) == upFullState));
-    }
-
-
-    std::string genConseBinaryValue(bool bitVal, int size){
-
-        std::string retString = "b";
-        std::string fillVal = bitVal ? "1" : "0";
-        for (int i = 0; i < size; i++ ){
-            retString += fillVal;
-        }
-        return retString;
-
     }
 
 }

@@ -2,8 +2,8 @@
 // Created by tanawin on 5/12/2566.
 //
 
-#ifndef KATHRYN_STATEREG_H
-#define KATHRYN_STATEREG_H
+#ifndef KATHRYN_SYNCREG_H
+#define KATHRYN_SYNCREG_H
 
 
 #include "ctrlFlowRegBase.h"
@@ -16,14 +16,16 @@ namespace kathryn {
 
     class Node;
 
-    class StateReg: public CtrlFlowRegBase{
+    class SyncReg: public CtrlFlowRegBase{
+        Val& upState;
         Val& upFullState;
         Val& downFullState;
+        int nextFillActivateId;
     protected:
         /**override data to init state regiter*/
         void com_init() override;
     public:
-        explicit StateReg();
+        explicit SyncReg(int size = 1);
         /** state register system must handle updateEvent themself*/
         Reg& operator <<= (Operable& b) override {
             std::cout << "we not support = operator in register";
@@ -36,6 +38,9 @@ namespace kathryn {
         /** exit expression*/
         Operable* generateEndExpr() override;
     };
+
+    std::string genConseBinaryValue(bool bitVal, int size);
+
 }
 
 #endif //KATHRYN_STATEREG_H

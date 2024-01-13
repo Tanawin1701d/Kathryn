@@ -109,7 +109,10 @@ namespace kathryn{
             /**exit node and force exitNode will be not deleted because it is only pointer it will be not clone*/
         }
 
-        Node* getExitNode () const { return exitNode; }
+        Node* getExitNode () const {
+            assert(exitNode != nullptr);
+            return exitNode;
+        }
         bool  isThereForceExitNode() const {return forceExitNode != nullptr;}
         Node* getForceExitNode() const {return forceExitNode;}
 

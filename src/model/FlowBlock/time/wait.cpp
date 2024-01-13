@@ -97,14 +97,14 @@ namespace kathryn{
         assert(cycle > 0);
     }
 
-    FlowBlockCycleWait::FlowBlockCycleWait(Operable *opr)
+    FlowBlockCycleWait::FlowBlockCycleWait(Operable& opr)
     : FlowBlockBase(CLKWAIT),
     _resultNodeWrap(nullptr),
     _waitNode(nullptr),
     cycle(-1),
-    cnt(opr)
+    cnt(&opr)
     {
-        assert(opr != nullptr);
+        ///////assert(opr != nullptr);
     }
 
     FlowBlockCycleWait::~FlowBlockCycleWait(){
@@ -131,9 +131,10 @@ namespace kathryn{
         /** build node*/
         if (cnt != nullptr)
             _waitNode = new WaitCycleNode(cnt);
-        else
+        else {
             assert(cycle > 0);
             _waitNode = new WaitCycleNode(cycle);
+        }
         /** result node wrap*/
         _resultNodeWrap = new NodeWrap();
         _resultNodeWrap->addEntraceNode(_waitNode);

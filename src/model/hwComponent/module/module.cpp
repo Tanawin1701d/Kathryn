@@ -70,6 +70,11 @@ namespace kathryn{
         _stateRegs.push_back(reg);
     }
 
+    void Module::addSyncReg(SyncReg* reg){
+        assert(reg != nullptr);
+        _syncRegs.push_back(reg);
+    }
+
     void Module::addCondWaitStateReg(CondWaitStateReg *reg) {
         assert(reg != nullptr);
         _condWaitStateRegs.push_back(reg);

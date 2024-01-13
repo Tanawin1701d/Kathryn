@@ -40,6 +40,8 @@ add_executable(Kathryn main.cpp
         src/model/FlowBlock/abstract/loopStMacro.h
         src/model/FlowBlock/abstract/spReg/stateReg.h
         src/model/FlowBlock/abstract/spReg/stateReg.cpp
+        src/model/FlowBlock/abstract/spReg/syncReg.cpp
+        src/model/FlowBlock/abstract/spReg/syncReg.h
         src/model/FlowBlock/seq/seq.cpp
         src/model/FlowBlock/seq/seq.h
         src/model/FlowBlock/loop/cwhile.cpp
@@ -54,7 +56,6 @@ add_executable(Kathryn main.cpp
         src/model/util/StateRegUtil.h
         src/test/test.cpp
         src/test/test.h
-        src/test/modelTest1.cpp
         src/test/modelTest1.h
         src/model/hwComponent/abstract/operation.cpp
         src/model/util/stateRegUtil.cpp
@@ -81,4 +82,6 @@ add_executable(Kathryn main.cpp
         src/model/debugger/modelDebugger.cpp
         src/model/debugger/modelDebugger.h
         src/model/FlowBlock/abstract/nodes/asmNode.h
+        src/test/modelTest3.h
+
 )

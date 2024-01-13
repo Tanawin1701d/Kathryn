@@ -66,7 +66,7 @@ namespace kathryn{
     }
 
     void FlowBlockElif::addMdLog(MdLogVal *mdLogVal) {
-        mdLogVal->addVal("[ Elif" + FlowBlockBase::getMdIdentVal() + " ]");
+        mdLogVal->addVal("[ Elif " + FlowBlockBase::getMdIdentVal() + " ]");
         addMdLogRecur(mdLogVal);
     }
 

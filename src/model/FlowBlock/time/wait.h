@@ -66,7 +66,7 @@ namespace kathryn{
     public:
 
         explicit FlowBlockCycleWait(int cycleUsed);
-        explicit FlowBlockCycleWait(Operable* opr);
+        explicit FlowBlockCycleWait(Operable& opr);
         ~FlowBlockCycleWait() override;
 
         NodeWrap* sumarizeBlock() override;

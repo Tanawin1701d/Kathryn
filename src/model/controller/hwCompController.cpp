@@ -37,6 +37,17 @@ namespace kathryn{
 
     }
 
+    void Controller::on_sync_reg_init(SyncReg* ptr) {
+        assert(ptr != nullptr);
+        Module* targetModulePtr = getTargetModulePtr();
+        /**localize necessary destination*/
+        targetModulePtr->addSyncReg(ptr);
+        ptr->setParent(targetModulePtr);
+        /** debug value*/
+        logMF(ptr,
+              "[Sync_REG] is initialized and set parent to " + targetModulePtr->getIdentDebugValue());
+
+    }
 
     void Controller::on_cond_wait_reg_init(CondWaitStateReg* ptr) {
         assert(ptr != nullptr);

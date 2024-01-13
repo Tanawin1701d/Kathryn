@@ -49,6 +49,7 @@ namespace kathryn{
 
     void FlowBlockIf::buildHwComponent() {
         assert(!allCondes.empty());
+        /**add execution block in if block to consider vector*/
         allStatement.insert(allStatement.begin(), subBlocks[0]->sumarizeBlock());
         assert(!allStatement.empty());
 
@@ -93,6 +94,7 @@ namespace kathryn{
         if (psuedoElseNode != nullptr)
             exitNode->addDependNode(psuedoElseNode);
         exitNode->assign();
+        resultNodeWrapper->addExitNode(exitNode);
 
         /**force exit condition*/
         genSumForceExitNode(allStatement);
@@ -123,11 +125,13 @@ namespace kathryn{
         mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() +" ]");
         int cnt = 0;
         for (auto sb : subBlocks){
-            mdLogVal->addVal("----> subblock " + std::to_string(cnt));
+            std::string subBlockHeaderDebug = "----> subblock " + std::to_string(cnt) + " condition ";
             if (cnt < allCondes.size()) {
-                mdLogVal->addVal("--------> condition " + allCondes[cnt]->castToIdent()->getIdentDebugValue() );
+                subBlockHeaderDebug += allCondes[cnt]->castToIdent()->getIdentDebugValue();
             }
-            sb->addMdLog(mdLogVal);
+            mdLogVal->addVal(subBlockHeaderDebug);
+
+            sb->addMdLog(mdLogVal->makeNewSubVal());
             cnt++;
         }
     }

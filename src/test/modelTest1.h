@@ -8,6 +8,7 @@
 #include "test.h"
 #include "model/controller/controller.h"
 #include "model/FlowBlock/seq/seq.h"
+#include "model/FlowBlock/time/wait.h"
 #include "model/hwComponent/module/module.h"
 #include "model/hwComponent/abstract/makeComponent.h"
 #include "application/visualizer/vis.h"
@@ -103,11 +104,36 @@ namespace kathryn{
 
     };
 
+    class testMod5: public Module{
+        makeReg(wt, 5);
+        makeReg(b, 64);
+        makeReg(c, 16);
+        makeReg(d,  3);
+    public:
+        explicit testMod5(int x): Module(){}
+
+        void flow() override{
+            par{
+                cyWait(wt);
+                seq{
+                    b <<= c;
+                    d <<= c;
+                };
+                seq{
+                    d <<= c + d;
+                    d <<= b + d;
+                };
+
+
+            }
+        }
+    };
+
     class test1: public Test{
 
     public:
         void test() override{
-            makeMod(tm, testMod4, 0);
+            makeMod(tm, testMod5, 0);
 
             //tm.getMdDescribe();
             auto mdLogVal = new MdLogVal();
