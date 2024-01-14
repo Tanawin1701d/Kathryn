@@ -24,7 +24,7 @@ namespace kathryn{
         PseudoNode* psuedoElseNode = nullptr;
         PseudoNode* exitNode       = nullptr;
 
-        NodeWrap* resultNodeWrapper = nullptr;
+        NodeWrap* resultNodeWrap = nullptr;
 
     public:
         explicit FlowBlockIf(Operable& cond);

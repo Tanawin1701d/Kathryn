@@ -15,7 +15,7 @@ namespace kathryn{
     FlowBlockIf::~FlowBlockIf(){
         delete psuedoElseNode;
         delete exitNode;
-        delete resultNodeWrapper;
+        delete resultNodeWrap;
         FlowBlockBase::~FlowBlockBase();
     }
 
@@ -29,8 +29,8 @@ namespace kathryn{
     }
 
     NodeWrap* FlowBlockIf::sumarizeBlock() {
-        assert(resultNodeWrapper != nullptr);
-        return resultNodeWrapper;
+        assert(resultNodeWrap != nullptr);
+        return resultNodeWrap;
     }
 
     void FlowBlockIf::onAttachBlock() {
@@ -74,15 +74,15 @@ namespace kathryn{
         }
 
         /** prepare return node wrap*/
-        resultNodeWrapper = new NodeWrap();
+        resultNodeWrap = new NodeWrap();
         for (auto nw : allStatement){
-            resultNodeWrapper->transferEntNodeFrom(nw);
+            resultNodeWrap->transferEntNodeFrom(nw);
         }
         ///// build proxy node to prevent state lost
         if ( allCondes.size() == allStatement.size() ) {
             psuedoElseNode = new PseudoNode();
             psuedoElseNode->addCondtion(prevFalse, BITWISE_AND);
-            resultNodeWrapper->addEntraceNode(psuedoElseNode);
+            resultNodeWrap->addEntraceNode(psuedoElseNode);
         }
 
         /**exit condition of node wrap*/
@@ -94,12 +94,12 @@ namespace kathryn{
         if (psuedoElseNode != nullptr)
             exitNode->addDependNode(psuedoElseNode);
         exitNode->assign();
-        resultNodeWrapper->addExitNode(exitNode);
+        resultNodeWrap->addExitNode(exitNode);
 
         /**force exit condition*/
         genSumForceExitNode(allStatement);
         if (areThereForceExit)
-            resultNodeWrapper->addForceExitNode(forceExitNode);
+            resultNodeWrap->addForceExitNode(forceExitNode);
 
         /**cycle determiner*/
         NodeWrapCycleDet deter;
@@ -108,7 +108,7 @@ namespace kathryn{
             deter.addToDet(psuedoElseNode);
         }
         /**cycle determiner for node wrap*/
-        resultNodeWrapper->setCycleUsed(deter.getSameCycleHorizon());
+        resultNodeWrap->setCycleUsed(deter.getSameCycleHorizon());
 
     }
 
@@ -124,6 +124,11 @@ namespace kathryn{
     void FlowBlockIf::addMdLog(MdLogVal *mdLogVal) {
         mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() +" ]");
         int cnt = 0;
+        if (resultNodeWrap->isThereForceExitNode()){
+            mdLogVal->addVal("forceExit is " + resultNodeWrap->getForceExitNode()->getMdIdentVal() +
+                             "  " +
+                             resultNodeWrap->getForceExitNode()->getMdDescribe());
+        }
         for (auto sb : subBlocks){
             std::string subBlockHeaderDebug = "----> subblock " + std::to_string(cnt) + " condition ";
             if (cnt < allCondes.size()) {

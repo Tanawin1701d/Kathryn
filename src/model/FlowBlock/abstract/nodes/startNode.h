@@ -26,6 +26,7 @@ namespace kathryn{
 
         Node* clone() override{
             auto clNode = new StartNode(*this);
+            clNode->setCpyPtr(this);
             return clNode;
         }
 

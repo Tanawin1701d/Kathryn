@@ -24,6 +24,7 @@ namespace kathryn{
 
         Node* clone() override{
             auto clNode = new StateNode(*this);
+            clNode->setCpyPtr(this);
             return clNode;
         }
 
@@ -94,6 +95,7 @@ namespace kathryn{
 
         Node* clone() override{
             auto clNode = new PseudoNode(*this);
+            clNode->setCpyPtr(this);
             return clNode;
         }
 
@@ -122,6 +124,7 @@ namespace kathryn{
 
         Node* clone() override{
             auto clNode = new DummyNode(*this);
+            clNode->setCpyPtr(this);
             return clNode;
         }
 

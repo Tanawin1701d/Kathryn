@@ -163,6 +163,12 @@ namespace kathryn{
                             exitNode->getMdIdentVal() + "  " + exitNode->getMdDescribe():
                             ""));
 
+        if (resultNodeWrap->isThereForceExitNode()){
+            mdLogVal->addVal("forceExit is " + resultNodeWrap->getForceExitNode()->getMdIdentVal() +
+                             "  " +
+                             resultNodeWrap->getForceExitNode()->getMdDescribe());
+        }
+
         addMdLogRecur(mdLogVal);
     }
 

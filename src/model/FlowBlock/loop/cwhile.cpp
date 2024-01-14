@@ -78,6 +78,7 @@ namespace kathryn{
 
         /** entrance result nodewrap*/
         resultNodeWrapper->transferEntNodeFrom(subBlockNodeWrap);
+        resultNodeWrapper->addConditionToAllNode(_condExpr, BITWISE_AND);
         /** in case it is not match at first time*/
         resultNodeWrapper->addEntraceNode(byPassExitNode);
 
@@ -91,6 +92,9 @@ namespace kathryn{
         /** pool exit node and put to result node wrap*/
         exitNode->addDependNode(subBlockExitNode);
         exitNode->addDependNode(byPassExitNode);
+        if ( subBlockNodeWrap->isThereForceExitNode() ){
+            exitNode->addDependNode(subBlockNodeWrap->getForceExitNode());
+        }
         exitNode->setDependStateJoinOp(BITWISE_OR);
         exitNode->assign();
         resultNodeWrapper->addExitNode(exitNode);
@@ -125,9 +129,20 @@ namespace kathryn{
         mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() + " ]");
         mdLogVal->addVal("exitNode " + ((exitNode != nullptr) ?
                                              exitNode->getMdIdentVal() + "  " +
-                                             exitNode->getMdDescribe() + "\n" :
-                                             "\n"));
+                                             exitNode->getMdDescribe() :
+                                             ""));
+        mdLogVal->addVal("resultNodeWrap is "+ resultNodeWrapper->getMdIdentVal() +
+        " " + resultNodeWrapper->getMdDescribe());
+        mdLogVal->addVal("loopNodeWrap is "+ loopNodeWrap->getMdIdentVal() +
+        " " + loopNodeWrap->getMdDescribe());
+        mdLogVal->addVal("--------- explain loop Node wrap --------------");
+        for (auto etNode : loopNodeWrap->entranceNodes){
+            mdLogVal->addVal("       " + etNode->getMdIdentVal() + "   " + etNode->getMdDescribe());
+        }
+        mdLogVal->addVal("---------end explain loop node wrap --------------");
+
         mdLogVal->addVal("implicitSubBlock");
+
         auto subLog = mdLogVal->makeNewSubVal();
         implicitFlowBlock->addMdLog(subLog);
 

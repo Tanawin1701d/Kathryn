@@ -235,6 +235,11 @@ namespace kathryn{
         for (auto seqEle: _subSeqMetas){
             mdLogVal->addVal(seqEle->getDescribe());
         }
+        if (resultNodeWrap->isThereForceExitNode()){
+            mdLogVal->addVal("forceExit is " + resultNodeWrap->getForceExitNode()->getMdIdentVal() +
+                                                   "  " +
+                                                   resultNodeWrap->getForceExitNode()->getMdDescribe());
+        }
 
         addMdLogRecur(mdLogVal);
 

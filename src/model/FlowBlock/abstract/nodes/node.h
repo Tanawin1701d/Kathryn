@@ -38,7 +38,8 @@ namespace kathryn {
     std::string NT_to_string(NODE_TYPE nt);
 
     struct Node : public ModelDebuggable{
-        NODE_TYPE nodeType = NODE_TYPE_CNT;
+        Node*    srcCpyNode = nullptr;
+        NODE_TYPE nodeType  = NODE_TYPE_CNT;
         Operable* condition = nullptr;
         std::vector<Node*> dependNodes;
         LOGIC_OP dependStateRaiseCond = OP_DUMMY;
@@ -119,6 +120,10 @@ namespace kathryn {
 
 
         /** get debugger value*/
+        void setCpyPtr(Node* srcPtr){
+            srcCpyNode = srcPtr;
+        }
+
         std::string getMdDescribe() override{
             std::string ret = "  have node dep [ ";
             for (auto depNode : dependNodes){
@@ -132,7 +137,14 @@ namespace kathryn {
             }
             ret += " ] with dep join condition [ ";
             ret += lop_to_string(dependStateRaiseCond);
-            ret += " ]";
+            ret += " ] ";
+
+            if (srcCpyNode != nullptr){
+                ret += "cpyFrom [";
+                ret += srcCpyNode->getMdIdentVal();
+                ret += " ]";
+
+            }
             return ret;
         }
 

@@ -22,6 +22,7 @@ namespace kathryn{
 
         Node* clone() override{
             auto clNode = new WaitCondNode(*this);
+            clNode->setCpyPtr(this);
             return clNode;
         }
 
@@ -67,6 +68,7 @@ namespace kathryn{
 
         Node* clone() override{
             auto clNode = new WaitCycleNode(*this);
+            clNode->setCpyPtr(this);
             return clNode;
         }
 
