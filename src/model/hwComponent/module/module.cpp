@@ -20,7 +20,10 @@ namespace kathryn{
     }
 
     Module::~Module() {
-        deleteSubElement(_stateRegs);
+        ///deleteSubElement(_stateRegs);
+        for(auto& _spReg: _spRegs){
+            deleteSubElement(_spReg);
+        }
         deleteSubElement(_flowBlockBases);
         deleteSubElement(_userRegs);
         deleteSubElement(_userWires);
@@ -51,7 +54,8 @@ namespace kathryn{
 
     void Module::localizeSlaveElements() {
         /** state reg and user reg used same local ID sequence*/
-        localizeSlaveVector(_stateRegs);
+        for (auto & _spReg : _spRegs)
+            localizeSlaveVector(_spReg);
         localizeSlaveVector(_userRegs);
         localizeSlaveVector(_userWires);
         localizeSlaveVector(_userExpressions);
@@ -65,24 +69,10 @@ namespace kathryn{
      *
      * */
     /** todo may be check their are reg in the system */
-    void Module::addStateReg(StateReg* reg) {
+    void Module::addSpReg(Reg* reg, SP_REG_TYPE spRegType){
         assert(reg != nullptr); /// can't be nullptr
-        _stateRegs.push_back(reg);
-    }
-
-    void Module::addSyncReg(SyncReg* reg){
-        assert(reg != nullptr);
-        _syncRegs.push_back(reg);
-    }
-
-    void Module::addCondWaitStateReg(CondWaitStateReg *reg) {
-        assert(reg != nullptr);
-        _condWaitStateRegs.push_back(reg);
-    }
-
-    void Module::addCycleWaitStateReg(CycleWaitStateReg *reg) {
-        assert(reg != nullptr);
-        _cycleWaitStateRegs.push_back(reg);
+        assert(spRegType < SP_CNT_REG);
+        _spRegs[spRegType].push_back(reg);
     }
 
     void Module::addFlowBlock(FlowBlockBase* fb) {

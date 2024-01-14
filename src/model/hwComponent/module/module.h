@@ -38,11 +38,8 @@ namespace kathryn{
     private:
         /**all slave object that belong to this elements*/
         /** register that user to represent state*/
-        std::vector<StateReg*>          _stateRegs; ////// state/ cond/cycle wait use same ctrlflowRegbase class
-        std::vector<SyncReg*>           _syncRegs;
-        std::vector<CondWaitStateReg*>  _condWaitStateRegs;
-        std::vector<CycleWaitStateReg*> _cycleWaitStateRegs;
-        std::vector<FlowBlockBase*>     _flowBlockBases;
+        std::vector<Reg*>           _spRegs[SP_CNT_REG]; ////// state/ cond/cycle wait use same ctrlflowRegbase class
+        std::vector<FlowBlockBase*> _flowBlockBases;
         /** user component*/
         std::vector<Reg*>        _userRegs;
         std::vector<Wire*>       _userWires;
@@ -75,23 +72,21 @@ namespace kathryn{
         void com_final() override;
 
         /**implicit element that is built from design flow*/
-        void addStateReg          (StateReg* reg);
-        void addSyncReg           (SyncReg*  reg);
-        void addCondWaitStateReg  (CondWaitStateReg* reg);
-        void addCycleWaitStateReg (CycleWaitStateReg* reg);
-        void addFlowBlock         (FlowBlockBase* fb);
+        void addSpReg          (Reg* reg, SP_REG_TYPE spRegType);
+        void addFlowBlock      (FlowBlockBase* fb);
 
         /**explicit element that is buillt from user declaration*/
-        void addUserReg           (Reg* reg);
-        void addUserWires         (Wire* wire);
-        void addUserExpression    (expression* expr);
-        void addUserVal           (Val* val);
-        void addUserSubModule     (Module* smd);
+        void addUserReg        (Reg* reg);
+        void addUserWires      (Wire* wire);
+        void addUserExpression (expression* expr);
+        void addUserVal        (Val* val);
+        void addUserSubModule  (Module* smd);
 
         /**implicit element that is built from design flow*/
-        auto& getStateRegs(){return _stateRegs;}
-        auto& getCondWaitStateReg (){return _condWaitStateRegs; };
-        auto& getCycleWaitStateReg(){return _cycleWaitStateRegs;};
+        auto& getSpRegs(SP_REG_TYPE spRegType){
+            assert(spRegType < SP_CNT_REG);
+            return _spRegs[spRegType];
+        }
         auto& getFlowBlocks(){return _flowBlockBases;}
 
         /**explicit element that is buillt from user declaration*/

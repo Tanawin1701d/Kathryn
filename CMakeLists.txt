@@ -83,5 +83,6 @@ add_executable(Kathryn main.cpp
         src/model/debugger/modelDebugger.h
         src/model/FlowBlock/abstract/nodes/asmNode.h
         src/test/modelTest3.h
+        src/model/FlowBlock/abstract/spReg/ctrlFlowRegBase.cpp
 
 )

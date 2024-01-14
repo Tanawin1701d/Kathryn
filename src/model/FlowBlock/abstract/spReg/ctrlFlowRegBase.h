@@ -10,6 +10,17 @@
 
 namespace kathryn{
 
+    enum SP_REG_TYPE{
+        SP_STATE_REG = 0,
+        SP_SYNC_REG = 1,
+        SP_COND_WAIT_REG = 2,
+        SP_CYCLE_WAIT_REG = 3,
+        SP_CNT_REG = 4
+
+    };
+
+    std::string sp_reg_type_to_str(SP_REG_TYPE spRegType);
+
     class CtrlFlowRegBase : public Reg{
 
     public:

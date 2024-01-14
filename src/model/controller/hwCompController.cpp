@@ -25,50 +25,18 @@ namespace kathryn{
      * state register handling
      *
      * */
-    void Controller::on_state_reg_init(StateReg* ptr) {
+    void Controller::on_sp_reg_init(Reg* ptr, SP_REG_TYPE spRegType) {
         assert(ptr != nullptr);
         Module* targetModulePtr = getTargetModulePtr();
         /**localize necessary destination*/
-        targetModulePtr->addStateReg(ptr);
+        targetModulePtr->addSpReg(ptr, spRegType);
         ptr->setParent(targetModulePtr);
         /** debug value*/
         logMF(ptr,
-              "[STATE_REG] is initialized and set parent to " + targetModulePtr->getIdentDebugValue());
+              "[" + sp_reg_type_to_str(spRegType) + "] is initialized and set parent to "
+              + targetModulePtr->getIdentDebugValue()
+        );
 
-    }
-
-    void Controller::on_sync_reg_init(SyncReg* ptr) {
-        assert(ptr != nullptr);
-        Module* targetModulePtr = getTargetModulePtr();
-        /**localize necessary destination*/
-        targetModulePtr->addSyncReg(ptr);
-        ptr->setParent(targetModulePtr);
-        /** debug value*/
-        logMF(ptr,
-              "[Sync_REG] is initialized and set parent to " + targetModulePtr->getIdentDebugValue());
-
-    }
-
-    void Controller::on_cond_wait_reg_init(CondWaitStateReg* ptr) {
-        assert(ptr != nullptr);
-        Module* targetModulePtr = getTargetModulePtr();
-        /**localize necessary destination*/
-        targetModulePtr->addCondWaitStateReg(ptr);
-        ptr->setParent(targetModulePtr);
-        /** debug value*/
-        logMF(ptr,
-              "CONDWAIT_REG is initialized and set parent to " + targetModulePtr->getIdentDebugValue());
-    }
-
-    void Controller::on_cycle_wait_reg_init(CycleWaitStateReg* ptr) {
-        assert(ptr != nullptr);
-        Module* targetModulePtr = getTargetModulePtr();
-        /**localize necessary destination*/
-        targetModulePtr->addCycleWaitStateReg(ptr);
-        ptr->setParent(targetModulePtr);
-        /** debug value*/
-        logMF(ptr,
-              "CONDCY_REG is initialized and set parent to " + targetModulePtr->getIdentDebugValue());
     }
 
     /** register handling*/

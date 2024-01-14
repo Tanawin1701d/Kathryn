@@ -75,10 +75,7 @@ namespace kathryn {
          * */
 
         /** state register handling*/
-        void on_state_reg_init(StateReg* ptr);
-        void on_sync_reg_init(SyncReg* ptr);
-        void on_cond_wait_reg_init(CondWaitStateReg* ptr);
-        void on_cycle_wait_reg_init(CycleWaitStateReg* ptr);
+        void on_sp_reg_init(Reg* ptr, SP_REG_TYPE regType);
         /** register handling*/
         void on_reg_init(Reg* ptr);
         void on_reg_update(AssignMeta* asmMeta, Reg* srcReg);

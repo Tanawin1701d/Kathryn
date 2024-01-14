@@ -32,7 +32,7 @@ namespace kathryn{
     }
 
     void CondWaitStateReg::com_init() {
-        ctrl->on_cond_wait_reg_init(this);
+        ctrl->on_sp_reg_init(this, SP_COND_WAIT_REG);
     }
 
     UpdateEvent* CondWaitStateReg::addDependState(Operable* dependState, Operable* activateCond){
@@ -115,7 +115,7 @@ namespace kathryn{
     }
 
     void CycleWaitStateReg::com_init() {
-        ctrl->on_cycle_wait_reg_init(this);
+        ctrl->on_sp_reg_init(this, SP_CYCLE_WAIT_REG);
     }
 
     UpdateEvent* CycleWaitStateReg::addDependState(Operable* dependState, Operable* activateCond){
