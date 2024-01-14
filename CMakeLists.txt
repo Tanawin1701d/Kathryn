@@ -84,5 +84,10 @@ add_executable(Kathryn main.cpp
         src/model/FlowBlock/abstract/nodes/asmNode.h
         src/test/modelTest3.h
         src/model/FlowBlock/abstract/spReg/ctrlFlowRegBase.cpp
+        src/sim/rtlSim/rtlSimable.cpp
+        src/sim/rtlSim/rtlSimable.h
+        src/sim/event/eventBase.h
+        src/sim/event/eventQ.h
+        src/sim/event/eventQ.cpp
 
 )
