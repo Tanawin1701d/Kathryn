@@ -40,9 +40,9 @@ namespace kathryn{
         Reg& callBackNonBlockAssignFromAgent(Operable& b, Slice absSliceOfHost) override;
 
         /** override simulation engine */
-        void simCurCycle() override;
+        void simStartCurCycle() override;
 
-        void finalizeCurCycle() override;
+        void simExitCurCycle() override;
     };
 
 

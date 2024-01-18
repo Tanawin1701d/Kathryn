@@ -6,6 +6,7 @@
 #define KATHRYN_VALREP_H
 
 #include <cstdio>
+#include "model/hwComponent/abstract/Slice.h"
 
 namespace kathryn{
 
@@ -38,6 +39,7 @@ namespace kathryn{
         int getLen() const{
             return _len;
         }
+
         int getValArrSize() const{
             return _valSize;
         }
@@ -61,6 +63,7 @@ namespace kathryn{
         ValRep cmpOperator(const ValRep& rhs,
                            const std::function<bool(ull* a, ull* b, int size)>& operation);
 
+        void updateOnSlice(ValRep& srcVal, Slice srcSl);
 
         ValRep& operator = (const ValRep& rhs);
 
@@ -69,7 +72,9 @@ namespace kathryn{
         ValRep operator | (const ValRep& rhs);
         ValRep operator ^ (const ValRep& rhs);
         ValRep operator == (const ValRep& rhs);
+        bool   operator == (const int& rhs);
         ValRep operator != (const ValRep& rhs);
+        bool   operator != (const int& rhs);
         //////// only one operand
         ValRep operator ~ ();
 
@@ -86,9 +91,9 @@ namespace kathryn{
         ///// not required equal bit operator
         ValRep operator +  (const ValRep& rhs);
         ValRep operator -  (const ValRep& rhs);
-        ValRep operator *  (const ValRep& rhs){assert(false); return ValRep(0);};
-        ValRep operator /  (const ValRep& rhs){assert(false); return ValRep(0);};
-        ValRep operator %  (const ValRep& rhs){assert(false); return ValRep(0);};
+        ValRep operator *  (const ValRep& rhs){assert(false);};
+        ValRep operator /  (const ValRep& rhs){assert(false);};
+        ValRep operator %  (const ValRep& rhs){assert(false);};
         ValRep operator << (const ValRep& rhs);
         ValRep operator >> (const ValRep& rhs);
 

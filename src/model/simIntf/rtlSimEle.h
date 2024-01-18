@@ -9,58 +9,39 @@
 
 namespace kathryn {
 
-    class RtlSimEngine{
-
-    public:
-
-        explicit RtlSimEngine();
-        virtual ~RtlSimEngine() = default;
-
-        /** get current value from back cycle to
-         * compute next cycle
-         * */
-        virtual ValRep& getValToCalThisCycle() = 0;
-
-    };
-
-
-    //////////////// sequential sim
-
-
-    class seqRtlSimEngine : public RtlSimEngine{
+    class RtlSimEngine {
 
     private:
         ValRep backVal;
         ValRep curVal;
-
+        /** idea we will use time array to store history of cycle
+         *  but for now we use cur cycle
+         * */
     public:
 
-        explicit seqRtlSimEngine(int sz);
+        explicit RtlSimEngine(int sz);
 
-        ValRep& getValToCalThisCycle() override;
-        ///// setter
-        void    setBackVal(ValRep& val){backVal = val;}
-        void    setCurVal (ValRep& val){curVal  = val;}
+        virtual ~RtlSimEngine() = default;
+
+        ////// setter
+        void setBackVal(ValRep &val) { backVal = val; }
+
+        void setCurVal(ValRep &val) { curVal = val; }
+
         ///// getter
-        ValRep& getBackVal(){return backVal;}
-        ValRep& getCurVal (){return curVal; }
+        ValRep &getBackVal() { return backVal; }
+
+        ValRep &getCurVal() { return curVal; }
+
+        ///// step
+        void iterate() {
+            backVal = curVal;
+        };
+
+
+        //////////////// sequential sim
+
 
     };
-
-
-    //////////////// comb sim
-
-    class combRtlSimEngine : public RtlSimEngine{
-
-    private:
-        ValRep curVal;
-
-    public:
-        explicit combRtlSimEngine(int sz);
-
-        ValRep& getValToCalThisCycle() override;
-
-    };
-
 }
 #endif //KATHRYN_RTLSIMELE_H

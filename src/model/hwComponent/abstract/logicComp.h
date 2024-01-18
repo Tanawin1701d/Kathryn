@@ -28,13 +28,13 @@ namespace kathryn{
                       public ModelDebuggable{
     public:
         explicit LogicComp(Slice slc, HW_COMPONENT_TYPE hwType,
-                           bool requiredAllocCheck, RtlSimEngine* simEngine):
+                           bool requiredAllocCheck):
                             Assignable<T>(),
                             Operable(),
                             Slicable<T>(slc),
                             Identifiable(hwType),
                             HwCompControllerItf(requiredAllocCheck),
-                            SimInterface(simEngine),
+                            SimInterface(new RtlSimEngine(slc.getSize())),
                             ModelDebuggable()
                             {}
 
@@ -47,6 +47,10 @@ namespace kathryn{
         std::string getMdIdentVal() override{
             return getIdentDebugValue();
         }
+
+        SimInterface* castToSimItf() override{
+            return static_cast<SimInterface*>(this);
+        };
 
     };
 

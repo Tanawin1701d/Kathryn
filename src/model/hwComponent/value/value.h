@@ -51,8 +51,8 @@ namespace kathryn{
         Val& callBackNonBlockAssignFromAgent(Operable& b, Slice absSlice) override{assert(false);};
 
         /** override simulator*/
-        void simCurCycle() override;
-        void finalizeCurCycle() override;
+        void simStartCurCycle() override;
+        void simExitCurCycle() override;
 
     };
 

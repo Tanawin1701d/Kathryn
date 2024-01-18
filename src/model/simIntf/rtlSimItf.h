@@ -12,7 +12,7 @@
 
 namespace kathryn{
 
-    class SimInterface : EventBase{
+    class SimInterface : public EventBase{
     private:
         bool isSimYet = false; ///// indicate that current cycle is simulated yet.
         RtlSimEngine* _engine = nullptr;
@@ -25,6 +25,10 @@ namespace kathryn{
             //////// for now we allow engine to be nullptr
         };
 
+        virtual ~SimInterface(){
+            delete _engine;
+        };
+
         void setSimEngine(RtlSimEngine* engine){
             if (_engine != nullptr){
                 delete _engine;
@@ -32,7 +36,7 @@ namespace kathryn{
             _engine = engine;
         }
 
-        RtlSimEngine* getEngine(){return _engine;}
+        RtlSimEngine* getSimEngine(){return _engine;}
 
         void setSimStatus(){
             isSimYet = true;

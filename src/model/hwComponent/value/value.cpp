@@ -10,7 +10,7 @@ namespace kathryn{
 
     Val::Val(int size, std::string v):
                                     LogicComp({0, size}, TYPE_VAL,
-                                              false, new combRtlSimEngine(size)),
+                                              false),
                                     _size(size)
                                     {
                                         com_init();
@@ -33,12 +33,12 @@ namespace kathryn{
         return operator() (idx, idx+1);
     }
 
-    void Val::simCurCycle() {
-        /////// TODO simulate it
+    void Val::simStartCurCycle() {
+        /////// TODO simulate it and entrance
     }
 
-    void Val::finalizeCurCycle() {
-
+    void Val::simExitCurCycle() {
+        resetSimStatus();
     }
 
 

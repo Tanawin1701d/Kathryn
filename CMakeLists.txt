@@ -95,5 +95,6 @@ add_executable(Kathryn main.cpp
         src/model/simIntf/rtlSimEle.h
         src/model/simIntf/rtlSimItf.cpp
         src/model/simIntf/rtlSimItf.h
+        src/model/hwComponent/abstract/assignable.cpp
 
 )

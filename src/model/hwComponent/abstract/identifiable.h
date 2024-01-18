@@ -68,6 +68,8 @@ namespace kathryn {
 
             };
 
+        virtual ~Identifiable() = default;
+
         Identifiable& operator = (const Identifiable& ident){
             if (this == &ident){
                 return *this;

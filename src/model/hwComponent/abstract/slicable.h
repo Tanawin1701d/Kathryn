@@ -22,7 +22,7 @@ namespace kathryn {
     public:
 
         explicit Slicable(Slice absSlice) : _absSlice(absSlice){}
-        ~Slicable(){
+        virtual ~Slicable(){
             for (auto agent: agentHolders){
                 delete agent;
             }
@@ -94,8 +94,13 @@ namespace kathryn {
             return *this;
         }
 
+        /** override operable*/
         Identifiable* castToIdent() override{
-            return nullptr;
+            assert(false);
+        }
+
+        SimInterface* castToSimItf() override{
+            assert(false);
         }
 
     };

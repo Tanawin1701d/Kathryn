@@ -37,7 +37,7 @@ namespace kathryn{
             std::vector<EventBase*> curEvents = eventQ.getAndPopNextSameCycleEvent();
             /** simulate each event*/
             for (auto event : curEvents){
-                event->simCurCycle();
+                event->simStartCurCycle();
             }
             /** delete each event*/
             for (auto event: curEvents){

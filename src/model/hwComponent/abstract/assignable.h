@@ -10,7 +10,7 @@
 #include "operable.h"
 #include "model/hwComponent/abstract/operable.h"
 #include "model/hwComponent/abstract/Slice.h"
-
+#include "model/simIntf/rtlSimEle.h"
 
 namespace kathryn{
 
@@ -22,6 +22,48 @@ namespace kathryn{
         Slice     updateSlice; /// slice to update
         int priority = 9;
         ///priority for circuit if there are attention to update same register at a time 0 is highest 9 is lowest
+
+        bool shouldAssignValRep(Operable* samplingOpr, bool isGetFromCur){
+            if (samplingOpr != nullptr){
+                SimInterface* simItf = samplingOpr->castToSimItf();
+                assert(simItf != nullptr);
+                auto simEnginePtr = simItf->getSimEngine();
+                ValRep samplingVal = ValRep(1);
+                if (isGetFromCur){
+                    samplingVal = simEnginePtr->getCurVal();
+                }else{
+                    samplingVal = simEnginePtr->getBackVal();
+                }
+                if (samplingVal != 1){
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        void tryAssignValRep(ValRep& desValRep, bool getFromCur){
+            ////// check update state valid
+            if (!(shouldAssignValRep(updateCondition, getFromCur) ||
+                  shouldAssignValRep(updateState, getFromCur))){
+                return;
+            }
+            assert(updateValue != nullptr);
+
+            ValRep& vr = getFromCur ? updateValue->castToSimItf()->getSimEngine()->getCurVal()
+                                    : updateValue->castToSimItf()->getSimEngine()->getBackVal();
+                    ;
+            desValRep.updateOnSlice(vr, updateSlice);
+        }
+
+        void trySimAll(){
+            trySim(updateCondition);
+            trySim(updateState);
+            trySim(updateValue);
+        }
+
+        static void trySim(Operable* opr){
+            opr->castToSimItf()->simStartCurCycle();
+        }
 
         [[nodiscard]] std::string getDebugString() const{
             return updateValue->castToIdent()->getGlobalName() +
@@ -57,7 +99,7 @@ namespace kathryn{
     public:
 
         explicit Assignable() = default;
-        ~Assignable(){
+        virtual ~Assignable(){
             for (auto eventPtr: _updateMeta){
                 delete eventPtr;
             }
@@ -76,6 +118,22 @@ namespace kathryn{
         AssignMeta* generateAssignMeta(Operable& assignValue, Slice assignSlice){
             return new AssignMeta(_updateMeta, assignValue, assignSlice);
         }
+
+        /////// assign value to val representation
+        ////////////////// usually it is call from sim Interface
+        /////// getFromCur means get value from current cycle or from back cycle
+        void assignValRepCurCycle(ValRep& desValRep, bool getFromCur){
+
+            for (int upId = _updateMeta.size()-1; upId >= 0; upId--){
+                UpdateEvent* curUpEvent = _updateMeta[upId];
+                curUpEvent->trySimAll();
+                assert(curUpEvent != nullptr);
+                curUpEvent->tryAssignValRep(desValRep, getFromCur);
+            }
+
+
+        }
+
 
     };
 

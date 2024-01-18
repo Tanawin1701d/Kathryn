@@ -10,8 +10,7 @@
 namespace kathryn{
 
 
-    Wire::Wire(int size) : LogicComp({0, size}, TYPE_WIRE,
-                                     true, new combRtlSimEngine(size)){
+    Wire::Wire(int size) : LogicComp({0, size}, TYPE_WIRE,true){
         com_init();
     }
 
@@ -51,11 +50,15 @@ namespace kathryn{
         return *this;
     }
 
-    void Wire::simCurCycle() {
-        ////// TODO override simulation
+    void Wire::simStartCurCycle() {
+        if (isCurCycleSimulated()){
+            return;
+        }
+        setSimStatus();
+        assignValRepCurCycle(getSimEngine()->getCurVal(), true);
     }
 
-    void Wire::finalizeCurCycle() {
+    void Wire::simExitCurCycle() {
 
     }
 

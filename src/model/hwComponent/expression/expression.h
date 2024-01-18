@@ -76,8 +76,8 @@ namespace kathryn {
         Operable* getOperandB() const {return _b;}
 
         /** override simulator interface*/
-        void simCurCycle() override;
-        void finalizeCurCycle() override;
+        void simStartCurCycle() override;
+        void simExitCurCycle() override;
 
     };
 

@@ -9,6 +9,7 @@
 #include "Slice.h"
 #include "operation.h"
 #include "identifiable.h"
+#include "model/simIntf/rtlSimItf.h"
 
 namespace kathryn {
 
@@ -24,6 +25,7 @@ namespace kathryn {
 
     public:
         explicit Operable() = default;
+        virtual ~Operable() = default;
         /** bitwise operators*/
         virtual expression& operator &  (const Operable& b);
         virtual expression& operator |  (const Operable& b);
@@ -57,6 +59,7 @@ namespace kathryn {
         virtual Operable& getExactOperable () const = 0;
 
         virtual Identifiable* castToIdent() = 0;
+        virtual SimInterface* castToSimItf() = 0;
     };
 
 

@@ -126,7 +126,9 @@ namespace kathryn{
 
     }
 
-    ValRep &ValRep::operator=(const ValRep &rhs) {
+
+
+    ValRep& ValRep::operator=(const ValRep &rhs) {
 
         if (&rhs == this){
             return *this;
@@ -144,6 +146,13 @@ namespace kathryn{
         return *this;
     }
 
+    void ValRep::updateOnSlice(ValRep& srcVal, Slice srcSl){
+        ///////// TODO to assign value
+        for (int startIdx = srcSl.start;
+                 startIdx < srcSl.stop; startIdx++){
+            _val[startIdx/] = 0
+        }
+    }
 
     /////////////////////////////////////////////////////////////
     //////////// bitwise operator ///////////////////////////////
@@ -181,14 +190,25 @@ namespace kathryn{
     //////////// equal operator /////////////////////////////////
     /////////////////////////////////////////////////////////////
 
-    ValRep ValRep::operator==(const ValRep &rhs) {
+    ValRep ValRep::operator==(const ValRep& rhs) {
         return eqOperator(rhs, true);
+    }
+
+    bool ValRep::operator==(const int& rhs){
+        assert(_len > 0);
+        assert(_valSize > 0);
+        return _val[0] == (ull)rhs;
     }
 
     ValRep ValRep::operator!=(const ValRep &rhs) {
         return eqOperator(rhs, false);
     }
 
+    bool ValRep::operator!=(const int& rhs){
+        assert(_len > 0);
+        assert(_valSize > 0);
+        return _val[0] != (ull)rhs;
+    }
 
     ////////////////////////////////////////////////////////////
     /////////// logical operator ///////////////////////////////
@@ -392,6 +412,5 @@ namespace kathryn{
 
         return preRet;
     }
-
 
 }

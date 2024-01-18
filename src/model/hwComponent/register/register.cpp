@@ -12,7 +12,7 @@ namespace kathryn{
     /** constructor need to init communication with controller*/
     Reg::Reg(int size, bool initCom, HW_COMPONENT_TYPE hwType, bool requiredAllocCheck) :
             LogicComp({0, size}, hwType,
-                      requiredAllocCheck, new seqRtlSimEngine(size)){
+                      requiredAllocCheck){
         if (initCom) {
             com_init();
         }
@@ -56,12 +56,18 @@ namespace kathryn{
         assert(false);
     }
 
-    void Reg::simCurCycle() {
-            ////// TODO
+    void Reg::simStartCurCycle() {
+        ///// if in This cycle the component is simmulated then skip simulation
+        if (isCurCycleSimulated()){
+            return;
+        }
+        setSimStatus();
+        assignValRepCurCycle(getSimEngine()->getCurVal(), false);
+        //// we assign false because it is register, we must get from back cycle
     }
 
-    void Reg::finalizeCurCycle() {
-            ////// TODO
+    void Reg::simExitCurCycle() {
+            resetSimStatus();
     }
 
 //    std::vector<std::string> Reg::getDebugAssignmentValue() {

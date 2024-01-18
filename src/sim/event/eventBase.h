@@ -20,18 +20,18 @@ namespace kathryn{
 
         virtual ~EventBase() = default;
 
+
         /**
           * compute value that will be assigned in this cycle
           * but store in buffer place
           * */
-        virtual void simCurCycle() = 0;
-
+        virtual void simStartCurCycle() = 0;
         /**
          * move value from buffer place to actual place
          * we do these because we need to maintain edge trigger
          * to not cascade change value while other rtl block is updating
          * */
-        virtual void finalizeCurCycle() = 0;
+        virtual void simExitCurCycle() = 0;
 
         /** event base will be schedule by using priority queue
          * the highest priority is the cycle that occur before
@@ -49,7 +49,6 @@ namespace kathryn{
 
         [[nodiscard]]
         CYCLE getCurCycle() const {return _curCycle;}
-
     };
 
 
