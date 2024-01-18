@@ -10,7 +10,8 @@
 namespace kathryn{
 
 
-    Wire::Wire(int size) : LogicComp({0, size}, TYPE_WIRE, true){
+    Wire::Wire(int size) : LogicComp({0, size}, TYPE_WIRE,
+                                     true, new combRtlSimEngine(size)){
         com_init();
     }
 
@@ -49,6 +50,19 @@ namespace kathryn{
         ctrl->on_wire_update(generateAssignMeta(b, resultSlice), this);
         return *this;
     }
+
+    void Wire::simCurCycle() {
+        ////// TODO override simulation
+    }
+
+    void Wire::finalizeCurCycle() {
+
+    }
+
+
+
+
+
 
 //    std::vector<std::string> Wire::getDebugAssignmentValue() {
 //        std::vector<std::string> results;

@@ -12,6 +12,8 @@
 #include "model/hwComponent/abstract/operable.h"
 #include "model/hwComponent/abstract/identifiable.h"
 #include "model/controller/conInterf/controllerItf.h"
+#include "model/simIntf/rtlSimEle.h"
+#include "model/simIntf/rtlSimItf.h"
 #include "model/debugger/modelDebugger.h"
 
 namespace kathryn{
@@ -22,14 +24,17 @@ namespace kathryn{
                       public AssignCallbackFromAgent<T>,
                       public Identifiable,
                       public HwCompControllerItf,
+                      public SimInterface,
                       public ModelDebuggable{
     public:
-        explicit LogicComp(Slice slc, HW_COMPONENT_TYPE hwType, bool requiredAllocCheck):
+        explicit LogicComp(Slice slc, HW_COMPONENT_TYPE hwType,
+                           bool requiredAllocCheck, RtlSimEngine* simEngine):
                             Assignable<T>(),
                             Operable(),
                             Slicable<T>(slc),
                             Identifiable(hwType),
                             HwCompControllerItf(requiredAllocCheck),
+                            SimInterface(simEngine),
                             ModelDebuggable()
                             {}
 

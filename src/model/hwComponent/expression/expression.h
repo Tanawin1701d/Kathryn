@@ -52,7 +52,7 @@ namespace kathryn {
                             );
         explicit expression();
         /** override assignable*/
-        expression& operator <<= (Operable& b) override {std::cout << "we not support <<= operator in exprMetas"; return *this;};
+        expression& operator <<= (Operable& b) override {std::cout << "we not support <<= operator in exprMetas"; assert(false);}
         expression& operator =   (Operable& b) override;
         /**override operable*/
         [[nodiscard]]
@@ -75,6 +75,9 @@ namespace kathryn {
         Operable* getOperandA() const {return _a;}
         Operable* getOperandB() const {return _b;}
 
+        /** override simulator interface*/
+        void simCurCycle() override;
+        void finalizeCurCycle() override;
 
     };
 

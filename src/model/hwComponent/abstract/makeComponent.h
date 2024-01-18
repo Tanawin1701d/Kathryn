@@ -31,7 +31,7 @@ namespace kathryn {
     template<typename T, typename... Args>
     T& _make(const std::string name,Args&&... args){
         static_assert(std::is_base_of<HwCompControllerItf, T>::value,
-                "make model component must base on Controller controllable"
+                "make model component must base on ModelController controllable"
                 );
         static_assert(std::is_base_of<Identifiable, T>::value,
                       "make model component must base on Identifiable"

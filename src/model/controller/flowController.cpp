@@ -6,13 +6,13 @@
 #include "util/logger/logger.h"
 namespace kathryn{
 
-    FlowBlockBase* Controller::getTopFlowBlock(){
+    FlowBlockBase* ModelController::getTopFlowBlock(){
         assert(!flowBlockStack.empty());
         return flowBlockStack.top();
     }
 
-    void Controller::tryPopFbBaseFromStack(FlowBlockBase* flowPtr,
-                                           std::stack<FlowBlockBase*>& srcSt) {
+    void ModelController::tryPopFbBaseFromStack(FlowBlockBase* flowPtr,
+                                                std::stack<FlowBlockBase*>& srcSt) {
         /**skip when empty skip when not match*/
         if (srcSt.empty() || (srcSt.top() != flowPtr))
             return;
@@ -21,14 +21,14 @@ namespace kathryn{
 
     }
 
-    void Controller::tryPopFbIfFromStack(kathryn::FlowBlockBase *flowPtr,
-                                         std::stack<FlowBlockIf *> &srcSt) {
+    void ModelController::tryPopFbIfFromStack(kathryn::FlowBlockBase *flowPtr,
+                                              std::stack<FlowBlockIf *> &srcSt) {
         if (srcSt.empty() || (srcSt.top() != flowPtr))
             return;
         srcSt.pop();
     }
 
-    void Controller::tryPopCtrlFlowFromAllStack(FlowBlockBase* flowPtr){
+    void ModelController::tryPopCtrlFlowFromAllStack(FlowBlockBase* flowPtr){
         /** debug*/
         logMF(flowPtr, "trypoping from all stack");
         tryPopFbBaseFromStack(flowPtr, flowBlockStack);
@@ -37,7 +37,7 @@ namespace kathryn{
     }
 
 
-    void Controller::removeLazyFbFromTopStack() {
+    void ModelController::removeLazyFbFromTopStack() {
         if (flowBlockStack.empty()){
             return;
         }
@@ -59,13 +59,13 @@ namespace kathryn{
     }
 
 
-    void Controller::purifyFlowStack() {
+    void ModelController::purifyFlowStack() {
         removeLazyFbFromTopStack();
     }
 
 
     /** use for any flow block except condition block*/
-    void Controller::on_attach_flowBlock(FlowBlockBase* fb) {
+    void ModelController::on_attach_flowBlock(FlowBlockBase* fb) {
 
         assert(fb != nullptr);
         assert(fb->getFlowType() != IF);
@@ -94,7 +94,7 @@ namespace kathryn{
 
     }
 
-    void Controller::on_detach_flowBlock(FlowBlockBase* fb) {
+    void ModelController::on_detach_flowBlock(FlowBlockBase* fb) {
         assert(fb != nullptr);
         assert(fb->getFlowType() != IF);
         assert(fb->getFlowType() != ELIF);
@@ -113,7 +113,7 @@ namespace kathryn{
         }
     }
 
-    void Controller::on_attach_flowBlock_if(FlowBlockIf *fb) {
+    void ModelController::on_attach_flowBlock_if(FlowBlockIf *fb) {
         assert(fb != nullptr);
         assert(fb->getFlowType() == IF);
         assert(!flowBlockStack.empty());
@@ -126,7 +126,7 @@ namespace kathryn{
 
     }
 
-    void Controller::on_attach_flowBlock_elif(FlowBlockElif *fb) {
+    void ModelController::on_attach_flowBlock_elif(FlowBlockElif *fb) {
         assert(fb != nullptr);
         assert(fb->getFlowType() == ELIF || fb->getFlowType() == ELSE);
         assert(!flowBlockStack.empty());
@@ -137,7 +137,7 @@ namespace kathryn{
 
     }
 
-    void Controller::on_detach_flowBlock_elif(FlowBlockElif *fb) {
+    void ModelController::on_detach_flowBlock_elif(FlowBlockElif *fb) {
         assert(fb != nullptr);
         assert(fb->getFlowType() == ELIF || fb->getFlowType() == ELSE);
         assert(!flowBlockStack.empty());
@@ -153,7 +153,7 @@ namespace kathryn{
         logMF(fb, "detach ELIF flowBlock to stack");
     }
 
-    FLOW_BLOCK_TYPE Controller::get_top_pattern_flow_block_type(){
+    FLOW_BLOCK_TYPE ModelController::get_top_pattern_flow_block_type(){
         if (patternFlowBlockStack.empty()){
             return DUMMY_BLOCK;
         }

@@ -9,7 +9,8 @@
 namespace kathryn{
 
     Val::Val(int size, std::string v):
-                                    LogicComp({0, size}, TYPE_VAL, false),
+                                    LogicComp({0, size}, TYPE_VAL,
+                                              false, new combRtlSimEngine(size)),
                                     _size(size)
                                     {
                                         com_init();
@@ -32,9 +33,13 @@ namespace kathryn{
         return operator() (idx, idx+1);
     }
 
-//    std::vector<std::string> Val::getDebugAssignmentValue() {
-//        return {"0"};
-//    }
+    void Val::simCurCycle() {
+        /////// TODO simulate it
+    }
+
+    void Val::finalizeCurCycle() {
+
+    }
 
 
 }

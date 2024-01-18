@@ -63,8 +63,8 @@ add_executable(Kathryn main.cpp
         src/test/modelTest2.h
         src/util/logger/logger.cpp
         src/util/logger/logger.h
-        src/model/logicRep/valRep.cpp
-        src/model/logicRep/valRep.h
+        src/sim/logicRep/valRep.cpp
+        src/sim/logicRep/valRep.h
         src/model/FlowBlock/abstract/nodeWrap.cpp
         src/model/FlowBlock/abstract/nodeWrap.h
         src/model/FlowBlock/time/wait.cpp
@@ -84,10 +84,16 @@ add_executable(Kathryn main.cpp
         src/model/FlowBlock/abstract/nodes/asmNode.h
         src/test/modelTest3.h
         src/model/FlowBlock/abstract/spReg/ctrlFlowRegBase.cpp
-        src/sim/rtlSim/rtlSimable.cpp
-        src/sim/rtlSim/rtlSimable.h
         src/sim/event/eventBase.h
         src/sim/event/eventQ.h
         src/sim/event/eventQ.cpp
+        src/sim/controller/controller.cpp
+        src/sim/controller/controller.h
+        src/sim/rtlSim/rtlSimResult.cpp
+        src/sim/rtlSim/rtlSimResult.h
+        src/model/simIntf/rtlSimEle.cpp
+        src/model/simIntf/rtlSimEle.h
+        src/model/simIntf/rtlSimItf.cpp
+        src/model/simIntf/rtlSimItf.h
 
 )

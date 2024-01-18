@@ -27,9 +27,12 @@ namespace kathryn{
         /**override slicable*/
         SliceAgent<Wire>& operator() (int start, int stop) override;
         SliceAgent<Wire>& operator() (int idx) override;
-        /**overide assign call back*/
+        /**override assign call back*/
         Wire& callBackBlockAssignFromAgent(Operable& b, Slice absSliceOfHost) override;
         Wire& callBackNonBlockAssignFromAgent(Operable& b, Slice absSliceOfHost) override;
+        /**override simulation*/
+        void simCurCycle() override;
+        void finalizeCurCycle() override;
 
         //std::vector<std::string> getDebugAssignmentValue() override;
 

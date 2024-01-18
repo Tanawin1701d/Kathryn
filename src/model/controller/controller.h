@@ -34,7 +34,7 @@ namespace kathryn {
 
 
 
-    class Controller {
+    class ModelController {
 
     private:
         bool hwCompAllocLock = true; /** this is used to indicate whether make<> is used or not only make<> can unlock*/
@@ -112,7 +112,7 @@ namespace kathryn {
     };
 
     /** this is entrace for every device to com_init with controller*/
-    Controller* getControllerPtr();
+    ModelController* getControllerPtr();
     void        freeControllerPtr();
 
 

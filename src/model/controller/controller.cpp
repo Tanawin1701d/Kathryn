@@ -8,14 +8,14 @@
 namespace kathryn{
 
     /** central initializer*/
-    Controller*    centralControllerPtr = nullptr;
+    ModelController*    centralControllerPtr = nullptr;
     Module*        globalModulePtr = nullptr;
 
-    Controller* getControllerPtr(){
+    ModelController* getControllerPtr(){
         /// initiate controller before return
         /***lazy initializer*/
         if (centralControllerPtr == nullptr){
-            centralControllerPtr = new Controller();
+            centralControllerPtr = new ModelController();
         }else{
             return centralControllerPtr;
         }

@@ -20,7 +20,8 @@ namespace kathryn{
                            Operable* b,
                            Slice bSlice,
                            int exp_size):
-    LogicComp<expression>({0, exp_size}, TYPE_EXPRESSION, false),
+    LogicComp<expression>({0, exp_size}, TYPE_EXPRESSION,
+                          false, new combRtlSimEngine(exp_size)),
     _op(op),
     _a(a),
     _aSlice(aSlice),
@@ -31,7 +32,7 @@ namespace kathryn{
     }
 
     expression::expression():
-    LogicComp<expression>(Slice(), TYPE_EXPRESSION, false),
+    LogicComp<expression>(Slice(), TYPE_EXPRESSION, false, nullptr),
     _op(ASSIGN),
     _a(nullptr),
     _aSlice(Slice()),
@@ -47,9 +48,11 @@ namespace kathryn{
 
     expression& expression::operator=(Operable &b) {
         _a = &b;
-        Slice proxySlice({0, b.getOperableSlice().getSize()});
+        int newSize = b.getOperableSlice().getSize();
+        Slice proxySlice({0, newSize});
         _aSlice = proxySlice;
         setSlice(proxySlice);
+        setSimEngine(new combRtlSimEngine(newSize));
         return *this;
     }
 
@@ -75,6 +78,14 @@ namespace kathryn{
         return *this;
     }
 
+    void expression::simCurCycle() {
+        /////// TODO simulate next cycle
+    }
+
+    void expression::finalizeCurCycle() {
+        /////// TODO finalize next cycle
+    }
+
 //    std::vector<std::string> expression::getDebugAssignmentValue() {
 //        if (isSingleOpr(_op)){
 //            return {lop_to_string(_op) + _a->castToIdent()->getGlobalName()};
@@ -84,6 +95,8 @@ namespace kathryn{
 //            return {aName + lop_to_string(_op) + bName};
 //        }
 //    }
+
+
 
 
 }

@@ -11,7 +11,8 @@ namespace kathryn{
 
     /** constructor need to init communication with controller*/
     Reg::Reg(int size, bool initCom, HW_COMPONENT_TYPE hwType, bool requiredAllocCheck) :
-            LogicComp({0, size}, hwType, requiredAllocCheck){
+            LogicComp({0, size}, hwType,
+                      requiredAllocCheck, new seqRtlSimEngine(size)){
         if (initCom) {
             com_init();
         }
@@ -29,8 +30,7 @@ namespace kathryn{
 
     Reg& Reg::operator=(Operable &b) {
         /** todo first version we not support this operator*/
-        assert(true);
-        return *this;
+        assert(false);
     }
 
     /** slicable override*/
@@ -56,6 +56,14 @@ namespace kathryn{
         assert(false);
     }
 
+    void Reg::simCurCycle() {
+            ////// TODO
+    }
+
+    void Reg::finalizeCurCycle() {
+            ////// TODO
+    }
+
 //    std::vector<std::string> Reg::getDebugAssignmentValue() {
 //        std::vector<std::string> results;
 //        for (auto upEvent: _updateMeta){
@@ -64,4 +72,6 @@ namespace kathryn{
 //        }
 //        return results;
 //    }
+
+
 }

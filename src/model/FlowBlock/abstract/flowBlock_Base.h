@@ -19,7 +19,7 @@
 
 namespace kathryn {
     /** it is basic node that only have one event at a node */
-    class Controller;
+    class ModelController;
     enum FLOW_BLOCK_TYPE{
         SEQUENTIAL,
         PARALLEL_AUTO_SYNC,
@@ -45,7 +45,7 @@ namespace kathryn {
         std::vector<FlowBlockBase*> subBlocks;
         std::vector<Node*>          basicNodes;
         FLOW_BLOCK_TYPE             _type;
-        Controller*                 ctrl = nullptr;
+        ModelController*                 ctrl = nullptr;
         bool                        lazyDeletedRequired = false;
         int                         _fbId;
         /*** for exit management*/

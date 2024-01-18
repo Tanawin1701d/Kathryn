@@ -10,13 +10,13 @@
 
 namespace kathryn {
 
-    class Controller;
+    class ModelController;
     /**
      * This is used for hardware element to interface with comtroller
      * */
     class HwCompControllerItf {
     protected:
-        Controller* ctrl;
+        ModelController* ctrl;
     public:
         explicit HwCompControllerItf(bool requiredAllocCheck = true);
 
