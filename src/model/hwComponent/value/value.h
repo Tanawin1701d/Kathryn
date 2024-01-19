@@ -20,8 +20,9 @@ namespace kathryn{
     /** This class act as constant value */
     class Val: public LogicComp<Val>{
     protected:
+        std::string rawValue;
         int _size;
-
+        /***the actual value will be assigned to val rep*/
 
         void com_init() override;
     public:

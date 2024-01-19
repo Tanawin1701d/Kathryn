@@ -3,18 +3,24 @@
 //
 
 #include "value.h"
+
+#include <utility>
 #include "model/controller/controller.h"
+#include "util/numberic/numConvert.h"
 
 
 namespace kathryn{
 
     Val::Val(int size, std::string v):
-                                    LogicComp({0, size}, TYPE_VAL,
-                                              false),
-                                    _size(size)
-                                    {
-                                        com_init();
-    }
+            LogicComp({0, size}, TYPE_VAL,false),
+            rawValue(std::move(v)),
+            _size(size){
+                    com_init();
+                    ValRep assignVal = cvStrToValRep(rawValue);
+                    getSimEngine()->getCurVal() = assignVal;
+                    getSimEngine()->getBackVal() = assignVal;
+
+            }
 
     void Val::com_init() {
         ctrl->on_value_init(this);
@@ -34,11 +40,13 @@ namespace kathryn{
     }
 
     void Val::simStartCurCycle() {
-        /////// TODO simulate it and entrance
+        /** val don't have to simulate*/
     }
 
     void Val::simExitCurCycle() {
         resetSimStatus();
+        //// getSimEngine()->iterate();
+        //////// don't have to iterate due to it is fix value
     }
 
 

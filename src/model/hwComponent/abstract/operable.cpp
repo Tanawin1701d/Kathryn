@@ -191,7 +191,7 @@ namespace kathryn {
                                      this->getOperableSlice(),
                                      &b.getExactOperable(),
                                      b.getOperableSlice(),
-                                     getOperableSlice().getSize() + 1);
+                                     getOperableSlice().getSize());
         /** size + 1 because we provide carry for exprMetas*/
 
         return *ret;
@@ -214,7 +214,7 @@ namespace kathryn {
                                      this->getOperableSlice(),
                                      &b.getExactOperable(),
                                      b.getOperableSlice(),
-                                     getOperableSlice().getSize() * b.getOperableSlice().getSize());
+                                     getOperableSlice().getSize());
 
         return *ret;
     }

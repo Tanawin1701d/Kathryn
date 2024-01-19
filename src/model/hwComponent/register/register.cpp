@@ -68,6 +68,7 @@ namespace kathryn{
 
     void Reg::simExitCurCycle() {
             resetSimStatus();
+            getSimEngine()->iterate();
     }
 
 //    std::vector<std::string> Reg::getDebugAssignmentValue() {

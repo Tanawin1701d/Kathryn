@@ -51,14 +51,18 @@ namespace kathryn{
     }
 
     void Wire::simStartCurCycle() {
+
         if (isCurCycleSimulated()){
             return;
         }
         setSimStatus();
         assignValRepCurCycle(getSimEngine()->getCurVal(), true);
+
     }
 
     void Wire::simExitCurCycle() {
+        resetSimStatus();
+        getSimEngine()->iterate();
 
     }
 

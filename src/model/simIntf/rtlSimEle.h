@@ -38,7 +38,6 @@ namespace kathryn {
             backVal = curVal;
         };
 
-
         //////////////// sequential sim
 
 

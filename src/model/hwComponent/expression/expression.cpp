@@ -78,11 +78,100 @@ namespace kathryn{
     }
 
     void expression::simStartCurCycle() {
-        /////// TODO simulate next cycle
+
+        if (isCurCycleSimulated()){
+            return;
+        }
+        setSimStatus();
+        ValRep* firstValRep = nullptr;
+        ValRep* secValRep   = nullptr;
+        ValRep& desValRep   = getSimEngine()->getCurVal();
+        /**value a*/
+        if (_a != nullptr){
+            _a->castToSimItf()->simStartCurCycle();
+            firstValRep =  &(_a->castToSimItf()->getSimEngine()->getCurVal());
+        }
+        /**value b*/
+        if (_b != nullptr){
+            _b->castToSimItf()->simStartCurCycle();
+            secValRep = &(_b->castToSimItf()->getSimEngine()->getCurVal());
+        }
+
+        switch (_op) {
+
+            case BITWISE_AND:
+                desValRep = (*firstValRep) & (*secValRep);
+                break;
+            case BITWISE_OR:
+                desValRep = (*firstValRep) | (*secValRep);
+                break;
+            case BITWISE_XOR:
+                desValRep = (*firstValRep) ^ (*secValRep);
+                break;
+            case BITWISE_INVR:
+                desValRep = ~(*firstValRep);
+                break;
+            case BITWISE_SHL:
+                desValRep = (*firstValRep) << (*secValRep);
+                break;
+            case BITWISE_SHR:
+                desValRep = (*firstValRep) >> (*secValRep);
+                break;
+            case LOGICAL_AND:
+                desValRep = (*firstValRep) && (*secValRep);
+                break;
+            case LOGICAL_OR:
+                desValRep = (*firstValRep) || (*secValRep);
+                break;
+            case LOGICAL_NOT:
+                desValRep = !(*firstValRep);
+                break;
+            case RELATION_EQ:
+                desValRep = (*firstValRep) == (*secValRep);
+                break;
+            case RELATION_NEQ:
+                desValRep = (*firstValRep) != (*secValRep);
+                break;
+            case RELATION_LE:
+                desValRep = (*firstValRep) < (*secValRep);
+                break;
+            case RELATION_LEQ:
+                desValRep = (*firstValRep) <= (*secValRep);
+                break;
+            case RELATION_GE:
+                desValRep = (*firstValRep) > (*secValRep);
+                break;
+            case RELATION_GEQ:
+                desValRep = (*firstValRep) >= (*secValRep);
+                break;
+            case ARITH_PLUS:
+                desValRep = (*firstValRep) + (*secValRep);
+                break;
+            case ARITH_MINUS:
+                desValRep = (*firstValRep) - (*secValRep);
+                break;
+            case ARITH_MUL:
+                desValRep = (*firstValRep) * (*secValRep);
+                break;
+            case ARITH_DIV:
+                desValRep = (*firstValRep) / (*secValRep);
+                break;
+            case ARITH_DIVR:
+                desValRep = (*firstValRep) % (*secValRep);
+                break;
+            case ASSIGN:
+                desValRep = *firstValRep;
+                break;
+            case OP_DUMMY:
+            case LOGIC_OP_COUNT:
+                break;
+        }
+
     }
 
     void expression::simExitCurCycle() {
-        /////// TODO finalize next cycle
+        resetSimStatus();
+        getSimEngine()->iterate();
     }
 
 //    std::vector<std::string> expression::getDebugAssignmentValue() {
