@@ -60,6 +60,17 @@ namespace kathryn{
         return &((*_condOpr) & ((*this) == _upState));
     }
 
+    bool CondWaitStateReg::isSimAtWaiting(){
+        /** register sim*/
+        RtlSimEngine* regEnginePtr = getSimEngine();
+        ValRep& curVal = regEnginePtr->getCurVal();
+        /** val sim*/
+        RtlSimEngine* valEnginePtr = _downState.getSimEngine();
+        ValRep& restCurVal = valEnginePtr->getCurVal();
+
+        return (curVal > restCurVal) == 1;
+    }
+
     /**
      *
      * cycle count wait state register
@@ -75,10 +86,11 @@ namespace kathryn{
      ),
      _waitCycle(waitCycle),
     _bitSz     (calBitUsed(waitCycle)),
-    IdleCnt   (&_make<Val>("IdleCnt" ,_bitSz,"d0")),
-    _startCnt  (&_make<Val>("startCnt",_bitSz,"d1")),
-    _endCnt    (&_make<Val>("endCnt"  ,_bitSz,"d" +  std::to_string(waitCycle)))
+    IdleCnt   (&_make<Val>("IdleCnt" ,_bitSz,"b0")),
+    _startCnt  (&_make<Val>("startCnt",_bitSz,"b1")),
+    _endCnt    (&_make<Val>("endCnt"  ,_bitSz,"h" +  std::to_string(waitCycle)))
      {
+        /** TO FIX*/
         com_init();
         makeIncStateEvent();
         assert(_bitSz > 0);
@@ -144,6 +156,17 @@ namespace kathryn{
 
     Operable* CycleWaitStateReg::generateEndExpr() {
         return &((*this) == (*_endCnt));
+    }
+
+    bool CycleWaitStateReg::isSimAtWaiting(){
+        /** register sim*/
+        RtlSimEngine* regEnginePtr = getSimEngine();
+        ValRep& curVal = regEnginePtr->getCurVal();
+        /** val sim*/
+        RtlSimEngine* valEnginePtr = IdleCnt->castToRtlSimItf()->getSimEngine();
+        ValRep& restCurVal = valEnginePtr->getCurVal();
+
+        return (curVal > restCurVal) == 1;
     }
 
 }

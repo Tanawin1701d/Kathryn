@@ -41,6 +41,15 @@ namespace kathryn {
 
         int getCycleUsed() override { return 1; }
 
+        void simStartCurCycle() override{
+            if (isCurCycleSimulated()){
+                return;
+            }
+            setSimStatus();
+            /** for basic assignment log engine is irrelevant*/
+            incEngine(false);
+        }
+
     };
 
 }

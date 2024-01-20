@@ -46,6 +46,16 @@ namespace kathryn{
         }
 
         int getCycleUsed() override {return 1;}
+
+        void simStartCurCycle() override{
+            if (isCurCycleSimulated()){
+                return;
+            }
+            setSimStatus();
+            assert(_stateReg != nullptr);
+            bool isStateSet = _stateReg->getSimEngine()->getCurVal() == 1;
+            incEngine(isStateSet);
+        }
     };
 
     /**
@@ -84,6 +94,17 @@ namespace kathryn{
 
         int getCycleUsed() override{ return 1; }
 
+        void simStartCurCycle() override{
+            if (isCurCycleSimulated()){
+                return;
+            }
+            setSimStatus();
+            assert(_synReg != nullptr);
+            bool isFullSyncCycle = _synReg->isSimAtFullSyn();
+            /** inc engine*/
+            incEngine(isFullSyncCycle);
+        }
+
     };
 
     struct PseudoNode : Node{
@@ -110,6 +131,18 @@ namespace kathryn{
         Operable* getExitOpr() override{return _pseudoAssignMeta;}
 
         bool isStateFullNode() override{ return false; }
+
+        void simStartCurCycle() override{
+            if (isCurCycleSimulated()){
+                return;
+            }
+            setSimStatus();
+            assert(_pseudoAssignMeta != nullptr);
+            /** inc engine*/
+            incEngine(false);
+        }
+
+
 
     };
 
@@ -139,6 +172,15 @@ namespace kathryn{
         Operable* getExitOpr() override{return _value;}
 
         bool isStateFullNode() override{return false;}
+
+        void simStartCurCycle() override{
+            if (isCurCycleSimulated()){
+                return;
+            }
+            setSimStatus();
+            assert(_value != nullptr);
+            incEngine(false);
+        }
 
     };
 

@@ -170,6 +170,10 @@ namespace kathryn {
             mdLogVal->addVal(lop_to_string(dependStateRaiseCond));
         }
 
+        void simExitCurCycle() override{
+            resetFlowSimStatus();
+        }
+
 
 
     };

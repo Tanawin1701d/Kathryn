@@ -51,6 +51,17 @@ namespace kathryn {
         return (&((*this) == upFullState));
     }
 
+    bool SyncReg::isSimAtFullSyn() {
+        /** register sim */
+        RtlSimEngine* regEnginePtr = getSimEngine();
+        ValRep& curVal = regEnginePtr->getCurVal();
+        /** val sim*/
+        RtlSimEngine* valEnginePtr = upFullState.getSimEngine();
+        ValRep& fullStateRep       = valEnginePtr->getCurVal();
+        /**due to it return valrep we must check it is equal to 1*/
+        return (curVal == fullStateRep) == 1;
+    }
+
 
     std::string genConseBinaryValue(bool bitVal, int size){
 

@@ -37,6 +37,8 @@ namespace kathryn {
         void makeUnSetStateEvent() override;
         /** exit expression*/
         Operable* generateEndExpr() override;
+
+        bool isSimAtFullSyn();
     };
 
     std::string genConseBinaryValue(bool bitVal, int size);

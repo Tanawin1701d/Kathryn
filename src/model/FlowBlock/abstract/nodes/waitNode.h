@@ -45,8 +45,14 @@ namespace kathryn{
 
         int getCycleUsed() override {return -1;}
 
+        void simStartCurCycle() override{
+            if (isCurCycleSimulated()){
+                return;
+            }
+            setSimStatus();
 
 
+        }
     };
 
     struct WaitCycleNode : Node{
