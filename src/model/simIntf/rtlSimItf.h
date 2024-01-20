@@ -15,19 +15,38 @@ namespace kathryn{
     class SimInterface : public EventBase{
     private:
         bool isSimYet = false; ///// indicate that current cycle is simulated yet.
-        RtlSimEngine* _engine = nullptr;
     public:
-        SimInterface(RtlSimEngine* engine):
-        EventBase(/**get current cycle**/),
-        _engine(engine)
+        SimInterface():
+        EventBase(/**get current cycle**/)
         {
             ////// assert(engine != nullptr);
             //////// for now we allow engine to be nullptr
         };
 
-        virtual ~SimInterface(){
-            delete _engine;
-        };
+        void setSimStatus(){
+            isSimYet = true;
+        }
+        void resetSimStatus(){
+            isSimYet = false;
+        }
+        [[nodiscard]]
+        bool isCurCycleSimulated() const{
+            return isSimYet;
+        }
+
+    };
+
+
+    class RtlSimInterface : public SimInterface{
+    private:
+        RtlSimEngine* _engine = nullptr;
+    public:
+
+        explicit RtlSimInterface(RtlSimEngine* engine):
+        SimInterface(),
+        _engine(engine){}
+
+        ~RtlSimInterface() override {delete _engine;}
 
         void setSimEngine(RtlSimEngine* engine){
             if (_engine != nullptr){
@@ -38,15 +57,50 @@ namespace kathryn{
 
         RtlSimEngine* getSimEngine(){return _engine;}
 
-        void setSimStatus(){
-            isSimYet = true;
+
+
+    };
+
+    /***
+     *
+     * flow sim interface should not sim/final  Rtl simInterface At all
+     * simExitCurCycle for flow sim can be repeatly call in each cycle
+     *
+     * */
+
+    class FlowSimInterface : public SimInterface{
+    private:
+        FlowSimEngine* _engine = nullptr;
+    public:
+        explicit FlowSimInterface(FlowSimEngine* engine):
+        SimInterface(),
+        _engine(engine){}
+
+        ~FlowSimInterface() override {delete _engine;}
+
+        FlowSimEngine* getSimEngine(){return _engine;}
+
+        bool incEngine(bool isStateRunning){
+
+            if (isStateRunning){
+                getSimEngine()->incUsedTime();
+            }
+            getSimEngine()->setRunningStatus(isStateRunning);
+
         }
-        void resetSimStatus(){
-            isSimYet = false;
-        }
-        bool isCurCycleSimulated() const{
-            return isSimYet;
-        }
+
+        bool isStateSetInCurCycle() {
+            assert(isCurCycleSimulated());
+            return getSimEngine()->isRunning();
+        };
+
+        void resetFlowSimStatus(){
+            resetSimStatus();
+            assert(_engine != nullptr);
+            _engine->unsetRunning();
+        };
+
+
 
     };
 

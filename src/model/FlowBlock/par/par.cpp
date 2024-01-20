@@ -172,6 +172,60 @@ namespace kathryn{
         addMdLogRecur(mdLogVal);
     }
 
+    void FlowBlockPar::simStartCurCycle() {
+
+        if (isCurCycleSimulated()){
+            return;
+        }
+        setSimStatus();
+        bool isStateRunning = false;
+        /** simulate each element*/
+        for (auto _sb: subBlocks){
+            assert(_sb != nullptr);
+            _sb->simStartCurCycle();
+            isStateRunning |= _sb->isStateSetInCurCycle();
+        }
+        for (auto _bsAsmNd: basicNodes){
+            assert(_bsAsmNd != nullptr);
+            _bsAsmNd->simStartCurCycle();
+        }
+        if (basicStNode != nullptr){
+            basicStNode->simStartCurCycle();
+            isStateRunning |= basicStNode->isStateSetInCurCycle();
+        }
+        if (synNode != nullptr){
+            synNode->simStartCurCycle();
+            isStateRunning |= synNode->isStateSetInCurCycle();
+        }
+        if (pseudoExitNode != nullptr){
+            pseudoExitNode->simStartCurCycle();
+            isStateRunning |= pseudoExitNode->isStateSetInCurCycle();
+        }
+        /** increment log*/
+        incEngine(isStateRunning);
+    }
+
+    void FlowBlockPar::simExitCurCycle() {
+        resetFlowSimStatus();
+        for (auto _sb: subBlocks){
+            assert(_sb != nullptr);
+            _sb->simExitCurCycle();
+        }
+        for (auto _bsAsmNd: basicNodes){
+            assert(_bsAsmNd != nullptr);
+            _bsAsmNd->simExitCurCycle();
+        }
+        if (basicStNode != nullptr){
+            basicStNode->simExitCurCycle();
+        }
+        if (synNode != nullptr){
+            synNode->simExitCurCycle();
+        }
+        if (pseudoExitNode != nullptr){
+            pseudoExitNode->simExitCurCycle();
+        }
+    }
+
 
     /**
      *

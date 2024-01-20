@@ -30,18 +30,24 @@ namespace kathryn {
         explicit SequenceEle(FlowBlockBase* fbBase    );
         ~SequenceEle();
 
-        void               genHardware       ();
-        void               addToCycleDet     (NodeWrapCycleDet& deter) const;
-        void               assignDependDent  (SequenceEle* predecessor) const;
-        Node*              getStateFinishIden() const;
-        std::vector<Node*> getEntranceNodes  ();
+        void               genHardware         ();
+        void               addToCycleDet       (NodeWrapCycleDet& deter) const;
+        void               assignDependDent    (SequenceEle* predecessor) const;
+        Node*              getStateFinishIden  () const;
+        std::vector<Node*> getEntranceNodes    ();
         bool               isThereForceExitNode() const;
-        Node*              getForceExitNode() const;
-        bool               isNodeWrap() const;
-        NodeWrap*          getNodeWrap() const;
-        bool               isBasicNode() const;
-        StateNode*         getBasicNode() const;
-        std::string        getDescribe();
+        Node*              getForceExitNode    () const;
+        bool               isNodeWrap          () const;
+        NodeWrap*          getNodeWrap         () const;
+        bool               isBasicNode         () const;
+        StateNode*         getBasicNode        () const;
+        std::string        getDescribe         ();
+
+        /*** for simulation*/
+        void               simulate() const;
+        void               finalizeSim() const;
+        bool               isCurSimStateSet() const; ///// check that are cur state is simulating and state is set
+
 
 
     };
@@ -73,6 +79,9 @@ namespace kathryn {
         /** Loop macro to notice position of system*/
         void doPreFunction() override;
         void doPostFunction() override;
+        /** override simulator*/
+        void simStartCurCycle() override;
+        void simExitCurCycle() override;
 
     };
 

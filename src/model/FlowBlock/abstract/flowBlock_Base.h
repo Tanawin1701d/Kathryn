@@ -40,12 +40,13 @@ namespace kathryn {
 
     extern int nextFbIdx;
 
-    class FlowBlockBase: public ModelDebuggable {
+    class FlowBlockBase: public ModelDebuggable,
+                         public FlowSimInterface{
     protected:
         std::vector<FlowBlockBase*> subBlocks;
         std::vector<Node*>          basicNodes;
         FLOW_BLOCK_TYPE             _type;
-        ModelController*                 ctrl = nullptr;
+        ModelController*            ctrl = nullptr;
         bool                        lazyDeletedRequired = false;
         int                         _fbId;
         /*** for exit management*/
@@ -54,7 +55,7 @@ namespace kathryn {
 
         /** generate implicit subblock typically used with if and while block*/
         FlowBlockBase* genImplicitSubBlk(FLOW_BLOCK_TYPE defaultType);
-        void            genSumForceExitNode(std::vector<NodeWrap*>& nws);
+        void           genSumForceExitNode(std::vector<NodeWrap*>& nws);
     public:
         explicit  FlowBlockBase(FLOW_BLOCK_TYPE type);
         virtual  ~FlowBlockBase();
@@ -84,9 +85,7 @@ namespace kathryn {
         ////// getter/setter
         FLOW_BLOCK_TYPE     getFlowType() const {return _type;}
         int                 getFlowBlockId() const{return _fbId;}
-        std::vector<FlowBlockBase*>& getSubBlocks(){
-            return subBlocks;
-        }
+        std::vector<FlowBlockBase*>& getSubBlocks(){return subBlocks;}
         /** lazy delete is the variable that tell controller whether
          * block should be pop from building stack when purifier is done
          * not when block is detach. Usually, It is used in if block

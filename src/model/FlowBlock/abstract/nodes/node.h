@@ -37,14 +37,17 @@ namespace kathryn {
 
     std::string NT_to_string(NODE_TYPE nt);
 
-    struct Node : public ModelDebuggable{
+    struct Node : public ModelDebuggable,
+                  public FlowSimInterface{
         Node*    srcCpyNode = nullptr;
         NODE_TYPE nodeType  = NODE_TYPE_CNT;
         Operable* condition = nullptr;
         std::vector<Node*> dependNodes;
         LOGIC_OP dependStateRaiseCond = OP_DUMMY;
 
-        Node(Node& rhs) {
+        Node(Node& rhs):
+        FlowSimInterface(new FlowSimEngine())
+        {
             nodeType             = rhs.nodeType;
             condition            = rhs.condition;
             dependNodes          = rhs.dependNodes;
@@ -52,6 +55,7 @@ namespace kathryn {
         }
 
         explicit Node(NODE_TYPE nt):
+            FlowSimInterface(new FlowSimEngine()),
             nodeType(nt),
             condition(nullptr),
             dependStateRaiseCond(OP_DUMMY){};

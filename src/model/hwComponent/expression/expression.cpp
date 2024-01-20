@@ -88,13 +88,13 @@ namespace kathryn{
         ValRep& desValRep   = getSimEngine()->getCurVal();
         /**value a*/
         if (_a != nullptr){
-            _a->castToSimItf()->simStartCurCycle();
-            firstValRep =  &(_a->castToSimItf()->getSimEngine()->getCurVal());
+            _a->castToRtlSimItf()->simStartCurCycle();
+            firstValRep =  &(_a->castToRtlSimItf()->getSimEngine()->getCurVal());
         }
         /**value b*/
         if (_b != nullptr){
-            _b->castToSimItf()->simStartCurCycle();
-            secValRep = &(_b->castToSimItf()->getSimEngine()->getCurVal());
+            _b->castToRtlSimItf()->simStartCurCycle();
+            secValRep = &(_b->castToRtlSimItf()->getSimEngine()->getCurVal());
         }
 
         switch (_op) {

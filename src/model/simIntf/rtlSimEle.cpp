@@ -10,4 +10,9 @@ namespace kathryn{
     RtlSimEngine::RtlSimEngine(int sz):
     backVal(sz),
     curVal(sz){}
-};
+
+    void FlowSimEngine::incUsedTime() {
+        amtUsed++;
+    }
+}
+

@@ -25,7 +25,7 @@ namespace kathryn{
 
         bool shouldAssignValRep(Operable* samplingOpr, bool isGetFromCur){
             if (samplingOpr != nullptr){
-                SimInterface* simItf = samplingOpr->castToSimItf();
+                RtlSimInterface* simItf = samplingOpr->castToRtlSimItf();
                 assert(simItf != nullptr);
                 auto simEnginePtr = simItf->getSimEngine();
                 ValRep samplingVal = ValRep(1);
@@ -49,8 +49,8 @@ namespace kathryn{
             }
             assert(updateValue != nullptr);
 
-            ValRep& vr = getFromCur ? updateValue->castToSimItf()->getSimEngine()->getCurVal()
-                                    : updateValue->castToSimItf()->getSimEngine()->getBackVal();
+            ValRep& vr = getFromCur ? updateValue->castToRtlSimItf()->getSimEngine()->getCurVal()
+                                    : updateValue->castToRtlSimItf()->getSimEngine()->getBackVal();
                     ;
             desValRep.updateOnSlice(vr, updateSlice);
         }
@@ -62,7 +62,7 @@ namespace kathryn{
         }
 
         static void trySim(Operable* opr){
-            opr->castToSimItf()->simStartCurCycle();
+            opr->castToRtlSimItf()->simStartCurCycle();
         }
 
         [[nodiscard]] std::string getDebugString() const{

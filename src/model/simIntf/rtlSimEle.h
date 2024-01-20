@@ -39,8 +39,23 @@ namespace kathryn {
         };
 
         //////////////// sequential sim
+    };
 
+    class FlowSimEngine{
+    private:
+        int amtUsed = 0;
+        bool isStateRunningIn = false; /// check that are there
+                                       /// state is running in this block
+    public:
 
+        explicit FlowSimEngine() = default;
+
+        void incUsedTime();
+        int&  getAmtUsed(){return amtUsed;}
+
+        void setRunningStatus  ( bool status){isStateRunningIn = status;}
+        void unsetRunning()      {isStateRunningIn = false;}
+        bool isRunning   ()const {return isStateRunningIn; }
     };
 }
 #endif //KATHRYN_RTLSIMELE_H

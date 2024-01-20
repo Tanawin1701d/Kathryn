@@ -133,7 +133,44 @@ namespace kathryn{
 
     }
 
+    void SequenceEle::simulate() const{
 
+        ////////////// simulate state node
+        if (_stateNode != nullptr){
+            _stateNode->simStartCurCycle();
+        }
+        ////////////// simulate basic Assignment and subBlock
+        if (_asmNode != nullptr){
+            _asmNode->simStartCurCycle();
+        }
+        if (_subBlock != nullptr){
+            _subBlock->simStartCurCycle();
+        }
+    }
+
+    void SequenceEle::finalizeSim() const{
+        if (_stateNode != nullptr){
+            _stateNode->simExitCurCycle();
+        }
+        if (_asmNode != nullptr){
+            _asmNode->simExitCurCycle();
+        }
+        if (_subBlock != nullptr){
+            _subBlock->simExitCurCycle();
+        }
+    }
+
+    bool SequenceEle::isCurSimStateSet() const{
+
+        if (_asmNode != nullptr){
+            return _asmNode->isStateSetInCurCycle();
+        }
+        if (_subBlock != nullptr){
+            return _subBlock->isStateSetInCurCycle();
+        }
+        assert(false);
+
+    }
 
 
     /**
@@ -215,6 +252,8 @@ namespace kathryn{
 
     }
 
+
+
     std::string FlowBlockSeq::getMdDescribe() {
 
         std::string ret;
@@ -251,6 +290,32 @@ namespace kathryn{
 
     void FlowBlockSeq::doPostFunction() {
         onDetachBlock();
+    }
+
+
+    /** override flow block simulation*/
+
+    void FlowBlockSeq::simStartCurCycle() {
+        if (isCurCycleSimulated()){
+            return;
+        }
+        setSimStatus();
+
+        /** simulate each element*/
+        bool isStateRunning = false;
+        for (auto subSeqMeta: _subSeqMetas){
+            subSeqMeta->simulate();
+            isStateRunning |= subSeqMeta->isCurSimStateSet();
+        }
+        /*** inc engine*/
+        incEngine(isStateRunning);
+    }
+
+    void FlowBlockSeq::simExitCurCycle(){
+        resetFlowSimStatus();
+        for(auto subSeqMeta: _subSeqMetas){
+            subSeqMeta->finalizeSim();
+        }
     }
 
 }

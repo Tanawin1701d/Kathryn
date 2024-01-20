@@ -12,6 +12,7 @@ namespace kathryn{
 
 
     FlowBlockBase::FlowBlockBase(FLOW_BLOCK_TYPE type):
+    FlowSimInterface(new FlowSimEngine()),
     _type(type),
     ctrl(getControllerPtr()),
     lazyDeletedRequired(false),

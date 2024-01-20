@@ -78,6 +78,29 @@ namespace kathryn{
         mdLogVal->addVal("waitNode is " + _waitNode->getMdIdentVal()+ " " +_waitNode->getMdDescribe());
     }
 
+    void FlowBlockCondWait::simStartCurCycle() {
+        if (isCurCycleSimulated()){
+            return;
+        }
+        setSimStatus();
+        bool isStateRunning = false;
+        /** simulate each element*/
+        if (_waitNode != nullptr){
+            _waitNode->simStartCurCycle();
+            isStateRunning |= _waitNode->isStateSetInCurCycle();
+        }
+        /** inc engine*/
+        incEngine(isStateRunning);
+    }
+
+    void FlowBlockCondWait::simExitCurCycle() {
+        resetFlowSimStatus();
+        if (_waitNode != nullptr){
+            _waitNode->simExitCurCycle();
+        }
+
+    }
+
 
     /***
      *
@@ -164,5 +187,26 @@ namespace kathryn{
         mdLogVal->addVal("counter" + cnt->castToIdent()->getIdentDebugValue());
     }
 
+    void FlowBlockCycleWait::simStartCurCycle() {
+        if (isCurCycleSimulated()){
+            return;
+        }
+        setSimStatus();
+        bool isStateRunning = false;
+        /** simulate each element*/
+        if (_waitNode != nullptr){
+            _waitNode->simStartCurCycle();
+            isStateRunning |= _waitNode->isStateSetInCurCycle();
+        }
+        /** inc engine*/
+        incEngine(isStateRunning);
+    }
+
+    void FlowBlockCycleWait::simExitCurCycle() {
+        resetFlowSimStatus();
+        if (_waitNode != nullptr){
+            _waitNode->simExitCurCycle();
+        }
+    }
 
 }

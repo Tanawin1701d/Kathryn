@@ -24,7 +24,7 @@ namespace kathryn{
                       public AssignCallbackFromAgent<T>,
                       public Identifiable,
                       public HwCompControllerItf,
-                      public SimInterface,
+                      public RtlSimInterface,
                       public ModelDebuggable{
     public:
         explicit LogicComp(Slice slc, HW_COMPONENT_TYPE hwType,
@@ -34,7 +34,7 @@ namespace kathryn{
                             Slicable<T>(slc),
                             Identifiable(hwType),
                             HwCompControllerItf(requiredAllocCheck),
-                            SimInterface(new RtlSimEngine(slc.getSize())),
+                            RtlSimInterface(new RtlSimEngine(slc.getSize())),
                             ModelDebuggable()
                             {}
 
@@ -48,8 +48,8 @@ namespace kathryn{
             return getIdentDebugValue();
         }
 
-        SimInterface* castToSimItf() override{
-            return static_cast<SimInterface*>(this);
+        RtlSimInterface* castToRtlSimItf() override{
+            return static_cast<RtlSimInterface*>(this);
         };
 
     };

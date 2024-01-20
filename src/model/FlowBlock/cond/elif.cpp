@@ -70,5 +70,29 @@ namespace kathryn{
         addMdLogRecur(mdLogVal);
     }
 
+    void FlowBlockElif::simStartCurCycle() {
+
+        if (isCurCycleSimulated()){
+            return;
+        }
+        setSimStatus();
+
+        bool isStateRunning = false;
+
+        if (implicitSubBlock != nullptr){
+            implicitSubBlock->simStartCurCycle();
+            isStateRunning |= implicitSubBlock->isCurCycleSimulated();
+        }
+
+        incEngine(isStateRunning);
+    }
+
+    void FlowBlockElif::simExitCurCycle() {
+        resetFlowSimStatus();
+        if (implicitSubBlock != nullptr){
+            implicitSubBlock->simExitCurCycle();
+        }
+    }
+
 
 }

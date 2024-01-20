@@ -46,6 +46,9 @@ namespace kathryn{
             return _cond;
         }
 
+        void simStartCurCycle() override;
+        void simExitCurCycle() override;
+
 
     };
 

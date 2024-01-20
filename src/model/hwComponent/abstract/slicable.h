@@ -99,7 +99,7 @@ namespace kathryn {
             assert(false);
         }
 
-        SimInterface* castToSimItf() override{
+        RtlSimInterface* castToRtlSimItf() override{
             assert(false);
         }
 
