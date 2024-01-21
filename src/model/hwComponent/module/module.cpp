@@ -12,8 +12,10 @@ namespace kathryn{
     Wire* rstWire = &_make<Wire>("rstWire", 1);
     StartNode* startNode = new StartNode(rstWire);
 
-    Module::Module(bool initComp): Identifiable(TYPE_MODULE),
-                      HwCompControllerItf()
+    Module::Module(bool initComp):
+                      Identifiable(TYPE_MODULE),
+                      HwCompControllerItf(),
+                      FlowSimInterface(new FlowSimEngine())
     {
         if (initComp)
             com_init();
@@ -147,7 +149,40 @@ namespace kathryn{
 
     }
 
+    /** override simulation*/
 
+    void Module::simStartCurCycle() {
+        /**simulate rtl first*/
+        for (int i = 0; i < SP_CNT_REG; i++){
+            simStartSubElement(_spRegs[i]);
+        }
+        simStartSubElement(_userRegs);
+        simStartSubElement(_userWires);
+        simStartSubElement(_userExpressions);
+        simStartSubElement(_userVals);
+        simStartSubElement(_userSubModule);
+
+        /**simulate flow block in which node is implicitly invoked*/
+        simStartSubElement(_flowBlockBases);
+
+    }
+
+    void Module::simExitCurCycle() {
+
+        /** exit rtl first*/
+        for (int i = 0; i < SP_CNT_REG; i++){
+            simExitSubElement(_spRegs[i]);
+        }
+        simExitSubElement(_userRegs);
+        simExitSubElement(_userWires);
+        simExitSubElement(_userExpressions);
+        simExitSubElement(_userVals);
+        simExitSubElement(_userSubModule);
+
+        /** exit flowblock first*/
+        simExitSubElement(_flowBlockBases);
+
+    }
 
 //    void Module::log(){
 //        /***dfs in all flowBLock and sub FLow block*/

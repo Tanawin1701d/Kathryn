@@ -33,6 +33,7 @@ namespace kathryn{
 
     class Module : public Identifiable,
                    public HwCompControllerItf,
+                   public FlowSimInterface,
                    public ModelDebuggable{
 
     private:
@@ -63,9 +64,23 @@ namespace kathryn{
         explicit Module(bool initComp = true);
         ~Module();
         template<typename T>
-        void deleteSubElement(std::vector<T*> subEleVec){
+        void deleteSubElement(std::vector<T*>& subEleVec){
             for (auto ele: subEleVec){
                 delete ele;
+            }
+        }
+
+        template<typename T>
+        void simStartSubElement(std::vector<T*>& subEleVec){
+            for (auto ele: subEleVec){
+                ele->simStartCurCycle();
+            }
+        }
+
+        template<typename T>
+        void simExitSubElement(std::vector<T*>& subEleVec){
+            for (auto ele: subEleVec){
+                ele->simExitCurCycle();
             }
         }
 
@@ -104,6 +119,11 @@ namespace kathryn{
         std::string getMdDescribe() override;
         void addMdLog(MdLogVal* mdLogVal) override;
         std::string getMdIdentVal() override{return getIdentDebugValue();};
+
+        /** override simulation */
+        void simStartCurCycle() override;
+        void simExitCurCycle() override;
+
     };
 
 }

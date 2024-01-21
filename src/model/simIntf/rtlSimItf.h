@@ -57,7 +57,7 @@ namespace kathryn{
 
         RtlSimEngine* getSimEngine(){return _engine;}
 
-
+        /** exit sim can be only invoked single time per cycle*/
 
     };
 
@@ -100,9 +100,21 @@ namespace kathryn{
             _engine->unsetRunning();
         };
 
-
-
+        /** start Sim can be invoked multiple times*/
+        /** exit sim can be invoked multiple times*/
     };
+
+    /***
+     * module interface
+     * */
+     class ModuleSimInterface : public SimInterface{
+     public:
+         explicit ModuleSimInterface():
+         SimInterface(){}
+
+         /** start Sim can be invoked multiple times*/
+         /** exit sim can be invoked multiple times*/
+     };
 
 }
 
