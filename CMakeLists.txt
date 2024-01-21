@@ -98,5 +98,8 @@ add_executable(Kathryn main.cpp
         src/model/hwComponent/abstract/assignable.cpp
         src/util/numberic/numConvert.cpp
         src/util/numberic/numConvert.h
+        src/model/simIntf/simEvent.cpp
+        src/model/simIntf/simEvent.h
+        src/sim/event/eventBase.cpp
 
 )

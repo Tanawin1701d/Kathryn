@@ -33,7 +33,7 @@ namespace kathryn{
 
     class Module : public Identifiable,
                    public HwCompControllerItf,
-                   public FlowSimInterface,
+                   public FlowSimulatable,
                    public ModelDebuggable{
 
     private:

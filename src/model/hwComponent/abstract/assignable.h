@@ -25,7 +25,7 @@ namespace kathryn{
 
         bool shouldAssignValRep(Operable* samplingOpr, bool isGetFromCur){
             if (samplingOpr != nullptr){
-                RtlSimInterface* simItf = samplingOpr->castToRtlSimItf();
+                RtlSimulatable* simItf = samplingOpr->castToRtlSimItf();
                 assert(simItf != nullptr);
                 auto simEnginePtr = simItf->getSimEngine();
                 ValRep samplingVal = ValRep(1);

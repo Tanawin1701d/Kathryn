@@ -18,8 +18,6 @@ namespace kathryn{
 
     void SimController::simStart() {
 
-        assert(_rstWire != nullptr);
-
         while ( (!eventQ.isEmpty()) &&
                 (eventQ.getNextEvent()->getCurCycle() <= _limitCycle)
         ){
@@ -39,17 +37,17 @@ namespace kathryn{
             for (auto event : curEvents){
                 event->simStartCurCycle();
             }
+            /** exit each event*/
+            for (auto event : curEvents){
+                event->simExitCurCycle();
+            }
             /** delete each event*/
             for (auto event: curEvents){
-                delete event;
+                if (event->needToDelete())
+                    delete event;
             }
         }
 
-    }
-
-    void SimController::setResetSignal(Wire *resetWire) {
-        assert(resetWire != nullptr);
-        _rstWire = resetWire;
     }
 
     void SimController::addEvent(EventBase *event) {
@@ -59,6 +57,25 @@ namespace kathryn{
 
     void SimController::saveData() {
         assert(false);
+    }
+
+
+    /***
+     *
+     *
+     * get sim controller (lazy initialization)
+     *
+     * **/
+
+    SimController* simCtrl = nullptr;
+
+    SimController* getSimController(){
+
+        if (simCtrl == nullptr){
+            simCtrl = new SimController(100000);
+        }
+        return simCtrl;
+
     }
 
 }

@@ -59,7 +59,7 @@ namespace kathryn {
         virtual Operable& getExactOperable () const = 0;
 
         virtual Identifiable* castToIdent() = 0;
-        virtual RtlSimInterface* castToRtlSimItf() = 0;
+        virtual RtlSimulatable* castToRtlSimItf() = 0;
     };
 
 

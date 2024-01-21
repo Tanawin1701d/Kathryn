@@ -22,7 +22,7 @@ namespace kathryn{
         /** add event to the queue*/
         void addEvent(EventBase* event);
         void removeEvent(EventBase* event);
-        /**caution! Event Base must be delete if it is no longer used*/
+        /**caution! Event Base must be delete if event based is need*/
         EventBase* getNextEvent();
         /**pop event*/
         void popEvent();
@@ -35,11 +35,7 @@ namespace kathryn{
         /** get last popCycle*/
         CYCLE getLastPopCycle() const;
 
-
-
-
     };
-
 
 }
 

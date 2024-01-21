@@ -24,18 +24,18 @@ namespace kathryn{
                       public AssignCallbackFromAgent<T>,
                       public Identifiable,
                       public HwCompControllerItf,
-                      public RtlSimInterface,
+                      public RtlSimulatable,
                       public ModelDebuggable{
     public:
         explicit LogicComp(Slice slc, HW_COMPONENT_TYPE hwType,
                            bool requiredAllocCheck):
-                            Assignable<T>(),
-                            Operable(),
-                            Slicable<T>(slc),
-                            Identifiable(hwType),
-                            HwCompControllerItf(requiredAllocCheck),
-                            RtlSimInterface(new RtlSimEngine(slc.getSize())),
-                            ModelDebuggable()
+                Assignable<T>(),
+                Operable(),
+                Slicable<T>(slc),
+                Identifiable(hwType),
+                HwCompControllerItf(requiredAllocCheck),
+                RtlSimulatable(new RtlSimEngine(slc.getSize())),
+                ModelDebuggable()
                             {}
 
         virtual ~LogicComp() = default;
@@ -48,8 +48,8 @@ namespace kathryn{
             return getIdentDebugValue();
         }
 
-        RtlSimInterface* castToRtlSimItf() override{
-            return static_cast<RtlSimInterface*>(this);
+        RtlSimulatable* castToRtlSimItf() override{
+            return static_cast<RtlSimulatable*>(this);
         };
 
     };

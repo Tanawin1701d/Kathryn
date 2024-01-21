@@ -12,16 +12,13 @@
 
 namespace kathryn{
 
-    class SimInterface : public EventBase{
+    class Simulatable{
     private:
         bool isSimYet = false; ///// indicate that current cycle is simulated yet.
     public:
-        SimInterface():
-        EventBase(/**get current cycle**/)
-        {
-            ////// assert(engine != nullptr);
-            //////// for now we allow engine to be nullptr
-        };
+        Simulatable() = default;
+
+        virtual ~Simulatable() = default;
 
         void setSimStatus(){
             isSimYet = true;
@@ -33,20 +30,31 @@ namespace kathryn{
         bool isCurCycleSimulated() const{
             return isSimYet;
         }
+        /**
+          * compute value that will be assigned in this cycle
+          * but store in buffer place
+          * */
+        virtual void simStartCurCycle() = 0;
+        /**
+         * move value from buffer place to actual place
+         * we do these because we need to maintain edge trigger
+         * to not cascade change value while other rtl block is updating
+         * */
+        virtual void simExitCurCycle() = 0;
 
     };
 
 
-    class RtlSimInterface : public SimInterface{
+    class RtlSimulatable : public Simulatable{
     private:
         RtlSimEngine* _engine = nullptr;
     public:
 
-        explicit RtlSimInterface(RtlSimEngine* engine):
-        SimInterface(),
-        _engine(engine){}
+        explicit RtlSimulatable(RtlSimEngine* engine):
+                Simulatable(),
+                _engine(engine){}
 
-        ~RtlSimInterface() override {delete _engine;}
+        ~RtlSimulatable() override {delete _engine;}
 
         void setSimEngine(RtlSimEngine* engine){
             if (_engine != nullptr){
@@ -68,15 +76,15 @@ namespace kathryn{
      *
      * */
 
-    class FlowSimInterface : public SimInterface{
+    class FlowSimulatable : public Simulatable{
     private:
         FlowSimEngine* _engine = nullptr;
     public:
-        explicit FlowSimInterface(FlowSimEngine* engine):
-        SimInterface(),
-        _engine(engine){}
+        explicit FlowSimulatable(FlowSimEngine* engine):
+                Simulatable(),
+                _engine(engine){}
 
-        ~FlowSimInterface() override {delete _engine;}
+        ~FlowSimulatable() override {delete _engine;}
 
         FlowSimEngine* getSimEngine(){return _engine;}
 
@@ -107,10 +115,10 @@ namespace kathryn{
     /***
      * module interface
      * */
-     class ModuleSimInterface : public SimInterface{
+     class ModuleSimInterface : public Simulatable{
      public:
          explicit ModuleSimInterface():
-         SimInterface(){}
+                 Simulatable(){}
 
          /** start Sim can be invoked multiple times*/
          /** exit sim can be invoked multiple times*/

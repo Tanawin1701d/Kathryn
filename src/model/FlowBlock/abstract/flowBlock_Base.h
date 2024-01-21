@@ -41,7 +41,7 @@ namespace kathryn {
     extern int nextFbIdx;
 
     class FlowBlockBase: public ModelDebuggable,
-                         public FlowSimInterface{
+                         public FlowSimulatable{
     protected:
         std::vector<FlowBlockBase*> subBlocks;
         std::vector<Node*>          basicNodes;

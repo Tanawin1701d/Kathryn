@@ -27,11 +27,12 @@ namespace kathryn{
 
         explicit SimController(CYCLE limitCycle);
         void simStart();
-        void setResetSignal(Wire* resetWire);
         void addEvent(EventBase* event);
         void saveData();
 
     };
+
+    SimController* getSimController();
 
 }
 

@@ -13,9 +13,9 @@ namespace kathryn{
     StartNode* startNode = new StartNode(rstWire);
 
     Module::Module(bool initComp):
-                      Identifiable(TYPE_MODULE),
-                      HwCompControllerItf(),
-                      FlowSimInterface(new FlowSimEngine())
+            Identifiable(TYPE_MODULE),
+            HwCompControllerItf(),
+            FlowSimulatable(new FlowSimEngine())
     {
         if (initComp)
             com_init();

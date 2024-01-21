@@ -5,6 +5,8 @@
 #ifndef KATHRYN_EVENTBASE_H
 #define KATHRYN_EVENTBASE_H
 
+#include<cassert>
+
 namespace kathryn{
 
     typedef unsigned long long int CYCLE;
@@ -18,9 +20,8 @@ namespace kathryn{
 
         explicit EventBase(CYCLE curCycle): _curCycle(curCycle){}
 
+        /** it is very crucial to do virtual deconstructor*/
         virtual ~EventBase() = default;
-
-
         /**
           * compute value that will be assigned in this cycle
           * but store in buffer place
@@ -49,6 +50,12 @@ namespace kathryn{
 
         [[nodiscard]]
         CYCLE getCurCycle() const {return _curCycle;}
+
+        void addNewEvent(EventBase* newEvent);
+
+        virtual bool needToDelete(){
+            return true;
+        }
     };
 
 
