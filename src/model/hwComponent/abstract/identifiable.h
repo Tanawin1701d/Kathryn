@@ -29,12 +29,14 @@ namespace kathryn {
         TYPE_COUNT = 8
     };
 
-    static const std::string GLOBAL_PREFIX[TYPE_COUNT] = {"R",
-                                                          "S",
-                                                          "W",
-                                                          "E",
-                                                          "M",
-                                                          "V"
+    static const std::string GLOBAL_PREFIX[TYPE_COUNT] = {"REG",
+                                                          "SR_ST",
+                                                          "SR_CDWT",
+                                                          "SR_CYWT",
+                                                          "WIRE",
+                                                          "EXPR",
+                                                          "MODULE",
+                                                          "VAL"
                                                         };
 
     class Module;
@@ -43,9 +45,9 @@ namespace kathryn {
         const std::string UNNAME_STR = "unnamed";
         /** name type such as Reg Wire ModuleClassName*/
         HW_COMPONENT_TYPE _type;
-        std::string _typeName; /// sub type of component typically we use for module
-        std::string _globalName;
-        ull         _globalId; /// id that DISTINCT // for all element even it is the same type
+        std::string       _varName; /// sub type of component typically we use for module
+        std::string       _globalName;
+        ull               _globalId; /// id that DISTINCT // for all element even it is the same type
         /// name for debugging
 
         /** local variable*/
@@ -56,12 +58,12 @@ namespace kathryn {
     public:
         /** assign and auto increment object id */
         explicit Identifiable(HW_COMPONENT_TYPE type) :
-            _type(type),
-            _typeName(UNNAME_STR),
+                _type(type),
+                _varName(UNNAME_STR),
             //_globalName(UNNAME_STR),
             _globalId(LAST_IDENT_ID),
-            _parent(nullptr),
-            _localId(-1)
+                _parent(nullptr),
+                _localId(-1)
             {
             _globalName = GLOBAL_PREFIX[type] + std::to_string(LAST_IDENT_ID);
             LAST_IDENT_ID++;
@@ -74,41 +76,46 @@ namespace kathryn {
             if (this == &ident){
                 return *this;
             }
-            _type = ident._type;
-            _typeName = UNNAME_STR;
-            _globalName = UNNAME_STR;
-            _globalId = LAST_IDENT_ID++;
-            _parent = nullptr;
-            _localId = -1;
+            _type       = ident._type;
+            _varName   = ident._varName + "_CP";
+            _globalName = GLOBAL_PREFIX[_type] + std::to_string(LAST_IDENT_ID);
+            _globalId   = LAST_IDENT_ID++;
+            _parent     = ident._parent;
+            _localId    = -1;
             return *this;
         }
 
         bool isLocalized() {return _parent != nullptr;}
 
         /** get hardware component type*/
-        [[nodiscard]] HW_COMPONENT_TYPE getType() const {return _type;}
-        void setIdentType(HW_COMPONENT_TYPE identType){_type = identType;}
+        [[nodiscard]]
+        HW_COMPONENT_TYPE getType     () const {return _type;}
+        void              setIdentType(HW_COMPONENT_TYPE identType){_type = identType;}
         /** get/set typeName (variable name)*/
-        [[nodiscard]] const std::string& getTypeName() const {return _typeName;}
-        void setTypeName(std::string typeName) {_typeName = std::move(typeName);}
+        [[nodiscard]]
+        const std::string& getVarName() const {return _varName;}
+        void               setVarName(std::string typeName) { _varName = std::move(typeName);}
         /** set global name*/
-        [[nodiscard]] const std::string& getGlobalName() const {return _globalName;}
-        void setGlobalName(const std::string& globalName) {_globalName = globalName;}
-        [[nodiscard]] ull getGlobalId() const {return _globalId;}
+        [[nodiscard]]
+        const std::string& getGlobalName() const {return _globalName;}
+        void               setGlobalName(const std::string& globalName) {_globalName = globalName;}
+        [[nodiscard]]
+        ull                getGlobalId() const {return _globalId;}
         /// global id can not be set it permanent when class is initialized void setGlobalId(ull globalId) {_globalId = globalId;}
 
-        Module* getParent(){return _parent;}
-        void setParent(Module* parent) {_parent = parent;}
+        Module*            getParent(){return _parent;}
+        void               setParent(Module* parent) {_parent = parent;}
 
-        [[nodiscard]] ull  getLocalId() const{return _localId;}
-        void setLocalId(ull id)      {_localId = id; }
+        [[nodiscard]]
+        ull                getLocalId() const {return _localId;}
+        void               setLocalId(ull id) {_localId = id;}
 
         virtual bool castDownAble(){return true;}
 
         /** get debug value*/
         [[nodiscard]]std::string
         getIdentDebugValue() const{
-            return getGlobalName() + "_localName_" + getTypeName();
+            return getGlobalName() + "_localName_" + getVarName();
         }
 
     };

@@ -48,7 +48,7 @@ namespace kathryn {
     /**key point is make the agent that transparent while routing
      * assignable for updateMeta in assignable in agent is not used*/
     template<typename T>
-    class SliceAgent : public Assignable<SliceAgent<T>>,public Operable, public Slicable<T> {
+    class SliceAgent : public Assignable<SliceAgent<T>>, public Operable, public Slicable<T> {
 
     private:
         T* _master;
@@ -102,6 +102,12 @@ namespace kathryn {
         RtlSimulatable* castToRtlSimItf() override{
             assert(false);
         }
+
+        ValRep& sv() override{
+            assert(false);
+        }
+
+
 
     };
 }

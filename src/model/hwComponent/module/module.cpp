@@ -15,7 +15,7 @@ namespace kathryn{
     Module::Module(bool initComp):
             Identifiable(TYPE_MODULE),
             HwCompControllerItf(),
-            FlowSimulatable(new FlowSimEngine())
+            ModuleSimInterface()
     {
         if (initComp)
             com_init();

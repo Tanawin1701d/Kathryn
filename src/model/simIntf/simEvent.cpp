@@ -20,6 +20,7 @@ namespace kathryn{
         auto resetSimEngine = _resetWire->castToRtlSimItf()->getSimEngine();
         ValRep resetVal = cvStrToValRep("b1");
         resetSimEngine->getCurVal() = resetVal;
+        addNewEvent(this);
 
     }
 

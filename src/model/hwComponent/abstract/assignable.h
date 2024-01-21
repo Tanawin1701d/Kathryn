@@ -16,9 +16,9 @@ namespace kathryn{
 
     /** reg/wire update metas data*/
     struct UpdateEvent{
-        Operable* updateCondition{}; /// which condition that allow this value to update.
-        Operable* updateState{}; /// which state that need to update.
-        Operable* updateValue{}; /// value to update.
+        Operable* updateCondition = nullptr; /// which condition that allow this value to update.
+        Operable* updateState     = nullptr; /// which state that need to update.
+        Operable* updateValue     = nullptr; /// value to update.
         Slice     updateSlice; /// slice to update
         int priority = 9;
         ///priority for circuit if there are attention to update same register at a time 0 is highest 9 is lowest

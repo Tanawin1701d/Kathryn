@@ -33,7 +33,7 @@ namespace kathryn{
 
     class Module : public Identifiable,
                    public HwCompControllerItf,
-                   public FlowSimulatable,
+                   public ModuleSimInterface,
                    public ModelDebuggable{
 
     private:
@@ -62,7 +62,7 @@ namespace kathryn{
 
     public:
         explicit Module(bool initComp = true);
-        ~Module();
+        ~Module() override;
         template<typename T>
         void deleteSubElement(std::vector<T*>& subEleVec){
             for (auto ele: subEleVec){
@@ -115,6 +115,7 @@ namespace kathryn{
         virtual void flow(){}; //// user must inherit this function to build thier flow
         virtual void buildFlow();
 
+        /** model debug*/
         [[maybe_unused]]
         std::string getMdDescribe() override;
         void addMdLog(MdLogVal* mdLogVal) override;

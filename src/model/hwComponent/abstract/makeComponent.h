@@ -40,7 +40,7 @@ namespace kathryn {
         /** make initializer*/
         unlockAlloc();
         auto objPtr = new T(std::forward<Args>(args)...);
-        objPtr->setTypeName(name);
+        objPtr->setVarName(name);
         objPtr->com_final();
 
         return *objPtr;

@@ -54,12 +54,13 @@ namespace kathryn {
 
         /** due to slice operable maybe change*/
         [[nodiscard]]
-        virtual Slice getOperableSlice() const = 0;
+        virtual Slice           getOperableSlice() const = 0;
         [[nodiscard]]
-        virtual Operable& getExactOperable () const = 0;
-
-        virtual Identifiable* castToIdent() = 0;
+        virtual Operable&       getExactOperable () const = 0;
+        /**downcasting*/
+        virtual Identifiable*   castToIdent() = 0;
         virtual RtlSimulatable* castToRtlSimItf() = 0;
+        virtual ValRep&         sv() = 0;
     };
 
 

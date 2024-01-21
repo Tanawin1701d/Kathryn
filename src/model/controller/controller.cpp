@@ -23,7 +23,7 @@ namespace kathryn{
         if (globalModulePtr == nullptr){
             centralControllerPtr->unlockAllocation();
             globalModulePtr = new Module(false);
-            globalModulePtr->setTypeName("globeMod");
+            globalModulePtr->setVarName("globeMod");
             centralControllerPtr->on_globalModule_init_component(globalModulePtr);
         }
         return centralControllerPtr;

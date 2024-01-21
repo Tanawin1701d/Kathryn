@@ -37,8 +37,12 @@ namespace kathryn{
 
 
     SliceAgent<Reg>& Reg::operator()(int start, int stop) {
+        /***TODO sliceAgent must be Delete
+         * but fow now we neglect it
+         * */
         auto ret =  new SliceAgent<Reg>(this,
-                                        Slice{start, stop});
+                                        getNextSlice(start, stop, getSlice())
+                                        );
         return *ret;
     }
 

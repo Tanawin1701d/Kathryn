@@ -33,8 +33,8 @@ namespace kathryn{
         /**
          * override assignable
          * */
-        Val& operator <<= (Operable& b) override { assert(true); return *this;}
-        Val& operator =   (Operable& b) override { assert(true); return *this;}
+        Val& operator <<= (Operable& b) override { assert(false);}
+        Val& operator =   (Operable& b) override { assert(false);}
         Val& operator = (std::string& b){return *this;};
         Val& operator = (ull v){return *this;};
 

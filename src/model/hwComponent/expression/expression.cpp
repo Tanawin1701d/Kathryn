@@ -67,14 +67,12 @@ namespace kathryn{
 
     expression& expression::callBackBlockAssignFromAgent(Operable &b, Slice absSlice) {
         std::cout << "exprMetas should not be assign in slice mode" << std::endl;
-        assert(true);
-        return *this;
+        assert(false);
     }
 
     expression& expression::callBackNonBlockAssignFromAgent(Operable &b, Slice absSlice) {
         std::cout << "exprMetas should not be assign in slice mode" << std::endl;
-        assert(true);
-        return *this;
+        assert(false);
     }
 
     void expression::simStartCurCycle() {

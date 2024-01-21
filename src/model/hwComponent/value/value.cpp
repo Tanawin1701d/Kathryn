@@ -17,7 +17,7 @@ namespace kathryn{
             _size(size){
                     com_init();
                     ValRep assignVal = cvStrToValRep(rawValue);
-                    getSimEngine()->getCurVal() = assignVal;
+                    getSimEngine()->getCurVal()  = assignVal;
                     getSimEngine()->getBackVal() = assignVal;
 
             }
