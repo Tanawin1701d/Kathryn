@@ -51,7 +51,7 @@ namespace kathryn{
                                                 &((*this) == _upState),
                                                 &_downState,
                                                 Slice({0,1}),
-                                                9
+                                                8
                                            });
         addUpdateMeta(resetEvent);
     }

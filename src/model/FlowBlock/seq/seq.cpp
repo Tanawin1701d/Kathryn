@@ -71,7 +71,7 @@ namespace kathryn{
             _complexNode->setAllDependNodeCond(BITWISE_AND);
             _complexNode->assignAllNode();
         }else{
-            assert(true);
+            assert(false);
         }
 
     }

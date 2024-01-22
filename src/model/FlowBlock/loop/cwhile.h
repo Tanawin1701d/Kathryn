@@ -17,16 +17,16 @@ namespace kathryn{
 
     class FlowBlockCwhile : public FlowBlockBase, public LoopStMacro{
     private:
-        Operable* _condExpr = nullptr;
+        Operable*      _condExpr         = nullptr;
         FlowBlockBase* implicitFlowBlock = nullptr;
-        bool isGetFlowBlockYet = false;
+        bool           isGetFlowBlockYet = false;
 
 
-        NodeWrap*    resultNodeWrapper = nullptr;
-        NodeWrap*    loopNodeWrap      = nullptr;
-        PseudoNode*  exitNode          = nullptr;
-        PseudoNode*  byPassExitNode    = nullptr;
-        PseudoNode*  subBlockExitNode  = nullptr;
+        NodeWrap*    resultNodeWrapper   = nullptr;
+        NodeWrap*    loopNodeWrap        = nullptr;
+        PseudoNode*  byPassExitNode      = nullptr;
+        PseudoNode*  subBlockExitNode    = nullptr;
+        PseudoNode*  exitNode            = nullptr;
         //// it is wrap is as same as result but it is used for loop assignment
 
         NodeWrap* subBlockNodeWrap = nullptr;

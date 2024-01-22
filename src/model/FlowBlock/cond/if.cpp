@@ -20,7 +20,7 @@ namespace kathryn{
     }
 
     void FlowBlockIf::addElementInFlowBlock(Node *node) {
-        assert(true); /** this flow type will generate single par or seq block*/
+        assert(false); /** this flow type will generate single par or seq block*/
     }
 
     void FlowBlockIf::addSubFlowBlock(FlowBlockBase *subBlock) {

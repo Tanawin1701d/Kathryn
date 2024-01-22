@@ -51,7 +51,7 @@ namespace kathryn{
             entranceNodes.push_back(nd);
         }
 
-        void addEntraceNodes(std::vector<Node*> nds){
+        void addEntraceNodes(const std::vector<Node*>& nds){
             for (auto nd : nds){
                 addEntraceNode(nd);
             }
