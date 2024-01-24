@@ -84,6 +84,13 @@ namespace kathryn{
             }
         }
 
+        template<typename T>
+        void prepareSimSubElement(std::vector<T*>& subEleVec){
+            for (auto ele: subEleVec){
+                ele->sortUpEventByPriority();
+            }
+        }
+
         void com_final() override;
 
         /**implicit element that is built from design flow*/
@@ -122,6 +129,7 @@ namespace kathryn{
         std::string getMdIdentVal() override{return getIdentDebugValue();};
 
         /** override simulation */
+        void prepareSim() override;
         void simStartCurCycle() override;
         void simExitCurCycle() override;
 

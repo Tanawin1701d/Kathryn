@@ -6,6 +6,7 @@
 #define KATHRYN_ASMNODE_H
 
 #include "node.h"
+#include "updateEvent.h"
 
 namespace kathryn {
 

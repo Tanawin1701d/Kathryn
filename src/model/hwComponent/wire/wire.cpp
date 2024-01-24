@@ -20,15 +20,15 @@ namespace kathryn{
     }
 
     Wire& Wire::operator=(Operable &b) {
-        Slice resultSlice = getSlice().getWeakAssignSlice({0, b.getOperableSlice().getSize()});
-        ctrl->on_wire_update(generateAssignMeta(b, resultSlice), this);
+        Slice absSlice = getSlice().getSubSliceWithShinkMsb({0, b.getOperableSlice().getSize()});
+        ctrl->on_wire_update(generateAssignMeta(b, absSlice), this);
         return *this;
     }
 
     SliceAgent<Wire>& Wire::operator()(int start, int stop) {
         auto ret = new SliceAgent<Wire>(
-                        this,
-                        getNextSlice(start, stop, getSlice())
+                this,
+                getAbsSubSlice(start, stop, getSlice())
                         );
         return *ret;
     }
@@ -40,13 +40,12 @@ namespace kathryn{
     /** override callback*/
 
     Wire& Wire::callBackBlockAssignFromAgent(Operable &b, Slice absSliceOfHost) {
-        assert(true);
-        return *this;
+        assert(false);
     }
 
     Wire& Wire::callBackNonBlockAssignFromAgent(Operable &b, Slice absSliceOfHost) {
-        Slice resultSlice = absSliceOfHost.getWeakAssignSlice({0, b.getOperableSlice().getSize()});
-        ctrl->on_wire_update(generateAssignMeta(b, resultSlice), this);
+        Slice absSlice = absSliceOfHost.getSubSliceWithShinkMsb({0, b.getOperableSlice().getSize()});
+        ctrl->on_wire_update(generateAssignMeta(b, absSlice), this);
         return *this;
     }
 

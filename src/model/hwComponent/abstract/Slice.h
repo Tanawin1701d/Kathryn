@@ -17,17 +17,22 @@ namespace kathryn{
         }
         int getSize() const {return stop - start;}
 
+        bool isBitInRangeRel(int bit){
+            return (start + bit) < stop;
+        }
 
-        /**weak assign is assign that can be posible but assigner lsb must greater than a is lsb*/
-        /** a is absolute value but b typically is related value*/
-        /**return slice of absolute value that relate to a */
-        Slice getWeakAssignSlice(Slice b){
-            assert(b.start == 0);
-            return {start, std::min(stop, start + b.getSize())};
+
+        /** the start bit must be in range but stop but haven't to*/
+        //////// b is relative value
+        Slice getSubSliceWithShinkMsb(Slice b){
+            assert(isBitInRangeRel(b.start));
+            assert(b.checkValidSlice());
+            return {start + b.start,
+                    std::min(stop, start + b.stop)};
         }
 
         Slice getSubSlice(Slice indexer) const{
-            assert(indexer.start < indexer.stop);
+            assert(indexer.checkValidSlice());
             assert( (start + indexer.stop) <= stop);
             return {start + indexer.start, start + indexer.stop};
         }

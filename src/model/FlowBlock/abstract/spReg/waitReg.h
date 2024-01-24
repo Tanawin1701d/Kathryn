@@ -11,6 +11,7 @@
 #include "model/hwComponent/expression/expression.h"
 #include "model/hwComponent/value/value.h"
 #include "model/hwComponent/abstract/makeComponent.h"
+#include "updateEvent.h"
 
 namespace kathryn{
 

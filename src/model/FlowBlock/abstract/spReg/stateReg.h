@@ -10,6 +10,7 @@
 #include "model/hwComponent/expression/expression.h"
 #include "model/hwComponent/value/value.h"
 #include "model/FlowBlock/abstract/nodes/node.h"
+#include "updateEvent.h"
 
 
 namespace kathryn {

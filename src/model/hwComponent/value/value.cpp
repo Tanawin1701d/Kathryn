@@ -29,8 +29,8 @@ namespace kathryn{
     SliceAgent<Val>& Val::operator()(int start, int stop){
 
         auto ret = new SliceAgent<Val>(
-                    this,
-                    getNextSlice(start, stop, getSlice())
+                this,
+                getAbsSubSlice(start, stop, getSlice())
                 );
         return *ret;
     }

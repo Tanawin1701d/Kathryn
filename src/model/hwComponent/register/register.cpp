@@ -23,7 +23,7 @@ namespace kathryn{
     }
 
     Reg& Reg::operator<<=(Operable &b) {
-        Slice absSlice = getSlice().getWeakAssignSlice({0, b.getOperableSlice().getSize()});
+        Slice absSlice = getSlice().getSubSliceWithShinkMsb({0, b.getOperableSlice().getSize()});
         ctrl->on_reg_update(generateAssignMeta(b, absSlice), this);
         return *this;
     }
@@ -41,7 +41,7 @@ namespace kathryn{
          * but fow now we neglect it
          * */
         auto ret =  new SliceAgent<Reg>(this,
-                                        getNextSlice(start, stop, getSlice())
+                                        getAbsSubSlice(start, stop, getSlice())
                                         );
         return *ret;
     }
@@ -51,8 +51,10 @@ namespace kathryn{
     }
 
     Reg& Reg::callBackBlockAssignFromAgent(Operable &b, Slice absSliceOfHost) {
-        Slice resultSlice = absSliceOfHost.getWeakAssignSlice({0, b.getOperableSlice().getSize()});
-        ctrl->on_reg_update(generateAssignMeta(b, resultSlice), this);
+        assert(absSliceOfHost.getSize() <= getOperableSlice().getSize());
+        Slice absSlice = absSliceOfHost.getSubSliceWithShinkMsb(
+                            {0, b.getOperableSlice().getSize()});
+        ctrl->on_reg_update(generateAssignMeta(b, absSlice), this);
         return *this;
     }
 

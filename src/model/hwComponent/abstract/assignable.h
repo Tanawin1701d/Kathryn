@@ -6,78 +6,17 @@
 #define KATHRYN_ASSIGNABLE_H
 
 #include <vector>
+#include <algorithm>
 
 #include "operable.h"
 #include "model/hwComponent/abstract/operable.h"
 #include "model/hwComponent/abstract/Slice.h"
 #include "model/simIntf/rtlSimEle.h"
+#include "updateEvent.h"
 
 namespace kathryn{
 
-    /** reg/wire update metas data*/
-    struct UpdateEvent{
-        Operable* updateCondition = nullptr; /// which condition that allow this value to update.
-        Operable* updateState     = nullptr; /// which state that need to update.
-        Operable* updateValue     = nullptr; /// value to update.
-        Slice     updateSlice; /// slice to update
-        int priority = 9;
-        ///priority for circuit if there are attention to update same register at a time 0 is highest 9 is lowest
-
-        bool shouldAssignValRep(Operable* samplingOpr, bool isGetFromCur){
-            if (samplingOpr != nullptr){
-                RtlSimulatable* simItf = samplingOpr->castToRtlSimItf();
-                assert(simItf != nullptr);
-                auto simEnginePtr = simItf->getSimEngine();
-                ValRep samplingVal = ValRep(1);
-                if (isGetFromCur){
-                    samplingVal = simEnginePtr->getCurVal();
-                }else{
-                    samplingVal = simEnginePtr->getBackVal();
-                }
-                if (!samplingVal.getLogicalValue()){
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        void tryAssignValRep(ValRep& desValRep, bool getFromCur){
-            ////// check update state valid
-            if (!(shouldAssignValRep(updateCondition, getFromCur) ||
-                  shouldAssignValRep(updateState, getFromCur))){
-                return;
-            }
-            assert(updateValue != nullptr);
-
-            ValRep& vr = getFromCur ? updateValue->castToRtlSimItf()->getSimEngine()->getCurVal()
-                                    : updateValue->castToRtlSimItf()->getSimEngine()->getBackVal();
-                    ;
-            desValRep.updateOnSlice(vr, updateSlice);
-        }
-
-        void trySimAll(){
-            trySim(updateCondition);
-            trySim(updateState);
-            trySim(updateValue);
-        }
-
-        static void trySim(Operable* opr){
-            opr->castToRtlSimItf()->simStartCurCycle();
-        }
-
-        [[nodiscard]] std::string getDebugString() const{
-            return updateValue->castToIdent()->getGlobalName() +
-            "[" +
-            std::to_string(updateSlice.start) + ":"+
-            std::to_string(updateSlice.stop) +
-            "] when state = " +
-            ((updateState != nullptr) ? updateState->castToIdent()->getGlobalName(): "none") +
-            " cond = " +
-            ((updateCondition != nullptr) ? updateCondition->castToIdent()->getGlobalName(): "none");
-        }
-    };
-
-    /* This is used to describe what and where to update that send to controller and let flow block determine*/
+    /** This is used to describe what and where to update that send to controller and let flow block determine*/
     struct AssignMeta{
         std::vector<UpdateEvent*>& updateEventsPool;
         Operable& valueToAssign;
@@ -124,15 +63,24 @@ namespace kathryn{
         /////// getFromCur means get value from current cycle or from back cycle
         void assignValRepCurCycle(ValRep& desValRep, bool getFromCur){
 
-            for (int upId = _updateMeta.size()-1; upId >= 0; upId--){
-                UpdateEvent* curUpEvent = _updateMeta[upId];
-                curUpEvent->trySimAll();
+            for (auto curUpEvent : _updateMeta){
                 assert(curUpEvent != nullptr);
+                curUpEvent->trySimAll();
                 curUpEvent->tryAssignValRep(desValRep, getFromCur);
             }
 
-
         }
+
+        static bool upEventCmp(const UpdateEvent* lhs, const UpdateEvent* rhs){
+            assert(lhs != nullptr);
+            assert(rhs != nullptr);
+            return (*lhs) < (*rhs);
+        }
+
+        void sortUpEventByPriority(){
+            std::sort(_updateMeta.begin(), _updateMeta.end(), upEventCmp);
+        }
+
 
 
     };

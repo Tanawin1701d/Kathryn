@@ -35,11 +35,10 @@ namespace kathryn {
         void addAgentHolder(SliceAgent<T>* agent){
             agentHolders.push_back(agent);
         }
-
-        Slice getNextSlice(int start, int stop, Slice oldSlice){
+        /** start and stop is */
+        Slice getAbsSubSlice(int start, int stop, Slice oldSlice){
             return oldSlice.getSubSlice({start, stop});
         }
-
         Slice getSlice() const { return _absSlice; }
         void  setSlice(Slice slc) {_absSlice =  slc;}
 
@@ -65,14 +64,14 @@ namespace kathryn {
 
         SliceAgent<T>& operator() (int start, int stop) override{
             auto ret =  new SliceAgent<T>(_master,
-                        Slicable<T>::getNextSlice(start, stop, getOperableSlice())
+                                          Slicable<T>::getAbsSubSlice(start, stop, getOperableSlice())
                     );
             return *ret;
         }
 
         SliceAgent<T>& operator() (int idx) override{
             auto ret =  new SliceAgent<T>(_master,
-                        Slicable<T>::getNextSlice(idx, idx+1, getOperableSlice())
+                                          Slicable<T>::getAbsSubSlice(idx, idx + 1, getOperableSlice())
                     );
             return *ret;
         }
@@ -106,9 +105,6 @@ namespace kathryn {
         ValRep& sv() override{
             assert(false);
         }
-
-
-
     };
 }
 

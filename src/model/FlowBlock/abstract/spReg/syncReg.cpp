@@ -4,6 +4,7 @@
 
 #include "syncReg.h"
 #include "model/controller/controller.h"
+#include "updateEvent.h"
 
 namespace kathryn {
 

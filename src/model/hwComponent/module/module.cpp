@@ -151,6 +151,21 @@ namespace kathryn{
 
     /** override simulation*/
 
+    void Module::prepareSim(){
+        /**prepare basis element first*/
+        for (int i = 0; i < SP_CNT_REG; i++){
+            prepareSimSubElement(_spRegs[i]);
+        }
+        prepareSimSubElement(_userRegs);
+        prepareSimSubElement(_userWires);
+        prepareSimSubElement(_userExpressions);
+        prepareSimSubElement(_userVals);
+        for(auto modulePtr : _userSubModule){
+            assert(modulePtr != nullptr);
+            modulePtr->prepareSim();
+        }
+    }
+
     void Module::simStartCurCycle() {
         /**simulate rtl first*/
         for (int i = 0; i < SP_CNT_REG; i++){

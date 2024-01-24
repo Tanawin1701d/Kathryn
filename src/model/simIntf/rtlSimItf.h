@@ -124,6 +124,8 @@ namespace kathryn{
          explicit ModuleSimInterface():
                  Simulatable(){}
 
+         virtual void prepareSim() = 0;
+
          /** start Sim can be invoked multiple times*/
          /** exit sim can be invoked multiple times*/
      };
