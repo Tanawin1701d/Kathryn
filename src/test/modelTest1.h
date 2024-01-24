@@ -59,9 +59,7 @@ namespace kathryn{
         makeReg(b, 64);
         makeReg(c, 16);
     public:
-        explicit testMod3(int x): Module(){
-
-        }
+        explicit testMod3(int x): Module(){}
 
         void flow() override {
             seq {
@@ -73,10 +71,8 @@ namespace kathryn{
                 par{
                     b <<= c;
                 };
-
             }
         }
-
     };
 
     class testMod4: public Module{

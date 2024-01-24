@@ -34,7 +34,7 @@ namespace kathryn{
                 }else{
                     samplingVal = simEnginePtr->getBackVal();
                 }
-                if (samplingVal != 1){
+                if (!samplingVal.getLogicalValue()){
                     return false;
                 }
             }

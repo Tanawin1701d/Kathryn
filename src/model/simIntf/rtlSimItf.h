@@ -67,6 +67,10 @@ namespace kathryn{
 
         /** exit sim can be only invoked single time per cycle*/
 
+        void setToRec() {_engine->setRecordCmd(true);}
+        std::vector<ValRep>& getRecData() { return _engine->getRecordData(); }
+
+
     };
 
     /***

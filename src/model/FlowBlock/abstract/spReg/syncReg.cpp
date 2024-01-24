@@ -59,7 +59,7 @@ namespace kathryn {
         RtlSimEngine* valEnginePtr = upFullState.getSimEngine();
         ValRep& fullStateRep       = valEnginePtr->getCurVal();
         /**due to it return valrep we must check it is equal to 1*/
-        return (curVal == fullStateRep) == 1;
+        return (curVal == fullStateRep).getLogicalValue();
     }
 
 

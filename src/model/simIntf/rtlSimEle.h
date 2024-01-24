@@ -5,13 +5,15 @@
 #ifndef KATHRYN_RTLSIMELE_H
 #define KATHRYN_RTLSIMELE_H
 
+#include <vector>
 #include "sim/logicRep/valRep.h"
 
 namespace kathryn {
 
     class RtlSimEngine {
-
     private:
+        bool   _recCmd = false; /** do not record data in simulation*/
+        std::vector<ValRep> _recData;
         ValRep backVal;
         ValRep curVal;
         /** idea we will use time array to store history of cycle
@@ -33,9 +35,17 @@ namespace kathryn {
 
         ValRep &getCurVal() { return curVal; }
 
+        ///// setRecord
+        void setRecordCmd(bool recCmd){ _recCmd = recCmd;}
+        bool getRecordCmd() const {return _recCmd;}
+        std::vector<ValRep>& getRecordData(){return _recData;}
+
         ///// step
         void iterate() {
+            if (getRecordCmd())
+                _recData.push_back(curVal);
             backVal = curVal;
+
         };
 
         //////////////// sequential sim
@@ -43,6 +53,8 @@ namespace kathryn {
 
     class FlowSimEngine{
     private:
+
+
         int amtUsed = 0;
         bool isStateRunningIn = false; /// check that are there
                                        /// state is running in this block

@@ -68,7 +68,7 @@ namespace kathryn{
         RtlSimEngine* valEnginePtr = _downState.getSimEngine();
         ValRep& restCurVal = valEnginePtr->getCurVal();
 
-        return (curVal > restCurVal) == 1;
+        return (curVal > restCurVal).getLogicalValue();
     }
 
     /**
@@ -166,7 +166,7 @@ namespace kathryn{
         RtlSimEngine* valEnginePtr = IdleCnt->castToRtlSimItf()->getSimEngine();
         ValRep& restCurVal = valEnginePtr->getCurVal();
 
-        return (curVal > restCurVal) == 1;
+        return (curVal > restCurVal).getLogicalValue();
     }
 
 }

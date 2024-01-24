@@ -25,11 +25,7 @@ namespace kathryn{
     }
 
     ValRep::ValRep(const ValRep &rhs) {
-
-        _len = rhs._len;
-        _valSize = rhs._valSize;
-        std::copy(rhs._val, rhs._val + _valSize, _val);
-
+        operator=(rhs);
     }
 
 
@@ -148,11 +144,77 @@ namespace kathryn{
 
     void ValRep::updateOnSlice(ValRep& srcVal, Slice srcSl){
         ///////// TODO to assign value
-        for (int startIdx = srcSl.start;
-                 startIdx < srcSl.stop; startIdx++){
-            _val[startIdx/] = 0
-        }
+        assert(srcVal.getLen() == srcSl.getSize());
+        assert(srcVal.getLen() <= getLen());
+        assert(srcSl.start >= 0);
+        /** extend value to match current val */
+        ValRep extendedSrcVal(srcVal.getZeroExtend(getLen()));
+        extendedSrcVal  = extendedSrcVal << srcSl.start;
+        /** clean the update portion to prepare for replacing */
+        this->fillZeroToValrep(srcSl.start, srcSl.stop);
+        /** replacing*/
+        *this = *this | extendedSrcVal;
+
     }
+
+    void ValRep::fillZeroToValrep(int startBit, int stopBit){
+
+
+        assert( (startBit >= 0)  && (stopBit <= (getValArrSize() * bitSizeOfUll)));
+        assert(startBit <= stopBit); //// for this fucntion we allow none fill used
+
+        /**iterate value*/
+        int curIterUll      = startBit   / bitSizeOfUll;
+        int curAlignIterBit = curIterUll * bitSizeOfUll;
+        int curIterBit      = startBit;
+        int stopIterUll     = stopBit / bitSizeOfUll;
+        /***********************************************/
+        while (curIterBit < stopBit){
+            ull zeroMaskBit;
+            if (curIterUll == stopIterUll){
+                zeroMaskBit = getZeroMask(curIterBit % bitSizeOfUll,
+                                          stopBit    % bitSizeOfUll);
+            }else{
+                zeroMaskBit = getZeroMask(curIterBit % bitSizeOfUll,
+                                          bitSizeOfUll
+                                          );
+            }
+            ull& considerVal = _val[curIterUll];
+                 considerVal = considerVal & zeroMaskBit; /**clear data*/
+
+            curIterUll      += 1;
+            curAlignIterBit += bitSizeOfUll;
+            curIterBit      = curAlignIterBit;
+        }
+        /**************************************************/
+    }
+
+    void ValRep::fillZeroToValrep(int startBit) {
+        fillZeroToValrep(startBit, getValArrSize()*bitSizeOfUll);
+    }
+
+    ull ValRep::getZeroMask(int startIdx, int stopIdx) const{
+        ///////[startIdx, stopIdx)
+        /**check integrity**/
+        assert(startIdx < stopIdx);
+        assert(startIdx >= 0);
+        assert(stopIdx <= bitSizeOfUll);
+        int amtConsiderBit = stopIdx - startIdx;
+        ull mask;
+        if (amtConsiderBit == bitSizeOfUll){
+            mask = (ull)(-1); //// corner case shift over varsize will be not shifted in c++
+            assert( (mask + 1) == 0);
+        }else{
+            mask =  (((ull)1) << amtConsiderBit) - 1;
+        }
+        ///////////(5 bit) 100000  - 1 = 011111
+        mask = mask << startIdx; //// shift to right position first
+        mask = ~mask; ///// we need zero bit to mask the consider region
+        return mask;
+
+    }
+
+
 
     /////////////////////////////////////////////////////////////
     //////////// bitwise operator ///////////////////////////////
@@ -183,6 +245,7 @@ namespace kathryn{
         for (int valIdx = 0; valIdx < _valSize; valIdx++){
             preRet._val[valIdx] = ~_val[valIdx];
         }
+        preRet.fillZeroToValrep(_len);
         return preRet;
     }
 
@@ -194,20 +257,8 @@ namespace kathryn{
         return eqOperator(rhs, true);
     }
 
-    bool ValRep::operator==(const int& rhs){
-        assert(_len > 0);
-        assert(_valSize > 0);
-        return _val[0] == (ull)rhs;
-    }
-
     ValRep ValRep::operator!=(const ValRep &rhs) {
         return eqOperator(rhs, false);
-    }
-
-    bool ValRep::operator!=(const int& rhs){
-        assert(_len > 0);
-        assert(_valSize > 0);
-        return _val[0] != (ull)rhs;
     }
 
     ////////////////////////////////////////////////////////////
@@ -226,7 +277,7 @@ namespace kathryn{
         });
     }
 
-    ValRep ValRep::operator!()const
+    ValRep ValRep::operator!() const
     {
 
         assert(_len > 0);
@@ -247,19 +298,19 @@ namespace kathryn{
     ValRep ValRep::operator<(const ValRep &rhs) {
 
         return cmpOperator(rhs,[](const ull* valA, const ull* valB, int valSize) -> bool
-                           {
-                                assert(valSize >= 1);
-                                for (int cmpIdx = valSize-1; cmpIdx >= 0; cmpIdx--){
-                                    if (valA[cmpIdx] < valB[cmpIdx]){
-                                        return true;
-                                    }else if (valA[cmpIdx] == valB[cmpIdx]){
-                                        continue;
-                                    }else{
-                                        return false;
-                                    }
-                                }
-                                return false;
-                           });
+        {
+             assert(valSize >= 1);
+             for (int cmpIdx = valSize-1; cmpIdx >= 0; cmpIdx--){
+                 if (valA[cmpIdx] < valB[cmpIdx]){
+                     return true;
+                 }else if (valA[cmpIdx] == valB[cmpIdx]){
+                     continue;
+                 }else{
+                     return false;
+                 }
+             }
+             return false;
+        });
 
     }
 
@@ -325,7 +376,7 @@ namespace kathryn{
         ValRep SrcB = getZeroExtend(maxLen);
 
         assert(maxLen >= 1);
-        ValRep preRet(maxLen + 1);
+        ValRep preRet(maxLen);
 
         /***addition*/
         bool overFlow = false;
@@ -337,10 +388,9 @@ namespace kathryn{
 
         }
 
-        if (overFlow){
-            preRet._val[SrcA._valSize] = 1;
-        }
-
+        /** prevent overflow bit pollute*/
+        preRet.fillZeroToValrep(preRet.getLen());
+        //////////////////////////////////////////////////////////////
         return preRet;
     }
 
@@ -358,6 +408,9 @@ namespace kathryn{
         for (int valIdx = 0; valIdx < srcA._valSize; valIdx++){
             preRet._val[valIdx] = srcA._val[valIdx] + srcB._val[valIdx] + overFlow;
         }
+        /** prevent overflow bit pollute*/
+        preRet.fillZeroToValrep(preRet.getLen());
+        //////////////////////////////////////////////////////////////
 
         return preRet;
     }
@@ -384,9 +437,17 @@ namespace kathryn{
                 preRet._val[valIdx] = 0;
             }
         }
-
+        /** prevent overflow bit pollute*/
+        preRet.fillZeroToValrep(preRet.getLen());
+        //////////////////////////////////////////////////////////////
         return preRet;
 
+    }
+
+    ValRep ValRep::operator<<(const int rhs){
+        ValRep shiftIdent(bitSizeOfUll);
+        shiftIdent._val[0] = (ull)rhs;
+        return operator<<(shiftIdent);
     }
 
     ValRep ValRep::operator>>(const ValRep &rhs) {
@@ -400,6 +461,7 @@ namespace kathryn{
             if ((valIdx + shiftEntireVal) < _valSize){
                     /*** major shift to align 64 bit per array block*/
                     preRet._val[valIdx] = _val[valIdx + shiftEntireVal];
+
                     /** do minor shift this is ensured that less than 64 bit*/
                     preRet._val[valIdx] = preRet._val[valIdx] >> shiftminorVal;
                     if ((valIdx + shiftEntireVal + 1) < _valSize){
@@ -410,7 +472,16 @@ namespace kathryn{
             }
         }
 
+        /** prevent overflow bit pollute*/
+        preRet.fillZeroToValrep(preRet.getLen());
+        //////////////////////////////////////////////////////////////
         return preRet;
+    }
+
+    ValRep ValRep::operator>>(const int rhs){
+        ValRep shiftIdent(bitSizeOfUll);
+        shiftIdent._val[0] = (ull)rhs;
+        return operator>>(shiftIdent);
     }
 
 }

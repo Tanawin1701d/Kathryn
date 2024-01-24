@@ -24,7 +24,7 @@ namespace kathryn{
      */
     class ValRep{
     private:
-        int   _len             = -1;
+        int   _len             = -1; //// userDefine size
         int   _valSize         = -1; //// size of array that contain ull
         ull*  _val             = nullptr;
         const int bitSizeOfUll = sizeof(ull) << 3;
@@ -40,42 +40,41 @@ namespace kathryn{
             return _len;
         }
 
-        int getValArrSize() const{
-            return _valSize;
-        }
+        int getValArrSize() const{return _valSize;}
 
-        ull* getVal() const{
-            return _val;
-        }
-
+        ull* getVal() const{return _val;}
+        /** build new valrep that have bigger than cur valrep the exceed bit wil
+         * be assigned to 0
+         * */
         ValRep getZeroExtend(int targetSize);
-
-        inline bool checkEqualBit(const ValRep& rhs) const{
-            return _len == rhs._len;
-        }
-
+        /** check define size*/
+        inline bool checkEqualBit(const ValRep& rhs) const{ return _len == rhs._len;}
+        /** operation core*/
         ValRep bwOperator(const ValRep& rhs,
                           const std::function<ull(ull, ull)>& operation);
-        ValRep eqOperator(const ValRep& rhs, bool checkEq);
-        bool   getLogicalValue() const;
         ValRep logicalOperator(const ValRep& rhs,
                                const std::function<bool(bool, bool)>& operation) const;
         ValRep cmpOperator(const ValRep& rhs,
                            const std::function<bool(ull* a, ull* b, int size)>& operation);
-
+        ValRep eqOperator(const ValRep& rhs, bool checkEq);
+        /** get logical value in single bit*/
+        bool   getLogicalValue() const;
+        /** update value from slice*/
         void updateOnSlice(ValRep& srcVal, Slice srcSl);
 
+        /** bit level control*/
+        ull  getZeroMask(int startIdx, int stopIdx) const; //// mask zero at [startIdx, stopIdx) leave other bits with 1 value
+        void fillZeroToValrep(int startBit, int stopBit); //// fill all bit in valrep bit absolute start bit
+        void fillZeroToValrep(int startBit);
 
         ValRep& operator = (const ValRep& rhs);
 
         //////// required equal bit operator
-        ValRep operator & (const ValRep& rhs);
-        ValRep operator | (const ValRep& rhs);
-        ValRep operator ^ (const ValRep& rhs);
+        ValRep operator &  (const ValRep& rhs);
+        ValRep operator |  (const ValRep& rhs);
+        ValRep operator ^  (const ValRep& rhs);
         ValRep operator == (const ValRep& rhs);
-        bool   operator == (const int& rhs);
         ValRep operator != (const ValRep& rhs);
-        bool   operator != (const int& rhs);
         //////// only one operand
         ValRep operator ~ ();
 
@@ -96,7 +95,9 @@ namespace kathryn{
         ValRep operator /  (const ValRep&    ){assert(false);};
         ValRep operator %  (const ValRep&    ){assert(false);};
         ValRep operator << (const ValRep& rhs);
+        ValRep operator << (const int rhs);
         ValRep operator >> (const ValRep& rhs);
+        ValRep operator >> (const int rhs);
 
 
     };
