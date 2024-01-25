@@ -29,6 +29,15 @@ namespace kathryn{
         return centralControllerPtr;
     }
 
+    Module* getGlobalModulePtr(){
+        if (globalModulePtr == nullptr){
+            assert(centralControllerPtr == nullptr);
+            getControllerPtr();
+        }
+        assert(globalModulePtr != nullptr);
+        return globalModulePtr;
+    }
+
     void freeControllerPtr(){
         ///// finalize global module if it have
         if (centralControllerPtr != nullptr){

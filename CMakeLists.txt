@@ -104,5 +104,9 @@ add_executable(Kathryn main.cpp
         src/test/simTest1.h
         src/model/hwComponent/abstract/updateEvent.h
         src/util/numberic/numConvert.cpp
+        src/sim/event/userEvent.cpp
+        src/sim/event/userEvent.h
+        src/sim/interface/simInterface.cpp
+        src/sim/interface/simInterface.h
 
 )

@@ -28,7 +28,7 @@
 namespace kathryn{
 
 
-    extern Wire* rstWire;
+    extern Wire*      rstWire;
     extern StartNode* startNode;
 
     class Module : public Identifiable,

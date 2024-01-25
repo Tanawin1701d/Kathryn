@@ -113,6 +113,7 @@ namespace kathryn {
 
     /** this is entrace for every device to com_init with controller*/
     ModelController* getControllerPtr();
+    Module*          getGlobalModulePtr();
     void        freeControllerPtr();
 
 

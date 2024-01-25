@@ -11,6 +11,9 @@ namespace kathryn{
 
     typedef unsigned long long int CYCLE;
 
+    int SIM_USER_PRIO = 9;
+    int SIM_MODEL_PRIO = 8;
+
     class EventBase{
     private:
         CYCLE _curCycle = 0;
@@ -18,7 +21,10 @@ namespace kathryn{
 
     public:
 
-        explicit EventBase(CYCLE curCycle): _curCycle(curCycle){}
+        explicit EventBase(CYCLE curCycle, int priority):
+            _curCycle(curCycle),
+            _priority(priority)
+            {}
 
         /** it is very crucial to do virtual deconstructor*/
         virtual ~EventBase() = default;

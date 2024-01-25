@@ -8,10 +8,13 @@
 namespace kathryn{
 
 
-    ModuleSimEvent::ModuleSimEvent(Module* startMd,Operable* resetWire):
-    EventBase(0),
+    ModuleSimEvent::ModuleSimEvent(Module* startMd,
+                                   Operable* resetWire,
+                                   StartNode* startNode):
+    EventBase(0, SIM_MODEL_PRIO),
     _startModule(startMd),
     _resetWire(rstWire),
+    _startNode(startNode),
     _curCycle(0)
     {
         assert(_startModule != nullptr);

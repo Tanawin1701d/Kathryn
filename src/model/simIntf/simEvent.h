@@ -14,14 +14,16 @@ namespace kathryn{
 
     class ModuleSimEvent : public EventBase{
     private:
-        Module*   _startModule = nullptr;
-        Operable* _resetWire   = nullptr;
+        Module*    _startModule = nullptr;
+        Operable*  _resetWire   = nullptr;
+        StartNode* _startNode   = nullptr;
         CYCLE     _curCycle    = 0;
 
     public:
 
-        explicit ModuleSimEvent(Module*   startMd,
-                                Operable* resetWire ///// active high
+        explicit ModuleSimEvent(Module*    startMd,
+                                Operable*  resetWire, ///// active high
+                                StartNode* startNode ///// active high
         );
 
 
