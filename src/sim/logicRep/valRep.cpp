@@ -48,6 +48,18 @@ namespace kathryn{
 
     }
 
+    ValRep ValRep::shink(int targetSize){
+        assert( (targetSize > 0) && (targetSize <= getLen()));
+        ValRep preRet(targetSize);
+
+        for (int cpIdx = 0; cpIdx < preRet.getValArrSize(); cpIdx++){
+            preRet._val[cpIdx] = _val[cpIdx];
+        }
+        preRet.fillZeroToValrep(preRet.getLen());
+
+        return preRet;
+    }
+
     ////////////// required equal bit operator
 
     ValRep ValRep::bwOperator(const ValRep &rhs,
@@ -142,16 +154,30 @@ namespace kathryn{
         return *this;
     }
 
-    void ValRep::updateOnSlice(ValRep& srcVal, Slice srcSl){
+    ValRep ValRep::slice(Slice sl) {
+
+        assert(sl.stop <= getLen());
+        assert(sl.checkValidSlice());
+
+        ValRep cpy(*this);
+        cpy = cpy >> sl.start;
+        cpy.shink(sl.getSize());
+
+        return cpy;
+    }
+
+
+
+    void ValRep::updateOnSlice(ValRep srcVal, Slice desSl){
         ///////// TODO to assign value
-        assert(srcVal.getLen() == srcSl.getSize());
-        assert(srcVal.getLen() <= getLen());
-        assert(srcSl.start >= 0);
+        assert(desSl.getSize() == srcVal.getLen());
+        assert(desSl.stop <= getLen());
+        assert(desSl.checkValidSlice());
         /** extend value to match current val */
         ValRep extendedSrcVal(srcVal.getZeroExtend(getLen()));
-        extendedSrcVal  = extendedSrcVal << srcSl.start;
+        extendedSrcVal  = extendedSrcVal << desSl.start;
         /** clean the update portion to prepare for replacing */
-        this->fillZeroToValrep(srcSl.start, srcSl.stop);
+        this->fillZeroToValrep(desSl.start, desSl.stop);
         /** replacing*/
         *this = *this | extendedSrcVal;
 
@@ -444,7 +470,7 @@ namespace kathryn{
 
     }
 
-    ValRep ValRep::operator<<(const int rhs){
+    ValRep ValRep::operator<<(int rhs){
         ValRep shiftIdent(bitSizeOfUll);
         shiftIdent._val[0] = (ull)rhs;
         return operator<<(shiftIdent);
@@ -478,10 +504,12 @@ namespace kathryn{
         return preRet;
     }
 
-    ValRep ValRep::operator>>(const int rhs){
+    ValRep ValRep::operator>>(int rhs){
         ValRep shiftIdent(bitSizeOfUll);
         shiftIdent._val[0] = (ull)rhs;
         return operator>>(shiftIdent);
     }
+
+
 
 }

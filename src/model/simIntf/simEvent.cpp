@@ -18,7 +18,7 @@ namespace kathryn{
         assert(_resetWire   != nullptr);
 
         auto resetSimEngine = _resetWire->castToRtlSimItf()->getSimEngine();
-        ValRep resetVal = cvStrToValRep("b1");
+        ValRep resetVal = NumConverter::cvtStrToValRep(1, 1);
         resetSimEngine->getCurVal() = resetVal;
         addNewEvent(this);
 
@@ -35,7 +35,7 @@ namespace kathryn{
 
         assert(_resetWire != nullptr);
         auto resetSimEngine = _resetWire->castToRtlSimItf()->getSimEngine();
-        ValRep resetVal = cvStrToValRep("b0");
+        ValRep resetVal = NumConverter::cvtStrToValRep(1,0);
         resetSimEngine->getCurVal() = resetVal;
         _curCycle++;
 

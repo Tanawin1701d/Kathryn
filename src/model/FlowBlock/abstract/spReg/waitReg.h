@@ -11,7 +11,6 @@
 #include "model/hwComponent/expression/expression.h"
 #include "model/hwComponent/value/value.h"
 #include "model/hwComponent/abstract/makeComponent.h"
-#include "updateEvent.h"
 
 namespace kathryn{
 
@@ -23,8 +22,8 @@ namespace kathryn{
 
     class CondWaitStateReg : public CtrlFlowRegBase{
 
-        makeVal(_upState,1, "b1");
-        makeVal(_downState,1, "b0");
+        makeVal(_upState  ,1, 1);
+        makeVal(_downState,1, 0);
         Operable* _condOpr = nullptr;
 
     protected:

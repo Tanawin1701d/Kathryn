@@ -11,8 +11,8 @@
 namespace kathryn{
 
     struct StartNode : Node{
-        makeVal(upState, 1, "b1");
-        makeVal(downState, 1, "b0");
+        makeVal(upState  , 1, 1);
+        makeVal(downState, 1, 0);
 
         StateReg* _delayReset = nullptr;
         Operable* _rstSig     = nullptr;

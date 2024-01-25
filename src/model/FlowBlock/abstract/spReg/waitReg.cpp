@@ -4,7 +4,6 @@
 
 #include "waitReg.h"
 #include "model/controller/controller.h"
-#include "updateEvent.h"
 
 
 namespace kathryn{
@@ -87,9 +86,9 @@ namespace kathryn{
      ),
      _waitCycle(waitCycle),
     _bitSz     (calBitUsed(waitCycle)),
-    IdleCnt   (&_make<Val>("IdleCnt" ,_bitSz,"b0")),
-    _startCnt  (&_make<Val>("startCnt",_bitSz,"b1")),
-    _endCnt    (&_make<Val>("endCnt"  ,_bitSz,"h" +  std::to_string(waitCycle)))
+    IdleCnt    (&_make<Val>("IdleCnt" ,_bitSz,0        )),
+    _startCnt  (&_make<Val>("startCnt",_bitSz,1        )),
+    _endCnt    (&_make<Val>("endCnt"  ,_bitSz,waitCycle))
      {
         /** TO FIX*/
         com_init();
@@ -105,8 +104,8 @@ namespace kathryn{
         false
     ),
     _bitSz     (endCnt->getOperableSlice().getSize()),
-    IdleCnt   (&_make<Val>("IdleCnt" ,_bitSz,"d0")),
-    _startCnt  (&_make<Val>("startCnt",_bitSz,"d1")),
+    IdleCnt    (&_make<Val>("IdleCnt" ,_bitSz,0)),
+    _startCnt  (&_make<Val>("startCnt",_bitSz,1)),
     _endCnt    (endCnt)
     {
         com_init();

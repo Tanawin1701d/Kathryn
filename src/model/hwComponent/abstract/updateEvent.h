@@ -55,7 +55,12 @@ namespace kathryn {
             ValRep& vr = getFromCur ? updateValue->castToRtlSimItf()->getSimEngine()->getCurVal()
                                     : updateValue->castToRtlSimItf()->getSimEngine()->getBackVal();
                     ;
-            desValRep.updateOnSlice(vr, updateSlice);
+            /**vr might have larger than desire updateSlice, so we must shink to match destination*/
+            Slice vrSl = updateValue->getOperableSlice();
+            vrSl = vrSl.getSubSliceWithShinkMsb({0, updateSlice.getSize()});
+            ValRep actualVr = vr.slice(vrSl);
+            /** update value */
+            desValRep.updateOnSlice(actualVr, updateSlice);
         }
 
         void trySimAll() const{

@@ -5,7 +5,7 @@
 #include "stateReg.h"
 
 #include "model/controller/controller.h"
-#include "updateEvent.h"
+
 
 namespace kathryn {
 
@@ -17,8 +17,8 @@ namespace kathryn {
                                                   false,
                                                   TYPE_STATE_REG,
                                                   false),
-              upFullState  (_make<Val>("upFullState"  ,1, "1b1")),
-              downFullState(_make<Val>("downFullState",1, "1b0"))
+              upFullState  (_make<Val>("upFullState"  ,1, 1)),
+              downFullState(_make<Val>("downFullState",1, 0))
     {
         com_init();
     };

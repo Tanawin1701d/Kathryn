@@ -5,6 +5,7 @@
 #ifndef KATHRYN_VALREP_H
 #define KATHRYN_VALREP_H
 
+#include <functional>
 #include <cstdio>
 #include "model/hwComponent/abstract/Slice.h"
 
@@ -47,6 +48,7 @@ namespace kathryn{
          * be assigned to 0
          * */
         ValRep getZeroExtend(int targetSize);
+        ValRep shink(int targetSize);
         /** check define size*/
         inline bool checkEqualBit(const ValRep& rhs) const{ return _len == rhs._len;}
         /** operation core*/
@@ -60,7 +62,8 @@ namespace kathryn{
         /** get logical value in single bit*/
         bool   getLogicalValue() const;
         /** update value from slice*/
-        void updateOnSlice(ValRep& srcVal, Slice srcSl);
+        ValRep slice(Slice sl);
+        void updateOnSlice(ValRep srcVal, Slice desSl);
 
         /** bit level control*/
         ull  getZeroMask(int startIdx, int stopIdx) const; //// mask zero at [startIdx, stopIdx) leave other bits with 1 value
@@ -95,9 +98,9 @@ namespace kathryn{
         ValRep operator /  (const ValRep&    ){assert(false);};
         ValRep operator %  (const ValRep&    ){assert(false);};
         ValRep operator << (const ValRep& rhs);
-        ValRep operator << (const int rhs);
+        ValRep operator << (int rhs);
         ValRep operator >> (const ValRep& rhs);
-        ValRep operator >> (const int rhs);
+        ValRep operator >> (int rhs);
 
 
     };

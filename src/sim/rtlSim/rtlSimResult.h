@@ -61,8 +61,6 @@ namespace kathryn{
      /**
       * it is used to wrap module and collect node statistic
       * */
-     struct ModuleSimEle
-
 }
 
 #endif //KATHRYN_RTLSIMRESULT_H

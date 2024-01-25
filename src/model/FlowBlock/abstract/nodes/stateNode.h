@@ -53,7 +53,7 @@ namespace kathryn{
             }
             setSimStatus();
             assert(_stateReg != nullptr);
-            bool isStateSet = _stateReg->getSimEngine()->getCurVal() == 1;
+            bool isStateSet = _stateReg->getSimEngine()->getCurVal().getLogicalValue();
             incEngine(isStateSet);
         }
     };

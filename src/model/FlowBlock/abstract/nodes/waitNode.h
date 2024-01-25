@@ -50,6 +50,8 @@ namespace kathryn{
                 return;
             }
             setSimStatus();
+            bool shouldIncStat = _condWaitStateReg->isSimAtWaiting();
+            incEngine(shouldIncStat);
 
 
         }
@@ -96,6 +98,17 @@ namespace kathryn{
         }
 
         int getCycleUsed() override {return _cycle;}
+
+        void simStartCurCycle() override{
+            if (isCurCycleSimulated()){
+                return;
+            }
+            setSimStatus();
+            bool shouldIncStat =  _cycleWaitStateReg->isSimAtWaiting();
+            incEngine(shouldIncStat);
+
+
+        }
 
     };
 

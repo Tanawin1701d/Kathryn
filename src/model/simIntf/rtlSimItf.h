@@ -92,7 +92,7 @@ namespace kathryn{
 
         FlowSimEngine* getSimEngine(){return _engine;}
 
-        bool incEngine(bool isStateRunning){
+        void incEngine(bool isStateRunning){
 
             if (isStateRunning){
                 getSimEngine()->incUsedTime();

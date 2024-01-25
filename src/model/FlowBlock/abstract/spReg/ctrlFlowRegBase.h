@@ -6,7 +6,6 @@
 #define KATHRYN_CTRLFLOWREGBASE_H
 
 #include "model/hwComponent/register/register.h"
-#include "updateEvent.h"
 
 
 namespace kathryn{

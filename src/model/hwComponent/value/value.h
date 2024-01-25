@@ -14,33 +14,63 @@
 #include "model/controller/conInterf/controllerItf.h"
 #include "model/hwComponent/abstract/slicable.h"
 #include "model/hwComponent/abstract/logicComp.h"
+#include "util/numberic/numConvert.h"
 
 namespace kathryn{
 
     /** This class act as constant value */
     class Val: public LogicComp<Val>{
     protected:
-        std::string rawValue;
-        int _size;
+        int    _size;
+        ValRep rawValue;
         /***the actual value will be assigned to val rep*/
 
         void com_init() override;
     public:
         /** todo we will make value save the value and range more precisly*/
-        explicit Val(int size, std::string v);
 
+        template<typename... Args>
+        explicit Val(int size, Args... args):
+            LogicComp({0, size}, TYPE_VAL, false),
+            _size(size),
+            rawValue(NumConverter::cvtStrToValRep(size, args...))
+            {
+                assert(size > 0);
+                com_init();
+                getSimEngine()->getCurVal()  = rawValue;
+                getSimEngine()->getBackVal() = rawValue;
+            }
+
+        explicit Val(int size):
+            LogicComp({0, size}, TYPE_VAL, false),
+            _size(size),
+            rawValue(NumConverter::cvtStrToValRep(size, 0))
+            {
+                assert(size > 0);
+                com_init();
+                getSimEngine()->getCurVal()  = rawValue;
+                getSimEngine()->getBackVal() = rawValue;
+            }
+
+        explicit Val(const ValRep& val):
+            LogicComp({0, val.getLen()}, TYPE_VAL, false),
+            _size(val.getLen()),
+            rawValue(val)
+            {
+
+            }
 
         /**
          * override assignable
          * */
         Val& operator <<= (Operable& b) override { assert(false);}
         Val& operator =   (Operable& b) override { assert(false);}
-        Val& operator = (std::string& b){return *this;};
-        Val& operator = (ull v){return *this;};
+        Val& operator =   (std::string& b)       { assert(false);}
+        Val& operator =   (ull v)                { assert(false);}
 
         /** override operable*/
         [[nodiscard]]
-        Slice getOperableSlice() const override { return Slice{0, _size};}
+        Slice     getOperableSlice() const override { return Slice{0, _size};}
         [[nodiscard]]
         Operable& getExactOperable() const override {return (Operable &) *this;}
 

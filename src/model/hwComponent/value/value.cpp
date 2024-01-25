@@ -11,17 +11,6 @@
 
 namespace kathryn{
 
-    Val::Val(int size, std::string v):
-            LogicComp({0, size}, TYPE_VAL,false),
-            rawValue(std::move(v)),
-            _size(size){
-                    com_init();
-                    ValRep assignVal = cvStrToValRep(rawValue);
-                    getSimEngine()->getCurVal()  = assignVal;
-                    getSimEngine()->getBackVal() = assignVal;
-
-            }
-
     void Val::com_init() {
         ctrl->on_value_init(this);
     }
@@ -48,6 +37,7 @@ namespace kathryn{
         //// getSimEngine()->iterate();
         //////// don't have to iterate due to it is fix value
     }
+
 
 
 }

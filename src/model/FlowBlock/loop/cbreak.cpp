@@ -47,7 +47,7 @@ namespace kathryn{
 
         /**build internal node*/
         breakNode = new StateNode();
-        normExitNode= new DummyNode(&_make<Val>("cbreakDum", 1, "b0"));
+        normExitNode= new DummyNode(&_make<Val>("cbreakDum", 1, 0));
 
         /**build resultNodeWrap*/
         resultNodeWrap = new NodeWrap();

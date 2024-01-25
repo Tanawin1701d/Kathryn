@@ -21,7 +21,7 @@ namespace kathryn{
         makeReg(a, 8);
         makeReg(b, 8);
         makeReg(c, 8);
-        makeVal(iv, 8, "8b10101010");
+        makeVal(iv, 8, 0b10101010);
 
         explicit testSimMod(int x): Module(){}
 

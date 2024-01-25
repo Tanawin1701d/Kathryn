@@ -14,7 +14,7 @@
 
 #define makeWire( name, argument) Wire& name = _make<Wire>(#name,argument)
 #define makeReg( name, argument)  Reg& name = _make<Reg>(#name, argument)
-#define makeVal(name, size, initVal) Val& name = _make<Val>(#name, size, initVal)
+#define makeVal(name, ...) Val& name = _make<Val>(#name, __VA_ARGS__)
 #define makeMod(name, TypeName, ...) Module& name = _make<TypeName>(#name, __VA_ARGS__)
 #define var auto&
 
