@@ -31,6 +31,7 @@ namespace kathryn{
         /**localize necessary destination*/
         targetModulePtr->addSpReg(ptr, spRegType);
         ptr->setParent(targetModulePtr);
+        ptr->buildInheritName(); //// build inherit name for that module
         /** debug value*/
         logMF(ptr,
               "[" + sp_reg_type_to_str(spRegType) + "] is initialized and set parent to "
@@ -47,6 +48,7 @@ namespace kathryn{
         /** localize necessary destination*/
         targetModulePtr->addUserReg(ptr);
         ptr->setParent(targetModulePtr);
+        ptr->buildInheritName();
         /** debug value*/
         logMF(ptr,
               "USER_REG is initialized and set parent to " + targetModulePtr->getIdentDebugValue());
@@ -81,6 +83,7 @@ namespace kathryn{
         /** localize necessary destination*/
         targetModulePtr->addUserWires(ptr);
         ptr->setParent(targetModulePtr);
+        ptr->buildInheritName();
         /** debug value*/
         logMF(ptr,
               "user wire is initialized and set parent to " + targetModulePtr->getIdentDebugValue());
@@ -110,6 +113,7 @@ namespace kathryn{
         /** localize necessary destination*/
         targetModulePtr->addUserExpression(ptr);
         ptr->setParent(targetModulePtr);
+        ptr->buildInheritName();
         /** debug value*/
         logMF(ptr,
               "expr is initializing and set parent to " + targetModulePtr->getIdentDebugValue());
@@ -121,6 +125,7 @@ namespace kathryn{
         /** localize necessary destination*/
         targetModulePtr->addUserVal(ptr);
         ptr->setParent(targetModulePtr);
+        ptr->buildInheritName();
         /** debug value*/
         logMF(ptr,
               "val is initializing and set parent to " + targetModulePtr->getIdentDebugValue());
@@ -135,6 +140,7 @@ namespace kathryn{
         /** for global module for initialize project*/
         assert(globalMod != nullptr);
         moduleStack.push(Module_Stack_Element{globalMod, MODULE_COMPONENT_CONSTRUCT});
+        globalMod->buildInheritName();
     }
 
 
@@ -149,6 +155,7 @@ namespace kathryn{
         assert(getTargetModuleEle().state != MODULE_FINISHED_CONSTRUCT);
         moduleStack.push(Module_Stack_Element{ptr, MODULE_COMPONENT_CONSTRUCT});
         ptr->setParent(targetModulePtr);
+        ptr->buildInheritName();
         /** debug value*/
         logMF(ptr,
               "module is initializing and set parent to " + targetModulePtr->getIdentDebugValue());

@@ -87,19 +87,17 @@ add_executable(Kathryn main.cpp
         src/sim/event/eventBase.h
         src/sim/event/eventQ.h
         src/sim/event/eventQ.cpp
-        src/sim/controller/controller.cpp
-        src/sim/controller/controller.h
-        src/sim/rtlSim/rtlSimResult.cpp
-        src/sim/rtlSim/rtlSimResult.h
-        src/model/simIntf/rtlSimEle.cpp
-        src/model/simIntf/rtlSimEle.h
-        src/model/simIntf/rtlSimItf.cpp
-        src/model/simIntf/rtlSimItf.h
+        src/sim/controller/simController.cpp
+        src/sim/controller/simController.h
+        src/model/simIntf/modelSimEngine.cpp
+        src/model/simIntf/modelSimEngine.h
+        src/model/simIntf/modelSimInterface.cpp
+        src/model/simIntf/modelSimInterface.h
         src/model/hwComponent/abstract/assignable.cpp
         src/util/numberic/numConvert.cpp
         src/util/numberic/numConvert.h
-        src/model/simIntf/simEvent.cpp
-        src/model/simIntf/simEvent.h
+        src/model/simIntf/moduleSimEvent.cpp
+        src/model/simIntf/moduleSimEvent.h
         src/sim/event/eventBase.cpp
         src/test/simTest1.h
         src/model/hwComponent/abstract/updateEvent.h
@@ -108,5 +106,9 @@ add_executable(Kathryn main.cpp
         src/sim/event/userEvent.h
         src/sim/interface/simInterface.cpp
         src/sim/interface/simInterface.h
+        src/util/fileWriter/fileWriterBase.cpp
+        src/util/fileWriter/fileWriterBase.h
+        src/sim/simResWriter/simResWriter.cpp
+        src/sim/simResWriter/simResWriter.h
 
 )

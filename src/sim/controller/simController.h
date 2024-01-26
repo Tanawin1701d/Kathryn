@@ -2,16 +2,17 @@
 // Created by tanawin on 15/1/2567.
 //
 
-#ifndef KATHRYN_CONTROLLER_H
-#define KATHRYN_CONTROLLER_H
+#ifndef KATHRYN_SIMCONTROLLER_H
+#define KATHRYN_SIMCONTROLLER_H
 
+#include<iostream>
 
 #include "sim/event/eventBase.h"
 #include "sim/event/eventQ.h"
-#include "model/hwComponent/wire/wire.h"
 
 namespace kathryn{
 
+    class Wire;
     class SimController{
 
     private:
@@ -25,10 +26,11 @@ namespace kathryn{
 
     public:
 
-        explicit SimController(CYCLE limitCycle);
+        explicit SimController();
         void simStart();
         void addEvent(EventBase* event);
         void saveData();
+        void setLimitCycle(CYCLE lmtCycle){_limitCycle = lmtCycle;}
 
     };
 
@@ -36,4 +38,4 @@ namespace kathryn{
 
 }
 
-#endif //KATHRYN_CONTROLLER_H
+#endif //KATHRYN_SIMCONTROLLER_H

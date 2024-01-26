@@ -2,14 +2,14 @@
 // Created by tanawin on 15/1/2567.
 //
 
-#include "controller.h"
+#include "simController.h"
 
 
 
 namespace kathryn{
 
-    SimController::SimController(CYCLE limitCycle):
-    _limitCycle(limitCycle)
+    SimController::SimController():
+    _limitCycle(0)
     {}
 
     void SimController::collectData() {
@@ -72,7 +72,7 @@ namespace kathryn{
     SimController* getSimController(){
 
         if (simCtrl == nullptr){
-            simCtrl = new SimController(100000);
+            simCtrl = new SimController();
         }
         return simCtrl;
 

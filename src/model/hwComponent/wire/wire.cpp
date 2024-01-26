@@ -10,7 +10,8 @@
 namespace kathryn{
 
 
-    Wire::Wire(int size) : LogicComp({0, size}, TYPE_WIRE,true){
+    Wire::Wire(int size) : LogicComp({0, size}, TYPE_WIRE,
+                                     new RtlSimEngine(size, VST_WIRE),true){
         com_init();
     }
 

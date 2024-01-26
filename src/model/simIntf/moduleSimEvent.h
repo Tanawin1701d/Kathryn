@@ -2,11 +2,9 @@
 // Created by tanawin on 21/1/2567.
 //
 
-#ifndef KATHRYN_SIMEVENT_H
-#define KATHRYN_SIMEVENT_H
+#ifndef KATHRYN_MODULESIMEVENT_H
+#define KATHRYN_MODULESIMEVENT_H
 
-
-#include "model/hwComponent/module/module.h"
 #include "sim/event/eventBase.h"
 
 namespace kathryn{
@@ -28,6 +26,7 @@ namespace kathryn{
 
 
         void simStartCurCycle() override;
+        void curCycleCollectData() override;
         void simExitCurCycle() override;
 
         bool needToDelete() override {return true;}
@@ -39,4 +38,4 @@ namespace kathryn{
 
 }
 
-#endif //KATHRYN_SIMEVENT_H
+#endif //KATHRYN_MODULESIMEVENT_H

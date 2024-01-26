@@ -1,9 +1,8 @@
 //
 // Created by tanawin on 21/1/2567.
 //
-
-#include "simEvent.h"
-#include "util/numberic/numConvert.h"
+#include "model/hwComponent/module/module.h"
+#include "moduleSimEvent.h"
 
 namespace kathryn{
 
@@ -32,10 +31,14 @@ namespace kathryn{
         _startModule->simStartCurCycle();
     }
 
+    void ModuleSimEvent::curCycleCollectData() {
+        _startModule->curCycleCollectData();
+    }
+
     void ModuleSimEvent::simExitCurCycle() {
 
         _startModule->simExitCurCycle();
-
+        /** process next event*/
         assert(_resetWire != nullptr);
         auto resetSimEngine = _resetWire->castToRtlSimItf()->getSimEngine();
         ValRep resetVal = NumConverter::cvtStrToValRep(1,0);
@@ -44,4 +47,6 @@ namespace kathryn{
 
         addNewEvent(this);
     }
+
+
 }

@@ -3,7 +3,7 @@
 //
 
 #include "eventBase.h"
-#include "sim/controller/controller.h"
+#include "sim/controller/simController.h"
 
 
 namespace kathryn{

@@ -31,7 +31,8 @@ namespace kathryn{
 
         template<typename... Args>
         explicit Val(int size, Args... args):
-            LogicComp({0, size}, TYPE_VAL, false),
+            LogicComp({0, size}, TYPE_VAL,
+                      new RtlSimEngine(size, VST_INTEGER), false),
             _size(size),
             rawValue(NumConverter::cvtStrToValRep(size, args...))
             {
@@ -42,7 +43,8 @@ namespace kathryn{
             }
 
         explicit Val(int size):
-            LogicComp({0, size}, TYPE_VAL, false),
+            LogicComp({0, size}, TYPE_VAL,
+                      new RtlSimEngine(size, VST_INTEGER), false),
             _size(size),
             rawValue(NumConverter::cvtStrToValRep(size, 0))
             {
@@ -53,7 +55,8 @@ namespace kathryn{
             }
 
         explicit Val(const ValRep& val):
-            LogicComp({0, val.getLen()}, TYPE_VAL, false),
+            LogicComp({0, val.getLen()}, TYPE_VAL,
+                      new RtlSimEngine(val.getLen(), VST_INTEGER), false),
             _size(val.getLen()),
             rawValue(val)
             {

@@ -2,11 +2,11 @@
 // Created by tanawin on 18/1/2567.
 //
 
-#ifndef KATHRYN_RTLSIMITF_H
-#define KATHRYN_RTLSIMITF_H
+#ifndef KATHRYN_MODELSIMINTERFACE_H
+#define KATHRYN_MODELSIMINTERFACE_H
 
 #include <cassert>
-#include "model/simIntf/rtlSimEle.h"
+#include "model/simIntf/modelSimEngine.h"
 #include "sim/event/eventBase.h"
 
 
@@ -36,18 +36,24 @@ namespace kathryn{
           * */
         virtual void simStartCurCycle() = 0;
         /**
+         * collect data to stat or vcd file
+         * */
+        virtual void prepareSim() = 0;
+        virtual void curCycleCollectData() = 0;
+        /**
          * move value from buffer place to actual place
          * we do these because we need to maintain edge trigger
          * to not cascade change value while other rtl block is updating
          * */
         virtual void simExitCurCycle() = 0;
 
+
     };
 
 
     class RtlSimulatable : public Simulatable{
     private:
-        RtlSimEngine* _engine = nullptr;
+        RtlSimEngine* _engine  = nullptr;
     public:
 
         explicit RtlSimulatable(RtlSimEngine* engine):
@@ -67,8 +73,21 @@ namespace kathryn{
 
         /** exit sim can be only invoked single time per cycle*/
 
-        void setToRec() {_engine->setRecordCmd(true);}
-        std::vector<ValRep>& getRecData() { return _engine->getRecordData(); }
+        /**specific set element before prepare sim*/
+        void beforePrepareSim(RtlSimEngine::RTL_Meta_afterMf simMeta){
+            _engine->setSimMeta(simMeta);
+        }
+
+        /** before sim controller start prepare the system*/
+        void prepareSim() override{
+            _engine->declareSimVar();
+        }
+
+        /****/
+        void curCycleCollectData() override{
+            _engine->tryWriteValue();
+        }
+
 
 
     };
@@ -112,6 +131,11 @@ namespace kathryn{
             _engine->unsetRunning();
         };
 
+        /**TODO add data collection to flow and node*/
+        void prepareSim() override{};
+
+        void curCycleCollectData() override{}
+
         /** start Sim can be invoked multiple times*/
         /** exit sim can be invoked multiple times*/
     };
@@ -120,16 +144,14 @@ namespace kathryn{
      * module interface
      * */
      class ModuleSimInterface : public Simulatable{
+
      public:
          explicit ModuleSimInterface():
                  Simulatable(){}
 
-         virtual void prepareSim() = 0;
-
-         /** start Sim can be invoked multiple times*/
-         /** exit sim can be invoked multiple times*/
+         virtual void beforePrepareSim(VcdWriter* vcdWriter) = 0;
      };
 
 }
 
-#endif //KATHRYN_RTLSIMITF_H
+#endif //KATHRYN_MODELSIMINTERFACE_H

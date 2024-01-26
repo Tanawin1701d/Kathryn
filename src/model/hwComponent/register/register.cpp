@@ -12,7 +12,7 @@ namespace kathryn{
     /** constructor need to init communication with controller*/
     Reg::Reg(int size, bool initCom, HW_COMPONENT_TYPE hwType, bool requiredAllocCheck) :
             LogicComp({0, size}, hwType,
-                      requiredAllocCheck){
+                      new RtlSimEngine(size, VST_REG),requiredAllocCheck){
         if (initCom) {
             com_init();
         }

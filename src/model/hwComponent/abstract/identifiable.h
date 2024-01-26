@@ -9,6 +9,7 @@
 #include <utility>
 #include <memory>
 #include <cassert>
+#include <vector>
 
 typedef unsigned long long int ull;
 
@@ -48,8 +49,7 @@ namespace kathryn {
         std::string       _varName; /// sub type of component typically we use for module
         std::string       _globalName;
         ull               _globalId; /// id that DISTINCT // for all element even it is the same type
-        /// name for debugging
-
+        std::vector<std::string> _inheritName; ///// "Name1_Name2_Name3"
         /** local variable*/
         Module* _parent; /// if it is nullptr it is not localized
         ull     _localId; /// id that use in the component
@@ -102,6 +102,15 @@ namespace kathryn {
         [[nodiscard]]
         ull                getGlobalId() const {return _globalId;}
         /// global id can not be set it permanent when class is initialized void setGlobalId(ull globalId) {_globalId = globalId;}
+
+        /** set inheritName name*/
+        /**inherit name must be call when all master module are initialized only*/
+        std::vector<std::string>& getInheritName(){
+            assert(!_inheritName.empty());
+            return _inheritName;
+        };
+        void buildInheritName();
+
 
         Module*            getParent(){return _parent;}
         void               setParent(Module* parent) {_parent = parent;}

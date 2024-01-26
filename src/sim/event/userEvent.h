@@ -24,7 +24,9 @@ namespace kathryn{
      UserEvent(std::function<void(void)> activeFunc, CYCLE cycle, int pri):
         EventBase(cycle, pri),
         _activeFunc(std::move(activeFunc))
-     {}
+     {
+         addNewEvent(this);
+     }
 
      void simStartCurCycle() override{
          _activeFunc();

@@ -3,7 +3,7 @@
 //
 
 #include "simInterface.h"
-#include "model/hwComponent/module/module.h"
+
 
 
 namespace kathryn{
@@ -27,11 +27,17 @@ namespace kathryn{
 
 
 
-    SimInterface::SimInterface():
+    SimInterface::SimInterface(CYCLE limitCycle):
     _ModuleSimEvent(
             new ModuleSimEvent(getGlobalModulePtr(),rstWire,startNode)
-    ){}
-
+    ),
+    _curUserDescCycle(0),
+    _limitCycle(limitCycle)
+    {
+        SimController* simCtrl = getSimController();
+        assert(simCtrl != nullptr);
+        simCtrl->setLimitCycle(limitCycle);
+    }
 
     SimInterface::~SimInterface() {
         delete _ModuleSimEvent;
@@ -41,8 +47,19 @@ namespace kathryn{
     void SimInterface::simStart() {
         /***module sim Event is auto insert to event*/
         /****/
+        describe();
+        SimController* simCtrl = getSimController();
+        assert(simCtrl != nullptr);
+        simCtrl->simStart();
 
+    }
 
+    void SimInterface::incCycle(CYCLE inCycle){
+        _curUserDescCycle += inCycle;
+    }
+
+    void SimInterface::setCycle(CYCLE stCycle){
+        _curUserDescCycle += stCycle;
     }
 
 

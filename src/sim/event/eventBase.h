@@ -11,8 +11,8 @@ namespace kathryn{
 
     typedef unsigned long long int CYCLE;
 
-    int SIM_USER_PRIO = 9;
-    int SIM_MODEL_PRIO = 8;
+    static int SIM_USER_PRIO = 9;
+    static int SIM_MODEL_PRIO = 8;
 
     class EventBase{
     private:
@@ -30,15 +30,19 @@ namespace kathryn{
         virtual ~EventBase() = default;
         /**
           * compute value that will be assigned in this cycle
-          * but store in buffer place
           * */
         virtual void simStartCurCycle() = 0;
         /**
-         * move value from buffer place to actual place
-         * we do these because we need to maintain edge trigger
-         * to not cascade change value while other rtl block is updating
+         * collect data from every compute unit
+         * ex for reg wire unit will write data to cmd unit
+         **/
+         virtual void curCycleCollectData() = 0;
+        /**
+         * a function that used to specify compute unit whether
+         * this cycle is finished
          * */
         virtual void simExitCurCycle() = 0;
+
 
         /** event base will be schedule by using priority queue
          * the highest priority is the cycle that occur before

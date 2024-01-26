@@ -9,7 +9,7 @@
 #include "Slice.h"
 #include "operation.h"
 #include "identifiable.h"
-#include "model/simIntf/rtlSimItf.h"
+#include "model/simIntf/modelSimInterface.h"
 
 namespace kathryn {
 

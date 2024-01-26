@@ -2,7 +2,7 @@
 // Created by tanawin on 30/11/2566.
 //
 
-#ifndef KATHRYN_CONTROLLER_H
+#ifndef KATHRYN_SIMCONTROLLER_H
 #define KATHRYN_CONTROLLER_H
 
 #include <stack>
@@ -120,4 +120,4 @@ namespace kathryn {
 
 }
 
-#endif //KATHRYN_CONTROLLER_H
+#endif //KATHRYN_SIMCONTROLLER_H

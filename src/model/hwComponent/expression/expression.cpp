@@ -20,7 +20,8 @@ namespace kathryn{
                            Operable* b,
                            Slice bSlice,
                            int exp_size):
-    LogicComp<expression>({0, exp_size}, TYPE_EXPRESSION,false),
+    LogicComp<expression>({0, exp_size}, TYPE_EXPRESSION,
+                          new RtlSimEngine(exp_size, VST_WIRE),false),
     _op(op),
     _a(a),
     _aSlice(aSlice),
@@ -31,7 +32,7 @@ namespace kathryn{
     }
 
     expression::expression():
-    LogicComp<expression>(Slice(), TYPE_EXPRESSION, false),
+    LogicComp<expression>(Slice(), TYPE_EXPRESSION, nullptr, false),
     _op(ASSIGN),
     _a(nullptr),
     _aSlice(Slice()),
@@ -51,7 +52,7 @@ namespace kathryn{
         Slice proxySlice({0, newSize});
         _aSlice = proxySlice;
         setSlice(proxySlice);
-        setSimEngine(new RtlSimEngine(newSize));
+        setSimEngine(new RtlSimEngine(newSize, VST_WIRE));
         return *this;
     }
 

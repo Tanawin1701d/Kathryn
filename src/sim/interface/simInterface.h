@@ -5,12 +5,12 @@
 #ifndef KATHRYN_SIMINTERFACE_H
 #define KATHRYN_SIMINTERFACE_H
 
-#include "model/simIntf/simEvent.h"
-#include "sim/event/userEvent.h"
-#include "sim/controller/controller.h"
 #include "model/controller/controller.h"
+#include "model/simIntf/moduleSimEvent.h"
+#include "sim/event/userEvent.h"
+#include "sim/controller/simController.h"
 
-
+#define sim agent << [&]()
 
 namespace kathryn{
 
@@ -19,6 +19,7 @@ namespace kathryn{
         ModuleSimEvent*         _ModuleSimEvent;
         std::vector<UserEvent*> _UserSimEvents;
         CYCLE                   _curUserDescCycle = 0;
+        CYCLE                   _limitCycle = 0;
         /** to receive uservent from user description*/
         class UserSimAgent{
         public:
@@ -26,10 +27,10 @@ namespace kathryn{
             explicit UserSimAgent(SimInterface* master);
             UserSimAgent& operator << (std::function<void(void)> simBehaviour);
         };
-
+        UserSimAgent agent = UserSimAgent(this);
 
     public:
-        explicit SimInterface();
+        explicit SimInterface(CYCLE limitCycle);
 
         ~SimInterface();
 
@@ -43,6 +44,20 @@ namespace kathryn{
 
 
     };
+
+//    class testItf: public SimInterface{
+//
+//        int x;
+//
+//        void describe() override{
+//
+//            sim{
+//                x = 5;
+//            };
+//            incCycle(5)
+//
+//        }
+//    };
 
 }
 
