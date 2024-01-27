@@ -6,7 +6,9 @@
 #define KATHRYN_VALREP_H
 
 #include <functional>
+#include <string>
 #include <cstdio>
+#include <bitset>
 #include "model/hwComponent/abstract/Slice.h"
 
 namespace kathryn{
@@ -28,7 +30,7 @@ namespace kathryn{
         int   _len             = -1; //// userDefine size
         int   _valSize         = -1; //// size of array that contain ull
         ull*  _val             = nullptr;
-        const int bitSizeOfUll = sizeof(ull) << 3;
+        static const int bitSizeOfUll = sizeof(ull) << 3;
 
     public:
         explicit ValRep(int len);
@@ -48,17 +50,17 @@ namespace kathryn{
          * be assigned to 0
          * */
         ValRep getZeroExtend(int targetSize);
-        ValRep shink(int targetSize);
+        ValRep shink        (int targetSize);
         /** check define size*/
         inline bool checkEqualBit(const ValRep& rhs) const{ return _len == rhs._len;}
         /** operation core*/
-        ValRep bwOperator(const ValRep& rhs,
-                          const std::function<ull(ull, ull)>& operation);
+        ValRep bwOperator     (const ValRep& rhs,
+                               const std::function<ull(ull, ull)>& operation);
         ValRep logicalOperator(const ValRep& rhs,
                                const std::function<bool(bool, bool)>& operation) const;
-        ValRep cmpOperator(const ValRep& rhs,
-                           const std::function<bool(ull* a, ull* b, int size)>& operation);
-        ValRep eqOperator(const ValRep& rhs, bool checkEq);
+        ValRep cmpOperator    (const ValRep& rhs,
+                               const std::function<bool(ull* a, ull* b, int size)>& operation);
+        ValRep eqOperator     (const ValRep& rhs, bool checkEq);
         /** get logical value in single bit*/
         bool   getLogicalValue() const;
         /** update value from slice*/
@@ -69,6 +71,9 @@ namespace kathryn{
         ull  getZeroMask(int startIdx, int stopIdx) const; //// mask zero at [startIdx, stopIdx) leave other bits with 1 value
         void fillZeroToValrep(int startBit, int stopBit); //// fill all bit in valrep bit absolute start bit
         void fillZeroToValrep(int startBit);
+
+        /** convert to binary string*/
+        std::string getBiStr();
 
         ValRep& operator = (const ValRep& rhs);
 

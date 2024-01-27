@@ -13,13 +13,21 @@
 
 #endif //KATHRYN_UPDATEEVENT_H
 namespace kathryn {
-    /** reg/wire update metas data*/
+
+    /** default -->update -->event -->priority */
+    static int DEFAULT_UE_PRI_USER     = 10;
+    static int DEFAULT_UE_PRI_INTERNAL_MAX = 100;
+    static int DEFAULT_UE_PRI_INTERNAL_MIN = 50;
+    static int DEFAULT_UE_PRI_RST      = INT32_MAX;
+    static int DEFAULT_UE_PRI_MIN      = 0;
+
+/** reg/wire update metas data*/
     struct UpdateEvent{
         Operable* updateCondition = nullptr; /// which condition that allow this value to update.
         Operable* updateState     = nullptr; /// which state that need to update.
         Operable* updateValue     = nullptr; /// value to update.
         Slice     updateSlice; /// slice to update must smaller or equal to updateValue.slice
-        int priority = 9;
+        int priority = DEFAULT_UE_PRI_MIN;
         ///priority for circuit if there are attention to update same register at a time 0 is highest 9 is lowest
 
         bool operator < (const UpdateEvent& rhs) const{

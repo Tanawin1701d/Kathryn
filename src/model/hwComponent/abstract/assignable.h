@@ -16,6 +16,7 @@
 
 namespace kathryn{
 
+
     /** This is used to describe what and where to update that send to controller and let flow block determine*/
     struct AssignMeta{
         std::vector<UpdateEvent*>& updateEventsPool;
@@ -53,6 +54,7 @@ namespace kathryn{
         void addUpdateMeta(UpdateEvent* event){
             _updateMeta.push_back(event);
         }
+
         /** generate update metas*/
         AssignMeta* generateAssignMeta(Operable& assignValue, Slice assignSlice){
             return new AssignMeta(_updateMeta, assignValue, assignSlice);

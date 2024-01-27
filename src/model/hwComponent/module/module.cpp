@@ -9,8 +9,6 @@
 
 namespace kathryn{
 
-    Wire* rstWire = &_make<Wire>("rstWire", 1);
-    StartNode* startNode = new StartNode(rstWire);
 
     Module::Module(bool initComp):
             Identifiable(TYPE_MODULE),

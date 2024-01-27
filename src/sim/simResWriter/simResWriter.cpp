@@ -3,6 +3,7 @@
 //
 
 #include "simResWriter.h"
+#include "sim/logicRep/valRep.h"
 
 
 namespace kathryn{

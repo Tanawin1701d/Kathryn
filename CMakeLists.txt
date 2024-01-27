@@ -110,5 +110,7 @@ add_executable(Kathryn main.cpp
         src/util/fileWriter/fileWriterBase.h
         src/sim/simResWriter/simResWriter.cpp
         src/sim/simResWriter/simResWriter.h
+        src/model/hwComponent/globalComponent/globalComponent.cpp
+        src/model/hwComponent/globalComponent/globalComponent.h
 
 )

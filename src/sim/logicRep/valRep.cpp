@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <algorithm>
+
 #include "valRep.h"
 
 
@@ -77,37 +78,9 @@ namespace kathryn{
 
     }
 
-    ValRep ValRep::eqOperator(const ValRep &rhs, bool checkEq) {
-        /** check valid size*/
-        assert(checkEqualBit(rhs));
-        assert(_len > 0);
-        /**build new variable*/
-        ValRep preRet(1);
-        bool result = true;
-        for (int valIdx = 0; valIdx < _valSize; valIdx++){
-            result =  result && (_val[valIdx] == rhs._val[valIdx]);
-        }
-        if (checkEq){
-            preRet._val[0] = result ? 1 : 0;
-        }else{
-            preRet._val[0] = result ? 0 : 1;
-        }
-
-        return preRet;
-    }
-
-    bool ValRep::getLogicalValue() const{
-        bool result = false;
-        for (int valIdx = 0; valIdx < _valSize; valIdx++){
-            result = result || _val[valIdx];
-        }
-        return result;
-    }
-
-
     ValRep ValRep::logicalOperator(const ValRep &rhs,
                                    const std::function<bool(bool, bool)>& operation
-                                   )const
+    )const
     {
 
         assert(_len > 0 && rhs._len > 0);
@@ -135,23 +108,31 @@ namespace kathryn{
     }
 
 
-
-    ValRep& ValRep::operator=(const ValRep &rhs) {
-
-        if (&rhs == this){
-            return *this;
+    ValRep ValRep::eqOperator(const ValRep &rhs, bool checkEq) {
+        /** check valid size*/
+        assert(checkEqualBit(rhs));
+        assert(_len > 0);
+        /**build new variable*/
+        ValRep preRet(1);
+        bool result = true;
+        for (int valIdx = 0; valIdx < _valSize; valIdx++){
+            result =  result && (_val[valIdx] == rhs._val[valIdx]);
         }
-
-        _len = rhs._len;
-        _valSize = rhs._valSize;
-        if (_valSize > 0){
-            _val = new ull[_valSize];
-            std::copy(rhs._val, rhs._val + _valSize, _val);
+        if (checkEq){
+            preRet._val[0] = result ? 1 : 0;
         }else{
-            _val = nullptr;
+            preRet._val[0] = result ? 0 : 1;
         }
 
-        return *this;
+        return preRet;
+    }
+
+    bool ValRep::getLogicalValue() const{
+        bool result = false;
+        for (int valIdx = 0; valIdx < _valSize; valIdx++){
+            result = result || _val[valIdx];
+        }
+        return result;
     }
 
     ValRep ValRep::slice(Slice sl) {
@@ -166,8 +147,6 @@ namespace kathryn{
         return cpy;
     }
 
-
-
     void ValRep::updateOnSlice(ValRep srcVal, Slice desSl){
         ///////// TODO to assign value
         assert(desSl.getSize() == srcVal.getLen());
@@ -180,6 +159,27 @@ namespace kathryn{
         this->fillZeroToValrep(desSl.start, desSl.stop);
         /** replacing*/
         *this = *this | extendedSrcVal;
+
+    }
+
+    ull ValRep::getZeroMask(int startIdx, int stopIdx) const{
+        ///////[startIdx, stopIdx)
+        /**check integrity**/
+        assert(startIdx < stopIdx);
+        assert(startIdx >= 0);
+        assert(stopIdx <= bitSizeOfUll);
+        int amtConsiderBit = stopIdx - startIdx;
+        ull mask;
+        if (amtConsiderBit == bitSizeOfUll){
+            mask = (ull)(-1); //// corner case shift over varsize will be not shifted in c++
+            assert( (mask + 1) == 0);
+        }else{
+            mask =  (((ull)1) << amtConsiderBit) - 1;
+        }
+        ///////////(5 bit) 100000  - 1 = 011111
+        mask = mask << startIdx; //// shift to right position first
+        mask = ~mask; ///// we need zero bit to mask the consider region
+        return mask;
 
     }
 
@@ -219,28 +219,38 @@ namespace kathryn{
         fillZeroToValrep(startBit, getValArrSize()*bitSizeOfUll);
     }
 
-    ull ValRep::getZeroMask(int startIdx, int stopIdx) const{
-        ///////[startIdx, stopIdx)
-        /**check integrity**/
-        assert(startIdx < stopIdx);
-        assert(startIdx >= 0);
-        assert(stopIdx <= bitSizeOfUll);
-        int amtConsiderBit = stopIdx - startIdx;
-        ull mask;
-        if (amtConsiderBit == bitSizeOfUll){
-            mask = (ull)(-1); //// corner case shift over varsize will be not shifted in c++
-            assert( (mask + 1) == 0);
-        }else{
-            mask =  (((ull)1) << amtConsiderBit) - 1;
-        }
-        ///////////(5 bit) 100000  - 1 = 011111
-        mask = mask << startIdx; //// shift to right position first
-        mask = ~mask; ///// we need zero bit to mask the consider region
-        return mask;
 
+    ValRep& ValRep::operator=(const ValRep &rhs) {
+
+        if (&rhs == this){
+            return *this;
+        }
+
+        _len = rhs._len;
+        _valSize = rhs._valSize;
+        if (_valSize > 0){
+            _val = new ull[_valSize];
+            std::copy(rhs._val, rhs._val + _valSize, _val);
+        }else{
+            _val = nullptr;
+        }
+
+        return *this;
     }
 
+    /**
+     * getter bi str
+     * */
 
+    std::string ValRep::getBiStr(){
+        std::string preRet ;
+        assert(getLen() > 0);
+        for (int i = getValArrSize()-1; i >= 0; i--){
+            std::bitset<bitSizeOfUll> binaryRepresentation(_val[i]);
+            preRet += binaryRepresentation.to_string();
+        }
+        return preRet.substr(preRet.size() - getLen(), getLen());
+    }
 
     /////////////////////////////////////////////////////////////
     //////////// bitwise operator ///////////////////////////////

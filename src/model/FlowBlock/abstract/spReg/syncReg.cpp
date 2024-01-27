@@ -29,7 +29,7 @@ namespace kathryn {
                                        dependState,
                                        &upState,
                                        Slice({nextFillActivateId, nextFillActivateId + 1}),
-                                       9});
+                                       DEFAULT_UE_PRI_INTERNAL_MAX});
         nextFillActivateId++;
         assert(nextFillActivateId <= getSlice().getSize());
         addUpdateMeta(event);
@@ -42,7 +42,7 @@ namespace kathryn {
             &((*this) == upFullState),
             &downFullState,
             Slice({0, getSlice().getSize()}),
-            8
+            DEFAULT_UE_PRI_INTERNAL_MIN
         });
         addUpdateMeta(event);
     }

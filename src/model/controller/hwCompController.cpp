@@ -32,6 +32,7 @@ namespace kathryn{
         targetModulePtr->addSpReg(ptr, spRegType);
         ptr->setParent(targetModulePtr);
         ptr->buildInheritName(); //// build inherit name for that module
+        ptr->makeResetEvent();
         /** debug value*/
         logMF(ptr,
               "[" + sp_reg_type_to_str(spRegType) + "] is initialized and set parent to "
@@ -49,6 +50,7 @@ namespace kathryn{
         targetModulePtr->addUserReg(ptr);
         ptr->setParent(targetModulePtr);
         ptr->buildInheritName();
+        ptr->makeResetEvent();
         /** debug value*/
         logMF(ptr,
               "USER_REG is initialized and set parent to " + targetModulePtr->getIdentDebugValue());
@@ -84,6 +86,7 @@ namespace kathryn{
         targetModulePtr->addUserWires(ptr);
         ptr->setParent(targetModulePtr);
         ptr->buildInheritName();
+        ptr->makeDefEvent();
         /** debug value*/
         logMF(ptr,
               "user wire is initialized and set parent to " + targetModulePtr->getIdentDebugValue());
@@ -99,11 +102,24 @@ namespace kathryn{
         assert(asmMeta != nullptr);
         purifyFlowStack();
         auto node = new AsmNode(asmMeta);
-        assert(!flowBlockStack.empty());
-        auto fb = flowBlockStack.top();
-        fb->addElementInFlowBlock(node);
-        logMF(srcWire,
-              "user wire is updating @ fb " + fb->getMdIdentVal());
+        //assert(!flowBlockStack.empty());
+        if (!flowBlockStack.empty()) {
+            /**in flow block*/
+            auto fb = flowBlockStack.top();
+            fb->addElementInFlowBlock(node);
+            logMF(srcWire,
+                  "user wire is updating @ fb " + fb->getMdIdentVal());
+        }else{
+            asmMeta->updateEventsPool.push_back(new UpdateEvent({
+                nullptr,
+                nullptr,
+                &asmMeta->valueToAssign,
+                asmMeta->desSlice,
+                DEFAULT_UE_PRI_USER
+            }));
+            logMF(srcWire,
+                  "user wire is updatting without flowblock");
+        }
     }
 
     /** exprMetas*/

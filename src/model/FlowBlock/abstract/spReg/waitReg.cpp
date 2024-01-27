@@ -41,7 +41,7 @@ namespace kathryn{
                                        dependState,
                                        &_upState,
                                        Slice({0, 1}),
-                                       9});
+                                       DEFAULT_UE_PRI_INTERNAL_MAX});
         addUpdateMeta(event);
         return event;
     }
@@ -51,7 +51,7 @@ namespace kathryn{
                                                 &((*this) == _upState),
                                                 &_downState,
                                                 Slice({0,1}),
-                                                8
+                                                DEFAULT_UE_PRI_INTERNAL_MIN
                                            });
         addUpdateMeta(resetEvent);
     }
@@ -121,7 +121,7 @@ namespace kathryn{
             &(((*this) < (*_endCnt)) & ((*this) >= (*_startCnt))),
             &((*this) + (*_startCnt)),
             Slice({0, _bitSz}),
-            9
+            DEFAULT_UE_PRI_INTERNAL_MAX-1
         });
         addUpdateMeta(event);
     }
@@ -136,7 +136,7 @@ namespace kathryn{
                                        dependState,
                                        _startCnt,
                                        Slice({0, _bitSz}),
-                                       9});
+                                       DEFAULT_UE_PRI_INTERNAL_MAX});
         addUpdateMeta(event);
         return event;
     }
@@ -148,7 +148,7 @@ namespace kathryn{
                                                    (&((*this) == (*_endCnt))),
                                                    IdleCnt,
                                                    Slice({0, _bitSz}),
-                                                   9
+                                                   DEFAULT_UE_PRI_INTERNAL_MIN
                                            });
         addUpdateMeta(resetEvent);
 

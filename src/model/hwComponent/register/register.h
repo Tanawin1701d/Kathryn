@@ -34,6 +34,9 @@ namespace kathryn{
         SliceAgent<Reg>& operator() (int start, int stop) override;
         SliceAgent<Reg>& operator() (int idx) override;
 
+        /**make rstEvent*/
+        void makeResetEvent();
+
         /** return type*/
 
         Reg& callBackBlockAssignFromAgent(Operable& b, Slice absSliceOfHost) override;

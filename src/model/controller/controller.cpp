@@ -25,7 +25,9 @@ namespace kathryn{
             globalModulePtr = new Module(false);
             globalModulePtr->setVarName("globeMod");
             centralControllerPtr->on_globalModule_init_component(globalModulePtr);
+            initiateGlobalComponent();
         }
+
         return centralControllerPtr;
     }
 

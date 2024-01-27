@@ -17,8 +17,8 @@ namespace kathryn {
                                                   false,
                                                   TYPE_STATE_REG,
                                                   false),
-              upFullState  (_make<Val>("upFullState"  ,1, 1)),
-              downFullState(_make<Val>("downFullState",1, 0))
+              upFullState  (_make<Val>("stateRegUpFull"  ,1, 1)),
+              downFullState(_make<Val>("stateRegDownFull",1, 0))
     {
         com_init();
     };
@@ -29,7 +29,7 @@ namespace kathryn {
                                        dependState,
                                        &upFullState,
                                        Slice({0, 1}),
-                                       9});
+                                       DEFAULT_UE_PRI_INTERNAL_MAX});
         addUpdateMeta(event);
         return event;
     }
@@ -40,7 +40,7 @@ namespace kathryn {
             &((*this) == upFullState),
             &downFullState,
             Slice({0, getSlice().getSize()}),
-            8
+            DEFAULT_UE_PRI_INTERNAL_MIN
         });
         addUpdateMeta(event);
     }

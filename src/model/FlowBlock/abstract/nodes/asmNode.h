@@ -34,9 +34,10 @@ namespace kathryn {
                                                          transformAllDepNodeToOpr(),
                                                          &_assignMeta->valueToAssign,
                                                          _assignMeta->desSlice,
-                                                         9
+                                                         DEFAULT_UE_PRI_USER
                                                  });
             _assignMeta->updateEventsPool.push_back(resultUpEvent);
+            /*** no need to deal with rst event due to data self invoked*/
         }
 
         int getCycleUsed() override { return 1; }

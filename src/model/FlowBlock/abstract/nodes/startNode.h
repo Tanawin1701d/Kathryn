@@ -14,14 +14,14 @@ namespace kathryn{
         makeVal(upState  , 1, 1);
         makeVal(downState, 1, 0);
 
-        StateReg* _delayReset = nullptr;
+        StateReg* _startState = nullptr;
         Operable* _rstSig     = nullptr;
 
         explicit StartNode(Operable* rstSig):
-            Node(START_NODE),
-            _delayReset(new StateReg()),
-            _rstSig(rstSig){
-            assert(_rstSig != nullptr);
+                Node(START_NODE),
+                _startState(new StateReg()),
+                _rstSig(rstSig){
+                assert(_rstSig != nullptr);
         }
 
         Node* clone() override{
@@ -30,14 +30,20 @@ namespace kathryn{
             return clNode;
         }
 
+        void makeUnsetStateEvent() override{
+            assert(_startState != nullptr);
+            _startState->makeUnSetStateEvent();
+        }
+
         Operable* getExitOpr() override{
             assert(_rstSig != nullptr);
-            return &((*_delayReset == upState) & (*_rstSig == downState));
+            return &(*_startState == upState);
         }
 
         void assign() override{
-            _delayReset->addDependState(_rstSig, nullptr);
-            /***do not make unset state event*/
+            _startState->addDependState(_rstSig, nullptr);
+            makeUnsetStateEvent();
+            /**no need to reset due to it used*/
         }
 
         int getCycleUsed() override{
@@ -49,9 +55,6 @@ namespace kathryn{
                 return;
             }
         }
-
-
-
 
     };
 

@@ -38,6 +38,18 @@ namespace kathryn{
         return operator()(idx, idx+1);
     }
 
+    void Wire::makeDefEvent(){
+        makeVal(defWireVal, genBiConValRep(0, getSlice().getSize()));
+        auto defEvent = new UpdateEvent({
+                                                nullptr,
+                                                nullptr,
+                                                &defWireVal,
+                                                {0, getSlice().getSize()},
+                                                DEFAULT_UE_PRI_MIN
+                                        });
+        addUpdateMeta(defEvent);
+    }
+
     /** override callback*/
 
     Wire& Wire::callBackBlockAssignFromAgent(Operable &b, Slice absSliceOfHost) {

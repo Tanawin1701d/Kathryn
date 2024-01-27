@@ -9,6 +9,7 @@
 #include<memory>
 #include<queue>
 #include<map>
+
 #include "model/hwComponent/abstract/operation.h"
 #include "model/hwComponent/expression/expression.h"
 #include "model/hwComponent/register/register.h"
@@ -111,7 +112,8 @@ namespace kathryn {
             dependStateRaiseCond = op;
         }
         /** unset event when state is raised there must be condition that bring this down*/
-        virtual void makeUnsetStateEvent(){ assert(false); };
+        virtual void makeUnsetStateEvent(){assert(false);}
+        virtual void makeRstAndDefStateEvent(){assert(false);}
         /** provided src state data*/
         virtual Operable* getExitOpr(){ return nullptr; };
         /** assign value with proper condition*/

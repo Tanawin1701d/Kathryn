@@ -27,6 +27,7 @@ namespace kathryn{
         /**override slicable*/
         SliceAgent<Wire>& operator() (int start, int stop) override;
         SliceAgent<Wire>& operator() (int idx) override;
+        void makeDefEvent();
         /**override assign call back*/
         Wire& callBackBlockAssignFromAgent(Operable& b, Slice absSliceOfHost) override;
         Wire& callBackNonBlockAssignFromAgent(Operable& b, Slice absSliceOfHost) override;

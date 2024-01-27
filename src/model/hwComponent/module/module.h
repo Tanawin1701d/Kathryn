@@ -15,6 +15,7 @@
 #include "model/hwComponent/wire/wire.h"
 #include "model/hwComponent/expression/expression.h"
 #include "model/hwComponent/value/value.h"
+#include "model/hwComponent/globalComponent/globalComponent.h"
 
 #include "model/FlowBlock/abstract/flowBlock_Base.h"
 #include "model/FlowBlock/abstract/spReg/stateReg.h"
@@ -22,15 +23,13 @@
 #include "model/FlowBlock/abstract/spReg/waitReg.h"
 #include "model/FlowBlock/abstract/nodes/startNode.h"
 
+
+
 #include "model/debugger/modelDebugger.h"
 #include "util/logger/logger.h"
 
 
 namespace kathryn{
-
-
-    extern Wire*      rstWire;
-    extern StartNode* startNode;
 
     class Module : public Identifiable,
                    public HwCompControllerItf,
@@ -151,7 +150,6 @@ namespace kathryn{
         /** Functions which allow user to custom  their module design flow*/
         virtual void flow(){}; //// user must inherit this function to build thier flow
         virtual void buildFlow();
-
         /** model debug*/
         [[maybe_unused]]
         std::string getMdDescribe() override;

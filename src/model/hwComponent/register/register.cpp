@@ -50,6 +50,18 @@ namespace kathryn{
         return operator() (idx, idx+1);
     }
 
+    void Reg::makeResetEvent(){
+        makeVal(rstRegVal, genBiConValRep(0, getSlice().getSize()));
+        auto rstEvent = new UpdateEvent({
+            nullptr,
+            rstWire,
+            &rstRegVal,
+            {0, getSlice().getSize()},
+            DEFAULT_UE_PRI_RST
+        });
+        addUpdateMeta(rstEvent);
+    }
+
     Reg& Reg::callBackBlockAssignFromAgent(Operable &b, Slice absSliceOfHost) {
         assert(absSliceOfHost.getSize() <= getOperableSlice().getSize());
         Slice absSlice = absSliceOfHost.getSubSliceWithShinkMsb(
