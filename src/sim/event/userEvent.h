@@ -32,6 +32,8 @@ namespace kathryn{
          _activeFunc();
      }
 
+     void curCycleCollectData() override{}
+
      void simExitCurCycle() override{}
 
      bool needToDelete() override{return true;}

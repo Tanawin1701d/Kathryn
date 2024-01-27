@@ -16,9 +16,10 @@ namespace kathryn{
 
     class SimInterface{
     protected:
+        VcdWriter*              _vcdWriter;
         ModuleSimEvent*         _ModuleSimEvent;
         std::vector<UserEvent*> _UserSimEvents;
-        CYCLE                   _curUserDescCycle = 0;
+        CYCLE                   _nextUserDescCycle = 0;
         CYCLE                   _limitCycle = 0;
         /** to receive uservent from user description*/
         class UserSimAgent{
@@ -30,7 +31,7 @@ namespace kathryn{
         UserSimAgent agent = UserSimAgent(this);
 
     public:
-        explicit SimInterface(CYCLE limitCycle);
+        explicit SimInterface(CYCLE limitCycle, std::string vcdFilePath);
 
         ~SimInterface();
 

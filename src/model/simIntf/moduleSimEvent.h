@@ -14,7 +14,6 @@ namespace kathryn{
     private:
         Module*    _startModule = nullptr;
         Operable*  _resetWire   = nullptr;
-        StartNode* _startNode   = nullptr;
         VcdWriter* _writer      = nullptr;
         ull        _clockIntv   = 10;
 
@@ -22,7 +21,6 @@ namespace kathryn{
 
         explicit ModuleSimEvent(Module*    startMd,
                                 Operable*  resetWire, ///// active high
-                                StartNode* startNode,
                                 VcdWriter* writer
         );
 

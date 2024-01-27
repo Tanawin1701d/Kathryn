@@ -9,18 +9,17 @@ namespace kathryn{
 
     ModuleSimEvent::ModuleSimEvent(Module* startMd,
                                    Operable* resetWire,
-                                   StartNode* startNode,
                                    VcdWriter* writer):
     EventBase(0, SIM_MODEL_PRIO),
     _startModule(startMd),
-    _resetWire(rstWire),
-    _startNode(startNode),
+    _resetWire(resetWire),
     _writer(writer)
     {
         assert(_startModule != nullptr);
         assert(_resetWire   != nullptr);
 
         /**prepare simulation*/
+        _writer->addNewVar(VST_WIRE, "CLK", {0,1});
         _startModule->beforePrepareSim(_writer);
         _startModule->prepareSim();
 
@@ -41,11 +40,14 @@ namespace kathryn{
     void ModuleSimEvent::curCycleCollectData() {
         /*** CLK UP*/
         _writer->addNewTimeStamp(_curCycle * _clockIntv);
-        _writer->addNewVar(VST_WIRE, "CLK", {0,1});
+        auto upClk = NumConverter::cvtStrToValRep(1, 0b1);
+        _writer->addNewValue("CLK", upClk);
         _startModule->curCycleCollectData();
         /*** CLK DOWN*/
         _writer->addNewTimeStamp(_curCycle * _clockIntv + (_clockIntv >> 1));
-        _writer->addNewVar(VST_WIRE, "CLK", {0, 1});
+        auto downClk = NumConverter::cvtStrToValRep(1, 0b0);
+        _writer->addNewValue("CLK", downClk);
+
 
     }
 

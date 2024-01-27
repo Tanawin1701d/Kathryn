@@ -17,23 +17,26 @@ namespace kathryn{
     SimInterface::UserSimAgent&
     SimInterface::UserSimAgent::operator<<(std::function<void(void)> simBehaviour) {
         auto*  event =  new UserEvent(simBehaviour,
-                                      _master->_curUserDescCycle,
+                                      _master->_nextUserDescCycle,
                                       SIM_USER_PRIO);
         _master->_UserSimEvents.push_back(event);
         return *this;
     }
 
-    /**sim interface*/
+    /**
+     *
+     * sim interface
+     *
+     * */
 
 
 
-    SimInterface::SimInterface(CYCLE limitCycle):
-    _ModuleSimEvent(
-            new ModuleSimEvent(getGlobalModulePtr(),rstWire,startNode)
-    ),
-    _curUserDescCycle(0),
-    _limitCycle(limitCycle)
+    SimInterface::SimInterface(CYCLE limitCycle, std::string vcdFilePath):
+            _vcdWriter(new VcdWriter(vcdFilePath)),
+            _nextUserDescCycle(0),
+            _limitCycle(limitCycle)
     {
+        _ModuleSimEvent = new ModuleSimEvent(getGlobalModulePtr(),rstWire,_vcdWriter);
         SimController* simCtrl = getSimController();
         assert(simCtrl != nullptr);
         simCtrl->setLimitCycle(limitCycle);
@@ -55,11 +58,11 @@ namespace kathryn{
     }
 
     void SimInterface::incCycle(CYCLE inCycle){
-        _curUserDescCycle += inCycle;
+        _nextUserDescCycle += inCycle;
     }
 
     void SimInterface::setCycle(CYCLE stCycle){
-        _curUserDescCycle += stCycle;
+        _nextUserDescCycle += stCycle;
     }
 
 
