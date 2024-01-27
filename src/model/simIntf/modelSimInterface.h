@@ -12,6 +12,19 @@
 
 namespace kathryn{
 
+
+    /**
+     *
+     * process of simulation for kathryn model simulation sequence
+     * ------ intiate phase ----------
+     * 1. beforePrepareSim(args)    ---- to setVariable before prepare function
+     * 2. prepareSim() ----- to process some infomation before simStart
+     * ------ sim phase(loop)----------
+     * 3. simStartCurCycle()    ----- to simulate value only in current cycle
+     * 4. curCycleCollectData() ----- to collect data for simulation that time
+     * 5. simExitCollectData()  ----- to prepare simulation for next cycle
+     * */
+
     class Simulatable{
     private:
         bool isSimYet = false; ///// indicate that current cycle is simulated yet.
@@ -30,6 +43,8 @@ namespace kathryn{
         bool isCurCycleSimulated() const{
             return isSimYet;
         }
+
+        virtual void prepareSim() = 0;
         /**
           * compute value that will be assigned in this cycle
           * but store in buffer place
@@ -38,7 +53,7 @@ namespace kathryn{
         /**
          * collect data to stat or vcd file
          * */
-        virtual void prepareSim() = 0;
+
         virtual void curCycleCollectData() = 0;
         /**
          * move value from buffer place to actual place

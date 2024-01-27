@@ -5,6 +5,7 @@
 #ifndef KATHRYN_MODULE_H
 #define KATHRYN_MODULE_H
 
+#include <functional>
 #include <vector>
 #include <cassert>
 
@@ -70,13 +71,47 @@ namespace kathryn{
             }
         }
 
+        /** logic comp*/
+        template<typename T>
+        void beforePrepareSimSubElement_RTL_only(std::vector<T*>& subEleVec, VcdWriter* writer){
+            for (auto ele: subEleVec){
+                assert(ele != nullptr);
+                ele->beforePrepareSim(
+                        {true, /// for now
+                         ele->concat_inheritName()+ "_" + ele->getVarName(),
+                         writer
+                         });
+                ele->sortUpEventByPriority();
+            }
+        }
+
+
+        /** logic comp*/
+        template<typename T>
+        void prepareSimSubElement(std::vector<T*>& subEleVec){
+            for (auto ele: subEleVec){
+                assert(ele != nullptr);
+                ele->prepareSim();
+            }
+        }
+
+        /** logic comp/flowBlock/subModule    */
         template<typename T>
         void simStartSubElement(std::vector<T*>& subEleVec){
             for (auto ele: subEleVec){
+                assert(ele != nullptr);
                 ele->simStartCurCycle();
             }
         }
 
+        template<typename T>
+        void curCollectData(std::vector<T*>& subEleVec){
+            for (auto ele: subEleVec){
+                ele->curCycleCollectData();
+            }
+        }
+
+        /** logic comp/flowBlock/subModule    */
         template<typename T>
         void simExitSubElement(std::vector<T*>& subEleVec){
             for (auto ele: subEleVec){
@@ -84,12 +119,7 @@ namespace kathryn{
             }
         }
 
-        template<typename T>
-        void prepareSimSubElement(std::vector<T*>& subEleVec){
-            for (auto ele: subEleVec){
-                ele->sortUpEventByPriority();
-            }
-        }
+
 
         void com_final() override;
 
@@ -125,12 +155,14 @@ namespace kathryn{
         /** model debug*/
         [[maybe_unused]]
         std::string getMdDescribe() override;
-        void addMdLog(MdLogVal* mdLogVal) override;
+        void        addMdLog(MdLogVal* mdLogVal) override;
         std::string getMdIdentVal() override{return getIdentDebugValue();};
 
         /** override simulation */
+        void beforePrepareSim(VcdWriter* vcdWriter) override;
         void prepareSim() override;
         void simStartCurCycle() override;
+        void curCycleCollectData() override;
         void simExitCurCycle() override;
 
     };

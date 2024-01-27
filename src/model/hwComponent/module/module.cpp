@@ -150,53 +150,96 @@ namespace kathryn{
     }
 
     /** override simulation*/
+    void Module::beforePrepareSim(VcdWriter* vcdWriter){
+
+        assert(vcdWriter);
+        /**RTL BEFORE PREPARE SIM(SP)*/
+        for (int i = 0; i < SP_CNT_REG; i++){
+            beforePrepareSimSubElement_RTL_only(_spRegs[i], vcdWriter);
+        }
+        /**RTL BEFORE PREPARE SIM(USER)*/
+        beforePrepareSimSubElement_RTL_only(_userRegs, vcdWriter);
+        beforePrepareSimSubElement_RTL_only(_userWires, vcdWriter);
+        beforePrepareSimSubElement_RTL_only(_userExpressions, vcdWriter);
+        beforePrepareSimSubElement_RTL_only(_userVals, vcdWriter);
+        /**COMPLEX BEFORE PREPARE SUB SIM*/
+        for(auto modulePtr : _userSubModule){
+            assert(modulePtr != nullptr);
+            modulePtr->beforePrepareSim(vcdWriter);
+        }
+        /** flow block not need before prepare sim*/
+
+    }
 
     void Module::prepareSim(){
-        /**prepare basis element first*/
+
+        /**RTL PREPARE SIM(SP)*/
         for (int i = 0; i < SP_CNT_REG; i++){
             prepareSimSubElement(_spRegs[i]);
         }
+        /**RTL PREPARE SIM(USER)*/
         prepareSimSubElement(_userRegs);
         prepareSimSubElement(_userWires);
         prepareSimSubElement(_userExpressions);
         prepareSimSubElement(_userVals);
-        for(auto modulePtr : _userSubModule){
-            assert(modulePtr != nullptr);
-            modulePtr->prepareSim();
-        }
+        /**COMPLEX PREPARE SUB SIM*/
+        prepareSimSubElement(_userSubModule);
+        ////// flow block not need prepare sim
     }
 
     void Module::simStartCurCycle() {
         /**simulate rtl first*/
+
+        /**RTL SIM(SP)*/
         for (int i = 0; i < SP_CNT_REG; i++){
             simStartSubElement(_spRegs[i]);
         }
+        /**RTL SIM(USER)*/
         simStartSubElement(_userRegs);
         simStartSubElement(_userWires);
         simStartSubElement(_userExpressions);
         simStartSubElement(_userVals);
+        /**COMPLEX SUB SIM*/
+        simStartSubElement(_flowBlockBases);
         simStartSubElement(_userSubModule);
 
         /**simulate flow block in which node is implicitly invoked*/
-        simStartSubElement(_flowBlockBases);
 
+
+    }
+
+    void Module::curCycleCollectData() {
+        /**RTL SIM(SP)*/
+        for (int i = 0; i < SP_CNT_REG; i++){
+            curCollectData(_spRegs[i]);
+        }
+        /**RTL SIM(USER)*/
+        curCollectData(_userRegs);
+        curCollectData(_userWires);
+        curCollectData(_userExpressions);
+        curCollectData(_userVals);
+        /**COMPLEX SUB SIM*/
+        curCollectData(_flowBlockBases);
+        curCollectData(_userSubModule);
     }
 
     void Module::simExitCurCycle() {
 
+        /**RTL SIM(SP)*/
         /** exit rtl first*/
         for (int i = 0; i < SP_CNT_REG; i++){
             simExitSubElement(_spRegs[i]);
         }
+        /**RTL SIM(USER)*/
         simExitSubElement(_userRegs);
         simExitSubElement(_userWires);
         simExitSubElement(_userExpressions);
         simExitSubElement(_userVals);
+        /**COMPLEX SUB SIM*/
+        simExitSubElement(_flowBlockBases);
         simExitSubElement(_userSubModule);
 
         /** exit flowblock first*/
-        simExitSubElement(_flowBlockBases);
-
     }
 
 //    void Module::log(){

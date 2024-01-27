@@ -15,7 +15,7 @@ namespace kathryn{
     static int SIM_MODEL_PRIO = 8;
 
     class EventBase{
-    private:
+    protected:
         CYCLE _curCycle = 0;
         int   _priority = 0;
 

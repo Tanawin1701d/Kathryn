@@ -110,6 +110,7 @@ namespace kathryn {
             return _inheritName;
         };
         void buildInheritName();
+        std::string concat_inheritName();
 
 
         Module*            getParent(){return _parent;}

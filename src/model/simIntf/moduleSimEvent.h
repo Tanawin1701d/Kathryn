@@ -15,13 +15,15 @@ namespace kathryn{
         Module*    _startModule = nullptr;
         Operable*  _resetWire   = nullptr;
         StartNode* _startNode   = nullptr;
-        CYCLE     _curCycle    = 0;
+        VcdWriter* _writer      = nullptr;
+        ull        _clockIntv   = 10;
 
     public:
 
         explicit ModuleSimEvent(Module*    startMd,
                                 Operable*  resetWire, ///// active high
-                                StartNode* startNode ///// active high
+                                StartNode* startNode,
+                                VcdWriter* writer
         );
 
 
@@ -29,7 +31,7 @@ namespace kathryn{
         void curCycleCollectData() override;
         void simExitCurCycle() override;
 
-        bool needToDelete() override {return true;}
+        bool needToDelete() override {return false;}
     };
 
 
