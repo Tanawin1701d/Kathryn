@@ -46,7 +46,8 @@ namespace kathryn {
         /*** for simulation*/
         void               simulate() const;
         void               finalizeSim() const;
-        bool               isCurSimStateSet() const; ///// check that are cur state is simulating and state is set
+        bool               isCurCycleSimulated() const; ///// check that are cur state is simulating and state is set
+        bool               isBlockOrNodeRunning() const;
 
 
 
@@ -81,6 +82,7 @@ namespace kathryn {
         void doPostFunction() override;
         /** override simulator*/
         void simStartCurCycle() override;
+
         void simExitCurCycle() override;
 
     };

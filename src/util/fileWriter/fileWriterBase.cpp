@@ -22,6 +22,7 @@ namespace kathryn{
     }
 
     FileWriterBase::~FileWriterBase() {
+        flush();
         delete   _outFile;
         delete[] _fileBuff;
 

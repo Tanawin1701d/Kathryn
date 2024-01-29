@@ -2,8 +2,8 @@
 // Created by tanawin on 30/11/2566.
 //
 
-#ifndef KATHRYN_SIMCONTROLLER_H
-#define KATHRYN_CONTROLLER_H
+#ifndef KATHRYN_MODEL_CONTROLLER_H
+#define KATHRYN_MODEL_CONTROLLER_H
 
 #include <stack>
 #include <memory>
@@ -75,7 +75,7 @@ namespace kathryn {
          * */
 
         /** state register handling*/
-        void on_sp_reg_init(Reg* ptr, SP_REG_TYPE regType);
+        void on_sp_reg_init(CtrlFlowRegBase* ptr, SP_REG_TYPE regType);
         /** register handling*/
         void on_reg_init(Reg* ptr);
         void on_reg_update(AssignMeta* asmMeta, Reg* srcReg);

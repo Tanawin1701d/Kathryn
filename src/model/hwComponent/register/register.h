@@ -44,8 +44,6 @@ namespace kathryn{
 
         /** override simulation engine */
         void simStartCurCycle() override;
-
-        void simExitCurCycle() override;
     };
 
 

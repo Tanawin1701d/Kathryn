@@ -13,32 +13,55 @@
 #include "model/hwComponent/abstract/makeComponent.h"
 #include "application/visualizer/vis.h"
 #include "util/logger/logger.h"
+#include "sim/interface/simInterface.h"
+
 
 namespace kathryn{
 
     class testSimMod: public Module{
     public:
-        makeReg(a, 8);
-        makeReg(b, 8);
-        makeReg(c, 8);
+//        makeReg(a, 8);
+//        makeReg(b, 8);
+//        makeReg(c, 8);
         makeVal(iv, 8, 0b10101010);
 
         explicit testSimMod(int x): Module(){}
 
         void flow() override{
 
-            a.setToRec();
-            b.setToRec();
-            c.setToRec();
-
-            seq{
-                a <<= iv;
-                b <<= a;
-                c <<= b;
-            }
+//            seq{
+//                a <<= iv;
+//                b <<= a;
+//                c <<= b;
+//            }
 
         }
 
+    };
+
+    static std::string vcdPath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/simTest1.vcd";
+
+    class sim1 :public SimInterface{
+    public:
+        testSimMod* _md = nullptr;
+        sim1(testSimMod* md):SimInterface(100, vcdPath),
+         _md(md){
+            assert(_md != nullptr);
+        }
+
+        void describe() override{
+
+            incCycle(2);
+
+            for (int i = 0; i < 100; i++) {
+                sim {
+                    _md->iv.sv() = NumConverter::cvtStrToValRep(8, 7);
+                };
+                incCycle(1);
+            }
+
+
+        }
     };
 
     class test1: public Test{
@@ -47,14 +70,18 @@ namespace kathryn{
         void test() override {
             makeMod(tm, testSimMod, 0);
 
-            /***/
+            /**logger */
             auto mdLogVal = new MdLogVal();
             tm.addMdLog(mdLogVal);
             logMD("tm", mdLogVal);
             //////////////////////////////////
+            sim1 s((testSimMod*)(&tm));
+            s.simStart();
 
         }
     };
+
+
 
 }
 

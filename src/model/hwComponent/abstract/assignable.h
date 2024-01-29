@@ -63,12 +63,12 @@ namespace kathryn{
         /////// assign value to val representation
         ////////////////// usually it is call from sim Interface
         /////// getFromCur means get value from current cycle or from back cycle
-        void assignValRepCurCycle(ValRep& desValRep, bool getFromCur){
+        void assignValRepCurCycle(ValRep& desValRep){
 
             for (auto curUpEvent : _updateMeta){
                 assert(curUpEvent != nullptr);
                 curUpEvent->trySimAll();
-                curUpEvent->tryAssignValRep(desValRep, getFromCur);
+                curUpEvent->tryAssignValRep(desValRep);
             }
 
         }

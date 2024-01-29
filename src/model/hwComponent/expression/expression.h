@@ -77,7 +77,6 @@ namespace kathryn {
 
         /** override simulator interface*/
         void simStartCurCycle() override;
-        void simExitCurCycle() override;
 
     };
 

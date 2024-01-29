@@ -54,7 +54,11 @@ namespace kathryn{
             setSimStatus();
             assert(_stateReg != nullptr);
             bool isStateSet = _stateReg->getSimEngine()->getCurVal().getLogicalValue();
-            incEngine(isStateSet);
+            if (isStateSet){
+                setBlockOrNodeRunning();
+                incEngine();
+            }
+
         }
     };
 
@@ -102,7 +106,11 @@ namespace kathryn{
             assert(_synReg != nullptr);
             bool isFullSyncCycle = _synReg->isSimAtFullSyn();
             /** inc engine*/
-            incEngine(isFullSyncCycle);
+            if (isFullSyncCycle){
+                setBlockOrNodeRunning();
+                incEngine();
+            }
+
         }
 
     };
@@ -138,8 +146,8 @@ namespace kathryn{
             }
             setSimStatus();
             assert(_pseudoAssignMeta != nullptr);
-            /** inc engine*/
-            incEngine(false);
+            /** inc engine do not increase engine*/
+
         }
 
 
@@ -179,7 +187,7 @@ namespace kathryn{
             }
             setSimStatus();
             assert(_value != nullptr);
-            incEngine(false);
+            /** inc engine do not increase engine*/
         }
 
     };

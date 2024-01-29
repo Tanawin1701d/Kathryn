@@ -48,7 +48,7 @@ namespace kathryn {
             }
             setSimStatus();
             /** for basic assignment log engine is irrelevant*/
-            incEngine(false);
+            /////incEngine(false) do not increase;
         }
 
     };

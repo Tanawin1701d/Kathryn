@@ -15,9 +15,9 @@ namespace kathryn{
         for (auto upEvent : updateMetas){
             /////// get update event for that state register
             StResMeta result;
-            result.condition = upEvent->updateCondition;
+            result.condition = upEvent->srcUpdateCondition;
             /** recursively get state as */
-            result.dependState = getDependState(upEvent->updateState);
+            result.dependState = getDependState(upEvent->srcUpdateState);
             preResult.push_back(result);
         }
 

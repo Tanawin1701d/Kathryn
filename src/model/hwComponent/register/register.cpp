@@ -12,7 +12,7 @@ namespace kathryn{
     /** constructor need to init communication with controller*/
     Reg::Reg(int size, bool initCom, HW_COMPONENT_TYPE hwType, bool requiredAllocCheck) :
             LogicComp({0, size}, hwType,
-                      new RtlSimEngine(size, VST_REG),requiredAllocCheck){
+                      new RtlSimEngine(size, VST_REG, true),requiredAllocCheck){
         if (initCom) {
             com_init();
         }
@@ -64,9 +64,8 @@ namespace kathryn{
 
     Reg& Reg::callBackBlockAssignFromAgent(Operable &b, Slice absSliceOfHost) {
         assert(absSliceOfHost.getSize() <= getOperableSlice().getSize());
-        Slice absSlice = absSliceOfHost.getSubSliceWithShinkMsb(
-                            {0, b.getOperableSlice().getSize()});
-        ctrl->on_reg_update(generateAssignMeta(b, absSlice), this);
+        assert(absSliceOfHost.getSize() <= b.getOperableSlice().getSize());
+        ctrl->on_reg_update(generateAssignMeta(b, absSliceOfHost), this);
         return *this;
     }
 
@@ -76,17 +75,15 @@ namespace kathryn{
 
     void Reg::simStartCurCycle() {
         ///// if in This cycle the component is simmulated then skip simulation
-        if (isCurCycleSimulated()){
+        RtlSimEngine* simEngine = getSimEngine();
+        assert(simEngine->isCurValSim());
+
+        if (simEngine->isNextValSim()){
             return;
         }
-        setSimStatus();
-        assignValRepCurCycle(getSimEngine()->getCurVal(), false);
+        simEngine->setNextValSimStatus();
+        assignValRepCurCycle(getSimEngine()->getNextVal());
         //// we assign false because it is register, we must get from back cycle
-    }
-
-    void Reg::simExitCurCycle() {
-            resetSimStatus();
-            getSimEngine()->iterate();
     }
 
 //    std::vector<std::string> Reg::getDebugAssignmentValue() {

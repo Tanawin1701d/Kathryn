@@ -32,35 +32,35 @@ namespace kathryn{
         template<typename... Args>
         explicit Val(int size, Args... args):
             LogicComp({0, size}, TYPE_VAL,
-                      new RtlSimEngine(size, VST_INTEGER), false),
+                      new RtlSimEngine(size, VST_INTEGER, false), false),
             _size(size),
             rawValue(NumConverter::cvtStrToValRep(size, args...))
             {
                 assert(size > 0);
                 com_init();
-                getSimEngine()->getCurVal()  = rawValue;
-                getSimEngine()->getBackVal() = rawValue;
+                initSim();
             }
 
         explicit Val(int size):
             LogicComp({0, size}, TYPE_VAL,
-                      new RtlSimEngine(size, VST_INTEGER), false),
+                      new RtlSimEngine(size, VST_INTEGER, false), false),
             _size(size),
             rawValue(NumConverter::cvtStrToValRep(size, 0))
             {
                 assert(size > 0);
                 com_init();
-                getSimEngine()->getCurVal()  = rawValue;
-                getSimEngine()->getBackVal() = rawValue;
+                initSim();
             }
 
         explicit Val(const ValRep& val):
             LogicComp({0, val.getLen()}, TYPE_VAL,
-                      new RtlSimEngine(val.getLen(), VST_INTEGER), false),
+                      new RtlSimEngine(val.getLen(), VST_INTEGER, false), false),
             _size(val.getLen()),
             rawValue(val)
             {
-
+                assert(val.getLen() > 0);
+                com_init();
+                initSim();
             }
 
         /**
@@ -87,6 +87,9 @@ namespace kathryn{
         /** override simulator*/
         void simStartCurCycle() override;
         void simExitCurCycle() override;
+        /** init sim*/
+        void initSim();
+
 
     };
 

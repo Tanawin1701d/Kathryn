@@ -183,7 +183,7 @@ namespace kathryn{
         for (auto _sb: subBlocks){
             assert(_sb != nullptr);
             _sb->simStartCurCycle();
-            isStateRunning |= _sb->isStateSetInCurCycle();
+            isStateRunning |= _sb->isBlockOrNodeRunning();
         }
         for (auto _bsAsmNd: basicNodes){
             assert(_bsAsmNd != nullptr);
@@ -191,22 +191,27 @@ namespace kathryn{
         }
         if (basicStNode != nullptr){
             basicStNode->simStartCurCycle();
-            isStateRunning |= basicStNode->isStateSetInCurCycle();
+            isStateRunning |= basicStNode->isBlockOrNodeRunning();
         }
         if (synNode != nullptr){
             synNode->simStartCurCycle();
-            isStateRunning |= synNode->isStateSetInCurCycle();
+            isStateRunning |= synNode->isBlockOrNodeRunning();
         }
         if (pseudoExitNode != nullptr){
             pseudoExitNode->simStartCurCycle();
-            isStateRunning |= pseudoExitNode->isStateSetInCurCycle();
+            isStateRunning |= pseudoExitNode->isBlockOrNodeRunning();
         }
         /** increment log*/
-        incEngine(isStateRunning);
+        if (isStateRunning){
+            setBlockOrNodeRunning();
+            incEngine();
+        }
+
     }
 
     void FlowBlockPar::simExitCurCycle() {
-        resetFlowSimStatus();
+        unSetSimStatus();
+        unsetBlockOrNodeRunning();
         for (auto _sb: subBlocks){
             assert(_sb != nullptr);
             _sb->simExitCurCycle();

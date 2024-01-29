@@ -17,13 +17,14 @@ namespace kathryn {
     class Node;
 
     class StateReg: public CtrlFlowRegBase{
+        bool _rstReq = true; //// did reset event require
         Val& upFullState;
         Val& downFullState;
     protected:
         /**override data to init state regiter*/
         void com_init() override;
     public:
-        explicit StateReg();
+        explicit StateReg(bool rstReq = true);
         /** state register system must handle updateEvent themself*/
         Reg& operator <<= (Operable& b) override {
             std::cout << "we not support = operator in register";
@@ -35,6 +36,10 @@ namespace kathryn {
         void makeUnSetStateEvent() override;
         /** exit expression*/
         Operable* generateEndExpr() override;
+        /***resetEvent Status*/
+        bool requireResetEvent(){
+            return _rstReq;
+        }
     };
 }
 

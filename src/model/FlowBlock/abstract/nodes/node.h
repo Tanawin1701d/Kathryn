@@ -61,7 +61,7 @@ namespace kathryn {
                 condition(nullptr),
                 dependStateRaiseCond(OP_DUMMY){};
 
-        virtual ~Node() = default;
+        ~Node() override = default;
 
         virtual Node* clone() = 0;
 
@@ -172,8 +172,13 @@ namespace kathryn {
             mdLogVal->addVal(lop_to_string(dependStateRaiseCond));
         }
 
+        /*** simulation override*/
+
+        //////void prepareSim() override{};
+
         void simExitCurCycle() override{
-            resetFlowSimStatus();
+            unsetBlockOrNodeRunning();
+            unSetSimStatus();
         }
 
 

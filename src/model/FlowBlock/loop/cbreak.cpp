@@ -87,18 +87,24 @@ namespace kathryn{
 
         if (breakNode != nullptr){
             breakNode->simStartCurCycle();
-            isStateRunning |= breakNode->isStateSetInCurCycle();
+            isStateRunning |= breakNode->isBlockOrNodeRunning();
         }
         if (normExitNode != nullptr){
             normExitNode->simStartCurCycle();
-            isStateRunning |= normExitNode->isStateSetInCurCycle();
+            isStateRunning |= normExitNode->isBlockOrNodeRunning();
+        }
+
+        if (isStateRunning){
+            setBlockOrNodeRunning();
+            incEngine();
         }
 
 
     }
 
     void FlowBlockCBreak::simExitCurCycle() {
-        resetFlowSimStatus();
+        unSetSimStatus();
+        unsetBlockOrNodeRunning();
         if (breakNode != nullptr){
             breakNode->simExitCurCycle();
         }

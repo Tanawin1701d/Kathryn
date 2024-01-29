@@ -9,10 +9,10 @@
 
 namespace kathryn{
 
-    typedef unsigned long long int CYCLE;
+    typedef long long int CYCLE;
 
     static int SIM_USER_PRIO = 9;
-    static int SIM_MODEL_PRIO = 8;
+    static int SIM_MODEL_PRIO = 10;
 
     class EventBase{
     protected:
@@ -60,6 +60,7 @@ namespace kathryn{
 
         [[nodiscard]]
         CYCLE getCurCycle() const {return _curCycle;}
+        CYCLE getPriority() const {return _priority;}
 
         void addNewEvent(EventBase* newEvent);
 

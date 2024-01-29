@@ -51,7 +51,11 @@ namespace kathryn{
             }
             setSimStatus();
             bool shouldIncStat = _condWaitStateReg->isSimAtWaiting();
-            incEngine(shouldIncStat);
+            if (shouldIncStat){
+                setBlockOrNodeRunning();
+                incEngine();
+            }
+
 
 
         }
@@ -105,7 +109,11 @@ namespace kathryn{
             }
             setSimStatus();
             bool shouldIncStat =  _cycleWaitStateReg->isSimAtWaiting();
-            incEngine(shouldIncStat);
+            if (shouldIncStat){
+                incEngine();
+                setBlockOrNodeRunning();
+            }
+
 
 
         }

@@ -21,7 +21,7 @@ namespace kathryn{
                            Slice bSlice,
                            int exp_size):
     LogicComp<expression>({0, exp_size}, TYPE_EXPRESSION,
-                          new RtlSimEngine(exp_size, VST_WIRE),false),
+                          new RtlSimEngine(exp_size, VST_WIRE, false),false),
     _op(op),
     _a(a),
     _aSlice(aSlice),
@@ -52,7 +52,7 @@ namespace kathryn{
         Slice proxySlice({0, newSize});
         _aSlice = proxySlice;
         setSlice(proxySlice);
-        setSimEngine(new RtlSimEngine(newSize, VST_WIRE));
+        setSimEngine(new RtlSimEngine(newSize, VST_WIRE, false));
         return *this;
     }
 
@@ -78,22 +78,26 @@ namespace kathryn{
 
     void expression::simStartCurCycle() {
 
-        if (isCurCycleSimulated()){
+        if (getSimEngine()->isCurValSim()){
             return;
         }
-        setSimStatus();
+        getSimEngine()->setCurValSimStatus();
         ValRep* firstValRep = nullptr;
         ValRep* secValRep   = nullptr;
         ValRep& desValRep   = getSimEngine()->getCurVal();
         /**value a*/
         if (_a != nullptr){
+            RtlSimEngine* aSimEngine = _a->castToRtlSimItf()->getSimEngine();
             _a->castToRtlSimItf()->simStartCurCycle();
-            firstValRep =  &(_a->castToRtlSimItf()->getSimEngine()->getCurVal());
+            assert(aSimEngine->isCurValSim());
+            firstValRep =  &(aSimEngine->getCurVal());
         }
         /**value b*/
         if (_b != nullptr){
+            RtlSimEngine* bSimEngine = _b->castToRtlSimItf()->getSimEngine();
             _b->castToRtlSimItf()->simStartCurCycle();
-            secValRep = &(_b->castToRtlSimItf()->getSimEngine()->getCurVal());
+            assert(bSimEngine->isCurValSim());
+            secValRep =  &(bSimEngine->getCurVal());
         }
 
         switch (_op) {
@@ -166,11 +170,6 @@ namespace kathryn{
                 break;
         }
 
-    }
-
-    void expression::simExitCurCycle() {
-        resetSimStatus();
-        getSimEngine()->iterate();
     }
 
 //    std::vector<std::string> expression::getDebugAssignmentValue() {

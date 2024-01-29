@@ -164,26 +164,32 @@ namespace kathryn{
         bool isStateRunning = false;
         if (implicitFlowBlock != nullptr){
             implicitFlowBlock->simStartCurCycle();
-            isStateRunning |= implicitFlowBlock->isStateSetInCurCycle();
+            isStateRunning |= implicitFlowBlock->isBlockOrNodeRunning();
         }
         if (exitNode != nullptr){
             exitNode->simStartCurCycle();
-            isStateRunning |= exitNode->isStateSetInCurCycle();
+            isStateRunning |= exitNode->isBlockOrNodeRunning();
         }
         if (byPassExitNode != nullptr){
             byPassExitNode->simStartCurCycle();
-            isStateRunning |= byPassExitNode->isStateSetInCurCycle();
+            isStateRunning |= byPassExitNode->isBlockOrNodeRunning();
         }
         if (subBlockExitNode != nullptr){
             subBlockExitNode->simStartCurCycle();
-            isStateRunning |= subBlockExitNode->isStateSetInCurCycle();
+            isStateRunning |= subBlockExitNode->isBlockOrNodeRunning();
         }
 
-        incEngine(isStateRunning);
+        if (isStateRunning){
+            setBlockOrNodeRunning();
+            incEngine();
+
+        }
+
     }
 
     void FlowBlockCwhile::simExitCurCycle() {
-        resetFlowSimStatus();
+        unSetSimStatus();
+        unsetBlockOrNodeRunning();
         if (implicitFlowBlock != nullptr){
             implicitFlowBlock->simExitCurCycle();
         }

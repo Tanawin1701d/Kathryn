@@ -30,7 +30,7 @@ namespace kathryn{
     void VcdWriter::addNewVar(VCD_SIG_TYPE st, std::string name, Slice sl) {
         addData("$var " +
                 vcdSigTypeToStr(st) + " " +
-                std::to_string(sl.getSize()) +
+                std::to_string(sl.getSize()) + " " +
                 name + " " +
                 name + " $end\n"
                 );

@@ -19,7 +19,7 @@ namespace kathryn{
 
         explicit StartNode(Operable* rstSig):
                 Node(START_NODE),
-                _startState(new StateReg()),
+                _startState(new StateReg(false)),
                 _rstSig(rstSig){
                 assert(_rstSig != nullptr);
         }

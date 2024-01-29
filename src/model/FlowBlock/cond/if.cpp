@@ -169,24 +169,29 @@ namespace kathryn{
         /** simulate */
         for(auto sb: subBlocks){
             sb->simStartCurCycle();
-            isStateRunning |= sb->isStateSetInCurCycle();
+            isStateRunning |= sb->isBlockOrNodeRunning();
         }
         if (psuedoElseNode != nullptr){
             psuedoElseNode->simStartCurCycle();
-            isStateRunning |= psuedoElseNode->isStateSetInCurCycle();
+            isStateRunning |= psuedoElseNode->isBlockOrNodeRunning();
         }
 
         if (exitNode != nullptr){
             exitNode->simStartCurCycle();
-            isStateRunning |= exitNode->isStateSetInCurCycle();
+            isStateRunning |= exitNode->isBlockOrNodeRunning();
         }
 
-        incEngine(isStateRunning);
+        if (isStateRunning){
+            setBlockOrNodeRunning();
+            incEngine();
+        }
+
 
     }
 
     void FlowBlockIf::simExitCurCycle() {
-        resetFlowSimStatus();
+        unSetSimStatus();
+        unsetBlockOrNodeRunning();
         for(auto sb: subBlocks){
             sb->simExitCurCycle();
         }

@@ -18,6 +18,7 @@ namespace kathryn{
 
     void SimController::simStart() {
 
+        //std::cout << eventQ.getNextEvent()->getCurCycle() << std::endl;
         while ( (!eventQ.isEmpty()) &&
                 (eventQ.getNextEvent()->getCurCycle() <= _limitCycle)
         ){
@@ -36,6 +37,10 @@ namespace kathryn{
             /** simulate each event*/
             for (auto event : curEvents){
                 event->simStartCurCycle();
+            }
+            /** collect each*/
+            for (auto event : curEvents){
+                event->curCycleCollectData();
             }
             /** exit each event*/
             for (auto event : curEvents){

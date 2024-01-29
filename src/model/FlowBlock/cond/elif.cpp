@@ -71,7 +71,6 @@ namespace kathryn{
     }
 
     void FlowBlockElif::simStartCurCycle() {
-
         if (isCurCycleSimulated()){
             return;
         }
@@ -81,14 +80,18 @@ namespace kathryn{
 
         if (implicitSubBlock != nullptr){
             implicitSubBlock->simStartCurCycle();
-            isStateRunning |= implicitSubBlock->isCurCycleSimulated();
+            isStateRunning |= implicitSubBlock->isBlockOrNodeRunning();
         }
 
-        incEngine(isStateRunning);
+        if (isStateRunning){
+            setBlockOrNodeRunning();
+            incEngine();
+        }
     }
 
     void FlowBlockElif::simExitCurCycle() {
-        resetFlowSimStatus();
+        unSetSimStatus();
+        unsetBlockOrNodeRunning();
         if (implicitSubBlock != nullptr){
             implicitSubBlock->simExitCurCycle();
         }

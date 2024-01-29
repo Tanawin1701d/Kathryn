@@ -23,10 +23,10 @@ namespace kathryn {
 
 /** reg/wire update metas data*/
     struct UpdateEvent{
-        Operable* updateCondition = nullptr; /// which condition that allow this value to update.
-        Operable* updateState     = nullptr; /// which state that need to update.
-        Operable* updateValue     = nullptr; /// value to update.
-        Slice     updateSlice; /// slice to update must smaller or equal to updateValue.slice
+        Operable* srcUpdateCondition = nullptr; /// which condition that allow this value to update.
+        Operable* srcUpdateState     = nullptr; /// which state that need to update.
+        Operable* srcUpdateValue     = nullptr; /// value to update.
+        Slice     desUpdateSlice; /// slice to update must smaller or equal to srcUpdateValue.slice
         int priority = DEFAULT_UE_PRI_MIN;
         ///priority for circuit if there are attention to update same register at a time 0 is highest 9 is lowest
 
@@ -34,47 +34,40 @@ namespace kathryn {
             return priority < rhs.priority;
         }
 
-        bool shouldAssignValRep(Operable* samplingOpr, bool isGetFromCur){
+        bool shouldAssignValRep(Operable* samplingOpr){
             if (samplingOpr != nullptr){
-                RtlSimulatable* simItf = samplingOpr->castToRtlSimItf();
-                assert(simItf != nullptr);
-                auto simEnginePtr = simItf->getSimEngine();
-                ValRep samplingVal = ValRep(1);
-                if (isGetFromCur){
-                    samplingVal = simEnginePtr->getCurVal();
-                }else{
-                    samplingVal = simEnginePtr->getBackVal();
-                }
-                if (!samplingVal.getLogicalValue()){
-                    return false;
-                }
+                RtlSimulatable* simItf       = samplingOpr->castToRtlSimItf();
+                RtlSimEngine*   simEnginePtr = simItf->getSimEngine();
+                assert(simEnginePtr->isCurValSim());
+                ValRep samplingVal           = simEnginePtr->getCurVal();
+
+                return samplingVal.getLogicalValue();
             }
             return true;
         }
 
-        void tryAssignValRep(ValRep& desValRep, bool getFromCur){
+        void tryAssignValRep(ValRep& desValRep){
             ////// check update state valid
-            if (!(shouldAssignValRep(updateCondition, getFromCur) &&
-                  shouldAssignValRep(updateState, getFromCur))){
+            if (!(shouldAssignValRep(srcUpdateCondition) &&
+                  shouldAssignValRep(srcUpdateState))){
                 return;
             }
-            assert(updateValue != nullptr);
+            Slice desSlice = desUpdateSlice;
+            Slice srcSlice = srcUpdateValue->getOperableSlice();
+                  assert(srcSlice.getSize() >= desSlice.getSize());
+                  srcSlice = srcSlice.getSubSliceWithShinkMsb({0, desSlice.getSize()});
+                  assert(srcSlice.getSize() == desSlice.getSize());
 
-            ValRep& vr = getFromCur ? updateValue->castToRtlSimItf()->getSimEngine()->getCurVal()
-                                    : updateValue->castToRtlSimItf()->getSimEngine()->getBackVal();
-                    ;
-            /**vr might have larger than desire updateSlice, so we must shink to match destination*/
-            Slice vrSl = updateValue->getOperableSlice();
-            vrSl = vrSl.getSubSliceWithShinkMsb({0, updateSlice.getSize()});
-            ValRep actualVr = vr.slice(vrSl);
-            /** update value */
-            desValRep.updateOnSlice(actualVr, updateSlice);
+            ValRep& srcSimVal = srcUpdateValue->castToRtlSimItf()->getSimEngine()->getCurVal();
+            assert(srcUpdateValue->castToRtlSimItf()->getSimEngine()->isCurValSim());
+            ValRep  srcSimValFit = srcSimVal.slice(srcSlice);
+            desValRep.updateOnSlice(srcSimValFit, desSlice);
         }
 
         void trySimAll() const{
-            trySim(updateCondition);
-            trySim(updateState);
-            trySim(updateValue);
+            trySim(srcUpdateCondition);
+            trySim(srcUpdateState);
+            trySim(srcUpdateValue);
         }
 
         static void trySim(Operable* opr){
@@ -83,14 +76,14 @@ namespace kathryn {
         }
 
         [[nodiscard]] std::string getDebugString() const{
-            return updateValue->castToIdent()->getGlobalName() +
-            "[" +
-            std::to_string(updateSlice.start) + ":"+
-            std::to_string(updateSlice.stop) +
-            "] when state = " +
-            ((updateState != nullptr) ? updateState->castToIdent()->getGlobalName(): "none") +
-            " cond = " +
-            ((updateCondition != nullptr) ? updateCondition->castToIdent()->getGlobalName(): "none");
+            return srcUpdateValue->castToIdent()->getGlobalName() +
+                   "[" +
+                   std::to_string(desUpdateSlice.start) + ":" +
+                   std::to_string(desUpdateSlice.stop) +
+                   "] when state = " +
+                   ((srcUpdateState != nullptr) ? srcUpdateState->castToIdent()->getGlobalName() : "none") +
+                   " cond = " +
+                   ((srcUpdateCondition != nullptr) ? srcUpdateCondition->castToIdent()->getGlobalName() : "none");
         }
     };
 }

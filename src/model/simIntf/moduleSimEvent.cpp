@@ -23,10 +23,7 @@ namespace kathryn{
         _startModule->beforePrepareSim(_writer);
         _startModule->prepareSim();
 
-        /** initiate reset Value*/
-        auto resetSimEngine = _resetWire->castToRtlSimItf()->getSimEngine();
-        ValRep resetVal = NumConverter::cvtStrToValRep(1, 1);
-        resetSimEngine->getCurVal() = resetVal;
+
         /** start Value*/
         addNewEvent(this);
 
@@ -34,7 +31,16 @@ namespace kathryn{
 
 
     void ModuleSimEvent::simStartCurCycle() {
+        if (_curCycle == 0) {
+            /** initiate reset Value*/
+            auto resetSimEngine = _resetWire->castToRtlSimItf()->getSimEngine();
+            ValRep resetVal = NumConverter::cvtStrToValRep(1, 1);
+            resetSimEngine->setCurValSimStatus();
+            resetSimEngine->getCurVal() = resetVal;
+        }
         _startModule->simStartCurCycle();
+        /***set reset wire */
+
     }
 
     void ModuleSimEvent::curCycleCollectData() {
@@ -57,9 +63,6 @@ namespace kathryn{
         /** prepare next event by convert this class to be next event */
         assert(_resetWire != nullptr);
         /**change reset to 0*/
-        auto resetSimEngine = _resetWire->castToRtlSimItf()->getSimEngine();
-        ValRep resetVal = NumConverter::cvtStrToValRep(1,0);
-        resetSimEngine->getCurVal() = resetVal;
         _curCycle++;
 
         addNewEvent(this);

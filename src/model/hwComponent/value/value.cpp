@@ -33,11 +33,14 @@ namespace kathryn{
     }
 
     void Val::simExitCurCycle() {
-        resetSimStatus();
-        //// getSimEngine()->iterate();
-        //////// don't have to iterate due to it is fix value
+        /** we do this to prevent iterate() function to prepare for next cycle*/
     }
 
-
+    void Val::initSim(){
+        getSimEngine()->setCurValSimStatus();
+        getSimEngine()->setNextValSimStatus();
+        getSimEngine()->getCurVal()  = rawValue;
+        getSimEngine()->getNextVal() = rawValue;
+    }
 
 }

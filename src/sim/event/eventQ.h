@@ -12,11 +12,19 @@
 
 namespace kathryn{
 
+    class eventQueueCmp{
+    public:
+        bool operator()(EventBase* lhs, EventBase* rhs){
+            return (*lhs) < (*rhs);
+        }
+    };
+
     class EventQ {
 
     private:
-        CYCLE lastPopCycle = 0;
-        std::priority_queue<EventBase *> eventQueue;
+
+        CYCLE lastPopCycle = -1;
+        std::priority_queue<EventBase*, std::vector<EventBase*>, eventQueueCmp> eventQueue;
 
     public:
         /** add event to the queue*/
@@ -34,6 +42,8 @@ namespace kathryn{
         std::vector<EventBase*> getAndPopNextSameCycleEvent();
         /** get last popCycle*/
         CYCLE getLastPopCycle() const;
+
+
 
     };
 

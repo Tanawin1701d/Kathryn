@@ -33,8 +33,6 @@ namespace kathryn{
         Wire& callBackNonBlockAssignFromAgent(Operable& b, Slice absSliceOfHost) override;
         /**override simulation*/
         void simStartCurCycle() override;
-        void simExitCurCycle() override;
-
         //std::vector<std::string> getDebugAssignmentValue() override;
 
 

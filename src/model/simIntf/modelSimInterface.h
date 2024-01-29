@@ -26,23 +26,10 @@ namespace kathryn{
      * */
 
     class Simulatable{
-    private:
-        bool isSimYet = false; ///// indicate that current cycle is simulated yet.
     public:
         Simulatable() = default;
 
         virtual ~Simulatable() = default;
-
-        void setSimStatus(){
-            isSimYet = true;
-        }
-        void resetSimStatus(){
-            isSimYet = false;
-        }
-        [[nodiscard]]
-        bool isCurCycleSimulated() const{
-            return isSimYet;
-        }
 
         virtual void prepareSim() = 0;
         /**
@@ -103,7 +90,11 @@ namespace kathryn{
             _engine->tryWriteValue();
         }
 
-
+        /**we sure that it can be invoked only one*/
+        void simExitCurCycle() override{
+            assert(_engine->isCurValSim());
+            _engine->iterate();
+        }
 
     };
 
@@ -116,6 +107,7 @@ namespace kathryn{
 
     class FlowSimulatable : public Simulatable{
     private:
+        bool           _isSimulated = false;
         FlowSimEngine* _engine = nullptr;
     public:
         explicit FlowSimulatable(FlowSimEngine* engine):
@@ -126,32 +118,39 @@ namespace kathryn{
 
         FlowSimEngine* getSimEngine(){return _engine;}
 
-        void incEngine(bool isStateRunning){
-
-            if (isStateRunning){
-                getSimEngine()->incUsedTime();
-            }
-            getSimEngine()->setRunningStatus(isStateRunning);
-
+        /**
+         * sim state
+         * **/
+        bool isCurCycleSimulated() const {
+            return _isSimulated;
+        }
+        void setSimStatus(){
+            _isSimulated = true;
+        }
+        void unSetSimStatus(){
+            _isSimulated = false;
         }
 
-        bool isStateSetInCurCycle() {
-            assert(isCurCycleSimulated());
-            return getSimEngine()->isRunning();
-        };
-
-        void resetFlowSimStatus(){
-            resetSimStatus();
-            assert(_engine != nullptr);
+        /**
+         * sim state
+         * **/
+        bool isBlockOrNodeRunning(){
+            return _engine->isRunning();
+        }
+        void setBlockOrNodeRunning(){
+            _engine->setRunningStatus();
+        }
+        void unsetBlockOrNodeRunning(){
             _engine->unsetRunning();
-        };
-
-        /**TODO add data collection to flow and node*/
+        }
+        void incEngine(){
+            getSimEngine()->incUsedTime();
+            getSimEngine()->setRunningStatus();
+        }
+        /** start Sim can be invoked multiple times*/
         void prepareSim() override{};
 
-        void curCycleCollectData() override{}
-
-        /** start Sim can be invoked multiple times*/
+        void curCycleCollectData() override{};
         /** exit sim can be invoked multiple times*/
     };
 

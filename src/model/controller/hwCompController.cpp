@@ -25,14 +25,15 @@ namespace kathryn{
      * state register handling
      *
      * */
-    void ModelController::on_sp_reg_init(Reg* ptr, SP_REG_TYPE spRegType) {
+    void ModelController::on_sp_reg_init(CtrlFlowRegBase* ptr, SP_REG_TYPE spRegType) {
         assert(ptr != nullptr);
         Module* targetModulePtr = getTargetModulePtr();
         /**localize necessary destination*/
         targetModulePtr->addSpReg(ptr, spRegType);
         ptr->setParent(targetModulePtr);
         ptr->buildInheritName(); //// build inherit name for that module
-        ptr->makeResetEvent();
+        if (ptr->requireResetEvent())
+            ptr->makeResetEvent();
         /** debug value*/
         logMF(ptr,
               "[" + sp_reg_type_to_str(spRegType) + "] is initialized and set parent to "

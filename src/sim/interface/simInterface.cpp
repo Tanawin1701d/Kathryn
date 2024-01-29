@@ -43,6 +43,7 @@ namespace kathryn{
     }
 
     SimInterface::~SimInterface() {
+        delete _vcdWriter;
         delete _ModuleSimEvent;
         /**no need to delete user event because sim controller will delete it */
     }

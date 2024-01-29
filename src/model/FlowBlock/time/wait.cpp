@@ -87,14 +87,18 @@ namespace kathryn{
         /** simulate each element*/
         if (_waitNode != nullptr){
             _waitNode->simStartCurCycle();
-            isStateRunning |= _waitNode->isStateSetInCurCycle();
+            isStateRunning |= _waitNode->isBlockOrNodeRunning();
         }
         /** inc engine*/
-        incEngine(isStateRunning);
+        if (isStateRunning) {
+            setBlockOrNodeRunning();
+            incEngine();
+        }
     }
 
     void FlowBlockCondWait::simExitCurCycle() {
-        resetFlowSimStatus();
+        unSetSimStatus();
+        unsetBlockOrNodeRunning();
         if (_waitNode != nullptr){
             _waitNode->simExitCurCycle();
         }
@@ -114,7 +118,7 @@ namespace kathryn{
     : FlowBlockBase(CLKWAIT),
       _resultNodeWrap(nullptr),
       _waitNode(nullptr),
-      cycle(-1),
+      cycle(cycleUsed),
       cnt(nullptr)
     {
         assert(cycle > 0);
@@ -196,14 +200,19 @@ namespace kathryn{
         /** simulate each element*/
         if (_waitNode != nullptr){
             _waitNode->simStartCurCycle();
-            isStateRunning |= _waitNode->isStateSetInCurCycle();
+            isStateRunning |= _waitNode->isBlockOrNodeRunning();
         }
         /** inc engine*/
-        incEngine(isStateRunning);
+        if (isStateRunning){
+            setBlockOrNodeRunning();
+            incEngine();
+        }
+
     }
 
     void FlowBlockCycleWait::simExitCurCycle() {
-        resetFlowSimStatus();
+        unSetSimStatus();
+        unsetBlockOrNodeRunning();
         if (_waitNode != nullptr){
             _waitNode->simExitCurCycle();
         }

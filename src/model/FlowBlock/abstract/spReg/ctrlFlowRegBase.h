@@ -42,6 +42,10 @@ namespace kathryn{
         virtual void      makeUnSetStateEvent() = 0;
         /***generate expression that represent state is finish*/
         virtual Operable* generateEndExpr() = 0;
+        /** to check that this register require reset event*/
+        virtual bool requireResetEvent(){
+            return true;
+        }
 
 
 

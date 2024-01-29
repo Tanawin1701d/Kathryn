@@ -13,10 +13,11 @@ namespace kathryn {
         ctrl->on_sp_reg_init(this, SP_STATE_REG);
     }
 
-    StateReg::StateReg(): CtrlFlowRegBase(        1,
+    StateReg::StateReg(bool rstReq): CtrlFlowRegBase(        1,
                                                   false,
                                                   TYPE_STATE_REG,
                                                   false),
+              _rstReq(rstReq),
               upFullState  (_make<Val>("stateRegUpFull"  ,1, 1)),
               downFullState(_make<Val>("stateRegDownFull",1, 0))
     {

@@ -11,7 +11,7 @@ namespace kathryn{
 
 
     Wire::Wire(int size) : LogicComp({0, size}, TYPE_WIRE,
-                                     new RtlSimEngine(size, VST_WIRE),true){
+                                     new RtlSimEngine(size, VST_WIRE, false),true){
         com_init();
     }
 
@@ -57,24 +57,20 @@ namespace kathryn{
     }
 
     Wire& Wire::callBackNonBlockAssignFromAgent(Operable &b, Slice absSliceOfHost) {
-        Slice absSlice = absSliceOfHost.getSubSliceWithShinkMsb({0, b.getOperableSlice().getSize()});
-        ctrl->on_wire_update(generateAssignMeta(b, absSlice), this);
+        ///Slice absSlice = absSliceOfHost.getSubSliceWithShinkMsb({0, b.getOperableSlice().getSize()});
+        assert(absSliceOfHost.getSize() <= getOperableSlice().getSize());
+        assert(absSliceOfHost.getSize() <= b.getOperableSlice().getSize());
+        ctrl->on_wire_update(generateAssignMeta(b, absSliceOfHost), this);
         return *this;
     }
 
     void Wire::simStartCurCycle() {
 
-        if (isCurCycleSimulated()){
+        if (getSimEngine()->isCurValSim()){
             return;
         }
-        setSimStatus();
-        assignValRepCurCycle(getSimEngine()->getCurVal(), true);
-
-    }
-
-    void Wire::simExitCurCycle() {
-        resetSimStatus();
-        getSimEngine()->iterate();
+        getSimEngine()->setCurValSimStatus();
+        assignValRepCurCycle(getSimEngine()->getCurVal());
 
     }
 
