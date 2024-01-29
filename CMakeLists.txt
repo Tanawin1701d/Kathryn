@@ -99,7 +99,7 @@ add_executable(Kathryn main.cpp
         src/model/simIntf/moduleSimEvent.cpp
         src/model/simIntf/moduleSimEvent.h
         src/sim/event/eventBase.cpp
-        src/test/simTest1.h
+        src/test/simTest/simTest1.h
         src/model/hwComponent/abstract/updateEvent.h
         src/util/numberic/numConvert.cpp
         src/sim/event/userEvent.cpp
@@ -112,5 +112,8 @@ add_executable(Kathryn main.cpp
         src/sim/simResWriter/simResWriter.h
         src/model/hwComponent/globalComponent/globalComponent.cpp
         src/model/hwComponent/globalComponent/globalComponent.h
+        src/test/simTest/simTest2.h
+        src/test/simTest/simTest3.h
+        src/test/simTest/simTest4.h
 
 )

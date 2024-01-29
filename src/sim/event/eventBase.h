@@ -11,8 +11,8 @@ namespace kathryn{
 
     typedef long long int CYCLE;
 
-    static int SIM_USER_PRIO = 9;
-    static int SIM_MODEL_PRIO = 10;
+    static int SIM_USER_PRIO  = 10;
+    static int SIM_MODEL_PRIO = 9;
 
     class EventBase{
     protected:

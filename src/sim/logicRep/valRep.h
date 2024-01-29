@@ -97,8 +97,8 @@ namespace kathryn{
         ValRep operator >= (const ValRep& rhs);
 
         ///// not required equal bit operator
-        ValRep operator +  (const ValRep& rhs);
-        ValRep operator -  (const ValRep& rhs);
+        ValRep operator +  (ValRep rhs);
+        ValRep operator -  (ValRep rhs);
         ValRep operator *  (const ValRep&    ){assert(false);};
         ValRep operator /  (const ValRep&    ){assert(false);};
         ValRep operator %  (const ValRep&    ){assert(false);};

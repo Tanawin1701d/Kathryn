@@ -82,6 +82,7 @@ namespace kathryn{
             return;
         }
         simEngine->setNextValSimStatus();
+        simEngine->getNextVal() = simEngine->getCurVal();
         assignValRepCurCycle(getSimEngine()->getNextVal());
         //// we assign false because it is register, we must get from back cycle
     }

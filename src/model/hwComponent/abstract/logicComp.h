@@ -53,6 +53,7 @@ namespace kathryn{
         };
 
         ValRep& sv() override{
+            getSimEngine()->setCurValSimStatus();
             return getSimEngine()->getCurVal();
         }
 

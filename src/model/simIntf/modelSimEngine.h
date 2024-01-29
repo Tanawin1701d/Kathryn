@@ -49,8 +49,8 @@ namespace kathryn {
 
         ////// setter
         void setSimMeta  (RTL_Meta_afterMf& val) { _simMeta = val; _isSimMetaSet = true;}
-        void setCurValSimStatus()  {assert(!_isCurValSim ); _isCurValSim  = true;}
-        void setNextValSimStatus() {assert(!_isNextValSim); _isNextValSim = true;}
+        void setCurValSimStatus()  {_isCurValSim  = true;}
+        void setNextValSimStatus() {_isNextValSim = true;}
 
         ///// getter
         bool              isSimForNext() const{return _simForNext;}

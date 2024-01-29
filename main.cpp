@@ -1,8 +1,6 @@
 #include <iostream>
 
-#include "test/simTest1.h"
-
-#include "util/logger/logger.h"
+#include "test/simTest/simTest4.h"
 
 
 using namespace kathryn;
@@ -10,8 +8,6 @@ using namespace kathryn;
 
 int main() {
 
-//    auto t = test3();
-//    t.test();
      auto t = test1();
      t.test();
 

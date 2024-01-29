@@ -2,10 +2,10 @@
 // Created by tanawin on 22/1/2567.
 //
 
-#ifndef KATHRYN_SIMTEST1_H
-#define KATHRYN_SIMTEST1_H
+#ifndef KATHRYN_SM_SIMTEST4_H
+#define KATHRYN_SM_SIMTEST4_H
 
-#include "test.h"
+#include "test/test.h"
 #include "model/controller/controller.h"
 #include "model/FlowBlock/seq/seq.h"
 #include "model/FlowBlock/time/wait.h"
@@ -20,32 +20,49 @@ namespace kathryn{
 
     class testSimMod: public Module{
     public:
-//        makeReg(a, 8);
-//        makeReg(b, 8);
-//        makeReg(c, 8);
-        makeVal(iv, 8, 0b10101010);
+        /** lane1*/
+        makeReg(a1, 8);
+        makeReg(b1, 8);
+        makeReg(c1, 8);
+        makeReg(d1, 8);
+        /** lane2*/
+        makeReg(a2, 8);
+        makeReg(b2, 8);
+        makeReg(c2, 8);
+
+        makeVal(iv, 8, 48);
+        makeVal(iv2, 8,64);
+
 
         explicit testSimMod(int x): Module(){}
 
         void flow() override{
 
-//            seq{
-//                a <<= iv;
-//                b <<= a;
-//                c <<= b;
-//            }
+            par{
+                seq{
+                    a1 <<= iv;
+                    b1 <<= a1;
+                    c1 <<= b1;
+                    d1 <<= c1;
+                }
+                seq {
+                    a2 <<= iv2;
+                    b2 <<= a2;
+                    c2 <<= b2;
+                }
+            }
 
         }
 
     };
 
-    static std::string vcdPath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/simTest1.vcd";
+    static std::string vcdPath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/simTest4.vcd";
 
     class sim1 :public SimInterface{
     public:
         testSimMod* _md = nullptr;
         sim1(testSimMod* md):SimInterface(100, vcdPath),
-         _md(md){
+                             _md(md){
             assert(_md != nullptr);
         }
 
@@ -55,7 +72,7 @@ namespace kathryn{
 
             for (int i = 0; i < 100; i++) {
                 sim {
-                    _md->iv.sv() = NumConverter::cvtStrToValRep(8, 7);
+                    //_md->iv.sv() = NumConverter::cvtStrToValRep(8, 7);
                 };
                 incCycle(1);
             }
@@ -85,4 +102,4 @@ namespace kathryn{
 
 }
 
-#endif //KATHRYN_SIMTEST1_H
+#endif

@@ -405,11 +405,11 @@ namespace kathryn{
     /////////// arithmetic operator ////////////////////////////
     ////////////////////////////////////////////////////////////
 
-    ValRep ValRep::operator+(const ValRep &rhs) {
+    ValRep ValRep::operator+(ValRep rhs) {
         /** extend value to achieve value*/
         int maxLen = std::max(getLen(), rhs.getLen());
         ValRep SrcA = getZeroExtend(maxLen);
-        ValRep SrcB = getZeroExtend(maxLen);
+        ValRep SrcB = rhs.getZeroExtend(maxLen);
 
         assert(maxLen >= 1);
         ValRep preRet(maxLen);
@@ -430,10 +430,10 @@ namespace kathryn{
         return preRet;
     }
 
-    ValRep ValRep::operator-(const ValRep &rhs) {
+    ValRep ValRep::operator-(ValRep rhs) {
         int maxLen = std::max(getLen(), rhs.getLen());
         ValRep srcA = getZeroExtend(maxLen);
-        ValRep srcB = getZeroExtend(maxLen);
+        ValRep srcB = rhs.getZeroExtend(maxLen);
 
         assert(maxLen >= 1);
         ValRep preRet(maxLen);
