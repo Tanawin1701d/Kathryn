@@ -93,16 +93,16 @@ namespace kathryn{
 
     }
 
-    ValRep ValRep::cmpOperator(const ValRep &rhs,
+    ValRep ValRep::cmpOperator(ValRep &rhs,
                                const std::function<bool(ull* a, ull* b, int sz)>& operation) {
 
         /** extend value to achieve value*/
         int maxLen = std::max(getLen(), rhs.getLen());
         ValRep SrcA = getZeroExtend(maxLen);
-        ValRep SrcB = getZeroExtend(maxLen);
+        ValRep SrcB = rhs.getZeroExtend(maxLen);
 
         ValRep preRet(1);
-        preRet._val[0] = operation(SrcA._val, SrcB._val, maxLen) ? 1 : 0;
+        preRet._val[0] = operation(SrcA._val, SrcB._val, SrcA.getValArrSize()) ? 1 : 0;
         return preRet;
 
     }
@@ -193,6 +193,7 @@ namespace kathryn{
         int curIterUll      = startBit   / bitSizeOfUll;
         int curAlignIterBit = curIterUll * bitSizeOfUll;
         int curIterBit      = startBit;
+
         int stopIterUll     = stopBit / bitSizeOfUll;
         /***********************************************/
         while (curIterBit < stopBit){
@@ -331,7 +332,7 @@ namespace kathryn{
     /////////// compare operator ///////////////////////////////
     ////////////////////////////////////////////////////////////
 
-    ValRep ValRep::operator<(const ValRep &rhs) {
+    ValRep ValRep::operator<(ValRep &rhs) {
 
         return cmpOperator(rhs,[](const ull* valA, const ull* valB, int valSize) -> bool
         {
@@ -350,7 +351,7 @@ namespace kathryn{
 
     }
 
-    ValRep ValRep::operator<=(const ValRep &rhs) {
+    ValRep ValRep::operator<=(ValRep &rhs) {
         return cmpOperator(rhs,[](const ull* valA, const ull* valB, int valSize) -> bool
         {
             assert(valSize >= 1);
@@ -367,7 +368,7 @@ namespace kathryn{
         });
     }
 
-    ValRep ValRep::operator>(const ValRep &rhs) {
+    ValRep ValRep::operator>(ValRep &rhs) {
         return cmpOperator(rhs,[](const ull* valA, const ull* valB, int valSize) -> bool
         {
             assert(valSize >= 1);
@@ -384,7 +385,7 @@ namespace kathryn{
         });
     }
 
-    ValRep ValRep::operator>=(const ValRep &rhs) {
+    ValRep ValRep::operator>=(ValRep &rhs) {
         return cmpOperator(rhs,[](const ull* valA, const ull* valB, int valSize) -> bool
         {
             assert(valSize >= 1);

@@ -66,9 +66,9 @@ namespace kathryn{
         /**assign to result node wrap*/
         /** node wrap no assign because we must sent to upper block*/
         resultNodeWrapper = new NodeWrap();
-        exitNode          = new PseudoNode();
-        byPassExitNode    = new PseudoNode();
-        subBlockExitNode  = new PseudoNode();
+        exitNode          = new PseudoNode(1);
+        byPassExitNode    = new PseudoNode(1);
+        subBlockExitNode  = new PseudoNode(1);
 
         /**
          *

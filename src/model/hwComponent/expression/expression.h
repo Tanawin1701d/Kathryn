@@ -32,9 +32,7 @@ namespace kathryn {
         /** metas data that contain bi operation*/
         LOGIC_OP _op;
         Operable* _a;
-        Slice _aSlice{};
         Operable* _b;
-        Slice _bSlice{};
 
     protected:
         void com_init() override;
@@ -45,20 +43,22 @@ namespace kathryn {
         /** constructor auto get id of the system*/
         explicit expression(LOGIC_OP op,
                             Operable* a,
-                            Slice aSlice,
                             Operable* b,
-                            Slice bSlice,
                             int exp_size
                             );
-        explicit expression();
+        explicit expression(int exp_size);
         /** override assignable*/
         expression& operator <<= (Operable& b) override {std::cout << "we not support <<= operator in exprMetas"; assert(false);}
         expression& operator =   (Operable& b) override;
+        expression& operator =   (expression& b);
         /**override operable*/
         [[nodiscard]]
-        Operable& getExactOperable() const override { return *(Operable*)(this); };
-        [[nodiscard]]
         Slice getOperableSlice() const override  { return getSlice(); }
+        [[nodiscard]]
+        Operable& getExactOperable() const override { return *(Operable*)(this);};
+        [[nodiscard]]
+
+
 
         /** override slicable*/
         SliceAgent<expression>& operator() (int start, int stop) override;

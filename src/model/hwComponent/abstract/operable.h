@@ -57,6 +57,9 @@ namespace kathryn {
         virtual Slice           getOperableSlice() const = 0;
         [[nodiscard]]
         virtual Operable&       getExactOperable () const = 0;
+
+        virtual ValRep&         getExactSimCurValue() = 0;
+        virtual ValRep&         getExactSimNextValue() = 0;
         /**downcasting*/
         virtual Identifiable*   castToIdent() = 0;
         virtual RtlSimulatable* castToRtlSimItf() = 0;

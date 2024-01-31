@@ -53,7 +53,7 @@ namespace kathryn{
             areThereForceExit |= (nw->getForceExitNode() != nullptr);
         }
         if (areThereForceExit){
-            forceExitNode = new PseudoNode;
+            forceExitNode = new PseudoNode(1);
             for (auto nw : nws){
                 if (nw->getForceExitNode() != nullptr){
                     forceExitNode->addDependNode(nw->getForceExitNode());

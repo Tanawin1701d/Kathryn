@@ -80,13 +80,13 @@ namespace kathryn{
         }
         ///// build proxy node to prevent state lost
         if ( allCondes.size() == allStatement.size() ) {
-            psuedoElseNode = new PseudoNode();
+            psuedoElseNode = new PseudoNode(1);
             psuedoElseNode->addCondtion(prevFalse, BITWISE_AND);
             resultNodeWrap->addEntraceNode(psuedoElseNode);
         }
 
         /**exit condition of node wrap*/
-        exitNode = new PseudoNode();
+        exitNode = new PseudoNode(1);
         exitNode->setDependStateJoinOp(BITWISE_OR);
         for (auto nw : allStatement){
             exitNode->addDependNode(nw->getExitNode());

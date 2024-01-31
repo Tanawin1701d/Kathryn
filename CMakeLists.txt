@@ -115,5 +115,6 @@ add_executable(Kathryn main.cpp
         src/test/simTest/simTest2.h
         src/test/simTest/simTest3.h
         src/test/simTest/simTest4.h
+        src/test/simTest/simTest5.h
 
 )

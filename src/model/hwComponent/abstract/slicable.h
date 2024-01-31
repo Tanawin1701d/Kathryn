@@ -94,12 +94,20 @@ namespace kathryn {
         }
 
         /** override operable*/
+        ValRep& getExactSimCurValue() override{
+            return castToRtlSimItf()->getSimEngine()->getCurVal();
+        }
+
+        ValRep& getExactSimNextValue() override{
+            return castToRtlSimItf()->getSimEngine()->getNextVal();
+        }
+
         Identifiable* castToIdent() override{
-            assert(false);
+            return static_cast<Identifiable*>(_master);
         }
 
         RtlSimulatable* castToRtlSimItf() override{
-            assert(false);
+            return static_cast<RtlSimulatable*>(_master);
         }
 
         ValRep& sv() override{

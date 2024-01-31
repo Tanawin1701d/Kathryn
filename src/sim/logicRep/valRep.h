@@ -58,7 +58,7 @@ namespace kathryn{
                                const std::function<ull(ull, ull)>& operation);
         ValRep logicalOperator(const ValRep& rhs,
                                const std::function<bool(bool, bool)>& operation) const;
-        ValRep cmpOperator    (const ValRep& rhs,
+        ValRep cmpOperator    (ValRep& rhs,
                                const std::function<bool(ull* a, ull* b, int size)>& operation);
         ValRep eqOperator     (const ValRep& rhs, bool checkEq);
         /** get logical value in single bit*/
@@ -91,10 +91,10 @@ namespace kathryn{
         ValRep operator && (const ValRep& rhs) const;
         ValRep operator || (const ValRep& rhs) const;
         ValRep operator !  () const;
-        ValRep operator <  (const ValRep& rhs);
-        ValRep operator <= (const ValRep& rhs);
-        ValRep operator >  (const ValRep& rhs);
-        ValRep operator >= (const ValRep& rhs);
+        ValRep operator <  (ValRep& rhs);
+        ValRep operator <= (ValRep& rhs);
+        ValRep operator >  (ValRep& rhs);
+        ValRep operator >= (ValRep& rhs);
 
         ///// not required equal bit operator
         ValRep operator +  (ValRep rhs);

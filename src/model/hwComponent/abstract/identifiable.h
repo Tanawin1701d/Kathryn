@@ -66,6 +66,9 @@ namespace kathryn {
                 _localId(-1)
             {
             _globalName = GLOBAL_PREFIX[type] + std::to_string(LAST_IDENT_ID);
+                if (LAST_IDENT_ID == 30 || LAST_IDENT_ID == 31){
+                    int idxxxx = 0;
+                }
             LAST_IDENT_ID++;
 
             };
@@ -79,7 +82,11 @@ namespace kathryn {
             _type       = ident._type;
             _varName   = ident._varName + "_CP";
             _globalName = GLOBAL_PREFIX[_type] + std::to_string(LAST_IDENT_ID);
+            if (LAST_IDENT_ID == 30 || LAST_IDENT_ID == 31){
+                int idxxxx = 0;
+            }
             _globalId   = LAST_IDENT_ID++;
+
             _parent     = ident._parent;
             _localId    = -1;
             return *this;

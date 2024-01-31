@@ -314,7 +314,7 @@ namespace kathryn{
                                               nodeWrapOfSubBlock);
         }else{
             assert(amt_block > 1);
-            pseudoExitNode = new PseudoNode();
+            pseudoExitNode = new PseudoNode(1);
             if (basicStNode != nullptr)
                 pseudoExitNode->addDependNode(basicStNode);
             for (auto nw : nodeWrapOfSubBlock){

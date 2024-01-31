@@ -116,11 +116,11 @@ namespace kathryn{
     };
 
     struct PseudoNode : Node{
-        Operable* _pseudoAssignMeta = nullptr;
+        expression* _pseudoAssignMeta = nullptr;
 
-        explicit PseudoNode() :
+        explicit PseudoNode(int expr_size) :
             Node(PSEUDO_NODE),
-            _pseudoAssignMeta(new expression()){}
+            _pseudoAssignMeta(new expression(expr_size)){}
 
         Node* clone() override{
             auto clNode = new PseudoNode(*this);
@@ -130,9 +130,10 @@ namespace kathryn{
 
         void assign() override{
             if (condition == nullptr)
-                _pseudoAssignMeta = transformAllDepNodeToOpr();
+                *_pseudoAssignMeta = *transformAllDepNodeToOpr();
             else
-                _pseudoAssignMeta = &(*transformAllDepNodeToOpr() & *condition);
+                *_pseudoAssignMeta = ( (*transformAllDepNodeToOpr()) & (*condition));
+            assert(_pseudoAssignMeta != nullptr);
         }
         int getCycleUsed() override { return 0; }
 

@@ -34,13 +34,10 @@ namespace kathryn {
             return priority < rhs.priority;
         }
 
-        bool shouldAssignValRep(Operable* samplingOpr){
-            if (samplingOpr != nullptr){
-                RtlSimulatable* simItf       = samplingOpr->castToRtlSimItf();
-                RtlSimEngine*   simEnginePtr = simItf->getSimEngine();
-                assert(simEnginePtr->isCurValSim());
-                ValRep samplingVal           = simEnginePtr->getCurVal();
-
+        bool shouldAssignValRep(Operable* opr){
+            if (opr != nullptr){
+                assert(opr->castToRtlSimItf()->getSimEngine()->isCurValSim());
+                ValRep samplingVal           = opr->getExactSimCurValue().slice(opr->getOperableSlice());
                 return samplingVal.getLogicalValue();
             }
             return true;
@@ -52,13 +49,14 @@ namespace kathryn {
                   shouldAssignValRep(srcUpdateState))){
                 return;
             }
+            /**clarify slice*/
             Slice desSlice = desUpdateSlice;
             Slice srcSlice = srcUpdateValue->getOperableSlice();
                   assert(srcSlice.getSize() >= desSlice.getSize());
                   srcSlice = srcSlice.getSubSliceWithShinkMsb({0, desSlice.getSize()});
                   assert(srcSlice.getSize() == desSlice.getSize());
-
-            ValRep& srcSimVal = srcUpdateValue->castToRtlSimItf()->getSimEngine()->getCurVal();
+            /**get src value and slice */
+            ValRep& srcSimVal = srcUpdateValue->getExactSimCurValue();
             assert(srcUpdateValue->castToRtlSimItf()->getSimEngine()->isCurValSim());
             ValRep  srcSimValFit = srcSimVal.slice(srcSlice);
             desValRep.updateOnSlice(srcSimValFit, desSlice);
@@ -73,6 +71,7 @@ namespace kathryn {
         static void trySim(Operable* opr){
             if (opr != nullptr)
                 opr->castToRtlSimItf()->simStartCurCycle();
+                ///////// get exact operable due to it may be agent
         }
 
         [[nodiscard]] std::string getDebugString() const{

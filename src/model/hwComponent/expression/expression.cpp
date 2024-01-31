@@ -5,9 +5,6 @@
 #include "expression.h"
 #include "model/controller/controller.h"
 
-#include <utility>
-
-
 namespace kathryn{
 
     /**
@@ -16,28 +13,23 @@ namespace kathryn{
 
     expression::expression(LOGIC_OP op,
                            Operable* a,
-                           Slice aSlice,
                            Operable* b,
-                           Slice bSlice,
                            int exp_size):
     LogicComp<expression>({0, exp_size}, TYPE_EXPRESSION,
                           new RtlSimEngine(exp_size, VST_WIRE, false),false),
     _op(op),
     _a(a),
-    _aSlice(aSlice),
-    _b(b),
-    _bSlice(bSlice)
+    _b(b)
     {
         com_init();
     }
 
-    expression::expression():
-    LogicComp<expression>(Slice(), TYPE_EXPRESSION, nullptr, false),
+    expression::expression(int exp_size):
+    LogicComp<expression>({0, exp_size}, TYPE_EXPRESSION,
+                          new RtlSimEngine(exp_size, VST_WIRE, false), false),
     _op(ASSIGN),
     _a(nullptr),
-    _aSlice(Slice()),
-    _b(nullptr),
-    _bSlice(Slice()){
+    _b(nullptr){
         com_init();
     }
 
@@ -48,11 +40,16 @@ namespace kathryn{
 
     expression& expression::operator=(Operable &b) {
         _a = &b;
-        int newSize = b.getOperableSlice().getSize();
-        Slice proxySlice({0, newSize});
-        _aSlice = proxySlice;
-        setSlice(proxySlice);
-        setSimEngine(new RtlSimEngine(newSize, VST_WIRE, false));
+        assert(b.getOperableSlice().getSize() == getOperableSlice().getSize());
+        return *this;
+    }
+
+    expression& expression::operator=(expression& b){
+        if (this == &b){
+            return *this;
+        }
+        _a = (Operable*)(&b);
+        assert(b.getOperableSlice().getSize() == getOperableSlice().getSize());
         return *this;
     }
 
@@ -78,98 +75,99 @@ namespace kathryn{
 
     void expression::simStartCurCycle() {
 
+
         if (getSimEngine()->isCurValSim()){
             return;
         }
         getSimEngine()->setCurValSimStatus();
-        ValRep* firstValRep = nullptr;
-        ValRep* secValRep   = nullptr;
+
+        ValRep  firstValRep(1); /**the size will be change*/
+        ValRep  secValRep  (1);
         ValRep& desValRep   = getSimEngine()->getCurVal();
         /**value a*/
         if (_a != nullptr){
-            RtlSimEngine* aSimEngine = _a->castToRtlSimItf()->getSimEngine();
             _a->castToRtlSimItf()->simStartCurCycle();
-            assert(aSimEngine->isCurValSim());
-            firstValRep =  &(aSimEngine->getCurVal());
+            assert(_a->castToRtlSimItf()->getSimEngine()->isCurValSim());
+            firstValRep =  _a->getExactSimCurValue().slice(_a->getOperableSlice());
         }
         /**value b*/
         if (_b != nullptr){
-            RtlSimEngine* bSimEngine = _b->castToRtlSimItf()->getSimEngine();
             _b->castToRtlSimItf()->simStartCurCycle();
-            assert(bSimEngine->isCurValSim());
-            secValRep =  &(bSimEngine->getCurVal());
+            assert(_b->castToRtlSimItf()->getSimEngine()->isCurValSim());
+            secValRep =  _b->getExactSimCurValue().slice(_b->getOperableSlice());
         }
 
         switch (_op) {
 
             case BITWISE_AND:
-                desValRep = (*firstValRep) & (*secValRep);
+                desValRep = (firstValRep) & (secValRep);
                 break;
             case BITWISE_OR:
-                desValRep = (*firstValRep) | (*secValRep);
+                desValRep = (firstValRep) | (secValRep);
                 break;
             case BITWISE_XOR:
-                desValRep = (*firstValRep) ^ (*secValRep);
+                desValRep = (firstValRep) ^ (secValRep);
                 break;
             case BITWISE_INVR:
-                desValRep = ~(*firstValRep);
+                desValRep = ~(firstValRep);
                 break;
             case BITWISE_SHL:
-                desValRep = (*firstValRep) << (*secValRep);
+                desValRep = (firstValRep) << (secValRep);
                 break;
             case BITWISE_SHR:
-                desValRep = (*firstValRep) >> (*secValRep);
+                desValRep = (firstValRep) >> (secValRep);
                 break;
             case LOGICAL_AND:
-                desValRep = (*firstValRep) && (*secValRep);
+                desValRep = (firstValRep) && (secValRep);
                 break;
             case LOGICAL_OR:
-                desValRep = (*firstValRep) || (*secValRep);
+                desValRep = (firstValRep) || (secValRep);
                 break;
             case LOGICAL_NOT:
-                desValRep = !(*firstValRep);
+                desValRep = !(firstValRep);
                 break;
             case RELATION_EQ:
-                desValRep = (*firstValRep) == (*secValRep);
+                desValRep = (firstValRep) == (secValRep);
                 break;
             case RELATION_NEQ:
-                desValRep = (*firstValRep) != (*secValRep);
+                desValRep = (firstValRep) != (secValRep);
                 break;
             case RELATION_LE:
-                desValRep = (*firstValRep) < (*secValRep);
+                desValRep = (firstValRep) < (secValRep);
                 break;
             case RELATION_LEQ:
-                desValRep = (*firstValRep) <= (*secValRep);
+                desValRep = (firstValRep) <= (secValRep);
                 break;
             case RELATION_GE:
-                desValRep = (*firstValRep) > (*secValRep);
+                desValRep = (firstValRep) > (secValRep);
                 break;
             case RELATION_GEQ:
-                desValRep = (*firstValRep) >= (*secValRep);
+                desValRep = (firstValRep) >= (secValRep);
                 break;
             case ARITH_PLUS:
-                desValRep = (*firstValRep) + (*secValRep);
+                desValRep = (firstValRep) + (secValRep);
                 break;
             case ARITH_MINUS:
-                desValRep = (*firstValRep) - (*secValRep);
+                desValRep = (firstValRep) - (secValRep);
                 break;
             case ARITH_MUL:
-                desValRep = (*firstValRep) * (*secValRep);
+                desValRep = (firstValRep) * (secValRep);
                 break;
             case ARITH_DIV:
-                desValRep = (*firstValRep) / (*secValRep);
+                desValRep = (firstValRep) / (secValRep);
                 break;
             case ARITH_DIVR:
-                desValRep = (*firstValRep) % (*secValRep);
+                desValRep = (firstValRep) % (secValRep);
                 break;
             case ASSIGN:
-                desValRep = *firstValRep;
+                desValRep = firstValRep;
                 break;
             case OP_DUMMY:
             case LOGIC_OP_COUNT:
                 break;
         }
-
+        desValRep.fillZeroToValrep(getSlice().getSize());
+        assert(getSlice().start == 0);
     }
 
 //    std::vector<std::string> expression::getDebugAssignmentValue() {
