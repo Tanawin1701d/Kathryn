@@ -21,19 +21,20 @@ namespace kathryn{
 
     class testSimMod: public Module{
     public:
-
+        bool testAutoSkip = false;
         makeVal(bnk, 32, 48);
         makeVal(zero, 32, 0);
         makeReg(a , 32);
         makeReg(b , 32);
 
-        explicit testSimMod(int x): Module(){}
+        explicit testSimMod(bool testAutoSkip): Module(){}
 
         void flow() override{
+            Val* valueToused = testAutoSkip ? &zero : &bnk;
 
             seq{
                 a <<= zero;
-                cwhile(a < bnk){
+                cwhile(a < (*valueToused)){
                     makeVal(one, 32, 1);
                     a <<= a + one;
                 }
@@ -73,7 +74,7 @@ namespace kathryn{
     public:
 
         void test() override {
-            makeMod(tm, testSimMod, 0);
+            makeMod(tm, testSimMod, false);
 
             /**logger */
             auto mdLogVal = new MdLogVal();

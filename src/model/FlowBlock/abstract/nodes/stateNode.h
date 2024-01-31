@@ -132,7 +132,7 @@ namespace kathryn{
             if (condition == nullptr)
                 *_pseudoAssignMeta = *transformAllDepNodeToOpr();
             else
-                *_pseudoAssignMeta = ( (*transformAllDepNodeToOpr()) & (*condition));
+                *_pseudoAssignMeta = (*transformAllDepNodeToOpr()) & (*condition);
             assert(_pseudoAssignMeta != nullptr);
         }
         int getCycleUsed() override { return 0; }

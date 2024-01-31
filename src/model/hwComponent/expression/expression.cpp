@@ -48,8 +48,7 @@ namespace kathryn{
         if (this == &b){
             return *this;
         }
-        _a = (Operable*)(&b);
-        assert(b.getOperableSlice().getSize() == getOperableSlice().getSize());
+        operator=(*(Operable*)&b);
         return *this;
     }
 

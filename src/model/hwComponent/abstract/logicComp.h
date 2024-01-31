@@ -52,6 +52,10 @@ namespace kathryn{
             return static_cast<RtlSimulatable*>(this);
         };
 
+        Operable* castToOpr(){
+            return static_cast<Operable*>(this);
+        }
+
         ValRep& getExactSimCurValue() override{
             return getSimEngine()->getCurVal();
         }

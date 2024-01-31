@@ -68,8 +68,8 @@ namespace kathryn{
          * */
         Val& operator <<= (Operable& b) override { assert(false);}
         Val& operator =   (Operable& b) override { assert(false);}
-        Val& operator =   (std::string& b)       { assert(false);}
-        Val& operator =   (ull v)                { assert(false);}
+        Val& operator =   (Val&      b) { assert(false);}
+
 
         /** override operable*/
         [[nodiscard]]

@@ -28,8 +28,12 @@ namespace kathryn{
         return *this;
     }
 
-    Reg& Reg::operator=(Operable &b) {
+    Reg& Reg::operator=(Operable& b) {
         /** todo first version we not support this operator*/
+        assert(false);
+    }
+
+    Reg& Reg::operator=(Reg& b){
         assert(false);
     }
 

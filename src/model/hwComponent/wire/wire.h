@@ -21,6 +21,7 @@ namespace kathryn{
         [[maybe_unused]]
         Wire& operator <<= (Operable& b) override {std::cout << "we not support <<= operator in wire"; return *this;};
         Wire& operator =   (Operable& b) override;
+        Wire& operator =   (Wire& b);
         /**override operable*/
         Operable& getExactOperable() const override {return *(Operable*)(this);}
         Slice getOperableSlice() const override {return getSlice();}

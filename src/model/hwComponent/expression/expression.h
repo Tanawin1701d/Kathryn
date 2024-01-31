@@ -48,8 +48,8 @@ namespace kathryn {
                             );
         explicit expression(int exp_size);
         /** override assignable*/
-        expression& operator <<= (Operable& b) override {std::cout << "we not support <<= operator in exprMetas"; assert(false);}
-        expression& operator =   (Operable& b) override;
+        expression& operator <<= (Operable  & b) override {std::cout << "we not support <<= operator in exprMetas"; assert(false);}
+        expression& operator =   (Operable  & b) override;
         expression& operator =   (expression& b);
         /**override operable*/
         [[nodiscard]]

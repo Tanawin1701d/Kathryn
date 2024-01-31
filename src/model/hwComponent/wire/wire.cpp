@@ -26,6 +26,16 @@ namespace kathryn{
         return *this;
     }
 
+    Wire& Wire::operator=(Wire& b){
+        if (this == &b){
+            return *this;
+        }
+
+        operator=(*(Operable*)&b);
+
+        return *this;
+    }
+
     SliceAgent<Wire>& Wire::operator()(int start, int stop) {
         auto ret = new SliceAgent<Wire>(
                 this,

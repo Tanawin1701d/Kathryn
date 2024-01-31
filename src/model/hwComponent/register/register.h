@@ -24,7 +24,8 @@ namespace kathryn{
         /** assignable override*/
         Reg& operator <<= (Operable& b) override;
         [[maybe_unused]]
-        Reg& operator =   (Operable& b) override;
+        Reg&  operator =   (Operable& b) override;
+        Reg&  operator =   (Reg& b);
 
         /** Operable override*/
         Slice getOperableSlice() const override {return getSlice();};
