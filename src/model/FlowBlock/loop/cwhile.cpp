@@ -108,7 +108,7 @@ namespace kathryn{
         loopNodeWrap->addDependNodeToAllNode(subBlockNodeWrap->getExitNode());
         loopNodeWrap->setAllDependNodeCond(BITWISE_AND);
         if (subBlockNodeWrap->isThereForceExitNode()) {
-            Operable *allowLoopCond = &((*_condExpr) & (!*subBlockNodeWrap->getForceExitNode()->getExitOpr()));
+            Operable* allowLoopCond = &((*_condExpr) & (!*subBlockNodeWrap->getForceExitNode()->getExitOpr()));
             loopNodeWrap->addConditionToAllNode(allowLoopCond, BITWISE_AND);
         }
         else {
