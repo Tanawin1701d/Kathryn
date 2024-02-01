@@ -8,7 +8,14 @@
 namespace kathryn{
 
 
-    FlowBlockIf::FlowBlockIf(Operable& cond):FlowBlockBase(IF){
+    FlowBlockIf::FlowBlockIf(Operable& cond):
+    FlowBlockBase(IF,
+       {
+               {FLOW_ST_BASE_STACK,
+                             FLOW_ST_HEAD_COND_STACK},
+               FLOW_JO_SUB_FLOW,
+               true
+       }){
         allCondes.push_back(&cond);
     }
 
@@ -34,7 +41,7 @@ namespace kathryn{
     }
 
     void FlowBlockIf::onAttachBlock() {
-        ctrl->on_attach_flowBlock_if(this);
+        ctrl->on_attach_flowBlock(this);
         auto sb = genImplicitSubBlk(PARALLEL_NO_SYN);
         implicitFlowBlock = sb;
         sb->onAttachBlock();
@@ -45,9 +52,12 @@ namespace kathryn{
         implicitFlowBlock->onDetachBlock();
         ////// we will hold this end block will handle it
         setLazyDelete();
+
+        ctrl->on_detach_flowBlock(this);
     }
 
     void FlowBlockIf::buildHwComponent() {
+        assert(conBlocks.empty());
         assert(!allCondes.empty());
         /**add execution block in if block to consider vector*/
         allStatement.insert(allStatement.begin(), subBlocks[0]->sumarizeBlock());
@@ -149,13 +159,20 @@ namespace kathryn{
         onDetachBlock();
     }
 
-    void FlowBlockIf::addElifNodeWrap(FlowBlockElif* fb) {
-        assert(fb != nullptr);
-        allStatement.push_back(fb->sumarizeBlock());
-        if (fb->getCondition() != nullptr)
-            allCondes.push_back(fb->getCondition());
-        assert(fb->getSubBlocks()[0] != nullptr);
-        subBlocks.push_back(fb);
+    void FlowBlockIf::addConFlowBlock(FlowBlockBase* conBlock){
+        assert(conBlock != nullptr);
+        assert(conBlock->getFlowType() == ELIF ||
+               conBlock->getFlowType() == ELSE);
+        /*** convert to elif block*/
+        FlowBlockElif* elifBlock = (FlowBlockElif*)conBlock;
+        /*** call base function*/
+        FlowBlockBase::addConFlowBlock(elifBlock);
+        /** push to if-else concern element*/
+        allStatement.push_back(elifBlock->sumarizeBlock());
+        if (elifBlock->getCondition() != nullptr)
+            allCondes.push_back(elifBlock->getCondition());
+
+        assert(conBlock->getSubBlocks()[0] != nullptr);
     }
 
     void FlowBlockIf::simStartCurCycle() {

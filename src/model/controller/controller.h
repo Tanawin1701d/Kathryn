@@ -41,32 +41,19 @@ namespace kathryn {
         /** building stack*/
         ////// module stack
         std::stack<Module_Stack_Element>  moduleStack;
-
         ////// flow describe stack
-        std::stack<FlowBlockBase*>        flowBlockStack; //// collect stack of all flowblock
-        std::stack<FlowBlockBase*>        patternFlowBlockStack; //// stack of only seq or parallel
-        std::stack<FlowBlockIf*>          ifBlockStack; /// stack of only cif or celif celse
+        std::stack<FlowBlockBase*> flowBlockStacks[FLOW_ST_CNT];
         /////// pattern flow block is subset of flowBlockStack
 
     protected:
         /** get module that response we now consider*/
         Module* getTargetModulePtr();
         Module_Stack_Element& getTargetModuleEle();
-        FlowBlockBase* getTopFlowBlock();
 
-        static void tryPopFbBaseFromStack(FlowBlockBase* flowPtr,
-                                   std::stack<FlowBlockBase*>& srcSt);
-        static void tryPopFbIfFromStack(FlowBlockBase* flowPtr,
-                                 std::stack<FlowBlockIf*>& srcSt);
-        void tryPopCtrlFlowFromAllStack(FlowBlockBase* flowPtr);
+       FlowBlockBase* getTopFlowBlockBase();
+       void           popFlowBlock(FlowBlockBase* fb);
+       void           pushFlowBlock(FlowBlockBase* fb);
 
-        bool isAllFlowStackEmpty() {return  flowBlockStack.empty() &&
-                                            patternFlowBlockStack.empty() &&
-                                            ifBlockStack.empty();}
-
-        void removeLazyFbFromTopStack();
-
-        ////  check that stack rule before add or remove any event
 
     public:
 
@@ -93,20 +80,17 @@ namespace kathryn {
         void on_module_final(Module* ptr);
 
         /** control flow block handler*/
+        bool           isAllFlowStackEmpty();
         void purifyFlowStack();
         void on_attach_flowBlock(FlowBlockBase* fb);
         void on_detach_flowBlock(FlowBlockBase* fb);
-
-        void on_attach_flowBlock_if(FlowBlockIf* fb);
-
-        void on_attach_flowBlock_elif(FlowBlockElif* fb);
-        void on_detach_flowBlock_elif(FlowBlockElif* fb);
 
         FLOW_BLOCK_TYPE get_top_pattern_flow_block_type();
 
         /** lock allocation*/
         void lockAllocation() {hwCompAllocLock = true;};
         void unlockAllocation(){hwCompAllocLock = false;};
+        [[nodiscard]]
         bool isAllocationLock() const{return hwCompAllocLock;}
 
     };

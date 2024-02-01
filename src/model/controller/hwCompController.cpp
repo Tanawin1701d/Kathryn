@@ -67,8 +67,8 @@ namespace kathryn{
         assert(asmMeta != nullptr);
         purifyFlowStack();
         auto node = new AsmNode(asmMeta);
-        assert(!flowBlockStack.empty());
-        auto fb = flowBlockStack.top();
+        assert(!flowBlockStacks[FLOW_ST_BASE_STACK].empty());
+        auto fb = getTopFlowBlockBase();
         fb->addElementInFlowBlock(node);
         logMF(srcReg,
               "user Reg is updating value @ fb block " + fb->getMdIdentVal());
@@ -104,9 +104,9 @@ namespace kathryn{
         purifyFlowStack();
         auto node = new AsmNode(asmMeta);
         //assert(!flowBlockStack.empty());
-        if (!flowBlockStack.empty()) {
+        if (!flowBlockStacks[FLOW_ST_BASE_STACK].empty()) {
             /**in flow block*/
-            auto fb = flowBlockStack.top();
+            auto fb = getTopFlowBlockBase();
             fb->addElementInFlowBlock(node);
             logMF(srcWire,
                   "user wire is updating @ fb " + fb->getMdIdentVal());
@@ -199,6 +199,8 @@ namespace kathryn{
         logMF(ptr,
               "module is finalized design flow");
     }
+
+
 
 
 }

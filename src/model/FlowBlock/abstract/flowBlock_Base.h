@@ -36,6 +36,25 @@ namespace kathryn {
         FLOW_BLOCK_COUNT
     };
 
+    enum FLOW_STACK_TYPE{
+        FLOW_ST_BASE_STACK = 0,
+        FLOW_ST_PATTERN_STACK = 1,    /**for seq par*/
+        FLOW_ST_HEAD_COND_STACK = 2, /**for if else**/
+        FLOW_ST_CNT = 3
+    };
+
+    enum FLOW_BLOCK_JOIN_POLICY{
+        FLOW_JO_SUB_FLOW, /**for other block*/
+        FLOW_JO_CON_FLOW /** join flowblock for elif and else*/
+    };
+
+    struct FB_CTRL_COM_META{
+        std::vector<FLOW_STACK_TYPE> _selFlowStack; //////// which stack for push/pop
+        FLOW_BLOCK_JOIN_POLICY       _joinPolicy; ////// how to join with other block
+        bool                         reqPurify = false;
+    };
+
+
     std::string FBT_to_string(FLOW_BLOCK_TYPE fbt);
 
     extern int nextFbIdx;
@@ -43,12 +62,17 @@ namespace kathryn {
     class FlowBlockBase: public ModelDebuggable,
                          public FlowSimulatable{
     protected:
+
+        /** flow element*/
         std::vector<FlowBlockBase*> subBlocks;
+        std::vector<FlowBlockBase*> conBlocks;
         std::vector<Node*>          basicNodes;
         FLOW_BLOCK_TYPE             _type;
         ModelController*            ctrl = nullptr;
         bool                        lazyDeletedRequired = false;
         int                         _fbId;
+        /** controller interactive element*/
+        FB_CTRL_COM_META                 _fbCtrlComMeta;
         /*** for exit management*/
         bool                        areThereForceExit = false;
         PseudoNode*                 forceExitNode = nullptr;
@@ -57,7 +81,8 @@ namespace kathryn {
         FlowBlockBase* genImplicitSubBlk(FLOW_BLOCK_TYPE defaultType);
         void           genSumForceExitNode(std::vector<NodeWrap*>& nws);
     public:
-        explicit  FlowBlockBase(FLOW_BLOCK_TYPE type);
+        explicit  FlowBlockBase(FLOW_BLOCK_TYPE  type,
+                                FB_CTRL_COM_META fbCtrlComMeta);
         virtual  ~FlowBlockBase();
         /**
          * entrance to make controller interact with
@@ -72,6 +97,11 @@ namespace kathryn {
             assert(subBlock != nullptr);
             subBlocks.push_back(subBlock);
         };
+        /** add sub con block as consecutive block*/
+        virtual void addConFlowBlock(FlowBlockBase* conBlock){
+            assert(conBlock != nullptr);
+            conBlocks.push_back(conBlock);
+        }
         /**
          * For custom block
          * */
@@ -85,13 +115,24 @@ namespace kathryn {
         ////// getter/setter
         FLOW_BLOCK_TYPE     getFlowType() const {return _type;}
         int                 getFlowBlockId() const{return _fbId;}
-        std::vector<FlowBlockBase*>& getSubBlocks(){return subBlocks;}
+        std::vector<FlowBlockBase*>&
+                            getSubBlocks(){return subBlocks;}
+        std::vector<FlowBlockBase*>&
+                            getConBlocks(){return conBlocks;}
         /** lazy delete is the variable that tell controller whether
          * block should be pop from building stack when purifier is done
          * not when block is detach. Usually, It is used in if block
          * */
-        bool isLazyDelete() const{ return lazyDeletedRequired; }
-        void setLazyDelete() { lazyDeletedRequired = true;}
+        bool                isLazyDelete() const{ return lazyDeletedRequired; }
+        void                setLazyDelete()     { lazyDeletedRequired = true;}
+        void                unsetLazyDelete()   {lazyDeletedRequired = false;}
+        /** controller communication*/
+        [[nodiscard]]
+        std::vector<FLOW_STACK_TYPE> getSelFbStack() const {return _fbCtrlComMeta._selFlowStack;}
+        [[nodiscard]]
+        FLOW_BLOCK_JOIN_POLICY       getJoinFbPol()  const {return _fbCtrlComMeta._joinPolicy;}
+        [[nodiscard]]
+        bool                         getPurifyReq()  const { return _fbCtrlComMeta.reqPurify; }
 
         /** debug method*/
         std::string getMdDescribeRecur() {

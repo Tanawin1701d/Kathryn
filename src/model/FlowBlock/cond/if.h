@@ -33,7 +33,7 @@ namespace kathryn{
         /** for controller add the local element to this sub block*/
         void addElementInFlowBlock(Node* node) override;
         void addSubFlowBlock(FlowBlockBase* subBlock) override;
-        void addElifNodeWrap(FlowBlockElif* fb);
+        void addConFlowBlock(FlowBlockBase* fb) override;
         NodeWrap* sumarizeBlock() override;
         /** on this block is start interact to controller*/
         void onAttachBlock() override;

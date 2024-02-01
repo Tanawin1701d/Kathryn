@@ -9,7 +9,15 @@
 namespace kathryn{
 
 
-    FlowBlockPar::FlowBlockPar(FLOW_BLOCK_TYPE fbType): FlowBlockBase(fbType) {
+    FlowBlockPar::FlowBlockPar(FLOW_BLOCK_TYPE fbType):
+    FlowBlockBase(fbType,
+      {
+              {FLOW_ST_BASE_STACK,
+                             FLOW_ST_PATTERN_STACK},
+              FLOW_JO_SUB_FLOW,
+              true
+      })
+      {
         assert((fbType == PARALLEL_AUTO_SYNC) ||
                (fbType == PARALLEL_NO_SYN));
     }
@@ -42,6 +50,7 @@ namespace kathryn{
     void
     FlowBlockPar::buildHwComponent() {
         assert((!basicNodes.empty()) || (!subBlocks.empty()));
+        assert(conBlocks.empty());
 
         /** build node for basic assignment*/
         if (!basicNodes.empty()){

@@ -190,7 +190,13 @@ namespace kathryn{
      *
      * */
 
-    FlowBlockSeq::FlowBlockSeq(): FlowBlockBase(SEQUENTIAL),
+    FlowBlockSeq::FlowBlockSeq(): FlowBlockBase(SEQUENTIAL,
+                                                {
+                                                        {FLOW_ST_BASE_STACK,
+                                                                      FLOW_ST_PATTERN_STACK},
+                                                        FLOW_JO_SUB_FLOW,
+                                                        true
+                                                }),
                                   resultNodeWrap(nullptr) {}
 
     FlowBlockSeq::~FlowBlockSeq(){
@@ -230,6 +236,7 @@ namespace kathryn{
 
     void FlowBlockSeq::buildHwComponent() {
         assert(!_subSeqMetas.empty());
+        assert(conBlocks.empty());
         NodeWrapCycleDet cycleDet;
         /** generate hardware*/
         for (auto& seqMeta: _subSeqMetas) {

@@ -7,8 +7,14 @@
 
 namespace kathryn{
 
-    FlowBlockCwhile::FlowBlockCwhile(Operable& condExpr): _condExpr(&condExpr),
-                                                          FlowBlockBase(WHILE) {}
+    FlowBlockCwhile::FlowBlockCwhile(Operable& condExpr):
+    _condExpr(&condExpr),
+    FlowBlockBase(WHILE,
+                    {
+                            {FLOW_ST_BASE_STACK},
+                            FLOW_JO_SUB_FLOW,
+                            true
+                    }) {}
 
     FlowBlockCwhile::~FlowBlockCwhile() {
         delete resultNodeWrapper;
@@ -53,6 +59,7 @@ namespace kathryn{
     }
 
     void FlowBlockCwhile::buildHwComponent() {
+        assert(conBlocks.empty());
         assert(subBlocks.size() == 1);
         /** get node wrap */
         subBlockNodeWrap = subBlocks[0]->sumarizeBlock();

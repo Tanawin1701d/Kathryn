@@ -111,6 +111,7 @@ namespace kathryn{
         /** create nodewrap of all flowblock*/
         /** may be if block is top flow we must clear the stack*/
         ctrl->purifyFlowStack();
+        assert(ctrl->isAllFlowStackEmpty());
         std::vector<NodeWrap*> frontNodeWrap;
 
         for (auto fb: _flowBlockBases){

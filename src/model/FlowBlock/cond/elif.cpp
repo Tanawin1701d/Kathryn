@@ -11,10 +11,21 @@ namespace kathryn{
 
     /** constructor*/
     FlowBlockElif::FlowBlockElif(Operable &cond):
-    FlowBlockBase(ELIF),
+    FlowBlockBase(ELIF,
+                  {
+                          {FLOW_ST_BASE_STACK},
+                          FLOW_JO_CON_FLOW,
+                          false
+                  }),
     _cond(&cond){}
 
-    FlowBlockElif::FlowBlockElif(): FlowBlockBase(ELSE) {}
+    FlowBlockElif::FlowBlockElif():
+    FlowBlockBase(ELSE,
+                  {
+                          {FLOW_ST_BASE_STACK},
+                          FLOW_JO_CON_FLOW,
+                          false
+                  }) {}
 
     FlowBlockElif::~FlowBlockElif(){
         FlowBlockBase::~FlowBlockBase();
@@ -34,7 +45,7 @@ namespace kathryn{
     }
 
     void FlowBlockElif::onAttachBlock() {
-        ctrl->on_attach_flowBlock_elif(this);
+        ctrl->on_attach_flowBlock(this);
         auto sb = genImplicitSubBlk(PARALLEL_NO_SYN);
         implicitSubBlock = sb;
         sb->onAttachBlock();
@@ -42,7 +53,7 @@ namespace kathryn{
 
     void FlowBlockElif::onDetachBlock() {
         implicitSubBlock->onDetachBlock();
-        ctrl->on_detach_flowBlock_elif(this);
+        ctrl->on_detach_flowBlock(this);
     }
 
     void FlowBlockElif::buildHwComponent() {

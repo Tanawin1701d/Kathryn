@@ -3,163 +3,118 @@
 //
 #include "controller.h"
 
-#include "util/logger/logger.h"
 namespace kathryn{
 
-    FlowBlockBase* ModelController::getTopFlowBlock(){
-        assert(!flowBlockStack.empty());
-        return flowBlockStack.top();
-    }
 
-    void ModelController::tryPopFbBaseFromStack(FlowBlockBase* flowPtr,
-                                                std::stack<FlowBlockBase*>& srcSt) {
-        /**skip when empty skip when not match*/
-        if (srcSt.empty() || (srcSt.top() != flowPtr))
-            return;
-        srcSt.pop();
-        /** debug */
-
-    }
-
-    void ModelController::tryPopFbIfFromStack(kathryn::FlowBlockBase *flowPtr,
-                                              std::stack<FlowBlockIf *> &srcSt) {
-        if (srcSt.empty() || (srcSt.top() != flowPtr))
-            return;
-        srcSt.pop();
-    }
-
-    void ModelController::tryPopCtrlFlowFromAllStack(FlowBlockBase* flowPtr){
-        /** debug*/
-        logMF(flowPtr, "trypoping from all stack");
-        tryPopFbBaseFromStack(flowPtr, flowBlockStack);
-        tryPopFbBaseFromStack(flowPtr, patternFlowBlockStack);
-        tryPopFbIfFromStack(flowPtr, ifBlockStack);
-    }
-
-
-    void ModelController::removeLazyFbFromTopStack() {
-        if (flowBlockStack.empty()){
-            return;
+    FlowBlockBase* ModelController::getTopFlowBlockBase() {
+        if (flowBlockStacks[FLOW_ST_BASE_STACK].empty()){
+           return nullptr;
         }
+        return flowBlockStacks[FLOW_ST_BASE_STACK].top();
+    }
 
-        if (flowBlockStack.top()->isLazyDelete()){
-            auto ifFlowBlock = ifBlockStack.top();
-            /** debug*/
-            logMF(flowBlockStack.top(), "pop lazy delete from stack");
-            assert(ifFlowBlock != nullptr);
-            /** build hardware component */
-            ifFlowBlock->buildHwComponent();
-            /** try pop from stack*/
-            tryPopCtrlFlowFromAllStack(flowBlockStack.top());
-            /** addElement to master of this block */
-            if (!flowBlockStack.empty()){
-                getTopFlowBlock()->addSubFlowBlock(ifFlowBlock);
-            }
+    void ModelController::popFlowBlock(FlowBlockBase* fb){
+        assert(!flowBlockStacks[FLOW_ST_BASE_STACK].empty());
+        assert( flowBlockStacks[FLOW_ST_BASE_STACK].top() == fb);
+
+        for (int stIdx: fb->getSelFbStack()){
+            assert(stIdx < FLOW_ST_CNT);
+            assert(!flowBlockStacks[stIdx].empty());
+            assert(flowBlockStacks[stIdx].top() == fb);
+            logMF(fb, "pop_flowBlock " + std::to_string(stIdx));
+            flowBlockStacks[stIdx].pop();
         }
     }
 
+    void ModelController::pushFlowBlock(kathryn::FlowBlockBase *fb) {
+        assert(fb != nullptr);
+        for (int stIdx: fb->getSelFbStack()){
+            logMF(fb, "push to stack " + std::to_string(stIdx));
+            assert(stIdx < FLOW_ST_CNT);
+            flowBlockStacks[stIdx].push(fb);
+        }
+    }
+
+    bool ModelController::isAllFlowStackEmpty(){
+        bool emptyStatus = true;
+        for(const auto & flowBlockStack : flowBlockStacks){
+            emptyStatus &= flowBlockStack.empty();
+        }
+        return emptyStatus;
+    }
 
     void ModelController::purifyFlowStack() {
-        removeLazyFbFromTopStack();
+        FlowBlockBase* fb = getTopFlowBlockBase();
+        if (fb == nullptr){return;}
+        if (fb->isLazyDelete()){
+            fb->unsetLazyDelete();
+            logMF(fb, "strong purify stack");
+            on_detach_flowBlock(fb);
+        }
     }
 
-
-    /** use for any flow block except condition block*/
-    void ModelController::on_attach_flowBlock(FlowBlockBase* fb) {
-
+    void ModelController::on_attach_flowBlock(FlowBlockBase *fb) {
+        /*** check purify flow stack*/
+        logMF(fb, "on_attach_flowBlock");
         assert(fb != nullptr);
-        assert(fb->getFlowType() != IF);
-        assert(fb->getFlowType() != ELIF);
-        assert(fb->getFlowType() != ELSE);
-        purifyFlowStack();
-
-        /** we must save head of flow block for deleting and debugging*/
-        if (flowBlockStack.empty()){
-            getTargetModuleEle().md->addFlowBlock(fb);
+        if (fb->getPurifyReq()){
+            logMF(fb, "try purify stack");
+            purifyFlowStack();
         }
-        flowBlockStack.push(fb);
-
-        /**debug*/
-        logMF(fb, "attach flowBlock to stack");
-
-         /** push to stack in each case*/
-        FLOW_BLOCK_TYPE flowType = fb->getFlowType();
-
-        if (flowType == SEQUENTIAL ||
-            flowType == PARALLEL_NO_SYN ||
-            flowType == PARALLEL_AUTO_SYNC){
-            logMF(fb, "attach flowBlock to PATTERN stack");
-            patternFlowBlockStack.push(fb);
-        }
-
+        /*** add to stack*/
+        pushFlowBlock(fb);
     }
 
     void ModelController::on_detach_flowBlock(FlowBlockBase* fb) {
         assert(fb != nullptr);
-        assert(fb->getFlowType() != IF);
-        assert(fb->getFlowType() != ELIF);
-        assert(fb->getFlowType() != ELSE);
-        purifyFlowStack();
-        auto top= getTopFlowBlock();
-        assert(top == fb);
-
-        logMF(fb, "detach flowBlock to stack");
-        /**we must build hardware component because sub element require module position*/
-        fb->buildHwComponent();
-
-        tryPopCtrlFlowFromAllStack(fb);
-        if (!flowBlockStack.empty()){
-            getTopFlowBlock()->addSubFlowBlock(fb);
+        logMF(fb, "on_detach_flowBlock");
+        /***if it is lazy delete do not delete it*/
+        if (fb->isLazyDelete()){
+            logMF(fb, "on_detach_flowBlock and not delete due to lazy delete");
+            return;
         }
-    }
-
-    void ModelController::on_attach_flowBlock_if(FlowBlockIf *fb) {
-        assert(fb != nullptr);
-        assert(fb->getFlowType() == IF);
-        assert(!flowBlockStack.empty());
-        purifyFlowStack();
-        flowBlockStack.push(fb);
-        ifBlockStack.push(fb);
-        /**debug*/
-        logMF(fb, "attach IF flowBlock to stack");
+        /**get top of the flow block base and build the hardware*/
+        FlowBlockBase* topFb = getTopFlowBlockBase();
+        assert(fb == topFb);
+        popFlowBlock(topFb);
+        topFb->buildHwComponent();
 
 
-    }
+        /**get front node to inject the subblock*/
+        FlowBlockBase* frontFb = getTopFlowBlockBase();
+        if (frontFb == nullptr){
+            logMF(fb, "addFlowBlock to module");
+            Module* parentMod = getTargetModulePtr();
+            parentMod->addFlowBlock(topFb);
+        }else if (frontFb->getJoinFbPol() == FLOW_JO_CON_FLOW){
+            /**it is consecutive block*/
+            logMF(fb, "addFlowBlock to be con module");
+            frontFb->addConFlowBlock(topFb);
+        }else if (frontFb->getJoinFbPol() == FLOW_JO_SUB_FLOW){
+            /**it is sub block*/
+            logMF(fb, "addFlowBlock to be sub module");
+            frontFb->addSubFlowBlock(topFb);
+        }else{
+            assert(false);
+        }
 
-    void ModelController::on_attach_flowBlock_elif(FlowBlockElif *fb) {
-        assert(fb != nullptr);
-        assert(fb->getFlowType() == ELIF || fb->getFlowType() == ELSE);
-        assert(!flowBlockStack.empty());
-        /*** do not purify flow stack*/
-        flowBlockStack.push(fb);
-        logMF(fb, "attach ELIF flowBlock to stack");
-
-
-    }
-
-    void ModelController::on_detach_flowBlock_elif(FlowBlockElif *fb) {
-        assert(fb != nullptr);
-        assert(fb->getFlowType() == ELIF || fb->getFlowType() == ELSE);
-        assert(!flowBlockStack.empty());
-        assert(!ifBlockStack.empty());
-        assert(fb == getTopFlowBlock());
-        /**build hardware component*/
-        fb->buildHwComponent();
-        /***pop this block from hardware stach*/
-        tryPopCtrlFlowFromAllStack(fb);
-        /** transfer data to master if block*/
-        ifBlockStack.top()->addElifNodeWrap(fb);
-        /**debug*/
-        logMF(fb, "detach ELIF flowBlock to stack");
     }
 
     FLOW_BLOCK_TYPE ModelController::get_top_pattern_flow_block_type(){
-        if (patternFlowBlockStack.empty()){
-            return DUMMY_BLOCK;
-        }
-        return patternFlowBlockStack.top()->getFlowType();
-    }
 
+
+        if (flowBlockStacks[FLOW_ST_PATTERN_STACK].empty()){
+            return DUMMY_BLOCK;
+        }else{
+            FlowBlockBase* fb = flowBlockStacks[FLOW_ST_PATTERN_STACK].top();
+
+            assert(fb != nullptr);
+            FLOW_BLOCK_TYPE fbType = fb->getFlowType();
+            assert(fbType >= SEQUENTIAL && fbType <= PARALLEL_AUTO_SYNC);
+            return fbType;
+        }
+
+    }
 
 
 

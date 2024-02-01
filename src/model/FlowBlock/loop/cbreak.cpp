@@ -10,7 +10,12 @@ namespace kathryn{
 
 
     FlowBlockCBreak::FlowBlockCBreak():
-    FlowBlockBase(EXITWHILE),
+    FlowBlockBase(EXITWHILE,
+                  {
+                          {FLOW_ST_BASE_STACK},
+                          FLOW_JO_SUB_FLOW,
+                          true
+                  }),
     LoopStMacro() {
 
     }
@@ -45,6 +50,7 @@ namespace kathryn{
 
     void FlowBlockCBreak::buildHwComponent() {
 
+        assert(conBlocks.empty());
         /**build internal node*/
         breakNode = new StateNode();
         normExitNode= new DummyNode(&_make<Val>("cbreakDum", 1, 0));

@@ -18,7 +18,12 @@ namespace kathryn{
 
     /**constructor*/
     FlowBlockCondWait::FlowBlockCondWait(Operable *exitCond)
-    : FlowBlockBase(CONDWAIT),
+    : FlowBlockBase(CONDWAIT,
+                    {
+                            {FLOW_ST_BASE_STACK},
+                            FLOW_JO_SUB_FLOW,
+                            true
+                    }),
     _resultNodeWrap(nullptr),
     _exitCond(exitCond),
     _waitNode(nullptr)
@@ -46,6 +51,7 @@ namespace kathryn{
     }
     /** buildHwComponent*/
     void FlowBlockCondWait::buildHwComponent() {
+        assert(conBlocks.empty());
 
         /** build node*/
         _waitNode = new WaitCondNode(_exitCond);
@@ -115,7 +121,12 @@ namespace kathryn{
 
 
     FlowBlockCycleWait::FlowBlockCycleWait(int cycleUsed)
-    : FlowBlockBase(CLKWAIT),
+    : FlowBlockBase(CLKWAIT,
+                    {
+                            {FLOW_ST_BASE_STACK},
+                            FLOW_JO_SUB_FLOW,
+                            true
+                    }),
       _resultNodeWrap(nullptr),
       _waitNode(nullptr),
       cycle(cycleUsed),
@@ -125,7 +136,12 @@ namespace kathryn{
     }
 
     FlowBlockCycleWait::FlowBlockCycleWait(Operable& opr)
-    : FlowBlockBase(CLKWAIT),
+    : FlowBlockBase(CLKWAIT,
+                    {
+                            {FLOW_ST_BASE_STACK},
+                            FLOW_JO_SUB_FLOW,
+                            true
+                    }),
     _resultNodeWrap(nullptr),
     _waitNode(nullptr),
     cycle(-1),
@@ -154,6 +170,7 @@ namespace kathryn{
     }
 
     void FlowBlockCycleWait::buildHwComponent() {
+        assert(conBlocks.empty());
 
         /** build node*/
         if (cnt != nullptr)

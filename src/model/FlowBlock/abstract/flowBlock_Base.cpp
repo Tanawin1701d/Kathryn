@@ -3,6 +3,8 @@
 //
 
 #include "flowBlock_Base.h"
+
+#include <utility>
 #include "model/controller/controller.h"
 #include "model/FlowBlock/seq/seq.h"
 
@@ -11,12 +13,16 @@ namespace kathryn{
     int nextFbIdx = 0;
 
 
-    FlowBlockBase::FlowBlockBase(FLOW_BLOCK_TYPE type):
+    FlowBlockBase::FlowBlockBase(FLOW_BLOCK_TYPE type, FB_CTRL_COM_META fbCtrlComMeta):
             FlowSimulatable(new FlowSimEngine()),
+            /** flow element*/
             _type(type),
             ctrl(getControllerPtr()),
             lazyDeletedRequired(false),
             _fbId(nextFbIdx++),
+            /** controller communication policy*/
+            _fbCtrlComMeta(std::move(fbCtrlComMeta)),
+            /** exit management*/
             areThereForceExit(false),
             forceExitNode(nullptr)
     {}
