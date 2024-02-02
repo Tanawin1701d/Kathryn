@@ -20,7 +20,7 @@ namespace kathryn{
     }
 
     FlowBlockZELIF::FlowBlockZELIF():
-            FlowBlockBase(ZELIF,
+            FlowBlockBase(ZELSE,
                           {
                                   {FLOW_ST_BASE_STACK},
                                   FLOW_JO_CON_FLOW,
@@ -35,6 +35,7 @@ namespace kathryn{
     }
 
     FlowBlockZELIF::~FlowBlockZELIF() {
+        basicNodes.clear();
         FlowBlockBase::~FlowBlockBase();
     }
 
@@ -90,8 +91,5 @@ namespace kathryn{
     void FlowBlockZELIF::simExitCurCycle() {
         assert(false);
     }
-
-
-
 
 }

@@ -23,18 +23,17 @@ namespace kathryn{
             curCond(&cond),
             prevFalse(nullptr)
     {
-
         ///assert(flowBlockType == ZIF);
         assert(curCond != nullptr);
     }
 
     FlowBlockZIF::~FlowBlockZIF() {
+        basicNodes.clear();
         FlowBlockBase::~FlowBlockBase();
     }
 
     void FlowBlockZIF::addElementInFlowBlock(Node *node) {
         assert(node != nullptr);
-        node->setDependStateJoinOp(BITWISE_AND);
         node->addCondtion(curCond, BITWISE_AND);
         FlowBlockBase::addElementInFlowBlock(node);
     }
@@ -65,6 +64,7 @@ namespace kathryn{
             elifNode->addCondtion(actualElif, BITWISE_AND);
             basicNodes.push_back(elifNode);
         }
+
         /** call base function*/
         FlowBlockBase::addConFlowBlock(fb);
     }

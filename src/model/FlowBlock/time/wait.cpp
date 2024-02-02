@@ -55,6 +55,7 @@ namespace kathryn{
 
         /** build node*/
         _waitNode = new WaitCondNode(_exitCond);
+        _waitNode->setDependStateJoinOp(BITWISE_AND);
         /** result node wrap*/
         _resultNodeWrap = new NodeWrap();
         _resultNodeWrap->addEntraceNode(_waitNode);

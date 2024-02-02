@@ -38,8 +38,8 @@ namespace kathryn{
         ///// it is the basic assignment
         if (_asmNode != nullptr){
             _stateNode = new StateNode();
+            _stateNode->setDependStateJoinOp(BITWISE_AND);
             _asmNode->addDependNode(_stateNode);
-            _asmNode->setDependStateJoinOp(BITWISE_AND);
             _asmNode->assign();
         }else if (_subBlock != nullptr){
             _complexNode = _subBlock->sumarizeBlock();
@@ -64,11 +64,9 @@ namespace kathryn{
 
         if (_asmNode != nullptr){
             _stateNode->addDependNode(predecessor->getStateFinishIden());
-            _stateNode->setDependStateJoinOp(BITWISE_AND);
             _stateNode->assign();   ///// assign state node to actual value
         }else if (_subBlock != nullptr){
             _complexNode->addDependNodeToAllNode(predecessor->getStateFinishIden());
-            _complexNode->setAllDependNodeCond(BITWISE_AND);
             _complexNode->assignAllNode();
         }else{
             assert(false);

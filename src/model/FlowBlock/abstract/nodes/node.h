@@ -36,6 +36,17 @@ namespace kathryn {
         NODE_TYPE_CNT
     };
 
+
+    /***
+     * NODE operation requirement
+     * 1. declare Node
+     * 2. add condition (optional)
+     * 3. add dependNode (at least one node)
+     * 4. set joinDependNodeOp (required)
+     * 5. assign (required)
+     * 1-4 can be set independently order, but 5 must declare at last time.
+     * **/
+
     std::string NT_to_string(NODE_TYPE nt);
 
     struct Node : public ModelDebuggable,

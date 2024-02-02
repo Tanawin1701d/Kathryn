@@ -31,7 +31,7 @@ namespace kathryn{
     public:
 
         explicit FlowBlockWhileBase(Operable& condExpr, FLOW_BLOCK_TYPE fbt);
-        virtual ~FlowBlockWhileBase();
+        ~FlowBlockWhileBase() override;
 
         /** for controller add the local element to this sub block*/
         void addElementInFlowBlock(Node* node) override;

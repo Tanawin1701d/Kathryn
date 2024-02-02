@@ -50,6 +50,7 @@ namespace kathryn{
 
         /**exit node wrap*/
         byPassExitNode->addCondtion(&(!*_condExpr), BITWISE_AND);
+        byPassExitNode->setDependStateJoinOp(BITWISE_AND);
         /** in case exit from sublock*/
         subBlockExitNode->addCondtion(&(!*_condExpr), BITWISE_AND);
         subBlockExitNode->addDependNode(subBlockNodeWrap->getExitNode());
@@ -72,12 +73,10 @@ namespace kathryn{
 
         /**assign for loop back assignment*/
         loopNodeWrap->addDependNodeToAllNode(subBlockNodeWrap->getExitNode());
-        loopNodeWrap->setAllDependNodeCond(BITWISE_AND);
         if (subBlockNodeWrap->isThereForceExitNode()) {
             Operable* allowLoopCond = &((*_condExpr) & (!*subBlockNodeWrap->getForceExitNode()->getExitOpr()));
             loopNodeWrap->addConditionToAllNode(allowLoopCond, BITWISE_AND);
-        }
-        else {
+        }else{
             loopNodeWrap->addConditionToAllNode(_condExpr, BITWISE_AND);
         }
         loopNodeWrap->assignAllNode();

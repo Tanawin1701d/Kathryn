@@ -55,10 +55,10 @@ namespace kathryn{
         /** build node for basic assignment*/
         if (!basicNodes.empty()){
             basicStNode = new StateNode();
+            basicStNode->setDependStateJoinOp(BITWISE_AND);
             /** add basic assignment to depend on stateNode*/
             for (auto nd : basicNodes){
                 nd->addDependNode(basicStNode);
-                nd->setDependStateJoinOp(BITWISE_AND);
                 nd->assign();
             }
         }

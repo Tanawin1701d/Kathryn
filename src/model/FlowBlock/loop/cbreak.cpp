@@ -53,7 +53,10 @@ namespace kathryn{
         assert(conBlocks.empty());
         /**build internal node*/
         breakNode = new StateNode();
+        breakNode->setDependStateJoinOp(BITWISE_AND);
         normExitNode= new DummyNode(&_make<Val>("cbreakDum", 1, 0));
+        normExitNode->setDependStateJoinOp(BITWISE_AND);
+        normExitNode->assign();
 
         /**build resultNodeWrap*/
         resultNodeWrap = new NodeWrap();

@@ -67,6 +67,7 @@ namespace kathryn{
         assert(asmMeta != nullptr);
         tryPurifyFlowStack();
         auto node = new AsmNode(asmMeta);
+        node->setDependStateJoinOp(BITWISE_AND);
         assert(!flowBlockStacks[FLOW_ST_BASE_STACK].empty());
         auto fb = getTopFlowBlockBase();
         fb->addElementInFlowBlock(node);
@@ -103,6 +104,7 @@ namespace kathryn{
         assert(asmMeta != nullptr);
         tryPurifyFlowStack();
         auto node = new AsmNode(asmMeta);
+        node->setDependStateJoinOp(BITWISE_AND);
         //assert(!flowBlockStack.empty());
         if (!flowBlockStacks[FLOW_ST_BASE_STACK].empty()) {
             /**in flow block*/

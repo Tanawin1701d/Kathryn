@@ -49,8 +49,6 @@ namespace kathryn {
         bool               isCurCycleSimulated() const; ///// check that are cur state is simulating and state is set
         bool               isBlockOrNodeRunning() const;
 
-
-
     };
 
     class FlowBlockSeq : public FlowBlockBase, public LoopStMacro{

@@ -31,11 +31,11 @@ namespace kathryn{
         FlowBlockBase::~FlowBlockBase();
     };
 
-    void FlowBlockElif::addElementInFlowBlock(Node *node) {
+    void FlowBlockElif::addElementInFlowBlock(Node* node) {
         assert(false); //// due to implicit sublock declaration
     }
 
-    void FlowBlockElif::addSubFlowBlock(FlowBlockBase *subBlock) {
+    void FlowBlockElif::addSubFlowBlock(FlowBlockBase* subBlock) {
         FlowBlockBase::addSubFlowBlock(subBlock);
     }
 

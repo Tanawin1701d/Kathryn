@@ -81,11 +81,12 @@ namespace kathryn{
             }
         }
 
-        void setAllDependNodeCond(LOGIC_OP op){
-            for (auto node: entranceNodes){
-                node->setDependStateJoinOp(op);
-            }
-        }
+        /** we force node to declare themselves*/
+//        void setAllDependNodeCond(LOGIC_OP op){
+//            for (auto node: entranceNodes){
+//                node->setDependStateJoinOp(op);
+//            }
+//        }
 
         void assignAllNode() {
             for (auto node: entranceNodes) {

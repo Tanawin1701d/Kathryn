@@ -113,6 +113,7 @@ namespace kathryn{
             ///// build proxy node to prevent state lost
             if ( allCondes.size() == allStatement.size() ) {
                 psuedoElseNode = new PseudoNode(1);
+                psuedoElseNode->setDependStateJoinOp(BITWISE_AND);
                 psuedoElseNode->addCondtion(prevFalse, BITWISE_AND);
                 resultNodeWrap->addEntraceNode(psuedoElseNode);
             }
@@ -128,6 +129,7 @@ namespace kathryn{
                 psuedoElseNode = new PseudoNode(1);
                 psuedoElseNode->addCondtion(prevFalse, BITWISE_AND);
                 psuedoElseNode->addDependNode(condNode);
+                psuedoElseNode->setDependStateJoinOp(BITWISE_AND);
                 psuedoElseNode->assign();
             }
         }
