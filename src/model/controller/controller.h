@@ -14,7 +14,7 @@
 #include "model/FlowBlock/par/par.h"
 #include "model/FlowBlock/cond/if.h"
 #include "model/FlowBlock/cond/elif.h"
-#include "model/FlowBlock/loop/cwhile.h"
+#include "model/FlowBlock/loop/whileBase.h"
 #include "model/FlowBlock/abstract/spReg/stateReg.h"
 #include "model/FlowBlock/abstract/spReg/syncReg.h"
 
@@ -53,6 +53,7 @@ namespace kathryn {
        FlowBlockBase* getTopFlowBlockBase();
        void           popFlowBlock(FlowBlockBase* fb);
        void           pushFlowBlock(FlowBlockBase* fb);
+       void           detachTopFlowBlock();
 
 
     public:
@@ -81,7 +82,7 @@ namespace kathryn {
 
         /** control flow block handler*/
         bool           isAllFlowStackEmpty();
-        void purifyFlowStack();
+        void tryPurifyFlowStack();
         void on_attach_flowBlock(FlowBlockBase* fb);
         void on_detach_flowBlock(FlowBlockBase* fb);
 

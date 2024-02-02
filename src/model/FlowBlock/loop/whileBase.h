@@ -2,8 +2,8 @@
 // Created by tanawin on 6/12/2566.
 //
 
-#ifndef KATHRYN_CWHILE_H
-#define KATHRYN_CWHILE_H
+#ifndef KATHRYN_WHILEBASE_H
+#define KATHRYN_WHILEBASE_H
 
 #include "model/FlowBlock/abstract/flowBlock_Base.h"
 #include "model/FlowBlock/abstract/loopStMacro.h"
@@ -11,30 +11,27 @@
 #include "model/FlowBlock/abstract/nodes/stateNode.h"
 
 
-#define cwhile(expr) for(auto kathrynBlock = new FlowBlockCwhile(expr); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 
 namespace kathryn{
 
-    class FlowBlockCwhile : public FlowBlockBase, public LoopStMacro{
-    private:
+    class FlowBlockWhileBase : public FlowBlockBase, public LoopStMacro{
+    protected:
         Operable*      _condExpr         = nullptr;
         FlowBlockBase* implicitFlowBlock = nullptr;
         bool           isGetFlowBlockYet = false;
+        NodeWrap*      resultNodeWrapper = nullptr;
+        NodeWrap*      subBlockNodeWrap  = nullptr;
+        PseudoNode*    exitNode          = nullptr;
 
 
-        NodeWrap*    resultNodeWrapper   = nullptr;
-        NodeWrap*    loopNodeWrap        = nullptr;
-        PseudoNode*  byPassExitNode      = nullptr;
-        PseudoNode*  subBlockExitNode    = nullptr;
-        PseudoNode*  exitNode            = nullptr;
         //// it is wrap is as same as result but it is used for loop assignment
 
-        NodeWrap* subBlockNodeWrap = nullptr;
+
 
     public:
 
-        explicit FlowBlockCwhile(Operable& condExpr);
-        virtual ~FlowBlockCwhile();
+        explicit FlowBlockWhileBase(Operable& condExpr, FLOW_BLOCK_TYPE fbt);
+        virtual ~FlowBlockWhileBase();
 
         /** for controller add the local element to this sub block*/
         void addElementInFlowBlock(Node* node) override;
@@ -46,19 +43,14 @@ namespace kathryn{
         /** on leave this block*/
         void onDetachBlock() override;
         /** for module to build hardware component*/
-        void buildHwComponent() override;
-        /** get describe*/
-        std::string getMdDescribe() override;
-        void addMdLog(MdLogVal *mdLogVal) override;
+        ///////////void buildHwComponent() override;
+
         /** Loop macro to notice position of system*/
         void doPreFunction() override;
         void doPostFunction() override;
-        /**override simulator*/
-        void simStartCurCycle() override;
-        void simExitCurCycle() override;
 
     };
 
 }
 
-#endif //KATHRYN_CWHILE_H
+#endif //KATHRYN_WHILEBASE_H

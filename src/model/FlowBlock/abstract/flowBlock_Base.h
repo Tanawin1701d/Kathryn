@@ -24,10 +24,15 @@ namespace kathryn {
         SEQUENTIAL,
         PARALLEL_AUTO_SYNC,
         PARALLEL_NO_SYN,
-        IF,
-        ELIF,
-        ELSE,
-        WHILE,
+        CIF,
+        CELIF,
+        CELSE,
+        SIF,
+        SELIF,
+        SELSE,
+        CWHILE,
+        SWHILE,
+        ALWAYS,
         EXITWHILE,
         CONDWAIT,
         CLKWAIT,
@@ -124,7 +129,7 @@ namespace kathryn {
          * not when block is detach. Usually, It is used in if block
          * */
         bool                isLazyDelete() const{ return lazyDeletedRequired; }
-        void                setLazyDelete()     { lazyDeletedRequired = true;}
+                void                setLazyDelete()     { lazyDeletedRequired = true;}
         void                unsetLazyDelete()   {lazyDeletedRequired = false;}
         /** controller communication*/
         [[nodiscard]]

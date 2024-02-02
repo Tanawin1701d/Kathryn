@@ -6,6 +6,14 @@
 namespace kathryn{
 
 
+    /***
+     *
+     * flow stack can not have lazy block more than one at a time
+     * because if there is consequence lazy block the prior one must be delete
+     *
+     * */
+
+
     FlowBlockBase* ModelController::getTopFlowBlockBase() {
         if (flowBlockStacks[FLOW_ST_BASE_STACK].empty()){
            return nullptr;
@@ -35,6 +43,36 @@ namespace kathryn{
         }
     }
 
+    void ModelController::detachTopFlowBlock() {
+
+        /**get top of the flow block base and build the hardware*/
+        FlowBlockBase* topFb = getTopFlowBlockBase();
+        assert(topFb != nullptr);
+        logMF(topFb, "on_detach_flowBlock");
+        popFlowBlock(topFb);
+        topFb->buildHwComponent();
+
+
+        /**get front node to inject the subblock*/
+        FlowBlockBase* frontFb = getTopFlowBlockBase();
+        if (frontFb == nullptr){
+            logMF(topFb, "addFlowBlock to module");
+            Module* parentMod = getTargetModulePtr();
+            parentMod->addFlowBlock(topFb);
+        }else if (topFb->getJoinFbPol() == FLOW_JO_CON_FLOW){
+            /**it is consecutive block*/
+            logMF(topFb, "addFlowBlock to be con module");
+            frontFb->addConFlowBlock(topFb);
+        }else if (topFb->getJoinFbPol() == FLOW_JO_SUB_FLOW){
+            /**it is sub block*/
+            logMF(topFb, "addFlowBlock to be sub module");
+            frontFb->addSubFlowBlock(topFb);
+        }else{
+            assert(false);
+        }
+
+    }
+
     bool ModelController::isAllFlowStackEmpty(){
         bool emptyStatus = true;
         for(const auto & flowBlockStack : flowBlockStacks){
@@ -43,13 +81,12 @@ namespace kathryn{
         return emptyStatus;
     }
 
-    void ModelController::purifyFlowStack() {
+    void ModelController::tryPurifyFlowStack() {
         FlowBlockBase* fb = getTopFlowBlockBase();
         if (fb == nullptr){return;}
         if (fb->isLazyDelete()){
-            fb->unsetLazyDelete();
             logMF(fb, "strong purify stack");
-            on_detach_flowBlock(fb);
+            detachTopFlowBlock();
         }
     }
 
@@ -59,44 +96,31 @@ namespace kathryn{
         assert(fb != nullptr);
         if (fb->getPurifyReq()){
             logMF(fb, "try purify stack");
-            purifyFlowStack();
+            tryPurifyFlowStack();
         }
         /*** add to stack*/
         pushFlowBlock(fb);
     }
 
     void ModelController::on_detach_flowBlock(FlowBlockBase* fb) {
-        assert(fb != nullptr);
-        logMF(fb, "on_detach_flowBlock");
-        /***if it is lazy delete do not delete it*/
+
+        /** if current flowblock is lazy delete do not detach it*/
         if (fb->isLazyDelete()){
-            logMF(fb, "on_detach_flowBlock and not delete due to lazy delete");
             return;
         }
-        /**get top of the flow block base and build the hardware*/
-        FlowBlockBase* topFb = getTopFlowBlockBase();
-        assert(fb == topFb);
-        popFlowBlock(topFb);
-        topFb->buildHwComponent();
 
-
-        /**get front node to inject the subblock*/
-        FlowBlockBase* frontFb = getTopFlowBlockBase();
-        if (frontFb == nullptr){
-            logMF(fb, "addFlowBlock to module");
-            Module* parentMod = getTargetModulePtr();
-            parentMod->addFlowBlock(topFb);
-        }else if (frontFb->getJoinFbPol() == FLOW_JO_CON_FLOW){
-            /**it is consecutive block*/
-            logMF(fb, "addFlowBlock to be con module");
-            frontFb->addConFlowBlock(topFb);
-        }else if (frontFb->getJoinFbPol() == FLOW_JO_SUB_FLOW){
-            /**it is sub block*/
-            logMF(fb, "addFlowBlock to be sub module");
-            frontFb->addSubFlowBlock(topFb);
-        }else{
-            assert(false);
+        /** there must be at most one flow block that must be detach
+         * due to last lazy delete pupose
+         * */
+        auto lazyBlock = getTopFlowBlockBase();
+        if (fb != lazyBlock){
+            assert(lazyBlock->isLazyDelete());
+            tryPurifyFlowStack();
         }
+        /** get our block detach*/
+        auto actualDetachBlock = getTopFlowBlockBase();
+        assert(actualDetachBlock == fb);
+        detachTopFlowBlock();
 
     }
 
@@ -107,7 +131,6 @@ namespace kathryn{
             return DUMMY_BLOCK;
         }else{
             FlowBlockBase* fb = flowBlockStacks[FLOW_ST_PATTERN_STACK].top();
-
             assert(fb != nullptr);
             FLOW_BLOCK_TYPE fbType = fb->getFlowType();
             assert(fbType >= SEQUENTIAL && fbType <= PARALLEL_AUTO_SYNC);

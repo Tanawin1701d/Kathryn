@@ -44,8 +44,8 @@ add_executable(Kathryn main.cpp
         src/model/FlowBlock/abstract/spReg/syncReg.h
         src/model/FlowBlock/seq/seq.cpp
         src/model/FlowBlock/seq/seq.h
-        src/model/FlowBlock/loop/cwhile.cpp
-        src/model/FlowBlock/loop/cwhile.h
+        src/model/FlowBlock/loop/whileBase.cpp
+        src/model/FlowBlock/loop/whileBase.h
         src/model/FlowBlock/cond/if.cpp
         src/model/FlowBlock/cond/if.h
         src/model/FlowBlock/cond/elif.cpp
@@ -116,5 +116,11 @@ add_executable(Kathryn main.cpp
         src/test/simTest/simTest3.h
         src/test/simTest/simTest4.h
         src/test/simTest/simTest5.h
+        src/model/FlowBlock/loop/cwhile.cpp
+        src/model/FlowBlock/loop/cwhile.h
+        src/model/FlowBlock/loop/swhile.cpp
+        src/model/FlowBlock/loop/swhile.h
+        src/model/FlowBlock/loop/always.cpp
+        src/model/FlowBlock/loop/always.h
 
 )

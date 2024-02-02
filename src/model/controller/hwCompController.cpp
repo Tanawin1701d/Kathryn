@@ -65,7 +65,7 @@ namespace kathryn{
          * */
         /*** do not add to module any more*/
         assert(asmMeta != nullptr);
-        purifyFlowStack();
+        tryPurifyFlowStack();
         auto node = new AsmNode(asmMeta);
         assert(!flowBlockStacks[FLOW_ST_BASE_STACK].empty());
         auto fb = getTopFlowBlockBase();
@@ -101,7 +101,7 @@ namespace kathryn{
          * */
         /*** do not add to module any more*/
         assert(asmMeta != nullptr);
-        purifyFlowStack();
+        tryPurifyFlowStack();
         auto node = new AsmNode(asmMeta);
         //assert(!flowBlockStack.empty());
         if (!flowBlockStacks[FLOW_ST_BASE_STACK].empty()) {

@@ -57,7 +57,7 @@ namespace kathryn{
     }
 
     void FlowBlockIf::buildHwComponent() {
-        assert(conBlocks.empty());
+
         assert(!allCondes.empty());
         /**add execution block in if block to consider vector*/
         allStatement.insert(allStatement.begin(), subBlocks[0]->sumarizeBlock());

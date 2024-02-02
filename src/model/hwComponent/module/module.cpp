@@ -110,7 +110,7 @@ namespace kathryn{
         /** every flowblock will auto build when block is detach*/
         /** create nodewrap of all flowblock*/
         /** may be if block is top flow we must clear the stack*/
-        ctrl->purifyFlowStack();
+        ctrl->tryPurifyFlowStack();
         assert(ctrl->isAllFlowStackEmpty());
         std::vector<NodeWrap*> frontNodeWrap;
 
