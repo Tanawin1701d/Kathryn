@@ -1,0 +1,42 @@
+//
+// Created by tanawin on 2/2/2567.
+//
+
+#ifndef KATHRYN_CWHILE_H
+#define KATHRYN_CWHILE_H
+
+#include "whileBase.h"
+
+#define cwhile(expr) for(auto kathrynBlock = new FlowBlockcWhile(expr); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+
+
+namespace kathryn{
+
+    class FlowBlockcWhile : public FlowBlockWhileBase{
+    private:
+        NodeWrap*    loopNodeWrap        = nullptr;
+        PseudoNode*  byPassExitNode      = nullptr;
+        PseudoNode*  subBlockExitNode    = nullptr;
+
+    public:
+        FlowBlockcWhile(Operable& opr);
+        ~FlowBlockcWhile();
+        void buildHwComponent() override;
+
+        /** get describe*/
+        std::string getMdDescribe() override;
+        void addMdLog(MdLogVal *mdLogVal) override;
+
+
+        /**override simulator*/
+        void simStartCurCycle() override;
+        void simExitCurCycle() override;
+
+
+
+
+    };
+
+}
+
+#endif //KATHRYN_CWHILE_H
