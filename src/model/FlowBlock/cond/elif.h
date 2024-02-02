@@ -8,7 +8,9 @@
 #include "model/FlowBlock/abstract/loopStMacro.h"
 
 #define celif(expr) for(auto kathrynBlock = new FlowBlockElif(expr); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
-#define celse for(auto kathrynBlock = new FlowBlockElif(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define selif(expr) for(auto kathrynBlock = new FlowBlockElif(expr); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define celse       for(auto kathrynBlock = new FlowBlockElif(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define selse       for(auto kathrynBlock = new FlowBlockElif(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 
 namespace kathryn{
 

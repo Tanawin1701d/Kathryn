@@ -11,7 +11,7 @@ namespace kathryn{
 
     /** constructor*/
     FlowBlockElif::FlowBlockElif(Operable &cond):
-    FlowBlockBase(ELIF,
+    FlowBlockBase(CSELIF,
                   {
                           {FLOW_ST_BASE_STACK},
                           FLOW_JO_CON_FLOW,
@@ -20,7 +20,7 @@ namespace kathryn{
     _cond(&cond){}
 
     FlowBlockElif::FlowBlockElif():
-    FlowBlockBase(ELSE,
+    FlowBlockBase(CSELSE,
                   {
                           {FLOW_ST_BASE_STACK},
                           FLOW_JO_CON_FLOW,

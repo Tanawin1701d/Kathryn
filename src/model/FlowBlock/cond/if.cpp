@@ -8,14 +8,16 @@
 namespace kathryn{
 
 
-    FlowBlockIf::FlowBlockIf(Operable& cond):
-    FlowBlockBase(IF,
+    FlowBlockIf::FlowBlockIf(Operable& cond,
+                             FLOW_BLOCK_TYPE flowBlockType):
+    FlowBlockBase(flowBlockType,
        {
                {FLOW_ST_BASE_STACK,
                              FLOW_ST_HEAD_COND_STACK},
                FLOW_JO_SUB_FLOW,
                true
        }){
+        assert(flowBlockType == CIF || flowBlockType == SIF);
         allCondes.push_back(&cond);
     }
 
@@ -33,6 +35,22 @@ namespace kathryn{
     void FlowBlockIf::addSubFlowBlock(FlowBlockBase *subBlock) {
         assert(subBlock != nullptr);
         FlowBlockBase::addSubFlowBlock(subBlock);
+    }
+
+    void FlowBlockIf::addConFlowBlock(FlowBlockBase* conBlock){
+        assert(conBlock != nullptr);
+        assert(conBlock->getFlowType() == CSELIF ||
+               conBlock->getFlowType() == CSELSE);
+        /*** convert to elif block*/
+        FlowBlockElif* elifBlock = (FlowBlockElif*)conBlock;
+        /*** call base function*/
+        FlowBlockBase::addConFlowBlock(elifBlock);
+        /** push to if-else concern element*/
+        allStatement.push_back(elifBlock->sumarizeBlock());
+        if (elifBlock->getCondition() != nullptr)
+            allCondes.push_back(elifBlock->getCondition());
+
+        assert(conBlock->getSubBlocks()[0] != nullptr);
     }
 
     NodeWrap* FlowBlockIf::sumarizeBlock() {
@@ -85,15 +103,36 @@ namespace kathryn{
 
         /** prepare return node wrap*/
         resultNodeWrap = new NodeWrap();
-        for (auto nw : allStatement){
-            resultNodeWrap->transferEntNodeFrom(nw);
+
+
+        /*** head of block conditioning*/
+        if (getFlowType() == CIF){
+            for (auto nw : allStatement){
+                resultNodeWrap->transferEntNodeFrom(nw);
+            }
+            ///// build proxy node to prevent state lost
+            if ( allCondes.size() == allStatement.size() ) {
+                psuedoElseNode = new PseudoNode(1);
+                psuedoElseNode->addCondtion(prevFalse, BITWISE_AND);
+                resultNodeWrap->addEntraceNode(psuedoElseNode);
+            }
+        }else if(getFlowType() == SIF){
+            condNode = new StateNode();
+            condNode->setDependStateJoinOp(BITWISE_AND);
+            resultNodeWrap->addEntraceNode(condNode);
+            for (auto nw: allStatement){
+                nw->addDependNodeToAllNode(condNode);
+                nw->assignAllNode();
+            }
+            if ( allCondes.size() == allStatement.size() ) {
+                psuedoElseNode = new PseudoNode(1);
+                psuedoElseNode->addCondtion(prevFalse, BITWISE_AND);
+                psuedoElseNode->addDependNode(condNode);
+                psuedoElseNode->assign();
+            }
         }
-        ///// build proxy node to prevent state lost
-        if ( allCondes.size() == allStatement.size() ) {
-            psuedoElseNode = new PseudoNode(1);
-            psuedoElseNode->addCondtion(prevFalse, BITWISE_AND);
-            resultNodeWrap->addEntraceNode(psuedoElseNode);
-        }
+
+
 
         /**exit condition of node wrap*/
         exitNode = new PseudoNode(1);
@@ -118,7 +157,17 @@ namespace kathryn{
             deter.addToDet(psuedoElseNode);
         }
         /**cycle determiner for node wrap*/
-        resultNodeWrap->setCycleUsed(deter.getSameCycleHorizon());
+        int cycleUsed = deter.getSameCycleHorizon();
+        if (cycleUsed == IN_CONSIST_CYCLE_USED){
+            resultNodeWrap->setCycleUsed(IN_CONSIST_CYCLE_USED);
+        }else if (getFlowType() == CIF){
+            resultNodeWrap->setCycleUsed(cycleUsed);
+        }else if (getFlowType() == SIF){
+            resultNodeWrap->setCycleUsed(cycleUsed+1);
+        }else{
+            assert(false);
+        }
+
 
     }
 
@@ -159,22 +208,6 @@ namespace kathryn{
         onDetachBlock();
     }
 
-    void FlowBlockIf::addConFlowBlock(FlowBlockBase* conBlock){
-        assert(conBlock != nullptr);
-        assert(conBlock->getFlowType() == ELIF ||
-               conBlock->getFlowType() == ELSE);
-        /*** convert to elif block*/
-        FlowBlockElif* elifBlock = (FlowBlockElif*)conBlock;
-        /*** call base function*/
-        FlowBlockBase::addConFlowBlock(elifBlock);
-        /** push to if-else concern element*/
-        allStatement.push_back(elifBlock->sumarizeBlock());
-        if (elifBlock->getCondition() != nullptr)
-            allCondes.push_back(elifBlock->getCondition());
-
-        assert(conBlock->getSubBlocks()[0] != nullptr);
-    }
-
     void FlowBlockIf::simStartCurCycle() {
 
         if (isCurCycleSimulated()){
@@ -188,14 +221,10 @@ namespace kathryn{
             sb->simStartCurCycle();
             isStateRunning |= sb->isBlockOrNodeRunning();
         }
-        if (psuedoElseNode != nullptr){
-            psuedoElseNode->simStartCurCycle();
-            isStateRunning |= psuedoElseNode->isBlockOrNodeRunning();
-        }
 
-        if (exitNode != nullptr){
-            exitNode->simStartCurCycle();
-            isStateRunning |= exitNode->isBlockOrNodeRunning();
+        if (condNode != nullptr){
+            condNode->simStartCurCycle();
+            isStateRunning |= condNode->isBlockOrNodeRunning();
         }
 
         if (isStateRunning){
@@ -212,12 +241,9 @@ namespace kathryn{
         for(auto sb: subBlocks){
             sb->simExitCurCycle();
         }
-        if (psuedoElseNode != nullptr){
-            psuedoElseNode->simExitCurCycle();
-        }
 
-        if (exitNode != nullptr){
-            exitNode->simExitCurCycle();
+        if (condNode != nullptr){
+            condNode->simExitCurCycle();
         }
 
     }

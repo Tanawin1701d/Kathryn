@@ -1,36 +1,38 @@
 //
-// Created by tanawin on 6/12/2566.
+// Created by tanawin on 2/2/2567.
 //
 
-#ifndef KATHRYN_IF_H
-#define KATHRYN_IF_H
+#ifndef KATHRYN_ZIF_H
+#define KATHRYN_ZIF_H
 
 #include "model/FlowBlock/abstract/flowBlock_Base.h"
 #include "model/FlowBlock/abstract/loopStMacro.h"
 #include "model/FlowBlock/abstract/nodes/node.h"
 #include "model/FlowBlock/abstract/nodes/stateNode.h"
 
-#define cif(expr) for(auto kathrynBlock = new FlowBlockIf(expr, CIF); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
-#define sif(expr) for(auto kathrynBlock = new FlowBlockIf(expr, SIF); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define zif(expr) for(auto kathrynBlock = new FlowBlockZIF(expr); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 
 namespace kathryn{
 
-    class FlowBlockElif;
+    /***
+       *
+       * zelif-zelse will detach as conjucntion block and will be extract in zif
+       * zif will extract at controller
+       * */
 
-    class FlowBlockIf: public FlowBlockBase, public LoopStMacro{
+
+
+    class FlowBlockZIF: public FlowBlockBase, public LoopStMacro{
     private:
-        StateNode*     condNode          = nullptr;
-        FlowBlockBase* implicitFlowBlock = nullptr;
-        std::vector<NodeWrap*> allStatement; /// include current block and else block
-        std::vector<Operable*>  allCondes; /// include condition of if block and elif block except else block
-        PseudoNode* psuedoElseNode       = nullptr;
-        PseudoNode* exitNode             = nullptr;
-
-        NodeWrap* resultNodeWrap         = nullptr;
+        Operable* curCond  = nullptr;
+        Operable* prevFalse = nullptr;
+        Operable* lastElifCond = nullptr;
 
     public:
-        explicit FlowBlockIf(Operable& cond, FLOW_BLOCK_TYPE flowBlockType);
-        ~FlowBlockIf() override;
+
+        explicit FlowBlockZIF(Operable& cond);
+        ~FlowBlockZIF() override;
+
 
         /** for controller add the local element to this sub block*/
         void addElementInFlowBlock(Node* node) override;
@@ -52,10 +54,11 @@ namespace kathryn{
         /** override simulation*/
         void simStartCurCycle() override;
         void simExitCurCycle() override;
+
     };
 
 
 
 }
 
-#endif //KATHRYN_IF_H
+#endif //KATHRYN_ZIF_H

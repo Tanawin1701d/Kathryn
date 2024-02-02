@@ -82,19 +82,19 @@ namespace kathryn{
                 "PARALLEL_AUTO_SYNC",
                 "PARALLEL_NO_SYN",
                 "CIF",
-                "CELIF",
-                "CELSE",
                 "SIF",
-                "SELIF",
-                "SELSE",
+                "CSELIF",
+                "CSELSE",
+                "ZIF",
+                "ZELIF",
+                "ZELSE",
                 "CWHILE",
                 "SWHILE",
-                "ALWAYS",
                 "EXITWHILE",
                 "CONDWAIT",
                 "CLKWAIT",
                 "DO_WHILE",
-                "DUMMY_BLOCK",
+                "DUMMY_BLOCK"
         };
         assert(fbt < FLOW_BLOCK_COUNT);
         return mapper[fbt];

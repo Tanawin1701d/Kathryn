@@ -25,14 +25,14 @@ namespace kathryn {
         PARALLEL_AUTO_SYNC,
         PARALLEL_NO_SYN,
         CIF,
-        CELIF,
-        CELSE,
         SIF,
-        SELIF,
-        SELSE,
+        CSELIF,
+        CSELSE,
+        ZIF,
+        ZELIF,
+        ZELSE,
         CWHILE,
         SWHILE,
-        ALWAYS,
         EXITWHILE,
         CONDWAIT,
         CLKWAIT,
@@ -50,7 +50,8 @@ namespace kathryn {
 
     enum FLOW_BLOCK_JOIN_POLICY{
         FLOW_JO_SUB_FLOW, /**for other block*/
-        FLOW_JO_CON_FLOW /** join flowblock for elif and else*/
+        FLOW_JO_CON_FLOW, /** join flowblock for elif and else*/
+        FLOW_JO_EXT_FLOW, /**extract this flow to be an basic node*/
     };
 
     struct FB_CTRL_COM_META{
@@ -120,6 +121,8 @@ namespace kathryn {
         ////// getter/setter
         FLOW_BLOCK_TYPE     getFlowType() const {return _type;}
         int                 getFlowBlockId() const{return _fbId;}
+        std::vector<Node*>&
+                            getBasicNode(){return basicNodes;}
         std::vector<FlowBlockBase*>&
                             getSubBlocks(){return subBlocks;}
         std::vector<FlowBlockBase*>&
