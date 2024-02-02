@@ -120,7 +120,9 @@ add_executable(Kathryn main.cpp
         src/model/FlowBlock/loop/cwhile.h
         src/model/FlowBlock/loop/swhile.cpp
         src/model/FlowBlock/loop/swhile.h
-        src/model/FlowBlock/loop/always.cpp
-        src/model/FlowBlock/loop/always.h
+        src/model/FlowBlock/cond/zif.cpp
+        src/model/FlowBlock/cond/zif.h
+        src/model/FlowBlock/cond/zelif.cpp
+        src/model/FlowBlock/cond/zelif.h
 
 )

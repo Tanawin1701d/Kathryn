@@ -67,6 +67,13 @@ namespace kathryn{
             /**it is sub block*/
             logMF(topFb, "addFlowBlock to be sub module");
             frontFb->addSubFlowBlock(topFb);
+        }else if (topFb->getJoinFbPol() == FLOW_JO_EXT_FLOW){
+            logMF(topFb, "extract flowblock and give it to basic asm");
+            for (auto basicNode: topFb->getBasicNode()){
+                frontFb->addElementInFlowBlock(basicNode);
+            }
+            /***we must delete this due to*/
+            delete topFb;
         }else{
             assert(false);
         }
