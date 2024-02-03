@@ -69,8 +69,10 @@ namespace kathryn{
     Wire& Wire::callBackNonBlockAssignFromAgent(Operable &b, Slice absSliceOfHost) {
         ///Slice absSlice = absSliceOfHost.getSubSliceWithShinkMsb({0, b.getOperableSlice().getSize()});
         assert(absSliceOfHost.getSize() <= getOperableSlice().getSize());
-        assert(absSliceOfHost.getSize() <= b.getOperableSlice().getSize());
-        ctrl->on_wire_update(generateAssignMeta(b, absSliceOfHost), this);
+        assert(absSliceOfHost.stop      <= getOperableSlice().stop);
+
+        Slice absSlice = absSliceOfHost.getSubSliceWithShinkMsb({0, b.getOperableSlice().getSize()});
+        ctrl->on_wire_update(generateAssignMeta(b, absSlice), this);
         return *this;
     }
 

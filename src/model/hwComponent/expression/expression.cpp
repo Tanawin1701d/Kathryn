@@ -167,6 +167,7 @@ namespace kathryn{
         }
         desValRep.fillZeroToValrep(getSlice().getSize());
         assert(getSlice().start == 0);
+        assert(desValRep.getLen() == getSlice().getSize());
     }
 
 //    std::vector<std::string> expression::getDebugAssignmentValue() {

@@ -68,8 +68,9 @@ namespace kathryn{
 
     Reg& Reg::callBackBlockAssignFromAgent(Operable &b, Slice absSliceOfHost) {
         assert(absSliceOfHost.getSize() <= getOperableSlice().getSize());
-        assert(absSliceOfHost.getSize() <= b.getOperableSlice().getSize());
-        ctrl->on_reg_update(generateAssignMeta(b, absSliceOfHost), this);
+        assert(absSliceOfHost.stop      <= getOperableSlice().stop);
+        Slice absSlice = absSliceOfHost.getSubSliceWithShinkMsb({0, b.getOperableSlice().getSize()});
+        ctrl->on_reg_update(generateAssignMeta(b, absSlice), this);
         return *this;
     }
 
