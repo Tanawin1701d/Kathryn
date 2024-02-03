@@ -120,7 +120,6 @@ namespace kathryn{
         for (auto nw: frontNodeWrap){
             /** we will have start wire node to start node*/
             nw->addDependNodeToAllNode(startNode);
-            nw->setAllDependNodeCond(BITWISE_AND);
             nw->assignAllNode();
             /** assume that node wrap that appear to module is not used anymore. */
         }

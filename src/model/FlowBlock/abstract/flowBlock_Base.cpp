@@ -46,7 +46,7 @@ namespace kathryn{
         }
         /** create subblock*/
         if ( (nextFbType == PARALLEL_NO_SYN) || (nextFbType == PARALLEL_AUTO_SYNC)){
-            return new FlowBlockParNoSync();
+            return new FlowBlockParAuto();
         }else if (nextFbType == SEQUENTIAL){
             return new FlowBlockSeq();
         }else{

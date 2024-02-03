@@ -124,5 +124,7 @@ add_executable(Kathryn main.cpp
         src/model/FlowBlock/cond/zif.h
         src/model/FlowBlock/cond/zelif.cpp
         src/model/FlowBlock/cond/zelif.h
+        src/kathryn.h
+        src/test/simTest/simTest8.h
 
 )

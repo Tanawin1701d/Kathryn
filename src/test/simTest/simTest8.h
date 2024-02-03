@@ -1,9 +1,9 @@
 //
-// Created by tanawin on 30/1/2567.
+// Created by tanawin on 3/2/2567.
 //
 
-#ifndef KATHRYN_SIMTEST7_H
-#define KATHRYN_SIMTEST7_H
+#ifndef KATHRYN_SIMTEST8_H
+#define KATHRYN_SIMTEST8_H
 
 
 #include "kathryn.h"
@@ -25,8 +25,9 @@ namespace kathryn{
         makeReg(c , 32);
 
         makeReg(s , 32);
-        makeReg(s2 , 32);
-        makeReg(s3 , 32);
+        makeReg(s2, 32);
+        makeReg(s3, 32);
+        makeReg(s4, 32);
 
         makeReg(cnt, 2);
         makeVal(one, 2, 1);
@@ -57,6 +58,7 @@ namespace kathryn{
                             s3 <<= ele;
                         }
                     }
+                    s4 <<= nine;
                 }
                 c <<= bnk;
             }
@@ -65,7 +67,7 @@ namespace kathryn{
 
     };
 
-    static std::string vcdPath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/simTest7.vcd";
+    static std::string vcdPath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/simTest8.vcd";
 
     class sim1 :public SimInterface{
     public:
@@ -111,4 +113,5 @@ namespace kathryn{
 
 }
 
-#endif //KATHRYN_SIMTEST7_H
+#endif //KATHRYN_SIMTEST8_H
+

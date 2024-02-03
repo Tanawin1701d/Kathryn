@@ -54,7 +54,7 @@ namespace kathryn{
         assert(false);
     }
 
-    NodeWrap* FlowBlockZELIF::sumarizeBlock() {}
+    NodeWrap* FlowBlockZELIF::sumarizeBlock() {assert(false);}
 
     void FlowBlockZELIF::onAttachBlock() {
         ctrl->on_attach_flowBlock(this);

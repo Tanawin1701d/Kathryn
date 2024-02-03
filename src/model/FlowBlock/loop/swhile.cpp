@@ -62,7 +62,8 @@ namespace kathryn{
 
 
         exitNode->addDependNode(normalExit);
-        exitNode->addDependNode(subBlockNodeWrap->getForceExitNode());
+        if (subBlockNodeWrap->isThereForceExitNode())
+            exitNode->addDependNode(subBlockNodeWrap->getForceExitNode());
         exitNode->setDependStateJoinOp(BITWISE_OR);
         exitNode->assign();
 

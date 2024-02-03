@@ -142,9 +142,9 @@ namespace kathryn{
 
         ValRep cpy(*this);
         cpy = cpy >> sl.start;
-        cpy.shink(sl.getSize());
+        ValRep shinkedVal = cpy.shink(sl.getSize());
 
-        return cpy;
+        return shinkedVal;
     }
 
     void ValRep::updateOnSlice(ValRep srcVal, Slice desSl){

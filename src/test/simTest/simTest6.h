@@ -6,16 +6,8 @@
 #define KATHRYN_SIMTEST6_H
 
 
+#include "kathryn.h"
 #include "test/test.h"
-#include "model/controller/controller.h"
-#include "model/FlowBlock/seq/seq.h"
-#include "model/FlowBlock/time/wait.h"
-#include "model/hwComponent/module/module.h"
-#include "model/hwComponent/abstract/makeComponent.h"
-#include "application/visualizer/vis.h"
-#include "util/logger/logger.h"
-#include "sim/interface/simInterface.h"
-
 
 namespace kathryn{
 
@@ -35,7 +27,7 @@ namespace kathryn{
             seq{
                 a <<= bnk;
                 b <<= zero;
-                cwhile(a >= zero){
+                cwhile(a > zero){
                     makeVal(one, 32, 1);
                     a <<= a - one;
                 }

@@ -5,13 +5,8 @@
 #ifndef KATHRYN_MODELTEST3_H
 #define KATHRYN_MODELTEST3_H
 
+#include "kathryn.h"
 #include "test.h"
-#include "model/controller/controller.h"
-#include "model/FlowBlock/seq/seq.h"
-#include "model/FlowBlock/loop/cbreak.h"
-#include "model/hwComponent/module/module.h"
-#include "model/hwComponent/abstract/makeComponent.h"
-#include "application/visualizer/vis.h"
 
 namespace kathryn{
 

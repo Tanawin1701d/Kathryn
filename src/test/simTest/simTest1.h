@@ -5,15 +5,9 @@
 #ifndef KATHRYN_SIMTEST1_H
 #define KATHRYN_SIMTEST1_H
 
+#include "kathryn.h"
 #include "test/test.h"
-#include "model/controller/controller.h"
-#include "model/FlowBlock/seq/seq.h"
-#include "model/FlowBlock/time/wait.h"
-#include "model/hwComponent/module/module.h"
-#include "model/hwComponent/abstract/makeComponent.h"
-#include "application/visualizer/vis.h"
-#include "util/logger/logger.h"
-#include "sim/interface/simInterface.h"
+
 
 
 namespace kathryn{

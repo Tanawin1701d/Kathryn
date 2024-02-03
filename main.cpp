@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "test/simTest/simTest7.h"
+#include "test/simTest/simTest9.h"
 
 
 using namespace kathryn;

@@ -1,67 +1,56 @@
 //
-// Created by tanawin on 22/1/2567.
+// Created by tanawin on 3/2/2567.
 //
 
-#ifndef KATHRYN_SM_SIMTEST4_H
-#define KATHRYN_SM_SIMTEST4_H
+#ifndef KATHRYN_SIMTEST9_H
+#define KATHRYN_SIMTEST9_H
+
 
 #include "kathryn.h"
 #include "test/test.h"
-
 
 
 namespace kathryn{
 
     class testSimMod: public Module{
     public:
-        makeReg(a0, 8);
-        makeReg(b0, 8);
-        /** lane1*/
-        makeReg(a1, 8);
-        makeReg(b1, 8);
-        makeReg(c1, 8);
-        makeReg(d1, 8);
-        /** lane2*/
-        makeReg(a2, 8);
-        makeReg(b2, 8);
-        makeReg(c2, 8);
+        bool testAutoSkip = false;
 
-        makeVal(iv,   8,48);
-        makeVal(iv2,  8,64);
-        makeVal(zero, 8, 0);
+        makeVal(bnk, 32, 48);
+        makeVal(akb, 32, 48);
+        makeVal(endConst, 112, 0b1111111111111111);
+        makeReg(cnt, 32);
+        makeReg(frd, 32);
+        makeReg(end, 3);
+
+        makeVal(one, 32,  1);
 
 
-        explicit testSimMod(int x): Module(){}
+        explicit testSimMod(bool testAutoSkip): Module(){}
 
         void flow() override{
+
             seq {
-                a0 <<= iv;
                 par {
-                    seq {
-                        a1 <<= iv;
-                        b1 <<= a1;
-                        c1 <<= b1;
-                        d1 <<= c1;
+                    swhile(cnt < bnk) {
+                        cnt <<= cnt + one;
                     }
-                    seq {
-                        a2 <<= iv2;
-                        b2 <<= a2;
-                        c2 <<= b2;
-                    }
+                    frd <<= akb;
+
                 }
-                b0 <<= iv;
+                end <<= endConst;
             }
 
         }
 
     };
 
-    static std::string vcdPath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/simTest4.vcd";
+    static std::string vcdPath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/simTest9.vcd";
 
     class sim1 :public SimInterface{
     public:
         testSimMod* _md = nullptr;
-        sim1(testSimMod* md):SimInterface(100, vcdPath),
+        sim1(testSimMod* md):SimInterface(300, vcdPath),
                              _md(md){
             assert(_md != nullptr);
         }
@@ -85,7 +74,7 @@ namespace kathryn{
     public:
 
         void test() override {
-            makeMod(tm, testSimMod, 0);
+            makeMod(tm, testSimMod, false);
 
             /**logger */
             auto mdLogVal = new MdLogVal();
@@ -102,4 +91,5 @@ namespace kathryn{
 
 }
 
-#endif
+#endif //KATHRYN_SIMTEST9_H
+

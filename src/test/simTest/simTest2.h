@@ -5,15 +5,9 @@
 #ifndef KATHRYN_SM_SIMTEST1_H
 #define KATHRYN_SM_SIMTEST1_H
 
+#include "kathryn.h"
 #include "test/test.h"
-#include "model/controller/controller.h"
-#include "model/FlowBlock/seq/seq.h"
-#include "model/FlowBlock/time/wait.h"
-#include "model/hwComponent/module/module.h"
-#include "model/hwComponent/abstract/makeComponent.h"
-#include "application/visualizer/vis.h"
-#include "util/logger/logger.h"
-#include "sim/interface/simInterface.h"
+
 
 
 namespace kathryn{
@@ -31,17 +25,19 @@ namespace kathryn{
 
             makeVal(bnk, 8, 48);
             makeVal(one, 8, 1);
+            makeVal(two, 8, 2);
             makeVal(maxer, 8, 255);
             makeReg(ota, 8);
             makeReg(maxReg, 8);
             makeReg(bwOrReg, 8);
+
 
             par{
                 a <<= iv;
                 b <<= iv;
                 c <<= bnk;
                 ota <<= bnk - one;
-                maxReg <<= maxer - one;
+                maxReg <<= maxer + two;
                 bwOrReg <<= bnk | one;
             }
 
