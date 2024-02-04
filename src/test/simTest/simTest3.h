@@ -7,7 +7,7 @@
 
 
 #include "kathryn.h"
-#include "test/test.h"
+#include "test/testLegacy/test.h"
 
 
 

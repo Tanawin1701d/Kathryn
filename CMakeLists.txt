@@ -54,13 +54,13 @@ add_executable(Kathryn main.cpp
         src/application/visualizer/vis.h
         src/model/hwComponent/abstract/logicComp.h
         src/model/util/StateRegUtil.h
-        src/test/test.cpp
-        src/test/test.h
-        src/test/modelTest1.h
+        src/test/testLegacy/test.cpp
+        src/test/testLegacy/test.h
+        src/test/testLegacy/modelTest1.h
         src/model/hwComponent/abstract/operation.cpp
         src/model/util/stateRegUtil.cpp
         src/model/FlowBlock/abstract/nodes/node.h
-        src/test/modelTest2.h
+        src/test/testLegacy/modelTest2.h
         src/util/logger/logger.cpp
         src/util/logger/logger.h
         src/sim/logicRep/valRep.cpp
@@ -82,7 +82,7 @@ add_executable(Kathryn main.cpp
         src/model/debugger/modelDebugger.cpp
         src/model/debugger/modelDebugger.h
         src/model/FlowBlock/abstract/nodes/asmNode.h
-        src/test/modelTest3.h
+        src/test/testLegacy/modelTest3.h
         src/model/FlowBlock/abstract/spReg/ctrlFlowRegBase.cpp
         src/sim/event/eventBase.h
         src/sim/event/eventQ.h
@@ -126,5 +126,13 @@ add_executable(Kathryn main.cpp
         src/model/FlowBlock/cond/zelif.h
         src/kathryn.h
         src/test/simTest/simTest8.h
+        src/frontEnd/cmd/cfe.cpp
+        src/frontEnd/cmd/cfe.h
+        src/test/autoSim/simMng.cpp
+        src/test/autoSim/simMng.h
+        src/test/autoSim/simAutoInterface.h
+        src/test/autoSim/simAutoInterface.cpp
+        src/util/termColor/termColor.cpp
+        src/util/termColor/termColor.h
 
 )

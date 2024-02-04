@@ -6,7 +6,7 @@
 #define KATHRYN_SM_SIMTEST4_H
 
 #include "kathryn.h"
-#include "test/test.h"
+#include "test/testLegacy/test.h"
 
 
 
