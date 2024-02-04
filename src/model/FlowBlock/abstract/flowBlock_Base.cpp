@@ -34,6 +34,9 @@ namespace kathryn{
         for (auto sub_fb: subBlocks){
             delete sub_fb;
         }
+        for (auto con_fb: conBlocks){
+            delete con_fb;
+        }
         delete forceExitNode;
         /////// it is safe to delete nullptr
     }

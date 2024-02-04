@@ -36,10 +36,10 @@ namespace kathryn{
 
     FlowBlockZELIF::~FlowBlockZELIF() {
         basicNodes.clear();
-        FlowBlockBase::~FlowBlockBase();
+        ///FlowBlockBase::~FlowBlockBase();
     }
 
-    void FlowBlockZELIF::addElementInFlowBlock(Node *node) {
+    void FlowBlockZELIF::addElementInFlowBlock(Node* node) {
         assert(node != nullptr);
         if (curCond != nullptr)
             node->addCondtion(curCond, BITWISE_AND);

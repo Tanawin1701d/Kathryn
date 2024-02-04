@@ -28,13 +28,13 @@ namespace kathryn{
     }
 
     FlowBlockZIF::~FlowBlockZIF() {
+        /**we will not delete basic nodes due to node ownership transfering*/
         basicNodes.clear();
-        FlowBlockBase::~FlowBlockBase();
+        //FlowBlockBase::~FlowBlockBase();
     }
 
     void FlowBlockZIF::addElementInFlowBlock(Node *node) {
         assert(node != nullptr);
-        node->addCondtion(curCond, BITWISE_AND);
         FlowBlockBase::addElementInFlowBlock(node);
     }
 
@@ -44,27 +44,7 @@ namespace kathryn{
 
     void FlowBlockZIF::addConFlowBlock(FlowBlockBase *fb) {
         assert(fb != nullptr);
-        assert(fb->getFlowType() == ZELIF ||fb->getFlowType() == ZELSE);
-
-        auto* elifFb = (FlowBlockZELIF*)fb;
-
-        /***check condition*/
-        if (prevFalse == nullptr){
-            prevFalse = &(!*curCond);
-        }else{
-            prevFalse = &((!*lastElifCond) && (*prevFalse));
-        }
-
-        Operable* actualElif =  &((*prevFalse) && (*elifFb->getCurCond()));
-        lastElifCond = elifFb->getCurCond();
-
-        /**extract the conjunction block*/
-        for (auto elifNode: getBasicNode()){
-            assert(elifNode != nullptr);
-            elifNode->addCondtion(actualElif, BITWISE_AND);
-            basicNodes.push_back(elifNode);
-        }
-
+        assert(fb->getFlowType() == ZELIF || fb->getFlowType() == ZELSE);
         /** call base function*/
         FlowBlockBase::addConFlowBlock(fb);
     }
@@ -83,6 +63,42 @@ namespace kathryn{
     }
 
     void FlowBlockZIF::buildHwComponent() {
+
+        assert(subBlocks.empty());
+        assert(!basicNodes.empty());
+
+        /**assign node condition to our basic Node */
+        for (auto nd: basicNodes){
+            assert(nd != nullptr);
+            assert(curCond != nullptr);
+            nd->addCondtion(curCond, BITWISE_AND);
+        }
+        if (conBlocks.empty())
+            return;
+        prevFalse = &(!(*curCond));
+        /**assign for each zelif block and zelse block*/
+        bool elseDetected = false;
+
+        for (auto zelifBlock: conBlocks){
+            assert(zelifBlock->getFlowType() == ZELIF ||
+                   zelifBlock->getFlowType() == ZELSE);
+            auto* castedZelifBlock = (FlowBlockZELIF*)zelifBlock;
+            /** extract the sub element*/
+            for (auto subBasicNode : castedZelifBlock->getBasicNode()){
+                if (castedZelifBlock->getCurCond() == nullptr){
+                    elseDetected = true;
+                    subBasicNode->addCondtion(prevFalse,BITWISE_AND);
+                }else{
+                    assert(!elseDetected);
+                    subBasicNode->addCondtion(&((*prevFalse) && (*castedZelifBlock->getCurCond())),
+                                              BITWISE_AND);
+                }
+
+                basicNodes.push_back(subBasicNode);
+            }
+            if (castedZelifBlock->getCurCond() != nullptr)
+                prevFalse = &((*prevFalse) && !(*castedZelifBlock->getCurCond()));
+        }
 
     }
 

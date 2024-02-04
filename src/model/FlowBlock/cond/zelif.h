@@ -12,7 +12,7 @@
 
 
 #define zelif(expr) for(auto kathrynBlock = new FlowBlockZELIF(expr); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
-#define zelse() for(auto kathrynBlock = new FlowBlockZELIF(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define zelse for(auto kathrynBlock = new FlowBlockZELIF(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 
 namespace kathryn{
 

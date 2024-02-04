@@ -73,7 +73,7 @@ namespace kathryn{
                 frontFb->addElementInFlowBlock(basicNode);
             }
             /***we must delete this due to*/
-            delete topFb;
+            ///// delete topFb;
         }else{
             assert(false);
         }
