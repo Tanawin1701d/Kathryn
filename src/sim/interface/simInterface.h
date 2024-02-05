@@ -10,7 +10,7 @@
 #include "sim/event/userEvent.h"
 #include "sim/controller/simController.h"
 
-#define sim agent << [&]()
+/////#define sim agent << [&]()
 
 namespace kathryn{
 
@@ -21,14 +21,8 @@ namespace kathryn{
         std::vector<UserEvent*> _UserSimEvents;
         CYCLE                   _nextUserDescCycle = 0;
         CYCLE                   _limitCycle = 0;
-        /** to receive uservent from user description*/
-        class UserSimAgent{
-        public:
-            SimInterface* _master;
-            explicit UserSimAgent(SimInterface* master);
-            UserSimAgent& operator << (std::function<void(void)> simBehaviour);
-        };
-        UserSimAgent agent = UserSimAgent(this);
+        UserEvent               simAgent;/** sim agent base can't change name*/
+
 
     public:
         explicit SimInterface(CYCLE limitCycle, std::string vcdFilePath);
@@ -37,28 +31,29 @@ namespace kathryn{
 
         void simStart();
 
-        void incCycle(CYCLE inCycle);
-        void setCycle(CYCLE stCycle);
-
         virtual void describe() = 0;
 
 
 
     };
 
-//    class testItf: public SimInterface{
-//
-//        int x;
-//
-//        void describe() override{
-//
-//            sim{
-//                x = 5;
-//            };
-//            incCycle(5)
-//
-//        }
-//    };
+    class testItf: public SimInterface{
+
+        int x;
+
+        void describe() override{
+
+            sim{
+                x = 55;
+                incCycle(5);
+                sim{
+
+                };
+            };
+            incCycle(4);
+
+        }
+    };
 
 }
 

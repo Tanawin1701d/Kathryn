@@ -10,6 +10,12 @@
 #include "eventBase.h"
 #include "sim/logicRep/valRep.h"
 
+
+/*** simAgent*/
+
+#define sim simAgent << [&](UserEvent& simAgent)
+#define incCycle(cycle) simAgent.iterateOrchestCycle(cycle)
+
 namespace kathryn{
 
 /**
@@ -18,18 +24,22 @@ namespace kathryn{
 
  class UserEvent: public EventBase{
  private:
-     std::function<void(void)> _activeFunc;
+     CYCLE      _orchestCycle = -1;
+     UserEvent* _parent = nullptr;
+     /*** core function to be used*/
+     std::function<void(UserEvent&)> _activeFunc;
+     /*** sub userEvent*/
+     std::vector<UserEvent*> _subEvents;
 
  public:
-     UserEvent(std::function<void(void)> activeFunc, CYCLE cycle, int pri):
-        EventBase(cycle, pri),
-        _activeFunc(std::move(activeFunc))
-     {
-         addNewEvent(this);
-     }
+     UserEvent(std::function<void(UserEvent&)> activeFunc,
+               UserEvent* parent,
+               int pri);
+
+     UserEvent();
 
      void simStartCurCycle() override{
-         _activeFunc();
+         _activeFunc(*this);
      }
 
      void curCycleCollectData() override{}
@@ -37,6 +47,24 @@ namespace kathryn{
      void simExitCurCycle() override{}
 
      bool needToDelete() override{return true;}
+
+     void addSubEvent(UserEvent* event) {
+         assert(event != nullptr);
+         _subEvents.push_back(event);
+     }
+
+
+     CYCLE getOrchestCycle() const {
+         return _orchestCycle;
+     }
+
+     void iterateOrchestCycle(CYCLE cycleAmt){
+         _orchestCycle += cycleAmt;
+
+     }
+
+     void operator << (std::function<void(UserEvent&)> simBehaviour);
+
 
  };
 

@@ -8,21 +8,6 @@
 
 namespace kathryn{
 
-    /**user sim agent*/
-
-    SimInterface::UserSimAgent::UserSimAgent(SimInterface* master):
-    _master(master)
-    {assert(master != nullptr);}
-
-    SimInterface::UserSimAgent&
-    SimInterface::UserSimAgent::operator<<(std::function<void(void)> simBehaviour) {
-        auto*  event =  new UserEvent(simBehaviour,
-                                      _master->_nextUserDescCycle,
-                                      SIM_USER_PRIO);
-        _master->_UserSimEvents.push_back(event);
-        return *this;
-    }
-
     /**
      *
      * sim interface
@@ -57,14 +42,5 @@ namespace kathryn{
         simCtrl->simStart();
 
     }
-
-    void SimInterface::incCycle(CYCLE inCycle){
-        _nextUserDescCycle += inCycle;
-    }
-
-    void SimInterface::setCycle(CYCLE stCycle){
-        _nextUserDescCycle += stCycle;
-    }
-
 
 }
