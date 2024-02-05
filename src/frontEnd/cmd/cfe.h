@@ -9,6 +9,9 @@
 #include <vector>
 #include <string>
 
+#include "util/termColor/termColor.h"
+
+
 namespace kathryn {
 
     void printWelcomeScreen();

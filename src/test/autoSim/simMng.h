@@ -6,8 +6,10 @@
 #define KATHRYN_SIMMNG_H
 
 #include<vector>
+#include<unordered_set>
 
 #include"simAutoInterface.h"
+#include "util/termColor/termColor.h"
 
 namespace kathryn{
 
@@ -15,13 +17,6 @@ namespace kathryn{
     void addSimTestToPool(SimAutoInterface* simEle);
 
     void startAutoSimTest();
-
-
-
-
-
-
-
 
 }
 

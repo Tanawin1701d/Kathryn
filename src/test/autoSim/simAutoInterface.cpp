@@ -4,13 +4,19 @@
 
 
 #include "simAutoInterface.h"
+#include "simMng.h"
 
 namespace kathryn{
 
 
-    SimAutoInterface::SimAutoInterface(CYCLE limitCycle, std::string vcdFilePath) :
-    SimInterface(limitCycle,
-                 vcdFilePath) {
+    SimAutoInterface::SimAutoInterface(int simId,
+                                       CYCLE limitCycle,
+                                       std::string vcdFilePath) :
+    SimInterface(limitCycle,std::move(vcdFilePath)),
+    _simId(simId){
+
+        addSimTestToPool(this);
 
     }
+
 }

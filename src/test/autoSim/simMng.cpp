@@ -3,12 +3,13 @@
 //
 
 #include "simMng.h"
-#include "util/termColor/termColor.h"
+
 
 
 namespace kathryn{
 
     std::vector<SimAutoInterface*>* testPool = nullptr;
+    std::unordered_set<int> addedSimAutoInterface;
 
 
     void addSimTestToPool(SimAutoInterface* simEle){
@@ -16,7 +17,16 @@ namespace kathryn{
             testPool = new std::vector<SimAutoInterface*>;
         }
         assert(simEle != nullptr);
+        if (addedSimAutoInterface.find(simEle->getSimId()) == addedSimAutoInterface.end())
+            return;
         testPool->push_back(simEle);
+    }
+
+
+    bool arrageSimInterfaceCmp(const SimAutoInterface* lhs,
+                               const SimAutoInterface* rhs
+                               ){
+        return lhs->getSimId() <= rhs->getSimId();
     }
 
     void startAutoSimTest(){
@@ -27,12 +37,16 @@ namespace kathryn{
             std::cout << "[kathryn auto test] " << "auto sim has nothing to simulate.\n";
         }
 
+        std::sort(testPool->begin(), testPool->end(), arrageSimInterfaceCmp);
+
         int testCase = 0;
         for (auto sif: *testPool){
-            std::cout << TC_BLUE << "[kathryn auto test] " << "start sim testcase "<< testCase << TC_DEF <<"\n";
+            std::cout << TC_BLUE << "[kathryn auto test] " << "start sim testcase "<< testCase << " id: " << sif->getSimId()<< TC_DEF <<"\n";
             sif->simStart();
-            std::cout << TC_BLUE << "[kathryn auto test] " << "finnish sim testcase "<< testCase << TC_DEF <<"\n";
+            std::cout << TC_BLUE << "[kathryn auto test] " << "finnish sim testcase "<< testCase << " id: " << sif->getSimId()  << TC_DEF <<"\n";
+            testCase++;
         }
+
     }
 
 

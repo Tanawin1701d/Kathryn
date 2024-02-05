@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include "cfe.h"
+#include "test/autoSim/simMng.h"
 
 
 namespace kathryn{
@@ -24,21 +25,29 @@ namespace kathryn{
     void test(int idx, std::vector<std::string>& args){
 
         if (idx >= args.size()){
-            std::cout << "test error no specify argument";
+            std::cout << "test error no specify argument"  << std::endl;
             assert(false);
         }
 
         if (args[idx] == "all"){
-
+            startAutoSimTest();
         }else{
-            try{
-
-            }catch (std::exception& e){
-
-            }
+            std::cout << TC_RED << "FOR now we do not support specificTestCase" << TC_DEF << std::endl;
         }
 
+    }
 
+    void start(std::vector<std::string>& args){
+
+        printWelcomeScreen();
+
+        if (args.size() == 0){
+            std::cout << "[kathryn] there is no command to run" << std::endl;
+        }else if(args[0] == "test"){
+            test(1, args);
+        }
+
+        std::cout << "[kathryn] exit program" << std::endl;
     }
 
 

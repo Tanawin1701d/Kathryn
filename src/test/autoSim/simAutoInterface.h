@@ -13,10 +13,15 @@ namespace kathryn{
 
 
     class SimAutoInterface: public SimInterface{
-
+    private:
+        int _simId = -1;
     public:
 
-        explicit SimAutoInterface(CYCLE limitCycle, std::string vcdFilePath);
+        explicit SimAutoInterface(int simId,
+                                  CYCLE limitCycle,
+                                  std::string vcdFilePath);
+
+        int getSimId() const {return _simId;};
 
 
     };
