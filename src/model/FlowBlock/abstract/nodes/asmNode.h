@@ -18,9 +18,12 @@ namespace kathryn {
             assert(_assignMeta != nullptr);
         }
 
+
         AsmNode(const AsmNode &other) : Node((Node &) other) {
             _assignMeta = other._assignMeta;
         }
+
+        ~AsmNode(){}
 
         Node *clone() override {
             auto clNode = new AsmNode(*this);

@@ -24,12 +24,12 @@ namespace kathryn{
         for(auto& _spReg: _spRegs){
             deleteSubElement(_spReg);
         }
-        deleteSubElement(_flowBlockBases);
         deleteSubElement(_userRegs);
         deleteSubElement(_userWires);
         deleteSubElement(_userExpressions);
         deleteSubElement(_userVals);
         deleteSubElement(_userSubModule);
+        deleteSubElement(_flowBlockBases);
     }
 
     void Module::com_init() {

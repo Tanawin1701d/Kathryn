@@ -8,13 +8,15 @@
 #include<vector>
 #include<unordered_set>
 
+#include "kathryn.h"
 #include"simAutoInterface.h"
+#include"testCase/autoTestInterface.h"
 #include "util/termColor/termColor.h"
 
 namespace kathryn{
 
 
-    void addSimTestToPool(SimAutoInterface* simEle);
+    void addSimTestToPool(AutoTestEle* simEle);
 
     void startAutoSimTest();
 

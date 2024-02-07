@@ -155,11 +155,16 @@ namespace kathryn{
      * */
 
 
-    void ModelController::on_globalModule_init_component(Module* globalMod) {
+    void ModelController::on_globalModule_init_component() {
+        /**initiate component*/
+        unlockAllocation();
+        globalModulePtr = new Module(false);
+        globalModulePtr->setVarName("globeMod");
         /** for global module for initialize project*/
-        assert(globalMod != nullptr);
-        moduleStack.push(Module_Stack_Element{globalMod, MODULE_COMPONENT_CONSTRUCT});
-        globalMod->buildInheritName();
+        assert(globalModulePtr != nullptr);
+        moduleStack.push(Module_Stack_Element{globalModulePtr, MODULE_COMPONENT_CONSTRUCT});
+        globalModulePtr->buildInheritName();
+        initiateGlobalComponent();
     }
 
 

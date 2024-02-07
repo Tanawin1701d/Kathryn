@@ -13,8 +13,10 @@
 
 /*** simAgent*/
 
+/** if you wish to use this macro*/
 #define sim simAgent << [&](UserEvent& simAgent)
 #define incCycle(cycle) simAgent.iterateOrchestCycle(cycle)
+#define setCycle(cycle) simAgent.setOrchestCycle(cycle)
 
 namespace kathryn{
 
@@ -61,6 +63,10 @@ namespace kathryn{
      void iterateOrchestCycle(CYCLE cycleAmt){
          _orchestCycle += cycleAmt;
 
+     }
+
+     void setOrchestCycle(CYCLE cycleAmt){
+         _orchestCycle = cycleAmt;
      }
 
      void operator << (std::function<void(UserEvent&)> simBehaviour);

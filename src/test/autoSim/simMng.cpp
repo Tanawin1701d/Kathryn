@@ -8,26 +8,26 @@
 
 namespace kathryn{
 
-    std::vector<SimAutoInterface*>* testPool = nullptr;
-    std::unordered_set<int> addedSimAutoInterface;
 
 
-    void addSimTestToPool(SimAutoInterface* simEle){
+    bool arrangeTestCmp(AutoTestEle* lhs, AutoTestEle* rhs){
+        assert(lhs != nullptr);
+        assert(rhs != nullptr);
+        return lhs->getSimId() < rhs->getSimId();
+    }
+
+    std::vector<AutoTestEle*>* testPool = nullptr;
+
+    void addSimTestToPool(AutoTestEle* simEle){
         if (testPool == nullptr){
-            testPool = new std::vector<SimAutoInterface*>;
+            testPool = new std::vector<AutoTestEle*>;
         }
         assert(simEle != nullptr);
-        if (addedSimAutoInterface.find(simEle->getSimId()) == addedSimAutoInterface.end())
-            return;
         testPool->push_back(simEle);
     }
 
 
-    bool arrageSimInterfaceCmp(const SimAutoInterface* lhs,
-                               const SimAutoInterface* rhs
-                               ){
-        return lhs->getSimId() <= rhs->getSimId();
-    }
+
 
     void startAutoSimTest(){
 
@@ -37,12 +37,13 @@ namespace kathryn{
             std::cout << "[kathryn auto test] " << "auto sim has nothing to simulate.\n";
         }
 
-        std::sort(testPool->begin(), testPool->end(), arrageSimInterfaceCmp);
+        std::sort(testPool->begin(), testPool->end(), arrangeTestCmp);
 
-        int testCase = 0;
+        int testCase = 1;
         for (auto sif: *testPool){
             std::cout << TC_BLUE << "[kathryn auto test] " << "start sim testcase "<< testCase << " id: " << sif->getSimId()<< TC_DEF <<"\n";
-            sif->simStart();
+            sif->start();
+            resetKathryn();
             std::cout << TC_BLUE << "[kathryn auto test] " << "finnish sim testcase "<< testCase << " id: " << sif->getSimId()  << TC_DEF <<"\n";
             testCase++;
         }

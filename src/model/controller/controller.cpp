@@ -9,42 +9,54 @@ namespace kathryn{
 
     /** central initializer*/
     ModelController*    centralControllerPtr = nullptr;
-    Module*        globalModulePtr = nullptr;
+    ///Module*             globalModulePtr      = nullptr;
+
+
+    ModelController::ModelController() {
+        /** to prevent loop allocation in global module constructor*/
+        centralControllerPtr = this;
+        on_globalModule_init_component();
+    }
+
+    void ModelController::reset(){
+        assert(!moduleStack.empty());
+        /** delete old global module**/
+        assert(moduleStack.size() == 1);
+        on_module_final(moduleStack.top().md);
+        delete globalModulePtr;
+        globalModulePtr = nullptr;
+        /** create new one*/
+        on_globalModule_init_component();
+    }
+
+    Module* ModelController::getGlobalModule(){
+        assert(globalModulePtr != nullptr);
+        return globalModulePtr;
+    }
 
     ModelController* getControllerPtr(){
         /// initiate controller before return
         /***lazy initializer*/
         if (centralControllerPtr == nullptr){
-            centralControllerPtr = new ModelController();
+            new ModelController();
+            /** the constructor of model controller will handle itself*/
         }else{
             return centralControllerPtr;
         }
-        /// if global module was not init, then init it
-        if (globalModulePtr == nullptr){
-            centralControllerPtr->unlockAllocation();
-            globalModulePtr = new Module(false);
-            globalModulePtr->setVarName("globeMod");
-            centralControllerPtr->on_globalModule_init_component(globalModulePtr);
-            initiateGlobalComponent();
-        }
-
         return centralControllerPtr;
     }
 
     Module* getGlobalModulePtr(){
-        if (globalModulePtr == nullptr){
-            assert(centralControllerPtr == nullptr);
-            getControllerPtr();
-        }
-        assert(globalModulePtr != nullptr);
-        return globalModulePtr;
+        return getControllerPtr()->getGlobalModule();
     }
 
-    void freeControllerPtr(){
-        ///// finalize global module if it have
-        if (centralControllerPtr != nullptr){
-            centralControllerPtr->on_module_final(globalModulePtr);
-        }
-    }
+//    void freeControllerPtr(){
+//        ///// finalize global module if it have
+//        if (centralControllerPtr != nullptr){
+//            centralControllerPtr->on_module_final(globalModulePtr);
+//        }
+//    }
+
+
 
 }

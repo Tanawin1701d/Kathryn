@@ -28,7 +28,6 @@ namespace kathryn{
                   }) {}
 
     FlowBlockElif::~FlowBlockElif(){
-        FlowBlockBase::~FlowBlockBase();
     };
 
     void FlowBlockElif::addElementInFlowBlock(Node* node) {

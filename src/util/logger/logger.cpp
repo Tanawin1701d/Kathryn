@@ -58,12 +58,22 @@ namespace kathryn{
         delete outFileMD;
     }
 
-    void finalizeMfDebugger(){
+    void flushMfDebugger(){
         for (auto& mfValue : mfStorage){
             *outFileMF << "[ " << mfValue.mdDebug->getMdIdentVal()
                        << " ]    " << mfValue.debugMsg << "\n";
             *outFileMF << "---------------------------\n";
         }
+        mfStorage.clear();
+        *outFileMF << "---------------------------------------\n";
+        *outFileMF << "---------------------------------------\n";
+        *outFileMF << "----------------FLUSH------------------\n";
+        *outFileMF << "---------------------------------------\n";
+        *outFileMF << "---------------------------------------\n";
+    }
+
+    void finalizeMfDebugger(){
+
         outFileMF->close();
         delete outFileMF;
     }

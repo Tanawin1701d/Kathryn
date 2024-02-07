@@ -20,7 +20,6 @@ namespace kathryn{
     FlowBlockWhileBase::~FlowBlockWhileBase() {
         delete resultNodeWrapper;
         delete exitNode;
-        FlowBlockBase::~FlowBlockBase();
     }
 
     void FlowBlockWhileBase::addElementInFlowBlock(Node *node) {

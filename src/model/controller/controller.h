@@ -49,6 +49,7 @@ namespace kathryn {
         ////// flow describe stack
         std::stack<FlowBlockBase*> flowBlockStacks[FLOW_ST_CNT];
         /////// pattern flow block is subset of flowBlockStack
+        Module* globalModulePtr = nullptr;
 
     protected:
         /** get module that response we now consider*/
@@ -66,7 +67,9 @@ namespace kathryn {
         /**
          * event handling function
          * */
-
+        explicit ModelController();
+        void reset();
+        Module* getGlobalModule();
         /** state register handling*/
         void on_sp_reg_init(CtrlFlowRegBase* ptr, SP_REG_TYPE regType);
         /** register handling*/
@@ -80,7 +83,7 @@ namespace kathryn {
         /** value handling*/
         void on_value_init(Val* ptr);
         /** module handling*/
-        void on_globalModule_init_component(Module* globalMod);
+        void on_globalModule_init_component();
         void on_module_init_components(Module* ptr);
         void on_module_init_designFlow(Module* ptr); /** todo make design flow implement correctly*/
         void on_module_final(Module* ptr);
@@ -106,8 +109,6 @@ namespace kathryn {
     Module*          getGlobalModulePtr();
     void        freeControllerPtr();
 
-
-
 }
 
-#endif //KATHRYN_SIMCONTROLLER_H
+#endif //KATHRYN_ModelCONTROLLER_H

@@ -18,6 +18,8 @@ namespace kathryn{
 
     void initiateGlobalComponent();
 
+    void resetGlobalComponent();
+
 
 }
 

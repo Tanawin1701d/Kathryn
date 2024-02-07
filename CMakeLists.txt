@@ -8,6 +8,7 @@ INCLUDE_DIRECTORIES( ./src )
 
 
 add_executable(Kathryn main.cpp
+        src/kathryn.cpp
         src/model/hwComponent/expression/expression.cpp
         src/model/hwComponent/expression/expression.h
         src/model/hwComponent/abstract/operation.h
@@ -134,5 +135,11 @@ add_executable(Kathryn main.cpp
         src/test/autoSim/simAutoInterface.cpp
         src/util/termColor/termColor.cpp
         src/util/termColor/termColor.h
+        ########### auto test
+        src/test/autoSim/testCase/simAutoTest1.cpp
+        src/test/autoSim/testCase/simAutoTest2.cpp
+        src/test/autoSim/testCase/autoTestInterface.h
+        src/test/autoSim/testCase/autoTestInterface.cpp
+
 
 )

@@ -27,7 +27,6 @@ namespace kathryn{
         delete basicStNode;
         delete synNode;
         delete pseudoExitNode;
-        FlowBlockBase::~FlowBlockBase();
     }
 
     NodeWrap*

@@ -47,6 +47,8 @@ namespace kathryn{
     void initMfDebugger();
 
     void finalizeMdDebugger();
+
+    void flushMfDebugger();
     void finalizeMfDebugger();
 
 

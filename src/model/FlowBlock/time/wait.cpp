@@ -34,7 +34,6 @@ namespace kathryn{
     FlowBlockCondWait::~FlowBlockCondWait(){
         delete _waitNode;
         delete _resultNodeWrap;
-        FlowBlockBase::~FlowBlockBase();
     }
 
     NodeWrap* FlowBlockCondWait::sumarizeBlock() {
@@ -154,7 +153,6 @@ namespace kathryn{
     FlowBlockCycleWait::~FlowBlockCycleWait(){
         delete _waitNode;
         delete _resultNodeWrap;
-        FlowBlockBase::~FlowBlockBase();
     }
 
     NodeWrap* FlowBlockCycleWait::sumarizeBlock() {

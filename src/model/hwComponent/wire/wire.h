@@ -14,8 +14,10 @@ namespace kathryn{
     class Wire : public LogicComp<Wire>{
     protected:
         void com_init() override;
+
     public:
         explicit Wire(int size);
+        void com_final() override {};
 
         /**override assignable*/
         [[maybe_unused]]

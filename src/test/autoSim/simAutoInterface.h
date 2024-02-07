@@ -21,7 +21,25 @@ namespace kathryn{
                                   CYCLE limitCycle,
                                   std::string vcdFilePath);
 
-        int getSimId() const {return _simId;};
+        int getSimId() const {return _simId;}
+
+        void testAndPrint(std::string testName, ValRep& simVal, ValRep& rhs);
+
+        virtual void simAssert() = 0;
+        virtual void simDriven() = 0;
+
+        void describe() override{
+            /* drive the signal*/
+            setCycle(0);
+            simDriven();
+            setCycle(0);
+            simAssert();
+
+        }
+
+        void flush(){
+            _vcdWriter->flush();
+        }
 
 
     };

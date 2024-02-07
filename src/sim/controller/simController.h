@@ -17,9 +17,7 @@ namespace kathryn{
 
     private:
 
-        CYCLE nextCycle = 1;
         CYCLE _limitCycle = 1;
-        Wire* _rstWire = nullptr;
         EventQ eventQ;
 
         void collectData();
@@ -31,6 +29,7 @@ namespace kathryn{
         void addEvent(EventBase* event);
         void saveData();
         void setLimitCycle(CYCLE lmtCycle){_limitCycle = lmtCycle;}
+        void reset();
 
     };
 

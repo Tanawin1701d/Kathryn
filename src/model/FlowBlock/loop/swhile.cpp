@@ -15,7 +15,6 @@ namespace kathryn{
         delete conNode;
         delete backToConNode;
         delete normalExit;
-        FlowBlockWhileBase::~FlowBlockWhileBase();
     }
 
     void FlowBlockSWhile::buildHwComponent() {

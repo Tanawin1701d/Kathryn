@@ -59,6 +59,15 @@ namespace kathryn{
         return lastPopCycle;
     }
 
+    void EventQ::reset() {
+        lastPopCycle = -1;
+        eventQueue =std::priority_queue<
+                            EventBase*,
+                            std::vector<EventBase*>,
+                            eventQueueCmp
+                            >();
+    }
+
 
 
 }

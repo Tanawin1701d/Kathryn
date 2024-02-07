@@ -26,8 +26,10 @@ namespace kathryn{
         /***the actual value will be assigned to val rep*/
 
         void com_init() override;
+
     public:
         /** todo we will make value save the value and range more precisly*/
+        void com_final() override {};
 
         template<typename... Args>
         explicit Val(int size, Args... args):

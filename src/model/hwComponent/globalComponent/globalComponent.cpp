@@ -19,4 +19,10 @@ namespace kathryn{
         startNode->assign();
     }
 
+    void resetGlobalComponent(){
+         /** rstWire and start node will be delete by module deconstructor*/
+         rstWire   = nullptr;
+         startNode = nullptr;
+    }
+
 }

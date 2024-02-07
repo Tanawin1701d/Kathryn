@@ -25,17 +25,17 @@ namespace kathryn{
     class TC {
         Code code;
     public:
-        TC(Code pCode) : code(pCode) {}
+        explicit TC(Code pCode) : code(pCode) {}
         friend std::ostream&
         operator<<(std::ostream& os, const TC& mod) {
             return os << "\033[" << mod.code << "m";
         }
     };
 
-    TC TC_BLUE(FG_BLUE);
-    TC TC_RED(FG_RED);
-    TC TC_GREEN(FG_GREEN);
-    TC TC_DEF(FG_DEFAULT);
+    extern TC TC_BLUE;
+    extern TC TC_RED;
+    extern TC TC_GREEN;
+    extern TC TC_DEF;
 
 
 

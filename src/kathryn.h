@@ -10,11 +10,10 @@
 #include "sim/interface/simInterface.h"
 #include "util/logger/logger.h"
 
-
-
-
-
 namespace kathryn{
+
+
+    void resetKathryn();
 
 }
 

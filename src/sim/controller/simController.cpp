@@ -64,6 +64,11 @@ namespace kathryn{
         assert(false);
     }
 
+    void SimController::reset(){
+        _limitCycle = 1;
+        eventQ.reset();
+    }
+
 
     /***
      *

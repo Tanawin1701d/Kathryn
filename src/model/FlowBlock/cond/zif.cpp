@@ -30,7 +30,6 @@ namespace kathryn{
     FlowBlockZIF::~FlowBlockZIF() {
         /**we will not delete basic nodes due to node ownership transfering*/
         basicNodes.clear();
-        //FlowBlockBase::~FlowBlockBase();
     }
 
     void FlowBlockZIF::addElementInFlowBlock(Node *node) {

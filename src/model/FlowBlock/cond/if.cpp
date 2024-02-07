@@ -25,7 +25,6 @@ namespace kathryn{
         delete psuedoElseNode;
         delete exitNode;
         delete resultNodeWrap;
-        FlowBlockBase::~FlowBlockBase();
     }
 
     void FlowBlockIf::addElementInFlowBlock(Node *node) {

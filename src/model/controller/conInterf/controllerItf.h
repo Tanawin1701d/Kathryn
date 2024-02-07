@@ -21,9 +21,9 @@ namespace kathryn {
         explicit HwCompControllerItf(bool requiredAllocCheck = true);
 
         /** use while constructor is invoke*/
-        virtual void com_init() { assert(true); }
+        virtual void com_init() { assert(false); }
         /** use when constructor is finish*/
-        virtual void com_final(){ assert(true); /**todo */ }
+        virtual void com_final(){ assert(false); /**todo */ }
     };
 
 

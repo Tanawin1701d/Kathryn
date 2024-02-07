@@ -22,7 +22,8 @@ namespace kathryn{
 
     UserEvent::UserEvent():
     EventBase(0, SIM_USER_PRIO),
-    _orchestCycle(0)
+    _orchestCycle(0),
+    _parent(nullptr)
     {}
 
 

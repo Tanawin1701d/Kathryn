@@ -14,7 +14,6 @@ namespace kathryn{
         delete loopNodeWrap;
         delete byPassExitNode;
         delete subBlockExitNode;
-        FlowBlockWhileBase::~FlowBlockWhileBase();
     }
 
     void FlowBlockcWhile::buildHwComponent() {

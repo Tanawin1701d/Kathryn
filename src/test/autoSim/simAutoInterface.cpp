@@ -15,10 +15,20 @@ namespace kathryn{
     SimInterface(limitCycle,std::move(vcdFilePath)),
     _simId(simId){
 
-        addSimTestToPool(this);
+        /////addSimTestToPool(this);
 
     }
 
+    void SimAutoInterface::testAndPrint(std::string testName, ValRep &simValLhs, ValRep& testValRhs) {
+
+        if ((simValLhs == testValRhs).getLogicalValue()){
+            std::cout << TC_GREEN << testName << " pass " << TC_DEF << std::endl;
+        }else{
+            std::cout << TC_RED << testName << " fail expect: "
+                      << testValRhs.getBiStr() << "  got : "
+                      << simValLhs.getBiStr() << TC_DEF << std::endl;
+        }
+    }
 
 
 }

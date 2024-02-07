@@ -17,9 +17,12 @@ namespace kathryn{
     protected:
         void com_init() override;
 
+
     public:
         explicit Reg(int size, bool initCom = true, HW_COMPONENT_TYPE hwType = TYPE_REG, bool requiredAllocCheck = true);
         ~Reg() override = default;
+
+        void com_final() override {};
 
         /** assignable override*/
         Reg& operator <<= (Operable& b) override;

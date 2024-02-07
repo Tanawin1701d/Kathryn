@@ -3,3 +3,15 @@
 //
 
 #include "termColor.h"
+
+namespace kathryn{
+
+
+    TC TC_BLUE (FG_BLUE);
+    TC TC_RED  (FG_RED);
+    TC TC_GREEN(FG_GREEN);
+    TC TC_DEF  (FG_DEFAULT);
+
+
+
+}

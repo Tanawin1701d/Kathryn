@@ -36,7 +36,6 @@ namespace kathryn{
 
     FlowBlockZELIF::~FlowBlockZELIF() {
         basicNodes.clear();
-        ///FlowBlockBase::~FlowBlockBase();
     }
 
     void FlowBlockZELIF::addElementInFlowBlock(Node* node) {

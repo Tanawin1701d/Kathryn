@@ -27,7 +27,7 @@ namespace kathryn{
     public:
         explicit SimInterface(CYCLE limitCycle, std::string vcdFilePath);
 
-        ~SimInterface();
+        virtual ~SimInterface();
 
         void simStart();
 

@@ -36,7 +36,7 @@ namespace kathryn {
 
     protected:
         void com_init() override;
-        void com_final() override {};
+
 
 
     public:
@@ -47,6 +47,8 @@ namespace kathryn {
                             int exp_size
                             );
         explicit expression(int exp_size);
+
+        void com_final() override {};
         /** override assignable*/
         expression& operator <<= (Operable  & b) override {std::cout << "we not support <<= operator in exprMetas"; assert(false);}
         expression& operator =   (Operable  & b) override;

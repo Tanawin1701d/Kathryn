@@ -42,6 +42,9 @@ namespace kathryn{
         std::vector<EventBase*> getAndPopNextSameCycleEvent();
         /** get last popCycle*/
         CYCLE getLastPopCycle() const;
+        /** clear eventQ*/
+        void reset();
+
 
 
 

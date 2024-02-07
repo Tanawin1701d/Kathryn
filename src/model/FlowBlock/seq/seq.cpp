@@ -199,7 +199,6 @@ namespace kathryn{
 
     FlowBlockSeq::~FlowBlockSeq(){
         delete resultNodeWrap;
-        FlowBlockBase::~FlowBlockBase();
         for (auto seqEle : _subSeqMetas){
             delete seqEle;
         }

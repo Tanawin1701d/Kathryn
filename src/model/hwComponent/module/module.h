@@ -54,6 +54,7 @@ namespace kathryn{
     protected:
         /** communicate to controller*/
         void com_init() override;
+
         /** localize slave element to belong to this node*/
         template<typename T>
         void localizeSlaveVector(std::vector<T>& _vec);
@@ -63,6 +64,9 @@ namespace kathryn{
     public:
         explicit Module(bool initComp = true);
         ~Module() override;
+
+        void com_final() override;
+
         template<typename T>
         void deleteSubElement(std::vector<T*>& subEleVec){
             for (auto ele: subEleVec){
@@ -117,10 +121,6 @@ namespace kathryn{
                 ele->simExitCurCycle();
             }
         }
-
-
-
-        void com_final() override;
 
         /**implicit element that is built from design flow*/
         void addSpReg          (Reg* reg, SP_REG_TYPE spRegType);
