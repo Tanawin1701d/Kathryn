@@ -25,9 +25,9 @@ namespace kathryn{
         );
 
 
-        void simStartCurCycle() override;
+        void simStartCurCycle()    override;
         void curCycleCollectData() override;
-        void simExitCurCycle() override;
+        void simExitCurCycle()     override;
 
         bool needToDelete() override {return false;}
     };

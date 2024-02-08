@@ -62,5 +62,11 @@ namespace kathryn{
     void FlowSimEngine::incUsedTime() {
         amtUsed++;
     }
+
+    void FlowSimEngine::finalizeData(){
+        assert(_meta._writer != nullptr);
+        _meta._writer->freq = amtUsed;
+        _meta._writer->localName = _meta._recName;
+    }
 }
 

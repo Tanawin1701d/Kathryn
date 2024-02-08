@@ -6,6 +6,7 @@
 #define KATHRYN_MODELSIMINTERFACE_H
 
 #include <cassert>
+#include <utility>
 #include "model/simIntf/modelSimEngine.h"
 #include "sim/event/eventBase.h"
 
@@ -48,6 +49,11 @@ namespace kathryn{
          * to not cascade change value while other rtl block is updating
          * */
         virtual void simExitCurCycle() = 0;
+        /**
+         * collect data that must be collect when simulation is
+         * simmulated
+         * **/
+        virtual void afterSimCollectData() = 0;
 
 
     };
@@ -95,6 +101,8 @@ namespace kathryn{
             assert(_engine->isCurValSim());
             _engine->iterate();
         }
+
+        void afterSimCollectData() override{};
 
     };
 
@@ -147,11 +155,18 @@ namespace kathryn{
             getSimEngine()->incUsedTime();
             getSimEngine()->setRunningStatus();
         }
+        /** initialize data before prepare Sim() is used*/
+        void beforePrepareSim(FlowSimEngine::FLOW_Meta_afterMf simMeta){
+            _engine->setSimMeta(std::move(simMeta));
+        }
         /** start Sim can be invoked multiple times*/
         void prepareSim() override{};
 
         void curCycleCollectData() override{};
         /** exit sim can be invoked multiple times*/
+
+        /** for node this function will be not in use*/
+        void afterSimCollectData() override;
     };
 
     /***
@@ -163,7 +178,7 @@ namespace kathryn{
          explicit ModuleSimInterface():
                  Simulatable(){}
 
-         virtual void beforePrepareSim(VcdWriter* vcdWriter) = 0;
+         virtual void beforePrepareSim(VcdWriter* vcdWriter, flowColEle* flowColEle) = 0;
      };
 
 }

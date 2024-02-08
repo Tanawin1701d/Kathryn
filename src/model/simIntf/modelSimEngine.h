@@ -77,20 +77,31 @@ namespace kathryn {
     class FlowSimEngine{
     private:
 
-
         int amtUsed = 0;
         bool isStateRunningIn = false; /// check that are there
                                        /// state is running in this block
+        bool _isSimMetaSet    = false;
     public:
+        struct FLOW_Meta_afterMf{
+
+            std::string      _recName = "UNDEFINED_SIGNAL_RECORD_NAME";
+            flowColEle*      _writer  = nullptr;
+        };
+
+        FLOW_Meta_afterMf _meta;
 
         explicit FlowSimEngine() = default;
 
         void incUsedTime();
         int&  getAmtUsed(){return amtUsed;}
 
+        void setSimMeta(FLOW_Meta_afterMf meta){_isSimMetaSet = true; _meta = meta;}
+
         void setRunningStatus  (){isStateRunningIn = true;}
         void unsetRunning()      {isStateRunningIn = false;}
         bool isRunning   ()const {return isStateRunningIn; }
+
+        void finalizeData();
     };
 }
 #endif //KATHRYN_MODELSIMENGINE_H

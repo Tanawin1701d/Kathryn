@@ -6,6 +6,7 @@
 #define KATHRYN_SIMRESWRITER_H
 
 #include<cassert>
+#include <vector>
 #include "util/fileWriter/fileWriterBase.h"
 #include "model/hwComponent/abstract/Slice.h"
 
@@ -35,6 +36,33 @@ namespace kathryn{
         void addNewTimeStamp(ull timeStamp);
 
 
+    };
+
+    struct flowColEle{
+        std::string localName;
+        int freq = 0;
+        std::vector<flowColEle*> subEle;
+
+        flowColEle* populateSubEle(){
+            subEle.push_back(new flowColEle);
+            return *subEle.rbegin();
+        }
+
+    };
+
+    class FlowCollector : public FileWriterBase{
+    private:
+        flowColEle* startEle = nullptr;
+
+    public:
+        FlowCollector(std::string fileName);
+
+        flowColEle* getstartEle() {
+            assert(startEle != nullptr);
+            return startEle;
+        }
+
+        void startWriteData();
     };
 
 

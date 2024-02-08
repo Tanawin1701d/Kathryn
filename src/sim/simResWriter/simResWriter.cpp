@@ -47,6 +47,15 @@ namespace kathryn{
         addData("#" + std::to_string(timeStamp) + "\n");
     }
 
+    ////////////////////////////////////// for flow collector
+
+    FlowCollector::FlowCollector(std::string fileName)
+        : FileWriterBase(fileName){
+        startEle = new flowColEle({"MAIN_FLOW_COLLECTOR",
+                                   0,
+                                   nullptr});
+    }
+
 
 
 }

@@ -157,7 +157,7 @@ namespace kathryn{
         std::string getMdIdentVal() override{return getIdentDebugValue();};
 
         /** override simulation */
-        void beforePrepareSim(VcdWriter* vcdWriter) override;
+        void beforePrepareSim(VcdWriter* vcdWriter, flowColEle* flowColEle) override;
         void prepareSim() override;
         void simStartCurCycle() override;
         void curCycleCollectData() override;

@@ -148,7 +148,7 @@ namespace kathryn{
     }
 
     /** override simulation*/
-    void Module::beforePrepareSim(VcdWriter* vcdWriter){
+    void Module::beforePrepareSim(VcdWriter* vcdWriter, flowColEle* flowColEle){
 
         assert(vcdWriter);
         /**RTL BEFORE PREPARE SIM(SP)*/
@@ -163,9 +163,10 @@ namespace kathryn{
         /**COMPLEX BEFORE PREPARE SUB SIM*/
         for(auto modulePtr : _userSubModule){
             assert(modulePtr != nullptr);
-            modulePtr->beforePrepareSim(vcdWriter);
+            modulePtr->beforePrepareSim(vcdWriter, flowColEle->populateSubEle());
         }
         /** flow block not need before prepare sim*/
+
 
     }
 
