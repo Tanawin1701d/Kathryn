@@ -160,12 +160,14 @@ namespace kathryn{
         beforePrepareSimSubElement_RTL_only(_userWires, vcdWriter);
         beforePrepareSimSubElement_RTL_only(_userExpressions, vcdWriter);
         beforePrepareSimSubElement_RTL_only(_userVals, vcdWriter);
+        /**flow block prepare sim*/
+        beforePrepareSimSubElement_FB_only(_flowBlockBases, flowColEle->populateSubEle());
         /**COMPLEX BEFORE PREPARE SUB SIM*/
         for(auto modulePtr : _userSubModule){
             assert(modulePtr != nullptr);
             modulePtr->beforePrepareSim(vcdWriter, flowColEle->populateSubEle());
         }
-        /** flow block not need before prepare sim*/
+
 
 
     }

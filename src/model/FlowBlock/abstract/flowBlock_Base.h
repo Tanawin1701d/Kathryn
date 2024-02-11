@@ -15,6 +15,7 @@
 #include "model/FlowBlock/abstract/nodes/node.h"
 #include "model/FlowBlock/abstract/nodeWrap.h"
 #include "model/FlowBlock/abstract/nodes/stateNode.h"
+#include "flowIdentifiable.h"
 
 
 namespace kathryn {
@@ -65,14 +66,30 @@ namespace kathryn {
 
     extern int nextFbIdx;
 
-    class FlowBlockBase: public ModelDebuggable,
+    class FlowBlockBase: public FlowIdentifiable,
+                         public ModelDebuggable,
                          public FlowSimulatable{
     protected:
 
+        struct sortEle{
+            FlowBlockBase* fb;
+            int order = -1;
+
+            bool operator< (const sortEle& rhs) const{
+                return order < rhs.order;
+            }
+        };
+
+        int nextInputOrder = 0;
         /** flow element*/
         std::vector<FlowBlockBase*> subBlocks;
+        std::vector<int>            subBlocksOrder; //// input order in this block
         std::vector<FlowBlockBase*> conBlocks;
+        std::vector<int>            conBlocksOrder; //// input order in this block
         std::vector<Node*>          basicNodes;
+        std::vector<int>            basicNodesOrder; //// input order in this block
+
+        /** status of node*/
         FLOW_BLOCK_TYPE             _type;
         ModelController*            ctrl = nullptr;
         bool                        lazyDeletedRequired = false;
@@ -97,16 +114,19 @@ namespace kathryn {
         virtual void addElementInFlowBlock(Node* node){
             assert(node != nullptr);
             basicNodes.push_back(node);
+            basicNodesOrder.push_back(nextInputOrder++);
         };
         /** when inside complex element such as sub flow block is finish, user must add here*/
         virtual void addSubFlowBlock(FlowBlockBase* subBlock){
             assert(subBlock != nullptr);
             subBlocks.push_back(subBlock);
+            subBlocksOrder.push_back(nextInputOrder++);
         };
         /** add sub con block as consecutive block*/
         virtual void addConFlowBlock(FlowBlockBase* conBlock){
             assert(conBlock != nullptr);
             conBlocks.push_back(conBlock);
+            conBlocksOrder.push_back(nextInputOrder++);
         }
         /**
          * For custom block
@@ -165,6 +185,9 @@ namespace kathryn {
         [[nodiscard]]std::string getMdIdentVal() override{
             return FBT_to_string(getFlowType()) + "_blockId_" + std::to_string(_fbId);
         }
+
+        std::vector<sortEle> sortSubAndConFbInOrder();
+        void beforePrepareSim(FlowSimEngine::FLOW_Meta_afterMf simMeta) override;
 
     };
 

@@ -44,6 +44,7 @@ namespace kathryn {
         std::string        getDescribe         ();
 
         /*** for simulation*/
+        void               beforePrepareSim(FlowSimEngine::FLOW_Meta_afterMf simMeta);
         void               simulate() const;
         void               finalizeSim() const;
         bool               isCurCycleSimulated() const; ///// check that are cur state is simulating and state is set
@@ -78,7 +79,9 @@ namespace kathryn {
         /** Loop macro to notice position of system*/
         void doPreFunction() override;
         void doPostFunction() override;
+
         /** override simulator*/
+
         void simStartCurCycle() override;
 
         void simExitCurCycle() override;

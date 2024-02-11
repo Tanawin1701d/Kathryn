@@ -14,6 +14,7 @@ namespace kathryn{
 
 
     FlowBlockBase::FlowBlockBase(FLOW_BLOCK_TYPE type, FB_CTRL_COM_META fbCtrlComMeta):
+            FlowIdentifiable(FBT_to_string(type)),
             FlowSimulatable(new FlowSimEngine()),
             /** flow element*/
             _type(type),
@@ -77,6 +78,38 @@ namespace kathryn{
     std::string getDescribe(){
         assert(false);
     }
+
+    std::vector<FlowBlockBase::sortEle> FlowBlockBase::sortSubAndConFbInOrder() {
+
+        std::vector<sortEle> poolEle;
+        /***pool sub block in to the array*/
+        for(int i = 0; i < subBlocks.size(); i++){
+            poolEle.push_back({subBlocks[i], subBlocksOrder[i]});
+        }
+        for(int i = 0; i < conBlocks.size(); i++){
+            poolEle.push_back({conBlocks[i], conBlocksOrder[i]});
+        }
+        /**sort array*/
+        std::sort(poolEle.begin(), poolEle.end());
+
+        return poolEle;
+    }
+
+    void FlowBlockBase::beforePrepareSim(FlowSimEngine::FLOW_Meta_afterMf simMeta) {
+        /**set flow for this element*/
+        simMeta._recName = getConCatInheritName();
+        getSimEngine()->setSimMeta(simMeta);
+        /*** invoke prepare sim in subelement in order*/
+        std::vector<FlowBlockBase::sortEle> poolEle = sortSubAndConFbInOrder();
+        for (auto& pl: poolEle){
+            pl.fb->beforePrepareSim(
+            {"AUTO_RESET_FLOWBLOCK_BASE",
+                     simMeta._writer->populateSubEle()
+                    });
+        }
+    }
+
+
 
 
     std::string FBT_to_string(FLOW_BLOCK_TYPE fbt){

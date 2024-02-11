@@ -114,7 +114,7 @@ namespace kathryn{
      * */
 
     class FlowSimulatable : public Simulatable{
-    private:
+    protected:
         bool           _isSimulated = false;
         FlowSimEngine* _engine = nullptr;
     public:
@@ -156,9 +156,7 @@ namespace kathryn{
             getSimEngine()->setRunningStatus();
         }
         /** initialize data before prepare Sim() is used*/
-        void beforePrepareSim(FlowSimEngine::FLOW_Meta_afterMf simMeta){
-            _engine->setSimMeta(std::move(simMeta));
-        }
+        virtual void beforePrepareSim(FlowSimEngine::FLOW_Meta_afterMf simMeta){};
         /** start Sim can be invoked multiple times*/
         void prepareSim() override{};
 

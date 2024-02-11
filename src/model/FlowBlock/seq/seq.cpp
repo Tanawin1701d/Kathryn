@@ -131,6 +131,21 @@ namespace kathryn{
 
     }
 
+
+    /*** for simulation*/
+
+    void SequenceEle::beforePrepareSim(FlowSimEngine::FLOW_Meta_afterMf simMeta){
+        if (_asmNode != nullptr){
+            /** for now we not allow asm node to write result data*/
+        }else if (_subBlock != nullptr){
+            simMeta._writer->populateSubEle();
+            simMeta._recName = "SEQ_RESET";
+            _subBlock->beforePrepareSim(simMeta);
+        }else{
+            assert(false);
+        }
+    }
+
     void SequenceEle::simulate() const{
 
         ////////////// simulate state node
@@ -305,7 +320,6 @@ namespace kathryn{
         onDetachBlock();
     }
 
-
     /** override flow block simulation*/
 
     void FlowBlockSeq::simStartCurCycle() {
@@ -333,5 +347,7 @@ namespace kathryn{
             subSeqMeta->finalizeSim();
         }
     }
+
+
 
 }

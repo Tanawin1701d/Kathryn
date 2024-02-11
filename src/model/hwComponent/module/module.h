@@ -88,6 +88,17 @@ namespace kathryn{
             }
         }
 
+        void beforePrepareSimSubElement_FB_only(std::vector<FlowBlockBase*>& subEleVec, flowColEle* flowColEle){
+            assert(flowColEle != nullptr);
+            for (auto* fb: subEleVec){
+                fb->beforePrepareSim({
+                    fb->getname(),
+                    flowColEle
+                });
+            }
+
+        }
+
 
         /** logic comp*/
         template<typename T>
