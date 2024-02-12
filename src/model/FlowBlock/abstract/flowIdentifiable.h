@@ -12,31 +12,40 @@ namespace kathryn{
     extern ull LAST_FLOW_IDENT_ID;
 
     class FlowBlockBase;
+    class Module;
 
     class FlowIdentifiable{
         ull _globalId = -1; ///// uniq id among all flowblock
         std::string _globalName; //////
         /** assign after parent is set*/
         std::vector<std::string> _inheritName;
-        FlowBlockBase* _parent   = nullptr;
-        bool isParrentAssignYet  = false;
+        FlowBlockBase* _parentFb    = nullptr;
+        Module*        _parentMod = nullptr;
+        bool isParentFbAssignYet  = false;
+        bool isParentMdAssignYet  = false;
+        bool isInheritNameAssignYet = false;
 
     public:
         explicit FlowIdentifiable(std::string localName);
 
         void setParent(FlowBlockBase* parentFlowBlock);
+        void setParent(Module* parentModule);
 
         std::vector<std::string>& getInheritName(){
-            assert(isParrentAssignYet);
+            assert(isParentMdAssignYet);
             return _inheritName;
         }
 
+        void assignInheritName();
+
         std::string getConCatInheritName(){
+            assert(isInheritNameAssignYet);
             std::string ret;
             for (auto str: _inheritName){
                 ret += str;
                 ret += "_";
             }
+            return ret;
         }
 
 

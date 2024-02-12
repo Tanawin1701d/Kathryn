@@ -4,6 +4,8 @@
 
 #include "simInterface.h"
 
+#include <utility>
+
 
 
 namespace kathryn{
@@ -16,12 +18,18 @@ namespace kathryn{
 
 
 
-    SimInterface::SimInterface(CYCLE limitCycle, std::string vcdFilePath):
-            _vcdWriter(new VcdWriter(vcdFilePath)),
-            _nextUserDescCycle(0),
+    SimInterface::SimInterface(CYCLE limitCycle,
+                               std::string vcdFilePath,
+                               std::string profileFilePath):
+            _vcdWriter(new VcdWriter(std::move(vcdFilePath))),
+            _flowWriter(new FlowWriter(std::move(profileFilePath))),
             _limitCycle(limitCycle)
     {
-        _ModuleSimEvent = new ModuleSimEvent(getGlobalModulePtr(),rstWire,_vcdWriter);
+        _ModuleSimEvent = new ModuleSimEvent(getGlobalModulePtr(),
+                                             rstWire,
+                                             _vcdWriter,
+                                             _flowWriter->getstartEle()
+                                             );
         SimController* simCtrl = getSimController();
         assert(simCtrl != nullptr);
         simCtrl->setLimitCycle(limitCycle);
@@ -29,6 +37,7 @@ namespace kathryn{
 
     SimInterface::~SimInterface() {
         delete _vcdWriter;
+        delete _flowWriter;
         delete _ModuleSimEvent;
         /**no need to delete user event because sim controller will delete it */
     }

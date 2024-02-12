@@ -9,18 +9,22 @@ namespace kathryn{
 
     ModuleSimEvent::ModuleSimEvent(Module* startMd,
                                    Operable* resetWire,
-                                   VcdWriter* writer):
+                                   VcdWriter* writer,
+                                   FlowColEle* flowColEle
+                                   ):
     EventBase(0, SIM_MODEL_PRIO),
     _startModule(startMd),
     _resetWire(resetWire),
-    _writer(writer)
+    _writer(writer),
+    _flowColEle(flowColEle)
     {
         assert(_startModule != nullptr);
         assert(_resetWire   != nullptr);
+        assert(_flowColEle  != nullptr);
 
         /**prepare simulation*/
         _writer->addNewVar(VST_WIRE, "CLK", {0,1});
-        _startModule->beforePrepareSim(_writer);
+        _startModule->beforePrepareSim(_writer, _flowColEle);
         _startModule->prepareSim();
 
 

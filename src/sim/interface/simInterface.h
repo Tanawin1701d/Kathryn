@@ -16,16 +16,18 @@ namespace kathryn{
 
     class SimInterface{
     protected:
-        VcdWriter*              _vcdWriter;
-        ModuleSimEvent*         _ModuleSimEvent;
+        VcdWriter*              _vcdWriter      = nullptr;
+        FlowWriter*             _flowWriter     = nullptr;
+        ModuleSimEvent*         _ModuleSimEvent = nullptr;
         std::vector<UserEvent*> _UserSimEvents;
-        CYCLE                   _nextUserDescCycle = 0;
         CYCLE                   _limitCycle = 0;
         UserEvent               simAgent;/** sim agent base can't change name*/
 
 
     public:
-        explicit SimInterface(CYCLE limitCycle, std::string vcdFilePath);
+        explicit SimInterface(CYCLE limitCycle,
+                              std::string vcdFilePath,
+                              std::string profileFilePath);
 
         virtual ~SimInterface();
 

@@ -84,8 +84,8 @@ namespace kathryn {
     public:
         struct FLOW_Meta_afterMf{
 
-            std::string      _recName = "UNDEFINED_SIGNAL_RECORD_NAME";
-            flowColEle*      _writer  = nullptr;
+            ///std::string      _recName = "UNDEFINED_SIGNAL_RECORD_NAME";
+            FlowColEle*      _writer  = nullptr;
         };
 
         FLOW_Meta_afterMf _meta;
@@ -95,13 +95,14 @@ namespace kathryn {
         void incUsedTime();
         int&  getAmtUsed(){return amtUsed;}
 
-        void setSimMeta(FLOW_Meta_afterMf meta){_isSimMetaSet = true; _meta = meta;}
+        void setSimMeta(FLOW_Meta_afterMf meta){
+            _isSimMetaSet = true;
+            _meta = std::move(meta);
+        }
 
         void setRunningStatus  (){isStateRunningIn = true;}
         void unsetRunning()      {isStateRunningIn = false;}
         bool isRunning   ()const {return isStateRunningIn; }
-
-        void finalizeData();
     };
 }
 #endif //KATHRYN_MODELSIMENGINE_H

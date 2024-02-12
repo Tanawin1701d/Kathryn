@@ -23,7 +23,7 @@ namespace kathryn{
      * ------ sim phase(loop)----------
      * 3. simStartCurCycle()    ----- to simulate value only in current cycle
      * 4. curCycleCollectData() ----- to collect data for simulation that time
-     * 5. simExitCollectData()  ----- to prepare simulation for next cycle
+     * [[unused]]5. simExitCollectData()  ----- to prepare simulation for next cycle
      * */
 
     class Simulatable{
@@ -53,7 +53,7 @@ namespace kathryn{
          * collect data that must be collect when simulation is
          * simmulated
          * **/
-        virtual void afterSimCollectData() = 0;
+
 
 
     };
@@ -101,8 +101,6 @@ namespace kathryn{
             assert(_engine->isCurValSim());
             _engine->iterate();
         }
-
-        void afterSimCollectData() override{};
 
     };
 
@@ -163,8 +161,6 @@ namespace kathryn{
         void curCycleCollectData() override{};
         /** exit sim can be invoked multiple times*/
 
-        /** for node this function will be not in use*/
-        void afterSimCollectData() override;
     };
 
     /***
@@ -176,7 +172,7 @@ namespace kathryn{
          explicit ModuleSimInterface():
                  Simulatable(){}
 
-         virtual void beforePrepareSim(VcdWriter* vcdWriter, flowColEle* flowColEle) = 0;
+         virtual void beforePrepareSim(VcdWriter* vcdWriter, FlowColEle* flowColEle) = 0;
      };
 
 }

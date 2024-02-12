@@ -148,7 +148,7 @@ namespace kathryn{
     }
 
     /** override simulation*/
-    void Module::beforePrepareSim(VcdWriter* vcdWriter, flowColEle* flowColEle){
+    void Module::beforePrepareSim(VcdWriter* vcdWriter, FlowColEle* flowColEle){
 
         assert(vcdWriter);
         /**RTL BEFORE PREPARE SIM(SP)*/

@@ -131,21 +131,6 @@ namespace kathryn{
 
     }
 
-
-    /*** for simulation*/
-
-    void SequenceEle::beforePrepareSim(FlowSimEngine::FLOW_Meta_afterMf simMeta){
-        if (_asmNode != nullptr){
-            /** for now we not allow asm node to write result data*/
-        }else if (_subBlock != nullptr){
-            simMeta._writer->populateSubEle();
-            simMeta._recName = "SEQ_RESET";
-            _subBlock->beforePrepareSim(simMeta);
-        }else{
-            assert(false);
-        }
-    }
-
     void SequenceEle::simulate() const{
 
         ////////////// simulate state node
@@ -185,8 +170,9 @@ namespace kathryn{
     }
 
     bool SequenceEle::isBlockOrNodeRunning() const{
-        if (_asmNode != nullptr){
-            return _asmNode->isBlockOrNodeRunning();
+        if (_stateNode != nullptr){
+            /**do not use asmNode as a trigger*/
+            return _stateNode->isBlockOrNodeRunning();
         }
         if (_subBlock != nullptr){
             return _subBlock->isBlockOrNodeRunning();

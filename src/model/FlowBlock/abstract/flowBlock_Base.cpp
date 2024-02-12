@@ -95,17 +95,18 @@ namespace kathryn{
         return poolEle;
     }
 
+
+
+    /** simulation section*/
+
     void FlowBlockBase::beforePrepareSim(FlowSimEngine::FLOW_Meta_afterMf simMeta) {
         /**set flow for this element*/
-        simMeta._recName = getConCatInheritName();
+        simMeta._writer->localName = getConCatInheritName();
         getSimEngine()->setSimMeta(simMeta);
         /*** invoke prepare sim in subelement in order*/
         std::vector<FlowBlockBase::sortEle> poolEle = sortSubAndConFbInOrder();
         for (auto& pl: poolEle){
-            pl.fb->beforePrepareSim(
-            {"AUTO_RESET_FLOWBLOCK_BASE",
-                     simMeta._writer->populateSubEle()
-                    });
+            pl.fb->beforePrepareSim({simMeta._writer->populateSubEle()});
         }
     }
 

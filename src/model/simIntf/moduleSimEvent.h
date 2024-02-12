@@ -12,16 +12,18 @@ namespace kathryn{
 
     class ModuleSimEvent : public EventBase{
     private:
-        Module*    _startModule = nullptr;
-        Operable*  _resetWire   = nullptr;
-        VcdWriter* _writer      = nullptr;
-        ull        _clockIntv   = 10;
+        Module*     _startModule = nullptr;
+        Operable*   _resetWire   = nullptr;
+        VcdWriter*  _writer      = nullptr;
+        FlowColEle* _flowColEle  = nullptr;
+        ull        _clockIntv    = 10;
 
     public:
 
         explicit ModuleSimEvent(Module*    startMd,
                                 Operable*  resetWire, ///// active high
-                                VcdWriter* writer
+                                VcdWriter* writer,
+                                FlowColEle* flowColEle
         );
 
 

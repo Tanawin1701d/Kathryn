@@ -5,10 +5,4 @@
 #include "modelSimInterface.h"
 
 namespace kathryn {
-    void FlowSimulatable::afterSimCollectData() {
-        assert(_engine != nullptr);
-        _engine->finalizeData();
-    }
-
-
 }

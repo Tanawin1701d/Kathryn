@@ -88,12 +88,15 @@ namespace kathryn{
             }
         }
 
-        void beforePrepareSimSubElement_FB_only(std::vector<FlowBlockBase*>& subEleVec, flowColEle* flowColEle){
+        void beforePrepareSimSubElement_FB_only(std::vector<FlowBlockBase*>& subEleVec, FlowColEle* flowColEle){
             assert(flowColEle != nullptr);
+            /**set writer for this ele*/
+            flowColEle->localName = concat_inheritName();
+            flowColEle->freq = 0;
+            /**set writer for sub flow block*/
             for (auto* fb: subEleVec){
                 fb->beforePrepareSim({
-                    fb->getname(),
-                    flowColEle
+                    flowColEle->populateSubEle()
                 });
             }
 
@@ -168,7 +171,7 @@ namespace kathryn{
         std::string getMdIdentVal() override{return getIdentDebugValue();};
 
         /** override simulation */
-        void beforePrepareSim(VcdWriter* vcdWriter, flowColEle* flowColEle) override;
+        void beforePrepareSim(VcdWriter* vcdWriter, FlowColEle* flowColEle) override;
         void prepareSim() override;
         void simStartCurCycle() override;
         void curCycleCollectData() override;

@@ -42,6 +42,8 @@ namespace kathryn{
     };
 
     static std::string vcdPath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/simAutoTest9.vcd";
+    static std::string profilePath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/profAutoTest9.vcd";
+
 
     class sim9 :public SimAutoInterface{
     public:
@@ -50,7 +52,8 @@ namespace kathryn{
 
         sim9(testSimMod9* md):SimAutoInterface(2,
                                               200,
-                                              vcdPath),
+                                              vcdPath,
+                                              profilePath),
                              _md(md)
         {}
 

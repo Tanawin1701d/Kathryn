@@ -89,7 +89,8 @@ namespace kathryn {
         void on_module_final(Module* ptr);
 
         /** control flow block handler*/
-        bool           isAllFlowStackEmpty();
+        void assignFlowBlockParent(FlowBlockBase* fb);
+        bool isAllFlowStackEmpty();
         void tryPurifyFlowStack();
         void on_attach_flowBlock(FlowBlockBase* fb);
         void on_detach_flowBlock(FlowBlockBase* fb);

@@ -59,23 +59,19 @@ namespace kathryn{
             logMF(topFb, "addFlowBlock to module");
             Module* parentMod = getTargetModulePtr();
             parentMod->addFlowBlock(topFb);
-            topFb->setParent(nullptr);
         }else if (topFb->getJoinFbPol() == FLOW_JO_CON_FLOW){
             /**it is consecutive block*/
             logMF(topFb, "addFlowBlock to be con module");
             frontFb->addConFlowBlock(topFb);
-            topFb->setParent(frontFb);
         }else if (topFb->getJoinFbPol() == FLOW_JO_SUB_FLOW){
             /**it is sub block*/
             logMF(topFb, "addFlowBlock to be sub module");
             frontFb->addSubFlowBlock(topFb);
-            topFb->setParent(frontFb);
         }else if (topFb->getJoinFbPol() == FLOW_JO_EXT_FLOW){
             logMF(topFb, "extract flowblock and give it to basic asm");
             for (auto basicNode: topFb->getBasicNode()){
                 frontFb->addElementInFlowBlock(basicNode);
             }
-            topFb->setParent(frontFb);
             /***we must delete this due to*/
             ///// delete topFb;
         }else{
@@ -83,6 +79,21 @@ namespace kathryn{
         }
 
     }
+
+    void ModelController::assignFlowBlockParent(FlowBlockBase* fb){
+
+        FlowBlockBase* topFb = getTopFlowBlockBase();
+
+        /** assign master module*/
+        Module* parentMod = getTargetModuleEle().md;
+        assert(parentMod != nullptr);
+        fb->setParent(parentMod);
+
+        if (topFb != nullptr){
+            fb->setParent(topFb);
+        }
+    }
+
 
     bool ModelController::isAllFlowStackEmpty(){
         bool emptyStatus = true;
@@ -109,6 +120,9 @@ namespace kathryn{
             logMF(fb, "try purify stack");
             tryPurifyFlowStack();
         }
+
+        assignFlowBlockParent(fb);
+        fb->assignInheritName();
         /*** add to stack*/
         pushFlowBlock(fb);
     }

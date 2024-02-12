@@ -49,13 +49,36 @@ namespace kathryn{
 
     ////////////////////////////////////// for flow collector
 
-    FlowCollector::FlowCollector(std::string fileName)
+    FlowWriter::FlowWriter(std::string fileName)
         : FileWriterBase(fileName){
-        startEle = new flowColEle({"MAIN_FLOW_COLLECTOR",
-                                   0,
-                                   nullptr});
+        startEle = new FlowColEle({"MAIN_FLOW_COLLECTOR",0});
     }
 
+    FlowWriter::~FlowWriter(){
+        startWriteData();
+    }
 
+    void FlowWriter::startWriteData(){
+        assert(startEle != nullptr);
 
+        std::stack<FlowColEle*> dfsSt;
+        addData(startEle->getPrintStr());
+        dfsSt.push(startEle);
+
+        /** do depth first search*/
+        while (!dfsSt.empty()){
+            ////////// get element
+            FlowColEle* flowColEle = dfsSt.top();
+            ////////// case thisEle
+            if (flowColEle->isAllSubElePrinted()){
+                dfsSt.pop();
+            }else{
+                /**we must print next*/
+                FlowColEle* nextFlowEle = flowColEle->getNextPrintSubEle();
+                flowColEle->iteratePrintIdx();
+                addData(nextFlowEle->getPrintStr());
+                dfsSt.push(nextFlowEle);
+            }
+        }
+    }
 }

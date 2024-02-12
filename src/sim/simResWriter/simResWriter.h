@@ -6,7 +6,8 @@
 #define KATHRYN_SIMRESWRITER_H
 
 #include<cassert>
-#include <vector>
+#include<vector>
+#include<stack>
 #include "util/fileWriter/fileWriterBase.h"
 #include "model/hwComponent/abstract/Slice.h"
 
@@ -25,6 +26,8 @@ namespace kathryn{
     std::string vcdSigTypeToStr(VCD_SIG_TYPE st);
 
     class ValRep;
+
+    /** for simulate data collection*/
     class VcdWriter : public FileWriterBase{
 
 
@@ -38,26 +41,59 @@ namespace kathryn{
 
     };
 
-    struct flowColEle{
+
+    /***/
+
+    struct FlowColEle{
         std::string localName;
         int freq = 0;
-        std::vector<flowColEle*> subEle;
+        std::vector<FlowColEle*> subEle;
+        /** for printing and traversing*/
+        int nextPrintedId = 0;
+        int curprintIdent = 0;
 
-        flowColEle* populateSubEle(){
-            subEle.push_back(new flowColEle);
+        FlowColEle* populateSubEle(){
+            subEle.push_back(new FlowColEle);
             return *subEle.rbegin();
         }
 
+        bool isAllSubElePrinted() const{
+            return nextPrintedId == subEle.size();
+        }
+        FlowColEle* getNextPrintSubEle(){
+            subEle[nextPrintedId]->curprintIdent = curprintIdent + 4;
+            return subEle[nextPrintedId];
+        }
+        void iteratePrintIdx(){
+            nextPrintedId++;
+        }
+
+        std::string getPrintStr() const{
+            std::string ret;
+            for (int i = 0; i < curprintIdent; i++){
+                ret += " ";
+            }
+            ret += localName;
+            ret += "      ";
+            ret += std::to_string(freq);
+            ret += "\n";
+            return ret;
+        }
+
+
+
     };
 
-    class FlowCollector : public FileWriterBase{
+    class FlowWriter : public FileWriterBase{
     private:
-        flowColEle* startEle = nullptr;
+        FlowColEle* startEle = nullptr;
 
     public:
-        FlowCollector(std::string fileName);
+        explicit FlowWriter(std::string fileName);
 
-        flowColEle* getstartEle() {
+        ~FlowWriter();
+
+        FlowColEle* getstartEle() {
             assert(startEle != nullptr);
             return startEle;
         }

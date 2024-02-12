@@ -4,6 +4,8 @@
 
 
 #include "simAutoInterface.h"
+
+#include <utility>
 #include "simMng.h"
 
 namespace kathryn{
@@ -11,12 +13,13 @@ namespace kathryn{
 
     SimAutoInterface::SimAutoInterface(int simId,
                                        CYCLE limitCycle,
-                                       std::string vcdFilePath) :
-    SimInterface(limitCycle,std::move(vcdFilePath)),
+                                       std::string vcdFilePath,
+                                       std::string profileFilePath
+                                       ) :
+    SimInterface(limitCycle,
+                 std::move(vcdFilePath),
+                 std::move(profileFilePath)),
     _simId(simId){
-
-        /////addSimTestToPool(this);
-
     }
 
     void SimAutoInterface::testAndPrint(std::string testName, ValRep &simValLhs, ValRep& testValRhs) {
