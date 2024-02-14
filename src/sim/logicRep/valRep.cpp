@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <algorithm>
+#include <iostream>
 
 #include "valRep.h"
 
@@ -154,7 +155,14 @@ namespace kathryn{
         assert(desSl.checkValidSlice());
         /** extend value to match current val */
         ValRep extendedSrcVal(srcVal.getZeroExtend(getLen()));
+        ///std::cout << "not extend ValSrc" << std::endl;
+        ///std::cout << srcVal.getBiStr() << std::endl;
+        ///std::cout << "extend ValSrc" << std::endl;
+        ///std::cout << extendedSrcVal.getBiStr() << std::endl;
+        ///assert(srcVal._val[0] != 2);
+
         extendedSrcVal  = extendedSrcVal << desSl.start;
+        extendedSrcVal.fillZeroToValrep(desSl.stop);
         /** clean the update portion to prepare for replacing */
         this->fillZeroToValrep(desSl.start, desSl.stop);
         /** replacing*/
@@ -454,6 +462,9 @@ namespace kathryn{
 
     ValRep ValRep::operator<<(const ValRep &rhs) {
 
+        ////std::cout << "---------------------- " << rhs._val[0] << std::endl;
+        ////std::cout << getBiStr() << std::endl;
+
         /** we don't let user shift than 2^64 */
         ValRep preRet(_len);
         assert(rhs._valSize == 1);
@@ -467,13 +478,15 @@ namespace kathryn{
                 /** do minor shift*/
                 preRet._val[valIdx] = preRet._val[valIdx] << shiftminorVal;
                 /*** if there are minor value to shift*/
-                if ((valIdx - shiftEntireVal - 1) >= 0){
+                if ( ((valIdx - shiftEntireVal - 1) >= 0) && (shiftminorVal > 0)){
                     preRet._val[valIdx] |= (_val[valIdx - shiftEntireVal - 1] >> (bitSizeOfUll - shiftminorVal));
                 }
             }else{
                 preRet._val[valIdx] = 0;
             }
         }
+
+        /////std::cout << preRet.getBiStr() << std::endl;
         /** prevent overflow bit pollute*/
         preRet.fillZeroToValrep(preRet.getLen());
         //////////////////////////////////////////////////////////////
@@ -501,7 +514,7 @@ namespace kathryn{
 
                     /** do minor shift this is ensured that less than 64 bit*/
                     preRet._val[valIdx] = preRet._val[valIdx] >> shiftminorVal;
-                    if ((valIdx + shiftEntireVal + 1) < _valSize){
+                    if ( ((valIdx + shiftEntireVal + 1) < _valSize) && (shiftminorVal > 0)){
                         preRet._val[valIdx] |= (_val[valIdx + shiftEntireVal + 1] << (bitSizeOfUll - shiftminorVal));
                     }
             }else{
