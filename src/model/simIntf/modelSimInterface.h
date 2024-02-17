@@ -22,6 +22,7 @@ namespace kathryn{
      * 2. prepareSim() ----- to process some infomation before simStart
      * ------ sim phase(loop)----------
      * 3. simStartCurCycle()    ----- to simulate value only in current cycle
+     * 4. simStartNextCycle()   ----- to simulate value only in next cycle
      * 4. curCycleCollectData() ----- to collect data for simulation that time
      * [[unused]]5. simExitCollectData()  ----- to prepare simulation for next cycle
      * */
@@ -38,10 +39,14 @@ namespace kathryn{
           * but store in buffer place
           * */
         virtual void simStartCurCycle() = 0;
+
+        /**
+         * simulate next cycle value from current cycle
+         * */
+        virtual void simStartNextCycle() = 0;
         /**
          * collect data to stat or vcd file
          * */
-
         virtual void curCycleCollectData() = 0;
         /**
          * move value from buffer place to actual place
@@ -89,6 +94,11 @@ namespace kathryn{
         /** before sim controller start prepare the system*/
         void prepareSim() override{
             _engine->declareSimVar();
+        }
+
+        /**simulate next cycle value for current cycle*/
+        void simStartNextCycle() override{
+            assert(false);
         }
 
         /****/
@@ -155,6 +165,10 @@ namespace kathryn{
         }
         /** initialize data before prepare Sim() is used*/
         virtual void beforePrepareSim(FlowSimEngine::FLOW_Meta_afterMf simMeta){};
+        /**simulate next cycle value for current cycle*/
+        void simStartNextCycle() override{
+            assert(false);
+        }
         /** start Sim can be invoked multiple times*/
         void prepareSim() override{};
 
@@ -173,6 +187,12 @@ namespace kathryn{
                  Simulatable(){}
 
          virtual void beforePrepareSim(VcdWriter* vcdWriter, FlowColEle* flowColEle) = 0;
+
+         /**simulate next cycle value for current cycle*/
+         void simStartNextCycle() override{
+             assert(false);
+         }
+
      };
 
 }

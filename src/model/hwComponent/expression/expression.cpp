@@ -78,6 +78,15 @@ namespace kathryn{
         if (getSimEngine()->isCurValSim()){
             return;
         }
+        if (getGlobalId() == 49)
+        {
+            std::cout << "s49" << std::endl;
+        };
+        if (getGlobalId() == 29)
+        {
+            std::cout << "s29" << std::endl;
+        };
+
         getSimEngine()->setCurValSimStatus();
 
         ValRep  firstValRep(1); /**the size will be change*/
@@ -88,6 +97,10 @@ namespace kathryn{
             _a->castToRtlSimItf()->simStartCurCycle();
             assert(_a->castToRtlSimItf()->getSimEngine()->isCurValSim());
             firstValRep =  _a->getExactSimCurValue().slice(_a->getOperableSlice());
+            if (getGlobalId() == 49)
+            {
+                std::cout << "get to invert" << _a->getExactSimCurValue().getBiStr() << "    " << &_a->getExactSimCurValue()  << std::endl;
+            }
         }
         /**value b*/
         if (_b != nullptr){
@@ -95,6 +108,7 @@ namespace kathryn{
             assert(_b->castToRtlSimItf()->getSimEngine()->isCurValSim());
             secValRep =  _b->getExactSimCurValue().slice(_b->getOperableSlice());
         }
+
 
         switch (_op) {
 
@@ -165,6 +179,13 @@ namespace kathryn{
             case LOGIC_OP_COUNT:
                 break;
         }
+
+        if (getGlobalId() == 29)
+        {
+            std::cout << "firstCmp" << desValRep.getBiStr() << "       " << &desValRep << std::endl;
+        };
+
+
         desValRep.fillZeroToValrep(getSlice().getSize());
         assert(getSlice().start == 0);
         assert(desValRep.getLen() == getSlice().getSize());

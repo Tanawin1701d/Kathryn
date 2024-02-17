@@ -81,7 +81,7 @@ namespace kathryn{
         assert(!allStatement.empty());
 
         /**add condition to state*/
-        Operable* prevFalse = &(!(*allCondes[0]));
+        Operable* prevFalse = &(~(*allCondes[0]));
         /** assign first first if*/
         allStatement[0]->addConditionToAllNode(allCondes[0], BITWISE_AND);
         int statementId = 1;
@@ -90,7 +90,7 @@ namespace kathryn{
                 allStatement[statementId]->addConditionToAllNode(
                         &((*allCondes[statementId]) & (*prevFalse)),
                         BITWISE_AND);
-                prevFalse = &((*prevFalse) & !(*allCondes[statementId]));
+                prevFalse = &((*prevFalse) & ~(*allCondes[statementId]));
             }else{
                 /** case else statement*/
                 assert(statementId == (allCondes.size())); /// check no ambiguous statement

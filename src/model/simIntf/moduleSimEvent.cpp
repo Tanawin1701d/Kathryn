@@ -42,7 +42,10 @@ namespace kathryn{
             resetSimEngine->setCurValSimStatus();
             resetSimEngine->getCurVal() = resetVal;
         }
+        ////std::cout << "--------------------------------------------------------" <<std::endl;
         _startModule->simStartCurCycle();
+        _startModule->simStartNextCycle();
+        ////std::cout << "--------------------------------------------------------" <<std::endl;
         /***set reset wire */
 
     }

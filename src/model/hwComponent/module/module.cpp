@@ -193,20 +193,29 @@ namespace kathryn{
 
         /**RTL SIM(SP)*/
         for (int i = 0; i < SP_CNT_REG; i++){
-            simStartSubElement(_spRegs[i]);
+            simStartCurSubElement(_spRegs[i]);
         }
         /**RTL SIM(USER)*/
-        simStartSubElement(_userRegs);
-        simStartSubElement(_userWires);
-        simStartSubElement(_userExpressions);
-        simStartSubElement(_userVals);
+        simStartCurSubElement(_userRegs);
+        simStartCurSubElement(_userWires);
+        simStartCurSubElement(_userExpressions);
+        simStartCurSubElement(_userVals);
         /**COMPLEX SUB SIM*/
-        simStartSubElement(_flowBlockBases);
-        simStartSubElement(_userSubModule);
+        simStartCurSubElement(_userSubModule);
+        simStartCurSubElement(_flowBlockBases);
 
         /**simulate flow block in which node is implicitly invoked*/
+    }
 
-
+    void Module::simStartNextCycle() {
+        /**RTL SIM(SP)*/
+        for (int i = 0; i < SP_CNT_REG; i++){
+            simStartNextSubElement(_spRegs[i]);
+        }
+        /**RTL SIM(USER)*/
+        simStartNextSubElement(_userRegs);
+        /**COMPLEX SUB SIM*/
+        simStartNextSubElement(_userSubModule);
     }
 
     void Module::curCycleCollectData() {
@@ -220,9 +229,11 @@ namespace kathryn{
         curCollectData(_userExpressions);
         curCollectData(_userVals);
         /**COMPLEX SUB SIM*/
-        curCollectData(_flowBlockBases);
         curCollectData(_userSubModule);
+        curCollectData(_flowBlockBases);
     }
+
+
 
     void Module::simExitCurCycle() {
 
@@ -237,11 +248,13 @@ namespace kathryn{
         simExitSubElement(_userExpressions);
         simExitSubElement(_userVals);
         /**COMPLEX SUB SIM*/
-        simExitSubElement(_flowBlockBases);
         simExitSubElement(_userSubModule);
+        simExitSubElement(_flowBlockBases);
 
         /** exit flowblock first*/
     }
+
+
 
 //    void Module::log(){
 //        /***dfs in all flowBLock and sub FLow block*/

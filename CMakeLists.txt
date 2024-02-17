@@ -150,6 +150,7 @@ add_executable(Kathryn main.cpp
         src/model/FlowBlock/abstract/flowIdentifiable.h
         src/model/FlowBlock/abstract/flowIdentifiable.cpp
         src/test/autoSim/testCase/simAutoTest12.cpp
+        src/test/autoSim/testCase/simAutoTest13.cpp
 
 
 )

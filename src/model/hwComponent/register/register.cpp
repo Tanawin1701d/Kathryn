@@ -82,15 +82,22 @@ namespace kathryn{
         ///// if in This cycle the component is simmulated then skip simulation
         RtlSimEngine* simEngine = getSimEngine();
         assert(simEngine->isCurValSim());
-
-        if (simEngine->isNextValSim()){
-            return;
-        }
-        simEngine->setNextValSimStatus();
-        simEngine->getNextVal() = simEngine->getCurVal();
-        assignValRepCurCycle(getSimEngine()->getNextVal());
-        //// we assign false because it is register, we must get from back cycle
     }
+
+    void Reg::simStartNextCycle() {
+
+        RtlSimEngine* simEngine = getSimEngine();
+        assert(simEngine->isCurValSim());
+        assert(!simEngine->isNextValSim());
+
+        simEngine->setNextValSimStatus();
+        simEngine->getNextVal() = simEngine->getCurVal(); ///// get curval to be next val because it may be no change
+        assignValRepCurCycle(getSimEngine()->getNextVal());
+    }
+
+
+
+
 
 //    std::vector<std::string> Reg::getDebugAssignmentValue() {
 //        std::vector<std::string> results;

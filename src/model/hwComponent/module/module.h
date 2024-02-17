@@ -114,12 +114,21 @@ namespace kathryn{
 
         /** logic comp/flowBlock/subModule    */
         template<typename T>
-        void simStartSubElement(std::vector<T*>& subEleVec){
+        void simStartCurSubElement(std::vector<T*>& subEleVec){
             for (auto ele: subEleVec){
                 assert(ele != nullptr);
                 ele->simStartCurCycle();
             }
         }
+
+        template<typename T>
+        void simStartNextSubElement(std::vector<T*>& subEleVec){
+            for(auto ele: subEleVec){
+                assert(ele != nullptr);
+                ele->simStartNextCycle();
+            }
+        }
+
 
         template<typename T>
         void curCollectData(std::vector<T*>& subEleVec){
@@ -174,6 +183,7 @@ namespace kathryn{
         void beforePrepareSim(VcdWriter* vcdWriter, FlowColEle* flowColEle) override;
         void prepareSim() override;
         void simStartCurCycle() override;
+        void simStartNextCycle() override;
         void curCycleCollectData() override;
         void simExitCurCycle() override;
 
