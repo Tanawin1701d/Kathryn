@@ -113,6 +113,11 @@ namespace kathryn {
         ValRep& sv() override{
             assert(false);
         }
+
+        Operable* checkShortCircuit() override{
+            return _master->checkShortCircuit();
+
+        }
     };
 }
 

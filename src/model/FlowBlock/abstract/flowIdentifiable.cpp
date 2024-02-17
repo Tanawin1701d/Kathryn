@@ -10,9 +10,9 @@ namespace kathryn{
 
     ull LAST_FLOW_IDENT_ID = 0;
 
-    FlowIdentifiable::FlowIdentifiable(std::string name) {
+    FlowIdentifiable::FlowIdentifiable(std::string localName) {
         _globalId = LAST_FLOW_IDENT_ID;
-        _globalName = name + std::to_string(_globalId);
+        _globalName = localName + std::to_string(_globalId);
     }
 
     void FlowIdentifiable::setParent(FlowBlockBase *parentFlowBlock) {

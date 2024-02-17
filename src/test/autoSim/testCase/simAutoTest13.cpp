@@ -22,6 +22,8 @@ namespace kathryn{
         makeVal(five, 67, 5);
         makeVal(ss,   8, 66);
         makeVal(ten, 67, 10);
+        makeWire(x1, 5);
+        makeWire(x2, 5);
 
         explicit testSimMod13(int x): Module(){}
 
@@ -37,6 +39,8 @@ namespace kathryn{
                         b <<= b + one;
                     }celif(a >= five){
                         b3 <<= b3 + one;
+                        x1 = x2;
+                        x2 = x1;
                     }celse{
                         b2 <<= b2 + one;
                     }
@@ -107,5 +111,5 @@ namespace kathryn{
 
     };
 
-    Sim13TestEle ele13(-1);
+    Sim13TestEle ele13(13);
 }

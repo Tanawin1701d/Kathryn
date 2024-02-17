@@ -5,6 +5,7 @@
 #include "controller.h"
 
 
+
 namespace kathryn{
 
     /** central initializer*/
@@ -49,6 +50,41 @@ namespace kathryn{
     Module* getGlobalModulePtr(){
         return getControllerPtr()->getGlobalModule();
     }
+
+
+
+    std::string ModelController::getCurModelStack() {
+
+        std::vector<Module_Stack_Element> mdVec = cvtStackToVec(moduleStack);
+        std::vector<FlowBlockBase*>       fbVec = cvtStackToVec(flowBlockStacks[FLOW_ST_BASE_STACK]);
+
+        int accumIdent = 0;
+        std::string result;
+
+        for (auto mod: mdVec){
+            result += (mod.md->getVarName() + "\n");
+            result += genConString(' ', accumIdent);
+            accumIdent += 4;
+        }
+
+        for (int i = 0; i < fbVec.size(); i++){
+            std::string position;
+            if (i > 0){
+                if (fbVec[i]->getFlowType() != CSELIF && fbVec[i]->getFlowType() != CSELSE) {
+                    position += " subBlockIdx " + std::to_string(fbVec[i - 1]->getSubBlocks().size()) + "    ";
+                }
+                position += " conBlockIdx " + std::to_string(fbVec[i-1]->getConBlocks().size());
+            }
+            result += (fbVec[i]->getGlobalName() + "@ " + position + "\n" );
+            result += genConString(' ', accumIdent);
+            accumIdent += 4;
+        }
+
+        return result;
+
+    }
+
+
 
 //    void freeControllerPtr(){
 //        ///// finalize global module if it have

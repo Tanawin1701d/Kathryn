@@ -124,6 +124,14 @@ namespace kathryn{
             /** assume that node wrap that appear to module is not used anymore. */
         }
 
+        /**check short circuit*/
+        for(auto expr: _userExpressions){
+            expr->startCheckShortCircuit();
+        }
+        for(auto wire: _userWires){
+            wire->startCheckShortCircuit();
+        }
+
     }
 
 

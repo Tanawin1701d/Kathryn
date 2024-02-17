@@ -86,6 +86,45 @@ namespace kathryn{
 
     }
 
+    Operable *Wire::checkShortCircuit() {
+
+        if (isInCheckPath){
+            return this;
+        }
+
+        isInCheckPath = true;
+
+        Operable* result = nullptr;
+
+        for (auto upEvent: _updateMeta){
+            assert(upEvent != nullptr);
+            if (upEvent->srcUpdateValue != nullptr) {
+                result = upEvent->srcUpdateValue->checkShortCircuit();
+                if (result != nullptr) {
+                    return result;
+                }
+            }
+            if (upEvent->srcUpdateCondition != nullptr) {
+                result = upEvent->srcUpdateCondition->checkShortCircuit();
+                if (result != nullptr) {
+                    return result;
+                }
+            }
+            if(upEvent->srcUpdateState != nullptr){
+                result =  upEvent->srcUpdateState->checkShortCircuit();
+                if (result != nullptr){
+                    return result;
+                }
+            }
+
+        }
+
+        isInCheckPath = false;
+        return nullptr;
+    }
+
+
+
 
 
 

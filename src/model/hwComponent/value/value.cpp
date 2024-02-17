@@ -43,4 +43,9 @@ namespace kathryn{
         getSimEngine()->getNextVal() = rawValue;
     }
 
+    Operable *Val::checkShortCircuit() {
+        return nullptr;
+    }
+
+
 }

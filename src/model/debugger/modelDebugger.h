@@ -24,6 +24,11 @@ namespace kathryn{
 
     };
 
+
+    void mfAssert(bool valid, std::string msg);
+
+
+
 }
 
 #endif //KATHRYN_MODELDEBUGGER_H

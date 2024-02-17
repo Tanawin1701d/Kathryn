@@ -64,6 +64,9 @@ namespace kathryn {
         virtual Identifiable*   castToIdent() = 0;
         virtual RtlSimulatable* castToRtlSimItf() = 0;
         virtual ValRep&         sv() = 0;
+
+        bool isInCheckPath = false;
+        virtual Operable* checkShortCircuit() = 0;
     };
 
 

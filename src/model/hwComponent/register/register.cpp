@@ -30,6 +30,7 @@ namespace kathryn{
 
     Reg& Reg::operator=(Operable& b) {
         /** todo first version we not support this operator*/
+        mfAssert(false, "reg don't support this = assigment");
         assert(false);
     }
 
@@ -93,6 +94,10 @@ namespace kathryn{
         simEngine->setNextValSimStatus();
         simEngine->getNextVal() = simEngine->getCurVal(); ///// get curval to be next val because it may be no change
         assignValRepCurCycle(getSimEngine()->getNextVal());
+    }
+
+    Operable* Reg::checkShortCircuit(){
+        return nullptr;
     }
 
 

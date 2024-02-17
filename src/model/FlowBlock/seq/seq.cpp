@@ -233,7 +233,7 @@ namespace kathryn{
     }
 
     void FlowBlockSeq::buildHwComponent() {
-        assert(!_subSeqMetas.empty());
+        mfAssert(!_subSeqMetas.empty(), "seqBlock has no assignment");
         assert(conBlocks.empty());
         NodeWrapCycleDet cycleDet;
         /** generate hardware*/

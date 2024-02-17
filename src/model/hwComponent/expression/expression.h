@@ -50,7 +50,7 @@ namespace kathryn {
 
         void com_final() override {};
         /** override assignable*/
-        expression& operator <<= (Operable  & b) override {std::cout << "we not support <<= operator in exprMetas"; assert(false);}
+        expression& operator <<= (Operable  & b) override {mfAssert(false, "expr don't support this <<= assigment"); assert(false);}
         expression& operator =   (Operable  & b) override;
         expression& operator =   (expression& b);
         /**override operable*/
@@ -79,6 +79,9 @@ namespace kathryn {
 
         /** override simulator interface*/
         void simStartCurCycle() override;
+
+        /**check short*/
+        Operable* checkShortCircuit() override;
 
     };
 

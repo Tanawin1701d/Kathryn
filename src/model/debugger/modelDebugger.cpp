@@ -5,6 +5,7 @@
 #include <cassert>
 #include "modelDebugger.h"
 #include "util/logger/logger.h"
+#include "model/controller/controller.h"
 
 
 namespace kathryn{
@@ -17,4 +18,14 @@ namespace kathryn{
         mdLogVal->addVal("-------------------------------");
 
     }
+
+    void mfAssert(bool valid, std::string msg){
+        if (valid){
+            return;
+        }
+        std::cout << msg << std::endl;
+        std::cout << getControllerPtr()->getCurModelStack();
+        assert(false);
+    }
+
 }

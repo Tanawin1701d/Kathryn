@@ -78,14 +78,6 @@ namespace kathryn{
         if (getSimEngine()->isCurValSim()){
             return;
         }
-        if (getGlobalId() == 49)
-        {
-            std::cout << "s49" << std::endl;
-        };
-        if (getGlobalId() == 29)
-        {
-            std::cout << "s29" << std::endl;
-        };
 
         getSimEngine()->setCurValSimStatus();
 
@@ -97,10 +89,6 @@ namespace kathryn{
             _a->castToRtlSimItf()->simStartCurCycle();
             assert(_a->castToRtlSimItf()->getSimEngine()->isCurValSim());
             firstValRep =  _a->getExactSimCurValue().slice(_a->getOperableSlice());
-            if (getGlobalId() == 49)
-            {
-                std::cout << "get to invert" << _a->getExactSimCurValue().getBiStr() << "    " << &_a->getExactSimCurValue()  << std::endl;
-            }
         }
         /**value b*/
         if (_b != nullptr){
@@ -180,15 +168,33 @@ namespace kathryn{
                 break;
         }
 
-        if (getGlobalId() == 29)
-        {
-            std::cout << "firstCmp" << desValRep.getBiStr() << "       " << &desValRep << std::endl;
-        };
-
-
         desValRep.fillZeroToValrep(getSlice().getSize());
         assert(getSlice().start == 0);
         assert(desValRep.getLen() == getSlice().getSize());
+    }
+
+    Operable* expression::checkShortCircuit(){
+        if (isInCheckPath){
+            return this;
+        }
+        isInCheckPath = true;
+
+        Operable* result;
+        if (_a != nullptr){
+            result = _a->checkShortCircuit();
+            if (result != nullptr){
+                return result;
+            }
+        }
+        if (_b != nullptr){
+            result = _b->checkShortCircuit();
+            if (result != nullptr){
+                return result;
+            }
+        }
+
+        isInCheckPath = false;
+        return nullptr;
     }
 
 //    std::vector<std::string> expression::getDebugAssignmentValue() {

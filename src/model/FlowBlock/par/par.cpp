@@ -48,7 +48,9 @@ namespace kathryn{
 
     void
     FlowBlockPar::buildHwComponent() {
-        assert((!basicNodes.empty()) || (!subBlocks.empty()));
+        mfAssert((!basicNodes.empty()) || (!subBlocks.empty()),
+                 "parBlock has no assignment"
+                 );
         assert(conBlocks.empty());
 
         /** build node for basic assignment*/

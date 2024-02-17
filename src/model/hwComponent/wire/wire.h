@@ -21,7 +21,7 @@ namespace kathryn{
 
         /**override assignable*/
         [[maybe_unused]]
-        Wire& operator <<= (Operable& b) override {std::cout << "we not support <<= operator in wire"; return *this;};
+        Wire& operator <<= (Operable& b) override {mfAssert(false, "wire don't support this <<= assigment");assert(false);};
         Wire& operator =   (Operable& b) override;
         Wire& operator =   (Wire& b);
         /**override operable*/
@@ -37,6 +37,8 @@ namespace kathryn{
         /**override simulation*/
         void simStartCurCycle() override;
         //std::vector<std::string> getDebugAssignmentValue() override;
+
+        Operable* checkShortCircuit() override;
 
 
     };

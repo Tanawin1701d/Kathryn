@@ -69,6 +69,17 @@ namespace kathryn{
             return getSimEngine()->getCurVal();
         }
 
+        void startCheckShortCircuit(){
+            Operable* matchOpr = checkShortCircuit();
+            if (matchOpr != nullptr){
+                std::cout << getMdIdentVal() << "  match with " << matchOpr->castToIdent()->getIdentDebugValue() << std::endl;
+                mfAssert(false, "get short circuit");
+            }
+        }
+
+
+
+
     };
 
 }

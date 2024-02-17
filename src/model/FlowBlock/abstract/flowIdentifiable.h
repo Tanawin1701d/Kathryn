@@ -48,6 +48,10 @@ namespace kathryn{
             return ret;
         }
 
+        std::string getGlobalName() const{
+            return _globalName;
+        }
+
 
     };
 

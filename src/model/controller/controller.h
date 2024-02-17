@@ -23,6 +23,9 @@
 #include "model/FlowBlock/abstract/spReg/stateReg.h"
 #include "model/FlowBlock/abstract/spReg/syncReg.h"
 
+#include "util/type/typeConv.h"
+#include "util/str/strUtil.h"
+
 
 namespace kathryn {
 
@@ -102,6 +105,12 @@ namespace kathryn {
         void unlockAllocation(){hwCompAllocLock = false;};
         [[nodiscard]]
         bool isAllocationLock() const{return hwCompAllocLock;}
+
+        /** for debugging and model checking purpose*/
+        std::string getCurModelStack();
+
+
+
 
     };
 
