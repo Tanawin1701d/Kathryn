@@ -12,7 +12,21 @@ namespace kathryn{
      * rtl simEngine
      * */
 
+    RtlSimEngine::RtlSimEngine(int sz):
+            _recMode(false),
+            _simForNext(false), /** we not use this type for mem prox sim*/
+            _isSimMetaSet(true),
+            _sigType(VST_DUMMY),
+            _simMeta(RTL_Meta_afterMf()),
+            _sz(sz),
+            _isCurValSim(false), /***typically reg is true but wire is false*/
+            _isNextValSim(false),
+            _curVal(sz),
+            _nextVal(sz)
+    {}
+
     RtlSimEngine::RtlSimEngine(int sz, VCD_SIG_TYPE sigType, bool simForNext):
+            _recMode(true),
             _simForNext(simForNext),
             _isSimMetaSet(false),
             _sigType(sigType),
@@ -27,6 +41,7 @@ namespace kathryn{
             }
 
     void RtlSimEngine::declareSimVar() {
+        assert(_recMode);
         assert(_isSimMetaSet);
         if (_simMeta._recCmd){
             _simMeta._writer->addNewVar(_sigType,
@@ -44,6 +59,7 @@ namespace kathryn{
     }
 
     void RtlSimEngine::tryWriteValue() {
+        assert(_recMode);
         assert(_isSimMetaSet);
         if (_simMeta._recCmd){
             /** request for record*/

@@ -42,8 +42,8 @@ namespace kathryn {
     public:
         /** constructor auto get id of the system*/
         explicit expression(LOGIC_OP op,
-                            Operable* a,
-                            Operable* b,
+                            const Operable* a,
+                            const Operable* b,
                             int exp_size
                             );
         explicit expression(int exp_size);

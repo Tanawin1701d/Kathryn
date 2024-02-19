@@ -12,14 +12,14 @@ namespace kathryn{
      * */
 
     expression::expression(LOGIC_OP op,
-                           Operable* a,
-                           Operable* b,
+                           const Operable* a,
+                           const Operable* b,
                            int exp_size):
     LogicComp<expression>({0, exp_size}, TYPE_EXPRESSION,
                           new RtlSimEngine(exp_size, VST_WIRE, false),false),
     _op(op),
-    _a(a),
-    _b(b)
+    _a(const_cast<Operable *>(a)),
+    _b(const_cast<Operable *>(b))
     {
         com_init();
     }

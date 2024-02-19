@@ -154,6 +154,12 @@ add_executable(Kathryn main.cpp
         src/util/type/typeConv.h
         src/util/str/strUtil.h
         src/util/str/strUtil.cpp
+        src/model/hwComponent/memBlock/MemBlock.cpp
+        src/model/hwComponent/memBlock/MemBlock.h
+        src/model/hwComponent/memBlock/MemBlockAgent.cpp
+        src/model/hwComponent/memBlock/MemBlockAgent.h
+        src/model/simIntf/memModelInterface.cpp
+        src/model/simIntf/memModelInterface.h
 
 
 )

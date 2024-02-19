@@ -26,6 +26,7 @@ namespace kathryn {
         };
 
     private:
+        bool               _recMode      = false; //// is this engine recordable
         bool               _simForNext   = false;
         bool               _isSimMetaSet = false;
         VCD_SIG_TYPE       _sigType = VST_DUMMY;
@@ -42,12 +43,13 @@ namespace kathryn {
          *  but for now we use cur cycle and next cycle
          * */
     public:
-
+        explicit RtlSimEngine(int sz);
         explicit RtlSimEngine(int sz, VCD_SIG_TYPE sigType, bool simForNext);
 
         virtual ~RtlSimEngine() = default;
 
         ////// setter
+        void setSimForNext(bool v) {_simForNext = v;}
         void setSimMeta  (RTL_Meta_afterMf& val) { _simMeta = val; _isSimMetaSet = true;}
         void setCurValSimStatus()  {_isCurValSim  = true;}
         void setNextValSimStatus() {_isNextValSim = true;}
@@ -73,6 +75,7 @@ namespace kathryn {
 
         //////////////// sequential sim
     };
+
 
     class FlowSimEngine{
     private:

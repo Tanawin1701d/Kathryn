@@ -87,12 +87,12 @@ namespace kathryn{
         /** exit sim can be only invoked single time per cycle*/
 
         /**specific set element before prepare sim*/
-        void beforePrepareSim(RtlSimEngine::RTL_Meta_afterMf simMeta){
+        virtual void beforePrepareSim(RtlSimEngine::RTL_Meta_afterMf simMeta){
             _engine->setSimMeta(simMeta);
         }
 
         /** before sim controller start prepare the system*/
-        void prepareSim() override{
+        virtual void prepareSim() override{
             _engine->declareSimVar();
         }
 
