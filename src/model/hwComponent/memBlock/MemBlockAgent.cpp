@@ -14,7 +14,7 @@ namespace kathryn{
     Operable(),
     Slicable<MemBlockEleHolder>({0, master->getWidthSize()}),
     Identifiable(TYPE_MEM_BLOCK_INDEXER),
-    RtlSimulatable(new RtlSimEngine(getSlice().getSize(), VST_DUMMY, false)),
+    MemAgentSimulatable(master->getWidthSize()),
     _master(master),
     _indexer(const_cast<Operable *>(indexer)){
         assert(_master  != nullptr);
@@ -27,7 +27,7 @@ namespace kathryn{
     Operable(),
     Slicable<MemBlockEleHolder>({0, master->getWidthSize()}),
     Identifiable(TYPE_MEM_BLOCK_INDEXER),
-    RtlSimulatable(new RtlSimEngine(getSlice().getSize(), VST_DUMMY, false)),
+    MemAgentSimulatable(master->getWidthSize()),
     _master(master),
     _indexer(nullptr)
     {
@@ -36,6 +36,16 @@ namespace kathryn{
         _indexer = (Operable*)(&memIndexer);
         assert(_master != nullptr);
         assert(_indexer!= nullptr);
+    }
+
+    ValRep&
+    MemBlockEleHolder::getCurMemVal(){
+        assert(isSetMode());
+        /**start simulate it first*/
+        _indexer->getSimItf()->simStartCurCycle();
+        ValRep& curValIndexer = _indexer->getRtlValItf()->getCurVal();
+        assert(curValIndexer.getLen() > 0);
+        return _master->getThisCycleValRep(curValIndexer.getVal()[0]);
     }
 
 
@@ -57,29 +67,11 @@ namespace kathryn{
 
 
     /*** override Operable*/
+    Slice MemBlockEleHolder::getOperableSlice() const {return getSlice();}
+    Operable &MemBlockEleHolder::getExactOperable() const { return (Operable &)(*this);}
+    Identifiable* MemBlockEleHolder::castToIdent() {return this;}
 
-    Slice MemBlockEleHolder::getOperableSlice() const {
-        return getSlice();
-    }
-    Operable &MemBlockEleHolder::getExactOperable() const {
-        return (Operable &)(*this);
-    }
-    ValRep& MemBlockEleHolder::getExactSimCurValue() {
-        /***/
-        return getSimEngine()->getCurVal();
-    }
-    ValRep& MemBlockEleHolder::getExactSimNextValue() {
-        return getSimEngine()->getNextVal();
-    }
-    Identifiable* MemBlockEleHolder::castToIdent() {
-        return this;
-    }
-    RtlSimulatable* MemBlockEleHolder::castToRtlSimItf() {
-        return this;
-    }
-    ValRep &MemBlockEleHolder::sv() {
-        assert(false);
-    }
+    ValRep &MemBlockEleHolder::sv(){assert(false);}
 
     /***slicable*/
 
@@ -115,37 +107,31 @@ namespace kathryn{
             ////// we so sure that it is read mode
             setReadMode();
         }
-        assert(getSimEngine() != nullptr);
-        getSimEngine()->setSimForNext(!isReadMode); /**we sim for next only for write mode*/
     }
 
     void MemBlockEleHolder::simStartCurCycle() {
-        /////// todo callback to master to request
-        assert(isSetMode());
-        if (isReadMode){
-            getSimEngine()->setCurValSimStatus();
-            auto& desValue = getSimEngine()->getCurVal();
-            assignValRepCurCycle(desValue);
+        /////// todo we will make indexer to integer idx more pleasant
+        if (isCurValSim()){
+            return;
         }
+        setCurValSimStatus();
+        _curAgentVal =  &getCurMemVal();
     }
 
     void MemBlockEleHolder::simStartNextCycle() {
-        ////// todo callback to master to request
         assert(isSetMode());
-        if (!isReadMode){
-            RtlSimEngine* simEngine = getSimEngine();
-            assert(simEngine->isCurValSim());
-            assert(!simEngine->isNextValSim());
-
-            simEngine->setNextValSimStatus();
-            simEngine->getNextVal() = simEngine->getCurVal();
-            assignValRepCurCycle(getSimEngine()->getNextVal());
+        ////// then copy the value to destination first incase value is not update
+        if (isNextValSim()) {
+            return;
         }
-    }
+        setNextValSimStatus();
 
-    void MemBlockEleHolder::simExitCurCycle() {
-        RtlSimulatable::simExitCurCycle();
-    }
+        if (!isReadMode()) {
+            ////// curAgentVal is assigned already
+            _nextAgentVal = getCurMemVal();
+            assignValRepCurCycle(_nextAgentVal);
+        }
 
+    }
 
 }

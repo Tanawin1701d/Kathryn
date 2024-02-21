@@ -63,56 +63,22 @@ namespace kathryn{
 
     };
 
-
-    class RtlSimulatable : public Simulatable{
-    private:
-        RtlSimEngine* _engine  = nullptr;
+    class RtlValItf{
     public:
 
-        explicit RtlSimulatable(RtlSimEngine* engine):
-                Simulatable(),
-                _engine(engine){}
+        virtual void setCurValSimStatus()  = 0;
+        virtual void setNextValSimStatus() = 0;
 
-        ~RtlSimulatable() override {delete _engine;}
+        virtual bool     isCurValSim () const= 0;
+        virtual bool     isNextValSim() const= 0;
 
-        void setSimEngine(RtlSimEngine* engine){
-            if (_engine != nullptr){
-                delete _engine;
-            }
-            _engine = engine;
-        }
-
-        RtlSimEngine* getSimEngine(){return _engine;}
-
-        /** exit sim can be only invoked single time per cycle*/
-
-        /**specific set element before prepare sim*/
-        virtual void beforePrepareSim(RtlSimEngine::RTL_Meta_afterMf simMeta){
-            _engine->setSimMeta(simMeta);
-        }
-
-        /** before sim controller start prepare the system*/
-        virtual void prepareSim() override{
-            _engine->declareSimVar();
-        }
-
-        /**simulate next cycle value for current cycle*/
-        void simStartNextCycle() override{
-            assert(false);
-        }
-
-        /****/
-        void curCycleCollectData() override{
-            _engine->tryWriteValue();
-        }
-
-        /**we sure that it can be invoked only one*/
-        void simExitCurCycle() override{
-            assert(_engine->isCurValSim());
-            _engine->iterate();
-        }
+        virtual ValRep&  getCurVal () = 0;
+        virtual ValRep&  getNextVal() = 0;
 
     };
+
+
+
 
     /***
      *

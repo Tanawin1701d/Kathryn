@@ -9,7 +9,7 @@
 #include "model/hwComponent/abstract/operable.h"
 #include "model/hwComponent/abstract/assignable.h"
 #include "model/hwComponent/abstract/slicable.h"
-"
+#include "model/simIntf/memSimInterface.h"
 
 namespace kathryn{
 
@@ -22,23 +22,25 @@ namespace kathryn{
                              public Slicable<MemBlockEleHolder>,
                              public AssignCallbackFromAgent<MemBlockEleHolder>,
                              public Identifiable,
-                             public RtlSimulatable
+                             public MemAgentSimulatable
      {
     private:
         bool setModeYet = false; /**the goal of setMode is to prevent duplicate read write in the same index*/
-        bool isReadMode = false; /**Therefore, we should know that if it did not set mode it may be read mode*/
+        bool readMode = false; /**Therefore, we should know that if it did not set mode it may be read mode*/
 
         MemBlock* _master  = nullptr;
         Operable* _indexer = nullptr;
 
     protected:
-        bool setReadMode (){setModeYet = true; isReadMode = true; }
-        bool setWriteMode(){setModeYet = true; isReadMode = false;}
+        bool setReadMode (){setModeYet = true; readMode = true; }
+        bool setWriteMode(){setModeYet = true; readMode = false;}
         bool isSetMode   (){return setModeYet;}
 
     public:
         explicit MemBlockEleHolder(MemBlock* master, const Operable* indexer);
         explicit MemBlockEleHolder(MemBlock* master, const int idx);
+
+        ValRep& getCurMemVal();
 
         /** override assignable (need to call controller)*/
         MemBlockEleHolder& operator <<= (Operable& b) override;
@@ -47,10 +49,12 @@ namespace kathryn{
         /** Operable*/
         Slice           getOperableSlice    () const override;
         Operable&       getExactOperable    () const override;
-        ValRep&         getExactSimCurValue () override;
-        ValRep&         getExactSimNextValue() override;
+
+        Simulatable*    getSimItf()    override {return this;}
+        RtlValItf*      getRtlValItf() override {return this;}
+
+
         Identifiable*   castToIdent         () override;
-        RtlSimulatable* castToRtlSimItf     () override;
         ValRep&         sv                  () override;
 
         /** Slicable*/
@@ -58,16 +62,15 @@ namespace kathryn{
         SliceAgent<MemBlockEleHolder>& operator() (int idx) override;
 
         /**Assign call back From Agent */
-        MemBlockEleHolder& callBackBlockAssignFromAgent(Operable& b, Slice absSliceOfHost);
+        MemBlockEleHolder& callBackBlockAssignFromAgent   (Operable& b, Slice absSliceOfHost);
         MemBlockEleHolder& callBackNonBlockAssignFromAgent(Operable& b, Slice absSliceOfHost);
 
         /**Rtl simulatable we cut many feature to make it be proxy*/
-        void beforePrepareSim(RtlSimEngine::RTL_Meta_afterMf simMeta) override{assert(false);}
         void prepareSim         () override;
         void simStartCurCycle   () override;
         void simStartNextCycle  () override;
-        void curCycleCollectData() override{assert(false);}
-        void simExitCurCycle    () override;
+        bool isReadMode         () override{return readMode;};
+
 
         Operable* checkShortCircuit   () override{return nullptr;}
 

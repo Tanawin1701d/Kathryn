@@ -158,8 +158,9 @@ add_executable(Kathryn main.cpp
         src/model/hwComponent/memBlock/MemBlock.h
         src/model/hwComponent/memBlock/MemBlockAgent.cpp
         src/model/hwComponent/memBlock/MemBlockAgent.h
-        src/model/simIntf/memModelInterface.cpp
-        src/model/simIntf/memModelInterface.h
+        src/model/simIntf/memSimInterface.cpp
+        src/model/simIntf/memSimInterface.h
+        src/model/simIntf/logicSimInterface.h
 
 
 )

@@ -58,11 +58,14 @@ namespace kathryn {
         [[nodiscard]]
         virtual Operable&       getExactOperable () const = 0;
 
-        virtual ValRep&         getExactSimCurValue() = 0;
-        virtual ValRep&         getExactSimNextValue() = 0;
+
+        virtual Simulatable*    getSimItf() = 0;
+        virtual RtlValItf*      getRtlValItf() = 0;
+
+
+
         /**downcasting*/
         virtual Identifiable*   castToIdent() = 0;
-        virtual RtlSimulatable* castToRtlSimItf() = 0;
         virtual ValRep&         sv() = 0;
 
         bool isInCheckPath = false;

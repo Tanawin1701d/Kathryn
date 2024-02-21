@@ -33,6 +33,7 @@ namespace kathryn{
         static const int bitSizeOfUll = sizeof(ull) << 3;
 
     public:
+        explicit  ValRep() = default;
         explicit ValRep(int len);
 
         ~ValRep();
