@@ -15,8 +15,7 @@ namespace kathryn{
                            const Operable* a,
                            const Operable* b,
                            int exp_size):
-    LogicComp<expression>({0, exp_size}, TYPE_EXPRESSION,
-                          new RtlSimEngine(exp_size, VST_WIRE, false),false),
+    LogicComp<expression>({0, exp_size}, TYPE_EXPRESSION,VST_WIRE, false,false),
     _op(op),
     _a(const_cast<Operable *>(a)),
     _b(const_cast<Operable *>(b))
@@ -25,8 +24,7 @@ namespace kathryn{
     }
 
     expression::expression(int exp_size):
-    LogicComp<expression>({0, exp_size}, TYPE_EXPRESSION,
-                          new RtlSimEngine(exp_size, VST_WIRE, false), false),
+    LogicComp<expression>({0, exp_size}, TYPE_EXPRESSION,VST_WIRE, false, false),
     _op(ASSIGN),
     _a(nullptr),
     _b(nullptr){
@@ -75,26 +73,26 @@ namespace kathryn{
     void expression::simStartCurCycle() {
 
 
-        if (getSimEngine()->isCurValSim()){
+        if (getRtlValItf()->isCurValSim()){
             return;
         }
 
-        getSimEngine()->setCurValSimStatus();
+        getRtlValItf()->setCurValSimStatus();
 
         ValRep  firstValRep(1); /**the size will be change*/
         ValRep  secValRep  (1);
-        ValRep& desValRep   = getSimEngine()->getCurVal();
+        ValRep& desValRep   = getRtlValItf()->getCurVal();
         /**value a*/
         if (_a != nullptr){
-            _a->castToRtlSimItf()->simStartCurCycle();
-            assert(_a->castToRtlSimItf()->getSimEngine()->isCurValSim());
-            firstValRep =  _a->getExactSimCurValue().slice(_a->getOperableSlice());
+            _a->getSimItf()->simStartCurCycle();
+            assert(_a->getRtlValItf()->isCurValSim());
+            firstValRep =  _a->getRtlValItf()->getCurVal().slice(_a->getOperableSlice());
         }
         /**value b*/
         if (_b != nullptr){
-            _b->castToRtlSimItf()->simStartCurCycle();
-            assert(_b->castToRtlSimItf()->getSimEngine()->isCurValSim());
-            secValRep =  _b->getExactSimCurValue().slice(_b->getOperableSlice());
+            _b->getSimItf()->simStartCurCycle();
+            assert(_b->getRtlValItf()->isCurValSim());
+            secValRep =  _b->getRtlValItf()->getCurVal().slice(_b->getOperableSlice());
         }
 
 

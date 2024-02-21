@@ -137,6 +137,40 @@ namespace kathryn{
         logMF(ptr,
               "expr is initializing and set parent to " + targetModulePtr->getIdentDebugValue());
     }
+
+    /** memBlock*/
+    void ModelController::on_memBlk_init(MemBlock* ptr){
+        assert(ptr != nullptr);
+        Module* targetModulePtr = getTargetModulePtr();
+        /** localize it*/
+        /** localize necessary destination*/
+        targetModulePtr->addUserMemBlk(ptr);
+        ptr->setParent(targetModulePtr);
+        ptr->buildInheritName();
+        /** debug value*/
+        logMF(ptr,
+              "memBlk is initializing and set parent to " + targetModulePtr->getIdentDebugValue());
+    }
+
+    void ModelController::on_memBlkEleHolder_update(AssignMeta* asmMeta,MemBlockEleHolder* srcHolder){
+        /**
+         * please note that UpdateEvent should fill update value/ and slice
+         * but it must let update condition and state as nullptr to let block fill
+         * to it
+         * */
+        /*** do not add to module any more*/
+        assert(asmMeta != nullptr);
+        tryPurifyFlowStack();
+        auto node = new AsmNode(asmMeta);
+        node->setDependStateJoinOp(BITWISE_AND);
+        assert(!flowBlockStacks[FLOW_ST_BASE_STACK].empty());
+        auto fb = getTopFlowBlockBase();
+        fb->addElementInFlowBlock(node);
+        logMF(srcHolder,
+              "memBlk HOLDER is updating value @ fb block " + fb->getMdIdentVal());
+    }
+
+
     /** value*/
     void ModelController::on_value_init(Val* ptr) {
         assert(ptr != nullptr);

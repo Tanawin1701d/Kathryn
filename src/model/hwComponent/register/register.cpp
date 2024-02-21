@@ -11,8 +11,7 @@ namespace kathryn{
 
     /** constructor need to init communication with controller*/
     Reg::Reg(int size, bool initCom, HW_COMPONENT_TYPE hwType, bool requiredAllocCheck) :
-            LogicComp({0, size}, hwType,
-                      new RtlSimEngine(size, VST_REG, true),requiredAllocCheck){
+            LogicComp({0, size}, hwType,VST_REG, true,requiredAllocCheck){
         if (initCom) {
             com_init();
         }
@@ -81,19 +80,18 @@ namespace kathryn{
 
     void Reg::simStartCurCycle() {
         ///// if in This cycle the component is simmulated then skip simulation
-        RtlSimEngine* simEngine = getSimEngine();
-        assert(simEngine->isCurValSim());
+        assert(getRtlValItf()->isCurValSim());
     }
 
     void Reg::simStartNextCycle() {
 
-        RtlSimEngine* simEngine = getSimEngine();
-        assert(simEngine->isCurValSim());
-        assert(!simEngine->isNextValSim());
+        RtlValItf* rtlValItf = getRtlValItf();
+        assert(rtlValItf->isCurValSim());
+        assert(!rtlValItf->isNextValSim());
 
-        simEngine->setNextValSimStatus();
-        simEngine->getNextVal() = simEngine->getCurVal(); ///// get curval to be next val because it may be no change
-        assignValRepCurCycle(getSimEngine()->getNextVal());
+        rtlValItf->setNextValSimStatus();
+        rtlValItf->getNextVal() = rtlValItf->getCurVal(); ///// get curval to be next val because it may be no change
+        assignValRepCurCycle(rtlValItf->getNextVal());
     }
 
     Operable* Reg::checkShortCircuit(){

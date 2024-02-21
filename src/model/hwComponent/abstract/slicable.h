@@ -56,10 +56,6 @@ namespace kathryn {
             _master->Slicable<T>::addAgentHolder(this);
         };
 
-        /** operable override*/
-        [[nodiscard]] Operable& getExactOperable() const override { return *(Operable*)_master; }
-        [[nodiscard]] Slice getOperableSlice() const override { return  Slicable<T>::getSlice(); }
-
         /** slicable overload*/
 
         SliceAgent<T>& operator() (int start, int stop) override{
@@ -94,20 +90,20 @@ namespace kathryn {
         }
 
         /** override operable*/
-        ValRep& getExactSimCurValue() override{
-            return castToRtlSimItf()->getSimEngine()->getCurVal();
-        }
 
-        ValRep& getExactSimNextValue() override{
-            return castToRtlSimItf()->getSimEngine()->getNextVal();
+        /** operable override*/
+        [[nodiscard]] Operable& getExactOperable() const override { return *(Operable*)_master; }
+        [[nodiscard]] Slice getOperableSlice() const override { return  Slicable<T>::getSlice(); }
+
+        Simulatable*    getSimItf() override{
+            return static_cast<Simulatable*>(_master);
+        }
+        RtlValItf*      getRtlValItf() override{
+            return static_cast<RtlValItf*>(_master);
         }
 
         Identifiable* castToIdent() override{
             return static_cast<Identifiable*>(_master);
-        }
-
-        RtlSimulatable* castToRtlSimItf() override{
-            return static_cast<RtlSimulatable*>(_master);
         }
 
         ValRep& sv() override{

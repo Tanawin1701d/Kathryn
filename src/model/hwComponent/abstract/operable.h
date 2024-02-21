@@ -58,7 +58,6 @@ namespace kathryn {
         [[nodiscard]]
         virtual Operable&       getExactOperable () const = 0;
 
-
         virtual Simulatable*    getSimItf() = 0;
         virtual RtlValItf*      getRtlValItf() = 0;
 

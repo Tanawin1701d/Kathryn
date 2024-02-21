@@ -27,6 +27,7 @@
 
 #include "model/debugger/modelDebugger.h"
 #include "util/logger/logger.h"
+#include "model/hwComponent/memBlock/MemBlock.h"
 
 
 namespace kathryn{
@@ -46,6 +47,7 @@ namespace kathryn{
         std::vector<Wire*>       _userWires;
         std::vector<expression*> _userExpressions;
         std::vector<Val*>        _userVals;
+        std::vector<MemBlock*>   _userMemBlks;
         std::vector<Module*>     _userSubModule;
 
         /** when hardware components require data from outside class
@@ -154,6 +156,7 @@ namespace kathryn{
         void addUserWires      (Wire* wire);
         void addUserExpression (expression* expr);
         void addUserVal        (Val* val);
+        void addUserMemBlk     (MemBlock* memBlock);
         void addUserSubModule  (Module* smd);
 
         /**implicit element that is built from design flow*/
@@ -168,7 +171,9 @@ namespace kathryn{
         auto& getUserWires(){return _userWires; }
         auto& getUserExpressions(){return _userExpressions; }
         auto& getUserVals(){return _userVals; }
+        auto& getUserMemBlk(){return _userMemBlks;}
         auto& getUserSubModules(){return _userSubModule; }
+
 
         /** Functions which allow user to custom  their module design flow*/
         virtual void flow(){}; //// user must inherit this function to build thier flow

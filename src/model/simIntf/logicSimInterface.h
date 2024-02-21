@@ -76,6 +76,10 @@ namespace kathryn{
             }
         }
 
+        void simStartCurCycle() override{
+            assert(false);
+        }
+
         /**simulate next cycle value for current cycle*/
         void simStartNextCycle() override{
             assert(false);

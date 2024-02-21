@@ -11,7 +11,9 @@
 #include "model/simIntf/modelSimInterface.h"
 #include "model/debugger/modelDebugger.h"
 #include "model/hwComponent/abstract/operable.h"
+#include "util/numberic/pmath.h"
 #include "MemBlockAgent.h"
+
 
 namespace kathryn{
 
@@ -34,6 +36,7 @@ namespace kathryn{
         MemBlockEleHolder& operator[] (const int idx);
 
         int getWidthSize() const {assert(WIDTH_SIZE != 0); return WIDTH_SIZE;}
+        ull getDepthSize() const {assert(DEPTH_SIZE != 0); return DEPTH_SIZE;}
 
         /**override simulatable*/
 

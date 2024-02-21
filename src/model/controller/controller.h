@@ -22,9 +22,11 @@
 #include "model/FlowBlock/cond/elif.h"
 #include "model/FlowBlock/abstract/spReg/stateReg.h"
 #include "model/FlowBlock/abstract/spReg/syncReg.h"
+#include "model/hwComponent/memBlock/MemBlock.h"
 
 #include "util/type/typeConv.h"
 #include "util/str/strUtil.h"
+
 
 
 namespace kathryn {
@@ -83,6 +85,10 @@ namespace kathryn {
         void on_wire_update(AssignMeta* asmMeta, Wire* srcWire);
         /** exprMetas handling*/
         void on_expression_init(expression* ptr);
+        /** on memBlock and its agent is updated*/
+        void on_memBlk_init(MemBlock* ptr);
+        void on_memBlkEleHolder_update(AssignMeta* asmMeta,MemBlockEleHolder* srcHolder);
+
         /** value handling*/
         void on_value_init(Val* ptr);
         /** module handling*/

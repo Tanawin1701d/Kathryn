@@ -13,8 +13,9 @@
 #include "model/hwComponent/abstract/identifiable.h"
 #include "model/controller/conInterf/controllerItf.h"
 #include "model/simIntf/modelSimEngine.h"
-#include "model/simIntf/modelSimInterface.h"
+#include "model/simIntf/logicSimInterface.h"
 #include "model/debugger/modelDebugger.h"
+
 
 namespace kathryn{
 
@@ -24,49 +25,55 @@ namespace kathryn{
                       public AssignCallbackFromAgent<T>,
                       public Identifiable,
                       public HwCompControllerItf,
-                      public RtlSimulatable,
+                      public LogicSimulatable,
                       public ModelDebuggable{
     public:
-        explicit LogicComp(Slice slc, HW_COMPONENT_TYPE hwType,
-                           RtlSimEngine* simEngine, bool requiredAllocCheck):
+        explicit LogicComp(Slice slc,
+                           HW_COMPONENT_TYPE hwType,
+                           VCD_SIG_TYPE sigType,
+                           bool simForNext,
+                           bool requiredAllocCheck):
                 Assignable<T>(),
                 Operable(),
                 Slicable<T>(slc),
                 Identifiable(hwType),
                 HwCompControllerItf(requiredAllocCheck),
-                RtlSimulatable(simEngine),
+                LogicSimulatable(slc.getSize(), sigType, simForNext),
                 ModelDebuggable()
                             {}
 
         virtual ~LogicComp() = default;
 
-        Identifiable * castToIdent() override{
-            return static_cast<Identifiable*>(this);
-        }
+
+        /** iterable override*/
 
         std::string getMdIdentVal() override{
             return getIdentDebugValue();
         }
 
-        RtlSimulatable* castToRtlSimItf() override{
-            return static_cast<RtlSimulatable*>(this);
-        };
-
         Operable* castToOpr(){
             return static_cast<Operable*>(this);
         }
 
-        ValRep& getExactSimCurValue() override{
-            return getSimEngine()->getCurVal();
+        /** operable override*/
+        Slice getOperableSlice() const override{
+            return Slicable<T>::getSlice();
         }
-
-        ValRep& getExactSimNextValue() override{
-            return getSimEngine()->getNextVal();
+        Operable& getExactOperable() const override{
+            return *(Operable*)this;
         }
-
+        Simulatable* getSimItf() override{
+            return static_cast<Simulatable*>(this);
+        }
+        RtlValItf* getRtlValItf() override{
+            return static_cast<RtlValItf*>(this);
+        }
+        Identifiable * castToIdent() override{
+            return static_cast<Identifiable*>(this);
+        }
         ValRep& sv() override{
-            getSimEngine()->setCurValSimStatus();
-            return getSimEngine()->getCurVal();
+            setCurValSimStatus();
+            return getCurVal();
         }
 
         void startCheckShortCircuit(){

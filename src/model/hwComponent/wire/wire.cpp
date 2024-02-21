@@ -10,8 +10,11 @@
 namespace kathryn{
 
 
-    Wire::Wire(int size) : LogicComp({0, size}, TYPE_WIRE,
-                                     new RtlSimEngine(size, VST_WIRE, false),true){
+    Wire::Wire(int size) : LogicComp({0, size},
+                                     TYPE_WIRE,
+                                     VST_WIRE,
+                                     false,
+                                     true){
         com_init();
     }
 
@@ -78,11 +81,11 @@ namespace kathryn{
 
     void Wire::simStartCurCycle() {
 
-        if (getSimEngine()->isCurValSim()){
+        if (getRtlValItf()->isCurValSim()){
             return;
         }
-        getSimEngine()->setCurValSimStatus();
-        assignValRepCurCycle(getSimEngine()->getCurVal());
+        getRtlValItf()->setCurValSimStatus();
+        assignValRepCurCycle(getRtlValItf()->getCurVal());
 
     }
 
@@ -122,21 +125,5 @@ namespace kathryn{
         isInCheckPath = false;
         return nullptr;
     }
-
-
-
-
-
-
-
-
-//    std::vector<std::string> Wire::getDebugAssignmentValue() {
-//        std::vector<std::string> results;
-//        for (auto upEvent: _updateMeta){
-//            results.push_back(upEvent->getDebugString());
-//        }
-//        return results;
-//    }
-
 
 }

@@ -37,10 +37,10 @@ namespace kathryn{
     }
 
     void Val::initSim(){
-        getSimEngine()->setCurValSimStatus();
-        getSimEngine()->setNextValSimStatus();
-        getSimEngine()->getCurVal()  = rawValue;
-        getSimEngine()->getNextVal() = rawValue;
+        getRtlValItf()->setCurValSimStatus();
+        getRtlValItf()->setNextValSimStatus();
+        getRtlValItf()->getCurVal()  = rawValue;
+        getRtlValItf()->getNextVal() = rawValue;
     }
 
     Operable *Val::checkShortCircuit() {

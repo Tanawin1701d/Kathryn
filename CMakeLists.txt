@@ -92,7 +92,6 @@ add_executable(Kathryn main.cpp
         src/sim/controller/simController.h
         src/model/simIntf/modelSimEngine.cpp
         src/model/simIntf/modelSimEngine.h
-        src/model/simIntf/modelSimInterface.cpp
         src/model/simIntf/modelSimInterface.h
         src/model/hwComponent/abstract/assignable.cpp
         src/util/numberic/numConvert.cpp
@@ -161,6 +160,9 @@ add_executable(Kathryn main.cpp
         src/model/simIntf/memSimInterface.cpp
         src/model/simIntf/memSimInterface.h
         src/model/simIntf/logicSimInterface.h
+        src/model/hwComponent/memBlock/MemBlock.h
+        src/util/numberic/pmath.cpp
+        src/util/numberic/pmath.h
 
 
 )

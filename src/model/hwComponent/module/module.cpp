@@ -100,6 +100,11 @@ namespace kathryn{
         _userVals.push_back(val);
     }
 
+    void Module::addUserMemBlk(MemBlock* memBlock) {
+        assert(memBlock != nullptr);
+        _userMemBlks.push_back(memBlock);
+    }
+
     void Module::addUserSubModule(Module* smd) {
         assert(smd != nullptr);
         _userSubModule.push_back(smd);

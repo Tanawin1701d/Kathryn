@@ -15,10 +15,13 @@ namespace kathryn{
     Slicable<MemBlockEleHolder>({0, master->getWidthSize()}),
     Identifiable(TYPE_MEM_BLOCK_INDEXER),
     MemAgentSimulatable(master->getWidthSize()),
+    ModelDebuggable(),
     _master(master),
-    _indexer(const_cast<Operable *>(indexer)){
+    _indexer(const_cast<Operable*>(indexer)){
         assert(_master  != nullptr);
         assert(_indexer != nullptr);
+        assert(_indexer->getOperableSlice().getSize()
+               == getExactIndexSize());
     }
 
 
@@ -28,11 +31,11 @@ namespace kathryn{
     Slicable<MemBlockEleHolder>({0, master->getWidthSize()}),
     Identifiable(TYPE_MEM_BLOCK_INDEXER),
     MemAgentSimulatable(master->getWidthSize()),
+    ModelDebuggable(),
     _master(master),
     _indexer(nullptr)
     {
-        /** todo make right size*/
-        makeVal(memIndexer, 7, idx);
+        makeVal(memIndexer, getExactIndexSize(), idx);
         _indexer = (Operable*)(&memIndexer);
         assert(_master != nullptr);
         assert(_indexer!= nullptr);
@@ -46,6 +49,12 @@ namespace kathryn{
         ValRep& curValIndexer = _indexer->getRtlValItf()->getCurVal();
         assert(curValIndexer.getLen() > 0);
         return _master->getThisCycleValRep(curValIndexer.getVal()[0]);
+    }
+
+    int
+    MemBlockEleHolder::getExactIndexSize(){
+        assert(_master != nullptr);
+        return log2Ceil(_master->getDepthSize());
     }
 
 
@@ -110,7 +119,6 @@ namespace kathryn{
     }
 
     void MemBlockEleHolder::simStartCurCycle() {
-        /////// todo we will make indexer to integer idx more pleasant
         if (isCurValSim()){
             return;
         }
