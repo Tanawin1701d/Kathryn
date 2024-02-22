@@ -46,8 +46,12 @@ namespace kathryn{
         FlowBlockBase::addConFlowBlock(elifBlock);
         /** push to if-else concern element*/
         allStatement.push_back(elifBlock->sumarizeBlock());
-        if (elifBlock->getCondition() != nullptr)
+        if (elifBlock->getCondition() != nullptr) {
             allCondes.push_back(elifBlock->getCondition());
+            allPurifiedCondes.push_back(
+                    purifyCondition(elifBlock->getCondition())
+            );
+        }
 
         assert(conBlock->getSubBlocks()[0] != nullptr);
     }
@@ -76,6 +80,7 @@ namespace kathryn{
     void FlowBlockIf::buildHwComponent() {
 
         assert(!allCondes.empty());
+        assert(allPurifiedCondes.size() == allCondes.size());
         /**add execution block in if block to consider vector*/
         allStatement.insert(allStatement.begin(), subBlocks[0]->sumarizeBlock());
         assert(!allStatement.empty());

@@ -76,7 +76,6 @@ namespace kathryn{
         if (getRtlValItf()->isCurValSim()){
             return;
         }
-
         getRtlValItf()->setCurValSimStatus();
 
         ValRep  firstValRep(1); /**the size will be change*/
@@ -86,13 +85,13 @@ namespace kathryn{
         if (_a != nullptr){
             _a->getSimItf()->simStartCurCycle();
             assert(_a->getRtlValItf()->isCurValSim());
-            firstValRep =  _a->getRtlValItf()->getCurVal().slice(_a->getOperableSlice());
+            firstValRep =  _a->getSlicedCurValue();
         }
         /**value b*/
         if (_b != nullptr){
             _b->getSimItf()->simStartCurCycle();
             assert(_b->getRtlValItf()->isCurValSim());
-            secValRep =  _b->getRtlValItf()->getCurVal().slice(_b->getOperableSlice());
+            secValRep =  _b->getSlicedCurValue();
         }
 
 

@@ -31,6 +31,8 @@ namespace kathryn{
     public:
         explicit MemBlock(ull depth, int width);
 
+        void com_init() override;
+
         MemBlockEleHolder& operator[] (const Operable& indexer);
 
         MemBlockEleHolder& operator[] (const int idx);

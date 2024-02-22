@@ -16,6 +16,7 @@ namespace kathryn{
     Identifiable(TYPE_MEM_BLOCK_INDEXER),
     MemAgentSimulatable(master->getWidthSize()),
     ModelDebuggable(),
+    readMode(true),
     _master(master),
     _indexer(const_cast<Operable*>(indexer)){
         assert(_master  != nullptr);
@@ -30,6 +31,7 @@ namespace kathryn{
     Operable(),
     Slicable<MemBlockEleHolder>({0, master->getWidthSize()}),
     Identifiable(TYPE_MEM_BLOCK_INDEXER),
+    HwCompControllerItf(false),
     MemAgentSimulatable(master->getWidthSize()),
     ModelDebuggable(),
     _master(master),
@@ -43,11 +45,10 @@ namespace kathryn{
 
     ValRep&
     MemBlockEleHolder::getCurMemVal(){
-        assert(isSetMode());
         /**start simulate it first*/
         _indexer->getSimItf()->simStartCurCycle();
-        ValRep& curValIndexer = _indexer->getRtlValItf()->getCurVal();
-        assert(curValIndexer.getLen() > 0);
+        ValRep curValIndexer = _indexer->getSlicedCurValue();
+        assert(curValIndexer.getLen() == getExactIndexSize());
         return _master->getThisCycleValRep(curValIndexer.getVal()[0]);
     }
 
@@ -60,18 +61,20 @@ namespace kathryn{
 
 
     MemBlockEleHolder& MemBlockEleHolder::operator<<=(Operable &b) {
-        mfAssert(!isSetMode(), "duplicate write operation");
+        mfAssert(isReadMode(), "duplicate write operation");
         mfAssert(getSlice().getSize() == b.getOperableSlice().getSize(),
                  "invalid write size");
         setWriteMode();
-        /**  TODO call back for communication to model controller*/
-
-
+        assert(b.getOperableSlice().getSize() == _master->getWidthSize());
+        ctrl->on_memBlkEleHolder_update(
+                generateAssignMeta(b, {0, _master->getWidthSize()}),
+                this);
         return *this;
     }
 
     MemBlockEleHolder &MemBlockEleHolder::operator=(Operable &b) {
         mfAssert(false, "memBlockEle doesn't support = operator");
+        assert(false);
     }
 
 
@@ -86,7 +89,7 @@ namespace kathryn{
 
     SliceAgent<MemBlockEleHolder>&
     MemBlockEleHolder::operator()(int start, int stop) {
-        mfAssert(!isSetMode(), "memBlockEle is used");
+        mfAssert(!isReadMode(), "memBlockEle is used");
         setReadMode();
         auto ret = new SliceAgent<MemBlockEleHolder>(this,
                                                      getAbsSubSlice(start, stop,getSlice())
@@ -101,22 +104,17 @@ namespace kathryn{
     MemBlockEleHolder&
     MemBlockEleHolder::callBackBlockAssignFromAgent(Operable &b, Slice absSliceOfHost) {
         mfAssert(false, "can't assign data to memBlock from slice");
+        assert(false);
     }
 
     MemBlockEleHolder&
     MemBlockEleHolder::callBackNonBlockAssignFromAgent(Operable &b, Slice absSliceOfHost) {
         mfAssert(false, "can't assign data to memBlock from slice");
+        assert(false);
     }
 
 
     /** override rtl simEngine*/
-
-    void MemBlockEleHolder::prepareSim(){
-        if (!isSetMode()){
-            ////// we so sure that it is read mode
-            setReadMode();
-        }
-    }
 
     void MemBlockEleHolder::simStartCurCycle() {
         if (isCurValSim()){
@@ -127,19 +125,13 @@ namespace kathryn{
     }
 
     void MemBlockEleHolder::simStartNextCycle() {
-        assert(isSetMode());
         ////// then copy the value to destination first incase value is not update
-        if (isNextValSim()) {
-            return;
-        }
+        assert(!isReadMode());
+        ////// curAgentVal is assigned already
+        assert(isNextValSim() == false);
         setNextValSimStatus();
-
-        if (!isReadMode()) {
-            ////// curAgentVal is assigned already
-            _nextAgentVal = getCurMemVal();
-            assignValRepCurCycle(_nextAgentVal);
-        }
-
+        _nextAgentVal = getCurMemVal();
+        assignValRepCurCycle(_nextAgentVal);
     }
 
 }

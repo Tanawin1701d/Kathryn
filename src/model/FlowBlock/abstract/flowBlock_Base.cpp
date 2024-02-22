@@ -58,6 +58,19 @@ namespace kathryn{
         }
     }
 
+    Operable* purifyCondition(Operable* rawOpr){
+            assert(rawOpr != nullptr);
+            Slice rawSl = rawOpr->getOperableSlice();
+            assert(rawSl.getSize() != 0);
+
+            if (rawSl.getSize() == 1){
+                return rawOpr;
+            }
+            makeVal(autoCmpCondVal, rawSl.getSize(), 0);
+            return &((*rawOpr) > autoCmpCondVal);
+
+    }
+
     void FlowBlockBase::genSumForceExitNode(std::vector<NodeWrap *> &nws) {
         for (auto nw : nws){
             areThereForceExit |= (nw->getForceExitNode() != nullptr);

@@ -3,6 +3,7 @@
 //
 
 #include "MemBlock.h"
+#include "model/controller/controller.h"
 
 namespace kathryn{
 
@@ -16,6 +17,11 @@ namespace kathryn{
             WIDTH_SIZE(width)
     {
         assert(width > 0);
+        com_init();
+    }
+
+    void MemBlock::com_init(){
+        ctrl->on_memBlk_init(this);
     }
 
     MemBlockEleHolder& MemBlock::operator[](const Operable& indexer) {
@@ -41,12 +47,13 @@ namespace kathryn{
     }
 
     void MemBlock::simStartNextCycle(){
-        if (isNextValSim()){
-            return;
-        }
-        setNextValSimStatus();
+        assert(!isNextValSim());
+        setNextValSimStatus(); /// it only can be invoked one;
         for (auto agentHolder: memBlockAgents){
-            agentHolder->simStartNextCycle();
+            ////// we will sim only write mode else is not
+            if (!agentHolder->isReadMode()){
+                agentHolder->simStartNextCycle();
+            }
         }
     }
 

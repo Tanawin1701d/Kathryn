@@ -103,6 +103,7 @@ namespace kathryn {
         /** generate implicit subblock typically used with if and while block*/
         FlowBlockBase* genImplicitSubBlk(FLOW_BLOCK_TYPE defaultType);
         void           genSumForceExitNode(std::vector<NodeWrap*>& nws);
+        Operable*      purifyCondition(Operable* rawOpr);
     public:
         explicit  FlowBlockBase(FLOW_BLOCK_TYPE  type,
                                 FB_CTRL_COM_META fbCtrlComMeta);
@@ -152,7 +153,7 @@ namespace kathryn {
          * not when block is detach. Usually, It is used in if block
          * */
         bool                isLazyDelete() const{ return lazyDeletedRequired; }
-                void                setLazyDelete()     { lazyDeletedRequired = true;}
+        void                setLazyDelete()     { lazyDeletedRequired = true;}
         void                unsetLazyDelete()   {lazyDeletedRequired = false;}
         /** controller communication*/
         [[nodiscard]]

@@ -70,6 +70,10 @@ namespace kathryn{
         _nextAgentVal(bitWidth)
         {}
 
+        void prepareSim() override{
+            assert(false);
+        }
+
         void curCycleCollectData() override{
             assert(false);
         }

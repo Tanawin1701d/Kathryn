@@ -11,6 +11,7 @@
 #include "model/hwComponent/abstract/slicable.h"
 #include "model/simIntf/memSimInterface.h"
 #include "model/debugger/modelDebugger.h"
+#include "model/controller/conInterf/controllerItf.h"
 
 namespace kathryn{
 
@@ -23,20 +24,20 @@ namespace kathryn{
                              public Slicable<MemBlockEleHolder>,
                              public AssignCallbackFromAgent<MemBlockEleHolder>,
                              public Identifiable,
+                             public HwCompControllerItf,
                              public MemAgentSimulatable,
-                             public ModelDebuggable
-     {
+                             public ModelDebuggable{
     private:
-        bool setModeYet = false; /**the goal of setMode is to prevent duplicate read write in the same index*/
+        ///bool setModeYet = false; /**the goal of setMode is to prevent duplicate read write in the same index*/
         bool readMode = false; /**Therefore, we should know that if it did not set mode it may be read mode*/
 
         MemBlock* _master  = nullptr;
         Operable* _indexer = nullptr;
 
     protected:
-        bool setReadMode (){setModeYet = true; readMode = true; }
-        bool setWriteMode(){setModeYet = true; readMode = false;}
-        [[nodiscard]] bool isSetMode   () const{return setModeYet;}
+        bool setReadMode (){readMode = true; }
+        bool setWriteMode(){readMode = false;}
+        ////[[nodiscard]] bool isSetMode   () const{return setModeYet;}
 
     public:
         explicit MemBlockEleHolder(MemBlock* master, const Operable* indexer);
@@ -68,7 +69,6 @@ namespace kathryn{
         MemBlockEleHolder& callBackNonBlockAssignFromAgent(Operable& b, Slice absSliceOfHost) override;
 
         /**Rtl simulatable we cut many feature to make it be proxy*/
-        void prepareSim         () override;
         void simStartCurCycle   () override;
         void simStartNextCycle  () override;
         bool isReadMode         () override{return readMode;};
@@ -76,8 +76,9 @@ namespace kathryn{
 
         Operable* checkShortCircuit   () override{return nullptr;}
 
+        /** debug method to do will will make debug string more delightful*/
         std::string getMdDescribe() override {return Identifiable::getIdentDebugValue();}
-
+        std::string getMdIdentVal() override {return Identifiable::getIdentDebugValue();}
 
     };
 

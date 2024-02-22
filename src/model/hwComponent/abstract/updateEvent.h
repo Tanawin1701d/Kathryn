@@ -36,8 +36,8 @@ namespace kathryn {
 
         bool shouldAssignValRep(Operable* opr){
             if (opr != nullptr){
-                assert(opr->castToRtlSimItf()->getSimEngine()->isCurValSim());
-                ValRep samplingVal           = opr->getExactSimCurValue().slice(opr->getOperableSlice());
+                assert(opr->getRtlValItf()->isCurValSim());
+                ValRep samplingVal           = opr->getSlicedCurValue();
                 return samplingVal.getLogicalValue();
             }
             return true;
@@ -50,16 +50,16 @@ namespace kathryn {
                 return;
             }
             /**clarify slice*/
-            Slice desSlice = desUpdateSlice;
             Slice srcSlice = srcUpdateValue->getOperableSlice();
-                  assert(srcSlice.getSize() >= desSlice.getSize());
-                  srcSlice = srcSlice.getSubSliceWithShinkMsb({0, desSlice.getSize()});
-                  assert(srcSlice.getSize() == desSlice.getSize());
+            Slice desSlice = desUpdateSlice;
+            assert(srcSlice.getSize() >= desSlice.getSize());
+            Slice desireSrcSlice = srcSlice.getSubSliceWithShinkMsb({0, desSlice.getSize()});
+            assert(srcSlice.getSize() == desSlice.getSize());
             /**get src value and slice */
-            ValRep& srcSimVal = srcUpdateValue->getExactSimCurValue();
-            assert(srcUpdateValue->castToRtlSimItf()->getSimEngine()->isCurValSim());
-            ValRep  srcSimValFit = srcSimVal.slice(srcSlice);
-            desValRep.updateOnSlice(srcSimValFit, desSlice);
+            assert(srcUpdateValue->getRtlValItf()->isCurValSim());
+            ValRep& rawSrcVal    = srcUpdateValue->getRtlValItf()->getCurVal();
+            ValRep  desireSrcVal = rawSrcVal.slice(desireSrcSlice);
+            desValRep.updateOnSlice(desireSrcVal, desireSrcSlice);
         }
 
         void trySimAll() const{
@@ -70,7 +70,7 @@ namespace kathryn {
 
         static void trySim(Operable* opr){
             if (opr != nullptr)
-                opr->castToRtlSimItf()->simStartCurCycle();
+                opr->getSimItf()->simStartCurCycle();
                 ///////// get exact operable due to it may be agent
         }
 

@@ -61,6 +61,9 @@ namespace kathryn {
         virtual Simulatable*    getSimItf() = 0;
         virtual RtlValItf*      getRtlValItf() = 0;
 
+        /** please remind this is a copy not reference value*/
+        ValRep  getSlicedCurValue();
+
 
 
         /**downcasting*/

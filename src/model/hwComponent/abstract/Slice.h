@@ -21,6 +21,9 @@ namespace kathryn{
             return (start + bit) < stop;
         }
 
+        bool isContain(const Slice rhs) const{
+            return (start <= rhs.start) && (stop >= rhs.stop);
+        }
 
         /** the start bit must be in range but stop but haven't to*/
         //////// b is relative value
