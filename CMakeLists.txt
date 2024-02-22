@@ -163,6 +163,7 @@ add_executable(Kathryn main.cpp
         src/model/hwComponent/memBlock/MemBlock.h
         src/util/numberic/pmath.cpp
         src/util/numberic/pmath.h
+        src/model/hwComponent/abstract/operableConOv.cpp
 
 
 )

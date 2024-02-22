@@ -9,6 +9,7 @@
 #include "Slice.h"
 #include "operation.h"
 #include "identifiable.h"
+#include "makeComponent.h"
 #include "model/simIntf/modelSimInterface.h"
 
 namespace kathryn {
@@ -52,6 +53,33 @@ namespace kathryn {
         virtual expression& operator %  (const Operable& b);
         /** todo for now self assign operation such as += is not permit */
 
+        /**
+         *
+         * rhs is match ull size
+         *
+         * */
+        virtual expression& operator &  (ull b);
+        virtual expression& operator |  (ull b);
+        virtual expression& operator ^  (ull b);
+        virtual expression& operator << (ull b);
+        virtual expression& operator >> (ull b);
+        /** logical operators*/
+        virtual expression& operator && (ull b);
+        virtual expression& operator || (ull b);
+        /** relational operator*/
+        virtual expression& operator == (ull b);
+        virtual expression& operator != (ull b);
+        virtual expression& operator <  (ull b);
+        virtual expression& operator <= (ull b);
+        virtual expression& operator >  (ull b);
+        virtual expression& operator >= (ull b);
+        /** arithmetic operators*/
+        virtual expression& operator +  (ull b);
+        virtual expression& operator -  (ull b);
+        virtual expression& operator *  (ull b);
+        virtual expression& operator /  (ull b);
+        virtual expression& operator %  (ull b);
+
         /** due to slice operable maybe change*/
         [[nodiscard]]
         virtual Slice           getOperableSlice() const = 0;
@@ -61,6 +89,7 @@ namespace kathryn {
         virtual Simulatable*    getSimItf() = 0;
         virtual RtlValItf*      getRtlValItf() = 0;
 
+
         /** please remind this is a copy not reference value*/
         ValRep  getSlicedCurValue();
 
@@ -69,6 +98,8 @@ namespace kathryn {
         /**downcasting*/
         virtual Identifiable*   castToIdent() = 0;
         virtual ValRep&         sv() = 0;
+
+        Operable& getMatchOperable(ull value);
 
         bool isInCheckPath = false;
         virtual Operable* checkShortCircuit() = 0;

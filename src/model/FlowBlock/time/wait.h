@@ -28,6 +28,7 @@ namespace kathryn{
         NodeWrap* _resultNodeWrap = nullptr;
         /** exit condition*/
         Operable* _exitCond = nullptr;
+        Operable* _purifiedExitCond = nullptr;
         /** represent node*/
         WaitCondNode* _waitNode = nullptr;
     public:

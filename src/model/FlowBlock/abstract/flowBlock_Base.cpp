@@ -58,7 +58,7 @@ namespace kathryn{
         }
     }
 
-    Operable* purifyCondition(Operable* rawOpr){
+    Operable* FlowBlockBase::purifyCondition(Operable* rawOpr){
             assert(rawOpr != nullptr);
             Slice rawSl = rawOpr->getOperableSlice();
             assert(rawSl.getSize() != 0);
@@ -88,9 +88,9 @@ namespace kathryn{
         }
     }
 
-    std::string getDescribe(){
-        assert(false);
-    }
+//    std::string FlowBlockBase::getDescribe(){
+//        assert(false);
+//    }
 
     std::vector<FlowBlockBase::sortEle> FlowBlockBase::sortSubAndConFbInOrder() {
 

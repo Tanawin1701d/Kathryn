@@ -4,6 +4,8 @@
 
 #include"operable.h"
 #include "model/hwComponent/expression/expression.h"
+#include "model/hwComponent/value/value.h"
+
 
 namespace kathryn {
 
@@ -202,6 +204,9 @@ namespace kathryn {
     }
 
 
+
+
+
     ValRep Operable::getSlicedCurValue(){
         Slice targetSlice    = getOperableSlice();
         Slice srcSlice       = getExactOperable().getOperableSlice();
@@ -211,5 +216,14 @@ namespace kathryn {
                (targetSlice.stop <= rawSrcSimVal.getLen()));
         return rawSrcSimVal.slice(targetSlice);
     }
+
+    Operable& Operable::getMatchOperable(const ull value) {
+            makeVal(userAutoVal, getOperableSlice().getSize(), value);
+            /** todo check bit size*/
+            return userAutoVal;
+    }
+
+
+
 
 }

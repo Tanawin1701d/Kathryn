@@ -26,6 +26,7 @@ namespace kathryn{
                     }),
     _resultNodeWrap(nullptr),
     _exitCond(exitCond),
+    _purifiedExitCond(purifyCondition(exitCond)),
     _waitNode(nullptr)
     {
         assert(exitCond != nullptr);
@@ -53,6 +54,7 @@ namespace kathryn{
         assert(conBlocks.empty());
 
         /** build node*/
+
         _waitNode = new WaitCondNode(_exitCond);
         _waitNode->setDependStateJoinOp(BITWISE_AND);
         /** result node wrap*/

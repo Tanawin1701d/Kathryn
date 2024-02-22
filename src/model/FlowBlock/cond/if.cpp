@@ -230,6 +230,11 @@ namespace kathryn{
             isStateRunning |= sb->isBlockOrNodeRunning();
         }
 
+        for(auto cb: conBlocks){
+            cb->simStartCurCycle();
+            isStateRunning |= cb->isBlockOrNodeRunning();
+        }
+
         if (condNode != nullptr){
             condNode->simStartCurCycle();
             isStateRunning |= condNode->isBlockOrNodeRunning();
@@ -248,6 +253,9 @@ namespace kathryn{
         unsetBlockOrNodeRunning();
         for(auto sb: subBlocks){
             sb->simExitCurCycle();
+        }
+        for(auto cb: conBlocks){
+            cb->simExitCurCycle();
         }
 
         if (condNode != nullptr){
