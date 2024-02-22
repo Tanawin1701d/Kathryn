@@ -17,6 +17,7 @@ namespace kathryn{
     class FlowBlockWhileBase : public FlowBlockBase, public LoopStMacro{
     protected:
         Operable*      _condExpr         = nullptr;
+        Operable*      _purifiedCondExpr = nullptr;
         FlowBlockBase* implicitFlowBlock = nullptr;
         bool           isGetFlowBlockYet = false;
         NodeWrap*      resultNodeWrapper = nullptr;

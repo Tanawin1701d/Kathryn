@@ -55,7 +55,7 @@ namespace kathryn{
          * */
         /**node that intend to exit*/
         normalExit->addDependNode(conNode);
-        normalExit->addCondtion(&(!*_condExpr), BITWISE_AND);
+        normalExit->addCondtion(&(!*_purifiedCondExpr), BITWISE_AND);
         normalExit->setDependStateJoinOp(BITWISE_AND);
         normalExit->assign();
 
@@ -73,7 +73,7 @@ namespace kathryn{
          *
          */
          subBlockNodeWrap->addDependNodeToAllNode(conNode);
-         subBlockNodeWrap->addConditionToAllNode(_condExpr, BITWISE_AND);
+         subBlockNodeWrap->addConditionToAllNode(_purifiedCondExpr, BITWISE_AND);
          subBlockNodeWrap->assignAllNode();
 
          resultNodeWrapper->addEntraceNode(conNode);

@@ -10,12 +10,15 @@ namespace kathryn{
     FlowBlockWhileBase::FlowBlockWhileBase(Operable& condExpr,
                                            FLOW_BLOCK_TYPE fbt):
     _condExpr(&condExpr),
+    _purifiedCondExpr(purifyCondition(&condExpr)),
     FlowBlockBase(fbt,
                     {
                             {FLOW_ST_BASE_STACK},
                             FLOW_JO_SUB_FLOW,
                             true
-                    }) {}
+                    }) {
+        assert(_purifiedCondExpr != nullptr);
+    }
 
     FlowBlockWhileBase::~FlowBlockWhileBase() {
         delete resultNodeWrapper;

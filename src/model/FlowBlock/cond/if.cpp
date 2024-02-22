@@ -19,6 +19,7 @@ namespace kathryn{
        }){
         assert(flowBlockType == CIF || flowBlockType == SIF);
         allCondes.push_back(&cond);
+        allPurifiedCondes.push_back(purifyCondition(&cond));
     }
 
     FlowBlockIf::~FlowBlockIf(){
@@ -86,19 +87,19 @@ namespace kathryn{
         assert(!allStatement.empty());
 
         /**add condition to state*/
-        Operable* prevFalse = &(~(*allCondes[0]));
+        Operable* prevFalse = &(~(*allPurifiedCondes[0]));
         /** assign first first if*/
-        allStatement[0]->addConditionToAllNode(allCondes[0], BITWISE_AND);
+        allStatement[0]->addConditionToAllNode(allPurifiedCondes[0], BITWISE_AND);
         int statementId = 1;
         for (; statementId < allStatement.size(); statementId++){
-            if (statementId < allCondes.size()) {
+            if (statementId < allPurifiedCondes.size()) {
                 allStatement[statementId]->addConditionToAllNode(
-                        &((*allCondes[statementId]) & (*prevFalse)),
+                        &((*allPurifiedCondes[statementId]) & (*prevFalse)),
                         BITWISE_AND);
-                prevFalse = &((*prevFalse) & ~(*allCondes[statementId]));
+                prevFalse = &((*prevFalse) & ~(*allPurifiedCondes[statementId]));
             }else{
                 /** case else statement*/
-                assert(statementId == (allCondes.size())); /// check no ambiguous statement
+                assert(statementId == (allPurifiedCondes.size())); /// check no ambiguous statement
                 allStatement[statementId]->addConditionToAllNode(
                         prevFalse,
                         BITWISE_AND);
@@ -187,6 +188,7 @@ namespace kathryn{
     }
 
     void FlowBlockIf::addMdLog(MdLogVal *mdLogVal) {
+        assert(allCondes.size() == allPurifiedCondes.size());
         mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() +" ]");
         int cnt = 0;
         if (resultNodeWrap->isThereForceExitNode()){

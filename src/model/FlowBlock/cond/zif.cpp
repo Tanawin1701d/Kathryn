@@ -32,7 +32,7 @@ namespace kathryn{
         basicNodes.clear();
     }
 
-    void FlowBlockZIF::addElementInFlowBlock(Node *node) {
+    void FlowBlockZIF::addElementInFlowBlock(Node* node) {
         assert(node != nullptr);
         FlowBlockBase::addElementInFlowBlock(node);
     }
@@ -66,15 +66,16 @@ namespace kathryn{
         assert(subBlocks.empty());
         assert(!basicNodes.empty());
 
+        Operable* purifiedCurCond = purifyCondition(curCond);
         /**assign node condition to our basic Node */
         for (auto nd: basicNodes){
             assert(nd != nullptr);
-            assert(curCond != nullptr);
-            nd->addCondtion(curCond, BITWISE_AND);
+            assert(purifiedCurCond != nullptr);
+            nd->addCondtion(purifiedCurCond, BITWISE_AND);
         }
         if (conBlocks.empty())
             return;
-        prevFalse = &(!(*curCond));
+        prevFalse = &(!(*purifiedCurCond));
         /**assign for each zelif block and zelse block*/
         bool elseDetected = false;
 
@@ -89,14 +90,17 @@ namespace kathryn{
                     subBasicNode->addCondtion(prevFalse,BITWISE_AND);
                 }else{
                     assert(!elseDetected);
-                    subBasicNode->addCondtion(&((*prevFalse) && (*castedZelifBlock->getCurCond())),
+                    Operable* purifiedCond = purifyCondition(castedZelifBlock->getCurCond());
+                    subBasicNode->addCondtion(&((*prevFalse) && (*purifiedCond)),
                                               BITWISE_AND);
                 }
 
                 basicNodes.push_back(subBasicNode);
             }
-            if (castedZelifBlock->getCurCond() != nullptr)
-                prevFalse = &((*prevFalse) && !(*castedZelifBlock->getCurCond()));
+            if (castedZelifBlock->getCurCond() != nullptr) {
+                Operable* purifiedCond = purifyCondition(castedZelifBlock->getCurCond());
+                prevFalse = &((*prevFalse) && !(*purifiedCond));
+            }
         }
 
     }
@@ -124,8 +128,5 @@ namespace kathryn{
     void FlowBlockZIF::simExitCurCycle(){
         assert(false);
     }
-
-
-
 
 }
