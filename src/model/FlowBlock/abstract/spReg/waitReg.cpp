@@ -62,11 +62,11 @@ namespace kathryn{
 
     bool CondWaitStateReg::isSimAtWaiting(){
         /** register sim*/
-        RtlSimEngine* regEnginePtr = getSimEngine();
-        ValRep& curVal = regEnginePtr->getCurVal();
+        assert(getRtlValItf()->isCurValSim());
+        ValRep& curVal = getRtlValItf()->getCurVal();
         /** val sim*/
-        RtlSimEngine* valEnginePtr = _downState.getSimEngine();
-        ValRep& restCurVal = valEnginePtr->getCurVal();
+        assert(_downState.getRtlValItf()->isCurValSim());
+        ValRep& restCurVal = _downState.getRtlValItf()->getCurVal();
 
         return (curVal > restCurVal).getLogicalValue();
     }
@@ -160,11 +160,11 @@ namespace kathryn{
 
     bool CycleWaitStateReg::isSimAtWaiting(){
         /** register sim*/
-        RtlSimEngine* regEnginePtr = getSimEngine();
-        ValRep& curVal = regEnginePtr->getCurVal();
+        assert(getRtlValItf()->isCurValSim());
+        ValRep& curVal = getRtlValItf()->getCurVal();
         /** val sim*/
-        RtlSimEngine* valEnginePtr = IdleCnt->castToRtlSimItf()->getSimEngine();
-        ValRep& restCurVal = valEnginePtr->getCurVal();
+        assert(IdleCnt->getRtlValItf()->isCurValSim());
+        ValRep& restCurVal = IdleCnt->getRtlValItf()->getCurVal();
 
         return (curVal > restCurVal).getLogicalValue();
     }

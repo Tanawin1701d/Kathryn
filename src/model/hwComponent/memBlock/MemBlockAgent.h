@@ -35,8 +35,8 @@ namespace kathryn{
         Operable* _indexer = nullptr;
 
     protected:
-        bool setReadMode (){readMode = true; }
-        bool setWriteMode(){readMode = false;}
+        void setReadMode (){readMode = true; }
+        void setWriteMode(){readMode = false;}
         ////[[nodiscard]] bool isSetMode   () const{return setModeYet;}
 
     public:

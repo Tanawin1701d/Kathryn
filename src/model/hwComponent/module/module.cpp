@@ -201,6 +201,10 @@ namespace kathryn{
         ////// flow block not need prepare sim
     }
 
+
+    /***/
+
+
     void Module::simStartCurCycle() {
         /**simulate rtl first*/
 
@@ -213,8 +217,10 @@ namespace kathryn{
         simStartCurSubElement(_userWires);
         simStartCurSubElement(_userExpressions);
         simStartCurSubElement(_userVals);
+        simStartCurSubElement(_userMemBlks);
         /**COMPLEX SUB SIM*/
         simStartCurSubElement(_userSubModule);
+        /**for now we are sure that the other is simulated*/
         simStartCurSubElement(_flowBlockBases);
 
         /**simulate flow block in which node is implicitly invoked*/
@@ -227,6 +233,7 @@ namespace kathryn{
         }
         /**RTL SIM(USER)*/
         simStartNextSubElement(_userRegs);
+        simStartNextSubElement(_userMemBlks);
         /**COMPLEX SUB SIM*/
         simStartNextSubElement(_userSubModule);
     }
@@ -260,11 +267,69 @@ namespace kathryn{
         simExitSubElement(_userWires);
         simExitSubElement(_userExpressions);
         simExitSubElement(_userVals);
+        simExitSubElement(_userMemBlks);
         /**COMPLEX SUB SIM*/
         simExitSubElement(_userSubModule);
         simExitSubElement(_flowBlockBases);
 
         /** exit flowblock first*/
+    }
+
+
+
+
+
+    /** sub element interface*/
+
+    template<typename T>
+    void Module::beforePrepareSimSubElement_RTL_only(std::vector<T*>& subEleVec, VcdWriter* writer){
+        for (auto ele: subEleVec){
+            assert(ele != nullptr);
+            ele->beforePrepareSim(
+                    {true, /// for now
+                     ele->concat_inheritName()+ "_" + ele->getVarName(),
+                     writer
+                    });
+            ele->sortUpEventByPriority();
+        }
+    }
+
+    template<typename T>
+    void Module::prepareSimSubElement(std::vector<T*>& subEleVec){
+        for (auto ele: subEleVec){
+            assert(ele != nullptr);
+            ele->prepareSim();
+        }
+    }
+
+    template<typename T>
+    void Module::simStartCurSubElement(std::vector<T*>& subEleVec){
+        for (auto ele: subEleVec){
+            assert(ele != nullptr);
+            ele->simStartCurCycle();
+        }
+    }
+
+    template<typename T>
+    void Module::simStartNextSubElement(std::vector<T*>& subEleVec){
+        for(auto ele: subEleVec){
+            assert(ele != nullptr);
+            ele->simStartNextCycle();
+        }
+    }
+
+    template<typename T>
+    void Module::curCollectData(std::vector<T*>& subEleVec){
+        for (auto ele: subEleVec){
+            ele->curCycleCollectData();
+        }
+    }
+
+    template<typename T>
+    void Module::simExitSubElement(std::vector<T*>& subEleVec){
+        for (auto ele: subEleVec){
+            ele->simExitCurCycle();
+        }
     }
 
 

@@ -53,11 +53,11 @@ namespace kathryn {
 
     bool SyncReg::isSimAtFullSyn() {
         /** register sim */
-        RtlSimEngine* regEnginePtr = getSimEngine();
-        ValRep& curVal = regEnginePtr->getCurVal();
+        assert(getRtlValItf()->isCurValSim());
+        ValRep& curVal = getRtlValItf()->getCurVal();
         /** val sim*/
-        RtlSimEngine* valEnginePtr = upFullState.getSimEngine();
-        ValRep& fullStateRep       = valEnginePtr->getCurVal();
+        assert(upFullState.getRtlValItf()->isCurValSim());
+        ValRep& fullStateRep       = upFullState.getRtlValItf()->getCurVal();
         /**due to it return valrep we must check it is equal to 1*/
         return (curVal == fullStateRep).getLogicalValue();
     }

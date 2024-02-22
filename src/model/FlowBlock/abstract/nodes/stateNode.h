@@ -53,7 +53,7 @@ namespace kathryn{
             }
             setSimStatus();
             assert(_stateReg != nullptr);
-            bool isStateSet = _stateReg->getSimEngine()->getCurVal().getLogicalValue();
+            bool isStateSet = _stateReg->getRtlValItf()->getCurVal().getLogicalValue();
             if (isStateSet){
                 setBlockOrNodeRunning();
                 incEngine();

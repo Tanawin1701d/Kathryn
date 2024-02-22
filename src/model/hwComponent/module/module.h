@@ -61,6 +61,19 @@ namespace kathryn{
         template<typename T>
         void localizeSlaveVector(std::vector<T>& _vec);
         void localizeSlaveElements();
+        /** sub element interface*/
+        template<typename T>
+        void beforePrepareSimSubElement_RTL_only(std::vector<T*>& subEleVec, VcdWriter* writer);
+        template<typename T>
+        void prepareSimSubElement(std::vector<T*>& subEleVec);
+        template<typename T>
+        void simStartCurSubElement(std::vector<T*>& subEleVec);
+        template<typename T>
+        void simStartNextSubElement(std::vector<T*>& subEleVec);
+        template<typename T>
+        void curCollectData(std::vector<T*>& subEleVec);
+        template<typename T>
+        void simExitSubElement(std::vector<T*>& subEleVec);
 
 
     public:
@@ -77,18 +90,7 @@ namespace kathryn{
         }
 
         /** logic comp*/
-        template<typename T>
-        void beforePrepareSimSubElement_RTL_only(std::vector<T*>& subEleVec, VcdWriter* writer){
-            for (auto ele: subEleVec){
-                assert(ele != nullptr);
-                ele->beforePrepareSim(
-                        {true, /// for now
-                         ele->concat_inheritName()+ "_" + ele->getVarName(),
-                         writer
-                         });
-                ele->sortUpEventByPriority();
-            }
-        }
+
 
         void beforePrepareSimSubElement_FB_only(std::vector<FlowBlockBase*>& subEleVec, FlowColEle* flowColEle){
             assert(flowColEle != nullptr);
@@ -104,48 +106,6 @@ namespace kathryn{
 
         }
 
-
-        /** logic comp*/
-        template<typename T>
-        void prepareSimSubElement(std::vector<T*>& subEleVec){
-            for (auto ele: subEleVec){
-                assert(ele != nullptr);
-                ele->prepareSim();
-            }
-        }
-
-        /** logic comp/flowBlock/subModule    */
-        template<typename T>
-        void simStartCurSubElement(std::vector<T*>& subEleVec){
-            for (auto ele: subEleVec){
-                assert(ele != nullptr);
-                ele->simStartCurCycle();
-            }
-        }
-
-        template<typename T>
-        void simStartNextSubElement(std::vector<T*>& subEleVec){
-            for(auto ele: subEleVec){
-                assert(ele != nullptr);
-                ele->simStartNextCycle();
-            }
-        }
-
-
-        template<typename T>
-        void curCollectData(std::vector<T*>& subEleVec){
-            for (auto ele: subEleVec){
-                ele->curCycleCollectData();
-            }
-        }
-
-        /** logic comp/flowBlock/subModule    */
-        template<typename T>
-        void simExitSubElement(std::vector<T*>& subEleVec){
-            for (auto ele: subEleVec){
-                ele->simExitCurCycle();
-            }
-        }
 
         /**implicit element that is built from design flow*/
         void addSpReg          (Reg* reg, SP_REG_TYPE spRegType);

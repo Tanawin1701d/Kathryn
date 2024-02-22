@@ -37,10 +37,9 @@ namespace kathryn{
     void ModuleSimEvent::simStartCurCycle() {
         if (_curCycle == 0) {
             /** initiate reset Value*/
-            auto resetSimEngine = _resetWire->castToRtlSimItf()->getSimEngine();
             ValRep resetVal = NumConverter::cvtStrToValRep(1, 1);
-            resetSimEngine->setCurValSimStatus();
-            resetSimEngine->getCurVal() = resetVal;
+            _resetWire->getRtlValItf()->setCurValSimStatus();
+            _resetWire->getRtlValItf()->getCurVal() = resetVal;
         }
         ////std::cout << "--------------------------------------------------------" <<std::endl;
         _startModule->simStartCurCycle();

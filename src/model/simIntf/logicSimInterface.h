@@ -62,6 +62,7 @@ namespace kathryn{
 
         /**specific set element before prepare sim*/
         virtual void beforePrepareSim(RTL_Meta_afterMf simMeta){
+            _isSimMetaSet = true;
             _simMeta = std::move(simMeta);
         }
 
