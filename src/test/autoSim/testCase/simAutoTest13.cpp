@@ -40,7 +40,7 @@ namespace kathryn{
                     }celif(a >= five){
                         b3 <<= b3 + one;
                         x1 = x2;
-                        x2 = x1;
+                        //x2 = x1;
                     }celse{
                         b2 <<= b2 + one;
                     }

@@ -53,13 +53,13 @@ namespace kathryn {
             Slice srcSlice = srcUpdateValue->getOperableSlice();
             Slice desSlice = desUpdateSlice;
             assert(srcSlice.getSize() >= desSlice.getSize());
-            Slice desireSrcSlice = srcSlice.getSubSliceWithShinkMsb({0, desSlice.getSize()});
-            assert(srcSlice.getSize() == desSlice.getSize());
+            Slice neededSrcSlice = srcSlice.getSubSliceWithShinkMsb({0, desSlice.getSize()});
+            Slice neededDesSlice = desSlice.getSubSliceWithShinkMsb({0, srcSlice.getSize()});
             /**get src value and slice */
             assert(srcUpdateValue->getRtlValItf()->isCurValSim());
             ValRep& rawSrcVal    = srcUpdateValue->getRtlValItf()->getCurVal();
-            ValRep  desireSrcVal = rawSrcVal.slice(desireSrcSlice);
-            desValRep.updateOnSlice(desireSrcVal, desireSrcSlice);
+            ValRep  desireSrcVal = rawSrcVal.slice(neededSrcSlice);
+            desValRep.updateOnSlice(desireSrcVal, neededDesSlice);
         }
 
         void trySimAll() const{
