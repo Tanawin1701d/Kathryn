@@ -43,12 +43,18 @@ namespace kathryn{
         explicit MemBlockEleHolder(MemBlock* master, const Operable* indexer);
         explicit MemBlockEleHolder(MemBlock* master, int idx);
 
+        void com_init() override{};
+        void com_final() override{};
+
         ValRep& getCurMemVal();
         int     getExactIndexSize();
 
         /** override assignable (need to call controller)*/
         MemBlockEleHolder& operator <<= (Operable& b) override;
+        MemBlockEleHolder& operator <<= (ull       b) override;
         MemBlockEleHolder& operator   = (Operable& b) override;
+        MemBlockEleHolder& operator   = (ull       b) override;
+        Slice getAssignSlice() override{ return Slicable<MemBlockEleHolder>::getSlice();}
 
         /** Operable*/
         [[nodiscard]] Slice           getOperableSlice    () const override;

@@ -164,6 +164,8 @@ add_executable(Kathryn main.cpp
         src/util/numberic/pmath.cpp
         src/util/numberic/pmath.h
         src/model/hwComponent/abstract/operableConOv.cpp
+        src/test/autoSim/testCase/simAutoTest14.cpp
+        src/test/autoSim/testCase/simAutoTest15.cpp
 
 
 )

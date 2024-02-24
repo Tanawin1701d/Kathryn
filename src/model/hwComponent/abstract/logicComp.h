@@ -59,6 +59,9 @@ namespace kathryn{
         Slice getOperableSlice() const override{
             return Slicable<T>::getSlice();
         }
+        Slice getAssignSlice() override{
+            return Slicable<T>::getSlice();
+        }
         Operable& getExactOperable() const override{
             return *(Operable*)this;
         }

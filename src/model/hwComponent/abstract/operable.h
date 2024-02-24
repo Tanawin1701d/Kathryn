@@ -80,6 +80,7 @@ namespace kathryn {
         virtual expression& operator /  (ull b);
         virtual expression& operator %  (ull b);
 
+
         /** due to slice operable maybe change*/
         [[nodiscard]]
         virtual Slice           getOperableSlice() const = 0;
@@ -88,10 +89,8 @@ namespace kathryn {
 
         virtual Simulatable*    getSimItf() = 0;
         virtual RtlValItf*      getRtlValItf() = 0;
-
-
         /** please remind this is a copy not reference value*/
-        ValRep  getSlicedCurValue();
+        ValRep  getSlicedCurValue(); ///// get simvalue with sliced to match current opr
 
 
 
@@ -99,7 +98,7 @@ namespace kathryn {
         virtual Identifiable*   castToIdent() = 0;
         virtual ValRep&         sv() = 0;
 
-        Operable& getMatchOperable(ull value);
+        Operable& getMatchOperable(ull value) const;
 
         bool isInCheckPath = false;
         virtual Operable* checkShortCircuit() = 0;

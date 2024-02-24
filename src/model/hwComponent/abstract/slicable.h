@@ -81,6 +81,15 @@ namespace kathryn {
              return *this;
         }
 
+        SliceAgent<T>& operator <<= (ull b) override {
+            Operable& rhsOpr = getMatchAssignOperable(b, Slicable<T>::getSlice().getSize());
+            _master->callBackBlockAssignFromAgent(
+                    rhsOpr,
+                    Slicable<T>::getSlice());
+
+            return *this;
+        }
+
         SliceAgent<T>& operator = (Operable& b) override {
             _master->callBackNonBlockAssignFromAgent(
                     b,
@@ -88,6 +97,17 @@ namespace kathryn {
             );
             return *this;
         }
+
+        SliceAgent<T>& operator = (ull b) override {
+            Operable& rhsOpr = getMatchAssignOperable(b, Slicable<T>::getSlice().getSize());
+            _master->callBackNonBlockAssignFromAgent(
+                    rhsOpr,
+                    Slicable<T>::getSlice());
+
+            return *this;
+        }
+
+        [[nodiscard]] Slice getAssignSlice()  override { return  Slicable<T>::getSlice(); }
 
         /** override operable*/
 

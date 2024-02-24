@@ -16,6 +16,9 @@ namespace kathryn {
 
 /** bitwise operators*/
     expression& Operable::operator&(const Operable &b) {
+        mfAssert(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
+                 "operable<&> get mismatch bit size"
+                 );
         auto ret =  new expression(BITWISE_AND,
                                    this,
                                    &b,
@@ -25,6 +28,9 @@ namespace kathryn {
     }
 
     expression& Operable::operator|(const Operable &b) {
+        mfAssert(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
+                 "operable<|> get mismatch bit size"
+        );
         auto ret =  new expression(BITWISE_OR,
                                      this,
                                      &b,
@@ -34,6 +40,9 @@ namespace kathryn {
     }
 
     expression& Operable::operator^(const Operable &b) {
+        mfAssert(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
+                 "operable<^> get mismatch bit size"
+        );
         auto ret =  new expression(BITWISE_XOR,
                                     this,
                                     &b,
@@ -43,6 +52,7 @@ namespace kathryn {
     }
 
     expression& Operable::operator~() {
+
         auto ret =  new expression(BITWISE_INVR,
                                      this,
                                      nullptr,
@@ -52,6 +62,9 @@ namespace kathryn {
     }
 
     expression& Operable::operator<<(const Operable &b) {
+        mfAssert(b.getOperableSlice().getSize() <= ValRep::bitSizeOfUll,
+                 "operable<&> get mismatch bit size"
+        );
         auto ret =  new expression(BITWISE_SHL,
                                      this,
                                      &b,
@@ -61,6 +74,9 @@ namespace kathryn {
     }
 
     expression& Operable::operator>>(const Operable &b) {
+        mfAssert(b.getOperableSlice().getSize() <= ValRep::bitSizeOfUll,
+                 "operable<&> get mismatch bit size"
+        );
         auto ret =  new expression(BITWISE_SHR,
                                      this,
                                      &b,
@@ -158,6 +174,9 @@ namespace kathryn {
     /** arithmetic operators*/
 
     expression& Operable::operator+(const Operable &b) {
+        mfAssert(getOperableSlice().getSize() >= b.getOperableSlice().getSize(),
+                 "operable<+> get mismatch bit size"
+        );
         auto ret =  new expression(ARITH_PLUS,
                                      this,
                                      &b,
@@ -168,6 +187,9 @@ namespace kathryn {
     }
 
     expression& Operable::operator-(const Operable &b) {
+        mfAssert(getOperableSlice().getSize() >= b.getOperableSlice().getSize(),
+                 "operable<-> get mismatch bit size"
+        );
         auto ret =  new expression(ARITH_MINUS,
                                      this,
                                      &b,
@@ -177,6 +199,9 @@ namespace kathryn {
     }
 
     expression& Operable::operator*(const Operable &b) {
+        mfAssert(getOperableSlice().getSize() >= b.getOperableSlice().getSize(),
+                 "operable<*> get mismatch bit size"
+        );
         auto ret =  new expression(ARITH_MUL,
                                      this,
                                      &b,
@@ -186,6 +211,9 @@ namespace kathryn {
     }
 
     expression& Operable::operator/(const Operable &b) {
+        mfAssert(getOperableSlice().getSize() >= b.getOperableSlice().getSize(),
+                 "operable</> get mismatch bit size"
+        );
         auto ret =  new expression(ARITH_DIV,
                                      this,
                                      &b,
@@ -195,6 +223,9 @@ namespace kathryn {
     }
 
     expression& Operable::operator%(const Operable &b) {
+        mfAssert(getOperableSlice().getSize() >= b.getOperableSlice().getSize(),
+                 "operable<%> get mismatch bit size"
+        );
         auto ret =  new expression(ARITH_DIVR,
                                      this,
                                      &b,
@@ -202,10 +233,6 @@ namespace kathryn {
 
         return *ret;
     }
-
-
-
-
 
     ValRep Operable::getSlicedCurValue(){
         Slice targetSlice    = getOperableSlice();
@@ -217,10 +244,10 @@ namespace kathryn {
         return rawSrcSimVal.slice(targetSlice);
     }
 
-    Operable& Operable::getMatchOperable(const ull value) {
-            makeVal(userAutoVal, getOperableSlice().getSize(), value);
-            /** todo check bit size*/
-            return userAutoVal;
+    Operable& Operable::getMatchOperable(const ull value) const {
+            makeVal(optUserAutoVal, getOperableSlice().getSize(), value);
+            /** todo check bit size */
+            return optUserAutoVal;
     }
 
 

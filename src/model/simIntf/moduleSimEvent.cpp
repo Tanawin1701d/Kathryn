@@ -36,15 +36,22 @@ namespace kathryn{
 
     void ModuleSimEvent::simStartCurCycle() {
         if (_curCycle == 0) {
+
+
+
             /** initiate reset Value*/
             ValRep resetVal = NumConverter::cvtStrToValRep(1, 1);
             _resetWire->getRtlValItf()->setCurValSimStatus();
             _resetWire->getRtlValItf()->getCurVal() = resetVal;
         }
-        ////std::cout << "--------------------------------------------------------" <<std::endl;
+
+        if (_curCycle == 35){
+            std::cout << "gotcha";
+        }
+        std::cout << "--------------------------------------------------------" <<std::endl;
         _startModule->simStartCurCycle();
         _startModule->simStartNextCycle();
-        ////std::cout << "--------------------------------------------------------" <<std::endl;
+        std::cout << "--------------------------------------------------------" <<std::endl;
         /***set reset wire */
 
     }

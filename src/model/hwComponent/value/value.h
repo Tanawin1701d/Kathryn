@@ -69,7 +69,9 @@ namespace kathryn{
          * override assignable
          * */
         Val& operator <<= (Operable& b) override { mfAssert(false, "val don't support this <<= assigment");assert(false);}
+        Val& operator <<= (ull       b) override { mfAssert(false, "val don't support this   = assigment");assert(false);}
         Val& operator =   (Operable& b) override { mfAssert(false, "val don't support this   = assigment");assert(false);}
+        Val& operator =   (ull       b) override { mfAssert(false, "val don't support this   = assigment");assert(false);}
         Val& operator =   (Val&      b)          { mfAssert(false, "val don't support this   = assigment");assert(false);}
 
 

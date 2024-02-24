@@ -49,6 +49,7 @@ namespace kathryn{
         _indexer->getSimItf()->simStartCurCycle();
         ValRep curValIndexer = _indexer->getSlicedCurValue();
         assert(curValIndexer.getLen() == getExactIndexSize());
+        std::cout << "indexer ==== " << curValIndexer.getVal()[0] << std::endl;
         return _master->getThisCycleValRep(curValIndexer.getVal()[0]);
     }
 
@@ -72,7 +73,17 @@ namespace kathryn{
         return *this;
     }
 
+    MemBlockEleHolder& MemBlockEleHolder::operator <<= (ull b){
+        Operable& rhs = getMatchAssignOperable(b, getSlice().getSize());
+        return operator<<=(rhs);
+    }
+
     MemBlockEleHolder &MemBlockEleHolder::operator=(Operable &b) {
+        mfAssert(false, "memBlockEle doesn't support = operator");
+        assert(false);
+    }
+
+    MemBlockEleHolder &MemBlockEleHolder::operator=(ull b) {
         mfAssert(false, "memBlockEle doesn't support = operator");
         assert(false);
     }
@@ -120,6 +131,7 @@ namespace kathryn{
         if (isCurValSim()){
             return;
         }
+        std::cout << "next======" << std::endl;
         setCurValSimStatus();
         _curAgentVal =  &getCurMemVal();
     }
@@ -130,6 +142,8 @@ namespace kathryn{
         ////// curAgentVal is assigned already
         assert(isNextValSim() == false);
         setNextValSimStatus();
+        std::cout << "next======" << std::endl;
+
         _nextAgentVal = getCurMemVal();
         assignValRepCurCycle(_nextAgentVal);
     }

@@ -32,6 +32,7 @@ namespace kathryn{
         explicit MemBlock(ull depth, int width);
 
         void com_init() override;
+        void com_final() override{};
 
         MemBlockEleHolder& operator[] (const Operable& indexer);
 
@@ -47,6 +48,11 @@ namespace kathryn{
         void simStartNextCycle() override;
 
         void simExitCurCycle() override;
+
+        /** override debugger*/
+        std::string getMdIdentVal() override{
+            return getIdentDebugValue();
+        }
 
 
 

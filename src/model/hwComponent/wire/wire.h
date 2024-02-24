@@ -22,8 +22,11 @@ namespace kathryn{
         /**override assignable*/
         [[maybe_unused]]
         Wire& operator <<= (Operable& b) override {mfAssert(false, "wire don't support this <<= assigment");assert(false);};
+        Wire& operator <<= (ull b) override {mfAssert(false, "wire don't support this <<= assigment");assert(false);}
+
         Wire& operator =   (Operable& b) override;
         Wire& operator =   (Wire& b);
+        Wire& operator =   (ull b) override;
         /**override operable*/
         Operable& getExactOperable() const override {return *(Operable*)(this);}
         Slice getOperableSlice() const override {return getSlice();}

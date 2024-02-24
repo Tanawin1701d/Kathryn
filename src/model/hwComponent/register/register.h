@@ -26,8 +26,10 @@ namespace kathryn{
 
         /** assignable override*/
         Reg& operator <<= (Operable& b) override;
+        Reg& operator <<= (ull b) override;
         [[maybe_unused]]
         Reg&  operator =   (Operable& b) override;
+        Reg& operator  =   (ull b) override{mfAssert(false, "wire don't support this <<= assigment");assert(false);}
         Reg&  operator =   (Reg& b);
 
         /** Operable override*/

@@ -39,6 +39,11 @@ namespace kathryn{
         return *this;
     }
 
+    Wire& Wire::operator = (ull b){
+        Operable& rhs = getMatchAssignOperable(b, getSlice().getSize());
+        return operator=(rhs);
+    }
+
     SliceAgent<Wire>& Wire::operator()(int start, int stop) {
         auto ret = new SliceAgent<Wire>(
                 this,

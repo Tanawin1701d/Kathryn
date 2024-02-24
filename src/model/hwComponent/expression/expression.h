@@ -51,8 +51,10 @@ namespace kathryn {
         void com_final() override {};
         /** override assignable*/
         expression& operator <<= (Operable  & b) override {mfAssert(false, "expr don't support this <<= assigment"); assert(false);}
+        expression& operator <<= (ull b)         override {mfAssert(false, "expr don't support this <<= assigment"); assert(false);}
         expression& operator =   (Operable  & b) override;
         expression& operator =   (expression& b);
+        expression& operator = (ull b)         override {mfAssert(false, "expr don't support this = assigment with ull overload"); assert(false);}
         /**override operable*/
         [[nodiscard]]
         Slice getOperableSlice() const override  { return getSlice(); }

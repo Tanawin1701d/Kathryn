@@ -196,6 +196,7 @@ namespace kathryn{
         prepareSimSubElement(_userWires);
         prepareSimSubElement(_userExpressions);
         prepareSimSubElement(_userVals);
+        prepareSimSubElement(_userMemBlks);
         /**COMPLEX PREPARE SUB SIM*/
         prepareSimSubElement(_userSubModule);
         ////// flow block not need prepare sim

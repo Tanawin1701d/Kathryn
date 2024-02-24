@@ -27,6 +27,11 @@ namespace kathryn{
         return *this;
     }
 
+    Reg& Reg::operator <<= (ull b) {
+        Operable& rhs = getMatchAssignOperable(b, getSlice().getSize());
+        return operator<<=(rhs);
+    }
+
     Reg& Reg::operator=(Operable& b) {
         /** todo first version we not support this operator*/
         mfAssert(false, "reg don't support this = assigment");

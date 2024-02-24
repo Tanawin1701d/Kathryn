@@ -13,7 +13,7 @@ namespace kathryn{
 
     class MemSimulatable : public Simulatable,
                            public RtlValItf{
-    private:
+    protected:
         /** we will not use sim engine anymore*/
         ValRep* memBlk = nullptr;
 
@@ -81,7 +81,7 @@ namespace kathryn{
         void simExitCurCycle() override{
             assert(_curAgentVal != nullptr);
             /** transfer simStatus*/
-            _isCurValSim  = _isNextValSim;
+            _isCurValSim  = false;
             _isNextValSim = false;
             if (!isReadMode()){ //// write mode
                 *_curAgentVal = _nextAgentVal;

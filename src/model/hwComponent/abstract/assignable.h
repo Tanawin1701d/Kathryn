@@ -31,6 +31,8 @@ namespace kathryn{
     * Assignable represent hardware component that can memorize logic value or
     *
     * */
+    /** to make value when constant input is used*/
+    Operable& getMatchAssignOperable(ull value, const int size);
 
     template<typename RET_TYPE>
     class Assignable{
@@ -47,7 +49,13 @@ namespace kathryn{
 
         /** assignable value*/
         virtual RET_TYPE& operator <<= (Operable& b) = 0;
+        virtual RET_TYPE& operator <<= (ull b) = 0;
+
+
         virtual RET_TYPE& operator =   (Operable& b) = 0;
+        virtual RET_TYPE& operator =   (ull b) = 0;
+
+        virtual Slice getAssignSlice() = 0;
 
         /** update event management*/
         std::vector<UpdateEvent*>& getUpdateMeta(){ return _updateMeta; }
@@ -59,6 +67,13 @@ namespace kathryn{
         AssignMeta* generateAssignMeta(Operable& assignValue, Slice assignSlice){
             return new AssignMeta(_updateMeta, assignValue, assignSlice);
         }
+
+
+        /***
+         *
+         * simulation task
+         *
+         * */
 
         /////// assign value to val representation
         ////////////////// usually it is call from sim Interface
@@ -85,8 +100,9 @@ namespace kathryn{
 
 
 
-    };
 
+
+    };
 
     template<typename RET_TYPE>
     class AssignCallbackFromAgent{
@@ -94,6 +110,9 @@ namespace kathryn{
         virtual RET_TYPE& callBackBlockAssignFromAgent(Operable& b, Slice absSliceOfHost)    = 0;
         virtual RET_TYPE& callBackNonBlockAssignFromAgent(Operable& b, Slice absSliceOfHost) = 0;
     };
+
+
+
 }
 
 #endif //KATHRYN_ASSIGNABLE_H

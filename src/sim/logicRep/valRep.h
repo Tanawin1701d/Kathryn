@@ -30,9 +30,10 @@ namespace kathryn{
         int   _len             = -1; //// userDefine size
         int   _valSize         = -1; //// size of array that contain ull
         ull*  _val             = nullptr;
-        static const int bitSizeOfUll = sizeof(ull) << 3;
+
 
     public:
+        static const int bitSizeOfUll = sizeof(ull) << 3;
         explicit  ValRep() = default;
         explicit ValRep(int len);
 
