@@ -88,6 +88,8 @@ namespace kathryn {
         /** on memBlock and its agent is updated*/
         void on_memBlk_init(MemBlock* ptr);
         void on_memBlkEleHolder_update(AssignMeta* asmMeta,MemBlockEleHolder* srcHolder);
+        /** on nest init*/
+        void on_nest_init(nest* ptr);
 
         /** value handling*/
         void on_value_init(Val* ptr);

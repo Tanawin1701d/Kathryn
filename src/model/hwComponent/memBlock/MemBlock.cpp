@@ -37,14 +37,14 @@ namespace kathryn{
     }
 
     void MemBlock::simStartCurCycle(){
-        std::cout << "start CurMemBlk PreDeclar" << std::endl;
+        /////std::cout << "start CurMemBlk PreDeclar" << std::endl;
         if (isCurValSim()){
             return;
         }
 
         setCurValSimStatus();
         for (auto agentHolder: memBlockAgents){
-            std::cout << "start CurMemBlk" << std::endl;
+            ////std::cout << "start CurMemBlk" << std::endl;
             agentHolder->simStartCurCycle();
         }
     }
@@ -52,7 +52,7 @@ namespace kathryn{
     void MemBlock::simStartNextCycle(){
         assert(!isNextValSim());
         setNextValSimStatus(); /// it only can be invoked one;
-        std::cout << "start Next MemBlk PreDeclar" << std::endl;
+        ////std::cout << "start Next MemBlk PreDeclar" << std::endl;
         for (auto agentHolder: memBlockAgents){
             ////// we will sim only write mode else is not
             if (!agentHolder->isReadMode()){
@@ -68,10 +68,10 @@ namespace kathryn{
             agentHolder->simExitCurCycle();
         }
 
-        std::cout <<"---------mem regiion" << std::endl;
-        for (int i = 0; i < DEPTH_SIZE; i++){
-            std::cout << memBlk[i].getBiStr() << std::endl;
-        }
+//        std::cout <<"---------mem regiion" << std::endl;
+//        for (int i = 0; i < DEPTH_SIZE; i++){
+//            std::cout << memBlk[i].getBiStr() << std::endl;
+//        }
     }
 
 

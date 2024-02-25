@@ -170,6 +170,19 @@ namespace kathryn{
               "memBlk HOLDER is updating value @ fb block " + fb->getMdIdentVal());
     }
 
+    /** exprMetas*/
+    void ModelController::on_nest_init(nest* ptr) {
+        assert(ptr != nullptr);
+        Module* targetModulePtr = getTargetModulePtr();
+        /** localize necessary destination*/
+        targetModulePtr->addUserNest(ptr);
+        ptr->setParent(targetModulePtr);
+        ptr->buildInheritName();
+        /** debug value*/
+        logMF(ptr,
+              "nest is initializing and set parent to " + targetModulePtr->getIdentDebugValue());
+    }
+
 
     /** value*/
     void ModelController::on_value_init(Val* ptr) {

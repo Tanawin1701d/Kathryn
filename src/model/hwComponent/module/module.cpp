@@ -100,6 +100,11 @@ namespace kathryn{
         _userVals.push_back(val);
     }
 
+    void Module::addUserNest(nest* nst){
+        assert(nst != nullptr);
+        _userNests.push_back(nst);
+    }
+
     void Module::addUserMemBlk(MemBlock* memBlock) {
         assert(memBlock != nullptr);
         _userMemBlks.push_back(memBlock);
@@ -173,6 +178,8 @@ namespace kathryn{
         beforePrepareSimSubElement_RTL_only(_userWires, vcdWriter);
         beforePrepareSimSubElement_RTL_only(_userExpressions, vcdWriter);
         beforePrepareSimSubElement_RTL_only(_userVals, vcdWriter);
+        beforePrepareSimSubElement_RTL_only(_userNests, vcdWriter);
+                ////// memblock doesn't have before prepare sim subelement
         /**flow block prepare sim*/
         beforePrepareSimSubElement_FB_only(_flowBlockBases, flowColEle->populateSubEle());
         /**COMPLEX BEFORE PREPARE SUB SIM*/
@@ -197,6 +204,7 @@ namespace kathryn{
         prepareSimSubElement(_userExpressions);
         prepareSimSubElement(_userVals);
         prepareSimSubElement(_userMemBlks);
+        prepareSimSubElement(_userNests);
         /**COMPLEX PREPARE SUB SIM*/
         prepareSimSubElement(_userSubModule);
         ////// flow block not need prepare sim
@@ -219,6 +227,7 @@ namespace kathryn{
         simStartCurSubElement(_userExpressions);
         simStartCurSubElement(_userVals);
         simStartCurSubElement(_userMemBlks);
+        simStartCurSubElement(_userNests);
         /**COMPLEX SUB SIM*/
         simStartCurSubElement(_userSubModule);
         /**for now we are sure that the other is simulated*/
@@ -249,6 +258,7 @@ namespace kathryn{
         curCollectData(_userWires);
         curCollectData(_userExpressions);
         curCollectData(_userVals);
+        curCollectData(_userNests);
         /**COMPLEX SUB SIM*/
         curCollectData(_userSubModule);
         curCollectData(_flowBlockBases);
@@ -269,6 +279,7 @@ namespace kathryn{
         simExitSubElement(_userExpressions);
         simExitSubElement(_userVals);
         simExitSubElement(_userMemBlks);
+        simExitSubElement(_userNests);
         /**COMPLEX SUB SIM*/
         simExitSubElement(_userSubModule);
         simExitSubElement(_flowBlockBases);

@@ -16,6 +16,8 @@
 #include "model/hwComponent/expression/expression.h"
 #include "model/hwComponent/value/value.h"
 #include "model/hwComponent/globalComponent/globalComponent.h"
+#include "model/hwComponent/memBlock/MemBlock.h"
+#include "model/hwComponent/expression/nest.h"
 
 #include "model/FlowBlock/abstract/flowBlock_Base.h"
 #include "model/FlowBlock/abstract/spReg/stateReg.h"
@@ -27,7 +29,7 @@
 
 #include "model/debugger/modelDebugger.h"
 #include "util/logger/logger.h"
-#include "model/hwComponent/memBlock/MemBlock.h"
+
 
 
 namespace kathryn{
@@ -48,6 +50,7 @@ namespace kathryn{
         std::vector<expression*> _userExpressions;
         std::vector<Val*>        _userVals;
         std::vector<MemBlock*>   _userMemBlks;
+        std::vector<nest*>       _userNests;
         std::vector<Module*>     _userSubModule;
 
         /** when hardware components require data from outside class
@@ -117,7 +120,9 @@ namespace kathryn{
         void addUserExpression (expression* expr);
         void addUserVal        (Val* val);
         void addUserMemBlk     (MemBlock* memBlock);
+        void addUserNest       (nest* nst);
         void addUserSubModule  (Module* smd);
+
 
         /**implicit element that is built from design flow*/
         auto& getSpRegs(SP_REG_TYPE spRegType){
@@ -131,8 +136,9 @@ namespace kathryn{
         auto& getUserWires(){return _userWires; }
         auto& getUserExpressions(){return _userExpressions; }
         auto& getUserVals(){return _userVals; }
-        auto& getUserMemBlk(){return _userMemBlks;}
-        auto& getUserSubModules(){return _userSubModule; }
+        auto& getUserMemBlks(){return _userMemBlks;}
+        auto& getUserNests(){return _userNests;}
+        auto& getUserSubModules(){return _userSubModule;}
 
 
         /** Functions which allow user to custom  their module design flow*/

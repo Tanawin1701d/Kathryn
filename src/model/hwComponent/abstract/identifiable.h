@@ -25,11 +25,12 @@ namespace kathryn {
         TYPE_CYCLE_WAIT_STATE_REG = 3,
         TYPE_WIRE = 4,
         TYPE_EXPRESSION = 5,
-        TYPE_MODULE = 6,
-        TYPE_VAL = 7,
-        TYPE_MEM_BLOCK = 8,
-        TYPE_MEM_BLOCK_INDEXER = 9,
-        TYPE_COUNT = 10
+        TYPE_NEST = 6,
+        TYPE_MODULE = 7,
+        TYPE_VAL = 8,
+        TYPE_MEM_BLOCK = 9,
+        TYPE_MEM_BLOCK_INDEXER = 10,
+        TYPE_COUNT = 11
     };
 
     static const std::string GLOBAL_PREFIX[TYPE_COUNT] = {"REG",
@@ -38,6 +39,7 @@ namespace kathryn {
                                                           "SR_CYWT",
                                                           "WIRE",
                                                           "EXPR",
+                                                          "NEST",
                                                           "MODULE",
                                                           "VAL",
                                                           "MEM_BLOCK",
