@@ -107,6 +107,18 @@ namespace kathryn {
             return *this;
         }
 
+        SliceAgent<T>& operator = (SliceAgent<T>& b){
+            /** when same agent have use equal operator sometime
+             * it may not auto convert to =(Operable& b)
+             * */
+            if (this == &b){ return *this; }
+            _master->callBackNonBlockAssignFromAgent(
+                    b,
+                    Slicable<T>::getSlice()
+            );
+            return *this;
+        }
+
         [[nodiscard]] Slice getAssignSlice()  override { return  Slicable<T>::getSlice(); }
 
         /** override operable*/
