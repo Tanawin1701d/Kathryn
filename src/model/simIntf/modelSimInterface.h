@@ -93,8 +93,6 @@ namespace kathryn{
 
     };
 
-
-
     /***
      *
      * flow sim interface should not sim/final  Rtl simInterface At all
@@ -127,6 +125,9 @@ namespace kathryn{
         void unSetSimStatus(){
             _isSimulated = false;
         }
+
+        void setNextValSimStatus()       override {assert(false);}
+        bool isNextValSim()        const override {assert(false);}
 
         /**
          * sim state
@@ -170,12 +171,22 @@ namespace kathryn{
      class ModuleSimEngine : public SimEngine{
 
      protected:
-
+        bool isCurCycleSimulated  = false;
+        bool isNextCycleSimulated = false;
      public:
          explicit ModuleSimEngine():
                  SimEngine(){}
 
          virtual void beforePrepareSim(VcdWriter* vcdWriter, FlowColEle* flowColEle) = 0;
+
+         void setCurValSimStatus () override{isCurCycleSimulated = true;}
+         void setNextValSimStatus() override{isNextCycleSimulated = true;}
+
+         bool     isCurValSim () const override{return isCurCycleSimulated; }
+         bool     isNextValSim() const override{return isNextCycleSimulated;}
+
+         ValRep&  getCurVal () override {assert(false);}
+         ValRep&  getNextVal() override {assert(false);}
 
      };
 

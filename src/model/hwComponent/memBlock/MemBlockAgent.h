@@ -32,7 +32,7 @@ namespace kathryn{
     protected:
         void setReadMode (){readMode = true; }
         void setWriteMode(){readMode = false;}
-        bool isReadMode() const{return readMode;}
+
         ////[[nodiscard]] bool isSetMode   () const{return setModeYet;}
 
     public:
@@ -41,6 +41,8 @@ namespace kathryn{
 
         void com_init() override{};
         void com_final() override{};
+
+        bool isReadMode() const{return readMode;}
 
         ValRep& getCurMemVal();
         int     getExactIndexSize();
@@ -69,6 +71,7 @@ namespace kathryn{
         /** Slicable*/
         SliceAgent<MemBlockEleHolder>& operator() (int start, int stop) override;
         SliceAgent<MemBlockEleHolder>& operator() (int idx) override;
+        Operable* doSlice(Slice sl) override;
 
         /**Assign call back From Agent */
         MemBlockEleHolder& callBackBlockAssignFromAgent   (Operable& b, Slice absSliceOfHost) override;

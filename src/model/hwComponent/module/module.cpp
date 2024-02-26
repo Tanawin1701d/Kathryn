@@ -239,6 +239,7 @@ namespace kathryn{
         simStartCurSubElement(_flowBlockBases);
 
         /**simulate flow block in which node is implicitly invoked*/
+        setCurValSimStatus();
     }
 
     void Module::simStartNextCycle() {
@@ -253,6 +254,8 @@ namespace kathryn{
         /**COMPLEX SUB SIM*/
         simStartNextSubElement(_userSubModules);
             /**for flow block no next cycle to determine*/
+
+        setNextValSimStatus();
     }
 
     void Module::curCycleCollectData() {
@@ -293,6 +296,8 @@ namespace kathryn{
         simExitSubElement(_flowBlockBases);
 
         /** exit flowblock first*/
+        isCurCycleSimulated  = false;
+        isNextCycleSimulated = false;
     }
 
 

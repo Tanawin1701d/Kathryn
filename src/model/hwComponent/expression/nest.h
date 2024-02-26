@@ -19,12 +19,12 @@
 namespace kathryn{
 
 
-    std::vector<Operable*> getNestVec();
-
     struct NestMeta{
         Operable*   opr;
         Assignable* asb;
     };
+
+    std::vector<NestMeta> getNestVec();
 
     template<typename OA, typename... T>
     std::vector<NestMeta> getNestVec(OA& oa, T&... args){
@@ -95,6 +95,7 @@ namespace kathryn{
             /** override slicable*/
             SliceAgent<nest>& operator() (int start, int stop) override;
             SliceAgent<nest>& operator() (int idx) override;
+            Operable* doSlice(Slice sl) override;
             /** call back assignable from client agent*/
             [[maybe_unused]]
             nest& callBackBlockAssignFromAgent(Operable& b, Slice absSlice) override;

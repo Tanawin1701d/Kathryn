@@ -78,10 +78,10 @@ namespace kathryn{
             return *(Operable*)this;
         }
 
-        Operable* doSlice(Slice sl) override{
-            auto x = Slicable<TYPE_COMP>::operator() (sl.start, sl.stop);
-            return x.castToOperable();
-        }
+//        Operable* doSlice(Slice sl) override{
+//            auto x = Slicable<TYPE_COMP>::operator() (sl.start, sl.stop);
+//            return x.castToOperable();
+//        }
 
         Simulatable* getSimItf() override{
             return static_cast<Simulatable*>(getSimEngine());

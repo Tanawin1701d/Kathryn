@@ -132,6 +132,11 @@ namespace kathryn{
         return operator() (idx, idx+1);
     }
 
+    Operable* MemBlockEleHolder::doSlice(Slice sl){
+        auto x = operator() (sl.start, sl.stop);
+        return x.castToOperable();
+    }
+
     MemBlockEleHolder&
     MemBlockEleHolder::callBackBlockAssignFromAgent(Operable &b, Slice absSliceOfHost) {
         mfAssert(false, "can't assign data to memBlock from slice");

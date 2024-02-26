@@ -66,6 +66,11 @@ namespace kathryn{
         return operator() (idx, idx+1);
     }
 
+    Operable* expression::doSlice(Slice sl){
+        auto x = operator() (sl.start, sl.stop);
+        return x.castToOperable();
+    }
+
     expression& expression::callBackBlockAssignFromAgent(Operable &b, Slice absSlice) {
         std::cout << "exprMetas should not be assign in slice mode" << std::endl;
         assert(false);

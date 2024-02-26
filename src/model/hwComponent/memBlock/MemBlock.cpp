@@ -45,7 +45,7 @@ namespace kathryn{
         setCurValSimStatus();
         for (auto agentHolder: memBlockAgents){
             ////std::cout << "start CurMemBlk" << std::endl;
-            agentHolder->simStartCurCycle();
+            agentHolder->getSimEngine()->simStartCurCycle();
         }
     }
 
@@ -56,7 +56,7 @@ namespace kathryn{
         for (auto agentHolder: memBlockAgents){
             ////// we will sim only write mode else is not
             if (!agentHolder->isReadMode()){
-                agentHolder->simStartNextCycle();
+                agentHolder->getSimEngine()->simStartNextCycle();
             }
         }
     }
@@ -65,7 +65,7 @@ namespace kathryn{
         _isCurValSim = false;
         _isNextValSim = false;
         for (auto agentHolder: memBlockAgents){
-            agentHolder->simExitCurCycle();
+            agentHolder->getSimEngine()->simExitCurCycle();
         }
 
 //        std::cout <<"---------mem regiion" << std::endl;

@@ -116,6 +116,7 @@ namespace kathryn{
         /** assign todo we will assign it later*/
         SliceAgent<Val>& operator() (int start, int stop) override;
         SliceAgent<Val>& operator() (int idx) override;
+        Operable* doSlice(Slice sl) override;
 
         Val& callBackBlockAssignFromAgent(Operable& b, Slice absSlice) override {assert(false);};
         Val& callBackNonBlockAssignFromAgent(Operable& b, Slice absSlice) override{assert(false);};
