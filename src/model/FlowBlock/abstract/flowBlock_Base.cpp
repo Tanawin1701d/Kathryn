@@ -115,7 +115,7 @@ namespace kathryn{
     void FlowBlockBase::beforePrepareSim(FlowSimEngine::FLOW_Meta_afterMf simMeta) {
         /**set flow for this element*/
         simMeta._writer->localName = getConCatInheritName();
-        getSimEngine()->setSimMeta(simMeta);
+        _engine->setSimMeta(simMeta);
         /*** invoke prepare sim in subelement in order*/
         std::vector<FlowBlockBase::sortEle> poolEle = sortSubAndConFbInOrder();
         for (auto& pl: poolEle){

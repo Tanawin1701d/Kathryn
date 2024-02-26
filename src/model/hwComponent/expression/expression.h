@@ -80,6 +80,7 @@ namespace kathryn {
         /** override slicable*/
         SliceAgent<expression>& operator() (int start, int stop) override;
         SliceAgent<expression>& operator() (int idx) override;
+        Operable* doSlice(Slice sl) override;
         /** call back assignable from client agent*/
         [[maybe_unused]]
         expression& callBackBlockAssignFromAgent(Operable& b, Slice absSlice) override;

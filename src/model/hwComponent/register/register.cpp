@@ -72,6 +72,11 @@ namespace kathryn{
         return operator() (idx, idx+1);
     }
 
+    Operable* Reg::doSlice(Slice sl){
+        auto x = operator() (sl.start, sl.stop);
+        return x.castToOperable();
+    }
+
     void Reg::makeResetEvent(){
         makeVal(rstRegVal, genBiConValRep(0, getSlice().getSize()));
         auto rstEvent = new UpdateEvent({

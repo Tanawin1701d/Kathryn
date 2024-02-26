@@ -157,7 +157,7 @@ namespace kathryn {
         [[nodiscard]] Slice getOperableSlice() const override { return  Slicable<T>::getSlice(); }
 
         Operable* doSlice(Slice sl) override{
-            auto x = Slicable<T>::operator() (sl.start, sl.stop);
+            auto x = operator() (sl.start, sl.stop);
             return x.castToOperable();
         }
 

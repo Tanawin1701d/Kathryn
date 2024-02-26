@@ -10,7 +10,7 @@ namespace kathryn{
 
     /** pre function declaration*/
 
-    std::vector<Operable*> getNestVec(){
+    std::vector<NestMeta> getNestVec(){
         return {};
     }
 
@@ -94,6 +94,11 @@ namespace kathryn{
 
     SliceAgent<nest> &nest::operator()(int idx) {
         return operator()(idx, idx + 1);
+    }
+
+    Operable* nest::doSlice(Slice sl){
+        auto x = operator() (sl.start, sl.stop);
+        return x.castToOperable();
     }
 
     nest& nest::callBackBlockAssignFromAgent(Operable &b, Slice absSlice) {
