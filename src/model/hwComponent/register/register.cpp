@@ -129,6 +129,11 @@ namespace kathryn{
             LogicSimEngine(sz, sigType, simForNext),
             _master(master){}
 
+    void RegLogicSim::simStartCurCycle() {
+        ///// if in This cycle the component is simmulated then skip simulation
+        assert(isCurValSim());
+    }
+
     void RegLogicSim::simStartNextCycle() {
 
         assert(isCurValSim());
@@ -137,11 +142,6 @@ namespace kathryn{
         setNextValSimStatus();
         getNextVal() = getCurVal(); ///// get curval to be next val because it may be no change
         _master->assignValRepCurCycle(getNextVal());
-    }
-
-    void RegLogicSim::simStartCurCycle() {
-        ///// if in This cycle the component is simmulated then skip simulation
-        assert(isCurValSim());
     }
 
 }
