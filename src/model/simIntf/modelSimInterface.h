@@ -66,6 +66,8 @@ namespace kathryn{
     class RtlValItf{
     public:
 
+        virtual ~RtlValItf() = default;
+
         virtual void setCurValSimStatus()  = 0;
         virtual void setNextValSimStatus() = 0;
 
@@ -77,6 +79,19 @@ namespace kathryn{
 
     };
 
+    class SimEngine: public Simulatable, public RtlValItf{
+
+    public:
+        virtual ~SimEngine() = default;
+
+    };
+
+    class SimEngineInterface{
+
+    public:
+        virtual SimEngine* getSimEngine() = 0;
+
+    };
 
 
 
@@ -87,26 +102,26 @@ namespace kathryn{
      *
      * */
 
-    class FlowSimulatable : public Simulatable{
+    class FlowSimEngineMaster: public SimEngine{
     protected:
         bool           _isSimulated = false;
         FlowSimEngine* _engine = nullptr;
     public:
-        explicit FlowSimulatable(FlowSimEngine* engine):
-                Simulatable(),
+        explicit FlowSimEngineMaster(FlowSimEngine* engine):
+                SimEngine(),
                 _engine(engine){}
 
-        ~FlowSimulatable() override {delete _engine;}
+        ~FlowSimEngineMaster() override {delete _engine;}
 
         FlowSimEngine* getSimEngine(){return _engine;}
 
         /**
          * sim state
          * **/
-        bool isCurCycleSimulated() const {
+        bool isCurValSim() const override {
             return _isSimulated;
         }
-        void setSimStatus(){
+        void setCurValSimStatus() override{
             _isSimulated = true;
         }
         void unSetSimStatus(){
@@ -131,33 +146,36 @@ namespace kathryn{
         }
         /** initialize data before prepare Sim() is used*/
         virtual void beforePrepareSim(FlowSimEngine::FLOW_Meta_afterMf simMeta){};
+        /** start Sim can be invoked multiple times*/
+        void prepareSim() override{};
+        /** curCycleCollectData*/
+        void curCycleCollectData() override{};
         /**simulate next cycle value for current cycle*/
         void simStartNextCycle() override{
             assert(false);
         }
-        /** start Sim can be invoked multiple times*/
-        void prepareSim() override{};
 
-        void curCycleCollectData() override{};
-        /** exit sim can be invoked multiple times*/
+        /** value overload*/
+        ValRep&  getCurVal () override {assert(false);}
+        ValRep&  getNextVal() override {assert(false);}
+
 
     };
+
+
 
     /***
      * module interface
      * */
-     class ModuleSimInterface : public Simulatable{
+     class ModuleSimEngine : public SimEngine{
+
+     protected:
 
      public:
-         explicit ModuleSimInterface():
-                 Simulatable(){}
+         explicit ModuleSimEngine():
+                 SimEngine(){}
 
          virtual void beforePrepareSim(VcdWriter* vcdWriter, FlowColEle* flowColEle) = 0;
-
-         /**simulate next cycle value for current cycle*/
-         void simStartNextCycle() override{
-             assert(false);
-         }
 
      };
 

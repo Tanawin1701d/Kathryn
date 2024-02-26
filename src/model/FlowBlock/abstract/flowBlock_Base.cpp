@@ -15,7 +15,7 @@ namespace kathryn{
 
     FlowBlockBase::FlowBlockBase(FLOW_BLOCK_TYPE type, FB_CTRL_COM_META fbCtrlComMeta):
             FlowIdentifiable(FBT_to_string(type)),
-            FlowSimulatable(new FlowSimEngine()),
+            FlowSimEngineMaster(new FlowSimEngine()),
             /** flow element*/
             _type(type),
             ctrl(getControllerPtr()),

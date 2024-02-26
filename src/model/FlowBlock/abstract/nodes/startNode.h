@@ -51,7 +51,7 @@ namespace kathryn{
         }
 
         void simStartCurCycle() override{
-            if (isCurCycleSimulated()){
+            if (isCurValSim()){
                 return;
             }
         }

@@ -48,10 +48,10 @@ namespace kathryn{
         int getCycleUsed() override {return 1;}
 
         void simStartCurCycle() override{
-            if (isCurCycleSimulated()){
+            if (isCurValSim()){
                 return;
             }
-            setSimStatus();
+            setCurValSimStatus();
             assert(_stateReg != nullptr);
             bool isStateSet = _stateReg->getRtlValItf()->getCurVal().getLogicalValue();
             if (isStateSet){
@@ -99,10 +99,10 @@ namespace kathryn{
         int getCycleUsed() override{ return 1; }
 
         void simStartCurCycle() override{
-            if (isCurCycleSimulated()){
+            if (isCurValSim()){
                 return;
             }
-            setSimStatus();
+            setCurValSimStatus();
             assert(_synReg != nullptr);
             bool isFullSyncCycle = _synReg->isSimAtFullSyn();
             /** inc engine*/
@@ -142,10 +142,10 @@ namespace kathryn{
         bool isStateFullNode() override{ return false; }
 
         void simStartCurCycle() override{
-            if (isCurCycleSimulated()){
+            if (isCurValSim()){
                 return;
             }
-            setSimStatus();
+            setCurValSimStatus();
             assert(_pseudoAssignMeta != nullptr);
             /** inc engine do not increase engine*/
 
@@ -183,10 +183,10 @@ namespace kathryn{
         bool isStateFullNode() override{return false;}
 
         void simStartCurCycle() override{
-            if (isCurCycleSimulated()){
+            if (isCurValSim()){
                 return;
             }
-            setSimStatus();
+            setCurValSimStatus();
             assert(_value != nullptr);
             /** inc engine do not increase engine*/
         }

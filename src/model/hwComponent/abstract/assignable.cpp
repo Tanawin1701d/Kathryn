@@ -6,6 +6,7 @@
 #include "assignable.h"
 #include "makeComponent.h"
 #include "model/hwComponent/value/value.h"
+#include "model/FlowBlock/abstract/nodes/asmNode.h"
 
 namespace kathryn{
 
@@ -13,5 +14,38 @@ namespace kathryn{
         makeVal(assUserAutoVal, size, value);
         return assUserAutoVal;
     }
+
+    void Assignable::generateAssignMetaAndFill(
+                                                Operable& srcOpr,
+                                                std::vector<AssignMeta*>& resultMetaCollector,
+                                                Slice  absSrcSlice,
+                                                Slice  absDesSlice
+                                                ){
+        /** check slice integrity*/
+        assert(srcOpr.getOperableSlice().isContain(absSrcSlice));
+        assert(getAssignSlice().isContain(absDesSlice));
+        assert(absSrcSlice == absDesSlice);
+
+        Slice desireSrcSlice = absSrcSlice.getMatchSizeSubSlice(absDesSlice);
+        Slice desireDesSlice = absDesSlice.getMatchSizeSubSlice(absSrcSlice);
+
+        Operable* exactSrcOpr  = &srcOpr.getExactOperable();
+        Operable* slicedSrcOpr = exactSrcOpr->doSlice(desireSrcSlice);
+
+        resultMetaCollector.push_back(
+                generateAssignMeta( *slicedSrcOpr, desireDesSlice)
+        );
+    }
+
+
+    AsmNode* Assignable::generateBasicNode(Operable& srcOpr, Slice desSlice){
+
+        assert(desSlice.getSize() <= srcOpr.getOperableSlice().getSize());
+        auto* assMeta = new AssignMeta(_updateMeta, srcOpr, desSlice);
+        auto* asmNode = new AsmNode(assMeta);
+        return asmNode;
+
+    }
+
 
 }

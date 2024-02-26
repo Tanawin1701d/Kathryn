@@ -14,30 +14,81 @@ namespace kathryn{
         return {};
     }
 
-
-
     /** nest class*/
 
     void nest::com_init() {
         ctrl->on_nest_init(this);
     }
 
-    nest::nest(int size, std::vector<Operable *> nestList):
-    LogicComp<nest>({0, size}, TYPE_NEST, VST_WIRE, false, false),
+    nest::nest(int size, std::vector<NestMeta> nestList):
+    LogicComp<nest>({0, size}, TYPE_NEST,
+                    new NestLogicSim(this, size,VST_WIRE, false),
+                    false),
     _nestList(std::move(nestList))
     {
         int testSize = 0;
-        for (Operable* opr: _nestList){
-            assert(opr != nullptr);
-            testSize += opr->getOperableSlice().getSize();
+        for (NestMeta meta: _nestList){
+            assert(meta.opr != nullptr);
+            testSize += meta.opr->getOperableSlice().getSize();
         }
         assert(testSize == size);
         com_init();
     }
 
+
+    /** assign enforcer*/
+
+
+    void nest::generateAssMetaForBlocking(Operable &srcOpr, std::vector<AssignMeta *> &resultMetaCollector,
+                                          Slice absSrcSlice, Slice absDesSlice) {
+        generateAssMetaForAll(srcOpr, resultMetaCollector, absSrcSlice, absDesSlice, true);
+    }
+
+    void nest::generateAssMetaForNonBlocking(Operable &srcOpr, std::vector<AssignMeta *> &resultMetaCollector,
+                                             Slice absSrcSlice, Slice absDesSlice) {
+        generateAssMetaForAll(srcOpr, resultMetaCollector, absSrcSlice, absDesSlice, false);
+    }
+
+
+    void
+    nest::generateAssMetaForAll(Operable &srcOpr,
+                                std::vector<AssignMeta *> &resultMetaCollector,
+                                Slice absSrcSlice,
+                                Slice absDesSlice,
+                                bool isBlockingAsm){
+
+        Slice curSlice = absSrcSlice;
+        for (NestMeta meta: _nestList){
+            Operable* subOpr   = meta.opr;
+            Assignable* subAss = meta.asb;
+            assert(subOpr != nullptr);
+            if (curSlice.start >= curSlice.stop){
+                break;
+            }
+            if (isBlockingAsm){
+                subAss->generateAssMetaForBlocking(
+                        srcOpr,
+                        resultMetaCollector,
+                        curSlice,
+                        subOpr->getOperableSlice()
+                );
+            }else{
+                subAss->generateAssMetaForNonBlocking(
+                        srcOpr,
+                        resultMetaCollector,
+                        curSlice,
+                        subOpr->getOperableSlice()
+                );
+            }
+
+            curSlice.start += curSlice.getMatchSizeSubSlice(subOpr->getOperableSlice()).getSize();
+        }
+
+    }
+    /**********************************/
+
     SliceAgent<nest> &nest::operator()(int start, int stop) {
-        auto ret =  new SliceAgent<nest>(this,
-                                               getAbsSubSlice(start, stop, getSlice()));
+        auto ret =  new SliceAgent<nest>(this,getAbsSubSlice(start, stop, getSlice()));
         return *ret;
     }
 
@@ -46,12 +97,34 @@ namespace kathryn{
     }
 
     nest& nest::callBackBlockAssignFromAgent(Operable &b, Slice absSlice) {
+        ///// TODO make it assignable
         assert(false);
     }
 
     nest& nest::callBackNonBlockAssignFromAgent(Operable &b, Slice absSlice) {
+        ///// TODO make it assignable
         assert(false);
     }
+
+    void nest::callBackBlockAssignFromAgent(Operable &srcOpr, std::vector<AssignMeta *> &resultMetaCollector,
+                                            Slice absSrcSlice, Slice absDesSlice) {
+        assert(getSlice().isContain(absDesSlice));
+        generateAssMetaForBlocking(srcOpr,
+                                   resultMetaCollector,
+                                   absSrcSlice,
+                                   absDesSlice);
+    }
+
+    void nest::callBackNonBlockAssignFromAgent(Operable &srcOpr, std::vector<AssignMeta *> &resultMetaCollector,
+                                               Slice absSrcSlice, Slice absDesSlice) {
+        assert(getSlice().isContain(absDesSlice));
+        generateAssMetaForNonBlocking(srcOpr,
+                                    resultMetaCollector,
+                                       absSrcSlice,
+                                       absDesSlice);
+    }
+
+
 
 
     Operable* nest::checkShortCircuit() {
@@ -61,8 +134,9 @@ namespace kathryn{
 
         isInCheckPath = true;
 
-        for (Operable* hostOpr: _nestList){
-            Operable* result = hostOpr->checkShortCircuit();
+        for (NestMeta meta: _nestList){
+
+            Operable* result = meta.opr->checkShortCircuit();
             if (result != nullptr){
                 return result;
             }
@@ -72,19 +146,35 @@ namespace kathryn{
         return nullptr;
     }
 
-    void nest::simStartCurCycle() {
-        if (getRtlValItf()->isCurValSim()){
+
+
+    /***
+     *
+     * NestLogicSim
+     *
+     * */
+
+    NestLogicSim::NestLogicSim(nest* master,
+                             int sz,
+                             VCD_SIG_TYPE sigType,
+                             bool simForNext):
+            LogicSimEngine(sz, sigType, simForNext),
+            _master(master){}
+
+    void NestLogicSim::simStartCurCycle() {
+        if (isCurValSim()){
             return;
         }
-        getRtlValItf()->setCurValSimStatus();
+        setCurValSimStatus();
 
         /**get sim value and reset it*/
-        ValRep& desValRep = getRtlValItf()->getCurVal();
+        ValRep& desValRep = getCurVal();
         desValRep.fillZeroToValrep(0);
 
         int curStartBit = 0;
 
-        for (Operable* opr: _nestList){
+        for (NestMeta meta: _master->_nestList){
+            Operable* opr = meta.opr;
             /**slave opr first*/
             assert(opr != nullptr);
             opr->getSimItf()->simStartCurCycle();
@@ -102,10 +192,12 @@ namespace kathryn{
             curStartBit += opr->getOperableSlice().getSize();
 
         }
-        assert(curStartBit == getSlice().getSize());
+        assert(curStartBit == _master->getSlice().getSize());
 
 
     }
+
+
 
 
 }

@@ -79,15 +79,15 @@ namespace kathryn {
         void on_sp_reg_init(CtrlFlowRegBase* ptr, SP_REG_TYPE regType);
         /** register handling*/
         void on_reg_init(Reg* ptr);
-        void on_reg_update(AssignMeta* asmMeta, Reg* srcReg);
+        void on_reg_update(AsmNode* asmNode, Reg* srcReg);
         /** wire handling*/
         void on_wire_init(Wire* ptr);
-        void on_wire_update(AssignMeta* asmMeta, Wire* srcWire);
+        void on_wire_update(AsmNode* asmNode, Wire* srcWire);
         /** exprMetas handling*/
         void on_expression_init(expression* ptr);
         /** on memBlock and its agent is updated*/
         void on_memBlk_init(MemBlock* ptr);
-        void on_memBlkEleHolder_update(AssignMeta* asmMeta,MemBlockEleHolder* srcHolder);
+        void on_memBlkEleHolder_update(AsmNode* asmNode,MemBlockEleHolder* srcHolder);
         /** on nest init*/
         void on_nest_init(nest* ptr);
 

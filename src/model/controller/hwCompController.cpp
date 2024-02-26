@@ -57,20 +57,19 @@ namespace kathryn{
               "USER_REG is initialized and set parent to " + targetModulePtr->getIdentDebugValue());
     }
 
-    void ModelController::on_reg_update(AssignMeta* asmMeta, Reg* srcReg){
+    void ModelController::on_reg_update(AsmNode* asmNode, Reg* srcReg){
         /**
          * please note that UpdateEvent should fill update value/ and slice
          * but it must let update condition and state as nullptr to let block fill
          * to it
          * */
         /*** do not add to module any more*/
-        assert(asmMeta != nullptr);
+        assert(asmNode != nullptr);
         tryPurifyFlowStack();
-        auto node = new AsmNode(asmMeta);
-        node->setDependStateJoinOp(BITWISE_AND);
+        asmNode->setDependStateJoinOp(BITWISE_AND);
         assert(!flowBlockStacks[FLOW_ST_BASE_STACK].empty());
         auto fb = getTopFlowBlockBase();
-        fb->addElementInFlowBlock(node);
+        fb->addElementInFlowBlock(asmNode);
         logMF(srcReg,
               "user Reg is updating value @ fb block " + fb->getMdIdentVal());
     }
@@ -94,32 +93,25 @@ namespace kathryn{
               "user wire is initialized and set parent to " + targetModulePtr->getIdentDebugValue());
     }
 
-    void ModelController::on_wire_update(AssignMeta* asmMeta, Wire* srcWire) {
+    void ModelController::on_wire_update(AsmNode* asmNode, Wire* srcWire) {
         /**
          * please note that UpdateEvent should fill update value/ and slice
          * but it must let update condition and state as nullptr to let block fill
          * to it
          * */
         /*** do not add to module any more*/
-        assert(asmMeta != nullptr);
+        assert(asmNode != nullptr);
         tryPurifyFlowStack();
-        auto node = new AsmNode(asmMeta);
-        node->setDependStateJoinOp(BITWISE_AND);
+        asmNode->setDependStateJoinOp(BITWISE_AND);
         //assert(!flowBlockStack.empty());
         if (!flowBlockStacks[FLOW_ST_BASE_STACK].empty()) {
             /**in flow block*/
             auto fb = getTopFlowBlockBase();
-            fb->addElementInFlowBlock(node);
+            fb->addElementInFlowBlock(asmNode);
             logMF(srcWire,
                   "user wire is updating @ fb " + fb->getMdIdentVal());
         }else{
-            asmMeta->updateEventsPool.push_back(new UpdateEvent({
-                nullptr,
-                nullptr,
-                &asmMeta->valueToAssign,
-                asmMeta->desSlice,
-                DEFAULT_UE_PRI_USER
-            }));
+            asmNode->dryAssign();
             logMF(srcWire,
                   "user wire is updatting without flowblock");
         }
@@ -152,20 +144,19 @@ namespace kathryn{
               "memBlk is initializing and set parent to " + targetModulePtr->getIdentDebugValue());
     }
 
-    void ModelController::on_memBlkEleHolder_update(AssignMeta* asmMeta,MemBlockEleHolder* srcHolder){
+    void ModelController::on_memBlkEleHolder_update(AsmNode* asmNode,MemBlockEleHolder* srcHolder){
         /**
          * please note that UpdateEvent should fill update value/ and slice
          * but it must let update condition and state as nullptr to let block fill
          * to it
          * */
         /*** do not add to module any more*/
-        assert(asmMeta != nullptr);
+        assert(asmNode != nullptr);
         tryPurifyFlowStack();
-        auto node = new AsmNode(asmMeta);
-        node->setDependStateJoinOp(BITWISE_AND);
+        asmNode->setDependStateJoinOp(BITWISE_AND);
         assert(!flowBlockStacks[FLOW_ST_BASE_STACK].empty());
         auto fb = getTopFlowBlockBase();
-        fb->addElementInFlowBlock(node);
+        fb->addElementInFlowBlock(asmNode);
         logMF(srcHolder,
               "memBlk HOLDER is updating value @ fb block " + fb->getMdIdentVal());
     }

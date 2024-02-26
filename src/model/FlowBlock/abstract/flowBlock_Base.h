@@ -68,7 +68,9 @@ namespace kathryn {
 
     class FlowBlockBase: public FlowIdentifiable,
                          public ModelDebuggable,
-                         public FlowSimulatable{
+                         public FlowSimEngineMaster,
+                         public SimEngineInterface
+                         {
     protected:
 
         struct sortEle{
@@ -108,6 +110,10 @@ namespace kathryn {
         explicit  FlowBlockBase(FLOW_BLOCK_TYPE  type,
                                 FB_CTRL_COM_META fbCtrlComMeta);
         virtual  ~FlowBlockBase();
+
+        SimEngine* getSimEngine() override{
+            return static_cast<SimEngine*>(this);
+        }
         /**
          * entrance to make controller interact with
          * */

@@ -19,30 +19,44 @@
 
 namespace kathryn{
 
-    template<typename T>
-    class LogicComp : public Assignable<T>, public Operable,
-                      public Slicable<T>,
-                      public AssignCallbackFromAgent<T>,
+    template<typename TYPE_COMP>
+    class LogicComp : public AssignOpr<TYPE_COMP>,
+                      public Assignable,
+                      public Operable,
+                      public Slicable<TYPE_COMP>,
+                      public AssignCallbackFromAgent<TYPE_COMP>,
                       public Identifiable,
                       public HwCompControllerItf,
-                      public LogicSimulatable,
-                      public ModelDebuggable{
+                      public ModelDebuggable,
+                      public SimEngineInterface{
+    protected:
+        SimEngine* _simEngine =  nullptr;
+
     public:
+
         explicit LogicComp(Slice slc,
                            HW_COMPONENT_TYPE hwType,
-                           VCD_SIG_TYPE sigType,
-                           bool simForNext,
+                           SimEngine* simEngine,
                            bool requiredAllocCheck):
-                Assignable<T>(),
+                AssignOpr<TYPE_COMP>(),
+                Assignable(),
                 Operable(),
-                Slicable<T>(slc),
+                Slicable<TYPE_COMP>(slc),
                 Identifiable(hwType),
                 HwCompControllerItf(requiredAllocCheck),
-                LogicSimulatable(slc.getSize(), sigType, simForNext),
-                ModelDebuggable()
+                ////LogicSimEngine(slc.getSize(), sigType, simForNext),
+                ModelDebuggable(),
+                SimEngineInterface(),
+                _simEngine(simEngine)
                             {}
 
-        virtual ~LogicComp() = default;
+        virtual ~LogicComp() {
+            delete _simEngine;
+        };
+
+        SimEngine* getSimEngine() override{
+            return _simEngine;
+        }
 
 
         /** iterable override*/
@@ -57,26 +71,41 @@ namespace kathryn{
 
         /** operable override*/
         Slice getOperableSlice() const override{
-            return Slicable<T>::getSlice();
+            return Slicable<TYPE_COMP>::getSlice();
         }
-        Slice getAssignSlice() override{
-            return Slicable<T>::getSlice();
-        }
+
         Operable& getExactOperable() const override{
             return *(Operable*)this;
         }
+
+        Operable* doSlice(Slice sl) override{
+            auto x = Slicable<TYPE_COMP>::operator() (sl.start, sl.stop);
+            return x.castToOperable();
+        }
+
         Simulatable* getSimItf() override{
-            return static_cast<Simulatable*>(this);
+            return static_cast<Simulatable*>(getSimEngine());
         }
+
         RtlValItf* getRtlValItf() override{
-            return static_cast<RtlValItf*>(this);
+            return static_cast<RtlValItf*>(getSimEngine());
         }
-        Identifiable * castToIdent() override{
+
+        Identifiable* castToIdent() override{
             return static_cast<Identifiable*>(this);
         }
         ValRep& sv() override{
-            setCurValSimStatus();
-            return getCurVal();
+            _simEngine->setCurValSimStatus();
+            return _simEngine->getCurVal();
+        }
+
+        /**
+         *
+         * override assignable
+         *
+         * */
+        Slice getAssignSlice() override{
+            return Slicable<TYPE_COMP>::getSlice();
         }
 
         void startCheckShortCircuit(){
@@ -86,9 +115,6 @@ namespace kathryn{
                 mfAssert(false, "get short circuit");
             }
         }
-
-
-
 
     };
 

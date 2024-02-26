@@ -27,6 +27,7 @@ namespace kathryn {
 
 
     class expression : public LogicComp<expression>{
+    friend class expressionLogicSim;
     private:
 
         /** metas data that contain bi operation*/
@@ -52,9 +53,21 @@ namespace kathryn {
         /** override assignable*/
         expression& operator <<= (Operable  & b) override {mfAssert(false, "expr don't support this <<= assigment"); assert(false);}
         expression& operator <<= (ull b)         override {mfAssert(false, "expr don't support this <<= assigment"); assert(false);}
+        void generateAssMetaForBlocking(Operable& srcOpr,
+                                        std::vector<AssignMeta*>& resultMetaCollector,
+                                        Slice  absSrcSlice,
+                                        Slice  absDesSlice) override{
+            mfAssert(false, "expr don't support generateAssMetaForBlocking"); assert(false);
+        }
         expression& operator =   (Operable  & b) override;
         expression& operator =   (expression& b);
         expression& operator = (ull b)         override {mfAssert(false, "expr don't support this = assigment with ull overload"); assert(false);}
+        void generateAssMetaForNonBlocking(Operable& srcOpr,
+                                           std::vector<AssignMeta*>& resultMetaCollector,
+                                           Slice  absSrcSlice,
+                                           Slice  absDesSlice) override{
+            mfAssert(false, "expr don't support generateAssMetaForNonBlocking"); assert(false);
+        }
         /**override operable*/
         [[nodiscard]]
         Slice getOperableSlice() const override  { return getSlice(); }
@@ -71,6 +84,15 @@ namespace kathryn {
         [[maybe_unused]]
         expression& callBackBlockAssignFromAgent(Operable& b, Slice absSlice) override;
         expression& callBackNonBlockAssignFromAgent(Operable& b, Slice absSlice) override;
+        void        callBackBlockAssignFromAgent(Operable& srcOpr,
+                                                 std::vector<AssignMeta*>& resultMetaCollector,
+                                                 Slice  absSrcSlice,
+                                                 Slice  absDesSlice) override{assert(false);}
+        void        callBackNonBlockAssignFromAgent(Operable& srcOpr,
+                                                    std::vector<AssignMeta*>& resultMetaCollector,
+                                                    Slice  absSrcSlice,
+                                                    Slice  absDesSlice) override{assert(false);}
+
         /** override debugg message*/
         //std::vector<std::string> getDebugAssignmentValue() override;
 
@@ -79,11 +101,17 @@ namespace kathryn {
         Operable* getOperandA() const {return _a;}
         Operable* getOperandB() const {return _b;}
 
-        /** override simulator interface*/
-        void simStartCurCycle() override;
-
         /**check short*/
         Operable* checkShortCircuit() override;
+
+    };
+
+    class expressionLogicSim: public LogicSimEngine{
+        expression* _master = nullptr;
+    public:
+        expressionLogicSim(expression* master,int sz, VCD_SIG_TYPE sigType, bool simForNext);
+        /** override simulation engine */
+        void simStartCurCycle() override;
 
     };
 

@@ -21,31 +21,37 @@ namespace kathryn{
 
     std::vector<Operable*> getNestVec();
 
-    template<typename... T>
-    std::vector<Operable*> getNestVec(Operable& opr, T&... args){
-        std::vector<Operable*> deepGet  = getNestVec(args...);
-        deepGet.push_back(&opr);
+    struct NestMeta{
+        Operable*   opr;
+        Assignable* asb;
+    };
+
+    template<typename OA, typename... T>
+    std::vector<NestMeta> getNestVec(OA& oa, T&... args){
+        std::vector<NestMeta> deepGet  = getNestVec(args...);
+        deepGet.push_back({&oa, &oa});
         return deepGet;
     }
 
     class nest;
 
-    template<typename... T>
-    nest& makeNest(Operable& opr, T&... args){
-        auto nestList = getNestVec(opr, args...);
+    template<typename OA, typename... T>
+    nest& makeNest(OA& oa, T&... args){
+        auto nestList = getNestVec(oa, args...);
         int nestSize = 0;
-        for (Operable* slaveOpr: nestList){
-            assert(slaveOpr != nullptr);
-            nestSize += slaveOpr->getOperableSlice().getSize();
-
+        for (NestMeta nestMeta: nestList){
+            assert(nestMeta.opr != nullptr);
+            nestSize += nestMeta.opr->getOperableSlice().getSize();
         }
         return _make<nest>("nest", nestSize, nestList);
     }
 
     class nest : public LogicComp<nest>{
+        friend class NestLogicSim;
         private:
             /** the higher bit is most significant bit*/
-            std::vector<Operable*> _nestList;
+            std::vector<NestMeta> _nestList;
+
 
         protected:
             void com_init() override;
@@ -53,15 +59,30 @@ namespace kathryn{
 
         public:
 
-            explicit nest(int size, std::vector<Operable*> nestList);
+            explicit nest(int size, std::vector<NestMeta> nestList);
 
             void com_final() override {};
             /** override assignable*/
             nest& operator <<= (Operable  & b) override {mfAssert(false, "nest don't support this <<= assigment"); assert(false);}
             nest& operator <<= (ull b)         override {mfAssert(false, "nest don't support this <<= assigment"); assert(false);}
+            void generateAssMetaForBlocking(Operable& srcOpr,
+                                    std::vector<AssignMeta*>& resultMetaCollector,
+                                    Slice  absSrcSlice,
+                                    Slice  absDesSlice) override;
             nest& operator =   (Operable  & b) override {mfAssert(false, "nest don't support this   = assigment"); assert(false);}
             nest& operator =   (nest& b)                {mfAssert(false, "nest don't support this   = assigment"); assert(false);}
             nest& operator = (ull b)         override   {mfAssert(false, "nest don't support this = assigment with ull overload"); assert(false);}
+            void generateAssMetaForNonBlocking(Operable& srcOpr,
+                                               std::vector<AssignMeta*>& resultMetaCollector,
+                                               Slice  absSrcSlice,
+                                               Slice  absDesSlice) override;
+
+            void generateAssMetaForAll(Operable& srcOpr,
+                                       std::vector<AssignMeta*>& resultMetaCollector,
+                                       Slice  absSrcSlice,
+                                       Slice  absDesSlice,
+                                       bool isblockingAsm
+                                       );
             /**override operable*/
             [[nodiscard]]
             Slice getOperableSlice() const override  { return getSlice(); }
@@ -78,15 +99,29 @@ namespace kathryn{
             [[maybe_unused]]
             nest& callBackBlockAssignFromAgent(Operable& b, Slice absSlice) override;
             nest& callBackNonBlockAssignFromAgent(Operable& b, Slice absSlice) override;
+            void  callBackBlockAssignFromAgent(Operable& srcOpr,
+                                               std::vector<AssignMeta*>& resultMetaCollector,
+                                               Slice  absSrcSlice,
+                                               Slice  absDesSlice)override;
+            void  callBackNonBlockAssignFromAgent(Operable& srcOpr,
+                                                  std::vector<AssignMeta*>& resultMetaCollector,
+                                                  Slice  absSrcSlice,
+                                                  Slice  absDesSlice)override;
 
             /** check short circuit*/
             Operable* checkShortCircuit() override;
 
-            void simStartCurCycle() override;
-
-
-
     };
+
+
+    class NestLogicSim: public LogicSimEngine{
+        nest* _master = nullptr;
+    public:
+        NestLogicSim(nest* master,int sz, VCD_SIG_TYPE sigType, bool simForNext);
+        /** override simulation engine */
+        void simStartCurCycle() override;
+    };
+
 
 
 

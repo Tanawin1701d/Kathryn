@@ -13,7 +13,7 @@ namespace kathryn{
     Module::Module(bool initComp):
             Identifiable(TYPE_MODULE),
             HwCompControllerItf(),
-            ModuleSimInterface()
+            ModuleSimEngine()
     {
         if (initComp)
             com_init();
@@ -28,7 +28,7 @@ namespace kathryn{
         deleteSubElement(_userWires);
         deleteSubElement(_userExpressions);
         deleteSubElement(_userVals);
-        deleteSubElement(_userSubModule);
+        deleteSubElement(_userSubModules);
         deleteSubElement(_flowBlockBases);
     }
 
@@ -60,7 +60,7 @@ namespace kathryn{
         localizeSlaveVector(_userWires);
         localizeSlaveVector(_userExpressions);
         localizeSlaveVector(_userVals);
-        localizeSlaveVector(_userSubModule);
+        localizeSlaveVector(_userSubModules);
     }
 
     /**
@@ -100,19 +100,21 @@ namespace kathryn{
         _userVals.push_back(val);
     }
 
+    void Module::addUserMemBlk(MemBlock* memBlock) {
+        assert(memBlock != nullptr);
+        _userMemBlks.push_back(memBlock);
+        /** manual*/
+    }
+
     void Module::addUserNest(nest* nst){
         assert(nst != nullptr);
         _userNests.push_back(nst);
     }
 
-    void Module::addUserMemBlk(MemBlock* memBlock) {
-        assert(memBlock != nullptr);
-        _userMemBlks.push_back(memBlock);
-    }
 
     void Module::addUserSubModule(Module* smd) {
         assert(smd != nullptr);
-        _userSubModule.push_back(smd);
+        _userSubModules.push_back(smd);
     }
 
     void Module::buildFlow() {
@@ -165,6 +167,9 @@ namespace kathryn{
 
     }
 
+
+
+
     /** override simulation*/
     void Module::beforePrepareSim(VcdWriter* vcdWriter, FlowColEle* flowColEle){
 
@@ -183,12 +188,10 @@ namespace kathryn{
         /**flow block prepare sim*/
         beforePrepareSimSubElement_FB_only(_flowBlockBases, flowColEle->populateSubEle());
         /**COMPLEX BEFORE PREPARE SUB SIM*/
-        for(auto modulePtr : _userSubModule){
+        for(auto modulePtr : _userSubModules){
             assert(modulePtr != nullptr);
             modulePtr->beforePrepareSim(vcdWriter, flowColEle->populateSubEle());
         }
-
-
 
     }
 
@@ -206,7 +209,9 @@ namespace kathryn{
         prepareSimSubElement(_userMemBlks);
         prepareSimSubElement(_userNests);
         /**COMPLEX PREPARE SUB SIM*/
-        prepareSimSubElement(_userSubModule);
+        prepareSimSubElement(_userSubModules);
+
+
         ////// flow block not need prepare sim
     }
 
@@ -229,7 +234,7 @@ namespace kathryn{
         simStartCurSubElement(_userMemBlks);
         simStartCurSubElement(_userNests);
         /**COMPLEX SUB SIM*/
-        simStartCurSubElement(_userSubModule);
+        simStartCurSubElement(_userSubModules);
         /**for now we are sure that the other is simulated*/
         simStartCurSubElement(_flowBlockBases);
 
@@ -244,8 +249,10 @@ namespace kathryn{
         /**RTL SIM(USER)*/
         simStartNextSubElement(_userRegs);
         simStartNextSubElement(_userMemBlks);
+            /**for wire expresssion and nest is not need to implement*/
         /**COMPLEX SUB SIM*/
-        simStartNextSubElement(_userSubModule);
+        simStartNextSubElement(_userSubModules);
+            /**for flow block no next cycle to determine*/
     }
 
     void Module::curCycleCollectData() {
@@ -259,8 +266,9 @@ namespace kathryn{
         curCollectData(_userExpressions);
         curCollectData(_userVals);
         curCollectData(_userNests);
+            /**memblock doesn't need to collect data*/
         /**COMPLEX SUB SIM*/
-        curCollectData(_userSubModule);
+        curCollectData(_userSubModules);
         curCollectData(_flowBlockBases);
     }
 
@@ -281,7 +289,7 @@ namespace kathryn{
         simExitSubElement(_userMemBlks);
         simExitSubElement(_userNests);
         /**COMPLEX SUB SIM*/
-        simExitSubElement(_userSubModule);
+        simExitSubElement(_userSubModules);
         simExitSubElement(_flowBlockBases);
 
         /** exit flowblock first*/
@@ -292,101 +300,71 @@ namespace kathryn{
 
 
     /** sub element interface*/
-
     template<typename T>
-    void Module::beforePrepareSimSubElement_RTL_only(std::vector<T*>& subEleVec, VcdWriter* writer){
+    void Module::beforePrepareSimSubElement_RTL_only(std::vector<T*>& subEleVec,
+                                                     VcdWriter* writer){
+
+        /****/
+
         for (auto ele: subEleVec){
             assert(ele != nullptr);
-            ele->beforePrepareSim(
+            LogicSimEngine*  logicSimEngine = (LogicSimEngine*)(ele->getSimEngine());
+
+            logicSimEngine->beforePrepareSim(
                     {true, /// for now
-                     ele->concat_inheritName()+ "_" + ele->getVarName(),
-                     writer
-                    });
+                             ele->concat_inheritName()+ "_" + ele->getVarName(),
+                             writer
+                            });
+            /***sort assignable to support sim*/
             ele->sortUpEventByPriority();
         }
     }
 
+    void Module::beforePrepareSimSubElement_FB_only(std::vector<FlowBlockBase*>& subEleVec, FlowColEle* flowColEle){
+        assert(flowColEle != nullptr);
+        /**set writer for this ele*/
+        flowColEle->localName = concat_inheritName();
+        flowColEle->freq = 0;
+        /**set writer for sub flow block*/
+        for (auto* fb: subEleVec){
+            fb->beforePrepareSim({
+                                         flowColEle->populateSubEle()
+                                 });
+        }
+
+    }
     template<typename T>
     void Module::prepareSimSubElement(std::vector<T*>& subEleVec){
         for (auto ele: subEleVec){
             assert(ele != nullptr);
-            ele->prepareSim();
+            ele->getSimEngine()->prepareSim();
         }
     }
-
     template<typename T>
     void Module::simStartCurSubElement(std::vector<T*>& subEleVec){
         for (auto ele: subEleVec){
             assert(ele != nullptr);
-            ele->simStartCurCycle();
+            ele->getSimEngine()->simStartCurCycle();
         }
     }
-
     template<typename T>
     void Module::simStartNextSubElement(std::vector<T*>& subEleVec){
         for(auto ele: subEleVec){
             assert(ele != nullptr);
-            ele->simStartNextCycle();
+            ele->getSimEngine()->simStartNextCycle();
         }
     }
-
     template<typename T>
     void Module::curCollectData(std::vector<T*>& subEleVec){
         for (auto ele: subEleVec){
-            ele->curCycleCollectData();
+            ele->getSimEngine()->curCycleCollectData();
         }
     }
-
     template<typename T>
     void Module::simExitSubElement(std::vector<T*>& subEleVec){
         for (auto ele: subEleVec){
-            ele->simExitCurCycle();
+            ele->getSimEngine()->simExitCurCycle();
         }
     }
-
-
-
-//    void Module::log(){
-//        /***dfs in all flowBLock and sub FLow block*/
-//        struct DFS_STATUS{
-//            FlowBlockBase* fbb = nullptr;
-//            int nextId = 0;
-//        };
-//
-//        std::stack<DFS_STATUS> dfsSt;
-//        ///std::string ret = "[ MODULE " + getIdentDebugValue() + " ]\n";
-//        std::string ret;
-//        for (auto fbbIter = _flowBlockBases.rbegin();
-//            fbbIter != _flowBlockBases.rend();
-//            fbbIter++
-//        ){
-//            dfsSt.push({*fbbIter, -1});
-//        }
-//
-//        while (!dfsSt.empty()){
-//            auto& top = dfsSt.top();
-//
-//            if (top.nextId == -1){
-//                ret += top.fbb->getDescribe();
-//                ret += "\n";
-//            }
-//
-//            top.nextId++;
-//
-//            if (top.nextId == top.fbb->getSubBlocks().size()){
-//                dfsSt.pop();
-//            }else{
-//                dfsSt.push({top.fbb->getSubBlocks()[top.nextId],
-//                            -1});
-//            }
-//
-//        }
-//
-//        std::string ident = "MODULE " + getIdentDebugValue();
-//
-//        logMD(ident,ret);
-//
-//    }
-
 
 }

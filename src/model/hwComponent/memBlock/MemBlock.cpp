@@ -11,7 +11,7 @@ namespace kathryn{
     MemBlock::MemBlock(ull depth, int width):
             Identifiable(TYPE_MEM_BLOCK),
             HwCompControllerItf(false),
-            MemSimulatable(depth, width),
+            MemSimEngine(depth, width),
             ModelDebuggable(),
             DEPTH_SIZE(depth),
             WIDTH_SIZE(width)

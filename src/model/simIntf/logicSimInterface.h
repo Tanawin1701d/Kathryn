@@ -9,8 +9,7 @@
 
 namespace kathryn{
 
-    class LogicSimulatable : public Simulatable,
-                           public RtlValItf{
+class LogicSimEngine : public SimEngine{
     private:
         struct RTL_Meta_afterMf{
             //// data that require to init after model formation
@@ -37,7 +36,7 @@ namespace kathryn{
          * */
     public:
 
-        explicit LogicSimulatable(int sz, VCD_SIG_TYPE sigType, bool simForNext):
+        explicit LogicSimEngine(int sz, VCD_SIG_TYPE sigType, bool simForNext):
                 _simForNext(simForNext),
                 _isSimMetaSet(false),
                 _sigType(sigType),
@@ -46,12 +45,11 @@ namespace kathryn{
                 _isCurValSim(simForNext),
                 _isNextValSim(false),
                 _curVal(sz),
-                _nextVal(sz),
-                Simulatable(){
+                _nextVal(sz){
             assert(sz > 0);
         }
 
-        ~LogicSimulatable() override = default;
+        ~LogicSimEngine() override = default;
 
         /** exit sim can be only invoked single time per cycle*/
         /***

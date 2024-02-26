@@ -28,24 +28,39 @@ namespace kathryn{
         return operator() (idx, idx+1);
     }
 
-    void Val::simStartCurCycle() {
-        /** val don't have to simulate*/
-    }
-
-    void Val::simExitCurCycle() {
-        /** we do this to prevent iterate() function to prepare for next cycle*/
-    }
-
-    void Val::initSim(){
-        getRtlValItf()->setCurValSimStatus();
-        getRtlValItf()->setNextValSimStatus();
-        getRtlValItf()->getCurVal()  = rawValue;
-        getRtlValItf()->getNextVal() = rawValue;
-    }
 
     Operable *Val::checkShortCircuit() {
         return nullptr;
     }
+
+
+
+    /**
+     * value simulation
+     * */
+
+    ValLogicSim::ValLogicSim(Val* master,
+                             int sz,
+                             VCD_SIG_TYPE sigType,
+                             bool simForNext):
+            LogicSimEngine(sz, sigType, simForNext),
+            _master(master){}
+
+    void ValLogicSim::simStartCurCycle() {
+        /** val don't have to simulate*/
+    }
+
+    void ValLogicSim::simExitCurCycle() {
+        /** we do this to prevent iterate() function to prepare for next cycle*/
+    }
+
+    void ValLogicSim::initSim(){
+        setCurValSimStatus();
+        setNextValSimStatus();
+        getCurVal()  = _master->rawValue;
+        getNextVal() = _master->rawValue;
+    }
+
 
 
 }

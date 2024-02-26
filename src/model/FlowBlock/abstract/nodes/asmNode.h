@@ -5,22 +5,34 @@
 #ifndef KATHRYN_ASMNODE_H
 #define KATHRYN_ASMNODE_H
 
+#include <utility>
+
 #include "node.h"
 
 namespace kathryn {
 
     struct AsmNode : Node {
-        AssignMeta *_assignMeta = nullptr; //// AssignMeta is must not use the same assign metas
+        std::vector<AssignMeta*> _assignMetas; //// AssignMeta is must not use the same assign metas
 
         explicit AsmNode(AssignMeta *assignMeta) :
                 Node(ASM_NODE),
-                _assignMeta(assignMeta) {
-            assert(_assignMeta != nullptr);
+                _assignMetas({assignMeta}){
+            assert(assignMeta != nullptr);
+        }
+
+        explicit AsmNode(std::vector<AssignMeta*> assignMetas):
+                Node(ASM_NODE),
+                _assignMetas(std::move(assignMetas)){
+
+            for (auto* asmMeta: _assignMetas){
+                assert(asmMeta != nullptr);
+            }
+
         }
 
 
         AsmNode(const AsmNode &other) : Node((Node &) other) {
-            _assignMeta = other._assignMeta;
+            _assignMetas = other._assignMetas;
         }
 
         ~AsmNode(){}
@@ -32,27 +44,50 @@ namespace kathryn {
         }
 
         void assign() override {
-            auto resultUpEvent = new UpdateEvent({
-                                                         condition,
-                                                         transformAllDepNodeToOpr(),
-                                                         &_assignMeta->valueToAssign,
-                                                         _assignMeta->desSlice,
-                                                         DEFAULT_UE_PRI_USER
-                                                 });
-            _assignMeta->updateEventsPool.push_back(resultUpEvent);
+            assert(!_assignMetas.empty());
+            Operable* depNodeOpr = transformAllDepNodeToOpr();
+            for (auto* assignMeta: _assignMetas) {
+                auto resultUpEvent = new UpdateEvent({
+                                                             condition,
+                                                             depNodeOpr,
+                                                             &assignMeta->valueToAssign,
+                                                             assignMeta->desSlice,
+                                                             DEFAULT_UE_PRI_USER
+                                                     });
+
+                assignMeta->updateEventsPool.push_back(resultUpEvent);
+            }
+
             /*** no need to deal with rst event due to data self invoked*/
+        }
+        /** assign with no flow block related*/
+        void dryAssign(){
+            assert(!_assignMetas.empty());
+            for (auto* assignMeta: _assignMetas) {
+                auto resultUpEvent = new UpdateEvent({
+                                                             nullptr,
+                                                             nullptr,
+                                                             &assignMeta->valueToAssign,
+                                                             assignMeta->desSlice,
+                                                             DEFAULT_UE_PRI_USER
+                                                     });
+
+                assignMeta->updateEventsPool.push_back(resultUpEvent);
+            }
         }
 
         int getCycleUsed() override { return 1; }
 
         void simStartCurCycle() override{
-            if (isCurCycleSimulated()){
+            if (isCurValSim()){
                 return;
             }
-            setSimStatus();
+            setCurValSimStatus();
             /** for basic assignment log engine is irrelevant*/
             /////incEngine(false) do not increase;
         }
+
+
 
     };
 

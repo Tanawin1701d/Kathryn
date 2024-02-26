@@ -19,9 +19,10 @@ namespace kathryn {
      * logic value
      *
      * */
-     template<typename T>
-     class LogicComp;
+    template<typename T>
+    class LogicComp;
     class expression;
+    struct AssignMeta;
     class Operable{
 
     public:
@@ -86,6 +87,8 @@ namespace kathryn {
         virtual Slice           getOperableSlice() const = 0;
         [[nodiscard]]
         virtual Operable&       getExactOperable () const = 0;
+
+        virtual Operable*       doSlice(Slice sl) = 0; //// sl is abs value
 
         virtual Simulatable*    getSimItf() = 0;
         virtual RtlValItf*      getRtlValItf() = 0;

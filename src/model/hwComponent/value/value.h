@@ -18,8 +18,21 @@
 
 namespace kathryn{
 
+    class Val;
+    class ValLogicSim: public LogicSimEngine{
+        Val* _master = nullptr;
+    public:
+        ValLogicSim(Val* master,int sz, VCD_SIG_TYPE sigType, bool simForNext);
+        /** override simulation engine */
+        void initSim();
+        void simStartCurCycle() override;
+        void simExitCurCycle() override;
+
+
+    };
     /** This class act as constant value */
     class Val: public LogicComp<Val>{
+        friend class ValLogicSim;
     protected:
         int    _size;
         ValRep rawValue;
@@ -33,47 +46,66 @@ namespace kathryn{
 
         template<typename... Args>
         explicit Val(int size, Args... args):
-            LogicComp({0, size}, TYPE_VAL,VST_INTEGER, false, false),
+            LogicComp({0, size},
+                      TYPE_VAL,
+                      new ValLogicSim(this,size,VST_INTEGER, false),
+                      false),
             _size(size),
             rawValue(NumConverter::cvtStrToValRep(size, args...))
             {
                 assert(size > 0);
                 com_init();
-                initSim();
+                ((ValLogicSim*)_simEngine)->initSim();
             }
 
         explicit Val(int size):
-            LogicComp({0, size}, TYPE_VAL,
-                      VST_INTEGER,
-                      false,
+            LogicComp({0, size},
+                      TYPE_VAL,
+                      new ValLogicSim(this,size,VST_INTEGER, false),
                       false),
             _size(size),
             rawValue(NumConverter::cvtStrToValRep(size, 0))
             {
                 assert(size > 0);
                 com_init();
-                initSim();
+                ((ValLogicSim*)_simEngine)->initSim();
             }
 
         explicit Val(const ValRep& val):
-            LogicComp({0, val.getLen()}, TYPE_VAL,VST_INTEGER, false, false),
+            LogicComp({0, val.getLen()},
+                      TYPE_VAL,
+                      new ValLogicSim(this,val.getLen(),VST_INTEGER, false),
+                      false),
             _size(val.getLen()),
             rawValue(val)
             {
                 assert(val.getLen() > 0);
                 com_init();
-                initSim();
+                ((ValLogicSim*)_simEngine)->initSim();
             }
 
         /**
          * override assignable
          * */
-        Val& operator <<= (Operable& b) override { mfAssert(false, "val don't support this <<= assigment");assert(false);}
-        Val& operator <<= (ull       b) override { mfAssert(false, "val don't support this   = assigment");assert(false);}
-        Val& operator =   (Operable& b) override { mfAssert(false, "val don't support this   = assigment");assert(false);}
-        Val& operator =   (ull       b) override { mfAssert(false, "val don't support this   = assigment");assert(false);}
-        Val& operator =   (Val&      b)          { mfAssert(false, "val don't support this   = assigment");assert(false);}
+        Val& operator <<= (Operable& b) override { mfAssert(false, "val don't support this <<= assigment"); assert(false);}
+        Val& operator <<= (ull       b) override { mfAssert(false, "val don't support this   = assigment"); assert(false);}
+        void generateAssMetaForBlocking(Operable& srcOpr,
+                                        std::vector<AssignMeta*>& resultMetaCollector,
+                                        Slice  absSrcSlice,
+                                        Slice  absDesSlice) override{
+            mfAssert(false, "val don't support this generateAssMetaForBlocking"); assert(false);
+        }
 
+
+        Val& operator =   (Operable& b) override { mfAssert(false, "val don't support this   = assigment"); assert(false);}
+        Val& operator =   (ull       b) override { mfAssert(false, "val don't support this   = assigment"); assert(false);}
+        Val& operator =   (Val&      b)          { mfAssert(false, "val don't support this   = assigment"); assert(false);}
+        void generateAssMetaForNonBlocking(Operable& srcOpr,
+                                           std::vector<AssignMeta*>& resultMetaCollector,
+                                           Slice  absSrcSlice,
+                                           Slice  absDesSlice) override{
+            mfAssert(false, "val don't support this generateAssMetaForNonBlocking"); assert(false);
+        }
 
         /** override operable*/
         [[nodiscard]]
@@ -87,17 +119,20 @@ namespace kathryn{
 
         Val& callBackBlockAssignFromAgent(Operable& b, Slice absSlice) override {assert(false);};
         Val& callBackNonBlockAssignFromAgent(Operable& b, Slice absSlice) override{assert(false);};
-
-        /** override simulator*/
-        void simStartCurCycle() override;
-        void simExitCurCycle() override;
-        /** init sim*/
-        void initSim();
+        void callBackBlockAssignFromAgent(Operable& srcOpr,
+                                          std::vector<AssignMeta*>& resultMetaCollector,
+                                          Slice  absSrcSlice,
+                                          Slice  absDesSlice) override{assert(false);}
+        void callBackNonBlockAssignFromAgent(Operable& srcOpr,
+                                             std::vector<AssignMeta*>& resultMetaCollector,
+                                             Slice  absSrcSlice,
+                                             Slice  absDesSlice) override{assert(false);}
 
         Operable* checkShortCircuit() override;
 
 
     };
+
 
 }
 

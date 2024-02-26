@@ -113,10 +113,10 @@ namespace kathryn{
     }
 
     void FlowBlockcWhile::simStartCurCycle() {
-        if (isCurCycleSimulated()){
+        if (isCurValSim()){
             return;
         }
-        setSimStatus();
+        setCurValSimStatus();
         bool isStateRunning = false;
         for (auto _sb: subBlocks){
             assert(_sb != nullptr);

@@ -15,7 +15,10 @@ namespace kathryn{
                            const Operable* a,
                            const Operable* b,
                            int exp_size):
-    LogicComp<expression>({0, exp_size}, TYPE_EXPRESSION,VST_WIRE, false,false),
+    LogicComp<expression>({0, exp_size},
+                          TYPE_EXPRESSION,
+                          new expressionLogicSim(this, exp_size,VST_WIRE, false),
+                          false),
     _op(op),
     _a(const_cast<Operable *>(a)),
     _b(const_cast<Operable *>(b))
@@ -24,7 +27,10 @@ namespace kathryn{
     }
 
     expression::expression(int exp_size):
-    LogicComp<expression>({0, exp_size}, TYPE_EXPRESSION,VST_WIRE, false, false),
+    LogicComp<expression>({0, exp_size},
+                          TYPE_EXPRESSION,
+                          new expressionLogicSim(this, exp_size,VST_WIRE, false),
+                          false),
     _op(ASSIGN),
     _a(nullptr),
     _b(nullptr){
@@ -70,32 +76,71 @@ namespace kathryn{
         assert(false);
     }
 
-    void expression::simStartCurCycle() {
+    Operable* expression::checkShortCircuit(){
+        if (isInCheckPath){
+            return this;
+        }
+        isInCheckPath = true;
+
+        Operable* result;
+        if (_a != nullptr){
+            result = _a->checkShortCircuit();
+            if (result != nullptr){
+                return result;
+            }
+        }
+        if (_b != nullptr){
+            result = _b->checkShortCircuit();
+            if (result != nullptr){
+                return result;
+            }
+        }
+
+        isInCheckPath = false;
+        return nullptr;
+    }
 
 
-        if (getRtlValItf()->isCurValSim()){
+    /**
+     *
+     * expression sim
+     * */
+
+    expressionLogicSim::expressionLogicSim(expression* master,
+                                           int sz,
+                                           VCD_SIG_TYPE sigType,
+                                           bool simForNext):
+            LogicSimEngine(sz, sigType, simForNext),
+            _master(master){}
+
+    void expressionLogicSim::simStartCurCycle() {
+
+
+        if (isCurValSim()){
             return;
         }
-        getRtlValItf()->setCurValSimStatus();
+        setCurValSimStatus();
 
         ValRep  firstValRep(1); /**the size will be change*/
         ValRep  secValRep  (1);
-        ValRep& desValRep   = getRtlValItf()->getCurVal();
+        ValRep& desValRep   = getCurVal();
         /**value a*/
-        if (_a != nullptr){
-            _a->getSimItf()->simStartCurCycle();
-            assert(_a->getRtlValItf()->isCurValSim());
-            firstValRep =  _a->getSlicedCurValue();
+        Operable* a = _master->_a;
+        if (a != nullptr){
+            a->getSimItf()->simStartCurCycle();
+            assert(a->getRtlValItf()->isCurValSim());
+            firstValRep =  a->getSlicedCurValue();
         }
+        Operable* b = _master->_b;
         /**value b*/
-        if (_b != nullptr){
-            _b->getSimItf()->simStartCurCycle();
-            assert(_b->getRtlValItf()->isCurValSim());
-            secValRep =  _b->getSlicedCurValue();
+        if (b != nullptr){
+            b->getSimItf()->simStartCurCycle();
+            assert(b->getRtlValItf()->isCurValSim());
+            secValRep = b->getSlicedCurValue();
         }
 
 
-        switch (_op) {
+        switch (_master->getOp()) {
 
             case BITWISE_AND:
                 desValRep = (firstValRep) & (secValRep);
@@ -165,42 +210,9 @@ namespace kathryn{
                 break;
         }
 
-        desValRep.fillZeroToValrep(getSlice().getSize());
-        assert(getSlice().start == 0);
-        assert(desValRep.getLen() == getSlice().getSize());
+        desValRep.fillZeroToValrep(_master->getSlice().getSize());
+        assert(_master->getSlice().start == 0);
+        assert(desValRep.getLen() == _master->getSlice().getSize());
     }
 
-    Operable* expression::checkShortCircuit(){
-        if (isInCheckPath){
-            return this;
-        }
-        isInCheckPath = true;
-
-        Operable* result;
-        if (_a != nullptr){
-            result = _a->checkShortCircuit();
-            if (result != nullptr){
-                return result;
-            }
-        }
-        if (_b != nullptr){
-            result = _b->checkShortCircuit();
-            if (result != nullptr){
-                return result;
-            }
-        }
-
-        isInCheckPath = false;
-        return nullptr;
-    }
-
-//    std::vector<std::string> expression::getDebugAssignmentValue() {
-//        if (isSingleOpr(_op)){
-//            return {lop_to_string(_op) + _a->castToIdent()->getGlobalName()};
-//        }else{
-//            std::string aName = _a->castToIdent()->getGlobalName();
-//            std::string bName = _b->castToIdent()->getGlobalName();
-//            return {aName + lop_to_string(_op) + bName};
-//        }
-//    }
 }

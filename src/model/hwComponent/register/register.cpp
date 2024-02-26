@@ -11,7 +11,10 @@ namespace kathryn{
 
     /** constructor need to init communication with controller*/
     Reg::Reg(int size, bool initCom, HW_COMPONENT_TYPE hwType, bool requiredAllocCheck) :
-            LogicComp({0, size}, hwType,VST_REG, true,requiredAllocCheck){
+            LogicComp({0, size},
+                      hwType,
+                      new RegLogicSim(this, size, VST_REG, true),
+                      requiredAllocCheck){
         if (initCom) {
             com_init();
         }
@@ -23,13 +26,23 @@ namespace kathryn{
 
     Reg& Reg::operator<<=(Operable &b) {
         Slice absSlice = getSlice().getSubSliceWithShinkMsb({0, b.getOperableSlice().getSize()});
-        ctrl->on_reg_update(generateAssignMeta(b, absSlice), this);
+        ctrl->on_reg_update(generateBasicNode(b, absSlice), this);
         return *this;
     }
 
     Reg& Reg::operator <<= (ull b) {
         Operable& rhs = getMatchAssignOperable(b, getSlice().getSize());
         return operator<<=(rhs);
+    }
+
+    void Reg::generateAssMetaForBlocking(Operable& srcOpr,
+                                         std::vector<AssignMeta*>& resultMetaCollector,
+                                         Slice  absSrcSlice,
+                                         Slice  absDesSlice) {
+        generateAssignMetaAndFill(srcOpr,
+                                  resultMetaCollector,
+                                  absSrcSlice,
+                                  absDesSlice);
     }
 
     Reg& Reg::operator=(Operable& b) {
@@ -75,7 +88,7 @@ namespace kathryn{
         assert(absSliceOfHost.getSize() <= getOperableSlice().getSize());
         assert(absSliceOfHost.stop      <= getOperableSlice().stop);
         Slice absSlice = absSliceOfHost.getSubSliceWithShinkMsb({0, b.getOperableSlice().getSize()});
-        ctrl->on_reg_update(generateAssignMeta(b, absSlice), this);
+        ctrl->on_reg_update(generateBasicNode(b, absSlice), this);
         return *this;
     }
 
@@ -83,20 +96,16 @@ namespace kathryn{
         assert(false);
     }
 
-    void Reg::simStartCurCycle() {
-        ///// if in This cycle the component is simmulated then skip simulation
-        assert(getRtlValItf()->isCurValSim());
+    void Reg::callBackBlockAssignFromAgent(Operable &srcOpr, std::vector<AssignMeta *> &resultMetaCollector,
+                                            Slice absSrcSlice, Slice absDesSlice) {
+        assert(getSlice().isContain(absDesSlice));
+        generateAssMetaForBlocking(srcOpr, resultMetaCollector, absSrcSlice, absDesSlice);
     }
 
-    void Reg::simStartNextCycle() {
-
-        RtlValItf* rtlValItf = getRtlValItf();
-        assert(rtlValItf->isCurValSim());
-        assert(!rtlValItf->isNextValSim());
-
-        rtlValItf->setNextValSimStatus();
-        rtlValItf->getNextVal() = rtlValItf->getCurVal(); ///// get curval to be next val because it may be no change
-        assignValRepCurCycle(rtlValItf->getNextVal());
+    void Reg::callBackNonBlockAssignFromAgent(Operable &srcOpr, std::vector<AssignMeta *> &resultMetaCollector,
+                                               Slice absSrcSlice, Slice absDesSlice) {
+        assert(getSlice().isContain(absDesSlice));
+        generateAssMetaForNonBlocking(srcOpr, resultMetaCollector, absSrcSlice, absDesSlice);
     }
 
     Operable* Reg::checkShortCircuit(){
@@ -104,17 +113,30 @@ namespace kathryn{
     }
 
 
+    /**
+     * Reg Logic Sim
+     * */
 
+    RegLogicSim::RegLogicSim(Reg* master,
+                             int sz,
+                             VCD_SIG_TYPE sigType,
+                             bool simForNext):
+            LogicSimEngine(sz, sigType, simForNext),
+            _master(master){}
 
+    void RegLogicSim::simStartNextCycle() {
 
-//    std::vector<std::string> Reg::getDebugAssignmentValue() {
-//        std::vector<std::string> results;
-//        for (auto upEvent: _updateMeta){
-//            assert(upEvent != nullptr);
-//            results.push_back(upEvent->getDebugString());
-//        }
-//        return results;
-//    }
+        assert(isCurValSim());
+        assert(!isNextValSim());
 
+        setNextValSimStatus();
+        getNextVal() = getCurVal(); ///// get curval to be next val because it may be no change
+        _master->assignValRepCurCycle(getNextVal());
+    }
+
+    void RegLogicSim::simStartCurCycle() {
+        ///// if in This cycle the component is simmulated then skip simulation
+        assert(isCurValSim());
+    }
 
 }

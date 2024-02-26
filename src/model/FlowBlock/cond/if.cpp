@@ -218,10 +218,10 @@ namespace kathryn{
 
     void FlowBlockIf::simStartCurCycle() {
 
-        if (isCurCycleSimulated()){
+        if (isCurValSim()){
             return;
         }
-        setSimStatus();
+        setCurValSimStatus();
 
         bool isStateRunning = false;
         /** simulate */

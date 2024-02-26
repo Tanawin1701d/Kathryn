@@ -46,10 +46,10 @@ namespace kathryn{
         int getCycleUsed() override {return -1;}
 
         void simStartCurCycle() override{
-            if (isCurCycleSimulated()){
+            if (isCurValSim()){
                 return;
             }
-            setSimStatus();
+            setCurValSimStatus();
             bool shouldIncStat = _condWaitStateReg->isSimAtWaiting();
             if (shouldIncStat){
                 setBlockOrNodeRunning();
@@ -104,10 +104,10 @@ namespace kathryn{
         int getCycleUsed() override {return _cycle;}
 
         void simStartCurCycle() override{
-            if (isCurCycleSimulated()){
+            if (isCurValSim()){
                 return;
             }
-            setSimStatus();
+            setCurValSimStatus();
             bool shouldIncStat =  _cycleWaitStateReg->isSimAtWaiting();
             if (shouldIncStat){
                 incEngine();

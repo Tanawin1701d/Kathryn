@@ -25,8 +25,15 @@ namespace kathryn{
             return (start <= rhs.start) && (stop >= rhs.stop);
         }
 
+        Slice getMatchSizeSubSlice(Slice b){
+            assert(b.checkValidSlice());
+            assert(checkValidSlice());
+            return getSubSliceWithShinkMsb({0, b.getSize()});
+        }
+
         /** the start bit must be in range but stop but haven't to*/
         //////// b is relative value
+
         Slice getSubSliceWithShinkMsb(Slice b){
             assert(isBitInRangeRel(b.start));
             assert(b.checkValidSlice());
@@ -38,6 +45,10 @@ namespace kathryn{
             assert(indexer.checkValidSlice());
             assert( (start + indexer.stop) <= stop);
             return {start + indexer.start, start + indexer.stop};
+        }
+
+        bool operator == (const Slice& b) const{
+            return (start == b.start) && (stop == b.stop);
         }
 
 

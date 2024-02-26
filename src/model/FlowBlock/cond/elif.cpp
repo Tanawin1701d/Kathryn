@@ -82,10 +82,10 @@ namespace kathryn{
     }
 
     void FlowBlockElif::simStartCurCycle() {
-        if (isCurCycleSimulated()){
+        if (isCurValSim()){
             return;
         }
-        setSimStatus();
+        setCurValSimStatus();
 
         bool isStateRunning = false;
 

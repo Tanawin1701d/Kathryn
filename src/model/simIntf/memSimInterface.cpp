@@ -11,7 +11,7 @@
 namespace kathryn{
 
 
-    MemSimulatable::MemSimulatable(ull depthSize, int widthSize):
+    MemSimEngine::MemSimEngine(ull depthSize, int widthSize):
     memBlk(nullptr),
     DEPTH_SIZE(depthSize),
     WIDTH_SIZE(widthSize)
@@ -23,7 +23,7 @@ namespace kathryn{
     }
 
     void
-    MemSimulatable::prepareSim(){
+    MemSimEngine::prepareSim(){
         memBlk =  new ValRep[DEPTH_SIZE];
         for (int i = 0; i < DEPTH_SIZE; i++){
             memBlk[i] = ValRep(WIDTH_SIZE);
@@ -32,7 +32,7 @@ namespace kathryn{
     }
 
     ValRep&
-    MemSimulatable::getThisCycleValRep(ull idx){
+    MemSimEngine::getThisCycleValRep(ull idx){
         assert(memBlk != nullptr);
         assert(idx < DEPTH_SIZE);
         return memBlk[idx];

@@ -19,7 +19,8 @@ namespace kathryn{
 
     class MemBlock: public Identifiable,
                     public HwCompControllerItf,
-                    public MemSimulatable,
+                    public MemSimEngine,
+                    public SimEngineInterface,
                     public ModelDebuggable{
     private:
         const ull DEPTH_SIZE = 0;
@@ -30,6 +31,10 @@ namespace kathryn{
 
     public:
         explicit MemBlock(ull depth, int width);
+
+        SimEngine* getSimEngine() override{
+            return static_cast<SimEngine*>(this);
+        }
 
         void com_init() override;
         void com_final() override{};

@@ -87,10 +87,10 @@ namespace kathryn{
     }
 
     void FlowBlockCondWait::simStartCurCycle() {
-        if (isCurCycleSimulated()){
+        if (isCurValSim()){
             return;
         }
-        setSimStatus();
+        setCurValSimStatus();
         bool isStateRunning = false;
         /** simulate each element*/
         if (_waitNode != nullptr){
@@ -210,10 +210,10 @@ namespace kathryn{
     }
 
     void FlowBlockCycleWait::simStartCurCycle() {
-        if (isCurCycleSimulated()){
+        if (isCurValSim()){
             return;
         }
-        setSimStatus();
+        setCurValSimStatus();
         bool isStateRunning = false;
         /** simulate each element*/
         if (_waitNode != nullptr){

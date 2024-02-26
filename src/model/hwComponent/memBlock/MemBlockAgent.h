@@ -12,6 +12,7 @@
 #include "model/simIntf/memSimInterface.h"
 #include "model/debugger/modelDebugger.h"
 #include "model/controller/conInterf/controllerItf.h"
+#include "model/hwComponent/abstract/logicComp.h"
 
 namespace kathryn{
 
@@ -19,14 +20,8 @@ namespace kathryn{
     class MemBlock;
 
     /**this class is used to hold only one element in each memblock*/
-    class MemBlockEleHolder: public Assignable<MemBlockEleHolder>,
-                             public Operable,
-                             public Slicable<MemBlockEleHolder>,
-                             public AssignCallbackFromAgent<MemBlockEleHolder>,
-                             public Identifiable,
-                             public HwCompControllerItf,
-                             public MemAgentSimulatable,
-                             public ModelDebuggable{
+    class MemBlockEleHolder: public LogicComp<MemBlockEleHolder>{
+        friend class MemEleHolderLogicSim;
     private:
         ///bool setModeYet = false; /**the goal of setMode is to prevent duplicate read write in the same index*/
         bool readMode = false; /**Therefore, we should know that if it did not set mode it may be read mode*/
@@ -37,6 +32,7 @@ namespace kathryn{
     protected:
         void setReadMode (){readMode = true; }
         void setWriteMode(){readMode = false;}
+        bool isReadMode() const{return readMode;}
         ////[[nodiscard]] bool isSetMode   () const{return setModeYet;}
 
     public:
@@ -52,16 +48,20 @@ namespace kathryn{
         /** override assignable (need to call controller)*/
         MemBlockEleHolder& operator <<= (Operable& b) override;
         MemBlockEleHolder& operator <<= (ull       b) override;
+        void generateAssMetaForBlocking(Operable& srcOpr,
+                                std::vector<AssignMeta*>& resultMetaCollector,
+                                Slice  absSrcSlice,
+                                Slice  absDesSlice) override;
         MemBlockEleHolder& operator   = (Operable& b) override;
         MemBlockEleHolder& operator   = (ull       b) override;
-        Slice getAssignSlice() override{ return Slicable<MemBlockEleHolder>::getSlice();}
+        void generateAssMetaForNonBlocking(Operable& srcOpr,
+                                   std::vector<AssignMeta*>& resultMetaCollector,
+                                   Slice  absSrcSlice,
+                                   Slice  absDesSlice) override;
 
         /** Operable*/
         [[nodiscard]] Slice           getOperableSlice    () const override;
         [[nodiscard]] Operable&       getExactOperable    () const override;
-
-        Simulatable*    getSimItf()    override {return this;}
-        RtlValItf*      getRtlValItf() override {return this;}
 
         Identifiable*   castToIdent         () override;
         ValRep&         sv                  () override;
@@ -73,11 +73,14 @@ namespace kathryn{
         /**Assign call back From Agent */
         MemBlockEleHolder& callBackBlockAssignFromAgent   (Operable& b, Slice absSliceOfHost) override;
         MemBlockEleHolder& callBackNonBlockAssignFromAgent(Operable& b, Slice absSliceOfHost) override;
-
-        /**Rtl simulatable we cut many feature to make it be proxy*/
-        void simStartCurCycle   () override;
-        void simStartNextCycle  () override;
-        bool isReadMode         () override{return readMode;};
+        void               callBackBlockAssignFromAgent(Operable& srcOpr,
+                                                        std::vector<AssignMeta*>& resultMetaCollector,
+                                                        Slice  absSrcSlice,
+                                                        Slice  absDesSlice) override;
+        void               callBackNonBlockAssignFromAgent(Operable& srcOpr,
+                                                        std::vector<AssignMeta*>& resultMetaCollector,
+                                                        Slice  absSrcSlice,
+                                                        Slice  absDesSlice) override;
 
 
         Operable* checkShortCircuit   () override{return nullptr;}
@@ -85,6 +88,17 @@ namespace kathryn{
         /** debug method to do will will make debug string more delightful*/
         std::string getMdDescribe() override {return Identifiable::getIdentDebugValue();}
         std::string getMdIdentVal() override {return Identifiable::getIdentDebugValue();}
+
+    };
+
+    class MemEleHolderLogicSim: public MemAgentSimEngine{
+        MemBlockEleHolder* _master = nullptr;
+    public:
+        MemEleHolderLogicSim(MemBlockEleHolder* master, int bitWidth);
+        /** override simulation engine */
+        void simStartCurCycle () override;
+        void simStartNextCycle() override;
+        bool isReadMode       () override{return _master->readMode;};
 
     };
 

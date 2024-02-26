@@ -26,15 +26,17 @@ namespace kathryn{
                                                                         valueToAssign(v),
                                                                         desSlice(s){}
     };
-
     /**
     * Assignable represent hardware component that can memorize logic value or
     *
     * */
     /** to make value when constant input is used*/
-    Operable& getMatchAssignOperable(ull value, const int size);
+    Operable& getMatchAssignOperable(ull value, int size);
 
-    template<typename RET_TYPE>
+    struct AsmNode;
+
+    AsmNode* generateBasicNodeHelper(std::vector<UpdateEvent*>& assPool, Operable& srcOpr, Slice desSlice);
+
     class Assignable{
     protected:
         std::vector<UpdateEvent*> _updateMeta;
@@ -48,26 +50,39 @@ namespace kathryn{
         }
 
         /** assignable value*/
-        virtual RET_TYPE& operator <<= (Operable& b) = 0;
-        virtual RET_TYPE& operator <<= (ull b) = 0;
+        virtual void generateAssMetaForBlocking(Operable& srcOpr,
+                                                std::vector<AssignMeta*>& resultMetaCollector,
+                                                Slice  absSrcSlice,
+                                                Slice  absDesSlice) = 0;
 
+        virtual void generateAssMetaForNonBlocking(Operable& srcOpr,
+                                                   std::vector<AssignMeta*>& resultMetaCollector,
+                                                   Slice  absSrcSlice,
+                                                   Slice  absDesSlice) = 0;
 
-        virtual RET_TYPE& operator =   (Operable& b) = 0;
-        virtual RET_TYPE& operator =   (ull b) = 0;
 
         virtual Slice getAssignSlice() = 0;
 
         /** update event management*/
         std::vector<UpdateEvent*>& getUpdateMeta(){ return _updateMeta; }
+
         void addUpdateMeta(UpdateEvent* event){
             _updateMeta.push_back(event);
         }
 
         /** generate update metas*/
-        AssignMeta* generateAssignMeta(Operable& assignValue, Slice assignSlice){
-            return new AssignMeta(_updateMeta, assignValue, assignSlice);
+        virtual AssignMeta* generateAssignMeta(Operable& srcValue, Slice desSlice){
+            return new AssignMeta(_updateMeta, srcValue, desSlice);
         }
 
+        /** generate update metas for src that need to be specificed the index and destination what ever*/
+        void generateAssignMetaAndFill(Operable& srcOpr,
+                                       std::vector<AssignMeta*>& resultMetaCollector,
+                                       Slice  absSrcSlice,
+                                       Slice  absDesSlice
+                                       );
+        /** generate the atomic node that is used to represent  state in the system*/
+        AsmNode* generateBasicNode(Operable& srcOpr, Slice desSlice);
 
         /***
          *
@@ -105,11 +120,29 @@ namespace kathryn{
     };
 
     template<typename RET_TYPE>
+    class AssignOpr{
+    public:
+        virtual RET_TYPE& operator <<= (Operable& b) = 0;
+        virtual RET_TYPE& operator <<= (ull b)       = 0;
+        virtual RET_TYPE& operator =   (Operable& b) = 0;
+        virtual RET_TYPE& operator =   (ull b)       = 0;
+    };
+
+    template<typename RET_TYPE>
     class AssignCallbackFromAgent{
     public:
         virtual RET_TYPE& callBackBlockAssignFromAgent(Operable& b, Slice absSliceOfHost)    = 0;
         virtual RET_TYPE& callBackNonBlockAssignFromAgent(Operable& b, Slice absSliceOfHost) = 0;
+        virtual void      callBackBlockAssignFromAgent(Operable& srcOpr,
+                                                       std::vector<AssignMeta*>& resultMetaCollector,
+                                                       Slice  absSrcSlice,
+                                                       Slice  absDesSlice) = 0;
+        virtual void      callBackNonBlockAssignFromAgent(Operable& srcOpr,
+                                                          std::vector<AssignMeta*>& resultMetaCollector,
+                                                          Slice  absSrcSlice,
+                                                          Slice  absDesSlice) = 0;
     };
+
 
 
 

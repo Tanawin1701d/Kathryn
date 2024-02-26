@@ -36,8 +36,10 @@ namespace kathryn{
 
     class Module : public Identifiable,
                    public HwCompControllerItf,
-                   public ModuleSimInterface,
-                   public ModelDebuggable{
+                   public ModuleSimEngine,
+                   public ModelDebuggable,
+                   public SimEngineInterface
+                   {
 
     private:
         /**all slave object that belong to this elements*/
@@ -51,7 +53,7 @@ namespace kathryn{
         std::vector<Val*>        _userVals;
         std::vector<MemBlock*>   _userMemBlks;
         std::vector<nest*>       _userNests;
-        std::vector<Module*>     _userSubModule;
+        std::vector<Module*>     _userSubModules;
 
         /** when hardware components require data from outside class
          * the system must handle wire routing while synthesis
@@ -65,18 +67,34 @@ namespace kathryn{
         void localizeSlaveVector(std::vector<T>& _vec);
         void localizeSlaveElements();
         /** sub element interface*/
+        //////// due to it is hard to debug, please stop using template
+
+        SimEngine* getSimEngine() override{
+            return static_cast<SimEngine*>(this);
+        }
+
+
+
+
+
+
+        /** must able to get sim and cast to LogicSim Engine*/
         template<typename T>
         void beforePrepareSimSubElement_RTL_only(std::vector<T*>& subEleVec, VcdWriter* writer);
+        void beforePrepareSimSubElement_FB_only(std::vector<FlowBlockBase*>& subEleVec, FlowColEle* flowColEle);
+
+
+        /** must able to get sim*/
         template<typename T>
-        void prepareSimSubElement(std::vector<T*>& subEleVec);
+        void prepareSimSubElement               (std::vector<T*>& subEleVec);
         template<typename T>
-        void simStartCurSubElement(std::vector<T*>& subEleVec);
+        void simStartCurSubElement              (std::vector<T*>& subEleVec);
         template<typename T>
-        void simStartNextSubElement(std::vector<T*>& subEleVec);
+        void simStartNextSubElement             (std::vector<T*>& subEleVec);
         template<typename T>
-        void curCollectData(std::vector<T*>& subEleVec);
+        void curCollectData                     (std::vector<T*>& subEleVec);
         template<typename T>
-        void simExitSubElement(std::vector<T*>& subEleVec);
+        void simExitSubElement                  (std::vector<T*>& subEleVec);
 
 
     public:
@@ -92,24 +110,8 @@ namespace kathryn{
             }
         }
 
+
         /** logic comp*/
-
-
-        void beforePrepareSimSubElement_FB_only(std::vector<FlowBlockBase*>& subEleVec, FlowColEle* flowColEle){
-            assert(flowColEle != nullptr);
-            /**set writer for this ele*/
-            flowColEle->localName = concat_inheritName();
-            flowColEle->freq = 0;
-            /**set writer for sub flow block*/
-            for (auto* fb: subEleVec){
-                fb->beforePrepareSim({
-                    flowColEle->populateSubEle()
-                });
-            }
-
-        }
-
-
         /**implicit element that is built from design flow*/
         void addSpReg          (Reg* reg, SP_REG_TYPE spRegType);
         void addFlowBlock      (FlowBlockBase* fb);
@@ -138,7 +140,7 @@ namespace kathryn{
         auto& getUserVals(){return _userVals; }
         auto& getUserMemBlks(){return _userMemBlks;}
         auto& getUserNests(){return _userNests;}
-        auto& getUserSubModules(){return _userSubModule;}
+        auto& getUserSubModules(){return _userSubModules;}
 
 
         /** Functions which allow user to custom  their module design flow*/

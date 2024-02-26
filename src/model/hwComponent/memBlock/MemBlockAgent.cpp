@@ -10,15 +10,14 @@
 namespace kathryn{
 
     MemBlockEleHolder::MemBlockEleHolder(MemBlock *master, const Operable* indexer):
-    Assignable<MemBlockEleHolder>(),
-    Operable(),
-    Slicable<MemBlockEleHolder>({0, master->getWidthSize()}),
-    Identifiable(TYPE_MEM_BLOCK_INDEXER),
-    MemAgentSimulatable(master->getWidthSize()),
-    ModelDebuggable(),
-    readMode(true),
-    _master(master),
-    _indexer(const_cast<Operable*>(indexer)){
+            LogicComp<MemBlockEleHolder>({0, master->getWidthSize()},
+                                         TYPE_MEM_BLOCK_INDEXER,
+                                         new MemEleHolderLogicSim(this, master->getWidthSize()),
+                                         false
+                                          ),
+            readMode(true),
+            _master(master),
+            _indexer(const_cast<Operable*>(indexer)){
         assert(_master  != nullptr);
         assert(_indexer != nullptr);
         assert(_indexer->getOperableSlice().getSize()
@@ -27,15 +26,13 @@ namespace kathryn{
 
 
     MemBlockEleHolder::MemBlockEleHolder(MemBlock * master, const int idx):
-    Assignable<MemBlockEleHolder>(),
-    Operable(),
-    Slicable<MemBlockEleHolder>({0, master->getWidthSize()}),
-    Identifiable(TYPE_MEM_BLOCK_INDEXER),
-    HwCompControllerItf(false),
-    MemAgentSimulatable(master->getWidthSize()),
-    ModelDebuggable(),
-    _master(master),
-    _indexer(nullptr)
+            LogicComp<MemBlockEleHolder>({0, master->getWidthSize()},
+                                         TYPE_MEM_BLOCK_INDEXER,
+                                         new MemEleHolderLogicSim(this, master->getWidthSize()),
+                                         false
+            ),
+            _master(master),
+            _indexer(nullptr)
     {
         makeVal(memIndexer, getExactIndexSize(), idx);
         _indexer = (Operable*)(&memIndexer);
@@ -68,7 +65,8 @@ namespace kathryn{
         setWriteMode();
         assert(b.getOperableSlice().getSize() == _master->getWidthSize());
         ctrl->on_memBlkEleHolder_update(
-                generateAssignMeta(b, {0, _master->getWidthSize()}),
+                generateBasicNode(b,
+                                           {0, _master->getWidthSize()}),
                 this);
         return *this;
     }
@@ -78,6 +76,20 @@ namespace kathryn{
         return operator<<=(rhs);
     }
 
+    void MemBlockEleHolder::generateAssMetaForBlocking(Operable& srcOpr,
+                                    std::vector<AssignMeta*>& resultMetaCollector,
+                                    Slice  absSrcSlice,
+                                    Slice  absDesSlice){
+
+        /** for assigning in memblock must have same size */
+        mfAssert(isReadMode(), "duplicate write operation");
+        mfAssert(getSlice().getSize() == srcOpr.getOperableSlice().getSize(),
+                 "invalid write size");
+        setWriteMode();
+        generateAssignMetaAndFill(srcOpr,resultMetaCollector,
+                                  absSrcSlice,absDesSlice);
+    }
+
     MemBlockEleHolder &MemBlockEleHolder::operator=(Operable &b) {
         mfAssert(false, "memBlockEle doesn't support = operator");
         assert(false);
@@ -85,6 +97,14 @@ namespace kathryn{
 
     MemBlockEleHolder &MemBlockEleHolder::operator=(ull b) {
         mfAssert(false, "memBlockEle doesn't support = operator");
+        assert(false);
+    }
+
+    void MemBlockEleHolder::generateAssMetaForNonBlocking(Operable& srcOpr,
+                                                          std::vector<AssignMeta*>& resultMetaCollector,
+                                                          Slice  absSrcSlice,
+                                                          Slice  absDesSlice){
+        mfAssert(false, "memBlockEle doesn't support generateAssMetaForNonBlocking");
         assert(false);
     }
 
@@ -124,19 +144,42 @@ namespace kathryn{
         assert(false);
     }
 
+    void
+    MemBlockEleHolder::callBackBlockAssignFromAgent(Operable &srcOpr, std::vector<AssignMeta *> &resultMetaCollector,
+                                                    Slice absSrcSlice, Slice absDesSlice) {
+        mfAssert(false, "can't assign data to memBlock from slice");
+        assert(false);
+    }
 
-    /** override rtl simEngine*/
+    void
+    MemBlockEleHolder::callBackNonBlockAssignFromAgent(Operable &srcOpr, std::vector<AssignMeta *> &resultMetaCollector,
+                                                       Slice absSrcSlice, Slice absDesSlice) {
+        mfAssert(false, "can't assign data to memBlock from slice");
+        assert(false);
+    }
 
-    void MemBlockEleHolder::simStartCurCycle() {
+
+    /**
+     *
+     * MemEleSimEngine
+     *
+     * */
+
+    MemEleHolderLogicSim::MemEleHolderLogicSim(MemBlockEleHolder* master,
+                                               int bitWidth):
+                          MemAgentSimEngine(bitWidth),
+                          _master(master){}
+
+    void MemEleHolderLogicSim::simStartCurCycle() {
         if (isCurValSim()){
             return;
         }
         ////std::cout << "next======" << std::endl;
         setCurValSimStatus();
-        _curAgentVal =  &getCurMemVal();
+        _curAgentVal =  &_master->getCurMemVal();
     }
 
-    void MemBlockEleHolder::simStartNextCycle() {
+    void MemEleHolderLogicSim::simStartNextCycle() {
         ////// then copy the value to destination first incase value is not update
         assert(!isReadMode());
         ////// curAgentVal is assigned already
@@ -144,8 +187,12 @@ namespace kathryn{
         setNextValSimStatus();
         /// std::cout << "next======" << std::endl;
 
-        _nextAgentVal = getCurMemVal();
-        assignValRepCurCycle(_nextAgentVal);
+        _nextAgentVal = _master->getCurMemVal();
+        _master->assignValRepCurCycle(_nextAgentVal);
     }
+
+
+
+
 
 }

@@ -47,7 +47,8 @@ namespace kathryn {
     /**key point is make the agent that transparent while routing
      * assignable for updateMeta in assignable in agent is not used*/
     template<typename T>
-    class SliceAgent : public Assignable<SliceAgent<T>>, public Operable, public Slicable<T> {
+    class SliceAgent : public AssignOpr<SliceAgent<T>>,public Assignable,
+                       public Operable, public Slicable<T> {
 
     private:
         T* _master;
@@ -55,6 +56,10 @@ namespace kathryn {
         SliceAgent(T* master, Slice slc) : _master(master), Slicable<T>(slc) {
             _master->Slicable<T>::addAgentHolder(this);
         };
+
+        Operable* castToOperable(){
+            return static_cast<Operable*>(_master);
+        }
 
         /** slicable overload*/
 
@@ -72,7 +77,7 @@ namespace kathryn {
             return *ret;
         }
 
-        /** override assignable*/
+        /** override AssignOpr*/
         SliceAgent<T>& operator <<= (Operable& b) override {
              _master->callBackBlockAssignFromAgent(
                 b,
@@ -88,6 +93,16 @@ namespace kathryn {
                     Slicable<T>::getSlice());
 
             return *this;
+        }
+
+        void generateAssMetaForBlocking(Operable& srcOpr,
+                                        std::vector<AssignMeta*>& resultMetaCollector,
+                                        Slice  absSrcSlice,
+                                        Slice  absDesSlice) override{
+            _master->callBackBlockAssignFromAgent(
+                    srcOpr,resultMetaCollector,
+                    absSrcSlice,absDesSlice
+            );
         }
 
         SliceAgent<T>& operator = (Operable& b) override {
@@ -107,6 +122,8 @@ namespace kathryn {
             return *this;
         }
 
+        /** override */
+
         SliceAgent<T>& operator = (SliceAgent<T>& b){
             /** when same agent have use equal operator sometime
              * it may not auto convert to =(Operable& b)
@@ -119,19 +136,36 @@ namespace kathryn {
             return *this;
         }
 
+        void generateAssMetaForNonBlocking(Operable& srcOpr,
+                                           std::vector<AssignMeta*>& resultMetaCollector,
+                                           Slice  absSrcSlice,
+                                           Slice  absDesSlice)override{
+            _master->callBackNonBlockAssignFromAgent(
+                    srcOpr,resultMetaCollector,
+                    absSrcSlice,absDesSlice
+            );
+        };
+
+        /** override assignable*/
+
         [[nodiscard]] Slice getAssignSlice()  override { return  Slicable<T>::getSlice(); }
 
-        /** override operable*/
+
 
         /** operable override*/
         [[nodiscard]] Operable& getExactOperable() const override { return *(Operable*)_master; }
         [[nodiscard]] Slice getOperableSlice() const override { return  Slicable<T>::getSlice(); }
 
+        Operable* doSlice(Slice sl) override{
+            auto x = Slicable<T>::operator() (sl.start, sl.stop);
+            return x.castToOperable();
+        }
+
         Simulatable*    getSimItf() override{
-            return static_cast<Simulatable*>(_master);
+            return static_cast<Simulatable*>(_master->getSimEngine());
         }
         RtlValItf*      getRtlValItf() override{
-            return static_cast<RtlValItf*>(_master);
+            return static_cast<RtlValItf*>(_master->getSimEngine());
         }
 
         Identifiable* castToIdent() override{

@@ -161,10 +161,10 @@ namespace kathryn{
     bool SequenceEle::isCurCycleSimulated() const{
 
         if (_asmNode != nullptr){
-            return _asmNode->isCurCycleSimulated();
+            return _asmNode->isCurValSim();
         }
         if (_subBlock != nullptr){
-            return _subBlock->isCurCycleSimulated();
+            return _subBlock->isCurValSim();
         }
         assert(false);
     }
@@ -309,10 +309,10 @@ namespace kathryn{
     /** override flow block simulation*/
 
     void FlowBlockSeq::simStartCurCycle() {
-        if (isCurCycleSimulated()){
+        if (isCurValSim()){
             return;
         }
-        setSimStatus();
+        setCurValSimStatus();
         bool isRunning = false;
         /** simulate each element*/
         for (auto subSeqMeta: _subSeqMetas){

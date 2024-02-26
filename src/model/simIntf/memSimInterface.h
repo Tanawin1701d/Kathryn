@@ -11,8 +11,7 @@
 namespace kathryn{
 
 
-    class MemSimulatable : public Simulatable,
-                           public RtlValItf{
+    class MemSimEngine : public SimEngine{
     protected:
         /** we will not use sim engine anymore*/
         ValRep* memBlk = nullptr;
@@ -25,7 +24,10 @@ namespace kathryn{
 
 
     public:
-        MemSimulatable(ull depthSize, int widthSize);
+        MemSimEngine(ull depthSize, int widthSize);
+        ~MemSimEngine(){
+            delete[] memBlk;
+        }
 
         //////// simulatable override
         void prepareSim() override;
@@ -54,8 +56,7 @@ namespace kathryn{
     };
 
 
-    class MemAgentSimulatable : public Simulatable,
-                                public RtlValItf{
+    class MemAgentSimEngine : public SimEngine{
     protected:
         bool               _isCurValSim  = false;
         bool               _isNextValSim = false;
@@ -66,7 +67,7 @@ namespace kathryn{
 
     public:
 
-        explicit MemAgentSimulatable(int bitWidth):
+        explicit MemAgentSimEngine(int bitWidth):
         _nextAgentVal(bitWidth)
         {}
 
