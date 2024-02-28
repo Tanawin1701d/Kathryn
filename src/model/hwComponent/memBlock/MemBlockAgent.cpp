@@ -47,7 +47,15 @@ namespace kathryn{
         ValRep curValIndexer = _indexer->getSlicedCurValue();
         assert(curValIndexer.getLen() == getExactIndexSize());
         /////std::cout << "indexer ==== " << curValIndexer.getVal()[0] << std::endl;
-        return _master->getThisCycleValRep(curValIndexer.getVal()[0]);
+        ////TODO we will deal overflow index later with this later
+
+        ull curIdx =  curValIndexer.getVal()[0];
+
+        if (curIdx >= _master->getDepthSize()){
+            curIdx  = 0;
+        }
+
+        return _master->getThisCycleValRep(curIdx);
     }
 
     int

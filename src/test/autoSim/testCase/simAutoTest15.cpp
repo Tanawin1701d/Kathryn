@@ -24,7 +24,7 @@ namespace kathryn{
 
             seq{
                 i <<= 0;
-                cwhile(i < 46){
+                cwhile(i < 47){
                     /////// max in this scope is 47
                     par {
                         storage[i] <<= k;
@@ -34,7 +34,7 @@ namespace kathryn{
                 }
                 i <<= 0;
                 i <<= 0;
-                cwhile(i < 46){
+                cwhile(i < 47){
                     par {
                         i <<= i + 1;
                         b <<= storage[i];
@@ -61,28 +61,19 @@ namespace kathryn{
                              _md(md)
         {}
 
+        int i = 0;
         void simAssert() override{
 
+             incCycle(54);
 
-//            incCycle(6);
-//
-//            sim{
-//                ValRep testVal = NumConverter::cvtStrToValRep(32, 6);
-//                testAndPrint("check expression on slicing", _md->c.sv(), testVal);
-//            };
-
-//            sim {
-//                ValRep testVal = NumConverter::cvtStrToValRep(67, 0b100, 0);
-//                testAndPrint("check shifting from slicing", _md->a.sv(), testVal);
-//            };
-//            sim {
-//                ValRep testVal = NumConverter::cvtStrToValRep(8, 2 + 6*2);
-//                testAndPrint("check base line function", _md->a.sv(), testVal);
-//            };
-//            sim{
-//                ValRep testVal = NumConverter::cvtStrToValRep(8, 48 - 6*2);
-//                testAndPrint("check bascheck base line functione line function", _md->b.sv(), testVal);
-//            };
+             for ( int j = 0; j < 48; j++ ){
+                sim{
+                    ValRep testVal = NumConverter::cvtStrToValRep(6, i);
+                    testAndPrint("check mem : " + std::to_string(i), _md->b.sv(), testVal);
+                    i++;
+                };
+                incCycle(1);
+             }
 
         }
 

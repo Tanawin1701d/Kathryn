@@ -28,6 +28,8 @@ namespace kathryn{
 
     }
 
+
+
     void FlowIdentifiable::assignInheritName() {
         /** please remind that we need set Parent before use this function*/
         if (_parentFb != nullptr){
@@ -42,7 +44,15 @@ namespace kathryn{
         isInheritNameAssignYet = true;
     }
 
+    FlowBlockBase* FlowIdentifiable::getFlowBlockParrent() {
 
+        return _parentFb;
+    }
+
+    Module* FlowIdentifiable::getModuleParent() {
+        assert(_parentMod != nullptr);
+        return _parentMod;
+    }
 
 
 }

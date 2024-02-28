@@ -25,6 +25,12 @@ namespace kathryn{
             return (start <= rhs.start) && (stop >= rhs.stop);
         }
 
+        bool isIntersec(const Slice rhs)const{
+            return ((start >= rhs.start) && (start < rhs.stop)) ||
+                   ((rhs.start >= start) && (rhs.start < stop))
+            ;
+        }
+
         Slice getMatchSizeSubSlice(Slice b){
             assert(b.checkValidSlice());
             assert(checkValidSlice());

@@ -24,7 +24,7 @@ namespace kathryn{
         /** check slice integrity*/
         assert(srcOpr.getOperableSlice().isContain(absSrcSlice));
         assert(getAssignSlice().isContain(absDesSlice));
-        assert(absSrcSlice == absDesSlice);
+        ///assert(absSrcSlice == absDesSlice);
 
         Slice desireSrcSlice = absSrcSlice.getMatchSizeSubSlice(absDesSlice);
         Slice desireDesSlice = absDesSlice.getMatchSizeSubSlice(absSrcSlice);

@@ -67,7 +67,7 @@ namespace kathryn{
         assert(asmNode != nullptr);
         tryPurifyFlowStack();
         asmNode->setDependStateJoinOp(BITWISE_AND);
-        assert(!flowBlockStacks[FLOW_ST_BASE_STACK].empty());
+        assert(isFlowBlockBaseofModuleInStack());
         auto fb = getTopFlowBlockBase();
         fb->addElementInFlowBlock(asmNode);
         logMF(srcReg,
@@ -104,7 +104,7 @@ namespace kathryn{
         tryPurifyFlowStack();
         asmNode->setDependStateJoinOp(BITWISE_AND);
         //assert(!flowBlockStack.empty());
-        if (!flowBlockStacks[FLOW_ST_BASE_STACK].empty()) {
+        if (isFlowBlockBaseofModuleInStack()) {
             /**in flow block*/
             auto fb = getTopFlowBlockBase();
             fb->addElementInFlowBlock(asmNode);
@@ -114,6 +114,8 @@ namespace kathryn{
             asmNode->dryAssign();
             logMF(srcWire,
                   "user wire is updatting without flowblock");
+            Module* targetModulePtr = getTargetModulePtr();
+            targetModulePtr->addAsmNode(asmNode);
         }
     }
 
@@ -154,7 +156,7 @@ namespace kathryn{
         assert(asmNode != nullptr);
         tryPurifyFlowStack();
         asmNode->setDependStateJoinOp(BITWISE_AND);
-        assert(!flowBlockStacks[FLOW_ST_BASE_STACK].empty());
+        assert(isFlowBlockBaseofModuleInStack());
         auto fb = getTopFlowBlockBase();
         fb->addElementInFlowBlock(asmNode);
         logMF(srcHolder,
@@ -174,6 +176,32 @@ namespace kathryn{
               "nest is initializing and set parent to " + targetModulePtr->getIdentDebugValue());
     }
 
+    void ModelController::on_nest_update(AsmNode* asmNode, nest* srcWire) {
+        /**
+         * please note that UpdateEvent should fill update value/ and slice
+         * but it must let update condition and state as nullptr to let block fill
+         * to it
+         * */
+        /*** do not add to module any more*/
+        assert(asmNode != nullptr);
+        tryPurifyFlowStack();
+        asmNode->setDependStateJoinOp(BITWISE_AND);
+        //assert(!flowBlockStack.empty());
+        if (isFlowBlockBaseofModuleInStack()) {
+            /**in flow block*/
+            auto fb = getTopFlowBlockBase();
+            fb->addElementInFlowBlock(asmNode);
+            logMF(srcWire,
+                  "user nest is updating @ fb " + fb->getMdIdentVal());
+        }else{
+            asmNode->dryAssign();
+            logMF(srcWire,
+                  "user nest is updating without flowblock");
+            Module* targetModulePtr = getTargetModulePtr();
+            targetModulePtr->addAsmNode(asmNode);
+        }
+    }
+
 
     /** value*/
     void ModelController::on_value_init(Val* ptr) {
@@ -189,7 +217,12 @@ namespace kathryn{
     }
 
     /**
+     *
+     *
      * module
+     *
+     *
+     *
      * */
 
 
@@ -244,7 +277,5 @@ namespace kathryn{
         logMF(ptr,
               "module is finalized design flow");
     }
-
-
 
 }

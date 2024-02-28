@@ -63,19 +63,26 @@ namespace kathryn{
 
             void com_final() override {};
             /** override assignable*/
-            nest& operator <<= (Operable  & b) override {mfAssert(false, "nest don't support this <<= assigment"); assert(false);}
-            nest& operator <<= (ull b)         override {mfAssert(false, "nest don't support this <<= assigment"); assert(false);}
+            nest& operator <<= (Operable  & b) override;
+            nest& operator <<= (ull b)         override;
+            void  blockingAssignmentBase(Operable& b, Slice desAbsSlice);
             void generateAssMetaForBlocking(Operable& srcOpr,
                                     std::vector<AssignMeta*>& resultMetaCollector,
                                     Slice  absSrcSlice,
                                     Slice  absDesSlice) override;
-            nest& operator =   (Operable  & b) override {mfAssert(false, "nest don't support this   = assigment"); assert(false);}
-            nest& operator =   (nest& b)                {mfAssert(false, "nest don't support this   = assigment"); assert(false);}
-            nest& operator = (ull b)         override   {mfAssert(false, "nest don't support this = assigment with ull overload"); assert(false);}
+
+            nest& operator =   (Operable  & b) override;
+            nest& operator =   (nest& b);
+            nest& operator = (ull b) override;
+            void nonBlockingAssignmentBase(Operable& b, Slice desAbsSlice);
             void generateAssMetaForNonBlocking(Operable& srcOpr,
                                                std::vector<AssignMeta*>& resultMetaCollector,
                                                Slice  absSrcSlice,
                                                Slice  absDesSlice) override;
+
+            /**get which netlist element match that bit Idx */
+            [[maybe_unused]]
+            int getNetListIdxThatMatch(int bitIdx);
 
             void generateAssMetaForAll(Operable& srcOpr,
                                        std::vector<AssignMeta*>& resultMetaCollector,

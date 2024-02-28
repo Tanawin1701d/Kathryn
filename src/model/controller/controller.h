@@ -66,7 +66,6 @@ namespace kathryn {
        void           pushFlowBlock(FlowBlockBase* fb);
        void           detachTopFlowBlock();
 
-
     public:
 
         /**
@@ -90,6 +89,7 @@ namespace kathryn {
         void on_memBlkEleHolder_update(AsmNode* asmNode,MemBlockEleHolder* srcHolder);
         /** on nest init*/
         void on_nest_init(nest* ptr);
+        void on_nest_update(AsmNode* asmNode, nest* srcNest);
 
         /** value handling*/
         void on_value_init(Val* ptr);
@@ -102,6 +102,7 @@ namespace kathryn {
         /** control flow block handler*/
         void assignFlowBlockParent(FlowBlockBase* fb);
         bool isAllFlowStackEmpty();
+        bool isFlowBlockBaseofModuleInStack();
         void tryPurifyFlowStack();
         void on_attach_flowBlock(FlowBlockBase* fb);
         void on_detach_flowBlock(FlowBlockBase* fb);
@@ -117,15 +118,12 @@ namespace kathryn {
         /** for debugging and model checking purpose*/
         std::string getCurModelStack();
 
-
-
-
     };
 
     /** this is entrace for every device to com_init with controller*/
     ModelController* getControllerPtr();
     Module*          getGlobalModulePtr();
-    void        freeControllerPtr();
+    void             freeControllerPtr();
 
 }
 

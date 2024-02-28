@@ -24,12 +24,17 @@ namespace kathryn{
         for(auto& _spReg: _spRegs){
             deleteSubElement(_spReg);
         }
+        deleteSubElement(_flowBlockBases);
+        deleteSubElement(_asmNodes);
+        /** delete user element*/
         deleteSubElement(_userRegs);
         deleteSubElement(_userWires);
         deleteSubElement(_userExpressions);
         deleteSubElement(_userVals);
+        deleteSubElement(_userMemBlks);
+        deleteSubElement(_userNests);
         deleteSubElement(_userSubModules);
-        deleteSubElement(_flowBlockBases);
+
     }
 
     void Module::com_init() {
@@ -44,24 +49,24 @@ namespace kathryn{
         ctrl->on_module_final(this);
     }
 
-    template<typename T>
-    void Module::localizeSlaveVector(std::vector<T> &_vec) {
-        for (size_t i = 0; i < _vec.size(); i++){
-            _vec[i]->setLocalId((ull)i);
-            _vec[i]->setParent(this);
-        }
-    }
-
-    void Module::localizeSlaveElements() {
-        /** state reg and user reg used same local ID sequence*/
-        for (auto & _spReg : _spRegs)
-            localizeSlaveVector(_spReg);
-        localizeSlaveVector(_userRegs);
-        localizeSlaveVector(_userWires);
-        localizeSlaveVector(_userExpressions);
-        localizeSlaveVector(_userVals);
-        localizeSlaveVector(_userSubModules);
-    }
+//    template<typename T>
+//    void Module::localizeSlaveVector(std::vector<T> &_vec) {
+//        for (size_t i = 0; i < _vec.size(); i++){
+//            _vec[i]->setLocalId((ull)i);
+//            _vec[i]->setParent(this);
+//        }
+//    }
+//
+//    void Module::localizeSlaveElements() {
+//        /** state reg and user reg used same local ID sequence*/
+//        for (auto & _spReg : _spRegs)
+//            localizeSlaveVector(_spReg);
+//        localizeSlaveVector(_userRegs);
+//        localizeSlaveVector(_userWires);
+//        localizeSlaveVector(_userExpressions);
+//        localizeSlaveVector(_userVals);
+//        localizeSlaveVector(_userSubModules);
+//    }
 
     /**
      *
@@ -78,6 +83,11 @@ namespace kathryn{
     void Module::addFlowBlock(FlowBlockBase* fb) {
         assert(fb != nullptr);
         _flowBlockBases.push_back(fb);
+    }
+
+    void Module::addAsmNode(AsmNode* asmNode) {
+        assert(asmNode != nullptr);
+        _asmNodes.push_back(asmNode);
     }
 
     void Module::addUserReg(Reg* reg) {

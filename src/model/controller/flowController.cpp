@@ -55,7 +55,7 @@ namespace kathryn{
 
         /**get front node to inject the subblock*/
         FlowBlockBase* frontFb = getTopFlowBlockBase();
-        if (frontFb == nullptr){
+        if (!isFlowBlockBaseofModuleInStack()){
             logMF(topFb, "addFlowBlock to module");
             Module* parentMod = getTargetModulePtr();
             parentMod->addFlowBlock(topFb);
@@ -82,14 +82,15 @@ namespace kathryn{
 
     void ModelController::assignFlowBlockParent(FlowBlockBase* fb){
 
-        FlowBlockBase* topFb = getTopFlowBlockBase();
+
 
         /** assign master module*/
         Module* parentMod = getTargetModuleEle().md;
         assert(parentMod != nullptr);
         fb->setParent(parentMod);
 
-        if (topFb != nullptr){
+        if (isFlowBlockBaseofModuleInStack()){
+            FlowBlockBase* topFb = getTopFlowBlockBase();
             fb->setParent(topFb);
         }
     }
@@ -101,6 +102,13 @@ namespace kathryn{
             emptyStatus &= flowBlockStack.empty();
         }
         return emptyStatus;
+    }
+
+    bool ModelController::isFlowBlockBaseofModuleInStack(){
+        assert(getTargetModulePtr() != nullptr);
+        return (!flowBlockStacks[FLOW_ST_BASE_STACK].empty()) &&
+                (flowBlockStacks[FLOW_ST_BASE_STACK].top()->getModuleParent() == getTargetModulePtr());
+
     }
 
     void ModelController::tryPurifyFlowStack() {
@@ -151,15 +159,18 @@ namespace kathryn{
 
     FLOW_BLOCK_TYPE ModelController::get_top_pattern_flow_block_type(){
 
+        bool ispattFlowBlockBaseofModuleInStack =
+                  (!flowBlockStacks[FLOW_ST_PATTERN_STACK].empty())
+                && (flowBlockStacks[FLOW_ST_PATTERN_STACK].top()->getModuleParent() == getTargetModulePtr());
 
-        if (flowBlockStacks[FLOW_ST_PATTERN_STACK].empty()){
-            return DUMMY_BLOCK;
-        }else{
+        if (ispattFlowBlockBaseofModuleInStack){
             FlowBlockBase* fb = flowBlockStacks[FLOW_ST_PATTERN_STACK].top();
             assert(fb != nullptr);
             FLOW_BLOCK_TYPE fbType = fb->getFlowType();
             assert(fbType >= SEQUENTIAL && fbType <= PARALLEL_AUTO_SYNC);
             return fbType;
+        }else{
+            return DUMMY_BLOCK;
         }
 
     }

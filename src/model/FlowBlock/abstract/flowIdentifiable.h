@@ -30,6 +30,9 @@ namespace kathryn{
 
         void setParent(FlowBlockBase* parentFlowBlock);
         void setParent(Module* parentModule);
+        FlowBlockBase* getFlowBlockParrent();
+        Module* getModuleParent();
+
 
         std::vector<std::string>& getInheritName(){
             assert(isParentMdAssignYet);
