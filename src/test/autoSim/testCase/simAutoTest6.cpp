@@ -57,7 +57,7 @@ namespace kathryn{
             incCycle(54);
 
             sim {
-                ValRep testVal = NumConverter::cvtStrToValRep(32, 48);
+                ValRep testVal = NumConverter::createValRep(32, 48);
                 testAndPrint("check end loop", _md->b.sv(), testVal);
             };
 

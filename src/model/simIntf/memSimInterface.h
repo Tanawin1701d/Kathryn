@@ -25,7 +25,7 @@ namespace kathryn{
 
     public:
         MemSimEngine(ull depthSize, int widthSize);
-        ~MemSimEngine(){
+        ~MemSimEngine() override{
             delete[] memBlk;
         }
 

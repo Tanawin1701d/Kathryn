@@ -61,15 +61,14 @@ namespace kathryn{
                              _md(md)
         {}
 
-        void simAssert() override{}
-
-        void simDriven() override{}
-
         void describeCon() override{
-
             conNextCycle(52);
+            for (int i =0; i < 48; i++){
+                testAndPrint("checkMem with new system : " + std::to_string(i), ull(_md->storage.v(i)), i);
+            }
             for(int i = 0; i < 48; i++){
-                ValRep testVal = NumConverter::cvtStrToValRep(6, i);
+                ValRep testVal = NumConverter::createValRep(6, i);
+
                 testAndPrint("checkMem : " + std::to_string(i), _md->b.sv(), testVal);
                 conNextCycle(1);
             }

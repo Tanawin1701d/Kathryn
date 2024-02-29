@@ -67,6 +67,7 @@ namespace kathryn{
 
 
     MemBlockEleHolder& MemBlockEleHolder::operator<<=(Operable &b) {
+        mfAssert(getAssignMode() == AM_MOD, "must be Model mode only");
         mfAssert(isReadMode(), "duplicate write operation");
         mfAssert(getSlice().getSize() == b.getOperableSlice().getSize(),
                  "invalid write size");
@@ -80,6 +81,7 @@ namespace kathryn{
     }
 
     MemBlockEleHolder& MemBlockEleHolder::operator <<= (ull b){
+        mfAssert(getAssignMode() == AM_MOD, "must be Model mode only");
         Operable& rhs = getMatchAssignOperable(b, getSlice().getSize());
         return operator<<=(rhs);
     }
@@ -105,7 +107,8 @@ namespace kathryn{
 
     MemBlockEleHolder &MemBlockEleHolder::operator=(ull b) {
         mfAssert(false, "memBlockEle doesn't support = operator");
-        assert(false);
+        assignSimValue(b);
+        return *this;
     }
 
     void MemBlockEleHolder::generateAssMetaForNonBlocking(Operable& srcOpr,

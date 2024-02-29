@@ -10,6 +10,9 @@
 
 namespace kathryn{
 
+    /**assign mode control*/
+
+
     Operable& getMatchAssignOperable(ull value, const int size){
         makeVal(assUserAutoVal, size, value);
         return assUserAutoVal;

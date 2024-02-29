@@ -61,7 +61,7 @@ namespace kathryn {
         }
         expression& operator =   (Operable  & b) override;
         expression& operator =   (expression& b);
-        expression& operator = (ull b)         override {mfAssert(false, "expr don't support this = assigment with ull overload"); assert(false);}
+        expression& operator =   (ull b) override {mfAssert(false, "expr don't support this = assigment with ull overload"); assert(false);}
         void generateAssMetaForNonBlocking(Operable& srcOpr,
                                            std::vector<AssignMeta*>& resultMetaCollector,
                                            Slice  absSrcSlice,

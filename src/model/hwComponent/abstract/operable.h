@@ -10,6 +10,7 @@
 #include "operation.h"
 #include "identifiable.h"
 #include "makeComponent.h"
+#include "model/hwComponent/abstract/modelMode.h"
 #include "model/simIntf/modelSimInterface.h"
 
 namespace kathryn {
@@ -95,18 +96,37 @@ namespace kathryn {
         /** please remind this is a copy not reference value*/
         ValRep  getSlicedCurValue(); ///// get simvalue with sliced to match current opr
 
-
-
         /**downcasting*/
         virtual Identifiable*   castToIdent() = 0;
+        [[maybe_unused]] ///// sv is legacy now we can use operator = to enable simultion value
         virtual ValRep&         sv() = 0;
 
         Operable& getMatchOperable(ull value) const;
 
         bool isInCheckPath = false;
         virtual Operable* checkShortCircuit() = 0;
-    };
 
+
+
+        /** convert to value for simulation*/
+
+        explicit operator ull(){
+            std::cout << "get simvalue is used" << std::endl;
+            assert(getAssignMode() == AM_SIM);
+            assert(getRtlValItf()->isCurValSim());
+            assert(getRtlValItf()->getCurVal().getValArrSize() == 1);
+            return getRtlValItf()->getCurVal().getVal()[0];
+        }
+        explicit operator ValRep&(){
+            assert(getAssignMode() == AM_SIM);
+            return getRtlValItf()->getCurVal();
+        }
+
+
+
+
+
+    };
 
 }
 

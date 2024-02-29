@@ -63,7 +63,7 @@ namespace kathryn{
             incCycle(101);
 
             sim {
-                ValRep testVal = NumConverter::cvtStrToValRep(3, 0b111);
+                ValRep testVal = NumConverter::createValRep(3, 0b111);
                 testAndPrint("check end loop with synNode", _md->end.sv(), testVal);
             };
 

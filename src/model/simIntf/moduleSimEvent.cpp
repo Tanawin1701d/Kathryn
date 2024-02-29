@@ -40,7 +40,7 @@ namespace kathryn{
 
 
             /** initiate reset Value*/
-            ValRep resetVal = NumConverter::cvtStrToValRep(1, 1);
+            ValRep resetVal = NumConverter::createValRep(1, 1);
             _resetWire->getRtlValItf()->setCurValSimStatus();
             _resetWire->getRtlValItf()->getCurVal() = resetVal;
         }
@@ -59,12 +59,12 @@ namespace kathryn{
     void ModuleSimEvent::curCycleCollectData() {
         /*** CLK UP*/
         _writer->addNewTimeStamp(_targetCycle * _clockIntv);
-        auto upClk = NumConverter::cvtStrToValRep(1, 0b1);
+        auto upClk = NumConverter::createValRep(1, 0b1);
         _writer->addNewValue("CLK", upClk);
         _startModule->curCycleCollectData();
         /*** CLK DOWN*/
         _writer->addNewTimeStamp(_targetCycle * _clockIntv + (_clockIntv >> 1));
-        auto downClk = NumConverter::cvtStrToValRep(1, 0b0);
+        auto downClk = NumConverter::createValRep(1, 0b0);
         _writer->addNewValue("CLK", downClk);
 
 

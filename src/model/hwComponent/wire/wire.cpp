@@ -23,14 +23,17 @@ namespace kathryn{
     }
 
     Wire& Wire::operator=(Operable &b) {
+        assert(getAssignMode() == AM_MOD);
         Slice absSlice = getSlice().getSubSliceWithShinkMsb({0, b.getOperableSlice().getSize()});
         ctrl->on_wire_update(generateBasicNode(b, absSlice), this);
         return *this;
     }
 
     Wire& Wire::operator=(Wire& b){
+        assert(getAssignMode() == AM_MOD);
         if (this == &b){
-            return *this;
+            mfAssert(false, "wire got recurrent assigning");
+            assert(false);
         }
 
         operator=(*(Operable*)&b);
@@ -39,8 +42,18 @@ namespace kathryn{
     }
 
     Wire& Wire::operator = (ull b){
-        Operable& rhs = getMatchAssignOperable(b, getSlice().getSize());
-        return operator=(rhs);
+        if (getAssignMode() == AM_MOD) {
+            /**model mode*/
+            Operable &rhs = getMatchAssignOperable(b, getSlice().getSize());
+            return operator=(rhs);
+        }else if (getAssignMode() == AM_SIM){
+            /**simulating mode*/
+            assignSimValue(b);
+            return *this;
+        }else{
+            assert(false);
+
+        }
     }
 
     void Wire::generateAssMetaForNonBlocking(Operable& srcOpr,

@@ -45,6 +45,8 @@ namespace kathryn{
 
 
     void SimInterface::simStart() {
+        /** set assiging mode*/
+        setAssignMode(AM_SIM);
         /***module sim Event is auto insert to event*/
 
         /***con simulating*/
@@ -58,6 +60,8 @@ namespace kathryn{
         if (conThread && conThread->joinable()){
             conThread->join();
         }
+        /** set assiging mode back*/
+        setAssignMode(AM_MOD);
         /** finish*/
 
     }

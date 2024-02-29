@@ -47,6 +47,9 @@ namespace kathryn{
         ull getDepthSize() const {assert(DEPTH_SIZE != 0); return DEPTH_SIZE;}
 
         /**override simulatable*/
+        void   s(ull idx, ull value);
+        void   s(ull idx, ValRep value);
+        ValRep v(ull idx);
 
         void simStartCurCycle() override;
 

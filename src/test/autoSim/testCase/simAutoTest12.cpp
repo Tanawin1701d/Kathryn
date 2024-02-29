@@ -53,7 +53,7 @@ namespace kathryn{
 
             incCycle(6);
             sim {
-                ValRep testVal = NumConverter::cvtStrToValRep(67, 0b100, 0);
+                ValRep testVal = NumConverter::createValRep(67, 0b100, 0);
                 testAndPrint("check shifting from slicing", _md->a.sv(), testVal);
             };
 //            sim {

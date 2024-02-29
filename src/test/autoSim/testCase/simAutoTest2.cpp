@@ -63,7 +63,7 @@ namespace kathryn{
             incCycle(3);
 
             sim {
-                ValRep testVal = NumConverter::cvtStrToValRep(8, 7);
+                ValRep testVal = NumConverter::createValRep(8, 7);
                 testAndPrint("check End Val", _md->a.sv(), testVal);
             };
         }
@@ -72,7 +72,7 @@ namespace kathryn{
             incCycle(2);
 
             sim {
-                _md->iv.sv() = NumConverter::cvtStrToValRep(8, 7);
+                _md->iv.sv() = NumConverter::createValRep(8, 7);
             };
             incCycle(1);
         }

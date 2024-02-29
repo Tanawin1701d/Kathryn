@@ -62,11 +62,11 @@ namespace kathryn{
             incCycle(3);
             incCycle(5);
             sim {
-                ValRep testVal = NumConverter::cvtStrToValRep(8, 2 + 6*2);
+                ValRep testVal = NumConverter::createValRep(8, 2 + 6 * 2);
                 testAndPrint("check base line function", _md->a.sv(), testVal);
             };
             sim{
-                ValRep testVal = NumConverter::cvtStrToValRep(8, 48 - 6*2);
+                ValRep testVal = NumConverter::createValRep(8, 48 - 6 * 2);
                 testAndPrint("check bascheck base line functione line function", _md->b.sv(), testVal);
             };
 
@@ -76,8 +76,8 @@ namespace kathryn{
             incCycle(2);
 
             sim {
-                _md->a.sv() = NumConverter::cvtStrToValRep(8,  2);
-                _md->b.sv() = NumConverter::cvtStrToValRep(8, 48);
+                _md->a.sv() = NumConverter::createValRep(8, 2);
+                _md->b.sv() = NumConverter::createValRep(8, 48);
             };
 
         }

@@ -56,7 +56,7 @@ namespace kathryn{
               incCycle(7);
 //
             sim{
-                ValRep testVal = NumConverter::cvtStrToValRep(32, 0x01080401);
+                ValRep testVal = NumConverter::createValRep(32, 0x01080401);
                 testAndPrint("nest check with slice", _md->result.sv(), testVal);
             };
 

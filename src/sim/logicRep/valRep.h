@@ -51,6 +51,7 @@ namespace kathryn{
         /** build new valrep that have bigger than cur valrep the exceed bit wil
          * be assigned to 0
          * */
+         operator ull();
         ValRep getZeroExtend(int targetSize);
         ValRep shink        (int targetSize);
         /** check define size*/

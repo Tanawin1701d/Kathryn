@@ -5,7 +5,7 @@
 #ifndef KATHRYN_LOGICCOMP_H
 #define KATHRYN_LOGICCOMP_H
 
-
+#include "model/hwComponent/abstract/modelMode.h"
 #include "model/hwComponent/abstract/slicable.h"
 #include "model/hwComponent/abstract/operation.h"
 #include "model/hwComponent/abstract/assignable.h"
@@ -15,6 +15,7 @@
 #include "model/simIntf/modelSimEngine.h"
 #include "model/simIntf/logicSimInterface.h"
 #include "model/debugger/modelDebugger.h"
+#include "util/numberic/numConvert.h"
 
 
 namespace kathryn{
@@ -78,10 +79,6 @@ namespace kathryn{
             return *(Operable*)this;
         }
 
-//        Operable* doSlice(Slice sl) override{
-//            auto x = Slicable<TYPE_COMP>::operator() (sl.start, sl.stop);
-//            return x.castToOperable();
-//        }
 
         Simulatable* getSimItf() override{
             return static_cast<Simulatable*>(getSimEngine());
@@ -104,6 +101,22 @@ namespace kathryn{
          * override assignable
          *
          * */
+        void assignSimValue(ull b) override{
+            mfAssert(getAssignMode() == AM_SIM, "cannot assign in model mode");
+            assert(_simEngine != nullptr);
+            getRtlValItf()->setCurValSimStatus();
+            getRtlValItf()->getCurVal() = NumConverter::createValRep(Slicable<TYPE_COMP>::getSlice().getSize(), b);
+
+        }
+
+        void assignSimValue(ValRep b) override{
+            mfAssert(getAssignMode() == AM_SIM, "cannot assign in model mode");
+            assert(_simEngine != nullptr);
+            getRtlValItf()->setCurValSimStatus();
+            assert(b.getLen() == getRtlValItf()->getCurVal().getLen());
+            getRtlValItf()->getCurVal() = b;
+        }
+
         Slice getAssignSlice() override{
             return Slicable<TYPE_COMP>::getSlice();
         }

@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include "valRep.h"
+#include "model/debugger/modelDebugger.h"
 
 
 namespace kathryn{
@@ -30,6 +31,10 @@ namespace kathryn{
         operator=(rhs);
     }
 
+    ValRep::operator ull() {
+        mfAssert(getLen() <= bitSizeOfUll, "valrep converter exceed the thredshod");
+        return _val[0];
+    }
 
     ValRep ValRep::getZeroExtend(int targetSize) {
 
@@ -533,7 +538,6 @@ namespace kathryn{
         shiftIdent._val[0] = (ull)rhs;
         return operator>>(shiftIdent);
     }
-
 
 
 }

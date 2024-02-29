@@ -43,18 +43,21 @@ namespace kathryn{
     }
 
     expression& expression::operator=(Operable &b) {
+        mfAssert(getAssignMode() == AM_MOD, "expression can use operator = only in MD mode");
         _a = &b;
         assert(b.getOperableSlice().getSize() == getOperableSlice().getSize());
         return *this;
     }
 
     expression& expression::operator=(expression& b){
+        mfAssert(getAssignMode() == AM_MOD, "expression can use operator = only in MD mode");
         if (this == &b){
             return *this;
         }
         operator=(*(Operable*)&b);
         return *this;
     }
+
 
     SliceAgent<expression>& expression::operator()(int start, int stop) {
         auto ret =  new SliceAgent<expression>(this,

@@ -173,6 +173,8 @@ add_executable(Kathryn main.cpp
         src/sim/event/ctTrigEvent.cpp
         src/sim/event/ctTrigEvent.h
         src/test/autoSim/testCase/simAutoTest18.cpp
+        src/model/hwComponent/abstract/modelMode.cpp
+        src/model/hwComponent/abstract/modelMode.h
 
 
 )

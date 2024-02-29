@@ -59,7 +59,7 @@ namespace kathryn{
 
             for (int i = 0; i < 100; i++) {
                 sim {
-                    _md->iv.sv() = NumConverter::cvtStrToValRep(8, 7);
+                    _md->iv.sv() = NumConverter::createValRep(8, 7);
                 };
                 incCycle(1);
             }

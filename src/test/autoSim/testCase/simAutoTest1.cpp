@@ -54,8 +54,14 @@ namespace kathryn{
         void simAssert() override{
             incCycle(13);
             sim {
-                ValRep testVal = NumConverter::cvtStrToValRep(8, 32);
+                ValRep testVal = NumConverter::createValRep(8, 32);
                 testAndPrint("check End Val", _md->a.sv(), testVal);
+            };
+            sim{
+                ValRep testVal = NumConverter::createValRep(8, 32);
+                ull cval(_md->a);
+                ValRep cValTest = NumConverter::createValRep(8, cval);
+                testAndPrint("check C Val", cValTest, testVal);
             };
         }
 
@@ -63,7 +69,8 @@ namespace kathryn{
             incCycle(2);
             for (int i = 0; i < 100; i++) {
                 sim {
-                    _md->iv.sv() = NumConverter::cvtStrToValRep(8, 7);
+                    _md->iv.sv() = NumConverter::createValRep(8, 7);
+                    _md->c = 7;
                 };
                 incCycle(1);
             }

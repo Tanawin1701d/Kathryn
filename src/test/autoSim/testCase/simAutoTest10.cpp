@@ -80,7 +80,7 @@ namespace kathryn{
             incCycle(8);
 
             sim {
-                ValRep testVal = NumConverter::cvtStrToValRep(8, 129);
+                ValRep testVal = NumConverter::createValRep(8, 129);
                 testAndPrint("check cifelse in sifelse", _md->result.sv(), testVal);
             };
 

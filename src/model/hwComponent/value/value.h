@@ -51,7 +51,7 @@ namespace kathryn{
                       new ValLogicSim(this,size,VST_INTEGER, false),
                       false),
             _size(size),
-            rawValue(NumConverter::cvtStrToValRep(size, args...))
+            rawValue(NumConverter::createValRep(size, args...))
             {
                 assert(size > 0);
                 com_init();
@@ -64,7 +64,7 @@ namespace kathryn{
                       new ValLogicSim(this,size,VST_INTEGER, false),
                       false),
             _size(size),
-            rawValue(NumConverter::cvtStrToValRep(size, 0))
+            rawValue(NumConverter::createValRep(size, 0))
             {
                 assert(size > 0);
                 com_init();

@@ -36,6 +36,8 @@ namespace kathryn{
         return *memBlockEleHolder;
     }
 
+
+
     void MemBlock::simStartCurCycle(){
         /////std::cout << "start CurMemBlk PreDeclar" << std::endl;
         if (isCurValSim()){
@@ -74,6 +76,23 @@ namespace kathryn{
 //        }
     }
 
+    void MemBlock::s(ull idx, ull value) {
+        s(idx, NumConverter::createValRep(getWidthSize(), value));
+    }
+
+    void MemBlock::s(ull idx, ValRep value) {
+        mfAssert(getAssignMode() == AM_SIM, "can't do in model mode");
+        mfAssert(idx < getDepthSize(), "can't do in model mode");
+        assert(memBlk != nullptr);
+        memBlk[idx] = value;
+
+    }
+
+    ValRep MemBlock::v(ull idx) {
+        mfAssert(getAssignMode() == AM_SIM, "can't do in model mode");
+        mfAssert(idx < getDepthSize(), "can't do in model mode");
+        return memBlk[idx];
+    }
 
 
 }

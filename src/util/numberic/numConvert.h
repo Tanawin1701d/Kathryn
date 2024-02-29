@@ -23,8 +23,26 @@ namespace kathryn{
             addToVec(resultVals, args...);
         }
 
+        static void checkOverflow(int sz, std::vector<ull>& src){
+            assert(sz > 0);
+            int sizeOfValRepElement = sizeof(ull) * 8;
+            int lastIdx = (sz + sizeOfValRepElement - 1) / sizeOfValRepElement;
+            lastIdx--;
+            /**target last*/
+
+            if (lastIdx < src.size()){
+                int startCheckBit = sz % sizeOfValRepElement;
+                ull ele = src[lastIdx] >> startCheckBit;
+                assert(ele == 0);
+            }
+            for (int idx = lastIdx + 1; idx < src.size(); idx++){
+                assert(src[idx] == 0);
+            }
+
+        }
+
         template<typename... Args>
-        static ValRep cvtStrToValRep(int sz, Args... args) {
+        static ValRep createValRep(int sz, Args... args) {
 
             /*** collect all value*/
             std::vector<ull> values;
@@ -37,11 +55,11 @@ namespace kathryn{
             /*** declare new varep*/
             assert(sz > 0);
             ValRep ret(sz);
-            assert(ret.getValArrSize() >= values.size());
-            for (int i = 0; i < values.size(); i++) {
+            checkOverflow(sz, values);
+            int amtEleToCpy = std::min(values.size(), (size_t)ret.getValArrSize());
+            for (int i = 0; i < amtEleToCpy; i++) {
                 ret.getVal()[i] = values[i];
             }
-            ret.fillZeroToValrep(ret.getLen());
 
             return ret;
         }

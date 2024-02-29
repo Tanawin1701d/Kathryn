@@ -83,7 +83,7 @@ namespace kathryn{
             incCycle(6);
 
             sim {
-                ValRep testVal = NumConverter::cvtStrToValRep(32, 11);
+                ValRep testVal = NumConverter::createValRep(32, 11);
                 testAndPrint("check middle con", _md->s.sv(), testVal);
             };
 

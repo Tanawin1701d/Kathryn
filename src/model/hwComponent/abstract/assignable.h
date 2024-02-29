@@ -17,6 +17,8 @@
 namespace kathryn{
 
 
+
+
     /** This is used to describe what and where to update that send to controller and let flow block determine*/
     struct AssignMeta{
         std::vector<UpdateEvent*>& updateEventsPool;
@@ -34,9 +36,6 @@ namespace kathryn{
     Operable& getMatchAssignOperable(ull value, int size);
 
     struct AsmNode;
-
-    AsmNode* generateBasicNodeHelper(std::vector<UpdateEvent*>& assPool, Operable& srcOpr, Slice desSlice);
-
     class Assignable{
     protected:
         std::vector<UpdateEvent*> _updateMeta;
@@ -59,6 +58,10 @@ namespace kathryn{
                                                    std::vector<AssignMeta*>& resultMetaCollector,
                                                    Slice  absSrcSlice,
                                                    Slice  absDesSlice) = 0;
+
+
+        virtual void  assignSimValue(ull    b){assert(false);}
+        virtual void  assignSimValue(ValRep b){assert(false);}
 
 
         virtual Slice getAssignSlice() = 0;

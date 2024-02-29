@@ -25,12 +25,14 @@ namespace kathryn{
     }
 
     Reg& Reg::operator<<=(Operable &b) {
+        assert(getAssignMode() == AM_MOD);
         Slice absSlice = getSlice().getSubSliceWithShinkMsb({0, b.getOperableSlice().getSize()});
         ctrl->on_reg_update(generateBasicNode(b, absSlice), this);
         return *this;
     }
 
     Reg& Reg::operator <<= (ull b) {
+        assert(getAssignMode() == AM_MOD);
         Operable& rhs = getMatchAssignOperable(b, getSlice().getSize());
         return operator<<=(rhs);
     }
@@ -49,6 +51,12 @@ namespace kathryn{
         /** todo first version we not support this operator*/
         mfAssert(false, "reg don't support this = assigment");
         assert(false);
+    }
+
+    Reg& Reg::operator=(ull b){
+        assert(getAssignMode() == AM_SIM);
+        assignSimValue(b);
+        return *this;
     }
 
     Reg& Reg::operator=(Reg& b){

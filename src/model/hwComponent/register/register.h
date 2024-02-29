@@ -33,8 +33,9 @@ namespace kathryn{
                                         Slice  absDesSlice) override;
         [[maybe_unused]]
         Reg&  operator =   (Operable& b) override;
-        Reg& operator  =   (ull b) override{mfAssert(false, "wire don't support this <<= assigment");assert(false);}
+        Reg& operator  =   (ull b) override;
         Reg&  operator =   (Reg& b);
+
         void generateAssMetaForNonBlocking(Operable& srcOpr,
                                    std::vector<AssignMeta*>& resultMetaCollector,
                                    Slice  absSrcSlice,

@@ -7,6 +7,7 @@
 
 #include "model/hwComponent/abstract/assignable.h"
 #include "model/hwComponent/abstract/operable.h"
+#include "model/debugger/modelDebugger.h"
 
 namespace kathryn {
 
@@ -79,6 +80,7 @@ namespace kathryn {
 
         /** override AssignOpr*/
         SliceAgent<T>& operator <<= (Operable& b) override {
+            mfAssert(getAssignMode() == AM_MOD, "agent can use operator <<= only in MD mode");
              _master->callBackBlockAssignFromAgent(
                 b,
                 Slicable<T>::getSlice());
@@ -87,6 +89,7 @@ namespace kathryn {
         }
 
         SliceAgent<T>& operator <<= (ull b) override {
+            mfAssert(getAssignMode() == AM_MOD, "agent can use operator <<= only in MD mode");
             Operable& rhsOpr = getMatchAssignOperable(b, Slicable<T>::getSlice().getSize());
             _master->callBackBlockAssignFromAgent(
                     rhsOpr,
@@ -106,6 +109,7 @@ namespace kathryn {
         }
 
         SliceAgent<T>& operator = (Operable& b) override {
+            mfAssert(getAssignMode() == AM_MOD, "agent can use operator = only in MD mode");
             _master->callBackNonBlockAssignFromAgent(
                     b,
                     Slicable<T>::getSlice()
@@ -114,6 +118,7 @@ namespace kathryn {
         }
 
         SliceAgent<T>& operator = (ull b) override {
+            mfAssert(getAssignMode() == AM_MOD, "agent can use operator = only in MD mode");
             Operable& rhsOpr = getMatchAssignOperable(b, Slicable<T>::getSlice().getSize());
             _master->callBackNonBlockAssignFromAgent(
                     rhsOpr,

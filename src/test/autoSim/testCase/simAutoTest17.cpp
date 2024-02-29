@@ -60,7 +60,7 @@ namespace kathryn{
               incCycle(5);
 //
             sim{
-                ValRep testVal = NumConverter::cvtStrToValRep(8, 1);
+                ValRep testVal = NumConverter::createValRep(8, 1);
                 testAndPrint("test recur nest d", _md->d.sv(), testVal);
                 testAndPrint("test recur nest e", _md->e.sv(), testVal);
                 testAndPrint("test recur nest f", _md->f.sv(), testVal);
