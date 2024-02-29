@@ -11,19 +11,20 @@ namespace kathryn{
 
     typedef long long int CYCLE;
 
+    static int SIM_CC_TRIGGER_PRIO = 10;
     static int SIM_USER_PRIO  = 10;
     static int SIM_MODEL_PRIO = 9;
 
     class EventBase{
     protected:
-        CYCLE _curCycle = 0;
+        CYCLE _targetCycle = 0;
         int   _priority = 0;
 
     public:
 
         explicit EventBase(CYCLE curCycle, int priority):
-            _curCycle(curCycle),
-            _priority(priority)
+                _targetCycle(curCycle),
+                _priority(priority)
             {}
 
         /** it is very crucial to do virtual deconstructor*/
@@ -50,8 +51,8 @@ namespace kathryn{
          * priority of event queue
          * */
         virtual bool operator < (const EventBase& rhs){
-            if (  (_curCycle  > rhs._curCycle) ||
-                 ((_curCycle == rhs._curCycle) && (_priority < rhs._priority))
+            if ((_targetCycle > rhs._targetCycle) ||
+                ((_targetCycle == rhs._targetCycle) && (_priority < rhs._priority))
             ){
                 return true;
             }
@@ -59,7 +60,7 @@ namespace kathryn{
         }
 
         [[nodiscard]]
-        CYCLE getCurCycle() const {return _curCycle;}
+        CYCLE getCurCycle() const {return _targetCycle;}
         CYCLE getPriority() const {return _priority;}
 
         void addNewEvent(EventBase* newEvent);

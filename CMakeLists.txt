@@ -170,6 +170,9 @@ add_executable(Kathryn main.cpp
         src/model/hwComponent/expression/nest.h
         src/test/autoSim/testCase/simAutoTest16.cpp
         src/test/autoSim/testCase/simAutoTest17.cpp
+        src/sim/event/ctTrigEvent.cpp
+        src/sim/event/ctTrigEvent.h
+        src/test/autoSim/testCase/simAutoTest18.cpp
 
 
 )

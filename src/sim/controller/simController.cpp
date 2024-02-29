@@ -31,9 +31,12 @@ namespace kathryn{
                 std::cout << "[SIM EXIT] sim exit because eventQ reaches limit cycle\n";
                 break;
             }
+            lock();
+            _curCycle = eventQ.getNextEvent()->getCurCycle();
             /************************************************************************/
             /** get event that occur in same cycle*/
             std::vector<EventBase*> curEvents = eventQ.getAndPopNextSameCycleEvent();
+            unlock();
             /** simulate each event*/
             for (auto event : curEvents){
                 event->simStartCurCycle();
@@ -57,7 +60,9 @@ namespace kathryn{
 
     void SimController::addEvent(EventBase *event) {
         assert(event != nullptr);
+        lock();
         eventQ.addEvent(event);
+        unlock();
     }
 
     void SimController::saveData() {
@@ -65,9 +70,27 @@ namespace kathryn{
     }
 
     void SimController::reset(){
+        lock();
         _limitCycle = 1;
         eventQ.reset();
+        unlock();
     }
+
+    CYCLE SimController::getCurCycle(){
+        lock();
+        CYCLE cpyCycle = _curCycle;
+        unlock();
+        return cpyCycle;
+    }
+
+    void SimController::lock(){
+        _rsMtx.lock();
+    }
+
+    void SimController::unlock(){
+        _rsMtx.unlock();
+    }
+
 
 
     /***

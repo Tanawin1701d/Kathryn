@@ -5,16 +5,20 @@
 #ifndef KATHRYN_SIMINTERFACE_H
 #define KATHRYN_SIMINTERFACE_H
 
+#include <condition_variable>
+#include <thread>
 #include "model/controller/controller.h"
 #include "model/simIntf/moduleSimEvent.h"
 #include "sim/event/userEvent.h"
 #include "sim/controller/simController.h"
+#include "sim/event/ctTrigEvent.h"
 
 /////#define sim agent << [&]()
 
 namespace kathryn{
 
     class SimInterface{
+        friend class ConcreteTriggerEvent;
     protected:
         VcdWriter*              _vcdWriter      = nullptr;
         FlowWriter*             _flowWriter     = nullptr;
@@ -22,6 +26,19 @@ namespace kathryn{
         std::vector<UserEvent*> _UserSimEvents;
         CYCLE                   _limitCycle = 0;
         UserEvent               simAgent;/** sim agent base can't change name*/
+
+        /**concrete sim*/
+
+        std::unique_ptr<std::thread> conThread;
+        ConcreteTriggerEvent* lastCtTrigger = nullptr;
+        CYCLE conCurCycleUsed = 2;
+
+        void simStartConSim();
+        /**for now we will not support Condition*/
+        void conCycle(CYCLE startCycle);
+        void conNextCycle(CYCLE amtCycle);
+        //// to initialize system and finalize system
+        void describeConWrapper();
 
 
     public:
@@ -33,9 +50,13 @@ namespace kathryn{
 
         void simStart();
 
-        virtual void describe() = 0;
+        /**describe discreate event*/
+        virtual void describe(){};
 
+        /**describe concrete event*/
+        virtual void describeCon(){};
 
+        /** user it to communicate about simulation trigger*/
 
     };
 
