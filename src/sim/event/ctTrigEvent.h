@@ -46,7 +46,8 @@ namespace kathryn{
     public:
         explicit ConcreteTriggerEvent(CYCLE targetCycle,
                                       SimInterface* simInterfaceMaster,
-                                      std::function<bool()> conditionTrigger
+                                      std::function<bool()> conditionTrigger,
+                                      int prority
                                       );
 
         void simStartCurCycle() override;

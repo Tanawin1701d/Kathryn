@@ -77,13 +77,14 @@ namespace kathryn{
 
     void SimInterface::simStartConSim(){
         /**build new auto start trigger*/
-        lastCtTrigger = new ConcreteTriggerEvent(2,this, [&](){return true;});
+        lastCtTrigger = new ConcreteTriggerEvent(2,this,
+                                                 [&](){return true;}, SIM_CC_TRIGGER_PRIO_FRONT_CYCLE);
         conThread = std::make_unique<std::thread>(&SimInterface::describeConWrapper, this);
         assert(conThread != nullptr);
         /** to prevent simulation queue dead lock*/
     }
 
-    void SimInterface::conCycle(CYCLE startCycle){
+    void SimInterface::conCycleBase(CYCLE startCycle, int priority){
         /** move on old trigger first*/
         if (lastCtTrigger != nullptr){
             lastCtTrigger->getFinishSerializer().notify();
@@ -94,12 +95,26 @@ namespace kathryn{
         conCurCycleUsed = startCycle;
         lastCtTrigger = new ConcreteTriggerEvent(startCycle,
                                                  this,
-                                                 [](){return true;});
+                                                 [](){return true;},
+                                                 priority);
         lastCtTrigger->getStartSerializer().wait();
+    }
+
+    void SimInterface::conCycle(CYCLE startCycle){
+        conCycleBase(startCycle, SIM_CC_TRIGGER_PRIO_FRONT_CYCLE);
     }
 
     void SimInterface::conNextCycle(kathryn::CYCLE amtCycle) {
         conCycle(conCurCycleUsed + amtCycle);
+    }
+
+
+    void SimInterface::conEndCycle(CYCLE startCycle) {
+        conCycleBase(startCycle, SIM_CC_TRIGGER_PRIO_BACK_CYCLE);
+    }
+
+    void SimInterface::conNextEndCycle(CYCLE amtCycle) {
+        conEndCycle(conCurCycleUsed + amtCycle);
     }
 
     void SimInterface::describeConWrapper() {
@@ -109,8 +124,6 @@ namespace kathryn{
         lastCtTrigger->getFinishSerializer().notify();
         /** to prevent queue stuck*/
     }
-
-
 
 
 

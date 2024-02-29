@@ -11,9 +11,10 @@ namespace kathryn{
 
     ConcreteTriggerEvent::ConcreteTriggerEvent(CYCLE targetCycle,
                                                SimInterface* simInterfaceMaster,
-                                               std::function<bool()> conditionTrigger):
+                                               std::function<bool()> conditionTrigger,
+                                               int prority):
     EventBase(targetCycle,
-              SIM_CC_TRIGGER_PRIO),
+              prority),
               _simInterfaceMaster(simInterfaceMaster),
               _conditionTrigger(conditionTrigger){
         addNewEvent(this);

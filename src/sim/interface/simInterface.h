@@ -35,8 +35,11 @@ namespace kathryn{
 
         void simStartConSim();
         /**for now we will not support Condition*/
+        void conCycleBase(CYCLE startCycle, int priority);
         void conCycle(CYCLE startCycle);
         void conNextCycle(CYCLE amtCycle);
+        void conEndCycle(CYCLE startCycle);
+        void conNextEndCycle(CYCLE amtCycle);
         //// to initialize system and finalize system
         void describeConWrapper();
 

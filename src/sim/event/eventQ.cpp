@@ -10,7 +10,7 @@ namespace kathryn{
 
     void EventQ::addEvent(EventBase *event) {
         assert(event != nullptr);
-        assert(event->getCurCycle() > lastPopCycle);
+        assert(event->getCurCycle() >= lastPopCycle);
         eventQueue.push(event);
     }
 
