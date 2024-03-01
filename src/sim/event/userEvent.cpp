@@ -21,7 +21,7 @@ namespace kathryn{
     }
 
     UserEvent::UserEvent():
-    EventBase(0, SIM_USER_PRIO),
+    EventBase(0, SIM_USER_PRIO_FRONT_CYCLE),
     _orchestCycle(0),
     _parent(nullptr)
     {}
@@ -33,7 +33,7 @@ namespace kathryn{
 
         auto* event = new UserEvent(std::move(simBehaviour),
                                     this,
-                                    SIM_USER_PRIO
+                                    _orchestPriority
         );
         _subEvents.push_back(event);
     }

@@ -12,9 +12,10 @@ namespace kathryn{
     typedef long long int CYCLE;
 
     static int SIM_CC_TRIGGER_PRIO_FRONT_CYCLE = 10;
-    static int SIM_USER_PRIO  = 10;
-    static int SIM_MODEL_PRIO = 9;
     static int SIM_CC_TRIGGER_PRIO_BACK_CYCLE = 8;
+    static int SIM_USER_PRIO_FRONT_CYCLE  = 10;
+    static int SIM_USER_PRIO_BACK_CYCLE  = 8;
+    static int SIM_MODEL_PRIO = 9;
 
     class EventBase{
     protected:

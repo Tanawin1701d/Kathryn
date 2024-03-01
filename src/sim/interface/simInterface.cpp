@@ -108,14 +108,10 @@ namespace kathryn{
         conCycle(conCurCycleUsed + amtCycle);
     }
 
-
-    void SimInterface::conEndCycle(CYCLE startCycle) {
-        conCycleBase(startCycle, SIM_CC_TRIGGER_PRIO_BACK_CYCLE);
+    void SimInterface::conEndCycle() {
+        conCycleBase(conCurCycleUsed, SIM_CC_TRIGGER_PRIO_BACK_CYCLE);
     }
 
-    void SimInterface::conNextEndCycle(CYCLE amtCycle) {
-        conEndCycle(conCurCycleUsed + amtCycle);
-    }
 
     void SimInterface::describeConWrapper() {
         assert(lastCtTrigger != nullptr);

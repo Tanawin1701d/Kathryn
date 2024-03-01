@@ -18,43 +18,53 @@ namespace kathryn{
 
     void SimController::simStart() {
 
-        //std::cout << eventQ.getNextEvent()->getCurCycle() << std::endl;
+        lock();
         while ( (!eventQ.isEmpty()) &&
                 (eventQ.getNextEvent()->getCurCycle() <= _limitCycle)
         ){
-            /** exit reason*/
-            if (eventQ.isEmpty()){
-                std::cout << "[SIM EXIT] sim exit because eventQ is empty\n";
-                break;
+            EventBase* nextEvent = eventQ.getNextEvent();
+            /**we are sure that nextEvent is valid due to while loop at the top*/
+
+            assert(_curCycle != nextEvent->getCurCycle()); //// check therer is no same cycle used
+            _curCycle = nextEvent->getCurCycle();
+            /**
+             * pull the data and collect it first
+             * */
+            std::vector<EventBase*> _curCycleEvents;
+
+            /**
+             *
+             * start cur cycle which allows same cycle queue adding
+             *
+             * */
+            while ((!eventQ.isEmpty()) &&
+                   (eventQ.getNextEvent()->getCurCycle() == _curCycle)){
+
+                EventBase* collectingEvent = eventQ.getNextEvent();
+                eventQ.popEvent();
+                unlock();
+                collectingEvent->simStartCurCycle();
+                _curCycleEvents.push_back(collectingEvent);
+                lock();
             }
-            if (eventQ.getNextEvent()->getCurCycle() > _limitCycle){
-                std::cout << "[SIM EXIT] sim exit because eventQ reaches limit cycle\n";
-                break;
+            unlock();
+
+            /**
+             * all event is simulated. For now, This cycle is stable.
+             * */
+            for (auto* curEvent: _curCycleEvents){
+                curEvent->curCycleCollectData();
+            }
+            for (auto* curEvent: _curCycleEvents){
+                curEvent->simExitCurCycle();
+            }
+            for (auto curEvent: _curCycleEvents){
+                if (curEvent->needToDelete())
+                    delete curEvent;
             }
             lock();
-            _curCycle = eventQ.getNextEvent()->getCurCycle();
-            /************************************************************************/
-            /** get event that occur in same cycle*/
-            std::vector<EventBase*> curEvents = eventQ.getAndPopNextSameCycleEvent();
-            unlock();
-            /** simulate each event*/
-            for (auto event : curEvents){
-                event->simStartCurCycle();
-            }
-            /** collect each*/
-            for (auto event : curEvents){
-                event->curCycleCollectData();
-            }
-            /** exit each event*/
-            for (auto event : curEvents){
-                event->simExitCurCycle();
-            }
-            /** delete each event*/
-            for (auto event: curEvents){
-                if (event->needToDelete())
-                    delete event;
-            }
         }
+        unlock();
 
     }
 

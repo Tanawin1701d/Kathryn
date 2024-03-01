@@ -31,6 +31,7 @@ namespace kathryn{
 
     public:
         explicit MemBlock(ull depth, int width);
+        ~MemBlock();
 
         SimEngine* getSimEngine() override{
             return static_cast<SimEngine*>(this);

@@ -8,14 +8,14 @@
 
 namespace kathryn{
 
-    class testSimMod: public Module{
+    class testSimMod2: public Module{
     public:
         makeReg(a, 8);
         makeReg(b, 8);
         makeReg(c, 8);
         makeVal(iv, 8, 0b10101010);
 
-        explicit testSimMod(int x): Module(){}
+        explicit testSimMod2(int x): Module(){}
 
         void flow() override{
 
@@ -48,9 +48,9 @@ namespace kathryn{
     class sim2 :public SimAutoInterface{
     public:
 
-        testSimMod* _md;
+        testSimMod2* _md;
 
-        sim2(testSimMod* md):SimAutoInterface(2,
+        sim2(testSimMod2* md):SimAutoInterface(2,
                                 100,
                                 vcdPath,
                                 profilePath),
@@ -84,14 +84,14 @@ namespace kathryn{
     public:
         explicit Sim2TestEle(int id): AutoTestEle(id){}
         void start() override{
-            makeMod(d, testSimMod, 1);
-            sim2 simulator((testSimMod*) &d);
+            makeMod(d, testSimMod2, 1);
+            sim2 simulator((testSimMod2*) &d);
             simulator.simStart();
         }
 
     };
 
-    Sim2TestEle ele2(2);
+    Sim2TestEle ele2(-1);
 
     ///sim2 testCase2;
 

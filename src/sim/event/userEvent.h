@@ -16,6 +16,7 @@
 /** if you wish to use this macro*/
 #define sim simAgent << [&](UserEvent& simAgent)
 #define incCycle(cycle) simAgent.iterateOrchestCycle(cycle)
+#define backCycle()     simAgent.jumpToEndCycle()
 #define setCycle(cycle) simAgent.setOrchestCycle(cycle)
 
 namespace kathryn{
@@ -27,6 +28,7 @@ namespace kathryn{
  class UserEvent: public EventBase{
  private:
      CYCLE      _orchestCycle = -1;
+     int        _orchestPriority     = SIM_USER_PRIO_FRONT_CYCLE;
      UserEvent* _parent = nullptr;
      /*** core function to be used*/
      std::function<void(UserEvent&)> _activeFunc;
@@ -61,12 +63,18 @@ namespace kathryn{
      }
 
      void iterateOrchestCycle(CYCLE cycleAmt){
+         _orchestPriority = SIM_USER_PRIO_FRONT_CYCLE;
          _orchestCycle += cycleAmt;
 
      }
 
      void setOrchestCycle(CYCLE cycleAmt){
+         _orchestPriority = SIM_USER_PRIO_FRONT_CYCLE;
          _orchestCycle = cycleAmt;
+     }
+
+     void jumpToEndCycle(){
+         _orchestPriority = SIM_USER_PRIO_BACK_CYCLE;
      }
 
      void operator << (std::function<void(UserEvent&)> simBehaviour);

@@ -20,6 +20,12 @@ namespace kathryn{
         com_init();
     }
 
+    MemBlock::~MemBlock(){
+        for (auto mba: memBlockAgents){
+            delete mba;
+        }
+    }
+
     void MemBlock::com_init(){
         ctrl->on_memBlk_init(this);
     }

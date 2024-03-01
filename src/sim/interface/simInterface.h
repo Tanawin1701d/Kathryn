@@ -30,16 +30,15 @@ namespace kathryn{
         /**concrete sim*/
 
         std::unique_ptr<std::thread> conThread;
-        ConcreteTriggerEvent* lastCtTrigger = nullptr;
-        CYCLE conCurCycleUsed = 2;
+        ConcreteTriggerEvent*        lastCtTrigger = nullptr;
+        CYCLE                        conCurCycleUsed = 2;
 
         void simStartConSim();
         /**for now we will not support Condition*/
         void conCycleBase(CYCLE startCycle, int priority);
         void conCycle(CYCLE startCycle);
         void conNextCycle(CYCLE amtCycle);
-        void conEndCycle(CYCLE startCycle);
-        void conNextEndCycle(CYCLE amtCycle);
+        void conEndCycle();
         //// to initialize system and finalize system
         void describeConWrapper();
 
