@@ -91,7 +91,7 @@ namespace kathryn{
 
     };
 
-    Sim2TestEle ele2(-1);
+    Sim2TestEle ele2(2);
 
     ///sim2 testCase2;
 

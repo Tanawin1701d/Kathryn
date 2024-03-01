@@ -9,7 +9,7 @@
 namespace kathryn{
 
 
-    FlowBlockCBreak::FlowBlockCBreak():
+    FlowBlockSCBreak::FlowBlockSCBreak():
     FlowBlockBase(EXITWHILE,
                   {
                           {FLOW_ST_BASE_STACK},
@@ -20,41 +20,43 @@ namespace kathryn{
 
     }
 
-    FlowBlockCBreak::~FlowBlockCBreak(){
+    FlowBlockSCBreak::~FlowBlockSCBreak(){
         delete resultNodeWrap;
         delete breakNode;
         delete normExitNode;
     }
 
-    void FlowBlockCBreak::addElementInFlowBlock(Node *node) {
+    void FlowBlockSCBreak::addElementInFlowBlock(Node *node) {
         assert(false);
     }
 
-    void FlowBlockCBreak::addSubFlowBlock(FlowBlockBase *subBlock) {
+    void FlowBlockSCBreak::addSubFlowBlock(FlowBlockBase *subBlock) {
         assert(false);
     }
 
-    NodeWrap* FlowBlockCBreak::sumarizeBlock() {
+    NodeWrap* FlowBlockSCBreak::sumarizeBlock() {
         assert(resultNodeWrap != nullptr);
         return resultNodeWrap;
     }
 
-    void FlowBlockCBreak::onAttachBlock() {
+    void FlowBlockSCBreak::onAttachBlock() {
         ctrl->on_attach_flowBlock(this);
     }
 
-    void FlowBlockCBreak::onDetachBlock() {
+    void FlowBlockSCBreak::onDetachBlock() {
         ctrl->on_detach_flowBlock(this);
     }
 
-    void FlowBlockCBreak::buildHwComponent() {
+    void FlowBlockSCBreak::buildHwComponent() {
 
         assert(conBlocks.empty());
         /**build internal node*/
         breakNode = new StateNode();
         breakNode->setDependStateJoinOp(BITWISE_AND);
-        normExitNode= new DummyNode(&_make<Val>("cbreakDum", 1, 0));
+
+        normExitNode = new DummyNode(&_make<Val>("cbreakDum", 1, 0));
         normExitNode->setDependStateJoinOp(BITWISE_AND);
+        /////////normExitNode->addDependNode(breakNode);
         normExitNode->assign();
 
         /**build resultNodeWrap*/
@@ -65,27 +67,27 @@ namespace kathryn{
 
     }
 
-    std::string FlowBlockCBreak::getMdDescribe(){
+    std::string FlowBlockSCBreak::getMdDescribe(){
         std::string ret;
         ret += "[breakNode is]"+ (breakNode != nullptr ? breakNode->getMdDescribe() : "") + "\n";
         return ret;
     }
 
-    void FlowBlockCBreak::addMdLog(MdLogVal *mdLogVal) {
+    void FlowBlockSCBreak::addMdLog(MdLogVal *mdLogVal) {
         mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() + " ]");
         mdLogVal->addVal("breakNode is " +
                              (breakNode != nullptr ? breakNode->getMdDescribe() : ""));
     }
 
-    void FlowBlockCBreak::doPreFunction() {
+    void FlowBlockSCBreak::doPreFunction() {
         onAttachBlock();
     }
 
-    void FlowBlockCBreak::doPostFunction() {
+    void FlowBlockSCBreak::doPostFunction() {
         onDetachBlock();
     }
 
-    void FlowBlockCBreak::simStartCurCycle() {
+    void FlowBlockSCBreak::simStartCurCycle() {
         if (isCurValSim()){
             return;
         }
@@ -110,7 +112,7 @@ namespace kathryn{
 
     }
 
-    void FlowBlockCBreak::simExitCurCycle() {
+    void FlowBlockSCBreak::simExitCurCycle() {
         unSetSimStatus();
         unsetBlockOrNodeRunning();
         if (breakNode != nullptr){

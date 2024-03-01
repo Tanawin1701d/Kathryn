@@ -175,6 +175,7 @@ add_executable(Kathryn main.cpp
         src/test/autoSim/testCase/simAutoTest18.cpp
         src/model/hwComponent/abstract/modelMode.cpp
         src/model/hwComponent/abstract/modelMode.h
+        src/test/autoSim/testCase/simAutoTest19.cpp
 
 
 )

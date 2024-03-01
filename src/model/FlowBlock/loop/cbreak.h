@@ -12,11 +12,11 @@
 #include "model/FlowBlock/abstract/nodes/stateNode.h"
 
 
-#define cbreak for(auto kathrynBlock = new FlowBlockCBreak(); kathrynBlock->doPrePostFunction(); kathrynBlock->step()){}
+#define sbreak for(auto kathrynBlock = new FlowBlockSCBreak(); kathrynBlock->doPrePostFunction(); kathrynBlock->step()){}
 
 namespace kathryn{
 
-    class FlowBlockCBreak : public FlowBlockBase, public LoopStMacro{
+    class FlowBlockSCBreak : public FlowBlockBase, public LoopStMacro{
     private:
         NodeWrap* resultNodeWrap = nullptr;
 
@@ -24,8 +24,8 @@ namespace kathryn{
         DummyNode* normExitNode = nullptr;
 
     public:
-        explicit FlowBlockCBreak();
-        ~FlowBlockCBreak();
+        explicit FlowBlockSCBreak();
+        ~FlowBlockSCBreak();
         /** for controller add the local element to this sub block*/
         void addElementInFlowBlock(Node* node) override;
         void addSubFlowBlock(FlowBlockBase* subBlock) override;

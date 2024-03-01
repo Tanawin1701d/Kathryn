@@ -111,7 +111,7 @@ namespace kathryn {
         /** convert to value for simulation*/
 
         explicit operator ull(){
-            std::cout << "get simvalue is used" << std::endl;
+            //std::cout << "get simvalue is used" << std::endl;
             assert(getAssignMode() == AM_SIM);
             assert(getRtlValItf()->isCurValSim());
             assert(getRtlValItf()->getCurVal().getValArrSize() == 1);
