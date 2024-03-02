@@ -22,6 +22,7 @@
 #include "model/FlowBlock/cond/elif.h"
 #include "model/FlowBlock/abstract/spReg/stateReg.h"
 #include "model/FlowBlock/abstract/spReg/syncReg.h"
+#include "model/FlowBlock/time/wait.h"
 #include "model/hwComponent/memBlock/MemBlock.h"
 
 #include "util/type/typeConv.h"

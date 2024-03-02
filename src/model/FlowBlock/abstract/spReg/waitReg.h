@@ -55,11 +55,20 @@ namespace kathryn{
       *
       * */
 
+
+    /**
+     *                    2 1 0
+     * [ | | | | | | | | | | | ]
+     *                        ^---------- state bit
+     * */
+
     class CycleWaitStateReg : public CtrlFlowRegBase{
     private:
         /**wait cycle meta data*/
         int _waitCycle = -1;
-        int _bitSz     = -1;
+        int _cntBitSz     = -1;
+        static const int stateSize = 1;
+        const int _totalBitSize = -1;
         /**when counter is reached exit expression will be set*/
         Operable* IdleCnt     = nullptr;
         Operable* _startCnt    = nullptr;

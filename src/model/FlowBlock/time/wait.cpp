@@ -17,7 +17,7 @@ namespace kathryn{
      * */
 
     /**constructor*/
-    FlowBlockCondWait::FlowBlockCondWait(Operable *exitCond)
+    FlowBlockCondWait::FlowBlockCondWait(Operable& exitCond)
     : FlowBlockBase(CONDWAIT,
                     {
                             {FLOW_ST_BASE_STACK},
@@ -25,11 +25,11 @@ namespace kathryn{
                             true
                     }),
     _resultNodeWrap(nullptr),
-    _exitCond(exitCond),
-    _purifiedExitCond(purifyCondition(exitCond)),
+    _exitCond(&exitCond),
+    _purifiedExitCond(purifyCondition(&exitCond)),
     _waitNode(nullptr)
     {
-        assert(exitCond != nullptr);
+        //assert(exitCond != nullptr);
     }
 
     FlowBlockCondWait::~FlowBlockCondWait(){
@@ -180,6 +180,7 @@ namespace kathryn{
             assert(cycle > 0);
             _waitNode = new WaitCycleNode(cycle);
         }
+        _waitNode->setDependStateJoinOp(BITWISE_AND);
         /** result node wrap*/
         _resultNodeWrap = new NodeWrap();
         _resultNodeWrap->addEntraceNode(_waitNode);

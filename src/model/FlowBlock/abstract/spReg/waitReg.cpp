@@ -79,48 +79,51 @@ namespace kathryn{
 
     /** constructor for specific cycle*/
     CycleWaitStateReg::CycleWaitStateReg(int waitCycle):
-    CtrlFlowRegBase( calBitUsed(waitCycle),
+            CtrlFlowRegBase( calBitUsed(waitCycle) + 1,
          false,
          TYPE_CYCLE_WAIT_STATE_REG,
          false
      ),
-     _waitCycle(waitCycle),
-    _bitSz     (calBitUsed(waitCycle)),
-    IdleCnt    (&_make<Val>("IdleCnt" ,_bitSz,0        )),
-    _startCnt  (&_make<Val>("startCnt",_bitSz,1        )),
-    _endCnt    (&_make<Val>("endCnt"  ,_bitSz,waitCycle))
+            _waitCycle(waitCycle),
+            _cntBitSz     (calBitUsed(waitCycle)),
+            _totalBitSize(_cntBitSz + 1),
+            IdleCnt    (&_make<Val>("IdleCnt" , _totalBitSize, 0)),
+            _startCnt  (&_make<Val>("startCnt", _totalBitSize, 1)),
+            _endCnt    (&_make<Val>("endCnt"  , _cntBitSz, waitCycle))
      {
+
         /** TO FIX*/
         com_init();
         makeIncStateEvent();
-        assert(_bitSz > 0);
+        assert(_cntBitSz > 0);
      }
 
     CycleWaitStateReg::CycleWaitStateReg(Operable* endCnt):
-    CtrlFlowRegBase(
-        endCnt->getOperableSlice().getSize(),
+            CtrlFlowRegBase(
+        endCnt->getOperableSlice().getSize() + 1,
         false,
         TYPE_CYCLE_WAIT_STATE_REG,
         false
     ),
-    _bitSz     (endCnt->getOperableSlice().getSize()),
-    IdleCnt    (&_make<Val>("IdleCnt" ,_bitSz,0)),
-    _startCnt  (&_make<Val>("startCnt",_bitSz,1)),
-    _endCnt    (endCnt)
+            _cntBitSz     (endCnt->getOperableSlice().getSize()),
+            _totalBitSize(_cntBitSz + 1),
+            IdleCnt    (&_make<Val>("IdleCnt" , _totalBitSize, 0)),
+            _startCnt  (&_make<Val>("startCnt", _totalBitSize, 1)),
+            _endCnt    (endCnt)
     {
         com_init();
         makeIncStateEvent();
-        assert(_bitSz > 0);
+        assert(_cntBitSz > 0);
         /** generate update event for reset register*/
     }
 
 
     void CycleWaitStateReg::makeIncStateEvent() {
         auto* event = new UpdateEvent({
-            nullptr,
-            &(((*this) < (*_endCnt)) & ((*this) >= (*_startCnt))),
-            &((*this) + (*_startCnt)),
-            Slice({0, _bitSz}),
+            &((*this)(1, _totalBitSize) != (*_endCnt)),
+            &((*this)(0)),
+            &((*this)(1, _totalBitSize) + 1),
+            Slice({1, _totalBitSize}),
             DEFAULT_UE_PRI_INTERNAL_MAX-1
         });
         addUpdateMeta(event);
@@ -135,7 +138,7 @@ namespace kathryn{
         auto* event = new UpdateEvent({activateCond,
                                        dependState,
                                        _startCnt,
-                                       Slice({0, _bitSz}),
+                                       Slice({0, _totalBitSize}),
                                        DEFAULT_UE_PRI_INTERNAL_MAX});
         addUpdateMeta(event);
         return event;
@@ -144,10 +147,10 @@ namespace kathryn{
     void CycleWaitStateReg::makeUnSetStateEvent() {
         /**reset event*/
         auto* resetEvent = new UpdateEvent({
-                                                   nullptr,
-                                                   (&((*this) == (*_endCnt))),
+                                                   &((*this)(1, _totalBitSize) == (*_endCnt)),
+                                                   &(*this)(0),
                                                    IdleCnt,
-                                                   Slice({0, _bitSz}),
+                                                   Slice({0, _totalBitSize}),
                                                    DEFAULT_UE_PRI_INTERNAL_MIN
                                            });
         addUpdateMeta(resetEvent);
@@ -155,7 +158,7 @@ namespace kathryn{
     }
 
     Operable* CycleWaitStateReg::generateEndExpr() {
-        return &((*this) == (*_endCnt));
+        return &((*this)(0) & ((*this)(1, _totalBitSize) == (*_endCnt)));
     }
 
     bool CycleWaitStateReg::isSimAtWaiting(){
