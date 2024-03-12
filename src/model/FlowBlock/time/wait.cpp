@@ -51,6 +51,7 @@ namespace kathryn{
     }
     /** buildHwComponent*/
     void FlowBlockCondWait::buildHwComponent() {
+        buildSubHwComponent();
         assert(conBlocks.empty());
 
         /** build node*/
@@ -171,6 +172,7 @@ namespace kathryn{
     }
 
     void FlowBlockCycleWait::buildHwComponent() {
+        buildSubHwComponent();
         assert(conBlocks.empty());
 
         /** build node*/

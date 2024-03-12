@@ -79,6 +79,7 @@ namespace kathryn{
     }
 
     void FlowBlockIf::buildHwComponent() {
+        buildSubHwComponent();
 
         assert(!allCondes.empty());
         assert(allPurifiedCondes.size() == allCondes.size());

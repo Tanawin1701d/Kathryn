@@ -50,7 +50,7 @@ namespace kathryn{
         assert(topFb != nullptr);
         logMF(topFb, "on_detach_flowBlock");
         popFlowBlock(topFb);
-        topFb->buildHwComponent();
+        //////topFb->buildHwComponent();
 
 
         /**get front node to inject the subblock*/

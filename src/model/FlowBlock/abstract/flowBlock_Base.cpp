@@ -58,6 +58,20 @@ namespace kathryn{
         }
     }
 
+    void FlowBlockBase::buildSubHwComponent(){
+
+        for (auto subBlockPtr: subBlocks){
+            assert(subBlockPtr != nullptr);
+            subBlockPtr->buildHwComponent();
+        }
+
+        for (auto conBlockPtr: conBlocks){
+            assert(conBlockPtr != nullptr);
+            conBlockPtr->buildHwComponent();
+        }
+
+    }
+
     Operable* FlowBlockBase::purifyCondition(Operable* rawOpr){
             assert(rawOpr != nullptr);
             Slice rawSl = rawOpr->getOperableSlice();

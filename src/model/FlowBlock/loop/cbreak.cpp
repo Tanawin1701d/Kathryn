@@ -48,6 +48,7 @@ namespace kathryn{
     }
 
     void FlowBlockSCBreak::buildHwComponent() {
+        buildSubHwComponent();
 
         assert(conBlocks.empty());
         /**build internal node*/

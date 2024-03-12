@@ -137,6 +137,8 @@ namespace kathryn{
         std::vector<NodeWrap*> frontNodeWrap;
 
         for (auto fb: _flowBlockBases){
+            assert(fb != nullptr);
+            fb->buildHwComponent();
             frontNodeWrap.push_back(fb->sumarizeBlock());
         }
         for (auto nw: frontNodeWrap){

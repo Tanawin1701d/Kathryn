@@ -62,7 +62,7 @@ namespace kathryn{
     }
 
     void FlowBlockZIF::buildHwComponent() {
-
+        buildSubHwComponent();
         assert(subBlocks.empty());
         assert(!basicNodes.empty());
 

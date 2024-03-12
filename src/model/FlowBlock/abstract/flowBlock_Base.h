@@ -144,6 +144,7 @@ namespace kathryn {
         virtual void        onAttachBlock() = 0; //// it is supposed to acknowledge controller whether this block is declared
         virtual void        onDetachBlock() = 0;
         /*** for module controller build node and other elements*/
+        virtual void        buildSubHwComponent();
         virtual void        buildHwComponent() = 0;
         ////// getter/setter
         FLOW_BLOCK_TYPE     getFlowType() const {return _type;}

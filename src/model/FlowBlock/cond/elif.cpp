@@ -56,6 +56,8 @@ namespace kathryn{
     }
 
     void FlowBlockElif::buildHwComponent() {
+        buildSubHwComponent();
+
         assert(conBlocks.empty());
         assert(!subBlocks.empty());
         resultNodeWrapper = subBlocks[0]->sumarizeBlock();

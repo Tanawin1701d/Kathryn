@@ -18,6 +18,7 @@ namespace kathryn{
     }
 
     void FlowBlockSWhile::buildHwComponent() {
+        buildSubHwComponent();
 
         assert(conBlocks.empty());
         assert(subBlocks.size() == 1);

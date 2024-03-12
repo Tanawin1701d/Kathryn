@@ -20,6 +20,7 @@ namespace kathryn {
         Val& upState;
         Val& upFullState;
         Val& downFullState;
+        expression* testExpr = nullptr;
         int nextFillActivateId;
     protected:
         /**override data to init state regiter*/
