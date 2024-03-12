@@ -145,9 +145,11 @@ namespace kathryn{
         /** there must be at most one flow block that must be detach
          * due to last lazy delete pupose
          * */
-        auto lazyBlock = getTopFlowBlockBase();
-        if (fb != lazyBlock){
-            assert(lazyBlock->isLazyDelete());
+        auto topFb = getTopFlowBlockBase();
+        if (fb != topFb){
+            ////// it must be lazy delete block inside that it is not deleted yet
+            assert(topFb->isLazyDelete());
+            /////// delete it now
             tryPurifyFlowStack();
         }
         /** get our block detach*/
