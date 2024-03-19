@@ -59,7 +59,7 @@ namespace kathryn {
 
     protected:
         /** get module that response we now consider*/
-        Module* getTargetModulePtr();
+        Module* getTopModulePtr();
         Module_Stack_Element& getTargetModuleEle();
 
        FlowBlockBase* getTopFlowBlockBase();
@@ -70,7 +70,9 @@ namespace kathryn {
     public:
 
         /**
-         * event handling function
+         *
+         * Hardware component handling fucntion
+         *
          * */
         explicit ModelController();
         void reset();
@@ -91,23 +93,32 @@ namespace kathryn {
         /** on nest init*/
         void on_nest_init(nest* ptr);
         void on_nest_update(AsmNode* asmNode, nest* srcNest);
-
         /** value handling*/
         void on_value_init(Val* ptr);
-        /** module handling*/
+
+        /**
+         *
+         * module handling
+         *
+         * */
+
         void on_globalModule_init_component();
         void on_module_init_components(Module* ptr);
         void on_module_init_designFlow(Module* ptr); /** todo make design flow implement correctly*/
         void on_module_final(Module* ptr);
 
-        /** control flow block handler*/
+        /**
+         *
+         * control flow block handler
+         *
+         * */
+
         void assignFlowBlockParent(FlowBlockBase* fb);
         bool isAllFlowStackEmpty();
-        bool isFlowBlockBaseofModuleInStack();
+        bool isTopFbBelongToTopModule();
         void tryPurifyFlowStack();
         void on_attach_flowBlock(FlowBlockBase* fb);
         void on_detach_flowBlock(FlowBlockBase* fb);
-
         FLOW_BLOCK_TYPE get_top_pattern_flow_block_type();
 
         /** lock allocation*/

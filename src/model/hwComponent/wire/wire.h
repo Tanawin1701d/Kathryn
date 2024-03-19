@@ -41,8 +41,8 @@ namespace kathryn{
                                            Slice  absDesSlice) override;
 
         /**override operable*/
-        Operable& getExactOperable() const override {return *(Operable*)(this);}
-        Slice getOperableSlice() const override {return getSlice();}
+//        Operable& getExactOperable() const override {return *(Operable*)(this);}
+//        Slice getOperableSlice() const override {return getSlice();}
         /**override slicable*/
         SliceAgent<Wire>& operator() (int start, int stop) override;
         SliceAgent<Wire>& operator() (int idx) override;

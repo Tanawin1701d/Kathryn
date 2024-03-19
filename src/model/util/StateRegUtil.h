@@ -6,6 +6,13 @@
 #define KATHRYN_STATEREGUTIL_H
 
 
+/***
+ *
+ * lagacy
+ *
+ * */
+
+
 #include "model/FlowBlock/abstract/spReg/stateReg.h"
 
 namespace kathryn{

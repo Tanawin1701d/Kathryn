@@ -62,8 +62,8 @@ namespace kathryn{
                                    Slice  absDesSlice) override;
 
         /** Operable*/
-        [[nodiscard]] Slice           getOperableSlice    () const override;
-        [[nodiscard]] Operable&       getExactOperable    () const override;
+//        [[nodiscard]] Slice           getOperableSlice    () const override;
+//        [[nodiscard]] Operable&       getExactOperable    () const override;
 
         Identifiable*   castToIdent         () override;
         ValRep&         sv                  () override;

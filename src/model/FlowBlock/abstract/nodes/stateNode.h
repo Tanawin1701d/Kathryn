@@ -98,6 +98,8 @@ namespace kathryn{
 
         int getCycleUsed() override{ return 1; }
 
+        bool isStateFullNode() override { return false;}
+
         void simStartCurCycle() override{
             if (isCurValSim()){
                 return;

@@ -50,7 +50,7 @@ namespace kathryn{
     void FlowBlockSCBreak::buildHwComponent() {
         buildSubHwComponent();
 
-        assert(conBlocks.empty());
+        assert(_conBlocks.empty());
         /**build internal node*/
         breakNode = new StateNode();
         breakNode->setDependStateJoinOp(BITWISE_AND);

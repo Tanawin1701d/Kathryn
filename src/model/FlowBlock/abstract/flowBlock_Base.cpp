@@ -24,21 +24,21 @@ namespace kathryn{
             /** controller communication policy*/
             _fbCtrlComMeta(std::move(fbCtrlComMeta)),
             /** exit management*/
-            areThereForceExit(false),
-            forceExitNode(nullptr)
+            _areThereForceExit(false),
+            _forceExitNode(nullptr)
     {}
 
     FlowBlockBase::~FlowBlockBase(){
-        for (auto basicNode : basicNodes){
+        for (auto basicNode : _basicNodes){
             delete basicNode;
         }
-        for (auto sub_fb: subBlocks){
+        for (auto sub_fb: _subBlocks){
             delete sub_fb;
         }
-        for (auto con_fb: conBlocks){
+        for (auto con_fb: _conBlocks){
             delete con_fb;
         }
-        delete forceExitNode;
+        delete _forceExitNode;
         /////// it is safe to delete nullptr
     }
 
@@ -60,12 +60,12 @@ namespace kathryn{
 
     void FlowBlockBase::buildSubHwComponent(){
 
-        for (auto subBlockPtr: subBlocks){
+        for (auto subBlockPtr: _subBlocks){
             assert(subBlockPtr != nullptr);
             subBlockPtr->buildHwComponent();
         }
 
-        for (auto conBlockPtr: conBlocks){
+        for (auto conBlockPtr: _conBlocks){
             assert(conBlockPtr != nullptr);
             conBlockPtr->buildHwComponent();
         }
@@ -87,34 +87,30 @@ namespace kathryn{
 
     void FlowBlockBase::genSumForceExitNode(std::vector<NodeWrap *> &nws) {
         for (auto nw : nws){
-            areThereForceExit |= (nw->getForceExitNode() != nullptr);
+            _areThereForceExit |= (nw->getForceExitNode() != nullptr);
         }
-        if (areThereForceExit){
-            forceExitNode = new PseudoNode(1);
+        if (_areThereForceExit){
+            _forceExitNode = new PseudoNode(1);
             for (auto nw : nws){
                 if (nw->getForceExitNode() != nullptr){
-                    forceExitNode->addDependNode(nw->getForceExitNode());
+                    _forceExitNode->addDependNode(nw->getForceExitNode());
                 }
             }
-            forceExitNode->setDependStateJoinOp(BITWISE_OR);
-            forceExitNode->assign();
+            _forceExitNode->setDependStateJoinOp(BITWISE_OR);
+            _forceExitNode->assign();
 
         }
     }
-
-//    std::string FlowBlockBase::getDescribe(){
-//        assert(false);
-//    }
 
     std::vector<FlowBlockBase::sortEle> FlowBlockBase::sortSubAndConFbInOrder() {
 
         std::vector<sortEle> poolEle;
         /***pool sub block in to the array*/
-        for(int i = 0; i < subBlocks.size(); i++){
-            poolEle.push_back({subBlocks[i], subBlocksOrder[i]});
+        for(int i = 0; i < _subBlocks.size(); i++){
+            poolEle.push_back({_subBlocks[i], _subBlocksOrder[i]});
         }
-        for(int i = 0; i < conBlocks.size(); i++){
-            poolEle.push_back({conBlocks[i], conBlocksOrder[i]});
+        for(int i = 0; i < _conBlocks.size(); i++){
+            poolEle.push_back({_conBlocks[i], _conBlocksOrder[i]});
         }
         /**sort array*/
         std::sort(poolEle.begin(), poolEle.end());
@@ -133,6 +129,7 @@ namespace kathryn{
         /*** invoke prepare sim in subelement in order*/
         std::vector<FlowBlockBase::sortEle> poolEle = sortSubAndConFbInOrder();
         for (auto& pl: poolEle){
+            ////// recurent build track element to system
             pl.fb->beforePrepareSim({simMeta._writer->populateSubEle()});
         }
     }
@@ -142,7 +139,7 @@ namespace kathryn{
 
     std::string FBT_to_string(FLOW_BLOCK_TYPE fbt){
         std::string mapper[FLOW_BLOCK_COUNT] = {
-                "SEQUENTIAL",
+                "SEQUENTIAL", /** seq to par_no_syn do not reorder it due to controller pattern checking*/
                 "PARALLEL_AUTO_SYNC",
                 "PARALLEL_NO_SYN",
                 "CIF",

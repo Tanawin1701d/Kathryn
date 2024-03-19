@@ -34,7 +34,7 @@ namespace kathryn{
         }
     }
 
-    void ModelController::pushFlowBlock(kathryn::FlowBlockBase *fb) {
+    void ModelController::pushFlowBlock(FlowBlockBase* fb) {
         assert(fb != nullptr);
         for (int stIdx: fb->getSelFbStack()){
             logMF(fb, "push to stack " + std::to_string(stIdx));
@@ -55,9 +55,9 @@ namespace kathryn{
 
         /**get front node to inject the subblock*/
         FlowBlockBase* frontFb = getTopFlowBlockBase();
-        if (!isFlowBlockBaseofModuleInStack()){
+        if (!isTopFbBelongToTopModule()){
             logMF(topFb, "addFlowBlock to module");
-            Module* parentMod = getTargetModulePtr();
+            Module* parentMod = getTopModulePtr();
             parentMod->addFlowBlock(topFb);
         }else if (topFb->getJoinFbPol() == FLOW_JO_CON_FLOW){
             /**it is consecutive block*/
@@ -82,14 +82,13 @@ namespace kathryn{
 
     void ModelController::assignFlowBlockParent(FlowBlockBase* fb){
 
-
-
         /** assign master module*/
         Module* parentMod = getTargetModuleEle().md;
         assert(parentMod != nullptr);
         fb->setParent(parentMod);
 
-        if (isFlowBlockBaseofModuleInStack()){
+        /** assign master flow block*/
+        if (isTopFbBelongToTopModule()){
             FlowBlockBase* topFb = getTopFlowBlockBase();
             fb->setParent(topFb);
         }
@@ -104,10 +103,10 @@ namespace kathryn{
         return emptyStatus;
     }
 
-    bool ModelController::isFlowBlockBaseofModuleInStack(){
-        assert(getTargetModulePtr() != nullptr);
+    bool ModelController::isTopFbBelongToTopModule(){
+        assert(getTopModulePtr() != nullptr);
         return (!flowBlockStacks[FLOW_ST_BASE_STACK].empty()) &&
-                (flowBlockStacks[FLOW_ST_BASE_STACK].top()->getModuleParent() == getTargetModulePtr());
+                (flowBlockStacks[FLOW_ST_BASE_STACK].top()->getModuleParent() == getTopModulePtr());
 
     }
 
@@ -161,11 +160,12 @@ namespace kathryn{
 
     FLOW_BLOCK_TYPE ModelController::get_top_pattern_flow_block_type(){
 
-        bool ispattFlowBlockBaseofModuleInStack =
+        bool topPatternFbBelongToTopModule =
                   (!flowBlockStacks[FLOW_ST_PATTERN_STACK].empty())
-                && (flowBlockStacks[FLOW_ST_PATTERN_STACK].top()->getModuleParent() == getTargetModulePtr());
+                && (flowBlockStacks[FLOW_ST_PATTERN_STACK].top()->getModuleParent() == getTopModulePtr()
+                );
 
-        if (ispattFlowBlockBaseofModuleInStack){
+        if (topPatternFbBelongToTopModule){
             FlowBlockBase* fb = flowBlockStacks[FLOW_ST_PATTERN_STACK].top();
             assert(fb != nullptr);
             FLOW_BLOCK_TYPE fbType = fb->getFlowType();

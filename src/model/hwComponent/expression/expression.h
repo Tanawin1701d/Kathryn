@@ -69,11 +69,11 @@ namespace kathryn {
             mfAssert(false, "expr don't support generateAssMetaForNonBlocking"); assert(false);
         }
         /**override operable*/
-        [[nodiscard]]
-        Slice getOperableSlice() const override  { return getSlice(); }
-        [[nodiscard]]
-        Operable& getExactOperable() const override { return *(Operable*)(this);};
-        [[nodiscard]]
+//        [[nodiscard]]
+//        Slice getOperableSlice() const override  { return getSlice(); }
+//        [[nodiscard]]
+//        Operable& getExactOperable() const override { return *(Operable*)(this);};
+//        [[nodiscard]]
 
 
 

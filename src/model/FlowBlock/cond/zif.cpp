@@ -29,7 +29,7 @@ namespace kathryn{
 
     FlowBlockZIF::~FlowBlockZIF() {
         /**we will not delete basic nodes due to node ownership transfering*/
-        basicNodes.clear();
+        _basicNodes.clear();
     }
 
     void FlowBlockZIF::addElementInFlowBlock(Node* node) {
@@ -63,23 +63,23 @@ namespace kathryn{
 
     void FlowBlockZIF::buildHwComponent() {
         buildSubHwComponent();
-        assert(subBlocks.empty());
-        assert(!basicNodes.empty());
+        assert(_subBlocks.empty());
+        assert(!_basicNodes.empty());
 
         Operable* purifiedCurCond = purifyCondition(curCond);
         /**assign node condition to our basic Node */
-        for (auto nd: basicNodes){
+        for (auto nd: _basicNodes){
             assert(nd != nullptr);
             assert(purifiedCurCond != nullptr);
             nd->addCondtion(purifiedCurCond, BITWISE_AND);
         }
-        if (conBlocks.empty())
+        if (_conBlocks.empty())
             return;
         prevFalse = &(!(*purifiedCurCond));
         /**assign for each zelif block and zelse block*/
         bool elseDetected = false;
 
-        for (auto zelifBlock: conBlocks){
+        for (auto zelifBlock: _conBlocks){
             assert(zelifBlock->getFlowType() == ZELIF ||
                    zelifBlock->getFlowType() == ZELSE);
             auto* castedZelifBlock = (FlowBlockZELIF*)zelifBlock;
@@ -95,7 +95,7 @@ namespace kathryn{
                                               BITWISE_AND);
                 }
 
-                basicNodes.push_back(subBasicNode);
+                _basicNodes.push_back(subBasicNode);
             }
             if (castedZelifBlock->getCurCond() != nullptr) {
                 Operable* purifiedCond = purifyCondition(castedZelifBlock->getCurCond());

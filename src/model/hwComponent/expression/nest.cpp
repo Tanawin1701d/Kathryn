@@ -36,6 +36,13 @@ namespace kathryn{
     }
 
 
+    /**
+     *
+     * blocking assignment
+     *
+     * */
+
+
     nest& nest::operator<<=(Operable &b) {
         blockingAssignmentBase(b, getSlice());
         return *this;
@@ -58,6 +65,13 @@ namespace kathryn{
         /** update node*/
         ctrl->on_nest_update(asmNode, this);
     }
+
+    /***
+     *
+     *
+     * non blocking assignment
+     *
+     * */
 
     nest& nest::operator=(Operable &b) {
         nonBlockingAssignmentBase(b, getSlice());
@@ -136,6 +150,7 @@ namespace kathryn{
         Slice curSrcSlice   = absSrcSlice;
         int accumStart = 0;
         ///std::cout << "------------------------------------" << std::endl;
+        /** traverse to all nest list to assign balule*/
         for (NestMeta meta: _nestList){
 
             /** get neccessary data*/
@@ -204,6 +219,7 @@ namespace kathryn{
     }
 
     nest& nest::callBackBlockAssignFromAgent(Operable &b, Slice absSlice) {
+
         blockingAssignmentBase(b, absSlice);
         return *this;
     }

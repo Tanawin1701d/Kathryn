@@ -24,7 +24,7 @@ namespace kathryn{
 
     Wire& Wire::operator=(Operable &b) {
         assert(getAssignMode() == AM_MOD);
-        Slice absSlice = getSlice().getSubSliceWithShinkMsb({0, b.getOperableSlice().getSize()});
+        Slice absSlice = getSlice().getMatchSizeSubSlice( b.getOperableSlice());
         ctrl->on_wire_update(generateBasicNode(b, absSlice), this);
         return *this;
     }
@@ -165,10 +165,10 @@ namespace kathryn{
      * Wire Logic Sim
      * */
 
-    WireLogicSim::WireLogicSim(Wire* master,
-                               int sz,
+    WireLogicSim::WireLogicSim(Wire*        master,
+                               int          sz,
                                VCD_SIG_TYPE sigType,
-                               bool simForNext):
+                               bool         simForNext):
             LogicSimEngine(sz, sigType, simForNext),
             _master(master){}
 

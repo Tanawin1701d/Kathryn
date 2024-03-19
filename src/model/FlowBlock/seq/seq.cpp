@@ -235,7 +235,7 @@ namespace kathryn{
     void FlowBlockSeq::buildHwComponent() {
         buildSubHwComponent();
         mfAssert(!_subSeqMetas.empty(), "seqBlock has no assignment");
-        assert(conBlocks.empty());
+        assert(_conBlocks.empty());
         NodeWrapCycleDet cycleDet;
         /** generate hardware*/
         for (auto& seqMeta: _subSeqMetas) {
@@ -262,8 +262,8 @@ namespace kathryn{
         resultNodeWrap->addEntraceNodes((*_subSeqMetas.begin())->getEntranceNodes());
         resultNodeWrap->addExitNode((*_subSeqMetas.rbegin())->getStateFinishIden());
         resultNodeWrap->setCycleUsed(cycleDet.getCycleVertical());
-        if (areThereForceExit)
-            resultNodeWrap->addForceExitNode(forceExitNode);
+        if (_areThereForceExit)
+            resultNodeWrap->addForceExitNode(_forceExitNode);
 
     }
 

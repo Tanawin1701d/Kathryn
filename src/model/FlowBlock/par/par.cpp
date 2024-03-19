@@ -49,23 +49,23 @@ namespace kathryn{
     void
     FlowBlockPar::buildHwComponent() {
         buildSubHwComponent();
-        mfAssert((!basicNodes.empty()) || (!subBlocks.empty()),
+        mfAssert((!_basicNodes.empty()) || (!_subBlocks.empty()),
                  "parBlock has no assignment"
                  );
-        assert(conBlocks.empty());
+        assert(_conBlocks.empty());
 
         /** build node for basic assignment*/
-        if (!basicNodes.empty()){
+        if (!_basicNodes.empty()){
             basicStNode = new StateNode();
             basicStNode->setDependStateJoinOp(BITWISE_AND);
             /** add basic assignment to depend on stateNode*/
-            for (auto nd : basicNodes){
+            for (auto nd : _basicNodes){
                 nd->addDependNode(basicStNode);
                 nd->assign();
             }
         }
         /**build node wrap for flowblock and keepTrack that node have forceExitOpr*/
-        for (auto fb : subBlocks){
+        for (auto fb : _subBlocks){
             NodeWrap* nw = fb->sumarizeBlock();
             assert(nw != nullptr);
             nodeWrapOfSubBlock.push_back(nw);
@@ -107,8 +107,8 @@ namespace kathryn{
     }
 
     void FlowBlockPar::assignForceExitToRnw() {
-        if (areThereForceExit){
-            resultNodeWrap->addForceExitNode(forceExitNode);
+        if (_areThereForceExit){
+            resultNodeWrap->addForceExitNode(_forceExitNode);
         }
     }
 
@@ -191,12 +191,12 @@ namespace kathryn{
         setCurValSimStatus();
         bool isStateRunning = false;
         /** simulate each element*/
-        for (auto _sb: subBlocks){
+        for (auto _sb: _subBlocks){
             assert(_sb != nullptr);
             _sb->simStartCurCycle();
             isStateRunning |= _sb->isBlockOrNodeRunning();
         }
-        for (auto _bsAsmNd: basicNodes){
+        for (auto _bsAsmNd: _basicNodes){
             assert(_bsAsmNd != nullptr);
             _bsAsmNd->simStartCurCycle();
         }
@@ -204,10 +204,11 @@ namespace kathryn{
             basicStNode->simStartCurCycle();
             isStateRunning |= basicStNode->isBlockOrNodeRunning();
         }
-        if (synNode != nullptr){
-            synNode->simStartCurCycle();
-            isStateRunning |= synNode->isBlockOrNodeRunning();
-        }
+//        if (synNode != nullptr){
+//            /**syn node is not necessary anymore*/
+//            synNode->simStartCurCycle();
+//            isStateRunning |= synNode->isBlockOrNodeRunning();
+//        }
         if (pseudoExitNode != nullptr){
             pseudoExitNode->simStartCurCycle();
             isStateRunning |= pseudoExitNode->isBlockOrNodeRunning();
@@ -223,11 +224,11 @@ namespace kathryn{
     void FlowBlockPar::simExitCurCycle() {
         unSetSimStatus();
         unsetBlockOrNodeRunning();
-        for (auto _sb: subBlocks){
+        for (auto _sb: _subBlocks){
             assert(_sb != nullptr);
             _sb->simExitCurCycle();
         }
-        for (auto _bsAsmNd: basicNodes){
+        for (auto _bsAsmNd: _basicNodes){
             assert(_bsAsmNd != nullptr);
             _bsAsmNd->simExitCurCycle();
         }

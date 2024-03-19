@@ -91,11 +91,11 @@ namespace kathryn{
                                        bool isblockingAsm
                                        );
             /**override operable*/
-            [[nodiscard]]
-            Slice getOperableSlice() const override  { return getSlice(); }
-            [[nodiscard]]
-            Operable& getExactOperable() const override { return *(Operable*)(this);};
-            [[nodiscard]]
+//            [[nodiscard]]
+//            Slice getOperableSlice() const override  { return getSlice(); }
+//            [[nodiscard]]
+//            Operable& getExactOperable() const override { return *(Operable*)(this);};
+//            [[nodiscard]]
 
 
 

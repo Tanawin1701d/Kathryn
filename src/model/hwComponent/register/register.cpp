@@ -117,8 +117,9 @@ namespace kathryn{
 
     void Reg::callBackNonBlockAssignFromAgent(Operable &srcOpr, std::vector<AssignMeta *> &resultMetaCollector,
                                                Slice absSrcSlice, Slice absDesSlice) {
-        assert(getSlice().isContain(absDesSlice));
-        generateAssMetaForNonBlocking(srcOpr, resultMetaCollector, absSrcSlice, absDesSlice);
+        assert(false);
+        ///assert(getSlice().isContain(absDesSlice));
+        ///generateAssMetaForNonBlocking(srcOpr, resultMetaCollector, absSrcSlice, absDesSlice);
     }
 
     Operable* Reg::checkShortCircuit(){

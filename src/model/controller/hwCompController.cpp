@@ -9,9 +9,9 @@
 namespace kathryn{
 
 
-    Module* ModelController::getTargetModulePtr() {
+    Module* ModelController::getTopModulePtr() {
+        /** base line must be auto initialized */
         assert(!moduleStack.empty());
-        /** base line must me */
         return moduleStack.top().md;
     }
 
@@ -20,14 +20,13 @@ namespace kathryn{
         return moduleStack.top();
     }
 
-
     /**
      * state register handling
      *
      * */
     void ModelController::on_sp_reg_init(CtrlFlowRegBase* ptr, SP_REG_TYPE spRegType) {
         assert(ptr != nullptr);
-        Module* targetModulePtr = getTargetModulePtr();
+        Module* targetModulePtr = getTopModulePtr();
         /**localize necessary destination*/
         targetModulePtr->addSpReg(ptr, spRegType);
         ptr->setParent(targetModulePtr);
@@ -46,7 +45,7 @@ namespace kathryn{
     void ModelController::on_reg_init(Reg* ptr) {
         assert(ptr != nullptr);
         /** assign reg to module */
-        Module* targetModulePtr = getTargetModulePtr();
+        Module* targetModulePtr = getTopModulePtr();
         /** localize necessary destination*/
         targetModulePtr->addUserReg(ptr);
         ptr->setParent(targetModulePtr);
@@ -67,7 +66,7 @@ namespace kathryn{
         assert(asmNode != nullptr);
         tryPurifyFlowStack();
         asmNode->setDependStateJoinOp(BITWISE_AND);
-        assert(isFlowBlockBaseofModuleInStack());
+        assert(isTopFbBelongToTopModule());
         auto fb = getTopFlowBlockBase();
         fb->addElementInFlowBlock(asmNode);
         logMF(srcReg,
@@ -82,7 +81,7 @@ namespace kathryn{
      * */
     void ModelController::on_wire_init(Wire* ptr) {
         assert(ptr != nullptr);
-        Module* targetModulePtr = getTargetModulePtr();
+        Module* targetModulePtr = getTopModulePtr();
         /** localize necessary destination*/
         targetModulePtr->addUserWires(ptr);
         ptr->setParent(targetModulePtr);
@@ -104,7 +103,7 @@ namespace kathryn{
         tryPurifyFlowStack();
         asmNode->setDependStateJoinOp(BITWISE_AND);
         //assert(!flowBlockStack.empty());
-        if (isFlowBlockBaseofModuleInStack()) {
+        if (isTopFbBelongToTopModule()) {
             /**in flow block*/
             auto fb = getTopFlowBlockBase();
             fb->addElementInFlowBlock(asmNode);
@@ -114,7 +113,7 @@ namespace kathryn{
             asmNode->dryAssign();
             logMF(srcWire,
                   "user wire is updatting without flowblock");
-            Module* targetModulePtr = getTargetModulePtr();
+            Module* targetModulePtr = getTopModulePtr();
             targetModulePtr->addAsmNode(asmNode);
         }
     }
@@ -122,7 +121,7 @@ namespace kathryn{
     /** exprMetas*/
     void ModelController::on_expression_init(expression* ptr) {
         assert(ptr != nullptr);
-        Module* targetModulePtr = getTargetModulePtr();
+        Module* targetModulePtr = getTopModulePtr();
         /** localize necessary destination*/
         targetModulePtr->addUserExpression(ptr);
         ptr->setParent(targetModulePtr);
@@ -135,7 +134,7 @@ namespace kathryn{
     /** memBlock*/
     void ModelController::on_memBlk_init(MemBlock* ptr){
         assert(ptr != nullptr);
-        Module* targetModulePtr = getTargetModulePtr();
+        Module* targetModulePtr = getTopModulePtr();
         /** localize it*/
         /** localize necessary destination*/
         targetModulePtr->addUserMemBlk(ptr);
@@ -156,7 +155,7 @@ namespace kathryn{
         assert(asmNode != nullptr);
         tryPurifyFlowStack();
         asmNode->setDependStateJoinOp(BITWISE_AND);
-        assert(isFlowBlockBaseofModuleInStack());
+        assert(isTopFbBelongToTopModule());
         auto fb = getTopFlowBlockBase();
         fb->addElementInFlowBlock(asmNode);
         logMF(srcHolder,
@@ -166,7 +165,7 @@ namespace kathryn{
     /** exprMetas*/
     void ModelController::on_nest_init(nest* ptr) {
         assert(ptr != nullptr);
-        Module* targetModulePtr = getTargetModulePtr();
+        Module* targetModulePtr = getTopModulePtr();
         /** localize necessary destination*/
         targetModulePtr->addUserNest(ptr);
         ptr->setParent(targetModulePtr);
@@ -187,7 +186,7 @@ namespace kathryn{
         tryPurifyFlowStack();
         asmNode->setDependStateJoinOp(BITWISE_AND);
         //assert(!flowBlockStack.empty());
-        if (isFlowBlockBaseofModuleInStack()) {
+        if (isTopFbBelongToTopModule()) {
             /**in flow block*/
             auto fb = getTopFlowBlockBase();
             fb->addElementInFlowBlock(asmNode);
@@ -197,7 +196,7 @@ namespace kathryn{
             asmNode->dryAssign();
             logMF(srcWire,
                   "user nest is updating without flowblock");
-            Module* targetModulePtr = getTargetModulePtr();
+            Module* targetModulePtr = getTopModulePtr();
             targetModulePtr->addAsmNode(asmNode);
         }
     }
@@ -206,7 +205,7 @@ namespace kathryn{
     /** value*/
     void ModelController::on_value_init(Val* ptr) {
         assert(ptr != nullptr);
-        Module* targetModulePtr = getTargetModulePtr();
+        Module* targetModulePtr = getTopModulePtr();
         /** localize necessary destination*/
         targetModulePtr->addUserVal(ptr);
         ptr->setParent(targetModulePtr);
@@ -243,7 +242,7 @@ namespace kathryn{
         /**check that module initialization is in construct state not in designflow constructing*/
         assert(getTargetModuleEle().state == MODULE_COMPONENT_CONSTRUCT);
         /** previous module*/
-        Module* targetModulePtr = getTargetModulePtr();
+        Module* targetModulePtr = getTopModulePtr();
         targetModulePtr->addUserSubModule(ptr);
         /** current module*/
         /**at least module must be other submodule*/
@@ -257,7 +256,7 @@ namespace kathryn{
     }
 
     void ModelController::on_module_init_designFlow(Module* ptr) {
-        Module* topModule = getTargetModulePtr();
+        Module* topModule = getTopModulePtr();
         assert(topModule == ptr);
         moduleStack.top().state = MODULE_DESIGN_FLOW_CONSTRUCT;
         /** debug value*/

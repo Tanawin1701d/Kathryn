@@ -34,7 +34,7 @@ namespace kathryn{
     }
 
 
-    Operable *Val::checkShortCircuit() {
+    Operable* Val::checkShortCircuit() {
         return nullptr;
     }
 

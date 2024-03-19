@@ -22,6 +22,7 @@ namespace kathryn{
 
     }
 
+    //// legacy
     bool thereAreStateLessConnection(std::vector<Node*> nds, Node* startNode) {
 
         assert(!startNode->isStateFullNode());

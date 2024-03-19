@@ -60,7 +60,7 @@ namespace kathryn {
     }
 
     Operable* SyncReg::generateEndExpr(){
-        return (&(((*this) | (*testExpr)) == upFullState));
+        return &(((*this) | (*testExpr)) == upFullState);
     }
 
     bool SyncReg::isSimAtFullSyn() {

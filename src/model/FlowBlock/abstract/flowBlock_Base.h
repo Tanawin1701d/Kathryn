@@ -22,7 +22,7 @@ namespace kathryn {
     /** it is basic node that only have one event at a node */
     class ModelController;
     enum FLOW_BLOCK_TYPE{
-        SEQUENTIAL,
+        SEQUENTIAL, /** seq to par_no_syn do not reorder it due to controller pattern checking*/
         PARALLEL_AUTO_SYNC,
         PARALLEL_NO_SYN,
         CIF,
@@ -45,7 +45,7 @@ namespace kathryn {
     enum FLOW_STACK_TYPE{
         FLOW_ST_BASE_STACK = 0,
         FLOW_ST_PATTERN_STACK = 1,    /**for seq par*/
-        FLOW_ST_HEAD_COND_STACK = 2, /**for if else**/
+        FLOW_ST_HEAD_COND_STACK = 2, /**for if only**/
         FLOW_ST_CNT = 3
     };
 
@@ -84,12 +84,12 @@ namespace kathryn {
 
         int nextInputOrder = 0;
         /** flow element*/
-        std::vector<FlowBlockBase*> subBlocks;
-        std::vector<int>            subBlocksOrder; //// input order in this block
-        std::vector<FlowBlockBase*> conBlocks;
-        std::vector<int>            conBlocksOrder; //// input order in this block
-        std::vector<Node*>          basicNodes;
-        std::vector<int>            basicNodesOrder; //// input order in this block
+        std::vector<FlowBlockBase*> _subBlocks;
+        std::vector<int>            _subBlocksOrder; //// input order in this block
+        std::vector<FlowBlockBase*> _conBlocks;
+        std::vector<int>            _conBlocksOrder; //// input order in this block
+        std::vector<Node*>          _basicNodes;
+        std::vector<int>            _basicNodesOrder; //// input order in this block
 
         /** status of node*/
         FLOW_BLOCK_TYPE             _type;
@@ -97,22 +97,22 @@ namespace kathryn {
         bool                        lazyDeletedRequired = false;
         int                         _fbId;
         /** controller interactive element*/
-        FB_CTRL_COM_META                 _fbCtrlComMeta;
+        FB_CTRL_COM_META            _fbCtrlComMeta;
         /*** for exit management*/
-        bool                        areThereForceExit = false;
-        PseudoNode*                 forceExitNode = nullptr;
+        bool                        _areThereForceExit = false;
+        PseudoNode*                 _forceExitNode     = nullptr;
 
         /** generate implicit subblock typically used with if and while block*/
         FlowBlockBase* genImplicitSubBlk(FLOW_BLOCK_TYPE defaultType);
         void           genSumForceExitNode(std::vector<NodeWrap*>& nws);
         Operable*      purifyCondition(Operable* rawOpr);
     public:
-        explicit  FlowBlockBase(FLOW_BLOCK_TYPE  type,
-                                FB_CTRL_COM_META fbCtrlComMeta);
-        virtual  ~FlowBlockBase();
+        explicit       FlowBlockBase(FLOW_BLOCK_TYPE  type,
+                                     FB_CTRL_COM_META fbCtrlComMeta);
+        virtual        ~FlowBlockBase();
 
-        SimEngine* getSimEngine() override{
-            return static_cast<SimEngine*>(this);
+        SimEngine*     getSimEngine() override{
+                return static_cast<SimEngine*>(this);
         }
         /**
          * entrance to make controller interact with
@@ -120,20 +120,20 @@ namespace kathryn {
         /** when basic behavior describe in flow block*/
         virtual void addElementInFlowBlock(Node* node){
             assert(node != nullptr);
-            basicNodes.push_back(node);
-            basicNodesOrder.push_back(nextInputOrder++);
+            _basicNodes.push_back(node);
+            _basicNodesOrder.push_back(nextInputOrder++);
         };
         /** when inside complex element such as sub flow block is finish, user must add here*/
         virtual void addSubFlowBlock(FlowBlockBase* subBlock){
             assert(subBlock != nullptr);
-            subBlocks.push_back(subBlock);
-            subBlocksOrder.push_back(nextInputOrder++);
+            _subBlocks.push_back(subBlock);
+            _subBlocksOrder.push_back(nextInputOrder++);
         };
         /** add sub con block as consecutive block*/
         virtual void addConFlowBlock(FlowBlockBase* conBlock){
             assert(conBlock != nullptr);
-            conBlocks.push_back(conBlock);
-            conBlocksOrder.push_back(nextInputOrder++);
+            _conBlocks.push_back(conBlock);
+            _conBlocksOrder.push_back(nextInputOrder++);
         }
         /**
          * For custom block
@@ -150,11 +150,11 @@ namespace kathryn {
         FLOW_BLOCK_TYPE     getFlowType() const {return _type;}
         int                 getFlowBlockId() const{return _fbId;}
         std::vector<Node*>&
-                            getBasicNode(){return basicNodes;}
+                            getBasicNode(){return _basicNodes;}
         std::vector<FlowBlockBase*>&
-                            getSubBlocks(){return subBlocks;}
+                            getSubBlocks(){return _subBlocks;}
         std::vector<FlowBlockBase*>&
-                            getConBlocks(){return conBlocks;}
+                            getConBlocks(){return _conBlocks;}
         /** lazy delete is the variable that tell controller whether
          * block should be pop from building stack when purifier is done
          * not when block is detach. Usually, It is used in if block
@@ -166,14 +166,14 @@ namespace kathryn {
         [[nodiscard]]
         std::vector<FLOW_STACK_TYPE> getSelFbStack() const {return _fbCtrlComMeta._selFlowStack;}
         [[nodiscard]]
-        FLOW_BLOCK_JOIN_POLICY       getJoinFbPol()  const {return _fbCtrlComMeta._joinPolicy;}
+        FLOW_BLOCK_JOIN_POLICY       getJoinFbPol()  const {return _fbCtrlComMeta._joinPolicy;  }
         [[nodiscard]]
-        bool                         getPurifyReq()  const { return _fbCtrlComMeta.reqPurify; }
+        bool                         getPurifyReq()  const {return _fbCtrlComMeta.reqPurify;    }
 
         /** debug method*/
         std::string getMdDescribeRecur() {
             std::string ret = "----------- sub Block --------\n";
-            for (auto sb : subBlocks){
+            for (auto sb : _subBlocks){
                 ret += sb->getMdDescribe();
                 ret += "\n";
             }
@@ -181,10 +181,10 @@ namespace kathryn {
         }
 
         void addMdLogRecur(MdLogVal *mdLogVal){
-            if (subBlocks.empty())
+            if (_subBlocks.empty())
                 return;
             mdLogVal->addVal("-----sub block------");
-            for (auto sb: subBlocks){
+            for (auto sb: _subBlocks){
                 auto subStruct = mdLogVal->makeNewSubVal();
                 sb->addMdLog(subStruct);
             }

@@ -20,9 +20,9 @@ namespace kathryn{
     void FlowBlockSWhile::buildHwComponent() {
         buildSubHwComponent();
 
-        assert(conBlocks.empty());
-        assert(subBlocks.size() == 1);
-        subBlockNodeWrap = subBlocks[0]->sumarizeBlock();
+        assert(_conBlocks.empty());
+        assert(_subBlocks.size() == 1);
+        subBlockNodeWrap = _subBlocks[0]->sumarizeBlock();
         assert(subBlockNodeWrap != nullptr);
 
         resultNodeWrapper = new NodeWrap();
@@ -109,12 +109,12 @@ namespace kathryn{
         }
         setCurValSimStatus();
         bool isStateRunning = false;
-        for (auto _sb: subBlocks){
+        for (auto _sb: _subBlocks){
             assert(_sb != nullptr);
             _sb->simStartCurCycle();
             isStateRunning |= _sb->isBlockOrNodeRunning();
         }
-        for (auto _bsAsmNd: basicNodes){
+        for (auto _bsAsmNd: _basicNodes){
             assert(_bsAsmNd != nullptr);
             _bsAsmNd->simStartCurCycle();
         }
@@ -133,11 +133,11 @@ namespace kathryn{
     void FlowBlockSWhile::simExitCurCycle() {
         unSetSimStatus();
         unsetBlockOrNodeRunning();
-        for (auto _sb: subBlocks){
+        for (auto _sb: _subBlocks){
             assert(_sb != nullptr);
             _sb->simExitCurCycle();
         }
-        for (auto _bsAsmNd: basicNodes){
+        for (auto _bsAsmNd: _basicNodes){
             assert(_bsAsmNd != nullptr);
             _bsAsmNd->simExitCurCycle();
         }

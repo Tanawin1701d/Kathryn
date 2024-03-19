@@ -108,10 +108,10 @@ namespace kathryn{
         }
 
         /** override operable*/
-        [[nodiscard]]
-        Slice     getOperableSlice() const override { return Slice{0, _size};}
-        [[nodiscard]]
-        Operable& getExactOperable() const override {return (Operable &) *this;}
+//        [[nodiscard]]
+//        Slice     getOperableSlice() const override { return Slice{0, _size};}
+//        [[nodiscard]]
+//        Operable& getExactOperable() const override {return (Operable &) *this;}
 
         /** assign todo we will assign it later*/
         SliceAgent<Val>& operator() (int start, int stop) override;

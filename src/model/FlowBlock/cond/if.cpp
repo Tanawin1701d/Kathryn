@@ -84,7 +84,7 @@ namespace kathryn{
         assert(!allCondes.empty());
         assert(allPurifiedCondes.size() == allCondes.size());
         /**add execution block in if block to consider vector*/
-        allStatement.insert(allStatement.begin(), subBlocks[0]->sumarizeBlock());
+        allStatement.insert(allStatement.begin(), _subBlocks[0]->sumarizeBlock());
         assert(!allStatement.empty());
 
         /**add condition to state*/
@@ -155,8 +155,8 @@ namespace kathryn{
 
         /**force exit condition*/
         genSumForceExitNode(allStatement);
-        if (areThereForceExit)
-            resultNodeWrap->addForceExitNode(forceExitNode);
+        if (_areThereForceExit)
+            resultNodeWrap->addForceExitNode(_forceExitNode);
 
         /**cycle determiner*/
         NodeWrapCycleDet deter;
@@ -197,7 +197,7 @@ namespace kathryn{
                              "  " +
                              resultNodeWrap->getForceExitNode()->getMdDescribe());
         }
-        for (auto sb : subBlocks){
+        for (auto sb : _subBlocks){
             std::string subBlockHeaderDebug = "----> subblock " + std::to_string(cnt) + " condition ";
             if (cnt < allCondes.size()) {
                 subBlockHeaderDebug += allCondes[cnt]->castToIdent()->getIdentDebugValue();
@@ -226,12 +226,12 @@ namespace kathryn{
 
         bool isStateRunning = false;
         /** simulate */
-        for(auto sb: subBlocks){
+        for(auto sb: _subBlocks){
             sb->simStartCurCycle();
             isStateRunning |= sb->isBlockOrNodeRunning();
         }
 
-        for(auto cb: conBlocks){
+        for(auto cb: _conBlocks){
             cb->simStartCurCycle();
             isStateRunning |= cb->isBlockOrNodeRunning();
         }
@@ -252,10 +252,10 @@ namespace kathryn{
     void FlowBlockIf::simExitCurCycle() {
         unSetSimStatus();
         unsetBlockOrNodeRunning();
-        for(auto sb: subBlocks){
+        for(auto sb: _subBlocks){
             sb->simExitCurCycle();
         }
-        for(auto cb: conBlocks){
+        for(auto cb: _conBlocks){
             cb->simExitCurCycle();
         }
 

@@ -121,8 +121,8 @@ namespace kathryn{
 
 
     /*** override Operable*/
-    Slice MemBlockEleHolder::getOperableSlice() const {return getSlice();}
-    Operable &MemBlockEleHolder::getExactOperable() const { return (Operable &)(*this);}
+//    Slice MemBlockEleHolder::getOperableSlice() const {return getSlice();}
+//    Operable &MemBlockEleHolder::getExactOperable() const { return (Operable &)(*this);}
     Identifiable* MemBlockEleHolder::castToIdent() {return this;}
 
     ValRep &MemBlockEleHolder::sv(){assert(false);}
@@ -196,13 +196,14 @@ namespace kathryn{
     }
 
     void MemEleHolderLogicSim::simStartNextCycle() {
-        ////// then copy the value to destination first incase value is not update
         assert(!isReadMode());
         ////// curAgentVal is assigned already
         assert(isNextValSim() == false);
         setNextValSimStatus();
         /// std::cout << "next======" << std::endl;
 
+        /////// copy current value to _nextAgentVal first then assign next value
+        ////////// fyi getCurmemval is pointer to origin value
         _nextAgentVal = _master->getCurMemVal();
         _master->assignValRepCurCycle(_nextAgentVal);
     }

@@ -31,7 +31,7 @@ namespace kathryn{
 
         NodeWrap() = default;
 
-        NodeWrap &operator=(const NodeWrap& rhs) {
+        NodeWrap& operator=(const NodeWrap& rhs) {
             if (&rhs == this) {
                 return *this;
             }
@@ -43,6 +43,7 @@ namespace kathryn{
             /** exit expression is not copied*/
             exitNode  = rhs.exitNode;
             forceExitNode = rhs.forceExitNode;
+            cycleUsed     = rhs.cycleUsed;
             return *this;
         }
 
