@@ -71,6 +71,7 @@ namespace kathryn {
                      "des expression assign wrapper doesn't cover entire expression");
             mfAssert(absSrcSlice.getSize() >= getSlice().getSize(),
                      "src expression assign wrapper doesn't cover entire expression");
+            doGlobalAsm(srcOpr, resultMetaCollector, absSrcSlice, absDesSlice);
         }
 
         expression& operator = (Operable& b)  { operatorEq(b);                                return *this;}
