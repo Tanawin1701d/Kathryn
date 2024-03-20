@@ -17,6 +17,7 @@ namespace kathryn {
     private:
         StateNode*  conNode       = nullptr;
         PseudoNode* backToConNode = nullptr;
+        PseudoNode* exposedConNode= nullptr; ///// the trigger from outer node to prevent conflict between con node and backto connode
 
         PseudoNode* normalExit    = nullptr;
 

@@ -176,9 +176,9 @@ namespace kathryn{
         assert(_conBlocks.empty());
 
         /** build node*/
-        if (cnt != nullptr)
+        if (cnt != nullptr) {
             _waitNode = new WaitCycleNode(cnt);
-        else {
+        }else {
             assert(cycle > 0);
             _waitNode = new WaitCycleNode(cycle);
         }

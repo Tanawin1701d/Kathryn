@@ -28,6 +28,7 @@ namespace kathryn{
         resultNodeWrapper = new NodeWrap();
         conNode           = new StateNode();
         backToConNode     = new PseudoNode(1);
+        exposedConNode    = new PseudoNode(1);
 
         normalExit        = new PseudoNode(1);
         exitNode          = new PseudoNode(1);
@@ -46,9 +47,16 @@ namespace kathryn{
         backToConNode->setDependStateJoinOp(BITWISE_AND);
         backToConNode->assign();
 
-        /***con node  no need to assign due to it upper block assignment**/
+        /**outer node*/
+        exposedConNode->setDependStateJoinOp(BITWISE_AND);
+             ////// exposedConnode wait for uppoer assign
+
+
+        /***con node  **/
         conNode->addDependNode(backToConNode);
+        conNode->addDependNode(exposedConNode);
         conNode->setDependStateJoinOp(BITWISE_OR);
+        conNode->assign();
         /***
          *
          * exit node
@@ -77,7 +85,7 @@ namespace kathryn{
          subBlockNodeWrap->addConditionToAllNode(_purifiedCondExpr, BITWISE_AND);
          subBlockNodeWrap->assignAllNode();
 
-         resultNodeWrapper->addEntraceNode(conNode);
+         resultNodeWrapper->addEntraceNode(exposedConNode);
          resultNodeWrapper->addExitNode(exitNode);
 
     }
