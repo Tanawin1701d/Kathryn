@@ -34,7 +34,7 @@ namespace kathryn{
                 c <<= bnk;
                 ota <<= bnk - one;
                 maxReg <<= maxer + two;
-                bwOrReg <<= bnk | one;
+                bwOrReg <<= bnk | (one & one);
             }
 
         }

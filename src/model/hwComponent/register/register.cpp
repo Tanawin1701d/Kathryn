@@ -15,52 +15,33 @@ namespace kathryn{
                       hwType,
                       new RegLogicSim(this, size, VST_REG, true),
                       requiredAllocCheck){
+        AssignOpr::setMaster(this);
+        AssignCallbackFromAgent::setMaster(this);
         if (initCom) {
             com_init();
         }
+        AssignOpr::setMaster(this);
+        AssignCallbackFromAgent::setMaster(this);
     }
 
     void Reg::com_init() {
         ctrl->on_reg_init(this);
     }
 
-    Reg& Reg::operator<<=(Operable &b) {
+    void Reg::doBlockAsm(Operable&b, Slice desSlice) {
         assert(getAssignMode() == AM_MOD);
-        Slice absSlice = getSlice().getSubSliceWithShinkMsb({0, b.getOperableSlice().getSize()});
-        ctrl->on_reg_update(generateBasicNode(b, absSlice), this);
-        return *this;
+        assert(desSlice.getSize() <= getSlice().getSize());
+        assert(desSlice.stop <= getSlice().stop);
+        /** bit control policy is shink the msb bit*/
+        Slice finalizeDesSlice = desSlice.getMatchSizeSubSlice(b.getOperableSlice());
+        ctrl->on_reg_update(
+                generateBasicNode(b, finalizeDesSlice),
+                this
+        );
     }
 
-    Reg& Reg::operator <<= (ull b) {
-        assert(getAssignMode() == AM_MOD);
-        Operable& rhs = getMatchAssignOperable(b, getSlice().getSize());
-        return operator<<=(rhs);
-    }
-
-    void Reg::generateAssMetaForBlocking(Operable& srcOpr,
-                                         std::vector<AssignMeta*>& resultMetaCollector,
-                                         Slice  absSrcSlice,
-                                         Slice  absDesSlice) {
-        generateAssignMetaAndFill(srcOpr,
-                                  resultMetaCollector,
-                                  absSrcSlice,
-                                  absDesSlice);
-    }
-
-    Reg& Reg::operator=(Operable& b) {
-        /** todo first version we not support this operator*/
-        mfAssert(false, "reg don't support this = assigment");
-        assert(false);
-    }
-
-    Reg& Reg::operator=(ull b){
-        assert(getAssignMode() == AM_SIM);
-        assignSimValue(b);
-        return *this;
-    }
-
-    Reg& Reg::operator=(Reg& b){
-        assert(false);
+    void Reg::doNonBlockAsm(Operable&b, Slice desSlice){
+        mfAssert(false, "register doesn't support nonblocking assignment");
     }
 
     /** slicable override*/
@@ -81,7 +62,7 @@ namespace kathryn{
     }
 
     Operable* Reg::doSlice(Slice sl){
-        auto x = operator() (sl.start, sl.stop);
+        auto& x = operator() (sl.start, sl.stop);
         return x.castToOperable();
     }
 
@@ -97,35 +78,9 @@ namespace kathryn{
         addUpdateMeta(rstEvent);
     }
 
-    Reg& Reg::callBackBlockAssignFromAgent(Operable &b, Slice absSliceOfHost) {
-        assert(absSliceOfHost.getSize() <= getOperableSlice().getSize());
-        assert(absSliceOfHost.stop      <= getOperableSlice().stop);
-        Slice absSlice = absSliceOfHost.getSubSliceWithShinkMsb({0, b.getOperableSlice().getSize()});
-        ctrl->on_reg_update(generateBasicNode(b, absSlice), this);
-        return *this;
-    }
-
-    Reg &Reg::callBackNonBlockAssignFromAgent(Operable &b, Slice absSliceOfHost) {
-        assert(false);
-    }
-
-    void Reg::callBackBlockAssignFromAgent(Operable &srcOpr, std::vector<AssignMeta *> &resultMetaCollector,
-                                            Slice absSrcSlice, Slice absDesSlice) {
-        assert(getSlice().isContain(absDesSlice));
-        generateAssMetaForBlocking(srcOpr, resultMetaCollector, absSrcSlice, absDesSlice);
-    }
-
-    void Reg::callBackNonBlockAssignFromAgent(Operable &srcOpr, std::vector<AssignMeta *> &resultMetaCollector,
-                                               Slice absSrcSlice, Slice absDesSlice) {
-        assert(false);
-        ///assert(getSlice().isContain(absDesSlice));
-        ///generateAssMetaForNonBlocking(srcOpr, resultMetaCollector, absSrcSlice, absDesSlice);
-    }
-
     Operable* Reg::checkShortCircuit(){
         return nullptr;
     }
-
 
     /**
      * Reg Logic Sim

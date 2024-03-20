@@ -15,13 +15,14 @@ namespace kathryn {
                                                   false,
                                                   TYPE_STATE_REG,
                                                   false),
-              upState      (_make<Val>("upState"      , 1  , 1)),
-              upFullState  (_make<Val>("upFullState"  ,genBiConValRep(true , size))),
-              downFullState(_make<Val>("downFullState",genBiConValRep(false, size))),
-              testExpr(new expression(size)),
-              nextFillActivateId(0)
+                                upState      (_make<Val>("upState"      , 1  , 1)),
+                                upFullState  (_make<Val>("upFullState"  ,genBiConValRep(true , size))),
+                                downFullState(_make<Val>("downFullState",genBiConValRep(false, size))),
+                                testWire(_make<Wire>("testSyncWire", size)),
+                                nextFillActivateId(0)
     {
         com_init();
+        assert(size > 0);
     };
 
     UpdateEvent* SyncReg::addDependState(Operable* dependState, Operable* activateCond){
@@ -31,14 +32,16 @@ namespace kathryn {
                                        &upState,
                                        Slice({nextFillActivateId, nextFillActivateId + 1}),
                                        DEFAULT_UE_PRI_INTERNAL_MAX});
-
-        ////// assign observe wire
-        if (activateCond == nullptr) {
-            (*testExpr)(nextFillActivateId) = *dependState;
-        }else{
-            (*testExpr)(nextFillActivateId) = (*dependState) & (*activateCond);
-        }
         addUpdateMeta(event);
+        ////// assign observe wire
+        auto* testEvent = new UpdateEvent({
+            activateCond,
+            dependState,
+            &upState,
+            Slice({nextFillActivateId, nextFillActivateId + 1}),
+            DEFAULT_UE_PRI_INTERNAL_MAX
+        });
+        testWire.addUpdateMeta(testEvent);
 
         nextFillActivateId++;
         assert(nextFillActivateId <= getSlice().getSize());
@@ -51,7 +54,7 @@ namespace kathryn {
         ////// unset also testExpr
         auto* event = new UpdateEvent({
             nullptr,
-            &(((*this) | (*testExpr)) == upFullState),
+            &(((*this) | testWire) == upFullState),
             &downFullState,
             Slice({0, getSlice().getSize()}),
             DEFAULT_UE_PRI_INTERNAL_MIN
@@ -60,7 +63,7 @@ namespace kathryn {
     }
 
     Operable* SyncReg::generateEndExpr(){
-        return &(((*this) | (*testExpr)) == upFullState);
+        return &(((*this) | testWire) == upFullState);
     }
 
     bool SyncReg::isSimAtFullSyn() {

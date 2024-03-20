@@ -19,11 +19,14 @@ namespace kathryn{
                           TYPE_EXPRESSION,
                           new expressionLogicSim(this, exp_size,VST_WIRE, false),
                           false),
+    _valueAssinged(true),
     _op(op),
     _a(const_cast<Operable *>(a)),
     _b(const_cast<Operable *>(b))
     {
         com_init();
+        AssignOpr::setMaster(this);
+        AssignCallbackFromAgent::setMaster(this);
     }
 
     expression::expression(int exp_size):
@@ -31,10 +34,13 @@ namespace kathryn{
                           TYPE_EXPRESSION,
                           new expressionLogicSim(this, exp_size,VST_WIRE, false),
                           false),
+    _valueAssinged(false),
     _op(ASSIGN),
     _a(nullptr),
     _b(nullptr){
         com_init();
+        AssignOpr::setMaster(this);
+        AssignCallbackFromAgent::setMaster(this);
     }
 
 
@@ -42,21 +48,15 @@ namespace kathryn{
         ctrl->on_expression_init(this);
     }
 
-    expression& expression::operator=(Operable &b) {
+    void expression::doNonBlockAsm(Operable &b, Slice desSlice) {
         mfAssert(getAssignMode() == AM_MOD, "expression can use operator = only in MD mode");
         _a = &b;
         assert(b.getOperableSlice().getSize() == getOperableSlice().getSize());
-        return *this;
+        assert(desSlice.getSize() == getOperableSlice().getSize());
+        mfAssert(!_valueAssinged, "multiple expression assign detect");
+        _valueAssinged = true;
     }
 
-    expression& expression::operator=(expression& b){
-        mfAssert(getAssignMode() == AM_MOD, "expression can use operator = only in MD mode");
-        if (this == &b){
-            return *this;
-        }
-        operator=(*(Operable*)&b);
-        return *this;
-    }
 
 
     SliceAgent<expression>& expression::operator()(int start, int stop) {
@@ -70,18 +70,8 @@ namespace kathryn{
     }
 
     Operable* expression::doSlice(Slice sl){
-        auto x = operator() (sl.start, sl.stop);
+        auto& x = operator() (sl.start, sl.stop);
         return x.castToOperable();
-    }
-
-    expression& expression::callBackBlockAssignFromAgent(Operable &b, Slice absSlice) {
-        std::cout << "exprMetas should not be assign in slice mode" << std::endl;
-        assert(false);
-    }
-
-    expression& expression::callBackNonBlockAssignFromAgent(Operable &b, Slice absSlice) {
-        std::cout << "exprMetas should not be assign in slice mode" << std::endl;
-        assert(false);
     }
 
     Operable* expression::checkShortCircuit(){

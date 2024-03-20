@@ -26,7 +26,8 @@ namespace kathryn{
             cwhile(cond){
                 zif(a > b){
                     a <<= a + one;
-                }zelif(a < b){
+                }
+                zelif(a < b){
                     a <<= a + two;
                     zif(a > b){
                         b <<= b - one;

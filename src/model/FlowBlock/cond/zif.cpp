@@ -20,11 +20,11 @@ namespace kathryn{
                   FLOW_JO_EXT_FLOW,
                   true
                   }),
-            curCond(&cond),
-            prevFalse(nullptr)
+            purifiedCurCond(&(*purifyCondition(&cond)))
     {
         ///assert(flowBlockType == ZIF);
-        assert(curCond != nullptr);
+        prevFalses.push_back(&(!(*purifiedCurCond)));
+        assert(purifiedCurCond != nullptr);
     }
 
     FlowBlockZIF::~FlowBlockZIF() {
@@ -35,6 +35,7 @@ namespace kathryn{
     void FlowBlockZIF::addElementInFlowBlock(Node* node) {
         assert(node != nullptr);
         FlowBlockBase::addElementInFlowBlock(node);
+        node->addCondtion(purifiedCurCond, BITWISE_AND);
     }
 
     void FlowBlockZIF::addSubFlowBlock(FlowBlockBase *subBlock) {
@@ -42,10 +43,31 @@ namespace kathryn{
     }
 
     void FlowBlockZIF::addConFlowBlock(FlowBlockBase *fb) {
+        assert(!lastZelifDetected);
+        assert(!prevFalses.empty());
         assert(fb != nullptr);
         assert(fb->getFlowType() == ZELIF || fb->getFlowType() == ZELSE);
         /** call base function*/
         FlowBlockBase::addConFlowBlock(fb);
+        FlowBlockZELIF* castedZelif = (FlowBlockZELIF*)fb;
+
+        Operable* prevFalse = *prevFalses.rbegin();
+        /**get next activate cond*/
+        /** assign activate cond and extract node*/
+        for (auto insideNode: fb->getBasicNode()){
+            assert(insideNode != nullptr);
+            insideNode->addCondtion(*prevFalses.rbegin(), BITWISE_AND);
+            FlowBlockBase::addElementInFlowBlock(insideNode);
+        }
+        /** generate next prev false*/
+        if (castedZelif->getPurifiedCurCond() == nullptr){
+            lastZelifDetected = true;
+        }else{
+            prevFalses.push_back(
+                    &((*prevFalse) & (!(*castedZelif->getPurifiedCurCond())))
+            );
+        }
+
     }
 
     NodeWrap *FlowBlockZIF::sumarizeBlock() {
@@ -62,47 +84,7 @@ namespace kathryn{
     }
 
     void FlowBlockZIF::buildHwComponent() {
-        buildSubHwComponent();
-        assert(_subBlocks.empty());
-        assert(!_basicNodes.empty());
-
-        Operable* purifiedCurCond = purifyCondition(curCond);
-        /**assign node condition to our basic Node */
-        for (auto nd: _basicNodes){
-            assert(nd != nullptr);
-            assert(purifiedCurCond != nullptr);
-            nd->addCondtion(purifiedCurCond, BITWISE_AND);
-        }
-        if (_conBlocks.empty())
-            return;
-        prevFalse = &(!(*purifiedCurCond));
-        /**assign for each zelif block and zelse block*/
-        bool elseDetected = false;
-
-        for (auto zelifBlock: _conBlocks){
-            assert(zelifBlock->getFlowType() == ZELIF ||
-                   zelifBlock->getFlowType() == ZELSE);
-            auto* castedZelifBlock = (FlowBlockZELIF*)zelifBlock;
-            /** extract the sub element*/
-            for (auto subBasicNode : castedZelifBlock->getBasicNode()){
-                if (castedZelifBlock->getCurCond() == nullptr){
-                    elseDetected = true;
-                    subBasicNode->addCondtion(prevFalse,BITWISE_AND);
-                }else{
-                    assert(!elseDetected);
-                    Operable* purifiedCond = purifyCondition(castedZelifBlock->getCurCond());
-                    subBasicNode->addCondtion(&((*prevFalse) && (*purifiedCond)),
-                                              BITWISE_AND);
-                }
-
-                _basicNodes.push_back(subBasicNode);
-            }
-            if (castedZelifBlock->getCurCond() != nullptr) {
-                Operable* purifiedCond = purifyCondition(castedZelifBlock->getCurCond());
-                prevFalse = &((*prevFalse) && !(*purifiedCond));
-            }
-        }
-
+        assert(false);
     }
 
     std::string FlowBlockZIF::getMdDescribe() {

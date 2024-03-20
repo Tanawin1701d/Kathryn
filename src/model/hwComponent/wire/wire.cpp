@@ -15,6 +15,8 @@ namespace kathryn{
                                      new WireLogicSim(this, size, VST_WIRE, false),
                                      true){
         com_init();
+        AssignOpr::setMaster(this);
+        AssignCallbackFromAgent::setMaster(this);
     }
 
 
@@ -22,50 +24,17 @@ namespace kathryn{
         ctrl->on_wire_init(this);
     }
 
-    Wire& Wire::operator=(Operable &b) {
+    void Wire::doBlockAsm(Operable &srcOpr, Slice desSlice) {
+        mfAssert(false, "wire doesn't support blocking asignment <<=");
+    }
+
+    void Wire::doNonBlockAsm(Operable &srcOpr, Slice desSlice) {
         assert(getAssignMode() == AM_MOD);
-        Slice absSlice = getSlice().getMatchSizeSubSlice( b.getOperableSlice());
-        ctrl->on_wire_update(generateBasicNode(b, absSlice), this);
-        return *this;
+        Slice finalizeDesSlice = getSlice().getMatchSizeSubSlice(desSlice);
+        ctrl->on_wire_update(
+                generateBasicNode(srcOpr, finalizeDesSlice),
+                this);
     }
-
-    Wire& Wire::operator=(Wire& b){
-        assert(getAssignMode() == AM_MOD);
-        if (this == &b){
-            mfAssert(false, "wire got recurrent assigning");
-            assert(false);
-        }
-
-        operator=(*(Operable*)&b);
-
-        return *this;
-    }
-
-    Wire& Wire::operator = (ull b){
-        if (getAssignMode() == AM_MOD) {
-            /**model mode*/
-            Operable &rhs = getMatchAssignOperable(b, getSlice().getSize());
-            return operator=(rhs);
-        }else if (getAssignMode() == AM_SIM){
-            /**simulating mode*/
-            assignSimValue(b);
-            return *this;
-        }else{
-            assert(false);
-
-        }
-    }
-
-    void Wire::generateAssMetaForNonBlocking(Operable& srcOpr,
-                                       std::vector<AssignMeta*>& resultMetaCollector,
-                                       Slice  absSrcSlice,
-                                       Slice  absDesSlice){
-
-        generateAssignMetaAndFill(srcOpr,resultMetaCollector,
-                                  absSrcSlice,absDesSlice);
-
-    }
-
 
     SliceAgent<Wire>& Wire::operator()(int start, int stop) {
         auto ret = new SliceAgent<Wire>(
@@ -80,7 +49,7 @@ namespace kathryn{
     }
 
     Operable* Wire::doSlice(Slice sl){
-        auto x = operator() (sl.start, sl.stop);
+        auto& x = operator() (sl.start, sl.stop);
         return x.castToOperable();
     }
 
@@ -97,33 +66,6 @@ namespace kathryn{
     }
 
     /** override callback*/
-
-    Wire& Wire::callBackBlockAssignFromAgent(Operable &b, Slice absSliceOfHost) {
-        assert(false);
-    }
-
-    Wire& Wire::callBackNonBlockAssignFromAgent(Operable &b, Slice absSliceOfHost) {
-        ///Slice absSlice = absSliceOfHost.getSubSliceWithShinkMsb({0, b.getOperableSlice().getSize()});
-        assert(absSliceOfHost.getSize() <= getOperableSlice().getSize());
-        assert(absSliceOfHost.stop      <= getOperableSlice().stop);
-
-        Slice absSlice = absSliceOfHost.getMatchSizeSubSlice(b.getOperableSlice());
-        ctrl->on_wire_update(generateBasicNode(b, absSlice), this);
-        return *this;
-    }
-
-    void Wire::callBackBlockAssignFromAgent(Operable &srcOpr, std::vector<AssignMeta *> &resultMetaCollector,
-                                            Slice absSrcSlice, Slice absDesSlice) {
-        assert(getSlice().isContain(absDesSlice));
-        generateAssMetaForBlocking(srcOpr, resultMetaCollector, absSrcSlice, absDesSlice);
-    }
-
-    void Wire::callBackNonBlockAssignFromAgent(Operable &srcOpr, std::vector<AssignMeta *> &resultMetaCollector,
-                                               Slice absSrcSlice, Slice absDesSlice) {
-        assert(getSlice().isContain(absDesSlice));
-        generateAssMetaForNonBlocking(srcOpr, resultMetaCollector, absSrcSlice, absDesSlice);
-    }
-
     Operable *Wire::checkShortCircuit() {
 
         if (isInCheckPath){

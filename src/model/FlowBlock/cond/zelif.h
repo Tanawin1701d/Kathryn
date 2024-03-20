@@ -21,7 +21,7 @@ namespace kathryn{
         Operable* curCond = nullptr;
 
     public :
-        Operable* getCurCond();
+        Operable* getPurifiedCurCond();
 
         explicit FlowBlockZELIF(Operable& cond);
         explicit FlowBlockZELIF();

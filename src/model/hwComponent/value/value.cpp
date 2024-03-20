@@ -29,7 +29,7 @@ namespace kathryn{
     }
 
     Operable* Val::doSlice(Slice sl){
-        auto x = operator() (sl.start, sl.stop);
+        auto& x = operator() (sl.start, sl.stop);
         return x.castToOperable();
     }
 

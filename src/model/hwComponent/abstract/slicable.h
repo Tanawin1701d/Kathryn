@@ -56,6 +56,7 @@ namespace kathryn {
     public:
         SliceAgent(T* master, Slice slc) : _master(master), Slicable<T>(slc) {
             _master->Slicable<T>::addAgentHolder(this);
+            AssignOpr<SliceAgent<T>>::setMaster(this);
         };
 
         Operable* castToOperable(){
@@ -78,84 +79,51 @@ namespace kathryn {
             return *ret;
         }
 
-        /** override AssignOpr*/
-        SliceAgent<T>& operator <<= (Operable& b) override {
-            mfAssert(getAssignMode() == AM_MOD, "agent can use operator <<= only in MD mode");
-             _master->callBackBlockAssignFromAgent(
-                b,
-                Slicable<T>::getSlice());
-
-             return *this;
-        }
-
-        SliceAgent<T>& operator <<= (ull b) override {
-            mfAssert(getAssignMode() == AM_MOD, "agent can use operator <<= only in MD mode");
-            Operable& rhsOpr = getMatchAssignOperable(b, Slicable<T>::getSlice().getSize());
-            _master->callBackBlockAssignFromAgent(
-                    rhsOpr,
-                    Slicable<T>::getSlice());
-
-            return *this;
-        }
-
-        void generateAssMetaForBlocking(Operable& srcOpr,
-                                        std::vector<AssignMeta*>& resultMetaCollector,
-                                        Slice  absSrcSlice,
-                                        Slice  absDesSlice) override{
-            _master->callBackBlockAssignFromAgent(
-                    srcOpr,resultMetaCollector,
-                    absSrcSlice,absDesSlice
-            );
-        }
-
-        SliceAgent<T>& operator = (Operable& b) override {
-            mfAssert(getAssignMode() == AM_MOD, "agent can use operator = only in MD mode");
-            _master->callBackNonBlockAssignFromAgent(
-                    b,
-                    Slicable<T>::getSlice()
-            );
-            return *this;
-        }
-
-        SliceAgent<T>& operator = (ull b) override {
-            mfAssert(getAssignMode() == AM_MOD, "agent can use operator = only in MD mode");
-            Operable& rhsOpr = getMatchAssignOperable(b, Slicable<T>::getSlice().getSize());
-            _master->callBackNonBlockAssignFromAgent(
-                    rhsOpr,
-                    Slicable<T>::getSlice());
-
-            return *this;
-        }
-
-        /** override */
-
-        SliceAgent<T>& operator = (SliceAgent<T>& b){
-            /** when same agent have use equal operator sometime
-             * it may not auto convert to =(Operable& b)
-             * */
-            if (this == &b){ return *this; }
-            _master->callBackNonBlockAssignFromAgent(
-                    b,
-                    Slicable<T>::getSlice()
-            );
-            return *this;
-        }
-
-        void generateAssMetaForNonBlocking(Operable& srcOpr,
-                                           std::vector<AssignMeta*>& resultMetaCollector,
-                                           Slice  absSrcSlice,
-                                           Slice  absDesSlice)override{
-            _master->callBackNonBlockAssignFromAgent(
-                    srcOpr,resultMetaCollector,
-                    absSrcSlice,absDesSlice
-            );
-        };
-
         /** override assignable*/
+        void doBlockAsm(Operable& srcOpr, Slice desSlice) override {
+            mfAssert(getAssignMode() == AM_MOD, "agent can use operator <<= only in MD mode");
+            assert(desSlice.getSize() <= Slicable<T>::getSlice().getSize());
+            assert(desSlice.stop      <= Slicable<T>::getSlice().stop);
+            _master->callBackBlockAssignFromAgent(srcOpr,desSlice);
+        }
+
+        void doNonBlockAsm(Operable& srcOpr, Slice desSlice) override{
+            mfAssert(getAssignMode() == AM_MOD, "agent can use operator <<= only in MD mode");
+            assert(desSlice.getSize() <= Slicable<T>::getSlice().getSize());
+            assert(desSlice.stop      <= Slicable<T>::getSlice().stop);
+            _master->callBackNonBlockAssignFromAgent(srcOpr,desSlice);
+        }
+
+        void doBlockAsm(Operable& srcOpr,
+                        std::vector<AssignMeta*>& resultMetaCollector,
+                        Slice  absSrcSlice,
+                        Slice  absDesSlice) override{
+            _master->callBackBlockAssignFromAgent(
+                    srcOpr,resultMetaCollector,
+                    absSrcSlice,absDesSlice
+            );
+        }
+
+        void doNonBlockAsm(Operable& srcOpr,
+                           std::vector<AssignMeta*>& resultMetaCollector,
+                           Slice  absSrcSlice,
+                           Slice  absDesSlice) override{
+            _master->callBackNonBlockAssignFromAgent(
+                    srcOpr,resultMetaCollector,
+                    absSrcSlice,absDesSlice
+            );
+        }
+
+        SliceAgent<T>& operator = (Operable& b)     { AssignOpr<SliceAgent<T>>::operatorEq(b);      return *this;}
+        SliceAgent<T>& operator = (ull b)           { AssignOpr<SliceAgent<T>>operatorEq(b);        return *this;}
+        SliceAgent<T>& operator = (SliceAgent<T>& b){ if (this == &b){return *this;} operatorEq(b); return *this;}
 
         [[nodiscard]] Slice getAssignSlice()  override { return  Slicable<T>::getSlice(); }
 
-
+        /** override assign opr*/
+        Assignable* getAssignableFromAssignOpr() override{
+            return this;
+        }
 
         /** operable override*/
         [[nodiscard]] Operable& getExactOperable() const override { return *(Operable*)_master; }
@@ -165,6 +133,10 @@ namespace kathryn {
             auto x = operator() (sl.start, sl.stop);
             return x.castToOperable();
         }
+
+
+
+        /** override simulation*/
 
         Simulatable*    getSimItf() override{
             return static_cast<Simulatable*>(_master->getSimEngine());

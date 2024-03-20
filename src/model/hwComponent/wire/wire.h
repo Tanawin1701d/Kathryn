@@ -20,46 +20,30 @@ namespace kathryn{
         void com_final() override {};
 
         /**override assignable*/
-        [[maybe_unused]]
-        Wire& operator <<= (Operable& b) override {mfAssert(false, "wire don't support this <<= assigment");assert(false);};
-        Wire& operator <<= (ull b) override {mfAssert(false, "wire don't support this <<= assigment");assert(false);}
-        void generateAssMetaForBlocking(Operable& srcOpr,
-                                        std::vector<AssignMeta*>& resultMetaCollector,
-                                        Slice  absSrcSlice,
-                                        Slice  absDesSlice) override{
-            mfAssert(false, "wire don't support generateAssMetaForBlocking");
-            assert(false);
-        };
+        void doBlockAsm(Operable& srcOpr, Slice desSlice) override;
+        void doNonBlockAsm(Operable& srcOpr, Slice desSlice) override;
+        void doBlockAsm(Operable& srcOpr,
+                        std::vector<AssignMeta*>& resultMetaCollector,
+                        Slice  absSrcSlice,
+                        Slice  absDesSlice) override{
+            mfAssert(false, "wire don't support this doBlockAsm"); assert(false);
+        }
+        void doNonBlockAsm(Operable& srcOpr,
+                           std::vector<AssignMeta*>& resultMetaCollector,
+                           Slice  absSrcSlice,
+                           Slice  absDesSlice) override{
+            doGlobalAsm(srcOpr, resultMetaCollector, absSrcSlice, absDesSlice);
+        }
 
+        Wire& operator = (Operable& b){ operatorEq(b);                                 return *this;}
+        Wire& operator = (ull b)      { operatorEq(b);                                    return *this;}
+        Wire& operator = (Wire& b)    { if (this == &b){return *this;} operatorEq(b);  return *this;}
 
-        Wire& operator =   (Operable& b) override;
-        Wire& operator =   (Wire& b);
-        Wire& operator =   (ull b) override;
-        void generateAssMetaForNonBlocking(Operable& srcOpr,
-                                           std::vector<AssignMeta*>& resultMetaCollector,
-                                           Slice  absSrcSlice,
-                                           Slice  absDesSlice) override;
-
-        /**override operable*/
-//        Operable& getExactOperable() const override {return *(Operable*)(this);}
-//        Slice getOperableSlice() const override {return getSlice();}
         /**override slicable*/
         SliceAgent<Wire>& operator() (int start, int stop) override;
         SliceAgent<Wire>& operator() (int idx) override;
         Operable* doSlice(Slice sl) override;
         void makeDefEvent();
-        /**override assign call back*/
-        Wire& callBackBlockAssignFromAgent(Operable& b, Slice absSliceOfHost) override;
-        Wire& callBackNonBlockAssignFromAgent(Operable& b, Slice absSliceOfHost) override;
-        void  callBackBlockAssignFromAgent(Operable& srcOpr,
-                                           std::vector<AssignMeta*>& resultMetaCollector,
-                                           Slice  absSrcSlice,
-                                           Slice  absDesSlice) override;
-        void  callBackNonBlockAssignFromAgent(Operable& srcOpr,
-                                              std::vector<AssignMeta*>& resultMetaCollector,
-                                              Slice  absSrcSlice,
-                                              Slice  absDesSlice) override;
-
         Operable* checkShortCircuit() override;
 
 

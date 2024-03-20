@@ -63,58 +63,42 @@ namespace kathryn{
 
             void com_final() override {};
             /** override assignable*/
-            nest& operator <<= (Operable  & b) override;
-            nest& operator <<= (ull b)         override;
-            void  blockingAssignmentBase(Operable& b, Slice desAbsSlice);
-            void generateAssMetaForBlocking(Operable& srcOpr,
-                                    std::vector<AssignMeta*>& resultMetaCollector,
-                                    Slice  absSrcSlice,
-                                    Slice  absDesSlice) override;
+            void doBlockAsm    (Operable& srcOpr, Slice desSlice) override;
+            void doNonBlockAsm (Operable& srcOpr, Slice desSlice) override;
 
-            nest& operator =   (Operable  & b) override;
-            nest& operator =   (nest& b);
-            nest& operator = (ull b) override;
-            void nonBlockingAssignmentBase(Operable& b, Slice desAbsSlice);
-            void generateAssMetaForNonBlocking(Operable& srcOpr,
-                                               std::vector<AssignMeta*>& resultMetaCollector,
-                                               Slice  absSrcSlice,
-                                               Slice  absDesSlice) override;
+            void doBlockAsm(Operable& srcOpr,
+                            std::vector<AssignMeta*>& resultMetaCollector,
+                            Slice  absSrcSlice,
+                            Slice  absDesSlice) override;
+            void doNonBlockAsm(Operable& srcOpr,
+                               std::vector<AssignMeta*>& resultMetaCollector,
+                               Slice  absSrcSlice,
+                               Slice  absDesSlice) override;
 
-            /**get which netlist element match that bit Idx */
+            void doGlobalAsm(Operable& srcOpr,
+                             std::vector<AssignMeta*>& resultMetaCollector,
+                             Slice  absSrcSlice,
+                             Slice  absDesSlice) override {assert(false);/**disable this function*/}
+
+            nest& operator = (Operable& b){ operatorEq(b);                                return *this;}
+            nest& operator = (ull b)      { operatorEq(b);                                   return *this;}
+            nest& operator = (nest& b)    { if (this == &b){return *this;} operatorEq(b); return *this;}
+
+        /**get which netlist element match that bit Idx */
             [[maybe_unused]]
             int getNetListIdxThatMatch(int bitIdx);
 
-            void generateAssMetaForAll(Operable& srcOpr,
-                                       std::vector<AssignMeta*>& resultMetaCollector,
-                                       Slice  absSrcSlice,
-                                       Slice  absDesSlice,
-                                       bool isblockingAsm
+            void doNestGlobalAsm(Operable& srcOpr,
+                                 std::vector<AssignMeta*>& resultMetaCollector,
+                                 Slice  absSrcSlice,
+                                 Slice  absDesSlice,
+                                 bool isblockingAsm
                                        );
-            /**override operable*/
-//            [[nodiscard]]
-//            Slice getOperableSlice() const override  { return getSlice(); }
-//            [[nodiscard]]
-//            Operable& getExactOperable() const override { return *(Operable*)(this);};
-//            [[nodiscard]]
-
-
 
             /** override slicable*/
             SliceAgent<nest>& operator() (int start, int stop) override;
             SliceAgent<nest>& operator() (int idx) override;
             Operable* doSlice(Slice sl) override;
-            /** call back assignable from client agent*/
-            [[maybe_unused]]
-            nest& callBackBlockAssignFromAgent(Operable& b, Slice absSlice) override;
-            nest& callBackNonBlockAssignFromAgent(Operable& b, Slice absSlice) override;
-            void  callBackBlockAssignFromAgent(Operable& srcOpr,
-                                               std::vector<AssignMeta*>& resultMetaCollector,
-                                               Slice  absSrcSlice,
-                                               Slice  absDesSlice)override;
-            void  callBackNonBlockAssignFromAgent(Operable& srcOpr,
-                                                  std::vector<AssignMeta*>& resultMetaCollector,
-                                                  Slice  absSrcSlice,
-                                                  Slice  absDesSlice)override;
 
             /** check short circuit*/
             Operable* checkShortCircuit() override;

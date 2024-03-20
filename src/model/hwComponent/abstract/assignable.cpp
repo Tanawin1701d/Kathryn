@@ -18,12 +18,12 @@ namespace kathryn{
         return assUserAutoVal;
     }
 
-    void Assignable::generateAssignMetaAndFill(
-                                                Operable& srcOpr,
-                                                std::vector<AssignMeta*>& resultMetaCollector,
-                                                Slice  absSrcSlice,
-                                                Slice  absDesSlice
-                                                ){
+    void Assignable::doGlobalAsm(
+            Operable& srcOpr,
+            std::vector<AssignMeta*>& resultMetaCollector,
+            Slice  absSrcSlice,
+            Slice  absDesSlice
+            ){
         /** check slice integrity*/
         assert(srcOpr.getOperableSlice().isContain(absSrcSlice));
         assert(getAssignSlice().isContain(absDesSlice));
@@ -49,6 +49,7 @@ namespace kathryn{
         return asmNode;
 
     }
+
 
 
 }

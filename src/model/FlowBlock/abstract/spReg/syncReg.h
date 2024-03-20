@@ -10,6 +10,7 @@
 #include "model/hwComponent/expression/expression.h"
 #include "model/hwComponent/value/value.h"
 #include "model/FlowBlock/abstract/nodes/node.h"
+#include "model/hwComponent/wire/wire.h"
 
 
 namespace kathryn {
@@ -20,7 +21,7 @@ namespace kathryn {
         Val& upState;
         Val& upFullState;
         Val& downFullState;
-        expression* testExpr = nullptr;
+        Wire& testWire;
         int nextFillActivateId;
     protected:
         /**override data to init state regiter*/

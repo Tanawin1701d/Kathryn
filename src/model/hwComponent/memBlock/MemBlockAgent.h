@@ -48,23 +48,23 @@ namespace kathryn{
         int     getExactIndexSize();
 
         /** override assignable (need to call controller)*/
-        MemBlockEleHolder& operator <<= (Operable& b) override;
-        MemBlockEleHolder& operator <<= (ull       b) override;
-        void generateAssMetaForBlocking(Operable& srcOpr,
-                                std::vector<AssignMeta*>& resultMetaCollector,
-                                Slice  absSrcSlice,
-                                Slice  absDesSlice) override;
-        MemBlockEleHolder& operator   = (Operable& b) override;
-        MemBlockEleHolder& operator   = (ull       b) override;
-        void generateAssMetaForNonBlocking(Operable& srcOpr,
-                                   std::vector<AssignMeta*>& resultMetaCollector,
-                                   Slice  absSrcSlice,
-                                   Slice  absDesSlice) override;
+        void doBlockAsm (Operable& srcOpr, Slice desSlice) override;
+        void doNonBlockAsm(Operable& srcOpr, Slice desSlice) override;
+        void doBlockAsm(Operable& srcOpr,
+                        std::vector<AssignMeta*>& resultMetaCollector,
+                        Slice  absSrcSlice,
+                        Slice  absDesSlice) override;
+
+        void doNonBlockAsm(Operable& srcOpr,
+                           std::vector<AssignMeta*>& resultMetaCollector,
+                           Slice  absSrcSlice,
+                           Slice  absDesSlice) override;
+
+        MemBlockEleHolder& operator = (Operable& b)         { operatorEq(b);                                return *this;}
+        MemBlockEleHolder& operator = (ull b)               { operatorEq(b);                                   return *this;}
+        MemBlockEleHolder& operator = (MemBlockEleHolder& b){ if (this == &b){return *this;} operatorEq(b); return *this;}
 
         /** Operable*/
-//        [[nodiscard]] Slice           getOperableSlice    () const override;
-//        [[nodiscard]] Operable&       getExactOperable    () const override;
-
         Identifiable*   castToIdent         () override;
         ValRep&         sv                  () override;
 
@@ -72,20 +72,6 @@ namespace kathryn{
         SliceAgent<MemBlockEleHolder>& operator() (int start, int stop) override;
         SliceAgent<MemBlockEleHolder>& operator() (int idx) override;
         Operable* doSlice(Slice sl) override;
-
-        /**Assign call back From Agent */
-        MemBlockEleHolder& callBackBlockAssignFromAgent   (Operable& b, Slice absSliceOfHost) override;
-        MemBlockEleHolder& callBackNonBlockAssignFromAgent(Operable& b, Slice absSliceOfHost) override;
-        void               callBackBlockAssignFromAgent(Operable& srcOpr,
-                                                        std::vector<AssignMeta*>& resultMetaCollector,
-                                                        Slice  absSrcSlice,
-                                                        Slice  absDesSlice) override;
-        void               callBackNonBlockAssignFromAgent(Operable& srcOpr,
-                                                        std::vector<AssignMeta*>& resultMetaCollector,
-                                                        Slice  absSrcSlice,
-                                                        Slice  absDesSlice) override;
-
-
         Operable* checkShortCircuit   () override{return nullptr;}
 
         /** debug method to do will will make debug string more delightful*/

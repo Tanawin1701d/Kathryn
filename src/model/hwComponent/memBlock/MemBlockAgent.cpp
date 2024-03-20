@@ -22,6 +22,8 @@ namespace kathryn{
         assert(_indexer != nullptr);
         assert(_indexer->getOperableSlice().getSize()
                == getExactIndexSize());
+        AssignOpr::setMaster(this);
+        AssignCallbackFromAgent::setMaster(this);
     }
 
 
@@ -66,63 +68,47 @@ namespace kathryn{
 
 
 
-    MemBlockEleHolder& MemBlockEleHolder::operator<<=(Operable &b) {
+    void MemBlockEleHolder::doBlockAsm(Operable &srcOpr, Slice desSlice) {
         mfAssert(getAssignMode() == AM_MOD, "must be Model mode only");
         mfAssert(isReadMode(), "duplicate write operation");
-        mfAssert(getSlice().getSize() == b.getOperableSlice().getSize(),
+        mfAssert(getSlice().getSize() == srcOpr.getOperableSlice().getSize(),
                  "invalid write size");
         setWriteMode();
-        assert(b.getOperableSlice().getSize() == _master->getWidthSize());
+        assert(srcOpr.getOperableSlice().getSize() == _master->getWidthSize());
         ctrl->on_memBlkEleHolder_update(
-                generateBasicNode(b,
-                                           {0, _master->getWidthSize()}),
+                generateBasicNode(srcOpr,
+                 {0, _master->getWidthSize()}),
                 this);
-        return *this;
     }
 
-    MemBlockEleHolder& MemBlockEleHolder::operator <<= (ull b){
-        mfAssert(getAssignMode() == AM_MOD, "must be Model mode only");
-        Operable& rhs = getMatchAssignOperable(b, getSlice().getSize());
-        return operator<<=(rhs);
+    void MemBlockEleHolder::doNonBlockAsm(Operable& srcOpr, Slice desSlice) {
+        mfAssert(false, "memBlockEle doesn't support = operator");
+        assert(false);
     }
 
-    void MemBlockEleHolder::generateAssMetaForBlocking(Operable& srcOpr,
-                                    std::vector<AssignMeta*>& resultMetaCollector,
-                                    Slice  absSrcSlice,
-                                    Slice  absDesSlice){
+    void MemBlockEleHolder::doBlockAsm(Operable& srcOpr,
+                                       std::vector<AssignMeta*>& resultMetaCollector,
+                                       Slice  absSrcSlice,
+                                       Slice  absDesSlice){
 
         /** for assigning in memblock must have same size */
         mfAssert(isReadMode(), "duplicate write operation");
         mfAssert(getSlice().getSize() == srcOpr.getOperableSlice().getSize(),
                  "invalid write size");
         setWriteMode();
-        generateAssignMetaAndFill(srcOpr,resultMetaCollector,
-                                  absSrcSlice,absDesSlice);
+        doGlobalAsm(srcOpr, resultMetaCollector,
+                    absSrcSlice, absDesSlice);
     }
 
-    MemBlockEleHolder &MemBlockEleHolder::operator=(Operable &b) {
-        mfAssert(false, "memBlockEle doesn't support = operator");
+    void MemBlockEleHolder::doNonBlockAsm(Operable& srcOpr,
+                                          std::vector<AssignMeta*>& resultMetaCollector,
+                                          Slice  absSrcSlice,
+                                          Slice  absDesSlice){
+        mfAssert(false, "memBlockEle doesn't support doNonBlockAsm");
         assert(false);
     }
-
-    MemBlockEleHolder &MemBlockEleHolder::operator=(ull b) {
-        mfAssert(false, "memBlockEle doesn't support = operator");
-        assignSimValue(b);
-        return *this;
-    }
-
-    void MemBlockEleHolder::generateAssMetaForNonBlocking(Operable& srcOpr,
-                                                          std::vector<AssignMeta*>& resultMetaCollector,
-                                                          Slice  absSrcSlice,
-                                                          Slice  absDesSlice){
-        mfAssert(false, "memBlockEle doesn't support generateAssMetaForNonBlocking");
-        assert(false);
-    }
-
 
     /*** override Operable*/
-//    Slice MemBlockEleHolder::getOperableSlice() const {return getSlice();}
-//    Operable &MemBlockEleHolder::getExactOperable() const { return (Operable &)(*this);}
     Identifiable* MemBlockEleHolder::castToIdent() {return this;}
 
     ValRep &MemBlockEleHolder::sv(){assert(false);}
@@ -144,36 +130,9 @@ namespace kathryn{
     }
 
     Operable* MemBlockEleHolder::doSlice(Slice sl){
-        auto x = operator() (sl.start, sl.stop);
+        auto& x = operator() (sl.start, sl.stop);
         return x.castToOperable();
     }
-
-    MemBlockEleHolder&
-    MemBlockEleHolder::callBackBlockAssignFromAgent(Operable &b, Slice absSliceOfHost) {
-        mfAssert(false, "can't assign data to memBlock from slice");
-        assert(false);
-    }
-
-    MemBlockEleHolder&
-    MemBlockEleHolder::callBackNonBlockAssignFromAgent(Operable &b, Slice absSliceOfHost) {
-        mfAssert(false, "can't assign data to memBlock from slice");
-        assert(false);
-    }
-
-    void
-    MemBlockEleHolder::callBackBlockAssignFromAgent(Operable &srcOpr, std::vector<AssignMeta *> &resultMetaCollector,
-                                                    Slice absSrcSlice, Slice absDesSlice) {
-        mfAssert(false, "can't assign data to memBlock from slice");
-        assert(false);
-    }
-
-    void
-    MemBlockEleHolder::callBackNonBlockAssignFromAgent(Operable &srcOpr, std::vector<AssignMeta *> &resultMetaCollector,
-                                                       Slice absSrcSlice, Slice absDesSlice) {
-        mfAssert(false, "can't assign data to memBlock from slice");
-        assert(false);
-    }
-
 
     /**
      *

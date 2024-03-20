@@ -25,52 +25,34 @@ namespace kathryn{
         void com_final() override {};
 
         /** assignable override*/
-        Reg& operator <<= (Operable& b) override;
-        Reg& operator <<= (ull b) override;
-        void generateAssMetaForBlocking(Operable& srcOpr,
-                                        std::vector<AssignMeta*>& resultMetaCollector,
-                                        Slice  absSrcSlice,
-                                        Slice  absDesSlice) override;
-        [[maybe_unused]]
-        Reg&  operator =   (Operable& b) override;
-        Reg& operator  =   (ull b) override;
-        Reg&  operator =   (Reg& b);
-
-        void generateAssMetaForNonBlocking(Operable& srcOpr,
-                                   std::vector<AssignMeta*>& resultMetaCollector,
-                                   Slice  absSrcSlice,
-                                   Slice  absDesSlice) override{
-            mfAssert(false, "reg don't support generateAssMetaForNonBlocking");
+        void doBlockAsm(Operable& srcOpr, Slice desSlice) override;
+        void doNonBlockAsm(Operable& srcOpr, Slice desSlice) override;
+            /////// for block is declar in assign base class
+        void doBlockAsm(Operable& srcOpr,
+                           std::vector<AssignMeta*>& resultMetaCollector,
+                           Slice  absSrcSlice,
+                           Slice  absDesSlice) override{
+            doGlobalAsm(srcOpr, resultMetaCollector, absSrcSlice, absDesSlice);
+        };
+        void doNonBlockAsm(Operable& srcOpr,
+                           std::vector<AssignMeta*>& resultMetaCollector,
+                           Slice  absSrcSlice,
+                           Slice  absDesSlice) override{
+            mfAssert(false, "reg don't support doNonBlockAsm");
             assert(false);
         };
 
-        /** Operable override*/
-//        Slice getOperableSlice() const override {return getSlice();};
-//        Operable& getExactOperable() const override {return *(Operable*)this; };
+        Reg& operator = (Operable& b){ operatorEq(b);                                return *this;}
+        Reg& operator = (ull b)      { operatorEq(b);                                   return *this;}
+        Reg& operator = (Reg& b)     { if (this == &b){return *this;} operatorEq(b); return *this;}
 
         /** Slicable*/
         SliceAgent<Reg>& operator() (int start, int stop) override;
         SliceAgent<Reg>& operator() (int idx) override;
         Operable* doSlice(Slice sl) override;
-
         /**make rstEvent*/
         void makeResetEvent();
-
         /** return type*/
-
-        Reg& callBackBlockAssignFromAgent(Operable& b, Slice absSliceOfHost) override;
-        Reg& callBackNonBlockAssignFromAgent(Operable& b, Slice absSliceOfHost) override;
-        void callBackBlockAssignFromAgent(Operable& srcOpr,
-                                          std::vector<AssignMeta*>& resultMetaCollector,
-                                          Slice  absSrcSlice,
-                                          Slice  absDesSlice) override;
-        void  callBackNonBlockAssignFromAgent(Operable& srcOpr,
-                                              std::vector<AssignMeta*>& resultMetaCollector,
-                                              Slice  absSrcSlice,
-                                              Slice  absDesSlice) override;
-
-
-
         Operable* checkShortCircuit() override;
     };
 

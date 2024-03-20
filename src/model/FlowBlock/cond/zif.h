@@ -24,9 +24,9 @@ namespace kathryn{
 
     class FlowBlockZIF: public FlowBlockBase, public LoopStMacro{
     private:
-        Operable* curCond  = nullptr;
-        Operable* prevFalse = nullptr;
-        Operable* lastElifCond = nullptr;
+        bool lastZelifDetected = false;
+        Operable* purifiedCurCond  = nullptr;
+        std::vector<Operable*> prevFalses;
 
     public:
 

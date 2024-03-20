@@ -15,7 +15,7 @@ namespace kathryn {
      * */
 
 /** bitwise operators*/
-    expression& Operable::operator&(const Operable &b) {
+    expression& Operable::operator&( Operable &b) {
         mfAssert(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
                  "operable<&> get mismatch bit size"
                  );
@@ -27,7 +27,7 @@ namespace kathryn {
         return *ret;
     }
 
-    expression& Operable::operator|(const Operable &b) {
+    expression& Operable::operator|(Operable &b) {
         mfAssert(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
                  "operable<|> get mismatch bit size"
         );
@@ -39,7 +39,7 @@ namespace kathryn {
         return *ret;
     }
 
-    expression& Operable::operator^(const Operable &b) {
+    expression& Operable::operator^( Operable &b) {
         mfAssert(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
                  "operable<^> get mismatch bit size"
         );
@@ -61,7 +61,7 @@ namespace kathryn {
         return *ret;
     }
 
-    expression& Operable::operator<<(const Operable &b) {
+    expression& Operable::operator<<( Operable &b) {
         mfAssert(b.getOperableSlice().getSize() <= ValRep::bitSizeOfUll,
                  "operable<&> get mismatch bit size"
         );
@@ -73,7 +73,7 @@ namespace kathryn {
         return *ret;
     }
 
-    expression& Operable::operator>>(const Operable &b) {
+    expression& Operable::operator>>( Operable &b) {
         mfAssert(b.getOperableSlice().getSize() <= ValRep::bitSizeOfUll,
                  "operable<&> get mismatch bit size"
         );
@@ -88,7 +88,7 @@ namespace kathryn {
 
     /** logical operators*/
 
-    expression& Operable::operator&&(const Operable &b) {
+    expression& Operable::operator&&( Operable &b) {
         auto ret =  new expression(LOGICAL_AND,
                                      this,
                                      &b,
@@ -97,7 +97,7 @@ namespace kathryn {
         return *ret;
     }
 
-    expression& Operable::operator||(const Operable &b) {
+    expression& Operable::operator||( Operable &b) {
         auto ret =  new expression(LOGICAL_OR,
                                      this,
                                      &b,
@@ -117,7 +117,7 @@ namespace kathryn {
 
     /** relational operator*/
 
-    expression& Operable::operator==(const Operable &b) {
+    expression& Operable::operator==( Operable &b) {
         auto ret =  new expression(RELATION_EQ,
                                      this,
                                      &b,
@@ -126,7 +126,7 @@ namespace kathryn {
         return *ret;
     }
 
-    expression& Operable::operator!=(const Operable &b) {
+    expression& Operable::operator!=( Operable &b) {
         auto ret =  new expression(RELATION_NEQ,
                                      this,
                                      &b,
@@ -135,7 +135,7 @@ namespace kathryn {
         return *ret;
     }
 
-    expression& Operable::operator<(const Operable &b) {
+    expression& Operable::operator<( Operable &b) {
         auto ret =  new expression(RELATION_LE,
                                     this,
                                     &b,
@@ -144,7 +144,7 @@ namespace kathryn {
         return *ret;
     }
 
-    expression& Operable::operator<=(const Operable &b) {
+    expression& Operable::operator<=( Operable &b) {
         auto ret =  new expression(RELATION_LEQ,
                                      this,
                                      &b,
@@ -153,7 +153,7 @@ namespace kathryn {
         return *ret;
     }
 
-    expression& Operable::operator>(const Operable &b) {
+    expression& Operable::operator>( Operable &b) {
         auto ret =  new expression(RELATION_GE,
                                      this,
                                      &b,
@@ -162,7 +162,7 @@ namespace kathryn {
         return *ret;
     }
 
-    expression& Operable::operator>=(const Operable &b) {
+    expression& Operable::operator>=( Operable &b) {
         auto ret =  new expression(RELATION_GEQ,
                                      this,
                                      &b,
@@ -173,7 +173,7 @@ namespace kathryn {
 
     /** arithmetic operators*/
 
-    expression& Operable::operator+(const Operable &b) {
+    expression& Operable::operator+( Operable &b) {
         mfAssert(getOperableSlice().getSize() >= b.getOperableSlice().getSize(),
                  "operable<+> get mismatch bit size"
         );
@@ -186,7 +186,7 @@ namespace kathryn {
         return *ret;
     }
 
-    expression& Operable::operator-(const Operable &b) {
+    expression& Operable::operator-( Operable &b) {
         mfAssert(getOperableSlice().getSize() >= b.getOperableSlice().getSize(),
                  "operable<-> get mismatch bit size"
         );
@@ -198,7 +198,7 @@ namespace kathryn {
         return *ret;
     }
 
-    expression& Operable::operator*(const Operable &b) {
+    expression& Operable::operator*( Operable &b) {
         mfAssert(getOperableSlice().getSize() >= b.getOperableSlice().getSize(),
                  "operable<*> get mismatch bit size"
         );
@@ -210,7 +210,7 @@ namespace kathryn {
         return *ret;
     }
 
-    expression& Operable::operator/(const Operable &b) {
+    expression& Operable::operator/( Operable &b) {
         mfAssert(getOperableSlice().getSize() >= b.getOperableSlice().getSize(),
                  "operable</> get mismatch bit size"
         );
@@ -222,7 +222,7 @@ namespace kathryn {
         return *ret;
     }
 
-    expression& Operable::operator%(const Operable &b) {
+    expression& Operable::operator%( Operable &b) {
         mfAssert(getOperableSlice().getSize() >= b.getOperableSlice().getSize(),
                  "operable<%> get mismatch bit size"
         );
@@ -244,7 +244,7 @@ namespace kathryn {
         return rawSrcSimVal.slice(targetSlice);
     }
 
-    Operable& Operable::getMatchOperable(const ull value) const {
+    Operable& Operable::getMatchOperable( ull value) const {
             makeVal(optUserAutoVal, getOperableSlice().getSize(), value);
             /** todo check bit size */
             return optUserAutoVal;

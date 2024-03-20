@@ -33,6 +33,8 @@ namespace kathryn{
         }
         assert(testSize == size);
         com_init();
+        AssignOpr::setMaster(this);
+        AssignCallbackFromAgent::setMaster(this);
     }
 
 
@@ -43,80 +45,45 @@ namespace kathryn{
      * */
 
 
-    nest& nest::operator<<=(Operable &b) {
-        blockingAssignmentBase(b, getSlice());
-        return *this;
-    }
-
-    nest& nest::operator<<=(ull b) {
-        Operable& rhs = getMatchAssignOperable(b, getSlice().getSize());
-        return operator<<=(rhs);
-    }
-
-    void  nest::blockingAssignmentBase(Operable& b, Slice desAbsSlice){
+    void nest::doBlockAsm(Operable& srcOpr, Slice desSlice) {
+        assert(desSlice.getSize() <= getSlice().getSize());
         std::vector<AssignMeta*> resultCollector;
         /** get assign meta to build node*/
-        generateAssMetaForBlocking(b,
-                                   resultCollector,
-                                   b.getOperableSlice(),
-                                   desAbsSlice);
+        doBlockAsm(srcOpr,
+                   resultCollector,
+                   srcOpr.getOperableSlice(),
+                   desSlice);
         /** basic node building*/
         auto* asmNode = new AsmNode(resultCollector);
         /** update node*/
         ctrl->on_nest_update(asmNode, this);
     }
 
-    /***
-     *
-     *
-     * non blocking assignment
-     *
-     * */
-
-    nest& nest::operator=(Operable &b) {
-        nonBlockingAssignmentBase(b, getSlice());
-        return *this;
-    }
-
-    nest& nest::operator=(nest &b) {
-        if (this == &b){
-            mfAssert(false, "detect loop in the nest ");
-        }
-        operator = ((Operable&)b);
-        return *this;
-    }
-
-    nest &nest::operator=(ull b) {
-        Operable& rhs = getMatchAssignOperable(b, getSlice().getSize());
-        operator = ((Operable&)rhs);
-        return *this;
-    }
-
-    void nest::nonBlockingAssignmentBase(Operable& b, Slice desAbsSlice){
+    void nest::doNonBlockAsm(Operable &srcOpr, Slice desSlice) {
+        assert(desSlice.getSize() <= getSlice().getSize());
         std::vector<AssignMeta*> resultCollector;
-        generateAssMetaForBlocking(b,
-                                   resultCollector,
-                                   b.getOperableSlice(),
-                                   desAbsSlice);
+        /** get assign meta to build node*/
+        doNonBlockAsm(srcOpr,
+                   resultCollector,
+                   srcOpr.getOperableSlice(),
+                   desSlice);
+        /** basic node building*/
         auto* asmNode = new AsmNode(resultCollector);
+        /** update node*/
         ctrl->on_nest_update(asmNode, this);
     }
-
-
-
-
 
     /** assign enforcer*/
 
 
-    void nest::generateAssMetaForBlocking(Operable &srcOpr, std::vector<AssignMeta *> &resultMetaCollector,
-                                          Slice absSrcSlice, Slice absDesSlice) {
-        generateAssMetaForAll(srcOpr, resultMetaCollector, absSrcSlice, absDesSlice, true);
+    void nest::doBlockAsm(Operable &srcOpr, std::vector<AssignMeta *> &resultMetaCollector,
+                          Slice absSrcSlice, Slice absDesSlice) {
+        doNestGlobalAsm(srcOpr, resultMetaCollector, absSrcSlice, absDesSlice, true);
     }
 
-    void nest::generateAssMetaForNonBlocking(Operable &srcOpr, std::vector<AssignMeta *> &resultMetaCollector,
-                                             Slice absSrcSlice, Slice absDesSlice) {
-        generateAssMetaForAll(srcOpr, resultMetaCollector, absSrcSlice, absDesSlice, false);
+    void nest::doNonBlockAsm(Operable &srcOpr, std::vector<AssignMeta *> &resultMetaCollector,
+                             Slice absSrcSlice, Slice absDesSlice) {
+        doNestGlobalAsm(srcOpr, resultMetaCollector, absSrcSlice, absDesSlice, false);
     }
 
     int nest::getNetListIdxThatMatch(int bitIdx) {
@@ -138,11 +105,11 @@ namespace kathryn{
 
 
     void
-    nest::generateAssMetaForAll(Operable &srcOpr,
-                                std::vector<AssignMeta *> &resultMetaCollector,
-                                Slice absSrcSlice,
-                                Slice absDesSlice,
-                                bool isBlockingAsm){
+    nest::doNestGlobalAsm(Operable &srcOpr,
+                          std::vector<AssignMeta *> &resultMetaCollector,
+                          Slice absSrcSlice,
+                          Slice absDesSlice,
+                          bool isblockingAsm){
 
         assert(absDesSlice.checkValidSlice());
         assert(absSrcSlice.checkValidSlice());
@@ -179,15 +146,15 @@ namespace kathryn{
             ///std::cout << "startBit " <<startBit << "   stopBit " << stopBit << std::endl;
 
             ///std::cout << "inner" << std::endl;
-            if (isBlockingAsm){
-                subAss->generateAssMetaForBlocking(
+            if (isblockingAsm){
+                subAss->doBlockAsm(
                         srcOpr,
                         resultMetaCollector,
                         curSrcSlice,
                         desireDesSlice
                 );
             }else{
-                subAss->generateAssMetaForNonBlocking(
+                subAss->doNonBlockAsm(
                         srcOpr,
                         resultMetaCollector,
                         curSrcSlice,
@@ -214,42 +181,9 @@ namespace kathryn{
     }
 
     Operable* nest::doSlice(Slice sl){
-        auto x = operator() (sl.start, sl.stop);
+        auto& x = operator() (sl.start, sl.stop);
         return x.castToOperable();
     }
-
-    nest& nest::callBackBlockAssignFromAgent(Operable &b, Slice absSlice) {
-
-        blockingAssignmentBase(b, absSlice);
-        return *this;
-    }
-
-    nest& nest::callBackNonBlockAssignFromAgent(Operable &b, Slice absSlice) {
-        ///// TODO make it assignable
-        nonBlockingAssignmentBase(b, absSlice);
-        return *this;
-    }
-
-    void nest::callBackBlockAssignFromAgent(Operable &srcOpr, std::vector<AssignMeta *> &resultMetaCollector,
-                                            Slice absSrcSlice, Slice absDesSlice) {
-        assert(getSlice().isContain(absDesSlice));
-        generateAssMetaForBlocking(srcOpr,
-                                   resultMetaCollector,
-                                   absSrcSlice,
-                                   absDesSlice);
-    }
-
-    void nest::callBackNonBlockAssignFromAgent(Operable &srcOpr, std::vector<AssignMeta *> &resultMetaCollector,
-                                               Slice absSrcSlice, Slice absDesSlice) {
-        assert(getSlice().isContain(absDesSlice));
-        generateAssMetaForNonBlocking(srcOpr,
-                                    resultMetaCollector,
-                                       absSrcSlice,
-                                       absDesSlice);
-    }
-
-
-
 
     Operable* nest::checkShortCircuit() {
         if (isInCheckPath){

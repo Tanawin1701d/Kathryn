@@ -56,6 +56,8 @@ namespace kathryn{
                 assert(size > 0);
                 com_init();
                 ((ValLogicSim*)_simEngine)->initSim();
+                AssignOpr::setMaster(this);
+                AssignCallbackFromAgent::setMaster(this);
             }
 
         explicit Val(int size):
@@ -69,6 +71,8 @@ namespace kathryn{
                 assert(size > 0);
                 com_init();
                 ((ValLogicSim*)_simEngine)->initSim();
+                AssignOpr::setMaster(this);
+                AssignCallbackFromAgent::setMaster(this);
             }
 
         explicit Val(const ValRep& val):
@@ -82,53 +86,40 @@ namespace kathryn{
                 assert(val.getLen() > 0);
                 com_init();
                 ((ValLogicSim*)_simEngine)->initSim();
+                AssignOpr::setMaster(this);
+                AssignCallbackFromAgent::setMaster(this);
             }
 
         /**
          * override assignable
          * */
-        Val& operator <<= (Operable& b) override { mfAssert(false, "val don't support this <<= assigment"); assert(false);}
-        Val& operator <<= (ull       b) override { mfAssert(false, "val don't support this   = assigment"); assert(false);}
-        void generateAssMetaForBlocking(Operable& srcOpr,
-                                        std::vector<AssignMeta*>& resultMetaCollector,
-                                        Slice  absSrcSlice,
-                                        Slice  absDesSlice) override{
-            mfAssert(false, "val don't support this generateAssMetaForBlocking"); assert(false);
+        void doBlockAsm(Operable& b, Slice desSlice) override {
+            mfAssert(false, "val don't support this <<= assigment"); assert(false);
+        }
+        void doNonBlockAsm(Operable& b, Slice desSlice) override {
+            mfAssert(false, "val don't support this   = assigment"); assert(false);
+        }
+        void doBlockAsm(Operable& srcOpr,
+                        std::vector<AssignMeta*>& resultMetaCollector,
+                        Slice  absSrcSlice,
+                        Slice  absDesSlice) override{
+            mfAssert(false, "val don't support this doBlockAsm"); assert(false);
+        }
+        void doNonBlockAsm(Operable& srcOpr,
+                           std::vector<AssignMeta*>& resultMetaCollector,
+                           Slice  absSrcSlice,
+                           Slice  absDesSlice) override{
+            mfAssert(false, "val don't support this doNonBlockAsm"); assert(false);
         }
 
-
-        Val& operator =   (Operable& b) override { mfAssert(false, "val don't support this   = assigment"); assert(false);}
-        Val& operator =   (ull       b) override { mfAssert(false, "val don't support this   = assigment"); assert(false);}
-        Val& operator =   (Val&      b)          { mfAssert(false, "val don't support this   = assigment"); assert(false);}
-        void generateAssMetaForNonBlocking(Operable& srcOpr,
-                                           std::vector<AssignMeta*>& resultMetaCollector,
-                                           Slice  absSrcSlice,
-                                           Slice  absDesSlice) override{
-            mfAssert(false, "val don't support this generateAssMetaForNonBlocking"); assert(false);
-        }
-
-        /** override operable*/
-//        [[nodiscard]]
-//        Slice     getOperableSlice() const override { return Slice{0, _size};}
-//        [[nodiscard]]
-//        Operable& getExactOperable() const override {return (Operable &) *this;}
+        Val& operator = (Operable& b){ operatorEq(b);                                return *this;}
+        Val& operator = (ull b)      { operatorEq(b);                                   return *this;}
+        Val& operator = (Val& b)     { if(this == &b){return *this;} operatorEq(b);  return *this;}
 
         /** assign todo we will assign it later*/
         SliceAgent<Val>& operator() (int start, int stop) override;
         SliceAgent<Val>& operator() (int idx) override;
         Operable* doSlice(Slice sl) override;
-
-        Val& callBackBlockAssignFromAgent(Operable& b, Slice absSlice) override {assert(false);};
-        Val& callBackNonBlockAssignFromAgent(Operable& b, Slice absSlice) override{assert(false);};
-        void callBackBlockAssignFromAgent(Operable& srcOpr,
-                                          std::vector<AssignMeta*>& resultMetaCollector,
-                                          Slice  absSrcSlice,
-                                          Slice  absDesSlice) override{assert(false);}
-        void callBackNonBlockAssignFromAgent(Operable& srcOpr,
-                                             std::vector<AssignMeta*>& resultMetaCollector,
-                                             Slice  absSrcSlice,
-                                             Slice  absDesSlice) override{assert(false);}
-
         Operable* checkShortCircuit() override;
 
 

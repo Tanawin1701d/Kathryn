@@ -23,6 +23,7 @@ namespace kathryn{
     }
 
     FlowBlockIf::~FlowBlockIf(){
+        delete condNode;
         delete psuedoElseNode;
         delete exitNode;
         delete resultNodeWrap;
@@ -46,7 +47,7 @@ namespace kathryn{
         /*** call base function*/
         FlowBlockBase::addConFlowBlock(elifBlock);
         /** push to if-else concern element*/
-        allStatement.push_back(elifBlock->sumarizeBlock());
+        /// allStatement.push_back(elifBlock->sumarizeBlock());
         if (elifBlock->getCondition() != nullptr) {
             allCondes.push_back(elifBlock->getCondition());
             allPurifiedCondes.push_back(
@@ -81,11 +82,16 @@ namespace kathryn{
     void FlowBlockIf::buildHwComponent() {
         buildSubHwComponent();
 
+        /**summarize all block*/
+        assert(_subBlocks.size() == 1);
+        allStatement.push_back(_subBlocks[0]->sumarizeBlock());
+        for (auto conFlowBlock: _conBlocks){
+            allStatement.push_back(conFlowBlock->sumarizeBlock());
+        }
         assert(!allCondes.empty());
         assert(allPurifiedCondes.size() == allCondes.size());
-        /**add execution block in if block to consider vector*/
-        allStatement.insert(allStatement.begin(), _subBlocks[0]->sumarizeBlock());
         assert(!allStatement.empty());
+
 
         /**add condition to state*/
         Operable* prevFalse = &(~(*allPurifiedCondes[0]));
@@ -113,10 +119,11 @@ namespace kathryn{
 
         /*** head of block conditioning*/
         if (getFlowType() == CIF){
+            /**set condition for all sub block*/
             for (auto nw : allStatement){
                 resultNodeWrap->transferEntNodeFrom(nw);
             }
-            ///// build proxy node to prevent state lost
+            /**build psuedo state for else*/
             if ( allCondes.size() == allStatement.size() ) {
                 psuedoElseNode = new PseudoNode(1);
                 psuedoElseNode->setDependStateJoinOp(BITWISE_AND);
@@ -124,6 +131,7 @@ namespace kathryn{
                 resultNodeWrap->addEntraceNode(psuedoElseNode);
             }
         }else if(getFlowType() == SIF){
+            /**set condition and state node for subblock*/
             condNode = new StateNode();
             condNode->setDependStateJoinOp(BITWISE_AND);
             resultNodeWrap->addEntraceNode(condNode);
@@ -131,6 +139,7 @@ namespace kathryn{
                 nw->addDependNodeToAllNode(condNode);
                 nw->assignAllNode();
             }
+            /**build psuedo state for else*/
             if ( allCondes.size() == allStatement.size() ) {
                 psuedoElseNode = new PseudoNode(1);
                 psuedoElseNode->addCondtion(prevFalse, BITWISE_AND);
@@ -138,6 +147,9 @@ namespace kathryn{
                 psuedoElseNode->setDependStateJoinOp(BITWISE_AND);
                 psuedoElseNode->assign();
             }
+        }else{
+            assert(false);
+            /** unknown flowblock type*/
         }
 
 
@@ -164,6 +176,7 @@ namespace kathryn{
         if (psuedoElseNode != nullptr){
             deter.addToDet(psuedoElseNode);
         }
+
         /**cycle determiner for node wrap*/
         int cycleUsed = deter.getSameCycleHorizon();
         if (cycleUsed == IN_CONSIST_CYCLE_USED){
@@ -175,7 +188,6 @@ namespace kathryn{
         }else{
             assert(false);
         }
-
 
     }
 

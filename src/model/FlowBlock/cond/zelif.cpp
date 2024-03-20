@@ -16,7 +16,7 @@ namespace kathryn{
                                   false
                           }){
 
-        curCond = &cond;
+        curCond = purifyCondition(&cond);
     }
 
     FlowBlockZELIF::FlowBlockZELIF():
@@ -30,7 +30,7 @@ namespace kathryn{
         curCond = nullptr;
     }
 
-    Operable *FlowBlockZELIF::getCurCond() {
+    Operable *FlowBlockZELIF::getPurifiedCurCond() {
         return curCond;
     }
 

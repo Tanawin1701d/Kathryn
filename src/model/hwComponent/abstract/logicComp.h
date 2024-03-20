@@ -129,6 +129,14 @@ namespace kathryn{
             }
         }
 
+        Assignable* getAssignableFromAssignOpr() override{
+            return this;
+        }
+
+        Assignable* getAssignableFromAssignCallbacker() override{
+            return this;
+        }
+
     };
 
 }

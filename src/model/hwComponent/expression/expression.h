@@ -29,7 +29,7 @@ namespace kathryn {
     class expression : public LogicComp<expression>{
     friend class expressionLogicSim;
     private:
-
+        bool _valueAssinged = false;
         /** metas data that contain bi operation*/
         LOGIC_OP _op;
         Operable* _a;
@@ -51,29 +51,33 @@ namespace kathryn {
 
         void com_final() override {};
         /** override assignable*/
-        expression& operator <<= (Operable  & b) override {mfAssert(false, "expr don't support this <<= assigment"); assert(false);}
-        expression& operator <<= (ull b)         override {mfAssert(false, "expr don't support this <<= assigment"); assert(false);}
-        void generateAssMetaForBlocking(Operable& srcOpr,
-                                        std::vector<AssignMeta*>& resultMetaCollector,
-                                        Slice  absSrcSlice,
-                                        Slice  absDesSlice) override{
-            mfAssert(false, "expr don't support generateAssMetaForBlocking"); assert(false);
+        void doBlockAsm(Operable& srcOpr, Slice desSlice) override{
+            mfAssert(false, "expr don't support doBlockAsm");
+            assert(false);
+        };
+        void doNonBlockAsm(Operable& srcOpr, Slice desSlice) override;
+
+        void doBlockAsm(Operable& srcOpr,
+                        std::vector<AssignMeta*>& resultMetaCollector,
+                        Slice  absSrcSlice,
+                        Slice  absDesSlice) override{
+            mfAssert(false, "expr don't support doBlockAsm"); assert(false);
         }
-        expression& operator =   (Operable  & b) override;
-        expression& operator =   (expression& b);
-        expression& operator =   (ull b) override {mfAssert(false, "expr don't support this = assigment with ull overload"); assert(false);}
-        void generateAssMetaForNonBlocking(Operable& srcOpr,
-                                           std::vector<AssignMeta*>& resultMetaCollector,
-                                           Slice  absSrcSlice,
-                                           Slice  absDesSlice) override{
-            mfAssert(false, "expr don't support generateAssMetaForNonBlocking"); assert(false);
+        void doNonBlockAsm(Operable& srcOpr,
+                           std::vector<AssignMeta*>& resultMetaCollector,
+                           Slice  absSrcSlice,
+                           Slice  absDesSlice) override{
+            mfAssert(absDesSlice == getSlice()                    ,
+                     "des expression assign wrapper doesn't cover entire expression");
+            mfAssert(absSrcSlice.getSize() >= getSlice().getSize(),
+                     "src expression assign wrapper doesn't cover entire expression");
         }
+
+        expression& operator = (Operable& b)  { operatorEq(b);                                return *this;}
+        expression& operator = (ull b)        { operatorEq(b);                                   return *this;}
+        expression& operator = (expression& b){ if (this == &b){return *this;} operatorEq(b); return *this;}
         /**override operable*/
-//        [[nodiscard]]
-//        Slice getOperableSlice() const override  { return getSlice(); }
-//        [[nodiscard]]
-//        Operable& getExactOperable() const override { return *(Operable*)(this);};
-//        [[nodiscard]]
+
 
 
 
@@ -81,18 +85,6 @@ namespace kathryn {
         SliceAgent<expression>& operator() (int start, int stop) override;
         SliceAgent<expression>& operator() (int idx) override;
         Operable* doSlice(Slice sl) override;
-        /** call back assignable from client agent*/
-        [[maybe_unused]]
-        expression& callBackBlockAssignFromAgent(Operable& b, Slice absSlice) override;
-        expression& callBackNonBlockAssignFromAgent(Operable& b, Slice absSlice) override;
-        void        callBackBlockAssignFromAgent(Operable& srcOpr,
-                                                 std::vector<AssignMeta*>& resultMetaCollector,
-                                                 Slice  absSrcSlice,
-                                                 Slice  absDesSlice) override{assert(false);}
-        void        callBackNonBlockAssignFromAgent(Operable& srcOpr,
-                                                    std::vector<AssignMeta*>& resultMetaCollector,
-                                                    Slice  absSrcSlice,
-                                                    Slice  absDesSlice) override{assert(false);}
 
         /** override debugg message*/
         //std::vector<std::string> getDebugAssignmentValue() override;
