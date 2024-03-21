@@ -7,6 +7,7 @@
 
 #include <condition_variable>
 #include <functional>
+#include <iostream>
 #include "eventBase.h"
 #include "sim/logicRep/valRep.h"
 
@@ -22,15 +23,18 @@ namespace kathryn{
             bool isProcessed = false;
 
             void notify(){
-                conVar.notify_all();
                 mtx.lock();
                 isProcessed = true;
+                ///std::cout << "isPeocessed is set to true "<< isProcessed <<std::endl;
                 mtx.unlock();
+                conVar.notify_all();
+
             }
 
             void wait(){
                 std::unique_lock<std::mutex> locker(mtx);
-                conVar.wait(locker, [&](){ return isProcessed;});
+                conVar.wait(locker, [&](){ /****std::cout << isProcessed << std::endl;****/
+                return isProcessed;});
             }
 
         };

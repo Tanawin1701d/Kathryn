@@ -85,18 +85,22 @@ namespace kathryn{
     }
 
     void SimInterface::conCycleBase(CYCLE startCycle, int priority){
-        /** move on old trigger first*/
+
+        /////// create new event and push to the queue first to prevent old trigger release
+        /////// their event and let event queue iterate over our section
+        conCurCycleUsed = startCycle;
+        auto newCtTrigger = new ConcreteTriggerEvent(startCycle,
+                                                 this,
+                                                 [](){return true;},
+                                                 priority);
+        /** new we ensure that next event is schedule now release old event****/
         if (lastCtTrigger != nullptr){
             lastCtTrigger->getFinishSerializer().notify();
             /** the trigger will be automatically delete from sim controller*/
         }
 
 
-        conCurCycleUsed = startCycle;
-        lastCtTrigger = new ConcreteTriggerEvent(startCycle,
-                                                 this,
-                                                 [](){return true;},
-                                                 priority);
+        lastCtTrigger = newCtTrigger;
         lastCtTrigger->getStartSerializer().wait();
     }
 
@@ -117,6 +121,7 @@ namespace kathryn{
         assert(lastCtTrigger != nullptr);
         lastCtTrigger->getStartSerializer().wait();
         describeCon();
+        ///////std::cout << "last trigger notifying" << std::endl;
         lastCtTrigger->getFinishSerializer().notify();
         /** to prevent queue stuck*/
     }
