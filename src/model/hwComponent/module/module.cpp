@@ -25,7 +25,7 @@ namespace kathryn{
             deleteSubElement(_spReg);
         }
         deleteSubElement(_flowBlockBases);
-        deleteSubElement(_asmNodes);
+        deleteSubElement(_bareNodes);
         /** delete user element*/
         deleteSubElement(_userRegs);
         deleteSubElement(_userWires);
@@ -85,9 +85,9 @@ namespace kathryn{
         _flowBlockBases.push_back(fb);
     }
 
-    void Module::addAsmNode(AsmNode* asmNode) {
-        assert(asmNode != nullptr);
-        _asmNodes.push_back(asmNode);
+    void Module::addNode(Node* node) {
+        assert(node != nullptr);
+        _bareNodes.push_back(node);
     }
 
     void Module::addUserReg(Reg* reg) {
@@ -128,18 +128,32 @@ namespace kathryn{
     }
 
     void Module::buildFlow() {
-        /** build all hardware to flowBlock*/
-        /** every flowblock will auto build when block is detach*/
-        /** create nodewrap of all flowblock*/
-        /** may be if block is top flow we must clear the stack*/
+
         ctrl->tryPurifyFlowStack();
         assert(ctrl->isAllFlowStackEmpty());
+
         std::vector<NodeWrap*> frontNodeWrap;
 
         for (auto fb: _flowBlockBases){
             assert(fb != nullptr);
-            fb->buildHwComponent();
-            frontNodeWrap.push_back(fb->sumarizeBlock());
+            switch (fb->getJoinFbPol()) {
+
+                case FLOW_JO_SUB_FLOW:
+                    /**in case it is normal flow block*/
+                    fb->buildHwComponent();
+                    frontNodeWrap.push_back(fb->sumarizeBlock());
+                    break;
+                case FLOW_JO_CON_FLOW:
+                    mfAssert(false, "detect con bare block iteration");
+                    break;
+                case FLOW_JO_EXT_FLOW:
+                    /**in case it is extract need flow block*/
+                    for (auto node: fb->getBasicNode()){
+                        node->dryAssign();
+                    }
+                    break;
+            }
+
         }
         for (auto nw: frontNodeWrap){
             /** we will have start wire node to start node*/

@@ -91,6 +91,8 @@ namespace kathryn {
         std::vector<Node*>          _basicNodes;
         std::vector<int>            _basicNodesOrder; //// input order in this block
 
+        std::vector<FlowBlockBase*> _abandonedBlocks;  /// the flow block that have been extracted and push to this block
+
         /** status of node*/
         FLOW_BLOCK_TYPE             _type;
         ModelController*            ctrl = nullptr;
@@ -134,6 +136,10 @@ namespace kathryn {
             assert(conBlock != nullptr);
             _conBlocks.push_back(conBlock);
             _conBlocksOrder.push_back(nextInputOrder++);
+        }
+        virtual void addAbandonFlowBlock(FlowBlockBase* abandonBlock){
+            assert(abandonBlock != nullptr);
+            _abandonedBlocks.push_back(abandonBlock);
         }
         /**
          * For custom block

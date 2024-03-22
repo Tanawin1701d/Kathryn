@@ -72,6 +72,7 @@ namespace kathryn{
             for (auto basicNode: topFb->getBasicNode()){
                 frontFb->addElementInFlowBlock(basicNode);
             }
+            frontFb->addAbandonFlowBlock(topFb);
             /***we must delete this due to*/
             ///// delete topFb;
         }else{

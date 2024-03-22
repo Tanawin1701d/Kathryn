@@ -66,11 +66,19 @@ namespace kathryn{
         assert(asmNode != nullptr);
         tryPurifyFlowStack();
         asmNode->setDependStateJoinOp(BITWISE_AND);
-        assert(isTopFbBelongToTopModule());
-        auto fb = getTopFlowBlockBase();
-        fb->addElementInFlowBlock(asmNode);
-        logMF(srcReg,
-              "user Reg is updating value @ fb block " + fb->getMdIdentVal());
+        if(isTopFbBelongToTopModule()){
+            auto fb = getTopFlowBlockBase();
+            fb->addElementInFlowBlock(asmNode);
+            logMF(srcReg,
+                  "user Reg is updating value @ fb block " + fb->getMdIdentVal());
+        }else{
+            asmNode->dryAssign();
+            logMF(srcReg,
+                  "user reg is updatting without flowblock");
+            Module* targetModulePtr = getTopModulePtr();
+            targetModulePtr->addNode(asmNode);
+        }
+
     }
 
 
@@ -79,7 +87,7 @@ namespace kathryn{
      * wire handling
      *
      * */
-    void ModelController::on_wire_init(Wire* ptr) {
+    void ModelController::on_wire_init(Wire* ptr){
         assert(ptr != nullptr);
         Module* targetModulePtr = getTopModulePtr();
         /** localize necessary destination*/
@@ -114,7 +122,7 @@ namespace kathryn{
             logMF(srcWire,
                   "user wire is updatting without flowblock");
             Module* targetModulePtr = getTopModulePtr();
-            targetModulePtr->addAsmNode(asmNode);
+            targetModulePtr->addNode(asmNode);
         }
     }
 
@@ -197,7 +205,7 @@ namespace kathryn{
             logMF(srcWire,
                   "user nest is updating without flowblock");
             Module* targetModulePtr = getTopModulePtr();
-            targetModulePtr->addAsmNode(asmNode);
+            targetModulePtr->addNode(asmNode);
         }
     }
 

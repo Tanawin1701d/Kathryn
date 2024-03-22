@@ -61,7 +61,7 @@ namespace kathryn {
             /*** no need to deal with rst event due to data self invoked*/
         }
         /** assign with no flow block related*/
-        void dryAssign(){
+        void dryAssign() override{
             assert(!_assignMetas.empty());
             for (auto* assignMeta: _assignMetas) {
                 auto resultUpEvent = new UpdateEvent({

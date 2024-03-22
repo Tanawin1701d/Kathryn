@@ -53,6 +53,11 @@ namespace kathryn{
             return {start + indexer.start, start + indexer.stop};
         }
 
+        Slice getSubSlice(int startIdx) const{
+            assert(startIdx < stop);
+            return {start + startIdx, stop};
+        }
+
         bool operator == (const Slice& b) const{
             return (start == b.start) && (stop == b.stop);
         }

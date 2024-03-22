@@ -60,7 +60,7 @@ namespace kathryn {
         };
 
         Operable* castToOperable(){
-            return static_cast<Operable*>(_master);
+            return static_cast<Operable*>(this);
         }
 
         /** slicable overload*/

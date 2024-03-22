@@ -64,7 +64,7 @@ namespace kathryn{
     }
 
     void FlowBlockZELIF::buildHwComponent() {
-
+        assert(false);
     }
 
     std::string FlowBlockZELIF::getMdDescribe() {

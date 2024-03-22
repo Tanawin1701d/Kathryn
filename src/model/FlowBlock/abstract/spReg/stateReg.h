@@ -37,7 +37,7 @@ namespace kathryn {
         /** exit expression*/
         Operable* generateEndExpr() override;
         /***resetEvent Status*/
-        bool requireResetEvent(){
+        bool requireResetEvent() override{
             return _rstReq;
         }
     };

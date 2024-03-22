@@ -47,12 +47,13 @@ namespace kathryn{
 
     void nest::doBlockAsm(Operable& srcOpr, Slice desSlice) {
         assert(desSlice.getSize() <= getSlice().getSize());
+        Slice actualSlice = desSlice.getMatchSizeSubSlice(srcOpr.getOperableSlice());
         std::vector<AssignMeta*> resultCollector;
         /** get assign meta to build node*/
         doBlockAsm(srcOpr,
                    resultCollector,
                    srcOpr.getOperableSlice(),
-                   desSlice);
+                   actualSlice);
         /** basic node building*/
         auto* asmNode = new AsmNode(resultCollector);
         /** update node*/
@@ -61,12 +62,13 @@ namespace kathryn{
 
     void nest::doNonBlockAsm(Operable &srcOpr, Slice desSlice) {
         assert(desSlice.getSize() <= getSlice().getSize());
+        Slice actualSlice = desSlice.getMatchSizeSubSlice(srcOpr.getOperableSlice());
         std::vector<AssignMeta*> resultCollector;
         /** get assign meta to build node*/
         doNonBlockAsm(srcOpr,
                    resultCollector,
                    srcOpr.getOperableSlice(),
-                   desSlice);
+                  actualSlice);
         /** basic node building*/
         auto* asmNode = new AsmNode(resultCollector);
         /** update node*/
@@ -105,69 +107,59 @@ namespace kathryn{
 
 
     void
-    nest::doNestGlobalAsm(Operable &srcOpr,
+    nest::doNestGlobalAsm(Operable& srcOpr,
                           std::vector<AssignMeta *> &resultMetaCollector,
                           Slice absSrcSlice,
                           Slice absDesSlice,
                           bool isblockingAsm){
 
-        assert(absDesSlice.checkValidSlice());
-        assert(absSrcSlice.checkValidSlice());
+        assert(absSrcSlice.getSize() >= absDesSlice.getSize());
+        assert(absSrcSlice.stop <= srcOpr.getOperableSlice().getSize());
+        assert(absDesSlice.stop <= getOperableSlice().getSize());
 
-        Slice curSrcSlice   = absSrcSlice;
-        int accumStart = 0;
-        ///std::cout << "------------------------------------" << std::endl;
-        /** traverse to all nest list to assign balule*/
-        for (NestMeta meta: _nestList){
+        int desIterAccumBit = 0;
+        int srcConsummedBit = 0;
 
-            /** get neccessary data*/
-            Operable* subOpr   = meta.opr;
-            Assignable* subAss = meta.asb;
-            assert(subOpr != nullptr);
-            Slice subOprSlice = subOpr->getOperableSlice();
-            int subOprSize = subOpr->getOperableSlice().getSize();
-            /** check is src ok*/
-            ///std::cout  <<subOpr->getOperableSlice().getSize() << std::endl;
-            if (curSrcSlice.start >= curSrcSlice.stop){
-                break;
-            }
-
-            /** check that current iteration reach specific point*/
-            if (!absDesSlice.isIntersec(
-                    {accumStart, accumStart + subOprSize})){
-                accumStart += subOprSize;
+        for (auto desNest: _nestList){
+            /** iterate to meet good point first*/
+            auto desOpr = desNest.opr;
+            auto desAsb= desNest.asb;
+            Slice curDesSlice     = desOpr->getOperableSlice();
+            int   curDesSize      = curDesSlice.getSize();
+            /** if it is not desire destination continue next*/
+            if (!absDesSlice.isIntersec({desIterAccumBit, desIterAccumBit + curDesSize})){
+                desIterAccumBit += curDesSize;
                 continue;
             }
-            ////std::cout << "trap"  <<subOpr->getOperableSlice().getSize() << std::endl;
-            /**get which bit in each element will be used to fill data*/
-            int startBit = std::max(0               , absDesSlice.start - accumStart);
-            int stopBit  = std::min(subOprSlice.stop, absDesSlice.stop  - accumStart);
-            Slice desireDesSlice = {startBit, stopBit};
-            ///std::cout << "startBit " <<startBit << "   stopBit " << stopBit << std::endl;
 
-            ///std::cout << "inner" << std::endl;
+            /** get relative index of current destination*/
+            int relDesStartBit = std::max(0         , absDesSlice.start - desIterAccumBit);
+            int relDesStopBit  = std::min(curDesSize, absDesSlice.stop - desIterAccumBit);
+            /**convert to abs index of current destination*/
+            Slice desireDesSlice = curDesSlice.getSubSlice({relDesStartBit, relDesStopBit});
+
+            /////// calculate src slice
+                /**trim start bit*/
+            Slice desireSrcSlice = absSrcSlice.getSubSlice(srcConsummedBit);
+                /** trim stop bit*/
+                  desireSrcSlice = desireSrcSlice.getMatchSizeSubSlice(desireDesSlice);
+
             if (isblockingAsm){
-                subAss->doBlockAsm(
-                        srcOpr,
-                        resultMetaCollector,
-                        curSrcSlice,
-                        desireDesSlice
-                );
+                desAsb->doBlockAsm(srcOpr,
+                                   resultMetaCollector,
+                                   desireSrcSlice,
+                                   desireDesSlice);
             }else{
-                subAss->doNonBlockAsm(
-                        srcOpr,
-                        resultMetaCollector,
-                        curSrcSlice,
-                        desireDesSlice
-                );
+                desAsb->doNonBlockAsm(srcOpr,
+                                      resultMetaCollector,
+                                      desireSrcSlice,
+                                      desireDesSlice);
             }
-            ////std::cout << "oouter" << std::endl;
-            /** iterate srcSlice to getnext*/
-            curSrcSlice.start += desireDesSlice.getSize();
-            /** iterate accumValue*/
-            accumStart += subOprSize;
-        }
 
+            srcConsummedBit += desireDesSlice.getSize();
+            desIterAccumBit += curDesSize;
+
+        }
     }
     /**********************************/
 

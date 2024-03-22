@@ -124,11 +124,11 @@ namespace kathryn {
         }
         /** unset event when state is raised there must be condition that bring this down*/
         virtual void makeUnsetStateEvent(){assert(false);}
-        virtual void makeRstAndDefStateEvent(){assert(false);}
         /** provided src state data*/
         virtual Operable* getExitOpr(){ return nullptr; };
         /** assign value with proper condition*/
         virtual void assign() = 0; /** please make sure that makeunsetState is called*/
+        virtual void dryAssign(){assert(false);};
         /** cycle that is use in this node*/
         virtual int getCycleUsed() = 0;
         /** is Stateful node (reffer to node that consume at least 1 cycle from machine)*/

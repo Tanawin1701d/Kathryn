@@ -178,6 +178,7 @@ add_executable(Kathryn main.cpp
         src/test/autoSim/testCase/simAutoTest19.cpp
         src/test/autoSim/testCase/simAutoTest20.cpp
         src/test/autoSim/testCase/simAutoTest21.cpp
+        src/test/autoSim/testCase/simAutoTest22.cpp
 
 
 )
