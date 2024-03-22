@@ -17,6 +17,11 @@ namespace kathryn{
         makeVal(c, 8, 8);
         makeVal(d, 32, 10);
 
+        makeWire(i, 6);
+        makeMem(mySt, 48, 8);
+        makeWire(myStOut, 8);
+        makeWire(myStOutOld, 8);
+
 
         explicit testSimMod22(int x): Module(){}
 
@@ -24,6 +29,11 @@ namespace kathryn{
 
             g(a,m,b) <<= g(c,d);
             m(9) <<= 1;
+            /**value*/
+            i          = 8;
+            mySt[i]    <<= c;
+            myStOut    = mySt[i];
+            myStOutOld = mySt[0];
 
         }
     };

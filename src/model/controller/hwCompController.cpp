@@ -163,11 +163,19 @@ namespace kathryn{
         assert(asmNode != nullptr);
         tryPurifyFlowStack();
         asmNode->setDependStateJoinOp(BITWISE_AND);
-        assert(isTopFbBelongToTopModule());
-        auto fb = getTopFlowBlockBase();
-        fb->addElementInFlowBlock(asmNode);
-        logMF(srcHolder,
-              "memBlk HOLDER is updating value @ fb block " + fb->getMdIdentVal());
+        if(isTopFbBelongToTopModule()){
+            auto fb = getTopFlowBlockBase();
+            fb->addElementInFlowBlock(asmNode);
+            logMF(srcHolder,
+                  "memBlk HOLDER is updating value @ fb block " + fb->getMdIdentVal());
+        }else{
+            asmNode->dryAssign();
+            logMF(srcHolder,
+                  "user mem holder is updatting without flowblock");
+            Module* targetModulePtr = getTopModulePtr();
+            targetModulePtr->addNode(asmNode);
+        }
+
     }
 
     /** exprMetas*/
