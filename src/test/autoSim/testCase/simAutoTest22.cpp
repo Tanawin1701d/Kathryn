@@ -30,7 +30,7 @@ namespace kathryn{
             g(a,m,b) <<= g(c,d);
             m(9) <<= 1;
             /**value*/
-            i          = 8;
+            i          = 4;
             mySt[i]    <<= c;
             myStOut    = mySt[i];
             myStOutOld = mySt[0];
@@ -54,6 +54,15 @@ namespace kathryn{
                              _md(md)
         {}
 
+        void describeCon() override{
+            testAndPrint("test dry nest", ull(_md->m), (1 << 9) + 8);
+            conEndCycle();
+            testAndPrint("test memAndWire dummy", ull(_md->myStOutOld), 0);
+            testAndPrint("test memAndWire fill" , ull(_md->myStOut), 8);
+        }
+
+
+
     };
 
 
@@ -68,5 +77,5 @@ namespace kathryn{
 
     };
 
-    Sim22TestEle ele22(-1);
+    Sim22TestEle ele22(22);
 }
