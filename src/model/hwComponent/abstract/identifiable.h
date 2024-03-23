@@ -11,11 +11,18 @@
 #include <cassert>
 #include <vector>
 
+
 typedef unsigned long long int ull;
 
 namespace kathryn {
 
     extern ull LAST_IDENT_ID;
+
+
+    ull getLastIdentId();
+    bool        isVarNameRetrievable(ull deviceIdentId);
+    std::string retrieveVarName();
+    void        setRetrieveVarName(std::string name);
 
 
     enum HW_COMPONENT_TYPE{
@@ -51,10 +58,10 @@ namespace kathryn {
     private:
         const std::string UNNAME_STR = "unnamed";
         /** name type such as Reg Wire ModuleClassName*/
-        HW_COMPONENT_TYPE _type;
-        std::string       _varName; /// sub type of component typically we use for module
-        std::string       _globalName;
-        ull               _globalId; /// id that DISTINCT // for all element even it is the same type
+        HW_COMPONENT_TYPE        _type;
+        std::string              _varName; /// sub type of component typically we use for module
+        std::string              _globalName;
+        ull                      _globalId; /// id that DISTINCT // for all element even it is the same type
         std::vector<std::string> _inheritName; ///// "Name1_Name2_Name3"
         /** local variable*/
         Module* _parent; /// if it is nullptr it is not localized
@@ -71,6 +78,7 @@ namespace kathryn {
                 _parent(nullptr),
                 _localId(-1)
             {
+            _varName = isVarNameRetrievable(LAST_IDENT_ID) ? retrieveVarName() : UNNAME_STR;
             _globalName = GLOBAL_PREFIX[type] + std::to_string(LAST_IDENT_ID);
                 if (LAST_IDENT_ID == 30 || LAST_IDENT_ID == 31){
                     int idxxxx = 0;

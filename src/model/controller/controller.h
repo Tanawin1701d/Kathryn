@@ -8,6 +8,8 @@
 #include <stack>
 #include <memory>
 
+#include "abstract/mainControlable.h"
+
 #include "model/hwComponent/module/module.h"
 #include "model/FlowBlock/abstract/nodes/asmNode.h"
 #include "model/FlowBlock/abstract/flowBlock_Base.h"
@@ -33,9 +35,11 @@
 namespace kathryn {
 
     enum MODULE_BUILDING_STATE{
-        MODULE_COMPONENT_CONSTRUCT,
-        MODULE_DESIGN_FLOW_CONSTRUCT,
-        MODULE_FINISHED_CONSTRUCT
+        MODULE_INIT, /** module element is declared but not yet init design flow only for element initialization*/
+        MODULE_END_GLOB_DECLARE, /** module end init element*/
+        MODULE_INIT_DESIGN_FLOW, /** module start init design flow*/
+        MODULE_END /** module finalize*/
+
     };
 
     struct Module_Stack_Element{
@@ -44,8 +48,9 @@ namespace kathryn {
     };
 
 
+    class MainControlable;
 
-    class ModelController {
+    class ModelController : public MainControlable {
 
     private:
         bool hwCompAllocLock = true; /** this is used to indicate whether make<> is used or not only make<> can unlock*/
@@ -75,7 +80,9 @@ namespace kathryn {
          *
          * */
         explicit ModelController();
-        void reset();
+        void start() override;
+        void reset() override;
+        void clean() override;
         Module* getGlobalModule();
         /** state register handling*/
         void on_sp_reg_init(CtrlFlowRegBase* ptr, SP_REG_TYPE regType);
@@ -102,8 +109,12 @@ namespace kathryn {
          *
          * */
 
+        ////// for global component
         void on_globalModule_init_component();
+        void on_globalModule_init_designFlow();
+        ////// for basic component
         void on_module_init_components(Module* ptr);
+        void on_module_end_init_components(Module* ptr);
         void on_module_init_designFlow(Module* ptr); /** todo make design flow implement correctly*/
         void on_module_final(Module* ptr);
 

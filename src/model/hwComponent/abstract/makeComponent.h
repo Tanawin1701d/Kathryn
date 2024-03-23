@@ -30,6 +30,8 @@ namespace kathryn {
 
     void unlockAlloc();
 
+
+
     template<typename T, typename... Args>
     T& _make(const std::string name,Args&&... args){
         static_assert(std::is_base_of<HwCompControllerItf, T>::value,
@@ -41,9 +43,9 @@ namespace kathryn {
 
         /** make initializer*/
         unlockAlloc();
+        setRetrieveVarName(name);
         auto objPtr = new T(std::forward<Args>(args)...);
-        objPtr->setVarName(name);
-        objPtr->com_final();
+        objPtr->com_final(); /** /* typicallly it is used only module*/
 
         return *objPtr;
     }

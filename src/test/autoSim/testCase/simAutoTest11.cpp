@@ -91,6 +91,7 @@ namespace kathryn{
         explicit Sim11TestEle(int id): AutoTestEle(id){}
         void start() override{
             makeMod(d, testSimMod11, 1);
+            startModelKathryn();
             sim11 simulator((testSimMod11*) &d);
             simulator.simStart();
         }

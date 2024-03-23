@@ -19,7 +19,7 @@ namespace kathryn{
      * process of simulation for kathryn model simulation sequence
      * ------ intiate phase ----------
      * 1. beforePrepareSim(args)    ---- to setVariable before prepare function
-     * 2. prepareSim() ----- to process some infomation before simStart
+     * 2. prepareSim() ----- to process some infomation before start
      * ------ sim phase(loop)----------
      * 3. simStartCurCycle()    ----- to simulate value only in current cycle
      * 4. simStartNextCycle()   ----- to simulate value only in next cycle

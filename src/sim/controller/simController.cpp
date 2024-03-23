@@ -16,7 +16,7 @@ namespace kathryn{
 
     }
 
-    void SimController::simStart() {
+    void SimController::start() {
 
         lock();
         while ( (!eventQ.isEmpty()) &&
@@ -84,6 +84,10 @@ namespace kathryn{
         _limitCycle = 1;
         eventQ.reset();
         unlock();
+    }
+
+    void SimController::clean(){
+        reset();
     }
 
     CYCLE SimController::getCurCycle(){

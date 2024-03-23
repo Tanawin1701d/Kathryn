@@ -9,6 +9,48 @@
 namespace kathryn{
     ull LAST_IDENT_ID = 0;
 
+    ull getLastIdentId(){
+        return LAST_IDENT_ID;
+    }
+
+    /***
+     *
+     *
+     * var name management colab with make component
+     *
+     * */
+
+    ull  lastIdent = -1;
+    std::string varName = "UNNAME";
+
+    bool isVarNameRetrievable(ull deviceIdentId){
+        return lastIdent == deviceIdentId;
+    }
+
+    std::string retrieveVarName(){
+        lastIdent = -1;
+        std::string preRet = "UNNAME";
+        swap(varName, preRet);
+        return preRet;
+    }
+
+    void setRetrieveVarName(std::string name){
+        lastIdent    = getLastIdentId();
+        varName      = std::move(name);
+    }
+
+
+
+    /**
+     *
+     *
+     *
+     *
+     * */
+
+
+
+
     void Identifiable::buildInheritName(){
         if (_parent != nullptr){
             _inheritName = _parent->getInheritName();

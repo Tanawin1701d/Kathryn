@@ -8,6 +8,12 @@
 
 namespace kathryn{
 
+
+
+    void startModelKathryn(){
+        getControllerPtr()->start();
+    }
+
     void resetKathryn(){
 
         /** flush model formation log value first*/
@@ -18,5 +24,7 @@ namespace kathryn{
         getSimController()->reset();
 
     }
+
+
 
 }

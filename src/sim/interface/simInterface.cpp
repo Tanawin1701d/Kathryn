@@ -56,7 +56,7 @@ namespace kathryn{
         /** start main thread*/
         SimController* simCtrl = getSimController();
         assert(simCtrl != nullptr);
-        simCtrl->simStart();
+        simCtrl->start();
         if (conThread && conThread->joinable()){
             conThread->join();
         }

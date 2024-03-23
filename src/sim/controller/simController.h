@@ -10,11 +10,12 @@
 
 #include "sim/event/eventBase.h"
 #include "sim/event/eventQ.h"
+#include "abstract/mainControlable.h"
 
 namespace kathryn{
 
     class Wire;
-    class SimController{
+    class SimController: public MainControlable{
 
     private:
         std::mutex _rsMtx;
@@ -27,11 +28,12 @@ namespace kathryn{
     public:
 
         explicit SimController();
-        void  simStart();
+        void  start() override;
+        void  reset() override;
+        void  clean() override;
         void  addEvent(EventBase* event);
         void  saveData();
         void  setLimitCycle(CYCLE lmtCycle){_limitCycle = lmtCycle;}
-        void  reset();
         CYCLE getCurCycle();
         void  lock();
         void  unlock();

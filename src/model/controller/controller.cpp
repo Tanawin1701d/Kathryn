@@ -19,15 +19,27 @@ namespace kathryn{
         on_globalModule_init_component();
     }
 
-    void ModelController::reset(){
-        assert(!moduleStack.empty());
-        /** delete old global module**/
-        assert(moduleStack.size() == 1);
+    void ModelController::start(){
+        assert(globalModulePtr != nullptr);
+        /***
+         * global Module must be auto initiated when controller is initialize or it is reset
+         * */
+        on_module_end_init_components(globalModulePtr);
+        on_globalModule_init_designFlow();
         on_module_final(moduleStack.top().md);
+    }
+
+    void ModelController::reset(){
+        clean();
+        on_globalModule_init_component();
+    }
+
+    void ModelController::clean(){
+        /** delete old global module**/
+        assert(isAllFlowStackEmpty());
+        assert(moduleStack.empty());
         delete globalModulePtr;
         globalModulePtr = nullptr;
-        /** create new one*/
-        on_globalModule_init_component();
     }
 
     Module* ModelController::getGlobalModule(){
@@ -41,8 +53,6 @@ namespace kathryn{
         if (centralControllerPtr == nullptr){
             new ModelController();
             /** the constructor of model controller will handle itself*/
-        }else{
-            return centralControllerPtr;
         }
         return centralControllerPtr;
     }

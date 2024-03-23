@@ -248,22 +248,30 @@ namespace kathryn{
         globalModulePtr->setVarName("globeMod");
         /** for global module for initialize project*/
         assert(globalModulePtr != nullptr);
-        moduleStack.push(Module_Stack_Element{globalModulePtr, MODULE_COMPONENT_CONSTRUCT});
+        moduleStack.push(Module_Stack_Element{globalModulePtr, MODULE_INIT});
         globalModulePtr->buildInheritName();
         initiateGlobalComponent();
+    }
+
+    void ModelController::on_globalModule_init_designFlow(){
+        assert(globalModulePtr != nullptr);
+        assert(moduleStack.empty());
+        assert(isAllFlowStackEmpty());
+        moduleStack.push(Module_Stack_Element{globalModulePtr, MODULE_INIT_DESIGN_FLOW});
+        globalModulePtr->buildAll();
     }
 
 
     void ModelController::on_module_init_components(Module* ptr) {
         /**check that module initialization is in construct state not in designflow constructing*/
-        assert(getTargetModuleEle().state == MODULE_COMPONENT_CONSTRUCT);
+        assert(getTargetModuleEle().state == MODULE_INIT || getTargetModuleEle().state == MODULE_INIT_DESIGN_FLOW);
+        assert(ptr->getStage() == MODEL_UNINIT);
         /** previous module*/
         Module* targetModulePtr = getTopModulePtr();
         targetModulePtr->addUserSubModule(ptr);
         /** current module*/
         /**at least module must be other submodule*/
-        assert(getTargetModuleEle().state != MODULE_FINISHED_CONSTRUCT);
-        moduleStack.push(Module_Stack_Element{ptr, MODULE_COMPONENT_CONSTRUCT});
+        moduleStack.push(Module_Stack_Element{ptr, MODULE_INIT});
         ptr->setParent(targetModulePtr);
         ptr->buildInheritName();
         /** debug value*/
@@ -271,23 +279,38 @@ namespace kathryn{
               "module is initializing and set parent to " + targetModulePtr->getIdentDebugValue());
     }
 
+    void ModelController::on_module_end_init_components(Module* ptr){
+        assert(!moduleStack.empty() && (moduleStack.top().md == ptr));
+        assert(moduleStack.top().state == MODULE_INIT);
+        ptr->setStage(MODEL_GLOB_INITED);
+        moduleStack.top().state = MODULE_END_GLOB_DECLARE;
+        moduleStack.pop();
+
+        logMF(ptr, "module is finalize init component");
+    }
+
+
+
     void ModelController::on_module_init_designFlow(Module* ptr) {
-        Module* topModule = getTopModulePtr();
-        assert(topModule == ptr);
-        moduleStack.top().state = MODULE_DESIGN_FLOW_CONSTRUCT;
+        assert(ptr->getStage() == MODEL_GLOB_INITED);
+        assert(getTargetModuleEle().state == MODULE_INIT_DESIGN_FLOW);
+        assert(ptr != nullptr);
+        /** push to model stack */
+        moduleStack.push(Module_Stack_Element{ptr, MODULE_INIT_DESIGN_FLOW});
         /** debug value*/
         logMF(ptr,
               "module is initializing design flow");
         /** flow the program*/
-        topModule->flow();
-        topModule->buildFlow();
+        ptr->buildAll();
 
     }
 
     void ModelController::on_module_final(Module* ptr) {
         assert(!moduleStack.empty() && ( moduleStack.top().md == ptr ));
-        moduleStack.top().state = MODULE_FINISHED_CONSTRUCT;
-        assert(isAllFlowStackEmpty());
+        assert(moduleStack.top().state == MODULE_INIT_DESIGN_FLOW);
+        ptr->setStage(MODEL_FLOW_INITED);
+        moduleStack.top().state = MODULE_END;
+        assert(!isTopFbBelongToTopModule());
         moduleStack.pop();
         logMF(ptr,
               "module is finalized design flow");

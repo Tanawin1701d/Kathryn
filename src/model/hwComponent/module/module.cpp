@@ -13,7 +13,8 @@ namespace kathryn{
     Module::Module(bool initComp):
             Identifiable(TYPE_MODULE),
             HwCompControllerItf(),
-            ModuleSimEngine()
+            ModuleSimEngine(),
+            _mdStage(MODEL_UNINIT)
     {
         if (initComp)
             com_init();
@@ -43,30 +44,9 @@ namespace kathryn{
     }
 
     void Module::com_final() {
-        /** invoke controller for design flow acknowledgement*/
-        ctrl->on_module_init_designFlow(this);
-        /** fix slave elements to belong to this module*/
-        ctrl->on_module_final(this);
+        /** invoke controller to design end component init*/
+        ctrl->on_module_end_init_components(this);
     }
-
-//    template<typename T>
-//    void Module::localizeSlaveVector(std::vector<T> &_vec) {
-//        for (size_t i = 0; i < _vec.size(); i++){
-//            _vec[i]->setLocalId((ull)i);
-//            _vec[i]->setParent(this);
-//        }
-//    }
-//
-//    void Module::localizeSlaveElements() {
-//        /** state reg and user reg used same local ID sequence*/
-//        for (auto & _spReg : _spRegs)
-//            localizeSlaveVector(_spReg);
-//        localizeSlaveVector(_userRegs);
-//        localizeSlaveVector(_userWires);
-//        localizeSlaveVector(_userExpressions);
-//        localizeSlaveVector(_userVals);
-//        localizeSlaveVector(_userSubModules);
-//    }
 
     /**
      *
@@ -122,12 +102,30 @@ namespace kathryn{
     }
 
 
-    void Module::addUserSubModule(Module* smd) {
+    void Module::addUserSubModule(Module* smd){
         assert(smd != nullptr);
         _userSubModules.push_back(smd);
     }
 
-    void Module::buildFlow() {
+    void Module::buildAll(){
+        /**declare to model controller that this module is initialize*/
+        flow();
+        buildFlow();
+        /**this ensure that submodule in init component and all is ready to build flow*/
+        /** build sub module first*/
+        for (auto subMd: _userSubModules){
+            ctrl->on_module_init_designFlow(subMd);
+            ctrl->on_module_final(subMd);
+        }
+
+        /**
+         *
+         * please note that you cant change order of flow and sub model init design flow
+         * */
+
+    }
+
+    void Module::buildFlow(){
 
         ctrl->tryPurifyFlowStack();
         assert(ctrl->isAllFlowStackEmpty());
