@@ -11,7 +11,10 @@ namespace kathryn{
     FlowBlockWhileBase(opr, CWHILE){}
 
     FlowBlockcWhile::~FlowBlockcWhile(){
-        delete loopNodeWrap;
+        delete upConditionNode;
+        delete loopConditionNode;
+        delete conditionNode;
+
         delete byPassExitNode;
         delete subBlockExitNode;
     }
@@ -25,62 +28,69 @@ namespace kathryn{
         subBlockNodeWrap = _subBlocks[0]->sumarizeBlock();
         assert(subBlockNodeWrap != nullptr);
 
-
-        /** copy node and node wrap*/
-        loopNodeWrap = new NodeWrap(*subBlockNodeWrap);
-
-
         /**assign to result node wrap*/
         /** node wrap no assign because we must sent to upper block*/
-        resultNodeWrapper = new NodeWrap();
-        exitNode          = new PseudoNode(1);
+
+        /**condition*/
+        upConditionNode   = new PseudoNode(1);
+        loopConditionNode = new PseudoNode(1);
+        conditionNode     = new PseudoNode(1);
+        /**exit*/
         byPassExitNode    = new PseudoNode(1);
         subBlockExitNode  = new PseudoNode(1);
+        exitNode          = new PseudoNode(1);
+        /**result*/
+        resultNodeWrapper = new NodeWrap();
 
         /**
-         *
-         * result node wrap
-         *
+         * do condition node first
          * */
+        upConditionNode->setDependStateJoinOp(BITWISE_AND);
+        upConditionNode->addCondtion(_purifiedCondExpr, BITWISE_AND);
 
-        /** entrance result nodewrap*/
-        resultNodeWrapper->transferEntNodeFrom(subBlockNodeWrap);
-        resultNodeWrapper->addConditionToAllNode(_purifiedCondExpr, BITWISE_AND);
-        /** in case it is not match at first time*/
-        resultNodeWrapper->addEntraceNode(byPassExitNode);
+        loopConditionNode->setDependStateJoinOp(BITWISE_AND);
+        loopConditionNode->addCondtion(_purifiedCondExpr, BITWISE_AND);
+        loopConditionNode->addDependNode(subBlockNodeWrap->getExitNode());
+        loopConditionNode->assign();
 
-        /**exit node wrap*/
-        byPassExitNode->addCondtion(&(!*_purifiedCondExpr), BITWISE_AND);
+        conditionNode->setDependStateJoinOp(BITWISE_OR);
+        conditionNode->addDependNode(upConditionNode);
+        conditionNode->addDependNode(loopConditionNode);
+        conditionNode->assign();
+
+        /**
+         * do work node wrap
+         * **/
+        subBlockNodeWrap->addDependNodeToAllNode(conditionNode);
+        subBlockNodeWrap->assignAllNode();
+        /**
+         * exit node
+         * */
+        ////////// incase exit bypassing
         byPassExitNode->setDependStateJoinOp(BITWISE_AND);
-        /** in case exit from sublock*/
+        byPassExitNode->addCondtion(&(!*_purifiedCondExpr), BITWISE_AND);
+        ////////// incase exit from subblock
+        subBlockExitNode->setDependStateJoinOp(BITWISE_AND);
         subBlockExitNode->addCondtion(&(!*_purifiedCondExpr), BITWISE_AND);
         subBlockExitNode->addDependNode(subBlockNodeWrap->getExitNode());
-        subBlockExitNode->setDependStateJoinOp(BITWISE_AND);
         subBlockExitNode->assign();
         /** pool exit node and put to result node wrap*/
+        exitNode->setDependStateJoinOp(BITWISE_OR);
         exitNode->addDependNode(subBlockExitNode);
         exitNode->addDependNode(byPassExitNode);
         if ( subBlockNodeWrap->isThereForceExitNode() ){
             exitNode->addDependNode(subBlockNodeWrap->getForceExitNode());
         }
-        exitNode->setDependStateJoinOp(BITWISE_OR);
         exitNode->assign();
-        resultNodeWrapper->addExitNode(exitNode);
-
 
         /**
-         * loop back condition to make block repeat
+         * result node wrap
          * */
+        resultNodeWrapper->addEntraceNode(upConditionNode);
+        resultNodeWrapper->addEntraceNode(byPassExitNode);
+        resultNodeWrapper->addExitNode(exitNode);
+        /**cycle andd force exit is set to -1*/
 
-        /**assign for loop back assignment*/
-        loopNodeWrap->addDependNodeToAllNode(subBlockNodeWrap->getExitNode());
-        if (subBlockNodeWrap->isThereForceExitNode()) {
-            Operable* allowLoopCond = &((*_purifiedCondExpr) & (!*subBlockNodeWrap->getForceExitNode()->getExitOpr()));
-            loopNodeWrap->addConditionToAllNode(allowLoopCond, BITWISE_AND);
-        }else{
-            loopNodeWrap->addConditionToAllNode(_purifiedCondExpr, BITWISE_AND);
-        }
-        loopNodeWrap->assignAllNode();
     }
 
 
@@ -99,12 +109,7 @@ namespace kathryn{
                                         ""));
         mdLogVal->addVal("resultNodeWrap is "+ resultNodeWrapper->getMdIdentVal() +
                          " " + resultNodeWrapper->getMdDescribe());
-        mdLogVal->addVal("loopNodeWrap is "+ loopNodeWrap->getMdIdentVal() +
-                         " " + loopNodeWrap->getMdDescribe());
         mdLogVal->addVal("--------- explain loop Node wrap --------------");
-        for (auto etNode : loopNodeWrap->entranceNodes){
-            mdLogVal->addVal("       " + etNode->getMdIdentVal() + "   " + etNode->getMdDescribe());
-        }
         mdLogVal->addVal("---------end explain loop node wrap --------------");
 
         mdLogVal->addVal("implicitSubBlock");

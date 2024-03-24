@@ -158,6 +158,8 @@ namespace kathryn{
                 "CONDWAIT",
                 "CLKWAIT",
                 "DO_WHILE",
+                "PIPE_SENDER",
+                "PIPE_RECIEVER",
                 "DUMMY_BLOCK"
         };
         assert(fbt < FLOW_BLOCK_COUNT);

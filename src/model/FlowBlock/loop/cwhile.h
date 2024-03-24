@@ -14,7 +14,12 @@ namespace kathryn{
 
     class FlowBlockcWhile : public FlowBlockWhileBase{
     private:
-        NodeWrap*    loopNodeWrap        = nullptr;
+        /**loop condition node*/
+        PseudoNode*  upConditionNode     = nullptr;
+        PseudoNode*  loopConditionNode   = nullptr;
+        PseudoNode*  conditionNode       = nullptr;
+
+        /** exit management node*/
         PseudoNode*  byPassExitNode      = nullptr;
         PseudoNode*  subBlockExitNode    = nullptr;
 
