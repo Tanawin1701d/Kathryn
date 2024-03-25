@@ -186,6 +186,8 @@ add_executable(Kathryn main.cpp
         src/model/FlowBlock/pipeline/pipeMng.h
         src/model/FlowBlock/pipeline/pipelineBlock.cpp
         src/model/FlowBlock/pipeline/pipelineBlock.h
+        src/model/FlowBlock/pipeline/pipeWrapper.cpp
+        src/model/FlowBlock/pipeline/pipeWrapper.h
 
 
 )

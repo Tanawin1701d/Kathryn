@@ -11,6 +11,8 @@
 #include "model/FlowBlock/abstract/loopStMacro.h"
 #include "model/FlowBlock/abstract/nodes/node.h"
 #include "model/FlowBlock/abstract/nodes/stateNode.h"
+
+#include "pipelineCom.h"
 #include "pipeMng.h"
 
 #define pipBlk for(auto kathrynBlock = new FlowBlockPipeBase(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
@@ -42,8 +44,8 @@ namespace kathryn{
 
         Pipe               _recvPipe;
         Pipe               _sendPipe;
-        FlowBlockPipeBase* _waitRecvBlock = nullptr;
-        FlowBlockPipeBase* _waitSendBlock = nullptr;
+        FlowBlockPipeCom* _waitRecvBlock = nullptr;
+        FlowBlockPipeCom* _waitSendBlock = nullptr;
 
         FlowBlockSeq* _implicitFlowBlock = nullptr;
         NodeWrap*     _impFbNodeWrap     = nullptr;
@@ -82,6 +84,14 @@ namespace kathryn{
 
         void setRecvPipe(Pipe recvPipe);
         void setSendPipe(Pipe sendPipe);
+
+
+        /**get debug*/
+        void addMdLog(MdLogVal* mdLogVal) override;
+
+        /**override simulator*/
+        void simStartCurCycle() override;
+        void simExitCurCycle() override;
 
     };
 

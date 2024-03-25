@@ -36,9 +36,10 @@ namespace kathryn{
         }
         mfAssert(rhs.isAlloc(), "copy pipe meta data while it is not allocated can lead to unexpect connection");
 
-        _isAlloc = true;
-        _pipeId = rhs._pipeId;
-        _availSendSignal = rhs._availSendSignal;
+        _isAlloc            = true;
+        _pipeId             = rhs._pipeId;
+        _dummyVal           = rhs._dummyVal;
+        _availSendSignal    = rhs._availSendSignal;
         _notifyToSendSignal = rhs._notifyToSendSignal;
 
         return *this;
@@ -46,7 +47,8 @@ namespace kathryn{
 
     void Pipe::alloc(){
         PipeController* pipCtrl = getControllerPtr()->getPipeCtrl();
-        _pipeId = pipCtrl->allocPipe(this);
+        pipCtrl->allocPipe(this);
+        ///////// pipId and alloc meta controller wil handdle it
         _availSendSignal    = &_make<expression>("availSendSignal_" + std::to_string(_pipeId),1);
         _notifyToSendSignal = &_make<expression>("notifyToSendSignal_" + std::to_string(_pipeId),1);
     }
@@ -77,13 +79,13 @@ namespace kathryn{
 
     void PipeController::clean(){
         _pipeMeta.clear();
-
     }
 
     pipId PipeController::allocPipe(Pipe* newPipeCom) {
         assert(newPipeCom != nullptr);
-        newPipeCom->_pipeId = getNextPipeId();
-        _pipeMeta.push_back(newPipeCom);
+        newPipeCom->_pipeId  = getNextPipeId();
+        newPipeCom->_isAlloc = true;
+        _pipeMeta.push_back(*newPipeCom);
         return newPipeCom->_pipeId;
     }
 

@@ -19,7 +19,7 @@ namespace kathryn{
     }),
     _pipe(pipe)
     {
-        mfAssert(_pipe._isAlloc, "pipe com is not allocated");
+        mfAssert(_pipe.isAlloc(), "pipe com is not allocated");
 
         assert( (fbt == PIPE_SENDER) || (fbt == PIPE_RECIEVER) );
 
@@ -137,12 +137,78 @@ namespace kathryn{
 
     }
 
+    /**loop st macro*/
+
     void FlowBlockPipeCom::doPreFunction() {
         onAttachBlock();
     }
 
     void FlowBlockPipeCom::doPostFunction() {
         onDetachBlock();
+    }
+
+    /** debug*/
+    void FlowBlockPipeCom::addMdLog(MdLogVal* mdLogVal){
+        mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() + " ]");
+        mdLogVal->addVal("_upwaitCheckNode " +
+                         _upWaitNode->getMdIdentVal() + " " +
+                         _upWaitNode->getMdDescribe()
+                         );
+        mdLogVal->addVal("_upExitNode " +
+                             _upExitNode->getMdIdentVal() + " " +
+                             _upExitNode->getMdDescribe()
+        );
+        mdLogVal->addVal("_notifyNode " +
+                                 _notifyNode->getMdIdentVal() + " " +
+                                 _notifyNode->getMdDescribe()
+        );
+    }
+
+    /** sim start cur cycle*/
+
+    void FlowBlockPipeCom::simStartCurCycle(){
+        if (isCurValSim()){
+            return;
+        }
+        setCurValSimStatus();
+
+        /** check running status*/
+        bool isStateRunning = false;
+        _waitNode->simStartCurCycle();
+        isStateRunning |= _waitNode->isBlockOrNodeRunning();
+
+        if (isStateRunning){
+            setBlockOrNodeRunning();
+            incEngine();
+        }
+
+        /** do sim all to maintain policy*/
+        _upWaitNode   ->simStartCurCycle();
+        _waitCheckNode->simStartCurCycle();
+
+        _upExitNode   ->simStartCurCycle();
+        _fromWaitNode ->simStartCurCycle();
+        _exitNode     ->simStartCurCycle();
+
+        _upNotifyNode ->simStartCurCycle();
+        _notifyNode   ->simStartCurCycle();
+    }
+
+    void FlowBlockPipeCom::simExitCurCycle(){
+        unSetSimStatus();
+        unsetBlockOrNodeRunning();
+
+        _upWaitNode   ->simExitCurCycle();
+        _waitCheckNode->simExitCurCycle();
+        _waitNode     ->simExitCurCycle();
+
+        _upExitNode   ->simExitCurCycle();
+        _fromWaitNode ->simExitCurCycle();
+        _exitNode     ->simExitCurCycle();
+
+        _upNotifyNode ->simExitCurCycle();
+        _notifyNode   ->simExitCurCycle();
+
     }
 
 

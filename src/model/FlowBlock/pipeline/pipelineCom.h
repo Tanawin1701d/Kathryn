@@ -12,6 +12,15 @@
 #include "model/FlowBlock/abstract/nodes/stateNode.h"
 #include "pipeMng.h"
 
+#define pipWaitSend(kathrynPipMeta) for(auto kathrynBlock = new FlowBlockPipeCom(PIPE_SENDER,kathrynPipMeta); \
+                                             kathrynBlock->doPrePostFunction();                               \
+                                             kathrynBlock->step())
+
+#define pipWaitRecv(kathrynPipMeta) for(auto kathrynBlock = new FlowBlockPipeCom(PIPE_RECIEVER,kathrynPipMeta); \
+                                             kathrynBlock->doPrePostFunction();                               \
+                                             kathrynBlock->step())
+
+
 namespace kathryn{
 
     class FlowBlockPipeCom: public FlowBlockBase, public LoopStMacro{
@@ -66,6 +75,12 @@ namespace kathryn{
         void doPostFunction() override;
 
         /**get debug*/
+        void addMdLog(MdLogVal* mdLogVal) override;
+
+        /**override simulator*/
+        void simStartCurCycle() override;
+        void simExitCurCycle() override;
+
 
     };
 

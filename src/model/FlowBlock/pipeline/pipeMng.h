@@ -46,7 +46,7 @@ namespace kathryn{
 
     class PipeController: MainControlable{
 
-    std::vector<Pipe*> _pipeMeta; /////// for user and s
+    std::vector<Pipe> _pipeMeta; /////// for user and s
 
     public:
         void start() override{};

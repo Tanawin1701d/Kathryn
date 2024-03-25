@@ -71,7 +71,7 @@ namespace kathryn{
         _implicitFlowBlock->onAttachBlock();
         /*** attach wait Block*/
         mfAssert(_isGetRecvPipe, "recv pipe is not allocated");
-        _waitRecvBlock = new FlowBlockPipeBase(PIPE_RECIEVER, _recvPipe);
+        _waitRecvBlock = new FlowBlockPipeCom(PIPE_RECIEVER, _recvPipe);
         _waitRecvBlock->onAttachBlock();
         _waitRecvBlock->onDetachBlock();
 
@@ -83,7 +83,7 @@ namespace kathryn{
         assert(_isGetImplicitFlowBlockYet);
 
         mfAssert(_isGetSendPipe, "send pipe is not allocated");
-        _waitSendBlock = new FlowBlockPipeBase(PIPE_SENDER, _sendPipe);
+        _waitSendBlock = new FlowBlockPipeCom(PIPE_SENDER, _sendPipe);
         _waitSendBlock->onAttachBlock();
         _waitSendBlock->onDetachBlock();
 
@@ -140,6 +140,70 @@ namespace kathryn{
         onDetachBlock();
     }
 
+    void FlowBlockPipeBase::addMdLog(MdLogVal *mdLogVal) {
+
+        mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() + " ]");
+
+        mdLogVal->addVal("jointNode " +
+                             _jointNode->getMdIdentVal() + "  " +
+                             _jointNode->getMdDescribe());
+
+        mdLogVal->addVal("resultNode wrap is " +
+                              _resultNodeWrap->getMdIdentVal() +
+                              " " + _resultNodeWrap->getMdDescribe());
+
+        mdLogVal->addVal("implicitSubBlock");
+        auto subLog = mdLogVal->makeNewSubVal();
+        _implicitFlowBlock->addMdLog(subLog);
+
+    }
+
+    void FlowBlockPipeBase::simStartCurCycle() {
+        if(isCurValSim()){
+            return;
+        }
+        setCurValSimStatus();
+        bool isStateRunning = false;
+
+        /** check state running*/
+
+        _waitRecvBlock->simStartCurCycle();
+        isStateRunning |= _waitRecvBlock->isBlockOrNodeRunning();
+
+        _waitSendBlock->simStartCurCycle();
+        isStateRunning |= _waitSendBlock->isBlockOrNodeRunning();
+
+        _implicitFlowBlock->simStartCurCycle();
+        isStateRunning |= _implicitFlowBlock->isBlockOrNodeRunning();
+
+        if (isStateRunning){
+            setBlockOrNodeRunning();
+            incEngine();
+        }
+
+        /** simulate other to follow protocol*/
+        _upNode   ->simStartCurCycle();
+        _jointNode->simStartCurCycle();
+        _exitNode ->simStartCurCycle();
+
+    }
+
+    void FlowBlockPipeBase::simExitCurCycle() {
+
+        unSetSimStatus();
+        unsetBlockOrNodeRunning();
+
+        _waitRecvBlock    ->simExitCurCycle();
+        _waitSendBlock    ->simExitCurCycle();
+        _implicitFlowBlock->simExitCurCycle();
+
+        _upNode   ->simExitCurCycle();
+        _jointNode->simExitCurCycle();
+        _exitNode ->simExitCurCycle();
+
+
+
+    }
 
 
 }

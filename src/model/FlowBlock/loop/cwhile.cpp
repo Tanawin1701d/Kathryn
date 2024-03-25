@@ -109,9 +109,6 @@ namespace kathryn{
                                         ""));
         mdLogVal->addVal("resultNodeWrap is "+ resultNodeWrapper->getMdIdentVal() +
                          " " + resultNodeWrapper->getMdDescribe());
-        mdLogVal->addVal("--------- explain loop Node wrap --------------");
-        mdLogVal->addVal("---------end explain loop node wrap --------------");
-
         mdLogVal->addVal("implicitSubBlock");
 
         auto subLog = mdLogVal->makeNewSubVal();
