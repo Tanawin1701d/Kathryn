@@ -2,45 +2,48 @@
 // Created by tanawin on 24/3/2567.
 //
 
-#include "pipelineBase.h"
+#include "pipelineCom.h"
 #include "model/controller/controller.h"
-
+#include "pipelineBlock.h"
 
 
 namespace kathryn{
 
 
-    FlowBlockPipeBase::FlowBlockPipeBase(FLOW_BLOCK_TYPE fbt,
-                                         expression* availExpr,
-                                         expression* notifyExpr):
-    _availExpr(availExpr),
-    _notifyExpr(notifyExpr),
+    FlowBlockPipeCom::FlowBlockPipeCom(FLOW_BLOCK_TYPE fbt,
+                                       Pipe pipe):
     FlowBlockBase(fbt,{
             {FLOW_ST_BASE_STACK},
             FLOW_JO_SUB_FLOW,
             true
-    })
+    }),
+    _pipe(pipe)
     {
-        assert(_availExpr  != nullptr);
-        assert(_notifyExpr != nullptr);
-        assert(_notifyExpr->getSlice().getSize() == 1);
+        mfAssert(_pipe._isAlloc, "pipe com is not allocated");
+
+        assert( (fbt == PIPE_SENDER) || (fbt == PIPE_RECIEVER) );
+
+        if (fbt == PIPE_RECIEVER){
+            _pipe.reverse();
+        }
+
     }
 
-    void FlowBlockPipeBase::addElementInFlowBlock(Node* node){
+    void FlowBlockPipeCom::addElementInFlowBlock(Node* node){
         assert(false);
     }
-    void FlowBlockPipeBase::addSubFlowBlock(FlowBlockBase* subBlock){
+    void FlowBlockPipeCom::addSubFlowBlock(FlowBlockBase* subBlock){
         assert(false);
     }
-    void FlowBlockPipeBase::addConFlowBlock(FlowBlockBase* conBlock){
+    void FlowBlockPipeCom::addConFlowBlock(FlowBlockBase* conBlock){
         assert(false);
     }
-    void FlowBlockPipeBase::addAbandonFlowBlock(FlowBlockBase* abandonBlock){
+    void FlowBlockPipeCom::addAbandonFlowBlock(FlowBlockBase* abandonBlock){
         assert(false);
     }
 
 
-    FlowBlockPipeBase::~FlowBlockPipeBase() {
+    FlowBlockPipeCom::~FlowBlockPipeCom() {
          /** wait session*/
          delete _upWaitNode;
          delete _waitCheckNode;
@@ -54,33 +57,35 @@ namespace kathryn{
          delete _notifyNode;
     }
 
-    NodeWrap* FlowBlockPipeBase::sumarizeBlock(){
+    NodeWrap* FlowBlockPipeCom::sumarizeBlock(){
         assert(_resultNodeWrap != nullptr);
         return _resultNodeWrap;
     }
 
-    void FlowBlockPipeBase::onAttachBlock() {
+    void FlowBlockPipeCom::onAttachBlock() {
         ctrl->on_attach_flowBlock(this);
     }
 
-    void FlowBlockPipeBase::onDetachBlock() {
+    void FlowBlockPipeCom::onDetachBlock() {
         ctrl->on_detach_flowBlock(this);
     }
 
 
 
-    void FlowBlockPipeBase::buildHwComponent(){
-        assert(_availExpr  != nullptr);
-        assert(_notifyExpr != nullptr);
+    void FlowBlockPipeCom::buildHwComponent(){
+
+        /**
+         * no need to build sub component because there is no sub component
+         * **/
 
         /**wait session*/
         _upWaitNode = new PseudoNode(1);
         _upWaitNode->setDependStateJoinOp(BITWISE_AND);
-        _upWaitNode->addCondtion(&(!(*_availExpr)), BITWISE_AND);
+        _upWaitNode->addCondtion(&(!(*(_pipe._availSendSignal))), BITWISE_AND);
 
         _waitCheckNode = new PseudoNode(1);
         _waitCheckNode->setDependStateJoinOp(BITWISE_AND);
-        _waitCheckNode->addCondtion(&(!(*_availExpr)), BITWISE_AND);
+        _waitCheckNode->addCondtion(&(!(*(_pipe._availSendSignal))), BITWISE_AND);
         _waitCheckNode->addDependNode(_waitNode);
         _waitCheckNode->assign();
 
@@ -93,11 +98,11 @@ namespace kathryn{
         /**skip session*/
         _upExitNode = new PseudoNode(1);
         _upExitNode->setDependStateJoinOp(BITWISE_AND);
-        _upExitNode->addCondtion(_availExpr, BITWISE_AND);
+        _upExitNode->addCondtion(_pipe._availSendSignal, BITWISE_AND);
 
         _fromWaitNode = new PseudoNode(1);
         _fromWaitNode->setDependStateJoinOp(BITWISE_AND);
-        _fromWaitNode->addCondtion(_availExpr, BITWISE_AND);
+        _fromWaitNode->addCondtion(_pipe._availSendSignal, BITWISE_AND);
         _fromWaitNode->addDependNode(_waitNode);
         _fromWaitNode->assign();
 
@@ -128,15 +133,17 @@ namespace kathryn{
 
 
         ////////// assign notify expression
-        *_notifyExpr = *_notifyNode->getExitOpr();
+        *_pipe._notifyToSendSignal = *_notifyNode->getExitOpr();
 
     }
 
-    void FlowBlockPipeBase::doPreFunction() {
+    void FlowBlockPipeCom::doPreFunction() {
         onAttachBlock();
     }
 
-    void FlowBlockPipeBase::doPostFunction() {
+    void FlowBlockPipeCom::doPostFunction() {
         onDetachBlock();
     }
+
+
 }

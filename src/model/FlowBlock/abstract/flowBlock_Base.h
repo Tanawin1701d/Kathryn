@@ -40,6 +40,7 @@ namespace kathryn {
         DO_WHILE,
         PIPE_SENDER,
         PIPE_RECIEVER,
+        PIPE_BLOCK,
         DUMMY_BLOCK,
         FLOW_BLOCK_COUNT
     };

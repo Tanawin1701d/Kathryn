@@ -180,10 +180,12 @@ add_executable(Kathryn main.cpp
         src/test/autoSim/testCase/simAutoTest21.cpp
         src/test/autoSim/testCase/simAutoTest22.cpp
         src/abstract/mainControlable.h
-        src/model/FlowBlock/pipeline/pipelineBase.cpp
-        src/model/FlowBlock/pipeline/pipelineBase.h
+        src/model/FlowBlock/pipeline/pipelineCom.cpp
+        src/model/FlowBlock/pipeline/pipelineCom.h
         src/model/FlowBlock/pipeline/pipeMng.cpp
         src/model/FlowBlock/pipeline/pipeMng.h
+        src/model/FlowBlock/pipeline/pipelineBlock.cpp
+        src/model/FlowBlock/pipeline/pipelineBlock.h
 
 
 )

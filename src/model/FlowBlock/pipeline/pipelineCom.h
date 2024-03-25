@@ -2,18 +2,19 @@
 // Created by tanawin on 24/3/2567.
 //
 
-#ifndef KATHRYN_PIPELINEBASE_H
-#define KATHRYN_PIPELINEBASE_H
+#ifndef KATHRYN_PIPELINECOM_H
+#define KATHRYN_PIPELINECOM_H
 
 
 #include "model/FlowBlock/abstract/flowBlock_Base.h"
 #include "model/FlowBlock/abstract/loopStMacro.h"
 #include "model/FlowBlock/abstract/nodes/node.h"
 #include "model/FlowBlock/abstract/nodes/stateNode.h"
+#include "pipeMng.h"
 
 namespace kathryn{
 
-    class FlowBlockPipeBase: public FlowBlockBase, public LoopStMacro{
+    class FlowBlockPipeCom: public FlowBlockBase, public LoopStMacro{
 
         /**
          *
@@ -22,8 +23,7 @@ namespace kathryn{
          * force exit node due to complexity purpose
          *
          * **/
-        expression*  _availExpr      = nullptr;
-        expression*  _notifyExpr     = nullptr;
+        Pipe         _pipe;
         NodeWrap*    _resultNodeWrap = nullptr;
 
         /**our component*/
@@ -43,10 +43,9 @@ namespace kathryn{
 
     public:
 
-        explicit FlowBlockPipeBase(FLOW_BLOCK_TYPE fbt,
-                                   expression* availExpr,
-                                   expression* notifyExpr);
-        ~FlowBlockPipeBase() override;
+        explicit FlowBlockPipeCom(FLOW_BLOCK_TYPE fbt,
+                                   Pipe pipe);
+        ~FlowBlockPipeCom() override;
 
         void addElementInFlowBlock(Node* node) override;
         void addSubFlowBlock(FlowBlockBase* subBlock) override;
@@ -66,11 +65,10 @@ namespace kathryn{
         void doPreFunction() override;
         void doPostFunction() override;
 
-
-
+        /**get debug*/
 
     };
 
 }
 
-#endif //KATHRYN_PIPELINEBASE_H
+#endif //KATHRYN_PIPELINECOM_H

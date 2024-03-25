@@ -26,6 +26,7 @@
 #include "model/FlowBlock/abstract/spReg/syncReg.h"
 #include "model/FlowBlock/time/wait.h"
 #include "model/hwComponent/memBlock/MemBlock.h"
+#include "model/FlowBlock/pipeline/pipeMng.h"
 
 #include "util/type/typeConv.h"
 #include "util/str/strUtil.h"
@@ -61,6 +62,8 @@ namespace kathryn {
         std::stack<FlowBlockBase*> flowBlockStacks[FLOW_ST_CNT];
         /////// pattern flow block is subset of flowBlockStack
         Module* globalModulePtr = nullptr;
+
+        PipeController pipeCtrl;
 
     protected:
         /** get module that response we now consider*/
@@ -140,6 +143,14 @@ namespace kathryn {
 
         /** for debugging and model checking purpose*/
         std::string getCurModelStack();
+
+        /**
+         *
+         * pipeline controller
+         *
+         * */
+
+        PipeController* getPipeCtrl(){return &pipeCtrl;}
 
     };
 

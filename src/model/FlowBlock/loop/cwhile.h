@@ -29,7 +29,7 @@ namespace kathryn{
         void buildHwComponent() override;
 
         /** get describe*/
-        std::string getMdDescribe() override;
+        std::string getMdDescribe() override; /** it is marked as legacy*/
         void addMdLog(MdLogVal *mdLogVal) override;
 
 
