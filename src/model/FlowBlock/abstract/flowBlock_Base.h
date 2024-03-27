@@ -41,6 +41,7 @@ namespace kathryn {
         PIPE_SENDER,
         PIPE_RECIEVER,
         PIPE_BLOCK,
+        PIPE_WRAPPER,
         DUMMY_BLOCK,
         FLOW_BLOCK_COUNT
     };

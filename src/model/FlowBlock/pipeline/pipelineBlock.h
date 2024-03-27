@@ -15,8 +15,8 @@
 #include "pipelineCom.h"
 #include "pipeMng.h"
 
-#define pipBlk for(auto kathrynBlock = new FlowBlockPipeBase(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
-#define pipBlkMan(recv, send) for(auto kathrynBlock = new FlowBlockPipeBase(recv, send); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define pipBlk                for(auto kathrynBlock = new FlowBlockPipeBase(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define pipBlkMan(recv, send) for(auto kathrynBlock = new FlowBlockPipeBase(&recv, &send); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 
 namespace kathryn{
 
@@ -37,22 +37,20 @@ namespace kathryn{
     class FlowBlockPipeBase: public FlowBlockBase, public LoopStMacro{
     protected:
         /** integrity check*/
-        bool _isGetRecvPipe             = false;
-        bool _isGetSendPipe             = false;
         bool _isGetImplicitFlowBlockYet = false;
 
 
-        Pipe               _recvPipe;
-        Pipe               _sendPipe;
+        Pipe*             _recvPipe      = nullptr;
+        Pipe*             _sendPipe      = nullptr;
         FlowBlockPipeCom* _waitRecvBlock = nullptr;
         FlowBlockPipeCom* _waitSendBlock = nullptr;
 
         FlowBlockSeq* _implicitFlowBlock = nullptr;
         NodeWrap*     _impFbNodeWrap     = nullptr;
 
-        PseudoNode* _upNode    = nullptr;
-        PseudoNode* _jointNode = nullptr;
-        DummyNode*  _exitNode  = nullptr;
+        PseudoNode* _upNode              = nullptr;
+        PseudoNode* _jointNode           = nullptr;
+        DummyNode*  _exitNode            = nullptr;
 
 
         NodeWrap* _resultNodeWrap = nullptr;
@@ -61,7 +59,7 @@ namespace kathryn{
     public:
 
         explicit FlowBlockPipeBase();
-        explicit FlowBlockPipeBase(Pipe& recvPipe, Pipe& sendPipe);
+        explicit FlowBlockPipeBase(Pipe* recvPipe, Pipe* sendPipe);
         ~FlowBlockPipeBase() override;
 
         /** for controller add the local element to this sub block*/
@@ -78,12 +76,13 @@ namespace kathryn{
 
         void buildHwComponent() override;
 
+        void setRecvPipe(Pipe* recvPipe);
+        void setSendPipe(Pipe* sendPipe);
+
         /** Loop macro to notice position of system*/
         void doPreFunction() override;
         void doPostFunction() override;
 
-        void setRecvPipe(Pipe recvPipe);
-        void setSendPipe(Pipe sendPipe);
 
 
         /**get debug*/

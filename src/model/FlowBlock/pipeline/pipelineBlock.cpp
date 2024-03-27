@@ -15,23 +15,17 @@ namespace kathryn{
                           {FLOW_ST_BASE_STACK},
                           FLOW_JO_SUB_FLOW,
                           true
-                  }),
-    _isGetRecvPipe(false),
-    _isGetSendPipe(false),
-    _recvPipe(Pipe(false)),
-    _sendPipe(Pipe(false))
+                  })
     {}
 
 
-    FlowBlockPipeBase::FlowBlockPipeBase(Pipe &recvPipe, Pipe &sendPipe):
+    FlowBlockPipeBase::FlowBlockPipeBase(Pipe* recvPipe, Pipe* sendPipe):
     FlowBlockBase(PIPE_BLOCK,
                   {
                           {FLOW_ST_BASE_STACK},
                           FLOW_JO_SUB_FLOW,
                           true
                   }),
-    _isGetRecvPipe(true),
-    _isGetSendPipe(true),
     _recvPipe(recvPipe),
     _sendPipe(sendPipe)
 
@@ -52,6 +46,8 @@ namespace kathryn{
         assert(subBlock != nullptr);
         assert(subBlock->getFlowType() == SEQUENTIAL);
         assert(subBlock == _implicitFlowBlock);
+        assert(!_isGetImplicitFlowBlockYet);
+        _isGetImplicitFlowBlockYet = true;
         FlowBlockBase::addSubFlowBlock(subBlock);
     }
 
@@ -70,8 +66,7 @@ namespace kathryn{
         _implicitFlowBlock = new FlowBlockSeq();
         _implicitFlowBlock->onAttachBlock();
         /*** attach wait Block*/
-        mfAssert(_isGetRecvPipe, "recv pipe is not allocated");
-        _waitRecvBlock = new FlowBlockPipeCom(PIPE_RECIEVER, _recvPipe);
+        _waitRecvBlock = new FlowBlockPipeCom(PIPE_RECIEVER);
         _waitRecvBlock->onAttachBlock();
         _waitRecvBlock->onDetachBlock();
 
@@ -82,8 +77,7 @@ namespace kathryn{
         assert(_implicitFlowBlock != nullptr);
         assert(_isGetImplicitFlowBlockYet);
 
-        mfAssert(_isGetSendPipe, "send pipe is not allocated");
-        _waitSendBlock = new FlowBlockPipeCom(PIPE_SENDER, _sendPipe);
+        _waitSendBlock = new FlowBlockPipeCom(PIPE_SENDER);
         _waitSendBlock->onAttachBlock();
         _waitSendBlock->onDetachBlock();
 
@@ -92,6 +86,13 @@ namespace kathryn{
     }
 
     void FlowBlockPipeBase::buildHwComponent(){
+        /** set the pipe first*/
+        mfAssert(_recvPipe != nullptr, "flow block pipe(recv) doesn't get pipe metadata");
+        mfAssert(_sendPipe != nullptr, "flow block pipe(send) doesn't get pipe metadata");
+        _waitRecvBlock->setPipe(_recvPipe);
+        _waitSendBlock->setPipe(_sendPipe);
+
+        /** then build sub hardware component**/
         buildSubHwComponent();
 
         _impFbNodeWrap = _implicitFlowBlock->sumarizeBlock();
@@ -120,15 +121,13 @@ namespace kathryn{
 
     }
 
-    void FlowBlockPipeBase::setRecvPipe(Pipe recvPipe){
-        _isGetRecvPipe = true;
-        mfAssert(recvPipe._isAlloc, "recv Pipe is not allocated");
+    void FlowBlockPipeBase::setRecvPipe(Pipe* recvPipe){
+        assert(recvPipe != nullptr);
         _recvPipe = recvPipe;
     }
 
-    void FlowBlockPipeBase::setSendPipe(Pipe sendPipe){
-        _isGetSendPipe = true;
-        mfAssert(sendPipe._isAlloc, "send Pipe is not allocated");
+    void FlowBlockPipeBase::setSendPipe(Pipe* sendPipe){
+        assert(sendPipe != nullptr);
         _sendPipe = sendPipe;
     }
 

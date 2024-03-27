@@ -14,39 +14,29 @@
 namespace kathryn{
 
 
-    typedef unsigned long long pipId;
-
+    typedef unsigned long long PIPID;
 
     class Pipe{
     public:
-        bool        _isAlloc            = false;
-        pipId       _pipeId             = -1;
-        Val*        _dummyVal           = nullptr;
-        expression* _availSendSignal    = nullptr;
-        expression* _notifyToSendSignal = nullptr;
+        PIPID       _pipeId            = -1;
+        Val*        _dummyStart        = nullptr;
+        Val*        _dummyStop         = nullptr;
+        expression* _masterReadyToSend = nullptr; /////// B read to check that it is recieveable, A write notify that data is ready
+        expression* _slaveReadyToRecv  = nullptr; /////// A read to check that other side is get data, B write to notfy that data is accept
 
-        explicit Pipe(bool allocRequire = true);
+        explicit Pipe(PIPID pipeId);
         Pipe(const Pipe& rhs);
         Pipe& operator = (const Pipe& rhs);
-
-        /** to allocate expression that is used to communication between block*/
-        void alloc();
-        bool isAlloc() const;
-        /** reverese for destination block perspective*/
-        void reverse();
-        void setAsDummyPipe();
+        void setDummyStartPipe();
+        void setDummyStopPipe();
 
 
     };
 
 
-
-
-
-
     class PipeController: MainControlable{
 
-    std::vector<Pipe> _pipeMeta; /////// for user and s
+    std::vector<Pipe*> _pipeMeta; /////// for user and s
 
     public:
         void start() override{};
@@ -55,16 +45,15 @@ namespace kathryn{
 
         void clean() override;
 
-        pipId allocPipe(Pipe* newPipeCom);
+        Pipe& createPipe();
 
         [[nodiscard]]
-        pipId getNextPipeId() const {return _pipeMeta.size();}
+        PIPID getNextPipeId() const {return _pipeMeta.size();}
 
     };
 
-
-
-
+    Pipe& makePipe();
+    std::vector<Pipe*> makePipes(int amt);
 
 }
 

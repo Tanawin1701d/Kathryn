@@ -12,13 +12,13 @@
 #include "model/FlowBlock/abstract/nodes/stateNode.h"
 #include "pipeMng.h"
 
-#define pipWaitSend(kathrynPipMeta) for(auto kathrynBlock = new FlowBlockPipeCom(PIPE_SENDER,kathrynPipMeta); \
+#define pipWaitSend(kathrynPipMeta) for(auto kathrynBlock = new FlowBlockPipeCom(PIPE_SENDER,&kathrynPipMeta); \
                                              kathrynBlock->doPrePostFunction();                               \
-                                             kathrynBlock->step())
+                                             kathrynBlock->step()){}
 
-#define pipWaitRecv(kathrynPipMeta) for(auto kathrynBlock = new FlowBlockPipeCom(PIPE_RECIEVER,kathrynPipMeta); \
+#define pipWaitRecv(kathrynPipMeta) for(auto kathrynBlock = new FlowBlockPipeCom(PIPE_RECIEVER,&kathrynPipMeta); \
                                              kathrynBlock->doPrePostFunction();                               \
-                                             kathrynBlock->step())
+                                             kathrynBlock->step()){}
 
 
 namespace kathryn{
@@ -32,28 +32,31 @@ namespace kathryn{
          * force exit node due to complexity purpose
          *
          * **/
-        Pipe         _pipe;
+        Pipe*         _pipe          = nullptr;
         NodeWrap*    _resultNodeWrap = nullptr;
 
         /**our component*/
         ////// wait session
-        PseudoNode*  _upWaitNode    = nullptr; ////// upper node assign to wait
-        PseudoNode*  _waitCheckNode = nullptr;
-        StateNode*   _waitNode      = nullptr;
+        PseudoNode*  _upWaitNode     = nullptr; ////// upper node assign to wait
+        PseudoNode*  _waitCheckNode  = nullptr;
+        StateNode*   _waitNode       = nullptr;
 
         ////// skip session
-        PseudoNode*  _upExitNode   = nullptr; ////// upper node assign to exit
-        PseudoNode*  _fromWaitNode = nullptr;
-        PseudoNode*  _exitNode     = nullptr;
+        PseudoNode*  _upExitNode     = nullptr; ////// upper node assign to exit
+        PseudoNode*  _fromWaitNode   = nullptr;
+        PseudoNode*  _exitNode       = nullptr;
 
         ////// notify Node
-        PseudoNode* _upNotifyNode  = nullptr;
-        PseudoNode* _notifyNode    = nullptr;
+        PseudoNode* _upNotifyNode    = nullptr;
+        PseudoNode* _notifyNode      = nullptr;
 
     public:
 
         explicit FlowBlockPipeCom(FLOW_BLOCK_TYPE fbt,
-                                   Pipe pipe);
+                                   Pipe* pipe);
+
+        explicit FlowBlockPipeCom(FLOW_BLOCK_TYPE fbt);
+
         ~FlowBlockPipeCom() override;
 
         void addElementInFlowBlock(Node* node) override;
@@ -68,6 +71,7 @@ namespace kathryn{
         void onDetachBlock() override;
         /** for module to build hardware component*/
         void buildHwComponent() override;
+        void setPipe(Pipe* pipEle);
 
 
         /** Loop macro to notice position of system*/

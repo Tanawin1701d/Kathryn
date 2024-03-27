@@ -11,7 +11,7 @@ namespace kathryn{
 
 
     FlowBlockPipeCom::FlowBlockPipeCom(FLOW_BLOCK_TYPE fbt,
-                                       Pipe pipe):
+                                       Pipe* pipe):
     FlowBlockBase(fbt,{
             {FLOW_ST_BASE_STACK},
             FLOW_JO_SUB_FLOW,
@@ -19,13 +19,20 @@ namespace kathryn{
     }),
     _pipe(pipe)
     {
-        mfAssert(_pipe.isAlloc(), "pipe com is not allocated");
 
+        assert(_pipe != nullptr);
         assert( (fbt == PIPE_SENDER) || (fbt == PIPE_RECIEVER) );
 
-        if (fbt == PIPE_RECIEVER){
-            _pipe.reverse();
-        }
+    }
+
+    FlowBlockPipeCom::FlowBlockPipeCom(FLOW_BLOCK_TYPE fbt):
+            FlowBlockBase(fbt,{
+                    {FLOW_ST_BASE_STACK},
+                    FLOW_JO_SUB_FLOW,
+                    true
+            }){
+
+        assert( (fbt == PIPE_SENDER) || (fbt == PIPE_RECIEVER) );
 
     }
 
@@ -44,6 +51,7 @@ namespace kathryn{
 
 
     FlowBlockPipeCom::~FlowBlockPipeCom() {
+         delete _resultNodeWrap;
          /** wait session*/
          delete _upWaitNode;
          delete _waitCheckNode;
@@ -74,6 +82,18 @@ namespace kathryn{
 
     void FlowBlockPipeCom::buildHwComponent(){
 
+        mfAssert(_pipe == nullptr,
+                 "pipeline Com doesn't have pipe meta data");
+
+        expression* checkToGoSignal = getFlowType() == PIPE_SENDER ?
+                                      _pipe->_slaveReadyToRecv :
+                                      _pipe->_masterReadyToSend;
+
+        expression* writeYourStatus = getFlowType() == PIPE_SENDER ?
+                                      _pipe->_masterReadyToSend:
+                                      _pipe->_slaveReadyToRecv;
+
+
         /**
          * no need to build sub component because there is no sub component
          * **/
@@ -81,11 +101,11 @@ namespace kathryn{
         /**wait session*/
         _upWaitNode = new PseudoNode(1);
         _upWaitNode->setDependStateJoinOp(BITWISE_AND);
-        _upWaitNode->addCondtion(&(!(*(_pipe._availSendSignal))), BITWISE_AND);
+        _upWaitNode->addCondtion(&(!(*checkToGoSignal)), BITWISE_AND);
 
         _waitCheckNode = new PseudoNode(1);
         _waitCheckNode->setDependStateJoinOp(BITWISE_AND);
-        _waitCheckNode->addCondtion(&(!(*(_pipe._availSendSignal))), BITWISE_AND);
+        _waitCheckNode->addCondtion(&(!(*(checkToGoSignal))), BITWISE_AND);
         _waitCheckNode->addDependNode(_waitNode);
         _waitCheckNode->assign();
 
@@ -98,11 +118,11 @@ namespace kathryn{
         /**skip session*/
         _upExitNode = new PseudoNode(1);
         _upExitNode->setDependStateJoinOp(BITWISE_AND);
-        _upExitNode->addCondtion(_pipe._availSendSignal, BITWISE_AND);
+        _upExitNode->addCondtion(checkToGoSignal, BITWISE_AND);
 
         _fromWaitNode = new PseudoNode(1);
         _fromWaitNode->setDependStateJoinOp(BITWISE_AND);
-        _fromWaitNode->addCondtion(_pipe._availSendSignal, BITWISE_AND);
+        _fromWaitNode->addCondtion(checkToGoSignal, BITWISE_AND);
         _fromWaitNode->addDependNode(_waitNode);
         _fromWaitNode->assign();
 
@@ -133,8 +153,14 @@ namespace kathryn{
 
 
         ////////// assign notify expression
-        *_pipe._notifyToSendSignal = *_notifyNode->getExitOpr();
+        *writeYourStatus = *_notifyNode->getExitOpr();
 
+    }
+
+    void FlowBlockPipeCom::setPipe(Pipe* pipEle){
+        assert(_pipe  == nullptr);
+        assert(pipEle != nullptr);
+        _pipe = pipEle;
     }
 
     /**loop st macro*/

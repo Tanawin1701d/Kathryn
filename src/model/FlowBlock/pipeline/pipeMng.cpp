@@ -6,21 +6,17 @@
 #include "model/controller/controller.h"
 
 namespace kathryn{
-
-
     /**
      *
      * pipe meta
      *
      * **/
 
-    Pipe::Pipe(bool allocRequire){
-
-        if (allocRequire){
-            alloc();
-        }
-
-
+    Pipe::Pipe(PIPID pipeId):
+    _pipeId(pipeId)
+    {
+        _masterReadyToSend = &_make<expression>("_masterReadyToSend" + std::to_string(_pipeId),1);
+        _slaveReadyToRecv  = &_make<expression>("_slaveReadyToRecv"  + std::to_string(_pipeId),1);
     }
 
     Pipe::Pipe(const Pipe& rhs){
@@ -34,37 +30,24 @@ namespace kathryn{
         if (this == (&rhs)){
             return *this;
         }
-        mfAssert(rhs.isAlloc(), "copy pipe meta data while it is not allocated can lead to unexpect connection");
 
-        _isAlloc            = true;
         _pipeId             = rhs._pipeId;
-        _dummyVal           = rhs._dummyVal;
-        _availSendSignal    = rhs._availSendSignal;
-        _notifyToSendSignal = rhs._notifyToSendSignal;
+        _dummyStart         = rhs._dummyStart;
+        _dummyStop          = rhs._dummyStop;
+        _masterReadyToSend  = rhs._masterReadyToSend;
+        _slaveReadyToRecv   = rhs._slaveReadyToRecv;
 
         return *this;
     }
 
-    void Pipe::alloc(){
-        PipeController* pipCtrl = getControllerPtr()->getPipeCtrl();
-        pipCtrl->allocPipe(this);
-        ///////// pipId and alloc meta controller wil handdle it
-        _availSendSignal    = &_make<expression>("availSendSignal_" + std::to_string(_pipeId),1);
-        _notifyToSendSignal = &_make<expression>("notifyToSendSignal_" + std::to_string(_pipeId),1);
+    void Pipe::setDummyStartPipe(){
+        _dummyStart = &_make<Val>("dummyStartPipe",1,1);
+        *_masterReadyToSend = *_dummyStart;
     }
 
-    bool Pipe::isAlloc() const{
-        return _isAlloc;
-    }
-
-    void Pipe::reverse(){
-        std::swap(_availSendSignal, _notifyToSendSignal);
-    }
-
-    void Pipe::setAsDummyPipe(){
-        mfAssert(isAlloc(), "you must allocate before set dummy pipe");
-        _dummyVal = &_make<Val>("dummyStartPipe", 1,0);
-        *_availSendSignal = *_dummyVal;
+    void Pipe::setDummyStopPipe(){
+        _dummyStop = &_make<Val>("dummyStopPipe", 1,1);
+        *_slaveReadyToRecv = *_dummyStart;
     }
 
     /**
@@ -78,15 +61,36 @@ namespace kathryn{
     void PipeController::reset(){clean();}
 
     void PipeController::clean(){
+        for(auto pipeMeta: _pipeMeta){
+            delete pipeMeta;
+        }
         _pipeMeta.clear();
     }
 
-    pipId PipeController::allocPipe(Pipe* newPipeCom) {
-        assert(newPipeCom != nullptr);
-        newPipeCom->_pipeId  = getNextPipeId();
-        newPipeCom->_isAlloc = true;
-        _pipeMeta.push_back(*newPipeCom);
-        return newPipeCom->_pipeId;
+    Pipe& PipeController::createPipe() {
+        Pipe* newPipe = new Pipe(getNextPipeId());
+        _pipeMeta.push_back(newPipe);
+        return *newPipe;
+    }
+
+    /**
+     *
+     * make pipe
+     *
+     * */
+
+    Pipe& makePipe(){
+        return getControllerPtr()->getPipeCtrl()->createPipe();
+    }
+
+
+    std::vector<Pipe*> makePipes(int amt){
+        mfAssert(amt > 0,"build pipe must more than zero");
+        std::vector<Pipe*> result;
+        for (int i = 0; i < amt; i++){
+            result.push_back(&makePipe());
+        }
+        return result;
     }
 
 
