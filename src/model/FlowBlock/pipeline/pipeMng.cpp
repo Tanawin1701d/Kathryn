@@ -47,7 +47,7 @@ namespace kathryn{
 
     void Pipe::setDummyStopPipe(){
         _dummyStop = &_make<Val>("dummyStopPipe", 1,1);
-        *_slaveReadyToRecv = *_dummyStart;
+        *_slaveReadyToRecv = *_dummyStop;
     }
 
     /**

@@ -20,19 +20,24 @@ namespace kathryn{
         void flow() override{
 
             pipWrap{
+                /////// pipe block 0
+                pipBlk{a <<= a + 1;}
+                /////// pipe block 1
+                pipBlk{b <<= a;}
+                /////// pipe block 2
                 pipBlk{
-                    a <<= a + 1;
-                }
-                pipBlk{
-                    b <<= a;
-                }
-                pipBlk{
-                    c <<= b;
-                };
-                pipBlk{
-                    d <<= c;
-                }
+                        c <<= b;
+                        cif(c == 5){
+                            syWait(6)
+                        }
+                      }
+                /////// pipe block 3
+                pipBlk{d <<= c;}
             }
+        }
+
+
+        void doFetchBlock(){
 
         }
     };
@@ -54,10 +59,28 @@ namespace kathryn{
         {}
 
         void describeCon() override{
-//            testAndPrint("test dry nest", ull(_md->m), (1 << 9) + 8);
-//            conEndCycle();
-//            testAndPrint("test memAndWire dummy", ull(_md->myStOutOld), 0);
-//            testAndPrint("test memAndWire fill" , ull(_md->myStOut), 8);
+
+                /*** start cycle*/
+                for (int i = 0; i <= 8; i++){
+                    testAndPrint("testPipVal: A", ull(_md->a), std::max(0,i  ));
+                    testAndPrint("testPipVal: B", ull(_md->b), std::max(0,i-1));
+                    testAndPrint("testPipVal: C", ull(_md->c), std::max(0,i-2));
+                    testAndPrint("testPipVal: D", ull(_md->d), std::max(0,i-3));
+                    conNextCycle(1);
+                }
+                /*** wait cycle*/
+                conNextCycle(6);
+
+                for (int i = 9; i < 12; i++){
+                    testAndPrint("testPipAfterWaitVal: A", ull(_md->a), std::max(0,i  ));
+                    testAndPrint("testPipAfterWaitVal: B", ull(_md->b), std::max(0,i-1));
+                    testAndPrint("testPipAfterWaitVal: C", ull(_md->c), std::max(0,i-2));
+                    testAndPrint("testPipAfterWaitVal: D", ull(_md->d), std::max(0,i-3));
+                    conNextCycle(1);
+                }
+
+
+
         }
 
 

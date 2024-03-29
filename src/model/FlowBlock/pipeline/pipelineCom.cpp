@@ -82,7 +82,7 @@ namespace kathryn{
 
     void FlowBlockPipeCom::buildHwComponent(){
 
-        mfAssert(_pipe == nullptr,
+        mfAssert(_pipe != nullptr,
                  "pipeline Com doesn't have pipe meta data");
 
         expression* checkToGoSignal = getFlowType() == PIPE_SENDER ?
@@ -100,16 +100,19 @@ namespace kathryn{
 
         /**wait session*/
         _upWaitNode = new PseudoNode(1);
+        _waitCheckNode = new PseudoNode(1);
+        _waitNode = new StateNode();
+
+
+
         _upWaitNode->setDependStateJoinOp(BITWISE_AND);
         _upWaitNode->addCondtion(&(!(*checkToGoSignal)), BITWISE_AND);
 
-        _waitCheckNode = new PseudoNode(1);
         _waitCheckNode->setDependStateJoinOp(BITWISE_AND);
         _waitCheckNode->addCondtion(&(!(*(checkToGoSignal))), BITWISE_AND);
         _waitCheckNode->addDependNode(_waitNode);
         _waitCheckNode->assign();
 
-        _waitNode = new StateNode();
         _waitNode->setDependStateJoinOp(BITWISE_OR);
         _waitNode->addDependNode(_upWaitNode);
         _waitNode->addDependNode(_waitCheckNode);
@@ -117,34 +120,42 @@ namespace kathryn{
 
         /**skip session*/
         _upExitNode = new PseudoNode(1);
+        _fromWaitNode = new PseudoNode(1);
+        _exitNode = new PseudoNode(1);
+
         _upExitNode->setDependStateJoinOp(BITWISE_AND);
         _upExitNode->addCondtion(checkToGoSignal, BITWISE_AND);
 
-        _fromWaitNode = new PseudoNode(1);
         _fromWaitNode->setDependStateJoinOp(BITWISE_AND);
         _fromWaitNode->addCondtion(checkToGoSignal, BITWISE_AND);
         _fromWaitNode->addDependNode(_waitNode);
         _fromWaitNode->assign();
 
 
-        _exitNode = new PseudoNode(1);
         _exitNode->setDependStateJoinOp(BITWISE_OR);
         _exitNode->addDependNode(_fromWaitNode);
         _exitNode->addDependNode(_upExitNode);
         _exitNode->assign();
 
-        /**  build notify node*/
+        /**
+         *
+         * build notify node
+         *
+         * */
         _upNotifyNode = new PseudoNode(1);
+        _notifyNode = new PseudoNode(1);
+        _resultNodeWrap = new NodeWrap();
+
+
         _upNotifyNode->setDependStateJoinOp(BITWISE_AND);
         /***no condition just let upper assign the finish state*/
-        _notifyNode = new PseudoNode(1);
+
         _notifyNode->setDependStateJoinOp(BITWISE_OR);
         _notifyNode->addDependNode(_waitNode);
         _notifyNode->addDependNode(_upNotifyNode);
         _notifyNode->assign();
 
         /****reuslt node wrap*/
-        _resultNodeWrap = new NodeWrap();
         _resultNodeWrap->addEntraceNode(_upWaitNode);
         _resultNodeWrap->addEntraceNode(_upExitNode);
         _resultNodeWrap->addEntraceNode(_upNotifyNode);

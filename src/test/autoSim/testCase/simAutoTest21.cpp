@@ -43,7 +43,7 @@ namespace kathryn{
         {}
 
         void describeCon() override{
-            for(int i = 0; i < 18; i++){
+            for(int i = 0; i < 17; i++){
                 if ((i % 4) == 0) {
                     conEndCycle();
                     testAndPrint("testResult is waiting", ull(_md->result), 0);

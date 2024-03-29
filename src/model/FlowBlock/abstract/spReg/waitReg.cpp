@@ -88,7 +88,7 @@ namespace kathryn{
             _cntBitSz     (calBitUsed(waitCycle)),
             _totalBitSize(_cntBitSz + 1),
             IdleCnt    (&_make<Val>("IdleCnt" , _totalBitSize, 0)),
-            _startCnt  (&_make<Val>("startCnt", _totalBitSize, 1)),
+            _startCnt  (&_make<Val>("startCnt", _totalBitSize, startVal)),
             _endCnt    (&_make<Val>("endCnt"  , _cntBitSz, waitCycle))
      {
 
@@ -108,7 +108,7 @@ namespace kathryn{
             _cntBitSz     (endCnt->getOperableSlice().getSize()),
             _totalBitSize(_cntBitSz + 1),
             IdleCnt    (&_make<Val>("IdleCnt" , _totalBitSize, 0)),
-            _startCnt  (&_make<Val>("startCnt", _totalBitSize, 1)),
+            _startCnt  (&_make<Val>("startCnt", _totalBitSize, startVal)),
             _endCnt    (endCnt)
     {
         com_init();

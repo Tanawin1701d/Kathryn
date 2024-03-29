@@ -75,13 +75,14 @@ namespace kathryn{
     void FlowBlockPipeBase::onDetachBlock(){
 
         assert(_implicitFlowBlock != nullptr);
-        assert(_isGetImplicitFlowBlockYet);
+
 
         _waitSendBlock = new FlowBlockPipeCom(PIPE_SENDER);
         _waitSendBlock->onAttachBlock();
         _waitSendBlock->onDetachBlock();
 
         _implicitFlowBlock->onDetachBlock();
+        assert(_isGetImplicitFlowBlockYet);
         ctrl->on_detach_flowBlock(this);
     }
 

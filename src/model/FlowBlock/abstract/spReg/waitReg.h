@@ -65,10 +65,12 @@ namespace kathryn{
     class CycleWaitStateReg : public CtrlFlowRegBase{
     private:
         /**wait cycle meta data*/
-        int _waitCycle = -1;
-        int _cntBitSz     = -1;
-        static const int stateSize = 1;
-        const int _totalBitSize = -1;
+
+        int               _waitCycle = -1;
+        int               _cntBitSz     = -1;
+        static const int  stateSize = 1;
+        const int         _totalBitSize = -1;
+        const int         startVal = 0b11;
         /**when counter is reached exit expression will be set*/
         Operable* IdleCnt     = nullptr;
         Operable* _startCnt    = nullptr;
