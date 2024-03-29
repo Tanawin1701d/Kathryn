@@ -11,7 +11,7 @@
 #include "identifiable.h"
 #include "makeComponent.h"
 #include "model/hwComponent/abstract/modelMode.h"
-#include "model/simIntf/modelSimInterface.h"
+#include "model/simIntf/base/modelSimEngine.h"
 
 namespace kathryn {
 

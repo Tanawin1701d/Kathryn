@@ -5,7 +5,7 @@
 #ifndef KATHRYN_UPDATEEVENT_H
 #define KATHRYN_UPDATEEVENT_H
 
-#include "model/simIntf/modelSimEngine.h"
+#include "model/simIntf/modelSimEngineLegacy.h"
 #include "model/hwComponent/abstract/Slice.h"
 #include "model/hwComponent/abstract/operable.h"
 #include "operable.h"

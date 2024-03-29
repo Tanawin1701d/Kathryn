@@ -19,13 +19,13 @@
 #include "model/hwComponent/memBlock/MemBlock.h"
 #include "model/hwComponent/expression/nest.h"
 
-#include "model/FlowBlock/abstract/flowBlock_Base.h"
-#include "model/FlowBlock/abstract/spReg/stateReg.h"
-#include "model/FlowBlock/abstract/spReg/syncReg.h"
-#include "model/FlowBlock/abstract/spReg/waitReg.h"
-#include "model/FlowBlock/abstract/nodes/startNode.h"
+#include "model/flowBlock/abstract/flowBlock_Base.h"
+#include "model/flowBlock/abstract/spReg/stateReg.h"
+#include "model/flowBlock/abstract/spReg/syncReg.h"
+#include "model/flowBlock/abstract/spReg/waitReg.h"
+#include "model/flowBlock/abstract/nodes/startNode.h"
 
-
+#include "moduleSimEngine.h"
 
 #include "model/debugger/modelDebugger.h"
 #include "util/logger/logger.h"
@@ -39,6 +39,8 @@ namespace kathryn{
         MODEL_GLOB_INITED,
         MODEL_FLOW_INITED
     };
+
+    class ModuleSimEngine;
 
     class Module : public Identifiable,
                    public HwCompControllerItf,
@@ -158,6 +160,8 @@ namespace kathryn{
 
 
     };
+
+
 
 }
 

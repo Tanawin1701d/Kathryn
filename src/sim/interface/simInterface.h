@@ -8,7 +8,7 @@
 #include <condition_variable>
 #include <thread>
 #include "model/controller/controller.h"
-#include "model/simIntf/moduleSimEvent.h"
+#include "model/simIntf/hwComponent/module/moduleSimEvent.h"
 #include "sim/event/userEvent.h"
 #include "sim/controller/simController.h"
 #include "sim/event/ctTrigEvent.h"

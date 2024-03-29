@@ -130,7 +130,7 @@ namespace kathryn{
         }
 
         assignFlowBlockParent(fb);
-        fb->assignInheritName();
+        fb->buildInheritName();
         /*** add to stack*/
         pushFlowBlock(fb);
     }

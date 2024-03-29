@@ -10,16 +10,13 @@
 #include <memory>
 #include <cassert>
 #include <vector>
+#include "model/abstract/identBase/identBase.h"
 
 
 typedef unsigned long long int ull;
 
 namespace kathryn {
 
-    extern ull LAST_IDENT_ID;
-
-
-    ull getLastIdentId();
     bool        isVarNameRetrievable(ull deviceIdentId);
     std::string retrieveVarName();
     void        setRetrieveVarName(std::string name);
@@ -54,37 +51,26 @@ namespace kathryn {
                                                         };
 
     class Module;
-    class Identifiable {
+    class Identifiable: public IdentBase {
     private:
         const std::string UNNAME_STR = "unnamed";
         /** name type such as Reg Wire ModuleClassName*/
-        HW_COMPONENT_TYPE        _type;
-        std::string              _varName; /// sub type of component typically we use for module
-        std::string              _globalName;
-        ull                      _globalId; /// id that DISTINCT // for all element even it is the same type
-        std::vector<std::string> _inheritName; ///// "Name1_Name2_Name3"
+        HW_COMPONENT_TYPE _type;
+        std::string       _varName; /// sub type of component typically we use for module
         /** local variable*/
         Module* _parent; /// if it is nullptr it is not localized
-        ull     _localId; /// id that use in the component
         /// it will share among the same module
 
     public:
         /** assign and auto increment object id */
         explicit Identifiable(HW_COMPONENT_TYPE type) :
+                IdentBase(),
                 _type(type),
                 _varName(UNNAME_STR),
-            //_globalName(UNNAME_STR),
-            _globalId(LAST_IDENT_ID),
-                _parent(nullptr),
-                _localId(-1)
+                _parent(nullptr)
             {
-            _varName = isVarNameRetrievable(LAST_IDENT_ID) ? retrieveVarName() : UNNAME_STR;
-            _globalName = GLOBAL_PREFIX[type] + std::to_string(LAST_IDENT_ID);
-                if (LAST_IDENT_ID == 30 || LAST_IDENT_ID == 31){
-                    int idxxxx = 0;
-                }
-            LAST_IDENT_ID++;
-
+            _varName = isVarNameRetrievable(_globalId) ? retrieveVarName() : UNNAME_STR;
+            _globalName = GLOBAL_PREFIX[type] + std::to_string(_globalId);
             };
 
         virtual ~Identifiable() = default;
@@ -94,54 +80,23 @@ namespace kathryn {
                 return *this;
             }
             _type       = ident._type;
-            _varName   = ident._varName + "_CP";
-            _globalName = GLOBAL_PREFIX[_type] + std::to_string(LAST_IDENT_ID);
-            if (LAST_IDENT_ID == 30 || LAST_IDENT_ID == 31){
-                int idxxxx = 0;
-            }
-            _globalId   = LAST_IDENT_ID++;
-
+            _varName    = ident._varName + "_CP";
             _parent     = ident._parent;
-            _localId    = -1;
             return *this;
         }
 
-        bool isLocalized() {return _parent != nullptr;}
-
         /** get hardware component type*/
         [[nodiscard]]
-        HW_COMPONENT_TYPE getType     () const {return _type;}
-        void              setIdentType(HW_COMPONENT_TYPE identType){_type = identType;}
+        HW_COMPONENT_TYPE  getType     () const {return _type;}
         /** get/set typeName (variable name)*/
         [[nodiscard]]
         const std::string& getVarName() const {return _varName;}
         void               setVarName(std::string typeName) { _varName = std::move(typeName);}
-        /** set global name*/
-        [[nodiscard]]
-        const std::string& getGlobalName() const {return _globalName;}
-        void               setGlobalName(const std::string& globalName) {_globalName = globalName;}
-        [[nodiscard]]
-        ull                getGlobalId() const {return _globalId;}
-        /// global id can not be set it permanent when class is initialized void setGlobalId(ull globalId) {_globalId = globalId;}
-
-        /** set inheritName name*/
-        /**inherit name must be call when all master module are initialized only*/
-        std::vector<std::string>& getInheritName(){
-            assert(!_inheritName.empty());
-            return _inheritName;
-        };
-        void buildInheritName();
-        std::string concat_inheritName();
-
+        /**build Inherit varname*/
+        void               buildInheritName() override;
 
         Module*            getParent(){return _parent;}
         void               setParent(Module* parent) {_parent = parent;}
-
-        [[nodiscard]]
-        ull                getLocalId() const {return _localId;}
-        void               setLocalId(ull id) {_localId = id;}
-
-        virtual bool castDownAble(){return true;}
 
         /** get debug value*/
         [[nodiscard]]std::string

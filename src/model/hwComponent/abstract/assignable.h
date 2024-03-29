@@ -11,7 +11,7 @@
 #include "operable.h"
 #include "model/hwComponent/abstract/operable.h"
 #include "model/hwComponent/abstract/Slice.h"
-#include "model/simIntf/modelSimEngine.h"
+#include "model/simIntf/modelSimEngineLegacy.h"
 #include "updateEvent.h"
 
 namespace kathryn{

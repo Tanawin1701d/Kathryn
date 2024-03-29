@@ -8,7 +8,7 @@
 #include <map>
 #include "model/hwComponent/abstract/identifiable.h"
 #include "model/controller/conInterf/controllerItf.h"
-#include "model/simIntf/modelSimInterface.h"
+#include "model/simIntf/base/modelSimEngine.h"
 #include "model/debugger/modelDebugger.h"
 #include "model/hwComponent/abstract/operable.h"
 #include "util/numberic/pmath.h"

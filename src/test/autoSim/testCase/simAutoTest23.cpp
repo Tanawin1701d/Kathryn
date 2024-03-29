@@ -6,6 +6,8 @@
 #include "test/autoSim/simAutoInterface.h"
 #include "autoTestInterface.h"
 
+
+
 namespace kathryn{
 
     class testSimMod23: public Module{
@@ -21,7 +23,7 @@ namespace kathryn{
 
             pipWrap{
                 /////// pipe block 0
-                pipBlk{a <<= a + 1;}
+                pipBlk{ a <<= a + 1;}
                 /////// pipe block 1
                 pipBlk{b <<= a;}
                 /////// pipe block 2
@@ -36,10 +38,6 @@ namespace kathryn{
             }
         }
 
-
-        void doFetchBlock(){
-
-        }
     };
 
     static std::string vcdPath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/simAutoTest23.vcd";

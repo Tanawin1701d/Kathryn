@@ -13,7 +13,7 @@
  * */
 
 
-#include "model/FlowBlock/abstract/spReg/stateReg.h"
+#include "model/flowBlock/abstract/spReg/stateReg.h"
 
 namespace kathryn{
 

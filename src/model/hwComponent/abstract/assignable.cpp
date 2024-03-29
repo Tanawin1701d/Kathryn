@@ -6,7 +6,7 @@
 #include "assignable.h"
 #include "makeComponent.h"
 #include "model/hwComponent/value/value.h"
-#include "model/FlowBlock/abstract/nodes/asmNode.h"
+#include "model/flowBlock/abstract/nodes/asmNode.h"
 
 namespace kathryn{
 

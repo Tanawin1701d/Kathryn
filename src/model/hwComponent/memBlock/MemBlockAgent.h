@@ -9,7 +9,7 @@
 #include "model/hwComponent/abstract/operable.h"
 #include "model/hwComponent/abstract/assignable.h"
 #include "model/hwComponent/abstract/slicable.h"
-#include "model/simIntf/memSimInterface.h"
+#include "model/simIntf/hwComponent/memSimEngine.h"
 #include "model/debugger/modelDebugger.h"
 #include "model/controller/conInterf/controllerItf.h"
 #include "model/hwComponent/abstract/logicComp.h"

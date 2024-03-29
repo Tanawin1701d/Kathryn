@@ -6,7 +6,7 @@
 #define KATHRYN_GLOBALCOMPONENT_H
 
 #include "model/hwComponent/wire/wire.h"
-#include "model/FlowBlock/abstract/nodes/startNode.h"
+#include "model/flowBlock/abstract/nodes/startNode.h"
 
 
 
