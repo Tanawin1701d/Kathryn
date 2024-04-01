@@ -18,8 +18,6 @@ int main() {
     initMdDebugger();
     initMfDebugger();
 
-
-
     std::vector<std::string> cmd = {"test", "all"};
     start(cmd);
 

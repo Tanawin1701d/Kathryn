@@ -25,6 +25,7 @@ namespace kathryn{
 
     public:
         FlowBlockcWhile(Operable& opr);
+        FlowBlockcWhile(bool fallTrue);
         ~FlowBlockcWhile();
         void buildHwComponent() override;
 
