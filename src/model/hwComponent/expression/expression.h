@@ -85,6 +85,7 @@ namespace kathryn {
         /** override slicable*/
         SliceAgent<expression>& operator() (int start, int stop) override;
         SliceAgent<expression>& operator() (int idx) override;
+        SliceAgent<expression>& operator() (Slice sl) override;
         Operable* doSlice(Slice sl) override;
 
         /** override debugg message*/

@@ -49,6 +49,7 @@ namespace kathryn{
         /** Slicable*/
         SliceAgent<Reg>& operator() (int start, int stop) override;
         SliceAgent<Reg>& operator() (int idx) override;
+        SliceAgent<Reg>& operator() (Slice sl) override;
         Operable* doSlice(Slice sl) override;
         /**make rstEvent*/
         void makeResetEvent();

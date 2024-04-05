@@ -30,7 +30,8 @@ namespace kathryn {
         }
 
         virtual SliceAgent<T>& operator() (int start, int stop) = 0;
-        virtual SliceAgent<T>& operator() (int idx) = 0;
+        virtual SliceAgent<T>& operator() (int idx)             = 0;
+        virtual SliceAgent<T>& operator() (Slice b)             = 0;
 
         /**this is used when Slicable of normal hwtype*/
         void addAgentHolder(SliceAgent<T>* agent){
@@ -77,6 +78,10 @@ namespace kathryn {
                                           Slicable<T>::getAbsSubSlice(idx, idx + 1, getOperableSlice())
                     );
             return *ret;
+        }
+
+        SliceAgent<T>& operator() (Slice sl) override{
+            return operator() (sl.start, sl.stop);
         }
 
         /** override assignable*/

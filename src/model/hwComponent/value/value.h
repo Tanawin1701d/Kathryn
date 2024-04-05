@@ -119,6 +119,7 @@ namespace kathryn{
         /** assign todo we will assign it later*/
         SliceAgent<Val>& operator() (int start, int stop) override;
         SliceAgent<Val>& operator() (int idx) override;
+        SliceAgent<Val>& operator() (Slice sl) override;
         Operable* doSlice(Slice sl) override;
         Operable* checkShortCircuit() override;
 

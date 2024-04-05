@@ -98,6 +98,7 @@ namespace kathryn{
             /** override slicable*/
             SliceAgent<nest>& operator() (int start, int stop) override;
             SliceAgent<nest>& operator() (int idx) override;
+            SliceAgent<nest>& operator() (Slice sl) override;
             Operable* doSlice(Slice sl) override;
 
             /** check short circuit*/

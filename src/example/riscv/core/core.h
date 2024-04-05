@@ -9,20 +9,33 @@
 
 namespace kathryn{
 
-    class Riscv: public Module{
+    namespace riscv {
 
-        const int XLEN = 32;
+        class Riscv : public Module {
 
-        makeReg(pc, XLEN);
-        makeWire(predFault, 1);
-        makeWire(correctPc, XLEN);
+            const int XLEN = 32;
 
-        void flow() override{
+            makeReg(pc, XLEN);
+            makeWire(predFault, 1);
+            makeWire(correctPc, XLEN);
+
+            void flow() override {
+
+                cwhile(true) {
+                    zif (predFault) {
+                        pc <<= correctPc;
+                    }
+                    zelse {
+                        pc <<= pc + 1;
+                    }
+                }
 
 
-        }
+            }
 
-    };
+        };
+
+    }
 
 }
 

@@ -71,6 +71,7 @@ namespace kathryn{
         /** Slicable*/
         SliceAgent<MemBlockEleHolder>& operator() (int start, int stop) override;
         SliceAgent<MemBlockEleHolder>& operator() (int idx) override;
+        SliceAgent<MemBlockEleHolder>& operator() (Slice sl) override;
         Operable* doSlice(Slice sl) override;
         Operable* checkShortCircuit   () override{return nullptr;}
 

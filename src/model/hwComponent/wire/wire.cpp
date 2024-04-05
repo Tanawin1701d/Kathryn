@@ -48,6 +48,10 @@ namespace kathryn{
         return operator()(idx, idx+1);
     }
 
+    SliceAgent<Wire>& Wire::operator()(Slice slc) {
+        return operator() (slc.start,slc.stop);
+    }
+
     Operable* Wire::doSlice(Slice sl){
         auto& x = operator() (sl.start, sl.stop);
         return x.castToOperable();

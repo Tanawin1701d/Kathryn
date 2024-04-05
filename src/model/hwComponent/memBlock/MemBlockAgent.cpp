@@ -129,6 +129,10 @@ namespace kathryn{
         return operator() (idx, idx+1);
     }
 
+    SliceAgent<MemBlockEleHolder> &MemBlockEleHolder::operator()(Slice sl) {
+        return operator() (sl.start, sl.stop);
+    }
+
     Operable* MemBlockEleHolder::doSlice(Slice sl){
         auto& x = operator() (sl.start, sl.stop);
         return x.castToOperable();

@@ -42,6 +42,7 @@ namespace kathryn{
         /**override slicable*/
         SliceAgent<Wire>& operator() (int start, int stop) override;
         SliceAgent<Wire>& operator() (int idx) override;
+        SliceAgent<Wire>& operator() (Slice sl) override;
         Operable* doSlice(Slice sl) override;
         void makeDefEvent();
         Operable* checkShortCircuit() override;

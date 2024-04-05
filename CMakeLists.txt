@@ -31,5 +31,9 @@ add_executable(Kathryn
         src/example/riscv/subSystem/storageMgm.h
         src/example/riscv/subSystem/regMgm.h
         src/example/riscv/core/core.h
+        src/example/riscv/core/fetch.h
+        src/example/riscv/parameter.h
+        src/example/riscv/core/decode.h
+        src/example/riscv/element.h
 
 )

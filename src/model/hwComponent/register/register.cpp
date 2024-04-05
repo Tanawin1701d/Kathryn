@@ -61,6 +61,11 @@ namespace kathryn{
         return operator() (idx, idx+1);
     }
 
+    SliceAgent<Reg>& Reg::operator() (Slice sl){
+        return operator() (sl.start, sl.stop);
+    }
+
+
     Operable* Reg::doSlice(Slice sl){
         auto& x = operator() (sl.start, sl.stop);
         return x.castToOperable();

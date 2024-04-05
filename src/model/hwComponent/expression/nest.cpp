@@ -172,6 +172,10 @@ namespace kathryn{
         return operator()(idx, idx + 1);
     }
 
+    SliceAgent<nest> &nest::operator()(Slice sl) {
+        return operator()(sl.start, sl.stop);
+    }
+
     Operable* nest::doSlice(Slice sl){
         auto& x = operator() (sl.start, sl.stop);
         return x.castToOperable();
