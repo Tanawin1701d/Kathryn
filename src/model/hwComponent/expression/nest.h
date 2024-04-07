@@ -46,6 +46,18 @@ namespace kathryn{
         return _make<nest>("nest", nestSize, nestList);
     }
 
+    template<typename OA>
+    nest& makeNestWithSameOneVal(OA& oa, int targetAmt){
+        assert(targetAmt > 0);
+        std::vector<NestMeta> nestList;
+        for(int i =0; i < targetAmt; i++){
+            nestList.push_back({&oa, &oa});
+        }
+        int singleTargetSize = nestList[0].opr->getOperableSlice().getSize();
+        assert(singleTargetSize > 0);
+        return _make<nest>("nestWithSameSingleValue", singleTargetSize * targetAmt, nestList);
+    }
+
     class nest : public LogicComp<nest>{
         friend class NestLogicSim;
         private:

@@ -13,27 +13,53 @@ namespace kathryn{
 
     namespace riscv {
 
-        enum RISCV_OP{
-            /*** mem memory related opcode */
-            RS_LOAD    = 0b00'000,
-            RS_STORE   = 0b01'000,
-            RS_MISCMEM = 0b00'011,
-            /***  branch instruction*/
-            RS_BRANCH  = 0b11'000,
-            RS_JALR    = 0b11'001,
-            RS_JAL     = 0b11'011,
-            /***  arithmthic instruction*/
-            RS_OP_IMM  = 0b00'100,
-            RS_OP      = 0b01'100,
-
-            RS_AUIPC   = 0b00'101,
-            RS_LUI     = 0b01'101,
-            /**  system instruction*/
-            RS_SYSTEM   = 0b11'100,
-        };
+//        enum RISCV_OP{
+//            /*** mem memory related opcode */
+//            RS_LOAD    = 0b00'000,
+//            RS_STORE   = 0b01'000,
+//            RS_MISCMEM = 0b00'011,
+//            /***  branch instruction*/
+//            RS_BRANCH  = 0b11'000,
+//            RS_JALR    = 0b11'001,
+//            RS_JAL     = 0b11'011,
+//            /***  arithmthic instruction*/
+//            RS_OP_IMM  = 0b00'100,
+//            RS_OP      = 0b01'100,
+//
+//            RS_AUIPC   = 0b00'101,
+//            RS_LUI     = 0b01'101,
+//            /**  system instruction*/
+//            RS_SYSTEM   = 0b11'100,
+//        };
 
 
         class Decode {
+
+            Slice OP_ALL{0,7};
+            Slice OP_H  { 5, 7};
+            Slice OP_L  { 2, 5};
+            Slice IDX_RD{ 7,12};
+            Slice IDX_R1{15,20};
+            Slice IDX_R2{20,25};
+            Slice FUNCT3{12,15};
+            Slice FUNCT7{25,32};
+
+            Slice IMM_I_0_12 {20, 32};
+
+            Slice IMM_S_5_12 {25, 32};
+            Slice IMM_S_0_5  {7, 12};
+
+            Slice IMM_B_12   {31, 32};
+            Slice IMM_B_5_11 {25, 31};
+            Slice IMM_B_11   {7, 8};
+            Slice IMM_B_1_5  {8, 12};
+
+            Slice IMM_U_12_32{12, 32};
+
+            Slice IMM_J_20   {31, 32};
+            Slice IMM_J_1_11 {21,31};
+            Slice IMM_J_11   {20};
+            Slice IMM_J_12_20{12,20};
 
             UOp decInstr;
 
@@ -45,42 +71,44 @@ namespace kathryn{
                     par {
 
                         /////// deal with pc
-                        decInstr.pc <<= fetchBlk.fetch_pc;
+                        decInstr.pc     <<= fetchBlk.fetch_pc;
                         decInstr.nextPc <<= fetchBlk.fetch_nextpc;
-                        auto op = fetchBlk.fetch_instr(0, 7);
+                        auto op= fetchBlk.fetch_instr(OP_ALL);
 
-                        zif( op(5, 7) == 0b0){
-                            zif (op(2, 5) == 0){
+                        zif( op(OP_H) == 0b00){
+                            //////// load  immop aulpc ////////////////////////////////////////////////
+                            zif (op(OP_L) == 0b000){
                                 doLoadStoreDecode(true, fetchBlk.fetch_instr);
-                            }///zelif(op(2,5) == 0b11){
-                                //doMiscDecode(fetchBlk.fetch_instr);
-                            ///}
-                            zelif(op(2,5) == 0b100){
-                                doOpImmDecode(fetchBlk.fetch_instr);
+                            }///zelif(op(2,5) == 0b11){//doMiscDecode(fetchBlk.fetch_instr);///}
+                            zelif(op(OP_L) == 0b100){
+                                doOpDecode(fetchBlk.fetch_instr, false); ///// imm
                             }zelse{
                                 doAulPcDecode(fetchBlk.fetch_instr);
                             }
-                        }zelif(op(5, 7) == 0b01){
-                            zif (op(2, 5) == 0){
+                            ///////////////////////////////////////////////////////////////////////////
+                        }zelif(op(OP_H) == 0b01){
+                            //////////// store op luidcode////////////////////////////////////////////
+                            zif (op(OP_L) == 0b000){
                                 doLoadStoreDecode(false, fetchBlk.fetch_instr);
-                            }zelif(op(2,5) == 0b100){
-                                doOpDecode(fetchBlk.fetch_instr);
+                            }zelif(op(OP_L) == 0b100){
+                                doOpDecode(fetchBlk.fetch_instr, true);
                             }zelse{ //(op(2,5) == 0b101) {
                                 doLuiDecode(fetchBlk.fetch_instr);
                             }
-                        }zelse{ ////// 11
-                            zif (op(2, 5) == 0){
+                            ////////////////////////////////////////////////////////////////////////
+                        }zelse{ ////// 11   we dont support 10
+                            ////////// branch jump with reg //////////////////////////
+                            zif (op(OP_L) == 0b000){
                                 doBranchDecode(fetchBlk.fetch_instr);
-                            }zelif(op(2,5) == 0b1){
+                            }zelif(op(OP_L) == 0b001){
                                 doJalRDecode(fetchBlk.fetch_instr);
-                            }zelse {////(op(2,5) == 0b011){
+                            }zelse{////(op(2,5) == 0b011){ this is 11
                                 doJalDecode(fetchBlk.fetch_instr);
                             }//}zelse{
 //                                doSystemDecode(fetchBlk.fetch_instr);
 //                            }
+                            ///////////////////////////////////////////////////////////
                         }
-
-
 
                     }
                 }
@@ -90,34 +118,29 @@ namespace kathryn{
             /** 00**/
 
             void doLoadStoreDecode(bool isLoad, Reg& instr){
+
+                Slice sizeBit = {12, 14};
+                int extendModeBit = 14;
+
+                decInstr.regData[RS_1].setFromRegFile(instr(IDX_R1));
                 if (isLoad){
-                    decInstr.opLs.isMemLoad  <<= 1;
-                    decInstr.opLs.isMemStore <<= 0;
-                    decInstr.regData[RS_1].setFromRegFile(instr(15, 20));
-                    zif(instr(14)){
-                        decInstr.regData[RS_2].setFromImm(); ///// set from sign extend mode
-                    }zelse{
-                        decInstr.regData[RS_2].setFromImm();
-                    };
-                    decInstr.regData[RS_des].setFromRegFile(instr(7, 12));
-
-
+                    decInstr.regData[RS_2].setFromImm(getExtendExpr(instr(IMM_I_0_12), XLEN, false));
+                    decInstr.regData[RS_3].reset();
+                    decInstr.regData[RS_des].setFromRegFile(instr(IDX_RD));
                 }else{
-                    decInstr.opLs.isMemLoad  <<= 0;
-                    decInstr.opLs.isMemStore <<= 1;
-                    decInstr.regData[RS_1].setFromRegFile(instr(15, 20));
-                    decInstr.regData[RS_2].setFromImm();
-                    decInstr.regData[RS_des].setFromImm();
+                    decInstr.regData[RS_2].setFromRegFile(instr(IDX_R2));
+                    decInstr.regData[RS_3].setFromImm(
+                        getExtendExpr(g(instr(IMM_S_5_12), instr(IMM_S_0_5)), XLEN, false)
+                            );
+                    decInstr.regData[RS_des].reset();
 
                 }
-                decInstr.regData[RS_3].reset();
-                decInstr.opAlu        .reset();
-                decInstr.opBranch     .reset();
-                decInstr.opLdPc       .reset();
 
-                decInstr.opLs.isUopUse  <<= 1;
-                decInstr.opLs.size         <<= instr(12, 14);
-                decInstr.opLs.extendMode   <<= instr(14);
+
+                decInstr.opLs.set(isLoad,instr(sizeBit), instr(extendModeBit));
+                decInstr.opAlu        .reset();
+                decInstr.opCtrlFlow   .reset();
+                decInstr.opLdPc       .reset();
             }
 //
 //            void doMiscDecode(Reg& instr){
@@ -126,104 +149,100 @@ namespace kathryn{
 //
 //            }
 
-            void doOpImmDecode(Reg& instr){
+            void doOpDecode(Reg& instr, bool isUsedR2){ //// else is imm
 
-                decInstr.regData[RS_1].setFromRegFile(instr(15, 20));
-                decInstr.regData[RS_2].setFromImm();
+                /** deal with reg */
+                decInstr.regData[RS_1].setFromRegFile(instr(IDX_R1));
+                if (isUsedR2){
+                    decInstr.regData[RS_2].setFromRegFile(instr(IDX_R2));
+                }else{
+                    /** for shift user only lower 5 bit*/
+                    decInstr.regData[RS_2].setFromImm(getExtendExpr(instr(IMM_I_0_12), XLEN, false));
+                }
                 decInstr.regData[RS_3].reset();
-                decInstr.regData[RS_des].setFromRegFile(instr(7, 12));
+                decInstr.regData[RS_des].setFromRegFile(instr(IDX_RD));
 
-                decInstr.opLs.reset();
-                decInstr.opBranch.reset();
-                decInstr.opLdPc.reset();
-
-                auto funct3 = instr(12, 15);
-
-                decInstr.opAlu.isUopUse            <<= 1;
-                decInstr.opAlu.isAdd               <<= (funct3 == 0);
-                decInstr.opAlu.isSub               <<= 0;
-                decInstr.opAlu.isXor               <<= (funct3 == 0b100);
-                decInstr.opAlu.isOr                <<= (funct3 == 0b110);
-                decInstr.opAlu.isAnd               <<= (funct3 == 0b111);
-                decInstr.opAlu.isCmpLessThanSign   <<= (funct3 == 0b010);
-                decInstr.opAlu.isCmpLessThanUSign  <<= (funct3 == 0b011);
-                decInstr.opAlu.isShiftLeftLogical  <<= (funct3 == 0b001);
-                decInstr.opAlu.isShiftRightLogical <<= (funct3 == 0b101) & (instr(30) == 0);
-                decInstr.opAlu.isShiftRightArith   <<= (funct3 == 0b101) & (instr(30) == 1);
+                /**reset other instruction*/
+                decInstr.opLs      .reset();
+                decInstr.opCtrlFlow.reset();
+                decInstr.opLdPc    .reset();
+                /**set current instruction*/
+                decInstr.opAlu.isUopUse                <<= 1;
+                if (isUsedR2) {
+                    decInstr.opAlu.isAdd               <<= (instr(FUNCT3) == 0b000) & (instr(30) == 0);
+                    decInstr.opAlu.isSub               <<= (instr(FUNCT3) == 0b000) & (instr(30) == 1);
+                }else{
+                    decInstr.opAlu.isAdd <<= (instr(FUNCT3) == 0b000);
+                    decInstr.opAlu.isSub <<= 0;
+                }
+                decInstr.opAlu.isXor               <<= (instr(FUNCT3) == 0b100);
+                decInstr.opAlu.isOr                <<= (instr(FUNCT3) == 0b110);
+                decInstr.opAlu.isAnd               <<= (instr(FUNCT3) == 0b111);
+                decInstr.opAlu.isCmpLessThanSign   <<= (instr(FUNCT3) == 0b010);
+                decInstr.opAlu.isCmpLessThanUSign  <<= (instr(FUNCT3) == 0b011);
+                decInstr.opAlu.isShiftLeftLogical  <<= (instr(FUNCT3) == 0b001);
+                decInstr.opAlu.isShiftRightLogical <<= (instr(FUNCT3) == 0b101) & (instr(30) == 0);
+                decInstr.opAlu.isShiftRightArith   <<= (instr(FUNCT3) == 0b101) & (instr(30) == 1);
 
 
             }
             void doAulPcDecode(Reg& instr, bool needPc = false){
                 decInstr.regData[RS_1].reset();
-                decInstr.regData[RS_2].reset();
-                decInstr.regData[RS_3].reset();
-                decInstr.regData[RS_des].setFromRegFile(instr(7, 12));
+                makeVal(fixdown, 12, 0);
+                decInstr.regData[RS_2]  .setFromImm(g(instr(IMM_U_12_32),  fixdown));
+                decInstr.regData[RS_3]  .reset();
+                decInstr.regData[RS_des].setFromRegFile(instr(IDX_RD));
 
-                decInstr.opLs.reset();
-                decInstr.opAlu.reset();
-                decInstr.opBranch.reset();
+                decInstr.opLs      .reset();
+                decInstr.opAlu     .reset();
+                decInstr.opCtrlFlow.reset();
                 decInstr.opLdPc.isUopUse <<= 1;
                 decInstr.opLdPc.needPc   <<= needPc;
 
             }
 
-            /** 01*/
-
-            void doOpDecode(Reg& instr){
-                decInstr.regData[RS_1].setFromRegFile(instr(15, 20));
-                decInstr.regData[RS_2].setFromRegFile(instr(20, 25));
-                decInstr.regData[RS_3].reset();
-                decInstr.regData[RS_des].setFromRegFile(instr(7, 12));
-
-                decInstr.opLs.reset();
-                decInstr.opBranch.reset();
-                decInstr.opLdPc.reset();
-
-                auto funct3 = instr(12, 15);
-
-                decInstr.opAlu.isUopUse            <<= 1;
-                decInstr.opAlu.isAdd               <<= (funct3 == 0) & (instr(30) == 0);
-                decInstr.opAlu.isSub               <<= (funct3 == 0) & (instr(30) == 1);
-                decInstr.opAlu.isXor               <<= (funct3 == 0b100);
-                decInstr.opAlu.isOr                <<= (funct3 == 0b110);
-                decInstr.opAlu.isAnd               <<= (funct3 == 0b111);
-                decInstr.opAlu.isCmpLessThanSign   <<= (funct3 == 0b010);
-                decInstr.opAlu.isCmpLessThanUSign  <<= (funct3 == 0b011);
-                decInstr.opAlu.isShiftLeftLogical  <<= (funct3 == 0b001);
-                decInstr.opAlu.isShiftRightLogical <<= (funct3 == 0b101) & (instr(30) == 0);
-                decInstr.opAlu.isShiftRightArith   <<= (funct3 == 0b101) & (instr(30) == 1);
-            }
-
             void doLuiDecode(Reg& instr){
-                doAulPcDecode(instr);
+                doAulPcDecode(instr, true);
             }
 
-            /** 11 */
-
-
+            /***
+             *
+             * branch control
+             *
+             * */
 
             void doBranchDecode(Reg& instr){
-                decInstr.regData[RS_1].setFromRegFile(instr(15, 20));
-                decInstr.regData[RS_2].setFromRegFile(instr(20, 25));
-                decInstr.regData[RS_3].setFromImm();
-                decInstr.regData[RS_des].setFromRegFile(instr(7, 12));
+                decInstr.regData[RS_1].setFromRegFile(instr(IDX_R1));
+                decInstr.regData[RS_2].setFromRegFile(instr(IDX_R2));
 
-                auto funct3 = instr(12, 15);
+                makeVal(lastBit, 1, 0);
+                nest& rawNest = g(instr(IMM_B_12),instr(IMM_B_11),instr(IMM_B_5_11),instr(IMM_B_1_5), lastBit);
+
+                decInstr.regData[RS_3].setFromImm(getExtendExpr(rawNest, XLEN, false));
+                decInstr.regData[RS_des].setFromRegFile(instr(IDX_RD));
+
+                auto funct3 = instr(FUNCT3);
 
                 decInstr.opLs.reset();
                 decInstr.opAlu.reset();
-                decInstr.opBranch.isUopUse <<= 1;
-                decInstr.opBranch.extendMode <<= instr(13);
-                decInstr.opBranch.isJalR     <<= 0b0;
-                decInstr.opBranch.isJal      <<= 0b0;
-                decInstr.opBranch.isEq       <<= (funct3 == 0b0);
-                decInstr.opBranch.isNEq      <<= (funct3 == 0b001);
-                decInstr.opBranch.isLt       <<= (funct3 == 0b100) | (funct3 == 0b110);
-                decInstr.opBranch.isGe       <<= (funct3 == 0b101) | (funct3 == 0b111);
+                decInstr.opCtrlFlow.isUopUse <<= 1;
+                decInstr.opCtrlFlow.extendMode <<= instr(13);
+                decInstr.opCtrlFlow.isJalR     <<= 0b0;
+                decInstr.opCtrlFlow.isJal      <<= 0b0;
+                decInstr.opCtrlFlow.isEq       <<= (funct3 == 0b0);
+                decInstr.opCtrlFlow.isNEq      <<= (funct3 == 0b001);
+                decInstr.opCtrlFlow.isLt       <<= (funct3 == 0b100) | (funct3 == 0b110);
+                decInstr.opCtrlFlow.isGe       <<= (funct3 == 0b101) | (funct3 == 0b111);
 
 
                 decInstr.opLdPc.reset();
             }
+
+            /**
+             *
+             * jump control
+             *
+             * */
 
             void doJalRDecode(Reg& instr){
 
@@ -234,30 +253,29 @@ namespace kathryn{
             void doJalDecode(Reg& instr, bool reqR1 = false){
 
                 if (reqR1){
-                    decInstr.regData[RS_1].setFromRegFile(instr(15, 20));
+                    decInstr.regData[RS_1].setFromRegFile(instr(IDX_R1));
+                    decInstr.regData[RS_2].setFromImm(getExtendExpr(instr(IMM_I_0_12), XLEN, false));
                 }else{
                     decInstr.regData[RS_1].setZero();
+                    makeVal(lastBit, 1, 0);
+                    nest& rawNest = g(instr(IMM_J_20),instr(IMM_J_12_20),instr(IMM_J_11),instr(IMM_J_1_11), lastBit);
+                    decInstr.regData[RS_2].setFromImm(getExtendExpr(rawNest, XLEN, false));
                 }
-
-                decInstr.regData[RS_2].reset();
-                decInstr.regData[RS_3].reset();
-                decInstr.regData[RS_des].setFromRegFile(instr(7, 12));
+                decInstr.regData[RS_3]  .reset();
+                decInstr.regData[RS_des].setFromRegFile(instr(IDX_RD));
 
                 decInstr.opLs.reset();
                 decInstr.opAlu.reset();
-
-                decInstr.opBranch.isUopUse   <<= 1;
-                decInstr.opBranch.extendMode <<= 0;
-                decInstr.opBranch.isJalR     <<= reqR1;
-                decInstr.opBranch.isJal      <<= !reqR1;
-                decInstr.opBranch.isEq       <<= 0;
-                decInstr.opBranch.isNEq      <<= 0;
-                decInstr.opBranch.isLt       <<= 0;
-                decInstr.opBranch.isGe       <<= 0;
-
-
                 decInstr.opLdPc.reset();
-                decInstr.opLdPc.reset();
+
+                decInstr.opCtrlFlow.isUopUse   <<= 1;
+                decInstr.opCtrlFlow.extendMode <<= 0;
+                decInstr.opCtrlFlow.isJalR     <<= reqR1;
+                decInstr.opCtrlFlow.isJal      <<= !reqR1;
+                decInstr.opCtrlFlow.isEq       <<= 0;
+                decInstr.opCtrlFlow.isNEq      <<= 0;
+                decInstr.opCtrlFlow.isLt       <<= 0;
+                decInstr.opCtrlFlow.isGe       <<= 0;
 
             }
 
@@ -265,11 +283,38 @@ namespace kathryn{
 //
 //            }
 
+            template<typename T>
+            nest& getExtendExpr(T& rawImm, int targetSize, bool unsignExtend) { ///// false is sign extend
+
+                assert(targetSize >= rawImm.getOperableSlice().getSize());
+
+                int extraSize = targetSize - rawImm.getOperableSlice().getSize();
+
+                nest* resultNest;
+
+                if (unsignExtend){
+                    makeVal(extendBits, extraSize);
+                    resultNest = &g(extendBits, rawImm);
+                    resultNest->setVarName("extend_with_usign");
+                }else{
+                    ////// sign extension
+
+                    ///////// get last bit and slice it
+                    auto* signBit = new expression(1);
+                    Slice lastBitSlice = rawImm.getOperableSlice();
+                          lastBitSlice = lastBitSlice.getSubSlice(lastBitSlice.getSize()-1);
+                    *signBit = *rawImm.doSlice( lastBitSlice );
+                    //////// make nest from last bit value
+                    resultNest = &g(makeNestWithSameOneVal(*signBit, extraSize), rawImm);
+                    resultNest->setVarName("extend_with_sign");
+                }
+                return *resultNest;
+            }
+
         };
 
 
     }
 
 }
-
 #endif //KATHRYN_DECODE_H

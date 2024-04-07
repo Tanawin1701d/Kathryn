@@ -48,14 +48,22 @@ namespace kathryn{
                 val   <<= 0;
             }
 
+
+
         };
 
         struct lsUop{
             makeReg(isUopUse  , 1);
             makeReg(isMemLoad , 1);
-            makeReg(isMemStore, 1);
             makeReg(size      , 2); //// 00 -> 8, 01 -> 16, 10 -> 32, 11-> reserve
             makeReg(extendMode, 1); //// 0 zero extend 1 signExtend
+
+            void set(bool isLoad, Operable& needSize, Operable& needExtendMode){
+                isUopUse <<= 1;
+                isMemLoad <<= isLoad;
+                size <<= needSize;
+                extendMode <<= needExtendMode;
+            }
 
             void reset(){
                 isUopUse <<= 0;
@@ -112,7 +120,7 @@ namespace kathryn{
             /** op code*/
             lsUop   opLs;
             aluUop  opAlu;
-            jumpUop opBranch;
+            jumpUop opCtrlFlow;
             ldPc    opLdPc;
         };
 

@@ -35,5 +35,6 @@ add_executable(Kathryn
         src/example/riscv/parameter.h
         src/example/riscv/core/decode.h
         src/example/riscv/element.h
+        src/example/numberic/extend.h
 
 )
