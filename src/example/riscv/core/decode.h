@@ -10,8 +10,7 @@
 
 namespace kathryn{
 
-
-    namespace riscv {
+    namespace riscv{
 
 //        enum RISCV_OP{
 //            /*** mem memory related opcode */
@@ -61,9 +60,10 @@ namespace kathryn{
             Slice IMM_J_11   {20};
             Slice IMM_J_12_20{12,20};
 
+        public:
             UOp decInstr;
 
-        public:
+
 
             void flow(Fetch &fetchBlk) {
 

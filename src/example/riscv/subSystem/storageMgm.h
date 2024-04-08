@@ -14,16 +14,16 @@ namespace kathryn{
 
         class StorageMgmt {
         public:
-            const int REGSIZE = 32;
-            const int AMTREG = 32;
+            const int REGSIZE  = 32;
+            const int AMTREG   = 32;
             const int IDX_SIZE = 5;
             MemBlock &_myMem;
 
             /** read section*/
             int amountReadIdx = 0;
-            std::vector<Operable *> readIdxs;
-            std::vector<Wire *> readEns;
-            std::vector<Wire *> readFinishes;
+            std::vector<Operable*> readIdxs;
+            std::vector<Wire*>     readEns;
+            std::vector<Wire*>     readFinishes;
 
             Wire &readIdxMaster;
             Operable &readOutput;
@@ -35,24 +35,28 @@ namespace kathryn{
                                                              readIdxMaster(_make<Wire>("_readIndexer", IDX_SIZE)),
                                                              readOutput(_myMem[readIdxMaster]) {}
 
-            void reqReadReg(Reg &x, Operable &idx) {
+            void reqStorage(Reg &x, Operable &idx, Reg& valid) {
 
                 assert(idx.getOperableSlice().getSize() == IDX_SIZE);
                 assert(x.getOperableSlice().getSize() == REGSIZE);
+                assert(valid.getOperableSlice().getSize() == 1);
 
-                readIdxs.push_back(&idx);
-                readEns.push_back(&_make<Wire>("startReadReg_" + std::to_string(amountReadIdx), 1));
+
+                readIdxs    .push_back(&idx);
+                readEns     .push_back(&_make<Wire>("startReadReg_" + std::to_string(amountReadIdx), 1));
                 readFinishes.push_back(&_make<Wire>("notifyReadReg_" + std::to_string(amountReadIdx), 1));
                 amountReadIdx++;
 
                 cwhile(true) {
                     par {
                         *readEns[readFinishes.size() - 1] = 1;
-                        cif (*readFinishes[readFinishes.size() - 1]) {
-                            x <<= readOutput;
+                        cif (valid){
                             sbreak
-                        }
-                        celse {
+                        }celif(*readFinishes[readFinishes.size() - 1]) {
+                            valid <<= 1;
+                            x     <<= readOutput;
+                            sbreak
+                        }celse{
                             x <<= 0;
                         }
                     }

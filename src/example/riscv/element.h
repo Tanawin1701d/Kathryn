@@ -122,6 +122,7 @@ namespace kathryn{
             aluUop  opAlu;
             jumpUop opCtrlFlow;
             ldPc    opLdPc;
+
         };
 
     }

@@ -24,7 +24,7 @@ namespace kathryn{
             void flow(StorageMgmt &memMgmt, Operable &reqPc) {
                 pipBlk {
                     par {
-                        memMgmt.reqReadReg(fetch_instr, reqPc);
+                        memMgmt.reqStorageReg(fetch_instr, reqPc);
                         fetch_pc <<= reqPc;
                     }
                 }

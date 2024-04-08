@@ -6,6 +6,7 @@
 #define KATHRYN_REGMGM_H
 
 #include"storageMgm.h"
+#include "example/riscv/element.h"
 
 namespace kathryn{
 
@@ -23,9 +24,11 @@ namespace kathryn{
             explicit RegMgmt(int idxSize, int regSize) :
                     StorageMgmt(idxSize, regSize) {}
 
-            Operable &isOverlapWithWriteReg(Operable &idx) {
-                return (idx != 0) &&
-                       ((idx == ReaderRegIdx) || (idx == ExecuteSecRegIdx) || (idx == WriteBackSecRegIdx));
+            Operable &isOverlapWithWriteReg(RegEle& regEle) {
+                return (regEle.idx != 0) &&
+                       ((regEle.idx == ReaderRegIdx) ||
+                       (regEle.idx == ExecuteSecRegIdx) ||
+                       (regEle.idx == WriteBackSecRegIdx));
 
             }
 
@@ -39,6 +42,12 @@ namespace kathryn{
             void reqExecuteFlushOccur() {
                 ReaderRegIdx <<= 0;
             }
+
+
+            void reqReg(RegEle& regEle){
+                reqStorage(regEle.val, regEle.idx, regEle.valid);
+            }
+
 
 
         };
