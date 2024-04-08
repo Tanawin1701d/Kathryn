@@ -67,8 +67,21 @@ namespace kathryn{
     }
 
 
+    /**
+     * standard assignment
+     *
+     * ***/
+
 
     void MemBlockEleHolder::doBlockAsm(Operable &srcOpr, Slice desSlice) {
+        doGlobalAsm(srcOpr, desSlice, ASM_DIRECT);
+    }
+
+    void MemBlockEleHolder::doNonBlockAsm(Operable& srcOpr, Slice desSlice) {
+        doGlobalAsm(srcOpr, desSlice, ASM_EQ_DEPNODE);
+    }
+
+    void MemBlockEleHolder::doGlobalAsm(Operable& srcOpr, Slice desSlice, ASM_TYPE asmType){
         mfAssert(getAssignMode() == AM_MOD, "must be Model mode only");
         mfAssert(isReadMode(), "duplicate write operation");
         mfAssert(getSlice().getSize() == srcOpr.getOperableSlice().getSize(),
@@ -77,35 +90,42 @@ namespace kathryn{
         assert(srcOpr.getOperableSlice().getSize() == _master->getWidthSize());
         ctrl->on_memBlkEleHolder_update(
                 generateBasicNode(srcOpr,
-                 {0, _master->getWidthSize()}),
+                                  {0, _master->getWidthSize()},
+                                          asmType),
                 this);
     }
 
-    void MemBlockEleHolder::doNonBlockAsm(Operable& srcOpr, Slice desSlice) {
-        mfAssert(false, "memBlockEle doesn't support = operator");
-        assert(false);
-    }
+    /**
+     * special group assignment
+     *
+     * ***/
 
     void MemBlockEleHolder::doBlockAsm(Operable& srcOpr,
                                        std::vector<AssignMeta*>& resultMetaCollector,
                                        Slice  absSrcSlice,
                                        Slice  absDesSlice){
-
         /** for assigning in memblock must have same size */
         mfAssert(isReadMode(), "duplicate write operation");
-        mfAssert(getSlice().getSize() == srcOpr.getOperableSlice().getSize(),
+        mfAssert(getSlice().getSize() == absSrcSlice.getSize(),
                  "invalid write size");
         setWriteMode();
-        doGlobalAsm(srcOpr, resultMetaCollector,
-                    absSrcSlice, absDesSlice);
+        Assignable::doGlobalAsm(srcOpr, resultMetaCollector,
+                                   absSrcSlice, absDesSlice,
+                                   ASM_DIRECT);
     }
 
     void MemBlockEleHolder::doNonBlockAsm(Operable& srcOpr,
                                           std::vector<AssignMeta*>& resultMetaCollector,
                                           Slice  absSrcSlice,
                                           Slice  absDesSlice){
-        mfAssert(false, "memBlockEle doesn't support doNonBlockAsm");
-        assert(false);
+        /** for assigning in memblock must have same size */
+        mfAssert(isReadMode(), "duplicate write operation");
+        mfAssert(getSlice().getSize() == absSrcSlice.getSize(),
+                 "invalid write size");
+        setWriteMode();
+        Assignable::doGlobalAsm(srcOpr, resultMetaCollector,
+                                   absSrcSlice, absDesSlice,
+                                   ASM_EQ_DEPNODE);
     }
 
     /*** override Operable*/

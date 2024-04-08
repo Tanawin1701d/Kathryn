@@ -7,6 +7,7 @@
 
 
 #include "node.h"
+#include "asmNode.h"
 
 namespace kathryn{
 
@@ -17,6 +18,7 @@ namespace kathryn{
 
     struct StateNode : Node{
         StateReg* _stateReg;
+        std::vector<AsmNode*> _dependSlaveAsmNode; /// the asignment node that depend on this stateNode
 
         explicit StateNode() :
             Node(STATE_NODE),
@@ -38,12 +40,23 @@ namespace kathryn{
             return _stateReg->generateEndExpr();
         }
 
+        void addSlaveAsmNode(AsmNode* asmNode){
+            assert(asmNode != nullptr);
+            _dependSlaveAsmNode.push_back(asmNode);
+        }
+
         void assign() override{
             _stateReg->setVarName(identName);
+            /*** set event*/
             Operable* dependNodeOpr = transformAllDepNodeToOpr();
             assert(dependNodeOpr != nullptr);
             _stateReg->addDependState(dependNodeOpr, condition);
+            /** unset event*/
             makeUnsetStateEvent();
+            /** slave event*/
+            for (AsmNode* asmNode: _dependSlaveAsmNode){
+                asmNode->assignFromStateNode();
+            }
         }
 
         int getCycleUsed() override {return 1;}

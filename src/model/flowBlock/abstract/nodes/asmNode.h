@@ -43,19 +43,65 @@ namespace kathryn {
             return clNode;
         }
 
-        void assign() override {
+
+        bool isThereIndirectAsmMeta() {
+
+            for (auto* assignMeta: _assignMetas) {
+                if (assignMeta->asmType == ASM_EQ_DEPNODE) {
+                    return true;
+                }
+            }
+            return false;
+
+
+        }
+
+        void assign() override{
+            assert(false);
+        }
+
+        void assignFromStateNode(){
+            assert(dependNodes.size() == 1);
             assert(!_assignMetas.empty());
             Operable* depNodeOpr = transformAllDepNodeToOpr();
-            for (auto* assignMeta: _assignMetas) {
-                auto resultUpEvent = new UpdateEvent({
-                                                             condition,
-                                                             depNodeOpr,
-                                                             &assignMeta->valueToAssign,
-                                                             assignMeta->desSlice,
-                                                             DEFAULT_UE_PRI_USER
-                                                     });
 
-                assignMeta->updateEventsPool.push_back(resultUpEvent);
+            Operable* inDirectCon      = nullptr;
+            Operable* InDirectDepState = nullptr;
+
+            if (isThereIndirectAsmMeta()) {
+                inDirectCon = condition;
+                if (dependNodes[0]->getCondition() != nullptr) {
+                    addLogic(inDirectCon, dependNodes[0]->getCondition(), BITWISE_AND);
+                }
+                InDirectDepState = dependNodes[0]->transformAllDepNodeToOpr();
+            }
+
+            for (auto* assignMeta: _assignMetas) {
+
+                if (assignMeta->asmType == ASM_DIRECT){
+                    ///////////// assign from current dependency
+                    auto resultUpEvent = new UpdateEvent({
+                                                                 condition,
+                                                                 depNodeOpr,
+                                                                 &assignMeta->valueToAssign,
+                                                                 assignMeta->desSlice,
+                                                                 DEFAULT_UE_PRI_USER
+                                                         });
+
+                    assignMeta->updateEventsPool.push_back(resultUpEvent);
+                    ////////////////////////////////////////////////////////////////////////////////////////
+                }else if (assignMeta->asmType == ASM_EQ_DEPNODE){
+                    //////////////// assign as same as node that have been assign
+                    auto resultUpEvent = new UpdateEvent({
+                                                                 inDirectCon,
+                                                                 InDirectDepState,
+                                                                 &assignMeta->valueToAssign,
+                                                                 assignMeta->desSlice,
+                                                                 DEFAULT_UE_PRI_USER
+                                                         });
+                    assignMeta->updateEventsPool.push_back(resultUpEvent);
+
+                }
             }
 
             /*** no need to deal with rst event due to data self invoked*/

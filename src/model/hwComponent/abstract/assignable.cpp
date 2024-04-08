@@ -22,7 +22,8 @@ namespace kathryn{
             Operable& srcOpr,
             std::vector<AssignMeta*>& resultMetaCollector,
             Slice  absSrcSlice,
-            Slice  absDesSlice
+            Slice  absDesSlice,
+            ASM_TYPE asmType
             ){
         /** check slice integrity*/
         assert(srcOpr.getOperableSlice().isContain(absSrcSlice));
@@ -36,15 +37,15 @@ namespace kathryn{
         Operable* slicedSrcOpr = exactSrcOpr->doSlice(desireSrcSlice);
 
         resultMetaCollector.push_back(
-                generateAssignMeta( *slicedSrcOpr, desireDesSlice)
+                generateAssignMeta( *slicedSrcOpr, desireDesSlice, asmType)
         );
     }
 
 
-    AsmNode* Assignable::generateBasicNode(Operable& srcOpr, Slice desSlice){
+    AsmNode* Assignable::generateBasicNode(Operable& srcOpr, Slice desSlice, ASM_TYPE asmType){
 
         assert(desSlice.getSize() <= srcOpr.getOperableSlice().getSize());
-        auto* assMeta = new AssignMeta(_updateMeta, srcOpr, desSlice);
+        auto* assMeta = new AssignMeta(_updateMeta, srcOpr, desSlice, asmType);
         auto* asmNode = new AsmNode(assMeta);
         return asmNode;
 

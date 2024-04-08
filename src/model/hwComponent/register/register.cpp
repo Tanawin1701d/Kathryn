@@ -28,20 +28,30 @@ namespace kathryn{
         ctrl->on_reg_init(this);
     }
 
+    /***
+     *
+     * standard assignment
+     *
+     * */
+
     void Reg::doBlockAsm(Operable&b, Slice desSlice) {
+        doGlobalAsm(b, desSlice, ASM_DIRECT);
+    }
+
+    void Reg::doNonBlockAsm(Operable&b, Slice desSlice){
+        doGlobalAsm(b, desSlice, ASM_EQ_DEPNODE);
+    }
+
+    void Reg::doGlobalAsm(Operable& srcOpr, Slice desSlice, ASM_TYPE asmType) {
         assert(getAssignMode() == AM_MOD);
         assert(desSlice.getSize() <= getSlice().getSize());
         assert(desSlice.stop <= getSlice().stop);
         /** bit control policy is shink the msb bit*/
-        Slice finalizeDesSlice = desSlice.getMatchSizeSubSlice(b.getOperableSlice());
+        Slice finalizeDesSlice = desSlice.getMatchSizeSubSlice(srcOpr.getOperableSlice());
         ctrl->on_reg_update(
-                generateBasicNode(b, finalizeDesSlice),
+                generateBasicNode(srcOpr, finalizeDesSlice, asmType),
                 this
         );
-    }
-
-    void Reg::doNonBlockAsm(Operable&b, Slice desSlice){
-        mfAssert(false, "register doesn't support nonblocking assignment");
     }
 
     /** slicable override*/

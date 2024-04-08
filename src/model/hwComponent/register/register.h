@@ -27,19 +27,19 @@ namespace kathryn{
         /** assignable override*/
         void doBlockAsm(Operable& srcOpr, Slice desSlice) override;
         void doNonBlockAsm(Operable& srcOpr, Slice desSlice) override;
+        void doGlobalAsm(Operable& srcOpr, Slice desSlice, ASM_TYPE asmType) override;
             /////// for block is declar in assign base class
         void doBlockAsm(Operable& srcOpr,
                            std::vector<AssignMeta*>& resultMetaCollector,
                            Slice  absSrcSlice,
                            Slice  absDesSlice) override{
-            doGlobalAsm(srcOpr, resultMetaCollector, absSrcSlice, absDesSlice);
+            Assignable::doGlobalAsm(srcOpr, resultMetaCollector, absSrcSlice, absDesSlice, ASM_DIRECT);
         };
         void doNonBlockAsm(Operable& srcOpr,
                            std::vector<AssignMeta*>& resultMetaCollector,
                            Slice  absSrcSlice,
                            Slice  absDesSlice) override{
-            mfAssert(false, "reg don't support doNonBlockAsm");
-            assert(false);
+            Assignable::doGlobalAsm(srcOpr, resultMetaCollector, absSrcSlice, absDesSlice, ASM_EQ_DEPNODE);
         };
 
         Reg& operator = (Operable& b){ operatorEq(b);                                return *this;}

@@ -22,6 +22,7 @@ namespace kathryn{
         /**override assignable*/
         void doBlockAsm(Operable& srcOpr, Slice desSlice) override;
         void doNonBlockAsm(Operable& srcOpr, Slice desSlice) override;
+
         void doBlockAsm(Operable& srcOpr,
                         std::vector<AssignMeta*>& resultMetaCollector,
                         Slice  absSrcSlice,
@@ -32,7 +33,7 @@ namespace kathryn{
                            std::vector<AssignMeta*>& resultMetaCollector,
                            Slice  absSrcSlice,
                            Slice  absDesSlice) override{
-            doGlobalAsm(srcOpr, resultMetaCollector, absSrcSlice, absDesSlice);
+            doGlobalAsm(srcOpr, resultMetaCollector, absSrcSlice, absDesSlice, ASM_DIRECT);
         }
 
         Wire& operator = (Operable& b){ operatorEq(b);                                 return *this;}

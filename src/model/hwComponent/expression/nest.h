@@ -90,7 +90,8 @@ namespace kathryn{
             void doGlobalAsm(Operable& srcOpr,
                              std::vector<AssignMeta*>& resultMetaCollector,
                              Slice  absSrcSlice,
-                             Slice  absDesSlice) override {assert(false);/**disable this function*/}
+                             Slice  absDesSlice,
+                             ASM_TYPE asmType) override {assert(false);/**disable this function*/}
 
             nest& operator = (Operable& b){ operatorEq(b);                                return *this;}
             nest& operator = (ull b)      { operatorEq(b);                                   return *this;}

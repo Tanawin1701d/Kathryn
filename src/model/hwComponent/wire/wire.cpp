@@ -32,7 +32,7 @@ namespace kathryn{
         assert(getAssignMode() == AM_MOD);
         Slice finalizeDesSlice = getSlice().getMatchSizeSubSlice(desSlice);
         ctrl->on_wire_update(
-                generateBasicNode(srcOpr, finalizeDesSlice),
+                generateBasicNode(srcOpr, finalizeDesSlice, ASM_DIRECT),
                 this);
     }
 

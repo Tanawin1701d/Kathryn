@@ -50,6 +50,8 @@ namespace kathryn{
         /** override assignable (need to call controller)*/
         void doBlockAsm (Operable& srcOpr, Slice desSlice) override;
         void doNonBlockAsm(Operable& srcOpr, Slice desSlice) override;
+        void doGlobalAsm(Operable& srcOpr, Slice desSlice, ASM_TYPE asmType) override;
+
         void doBlockAsm(Operable& srcOpr,
                         std::vector<AssignMeta*>& resultMetaCollector,
                         Slice  absSrcSlice,

@@ -51,12 +51,13 @@ namespace kathryn {
 
     struct Node : public ModelDebuggable,
                   public FlowSimEngine{
-        Node*              srcCpyNode           = nullptr;
-        NODE_TYPE          nodeType             = NODE_TYPE_CNT;
-        Operable*          condition            = nullptr;
+        Node*              srcCpyNode              = nullptr;
+        NODE_TYPE          nodeType                = NODE_TYPE_CNT;
+        Operable*          condition               = nullptr;
         std::vector<Node*> dependNodes;
-        LOGIC_OP           dependStateRaiseCond = OP_DUMMY;
-        std::string        identName            = "NODE_UNNAME";
+        Operable*          cachedFromResultDepNode = nullptr;
+        LOGIC_OP           dependStateRaiseCond    = OP_DUMMY;
+        std::string        identName               = "NODE_UNNAME";
 
         Node(Node& rhs):
                 FlowSimEngine()
@@ -104,14 +105,19 @@ namespace kathryn {
         }
 
         std::vector<Node*>& getDependNodes() {return dependNodes; }
+        Operable*           getCondition() const {return condition;}
 
         /** join depend node to usealble expression*/
         Operable* transformAllDepNodeToOpr(){
+            if (cachedFromResultDepNode != nullptr){
+                return cachedFromResultDepNode;
+            }
             Operable* resultOpr = nullptr;
             for (auto nd : dependNodes){
                 addLogic(resultOpr, nd->getExitOpr(), dependStateRaiseCond);
             }
             assert(resultOpr != nullptr);
+            cachedFromResultDepNode = resultOpr;
             return resultOpr;
         }
 

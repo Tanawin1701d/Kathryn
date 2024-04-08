@@ -20,13 +20,19 @@ namespace kathryn{
 
 
     /** This is used to describe what and where to update that send to controller and let flow block determine*/
+    enum ASM_TYPE{
+        ASM_DIRECT = 0,
+        ASM_EQ_DEPNODE = 1
+    };
     struct AssignMeta{
         std::vector<UpdateEvent*>& updateEventsPool;
-        Operable& valueToAssign;
-        Slice desSlice;
-        AssignMeta(std::vector<UpdateEvent*>& u, Operable& v, Slice s): updateEventsPool(u),
+        Operable&                  valueToAssign;
+        Slice                      desSlice;
+        ASM_TYPE                   asmType;
+        AssignMeta(std::vector<UpdateEvent*>& u, Operable& v, Slice s, ASM_TYPE at): updateEventsPool(u),
                                                                         valueToAssign(v),
-                                                                        desSlice(s){}
+                                                                        desSlice(s),
+                                                                        asmType(at){}
     };
     /**
     * Assignable represent hardware component that can memorize logic value or
@@ -49,16 +55,16 @@ namespace kathryn{
         }
 
         /** base function assign other operable to this operable*/
-        virtual void doBlockAsm(Operable& srcOpr, Slice desSlice) = 0;
+        virtual void doBlockAsm   (Operable& srcOpr, Slice desSlice) = 0;
         virtual void doNonBlockAsm(Operable& srcOpr, Slice desSlice) = 0;
-        virtual void doGlobalAsm(Operable& srcOpr, Slice desSlice){assert(false);} ///// typically, it is used in nest
+        virtual void doGlobalAsm  (Operable& srcOpr, Slice desSlice, ASM_TYPE asmType){assert(false);} ///// typically, it is used in nest
 
         /** base function assign other operable to this operable
          * but do not communicate to controller, just give result assign meta to system*/
-        virtual void doBlockAsm(Operable& srcOpr,
-                                std::vector<AssignMeta*>& resultMetaCollector, ////// result to assign assign meta
-                                Slice  absSrcSlice,
-                                Slice  absDesSlice) = 0;
+        virtual void doBlockAsm   (Operable& srcOpr,
+                                   std::vector<AssignMeta*>& resultMetaCollector, ////// result to assign assign meta
+                                   Slice  absSrcSlice,
+                                   Slice  absDesSlice) = 0;
 
         virtual void doNonBlockAsm(Operable& srcOpr,
                                    std::vector<AssignMeta*>& resultMetaCollector,
@@ -67,10 +73,11 @@ namespace kathryn{
 
         /** global fucntion asign  other operable to this operable
          * but do not communicate to controller, just give result assign meta to system*/
-        virtual void doGlobalAsm(Operable& srcOpr,
-                         std::vector<AssignMeta*>& resultMetaCollector,
-                         Slice  absSrcSlice,
-                         Slice  absDesSlice);
+        virtual void doGlobalAsm  (Operable& srcOpr,
+                                   std::vector<AssignMeta*>& resultMetaCollector,
+                                   Slice  absSrcSlice,
+                                   Slice  absDesSlice,
+                                   ASM_TYPE asmType);
 
 
         virtual void  assignSimValue(ull    b){assert(false);}
@@ -85,12 +92,12 @@ namespace kathryn{
         void addUpdateMeta(UpdateEvent* event){_updateMeta.push_back(event);}
 
         /** generate update metas*/
-        virtual AssignMeta* generateAssignMeta(Operable& srcValue, Slice desSlice){
-            return new AssignMeta(_updateMeta, srcValue, desSlice);
+        virtual AssignMeta* generateAssignMeta(Operable& srcValue, Slice desSlice, ASM_TYPE asmType){
+            return new AssignMeta(_updateMeta, srcValue, desSlice, asmType);
         }
 
         /** generate the atomic node that is used to represent  state in the system*/
-        AsmNode* generateBasicNode(Operable& srcOpr, Slice desSlice);
+        AsmNode* generateBasicNode(Operable& srcOpr, Slice desSlice, ASM_TYPE asmType);
 
         /***
          *
@@ -188,7 +195,7 @@ namespace kathryn{
         virtual void callBackNonBlockAssignFromAgent(Operable& b, Slice absSliceOfHost){
             getAssignableFromAssignCallbacker()->doNonBlockAsm(b, absSliceOfHost);
             assert(_master != nullptr);
-        };
+        }
         virtual void      callBackBlockAssignFromAgent(Operable& srcOpr,
                                                        std::vector<AssignMeta*>& resultMetaCollector,
                                                        Slice  absSrcSlice,
