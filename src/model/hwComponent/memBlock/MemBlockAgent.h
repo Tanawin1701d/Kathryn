@@ -24,7 +24,7 @@ namespace kathryn{
         friend class MemEleHolderLogicSim;
     private:
         ///bool setModeYet = false; /**the goal of setMode is to prevent duplicate read write in the same index*/
-        bool readMode = false; /**Therefore, we should know that if it did not set mode it may be read mode*/
+        bool readMode = true; /**Therefore, we should know that if it did not set mode it may be read mode*/
 
         MemBlock* _master  = nullptr;
         Operable* _indexer = nullptr;

@@ -33,6 +33,7 @@ namespace kathryn{
                                          new MemEleHolderLogicSim(this, master->getWidthSize()),
                                          false
             ),
+            readMode(true),
             _master(master),
             _indexer(nullptr)
     {
@@ -40,6 +41,9 @@ namespace kathryn{
         _indexer = (Operable*)(&memIndexer);
         assert(_master != nullptr);
         assert(_indexer!= nullptr);
+
+        AssignOpr::setMaster(this);
+        AssignCallbackFromAgent::setMaster(this);
     }
 
     ValRep&
