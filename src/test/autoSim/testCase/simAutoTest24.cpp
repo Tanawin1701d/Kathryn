@@ -60,10 +60,13 @@ namespace kathryn{
         {}
 
         void describeCon() override{
-//            conNextCycle(52);
-//            for (int i =0; i < 48; i++){
-//                testAndPrint("checkMem with new system : " + std::to_string(i), ull(_md->storage.v(i)), i);
-//            }
+            conNextCycle(50);
+            for (int i =1; i < 48; i++){
+                testAndPrint("checkMem with new system : " + std::to_string(i), ull(_md->storage.v(i)), i);
+                conEndCycle();
+                testAndPrint("checkMem wire assignment : " + std::to_string(i), ull(_md->b), i);
+                conNextCycle(1);
+            }
 //            for(int i = 0; i < 48; i++){
 //                ValRep testVal = NumConverter::createValRep(6, i);
 //
