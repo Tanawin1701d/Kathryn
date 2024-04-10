@@ -24,12 +24,6 @@ namespace kathryn{
             Node(STATE_NODE),
             _stateReg(new StateReg()){}
 
-        Node* clone() override{
-            auto clNode = new StateNode(*this);
-            clNode->setCpyPtr(this);
-            return clNode;
-        }
-
         void makeUnsetStateEvent() override{
             assert(_stateReg != nullptr);
             _stateReg->makeUnSetStateEvent();
@@ -42,6 +36,7 @@ namespace kathryn{
 
         void addSlaveAsmNode(AsmNode* asmNode){
             assert(asmNode != nullptr);
+            asmNode->addDependNode(this);
             _dependSlaveAsmNode.push_back(asmNode);
         }
 
@@ -89,11 +84,6 @@ namespace kathryn{
             Node(SYN_NODE),
             _synReg(new SyncReg(synSize)){}
 
-        Node* clone() override{
-            /** syn node is not supposed to be copied*/
-            assert(false);
-        }
-
         void addCondtion(Operable* opr, LOGIC_OP op) override{ assert(false);}
 
         void makeUnsetStateEvent() override{
@@ -139,12 +129,6 @@ namespace kathryn{
             Node(PSEUDO_NODE),
             _pseudoAssignMeta(new expression(expr_size)){}
 
-        Node* clone() override{
-            auto clNode = new PseudoNode(*this);
-            clNode->setCpyPtr(this);
-            return clNode;
-        }
-
         void assign() override{
             if (condition == nullptr)
                 *_pseudoAssignMeta = *transformAllDepNodeToOpr();
@@ -180,12 +164,6 @@ namespace kathryn{
             Node(DUMMY_NODE),
             _value(value){
             assert(_value != nullptr);
-        }
-
-        Node* clone() override{
-            auto clNode = new DummyNode(*this);
-            clNode->setCpyPtr(this);
-            return clNode;
         }
 
         void assign() override{

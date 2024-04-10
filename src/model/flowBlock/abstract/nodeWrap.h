@@ -26,25 +26,17 @@ namespace kathryn{
         int cycleUsed = IN_CONSIST_CYCLE_USED;
 
         NodeWrap(const NodeWrap& rhs) {
-            *this = rhs;
+            ///// we don't support copy constructor anymore
+            ///// because it may cause error to asignment node formation and hard to debug
+            assert(false);
         }
 
         NodeWrap() = default;
 
         NodeWrap& operator=(const NodeWrap& rhs) {
-            if (&rhs == this) {
-                return *this;
-            }
-            ///// change node location
-            for (auto nd: rhs.entranceNodes) {
-                assert(nd != nullptr);
-                entranceNodes.push_back(nd->clone());
-            }
-            /** exit expression is not copied*/
-            exitNode  = rhs.exitNode;
-            forceExitNode = rhs.forceExitNode;
-            cycleUsed     = rhs.cycleUsed;
-            return *this;
+            ///// we don't support copy constructor anymore
+            ///// because it may cause error to asignment node formation and hard to debug
+            assert(false);
         }
 
         void addEntraceNode(Node *nd) {

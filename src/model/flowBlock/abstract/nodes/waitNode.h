@@ -20,12 +20,6 @@ namespace kathryn{
             _condWaitStateReg = new CondWaitStateReg(waitCond);
         }
 
-        Node* clone() override{
-            auto clNode = new WaitCondNode(*this);
-            clNode->setCpyPtr(this);
-            return clNode;
-        }
-
         void makeUnsetStateEvent() override{
             assert(_condWaitStateReg != nullptr);
             _condWaitStateReg->makeUnSetStateEvent();
@@ -77,12 +71,6 @@ namespace kathryn{
                 Node(WAITCYCLE_NODE)
         {
             _cycleWaitStateReg = new CycleWaitStateReg(opr);
-        }
-
-        Node* clone() override{
-            auto clNode = new WaitCycleNode(*this);
-            clNode->setCpyPtr(this);
-            return clNode;
         }
 
         void makeUnsetStateEvent() override{

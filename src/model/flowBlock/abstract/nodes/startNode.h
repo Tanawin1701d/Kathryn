@@ -24,12 +24,6 @@ namespace kathryn{
                 assert(_rstSig != nullptr);
         }
 
-        Node* clone() override{
-            auto clNode = new StartNode(*this);
-            clNode->setCpyPtr(this);
-            return clNode;
-        }
-
         void makeUnsetStateEvent() override{
             assert(_startState != nullptr);
             _startState->makeUnSetStateEvent();

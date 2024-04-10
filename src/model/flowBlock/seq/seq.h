@@ -19,7 +19,7 @@ namespace kathryn {
     class SequenceEle{
     public:
         /**node and flow block*/
-        Node*          _asmNode  = nullptr;
+        AsmNode*          _asmNode  = nullptr;
         FlowBlockBase* _subBlock = nullptr;
 
         /**state representation*/
@@ -30,7 +30,7 @@ namespace kathryn {
         explicit SequenceEle(FlowBlockBase* fbBase    );
         ~SequenceEle();
 
-        void               genHardware         ();
+        void               genNode             ();
         void               setIdentStateId     (ull masterIdx, int subIdx) const;
         void               addToCycleDet       (NodeWrapCycleDet& deter) const;
         void               assignDependDent    (SequenceEle* predecessor) const;

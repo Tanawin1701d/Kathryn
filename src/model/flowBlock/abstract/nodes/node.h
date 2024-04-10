@@ -51,7 +51,6 @@ namespace kathryn {
 
     struct Node : public ModelDebuggable,
                   public FlowSimEngine{
-        Node*              srcCpyNode              = nullptr;
         NODE_TYPE          nodeType                = NODE_TYPE_CNT;
         Operable*          condition               = nullptr;
         std::vector<Node*> dependNodes;
@@ -76,7 +75,9 @@ namespace kathryn {
 
         ~Node() override = default;
 
-        virtual Node* clone() = 0;
+        NODE_TYPE getNodeType() const{
+            return nodeType;
+        }
 
         static void addLogic(Operable* &desLogic, Operable *opr, LOGIC_OP op) {
             assert(op == BITWISE_AND || op == BITWISE_OR);
@@ -144,9 +145,6 @@ namespace kathryn {
 
 
         /** get debugger value*/
-        void setCpyPtr(Node* srcPtr){
-            srcCpyNode = srcPtr;
-        }
 
         std::string getMdDescribe() override{
             std::string ret = "  have node dep [ ";
@@ -163,12 +161,6 @@ namespace kathryn {
             ret += lop_to_string(dependStateRaiseCond);
             ret += " ] ";
 
-            if (srcCpyNode != nullptr){
-                ret += "cpyFrom [";
-                ret += srcCpyNode->getMdIdentVal();
-                ret += " ]";
-
-            }
             return ret;
         }
 

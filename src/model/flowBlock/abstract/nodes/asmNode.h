@@ -37,13 +37,6 @@ namespace kathryn {
 
         ~AsmNode(){}
 
-        Node *clone() override {
-            auto clNode = new AsmNode(*this);
-            clNode->setCpyPtr(this);
-            return clNode;
-        }
-
-
         bool isThereIndirectAsmMeta() {
 
             for (auto* assignMeta: _assignMetas) {

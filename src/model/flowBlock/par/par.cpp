@@ -60,8 +60,8 @@ namespace kathryn{
             basicStNode->setDependStateJoinOp(BITWISE_AND);
             /** add basic assignment to depend on stateNode*/
             for (auto nd : _basicNodes){
-                nd->addDependNode(basicStNode);
-                nd->assign();
+                assert(nd->getNodeType() == ASM_NODE);
+                basicStNode->addSlaveAsmNode((AsmNode*)nd);
             }
         }
         /**build node wrap for flowblock and keepTrack that node have forceExitOpr*/

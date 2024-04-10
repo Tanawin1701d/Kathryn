@@ -18,7 +18,8 @@ namespace kathryn{
 
     SequenceEle::SequenceEle(Node *asmNode) {
         assert(asmNode != nullptr);
-        _asmNode = asmNode;
+        assert(asmNode->getNodeType() == ASM_NODE);
+        _asmNode = (AsmNode*)asmNode;
     }
 
     SequenceEle::SequenceEle(FlowBlockBase *fbBase) {
@@ -31,7 +32,7 @@ namespace kathryn{
 
     }
 
-    void SequenceEle::genHardware() {
+    void SequenceEle::genNode() {
 
         assert( (_asmNode != nullptr) ^ (_subBlock != nullptr));
 
@@ -39,8 +40,7 @@ namespace kathryn{
         if (_asmNode != nullptr){
             _stateNode = new StateNode();
             _stateNode->setDependStateJoinOp(BITWISE_AND);
-            _asmNode->addDependNode(_stateNode);
-            _asmNode->assign();
+            _stateNode->addSlaveAsmNode(_asmNode);
         }else if (_subBlock != nullptr){
             _complexNode = _subBlock->sumarizeBlock();
         }else{
@@ -251,7 +251,7 @@ namespace kathryn{
         /** generate hardware*/
         int idx = 0;
         for (auto& seqMeta: _subSeqMetas) {
-            seqMeta->genHardware();
+            seqMeta->genNode();
             seqMeta->setIdentStateId(getGlobalId(),idx++);
             seqMeta->addToCycleDet(cycleDet);
         }
