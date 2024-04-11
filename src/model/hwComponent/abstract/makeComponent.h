@@ -11,15 +11,15 @@
 #include "model/controller/conInterf/controllerItf.h"
 #include "model/hwComponent/abstract/identifiable.h"
 
-
+#define makeMod(name, TypeName, ...) Module& name = _make<TypeName>(#name, __VA_ARGS__)
 #define makeWire( name, argument) Wire& name = _make<Wire>(#name,argument)
 #define makeReg( name, argument)  Reg& name = _make<Reg>(#name, argument)
 #define makeVal(name, ...) Val& name = _make<Val>(#name, __VA_ARGS__)
 #define makeMem(name, depth, width) MemBlock& name = _make<MemBlock>(#name, depth, width)
 #define g(...) makeNest(__VA_ARGS__)
-
-
-#define makeMod(name, TypeName, ...) Module& name = _make<TypeName>(#name, __VA_ARGS__)
+#define box(tn) struct tn: Box
+#define initBox(tn)  auto& operator=(const tn& rhs) { Box::operator=((Box&) rhs); return *this;};
+#define makeBox(name, TypeName) TypeName& name = _make<TypeName>(#name)
 
 
 #define var auto&
@@ -41,7 +41,7 @@ namespace kathryn {
         static_assert(std::is_base_of<HwCompControllerItf, T>::value,
                 "make model component must base on ModelController controllable"
                 );
-        static_assert(std::is_base_of<Identifiable, T>::value,
+        static_assert(std::is_base_of<IdentBase, T>::value,
                       "make model component must base on Identifiable"
                 );
 
@@ -49,7 +49,25 @@ namespace kathryn {
         unlockAlloc();
         setRetrieveVarName(name);
         auto objPtr = new T(std::forward<Args>(args)...);
-        objPtr->com_final(); /** /* typicallly it is used only module*/
+        objPtr->com_final(); /** /* typicallly it is used only module and box*/
+
+        return *objPtr;
+    }
+
+    template<typename T>
+    T& _make(const std::string name){
+        static_assert(std::is_base_of<HwCompControllerItf, T>::value,
+                      "make model component must base on ModelController controllable"
+        );
+        static_assert(std::is_base_of<IdentBase, T>::value,
+                      "make model component must base on Identifiable"
+        );
+
+        /** make initializer*/
+        unlockAlloc();
+        setRetrieveVarName(name);
+        auto objPtr = new T();
+        objPtr->com_final(); /** /* typicallly it is used only module and box*/
 
         return *objPtr;
     }

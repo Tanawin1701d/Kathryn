@@ -18,6 +18,7 @@
 #include "model/hwComponent/globalComponent/globalComponent.h"
 #include "model/hwComponent/memBlock/MemBlock.h"
 #include "model/hwComponent/expression/nest.h"
+#include "model/hwComponent/box/box.h"
 
 #include "model/flowBlock/abstract/flowBlock_Base.h"
 #include "model/flowBlock/abstract/spReg/stateReg.h"
@@ -54,7 +55,8 @@ namespace kathryn{
         /**all slave object that belong to this elements*/
         /** register that user to represent state*/
         std::vector<Reg*>           _spRegs[SP_CNT_REG]; ////// state/ cond/cycle wait use same ctrlflowRegbase class
-        std::vector<FlowBlockBase*> _flowBlockBases;
+        std::vector<FlowBlockBase*> _flowBlockBases; //// it contain only head of flowblock in module
+
         std::vector<Node*>       _bareNodes; ////// for the node that did not assign to flowblock and it has already dry assign
         /** user component*/
         std::vector<Reg*>        _userRegs;
@@ -64,6 +66,8 @@ namespace kathryn{
         std::vector<MemBlock*>   _userMemBlks;
         std::vector<nest*>       _userNests;
         std::vector<Module*>     _userSubModules;
+        std::vector<Box*>        _userBoxs; //// it contain only head of box in module
+
 
         /** when hardware components require data from outside class
          * the system must handle wire routing while synthesis
@@ -102,6 +106,7 @@ namespace kathryn{
         void addUserMemBlk     (MemBlock* memBlock);
         void addUserNest       (nest* nst);
         void addUserSubModule  (Module* smd);
+        void addUserBox        (Box* box);
 
 
         /**implicit element that is built from design flow*/
@@ -119,6 +124,7 @@ namespace kathryn{
         auto& getUserMemBlks(){return _userMemBlks;}
         auto& getUserNests(){return _userNests;}
         auto& getUserSubModules(){return _userSubModules;}
+        auto& getBoxs(){return _userBoxs;}
 
 
         /** Functions which allow user to custom  their module design flow*/

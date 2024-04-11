@@ -44,6 +44,7 @@ namespace kathryn{
     /** register handling*/
     void ModelController::on_reg_init(Reg* ptr) {
         assert(ptr != nullptr);
+        on_chk_and_lock_belongBlk(ptr, ptr);
         /** assign reg to module */
         Module* targetModulePtr = getTopModulePtr();
         /** localize necessary destination*/
@@ -54,6 +55,7 @@ namespace kathryn{
         /** debug value*/
         logMF(ptr,
               "USER_REG is initialized and set parent to " + targetModulePtr->getIdentDebugValue());
+        on_chk_and_release_blk(ptr);
     }
 
     void ModelController::on_reg_update(AsmNode* asmNode, Reg* srcReg){
@@ -89,15 +91,18 @@ namespace kathryn{
      * */
     void ModelController::on_wire_init(Wire* ptr){
         assert(ptr != nullptr);
+        on_chk_and_lock_belongBlk(ptr, ptr);
         Module* targetModulePtr = getTopModulePtr();
         /** localize necessary destination*/
         targetModulePtr->addUserWires(ptr);
         ptr->setParent(targetModulePtr);
         ptr->buildInheritName();
         ptr->makeDefEvent();
+
         /** debug value*/
         logMF(ptr,
               "user wire is initialized and set parent to " + targetModulePtr->getIdentDebugValue());
+        on_chk_and_release_blk(ptr);
     }
 
     void ModelController::on_wire_update(AsmNode* asmNode, Wire* srcWire) {
@@ -129,14 +134,17 @@ namespace kathryn{
     /** exprMetas*/
     void ModelController::on_expression_init(expression* ptr) {
         assert(ptr != nullptr);
+        on_chk_and_lock_belongBlk(ptr, ptr);
         Module* targetModulePtr = getTopModulePtr();
         /** localize necessary destination*/
         targetModulePtr->addUserExpression(ptr);
         ptr->setParent(targetModulePtr);
         ptr->buildInheritName();
+
         /** debug value*/
         logMF(ptr,
               "expr is initializing and set parent to " + targetModulePtr->getIdentDebugValue());
+        on_chk_and_release_blk(ptr);
     }
 
     /** memBlock*/
@@ -178,20 +186,23 @@ namespace kathryn{
 
     }
 
-    /** exprMetas*/
+    /** nest*/
     void ModelController::on_nest_init(nest* ptr) {
         assert(ptr != nullptr);
+        on_chk_and_lock_belongBlk(ptr, ptr);
         Module* targetModulePtr = getTopModulePtr();
         /** localize necessary destination*/
         targetModulePtr->addUserNest(ptr);
         ptr->setParent(targetModulePtr);
         ptr->buildInheritName();
+
         /** debug value*/
         logMF(ptr,
               "nest is initializing and set parent to " + targetModulePtr->getIdentDebugValue());
+        on_chk_and_release_blk(ptr);
     }
 
-    void ModelController::on_nest_update(AsmNode* asmNode, nest* srcWire) {
+    void ModelController::on_nest_update(AsmNode* asmNode, nest* srcNest) {
         /**
          * please note that UpdateEvent should fill update value/ and slice
          * but it must let update condition and state as nullptr to let block fill
@@ -206,11 +217,11 @@ namespace kathryn{
             /**in flow block*/
             auto fb = getTopFlowBlockBase();
             fb->addElementInFlowBlock(asmNode);
-            logMF(srcWire,
+            logMF(srcNest,
                   "user nest is updating @ fb " + fb->getMdIdentVal());
         }else{
             asmNode->dryAssign();
-            logMF(srcWire,
+            logMF(srcNest,
                   "user nest is updating without flowblock");
             Module* targetModulePtr = getTopModulePtr();
             targetModulePtr->addNode(asmNode);
@@ -221,6 +232,7 @@ namespace kathryn{
     /** value*/
     void ModelController::on_value_init(Val* ptr) {
         assert(ptr != nullptr);
+        on_chk_and_lock_belongBlk(ptr, ptr);
         Module* targetModulePtr = getTopModulePtr();
         /** localize necessary destination*/
         targetModulePtr->addUserVal(ptr);
@@ -229,6 +241,81 @@ namespace kathryn{
         /** debug value*/
         logMF(ptr,
               "val is initializing and set parent to " + targetModulePtr->getIdentDebugValue());
+        on_chk_and_release_blk(ptr);
+    }
+
+    /** box*/
+    void ModelController::on_box_init(Box* ptr) {
+        assert(ptr != nullptr);
+        Module* targetModulePtr = getTopModulePtr();
+        /** localize necessary destination*/
+        ////// if it is slave block do not push it to module storage
+        ptr->setParent(targetModulePtr);
+        if (boxStack.empty()){
+            targetModulePtr->addUserBox(ptr);
+        }else{
+            Box* topBox = boxStack.top();
+            topBox->addSubBox(ptr);
+        }
+        ptr->buildInheritName();
+
+        boxStack.push(ptr);
+        /** debug value*/
+        logMF(ptr, "box is initializing and set parent to " +
+                   targetModulePtr->getIdentDebugValue());
+    }
+
+    void ModelController::on_box_end_init(Box* ptr){
+        /**check that the stack is not do somthing wrong*/
+        assert(ptr == boxStack.top());
+        assert(boxLock == nullptr);
+        boxStack.pop();
+        logMF(ptr, "box is pick out from stack");
+    }
+
+    void ModelController::on_box_update(AsmNode* asmNode, Box* srcBox) {
+        /**
+         * please note that UpdateEvent should fill update value/ and slice
+         * but it must let update condition and state as nullptr to let block fill
+         * to it
+         * */
+        /*** do not add to module any more*/
+        assert(asmNode != nullptr);
+        tryPurifyFlowStack();
+        asmNode->setDependStateJoinOp(BITWISE_AND);
+        //assert(!flowBlockStack.empty());
+        if (isTopFbBelongToTopModule()) {
+            /**in flow block*/
+            auto fb = getTopFlowBlockBase();
+            fb->addElementInFlowBlock(asmNode);
+            logMF(srcBox,
+                  "user nest is updating @ fb " + fb->getMdIdentVal());
+        }else{
+            asmNode->dryAssign();
+            logMF(srcBox,
+                  "user nest is updating without flowblock");
+            Module* targetModulePtr = getTopModulePtr();
+            targetModulePtr->addNode(asmNode);
+        }
+    }
+
+    void ModelController::on_chk_and_lock_belongBlk(Assignable* asb, Operable* opr) {
+        assert(asb != nullptr);
+        assert(opr != nullptr);
+        /**check that box is being fomation and make sure reg is from user */
+        if ( (boxLock == nullptr) && (!boxStack.empty()) ){
+            boxLock = asb;
+            boxStack.top()->addNestMeta({opr, asb});
+        }else{
+            return;
+        }
+
+    }
+
+    void ModelController::on_chk_and_release_blk(Assignable* asb) {
+        if (asb == boxLock){
+            boxLock = nullptr;
+        }
     }
 
     /**

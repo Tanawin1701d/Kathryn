@@ -35,6 +35,7 @@ namespace kathryn{
         deleteSubElement(_userMemBlks);
         deleteSubElement(_userNests);
         deleteSubElement(_userSubModules);
+        deleteSubElement(_userBoxs);
 
     }
 
@@ -105,6 +106,11 @@ namespace kathryn{
     void Module::addUserSubModule(Module* smd){
         assert(smd != nullptr);
         _userSubModules.push_back(smd);
+    }
+
+    void Module::addUserBox(Box* box){
+        assert(box != nullptr);
+        _userBoxs.push_back(box);
     }
 
     void Module::buildAll(){
