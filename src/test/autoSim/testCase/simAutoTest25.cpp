@@ -27,17 +27,19 @@ namespace kathryn{
         makeBox(a, myType);
         makeBox(b, myType);
 
+        myType* ccccc;
 
         explicit testSimMod25(int x): Module(){}
 
         void flow() override{
 
             seq{
-                a.test1 <<= 48;
-                a.test2 <<= 50;
+                a.test1   <<= 48;
+                a.test2   <<= 50;
                 a.n.testn <<= 99;
-                b       <<= a;
+                b         <<= a;
                 makeBox(c, myType);
+                ccccc = &c;
                 c         = a;
             }
 
@@ -63,6 +65,13 @@ namespace kathryn{
 
         void describeCon() override{
 
+            conNextCycle(4);
+            testAndPrint("check bundle assign b -> test1", ull(_md->b.test1),48);
+            testAndPrint("check bundle assign b -> test2", ull(_md->b.test2),50);
+            testAndPrint("check bundle assign b -> testn", ull(_md->b.n.testn),99);
+            testAndPrint("check bundle assign c -> test1", ull(_md->ccccc->test1),48);
+            testAndPrint("check bundle assign c -> test2", ull(_md->ccccc->test2),50);
+            testAndPrint("check bundle assign c -> testn", ull(_md->ccccc->n.testn),99);
 //            for(int i = 0; i < 48; i++){
 //                ValRep testVal = NumConverter::createValRep(6, i);
 //
