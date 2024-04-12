@@ -194,7 +194,7 @@ namespace kathryn{
             exitNode->addDependNode(psuedoElseNode);
         exitNode->setInternalIdent("scifExitNode" + std::to_string(getGlobalId()));
         exitNode->assign();
-        resultNodeWrap->addExitNode(exitNode);
+        resultNodeWrap->addExitNode(suppressExitOprWithRst(exitNode));
 
         /**force exit condition*/
         genSumForceExitNode(allStatement);

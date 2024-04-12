@@ -95,7 +95,7 @@ namespace kathryn{
          * */
         resultNodeWrapper->addEntraceNode(upConditionNode);
         resultNodeWrapper->addEntraceNode(byPassExitNode);
-        resultNodeWrapper->addExitNode(exitNode);
+        resultNodeWrapper->addExitNode(suppressExitOprWithRst(exitNode));
         /**cycle andd force exit is set to -1*/
 
     }

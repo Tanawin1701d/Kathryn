@@ -321,7 +321,7 @@ namespace kathryn{
                                                   nodeWrapOfSubBlock);
             }
             assert(exitNode != nullptr);
-            resultNodeWrap->addExitNode(exitNode);
+            resultNodeWrap->addExitNode(suppressExitOprWithRst(exitNode));
         }
 
     }
@@ -362,6 +362,6 @@ namespace kathryn{
             exitNode  = pseudoExitNode;
         }
         assert(exitNode != nullptr);
-        resultNodeWrap->addExitNode(exitNode);
+        resultNodeWrap->addExitNode(suppressExitOprWithRst(exitNode));
     }
 }

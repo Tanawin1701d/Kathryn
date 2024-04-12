@@ -192,7 +192,11 @@ namespace kathryn{
         _resultNodeWrap->addEntraceNode(_upWaitNode);
         _resultNodeWrap->addEntraceNode(_upExitNode);
         _resultNodeWrap->addEntraceNode(_upNotifyNode);
-        _resultNodeWrap->addExitNode(_exitNode);
+        if (getFlowType() == PIPE_SENDER) {
+            _resultNodeWrap->addExitNode(suppressExitOprWithRst(_exitNode));
+        }else{
+            _resultNodeWrap->addExitNode(_exitNode);
+        }
         /**cycle andd force exit is set to -1*/
 
 

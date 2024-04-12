@@ -124,10 +124,11 @@ namespace kathryn {
         PseudoNode*                 _forceExitNode     = nullptr;
         /**  for interrupt management*/
         InteruptNode*               _interruptNode[INTR_TYPE_CNT];
-        /*** for manage start engine*/
+        /*** helper for start from interrupt reset*/
         PseudoNode*                  _upStart   = nullptr; //// normal trigger from outsource
         PseudoNode*                  _mainStart = nullptr; //// mainStart = upStart | interruptStart
-
+        /** helper for exit from interrupt reset */
+        PseudoNode*                  _newExit   = nullptr;
 
 
         /** generate implicit subblock typically used with if and while block*/
@@ -137,6 +138,7 @@ namespace kathryn {
         void           genStartBlockNode  ();
 
         Operable*      purifyCondition    (Operable* rawOpr);
+        Node*          suppressExitOprWithRst(Node* rawExit);
     public:
         explicit       FlowBlockBase      (FLOW_BLOCK_TYPE  type,
                                            FB_CTRL_COM_META fbCtrlComMeta);

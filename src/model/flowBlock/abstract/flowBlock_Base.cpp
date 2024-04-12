@@ -53,6 +53,7 @@ namespace kathryn{
 
         delete _upStart;
         delete _mainStart;
+        delete _newExit;
 
         delete _forceExitNode;
 
@@ -133,7 +134,22 @@ namespace kathryn{
             }
             makeVal(autoCmpCondVal, rawSl.getSize(), 0);
             return &((*rawOpr) > autoCmpCondVal);
+    }
 
+    Node* FlowBlockBase::suppressExitOprWithRst(Node* rawExit){
+
+            assert(rawExit != nullptr);
+            if (_interruptNode[INTR_TYPE_RESET] == nullptr){
+                return rawExit;
+            }
+
+            _newExit = new PseudoNode(1);
+            _newExit->setDependStateJoinOp(BITWISE_AND);
+            _newExit->addDependNode(rawExit);
+            _newExit->addCondtion(&!(*_interruptNode[INTR_TYPE_RESET]->getExitOpr()),
+                                  BITWISE_AND);
+
+            return _newExit;
     }
 
     void FlowBlockBase::genSumForceExitNode(std::vector<NodeWrap *> &nws) {

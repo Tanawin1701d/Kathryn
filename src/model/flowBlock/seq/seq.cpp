@@ -295,7 +295,7 @@ namespace kathryn{
         resultNodeWrap->addExitNode((*_subSeqMetas.rbegin())->getStateFinishIden());
         resultNodeWrap->setCycleUsed(cycleDet.getCycleVertical());
         if (_areThereForceExit)
-            resultNodeWrap->addForceExitNode(_forceExitNode);
+            resultNodeWrap->addForceExitNode(suppressExitOprWithRst(_forceExitNode));
 
     }
 

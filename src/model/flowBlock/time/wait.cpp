@@ -63,7 +63,7 @@ namespace kathryn{
         /** result node wrap*/
         _resultNodeWrap = new NodeWrap();
         _resultNodeWrap->addEntraceNode(_waitNode);
-        _resultNodeWrap->addExitNode(_waitNode);
+        _resultNodeWrap->addExitNode(suppressExitOprWithRst(_waitNode));
 
     }
 
@@ -190,7 +190,7 @@ namespace kathryn{
         /** result node wrap*/
         _resultNodeWrap = new NodeWrap();
         _resultNodeWrap->addEntraceNode(_waitNode);
-        _resultNodeWrap->addExitNode(_waitNode);
+        _resultNodeWrap->addExitNode(suppressExitOprWithRst(_waitNode));
 
     }
 
