@@ -27,20 +27,20 @@ namespace kathryn {
 
     UpdateEvent* SyncReg::addDependState(Operable* dependState, Operable* activateCond){
         assert(dependState != nullptr);
-        auto* event = new UpdateEvent({activateCond,
+        auto* event = new UpdateEvent(activateCond,
                                        dependState,
                                        &upState,
                                        Slice({nextFillActivateId, nextFillActivateId + 1}),
-                                       DEFAULT_UE_PRI_INTERNAL_MAX});
+                                       DEFAULT_UE_PRI_INTERNAL_MAX);
         addUpdateMeta(event);
         ////// assign observe wire
-        auto* testEvent = new UpdateEvent({
+        auto* testEvent = new UpdateEvent(
             activateCond,
             dependState,
             &upState,
             Slice({nextFillActivateId, nextFillActivateId + 1}),
             DEFAULT_UE_PRI_INTERNAL_MAX
-        });
+        );
         testWire.addUpdateMeta(testEvent);
 
         nextFillActivateId++;
@@ -52,13 +52,13 @@ namespace kathryn {
     void SyncReg::makeUnSetStateEvent() {
 
         ////// unset also testExpr
-        auto* event = new UpdateEvent({
+        auto* event = new UpdateEvent(
             nullptr,
             &(((*this) | testWire) == upFullState),
             &downFullState,
             Slice({0, getSlice().getSize()}),
             DEFAULT_UE_PRI_INTERNAL_MIN
-        });
+        );
         addUpdateMeta(event);
     }
 

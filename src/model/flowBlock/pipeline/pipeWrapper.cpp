@@ -59,7 +59,8 @@ namespace kathryn{
 
     void FlowBlockPipeWrapper::buildHwComponent() {
         /** no need to build sub element*/
-
+        mfAssert(_interruptNode[INTR_TYPE_START] == nullptr,
+                 "pipeline com doesn't support pipe interrupt start signal");
         /**make pip communication*/
         assert(!_insidePipBlks.empty());
         _pipComs = makePipes(_insidePipBlks.size()+1); //// we must +1 for the end of pip

@@ -80,7 +80,6 @@ namespace kathryn{
     }
 
     void FlowBlockIf::buildHwComponent() {
-        buildSubHwComponent();
 
         /**summarize all block*/
         assert(_subBlocks.size() == 1);
@@ -120,22 +119,54 @@ namespace kathryn{
         /*** head of block conditioning*/
         if (getFlowType() == CIF){
             /**set condition for all sub block*/
-            for (auto nw : allStatement){
-                resultNodeWrap->transferEntNodeFrom(nw);
+            if (_interruptNode[INTR_TYPE_START] == nullptr){
+                for (auto nw : allStatement){
+                    resultNodeWrap->transferEntNodeFrom(nw);
+                }
+                /** there should be else node*/
+                if ( allCondes.size() == allStatement.size() ) {
+                    psuedoElseNode = new PseudoNode(1);
+                    psuedoElseNode->setDependStateJoinOp(BITWISE_AND);
+                    psuedoElseNode->addCondtion(prevFalse, BITWISE_AND);
+                    resultNodeWrap->addEntraceNode(psuedoElseNode);
+                }
+
+            }else{
+                genStartBlockNode();
+                resultNodeWrap->addEntraceNode(_upStart);
+                for(auto nw: allStatement){
+                    nw->addDependNodeToAllNode(_mainStart);
+                    nw->assignAllNode();
+                }
+                /** there should be else node*/
+                if ( allCondes.size() == allStatement.size() ) {
+                    psuedoElseNode = new PseudoNode(1);
+                    psuedoElseNode->setDependStateJoinOp(BITWISE_AND);
+                    psuedoElseNode->addCondtion(prevFalse, BITWISE_AND);
+                    psuedoElseNode->addDependNode(_mainStart);
+                    psuedoElseNode->assign();
+                }
+
             }
+
             /**build psuedo state for else*/
-            if ( allCondes.size() == allStatement.size() ) {
-                psuedoElseNode = new PseudoNode(1);
-                psuedoElseNode->setDependStateJoinOp(BITWISE_AND);
-                psuedoElseNode->addCondtion(prevFalse, BITWISE_AND);
-                resultNodeWrap->addEntraceNode(psuedoElseNode);
-            }
+
         }else if(getFlowType() == SIF){
             /**set condition and state node for subblock*/
             condNode = new StateNode();
             condNode->setDependStateJoinOp(BITWISE_AND);
+            fillResetIntEventToNode(condNode);
             condNode->setInternalIdent("sifCond" + std::to_string(getGlobalId()));
-            resultNodeWrap->addEntraceNode(condNode);
+
+            if (_interruptNode[INTR_TYPE_START] == nullptr){
+                resultNodeWrap->addEntraceNode(condNode);
+            }else{
+                genStartBlockNode();
+                resultNodeWrap->addEntraceNode(_upStart);
+                condNode->addDependNode(_mainStart);
+                condNode->assign();
+            }
+
             for (auto nw: allStatement){
                 nw->addDependNodeToAllNode(condNode);
                 nw->assignAllNode();
@@ -152,8 +183,6 @@ namespace kathryn{
             assert(false);
             /** unknown flowblock type*/
         }
-
-
 
         /**exit condition of node wrap*/
         exitNode = new PseudoNode(1);

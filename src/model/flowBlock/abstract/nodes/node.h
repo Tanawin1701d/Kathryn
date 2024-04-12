@@ -33,8 +33,11 @@ namespace kathryn {
         START_NODE,
         WAITCOND_NODE,
         WAITCYCLE_NODE,
+        INTERRUPT_NODE,
         NODE_TYPE_CNT
     };
+
+
 
 
     /***
@@ -53,6 +56,7 @@ namespace kathryn {
                   public FlowSimEngine{
         NODE_TYPE          nodeType                = NODE_TYPE_CNT;
         Operable*          condition               = nullptr;
+        Node*              _resetIntNode           = nullptr;
         std::vector<Node*> dependNodes;
         Operable*          cachedFromResultDepNode = nullptr;
         LOGIC_OP           dependStateRaiseCond    = OP_DUMMY;
@@ -103,6 +107,12 @@ namespace kathryn {
         void addDependNode(Node* srcNode) {
             assert(srcNode != nullptr);
             dependNodes.push_back(srcNode);
+        }
+
+        void addResetIntNode(Node* resetIntNode){
+            assert(resetIntNode != nullptr);
+            assert(_resetIntNode == nullptr);
+            _resetIntNode = resetIntNode;
         }
 
         std::vector<Node*>& getDependNodes() {return dependNodes; }

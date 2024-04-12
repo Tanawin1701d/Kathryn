@@ -26,23 +26,23 @@ namespace kathryn {
 
     UpdateEvent* StateReg::addDependState(Operable* dependState, Operable* activateCond){
         assert(dependState != nullptr);
-        auto* event = new UpdateEvent({activateCond,
+        auto* event = new UpdateEvent(activateCond,
                                        dependState,
                                        &upFullState,
                                        Slice({0, 1}),
-                                       DEFAULT_UE_PRI_INTERNAL_MAX});
+                                       DEFAULT_UE_PRI_INTERNAL_MAX);
         addUpdateMeta(event);
         return event;
     }
 
     void StateReg::makeUnSetStateEvent() {
-        auto* event = new UpdateEvent({
+        auto* event = new UpdateEvent(
             nullptr,
             &((*this) == upFullState),
             &downFullState,
             Slice({0, getSlice().getSize()}),
             DEFAULT_UE_PRI_INTERNAL_MIN
-        });
+        );
         addUpdateMeta(event);
     }
 

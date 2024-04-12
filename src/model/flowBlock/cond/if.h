@@ -19,24 +19,23 @@ namespace kathryn{
 
     class FlowBlockIf: public FlowBlockBase, public LoopStMacro{
     private:
-        StateNode*     condNode          = nullptr;
-        FlowBlockBase* implicitFlowBlock = nullptr;
-        std::vector<NodeWrap*> allStatement; /// include current block and else block
+        StateNode*              condNode          = nullptr;
+        FlowBlockBase*          implicitFlowBlock = nullptr;
+        std::vector<NodeWrap*>  allStatement; /// include current block and else block
         std::vector<Operable*>  allCondes; /// include condition of if block and elif block except else block
         std::vector<Operable*>  allPurifiedCondes;
-        PseudoNode* psuedoElseNode       = nullptr;
-        PseudoNode* exitNode             = nullptr;
-
-        NodeWrap* resultNodeWrap         = nullptr;
+        PseudoNode*             psuedoElseNode    = nullptr;
+        PseudoNode*             exitNode          = nullptr;
+        NodeWrap*               resultNodeWrap    = nullptr;
 
     public:
         explicit FlowBlockIf(Operable& cond, FLOW_BLOCK_TYPE flowBlockType);
         ~FlowBlockIf() override;
 
         /** for controller add the local element to this sub block*/
-        void addElementInFlowBlock(Node* node) override;
-        void addSubFlowBlock(FlowBlockBase* subBlock) override;
-        void addConFlowBlock(FlowBlockBase* fb) override;
+        void addElementInFlowBlock(Node*          node) override;
+        void addSubFlowBlock      (FlowBlockBase* subBlock) override;
+        void addConFlowBlock      (FlowBlockBase* fb) override;
         NodeWrap* sumarizeBlock() override;
         /** on this block is start interact to controller*/
         void onAttachBlock() override;

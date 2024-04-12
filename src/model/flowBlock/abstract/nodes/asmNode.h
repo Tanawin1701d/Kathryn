@@ -73,25 +73,25 @@ namespace kathryn {
 
                 if (assignMeta->asmType == ASM_DIRECT){
                     ///////////// assign from current dependency
-                    auto resultUpEvent = new UpdateEvent({
+                    auto resultUpEvent = new UpdateEvent(
                                                                  condition,
                                                                  depNodeOpr,
                                                                  &assignMeta->valueToAssign,
                                                                  assignMeta->desSlice,
                                                                  DEFAULT_UE_PRI_USER
-                                                         });
+                                                         );
 
                     assignMeta->updateEventsPool.push_back(resultUpEvent);
                     ////////////////////////////////////////////////////////////////////////////////////////
                 }else if (assignMeta->asmType == ASM_EQ_DEPNODE){
                     //////////////// assign as same as node that have been assign
-                    auto resultUpEvent = new UpdateEvent({
+                    auto resultUpEvent = new UpdateEvent(
                                                                  inDirectCon,
                                                                  InDirectDepState,
                                                                  &assignMeta->valueToAssign,
                                                                  assignMeta->desSlice,
                                                                  DEFAULT_UE_PRI_USER
-                                                         });
+                                                         );
                     assignMeta->updateEventsPool.push_back(resultUpEvent);
 
                 }
@@ -103,13 +103,13 @@ namespace kathryn {
         void dryAssign() override{
             assert(!_assignMetas.empty());
             for (auto* assignMeta: _assignMetas) {
-                auto resultUpEvent = new UpdateEvent({
+                auto resultUpEvent = new UpdateEvent(
                                                              nullptr,
                                                              nullptr,
                                                              &assignMeta->valueToAssign,
                                                              assignMeta->desSlice,
                                                              DEFAULT_UE_PRI_USER
-                                                     });
+                                                     );
 
                 assignMeta->updateEventsPool.push_back(resultUpEvent);
             }

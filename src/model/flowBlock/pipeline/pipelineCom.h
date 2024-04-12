@@ -32,23 +32,25 @@ namespace kathryn{
          * force exit node due to complexity purpose
          *
          * **/
-        Pipe*         _pipe          = nullptr;
-        NodeWrap*    _resultNodeWrap = nullptr;
+        Pipe*         _pipe               = nullptr;
+        NodeWrap*    _resultNodeWrap      = nullptr;
 
         /**our component*/
         ////// wait session
-        PseudoNode*  _upWaitNode     = nullptr; ////// upper node assign to wait
-        PseudoNode*  _waitCheckNode  = nullptr;
-        StateNode*   _waitNode       = nullptr;
+        PseudoNode*  _upWaitNode          = nullptr; ////// upper node assign to wait
+        PseudoNode*  _upWaitNodeFromReset = nullptr;
+        PseudoNode*  _waitCheckNode       = nullptr;
+        StateNode*   _waitNode            = nullptr;
 
         ////// skip session
-        PseudoNode*  _upExitNode     = nullptr; ////// upper node assign to exit
-        PseudoNode*  _fromWaitNode   = nullptr;
-        PseudoNode*  _exitNode       = nullptr;
+        PseudoNode*  _upExitNode          = nullptr; ////// upper node assign to exit
+        PseudoNode*  _upExitNodeFromReset = nullptr;
+        PseudoNode*  _fromWaitNode        = nullptr;
+        PseudoNode*  _exitNode            = nullptr;
 
         ////// notify Node
-        PseudoNode* _upNotifyNode    = nullptr;
-        PseudoNode* _notifyNode      = nullptr;
+        PseudoNode* _upNotifyNode         = nullptr;
+        PseudoNode* _notifyNode           = nullptr;
 
     public:
 

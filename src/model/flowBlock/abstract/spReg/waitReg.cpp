@@ -37,22 +37,22 @@ namespace kathryn{
 
     UpdateEvent* CondWaitStateReg::addDependState(Operable* dependState, Operable* activateCond){
         assert(dependState != nullptr);
-        auto* event = new UpdateEvent({activateCond,
+        auto* event = new UpdateEvent(activateCond,
                                        dependState,
                                        &_upState,
                                        Slice({0, 1}),
-                                       DEFAULT_UE_PRI_INTERNAL_MAX});
+                                       DEFAULT_UE_PRI_INTERNAL_MAX);
         addUpdateMeta(event);
         return event;
     }
 
     void CondWaitStateReg::makeUnSetStateEvent() {
-        auto* resetEvent = new UpdateEvent({    _condOpr,
+        auto* resetEvent = new UpdateEvent(    _condOpr,
                                                 &((*this) == _upState),
                                                 &_downState,
                                                 Slice({0,1}),
                                                 DEFAULT_UE_PRI_INTERNAL_MIN
-                                           });
+                                           );
         addUpdateMeta(resetEvent);
     }
 
@@ -119,13 +119,13 @@ namespace kathryn{
 
 
     void CycleWaitStateReg::makeIncStateEvent() {
-        auto* event = new UpdateEvent({
+        auto* event = new UpdateEvent(
             &((*this)(1, _totalBitSize) != (*_endCnt)),
             &((*this)(0)),
             &((*this)(1, _totalBitSize) + 1),
             Slice({1, _totalBitSize}),
             DEFAULT_UE_PRI_INTERNAL_MAX-1
-        });
+        );
         addUpdateMeta(event);
     }
 
@@ -135,24 +135,24 @@ namespace kathryn{
 
     UpdateEvent* CycleWaitStateReg::addDependState(Operable* dependState, Operable* activateCond){
         assert(dependState != nullptr);
-        auto* event = new UpdateEvent({activateCond,
+        auto* event = new UpdateEvent(activateCond,
                                        dependState,
                                        _startCnt,
                                        Slice({0, _totalBitSize}),
-                                       DEFAULT_UE_PRI_INTERNAL_MAX});
+                                       DEFAULT_UE_PRI_INTERNAL_MAX);
         addUpdateMeta(event);
         return event;
     }
 
     void CycleWaitStateReg::makeUnSetStateEvent() {
         /**reset event*/
-        auto* resetEvent = new UpdateEvent({
+        auto* resetEvent = new UpdateEvent(
                                                    &((*this)(1, _totalBitSize) == (*_endCnt)),
                                                    &(*this)(0),
                                                    IdleCnt,
                                                    Slice({0, _totalBitSize}),
                                                    DEFAULT_UE_PRI_INTERNAL_MIN
-                                           });
+                                           );
         addUpdateMeta(resetEvent);
 
     }

@@ -8,6 +8,7 @@
 
 #include "node.h"
 #include "asmNode.h"
+#include "interuptNode.h"
 
 namespace kathryn{
 
@@ -19,6 +20,7 @@ namespace kathryn{
     struct StateNode : Node{
         StateReg* _stateReg;
         std::vector<AsmNode*> _dependSlaveAsmNode; /// the asignment node that depend on this stateNode
+
 
         explicit StateNode() :
             Node(STATE_NODE),

@@ -59,13 +59,13 @@ namespace kathryn{
 
     void Wire::makeDefEvent(){
         makeVal(defWireVal, genBiConValRep(0, getSlice().getSize()));
-        auto defEvent = new UpdateEvent({
+        auto defEvent = new UpdateEvent(
                                                 nullptr,
                                                 nullptr,
                                                 &defWireVal,
                                                 {0, getSlice().getSize()},
                                                 DEFAULT_UE_PRI_MIN
-                                        });
+                                        );
         addUpdateMeta(defEvent);
     }
 

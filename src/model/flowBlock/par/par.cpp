@@ -48,7 +48,6 @@ namespace kathryn{
 
     void
     FlowBlockPar::buildHwComponent() {
-        buildSubHwComponent();
         mfAssert((!_basicNodes.empty()) || (!_subBlocks.empty()),
                  "parBlock has no assignment"
                  );
@@ -58,6 +57,7 @@ namespace kathryn{
         if (!_basicNodes.empty()){
             basicStNode = new StateNode();
             basicStNode->setDependStateJoinOp(BITWISE_AND);
+            basicStNode->addResetIntNode(_interruptNode[INTR_TYPE_RESET]);
             /** add basic assignment to depend on stateNode*/
             for (auto nd : _basicNodes){
                 assert(nd->getNodeType() == ASM_NODE);
@@ -89,10 +89,31 @@ namespace kathryn{
          * */
         /*** entrance node management*/
         resultNodeWrap = new NodeWrap();
-        if (basicStNode != nullptr)
-            resultNodeWrap->addEntraceNode(basicStNode);
-        for (auto nw : nodeWrapOfSubBlock){
-            resultNodeWrap->transferEntNodeFrom(nw);
+
+        /*** process entrance of result node wrap*/
+        if (_interruptNode[START_NODE] == nullptr) {
+            /*** case there is no interrupt start,
+             * simply just provide node to upper next
+             * */
+            if (basicStNode != nullptr)
+                resultNodeWrap->addEntraceNode(basicStNode);
+            for (auto nw: nodeWrapOfSubBlock) {
+                resultNodeWrap->transferEntNodeFrom(nw);
+            }
+        }else{
+            /** case there is interrupt start*/
+            genStartBlockNode();
+            resultNodeWrap->addEntraceNode(_upStart);
+
+            if (basicStNode != nullptr){
+                basicStNode->addDependNode(_mainStart);
+                basicStNode->assign();
+            }
+            for (auto nw: nodeWrapOfSubBlock) {
+                resultNodeWrap->transferEntNodeFrom(nw);
+                nw->addDependNodeToAllNode(_mainStart);
+                nw->assignAllNode();
+            }
         }
 
         buildSyncNode();

@@ -12,12 +12,17 @@
 #include "model/hwComponent/register/register.h"
 #include "model/hwComponent/expression/expression.h"
 #include "model/hwComponent/abstract/operation.h"
+
 #include "model/flowBlock/abstract/nodes/node.h"
 #include "model/flowBlock/abstract/nodeWrap.h"
 #include "model/flowBlock/abstract/nodes/stateNode.h"
+#include "model/flowBlock/abstract/nodes/interuptNode.h"
 #include "flowIdentifiable.h"
 #include "model/simIntf/flowBlock/flowBlockSimEngine.h"
 
+
+#define intrReset(signal) kathrynBlock->addIntrSignal(signal, INTR_TYPE_RESET)
+#define intrStart(signal) kathrynBlock->addIntrSignal(signal, INTR_TYPE_START)
 
 namespace kathryn {
     /** it is basic node that only have one event at a node */
@@ -43,6 +48,7 @@ namespace kathryn {
         PIPE_RECIEVER,
         PIPE_BLOCK,
         PIPE_WRAPPER,
+        INTERRUPTFB,
         DUMMY_BLOCK,
         FLOW_BLOCK_COUNT
     };
@@ -58,6 +64,12 @@ namespace kathryn {
         FLOW_JO_SUB_FLOW, /**for other block*/
         FLOW_JO_CON_FLOW, /** join flowblock for elif and else*/
         FLOW_JO_EXT_FLOW, /**extract this flow to be an basic node*/
+    };
+
+    enum INTR_TYPE{
+        INTR_TYPE_START = 0,
+        INTR_TYPE_RESET = 1,
+        INTR_TYPE_CNT   = 2
     };
 
     struct FB_CTRL_COM_META{
@@ -98,6 +110,8 @@ namespace kathryn {
 
         std::vector<FlowBlockBase*> _abandonedBlocks;  /// the flow block that have been extracted and push to this block
 
+        std::vector<Operable*>      _interruptSignals[INTR_TYPE_CNT];
+
         /** status of node*/
         FLOW_BLOCK_TYPE             _type;
         ModelController*            ctrl = nullptr;
@@ -108,15 +122,25 @@ namespace kathryn {
         /*** for exit management*/
         bool                        _areThereForceExit = false;
         PseudoNode*                 _forceExitNode     = nullptr;
+        /**  for interrupt management*/
+        InteruptNode*               _interruptNode[INTR_TYPE_CNT];
+        /*** for manage start engine*/
+        PseudoNode*                  _upStart   = nullptr; //// normal trigger from outsource
+        PseudoNode*                  _mainStart = nullptr; //// mainStart = upStart | interruptStart
+
+
 
         /** generate implicit subblock typically used with if and while block*/
-        FlowBlockBase* genImplicitSubBlk(FLOW_BLOCK_TYPE defaultType);
+        FlowBlockBase* genImplicitSubBlk  (FLOW_BLOCK_TYPE defaultType);
         void           genSumForceExitNode(std::vector<NodeWrap*>& nws);
-        Operable*      purifyCondition(Operable* rawOpr);
+        void           genInteruptNode    (); ///// this is called by buiild hw master
+        void           genStartBlockNode  ();
+
+        Operable*      purifyCondition    (Operable* rawOpr);
     public:
-        explicit       FlowBlockBase(FLOW_BLOCK_TYPE  type,
-                                     FB_CTRL_COM_META fbCtrlComMeta);
-        virtual        ~FlowBlockBase();
+        explicit       FlowBlockBase      (FLOW_BLOCK_TYPE  type,
+                                           FB_CTRL_COM_META fbCtrlComMeta);
+        virtual        ~FlowBlockBase     ();
 
         SimEngine*     getSimEngine() override{
                 return static_cast<SimEngine*>(this);
@@ -146,6 +170,10 @@ namespace kathryn {
             assert(abandonBlock != nullptr);
             _abandonedBlocks.push_back(abandonBlock);
         }
+
+        void addIntrSignal(Operable& opr, INTR_TYPE intrType);
+
+        void fillResetIntEventToNode(Node *nd);
         /**
          * For custom block
          * */
@@ -155,31 +183,33 @@ namespace kathryn {
         virtual void        onAttachBlock() = 0; //// it is supposed to acknowledge controller whether this block is declared
         virtual void        onDetachBlock() = 0;
         /*** for module controller build node and other elements*/
+                void        sendResetIntToSlave();
+        virtual void        buildHwMaster();
         virtual void        buildSubHwComponent();
         virtual void        buildHwComponent() = 0;
         ////// getter/setter
-        FLOW_BLOCK_TYPE     getFlowType() const {return _type;}
+        FLOW_BLOCK_TYPE     getFlowType   () const {return _type;}
         int                 getFlowBlockId() const{return _fbId;}
         std::vector<Node*>&
-                            getBasicNode(){return _basicNodes;}
+                            getBasicNode  (){return _basicNodes;}
         std::vector<FlowBlockBase*>&
-                            getSubBlocks(){return _subBlocks;}
+                            getSubBlocks  (){return _subBlocks;}
         std::vector<FlowBlockBase*>&
-                            getConBlocks(){return _conBlocks;}
+                            getConBlocks  (){return _conBlocks;}
         /** lazy delete is the variable that tell controller whether
          * block should be pop from building stack when purifier is done
          * not when block is detach. Usually, It is used in if block
          * */
-        bool                isLazyDelete() const{ return lazyDeletedRequired; }
-        void                setLazyDelete()     { lazyDeletedRequired = true;}
+        bool                isLazyDelete   () const{ return lazyDeletedRequired; }
+        void                setLazyDelete  ()     { lazyDeletedRequired = true;}
         void                unsetLazyDelete()   {lazyDeletedRequired = false;}
         /** controller communication*/
         [[nodiscard]]
         std::vector<FLOW_STACK_TYPE> getSelFbStack() const {return _fbCtrlComMeta._selFlowStack;}
         [[nodiscard]]
-        FLOW_BLOCK_JOIN_POLICY       getJoinFbPol()  const {return _fbCtrlComMeta._joinPolicy;  }
+        FLOW_BLOCK_JOIN_POLICY       getJoinFbPol () const {return _fbCtrlComMeta._joinPolicy;  }
         [[nodiscard]]
-        bool                         getPurifyReq()  const {return _fbCtrlComMeta.reqPurify;    }
+        bool                         getPurifyReq () const {return _fbCtrlComMeta.reqPurify;    }
 
         /** debug method*/
         std::string getMdDescribeRecur() {

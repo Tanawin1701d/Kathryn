@@ -21,17 +21,32 @@ namespace kathryn {
     static int DEFAULT_UE_PRI_RST      = INT32_MAX;
     static int DEFAULT_UE_PRI_MIN      = 0;
 
+    extern ull GLOBAL_UPDATE_EVENT_ID;
+
 /** reg/wire update metas data*/
     struct UpdateEvent{
         Operable* srcUpdateCondition = nullptr; /// which condition that allow this value to update.
         Operable* srcUpdateState     = nullptr; /// which state that need to update.
         Operable* srcUpdateValue     = nullptr; /// value to update.
         Slice     desUpdateSlice; /// slice to update must smaller or equal to srcUpdateValue.slice
-        int priority = DEFAULT_UE_PRI_MIN;
+        int       priority = DEFAULT_UE_PRI_MIN;
+        ull       updateIdx          = -1;
         ///priority for circuit if there are attention to update same register at a time 0 is highest 9 is lowest
 
+        explicit UpdateEvent(Operable* cond,
+                             Operable* state,
+                             Operable* val,
+                             Slice     desSlice,
+                             int       pri
+                             );
+
         bool operator < (const UpdateEvent& rhs) const{
-            return priority < rhs.priority;
+            if (priority < rhs.priority){
+                return true;
+            }else if (priority == rhs.priority){
+                return updateIdx < rhs.updateIdx;
+            }
+            return false;
         }
 
         bool shouldAssignValRep(Operable* opr){

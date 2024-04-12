@@ -19,21 +19,23 @@ namespace kathryn {
     class SequenceEle{
     public:
         /**node and flow block*/
-        AsmNode*          _asmNode  = nullptr;
+        AsmNode*       _asmNode  = nullptr;
         FlowBlockBase* _subBlock = nullptr;
 
         /**state representation*/
-        StateNode* _stateNode       = nullptr;
-        NodeWrap*  _complexNode     = nullptr;
+        InteruptNode* _resetIntNode    = nullptr; ///// resetintnode is work with state node complexnode is not involve
+        StateNode*    _stateNode       = nullptr;
+        NodeWrap*     _complexNode     = nullptr;
 
         explicit SequenceEle(Node*          simpleNode);
         explicit SequenceEle(FlowBlockBase* fbBase    );
         ~SequenceEle();
 
-        void               genNode             ();
+        void               genNode             (InteruptNode* resetIntNode);
         void               setIdentStateId     (ull masterIdx, int subIdx) const;
         void               addToCycleDet       (NodeWrapCycleDet& deter) const;
         void               assignDependDent    (SequenceEle* predecessor) const;
+        void               assignDependDent    (Node* nd) const;
         Node*              getStateFinishIden  () const;
         std::vector<Node*> getEntranceNodes    ();
         bool               isThereForceExitNode() const;
@@ -57,6 +59,9 @@ namespace kathryn {
 
         std::vector<SequenceEle*> _subSeqMetas;
         NodeWrap*                resultNodeWrap = nullptr;
+        /***node for interrupt start*/
+        PseudoNode* upStart   = nullptr; //// normal trigger from outsource
+        PseudoNode* mainStart = nullptr; //// mainStart = upStart | interruptStart
 
 
     public:

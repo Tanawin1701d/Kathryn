@@ -83,13 +83,13 @@ namespace kathryn{
 
     void Reg::makeResetEvent(){
         makeVal(rstRegVal, genBiConValRep(0, getSlice().getSize()));
-        auto rstEvent = new UpdateEvent({
+        auto rstEvent = new UpdateEvent(
             nullptr,
             rstWire,
             &rstRegVal,
             {0, getSlice().getSize()},
             DEFAULT_UE_PRI_RST
-        });
+        );
         addUpdateMeta(rstEvent);
     }
 

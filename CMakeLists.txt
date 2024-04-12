@@ -27,7 +27,8 @@ add_executable(Kathryn
         ${SRC_SIM}
         ${SRC_TEST}
         ${SRC_UTIL}
-#        src/model/hwComponent/box/box.h
+        src/model/flowBlock/abstract/nodes/interuptNode.h
+        #        src/model/hwComponent/box/box.h
 #        src/example/riscv/core/regAccess.h
 #        src/example/riscv/element.h
 #        src/example/riscv/core/decode.h

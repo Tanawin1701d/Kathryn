@@ -144,7 +144,7 @@ namespace kathryn{
 
                 case FLOW_JO_SUB_FLOW:
                     /**in case it is normal flow block*/
-                    fb->buildHwComponent();
+                    fb->buildHwMaster();
                     frontNodeWrap.push_back(fb->sumarizeBlock());
                     break;
                 case FLOW_JO_CON_FLOW:

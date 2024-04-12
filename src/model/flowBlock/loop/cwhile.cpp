@@ -20,7 +20,6 @@ namespace kathryn{
     }
 
     void FlowBlockcWhile::buildHwComponent() {
-        buildSubHwComponent();
 
         assert(_conBlocks.empty());
         assert(_subBlocks.size() == 1);
@@ -55,7 +54,9 @@ namespace kathryn{
         loopConditionNode->setInternalIdent("cWhileConNodeLoopBack" + std::to_string(getGlobalId()));
         loopConditionNode->assign();
 
+
         conditionNode->setDependStateJoinOp(BITWISE_OR);
+        fillResetIntEventToNode(conditionNode);
         conditionNode->addDependNode(upConditionNode);
         conditionNode->addDependNode(loopConditionNode);
         conditionNode->setInternalIdent("cWhileConNode" + std::to_string(getGlobalId()));

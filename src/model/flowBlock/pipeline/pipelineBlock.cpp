@@ -90,11 +90,10 @@ namespace kathryn{
         /** set the pipe first*/
         mfAssert(_recvPipe != nullptr, "flow block pipe(recv) doesn't get pipe metadata");
         mfAssert(_sendPipe != nullptr, "flow block pipe(send) doesn't get pipe metadata");
+        mfAssert(_interruptNode[INTR_TYPE_START] == nullptr,
+                 "pipeline com doesn't support pipe interrupt start signal");
         _waitRecvBlock->setPipe(_recvPipe);
         _waitSendBlock->setPipe(_sendPipe);
-
-        /** then build sub hardware component**/
-        buildSubHwComponent();
 
         _impFbNodeWrap = _implicitFlowBlock->sumarizeBlock();
 

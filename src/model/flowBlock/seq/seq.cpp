@@ -32,15 +32,17 @@ namespace kathryn{
 
     }
 
-    void SequenceEle::genNode() {
+    void SequenceEle::genNode(InteruptNode* resetIntNode) {
 
         assert( (_asmNode != nullptr) ^ (_subBlock != nullptr));
 
         ///// it is the basic assignment
         if (_asmNode != nullptr){
+            _resetIntNode = resetIntNode;
             _stateNode = new StateNode();
             _stateNode->setDependStateJoinOp(BITWISE_AND);
             _stateNode->addSlaveAsmNode(_asmNode);
+            _stateNode->addResetIntNode(_resetIntNode);
         }else if (_subBlock != nullptr){
             _complexNode = _subBlock->sumarizeBlock();
         }else{
@@ -70,20 +72,24 @@ namespace kathryn{
     }
 
     void SequenceEle::assignDependDent(SequenceEle *predecessor) const {
-        assert(predecessor != nullptr);
+        assignDependDent(predecessor->getStateFinishIden());
+    }
+
+    void SequenceEle::assignDependDent(Node* nd) const {
+        assert(nd != nullptr);
         assert((_asmNode != nullptr) ^ (_subBlock != nullptr));
 
         if (_asmNode != nullptr){
-            _stateNode->addDependNode(predecessor->getStateFinishIden());
+            _stateNode->addDependNode(nd);
             _stateNode->assign();   ///// assign state node to actual value
         }else if (_subBlock != nullptr){
-            _complexNode->addDependNodeToAllNode(predecessor->getStateFinishIden());
+            _complexNode->addDependNodeToAllNode(nd);
             _complexNode->assignAllNode();
-        }else{
-            assert(false);
-        }
+        }else{assert(false);}
 
     }
+
+
 
     Node* SequenceEle::getStateFinishIden() const {
         assert( (_asmNode != nullptr) ^ (_subBlock != nullptr));
@@ -244,14 +250,13 @@ namespace kathryn{
     }
 
     void FlowBlockSeq::buildHwComponent() {
-        buildSubHwComponent();
         mfAssert(!_subSeqMetas.empty(), "seqBlock has no assignment");
         assert(_conBlocks.empty());
         NodeWrapCycleDet cycleDet;
         /** generate hardware*/
         int idx = 0;
         for (auto& seqMeta: _subSeqMetas) {
-            seqMeta->genNode();
+            seqMeta->genNode(_interruptNode[INTR_TYPE_RESET]);
             seqMeta->setIdentStateId(getGlobalId(),idx++);
             seqMeta->addToCycleDet(cycleDet);
         }
@@ -272,7 +277,21 @@ namespace kathryn{
         }
         /** build new result NodeWrap*/
         resultNodeWrap = new NodeWrap();
-        resultNodeWrap->addEntraceNodes((*_subSeqMetas.begin())->getEntranceNodes());
+        /**
+         * deal with entrance node
+         * **/
+
+        if (_interruptNode[INTR_TYPE_START] == nullptr){
+            resultNodeWrap->addEntraceNodes((*_subSeqMetas.begin())->getEntranceNodes());
+        }else{
+            genStartBlockNode();
+            ///////////// start trigger
+            (*_subSeqMetas.begin())->assignDependDent(mainStart);
+            ///////////// result node wrap
+            resultNodeWrap->addEntraceNode(upStart);
+            ///////////////////////////////////////////////////////////////////////////////////////
+        }
+
         resultNodeWrap->addExitNode((*_subSeqMetas.rbegin())->getStateFinishIden());
         resultNodeWrap->setCycleUsed(cycleDet.getCycleVertical());
         if (_areThereForceExit)
