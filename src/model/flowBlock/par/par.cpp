@@ -57,7 +57,7 @@ namespace kathryn{
         if (!_basicNodes.empty()){
             basicStNode = new StateNode();
             basicStNode->setDependStateJoinOp(BITWISE_AND);
-            basicStNode->setResetIntNode(_interruptNode[INTR_TYPE_RESET]);
+            fillResetIntEventToNode(basicStNode);
             /** add basic assignment to depend on stateNode*/
             for (auto nd : _basicNodes){
                 assert(nd->getNodeType() == ASM_NODE);
@@ -91,7 +91,7 @@ namespace kathryn{
         resultNodeWrap = new NodeWrap();
 
         /*** process entrance of result node wrap*/
-        if (_interruptNode[START_NODE] == nullptr) {
+        if (_interruptNode[INTR_TYPE_START] == nullptr) {
             /*** case there is no interrupt start,
              * simply just provide node to upper next
              * */
@@ -322,7 +322,7 @@ namespace kathryn{
                                                   nodeWrapOfSubBlock);
             }
             assert(exitNode != nullptr);
-            resultNodeWrap->addExitNode(suppressExitOprWithRst(exitNode));
+            resultNodeWrap->addExitNode(exitNode);
         }
 
     }
@@ -363,6 +363,6 @@ namespace kathryn{
             exitNode  = pseudoExitNode;
         }
         assert(exitNode != nullptr);
-        resultNodeWrap->addExitNode(suppressExitOprWithRst(exitNode));
+        resultNodeWrap->addExitNode(exitNode);
     }
 }

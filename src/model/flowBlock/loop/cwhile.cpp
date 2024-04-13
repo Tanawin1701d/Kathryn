@@ -55,10 +55,13 @@ namespace kathryn{
         loopConditionNode->assign();
 
 
+
         conditionNode->setDependStateJoinOp(BITWISE_OR);
-        fillResetIntEventToNode(conditionNode);
         conditionNode->addDependNode(upConditionNode);
         conditionNode->addDependNode(loopConditionNode);
+        if (_interruptNode[INTR_TYPE_START] != nullptr){
+            conditionNode->addDependNode(_interruptNode[INTR_TYPE_START]);
+        }
         conditionNode->setInternalIdent("cWhileConNode" + std::to_string(getGlobalId()));
         conditionNode->assign();
 
@@ -95,7 +98,7 @@ namespace kathryn{
          * */
         resultNodeWrapper->addEntraceNode(upConditionNode);
         resultNodeWrapper->addEntraceNode(byPassExitNode);
-        resultNodeWrapper->addExitNode(suppressExitOprWithRst(exitNode));
+        resultNodeWrapper->addExitNode(exitNode);
         /**cycle andd force exit is set to -1*/
 
     }

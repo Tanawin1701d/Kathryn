@@ -26,7 +26,10 @@ namespace kathryn{
             _fbCtrlComMeta(std::move(fbCtrlComMeta)),
             /** exit management*/
             _areThereForceExit(false),
-            _forceExitNode(nullptr)
+            _forceExitNode(nullptr),
+            _upStart(nullptr),
+            _mainStart(nullptr),
+            _newExit(nullptr)
     {
                 for (int intCnt = 0; intCnt < INTR_TYPE_CNT; intCnt++){
                     _interruptNode[intCnt] = nullptr;
@@ -136,21 +139,22 @@ namespace kathryn{
             return &((*rawOpr) > autoCmpCondVal);
     }
 
-    Node* FlowBlockBase::suppressExitOprWithRst(Node* rawExit){
-
-            assert(rawExit != nullptr);
-            if (_interruptNode[INTR_TYPE_RESET] == nullptr){
-                return rawExit;
-            }
-
-            _newExit = new PseudoNode(1);
-            _newExit->setDependStateJoinOp(BITWISE_AND);
-            _newExit->addDependNode(rawExit);
-            _newExit->addCondtion(&!(*_interruptNode[INTR_TYPE_RESET]->getExitOpr()),
-                                  BITWISE_AND);
-
-            return _newExit;
-    }
+//    Node* FlowBlockBase::suppressExitOprWithRst(Node* rawExit){
+//
+//            assert(rawExit != nullptr);
+//            if (_interruptNode[INTR_TYPE_RESET] == nullptr){
+//                return rawExit;
+//            }
+//
+//            _newExit = new PseudoNode(1);
+//            _newExit->setDependStateJoinOp(BITWISE_AND);
+//            _newExit->addDependNode(rawExit);
+//            _newExit->addCondtion(&!(*_interruptNode[INTR_TYPE_RESET]->getExitOpr()),
+//                                  BITWISE_AND);
+//            _newExit->assign();
+//
+//            return _newExit;
+//    }
 
     void FlowBlockBase::genSumForceExitNode(std::vector<NodeWrap *> &nws) {
         for (auto nw : nws){
@@ -183,6 +187,7 @@ namespace kathryn{
             for(Operable* interruptSignal: _interruptSignals[intType]){
                 intNode->addInterruptSignal(interruptSignal);
             }
+            intNode->assign();
         }
     }
 
@@ -206,7 +211,7 @@ namespace kathryn{
         _interruptSignals[intrType].push_back(&opr);
     }
 
-    void FlowBlockBase::fillResetIntEventToNode(Node *nd) {
+    void FlowBlockBase::fillResetIntEventToNode(Node *nd, bool enableIfStartIntr) {
         nd->setResetIntNode(_interruptNode[INTR_TYPE_RESET]);
     }
 

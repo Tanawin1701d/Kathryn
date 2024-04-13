@@ -66,7 +66,7 @@ namespace kathryn{
         resultNodeWrap = new NodeWrap();
         resultNodeWrap->addEntraceNode(breakNode);
         resultNodeWrap->addForceExitNode(breakNode);
-        resultNodeWrap->addExitNode(suppressExitOprWithRst(normExitNode));
+        resultNodeWrap->addExitNode(normExitNode);
 
     }
 

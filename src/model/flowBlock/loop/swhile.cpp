@@ -93,7 +93,7 @@ namespace kathryn{
          subBlockNodeWrap->assignAllNode();
 
          resultNodeWrapper->addEntraceNode(exposedConNode);
-         resultNodeWrapper->addExitNode(suppressExitOprWithRst(exitNode));
+         resultNodeWrapper->addExitNode(exitNode);
 
     }
 

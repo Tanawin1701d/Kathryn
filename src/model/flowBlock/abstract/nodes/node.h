@@ -110,7 +110,7 @@ namespace kathryn {
         }
 
         void setResetIntNode(Node* resetIntNode){
-            assert(resetIntNode != nullptr);
+            /** nullptr is  acceptable*/
             assert(_resetIntNode == nullptr);
             _resetIntNode = resetIntNode;
         }

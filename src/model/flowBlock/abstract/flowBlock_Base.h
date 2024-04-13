@@ -111,6 +111,7 @@ namespace kathryn {
         std::vector<FlowBlockBase*> _abandonedBlocks;  /// the flow block that have been extracted and push to this block
 
         std::vector<Operable*>      _interruptSignals[INTR_TYPE_CNT];
+        InteruptNode*               _interruptNode   [INTR_TYPE_CNT];
 
         /** status of node*/
         FLOW_BLOCK_TYPE             _type;
@@ -123,7 +124,7 @@ namespace kathryn {
         bool                        _areThereForceExit = false;
         PseudoNode*                 _forceExitNode     = nullptr;
         /**  for interrupt management*/
-        InteruptNode*               _interruptNode[INTR_TYPE_CNT];
+
         /*** helper for start from interrupt reset*/
         PseudoNode*                  _upStart   = nullptr; //// normal trigger from outsource
         PseudoNode*                  _mainStart = nullptr; //// mainStart = upStart | interruptStart
@@ -138,7 +139,6 @@ namespace kathryn {
         void           genStartBlockNode  ();
 
         Operable*      purifyCondition    (Operable* rawOpr);
-        Node*          suppressExitOprWithRst(Node* rawExit);
     public:
         explicit       FlowBlockBase      (FLOW_BLOCK_TYPE  type,
                                            FB_CTRL_COM_META fbCtrlComMeta);
@@ -175,7 +175,7 @@ namespace kathryn {
 
         void addIntrSignal(Operable& opr, INTR_TYPE intrType);
 
-        void fillResetIntEventToNode(Node *nd);
+        void fillResetIntEventToNode(Node* nd, bool enableIfStartIntr);
         /**
          * For custom block
          * */

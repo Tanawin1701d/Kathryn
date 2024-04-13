@@ -104,7 +104,7 @@ namespace kathryn{
         /**wait session*/
         _upWaitNode    = new PseudoNode(1);
         _waitCheckNode = new PseudoNode(1);
-        _waitNode = new StateNode();
+        _waitNode      = new StateNode();
 
 
 
@@ -121,19 +121,7 @@ namespace kathryn{
         _waitNode->setDependStateJoinOp(BITWISE_OR);
         _waitNode->addDependNode(_upWaitNode);
         _waitNode->addDependNode(_waitCheckNode);
-        if (_interruptNode[INTR_TYPE_RESET] != nullptr){
-            if (getFlowType() == PIPE_SENDER){
-                _waitNode->setResetIntNode(_interruptNode[INTR_TYPE_RESET]);
-            }else if (getFlowType() == PIPE_RECIEVER){
-                _upWaitNodeFromReset = new PseudoNode(1);
-                _upWaitNodeFromReset->setDependStateJoinOp(BITWISE_AND);
-                _upWaitNodeFromReset->addCondtion(&(!(*(checkToGoSignal))), BITWISE_AND);
-                _upWaitNodeFromReset->addDependNode(_interruptNode[INTR_TYPE_RESET]);
-                _upWaitNodeFromReset->setInternalIdent("pipCom" + identHelper + "waitCheckFromRst" + std::to_string(getGlobalId()));
-                _upWaitNodeFromReset->assign();
-                _waitNode->addDependNode(_upWaitNodeFromReset);
-            }
-        }
+        fillResetIntEventToNode(_waitNode);
         _waitNode->setInternalIdent("pipCom" + identHelper + "wait" + std::to_string(getGlobalId()));
         _waitNode->assign();
 
@@ -156,17 +144,6 @@ namespace kathryn{
         _exitNode->setDependStateJoinOp(BITWISE_OR);
         _exitNode->addDependNode(_fromWaitNode);
         _exitNode->addDependNode(_upExitNode);
-        if (_interruptNode[INTR_TYPE_RESET] != nullptr){
-            if (getFlowType() == PIPE_RECIEVER){
-                _upExitNodeFromReset = new PseudoNode(1);
-                _upExitNodeFromReset->setDependStateJoinOp(BITWISE_AND);
-                _upExitNodeFromReset->addCondtion(checkToGoSignal, BITWISE_AND);
-                _upExitNodeFromReset->addDependNode(_interruptNode[INTR_TYPE_RESET]);
-                _upExitNodeFromReset->setInternalIdent("pipCom" + identHelper + "waitCheckFromRst" + std::to_string(getGlobalId()));
-                _upExitNodeFromReset->assign();
-                _waitNode->addDependNode(_upWaitNodeFromReset);
-            }
-        }
         _exitNode->setInternalIdent("pipCom" + identHelper + "exitNode" + std::to_string(getGlobalId()));
         _exitNode->assign();
 
@@ -192,11 +169,7 @@ namespace kathryn{
         _resultNodeWrap->addEntraceNode(_upWaitNode);
         _resultNodeWrap->addEntraceNode(_upExitNode);
         _resultNodeWrap->addEntraceNode(_upNotifyNode);
-        if (getFlowType() == PIPE_SENDER) {
-            _resultNodeWrap->addExitNode(suppressExitOprWithRst(_exitNode));
-        }else{
-            _resultNodeWrap->addExitNode(_exitNode);
-        }
+        _resultNodeWrap->addExitNode(_exitNode);
         /**cycle andd force exit is set to -1*/
 
 
