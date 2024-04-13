@@ -46,6 +46,18 @@ namespace kathryn {
         addUpdateMeta(event);
     }
 
+    void StateReg::makeResetInteruptEvent(Operable *stopTrigger){
+        assert(stopTrigger->getOperableSlice().getSize() == 1);
+        auto* event = new UpdateEvent(
+                nullptr,
+                stopTrigger,
+                &downFullState,
+                Slice({0, getSlice().getSize()}),
+                DEFAULT_UE_PRI_INTR_MAX
+        );
+        addUpdateMeta(event);
+    }
+
     Operable* StateReg::generateEndExpr(){
         return (&((*this) == upFullState));
     }

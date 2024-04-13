@@ -34,6 +34,8 @@ namespace kathryn {
         UpdateEvent* addDependState(Operable* dependState, Operable* activateCond) override;
         /** reset event*/
         void makeUnSetStateEvent() override;
+        /** reset */
+        void makeResetInteruptEvent(Operable* stopTrigger) override;
         /** exit expression*/
         Operable* generateEndExpr() override;
         /***resetEvent Status*/

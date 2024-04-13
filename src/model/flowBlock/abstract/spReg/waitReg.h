@@ -37,6 +37,8 @@ namespace kathryn{
         UpdateEvent* addDependState(Operable* dependState, Operable* activateCond) override;
         /** generate reset event*/
         void makeUnSetStateEvent() override;
+        /** generate reset interrupt event*/
+        void makeResetInteruptEvent(Operable *stopTrigger) override;
         /** generate out expression*/
         Operable* generateEndExpr() override;
         /** oevrride operator to prevent false input*/
@@ -89,6 +91,8 @@ namespace kathryn{
         UpdateEvent* addDependState(Operable* dependState, Operable* activateCond) override;
         /** reset event*/
         void makeUnSetStateEvent() override;
+        /** reset interrupt event*/
+        void makeResetInteruptEvent(Operable *stopTrigger) override;
         /** generate out expression*/
         Operable* generateEndExpr() override;
         /** oevrride operator to prevent false input*/

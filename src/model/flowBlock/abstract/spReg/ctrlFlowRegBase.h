@@ -40,8 +40,6 @@ namespace kathryn{
         virtual UpdateEvent* addDependState(Operable* dependState, Operable* activateCond) = 0;
         /** build register representation when leaving this state */
         virtual void      makeUnSetStateEvent() = 0;
-        /*** make event that expression make interupt to start sequence*/
-        virtual void      makeSetInteruptEvent(Operable* startTrigger) = 0;
         /*** make UNset event that expression make interupt to start sequence*/
         virtual void      makeResetInteruptEvent(Operable* stopTrigger) = 0;
         /*** generate expression that represent state is finish*/

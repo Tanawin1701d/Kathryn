@@ -58,7 +58,7 @@ namespace kathryn{
 
         _waitNode = new WaitCondNode(_exitCond);
         _waitNode->setDependStateJoinOp(BITWISE_AND);
-        _waitNode->addResetIntNode(_interruptNode[INTR_TYPE_RESET]);
+        _waitNode->setResetIntNode(_interruptNode[INTR_TYPE_RESET]);
         _waitNode->setInternalIdent("waitCond"+std::to_string(getGlobalId()));
         /** result node wrap*/
         _resultNodeWrap = new NodeWrap();
@@ -185,7 +185,7 @@ namespace kathryn{
             _waitNode = new WaitCycleNode(cycle);
         }
         _waitNode->setInternalIdent("waitCycle"+std::to_string(getGlobalId()));
-        _waitNode->addResetIntNode(_interruptNode[INTR_TYPE_RESET]);
+        _waitNode->setResetIntNode(_interruptNode[INTR_TYPE_RESET]);
         _waitNode->setDependStateJoinOp(BITWISE_AND);
         /** result node wrap*/
         _resultNodeWrap = new NodeWrap();

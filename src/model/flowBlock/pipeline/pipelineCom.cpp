@@ -123,7 +123,7 @@ namespace kathryn{
         _waitNode->addDependNode(_waitCheckNode);
         if (_interruptNode[INTR_TYPE_RESET] != nullptr){
             if (getFlowType() == PIPE_SENDER){
-                _waitNode->addResetIntNode(_interruptNode[INTR_TYPE_RESET]);
+                _waitNode->setResetIntNode(_interruptNode[INTR_TYPE_RESET]);
             }else if (getFlowType() == PIPE_RECIEVER){
                 _upWaitNodeFromReset = new PseudoNode(1);
                 _upWaitNodeFromReset->setDependStateJoinOp(BITWISE_AND);

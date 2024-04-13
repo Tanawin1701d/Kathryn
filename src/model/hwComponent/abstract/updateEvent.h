@@ -15,11 +15,16 @@
 namespace kathryn {
 
     /** default -->update -->event -->priority */
-    static int DEFAULT_UE_PRI_USER     = 10;
+    static int DEFAULT_UE_PRI_USER         = 10;
+    /** interrupt priority*/
+    static int DEFAULT_UE_PRI_INTR_MAX     = 150;
+    static int DEFAULT_UE_PRI_INTR_MIN     = 125;
+    /** internal activity priority*/
     static int DEFAULT_UE_PRI_INTERNAL_MAX = 100;
     static int DEFAULT_UE_PRI_INTERNAL_MIN = 50;
-    static int DEFAULT_UE_PRI_RST      = INT32_MAX;
-    static int DEFAULT_UE_PRI_MIN      = 0;
+    /** global command priority*/
+    static int DEFAULT_UE_PRI_RST          = INT32_MAX;
+    static int DEFAULT_UE_PRI_MIN          = 0;
 
     extern ull GLOBAL_UPDATE_EVENT_ID;
 

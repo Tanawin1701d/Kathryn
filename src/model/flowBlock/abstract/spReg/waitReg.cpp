@@ -56,6 +56,18 @@ namespace kathryn{
         addUpdateMeta(resetEvent);
     }
 
+    void CondWaitStateReg::makeResetInteruptEvent(Operable *stopTrigger){
+        assert(stopTrigger->getOperableSlice().getSize() == 1);
+        auto* event = new UpdateEvent(
+                nullptr,
+                stopTrigger,
+                &_downState,
+                Slice({0, getSlice().getSize()}),
+                DEFAULT_UE_PRI_INTR_MAX
+        );
+        addUpdateMeta(event);
+    }
+
     Operable* CondWaitStateReg::generateEndExpr() {
         return &((*_condOpr) & ((*this) == _upState));
     }
@@ -147,14 +159,26 @@ namespace kathryn{
     void CycleWaitStateReg::makeUnSetStateEvent() {
         /**reset event*/
         auto* resetEvent = new UpdateEvent(
-                                                   &((*this)(1, _totalBitSize) == (*_endCnt)),
-                                                   &(*this)(0),
-                                                   IdleCnt,
-                                                   Slice({0, _totalBitSize}),
-                                                   DEFAULT_UE_PRI_INTERNAL_MIN
-                                           );
+               &((*this)(1, _totalBitSize) == (*_endCnt)),
+               &(*this)(0),
+               IdleCnt,
+               Slice({0, _totalBitSize}),
+               DEFAULT_UE_PRI_INTERNAL_MIN
+        );
         addUpdateMeta(resetEvent);
 
+    }
+
+    void CycleWaitStateReg::makeResetInteruptEvent(Operable *stopTrigger){
+        assert(stopTrigger->getOperableSlice().getSize() == 1);
+        auto* event = new UpdateEvent(
+                nullptr,
+                stopTrigger,
+                IdleCnt,
+                Slice({0, _totalBitSize}),
+                DEFAULT_UE_PRI_INTR_MAX
+        );
+        addUpdateMeta(event);
     }
 
     Operable* CycleWaitStateReg::generateEndExpr() {

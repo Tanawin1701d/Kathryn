@@ -109,7 +109,7 @@ namespace kathryn {
             dependNodes.push_back(srcNode);
         }
 
-        void addResetIntNode(Node* resetIntNode){
+        void setResetIntNode(Node* resetIntNode){
             assert(resetIntNode != nullptr);
             assert(_resetIntNode == nullptr);
             _resetIntNode = resetIntNode;
@@ -142,6 +142,12 @@ namespace kathryn {
         }
         /** unset event when state is raised there must be condition that bring this down*/
         virtual void makeUnsetStateEvent(){assert(false);}
+        /** make reset interrupt event to register that need*/
+        virtual void makeResetIntEventHelper(CtrlFlowRegBase* ctrlReg){
+            if (_resetIntNode != nullptr){
+                ctrlReg->makeResetInteruptEvent(_resetIntNode->getExitOpr());
+            }
+        }
         /** provided src state data*/
         virtual Operable* getExitOpr(){ return nullptr; };
         /** assign value with proper condition*/

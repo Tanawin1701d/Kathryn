@@ -50,6 +50,8 @@ namespace kathryn{
             _stateReg->addDependState(dependNodeOpr, condition);
             /** unset event*/
             makeUnsetStateEvent();
+            /** reset Interrupt*/
+            makeResetIntEventHelper(_stateReg);
             /** slave event*/
             for (AsmNode* asmNode: _dependSlaveAsmNode){
                 asmNode->assignFromStateNode();
@@ -100,6 +102,8 @@ namespace kathryn{
             for (auto dependNode : dependNodes){
                 _synReg->addDependState(dependNode->getExitOpr(), condition);
             }
+            makeResetIntEventHelper(_synReg);
+
             makeUnsetStateEvent();
         }
 

@@ -57,7 +57,7 @@ namespace kathryn{
         if (!_basicNodes.empty()){
             basicStNode = new StateNode();
             basicStNode->setDependStateJoinOp(BITWISE_AND);
-            basicStNode->addResetIntNode(_interruptNode[INTR_TYPE_RESET]);
+            basicStNode->setResetIntNode(_interruptNode[INTR_TYPE_RESET]);
             /** add basic assignment to depend on stateNode*/
             for (auto nd : _basicNodes){
                 assert(nd->getNodeType() == ASM_NODE);
@@ -294,6 +294,7 @@ namespace kathryn{
             for (auto nw : nodeWrapOfSubBlock){
                 synNode->addDependNode(nw->getExitNode());
             }
+            synNode->setResetIntNode(_interruptNode[INTR_TYPE_RESET]);
             ////// assign sync reg and sync node don't have to set join op because
             /////////// sync register will handle it
             synNode->assign();

@@ -42,7 +42,7 @@ namespace kathryn{
             _stateNode = new StateNode();
             _stateNode->setDependStateJoinOp(BITWISE_AND);
             _stateNode->addSlaveAsmNode(_asmNode);
-            _stateNode->addResetIntNode(_resetIntNode);
+            _stateNode->setResetIntNode(_resetIntNode);
         }else if (_subBlock != nullptr){
             _complexNode = _subBlock->sumarizeBlock();
         }else{

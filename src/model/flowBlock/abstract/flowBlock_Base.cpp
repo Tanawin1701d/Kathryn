@@ -207,7 +207,7 @@ namespace kathryn{
     }
 
     void FlowBlockBase::fillResetIntEventToNode(Node *nd) {
-                nd->addResetIntNode(_interruptNode[INTR_TYPE_RESET]);
+        nd->setResetIntNode(_interruptNode[INTR_TYPE_RESET]);
     }
 
     std::vector<FlowBlockBase::sortEle> FlowBlockBase::sortSubAndConFbInOrder() {

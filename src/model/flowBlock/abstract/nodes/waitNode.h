@@ -34,6 +34,7 @@ namespace kathryn{
             auto dependNodeOpr = transformAllDepNodeToOpr();
             assert(dependNodeOpr != nullptr);
             _condWaitStateReg->addDependState(dependNodeOpr, condition);
+            makeResetIntEventHelper(_condWaitStateReg);
             makeUnsetStateEvent();
             _condWaitStateReg->setVarName(identName);
         }
@@ -88,6 +89,7 @@ namespace kathryn{
             assert(dependNodeOpr != nullptr);
             _cycleWaitStateReg->addDependState(dependNodeOpr, condition);
             makeUnsetStateEvent();
+            makeResetIntEventHelper(_cycleWaitStateReg);
             _cycleWaitStateReg->setVarName(identName);
         }
 

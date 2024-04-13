@@ -63,6 +63,9 @@ namespace kathryn {
 
             if (isThereIndirectAsmMeta()) {
                 inDirectCon = condition;
+                if (dependNodes[0]->_resetIntNode != nullptr){
+                    addLogic(inDirectCon, &(!*dependNodes[0]->_resetIntNode->getExitOpr()), BITWISE_AND);
+                }
                 if (dependNodes[0]->getCondition() != nullptr) {
                     addLogic(inDirectCon, dependNodes[0]->getCondition(), BITWISE_AND);
                 }
