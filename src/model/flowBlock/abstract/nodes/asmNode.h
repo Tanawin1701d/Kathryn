@@ -30,70 +30,47 @@ namespace kathryn {
 
         }
 
-
-        AsmNode(const AsmNode &other) : Node((Node &) other) {
-            _assignMetas = other._assignMetas;
-        }
-
-        ~AsmNode(){}
-
-        bool isThereIndirectAsmMeta() {
-
-            for (auto* assignMeta: _assignMetas) {
-                if (assignMeta->asmType == ASM_EQ_DEPNODE) {
-                    return true;
-                }
-            }
-            return false;
-
-
-        }
+        ~AsmNode() override = default;
 
         void assign() override{
             assert(false);
         }
 
         void assignFromStateNode(){
-            assert(dependNodes.size() == 1);
+            assert(nodeSrcs.size() == 1);
+            assert(nodeSrcs[0].condition == nullptr);
+            assert(nodeSrcs[0].dependNode != nullptr);
             assert(!_assignMetas.empty());
-            Operable* depNodeOpr = transformAllDepNodeToOpr();
-
-            Operable* inDirectCon      = nullptr;
-            Operable* InDirectDepState = nullptr;
-
-            if (isThereIndirectAsmMeta()) {
-                inDirectCon = condition;
-                if (dependNodes[0]->getCondition() != nullptr) {
-                    addLogic(inDirectCon, dependNodes[0]->getCondition(), BITWISE_AND);
-                }
-                InDirectDepState = dependNodes[0]->transformAllDepNodeToOpr();
-            }
 
             for (auto* assignMeta: _assignMetas) {
 
+                /*** for reg <<= operator*/
                 if (assignMeta->asmType == ASM_DIRECT){
                     ///////////// assign from current dependency
                     auto resultUpEvent = new UpdateEvent({
-                                                                 condition,
-                                                                 depNodeOpr,
-                                                                 &assignMeta->valueToAssign,
-                                                                 assignMeta->desSlice,
-                                                                 DEFAULT_UE_PRI_USER
-                                                         });
-
+                        nodeSrcs[0].condition,
+                        nodeSrcs[0].dependNode->getExitOpr(),
+                        &assignMeta->valueToAssign,
+                        assignMeta->desSlice,
+                        DEFAULT_UE_PRI_USER
+                    });
                     assignMeta->updateEventsPool.push_back(resultUpEvent);
+
                     ////////////////////////////////////////////////////////////////////////////////////////
+                /** for reg = operator*/
                 }else if (assignMeta->asmType == ASM_EQ_DEPNODE){
-                    //////////////// assign as same as node that have been assign
-                    auto resultUpEvent = new UpdateEvent({
-                                                                 inDirectCon,
-                                                                 InDirectDepState,
-                                                                 &assignMeta->valueToAssign,
-                                                                 assignMeta->desSlice,
-                                                                 DEFAULT_UE_PRI_USER
-                                                         });
-                    assignMeta->updateEventsPool.push_back(resultUpEvent);
 
+                    //////////////// assign as same as node that have been assign
+                    for (auto nodeSrc: nodeSrcs[0].dependNode->nodeSrcs) {
+                        auto resultUpEvent = new UpdateEvent({
+                                                                     nodeSrc.condition,
+                                                                     nodeSrc.dependNode->getExitOpr(),
+                                                                     &assignMeta->valueToAssign,
+                                                                     assignMeta->desSlice,
+                                                                     DEFAULT_UE_PRI_USER
+                                                             });
+                        assignMeta->updateEventsPool.push_back(resultUpEvent);
+                    }
                 }
             }
 

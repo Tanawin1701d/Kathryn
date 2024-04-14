@@ -31,9 +31,11 @@ namespace kathryn{
         }
 
         void assign() override{
-            auto dependNodeOpr = transformAllDepNodeToOpr();
-            assert(dependNodeOpr != nullptr);
-            _condWaitStateReg->addDependState(dependNodeOpr, condition);
+            assert(!nodeSrcs.empty());
+            for(auto nodeSrc: nodeSrcs){
+                _condWaitStateReg->addDependState(nodeSrc.dependNode->getExitOpr(), nodeSrc.condition);
+            }
+
             makeUnsetStateEvent();
             _condWaitStateReg->setVarName(identName);
         }
@@ -84,9 +86,12 @@ namespace kathryn{
         }
 
         void assign() override{
-            auto dependNodeOpr = transformAllDepNodeToOpr();
-            assert(dependNodeOpr != nullptr);
-            _cycleWaitStateReg->addDependState(dependNodeOpr, condition);
+
+            /**normal start event*/
+            for(auto nodeSrc: nodeSrcs){
+                _cycleWaitStateReg->addDependState(nodeSrc.dependNode->getExitOpr(), nodeSrc.condition);
+            }
+            /** unset event*/
             makeUnsetStateEvent();
             _cycleWaitStateReg->setVarName(identName);
         }

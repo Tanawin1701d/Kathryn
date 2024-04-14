@@ -5,6 +5,7 @@
 #ifndef KATHRYN_NODE_H
 #define KATHRYN_NODE_H
 
+#include <utility>
 #include<vector>
 #include<memory>
 #include<queue>
@@ -49,29 +50,24 @@ namespace kathryn {
 
     std::string NT_to_string(NODE_TYPE nt);
 
+    struct NodeSrcEdge{
+        Node*     dependNode = nullptr;
+        Operable* condition  = nullptr;
+    };
+
     struct Node : public ModelDebuggable,
                   public FlowSimEngine{
-        NODE_TYPE          nodeType                = NODE_TYPE_CNT;
-        Operable*          condition               = nullptr;
-        std::vector<Node*> dependNodes;
-        Operable*          cachedFromResultDepNode = nullptr;
-        LOGIC_OP           dependStateRaiseCond    = OP_DUMMY;
-        std::string        identName               = "NODE_UNNAME";
+        NODE_TYPE                nodeType  = NODE_TYPE_CNT;
+        std::vector<NodeSrcEdge> nodeSrcs;
+        std::string              identName = "NODE_UNNAME";
 
-        Node(Node& rhs):
-                FlowSimEngine()
-        {
-            nodeType             = rhs.nodeType;
-            condition            = rhs.condition;
-            dependNodes          = rhs.dependNodes;
-            dependStateRaiseCond = rhs.dependStateRaiseCond;
-        }
+        Operable*                intReset  = nullptr;
+
+        Node(Node& rhs) = delete;
 
         explicit Node(NODE_TYPE nt):
                 FlowSimEngine(),
-                nodeType(nt),
-                condition(nullptr),
-                dependStateRaiseCond(OP_DUMMY){};
+                nodeType(nt){};
 
         ~Node() override = default;
 
@@ -94,75 +90,40 @@ namespace kathryn {
             }
         }
 
-        /** add condition for assignment*/
-        virtual void addCondtion(Operable* opr, LOGIC_OP op) {
-            addLogic(condition, opr, op);
-        }
-
         /** add dependNode for assignment*/
-        void addDependNode(Node* srcNode) {
+        void addDependNode(Node* srcNode, Operable* cond) {
             assert(srcNode != nullptr);
-            dependNodes.push_back(srcNode);
+            nodeSrcs.push_back({srcNode, cond});
         }
 
-        std::vector<Node*>& getDependNodes() {return dependNodes; }
-        Operable*           getCondition() const {return condition;}
-
-        /** join depend node to usealble expression*/
-        Operable* transformAllDepNodeToOpr(){
-            if (cachedFromResultDepNode != nullptr){
-                return cachedFromResultDepNode;
-            }
-            Operable* resultOpr = nullptr;
-            for (auto nd : dependNodes){
-                addLogic(resultOpr, nd->getExitOpr(), dependStateRaiseCond);
-            }
-            assert(resultOpr != nullptr);
-            cachedFromResultDepNode = resultOpr;
-            return resultOpr;
+        std::vector<NodeSrcEdge>& getDependNodes() {return nodeSrcs;}
+        void setInterruptReset(Operable* rst){
+            assert(rst != nullptr);
+            assert(rst->getOperableSlice().getSize() == 1);
+            intReset = rst;
         }
-
+        Operable* getInterruptReset(){
+            return intReset;
+        }
         /**
          * function that allow sp node custom their behavior
          * **/
-
-        /** set that how to join node to make this node valid*/
-        virtual void setDependStateJoinOp(LOGIC_OP op){
-            dependStateRaiseCond = op;
-        }
         /** unset event when state is raised there must be condition that bring this down*/
-        virtual void makeUnsetStateEvent(){assert(false);}
+        virtual void      makeUnsetStateEvent(){assert(false);}
         /** provided src state data*/
         virtual Operable* getExitOpr(){ return nullptr; };
         /** assign value with proper condition*/
-        virtual void assign() = 0; /** please make sure that makeunsetState is called*/
-        virtual void dryAssign(){assert(false);};
+        virtual void      assign() = 0; /** please make sure that makeunsetState is called*/
+        virtual void      dryAssign(){assert(false);};
         /** cycle that is use in this node*/
-        virtual int getCycleUsed() = 0;
+        virtual int       getCycleUsed() = 0;
         /** is Stateful node (reffer to node that consume at least 1 cycle from machine)*/
-        virtual bool isStateFullNode(){ return true; }
+        virtual bool      isStateFullNode(){ return true; }
 
 
 
         /** get debugger value*/
 
-        std::string getMdDescribe() override{
-            std::string ret = "  have node dep [ ";
-            for (auto depNode : dependNodes){
-                ret += depNode->getMdIdentVal();
-                ret += ", ";
-            }
-            /** condition*/
-            ret += "] with condition [ ";
-            if (condition != nullptr) {
-                ret += condition->castToIdent()->getIdentDebugValue();
-            }
-            ret += " ] with dep join condition [ ";
-            ret += lop_to_string(dependStateRaiseCond);
-            ret += " ] ";
-
-            return ret;
-        }
 
         std::string getMdIdentVal() override{
             std::string ret = NT_to_string(nodeType) + " @ " + std::to_string((ull)this);
@@ -171,15 +132,9 @@ namespace kathryn {
 
         void addMdLog(MdLogVal* mdLogVal) override{
             mdLogVal->addVal("[Node] " + getMdIdentVal() +  "have node dep");
-            for (auto depNode : dependNodes){
-                mdLogVal->addVal(depNode->getMdIdentVal());
+            for (auto depSrc : nodeSrcs){
+                mdLogVal->addVal(depSrc.dependNode->getMdIdentVal());
             }
-            mdLogVal->addVal("----> condition");
-            if (condition != nullptr) {
-                mdLogVal->addVal(condition->castToIdent()->getIdentDebugValue());
-            }
-            mdLogVal->addVal("----> dep join condition");
-            mdLogVal->addVal(lop_to_string(dependStateRaiseCond));
         }
 
         /*** simulation override*/
@@ -191,7 +146,7 @@ namespace kathryn {
 
         /** internal value identifier for debugging purpose*/
         void setInternalIdent(std::string identVal){
-            identName = identVal;
+            identName = std::move(identVal);
         }
 
 

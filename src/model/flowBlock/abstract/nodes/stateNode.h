@@ -36,16 +36,16 @@ namespace kathryn{
 
         void addSlaveAsmNode(AsmNode* asmNode){
             assert(asmNode != nullptr);
-            asmNode->addDependNode(this);
+            asmNode->addDependNode(this, nullptr);
             _dependSlaveAsmNode.push_back(asmNode);
         }
 
         void assign() override{
             _stateReg->setVarName(identName);
             /*** set event*/
-            Operable* dependNodeOpr = transformAllDepNodeToOpr();
-            assert(dependNodeOpr != nullptr);
-            _stateReg->addDependState(dependNodeOpr, condition);
+            for (auto nodeSrc: nodeSrcs){
+                _stateReg->addDependState(nodeSrc.dependNode->getExitOpr(), nodeSrc.condition);
+            }
             /** unset event*/
             makeUnsetStateEvent();
             /** slave event*/
@@ -84,8 +84,6 @@ namespace kathryn{
             Node(SYN_NODE),
             _synReg(new SyncReg(synSize)){}
 
-        void addCondtion(Operable* opr, LOGIC_OP op) override{ assert(false);}
-
         void makeUnsetStateEvent() override{
             assert(_synReg != nullptr);
             _synReg->makeUnSetStateEvent();
@@ -95,9 +93,12 @@ namespace kathryn{
 
         void assign() override{
             _synReg->setVarName(identName);
-            for (auto dependNode : dependNodes){
-                _synReg->addDependState(dependNode->getExitOpr(), condition);
+            /** make start event*/
+            for (auto dependNode : nodeSrcs){
+                assert(dependNode.condition == nullptr);
+                _synReg->addDependState(dependNode.dependNode->getExitOpr(), nullptr);
             }
+            /** make unset event*/
             makeUnsetStateEvent();
         }
 
@@ -124,16 +125,29 @@ namespace kathryn{
 
     struct PseudoNode : Node{
         expression* _pseudoAssignMeta = nullptr;
+        LOGIC_OP    _joinOp;
 
-        explicit PseudoNode(int expr_size) :
+        explicit PseudoNode(int expr_size, LOGIC_OP joinOp) :
             Node(PSEUDO_NODE),
-            _pseudoAssignMeta(new expression(expr_size)){}
+            _pseudoAssignMeta(new expression(expr_size)),
+            _joinOp(joinOp)
+            {}
 
         void assign() override{
-            if (condition == nullptr)
-                *_pseudoAssignMeta = *transformAllDepNodeToOpr();
-            else
-                *_pseudoAssignMeta = (*transformAllDepNodeToOpr()) & (*condition);
+            assert(!nodeSrcs.empty());
+            Operable* finalOpr = nullptr;
+            Operable* oprPerSrc = nullptr;
+            for (auto nodeSrc: nodeSrcs){
+                oprPerSrc = nodeSrc.dependNode->getExitOpr();
+                if (nodeSrc.condition == nullptr){
+                    addLogic(oprPerSrc, nodeSrc.condition, BITWISE_AND);
+                }
+                assert(oprPerSrc != nullptr);
+                addLogic(finalOpr, oprPerSrc, _joinOp);
+            }
+
+            assert(finalOpr != nullptr);
+            *_pseudoAssignMeta = *finalOpr;
             assert(_pseudoAssignMeta != nullptr);
             _pseudoAssignMeta->setVarName(identName);
         }
@@ -168,8 +182,7 @@ namespace kathryn{
 
         void assign() override{
             /** we don't support assign from condition or depend state*/
-            assert(dependNodes.empty());
-            assert(condition == nullptr);
+            assert(nodeSrcs.empty());
             _value->setVarName(identName);
         }
 

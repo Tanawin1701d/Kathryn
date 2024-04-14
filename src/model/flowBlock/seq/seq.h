@@ -37,7 +37,7 @@ namespace kathryn {
         Node*              getStateFinishIden  () const;
         std::vector<Node*> getEntranceNodes    ();
         bool               isThereForceExitNode() const;
-         Node*              getForceExitNode    () const;
+        Node*              getForceExitNode    () const;
         bool               isNodeWrap          () const;
         NodeWrap*          getNodeWrap         () const;
         bool               isBasicNode         () const;
