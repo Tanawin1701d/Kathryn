@@ -74,7 +74,7 @@ namespace kathryn{
             logMF(srcReg,
                   "user Reg is updating value @ fb block " + fb->getMdIdentVal());
         }else{
-            asmNode->dryAssign();
+            asmNode->dryFinalize();
             logMF(srcReg,
                   "user reg is updatting without flowblock");
             Module* targetModulePtr = getTopModulePtr();
@@ -123,7 +123,7 @@ namespace kathryn{
             logMF(srcWire,
                   "user wire is updating @ fb " + fb->getMdIdentVal());
         }else{
-            asmNode->dryAssign();
+            asmNode->dryFinalize();
             logMF(srcWire,
                   "user wire is updatting without flowblock");
             Module* targetModulePtr = getTopModulePtr();
@@ -177,7 +177,7 @@ namespace kathryn{
             logMF(srcHolder,
                   "memBlk HOLDER is updating value @ fb block " + fb->getMdIdentVal());
         }else{
-            asmNode->dryAssign();
+            asmNode->dryFinalize();
             logMF(srcHolder,
                   "user mem holder is updatting without flowblock");
             Module* targetModulePtr = getTopModulePtr();
@@ -220,7 +220,7 @@ namespace kathryn{
             logMF(srcNest,
                   "user nest is updating @ fb " + fb->getMdIdentVal());
         }else{
-            asmNode->dryAssign();
+            asmNode->dryFinalize();
             logMF(srcNest,
                   "user nest is updating without flowblock");
             Module* targetModulePtr = getTopModulePtr();
@@ -291,7 +291,7 @@ namespace kathryn{
             logMF(srcBox,
                   "user nest is updating @ fb " + fb->getMdIdentVal());
         }else{
-            asmNode->dryAssign();
+            asmNode->dryFinalize();
             logMF(srcBox,
                   "user nest is updating without flowblock");
             Module* targetModulePtr = getTopModulePtr();

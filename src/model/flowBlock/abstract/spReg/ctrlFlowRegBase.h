@@ -6,6 +6,7 @@
 #define KATHRYN_CTRLFLOWREGBASE_H
 
 #include "model/hwComponent/register/register.h"
+#include "model/flowBlock/abstract/nodes/nodeCon.h"
 
 
 namespace kathryn{
@@ -37,14 +38,16 @@ namespace kathryn{
             ){}
 
         /** add depend State register return update event*/
-        virtual UpdateEvent* addDependState(Operable* dependState, Operable* activateCond) = 0;
-        /** build register representation when leaving this state */
-        virtual void      makeUnSetStateEvent() = 0;
-        /*** make UNset event that expression make interupt to start sequence*/
-        virtual void      makeResetInteruptEvent(Operable* stopTrigger) = 0;
-        /*** generate expression that represent state is finish*/
-        virtual Operable* generateEndExpr() = 0;
+        virtual void makeSetEvent    (std::vector<NODE_META>& setMeta) = 0;
+        virtual void makeUnsetEvent  () = 0;
+        virtual void makeResetIntrSeq(std::vector<NODE_META>& setMeta) = 0;
+        virtual void makeStartIntrSeq(std::vector<NODE_META>& setMeta) = 0;
+        /**add depend State*/
+        virtual void addDependState(Operable* state, Operable* condition) = 0;
 
+
+        /*** generate expression that represent state is finish*/
+        virtual Operable* generateState() = 0;
         /** to check that this register require reset event*/
         virtual bool requireResetEvent(){
             return true;

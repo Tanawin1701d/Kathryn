@@ -20,37 +20,19 @@ namespace kathryn {
     public:
         /**node and flow block*/
         AsmNode*       _asmNode  = nullptr;
+
+        StateNode*     _stNode   = nullptr;
         FlowBlockBase* _subBlock = nullptr;
 
         /**state representation*/
-        InteruptNode* _resetIntNode    = nullptr; ///// resetintnode is work with state node complexnode is not involve
-        StateNode*    _stateNode       = nullptr;
-        NodeWrap*     _complexNode     = nullptr;
+        NodeWrap     _nw;
 
         explicit SequenceEle(Node*          simpleNode);
         explicit SequenceEle(FlowBlockBase* fbBase    );
         ~SequenceEle();
 
-        void               genNode             (InteruptNode* resetIntNode);
-        void               setIdentStateId     (ull masterIdx, int subIdx) const;
-        void               addToCycleDet       (NodeWrapCycleDet& deter) const;
-        void               assignDependDent    (SequenceEle* predecessor) const;
-        void               assignDependDent    (Node* nd) const;
-        Node*              getStateFinishIden  () const;
-        std::vector<Node*> getEntranceNodes    ();
-        bool               isThereForceExitNode() const;
-        Node*              getForceExitNode    () const;
-        bool               isNodeWrap          () const;
-        NodeWrap*          getNodeWrap         () const;
-        bool               isBasicNode         () const;
-        StateNode*         getBasicNode        () const;
-        std::string        getDescribe         ();
-
-        /*** for simulation*/
-        void               simulate() const;
-        void               finalizeSim() const;
-        bool               isCurCycleSimulated() const; ///// check that are cur state is simulating and state is set
-        bool               isBlockOrNodeRunning() const;
+        void     genNode();
+        void     joinEle(SequenceEle& prevEle, NodeWrap& resultNodeWrap);
 
     };
 

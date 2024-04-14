@@ -16,188 +16,36 @@ namespace kathryn{
      * */
 
 
-    SequenceEle::SequenceEle(Node *asmNode) {
+    SequenceEle::SequenceEle(Node* asmNode) {
         assert(asmNode != nullptr);
         assert(asmNode->getNodeType() == ASM_NODE);
         _asmNode = (AsmNode*)asmNode;
     }
 
-    SequenceEle::SequenceEle(FlowBlockBase *fbBase) {
+    SequenceEle::SequenceEle(FlowBlockBase* fbBase) {
         assert(fbBase != nullptr);
         _subBlock  = fbBase;
     }
 
     SequenceEle::~SequenceEle() {
-        delete _stateNode;
-
+        delete _asmNode;
+        delete _stNode;
     }
 
-    void SequenceEle::genNode(InteruptNode* resetIntNode) {
-
-        assert( (_asmNode != nullptr) ^ (_subBlock != nullptr));
-
-        ///// it is the basic assignment
+    void SequenceEle::genNode(){
+        /** assign node wrap*/
         if (_asmNode != nullptr){
-            _resetIntNode = resetIntNode;
-            _stateNode = new StateNode();
-            _stateNode->setDependStateJoinOp(BITWISE_AND);
-            _stateNode->addSlaveAsmNode(_asmNode);
-            _stateNode->setResetIntNode(_resetIntNode);
-        }else if (_subBlock != nullptr){
-            _complexNode = _subBlock->sumarizeBlock();
+            _stNode = new StateNode();
+            SrcNodeAgent sng = _asmNode->genSrcAgent();
+            sng.addDep(_stNode, CON_NODE_SET);
+            ////////// node wrap
+            _nw.addEntraceNode(sng);
+            _nw.setCycleUsed(1);
+            _nw.setExitNode(_stNode);
         }else{
-            assert(false);
+            _nw = _subBlock->sumarizeBlock();
         }
     }
-
-    void SequenceEle::setIdentStateId(ull masterIdx, int idx) const{
-        assert((_stateNode != nullptr) ^ (_complexNode != nullptr));
-        if (_stateNode != nullptr){
-            _stateNode->setInternalIdent(
-                    "seqStateReg_"+
-                    std::to_string(masterIdx)+
-                    "_" +
-                    std::to_string(idx));
-        }
-    }
-
-    void SequenceEle::addToCycleDet(NodeWrapCycleDet &deter) const {
-        if (_asmNode != nullptr){
-            deter.addToDet(_asmNode);
-        } else if (_subBlock != nullptr){
-            deter.addToDet(_complexNode);
-        }else{
-            assert(false);
-        }
-    }
-
-    void SequenceEle::assignDependDent(SequenceEle *predecessor) const {
-        assignDependDent(predecessor->getStateFinishIden());
-    }
-
-    void SequenceEle::assignDependDent(Node* nd) const {
-        assert(nd != nullptr);
-        assert((_asmNode != nullptr) ^ (_subBlock != nullptr));
-
-        if (_asmNode != nullptr){
-            _stateNode->addDependNode(nd);
-            _stateNode->assign();   ///// assign state node to actual value
-        }else if (_subBlock != nullptr){
-            _complexNode->addDependNodeToAllNode(nd);
-            _complexNode->assignAllNode();
-        }else{assert(false);}
-
-    }
-
-
-
-    Node* SequenceEle::getStateFinishIden() const {
-        assert( (_asmNode != nullptr) ^ (_subBlock != nullptr));
-        if (_asmNode != nullptr){
-            return _stateNode;
-        }else if (_subBlock != nullptr){
-            return _complexNode->getExitNode();
-        }
-        assert(false);
-    }
-
-    std::vector<Node *> SequenceEle::getEntranceNodes() {
-        assert( (_asmNode != nullptr) ^ (_subBlock != nullptr));
-        if (_asmNode != nullptr){
-            return {_stateNode};
-        }else if (_subBlock != nullptr){
-            return _complexNode->entranceNodes;
-        }
-        assert(false);
-    }
-
-    bool SequenceEle::isThereForceExitNode() const{
-        return (_complexNode != nullptr)  &&
-                (_complexNode->isThereForceExitNode());
-    }
-
-    Node *SequenceEle::getForceExitNode() const {
-        assert(isThereForceExitNode());
-        return _complexNode->getForceExitNode();
-    }
-
-    bool SequenceEle::isNodeWrap() const{
-        return _complexNode != nullptr;
-    }
-
-    bool SequenceEle::isBasicNode() const{
-        return _stateNode != nullptr;
-    }
-
-    NodeWrap *SequenceEle::getNodeWrap() const {
-        return _complexNode;
-    }
-
-    StateNode *SequenceEle::getBasicNode() const {
-        return _stateNode;
-    }
-
-    std::string SequenceEle::getDescribe(){
-
-        if (isBasicNode()){
-            return _stateNode->getMdIdentVal() + " " + _stateNode->getMdDescribe();
-        }else if (isNodeWrap()){
-            return _complexNode->getMdIdentVal() + _complexNode->getMdDescribe();
-        }
-        assert(false);
-
-    }
-
-    void SequenceEle::simulate() const{
-
-        ////////////// simulate state node
-        if (_stateNode != nullptr){
-            _stateNode->simStartCurCycle();
-        }
-        ////////////// simulate basic Assignment and subBlock
-        if (_asmNode != nullptr){
-            _asmNode->simStartCurCycle();
-        }
-        if (_subBlock != nullptr){
-            _subBlock->simStartCurCycle();
-        }
-    }
-
-    void SequenceEle::finalizeSim() const{
-        if (_stateNode != nullptr){
-            _stateNode->simExitCurCycle();
-        }
-        if (_asmNode != nullptr){
-            _asmNode->simExitCurCycle();
-        }
-        if (_subBlock != nullptr){
-            _subBlock->simExitCurCycle();
-        }
-    }
-
-    bool SequenceEle::isCurCycleSimulated() const{
-
-        if (_asmNode != nullptr){
-            return _asmNode->isCurValSim();
-        }
-        if (_subBlock != nullptr){
-            return _subBlock->isCurValSim();
-        }
-        assert(false);
-    }
-
-    bool SequenceEle::isBlockOrNodeRunning() const{
-        if (_stateNode != nullptr){
-            /**do not use asmNode as a trigger*/
-            return _stateNode->isBlockOrNodeRunning();
-        }
-        if (_subBlock != nullptr){
-            return _subBlock->isBlockOrNodeRunning();
-        }
-        assert(false);
-    }
-
-
     /**
      *
      *
@@ -256,7 +104,7 @@ namespace kathryn{
         /** generate hardware*/
         int idx = 0;
         for (auto& seqMeta: _subSeqMetas) {
-            seqMeta->genNode(_interruptNode[INTR_TYPE_RESET]);
+            seqMeta->genNode();
             seqMeta->setIdentStateId(getGlobalId(),idx++);
             seqMeta->addToCycleDet(cycleDet);
         }
@@ -269,33 +117,26 @@ namespace kathryn{
             }
         }
         genSumForceExitNode(allNw);
-        /** connect depend node chain*/
-        for (size_t idx = 0; (idx+1) < _subSeqMetas.size(); idx++){
-            auto lhsNodeWrapper = _subSeqMetas[idx];
-            auto rhsNodeWrapper = _subSeqMetas[idx+1];
-            rhsNodeWrapper->assignDependDent(lhsNodeWrapper);
-        }
-        /** build new result NodeWrap*/
-        resultNodeWrap = new NodeWrap();
-        /**
-         * deal with entrance node
-         * **/
 
-        if (_interruptNode[INTR_TYPE_START] == nullptr){
-            resultNodeWrap->addEntraceNodes((*_subSeqMetas.begin())->getEntranceNodes());
-        }else{
-            genStartBlockNode();
-            ///////////// start trigger
-            (*_subSeqMetas.begin())->assignDependDent(mainStart);
-            ///////////// result node wrap
-            resultNodeWrap->addEntraceNode(upStart);
-            ///////////////////////////////////////////////////////////////////////////////////////
+        /***
+         *
+         * build dep
+         *
+         * */
+
+        for (int idx = 1; idx < _subSeqMetas.size(); idx++){
+
+            //////////// assign dep for stateNode
+            Operable* ;
+            int revIdx = idx-1;
+            for ( ; revIdx >= 0; revIdx--){
+                if (_subSeqMetas[revIdx]->_nw.getBypassCond() != nullptr){
+
+                }
+            }
+
         }
 
-        resultNodeWrap->addExitNode((*_subSeqMetas.rbegin())->getStateFinishIden());
-        resultNodeWrap->setCycleUsed(cycleDet.getCycleVertical());
-        if (_areThereForceExit)
-            resultNodeWrap->addForceExitNode(_forceExitNode);
 
     }
 

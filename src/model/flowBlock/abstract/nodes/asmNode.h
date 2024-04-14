@@ -14,6 +14,7 @@ namespace kathryn {
     struct AsmNode : Node {
         std::vector<AssignMeta*> _assignMetas; //// AssignMeta is must not use the same assign metas
 
+        /** constructor*/
         explicit AsmNode(AssignMeta *assignMeta) :
                 Node(ASM_NODE),
                 _assignMetas({assignMeta}){
@@ -31,11 +32,9 @@ namespace kathryn {
         }
 
 
-        AsmNode(const AsmNode &other) : Node((Node &) other) {
-            _assignMetas = other._assignMetas;
-        }
+        AsmNode(const AsmNode &other) = delete;
 
-        ~AsmNode(){}
+        ~AsmNode() = default;
 
         bool isThereIndirectAsmMeta() {
 
@@ -49,61 +48,25 @@ namespace kathryn {
 
         }
 
-        void assign() override{
-            assert(false);
-        }
+        void finalize() override{ assert(false);}
 
-        void assignFromStateNode(){
-            assert(dependNodes.size() == 1);
-            assert(!_assignMetas.empty());
-            Operable* depNodeOpr = transformAllDepNodeToOpr();
-
-            Operable* inDirectCon      = nullptr;
-            Operable* InDirectDepState = nullptr;
-
-            if (isThereIndirectAsmMeta()) {
-                inDirectCon = condition;
-                if (dependNodes[0]->_resetIntNode != nullptr){
-                    addLogic(inDirectCon, &(!*dependNodes[0]->_resetIntNode->getExitOpr()), BITWISE_AND);
-                }
-                if (dependNodes[0]->getCondition() != nullptr) {
-                    addLogic(inDirectCon, dependNodes[0]->getCondition(), BITWISE_AND);
-                }
-                InDirectDepState = dependNodes[0]->transformAllDepNodeToOpr();
-            }
-
-            for (auto* assignMeta: _assignMetas) {
-
-                if (assignMeta->asmType == ASM_DIRECT){
-                    ///////////// assign from current dependency
-                    auto resultUpEvent = new UpdateEvent(
-                                                                 condition,
-                                                                 depNodeOpr,
-                                                                 &assignMeta->valueToAssign,
-                                                                 assignMeta->desSlice,
-                                                                 DEFAULT_UE_PRI_USER
-                                                         );
-
-                    assignMeta->updateEventsPool.push_back(resultUpEvent);
-                    ////////////////////////////////////////////////////////////////////////////////////////
-                }else if (assignMeta->asmType == ASM_EQ_DEPNODE){
-                    //////////////// assign as same as node that have been assign
-                    auto resultUpEvent = new UpdateEvent(
-                                                                 inDirectCon,
-                                                                 InDirectDepState,
-                                                                 &assignMeta->valueToAssign,
-                                                                 assignMeta->desSlice,
-                                                                 DEFAULT_UE_PRI_USER
-                                                         );
-                    assignMeta->updateEventsPool.push_back(resultUpEvent);
-
-                }
-            }
-
-            /*** no need to deal with rst event due to data self invoked*/
+        void finalizeFromStateNode(){
+            /***
+             *
+             *
+             *
+             *
+             * TODO make fire condition and state
+             *
+             *
+             *
+             *
+             *
+             *
+             * */
         }
         /** assign with no flow block related*/
-        void dryAssign() override{
+        void dryFinalize(){
             assert(!_assignMetas.empty());
             for (auto* assignMeta: _assignMetas) {
                 auto resultUpEvent = new UpdateEvent(

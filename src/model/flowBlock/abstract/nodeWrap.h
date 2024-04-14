@@ -6,6 +6,7 @@
 #define KATHRYN_NODEWRAP_H
 
 #include "model/flowBlock/abstract/nodes/node.h"
+#include "model/flowBlock/abstract/nodes/nodeCon.h"
 
 namespace kathryn{
 
@@ -15,92 +16,95 @@ namespace kathryn{
     struct NodeWrap : ModelDebuggable {
     public:
 
-        /** entrance represent UpdateEvent which refers to node that be head of the subblock*/
-        /** note that exprMetas must not be here due to the abstract of the system*/
-        std::vector<Node*> entranceNodes;
+        /** it is agent of the node typically ctrlFlowRegBase*/
+        std::vector<SrcNodeAgent> srcNodeAgents;
         /** the exit condition that allow next building block run*/
-        Node* exitNode  = nullptr;
+        Node* exitNode      = nullptr;
         /** force exit Node is the node that indicate exit expression without concerning of flowBlock behaviour*/
         Node* forceExitNode = nullptr;
+        /** bypass condition may be there is no state to handle in previous wrap*/
+        Operable* byPassCondition = nullptr;
         /** number of cycle required in this subblock*/
-        int cycleUsed = IN_CONSIST_CYCLE_USED;
-
-        NodeWrap(const NodeWrap& rhs) {
-            ///// we don't support copy constructor anymore
-            ///// because it may cause error to asignment node formation and hard to debug
-            assert(false);
-        }
+        int cycleUsed       = IN_CONSIST_CYCLE_USED;
+        /** disable copy constructor*/
+//        NodeWrap(const NodeWrap& rhs) = delete;
+//        NodeWrap& operator = (const NodeWrap& rhs) = delete;
 
         NodeWrap() = default;
 
-        NodeWrap& operator=(const NodeWrap& rhs) {
-            ///// we don't support copy constructor anymore
-            ///// because it may cause error to asignment node formation and hard to debug
-            assert(false);
+        /**
+         * add/set element of node wrap
+         * */
+
+        void addEntraceNode(SrcNodeAgent sna) {
+            srcNodeAgents.push_back(sna);
         }
 
-        void addEntraceNode(Node *nd) {
-            assert(nd != nullptr);
-            entranceNodes.push_back(nd);
-        }
-
-        void addEntraceNodes(const std::vector<Node*>& nds){
+        void addEntraceNodes(const std::vector<SrcNodeAgent>& nds){
             for (auto nd : nds){
                 addEntraceNode(nd);
             }
         }
 
-        void addExitNode(Node* nd) {
-            assert(nd != nullptr);
+        void setExitNode(Node* nd) {
+            assert((nd != nullptr) && (exitNode == nullptr));
             exitNode = nd;
         }
 
-        void addForceExitNode(Node* nd){
-            assert(nd != nullptr);
+        void setForceExitNode(Node* nd){
+            assert((nd != nullptr) && (forceExitNode == nullptr));
             forceExitNode = nd;
         }
 
-        void addConditionToAllNode(Operable *cond, LOGIC_OP op) {
+        void setByPassCond(Operable* bypassOpr){
+            assert((bypassOpr != nullptr) && (byPassCondition == nullptr));
+        }
+
+        /** add dep and condition condition*/
+
+        void addDepToAllSrcAgent(Node* masterSrcNode, CONNECT_NODE_PURPOSE cnp){
+            assert(masterSrcNode != nullptr);
+            assert(cnp < CON_NODE_CNT);
+            for (auto srcNodeAgent: srcNodeAgents) {
+                srcNodeAgent.addDep(masterSrcNode, cnp);
+            }
+        }
+
+        void addCondToAllSrcAgent(Operable *cond, LOGIC_OP op) {
             assert(cond != nullptr);
-            for (auto node: entranceNodes) {
-                node->addCondtion(cond, op);
+            for (auto sng: srcNodeAgents) {
+                sng.addCond(cond, op);
             }
         }
 
-        void addDependNodeToAllNode(Node* st) {
-            assert(st != nullptr);
-            for (auto node: entranceNodes) {
-                node->addDependNode(st);
-            }
+        void addCondToByPass(Operable* cond, LOGIC_OP op) {
+            assert(cond != nullptr);
+            addLogic(byPassCondition, cond, op);
         }
 
-        /** we force node to declare themselves*/
-//        void setAllDependNodeCond(LOGIC_OP op){
-//            for (auto node: entranceNodes){
-//                node->setDependStateJoinOp(op);
-//            }
-//        }
+        /**
+         *
+         * finalize dep
+         *
+         * */
 
-        void assignAllNode() {
-            for (auto node: entranceNodes) {
-                node->assign();
+        void finalizeAllSrcNodeAgent() {
+            for (auto srcNodeAgent: srcNodeAgents) {
+                srcNodeAgent.finalize();
             }
         }
 
         /** copy node pointer to this wrap*/
         /// todo we will make it copy node if need but for now we don't
-        void transferEntNodeFrom(NodeWrap *nw) {
+        void transferEntSrcNodeAgentFrom(NodeWrap *nw) {
             assert(nw != nullptr);
-            for (auto node: nw->entranceNodes) {
-                entranceNodes.push_back(node);
+            for (auto node: nw->srcNodeAgents) {
+                srcNodeAgents.push_back(node);
             }
         }
 
-        void deleteNodesInWrap() {
-            for (auto nd: entranceNodes) {
-                delete nd;
-            }
-            /**exit node and force exitNode will be not deleted because it is only pointer it will be not clone*/
+        Operable* getBypassCond() const{
+            return byPassCondition;
         }
 
         Node* getExitNode () const {
@@ -108,7 +112,7 @@ namespace kathryn{
             return exitNode;
         }
         bool  isThereForceExitNode() const {return forceExitNode != nullptr;}
-        Node* getForceExitNode() const {return forceExitNode;}
+        Node* getForceExitNode    () const {return forceExitNode;}
 
         void setCycleUsed(int cycle){
             assert(cycle == -1 || cycle > 0);
@@ -118,29 +122,6 @@ namespace kathryn{
         int getCycleUsed() const{
             assert(cycleUsed == -1 || cycleUsed > 0 );
             return cycleUsed;
-        }
-
-        std::string getMdDescribe() override{
-            std::string ret;
-            ret += "hasEntranceNode [";
-            for (auto entranceNode : entranceNodes){
-                ret += entranceNode->getMdIdentVal();
-                ret += ", ";
-            }
-
-            ret += "] has exitNode ";
-            ret += exitNode->getMdIdentVal();
-
-            if (isThereForceExitNode()){
-                ret += "has force exit Node ";
-                ret += forceExitNode->getMdIdentVal();
-            }
-
-
-
-            ret += " use cycle " + std::to_string(cycleUsed);
-
-            return ret;
         }
 
         std::string getMdIdentVal() override{

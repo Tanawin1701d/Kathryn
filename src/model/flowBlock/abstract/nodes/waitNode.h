@@ -20,23 +20,22 @@ namespace kathryn{
             _condWaitStateReg = new CondWaitStateReg(waitCond);
         }
 
-        void makeUnsetStateEvent() override{
-            assert(_condWaitStateReg != nullptr);
-            _condWaitStateReg->makeUnSetStateEvent();
+        void finalize() override{
+            _condWaitStateReg->setVarName(identName);
+            /*** set event*/
+            _condWaitStateReg->makeSetEvent(dep[CON_NODE_SET]);
+            /** unset event*/
+            _condWaitStateReg->makeUnsetEvent();
+            /** reset Interrupt*/
+            _condWaitStateReg->makeResetIntrSeq(dep[CON_NODE_RESET_INTR]);
+            /** start Interrupt*/
+            _condWaitStateReg->makeStartIntrSeq(dep[CON_NODE_START_INTR]);
+
         }
 
         Operable* getExitOpr() override{
             assert(_condWaitStateReg != nullptr);
             return _condWaitStateReg->generateEndExpr();
-        }
-
-        void assign() override{
-            auto dependNodeOpr = transformAllDepNodeToOpr();
-            assert(dependNodeOpr != nullptr);
-            _condWaitStateReg->addDependState(dependNodeOpr, condition);
-            makeResetIntEventHelper(_condWaitStateReg);
-            makeUnsetStateEvent();
-            _condWaitStateReg->setVarName(identName);
         }
 
         int getCycleUsed() override {return -1;}
@@ -74,23 +73,23 @@ namespace kathryn{
             _cycleWaitStateReg = new CycleWaitStateReg(opr);
         }
 
-        void makeUnsetStateEvent() override{
-            assert(_cycleWaitStateReg != nullptr);
-            _cycleWaitStateReg->makeUnSetStateEvent();
+
+        void finalize() override{
+
+            _cycleWaitStateReg->setVarName(identName);
+            /*** set event*/
+            _cycleWaitStateReg->makeSetEvent(dep[CON_NODE_SET]);
+            /** unset event*/
+            _cycleWaitStateReg->makeUnsetEvent();
+            /** reset Interrupt*/
+            _cycleWaitStateReg->makeResetIntrSeq(dep[CON_NODE_RESET_INTR]);
+            /** start Interrupt*/
+            _cycleWaitStateReg->makeStartIntrSeq(dep[CON_NODE_START_INTR]);
         }
 
         Operable* getExitOpr() override{
             assert(_cycleWaitStateReg != nullptr);
             return _cycleWaitStateReg->generateEndExpr();
-        }
-
-        void assign() override{
-            auto dependNodeOpr = transformAllDepNodeToOpr();
-            assert(dependNodeOpr != nullptr);
-            _cycleWaitStateReg->addDependState(dependNodeOpr, condition);
-            makeUnsetStateEvent();
-            makeResetIntEventHelper(_cycleWaitStateReg);
-            _cycleWaitStateReg->setVarName(identName);
         }
 
         int getCycleUsed() override {return _cycle;}

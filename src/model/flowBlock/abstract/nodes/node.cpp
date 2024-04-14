@@ -23,39 +23,55 @@ namespace kathryn{
 
     }
 
-    //// legacy
-    bool thereAreStateLessConnection(std::vector<Node*> nds, Node* startNode) {
+    /** node base*/
 
-        assert(!startNode->isStateFullNode());
-        std::queue<Node*> toCheckingNode;
+    SrcNodeAgent Node::genSrcAgent() {
+        return  {nullptr, this};
+    }
 
-        /**fill checking node from nds*/
-        toCheckingNode.push(startNode);
 
-        while (!toCheckingNode.empty()){
-            auto frontNode = toCheckingNode.front();
-            toCheckingNode.pop();
-            /** check depend matched node*/
-            for (auto checkNode: nds){
-                if (checkNode == frontNode){
-                    return true;
-                }
-            }
-            /**add dependNode to next iteration*/
-            for (auto depNode : frontNode->getDependNodes()){
-                assert(depNode != nullptr);
-                if (!depNode->isStateFullNode()){
-                    toCheckingNode.push(depNode);
-                }
-            }
+    /** src node agent*/
 
-        }
+    SrcNodeAgent::SrcNodeAgent(Operable* cond, Node* desNode):
+    _condition(cond),
+    _desNode(desNode){
+        assert(_desNode != nullptr);
+    }
 
-        return false;
+    void SrcNodeAgent::addDep(Node* srcNode, CONNECT_NODE_PURPOSE cnp) const{
+        assert(srcNode != nullptr);
+        _desNode->allocDep(cnp, _condition, srcNode);
+    }
+
+    void SrcNodeAgent::addCond(Operable* cond, LOGIC_OP op){
+        assert(cond != nullptr);
+        addLogic(_condition, cond, op);
+    }
+
+    void SrcNodeAgent::finalize() const{
+        _desNode->finalize();
     }
 
 
 
+
+
+
+
+    void addLogic(Operable* &desLogic, Operable *opr, LOGIC_OP op){
+        assert(op == BITWISE_AND || op == BITWISE_OR);
+        assert(opr != nullptr);
+        if (desLogic == nullptr) {
+            desLogic = opr;
+            return;
+        }
+
+        if (op == BITWISE_AND) {
+            desLogic = &((*desLogic) & (*opr));
+        } else if (op == BITWISE_OR) {
+            desLogic = &((*desLogic) | (*opr));
+        }
+    }
 
 
 

@@ -180,7 +180,7 @@ namespace kathryn {
          * For custom block
          * */
         /** when everything is finish call this to get sumarisation*/
-        virtual NodeWrap*   sumarizeBlock() = 0;
+        virtual NodeWrap    sumarizeBlock() = 0;
         /*** communicator to controller*/
         virtual void        onAttachBlock() = 0; //// it is supposed to acknowledge controller whether this block is declared
         virtual void        onDetachBlock() = 0;

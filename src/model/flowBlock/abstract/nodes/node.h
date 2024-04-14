@@ -13,12 +13,11 @@
 #include "model/hwComponent/abstract/operation.h"
 #include "model/hwComponent/expression/expression.h"
 #include "model/hwComponent/register/register.h"
-#include "model/hwComponent/abstract/assignable.h"
 #include "model/flowBlock/abstract/spReg/stateReg.h"
 #include "model/flowBlock/abstract/spReg/syncReg.h"
 #include "model/debugger/modelDebugger.h"
 #include "model/simIntf/flowBlock/flowBlockSimEngine.h"
-
+#include "nodeCon.h"
 
 namespace kathryn {
 
@@ -42,185 +41,103 @@ namespace kathryn {
 
     /***
      * NODE operation requirement
-     * 1. declare Node
-     * 2. add condition (optional)
-     * 3. add dependNode (at least one node)
-     * 4. set joinDependNodeOp (required)
-     * 5. assign (required)
-     * 1-4 can be set independently order, but 5 must declare at last time.
+     * 1. add dep
+     * 2.
      * **/
 
     std::string NT_to_string(NODE_TYPE nt);
 
+
+    struct SrcNodeAgent;
+
     struct Node : public ModelDebuggable,
                   public FlowSimEngine{
-        NODE_TYPE          nodeType                = NODE_TYPE_CNT;
-        Operable*          condition               = nullptr;
-        Node*              _resetIntNode           = nullptr;
-        std::vector<Node*> dependNodes;
-        Operable*          cachedFromResultDepNode = nullptr;
-        LOGIC_OP           dependStateRaiseCond    = OP_DUMMY;
-        std::string        identName               = "NODE_UNNAME";
+        NODE_TYPE          nodeType      = NODE_TYPE_CNT;
+        std::string        identName     = "NODE_UNNAME";
+        std::vector<NODE_META> dep[CON_NODE_CNT];
 
-        Node(Node& rhs):
-                FlowSimEngine()
-        {
-            nodeType             = rhs.nodeType;
-            condition            = rhs.condition;
-            dependNodes          = rhs.dependNodes;
-            dependStateRaiseCond = rhs.dependStateRaiseCond;
+        /** constructor deconstructor*/
+        explicit Node(NODE_TYPE nt):FlowSimEngine(),nodeType(nt){};
+                 Node(Node& rhs) = delete;
+                ~Node() override = default;
+        /*** node type*/
+        NODE_TYPE getNodeType() const{return nodeType;}
+        /** gen src node agent*/
+        SrcNodeAgent genSrcAgent();
+        /** this is master function to allocate dependency to slave***/
+        virtual void allocDep(CONNECT_NODE_PURPOSE pp,
+                              Operable* condition,
+                              Node* state){
+            dep[pp].emplace_back(condition, state);
         }
 
-        explicit Node(NODE_TYPE nt):
-                FlowSimEngine(),
-                nodeType(nt),
-                condition(nullptr),
-                dependStateRaiseCond(OP_DUMMY){};
-
-        ~Node() override = default;
-
-        NODE_TYPE getNodeType() const{
-            return nodeType;
-        }
-
-        static void addLogic(Operable* &desLogic, Operable *opr, LOGIC_OP op) {
-            assert(op == BITWISE_AND || op == BITWISE_OR);
-            assert(opr != nullptr);
-            if (desLogic == nullptr) {
-                desLogic = opr;
-                return;
+        bool checkAllDepEmpty(){
+            for (int depType = 0; depType < CON_NODE_CNT; depType++){
+                if (!dep[depType].empty()){
+                    return false;
+                }
             }
-
-            if (op == BITWISE_AND) {
-                desLogic = &((*desLogic) & (*opr));
-            } else if (op == BITWISE_OR) {
-                desLogic = &((*desLogic) | (*opr));
-            }
+            return true;
         }
 
-        /** add condition for assignment*/
-        virtual void addCondtion(Operable* opr, LOGIC_OP op) {
-            addLogic(condition, opr, op);
-        }
-
-        /** add dependNode for assignment*/
-        void addDependNode(Node* srcNode) {
-            assert(srcNode != nullptr);
-            dependNodes.push_back(srcNode);
-        }
-
-        void setResetIntNode(Node* resetIntNode){
-            /** nullptr is  acceptable*/
-            assert(_resetIntNode == nullptr);
-            _resetIntNode = resetIntNode;
-        }
-
-        std::vector<Node*>& getDependNodes() {return dependNodes; }
-        Operable*           getCondition() const {return condition;}
-
-        /** join depend node to usealble expression*/
-        Operable* transformAllDepNodeToOpr(){
-            if (cachedFromResultDepNode != nullptr){
-                return cachedFromResultDepNode;
-            }
-            Operable* resultOpr = nullptr;
-            for (auto nd : dependNodes){
-                addLogic(resultOpr, nd->getExitOpr(), dependStateRaiseCond);
-            }
-            assert(resultOpr != nullptr);
-            cachedFromResultDepNode = resultOpr;
-            return resultOpr;
-        }
-
-        /**
-         * function that allow sp node custom their behavior
-         * **/
-
-        /** set that how to join node to make this node valid*/
-        virtual void setDependStateJoinOp(LOGIC_OP op){
-            dependStateRaiseCond = op;
-        }
-        /** unset event when state is raised there must be condition that bring this down*/
-        virtual void makeUnsetStateEvent(){assert(false);}
-        /** make reset interrupt event to register that need*/
-        virtual void makeResetIntEventHelper(CtrlFlowRegBase* ctrlReg){
-            if (_resetIntNode != nullptr){
-                ctrlReg->makeResetInteruptEvent(_resetIntNode->getExitOpr());
-            }
-        }
+        virtual void      finalize() = 0;
         /** provided src state data*/
-        virtual Operable* getExitOpr(){ return nullptr; };
-        /** assign value with proper condition*/
-        virtual void assign() = 0; /** please make sure that makeunsetState is called*/
-        virtual void dryAssign(){assert(false);};
+        virtual Operable* getExitOpr()   = 0;
         /** cycle that is use in this node*/
-        virtual int getCycleUsed() = 0;
+        virtual int       getCycleUsed() = 0;
         /** is Stateful node (reffer to node that consume at least 1 cycle from machine)*/
-        virtual bool isStateFullNode(){ return true; }
+        virtual bool isStateFullNode()   = 0;
 
 
 
         /** get debugger value*/
 
-        std::string getMdDescribe() override{
-            std::string ret = "  have node dep [ ";
-            for (auto depNode : dependNodes){
-                ret += depNode->getMdIdentVal();
-                ret += ", ";
-            }
-            /** condition*/
-            ret += "] with condition [ ";
-            if (condition != nullptr) {
-                ret += condition->castToIdent()->getIdentDebugValue();
-            }
-            ret += " ] with dep join condition [ ";
-            ret += lop_to_string(dependStateRaiseCond);
-            ret += " ] ";
-
-            return ret;
-        }
-
         std::string getMdIdentVal() override{
             std::string ret = NT_to_string(nodeType) + " @ " + std::to_string((ull)this);
             return ret;
         }
-
         void addMdLog(MdLogVal* mdLogVal) override{
-            mdLogVal->addVal("[Node] " + getMdIdentVal() +  "have node dep");
-            for (auto depNode : dependNodes){
-                mdLogVal->addVal(depNode->getMdIdentVal());
-            }
-            mdLogVal->addVal("----> condition");
-            if (condition != nullptr) {
-                mdLogVal->addVal(condition->castToIdent()->getIdentDebugValue());
-            }
-            mdLogVal->addVal("----> dep join condition");
-            mdLogVal->addVal(lop_to_string(dependStateRaiseCond));
+            ////// TODO make mdlog
         }
-
         /*** simulation override*/
-
         void simExitCurCycle() override{
             unsetBlockOrNodeRunning();
             unSetSimStatus();
         }
-
         /** internal value identifier for debugging purpose*/
         void setInternalIdent(std::string identVal){
             identName = identVal;
         }
 
+    };
+
+
+    /***
+     *
+     * this is agent that is used to interact with node (src side)
+     *
+     * */
+    struct SrcNodeAgent{
+
+        /** condition that trigger des Node*/
+        Operable* _condition = nullptr;
+        Node*     _desNode   = nullptr;
+
+        SrcNodeAgent(Operable* cond, Node* desNode);
+
+        void addDep(Node* srcNode, CONNECT_NODE_PURPOSE cnp) const;
+
+        void addCond(Operable* cond, LOGIC_OP op);
+
+        void finalize() const;
 
 
     };
 
-    /** This function is used to checked that start node is hard wired to some node in
-     * nds if it is match return true
-     *
-     * please bear in mind that copy node that used in while loop can't be detect by this
-     * function
-     * */
-    bool thereAreStateLessConnection(std::vector<Node*> nds, Node* startNode);
+    void addLogic(Operable* &desLogic, Operable *opr, LOGIC_OP op);
+
+
+
 
 }
 

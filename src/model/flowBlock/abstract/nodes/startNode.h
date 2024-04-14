@@ -24,9 +24,12 @@ namespace kathryn{
                 assert(_rstSig != nullptr);
         }
 
-        void makeUnsetStateEvent() override{
-            assert(_startState != nullptr);
-            _startState->makeUnSetStateEvent();
+        void finalize() override{
+
+            assert(checkAllDepEmpty());
+            _startState->setVarName("startNode");
+            _startState->addDependState(_rstSig, nullptr);
+            _startState->makeUnsetEvent();
         }
 
         Operable* getExitOpr() override{
@@ -34,15 +37,12 @@ namespace kathryn{
             return &(*_startState == upState);
         }
 
-        void assign() override{
-            _startState->addDependState(_rstSig, nullptr);
-            makeUnsetStateEvent();
-            _startState->setVarName("startNode");
-            /**no need to reset due to it used*/
-        }
-
         int getCycleUsed() override{
             return 1;
+        }
+
+        bool isStateFullNode() override{
+            return true;
         }
 
         void simStartCurCycle() override{

@@ -8,7 +8,6 @@
 
 #include "node.h"
 #include "asmNode.h"
-#include "interuptNode.h"
 
 namespace kathryn{
 
@@ -26,15 +25,8 @@ namespace kathryn{
             Node(STATE_NODE),
             _stateReg(new StateReg()){}
 
-        void makeUnsetStateEvent() override{
-            assert(_stateReg != nullptr);
-            _stateReg->makeUnSetStateEvent();
-        }
 
-        Operable* getExitOpr() override{
-            assert(_stateReg != nullptr);
-            return _stateReg->generateEndExpr();
-        }
+
 
         void addSlaveAsmNode(AsmNode* asmNode){
             assert(asmNode != nullptr);
@@ -42,23 +34,32 @@ namespace kathryn{
             _dependSlaveAsmNode.push_back(asmNode);
         }
 
-        void assign() override{
+        void finalize() override{
             _stateReg->setVarName(identName);
             /*** set event*/
-            Operable* dependNodeOpr = transformAllDepNodeToOpr();
-            assert(dependNodeOpr != nullptr);
-            _stateReg->addDependState(dependNodeOpr, condition);
+            _stateReg->makeSetEvent(dep[CON_NODE_SET]);
             /** unset event*/
-            makeUnsetStateEvent();
+            _stateReg->makeUnsetEvent();
             /** reset Interrupt*/
-            makeResetIntEventHelper(_stateReg);
+            _stateReg->makeResetIntrSeq(dep[CON_NODE_RESET_INTR]);
+            /** start Interrupt*/
+            _stateReg->makeStartIntrSeq(dep[CON_NODE_START_INTR]);
             /** slave event*/
             for (AsmNode* asmNode: _dependSlaveAsmNode){
-                asmNode->assignFromStateNode();
+                asmNode->finalizeFromStateNode();
             }
         }
 
+        Operable* getExitOpr() override{
+            assert(_stateReg != nullptr);
+            return _stateReg->generateEndExpr();
+        }
+
         int getCycleUsed() override {return 1;}
+
+        bool isStateFullNode() override{
+            return true;
+        }
 
         void simStartCurCycle() override{
             if (isCurValSim()){
@@ -88,26 +89,24 @@ namespace kathryn{
             Node(SYN_NODE),
             _synReg(new SyncReg(synSize)){}
 
-        void addCondtion(Operable* opr, LOGIC_OP op) override{ assert(false);}
 
-        void makeUnsetStateEvent() override{
-            assert(_synReg != nullptr);
-            _synReg->makeUnSetStateEvent();
-        }
 
-        Operable* getExitOpr() override{return _synReg->generateEndExpr();}
-
-        void assign() override{
+        void finalize() override{
             _synReg->setVarName(identName);
-            for (auto dependNode : dependNodes){
-                _synReg->addDependState(dependNode->getExitOpr(), condition);
-            }
-            makeResetIntEventHelper(_synReg);
 
-            makeUnsetStateEvent();
+            /*** set event*/
+            _synReg->makeSetEvent(dep[CON_NODE_SET]);
+            /** unset event*/
+            _synReg->makeUnsetEvent();
+            /** reset Interrupt*/
+            _synReg->makeResetIntrSeq(dep[CON_NODE_RESET_INTR]);
+            /** start Interrupt*/
+            _synReg->makeStartIntrSeq(dep[CON_NODE_START_INTR]);
         }
 
-        int getCycleUsed() override{ return 1; }
+        Operable* getExitOpr() override{return _synReg->generateState();}
+
+        int getCycleUsed() override{ return 0; }
 
         bool isStateFullNode() override { return false;}
 
@@ -129,23 +128,32 @@ namespace kathryn{
     };
 
     struct PseudoNode : Node{
-        expression* _pseudoAssignMeta = nullptr;
+        Operable* outputExpr = nullptr;
 
         explicit PseudoNode(int expr_size) :
             Node(PSEUDO_NODE),
-            _pseudoAssignMeta(new expression(expr_size)){}
+            outputExpr(nullptr){}
 
-        void assign() override{
-            if (condition == nullptr)
-                *_pseudoAssignMeta = *transformAllDepNodeToOpr();
-            else
-                *_pseudoAssignMeta = (*transformAllDepNodeToOpr()) & (*condition);
-            assert(_pseudoAssignMeta != nullptr);
-            _pseudoAssignMeta->setVarName(identName);
+        void finalize() override{
+
+            /** for pseudoNode  only conNode set is set */
+
+            for (NODE_META& x: dep[CON_NODE_SET]){
+                assert(x._state != nullptr);
+
+                if (x._condition == nullptr){
+                    addLogic(outputExpr, x._state->getExitOpr(), BITWISE_OR);
+                }else{
+                    addLogic(outputExpr,
+                             &((*x._state->getExitOpr()) & (*x._condition)),
+                             BITWISE_OR);
+                }
+            }
         }
+
         int getCycleUsed() override { return 0; }
 
-        Operable* getExitOpr() override{return _pseudoAssignMeta;}
+        Operable* getExitOpr() override{assert(outputExpr != nullptr); return outputExpr;}
 
         bool isStateFullNode() override{ return false; }
 
@@ -154,9 +162,8 @@ namespace kathryn{
                 return;
             }
             setCurValSimStatus();
-            assert(_pseudoAssignMeta != nullptr);
+            assert(outputExpr != nullptr);
             /** inc engine do not increase engine*/
-
         }
 
 
@@ -172,16 +179,15 @@ namespace kathryn{
             assert(_value != nullptr);
         }
 
-        void assign() override{
+        void finalize() override{
             /** we don't support assign from condition or depend state*/
-            assert(dependNodes.empty());
-            assert(condition == nullptr);
+            assert(checkAllDepEmpty());
             _value->setVarName(identName);
         }
 
-        int getCycleUsed() override{ return 0; }
-
         Operable* getExitOpr() override{return _value;}
+
+        int getCycleUsed() override{ return 0; }
 
         bool isStateFullNode() override{return false;}
 
