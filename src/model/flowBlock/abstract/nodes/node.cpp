@@ -14,6 +14,7 @@ namespace kathryn{
         "SYN_NODE",
         "PSEUDO_NODE",
         "DUMMY_NODE",
+        "OPR_NODE",
         "START_NODE",
         "WAITCOND_NODE",
         "WAITCYCLE_NODE"

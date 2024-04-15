@@ -99,79 +99,28 @@ namespace kathryn{
          * no need to build sub component because there is no sub component
          * **/
 
-        /**wait session*/
-        _upWaitNode = new PseudoNode(1);
-        _waitCheckNode = new PseudoNode(1);
-        _waitNode = new StateNode();
-
-
-
-        _upWaitNode->setDependStateJoinOp(BITWISE_AND);
-        _upWaitNode->addCondtion(&(!(*checkToGoSignal)), BITWISE_AND);
-        _upWaitNode->setInternalIdent("pipCom" + identHelper + "waitUp" + std::to_string(getGlobalId()));
-
-        _waitCheckNode->setDependStateJoinOp(BITWISE_AND);
-        _waitCheckNode->addCondtion(&(!(*(checkToGoSignal))), BITWISE_AND);
-        _waitCheckNode->addDependNode(_waitNode);
-        _waitCheckNode->setInternalIdent("pipCom" + identHelper + "waitCheck" + std::to_string(getGlobalId()));
-        _waitCheckNode->assign();
-
-        _waitNode->setDependStateJoinOp(BITWISE_OR);
-        _waitNode->addDependNode(_upWaitNode);
-        _waitNode->addDependNode(_waitCheckNode);
-        _waitNode->setInternalIdent("pipCom" + identHelper + "wait" + std::to_string(getGlobalId()));
-        _waitNode->assign();
-
-        /**skip session*/
-        _upExitNode = new PseudoNode(1);
-        _fromWaitNode = new PseudoNode(1);
-        _exitNode = new PseudoNode(1);
-
-        _upExitNode->setDependStateJoinOp(BITWISE_AND);
-        _upExitNode->addCondtion(checkToGoSignal, BITWISE_AND);
-        _upExitNode->setInternalIdent("pipCom" + identHelper + "upExit" + std::to_string(getGlobalId()));
-
-        _fromWaitNode->setDependStateJoinOp(BITWISE_AND);
-        _fromWaitNode->addCondtion(checkToGoSignal, BITWISE_AND);
-        _fromWaitNode->addDependNode(_waitNode);
-        _fromWaitNode->setInternalIdent("pipCom" + identHelper + "ExitfromWait" + std::to_string(getGlobalId()));
-        _fromWaitNode->assign();
-
-
-        _exitNode->setDependStateJoinOp(BITWISE_OR);
-        _exitNode->addDependNode(_fromWaitNode);
-        _exitNode->addDependNode(_upExitNode);
-        _exitNode->setInternalIdent("pipCom" + identHelper + "exitNode" + std::to_string(getGlobalId()));
-        _exitNode->assign();
-
-        /**
-         *
-         * build notify node
-         *
-         * */
-        _upNotifyNode = new PseudoNode(1);
-        _notifyNode = new PseudoNode(1);
+        /*** initialize node*/
+        upCondNode = new PseudoNode(1, BITWISE_OR);
+        _waitNode   = new StateNode();
+        _waitNode->setInternalIdent("pipCom" + identHelper + "waitNode" + std::to_string(getGlobalId()));
+        fillIntResetToNodeIfThere(_waitNode);
+        endNode    = new PseudoNode(1, BITWISE_OR);
         _resultNodeWrap = new NodeWrap();
 
-
-        _upNotifyNode->setDependStateJoinOp(BITWISE_AND);
-        /***no condition just let upper assign the finish state*/
-
-        _notifyNode->setDependStateJoinOp(BITWISE_OR);
-        _notifyNode->addDependNode(_waitNode);
-        _notifyNode->addDependNode(_upNotifyNode);
-        _notifyNode->assign();
-
-        /****reuslt node wrap*/
-        _resultNodeWrap->addEntraceNode(_upWaitNode);
-        _resultNodeWrap->addEntraceNode(_upExitNode);
-        _resultNodeWrap->addEntraceNode(_upNotifyNode);
-        _resultNodeWrap->addExitNode(_exitNode);
-        /**cycle andd force exit is set to -1*/
-
+        /*** wait node*/
+        _waitNode->addDependNode(upCondNode, &!(*checkToGoSignal));
+        _waitNode->addDependNode(_waitNode, &!(*checkToGoSignal));
+        _waitNode->assign();
+        /*** endNode*/
+        endNode->addDependNode(_waitNode, checkToGoSignal);
+        endNode->addDependNode(upCondNode, checkToGoSignal);
+        endNode->assign();
+        /***/
+        _resultNodeWrap->addEntraceNode(upCondNode);
+        _resultNodeWrap->addExitNode   (endNode);
 
         ////////// assign notify expression
-        *writeYourStatus = *_notifyNode->getExitOpr();
+        *writeYourStatus = (*upCondNode->getExitOpr()) | (*_waitNode->getExitOpr());
 
     }
 
@@ -195,16 +144,12 @@ namespace kathryn{
     void FlowBlockPipeCom::addMdLog(MdLogVal* mdLogVal){
         mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() + " ]");
         mdLogVal->addVal("_upwaitCheckNode " +
-                         _upWaitNode->getMdIdentVal() + " " +
-                         _upWaitNode->getMdDescribe()
+                                 upCondNode->getMdIdentVal() + " " +
+                                 upCondNode->getMdDescribe()
                          );
         mdLogVal->addVal("_upExitNode " +
-                             _upExitNode->getMdIdentVal() + " " +
-                             _upExitNode->getMdDescribe()
-        );
-        mdLogVal->addVal("_notifyNode " +
-                                 _notifyNode->getMdIdentVal() + " " +
-                                 _notifyNode->getMdDescribe()
+                                 endNode->getMdIdentVal() + " " +
+                                 endNode->getMdDescribe()
         );
     }
 
@@ -227,31 +172,17 @@ namespace kathryn{
         }
 
         /** do sim all to maintain policy*/
-        _upWaitNode   ->simStartCurCycle();
-        _waitCheckNode->simStartCurCycle();
-
-        _upExitNode   ->simStartCurCycle();
-        _fromWaitNode ->simStartCurCycle();
-        _exitNode     ->simStartCurCycle();
-
-        _upNotifyNode ->simStartCurCycle();
-        _notifyNode   ->simStartCurCycle();
+        upCondNode->simStartCurCycle();
+        _waitNode ->simStartCurCycle();
+        endNode   ->simStartCurCycle();
     }
 
     void FlowBlockPipeCom::simExitCurCycle(){
         unSetSimStatus();
         unsetBlockOrNodeRunning();
-
-        _upWaitNode   ->simExitCurCycle();
-        _waitCheckNode->simExitCurCycle();
-        _waitNode     ->simExitCurCycle();
-
-        _upExitNode   ->simExitCurCycle();
-        _fromWaitNode ->simExitCurCycle();
-        _exitNode     ->simExitCurCycle();
-
-        _upNotifyNode ->simExitCurCycle();
-        _notifyNode   ->simExitCurCycle();
+        upCondNode->simExitCurCycle();
+        _waitNode ->simExitCurCycle();
+        endNode   ->simExitCurCycle();
 
     }
 

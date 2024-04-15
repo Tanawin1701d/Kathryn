@@ -32,8 +32,7 @@ namespace kathryn{
     {}
 
     FlowBlockPipeBase::~FlowBlockPipeBase(){
-        delete _upNode;
-        delete _jointNode;
+        delete _joinNode;
         delete _exitNode;
         delete _resultNodeWrap;
     }
@@ -94,30 +93,25 @@ namespace kathryn{
         _waitSendBlock->setPipe(_sendPipe);
 
         /** then build sub hardware component**/
-        buildSubHwComponent();
 
         _impFbNodeWrap = _implicitFlowBlock->sumarizeBlock();
 
-        /** fire start node*/
-        _upNode    = new PseudoNode(1);
-        _upNode->setDependStateJoinOp(BITWISE_AND);
-
-        _jointNode = new PseudoNode(1);
-        _jointNode->setDependStateJoinOp(BITWISE_OR);
-        _jointNode->addDependNode(_upNode);
-        _jointNode->addDependNode(_impFbNodeWrap->getExitNode());
-        _jointNode->assign();
-
-        /** fire start subBlock*/
-        _impFbNodeWrap->addDependNodeToAllNode(_jointNode);
+        /** initialize node*/
+        _joinNode = new PseudoNode(1, BITWISE_OR);
+        _joinNode->setInternalIdent("pipJoinNode_" + std::to_string(getGlobalId()));
+        _joinNode->addDependNode(_impFbNodeWrap->getExitNode(), nullptr);
+            ///// it is not assign because it let upper block assign
+        /** impFbNodeWrap depend on joinNode*/
+        _impFbNodeWrap->addDependNodeToAllNode(_joinNode, nullptr);
         _impFbNodeWrap->assignAllNode();
+
 
         /** fire exit node*/
         _exitNode  = new DummyNode(&_make<Val>("pipeBlockExit", 1,0));
 
         /** manage result node warap*/
         _resultNodeWrap = new NodeWrap();
-        _resultNodeWrap->addEntraceNode(_upNode);
+        _resultNodeWrap->addEntraceNode(_joinNode);
         _resultNodeWrap->addExitNode(_exitNode);
 
     }
@@ -145,8 +139,8 @@ namespace kathryn{
         mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() + " ]");
 
         mdLogVal->addVal("jointNode " +
-                             _jointNode->getMdIdentVal() + "  " +
-                             _jointNode->getMdDescribe());
+                                 _joinNode->getMdIdentVal() + "  " +
+                                 _joinNode->getMdDescribe());
 
         mdLogVal->addVal("resultNode wrap is " +
                               _resultNodeWrap->getMdIdentVal() +
@@ -182,8 +176,7 @@ namespace kathryn{
         }
 
         /** simulate other to follow protocol*/
-        _upNode   ->simStartCurCycle();
-        _jointNode->simStartCurCycle();
+        _joinNode   ->simStartCurCycle();
         _exitNode ->simStartCurCycle();
 
     }
@@ -197,8 +190,7 @@ namespace kathryn{
         _waitSendBlock    ->simExitCurCycle();
         _implicitFlowBlock->simExitCurCycle();
 
-        _upNode   ->simExitCurCycle();
-        _jointNode->simExitCurCycle();
+        _joinNode   ->simExitCurCycle();
         _exitNode ->simExitCurCycle();
 
 

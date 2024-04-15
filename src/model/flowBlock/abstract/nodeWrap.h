@@ -60,17 +60,10 @@ namespace kathryn{
             forceExitNode = nd;
         }
 
-        void addConditionToAllNode(Operable *cond, LOGIC_OP op) {
-            assert(cond != nullptr);
-            for (auto node: entranceNodes) {
-                node->addCondtion(cond, op);
-            }
-        }
-
-        void addDependNodeToAllNode(Node* st) {
+        void addDependNodeToAllNode(Node* st, Operable* condition=nullptr) {
             assert(st != nullptr);
             for (auto node: entranceNodes) {
-                node->addDependNode(st);
+                node->addDependNode(st, condition);
             }
         }
 
@@ -171,6 +164,10 @@ namespace kathryn{
             for (auto nw: nws){
                 addToDet(nw);
             }
+        }
+
+        void addToDet(int cycle){
+            samplingVec.push_back(cycle);
         }
 
         void addToDet(Node* nd){

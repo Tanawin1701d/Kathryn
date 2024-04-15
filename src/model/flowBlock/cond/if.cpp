@@ -24,7 +24,6 @@ namespace kathryn{
 
     FlowBlockIf::~FlowBlockIf(){
         delete condNode;
-        delete psuedoElseNode;
         delete exitNode;
         delete resultNodeWrap;
     }
@@ -80,8 +79,6 @@ namespace kathryn{
     }
 
     void FlowBlockIf::buildHwComponent() {
-        buildSubHwComponent();
-
         /**summarize all block*/
         assert(_subBlocks.size() == 1);
         allStatement.push_back(_subBlocks[0]->sumarizeBlock());
@@ -93,80 +90,55 @@ namespace kathryn{
         assert(!allStatement.empty());
 
 
+        if (getFlowType() == CIF){
+            condNode = new PseudoNode(1, BITWISE_OR);
+        }else if(getFlowType() == SIF){
+            condNode = new StateNode();
+            fillIntResetToNodeIfThere(condNode);
+        }else{ assert(false);}
+        condNode->setInternalIdent("ifExitNode" + std::to_string(getGlobalId()));
+        exitNode = new PseudoNode(1, BITWISE_OR);
+        exitNode->setInternalIdent("scifExitNode" + std::to_string(getGlobalId()));
+        resultNodeWrap = new NodeWrap();
+
         /**add condition to state*/
         Operable* prevFalse = &(~(*allPurifiedCondes[0]));
         /** assign first first if*/
-        allStatement[0]->addConditionToAllNode(allPurifiedCondes[0], BITWISE_AND);
+        allStatement[0]->addDependNodeToAllNode( condNode,allPurifiedCondes[0]);
+        allStatement[0]->assignAllNode();
+        exitNode->addDependNode(allStatement[0]->getExitNode(), nullptr);
+
+
         int statementId = 1;
         for (; statementId < allStatement.size(); statementId++){
             if (statementId < allPurifiedCondes.size()) {
-                allStatement[statementId]->addConditionToAllNode(
-                        &((*allPurifiedCondes[statementId]) & (*prevFalse)),
-                        BITWISE_AND);
+                allStatement[statementId]->addDependNodeToAllNode(
+                        condNode,
+                        &((*allPurifiedCondes[statementId]) & (*prevFalse)));
+                allStatement[statementId]->assignAllNode();
+                exitNode->addDependNode(allStatement[statementId]->getExitNode(), nullptr);
                 prevFalse = &((*prevFalse) & ~(*allPurifiedCondes[statementId]));
             }else{
                 /** case else statement*/
                 assert(statementId == (allPurifiedCondes.size())); /// check no ambiguous statement
-                allStatement[statementId]->addConditionToAllNode(
-                        prevFalse,
-                        BITWISE_AND);
+                allStatement[statementId]->addDependNodeToAllNode(
+                        condNode,
+                        prevFalse);
+                allStatement[statementId]->assignAllNode();
+                exitNode->addDependNode(allStatement[statementId]->getExitNode(), nullptr);
             }
         }
 
-        /** prepare return node wrap*/
-        resultNodeWrap = new NodeWrap();
-
-
-        /*** head of block conditioning*/
-        if (getFlowType() == CIF){
-            /**set condition for all sub block*/
-            for (auto nw : allStatement){
-                resultNodeWrap->transferEntNodeFrom(nw);
-            }
-            /**build psuedo state for else*/
-            if ( allCondes.size() == allStatement.size() ) {
-                psuedoElseNode = new PseudoNode(1);
-                psuedoElseNode->setDependStateJoinOp(BITWISE_AND);
-                psuedoElseNode->addCondtion(prevFalse, BITWISE_AND);
-                resultNodeWrap->addEntraceNode(psuedoElseNode);
-            }
-        }else if(getFlowType() == SIF){
-            /**set condition and state node for subblock*/
-            condNode = new StateNode();
-            condNode->setDependStateJoinOp(BITWISE_AND);
-            condNode->setInternalIdent("sifCond" + std::to_string(getGlobalId()));
-            resultNodeWrap->addEntraceNode(condNode);
-            for (auto nw: allStatement){
-                nw->addDependNodeToAllNode(condNode);
-                nw->assignAllNode();
-            }
-            /**build psuedo state for else*/
-            if ( allCondes.size() == allStatement.size() ) {
-                psuedoElseNode = new PseudoNode(1);
-                psuedoElseNode->addCondtion(prevFalse, BITWISE_AND);
-                psuedoElseNode->addDependNode(condNode);
-                psuedoElseNode->setDependStateJoinOp(BITWISE_AND);
-                psuedoElseNode->assign();
-            }
-        }else{
-            assert(false);
-            /** unknown flowblock type*/
+        if (allStatement.size() == allPurifiedCondes.size()){
+            /** there is no else node*/
+            /** prev false is ready*/
+            exitNode->addDependNode(condNode, prevFalse);
         }
-
-
+        exitNode->assign();
 
         /**exit condition of node wrap*/
-        exitNode = new PseudoNode(1);
-        exitNode->setDependStateJoinOp(BITWISE_OR);
-        for (auto nw : allStatement){
-            exitNode->addDependNode(nw->getExitNode());
-        }
-        if (psuedoElseNode != nullptr)
-            exitNode->addDependNode(psuedoElseNode);
-        exitNode->setInternalIdent("scifExitNode" + std::to_string(getGlobalId()));
-        exitNode->assign();
+        resultNodeWrap->addEntraceNode(condNode);
         resultNodeWrap->addExitNode(exitNode);
-
         /**force exit condition*/
         genSumForceExitNode(allStatement);
         if (_areThereForceExit)
@@ -175,8 +147,9 @@ namespace kathryn{
         /**cycle determiner*/
         NodeWrapCycleDet deter;
         deter.addToDet(allStatement);
-        if (psuedoElseNode != nullptr){
-            deter.addToDet(psuedoElseNode);
+        if(allStatement.size() == allPurifiedCondes.size()){
+            /** there is zero state node*/
+            deter.addToDet(0);
         }
 
         /**cycle determiner for node wrap*/

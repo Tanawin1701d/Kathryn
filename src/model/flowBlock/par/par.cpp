@@ -48,29 +48,37 @@ namespace kathryn{
 
     void
     FlowBlockPar::buildHwComponent() {
-        buildSubHwComponent();
         mfAssert((!_basicNodes.empty()) || (!_subBlocks.empty()),
                  "parBlock has no assignment"
                  );
         assert(_conBlocks.empty());
 
-        /** build node for basic assignment*/
+        /**
+         *
+         * build node for basic assignment
+         *
+         * */
         if (!_basicNodes.empty()){
             basicStNode = new StateNode();
-            basicStNode->setDependStateJoinOp(BITWISE_AND);
+            fillIntResetToNodeIfThere(basicStNode);
             /** add basic assignment to depend on stateNode*/
             for (auto nd : _basicNodes){
                 assert(nd->getNodeType() == ASM_NODE);
                 basicStNode->addSlaveAsmNode((AsmNode*)nd);
             }
         }
-        /**build node wrap for flowblock and keepTrack that node have forceExitOpr*/
+
+
+        /**
+         *
+         * gen sum force exit node
+         *
+         * */
         for (auto fb : _subBlocks){
             NodeWrap* nw = fb->sumarizeBlock();
             assert(nw != nullptr);
             nodeWrapOfSubBlock.push_back(nw);
         }
-        /** force exit node */
         genSumForceExitNode(nodeWrapOfSubBlock);
 
         /**
@@ -84,7 +92,6 @@ namespace kathryn{
         cycleDet.addToDet(nodeWrapOfSubBlock);
         cycleUsed = cycleDet.getMaxCycleHorizon();
         /**
-         *
          * build result node wrap entrance
          * */
         /*** entrance node management*/
@@ -262,16 +269,17 @@ namespace kathryn{
             /////// syn reg needed
             int synSize = amt_block;
             synNode = new SynNode(synSize);
+            fillIntResetToNodeIfThere(synNode);
             synNode->setInternalIdent(
                     "parSynNode_" +
                     std::to_string(getGlobalId())
                     );
             /**syn node don't need to specify join operation due to it used own logic or*/
             if (basicStNode != nullptr){
-                synNode->addDependNode(basicStNode);
+                synNode->addDependNode(basicStNode, nullptr);
             }
             for (auto nw : nodeWrapOfSubBlock){
-                synNode->addDependNode(nw->getExitNode());
+                synNode->addDependNode(nw->getExitNode(), nullptr);
             }
             ////// assign sync reg and sync node don't have to set join op because
             /////////// sync register will handle it
@@ -330,13 +338,12 @@ namespace kathryn{
                                               nodeWrapOfSubBlock);
         }else{
             assert(amt_block > 1);
-            pseudoExitNode = new PseudoNode(1);
+            pseudoExitNode = new PseudoNode(1, BITWISE_OR);
             if (basicStNode != nullptr)
-                pseudoExitNode->addDependNode(basicStNode);
+                pseudoExitNode->addDependNode(basicStNode, nullptr);
             for (auto nw : nodeWrapOfSubBlock){
-                pseudoExitNode->addDependNode(nw->getExitNode());
+                pseudoExitNode->addDependNode(nw->getExitNode(), nullptr);
             }
-            pseudoExitNode->setDependStateJoinOp(BITWISE_OR);
             pseudoExitNode->assign();
             exitNode  = pseudoExitNode;
         }

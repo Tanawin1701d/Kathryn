@@ -19,14 +19,15 @@ namespace kathryn {
     class SequenceEle{
     public:
         /**node and flow block*/
-        AsmNode*          _asmNode  = nullptr;
-        FlowBlockBase* _subBlock = nullptr;
+        OprNode*          _intRstNode = nullptr;
+        AsmNode*          _asmNode    = nullptr;
+        FlowBlockBase* _subBlock      = nullptr;
 
         /**state representation*/
         StateNode* _stateNode       = nullptr;
         NodeWrap*  _complexNode     = nullptr;
 
-        explicit SequenceEle(Node*          simpleNode);
+        explicit SequenceEle(Node*          simpleNode, OprNode* intRstNode);
         explicit SequenceEle(FlowBlockBase* fbBase    );
         ~SequenceEle();
 

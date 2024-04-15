@@ -27,7 +27,12 @@ namespace kathryn{
             /** exit management*/
             _areThereForceExit(false),
             _forceExitNode(nullptr)
-    {}
+    {
+                /**initialize interrupt node*/
+                for (int intType = 0; intType < INT_CNT; intType++){
+                    intNodes[intType] = nullptr;
+                }
+    }
 
     FlowBlockBase::~FlowBlockBase(){
         for (auto basicNode : _basicNodes){
@@ -42,6 +47,10 @@ namespace kathryn{
         for (auto abandon_fb:_abandonedBlocks){
             delete abandon_fb;
         }
+        for (auto intNode: intNodes){
+            delete intNode;
+        }
+
         delete _forceExitNode;
         /////// it is safe to delete nullptr
     }
@@ -62,16 +71,62 @@ namespace kathryn{
         }
     }
 
-    void FlowBlockBase::buildSubHwComponent(){
-
+    void FlowBlockBase::fillIntRstSignalToChild(){
         for (auto subBlockPtr: _subBlocks){
             assert(subBlockPtr != nullptr);
-            subBlockPtr->buildHwComponent();
+            for (auto signal: intSignals[INT_RESET]){
+                subBlockPtr->addIntSignal(INT_RESET, signal);
+            }
+
         }
 
         for (auto conBlockPtr: _conBlocks){
             assert(conBlockPtr != nullptr);
-            conBlockPtr->buildHwComponent();
+            for (auto signal: intSignals[INT_RESET]){
+                conBlockPtr->addIntSignal(INT_RESET, signal);
+            }
+        }
+    }
+
+    void FlowBlockBase::genIntNode(){
+
+        for (int intType = 0; intType < INT_CNT; intType++){
+            if (intSignals[intType].empty()){
+                continue;
+            }
+            /* init node **/
+            intNodes[intType] = new OprNode(intSignals[intType][0]);
+
+            for (int sigId = 1; sigId < intSignals[intType].size(); sigId++){
+                intNodes[intType]->addLogic(
+                    intNodes[intType]->_value,
+                    intSignals[intType][sigId],
+                    BITWISE_OR
+                );
+            }
+        }
+
+    }
+
+    void FlowBlockBase::buildHwMaster(){
+                /** build lower deck*/
+                fillIntRstSignalToChild();
+                buildSubHwComponent();
+                /** we so sure now that all sub  Block is ready*/
+                genIntNode();
+                buildHwComponent();
+    }
+
+    void FlowBlockBase::buildSubHwComponent(){
+
+        for (auto subBlockPtr: _subBlocks){
+            assert(subBlockPtr != nullptr);
+            subBlockPtr->buildHwMaster();
+        }
+
+        for (auto conBlockPtr: _conBlocks){
+            assert(conBlockPtr != nullptr);
+            conBlockPtr->buildHwMaster();
         }
 
     }
@@ -90,19 +145,20 @@ namespace kathryn{
     }
 
     void FlowBlockBase::genSumForceExitNode(std::vector<NodeWrap *> &nws) {
+        /** check that there is force exit node*/
         for (auto nw : nws){
             _areThereForceExit |= (nw->getForceExitNode() != nullptr);
         }
+
+        /** build pseudo node*/
         if (_areThereForceExit){
-            _forceExitNode = new PseudoNode(1);
+            _forceExitNode = new PseudoNode(1, BITWISE_OR);
             for (auto nw : nws){
                 if (nw->getForceExitNode() != nullptr){
-                    _forceExitNode->addDependNode(nw->getForceExitNode());
+                    _forceExitNode->addDependNode(nw->getForceExitNode(), nullptr);
                 }
             }
-            _forceExitNode->setDependStateJoinOp(BITWISE_OR);
             _forceExitNode->assign();
-
         }
     }
 

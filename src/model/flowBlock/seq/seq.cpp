@@ -16,10 +16,11 @@ namespace kathryn{
      * */
 
 
-    SequenceEle::SequenceEle(Node *asmNode) {
+    SequenceEle::SequenceEle(Node *asmNode, OprNode* intRstNode) {
         assert(asmNode != nullptr);
         assert(asmNode->getNodeType() == ASM_NODE);
         _asmNode = (AsmNode*)asmNode;
+        _intRstNode = intRstNode;
     }
 
     SequenceEle::SequenceEle(FlowBlockBase *fbBase) {
@@ -39,8 +40,10 @@ namespace kathryn{
         ///// it is the basic assignment
         if (_asmNode != nullptr){
             _stateNode = new StateNode();
-            _stateNode->setDependStateJoinOp(BITWISE_AND);
             _stateNode->addSlaveAsmNode(_asmNode);
+            if (_intRstNode != nullptr) {
+                _stateNode->setInterruptReset(_intRstNode);
+            }
         }else if (_subBlock != nullptr){
             _complexNode = _subBlock->sumarizeBlock();
         }else{
@@ -74,7 +77,7 @@ namespace kathryn{
         assert((_asmNode != nullptr) ^ (_subBlock != nullptr));
 
         if (_asmNode != nullptr){
-            _stateNode->addDependNode(predecessor->getStateFinishIden());
+            _stateNode->addDependNode(predecessor->getStateFinishIden(), nullptr);
             _stateNode->assign();   ///// assign state node to actual value
         }else if (_subBlock != nullptr){
             _complexNode->addDependNodeToAllNode(predecessor->getStateFinishIden());
@@ -218,7 +221,7 @@ namespace kathryn{
 
     void FlowBlockSeq::addElementInFlowBlock(Node* node) {
         assert(node != nullptr);
-        _subSeqMetas.push_back(new SequenceEle(node));
+        _subSeqMetas.push_back(new SequenceEle(node, intNodes[INT_RESET]));
         /** base function to notice existence of sub flow element*/
         FlowBlockBase::addElementInFlowBlock(node);
     }
@@ -244,7 +247,6 @@ namespace kathryn{
     }
 
     void FlowBlockSeq::buildHwComponent() {
-        buildSubHwComponent();
         mfAssert(!_subSeqMetas.empty(), "seqBlock has no assignment");
         assert(_conBlocks.empty());
         NodeWrapCycleDet cycleDet;

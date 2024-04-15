@@ -48,8 +48,7 @@ namespace kathryn{
         FlowBlockSeq* _implicitFlowBlock = nullptr;
         NodeWrap*     _impFbNodeWrap     = nullptr;
 
-        PseudoNode* _upNode              = nullptr;
-        PseudoNode* _jointNode           = nullptr;
+        PseudoNode* _joinNode             = nullptr;
         DummyNode*  _exitNode            = nullptr;
 
 

@@ -10,18 +10,24 @@
 #include "model/flowBlock/abstract/nodes/node.h"
 #include "model/flowBlock/abstract/nodes/stateNode.h"
 
-
+#define cwhile(expr) for(auto kathrynBlock = new FlowBlockWhileBase(expr, CWHILE); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define swhile(expr) for(auto kathrynBlock = new FlowBlockWhileBase(expr, SWHILE); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 
 namespace kathryn{
 
-    class FlowBlockWhileBase : public FlowBlockBase, public LoopStMacro{
+    class FlowBlockWhile : public FlowBlockBase, public LoopStMacro{
     protected:
+        ///////// condition
+        bool           _fallTrue         = false;
         Operable*      _condExpr         = nullptr;
         Operable*      _purifiedCondExpr = nullptr;
+        //////// block
         FlowBlockBase* implicitFlowBlock = nullptr;
         bool           isGetFlowBlockYet = false;
+        //////// nodes
         NodeWrap*      resultNodeWrapper = nullptr;
         NodeWrap*      subBlockNodeWrap  = nullptr;
+        Node*          conditionNode     = nullptr;
         PseudoNode*    exitNode          = nullptr;
 
 
@@ -31,8 +37,11 @@ namespace kathryn{
 
     public:
 
-        explicit FlowBlockWhileBase(Operable& condExpr, FLOW_BLOCK_TYPE fbt);
-        ~FlowBlockWhileBase() override;
+        explicit FlowBlockWhile(Operable& condExpr, FLOW_BLOCK_TYPE fbt);
+        explicit FlowBlockWhile(bool fallTrue     , FLOW_BLOCK_TYPE fbt);
+        ~FlowBlockWhile() override;
+
+        void buildHwComponent() override;
 
         /** for controller add the local element to this sub block*/
         void addElementInFlowBlock(Node* node) override;
@@ -49,6 +58,11 @@ namespace kathryn{
         /** Loop macro to notice position of system*/
         void doPreFunction() override;
         void doPostFunction() override;
+
+        void addMdLog(MdLogVal* mdLogVal) override;
+        /** override simulator*/
+        void simStartCurCycle() override;
+        void simExitCurCycle() override;
 
     };
 

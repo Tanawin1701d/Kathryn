@@ -51,13 +51,12 @@ namespace kathryn{
     }
     /** buildHwComponent*/
     void FlowBlockCondWait::buildHwComponent() {
-        buildSubHwComponent();
         assert(_conBlocks.empty());
 
         /** build node*/
 
         _waitNode = new WaitCondNode(_exitCond);
-        _waitNode->setDependStateJoinOp(BITWISE_AND);
+        fillIntResetToNodeIfThere(_waitNode);
         _waitNode->setInternalIdent("waitCond"+std::to_string(getGlobalId()));
         /** result node wrap*/
         _resultNodeWrap = new NodeWrap();
@@ -173,7 +172,6 @@ namespace kathryn{
     }
 
     void FlowBlockCycleWait::buildHwComponent() {
-        buildSubHwComponent();
         assert(_conBlocks.empty());
 
         /** build node*/
@@ -183,8 +181,8 @@ namespace kathryn{
             assert(cycle > 0);
             _waitNode = new WaitCycleNode(cycle);
         }
+        fillIntResetToNodeIfThere(_waitNode);
         _waitNode->setInternalIdent("waitCycle"+std::to_string(getGlobalId()));
-        _waitNode->setDependStateJoinOp(BITWISE_AND);
         /** result node wrap*/
         _resultNodeWrap = new NodeWrap();
         _resultNodeWrap->addEntraceNode(_waitNode);

@@ -15,6 +15,7 @@
 #include "model/flowBlock/abstract/nodes/node.h"
 #include "model/flowBlock/abstract/nodeWrap.h"
 #include "model/flowBlock/abstract/nodes/stateNode.h"
+#include "model/flowBlock/abstract/nodes/logicNode.h"
 #include "flowIdentifiable.h"
 #include "model/simIntf/flowBlock/flowBlockSimEngine.h"
 
@@ -60,6 +61,13 @@ namespace kathryn {
         FLOW_JO_EXT_FLOW, /**extract this flow to be an basic node*/
     };
 
+    enum INT_TYPE{
+        INT_RESET = 0,
+        INT_START = 1,
+        INT_CNT = 2,
+    };
+
+
     struct FB_CTRL_COM_META{
         std::vector<FLOW_STACK_TYPE> _selFlowStack; //////// which stack for push/pop
         FLOW_BLOCK_JOIN_POLICY       _joinPolicy; ////// how to join with other block
@@ -98,6 +106,9 @@ namespace kathryn {
 
         std::vector<FlowBlockBase*> _abandonedBlocks;  /// the flow block that have been extracted and push to this block
 
+        std::vector<Operable*>        intSignals[INT_CNT];
+        OprNode*                      intNodes  [INT_CNT];
+
         /** status of node*/
         FLOW_BLOCK_TYPE             _type;
         ModelController*            ctrl = nullptr;
@@ -112,6 +123,8 @@ namespace kathryn {
         /** generate implicit subblock typically used with if and while block*/
         FlowBlockBase* genImplicitSubBlk(FLOW_BLOCK_TYPE defaultType);
         void           genSumForceExitNode(std::vector<NodeWrap*>& nws);
+        void           fillIntRstSignalToChild();
+        void           genIntNode();
         Operable*      purifyCondition(Operable* rawOpr);
     public:
         explicit       FlowBlockBase(FLOW_BLOCK_TYPE  type,
@@ -146,6 +159,17 @@ namespace kathryn {
             assert(abandonBlock != nullptr);
             _abandonedBlocks.push_back(abandonBlock);
         }
+
+        void addIntSignal(INT_TYPE type, Operable* signal){
+            assert(signal != nullptr); assert(type < INT_CNT); assert(signal->getOperableSlice().getSize() == 1);
+            intSignals[type].push_back(signal);
+        }
+
+        void fillIntResetToNodeIfThere(Node* nd){
+            if (intNodes[INT_RESET] != nullptr){
+                nd->setInterruptReset(intNodes[INT_RESET]);
+            }
+        }
         /**
          * For custom block
          * */
@@ -155,6 +179,7 @@ namespace kathryn {
         virtual void        onAttachBlock() = 0; //// it is supposed to acknowledge controller whether this block is declared
         virtual void        onDetachBlock() = 0;
         /*** for module controller build node and other elements*/
+        virtual void        buildHwMaster();
         virtual void        buildSubHwComponent();
         virtual void        buildHwComponent() = 0;
         ////// getter/setter

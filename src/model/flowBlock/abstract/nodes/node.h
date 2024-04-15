@@ -31,6 +31,7 @@ namespace kathryn {
         SYN_NODE,
         PSEUDO_NODE,
         DUMMY_NODE,
+        OPR_NODE,
         START_NODE,
         WAITCOND_NODE,
         WAITCYCLE_NODE,
@@ -61,7 +62,7 @@ namespace kathryn {
         std::vector<NodeSrcEdge> nodeSrcs;
         std::string              identName = "NODE_UNNAME";
 
-        Operable*                intReset  = nullptr;
+        Node*                    intReset  = nullptr;
 
         Node(Node& rhs) = delete;
 
@@ -97,12 +98,12 @@ namespace kathryn {
         }
 
         std::vector<NodeSrcEdge>& getDependNodes() {return nodeSrcs;}
-        void setInterruptReset(Operable* rst){
+
+        void setInterruptReset(Node* rst){
             assert(rst != nullptr);
-            assert(rst->getOperableSlice().getSize() == 1);
             intReset = rst;
         }
-        Operable* getInterruptReset(){
+        Node* getInterruptReset() const{
             return intReset;
         }
         /**

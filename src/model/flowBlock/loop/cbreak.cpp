@@ -48,15 +48,13 @@ namespace kathryn{
     }
 
     void FlowBlockSCBreak::buildHwComponent() {
-        buildSubHwComponent();
 
         assert(_conBlocks.empty());
         /**build internal node*/
         breakNode = new StateNode();
-        breakNode->setDependStateJoinOp(BITWISE_AND);
+        fillIntResetToNodeIfThere(breakNode);
 
         normExitNode = new DummyNode(&_make<Val>("cbreakDum", 1, 0));
-        normExitNode->setDependStateJoinOp(BITWISE_AND);
         /////////normExitNode->addDependNode(breakNode);
         normExitNode->assign();
 
