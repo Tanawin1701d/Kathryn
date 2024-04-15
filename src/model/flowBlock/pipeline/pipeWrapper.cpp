@@ -57,8 +57,9 @@ namespace kathryn{
         ctrl->on_detach_flowBlock(this);
     }
 
-    void FlowBlockPipeWrapper::buildHwComponent() {
-        /** no need to build sub element*/
+    void FlowBlockPipeWrapper::buildHwMaster(){
+        /** build lower deck*/
+        fillIntRstSignalToChild();
 
         /**make pip communication*/
         assert(!_insidePipBlks.empty());
@@ -70,11 +71,21 @@ namespace kathryn{
             _insidePipBlks[blkId]->setRecvPipe(_pipComs[blkId]);
             _insidePipBlks[blkId]->setSendPipe(_pipComs[blkId+1]);
         }
+
+        buildSubHwComponent();
+        /** we so sure now that all sub  Block is ready*/
+        genIntNode();
+        buildHwComponent();
+    }
+
+    void FlowBlockPipeWrapper::buildHwComponent() {
+        /** no need to build sub element*/
+
         /**build hardware and get sumarize result*/
         for (auto _insidePipBlk : _insidePipBlks){
-            _insidePipBlk->buildHwComponent();
             _nwOfPipBlks.push_back(_insidePipBlk->sumarizeBlock());
         }
+
         /** result node wrap management*/
         _resultNodeWrap = new NodeWrap();
         for (auto nwOfPipBlk: _nwOfPipBlks){

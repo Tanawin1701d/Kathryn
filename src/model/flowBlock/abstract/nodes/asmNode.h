@@ -13,6 +13,7 @@ namespace kathryn {
 
     struct AsmNode : Node {
         std::vector<AssignMeta*> _assignMetas; //// AssignMeta is must not use the same assign metas
+        Operable*                _preCondition = nullptr;
 
         explicit AsmNode(AssignMeta *assignMeta) :
                 Node(ASM_NODE),
@@ -46,9 +47,10 @@ namespace kathryn {
 
                 /*** for reg <<= operator*/
                 if (assignMeta->asmType == ASM_DIRECT){
+
                     ///////////// assign from current dependency
                     auto resultUpEvent = new UpdateEvent({
-                        nodeSrcs[0].condition,
+                        addLogicWithOutput(nodeSrcs[0].condition, _preCondition, BITWISE_AND),
                         nodeSrcs[0].dependNode->getExitOpr(),
                         &assignMeta->valueToAssign,
                         assignMeta->desSlice,
@@ -60,17 +62,24 @@ namespace kathryn {
                 /** for reg = operator*/
                 }else if (assignMeta->asmType == ASM_EQ_DEPNODE){
 
+                    /**
+                     * TODO state reg is not support user reset operable directly
+                     * Therefore if we have further condition this asm node must be fixed.
+                     * */
+
                     //////////////// assign as same as node that have been assign
                     for (auto nodeSrc: nodeSrcs[0].dependNode->nodeSrcs) {
                         auto resultUpEvent = new UpdateEvent({
-                                                                     nodeSrc.condition,
-                                                                     nodeSrc.dependNode->getExitOpr(),
-                                                                     &assignMeta->valueToAssign,
-                                                                     assignMeta->desSlice,
-                                                                     DEFAULT_UE_PRI_USER
+                             addLogicWithOutput(nodeSrc.condition, _preCondition, BITWISE_AND),
+                             nodeSrc.dependNode->getExitOpr(),
+                             &assignMeta->valueToAssign,
+                             assignMeta->desSlice,
+                             DEFAULT_UE_PRI_USER
                                                              });
                         assignMeta->updateEventsPool.push_back(resultUpEvent);
                     }
+                }else{
+                    assert(false);
                 }
             }
 
@@ -101,6 +110,11 @@ namespace kathryn {
             setCurValSimStatus();
             /** for basic assignment log engine is irrelevant*/
             /////incEngine(false) do not increase;
+        }
+
+        void addPreCondition(Operable* cond, LOGIC_OP op){
+            assert(cond != nullptr);
+            addLogic(_preCondition, cond, op);
         }
 
 

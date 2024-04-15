@@ -91,6 +91,26 @@ namespace kathryn {
             }
         }
 
+        static Operable* addLogicWithOutput(Operable* opr1, Operable* opr2, LOGIC_OP op){
+            assert(op == BITWISE_AND || op == BITWISE_OR);
+
+            if ( (opr1 == nullptr) && (opr2 == nullptr)){
+                return nullptr;
+            }
+
+            if(opr1 == nullptr){
+                return opr2;
+            }else if(opr2 == nullptr){
+                return opr1;
+            }else if(op == BITWISE_AND) {
+                return &((*opr1) & (*opr2));
+            }else if(op == BITWISE_OR) {
+                return &((*opr1) | (*opr2));
+            }else{
+                assert(false);
+            }
+        }
+
         /** add dependNode for assignment*/
         void addDependNode(Node* srcNode, Operable* cond) {
             assert(srcNode != nullptr);
@@ -171,14 +191,6 @@ namespace kathryn {
 
 
     };
-
-    /** This function is used to checked that start node is hard wired to some node in
-     * nds if it is match return true
-     *
-     * please bear in mind that copy node that used in while loop can't be detect by this
-     * function
-     * */
-    bool thereAreStateLessConnection(std::vector<Node*> nds, Node* startNode);
 
 }
 

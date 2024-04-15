@@ -26,7 +26,10 @@ namespace kathryn{
         }
 
         void makeUserResetEvent() override{
-            _condWaitStateReg->makeUserRstEvent();
+            if (isThrereIntReset()){
+                _condWaitStateReg->makeUserRstEvent(intReset->getExitOpr());
+            }
+
         }
 
         Operable* getExitOpr() override{
@@ -41,6 +44,7 @@ namespace kathryn{
             }
 
             makeUnsetStateEvent();
+            makeUserResetEvent();
             _condWaitStateReg->setVarName(identName);
         }
 
@@ -85,7 +89,10 @@ namespace kathryn{
         }
 
         void makeUserResetEvent() override{
-            _cycleWaitStateReg->makeUserRstEvent();
+            if(isThrereIntReset()){
+                _cycleWaitStateReg->makeUserRstEvent(intReset->getExitOpr());
+            }
+
         }
 
         Operable* getExitOpr() override{
@@ -101,6 +108,7 @@ namespace kathryn{
             }
             /** unset event*/
             makeUnsetStateEvent();
+            makeUserResetEvent();
             _cycleWaitStateReg->setVarName(identName);
         }
 

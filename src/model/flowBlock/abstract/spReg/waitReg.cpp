@@ -57,6 +57,7 @@ namespace kathryn{
     }
 
     void CondWaitStateReg::makeUserRstEvent(Operable* rst){
+        assert(rst != nullptr);
         auto* resetEvent = new UpdateEvent({    nullptr,
                                                 rst,
                                                 &_downState,
@@ -169,6 +170,7 @@ namespace kathryn{
 
     void CycleWaitStateReg::makeUserRstEvent(Operable* rst){
         /**reset event*/
+        assert(rst != nullptr);
         auto* resetEvent = new UpdateEvent({
            nullptr,
            rst,

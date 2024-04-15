@@ -52,17 +52,9 @@ namespace kathryn{
 
     FlowBlockPipeCom::~FlowBlockPipeCom() {
          delete _resultNodeWrap;
-         /** wait session*/
-         delete _upWaitNode;
-         delete _waitCheckNode;
+         delete upCondNode;
          delete _waitNode;
-         /** go session*/
-         delete _upExitNode;
-         delete _fromWaitNode;
-         delete _exitNode;
-         /**notify session*/
-         delete _upNotifyNode;
-         delete _notifyNode;
+         delete endNode;
     }
 
     NodeWrap* FlowBlockPipeCom::sumarizeBlock(){
@@ -84,6 +76,7 @@ namespace kathryn{
 
         mfAssert(_pipe != nullptr,
                  "pipeline Com doesn't have pipe meta data");
+        assert(!isThereIntStart());
 
         expression* checkToGoSignal = getFlowType() == PIPE_SENDER ?
                                       _pipe->_slaveReadyToRecv :
@@ -101,10 +94,10 @@ namespace kathryn{
 
         /*** initialize node*/
         upCondNode = new PseudoNode(1, BITWISE_OR);
-        _waitNode   = new StateNode();
+        _waitNode  = new StateNode();
         _waitNode->setInternalIdent("pipCom" + identHelper + "waitNode" + std::to_string(getGlobalId()));
         fillIntResetToNodeIfThere(_waitNode);
-        endNode    = new PseudoNode(1, BITWISE_OR);
+        endNode         = new PseudoNode(1, BITWISE_OR);
         _resultNodeWrap = new NodeWrap();
 
         /*** wait node*/

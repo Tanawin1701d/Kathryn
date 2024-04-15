@@ -33,8 +33,9 @@ namespace kathryn{
 
     void FlowBlockZIF::addElementInFlowBlock(Node* node) {
         assert(node != nullptr);
+        assert(node->getNodeType() == ASM_NODE);
         FlowBlockBase::addElementInFlowBlock(node);
-        node->addCondtion(purifiedCurCond, BITWISE_AND);
+        ((AsmNode *) node)->addPreCondition(purifiedCurCond, BITWISE_AND);
     }
 
     void FlowBlockZIF::addSubFlowBlock(FlowBlockBase *subBlock) {
@@ -55,7 +56,8 @@ namespace kathryn{
         /** assign activate cond and extract node*/
         for (auto insideNode: fb->getBasicNode()){
             assert(insideNode != nullptr);
-            insideNode->addCondtion(*prevFalses.rbegin(), BITWISE_AND);
+            assert(insideNode->getNodeType() == ASM_NODE);
+            ((AsmNode *) insideNode)->addPreCondition(*prevFalses.rbegin(), BITWISE_AND);
             FlowBlockBase::addElementInFlowBlock(insideNode);
         }
         /** generate next prev false*/

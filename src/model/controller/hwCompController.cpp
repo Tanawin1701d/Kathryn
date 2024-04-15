@@ -67,7 +67,6 @@ namespace kathryn{
         /*** do not add to module any more*/
         assert(asmNode != nullptr);
         tryPurifyFlowStack();
-        asmNode->setDependStateJoinOp(BITWISE_AND);
         if(isTopFbBelongToTopModule()){
             auto fb = getTopFlowBlockBase();
             fb->addElementInFlowBlock(asmNode);
@@ -114,7 +113,6 @@ namespace kathryn{
         /*** do not add to module any more*/
         assert(asmNode != nullptr);
         tryPurifyFlowStack();
-        asmNode->setDependStateJoinOp(BITWISE_AND);
         //assert(!flowBlockStack.empty());
         if (isTopFbBelongToTopModule()) {
             /**in flow block*/
@@ -170,7 +168,6 @@ namespace kathryn{
         /*** do not add to module any more*/
         assert(asmNode != nullptr);
         tryPurifyFlowStack();
-        asmNode->setDependStateJoinOp(BITWISE_AND);
         if(isTopFbBelongToTopModule()){
             auto fb = getTopFlowBlockBase();
             fb->addElementInFlowBlock(asmNode);
@@ -211,7 +208,6 @@ namespace kathryn{
         /*** do not add to module any more*/
         assert(asmNode != nullptr);
         tryPurifyFlowStack();
-        asmNode->setDependStateJoinOp(BITWISE_AND);
         //assert(!flowBlockStack.empty());
         if (isTopFbBelongToTopModule()) {
             /**in flow block*/
@@ -282,7 +278,6 @@ namespace kathryn{
         /*** do not add to module any more*/
         assert(asmNode != nullptr);
         tryPurifyFlowStack();
-        asmNode->setDependStateJoinOp(BITWISE_AND);
         //assert(!flowBlockStack.empty());
         if (isTopFbBelongToTopModule()) {
             /**in flow block*/

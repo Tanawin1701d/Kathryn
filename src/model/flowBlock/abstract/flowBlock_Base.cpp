@@ -113,12 +113,12 @@ namespace kathryn{
     }
 
     void FlowBlockBase::buildHwMaster(){
-                /** build lower deck*/
-                fillIntRstSignalToChild();
-                buildSubHwComponent();
-                /** we so sure now that all sub  Block is ready*/
-                genIntNode();
-                buildHwComponent();
+        /** build lower deck*/
+        fillIntRstSignalToChild();
+        buildSubHwComponent();
+        /** we so sure now that all sub  Block is ready*/
+        genIntNode();
+        buildHwComponent();
     }
 
     void FlowBlockBase::buildSubHwComponent(){

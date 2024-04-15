@@ -108,7 +108,7 @@ namespace kathryn{
 
         condNode->setInternalIdent("ifExitNode" + std::to_string(getGlobalId()));
         exitNode = new PseudoNode(1, BITWISE_OR);
-        exitNode->setInternalIdent("scifExitNode" + std::to_string(getGlobalId()));
+        exitNode->setInternalIdent("ifExitNode" + std::to_string(getGlobalId()));
         resultNodeWrap = new NodeWrap();
 
 

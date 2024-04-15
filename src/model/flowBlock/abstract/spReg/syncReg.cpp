@@ -63,6 +63,7 @@ namespace kathryn {
     }
 
     void SyncReg::makeUserRstEvent(Operable* userRst) {
+        assert(userRst != nullptr);
         auto* event = new UpdateEvent({
           nullptr,
           userRst,

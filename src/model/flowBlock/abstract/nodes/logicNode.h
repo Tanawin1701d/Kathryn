@@ -25,8 +25,9 @@ namespace kathryn{
             Operable* finalOpr = nullptr;
             Operable* oprPerSrc = nullptr;
             for (auto nodeSrc: nodeSrcs){
+                assert(nodeSrc.dependNode != nullptr);
                 oprPerSrc = nodeSrc.dependNode->getExitOpr();
-                if (nodeSrc.condition == nullptr){
+                if (nodeSrc.condition != nullptr){
                     assert(nodeSrc.condition->getOperableSlice().getSize() == 1);
                     addLogic(oprPerSrc, nodeSrc.condition, BITWISE_AND);
                 }
@@ -35,7 +36,7 @@ namespace kathryn{
             }
 
             assert(finalOpr != nullptr);
-            *_pseudoAssignMeta = *finalOpr;
+            *_pseudoAssignMeta = (*finalOpr);
             assert(_pseudoAssignMeta != nullptr);
             _pseudoAssignMeta->setVarName(identName);
         }

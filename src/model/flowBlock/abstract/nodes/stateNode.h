@@ -90,7 +90,9 @@ namespace kathryn{
         }
 
         void makeUserResetEvent() override{
-            _synReg->makeUserRstEvent();
+            if (isThrereIntReset()) {
+                _synReg->makeUserRstEvent(intReset->getExitOpr());
+            }
         }
 
         Operable* getExitOpr() override{return bindWithRstOutPutIfReset(_synReg->generateEndExpr());}

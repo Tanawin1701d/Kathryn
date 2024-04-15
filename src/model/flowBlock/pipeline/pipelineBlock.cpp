@@ -85,12 +85,23 @@ namespace kathryn{
         ctrl->on_detach_flowBlock(this);
     }
 
-    void FlowBlockPipeBase::buildHwComponent(){
+    void FlowBlockPipeBase::buildHwMaster(){
+        /** build lower deck*/
+        fillIntRstSignalToChild();
+
         /** set the pipe first*/
         mfAssert(_recvPipe != nullptr, "flow block pipe(recv) doesn't get pipe metadata");
         mfAssert(_sendPipe != nullptr, "flow block pipe(send) doesn't get pipe metadata");
         _waitRecvBlock->setPipe(_recvPipe);
         _waitSendBlock->setPipe(_sendPipe);
+
+        buildSubHwComponent();
+        /** we so sure now that all sub  Block is ready*/
+        genIntNode();
+        buildHwComponent();
+    }
+
+    void FlowBlockPipeBase::buildHwComponent(){
 
         /** then build sub hardware component**/
 
@@ -100,6 +111,9 @@ namespace kathryn{
         _joinNode = new PseudoNode(1, BITWISE_OR);
         _joinNode->setInternalIdent("pipJoinNode_" + std::to_string(getGlobalId()));
         _joinNode->addDependNode(_impFbNodeWrap->getExitNode(), nullptr);
+        if (isThereIntStart()){
+            _joinNode->addDependNode(intNodes[INT_START], nullptr);
+        }
             ///// it is not assign because it let upper block assign
         /** impFbNodeWrap depend on joinNode*/
         _impFbNodeWrap->addDependNodeToAllNode(_joinNode, nullptr);

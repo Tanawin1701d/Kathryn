@@ -73,6 +73,8 @@ namespace kathryn{
         void onDetachBlock() override;
         /** for module to build hardware component*/
 
+        void buildHwMaster() override;
+
         void buildHwComponent() override;
 
         void setRecvPipe(Pipe* recvPipe);

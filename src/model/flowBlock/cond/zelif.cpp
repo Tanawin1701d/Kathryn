@@ -40,8 +40,10 @@ namespace kathryn{
 
     void FlowBlockZELIF::addElementInFlowBlock(Node* node) {
         assert(node != nullptr);
-        if (curCond != nullptr)
-            node->addCondtion(curCond, BITWISE_AND);
+        if (curCond != nullptr) {
+            assert(node->getNodeType() == ASM_NODE);
+            ((AsmNode*)node)->addPreCondition(curCond, BITWISE_AND);
+        }
         FlowBlockBase::addElementInFlowBlock(node);
     }
 
