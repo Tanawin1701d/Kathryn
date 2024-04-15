@@ -125,6 +125,7 @@ namespace kathryn {
         void           genSumForceExitNode(std::vector<NodeWrap*>& nws);
         void           fillIntRstSignalToChild();
         void           genIntNode();
+        bool           isThereIntStart();
         Operable*      purifyCondition(Operable* rawOpr);
     public:
         explicit       FlowBlockBase(FLOW_BLOCK_TYPE  type,

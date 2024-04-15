@@ -55,6 +55,7 @@ namespace kathryn{
             conditionNode = new StateNode();
             fillIntResetToNodeIfThere(conditionNode);
         }
+
         exitNode          = new PseudoNode(1, BITWISE_OR);
         resultNodeWrapper = new NodeWrap();
         ////////////////////////////////////////////////////////////////////
@@ -70,6 +71,9 @@ namespace kathryn{
                                         ( &(~(*subBlockNodeWrap->getForceExitNode()->getExitOpr())) ):
                                         nullptr
                                      );
+        if(isThereIntStart()){
+            conditionNode->addDependNode(intNodes[INT_START], nullptr);
+        }
         /**do exit NOde Dep*/
         if (!_fallTrue) {
             exitNode->addDependNode(conditionNode, &(!(*_purifiedCondExpr)) );

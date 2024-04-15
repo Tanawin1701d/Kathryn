@@ -88,6 +88,18 @@ namespace kathryn{
 
     }
 
+    void SequenceEle::assignIntStart(OprNode* intStartNode){
+        assert(intStartNode != nullptr);
+
+        if (_asmNode !=nullptr){
+            _stateNode->addDependNode(intStartNode, nullptr);
+        }else if(_subBlock != nullptr){
+            _complexNode->addDependNodeToAllNode(intStartNode);
+        }else{
+            assert(false);
+        }
+    }
+
     Node* SequenceEle::getStateFinishIden() const {
         assert( (_asmNode != nullptr) ^ (_subBlock != nullptr));
         if (_asmNode != nullptr){
@@ -272,6 +284,10 @@ namespace kathryn{
             auto rhsNodeWrapper = _subSeqMetas[idx+1];
             rhsNodeWrapper->assignDependDent(lhsNodeWrapper);
         }
+        if (isThereIntStart()){
+            _subSeqMetas[0]->assignIntStart(intNodes[INT_START]);
+        }
+
         /** build new result NodeWrap*/
         resultNodeWrap = new NodeWrap();
         resultNodeWrap->addEntraceNodes((*_subSeqMetas.begin())->getEntranceNodes());

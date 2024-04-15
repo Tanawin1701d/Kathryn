@@ -25,9 +25,13 @@ namespace kathryn{
             _condWaitStateReg->makeUnSetStateEvent();
         }
 
+        void makeUserResetEvent() override{
+            _condWaitStateReg->makeUserRstEvent();
+        }
+
         Operable* getExitOpr() override{
             assert(_condWaitStateReg != nullptr);
-            return _condWaitStateReg->generateEndExpr();
+            return bindWithRstOutPutIfReset(_condWaitStateReg->generateEndExpr());
         }
 
         void assign() override{
@@ -80,9 +84,13 @@ namespace kathryn{
             _cycleWaitStateReg->makeUnSetStateEvent();
         }
 
+        void makeUserResetEvent() override{
+            _cycleWaitStateReg->makeUserRstEvent();
+        }
+
         Operable* getExitOpr() override{
             assert(_cycleWaitStateReg != nullptr);
-            return _cycleWaitStateReg->generateEndExpr();
+            return bindWithRstOutPutIfReset(_cycleWaitStateReg->generateEndExpr());
         }
 
         void assign() override{

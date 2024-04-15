@@ -103,14 +103,32 @@ namespace kathryn {
             assert(rst != nullptr);
             intReset = rst;
         }
+
+        bool isThrereIntReset(){
+            return intReset != nullptr;
+        }
+
         Node* getInterruptReset() const{
             return intReset;
+        }
+
+        Operable* bindWithRstOutPutIfReset(Operable* rawExit){
+            assert(rawExit != nullptr);
+            assert(rawExit->getOperableSlice().getSize() == 1);
+            if (isThrereIntReset()){
+                return &( (*rawExit) & (~(*getInterruptReset()->getExitOpr())) );
+            }else{
+                return rawExit;
+            }
+
         }
         /**
          * function that allow sp node custom their behavior
          * **/
         /** unset event when state is raised there must be condition that bring this down*/
         virtual void      makeUnsetStateEvent(){assert(false);}
+
+        virtual void      makeUserResetEvent(){assert(false);}
         /** provided src state data*/
         virtual Operable* getExitOpr(){ return nullptr; };
         /** assign value with proper condition*/

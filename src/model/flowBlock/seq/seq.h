@@ -21,7 +21,7 @@ namespace kathryn {
         /**node and flow block*/
         OprNode*          _intRstNode = nullptr;
         AsmNode*          _asmNode    = nullptr;
-        FlowBlockBase* _subBlock      = nullptr;
+        FlowBlockBase*    _subBlock   = nullptr;
 
         /**state representation*/
         StateNode* _stateNode       = nullptr;
@@ -35,6 +35,7 @@ namespace kathryn {
         void               setIdentStateId     (ull masterIdx, int subIdx) const;
         void               addToCycleDet       (NodeWrapCycleDet& deter) const;
         void               assignDependDent    (SequenceEle* predecessor) const;
+        void               assignIntStart      (OprNode* intStartNode);
         Node*              getStateFinishIden  () const;
         std::vector<Node*> getEntranceNodes    ();
         bool               isThereForceExitNode() const;

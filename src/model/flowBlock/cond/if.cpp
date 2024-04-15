@@ -89,6 +89,11 @@ namespace kathryn{
         assert(allPurifiedCondes.size() == allCondes.size());
         assert(!allStatement.empty());
 
+        /***
+         *
+         * initialize node
+         *
+         * */
 
         if (getFlowType() == CIF){
             condNode = new PseudoNode(1, BITWISE_OR);
@@ -96,10 +101,22 @@ namespace kathryn{
             condNode = new StateNode();
             fillIntResetToNodeIfThere(condNode);
         }else{ assert(false);}
+
+        if (isThereIntStart()){
+            condNode->addDependNode(intNodes[INT_START], nullptr);
+        }
+
         condNode->setInternalIdent("ifExitNode" + std::to_string(getGlobalId()));
         exitNode = new PseudoNode(1, BITWISE_OR);
         exitNode->setInternalIdent("scifExitNode" + std::to_string(getGlobalId()));
         resultNodeWrap = new NodeWrap();
+
+
+        /***
+         *
+         * subblock and Exit assign
+         *
+         * */
 
         /**add condition to state*/
         Operable* prevFalse = &(~(*allPurifiedCondes[0]));
@@ -129,6 +146,8 @@ namespace kathryn{
             }
         }
 
+
+
         if (allStatement.size() == allPurifiedCondes.size()){
             /** there is no else node*/
             /** prev false is ready*/
@@ -136,15 +155,29 @@ namespace kathryn{
         }
         exitNode->assign();
 
-        /**exit condition of node wrap*/
+        /**
+         *
+         * result node wrap
+         *
+         *
+         * */
+
+
         resultNodeWrap->addEntraceNode(condNode);
         resultNodeWrap->addExitNode(exitNode);
+
         /**force exit condition*/
         genSumForceExitNode(allStatement);
         if (_areThereForceExit)
             resultNodeWrap->addForceExitNode(_forceExitNode);
 
-        /**cycle determiner*/
+        /**
+         *
+         *
+         * cycle determiner
+         *
+         *
+         * */
         NodeWrapCycleDet deter;
         deter.addToDet(allStatement);
         if(allStatement.size() == allPurifiedCondes.size()){

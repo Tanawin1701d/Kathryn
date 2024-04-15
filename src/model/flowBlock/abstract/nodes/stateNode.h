@@ -31,7 +31,7 @@ namespace kathryn{
 
         Operable* getExitOpr() override{
             assert(_stateReg != nullptr);
-            return _stateReg->generateEndExpr();
+            return bindWithRstOutPutIfReset(_stateReg->generateEndExpr());
         }
 
         void addSlaveAsmNode(AsmNode* asmNode){
@@ -89,7 +89,11 @@ namespace kathryn{
             _synReg->makeUnSetStateEvent();
         }
 
-        Operable* getExitOpr() override{return _synReg->generateEndExpr();}
+        void makeUserResetEvent() override{
+            _synReg->makeUserRstEvent();
+        }
+
+        Operable* getExitOpr() override{return bindWithRstOutPutIfReset(_synReg->generateEndExpr());}
 
         void assign() override{
             _synReg->setVarName(identName);
@@ -100,6 +104,7 @@ namespace kathryn{
             }
             /** make unset event*/
             makeUnsetStateEvent();
+            makeUserResetEvent();
         }
 
         int getCycleUsed() override{ return 1; }

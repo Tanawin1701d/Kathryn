@@ -71,7 +71,7 @@ namespace kathryn{
 
         /**
          *
-         * gen sum force exit node
+         * gen node wrap
          *
          * */
         for (auto fb : _subBlocks){
@@ -79,6 +79,10 @@ namespace kathryn{
             assert(nw != nullptr);
             nodeWrapOfSubBlock.push_back(nw);
         }
+
+        /**
+         * gen force exit node
+         * */
         genSumForceExitNode(nodeWrapOfSubBlock);
 
         /**
@@ -96,10 +100,17 @@ namespace kathryn{
          * */
         /*** entrance node management*/
         resultNodeWrap = new NodeWrap();
-        if (basicStNode != nullptr)
+        if (basicStNode != nullptr) {
             resultNodeWrap->addEntraceNode(basicStNode);
+            if (isThereIntStart()){
+                basicStNode->addDependNode(intNodes[INT_START], nullptr);
+            }
+        }
         for (auto nw : nodeWrapOfSubBlock){
             resultNodeWrap->transferEntNodeFrom(nw);
+            if (isThereIntStart()){
+                nw->addDependNodeToAllNode(intNodes[INT_START]);
+            }
         }
 
         buildSyncNode();

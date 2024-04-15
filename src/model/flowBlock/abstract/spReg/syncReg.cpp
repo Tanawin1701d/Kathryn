@@ -62,6 +62,17 @@ namespace kathryn {
         addUpdateMeta(event);
     }
 
+    void SyncReg::makeUserRstEvent(Operable* userRst) {
+        auto* event = new UpdateEvent({
+          nullptr,
+          userRst,
+          &downFullState,
+          Slice({0, getSlice().getSize()}),
+          DEFAULT_UE_PRI_INTERNAL_MIN ////// we priority set event first rst must be lower
+                                      });
+        addUpdateMeta(event);
+    }
+
     Operable* SyncReg::generateEndExpr(){
         return &(((*this) | testWire) == upFullState);
     }

@@ -56,6 +56,16 @@ namespace kathryn{
         addUpdateMeta(resetEvent);
     }
 
+    void CondWaitStateReg::makeUserRstEvent(Operable* rst){
+        auto* resetEvent = new UpdateEvent({    nullptr,
+                                                rst,
+                                                &_downState,
+                                                Slice({0,1}),
+                                                DEFAULT_UE_PRI_INTERNAL_MIN
+                                           });
+        addUpdateMeta(resetEvent);
+    }
+
     Operable* CondWaitStateReg::generateEndExpr() {
         return &((*_condOpr) & ((*this) == _upState));
     }
@@ -147,14 +157,26 @@ namespace kathryn{
     void CycleWaitStateReg::makeUnSetStateEvent() {
         /**reset event*/
         auto* resetEvent = new UpdateEvent({
-                                                   &((*this)(1, _totalBitSize) == (*_endCnt)),
-                                                   &(*this)(0),
-                                                   IdleCnt,
-                                                   Slice({0, _totalBitSize}),
-                                                   DEFAULT_UE_PRI_INTERNAL_MIN
+            &((*this)(1, _totalBitSize) == (*_endCnt)),
+            &(*this)(0),
+            IdleCnt,
+            Slice({0, _totalBitSize}),
+            DEFAULT_UE_PRI_INTERNAL_MIN
                                            });
         addUpdateMeta(resetEvent);
 
+    }
+
+    void CycleWaitStateReg::makeUserRstEvent(Operable* rst){
+        /**reset event*/
+        auto* resetEvent = new UpdateEvent({
+           nullptr,
+           rst,
+           IdleCnt,
+           Slice({0, _totalBitSize}),
+           DEFAULT_UE_PRI_INTERNAL_MIN
+                                           });
+        addUpdateMeta(resetEvent);
     }
 
     Operable* CycleWaitStateReg::generateEndExpr() {

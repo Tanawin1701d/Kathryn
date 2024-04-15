@@ -34,6 +34,8 @@ namespace kathryn {
         UpdateEvent* addDependState(Operable* dependState, Operable* activateCond) override;
         /** reset event*/
         void makeUnSetStateEvent() override;
+        /** user reset event*/
+        void makeUserRstEvent(Operable* rstWire) override { assert(false); /** it is single node; there is no neccessary for reset user event */};
         /** exit expression*/
         Operable* generateEndExpr() override;
         /***resetEvent Status*/
