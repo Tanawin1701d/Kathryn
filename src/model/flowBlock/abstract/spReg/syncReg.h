@@ -22,6 +22,8 @@ namespace kathryn {
         Val& upFullState;
         Val& downFullState;
         Wire& testWire;
+        Operable* endExpr = nullptr;
+        Operable* endExprInv = nullptr;
         int nextFillActivateId;
     protected:
         /**override data to init state regiter*/

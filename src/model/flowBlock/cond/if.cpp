@@ -97,8 +97,10 @@ namespace kathryn{
 
         if (getFlowType() == CIF){
             condNode = new PseudoNode(1, BITWISE_OR);
+            condNode->setInternalIdent("cifNode" + std::to_string(getGlobalId()));
         }else if(getFlowType() == SIF){
             condNode = new StateNode();
+            condNode->setInternalIdent("sifNode" + std::to_string(getGlobalId()));
             fillIntResetToNodeIfThere(condNode);
         }else{ assert(false);}
 
@@ -106,7 +108,7 @@ namespace kathryn{
             condNode->addDependNode(intNodes[INT_START], nullptr);
         }
 
-        condNode->setInternalIdent("ifExitNode" + std::to_string(getGlobalId()));
+
         exitNode = new PseudoNode(1, BITWISE_OR);
         exitNode->setInternalIdent("ifExitNode" + std::to_string(getGlobalId()));
         resultNodeWrap = new NodeWrap();

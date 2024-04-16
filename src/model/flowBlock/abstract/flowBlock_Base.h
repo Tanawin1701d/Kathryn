@@ -5,6 +5,10 @@
 #ifndef KATHRYN_FLOWBLOCK_BASE_H
 #define KATHRYN_FLOWBLOCK_BASE_H
 
+
+#define intrReset(expr) kathrynBlock->addIntSignal(INT_RESET, &expr)
+#define intrStart(expr) kathrynBlock->addIntSignal(INT_START, &expr)
+
 #include<memory>
 #include<vector>
 
@@ -126,6 +130,7 @@ namespace kathryn {
         void           fillIntRstSignalToChild();
         void           genIntNode();
         bool           isThereIntStart();
+        bool           isThereIntRst();
         Operable*      purifyCondition(Operable* rawOpr);
     public:
         explicit       FlowBlockBase(FLOW_BLOCK_TYPE  type,
@@ -161,7 +166,7 @@ namespace kathryn {
             _abandonedBlocks.push_back(abandonBlock);
         }
 
-        void addIntSignal(INT_TYPE type, Operable* signal){
+        virtual void addIntSignal(INT_TYPE type, Operable* signal){
             assert(signal != nullptr); assert(type < INT_CNT); assert(signal->getOperableSlice().getSize() == 1);
             intSignals[type].push_back(signal);
         }

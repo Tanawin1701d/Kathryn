@@ -1,0 +1,90 @@
+//
+// Created by tanawin on 22/1/2567.
+//
+
+#include "kathryn.h"
+#include "test/autoSim/simAutoInterface.h"
+#include "autoTestInterface.h"
+
+namespace kathryn{
+
+    class testSimMod27: public Module{
+    public:
+
+        makeReg(a, 8);
+        makeVal(b, 8, 48);
+        makeReg(c, 1);
+        makeReg(d, 1);
+        makeWire(is, 1);
+
+        explicit testSimMod27(int x): Module(){}
+
+        void flow() override{
+
+            cwhile( (c == 1) & (a < 48) ){
+                par {
+                    intrStart(is);
+                    c = 1;
+                    a <<= a + 1;
+                    seq{
+                      d = 1;
+                    }
+                }
+            }
+
+            seq{
+                syWait(5);
+                is = 1;
+            }
+
+
+        }
+    };
+
+    static std::string vcdPath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/simAutoTest27.vcd";
+    static std::string profilePath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/profAutoTest27.vcd";
+
+
+    class sim27 :public SimAutoInterface{
+    public:
+
+        testSimMod27* _md;
+
+        sim27(testSimMod27* md):SimAutoInterface(2,
+                                              200,
+                                              vcdPath,
+                                              profilePath),
+                             _md(md)
+        {}
+
+        void describeCon() override{
+
+            conNextCycle(6);
+            testAndPrint("check intr par c start", ull(_md->c),1);
+            testAndPrint("check intr par d start", ull(_md->d),1);
+            conNextCycle(1);
+            testAndPrint("check intr par a start", ull(_md->a),1);
+            testAndPrint("check intr par c stay", ull(_md->c),1);
+            conNextCycle(1);
+            testAndPrint("check intr par a start", ull(_md->a),2);
+
+
+        }
+
+    };
+
+
+    class Sim27TestEle: public AutoTestEle{
+    public:
+        explicit Sim27TestEle(int id): AutoTestEle(id){}
+        void start() override{
+            makeMod(d, testSimMod27, 1);
+            startModelKathryn();
+            sim27 simulator((testSimMod27*) &d);
+            simulator.simStart();
+        }
+
+    };
+
+    Sim27TestEle ele27(27);
+}

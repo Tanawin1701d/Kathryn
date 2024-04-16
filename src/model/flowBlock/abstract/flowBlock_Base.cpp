@@ -112,6 +112,10 @@ namespace kathryn{
         return intNodes[INT_START] != nullptr;
     }
 
+    bool FlowBlockBase::isThereIntRst(){
+        return intNodes[INT_RESET] != nullptr;
+    }
+
     void FlowBlockBase::buildHwMaster(){
         /** build lower deck*/
         fillIntRstSignalToChild();

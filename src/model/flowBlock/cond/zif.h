@@ -38,6 +38,7 @@ namespace kathryn{
         void addElementInFlowBlock(Node* node) override;
         void addSubFlowBlock(FlowBlockBase* subBlock) override;
         void addConFlowBlock(FlowBlockBase* fb) override;
+        void addIntSignal(INT_TYPE type, Operable* signal) override;
         NodeWrap* sumarizeBlock() override;
         /** on this block is start interact to controller*/
         void onAttachBlock() override;

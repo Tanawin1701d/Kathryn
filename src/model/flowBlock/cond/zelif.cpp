@@ -55,6 +55,11 @@ namespace kathryn{
         assert(false);
     }
 
+    void FlowBlockZELIF::addIntSignal(INT_TYPE type, Operable* signal){
+        mfAssert(!isThereIntStart(), "start interrupt can start in zblock");
+        mfAssert(!isThereIntRst(), "start interrupt can reset in zblock");
+    }
+
     NodeWrap* FlowBlockZELIF::sumarizeBlock() {assert(false);}
 
     void FlowBlockZELIF::onAttachBlock() {

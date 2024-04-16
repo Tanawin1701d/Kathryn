@@ -58,6 +58,8 @@ namespace kathryn{
     void FlowBlockElif::buildHwComponent() {
         assert(_conBlocks.empty());
         assert(!_subBlocks.empty());
+        mfAssert(!isThereIntStart(), "start interrupt can start in elif block but can start in if block or block inside elif block");
+        mfAssert(!isThereIntRst(), "start interrupt can reset in elif block but can start in if block or block inside elif block");
         resultNodeWrapper = _subBlocks[0]->sumarizeBlock();
     }
 

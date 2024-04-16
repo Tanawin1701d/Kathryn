@@ -51,8 +51,10 @@ namespace kathryn{
         //** initialize node*/
         if (getFlowType() == CWHILE){
             conditionNode = new PseudoNode(1, BITWISE_OR);
+            conditionNode->setInternalIdent("cConNode" + std::to_string(getGlobalId()));
         }else{////// SWHILE
             conditionNode = new StateNode();
+            conditionNode->setInternalIdent("sConNode" + std::to_string(getGlobalId()));
             fillIntResetToNodeIfThere(conditionNode);
         }
 

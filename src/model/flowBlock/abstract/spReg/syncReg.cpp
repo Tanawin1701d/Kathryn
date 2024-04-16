@@ -18,7 +18,9 @@ namespace kathryn {
                                 upState      (_make<Val>("upState"      , 1  , 1)),
                                 upFullState  (_make<Val>("upFullState"  ,genBiConValRep(true , size))),
                                 downFullState(_make<Val>("downFullState",genBiConValRep(false, size))),
-                                testWire(_make<Wire>("testSyncWire", size)),
+                                testWire(     _make<Wire>("testSyncWire", size)),
+                                endExpr(&(((*this) | testWire) == upFullState)),
+                                endExprInv(&(~(*endExpr))),
                                 nextFillActivateId(0)
     {
         com_init();
@@ -26,8 +28,10 @@ namespace kathryn {
     };
 
     UpdateEvent* SyncReg::addDependState(Operable* dependState, Operable* activateCond){
+        assert(activateCond == nullptr);
         assert(dependState != nullptr);
-        auto* event = new UpdateEvent({activateCond,
+        /** if endExpr rise, it is neccessary to tel register to rise*/
+        auto* event = new UpdateEvent({endExprInv,
                                        dependState,
                                        &upState,
                                        Slice({nextFillActivateId, nextFillActivateId + 1}),
@@ -35,7 +39,7 @@ namespace kathryn {
         addUpdateMeta(event);
         ////// assign observe wire
         auto* testEvent = new UpdateEvent({
-            activateCond,
+            nullptr,
             dependState,
             &upState,
             Slice({nextFillActivateId, nextFillActivateId + 1}),
@@ -75,7 +79,8 @@ namespace kathryn {
     }
 
     Operable* SyncReg::generateEndExpr(){
-        return &(((*this) | testWire) == upFullState);
+        assert(nextFillActivateId == getOperableSlice().getSize());
+        return endExpr;
     }
 
     bool SyncReg::isSimAtFullSyn() {
