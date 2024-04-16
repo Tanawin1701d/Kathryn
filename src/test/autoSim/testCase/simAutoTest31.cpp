@@ -27,18 +27,18 @@ namespace kathryn{
             pipWrap{
                 /////// pipe block 0
                 pipBlk{
-//                    //intrStart(is);
+                    intrStart(is);
                     intrReset(is);
-//                    cif(a < 5){
-//                        a = a + 1;
-//                    }celse{
-                        freez = 1;
-//                        cwhile(true){
-//                            seq {
-//                                freez  = 1;
-//                            }
-//                        }
-                    //}
+
+                    cif(a < 5){
+                        a = a + 1;
+                    }celse{
+                        cwhile(true){
+                            seq {
+                                freez  = 1;
+                            }
+                        }
+                    }
                 }
                 /////// pipe block 1
                 pipBlk{
@@ -51,7 +51,7 @@ namespace kathryn{
                 syWait(10);
                 par{
                     is = 1;
-                    ////a  = 0;
+                    a  = 0;
                 }
             }
         }
@@ -77,6 +77,24 @@ namespace kathryn{
         void describeCon() override{
 
 //            /*** start cycle*/
+              for (int i = 1; i <= 5; i++){
+                  testAndPrint("testPipVal before resetAndRestart and getStuck", ull(_md->a), i);
+                  conEndCycle();
+                  testAndPrint("testPipVal before freez", ull(_md->freez), 0);
+                  conNextCycle(1);
+              }
+              for (int i = 0; i < 6; i++){
+                  conEndCycle();
+                  testAndPrint("testPipVal freez", ull(_md->freez), 1);
+                  conNextCycle(1);
+              }
+
+            for (int i = 1; i <= 5; i++){
+                testAndPrint("testPipVal after resetAndRestart: a", ull(_md->a), i);
+                conEndCycle();
+                testAndPrint("testPipVal after freez", ull(_md->freez), 0);
+                conNextCycle(1);
+            }
 //            for (int i = 0; i <= 8; i++){
 //                testAndPrint("testPipVal: A", ull(_md->a), std::max(0,i  ));
 //                testAndPrint("testPipVal: B", ull(_md->b), std::max(0,i-1));
@@ -116,5 +134,5 @@ namespace kathryn{
 
     };
 
-    Sim31TestEle ele31(-1);
+    Sim31TestEle ele31(31);
 }

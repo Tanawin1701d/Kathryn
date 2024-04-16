@@ -151,6 +151,7 @@ namespace kathryn {
         virtual void      makeUserResetEvent(){assert(false);}
         /** provided src state data*/
         virtual Operable* getExitOpr(){ return nullptr; };
+        virtual Operable* getStateOperating(){return nullptr;}
         /** assign value with proper condition*/
         virtual void      assign() = 0; /** please make sure that makeunsetState is called*/
         virtual void      dryAssign(){assert(false);};

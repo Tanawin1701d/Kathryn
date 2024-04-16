@@ -34,6 +34,11 @@ namespace kathryn{
             return bindWithRstOutPutIfReset(_stateReg->generateEndExpr());
         }
 
+        Operable* getStateOperating() override{
+            assert(_stateReg != nullptr);
+            return _stateReg->generateEndExpr();
+        }
+
         void addSlaveAsmNode(AsmNode* asmNode){
             assert(asmNode != nullptr);
             asmNode->addDependNode(this, nullptr);

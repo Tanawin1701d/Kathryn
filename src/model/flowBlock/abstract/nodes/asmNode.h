@@ -51,7 +51,7 @@ namespace kathryn {
                     ///////////// assign from current dependency
                     auto resultUpEvent = new UpdateEvent({
                         addLogicWithOutput(nodeSrcs[0].condition, _preCondition, BITWISE_AND),
-                        nodeSrcs[0].dependNode->getExitOpr(),
+                        nodeSrcs[0].dependNode->getStateOperating(), /////// you can not simply use genExitOpr because it is used to colab with reset
                         &assignMeta->valueToAssign,
                         assignMeta->desSlice,
                         DEFAULT_UE_PRI_USER
