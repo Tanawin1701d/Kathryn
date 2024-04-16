@@ -27,12 +27,13 @@ namespace kathryn {
         StateNode* _stateNode       = nullptr;
         NodeWrap*  _complexNode     = nullptr;
 
-        explicit SequenceEle(Node*          simpleNode, OprNode* intRstNode);
+        explicit SequenceEle(Node*          simpleNode);
         explicit SequenceEle(FlowBlockBase* fbBase    );
         ~SequenceEle();
 
         void               genNode             ();
         void               setIdentStateId     (ull masterIdx, int subIdx) const;
+        void               setIntReset         (OprNode* intResetNode);
         void               addToCycleDet       (NodeWrapCycleDet& deter) const;
         void               assignDependDent    (SequenceEle* predecessor) const;
         void               assignIntStart      (OprNode* intStartNode);

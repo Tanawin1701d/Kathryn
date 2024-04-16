@@ -28,6 +28,7 @@ namespace kathryn{
         NodeWrap*      resultNodeWrapper = nullptr;
         NodeWrap*      subBlockNodeWrap  = nullptr;
         Node*          conditionNode     = nullptr;
+        DummyNode*     exitDummy         = nullptr;
         PseudoNode*    exitNode          = nullptr;
 
 

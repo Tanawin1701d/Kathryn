@@ -37,6 +37,7 @@ namespace kathryn{
     FlowBlockWhile::~FlowBlockWhile() {
         delete resultNodeWrapper;
         delete conditionNode;
+        delete exitDummy;
         delete exitNode;
     }
 
@@ -83,6 +84,14 @@ namespace kathryn{
         if (subBlockNodeWrap->isThereForceExitNode()){
             exitNode->addDependNode(subBlockNodeWrap->getForceExitNode(), nullptr);
         }
+
+        if (_fallTrue && (!subBlockNodeWrap->isThereForceExitNode())){
+            ///////// incase there is no exit source we warning user that there is infinite loop
+            /////////// TODO warning
+            exitDummy = new DummyNode(&_make<Val>("exitDummy", 1, 0));
+            exitNode->addDependNode(exitDummy, nullptr);
+        }
+
         exitNode->assign();
 
 

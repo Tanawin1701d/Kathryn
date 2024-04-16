@@ -94,10 +94,13 @@ namespace kathryn{
 
         /*** initialize node*/
         upCondNode = new PseudoNode(1, BITWISE_OR);
+        upCondNode->setInternalIdent("pipCom" + identHelper+"upCondNode" + std::to_string(getGlobalId()));
         _waitNode  = new StateNode();
         _waitNode->setInternalIdent("pipCom" + identHelper + "waitNode" + std::to_string(getGlobalId()));
         fillIntResetToNodeIfThere(_waitNode);
         endNode         = new PseudoNode(1, BITWISE_OR);
+        endNode->setInternalIdent("pipCom" + identHelper+"endNode" + std::to_string(getGlobalId()));
+
         _resultNodeWrap = new NodeWrap();
 
         /*** wait node*/

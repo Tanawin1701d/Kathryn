@@ -16,11 +16,10 @@ namespace kathryn{
      * */
 
 
-    SequenceEle::SequenceEle(Node *asmNode, OprNode* intRstNode) {
+    SequenceEle::SequenceEle(Node *asmNode) {
         assert(asmNode != nullptr);
         assert(asmNode->getNodeType() == ASM_NODE);
         _asmNode = (AsmNode*)asmNode;
-        _intRstNode = intRstNode;
     }
 
     SequenceEle::SequenceEle(FlowBlockBase *fbBase) {
@@ -60,6 +59,10 @@ namespace kathryn{
                     "_" +
                     std::to_string(idx));
         }
+    }
+
+    void SequenceEle::setIntReset(OprNode* intResetNode){
+        _intRstNode = intResetNode;
     }
 
     void SequenceEle::addToCycleDet(NodeWrapCycleDet &deter) const {
@@ -233,7 +236,7 @@ namespace kathryn{
 
     void FlowBlockSeq::addElementInFlowBlock(Node* node) {
         assert(node != nullptr);
-        _subSeqMetas.push_back(new SequenceEle(node, intNodes[INT_RESET]));
+        _subSeqMetas.push_back(new SequenceEle(node));
         /** base function to notice existence of sub flow element*/
         FlowBlockBase::addElementInFlowBlock(node);
     }
@@ -265,6 +268,7 @@ namespace kathryn{
         /** generate hardware*/
         int idx = 0;
         for (auto& seqMeta: _subSeqMetas) {
+            seqMeta->setIntReset(intNodes[INT_RESET]); //// set interrupt reset must be set before gennode
             seqMeta->genNode();
             seqMeta->setIdentStateId(getGlobalId(),idx++);
             seqMeta->addToCycleDet(cycleDet);
