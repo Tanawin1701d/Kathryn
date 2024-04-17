@@ -94,11 +94,14 @@ namespace kathryn{
 
         /*** initialize node*/
         upCondNode = new PseudoNode(1, BITWISE_OR);
+        addSysNode(upCondNode);
         upCondNode->setInternalIdent("pipCom" + identHelper+"upCondNode" + std::to_string(getGlobalId()));
         _waitNode  = new StateNode();
+        addSysNode(_waitNode);
         _waitNode->setInternalIdent("pipCom" + identHelper + "waitNode" + std::to_string(getGlobalId()));
         fillIntResetToNodeIfThere(_waitNode);
         endNode         = new PseudoNode(1, BITWISE_OR);
+        addSysNode(endNode);
         endNode->setInternalIdent("pipCom" + identHelper+"endNode" + std::to_string(getGlobalId()));
 
         _resultNodeWrap = new NodeWrap();
@@ -148,39 +151,5 @@ namespace kathryn{
                                  endNode->getMdDescribe()
         );
     }
-
-    /** sim start cur cycle*/
-
-    void FlowBlockPipeCom::simStartCurCycle(){
-        if (isCurValSim()){
-            return;
-        }
-        setCurValSimStatus();
-
-        /** check running status*/
-        bool isStateRunning = false;
-        _waitNode->simStartCurCycle();
-        isStateRunning |= _waitNode->isBlockOrNodeRunning();
-
-        if (isStateRunning){
-            setBlockOrNodeRunning();
-            incEngine();
-        }
-
-        /** do sim all to maintain policy*/
-        upCondNode->simStartCurCycle();
-        _waitNode ->simStartCurCycle();
-        endNode   ->simStartCurCycle();
-    }
-
-    void FlowBlockPipeCom::simExitCurCycle(){
-        unSetSimStatus();
-        unsetBlockOrNodeRunning();
-        upCondNode->simExitCurCycle();
-        _waitNode ->simExitCurCycle();
-        endNode   ->simExitCurCycle();
-
-    }
-
 
 }

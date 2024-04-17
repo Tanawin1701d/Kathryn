@@ -16,7 +16,6 @@ namespace kathryn{
 
     FlowBlockBase::FlowBlockBase(FLOW_BLOCK_TYPE type, FB_CTRL_COM_META fbCtrlComMeta):
             FlowIdentifiable(FBT_to_string(type)),
-            FlowSimEngine(),
             /** flow element*/
             _type(type),
             ctrl(getControllerPtr()),
@@ -26,7 +25,8 @@ namespace kathryn{
             _fbCtrlComMeta(std::move(fbCtrlComMeta)),
             /** exit management*/
             _areThereForceExit(false),
-            _forceExitNode(nullptr)
+            _forceExitNode(nullptr),
+            _flowSimEngine(new FlowBlockSimEngine(this))
     {
                 /**initialize interrupt node*/
                 for (int intType = 0; intType < INT_CNT; intType++){
@@ -52,6 +52,7 @@ namespace kathryn{
         }
 
         delete _forceExitNode;
+        delete _flowSimEngine;
         /////// it is safe to delete nullptr
     }
 
@@ -185,25 +186,6 @@ namespace kathryn{
 
         return poolEle;
     }
-
-
-
-    /** simulation section*/
-
-    void FlowBlockBase::beforePrepareSim(FLOW_Meta_afterMf simMeta) {
-        /**set flow for this element*/
-        FlowSimEngine::beforePrepareSim(simMeta);
-        simMeta._writer->localName = getGlobalName();
-        /*** invoke prepare sim in subelement in order*/
-        std::vector<FlowBlockBase::sortEle> poolEle = sortSubAndConFbInOrder();
-        for (auto& pl: poolEle){
-            ////// recurent build track element to system
-            pl.fb->beforePrepareSim({simMeta._writer->populateSubEle()});
-        }
-    }
-
-
-
 
     std::string FBT_to_string(FLOW_BLOCK_TYPE fbt){
         std::string mapper[FLOW_BLOCK_COUNT] = {

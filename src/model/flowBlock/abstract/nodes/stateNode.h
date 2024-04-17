@@ -22,7 +22,9 @@ namespace kathryn{
 
         explicit StateNode() :
             Node(STATE_NODE),
-            _stateReg(new StateReg()){}
+            _stateReg(new StateReg()){
+            addCycleRelatedReg(_stateReg);
+        }
 
         void makeUnsetStateEvent() override{
             assert(_stateReg != nullptr);
@@ -60,20 +62,6 @@ namespace kathryn{
         }
 
         int getCycleUsed() override {return 1;}
-
-        void simStartCurCycle() override{
-            if (isCurValSim()){
-                return;
-            }
-            setCurValSimStatus();
-            assert(_stateReg != nullptr);
-            bool isStateSet = _stateReg->getRtlValItf()->getCurVal().getLogicalValue();
-            if (isStateSet){
-                setBlockOrNodeRunning();
-                incEngine();
-            }
-
-        }
     };
 
     /**
@@ -87,7 +75,10 @@ namespace kathryn{
         /**in SynNode condition and dependState is disengage*/
         explicit SynNode(int synSize) :
             Node(SYN_NODE),
-            _synReg(new SyncReg(synSize)){}
+            _synReg(new SyncReg(synSize)){
+
+            addCycleRelatedReg(_synReg);
+        }
 
         void makeUnsetStateEvent() override{
             assert(_synReg != nullptr);
@@ -117,21 +108,6 @@ namespace kathryn{
         int getCycleUsed() override{ return 1; }
 
         bool isStateFullNode() override { return false;}
-
-        void simStartCurCycle() override{
-            if (isCurValSim()){
-                return;
-            }
-            setCurValSimStatus();
-            assert(_synReg != nullptr);
-            bool isFullSyncCycle = _synReg->isSimAtFullSyn();
-            /** inc engine*/
-            if (isFullSyncCycle){
-                setBlockOrNodeRunning();
-                incEngine();
-            }
-
-        }
 
     };
 

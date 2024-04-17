@@ -21,7 +21,7 @@
 #include "model/flowBlock/abstract/nodes/stateNode.h"
 #include "model/flowBlock/abstract/nodes/logicNode.h"
 #include "flowIdentifiable.h"
-#include "model/simIntf/flowBlock/flowBlockSimEngine.h"
+#include "model/simIntf/flowBlock/flowBlockSim.h"
 
 
 namespace kathryn {
@@ -85,9 +85,11 @@ namespace kathryn {
 
     class FlowBlockBase: public FlowIdentifiable,
                          public ModelDebuggable,
-                         public FlowSimEngine,
-                         public SimEngineInterface
+                         ////public FlowSimEngine,
+                         public SimEngineInterface,
+                         public FlowSimEngineInterface
                          {
+    friend class FlowBlockSimEngine;
     protected:
 
         struct sortEle{
@@ -107,6 +109,7 @@ namespace kathryn {
         std::vector<int>            _conBlocksOrder; //// input order in this block
         std::vector<Node*>          _basicNodes;
         std::vector<int>            _basicNodesOrder; //// input order in this block
+        std::vector<Node*>          _sysNodes;
 
         std::vector<FlowBlockBase*> _abandonedBlocks;  /// the flow block that have been extracted and push to this block
 
@@ -123,6 +126,8 @@ namespace kathryn {
         /*** for exit management*/
         bool                        _areThereForceExit = false;
         PseudoNode*                 _forceExitNode     = nullptr;
+        /*** flow block sim engine*/
+        FlowBaseSimEngine*              _flowSimEngine     = nullptr;
 
         /** generate implicit subblock typically used with if and while block*/
         FlowBlockBase* genImplicitSubBlk(FLOW_BLOCK_TYPE defaultType);
@@ -138,7 +143,10 @@ namespace kathryn {
         virtual        ~FlowBlockBase();
 
         SimEngine*     getSimEngine() override{
-                return static_cast<SimEngine*>(this);
+                return _flowSimEngine;
+        }
+        FlowBaseSimEngine* getFlowSimEngine() override{
+                return _flowSimEngine;
         }
         /**
          * entrance to make controller interact with
@@ -149,6 +157,11 @@ namespace kathryn {
             _basicNodes.push_back(node);
             _basicNodesOrder.push_back(nextInputOrder++);
         };
+
+        virtual void addSysNode(Node* node){
+            assert(node != nullptr);
+            _sysNodes.push_back(node);
+        }
         /** when inside complex element such as sub flow block is finish, user must add here*/
         virtual void addSubFlowBlock(FlowBlockBase* subBlock){
             assert(subBlock != nullptr);
@@ -237,7 +250,6 @@ namespace kathryn {
         }
 
         std::vector<sortEle> sortSubAndConFbInOrder();
-        void beforePrepareSim(FLOW_Meta_afterMf simMeta) override;
 
     };
 

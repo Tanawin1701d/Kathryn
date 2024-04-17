@@ -50,9 +50,6 @@ namespace kathryn{
         /** Loop macro to notice position of system*/
         void doPreFunction() override;
         void doPostFunction() override;
-        /** override simulation*/
-        void simStartCurCycle() override;
-        void simExitCurCycle() override;
     };
 
 

@@ -18,6 +18,7 @@ namespace kathryn{
                 Node(WAITCOND_NODE){
             assert(waitCond != nullptr);
             _condWaitStateReg = new CondWaitStateReg(waitCond);
+            addCycleRelatedReg(_condWaitStateReg);
         }
 
         void makeUnsetStateEvent() override{
@@ -50,20 +51,6 @@ namespace kathryn{
 
         int getCycleUsed() override {return -1;}
 
-        void simStartCurCycle() override{
-            if (isCurValSim()){
-                return;
-            }
-            setCurValSimStatus();
-            bool shouldIncStat = _condWaitStateReg->isSimAtWaiting();
-            if (shouldIncStat){
-                setBlockOrNodeRunning();
-                incEngine();
-            }
-
-
-
-        }
     };
 
     struct WaitCycleNode : Node{
@@ -75,6 +62,7 @@ namespace kathryn{
                 _cycle(cycle){
 
             _cycleWaitStateReg = new CycleWaitStateReg(cycle);
+            addCycleRelatedReg(_cycleWaitStateReg);
         }
 
         explicit WaitCycleNode(Operable* opr):
@@ -113,21 +101,6 @@ namespace kathryn{
         }
 
         int getCycleUsed() override {return _cycle;}
-
-        void simStartCurCycle() override{
-            if (isCurValSim()){
-                return;
-            }
-            setCurValSimStatus();
-            bool shouldIncStat =  _cycleWaitStateReg->isSimAtWaiting();
-            if (shouldIncStat){
-                incEngine();
-                setBlockOrNodeRunning();
-            }
-
-
-
-        }
 
     };
 

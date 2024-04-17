@@ -60,6 +60,7 @@ namespace kathryn{
          * */
         if (!_basicNodes.empty()){
             basicStNode = new StateNode();
+            addSysNode(basicStNode);
             fillIntResetToNodeIfThere(basicStNode);
             /** add basic assignment to depend on stateNode*/
             for (auto nd : _basicNodes){
@@ -201,67 +202,6 @@ namespace kathryn{
         addMdLogRecur(mdLogVal);
     }
 
-    void FlowBlockPar::simStartCurCycle() {
-
-        if (isCurValSim()){
-            return;
-        }
-        setCurValSimStatus();
-        bool isStateRunning = false;
-        /** simulate each element*/
-        for (auto _sb: _subBlocks){
-            assert(_sb != nullptr);
-            _sb->simStartCurCycle();
-            isStateRunning |= _sb->isBlockOrNodeRunning();
-        }
-        for (auto _bsAsmNd: _basicNodes){
-            assert(_bsAsmNd != nullptr);
-            _bsAsmNd->simStartCurCycle();
-        }
-        if (basicStNode != nullptr){
-            basicStNode->simStartCurCycle();
-            isStateRunning |= basicStNode->isBlockOrNodeRunning();
-        }
-//        if (synNode != nullptr){
-//            /**syn node is not necessary anymore*/
-//            synNode->simStartCurCycle();
-//            isStateRunning |= synNode->isBlockOrNodeRunning();
-//        }
-        if (pseudoExitNode != nullptr){
-            pseudoExitNode->simStartCurCycle();
-            isStateRunning |= pseudoExitNode->isBlockOrNodeRunning();
-        }
-        /** increment log*/
-        if (isStateRunning){
-            setBlockOrNodeRunning();
-            incEngine();
-        }
-
-    }
-
-    void FlowBlockPar::simExitCurCycle() {
-        unSetSimStatus();
-        unsetBlockOrNodeRunning();
-        for (auto _sb: _subBlocks){
-            assert(_sb != nullptr);
-            _sb->simExitCurCycle();
-        }
-        for (auto _bsAsmNd: _basicNodes){
-            assert(_bsAsmNd != nullptr);
-            _bsAsmNd->simExitCurCycle();
-        }
-        if (basicStNode != nullptr){
-            basicStNode->simExitCurCycle();
-        }
-        if (synNode != nullptr){
-            synNode->simExitCurCycle();
-        }
-        if (pseudoExitNode != nullptr){
-            pseudoExitNode->simExitCurCycle();
-        }
-    }
-
-
     /**
      *
      *
@@ -280,6 +220,7 @@ namespace kathryn{
             /////// syn reg needed
             int synSize = amt_block;
             synNode = new SynNode(synSize);
+            addSysNode(synNode);
             fillIntResetToNodeIfThere(synNode);
             synNode->setInternalIdent(
                     "parSynNode_" +
@@ -350,6 +291,7 @@ namespace kathryn{
         }else{
             assert(amt_block > 1);
             pseudoExitNode = new PseudoNode(1, BITWISE_OR);
+            addSysNode(pseudoExitNode);
             if (basicStNode != nullptr)
                 pseudoExitNode->addDependNode(basicStNode, nullptr);
             for (auto nw : nodeWrapOfSubBlock){

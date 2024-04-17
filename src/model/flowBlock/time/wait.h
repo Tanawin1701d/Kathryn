@@ -46,9 +46,6 @@ namespace kathryn{
         /** debug method*/
         std::string getMdDescribe() override;
         void addMdLog(MdLogVal* mdLogVal) override;
-        /** override simulation*/
-        void simStartCurCycle() override;
-        void simExitCurCycle() override;
     };
 
     /***
@@ -83,10 +80,6 @@ namespace kathryn{
         /** debugger*/
         std::string getMdDescribe() override;
         void addMdLog(MdLogVal* mdLogVal) override;
-        /**override simulation*/
-        void simStartCurCycle() override;
-        void simExitCurCycle() override;
-
     };
 
 }

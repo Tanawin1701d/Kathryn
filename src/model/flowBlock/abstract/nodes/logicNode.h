@@ -46,18 +46,6 @@ namespace kathryn{
 
         bool isStateFullNode() override{ return false; }
 
-        void simStartCurCycle() override{
-            if (isCurValSim()){
-                return;
-            }
-            setCurValSimStatus();
-            assert(_pseudoAssignMeta != nullptr);
-            /** inc engine do not increase engine*/
-
-        }
-
-
-
     };
 
     struct DummyNode : Node{
@@ -81,15 +69,6 @@ namespace kathryn{
 
         bool isStateFullNode() override{return false;}
 
-        void simStartCurCycle() override{
-            if (isCurValSim()){
-                return;
-            }
-            setCurValSimStatus();
-            assert(_value != nullptr);
-            /** inc engine do not increase engine*/
-        }
-
     };
 
     struct OprNode : Node{
@@ -112,15 +91,6 @@ namespace kathryn{
         Operable* getExitOpr() override{return _value;}
 
         bool isStateFullNode() override{return false;}
-
-        void simStartCurCycle() override{
-            if (isCurValSim()){
-                return;
-            }
-            setCurValSimStatus();
-            assert(_value != nullptr);
-            /** inc engine do not increase engine*/
-        }
 
     };
 

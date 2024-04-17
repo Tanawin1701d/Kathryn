@@ -78,36 +78,9 @@ namespace kathryn{
         return ret;
     }
 
-    void FlowBlockElif::addMdLog(MdLogVal *mdLogVal) {
+    void FlowBlockElif::addMdLog(MdLogVal *mdLogVal){
         mdLogVal->addVal("[ Elif " + FlowBlockBase::getMdIdentVal() + " ]");
         addMdLogRecur(mdLogVal);
-    }
-
-    void FlowBlockElif::simStartCurCycle() {
-        if (isCurValSim()){
-            return;
-        }
-        setCurValSimStatus();
-
-        bool isStateRunning = false;
-
-        if (implicitSubBlock != nullptr){
-            implicitSubBlock->simStartCurCycle();
-            isStateRunning |= implicitSubBlock->isBlockOrNodeRunning();
-        }
-
-        if (isStateRunning){
-            setBlockOrNodeRunning();
-            incEngine();
-        }
-    }
-
-    void FlowBlockElif::simExitCurCycle() {
-        unSetSimStatus();
-        unsetBlockOrNodeRunning();
-        if (implicitSubBlock != nullptr){
-            implicitSubBlock->simExitCurCycle();
-        }
     }
 
 

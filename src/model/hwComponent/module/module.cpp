@@ -362,7 +362,7 @@ namespace kathryn{
         flowColEle->freq = 0;
         /**set writer for sub flow block*/
         for (auto* fb: subEleVec){
-            fb->beforePrepareSim({
+            fb->getFlowSimEngine()->beforePrepareSim({
                                          flowColEle->populateSubEle()
                                  });
         }

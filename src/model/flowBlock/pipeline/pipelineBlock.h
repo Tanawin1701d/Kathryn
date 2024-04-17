@@ -89,10 +89,6 @@ namespace kathryn{
         /**get debug*/
         void addMdLog(MdLogVal* mdLogVal) override;
 
-        /**override simulator*/
-        void simStartCurCycle() override;
-        void simExitCurCycle() override;
-
     };
 
 }

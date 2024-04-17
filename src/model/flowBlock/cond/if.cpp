@@ -102,7 +102,8 @@ namespace kathryn{
             condNode = new StateNode();
             condNode->setInternalIdent("sifNode" + std::to_string(getGlobalId()));
             fillIntResetToNodeIfThere(condNode);
-        }else{ assert(false);}
+        }else{assert(false);}
+        addSysNode(condNode);
 
         if (isThereIntStart()){
             condNode->addDependNode(intNodes[INT_START], nullptr);
@@ -110,6 +111,7 @@ namespace kathryn{
 
 
         exitNode = new PseudoNode(1, BITWISE_OR);
+        addSysNode(exitNode);
         exitNode->setInternalIdent("ifExitNode" + std::to_string(getGlobalId()));
         resultNodeWrap = new NodeWrap();
 
@@ -238,54 +240,5 @@ namespace kathryn{
     void FlowBlockIf::doPostFunction() {
         onDetachBlock();
     }
-
-    void FlowBlockIf::simStartCurCycle() {
-
-        if (isCurValSim()){
-            return;
-        }
-        setCurValSimStatus();
-
-        bool isStateRunning = false;
-        /** simulate */
-        for(auto sb: _subBlocks){
-            sb->simStartCurCycle();
-            isStateRunning |= sb->isBlockOrNodeRunning();
-        }
-
-        for(auto cb: _conBlocks){
-            cb->simStartCurCycle();
-            isStateRunning |= cb->isBlockOrNodeRunning();
-        }
-
-        if (condNode != nullptr){
-            condNode->simStartCurCycle();
-            isStateRunning |= condNode->isBlockOrNodeRunning();
-        }
-
-        if (isStateRunning){
-            setBlockOrNodeRunning();
-            incEngine();
-        }
-
-
-    }
-
-    void FlowBlockIf::simExitCurCycle() {
-        unSetSimStatus();
-        unsetBlockOrNodeRunning();
-        for(auto sb: _subBlocks){
-            sb->simExitCurCycle();
-        }
-        for(auto cb: _conBlocks){
-            cb->simExitCurCycle();
-        }
-
-        if (condNode != nullptr){
-            condNode->simExitCurCycle();
-        }
-
-    }
-
 
 }

@@ -94,6 +94,7 @@ namespace kathryn{
         }
         _dummyExitVal = &_make<Val>("dummyExitOfPipeWrapper", 1, 0);
         _dummyExitNode = new DummyNode(_dummyExitVal);
+        addSysNode(_dummyExitNode);
         _resultNodeWrap->addExitNode(_dummyExitNode);
 
     }
@@ -123,46 +124,5 @@ namespace kathryn{
                 _insidePipBlk->addMdLog(subLog);
             }
     }
-
-    /**
-     *
-     * start sim cycle
-     *
-     * */
-
-    void FlowBlockPipeWrapper::simStartCurCycle() {
-        if(isCurValSim()){
-            return;
-        }
-        setCurValSimStatus();
-        bool isStateRunning = false;
-
-        for(auto insidePipBlk: _insidePipBlks){
-            insidePipBlk->simStartCurCycle();
-            isStateRunning |= insidePipBlk->isBlockOrNodeRunning();
-        }
-
-        if (isStateRunning){
-            setBlockOrNodeRunning();
-            incEngine();
-        }
-
-        _dummyExitNode->simStartCurCycle();
-
-
-    }
-
-    void FlowBlockPipeWrapper::simExitCurCycle() {
-
-        unSetSimStatus();
-        unsetBlockOrNodeRunning();
-
-        for(auto insidePipBlk: _insidePipBlks){
-            insidePipBlk->simExitCurCycle();
-        }
-        _dummyExitNode->simExitCurCycle();
-
-    }
-
 
 }

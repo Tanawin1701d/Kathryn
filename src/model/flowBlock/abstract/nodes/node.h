@@ -18,7 +18,8 @@
 #include "model/flowBlock/abstract/spReg/stateReg.h"
 #include "model/flowBlock/abstract/spReg/syncReg.h"
 #include "model/debugger/modelDebugger.h"
-#include "model/simIntf/flowBlock/flowBlockSimEngine.h"
+#include "model/simIntf/flowBlock/flowBaseSim.h"
+#include "model/simIntf/flowBlock/flowNodeSim.h"
 
 
 namespace kathryn {
@@ -57,20 +58,31 @@ namespace kathryn {
     };
 
     struct Node : public ModelDebuggable,
-                  public FlowSimEngine{
+                  public FlowSimEngineInterface{
         NODE_TYPE                nodeType  = NODE_TYPE_CNT;
         std::vector<NodeSrcEdge> nodeSrcs;
         std::string              identName = "NODE_UNNAME";
 
         Node*                    intReset  = nullptr;
 
+        /** simulate support register*/
+        std::vector<CtrlFlowRegBase*> relatedCycleConsumeReg;
+        FlowNodeSimEngine*            flowNodeSimEngine = nullptr;
+
         Node(Node& rhs) = delete;
 
         explicit Node(NODE_TYPE nt):
-                FlowSimEngine(),
-                nodeType(nt){};
+                nodeType(nt),
+                flowNodeSimEngine(new FlowNodeSimEngine(this)){};
 
-        ~Node() override = default;
+        ~Node(){
+            delete flowNodeSimEngine;
+        };
+
+        FlowBaseSimEngine* getFlowSimEngine() override{
+            assert(flowNodeSimEngine != nullptr);
+            return flowNodeSimEngine;
+        }
 
         NODE_TYPE getNodeType() const{
             return nodeType;
@@ -116,9 +128,15 @@ namespace kathryn {
             assert(srcNode != nullptr);
             nodeSrcs.push_back({srcNode, cond});
         }
+        /** add to relatedCycleConsumeReg which is used to identify register that related to cycle usage*/
+        void addCycleRelatedReg(CtrlFlowRegBase* ctrlReg){
+            assert(ctrlReg != nullptr);
+            relatedCycleConsumeReg.push_back(ctrlReg);
+        }
 
         std::vector<NodeSrcEdge>& getDependNodes() {return nodeSrcs;}
 
+        /** interrupt handler*/
         void setInterruptReset(Node* rst){
             assert(rst != nullptr);
             intReset = rst;
@@ -160,11 +178,7 @@ namespace kathryn {
         /** is Stateful node (reffer to node that consume at least 1 cycle from machine)*/
         virtual bool      isStateFullNode(){ return true; }
 
-
-
         /** get debugger value*/
-
-
         std::string getMdIdentVal() override{
             std::string ret = NT_to_string(nodeType) + " @ " + std::to_string((ull)this);
             return ret;
@@ -175,13 +189,6 @@ namespace kathryn {
             for (auto depSrc : nodeSrcs){
                 mdLogVal->addVal(depSrc.dependNode->getMdIdentVal());
             }
-        }
-
-        /*** simulation override*/
-
-        void simExitCurCycle() override{
-            unsetBlockOrNodeRunning();
-            unSetSimStatus();
         }
 
         /** internal value identifier for debugging purpose*/

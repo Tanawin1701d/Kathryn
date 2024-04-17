@@ -58,8 +58,10 @@ namespace kathryn{
             conditionNode->setInternalIdent("sConNode" + std::to_string(getGlobalId()));
             fillIntResetToNodeIfThere(conditionNode);
         }
+        addSysNode(conditionNode);
 
         exitNode          = new PseudoNode(1, BITWISE_OR);
+        addSysNode(exitNode);
         resultNodeWrapper = new NodeWrap();
         ////////////////////////////////////////////////////////////////////
 
@@ -89,6 +91,7 @@ namespace kathryn{
             ///////// incase there is no exit source we warning user that there is infinite loop
             /////////// TODO warning
             exitDummy = new DummyNode(&_make<Val>("exitDummy", 1, 0));
+            addSysNode(exitDummy);
             exitNode->addDependNode(exitDummy, nullptr);
         }
 
@@ -152,52 +155,6 @@ namespace kathryn{
 
         auto subLog = mdLogVal->makeNewSubVal();
         implicitFlowBlock->addMdLog(subLog);
-
-    }
-
-    void FlowBlockWhile::simStartCurCycle() {
-
-        if (isCurValSim()){
-            return;
-        }
-        setCurValSimStatus();
-        bool isStateRunning = false;
-
-        /** simulate block */
-        for (auto _sb: _subBlocks){
-            assert(_sb != nullptr);
-            _sb->simStartCurCycle();
-            isStateRunning |= _sb->isBlockOrNodeRunning();
-        }
-        for (auto _bsAsmNd: _basicNodes){
-            assert(_bsAsmNd != nullptr);
-            _bsAsmNd->simStartCurCycle();
-        }
-
-        /** conNode*/
-        assert(conditionNode != nullptr);
-        conditionNode->simStartCurCycle();
-        isStateRunning |= conditionNode->isBlockOrNodeRunning();
-
-        if (isStateRunning){
-            setBlockOrNodeRunning();
-            incEngine();
-        }
-    }
-
-    void FlowBlockWhile::simExitCurCycle() {
-        unSetSimStatus();
-        unsetBlockOrNodeRunning();
-        for (auto _sb: _subBlocks){
-            assert(_sb != nullptr);
-            _sb->simExitCurCycle();
-        }
-        for (auto _bsAsmNd: _basicNodes){
-            assert(_bsAsmNd != nullptr);
-            _bsAsmNd->simExitCurCycle();
-        }
-        assert(conditionNode != nullptr);
-        conditionNode->simExitCurCycle();
 
     }
 

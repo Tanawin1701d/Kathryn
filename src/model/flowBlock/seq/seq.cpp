@@ -160,55 +160,12 @@ namespace kathryn{
 
     }
 
-    void SequenceEle::simulate() const{
-
-        ////////////// simulate state node
-        if (_stateNode != nullptr){
-            _stateNode->simStartCurCycle();
-        }
-        ////////////// simulate basic Assignment and subBlock
+    void SequenceEle::addToSystemNodes(std::vector<Node*>& sysNode){
         if (_asmNode != nullptr){
-            _asmNode->simStartCurCycle();
-        }
-        if (_subBlock != nullptr){
-            _subBlock->simStartCurCycle();
+            assert(_stateNode != nullptr);
+            sysNode.push_back(_stateNode);
         }
     }
-
-    void SequenceEle::finalizeSim() const{
-        if (_stateNode != nullptr){
-            _stateNode->simExitCurCycle();
-        }
-        if (_asmNode != nullptr){
-            _asmNode->simExitCurCycle();
-        }
-        if (_subBlock != nullptr){
-            _subBlock->simExitCurCycle();
-        }
-    }
-
-    bool SequenceEle::isCurCycleSimulated() const{
-
-        if (_asmNode != nullptr){
-            return _asmNode->isCurValSim();
-        }
-        if (_subBlock != nullptr){
-            return _subBlock->isCurValSim();
-        }
-        assert(false);
-    }
-
-    bool SequenceEle::isBlockOrNodeRunning() const{
-        if (_stateNode != nullptr){
-            /**do not use asmNode as a trigger*/
-            return _stateNode->isBlockOrNodeRunning();
-        }
-        if (_subBlock != nullptr){
-            return _subBlock->isBlockOrNodeRunning();
-        }
-        assert(false);
-    }
-
 
     /**
      *
@@ -272,6 +229,7 @@ namespace kathryn{
             seqMeta->genNode();
             seqMeta->setIdentStateId(getGlobalId(),idx++);
             seqMeta->addToCycleDet(cycleDet);
+            seqMeta->addToSystemNodes(_sysNodes);
         }
         /** generate forceExit Node*/
             /***check areThere forceExitNode*/
@@ -341,35 +299,5 @@ namespace kathryn{
     void FlowBlockSeq::doPostFunction() {
         onDetachBlock();
     }
-
-    /** override flow block simulation*/
-
-    void FlowBlockSeq::simStartCurCycle() {
-        if (isCurValSim()){
-            return;
-        }
-        setCurValSimStatus();
-        bool isRunning = false;
-        /** simulate each element*/
-        for (auto subSeqMeta: _subSeqMetas){
-            subSeqMeta->simulate();
-            isRunning |= subSeqMeta->isBlockOrNodeRunning();
-        }
-        if (isRunning) {
-            setBlockOrNodeRunning();
-            incEngine();
-        }
-    }
-
-
-    void FlowBlockSeq::simExitCurCycle(){
-        unSetSimStatus();
-        unsetBlockOrNodeRunning();
-        for(auto subSeqMeta: _subSeqMetas){
-            subSeqMeta->finalizeSim();
-        }
-    }
-
-
 
 }

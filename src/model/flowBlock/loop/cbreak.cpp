@@ -52,9 +52,11 @@ namespace kathryn{
         assert(_conBlocks.empty());
         /**build internal node*/
         breakNode = new StateNode();
+        addSysNode(breakNode);
         fillIntResetToNodeIfThere(breakNode);
 
         normExitNode = new DummyNode(&_make<Val>("cbreakDum", 1, 0));
+        addSysNode(normExitNode);
         /////////normExitNode->addDependNode(breakNode);
         normExitNode->assign();
 
@@ -85,43 +87,4 @@ namespace kathryn{
     void FlowBlockSCBreak::doPostFunction() {
         onDetachBlock();
     }
-
-    void FlowBlockSCBreak::simStartCurCycle() {
-        if (isCurValSim()){
-            return;
-        }
-        setCurValSimStatus();
-
-        bool isStateRunning = false;
-
-        if (breakNode != nullptr){
-            breakNode->simStartCurCycle();
-            isStateRunning |= breakNode->isBlockOrNodeRunning();
-        }
-        if (normExitNode != nullptr){
-            normExitNode->simStartCurCycle();
-            isStateRunning |= normExitNode->isBlockOrNodeRunning();
-        }
-
-        if (isStateRunning){
-            setBlockOrNodeRunning();
-            incEngine();
-        }
-
-
-    }
-
-    void FlowBlockSCBreak::simExitCurCycle() {
-        unSetSimStatus();
-        unsetBlockOrNodeRunning();
-        if (breakNode != nullptr){
-            breakNode->simExitCurCycle();
-        }
-        if (normExitNode != nullptr){
-            normExitNode->simExitCurCycle();
-        }
-
-    }
-
-
 }

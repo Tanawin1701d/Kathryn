@@ -109,6 +109,7 @@ namespace kathryn{
 
         /** initialize node*/
         _joinNode = new PseudoNode(1, BITWISE_OR);
+        addSysNode(_joinNode);
         _joinNode->setInternalIdent("pipJoinNode_" + std::to_string(getGlobalId()));
         _joinNode->addDependNode(_impFbNodeWrap->getExitNode(), nullptr);
         if (isThereIntStart()){
@@ -122,6 +123,7 @@ namespace kathryn{
 
         /** fire exit node*/
         _exitNode  = new DummyNode(&_make<Val>("pipeBlockExit", 1,0));
+        addSysNode(_exitNode);
 
         /** manage result node warap*/
         _resultNodeWrap = new NodeWrap();
@@ -165,51 +167,5 @@ namespace kathryn{
         _implicitFlowBlock->addMdLog(subLog);
 
     }
-
-    void FlowBlockPipeBase::simStartCurCycle() {
-        if(isCurValSim()){
-            return;
-        }
-        setCurValSimStatus();
-        bool isStateRunning = false;
-
-        /** check state running*/
-
-        _waitRecvBlock->simStartCurCycle();
-        isStateRunning |= _waitRecvBlock->isBlockOrNodeRunning();
-
-        _waitSendBlock->simStartCurCycle();
-        isStateRunning |= _waitSendBlock->isBlockOrNodeRunning();
-
-        _implicitFlowBlock->simStartCurCycle();
-        isStateRunning |= _implicitFlowBlock->isBlockOrNodeRunning();
-
-        if (isStateRunning){
-            setBlockOrNodeRunning();
-            incEngine();
-        }
-
-        /** simulate other to follow protocol*/
-        _joinNode   ->simStartCurCycle();
-        _exitNode ->simStartCurCycle();
-
-    }
-
-    void FlowBlockPipeBase::simExitCurCycle() {
-
-        unSetSimStatus();
-        unsetBlockOrNodeRunning();
-
-        _waitRecvBlock    ->simExitCurCycle();
-        _waitSendBlock    ->simExitCurCycle();
-        _implicitFlowBlock->simExitCurCycle();
-
-        _joinNode   ->simExitCurCycle();
-        _exitNode ->simExitCurCycle();
-
-
-
-    }
-
 
 }

@@ -108,13 +108,4 @@ namespace kathryn{
     void FlowBlockZIF::doPostFunction() {
         onDetachBlock();
     }
-
-    void FlowBlockZIF::simStartCurCycle(){
-        assert(false);
-    }
-
-    void FlowBlockZIF::simExitCurCycle(){
-        assert(false);
-    }
-
 }

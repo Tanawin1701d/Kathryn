@@ -59,6 +59,7 @@ namespace kathryn{
         _waitNode = new WaitCondNode(_exitCond);
         fillIntResetToNodeIfThere(_waitNode);
         _waitNode->setInternalIdent("waitCond"+std::to_string(getGlobalId()));
+
         /** result node wrap*/
         _resultNodeWrap = new NodeWrap();
         _resultNodeWrap->addEntraceNode(_waitNode);
@@ -87,34 +88,6 @@ namespace kathryn{
         mdLogVal->addVal("exitVal cond is " + _exitCond->castToIdent()->getIdentDebugValue());
         mdLogVal->addVal("waitNode is " + _waitNode->getMdIdentVal()+ " " +_waitNode->getMdDescribe());
     }
-
-    void FlowBlockCondWait::simStartCurCycle() {
-        if (isCurValSim()){
-            return;
-        }
-        setCurValSimStatus();
-        bool isStateRunning = false;
-        /** simulate each element*/
-        if (_waitNode != nullptr){
-            _waitNode->simStartCurCycle();
-            isStateRunning |= _waitNode->isBlockOrNodeRunning();
-        }
-        /** inc engine*/
-        if (isStateRunning) {
-            setBlockOrNodeRunning();
-            incEngine();
-        }
-    }
-
-    void FlowBlockCondWait::simExitCurCycle() {
-        unSetSimStatus();
-        unsetBlockOrNodeRunning();
-        if (_waitNode != nullptr){
-            _waitNode->simExitCurCycle();
-        }
-
-    }
-
 
     /***
      *
@@ -183,8 +156,10 @@ namespace kathryn{
             assert(cycle > 0);
             _waitNode = new WaitCycleNode(cycle);
         }
+        addSysNode(_waitNode);
         fillIntResetToNodeIfThere(_waitNode);
         _waitNode->setInternalIdent("waitCycle"+std::to_string(getGlobalId()));
+
         /** result node wrap*/
         _resultNodeWrap = new NodeWrap();
         _resultNodeWrap->addEntraceNode(_waitNode);
@@ -212,33 +187,6 @@ namespace kathryn{
         mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() + "]");
         mdLogVal->addVal( "wait Node is " + _waitNode->getMdIdentVal() + "  " + _waitNode->getMdDescribe());
         mdLogVal->addVal("counter" + cnt->castToIdent()->getIdentDebugValue());
-    }
-
-    void FlowBlockCycleWait::simStartCurCycle() {
-        if (isCurValSim()){
-            return;
-        }
-        setCurValSimStatus();
-        bool isStateRunning = false;
-        /** simulate each element*/
-        if (_waitNode != nullptr){
-            _waitNode->simStartCurCycle();
-            isStateRunning |= _waitNode->isBlockOrNodeRunning();
-        }
-        /** inc engine*/
-        if (isStateRunning){
-            setBlockOrNodeRunning();
-            incEngine();
-        }
-
-    }
-
-    void FlowBlockCycleWait::simExitCurCycle() {
-        unSetSimStatus();
-        unsetBlockOrNodeRunning();
-        if (_waitNode != nullptr){
-            _waitNode->simExitCurCycle();
-        }
     }
 
 }

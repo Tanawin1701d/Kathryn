@@ -2,27 +2,34 @@
 // Created by tanawin on 29/3/2567.
 //
 
-#include "model/simIntf/base/modelSimEngine.h"
+
 
 #ifndef KATHRYN_SIMITF_FLOWBLOCK_FLOWBLOCKSIMENGINE_H
 #define KATHRYN_SIMITF_FLOWBLOCK_FLOWBLOCKSIMENGINE_H
+
+#include "model/simIntf/base/modelSimEngine.h"
 
 namespace kathryn{
 
     /***
         *
         * flow sim interface should not sim/final  Rtl simInterface At all
-        * simExitCurCycle for flow sim can be repeatly call in each cycle
+        * simExitCurCycleSubEle for flow sim can be repeatly call in each cycle
         *
         * */
 
-    class FlowSimEngine: public SimEngine{
+    class FlowBlockBase;
+    struct Node;
+
+
+
+    class FlowBaseSimEngine: public SimEngine{
     protected:
-        bool _isSimulated     = false;
-        int  _amtUsed         = 0;
-        bool _isStateRunningIn= false; /// check that are there
+        bool _isSimulated      = false;
+        int  _amtUsed          = 0;
+        bool _isStateRunningIn = false; /// check that are there
                                        /// state is running in this block
-        bool _isSimMetaSet    = false;
+        bool _isSimMetaSet     = false;
 
     public:
         struct FLOW_Meta_afterMf{
@@ -30,9 +37,9 @@ namespace kathryn{
         };
         FLOW_Meta_afterMf _meta;
 
-        explicit FlowSimEngine():SimEngine(){}
+        explicit FlowBaseSimEngine();
 
-        ~FlowSimEngine() override = default;
+        ~FlowBaseSimEngine() override = default;
 
         /**
          * sim state
@@ -84,7 +91,36 @@ namespace kathryn{
         /** value overload*/
         ValRep&  getCurVal () override {assert(false);}
         ValRep&  getNextVal() override {assert(false);}
+
+        /** sub element simulation*/
+        template<typename T>
+        bool simStartCurCycleAndGetStatSubEle(std::vector<T*>& blocks){
+            bool isStateRunning = false;
+            for (auto block: blocks){
+                assert(block != nullptr);
+                FlowBaseSimEngine* flowBaseSim = block->getFlowSimEngine();
+                assert(flowBaseSim != nullptr);
+                flowBaseSim->simStartCurCycle();
+                isStateRunning |= flowBaseSim->isBlockOrNodeRunning();
+            }
+            return isStateRunning;
+        }
+        template<typename T>
+        void simExitCurCycleSubEle(std::vector<T*>& blocks){
+
+            for(auto block: blocks){
+                assert(block != nullptr);
+                block->getFlowSimEngine()->simExitCurCycle();
+            }
+        }
     };
+
+    class FlowSimEngineInterface{
+    public:
+        virtual FlowBaseSimEngine* getFlowSimEngine() = 0;
+    };
+
+
 
 
 }

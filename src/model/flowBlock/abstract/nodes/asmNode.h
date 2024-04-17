@@ -31,7 +31,7 @@ namespace kathryn {
 
         }
 
-        ~AsmNode() override = default;
+        ~AsmNode()  = default;
 
         void assign() override{
             assert(false);
@@ -102,15 +102,6 @@ namespace kathryn {
         }
 
         int getCycleUsed() override { return 1; }
-
-        void simStartCurCycle() override{
-            if (isCurValSim()){
-                return;
-            }
-            setCurValSimStatus();
-            /** for basic assignment log engine is irrelevant*/
-            /////incEngine(false) do not increase;
-        }
 
         void addPreCondition(Operable* cond, LOGIC_OP op){
             assert(cond != nullptr);

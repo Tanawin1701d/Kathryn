@@ -90,12 +90,4 @@ namespace kathryn{
         onDetachBlock();
     }
 
-    void FlowBlockZELIF::simStartCurCycle() {
-        assert(false);
-    }
-
-    void FlowBlockZELIF::simExitCurCycle() {
-        assert(false);
-    }
-
 }

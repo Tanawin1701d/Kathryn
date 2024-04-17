@@ -47,11 +47,6 @@ namespace kathryn{
         Operable* getCondition() const{
             return _cond;
         }
-
-        void simStartCurCycle() override;
-        void simExitCurCycle() override;
-
-
     };
 
 

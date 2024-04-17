@@ -46,12 +46,7 @@ namespace kathryn {
         bool               isBasicNode         () const;
         StateNode*         getBasicNode        () const;
         std::string        getDescribe         ();
-
-        /*** for simulation*/
-        void               simulate() const;
-        void               finalizeSim() const;
-        bool               isCurCycleSimulated() const; ///// check that are cur state is simulating and state is set
-        bool               isBlockOrNodeRunning() const;
+        void               addToSystemNodes    (std::vector<Node*>& sysNode);
 
     };
 
@@ -82,13 +77,6 @@ namespace kathryn {
         /** Loop macro to notice position of system*/
         void doPreFunction() override;
         void doPostFunction() override;
-
-        /** override simulator*/
-
-        void simStartCurCycle() override;
-
-        void simExitCurCycle() override;
-
     };
 
 
