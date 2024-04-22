@@ -111,8 +111,8 @@ namespace kathryn{
 
                 decInstr.regData[RS_1].setFromRegFile(instr(IDX_R1));
                 if (isLoad){
-                    decInstr.regData[RS_2].setFromImm(getExtendExpr(instr(IMM_I_0_12), XLEN, false));
-                    decInstr.regData[RS_3].reset();
+                    decInstr.regData[RS_2].reset();
+                    decInstr.regData[RS_3].setFromImm(getExtendExpr(instr(IMM_I_0_12), XLEN, false));
                     decInstr.regData[RS_des].setFromRegFile(instr(IDX_RD));
                 }else{
                     decInstr.regData[RS_2].setFromRegFile(instr(IDX_R2));
