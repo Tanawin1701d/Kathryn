@@ -22,7 +22,7 @@ namespace kathryn{
 
         void assign() override{
             assert(!nodeSrcs.empty());
-            Operable* finalOpr = nullptr;
+            Operable* finalOpr  = nullptr;
             Operable* oprPerSrc = nullptr;
             for (auto nodeSrc: nodeSrcs){
                 assert(nodeSrc.dependNode != nullptr);

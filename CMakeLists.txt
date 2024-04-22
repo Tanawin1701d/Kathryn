@@ -27,11 +27,9 @@ add_executable(Kathryn
         ${SRC_SIM}
         ${SRC_TEST}
         ${SRC_UTIL}
-        src/model/hwComponent/box/box.h
-        src/example/riscv/core/regAccess.h
         src/example/riscv/element.h
+        src/example/riscv/core/core.h
         src/example/riscv/core/decode.h
-        src/example/riscv/subSystem/regMgm.h
         src/example/riscv/subSystem/storageMgm.h
         src/example/riscv/core/execute.h
         src/example/riscv/core/writeBack.h

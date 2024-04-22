@@ -8,6 +8,7 @@
 #include "kathryn.h"
 #include "example/riscv/element.h"
 #include "example/riscv/subSystem/storageMgm.h"
+#include "example/numberic/extend.h"
 
 namespace kathryn{
 
@@ -21,7 +22,7 @@ namespace kathryn{
             StorageMgmt& _memArb;
             makeWire(readEn, 1);
             makeWire(readAddr, XLEN);
-            Operable* readFn = nullptr;
+            Operable& readFn;
             makeReg(dummyReg, XLEN);
             /*** cmp val*/
             makeWire(cmpLtSign, 1);
@@ -29,8 +30,9 @@ namespace kathryn{
 
             explicit Execute(UOp& decodedUop, StorageMgmt& memArb):
             _decodedUop(decodedUop),
-            _memArb(memArb){
-
+            _memArb(memArb),
+            readFn(_memArb.addReader(readEn, readAddr(2, XLEN)))
+            {
                 readAddr    = exUop.regData[RS_1].idx + exUop.regData[RS_3].idx;
                 cmpLtSign   = (exUop.regData[RS_1].val(XLEN-1) & (~exUop.regData[RS_2].val(XLEN-1)))   |
                              (
@@ -38,11 +40,6 @@ namespace kathryn{
                                      (exUop.regData[RS_1].val(0, XLEN-1) <  exUop.regData[RS_2].val(0, XLEN-1))
                              );
                 cmpLtUnSign =  exUop.regData[RS_1].val(0, XLEN-1) < exUop.regData[RS_2].val(0, XLEN-1);
-            }
-
-            ////////// default is 0
-            Operable* getWriteIdx(){
-                return &exUop.regData[RS_des].idx;
             }
 
             void accessRegData(int idx, MemBlock& memBlock,BYPASS_DATA& bypassData){
@@ -134,54 +131,51 @@ namespace kathryn{
                 cif(exUop.opAlu.isUopUse) {
 
                     cif(exUop.opAlu.isShiftLeftLogical) {
-                        cwhile(true) {
+                        cdowhile(rs2.val(0, 5) > 1){
                             rdes.val <<= rdes.val << (rs2.val(0, 5) > 0);
                             rs2 .val <<= rs2.val - 1;
-                            sbreakCon(rs2.val(0, 5) <= 1);
                         }
                     }
 
                     cif(exUop.opAlu.isShiftRightLogical) {
-                        cwhile(true) {
+                        cdowhile(rs2.val(0, 5) > 1) {
                             rdes.val <<= rdes.val >> (rs2.val(0, 5) > 0);
                             rs2 .val <<= rs2.val - 1;
-                            sbreakCon(rs2.val(0, 5) <= 1);
+                            sbreakCon();
                         }
                     }
 
                     cif(exUop.opAlu.isShiftRightArith) {
-                        cwhile(true) {
+                        cdowhile(rs2.val(0, 5) > 1) {
                             rdes.val(0, XLEN - 1) <<= rdes.val(0, XLEN - 1) >> (rs2.val(0, 5) > 0);
                             rs2 .val <<= rs2.val - 1;
-                            sbreakCon(rs2.val(0, 5) <= 1);
                         }
                     }
                 }
             }
 
             void execLS(){
-                readFn = &_memArb.addReader(readEn, exUop.regData[RS_1].idx + exUop.regData[RS_3].idx);
+
                 cif(exUop.opLs.isUopUse){
-                    cwhile(true) {
+                    cdowhile(!readFn){
                         readEn = 1;
-                        zif(exUop.opLs.size == 0b00 & (*readFn)) {
+                        zif((exUop.opLs.size == 0b00) &readFn) {
                             exUop.regData[RS_des].val <<= getExtendExpr(_memArb.readOutput(0, 8),XLEN,false);
                             zif(~exUop.opLs.isMemLoad) {
                                 _memArb.reqWriteReq(g(_memArb.readOutput(8, XLEN), exUop.regData[RS_2].val(0, 8)),readAddr
                                 );
                             }
-                        }zif(exUop.opLs.size == 0b01 & (*readFn)) {
+                        }zif((exUop.opLs.size == 0b01) & (readFn)) {
                             exUop.regData[RS_des].val <<= getExtendExpr(_memArb.readOutput(0, 16),XLEN,false);
                             zif(~exUop.opLs.isMemLoad) {
                                 _memArb.reqWriteReq(g(_memArb.readOutput(16, XLEN), exUop.regData[RS_2].val(0, 16)),readAddr);
                             }
-                        }zif(exUop.opLs.size == 0b10 & (*readFn)) {
+                        }zif((exUop.opLs.size == 0b10) & (readFn)) {
                             exUop.regData[RS_des].val <<= _memArb.readOutput;
                             zif(~exUop.opLs.isMemLoad) {
                                 _memArb.reqWriteReq(exUop.regData[RS_2].val(0, 16),readAddr);
                             }
                         }
-                        sbreakCon(*readFn);
                     }
                 }
             }

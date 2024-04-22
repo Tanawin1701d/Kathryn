@@ -13,18 +13,22 @@
 
 
 #define sbreak for(auto kathrynBlock = new FlowBlockSCBreak(); kathrynBlock->doPrePostFunction(); kathrynBlock->step()){}
+#define sbreakCon(expr) for(auto kathrynBlock = new FlowBlockSCBreak(expr); kathrynBlock->doPrePostFunction(); kathrynBlock->step()){}
 
 namespace kathryn{
 
     class FlowBlockSCBreak : public FlowBlockBase, public LoopStMacro{
     private:
+        Operable* forceExitOpr   = nullptr;
         NodeWrap* resultNodeWrap = nullptr;
 
-        StateNode* breakNode = nullptr;
-        DummyNode* normExitNode = nullptr;
+        StateNode* breakNode      = nullptr;
+        PseudoNode* breakCondNode = nullptr; /// incase there is condition to break node
+        DummyNode* normExitNode   = nullptr;
 
     public:
         explicit FlowBlockSCBreak();
+        explicit FlowBlockSCBreak(Operable& opr);
         ~FlowBlockSCBreak();
         /** for controller add the local element to this sub block*/
         void addElementInFlowBlock(Node* node) override;

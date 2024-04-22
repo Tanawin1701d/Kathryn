@@ -34,15 +34,23 @@ namespace kathryn{
             BYPASS_DATA bp;
 
             explicit Riscv():
+
             memBlk(MEM_ADDR_IDX-2, XLEN),
+            fetch(memBlk, pc),
             execute(decode.decInstr, memBlk){}
 
             void flow() override {
 
-                std::vector<Operable*> writingReg;
+                cwhile(true){
+                    zif(misPredic){
+                        pc <<= restartPc;
+                    }zelif(fetch.readFin){
+                        pc <<= pc + 4;
+                    }
+                }
 
                 pipWrap{
-                    fetch    .flow(misPredic, restartPc, memBlk,fetchData);
+                    fetch    .flow(misPredic, fetchData);
                     decode   .flow(misPredic, fetchData);
                     /**execute and write back can't be delete anymore*/
                     execute  .flow(misPredic, restartPc, regFile, bp); ///////// mispredict writer

@@ -16,6 +16,7 @@
 #include "model/flowBlock/seq/seq.h"
 #include "model/flowBlock/par/par.h"
 #include "model/flowBlock/loop/whileBase.h"
+#include "model/flowBlock/loop/doWhileBase.h"
 #include "model/flowBlock/loop/cbreak.h"
 #include "model/flowBlock/cond/zif.h"
 #include "model/flowBlock/cond/zelif.h"

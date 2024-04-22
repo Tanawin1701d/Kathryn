@@ -19,11 +19,12 @@ namespace kathryn{
             void flow(UOp& execUop, MemBlock& regFile, BYPASS_DATA& bypassData){
                 RegEle& desReg = execUop.regData[RS_des];
                 pipBlk{
-                    zif( (desReg.valid) && (desReg.idx != 0)){
-                        regFile[desReg.idx] <<= desReg.val;
-                        bypassData.idx   = desReg.idx;
-                        bypassData.value = desReg.val;
-
+                    par {
+                        zif((desReg.valid) && (desReg.idx != 0)) {
+                            regFile[desReg.idx] <<= desReg.val;
+                            bypassData.idx = desReg.idx;
+                            bypassData.value = desReg.val;
+                        }
                     }
                 }
             }

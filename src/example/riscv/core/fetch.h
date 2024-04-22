@@ -23,25 +23,29 @@ namespace kathryn{
             //makeReg(valid, 1);
 
             makeWire(readEn, 1);
-            Operable* readFin = nullptr;
+            StorageMgmt& storageMgmt;
+            Operable&    _reqPc;
+            Operable&    readFin;
+
+            explicit Fetch(StorageMgmt& memMgmt, Operable& reqPc):
+            storageMgmt(memMgmt),
+            _reqPc(reqPc),
+            readFin(storageMgmt.addReader(readEn,_reqPc))
+            {}
 
 
-            void flow(Operable& rst, Operable& reqPc, StorageMgmt& memMgmt, FETCH_DATA& fetchdata) {
-
-
-                readFin = &memMgmt.addReader(readEn,reqPc);
+            void flow(Operable& rst, FETCH_DATA& fetchdata) {
 
                 pipBlk {
                     intrReset(rst);
-                    cwhile(true) {
-                        par {
-                            readEn        = 1;
-                            fetchdata.fetch_instr <<= memMgmt.readOutput;
-                            zif(*readFin){
-                                fetchdata.fetch_pc     <<= reqPc;
-                                fetchdata.fetch_nextpc <<= reqPc + 4;
+                    par {
+                        cdowhile(!readFin){
+                            readEn = 1;
+                            fetchdata.fetch_instr <<= storageMgmt.readOutput;
+                            zif(readFin) {
+                                fetchdata.fetch_pc <<= _reqPc;
+                                fetchdata.fetch_nextpc <<= _reqPc + 4;
                             }
-                            sbreakCon(*readFin);
                         }
                     }
                 }

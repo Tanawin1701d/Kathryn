@@ -16,13 +16,22 @@ namespace kathryn{
                           FLOW_JO_SUB_FLOW,
                           true
                   }),
-    LoopStMacro() {
+    LoopStMacro() {}
 
-    }
+    FlowBlockSCBreak::FlowBlockSCBreak(Operable& opr):
+            FlowBlockBase(EXITWHILE,
+                          {
+                                  {FLOW_ST_BASE_STACK},
+                                  FLOW_JO_SUB_FLOW,
+                                  true
+                          }),
+            LoopStMacro(),
+            forceExitOpr(&opr){}
 
     FlowBlockSCBreak::~FlowBlockSCBreak(){
         delete resultNodeWrap;
         delete breakNode;
+        delete breakCondNode;
         delete normExitNode;
     }
 
@@ -63,7 +72,15 @@ namespace kathryn{
         /**build resultNodeWrap*/
         resultNodeWrap = new NodeWrap();
         resultNodeWrap->addEntraceNode(breakNode);
-        resultNodeWrap->addForceExitNode(breakNode);
+        if (forceExitOpr == nullptr){
+            resultNodeWrap->addForceExitNode(breakNode);
+        }else{
+            breakCondNode = new PseudoNode(1, BITWISE_AND);
+            breakCondNode->addDependNode(breakNode, forceExitOpr);
+            breakCondNode->assign();
+            addSysNode(breakCondNode);
+            resultNodeWrap->addForceExitNode(breakCondNode);
+        }
         resultNodeWrap->addExitNode(normExitNode);
 
     }
