@@ -5,32 +5,13 @@
 #ifndef KATHRYN_DECODE_H
 #define KATHRYN_DECODE_H
 
-#include "fetch.h"
+#include "kathryn.h"
 #include "example/riscv/element.h"
+#include "example/numberic/extend.h"
 
 namespace kathryn{
 
     namespace riscv{
-
-//        enum RISCV_OP{
-//            /*** mem memory related opcode */
-//            RS_LOAD    = 0b00'000,
-//            RS_STORE   = 0b01'000,
-//            RS_MISCMEM = 0b00'011,
-//            /***  branch instruction*/
-//            RS_BRANCH  = 0b11'000,
-//            RS_JALR    = 0b11'001,
-//            RS_JAL     = 0b11'011,
-//            /***  arithmthic instruction*/
-//            RS_OP_IMM  = 0b00'100,
-//            RS_OP      = 0b01'100,
-//
-//            RS_AUIPC   = 0b00'101,
-//            RS_LUI     = 0b01'101,
-//            /**  system instruction*/
-//            RS_SYSTEM   = 0b11'100,
-//        };
-
 
         class Decode {
 
@@ -62,53 +43,59 @@ namespace kathryn{
 
         public:
             UOp decInstr;
+            makeWire(invalidHighDec, 1);
+            makeWire(invalidLowDec,  1);
 
 
 
-            void flow(Fetch &fetchBlk) {
+            void flow(Operable& rst, FETCH_DATA& fetchData) {
 
                 pipBlk {
+                    intrReset(rst);
                     par {
 
                         /////// deal with pc
-                        decInstr.pc     <<= fetchBlk.fetch_pc;
-                        decInstr.nextPc <<= fetchBlk.fetch_nextpc;
-                        auto op= fetchBlk.fetch_instr(OP_ALL);
+                        decInstr.pc     <<= fetchData.fetch_pc;
+                        decInstr.nextPc <<= fetchData.fetch_nextpc;
+                        auto& op= fetchData.fetch_instr(OP_ALL);
 
                         zif( op(OP_H) == 0b00){
                             //////// load  immop aulpc ////////////////////////////////////////////////
                             zif (op(OP_L) == 0b000){
-                                doLoadStoreDecode(true, fetchBlk.fetch_instr);
+                                doLoadStoreDecode(true, fetchData.fetch_instr);
                             }///zelif(op(2,5) == 0b11){//doMiscDecode(fetchBlk.fetch_instr);///}
                             zelif(op(OP_L) == 0b100){
-                                doOpDecode(fetchBlk.fetch_instr, false); ///// imm
-                            }zelse{
-                                doAulPcDecode(fetchBlk.fetch_instr);
+                                doOpDecode(fetchData.fetch_instr, false); ///// imm
+                            }zelse{ ///////101
+                                doAulPcDecode(fetchData.fetch_instr);
                             }
                             ///////////////////////////////////////////////////////////////////////////
                         }zelif(op(OP_H) == 0b01){
                             //////////// store op luidcode////////////////////////////////////////////
                             zif (op(OP_L) == 0b000){
-                                doLoadStoreDecode(false, fetchBlk.fetch_instr);
+                                doLoadStoreDecode(false, fetchData.fetch_instr);
                             }zelif(op(OP_L) == 0b100){
-                                doOpDecode(fetchBlk.fetch_instr, true);
+                                doOpDecode(fetchData.fetch_instr, true);
                             }zelse{ //(op(2,5) == 0b101) {
-                                doLuiDecode(fetchBlk.fetch_instr);
+                                doLuiDecode(fetchData.fetch_instr);
                             }
                             ////////////////////////////////////////////////////////////////////////
-                        }zelse{ ////// 11   we dont support 10
+                        }zelif(op(OP_H) == 0b11){ ////// 11   we dont support 10
                             ////////// branch jump with reg //////////////////////////
                             zif (op(OP_L) == 0b000){
-                                doBranchDecode(fetchBlk.fetch_instr);
+                                doBranchDecode(fetchData.fetch_instr);
                             }zelif(op(OP_L) == 0b001){
-                                doJalRDecode(fetchBlk.fetch_instr);
+                                doJalRDecode(fetchData.fetch_instr);
                             }zelse{////(op(2,5) == 0b011){ this is 11
-                                doJalDecode(fetchBlk.fetch_instr);
+                                doJalDecode(fetchData.fetch_instr);
                             }//}zelse{
 //                                doSystemDecode(fetchBlk.fetch_instr);
 //                            }
                             ///////////////////////////////////////////////////////////
-                        }
+                        }zelse{
+                            /////// 11
+                            invalidHighDec = 1;
+                        };
 
                     }
                 }
@@ -136,18 +123,11 @@ namespace kathryn{
 
                 }
 
-
                 decInstr.opLs.set(isLoad,instr(sizeBit), instr(extendModeBit));
-                decInstr.opAlu        .reset();
-                decInstr.opCtrlFlow   .reset();
-                decInstr.opLdPc       .reset();
+                decInstr.opAlu     .reset();
+                decInstr.opCtrlFlow.reset();
+                decInstr.opLdPc    .reset();
             }
-//
-//            void doMiscDecode(Reg& instr){
-//
-//
-//
-//            }
 
             void doOpDecode(Reg& instr, bool isUsedR2){ //// else is imm
 
@@ -186,6 +166,7 @@ namespace kathryn{
 
 
             }
+
             void doAulPcDecode(Reg& instr, bool needPc = false){
                 decInstr.regData[RS_1].reset();
                 makeVal(fixdown, 12, 0);
@@ -279,38 +260,6 @@ namespace kathryn{
 
             }
 
-//            void doSystemDecode(Reg& instr){
-//
-//            }
-
-            template<typename T>
-            nest& getExtendExpr(T& rawImm, int targetSize, bool unsignExtend) { ///// false is sign extend
-
-                assert(targetSize >= rawImm.getOperableSlice().getSize());
-
-                int extraSize = targetSize - rawImm.getOperableSlice().getSize();
-
-                nest* resultNest;
-
-                if (unsignExtend){
-                    makeVal(extendBits, extraSize);
-                    resultNest = &g(extendBits, rawImm);
-                    resultNest->setVarName("extend_with_usign");
-                }else{
-                    ////// sign extension
-
-                    ///////// get last bit and slice it
-                    auto* signBit = new expression(1);
-                    Slice lastBitSlice = rawImm.getOperableSlice();
-                          lastBitSlice = lastBitSlice.getSubSlice(lastBitSlice.getSize()-1);
-                    *signBit = *rawImm.doSlice( lastBitSlice );
-                    //////// make nest from last bit value
-                    resultNest = &g(makeNestWithSameOneVal(*signBit, extraSize), rawImm);
-                    resultNest->setVarName("extend_with_sign");
-                }
-                return *resultNest;
-            }
-
         };
 
 
@@ -318,3 +267,24 @@ namespace kathryn{
 
 }
 #endif //KATHRYN_DECODE_H
+
+
+//        enum RISCV_OP{
+//            /*** mem memory related opcode */
+//            RS_LOAD    = 0b00'000,
+//            RS_STORE   = 0b01'000,
+//            RS_MISCMEM = 0b00'011,
+//            /***  branch instruction*/
+//            RS_BRANCH  = 0b11'000,
+//            RS_JALR    = 0b11'001,
+//            RS_JAL     = 0b11'011,
+//            /***  arithmthic instruction*/
+//            RS_OP_IMM  = 0b00'100,
+//            RS_OP      = 0b01'100,
+//
+//            RS_AUIPC   = 0b00'101,
+//            RS_LUI     = 0b01'101,
+//            /**  system instruction*/
+//            RS_SYSTEM   = 0b11'100,
+//        };
+

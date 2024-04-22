@@ -21,50 +21,34 @@ namespace kathryn{
 
             /** read section*/
             int amountReadIdx = 0;
-            std::vector<Operable*> readIdxs;
-            std::vector<Wire*>     readEns;
+            std::vector<Operable*> readAddress;
+            std::vector<Operable*> readEns;
             std::vector<Wire*>     readFinishes;
 
-            Wire &readIdxMaster;
-            Operable &readOutput;
+            Wire     &readIdxMaster;
+            MemBlockEleHolder&readOutput;
 
             explicit StorageMgmt(int idxSize, int regSize) : REGSIZE(regSize),
                                                              AMTREG(1 << idxSize),
                                                              IDX_SIZE(idxSize),
                                                              _myMem(_make<MemBlock>("_myMem", AMTREG, REGSIZE)),
                                                              readIdxMaster(_make<Wire>("_readIndexer", IDX_SIZE)),
-                                                             readOutput(_myMem[readIdxMaster]) {}
+                                                             readOutput(_myMem[readIdxMaster]){}
 
-            void reqStorage(Reg &x, Operable &idx, Reg& valid) {
+            Operable& addReader(Operable& readEn, Operable &address) {
 
-                assert(idx.getOperableSlice().getSize() == IDX_SIZE);
-                assert(x.getOperableSlice().getSize() == REGSIZE);
-                assert(valid.getOperableSlice().getSize() == 1);
+                assert(address.getOperableSlice().getSize() == IDX_SIZE);
 
 
-                readIdxs    .push_back(&idx);
-                readEns     .push_back(&_make<Wire>("startReadReg_" + std::to_string(amountReadIdx), 1));
+                readAddress    .push_back(&address);
+                readEns     .push_back(&readEn);
                 readFinishes.push_back(&_make<Wire>("notifyReadReg_" + std::to_string(amountReadIdx), 1));
                 amountReadIdx++;
-
-                cwhile(true) {
-                    par {
-                        *readEns[readFinishes.size() - 1] = 1;
-                        cif (valid){
-                            sbreak
-                        }celif(*readFinishes[readFinishes.size() - 1]) {
-                            valid <<= 1;
-                            x     <<= readOutput;
-                            sbreak
-                        }celse{
-                            x <<= 0;
-                        }
-                    }
-                }
+                return *(*readFinishes.rbegin());
             }
 
 
-            void reqWriteReg(Reg &x, Operable &idx) {
+            void reqWriteReq(Operable& x, Operable &idx) {
                 assert(idx.getOperableSlice().getSize() == IDX_SIZE);
                 assert(x.getOperableSlice().getSize() == REGSIZE);
                 _myMem[idx] <<= x;
@@ -72,15 +56,17 @@ namespace kathryn{
 
             void buildReadFlow() {
 
+                assert(!readEns.empty());
+
                 cwhile(true) {
 
-                    zif(*readEns[0]) {
-                        readIdxMaster = *readIdxs[0];
+                    zif(*readEns[readEns.size()-1]) {
+                        readIdxMaster = *readAddress[0];
                         (*readFinishes[0]) = 1;
                     }
-                    for (int i = 1; i < readEns.size(); i++) {
+                    for (int i = ((int)readEns.size())-2; i >= 0; i--) {
                         zelif(*readEns[i]) {
-                            readIdxMaster = *readIdxs[i];
+                            readIdxMaster = *readAddress[i];
                             (*readFinishes[i]) = 1;
                         }
                     }

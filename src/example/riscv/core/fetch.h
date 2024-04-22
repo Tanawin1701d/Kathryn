@@ -6,8 +6,9 @@
 #define KATHRYN_FETCH_H
 
 #include "kathryn.h"
-#include "example/riscv/subSystem/regMgm.h"
+#include "example/riscv/subSystem/storageMgm.h"
 #include "example/riscv/parameter.h"
+#include "example/riscv/element.h"
 
 namespace kathryn{
 
@@ -17,15 +18,31 @@ namespace kathryn{
 
 
         public:
-            makeReg(fetch_instr, XLEN);
-            makeReg(fetch_pc, MEM_ADDR_IDX);
-            makeReg(fetch_nextpc, MEM_ADDR_IDX);
+            /** to send to next instruction*/
 
-            void flow(StorageMgmt &memMgmt, Operable &reqPc) {
+            //makeReg(valid, 1);
+
+            makeWire(readEn, 1);
+            Operable* readFin = nullptr;
+
+
+            void flow(Operable& rst, Operable& reqPc, StorageMgmt& memMgmt, FETCH_DATA& fetchdata) {
+
+
+                readFin = &memMgmt.addReader(readEn,reqPc);
+
                 pipBlk {
-                    par {
-                        memMgmt.reqStorageReg(fetch_instr, reqPc);
-                        fetch_pc <<= reqPc;
+                    intrReset(rst);
+                    cwhile(true) {
+                        par {
+                            readEn        = 1;
+                            fetchdata.fetch_instr <<= memMgmt.readOutput;
+                            zif(*readFin){
+                                fetchdata.fetch_pc     <<= reqPc;
+                                fetchdata.fetch_nextpc <<= reqPc + 4;
+                            }
+                            sbreakCon(*readFin);
+                        }
                     }
                 }
             }

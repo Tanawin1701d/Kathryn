@@ -13,10 +13,7 @@ namespace kathryn{
         static const int MEM_ADDR_IDX = 32; /////256 megabyte
         static const int REG_IDX      =  5;
         static const int UOP_WIDTH    =  7;
-
-
-
-
+        static const int AMT_REG      = 32;
 
     }
 

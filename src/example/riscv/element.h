@@ -40,6 +40,7 @@ namespace kathryn{
 
             void reset(){
                 valid  <<= 0;
+                idx   <<= 0;
             }
 
             void setZero(){
@@ -48,13 +49,11 @@ namespace kathryn{
                 val   <<= 0;
             }
 
-
-
         };
 
         struct lsUop{
             makeReg(isUopUse  , 1);
-            makeReg(isMemLoad , 1);
+            makeReg(isMemLoad , 1); ///// else is store
             makeReg(size      , 2); //// 00 -> 8, 01 -> 16, 10 -> 32, 11-> reserve
             makeReg(extendMode, 1); //// 0 zero extend 1 signExtend
 
@@ -90,9 +89,10 @@ namespace kathryn{
 
         struct jumpUop{
             makeReg(isUopUse  , 1);
-            makeReg(extendMode, 1); //// 0 zero extend 1 signExtend
             makeReg(isJalR    , 1);
             makeReg(isJal     , 1);
+
+            makeReg(extendMode, 1); //// 0 zero extend 1 signExtend
             makeReg(isEq      , 1);
             makeReg(isNEq     , 1);
             makeReg(isLt      , 1);
@@ -123,6 +123,17 @@ namespace kathryn{
             jumpUop opCtrlFlow;
             ldPc    opLdPc;
 
+        };
+
+        struct FETCH_DATA{
+            makeReg(fetch_pc    , MEM_ADDR_IDX);
+            makeReg(fetch_nextpc, MEM_ADDR_IDX);
+            makeReg(fetch_instr, XLEN);
+        };
+
+        struct BYPASS_DATA{
+            makeWire(idx, REG_IDX);
+            makeWire(value, XLEN);
         };
 
     }

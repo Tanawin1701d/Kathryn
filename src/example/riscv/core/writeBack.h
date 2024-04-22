@@ -7,7 +7,7 @@
 
 #include "kathryn.h"
 #include "example/riscv/element.h"
-#include "execute.h"
+#include "example/riscv/subSystem/storageMgm.h"
 
 namespace kathryn{
 
@@ -15,22 +15,20 @@ namespace kathryn{
 
         class WriteBack{
         public:
-            makeReg(x, 1);
-            void flow(Execute& exec,RegMgmt& regMgmt){
-                RegEle& nextToWriteReg = exec.exUop.regData[RS_des];
+
+            void flow(UOp& execUop, MemBlock& regFile, BYPASS_DATA& bypassData){
+                RegEle& desReg = execUop.regData[RS_des];
                 pipBlk{
-                    cif(nextToWriteReg.valid) {
-                        regMgmt.reqWriteReg(nextToWriteReg.val, nextToWriteReg.idx);
-                    }celse{
-                        x <<= 0;
+                    zif( (desReg.valid) && (desReg.idx != 0)){
+                        regFile[desReg.idx] <<= desReg.val;
+                        bypassData.idx   = desReg.idx;
+                        bypassData.value = desReg.val;
+
                     }
                 }
             }
-
         };
-
     }
-
 }
 
 #endif //KATHRYN_WRITEBACK_H
