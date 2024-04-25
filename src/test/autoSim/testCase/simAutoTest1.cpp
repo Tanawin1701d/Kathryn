@@ -35,6 +35,19 @@ namespace kathryn{
                 a <<= a << y;
             }
 
+//
+//            seq{
+//                cif(a < b){
+//                    a <<= b;
+//                }celse{
+//                    b <<= a;
+//                }
+//            }
+//
+//            cwhile(a<b){
+//                a <<= a + 1;
+//            }
+
         }
 
     };

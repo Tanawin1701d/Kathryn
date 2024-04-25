@@ -34,7 +34,10 @@ namespace kathryn {
         assert(subBlockNodeWrap != nullptr);
 
         /***sub block depend lower deck is assume condition or*/
-        subBlockNodeWrap->addDependNodeToAllNode(subBlockNodeWrap->getExitNode(), _purifiedCondExpr);
+        subBlockNodeWrap->addDependNodeToAllNode(subBlockNodeWrap->getExitNode(),
+                                                 subBlockNodeWrap->isThereForceExitNode()
+                                                 ? &((*_purifiedCondExpr) & (~(*subBlockNodeWrap->getForceExitNode()->getExitOpr())))
+                                                 : _purifiedCondExpr);
         if (isThereIntStart()) {
             subBlockNodeWrap->addDependNodeToAllNode(intNodes[INT_START], nullptr);
         }
@@ -42,6 +45,9 @@ namespace kathryn {
         //////// no need reset signal
         exitNode = new PseudoNode(1, BITWISE_OR);
         exitNode->addDependNode(subBlockNodeWrap->getExitNode(), &(!(*_purifiedCondExpr)));
+        if (subBlockNodeWrap->isThereForceExitNode()){
+            exitNode->addDependNode(subBlockNodeWrap->getForceExitNode(), nullptr);
+        }
         exitNode->assign();
         addSysNode(exitNode);
         ////////////////////////////////////////////////////////////////////
