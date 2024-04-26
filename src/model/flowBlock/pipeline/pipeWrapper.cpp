@@ -11,7 +11,7 @@ namespace kathryn{
     FlowBlockPipeWrapper::FlowBlockPipeWrapper():
     FlowBlockBase(PIPE_WRAPPER,
                   {
-                          {FLOW_ST_BASE_STACK},
+                          {FLOW_ST_BASE_STACK, FLOW_ST_PIP_WRAP},
                           FLOW_JO_SUB_FLOW,
                           true
                   }){}

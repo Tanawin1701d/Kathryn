@@ -168,6 +168,21 @@ namespace kathryn{
 
     }
 
+
+    Operable& ModelController::on_get_check_next_pipblk_ready_signal() {
+        tryPurifyFlowStack();
+        mfAssert(isTopFbBelongToTopModule(), "there is no flow block to get next ready signal");
+        assert((!flowBlockStacks[FLOW_ST_PIP_WRAP].empty()) &&
+               (flowBlockStacks[FLOW_ST_PIP_WRAP].top()->getModuleParent() == getTopModulePtr())
+               );
+
+        /*** get and gen signal*/
+        auto pipWrapBlk = flowBlockStacks[FLOW_ST_PIP_WRAP].top();
+        assert(pipWrapBlk->getFlowType() == PIPE_WRAPPER);
+        auto castedpipWrapBlk = (FlowBlockPipeWrapper*) pipWrapBlk;
+        return castedpipWrapBlk->getNextPipBlockReadySignal();
+    }
+
     FLOW_BLOCK_TYPE ModelController::get_top_pattern_flow_block_type(){
 
         bool topPatternFbBelongToTopModule =

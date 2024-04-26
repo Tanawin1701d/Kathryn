@@ -14,7 +14,7 @@
 #include "pipelineBlock.h"
 
 #define pipWrap for(auto kathrynBlock_pipWrap = new FlowBlockPipeWrapper(); kathrynBlock_pipWrap->doPrePostFunction(); kathrynBlock_pipWrap->step())
-#define nextPipReadySig kathrynBlock_pipWrap->getNextPipBlockReadySignal()
+#define nextPipReadySig getControllerPtr()->on_get_check_next_pipblk_ready_signal()
 
 namespace kathryn{
 
