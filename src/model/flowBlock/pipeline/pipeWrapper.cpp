@@ -49,6 +49,15 @@ namespace kathryn{
         return _resultNodeWrap;
     }
 
+    expression& FlowBlockPipeWrapper::getNextPipBlockReadySignal(){
+        /** due to this getting pipe block is not fill to the vector*/
+        int declareBlock = _insidePipBlks.size();
+        _userCheckNextSignals.emplace_back(declareBlock);
+        return *(_userCheckNextSignals.rbegin()->expr);
+    }
+
+
+
     void FlowBlockPipeWrapper::onAttachBlock() {
         ctrl->on_attach_flowBlock(this);
     }
@@ -70,6 +79,10 @@ namespace kathryn{
         for (int blkId = 0; blkId < _insidePipBlks.size(); blkId++){
             _insidePipBlks[blkId]->setRecvPipe(_pipComs[blkId]);
             _insidePipBlks[blkId]->setSendPipe(_pipComs[blkId+1]);
+        }
+        /**set user check next signal*/
+        for (auto& userCheckNextSignal: _userCheckNextSignals){
+            userCheckNextSignal.connectSignal(_pipComs);
         }
 
         buildSubHwComponent();
@@ -125,4 +138,24 @@ namespace kathryn{
             }
     }
 
+
+    /**
+     *
+     * user check next signal structure
+     *
+     * **/
+
+
+
+    FlowBlockPipeWrapper::UserCheckNextSignal::UserCheckNextSignal(int pipIdx):
+    srcPipId(pipIdx),
+    desPipId(pipIdx+1),
+    expr(&_make<expression>("userCheckSignal" + std::to_string(pipIdx), 1))
+    {}
+
+    void FlowBlockPipeWrapper::UserCheckNextSignal::connectSignal(std::vector<Pipe*> &allPip) {
+        assert(desPipId < allPip.size());
+        /////// get start block of next block
+        (*expr) = *(allPip[desPipId]->_slaveReadyToRecv);
+    }
 }

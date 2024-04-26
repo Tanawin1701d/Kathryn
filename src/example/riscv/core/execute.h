@@ -16,8 +16,11 @@ namespace kathryn{
 
         class Execute{
         public:
-            UOp exUop;
             UOp& _decodedUop;
+            RegEle& rdes;
+            RegEle& rs1;
+            RegEle& rs2;
+            RegEle& rs3;
             /*** mem access*/
             StorageMgmt& _memArb;
             makeWire(readEn, 1);
@@ -28,23 +31,27 @@ namespace kathryn{
             makeWire(cmpLtSign, 1);
             makeWire(cmpLtUnSign, 1);
 
-            explicit Execute(UOp& decodedUop, StorageMgmt& memArb):
+            explicit Execute(UOp& decodedUop, StorageMgmt& memArb, RegEle& desReg):
             _decodedUop(decodedUop),
+            rdes(desReg),
+            rs1(_decodedUop.regData[RS_1]),
+            rs2(_decodedUop.regData[RS_2]),
+            rs3(_decodedUop.regData[RS_3]),
             _memArb(memArb),
             readFn(_memArb.addReader(readEn, readAddr(2, XLEN)))
             {
-                readAddr    = exUop.regData[RS_1].idx + exUop.regData[RS_3].idx;
-                cmpLtSign   = (exUop.regData[RS_1].val(XLEN-1) & (~exUop.regData[RS_2].val(XLEN-1)))   |
-                             (
-                                     (exUop.regData[RS_1].val(XLEN-1)          == exUop.regData[RS_2].val(XLEN-1)) &
-                                     (exUop.regData[RS_1].val(0, XLEN-1) <  exUop.regData[RS_2].val(0, XLEN-1))
+                readAddr    = _decodedUop.regData[RS_1].idx + _decodedUop.regData[RS_3].idx;
+                cmpLtSign   = (_decodedUop.regData[RS_1].val(XLEN - 1) & (~_decodedUop.regData[RS_2].val(XLEN - 1))) |
+                              (
+                                      (_decodedUop.regData[RS_1].val(XLEN - 1) == _decodedUop.regData[RS_2].val(XLEN - 1)) &
+                                      (_decodedUop.regData[RS_1].val(0, XLEN - 1) < _decodedUop.regData[RS_2].val(0, XLEN - 1))
                              );
-                cmpLtUnSign =  exUop.regData[RS_1].val(0, XLEN-1) < exUop.regData[RS_2].val(0, XLEN-1);
+                cmpLtUnSign = _decodedUop.regData[RS_1].val(0, XLEN - 1) < _decodedUop.regData[RS_2].val(0, XLEN - 1);
             }
 
             void accessRegData(int idx, MemBlock& memBlock,BYPASS_DATA& bypassData){
                 RegEle& rs1    = _decodedUop.regData[idx];
-                RegEle& rsfill = exUop.regData[idx];
+                RegEle& rsfill = _decodedUop.regData[idx];
                 zif( (~rs1.valid) & (rs1.idx != 0)){
                     zif(bypassData.idx == rs1.idx){ rsfill.val <<= bypassData.value;}     /////// bypass?
                     zelse                         { rsfill.val <<= memBlock[rs1.idx];} ///////// fill data
@@ -59,9 +66,9 @@ namespace kathryn{
                     par{
                         accessRegData(RS_1, memBlock, bypassData); ////// access register 1
                         accessRegData(RS_2,  memBlock, bypassData);
+                        rdes <<= _decodedUop.regData[RS_des];
                     }
                     par{
-
                         /////////// do alu uop
                         execAlu(misPredic, reStartPc);
                     }
@@ -74,78 +81,69 @@ namespace kathryn{
             }
 
             void execAlu(Wire& misPredic,Wire& reStartPc){
-                RegEle& rdes  = exUop.regData[RS_des];
-                RegEle& rs1   = exUop.regData[RS_1];
-                RegEle& rs2   = exUop.regData[RS_2];
-                RegEle& rs3   = exUop.regData[RS_3];
                 /////////////////// do simple alu
-                zif(exUop.opAlu.isUopUse){
+                zif(_decodedUop.opAlu.isUopUse){
                     rdes.valid <<= 1;
-                    zif(exUop.opAlu.isAdd){ rdes.val <<= rs1.val + rs2.val;}
-                    zif(exUop.opAlu.isSub){ rdes.val <<= rs1.val - rs2.val;}
-                    zif(exUop.opAlu.isXor){ rdes.val <<= rs1.val ^ rs2.val;}
-                    zif(exUop.opAlu.isOr) { rdes.val <<= rs1.val | rs2.val;}
-                    zif(exUop.opAlu.isAnd){ rdes.val <<= rs1.val & rs2.val;}
-                    zif(exUop.opAlu.isCmpLessThanSign) {rdes.val(1, XLEN) <<= 0; rdes.val(0) <<= cmpLtSign;}
-                    zif(exUop.opAlu.isCmpLessThanUSign){rdes.val(1, XLEN) <<= 0; rdes.val(0) <<= cmpLtUnSign;}
+                    zif(_decodedUop.opAlu.isAdd){ rdes.val <<= rs1.val + rs2.val;}
+                    zif(_decodedUop.opAlu.isSub){ rdes.val <<= rs1.val - rs2.val;}
+                    zif(_decodedUop.opAlu.isXor){ rdes.val <<= rs1.val ^ rs2.val;}
+                    zif(_decodedUop.opAlu.isOr) { rdes.val <<= rs1.val | rs2.val;}
+                    zif(_decodedUop.opAlu.isAnd){ rdes.val <<= rs1.val & rs2.val;}
+                    zif(_decodedUop.opAlu.isCmpLessThanSign) { rdes.val(1, XLEN) <<= 0; rdes.val(0) <<= cmpLtSign;}
+                    zif(_decodedUop.opAlu.isCmpLessThanUSign){ rdes.val(1, XLEN) <<= 0; rdes.val(0) <<= cmpLtUnSign;}
                 }
 
-                zif(exUop.opCtrlFlow.isUopUse){
+                zif(_decodedUop.opCtrlFlow.isUopUse){
                     /** this work only if predic pc is eq to pc+4*/
 
-                    misPredic = (exUop.opCtrlFlow.isJal) |
-                                (exUop.opCtrlFlow.isJalR)|
-                                (exUop.opCtrlFlow.isEq   & rs1.val == rs2.val) |
-                                (exUop.opCtrlFlow.isNEq  & rs1.val != rs2.val) |
-                                (exUop.opCtrlFlow.isLt   &   exUop.opCtrlFlow.extendMode  & cmpLtSign) |
-                                (exUop.opCtrlFlow.isLt   & (~exUop.opCtrlFlow.extendMode)  & cmpLtUnSign) |      //////// unsign
-                                (exUop.opCtrlFlow.isGe   & ( exUop.opCtrlFlow.extendMode)  & (~cmpLtSign)) |
-                                (exUop.opCtrlFlow.isGe   & (~exUop.opCtrlFlow.extendMode)  & (~cmpLtUnSign));
-                    zif(exUop.opCtrlFlow.isJal){
-                        reStartPc    = exUop.pc + rs1.val;
-                        rdes.val   <<= exUop.pc + 4;
+                    misPredic = (_decodedUop.opCtrlFlow.isJal) |
+                                (_decodedUop.opCtrlFlow.isJalR) |
+                                (_decodedUop.opCtrlFlow.isEq & rs1.val == rs2.val) |
+                                (_decodedUop.opCtrlFlow.isNEq & rs1.val != rs2.val) |
+                                (_decodedUop.opCtrlFlow.isLt & _decodedUop.opCtrlFlow.extendMode & cmpLtSign) |
+                                (_decodedUop.opCtrlFlow.isLt & (~_decodedUop.opCtrlFlow.extendMode) & cmpLtUnSign) |      //////// unsign
+                                (_decodedUop.opCtrlFlow.isGe & ( _decodedUop.opCtrlFlow.extendMode) & (~cmpLtSign)) |
+                                (_decodedUop.opCtrlFlow.isGe & (~_decodedUop.opCtrlFlow.extendMode) & (~cmpLtUnSign));
+                    zif(_decodedUop.opCtrlFlow.isJal){
+                        reStartPc    = _decodedUop.pc + rs1.val;
+                        rdes.val   <<= _decodedUop.pc + 4;
                         rdes.valid <<= 1;
-                    }zelif(exUop.opCtrlFlow.isJalR){
+                    }zelif(_decodedUop.opCtrlFlow.isJalR){
                         reStartPc    = rs1.val + rs2.val;
-                        rdes.val   <<= exUop.pc + 4;
+                        rdes.val   <<= _decodedUop.pc + 4;
                         rdes.valid <<= 1;
                     }zelse{
-                        reStartPc = exUop.pc + rs3.val;
+                        reStartPc = _decodedUop.pc + rs3.val;
                     }
                 }
 
-                zif(exUop.opLdPc.isUopUse){
+                zif(_decodedUop.opLdPc.isUopUse){
                     rdes.valid <<= 1;
-                    zif(exUop.opLdPc.needPc){ rdes.val <<= exUop.pc + rs1.val;}
-                    zelse{ rdes.val <<= rs1.val; };
+                    zif(_decodedUop.opLdPc.needPc){ rdes.val <<= _decodedUop.pc + rs1.val;}
+                    zelse                         { rdes.val <<= rs1.val; };
                 }
 
             }
 
             void execComplexAlu(){
 
-                RegEle& rdes  = exUop.regData[RS_des];
-                RegEle& rs1   = exUop.regData[RS_1];
-                RegEle& rs2   = exUop.regData[RS_2];
+                cif(_decodedUop.opAlu.isUopUse) {
 
-                cif(exUop.opAlu.isUopUse) {
-
-                    cif(exUop.opAlu.isShiftLeftLogical) {
+                    cif(_decodedUop.opAlu.isShiftLeftLogical) {
                         cdowhile(rs2.val(0, 5) > 1){
                             rdes.val <<= rdes.val << (rs2.val(0, 5) > 0);
                             rs2 .val <<= rs2.val - 1;
                         }
                     }
 
-                    cif(exUop.opAlu.isShiftRightLogical) {
+                    cif(_decodedUop.opAlu.isShiftRightLogical) {
                         cdowhile(rs2.val(0, 5) > 1) {
                             rdes.val <<= rdes.val >> (rs2.val(0, 5) > 0);
                             rs2 .val <<= rs2.val - 1;
-                            sbreakCon();
                         }
                     }
 
-                    cif(exUop.opAlu.isShiftRightArith) {
+                    cif(_decodedUop.opAlu.isShiftRightArith) {
                         cdowhile(rs2.val(0, 5) > 1) {
                             rdes.val(0, XLEN - 1) <<= rdes.val(0, XLEN - 1) >> (rs2.val(0, 5) > 0);
                             rs2 .val <<= rs2.val - 1;
@@ -156,24 +154,24 @@ namespace kathryn{
 
             void execLS(){
 
-                cif(exUop.opLs.isUopUse){
+                cif(_decodedUop.opLs.isUopUse){
                     cdowhile(!readFn){
                         readEn = 1;
-                        zif((exUop.opLs.size == 0b00) &readFn) {
-                            exUop.regData[RS_des].val <<= getExtendExpr(_memArb.readOutput(0, 8),XLEN,false);
-                            zif(~exUop.opLs.isMemLoad) {
-                                _memArb.reqWriteReq(g(_memArb.readOutput(8, XLEN), exUop.regData[RS_2].val(0, 8)),readAddr
+                        zif((_decodedUop.opLs.size == 0b00) & readFn) {
+                            _decodedUop.regData[RS_des].val <<= getExtendExpr(_memArb.readOutput(0, 8), XLEN, false);
+                            zif(~_decodedUop.opLs.isMemLoad) {
+                                _memArb.reqWriteReq(g(_memArb.readOutput(8, XLEN), _decodedUop.regData[RS_2].val(0, 8)), readAddr
                                 );
                             }
-                        }zif((exUop.opLs.size == 0b01) & (readFn)) {
-                            exUop.regData[RS_des].val <<= getExtendExpr(_memArb.readOutput(0, 16),XLEN,false);
-                            zif(~exUop.opLs.isMemLoad) {
-                                _memArb.reqWriteReq(g(_memArb.readOutput(16, XLEN), exUop.regData[RS_2].val(0, 16)),readAddr);
+                        }zif((_decodedUop.opLs.size == 0b01) & (readFn)) {
+                            _decodedUop.regData[RS_des].val <<= getExtendExpr(_memArb.readOutput(0, 16), XLEN, false);
+                            zif(~_decodedUop.opLs.isMemLoad) {
+                                _memArb.reqWriteReq(g(_memArb.readOutput(16, XLEN), _decodedUop.regData[RS_2].val(0, 16)), readAddr);
                             }
-                        }zif((exUop.opLs.size == 0b10) & (readFn)) {
-                            exUop.regData[RS_des].val <<= _memArb.readOutput;
-                            zif(~exUop.opLs.isMemLoad) {
-                                _memArb.reqWriteReq(exUop.regData[RS_2].val(0, 16),readAddr);
+                        }zif((_decodedUop.opLs.size == 0b10) & (readFn)) {
+                            _decodedUop.regData[RS_des].val <<= _memArb.readOutput;
+                            zif(~_decodedUop.opLs.isMemLoad) {
+                                _memArb.reqWriteReq(_decodedUop.regData[RS_2].val, readAddr);
                             }
                         }
                     }

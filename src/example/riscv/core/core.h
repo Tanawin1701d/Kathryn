@@ -31,13 +31,15 @@ namespace kathryn{
             WriteBack writeBack;
             /***bypass ele*/
             FETCH_DATA  fetchData;
-            BYPASS_DATA bp;
+            UOp         decData;
+            RegEle      wbData; //// write back data
+            BYPASS_DATA bp;     ///// bypass data
 
             explicit Riscv():
 
             memBlk(MEM_ADDR_IDX-2, XLEN),
             fetch(memBlk, pc),
-            execute(decode.decInstr, memBlk){}
+            execute(decData, memBlk, wbData){}
 
             void flow() override {
 
@@ -51,10 +53,10 @@ namespace kathryn{
 
                 pipWrap{
                     fetch    .flow(misPredic, fetchData);
-                    decode   .flow(misPredic, fetchData);
+                    decode   .flow(misPredic, fetchData, decData);
                     /**execute and write back can't be delete anymore*/
                     execute  .flow(misPredic, restartPc, regFile, bp); ///////// mispredict writer
-                    writeBack.flow(execute.exUop, regFile,bp);
+                    writeBack.flow(wbData, regFile, bp);
                 }
             }
 

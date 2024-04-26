@@ -18,9 +18,6 @@ namespace kathryn{
 
 
         public:
-            /** to send to next instruction*/
-
-            //makeReg(valid, 1);
 
             makeWire(readEn, 1);
             StorageMgmt& storageMgmt;
@@ -34,13 +31,12 @@ namespace kathryn{
             {}
 
 
-            void flow(Operable& rst, FETCH_DATA& fetchdata) {
+            void flow(Operable& rst, FETCH_DATA& fetchdata){
 
-                pipBlk {
-                    intrReset(rst);
+                pipBlk{ pipReset(rst); pipStart(rst);
                     par {
                         cdowhile(!readFin){
-                            readEn = 1;
+                            readEn = nextPipReadySig;
                             fetchdata.fetch_instr <<= storageMgmt.readOutput;
                             zif(readFin) {
                                 fetchdata.fetch_pc <<= _reqPc;

@@ -16,8 +16,7 @@ namespace kathryn{
         class WriteBack{
         public:
 
-            void flow(UOp& execUop, MemBlock& regFile, BYPASS_DATA& bypassData){
-                RegEle& desReg = execUop.regData[RS_des];
+            void flow(RegEle& desReg, MemBlock& regFile, BYPASS_DATA& bypassData){
                 pipBlk{
                     par {
                         zif((desReg.valid) && (desReg.idx != 0)) {

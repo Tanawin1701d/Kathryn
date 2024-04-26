@@ -13,17 +13,31 @@
 
 #include "pipelineBlock.h"
 
-#define pipWrap for(auto kathrynBlock = new FlowBlockPipeWrapper(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define pipWrap for(auto kathrynBlock_pipWrap = new FlowBlockPipeWrapper(); kathrynBlock_pipWrap->doPrePostFunction(); kathrynBlock_pipWrap->step())
+#define nextPipReadySig kathrynBlock_pipWrap->getNextPipBlockReadySignal()
 
 namespace kathryn{
 
     class FlowBlockPipeWrapper: public FlowBlockBase, public LoopStMacro{
+
+        struct UserCheckNextSignal{
+            int srcPipId = -1;
+            int desPipId = -1;
+            expression* expr = nullptr;
+
+            explicit UserCheckNextSignal(int pipIdx);
+
+            void connectSignal(std::vector<Pipe*>& allPip);
+
+        };
 
     protected:
 
         std::vector<FlowBlockPipeBase*> _insidePipBlks;
         std::vector<NodeWrap*>          _nwOfPipBlks;
         std::vector<Pipe*>              _pipComs;
+        std::vector<UserCheckNextSignal>_userCheckNextSignals;
+        ///// collect meta data from next pipblock is ready to recv data
 
         /*
          *  |pip0|block0|pip1|block1|pip2|
@@ -36,14 +50,15 @@ namespace kathryn{
     public:
         /** constructor*/
         explicit FlowBlockPipeWrapper();
-        ~FlowBlockPipeWrapper();
+        ~FlowBlockPipeWrapper() override;
 
         /** for controller add the local element to this sub block*/
         void addElementInFlowBlock(Node* node) override;
         void addSubFlowBlock(FlowBlockBase* subBlock) override;
         void addConFlowBlock(FlowBlockBase* conBlock) override;
         NodeWrap* sumarizeBlock() override;
-
+        /** add next start signal*/
+        expression& getNextPipBlockReadySignal();
         /** on this block is start interact to controller*/
         void onAttachBlock() override;
         /** on leave this block*/
