@@ -11,8 +11,8 @@
 #include "model/flowBlock/abstract/nodes/stateNode.h"
 
 
-#define zelif(expr) for(auto kathrynBlock = new FlowBlockZELIF(expr); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
-#define zelse for(auto kathrynBlock = new FlowBlockZELIF(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define zelif(expr) for(auto kathrynBlock_zelif = new FlowBlockZELIF(expr); kathrynBlock_zelif->doPrePostFunction(); kathrynBlock_zelif->step())
+#define zelse for(auto kathrynBlock_zelse = new FlowBlockZELIF(); kathrynBlock_zelse->doPrePostFunction(); kathrynBlock_zelse->step())
 
 namespace kathryn{
 

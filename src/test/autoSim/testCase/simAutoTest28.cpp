@@ -68,11 +68,10 @@ namespace kathryn{
 
         void describeCon() override{
 
-            conNextCycle(6);
+            conNextCycle(5);
             testAndPrint("check intr ifelse trigger c start", ull(_md->c),1);
             conNextCycle(1);
             testAndPrint("check intr par a start", ull(_md->a),1);
-            conNextCycle(1);
             testAndPrint("check intr par a2 start", ull(_md->a2),1);
             conNextCycle(1);
             testAndPrint("check intr par a start", ull(_md->a),2);

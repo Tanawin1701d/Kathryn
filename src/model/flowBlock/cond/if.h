@@ -10,8 +10,8 @@
 #include "model/flowBlock/abstract/nodes/node.h"
 #include "model/flowBlock/abstract/nodes/stateNode.h"
 
-#define cif(expr) for(auto kathrynBlock = new FlowBlockIf(expr, CIF); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
-#define sif(expr) for(auto kathrynBlock = new FlowBlockIf(expr, SIF); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define cif(expr) for(auto kathrynBlock_cif = new FlowBlockIf(expr, CIF); kathrynBlock_cif->doPrePostFunction(); kathrynBlock_cif->step())
+#define sif(expr) for(auto kathrynBlock_sif = new FlowBlockIf(expr, SIF); kathrynBlock_sif->doPrePostFunction(); kathrynBlock_sif->step())
 
 namespace kathryn{
 

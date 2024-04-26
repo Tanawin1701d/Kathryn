@@ -143,6 +143,7 @@ namespace kathryn {
         void tryPurifyFlowStack();
         void on_attach_flowBlock(FlowBlockBase* fb);
         void on_detach_flowBlock(FlowBlockBase* fb);
+        void on_attachAndDetach_intrSignal(INT_TYPE intType, Operable* sig);
         FLOW_BLOCK_TYPE get_top_pattern_flow_block_type();
 
         /** lock allocation*/

@@ -159,6 +159,15 @@ namespace kathryn{
 
     }
 
+    void ModelController::on_attachAndDetach_intrSignal(INT_TYPE intType, Operable* sig) {
+        assert(sig != nullptr);
+        tryPurifyFlowStack();
+        mfAssert(isTopFbBelongToTopModule(), "There is no flow block to add intr signal");
+        auto topFb = getTopFlowBlockBase();
+        topFb->addIntSignal(intType, sig);
+
+    }
+
     FLOW_BLOCK_TYPE ModelController::get_top_pattern_flow_block_type(){
 
         bool topPatternFbBelongToTopModule =
