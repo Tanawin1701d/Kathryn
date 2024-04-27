@@ -15,7 +15,7 @@ namespace kathryn{
 
         class Decode {
 
-            Slice OP_ALL{0,7};
+            Slice OP_ALL{ 0, 7};
             Slice OP_H  { 5, 7};
             Slice OP_L  { 2, 5};
             Slice IDX_RD{ 7,12};
@@ -47,8 +47,7 @@ namespace kathryn{
 
             void flow(Operable& rst, FETCH_DATA& fetchData, UOp& _decUop) {
 
-                pipBlk {
-                    intrReset(rst);
+                pipBlk { intrReset(rst);
                     cdowhile(!nextPipReadySig) {
                         par {
                             zif(nextPipReadySig) {
@@ -62,21 +61,18 @@ namespace kathryn{
                                     zelif(op(OP_L) == 0b100){ doOpDecode       (fetchData.fetch_instr, _decUop, false);}
                                     zelse                      { doAulPcDecode    (fetchData.fetch_instr, _decUop);/*101*/         }
                                     ///////////////////////////////////////////////////////////////////////////
-                                }
-                                zelif(op(OP_H) == 0b01) {
+                                }zelif(op(OP_H) == 0b01) {
                                     //////////// store op luidcode////////////////////////////////////////////
-                                    zif (op(OP_L) == 0b000)  { doLoadStoreDecode(fetchData.fetch_instr, _decUop, false); }
+                                    zif  (op(OP_L) == 0b000) { doLoadStoreDecode(fetchData.fetch_instr, _decUop, false); }
                                     zelif(op(OP_L) == 0b100) { doOpDecode       (fetchData.fetch_instr, _decUop, true);}
                                     zelse                       { doLuiDecode      (fetchData.fetch_instr, _decUop);               }   //(op(2,5) == 0b101) {
                                     ////////////////////////////////////////////////////////////////////////
-                                }
-                                zelif(op(OP_H) == 0b11) { ////// 11   we dont support 10
+                                }zelif(op(OP_H) == 0b11) { ////// 11   we dont support 10
                                     ////////// branch jump with reg //////////////////////////
-                                    zif (op(OP_L) == 0b000)  { doBranchDecode(fetchData.fetch_instr, _decUop);}
+                                    zif  (op(OP_L) == 0b000) { doBranchDecode(fetchData.fetch_instr, _decUop);}
                                     zelif(op(OP_L) == 0b001) { doJalRDecode  (fetchData.fetch_instr, _decUop);}
                                     zelse                       { doJalDecode   (fetchData.fetch_instr, _decUop);}/*(op(2,5) == 0b011){ this is 11*///}zelse{doSystemDecode(fetchBlk.fetch_instr);
-                                }
-                                zelse {invalidHighDec = 1;};
+                                }zelse {invalidHighDec = 1;};
                             }
 
                         }
@@ -106,7 +102,7 @@ namespace kathryn{
 
                 }
 
-                _decUop.opLs.set(isLoad, instr(sizeBit), instr(extendModeBit));
+                _decUop.opLs      .set(isLoad, instr(sizeBit), instr(extendModeBit));
                 _decUop.opAlu     .reset();
                 _decUop.opCtrlFlow.reset();
                 _decUop.opLdPc    .reset();
@@ -150,7 +146,7 @@ namespace kathryn{
 
             }
 
-            void doAulPcDecode(Reg& instr, UOp& _decUop,bool needPc = false){
+            void doAulPcDecode(Reg& instr, UOp& _decUop,bool needPc = true){
                 _decUop.regData[RS_1].reset();
                 makeVal(fixdown, 12, 0);
                 _decUop.regData[RS_2]  .setFromImm(g(instr(IMM_U_12_32), fixdown));
@@ -166,7 +162,7 @@ namespace kathryn{
             }
 
             void doLuiDecode(Reg& instr, UOp& _decUop){
-                doAulPcDecode(instr, _decUop, true);
+                doAulPcDecode(instr, _decUop, false);
             }
 
             /***
@@ -193,7 +189,7 @@ namespace kathryn{
                 _decUop.opCtrlFlow.extendMode <<= instr(13);
                 _decUop.opCtrlFlow.isJalR     <<= 0b0;
                 _decUop.opCtrlFlow.isJal      <<= 0b0;
-                _decUop.opCtrlFlow.isEq       <<= (funct3 == 0b0);
+                _decUop.opCtrlFlow.isEq       <<= (funct3 == 0b000);
                 _decUop.opCtrlFlow.isNEq      <<= (funct3 == 0b001);
                 _decUop.opCtrlFlow.isLt       <<= (funct3 == 0b100) | (funct3 == 0b110);
                 _decUop.opCtrlFlow.isGe       <<= (funct3 == 0b101) | (funct3 == 0b111);

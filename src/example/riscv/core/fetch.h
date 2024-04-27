@@ -37,9 +37,12 @@ namespace kathryn{
                     par {
                         cdowhile(!readFin){
                             readEn = nextPipReadySig;
-                            fetchdata.fetch_instr <<= storageMgmt.readOutput;
                             zif(readFin) {
-                                fetchdata.fetch_pc <<= _reqPc;
+                                /** fetch data is shared among fetch and decoder
+                                 ** we must make sure it is ready to recv
+                                 * */
+                                fetchdata.fetch_instr <<= storageMgmt.readOutput;
+                                fetchdata.fetch_pc     <<= _reqPc;
                                 fetchdata.fetch_nextpc <<= _reqPc + 4;
                             }
                         }

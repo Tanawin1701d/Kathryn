@@ -68,14 +68,10 @@ namespace kathryn{
                         accessRegData(RS_2,  memBlock, bypassData);
                         rdes <<= _decodedUop.regData[RS_des];
                     }
-                    par{
-                        /////////// do alu uop
-                        execAlu(misPredic, reStartPc);
+                    par{ execAlu(misPredic, reStartPc);
                     }
                     par{
-                        execComplexAlu();
-                        /////////// do load store
-                        execLS();
+                        execComplexAlu(); execLS();
                     }
                 }
             }

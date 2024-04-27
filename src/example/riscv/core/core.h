@@ -19,17 +19,17 @@ namespace kathryn{
         class Riscv : public Module {
         public:
 
-            makeReg(pc, XLEN);
+            makeReg (pc       , XLEN);
             makeWire(misPredic, 1);
             makeWire(restartPc, XLEN);
             /** storage*/
             makeMem(regFile, AMT_REG, XLEN);
             StorageMgmt memBlk;
             /** pipline element*/
-            Fetch     fetch;
-            Decode    decode;
-            Execute   execute;
-            WriteBack writeBack;
+            Fetch       fetch;
+            Decode      decode;
+            Execute     execute;
+            WriteBack   writeBack;
             /***bypass ele*/
             FETCH_DATA  fetchData;
             UOp         decData;
@@ -39,13 +39,13 @@ namespace kathryn{
             FlowBlockPipeWrapper* pipProbe = nullptr;
 
             explicit Riscv():
-
-            memBlk(MEM_ADDR_IDX-2, XLEN),
-            fetch(memBlk, pc),
+            memBlk (MEM_ADDR_IDX_ACTUAL-2, XLEN), //// -2 due to it is 4 byte align
+            fetch  (memBlk, pc),
             execute(decData, memBlk, wbData){}
 
             void flow() override {
 
+                /** calulate next cycle*/
                 cwhile(true){
                     zif(misPredic){
                         pc <<= restartPc;
@@ -54,6 +54,7 @@ namespace kathryn{
                     }
                 }
 
+                /** pipe line wrapper */
                 pipWrap{    exposeBlk(pipProbe)
                     fetch    .flow(misPredic, fetchData);
                     decode   .flow(misPredic, fetchData, decData);
