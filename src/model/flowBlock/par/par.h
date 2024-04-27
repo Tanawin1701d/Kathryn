@@ -12,8 +12,8 @@
 #include "model/flowBlock/abstract/nodes/node.h"
 #include "model/flowBlock/abstract/nodes/stateNode.h"
 
-#define par    for(auto kathrynBlock_par    = new FlowBlockParAuto();   kathrynBlock_par->doPrePostFunction();    kathrynBlock_par->step())
-#define parMan for(auto kathrynBlock_parMan = new FlowBlockParNoSync(); kathrynBlock_parMan->doPrePostFunction(); kathrynBlock_parMan->step())
+#define par    for(auto kathrynBlock = new FlowBlockParAuto();   kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define parMan for(auto kathrynBlock = new FlowBlockParNoSync(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 
 
 namespace kathryn {

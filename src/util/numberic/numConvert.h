@@ -7,6 +7,8 @@
 
 #include <string>
 #include <vector>
+#include <ios>
+#include <sstream>
 #include "sim/logicRep/valRep.h"
 
 namespace kathryn{
@@ -69,6 +71,12 @@ namespace kathryn{
         //// gen(1,5) => b11111
         //// gen(0,6) => b000000
         ValRep genBiConValRep(bool val, int bitSize);
+
+        std::string cvtNum2HexStr(ull x){
+            std::ostringstream oss;
+            oss << std::hex <<std::uppercase << ull(x);
+            return oss.str();
+        }
 
 
 

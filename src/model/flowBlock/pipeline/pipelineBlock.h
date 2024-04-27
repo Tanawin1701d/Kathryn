@@ -15,19 +15,15 @@
 #include "pipelineCom.h"
 #include "pipeMng.h"
 
-#define pipBlk                for(auto kathrynBlock_pipBlk    = new FlowBlockPipeBase();             \
-                                       kathrynBlock_pipBlk->doPrePostFunction();                     \
-                                       kathrynBlock_pipBlk->step())
+#define pipBlk                for(auto kathrynBlock = new FlowBlockPipeBase();             \
+                                       kathrynBlock->doPrePostFunction();                     \
+                                       kathrynBlock->step())
 
 
 
-#define pipBlkMan(recv, send) for(auto kathrynBlock_pipBlk = new FlowBlockPipeBase(&recv, &send); \
-                                       kathrynBlock_pipBlk->doPrePostFunction();                  \                                        \
-                                       kathrynBlock_pipBlk->step())
-
-
-#define pipStart(expr) kathrynBlock_pipBlk->addIntSignal(INT_RESET, &expr);
-#define pipReset(expr) kathrynBlock_pipBlk->addIntSignal(INT_START, &expr);
+#define pipBlkMan(recv, send) for(auto kathrynBlock = new FlowBlockPipeBase(&recv, &send); \
+                                       kathrynBlock->doPrePostFunction();                  \                                        \
+                                       kathrynBlock->step())
 
 namespace kathryn{
 
@@ -95,10 +91,11 @@ namespace kathryn{
         void doPreFunction() override;
         void doPostFunction() override;
 
-
-
         /**get debug*/
         void addMdLog(MdLogVal* mdLogVal) override;
+
+        FlowBlockPipeCom* getRecvFbPipCom() {return _waitRecvBlock;}
+        FlowBlockPipeCom* getSendFbPipCom() {return _waitSendBlock;}
 
     };
 

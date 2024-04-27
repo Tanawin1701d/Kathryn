@@ -12,7 +12,7 @@
 #include "model/flowBlock/abstract/nodes/node.h"
 #include "model/flowBlock/abstract/nodes/stateNode.h"
 
-#define seq for(auto kathrynBlock_seq = new FlowBlockSeq(); kathrynBlock_seq->doPrePostFunction(); kathrynBlock_seq->step())
+#define seq for(auto kathrynBlock = new FlowBlockSeq(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 
 namespace kathryn {
 

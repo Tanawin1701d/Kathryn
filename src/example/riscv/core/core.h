@@ -17,6 +17,7 @@ namespace kathryn{
     namespace riscv {
 
         class Riscv : public Module {
+        public:
 
             makeReg(pc, XLEN);
             makeWire(misPredic, 1);
@@ -35,6 +36,8 @@ namespace kathryn{
             RegEle      wbData; //// write back data
             BYPASS_DATA bp;     ///// bypass data
 
+            FlowBlockPipeWrapper* pipProbe = nullptr;
+
             explicit Riscv():
 
             memBlk(MEM_ADDR_IDX-2, XLEN),
@@ -51,7 +54,7 @@ namespace kathryn{
                     }
                 }
 
-                pipWrap{
+                pipWrap{    exposeBlk(pipProbe)
                     fetch    .flow(misPredic, fetchData);
                     decode   .flow(misPredic, fetchData, decData);
                     /**execute and write back can't be delete anymore*/

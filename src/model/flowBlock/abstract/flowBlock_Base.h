@@ -6,8 +6,9 @@
 #define KATHRYN_FLOWBLOCK_BASE_H
 
 
-#define intrReset(expr) getControllerPtr()->on_attachAndDetach_intrSignal(INT_RESET, &expr)
-#define intrStart(expr) getControllerPtr()->on_attachAndDetach_intrSignal(INT_START, &expr)
+#define intrReset( expr  )   kathrynBlock->addIntSignal(INT_RESET, &expr);
+#define intrStart( expr  )   kathrynBlock->addIntSignal(INT_START, &expr);
+#define exposeBlk( exVar )  exVar = kathrynBlock;
 
 #include<memory>
 #include<vector>

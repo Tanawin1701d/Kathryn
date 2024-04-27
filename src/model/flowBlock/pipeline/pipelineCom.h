@@ -12,13 +12,13 @@
 #include "model/flowBlock/abstract/nodes/stateNode.h"
 #include "pipeMng.h"
 
-#define pipWaitSend(kathrynPipMeta) for(auto kathrynBlock_pipWaitSend = new FlowBlockPipeCom(PIPE_SENDER,&kathrynPipMeta); \
-                                             kathrynBlock_pipWaitSend->doPrePostFunction();                               \
-                                             kathrynBlock_pipWaitSend->step()){}
+#define pipWaitSend(kathrynPipMeta) for(auto kathrynBlock = new FlowBlockPipeCom(PIPE_SENDER,&kathrynPipMeta); \
+                                             kathrynBlock->doPrePostFunction();                               \
+                                             kathrynBlock->step()){}
 
-#define pipWaitRecv(kathrynPipMeta) for(auto kathrynBlock_pipWaitRecv = new FlowBlockPipeCom(PIPE_RECIEVER,&kathrynPipMeta); \
-                                             kathrynBlock_pipWaitRecv->doPrePostFunction();                               \
-                                             kathrynBlock_pipWaitRecv->step()){}
+#define pipWaitRecv(kathrynPipMeta) for(auto kathrynBlock = new FlowBlockPipeCom(PIPE_RECIEVER,&kathrynPipMeta); \
+                                             kathrynBlock->doPrePostFunction();                               \
+                                             kathrynBlock->step()){}
 
 
 namespace kathryn{

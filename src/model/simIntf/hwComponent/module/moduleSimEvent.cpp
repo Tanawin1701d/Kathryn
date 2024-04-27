@@ -49,7 +49,7 @@ namespace kathryn{
 //            std::cout << "gotcha";
 //        }
 //        std::cout << "--------------------------------------------------------" <<std::endl;
-        _startModule->simStartCurCycle();
+        _startModule->simStartCurCycle ();
         _startModule->simStartNextCycle();
 //        std::cout << "--------------------------------------------------------" <<std::endl;
         /***set reset wire */

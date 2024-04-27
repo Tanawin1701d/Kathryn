@@ -33,7 +33,7 @@ namespace kathryn{
 
             void flow(Operable& rst, FETCH_DATA& fetchdata){
 
-                pipBlk{ pipReset(rst); pipStart(rst);
+                pipBlk{ intrReset(rst); intrStart(rst);
                     par {
                         cdowhile(!readFin){
                             readEn = nextPipReadySig;

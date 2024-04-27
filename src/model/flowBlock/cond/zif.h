@@ -10,7 +10,7 @@
 #include "model/flowBlock/abstract/nodes/node.h"
 #include "model/flowBlock/abstract/nodes/stateNode.h"
 
-#define zif(expr) for(auto kathrynBlock_zif = new FlowBlockZIF(expr); kathrynBlock_zif->doPrePostFunction(); kathrynBlock_zif->step())
+#define zif(expr) for(auto kathrynBlock = new FlowBlockZIF(expr); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 
 namespace kathryn{
 

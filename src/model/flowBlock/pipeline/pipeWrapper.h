@@ -13,7 +13,7 @@
 
 #include "pipelineBlock.h"
 
-#define pipWrap for(auto kathrynBlock_pipWrap = new FlowBlockPipeWrapper(); kathrynBlock_pipWrap->doPrePostFunction(); kathrynBlock_pipWrap->step())
+#define pipWrap for(auto kathrynBlock = new FlowBlockPipeWrapper(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 #define nextPipReadySig getControllerPtr()->on_get_check_next_pipblk_ready_signal()
 
 namespace kathryn{
@@ -74,6 +74,8 @@ namespace kathryn{
 
         /**get debug*/
         void addMdLog(MdLogVal* mdLogVal) override;
+
+        std::vector<FlowBlockPipeBase*>& getPipStage() {return _insidePipBlks;}
 
     };
 

@@ -12,8 +12,8 @@
 #include "model/flowBlock/abstract/nodes/stateNode.h"
 
 
-#define sbreak          for(auto kathrynBlock_sbreak    = new FlowBlockSCBreak(); kathrynBlock_sbreak->doPrePostFunction(); kathrynBlock_sbreak->step()){}
-#define sbreakCon(expr) for(auto kathrynBlock_sbreakCon = new FlowBlockSCBreak(expr); kathrynBlock_sbreakCon->doPrePostFunction(); kathrynBlock_sbreakCon->step()){}
+#define sbreak          for(auto kathrynBlock = new FlowBlockSCBreak();     kathrynBlock->doPrePostFunction(); kathrynBlock->step()){}
+#define sbreakCon(expr) for(auto kathrynBlock = new FlowBlockSCBreak(expr); kathrynBlock->doPrePostFunction(); kathrynBlock->step()){}
 
 namespace kathryn{
 

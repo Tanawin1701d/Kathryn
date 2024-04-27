@@ -35,4 +35,6 @@ add_executable(Kathryn
         src/example/riscv/core/writeBack.h
         src/example/riscv/core/fetch.h
         src/util/fileWriter/slotWriter/slotWriter.h
+        src/example/riscv/simulation/RISCV_sim.h
+        src/example/riscv/simulation/RISCV_sim.cpp
 )

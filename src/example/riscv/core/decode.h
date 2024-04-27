@@ -47,7 +47,8 @@ namespace kathryn{
 
             void flow(Operable& rst, FETCH_DATA& fetchData, UOp& _decUop) {
 
-                pipBlk { pipReset(rst);
+                pipBlk {
+                    intrReset(rst);
                     cdowhile(!nextPipReadySig) {
                         par {
                             zif(nextPipReadySig) {
