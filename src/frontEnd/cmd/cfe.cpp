@@ -37,6 +37,16 @@ namespace kathryn{
 
     }
 
+    void test_riscv(){
+
+        riscv::RISCV_MNG riscTestMng;
+        riscTestMng.start();
+        std::cout << TC_GREEN <<  " finish sim " << TC_DEF << std::endl;
+        resetKathryn();
+        /////////////////delete x;
+
+    }
+
     void start(std::vector<std::string>& args){
 
         printWelcomeScreen();
@@ -45,6 +55,8 @@ namespace kathryn{
             std::cout << "[kathryn] there is no command to run" << std::endl;
         }else if(args[0] == "test"){
             test(1, args);
+        }else if(args[0] == "riscvBeta"){
+            test_riscv();
         }
 
         std::cout << "[kathryn] exit program" << std::endl;

@@ -3,6 +3,9 @@
 //
 
 #include "RISCV_sim.h"
+#include "util/termColor/termColor.h"
+
+#include <utility>
 
 namespace kathryn{
 
@@ -12,20 +15,33 @@ namespace kathryn{
         RiscvSimInterface::RiscvSimInterface(CYCLE       limitCycle,
                                              std::string vcdFilePath,
                                              std::string profileFilePath,
-                                             std::string slotFilePath):
-                SimInterface(limitCycle,
-                             vcdFilePath,
-                             profileFilePath),
+                                             std::string slotFilePath,
+                                             Riscv& core):
+                SimInterface(limitCycle,std::move(vcdFilePath),std::move(profileFilePath)),
+                _core(core),
                 slotWriter({"fetch", "decode", "execute", "wb"},
                            25,
-                           slotFilePath){}
+                           std::move(slotFilePath)){
+        }
 
         void RiscvSimInterface::describe() {
-            /*** todo fill memory*/
+
+            for (int writeAddr = 0;
+                 writeAddr < 400;////(1 << MEM_ADDR_IDX_ACTUAL_AL32);
+                 writeAddr++){
+                _core.memBlk._myMem.s(writeAddr, 0b0010011);
+            }
+            std::cout << TC_GREEN << "initialize mem finish" << TC_DEF << std::endl;
+
         }
 
         void RiscvSimInterface::describeCon() {
 
+            for (int i = 0; i <= 100; i++){
+                conEndCycle();
+                recordSlot();
+                conNextCycle(1);
+            }
 
         }
 
@@ -34,7 +50,7 @@ namespace kathryn{
             /** please bare in mind that this recorder work correctly when
              *  it is the end of the cycle
              * */
-             auto& pipStages = core.pipProbe->getPipStage();
+             auto& pipStages = _core.pipProbe->getPipStage();
 
             /*** record fetch */
             FlowBlockPipeBase* fetch = pipStages[RISC_FETCH];
@@ -76,11 +92,11 @@ namespace kathryn{
             assert(pipblock != nullptr);
             if (writeSlotIfStall(RISC_FETCH, pipblock)){return;}
 
-            if (ull(core.fetch.readEn)){
-                if (ull(core.fetch.readFin)){
+            if (ull(_core.fetch.readEn)){
+                if (ull(_core.fetch.readFin)){
                     slotWriter.addSlotVal(RISC_FETCH, "READ ADDR");
                     slotWriter.addSlotVal(RISC_FETCH,
-                                          cvtNum2HexStr(ull(core.fetch._reqPc)));
+                                          cvtNum2HexStr(ull(_core.fetch._reqPc)));
                 }else{
                     slotWriter.addSlotVal(RISC_FETCH, "WAIT4MEM");
                 }
@@ -98,26 +114,26 @@ namespace kathryn{
 
             //////////// now decoding
 
-            ull rawIntr  = ull(core.fetchData.fetch_instr);
-            ull pc       = ull(core.fetchData.fetch_pc);
-            ull next_pc  = ull(core.fetchData.fetch_nextpc);
+            ull rawIntr  = ull(_core.fetchData.fetch_instr);
+            ull pc       = ull(_core.fetchData.fetch_pc);
+            ull next_pc  = ull(_core.fetchData.fetch_nextpc);
 
 
             ull opMaskBit = (1 << 7) - 1;
             ull op = rawIntr & opMaskBit;
 
             std::map<ull, std::string> decMap = {
-                {0b00'000, "LOAD"},
-                {0b01'000, "STORE"},
-                {0b00'011, "MISCMEM"},
-                {0b11'000, "BRANCH"},
-                {0b11'001, "JALR"},
-                {0b11'011, "JAL"},
-                {0b00'100, "OP_IMM"},
-                {0b01'100, "OP"},
-                {0b00'101, "AUIPC"},
-                {0b01'101, "LUI"},
-                {0b11'100, "SYSTEM"}
+                {0b00'000'11, "LOAD"},
+                {0b01'000'11, "STORE"},
+                {0b00'011'11, "MISCMEM"},
+                {0b11'000'11, "BRANCH"},
+                {0b11'001'11, "JALR"},
+                {0b11'011'11, "JAL"},
+                {0b00'100'11, "OP_IMM"},
+                {0b01'100'11, "OP"},
+                {0b00'101'11, "AUIPC"},
+                {0b01'101'11, "LUI"},
+                {0b11'100'11, "SYSTEM"},
             };
 
             std::string decStr = (decMap.find(op) != decMap.end()) ? decMap[op]: "UNKNOWN";
@@ -132,7 +148,7 @@ namespace kathryn{
 
             if (writeSlotIfStall(RISC_EXECUTE, pipblock)){return;}
 
-            UOp& decodedUop = core.execute._decodedUop;
+            UOp& decodedUop = _core.execute._decodedUop;
 
             /** decode
              *
@@ -188,7 +204,7 @@ namespace kathryn{
             assert(pipblock != nullptr);
             if (writeSlotIfStall(RISC_WB, pipblock)){return;}
 
-            RegEle& wbReg = core.wbData;
+            RegEle& wbReg = _core.wbData;
 
             writeReg("rwb", RISC_WB, wbReg);
         }

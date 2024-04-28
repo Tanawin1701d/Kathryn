@@ -36,7 +36,7 @@ namespace kathryn{
         std::string result;
         for (int ln = 0; ln < amtLine; ln++){
             result += "|";
-            for (int slIdx = 0; col.size(); slIdx++){
+            for (int slIdx = 0; slIdx < col.size(); slIdx++){
                 /**check there is no line for print just nothing*/
                 if (ln < col[slIdx].size()){
                     /** before padding*/

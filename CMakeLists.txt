@@ -27,14 +27,15 @@ add_executable(Kathryn
         ${SRC_SIM}
         ${SRC_TEST}
         ${SRC_UTIL}
-        src/example/riscv/element.h
-        src/example/riscv/core/core.h
-        src/example/riscv/core/decode.h
-        src/example/riscv/subSystem/storageMgm.h
-        src/example/riscv/core/execute.h
-        src/example/riscv/core/writeBack.h
-        src/example/riscv/core/fetch.h
-        src/util/fileWriter/slotWriter/slotWriter.h
-        src/example/riscv/simulation/RISCV_sim.h
-        src/example/riscv/simulation/RISCV_sim.cpp
+        ${SRC_EXAMPLE}
+#        src/example/riscv/element.h
+#        src/example/riscv/core/core.h
+#        src/example/riscv/core/decode.h
+#        src/example/riscv/subSystem/storageMgm.h
+#        src/example/riscv/core/execute.h
+#        src/example/riscv/core/writeBack.h
+#        src/example/riscv/core/fetch.h
+#        src/util/fileWriter/slotWriter/slotWriter.h
+#        src/example/riscv/simulation/RISCV_sim.h
+#        src/example/riscv/simulation/RISCV_sim.cpp
 )

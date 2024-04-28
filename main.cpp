@@ -8,7 +8,7 @@
 using namespace kathryn;
 
 
-int main() {
+int main(int argc, char* argv[]) {
 
 //     auto t = test1();
 //     t.test();
@@ -18,9 +18,19 @@ int main() {
     initMdDebugger();
     initMfDebugger();
 
-    std::vector<std::string> cmd = {"test", "all"};
-    start(cmd);
+    std::vector<std::string> cmd; ///// = {"test", "all"};
 
+    if (argc < 2){
+        std::cout << "there is no argument value" << std::endl;
+    }
+
+    for (int i = 1; i < argc; i++){
+        std::string myarg = std::string(argv[i]);
+        cmd.push_back(myarg);
+    }
+
+
+    start(cmd);
 
     finalizeMdDebugger();
     finalizeMfDebugger();

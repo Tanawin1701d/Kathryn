@@ -14,10 +14,10 @@ namespace kathryn{
 
         class StorageMgmt {
         public:
-            const int REGSIZE  = 32;
-            const int AMTREG   = 32;
-            const int IDX_SIZE = 5;
-            MemBlock &_myMem;
+            const int ROW_WIDTH;
+            const int AMT_ROW  ;
+            const int IDX_SIZE ;
+            MemBlock& _myMem;
 
             /** read section*/
             int amountReadIdx = 0;
@@ -28,19 +28,18 @@ namespace kathryn{
             Wire     &readIdxMaster;
             MemBlockEleHolder&readOutput;
 
-            explicit StorageMgmt(int idxSize, int regSize) : REGSIZE(regSize),
-                                                             AMTREG(1 << idxSize),
-                                                             IDX_SIZE(idxSize),
-                                                             _myMem(_make<MemBlock>("_myMem", AMTREG, REGSIZE)),
-                                                             readIdxMaster(_make<Wire>("_readIndexer", IDX_SIZE)),
-                                                             readOutput(_myMem[readIdxMaster]){}
+            explicit StorageMgmt(int idxSize, int rowWidth) : ROW_WIDTH    (rowWidth),
+                                                              AMT_ROW      (1 << idxSize),
+                                                              IDX_SIZE     (idxSize),
+                                                              _myMem       (_make<MemBlock>("_myMem", AMT_ROW, ROW_WIDTH)),
+                                                              readIdxMaster(_make<Wire>("_readIndexer", IDX_SIZE)),
+                                                              readOutput   (_myMem[readIdxMaster]){}
 
             Operable& addReader(Operable& readEn, Operable &address) {
 
                 assert(address.getOperableSlice().getSize() == IDX_SIZE);
 
-
-                readAddress    .push_back(&address);
+                readAddress .push_back(&address);
                 readEns     .push_back(&readEn);
                 readFinishes.push_back(&_make<Wire>("notifyReadReg_" + std::to_string(amountReadIdx), 1));
                 amountReadIdx++;
@@ -50,7 +49,7 @@ namespace kathryn{
 
             void reqWriteReq(Operable& x, Operable &idx) {
                 assert(idx.getOperableSlice().getSize() == IDX_SIZE);
-                assert(x.getOperableSlice().getSize() == REGSIZE);
+                assert(x.getOperableSlice().getSize() == ROW_WIDTH);
                 _myMem[idx] <<= x;
             }
 

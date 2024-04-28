@@ -137,12 +137,7 @@ namespace kathryn{
 
     void ModelController::on_detach_flowBlock(FlowBlockBase* fb) {
 
-        /** if current flowblock is lazy delete do not detach it*/
-        if (fb->isLazyDelete()){
-            return;
-        }
-
-        /** there must be at most one flow block that must be detach
+        /** to clean lazy delete of the flow block
          * due to last lazy delete pupose
          * */
         auto topFb = getTopFlowBlockBase();
@@ -152,10 +147,17 @@ namespace kathryn{
             /////// delete it now
             tryPurifyFlowStack();
         }
+
         /** get our block detach*/
         auto actualDetachBlock = getTopFlowBlockBase();
+
+        /** if current flowblock is lazy delete do not detach it*/
         assert(actualDetachBlock == fb);
-        detachTopFlowBlock();
+        if (fb->isLazyDelete()){
+            return;
+        }else{
+            detachTopFlowBlock();
+        }
 
     }
 

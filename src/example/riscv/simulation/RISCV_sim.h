@@ -23,7 +23,7 @@ namespace kathryn{
         class RiscvSimInterface: public SimInterface{
         private:
 
-            Riscv      core;
+            Riscv&      _core;
             const int  AMT_STAGE = 4;
             SlotWriter slotWriter;
 
@@ -33,7 +33,8 @@ namespace kathryn{
             explicit RiscvSimInterface(CYCLE limitCycle,
                                        std::string vcdFilePath,
                                        std::string profileFilePath,
-                                       std::string slotFilePath
+                                       std::string slotFilePath,
+                                       Riscv& core
                                        );
 
             void describe() override;
@@ -55,6 +56,23 @@ namespace kathryn{
                                   PIPE_STAGE pipeStage,
                                   RegEle&    regEle);
 
+        };
+
+        class RISCV_MNG{
+        public:
+            void start(){
+                makeMod(riscCore, Riscv, false);
+                startModelKathryn();
+                RiscvSimInterface simulator(300,
+                                            "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/simAutoTestRiscv.vcd",
+                                            "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/profAutoRiscv.vcd",
+                                            "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/slotAutoRiscv.vcd",
+                                            (Riscv&)riscCore
+                                            );
+                simulator.simStart();
+
+
+            }
         };
 
     }

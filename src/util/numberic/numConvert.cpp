@@ -18,4 +18,11 @@ namespace kathryn{
         return preRet;
     }
 
+
+    std::string cvtNum2HexStr(ull x){
+        std::ostringstream oss;
+        oss << std::hex <<std::uppercase << ull(x);
+        return oss.str();
+    }
+
 }

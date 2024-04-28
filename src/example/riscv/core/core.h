@@ -22,6 +22,13 @@ namespace kathryn{
             makeReg (pc       , XLEN);
             makeWire(misPredic, 1);
             makeWire(restartPc, XLEN);
+            /** ele*/
+            /***bypass ele*/
+            FETCH_DATA  fetchData;
+            UOp         decData;
+            RegEle      wbData; //// write back data
+            BYPASS_DATA bp;     ///// bypass data
+
             /** storage*/
             makeMem(regFile, AMT_REG, XLEN);
             StorageMgmt memBlk;
@@ -30,16 +37,11 @@ namespace kathryn{
             Decode      decode;
             Execute     execute;
             WriteBack   writeBack;
-            /***bypass ele*/
-            FETCH_DATA  fetchData;
-            UOp         decData;
-            RegEle      wbData; //// write back data
-            BYPASS_DATA bp;     ///// bypass data
 
             FlowBlockPipeWrapper* pipProbe = nullptr;
 
-            explicit Riscv():
-            memBlk (MEM_ADDR_IDX_ACTUAL-2, XLEN), //// -2 due to it is 4 byte align
+            explicit Riscv(bool x):
+            memBlk (MEM_ADDR_IDX_ACTUAL_AL32, XLEN), //// -2 due to it is 4 byte align
             fetch  (memBlk, pc),
             execute(decData, memBlk, wbData){}
 
@@ -55,13 +57,15 @@ namespace kathryn{
                 }
 
                 /** pipe line wrapper */
-                pipWrap{    exposeBlk(pipProbe)
+                pipWrap{ exposeBlk(pipProbe)
                     fetch    .flow(misPredic, fetchData);
                     decode   .flow(misPredic, fetchData, decData);
                     /**execute and write back can't be delete anymore*/
                     execute  .flow(misPredic, restartPc, regFile, bp); ///////// mispredict writer
                     writeBack.flow(wbData, regFile, bp);
                 }
+
+                memBlk.buildReadFlow();
             }
 
         };

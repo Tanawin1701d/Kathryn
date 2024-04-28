@@ -11,6 +11,8 @@
 
 #include "util/termColor/termColor.h"
 
+#include "example/riscv/simulation/RISCV_sim.h"
+
 
 namespace kathryn {
 
@@ -20,6 +22,8 @@ namespace kathryn {
               std::vector<std::string>& args);
 
     void start(std::vector<std::string>& args);
+
+    void test_riscv();
 
 }
 

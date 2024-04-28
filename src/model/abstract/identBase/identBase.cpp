@@ -15,7 +15,12 @@ namespace kathryn{
 
 
     IdentBase::IdentBase() {
+
         _globalId = GLOBAL_MODEL_ID++;
+
+        if (_globalId == 572){
+            int dsdgdfgfd= 5;
+        }
     }
 
 

@@ -20,6 +20,7 @@ namespace kathryn{
             _indexer(const_cast<Operable*>(indexer)){
         assert(_master  != nullptr);
         assert(_indexer != nullptr);
+        std::cout << _indexer->getOperableSlice().getSize() << "    actual " << getExactIndexSize() << std::endl;
         assert(_indexer->getOperableSlice().getSize()
                == getExactIndexSize());
         AssignOpr::setMaster(this);
@@ -141,7 +142,7 @@ namespace kathryn{
 
     SliceAgent<MemBlockEleHolder>&
     MemBlockEleHolder::operator()(int start, int stop) {
-        mfAssert(!isReadMode(), "memBlockEle is used");
+        mfAssert(isReadMode(), "mem holder is used for write mode");
         setReadMode();
         auto ret = new SliceAgent<MemBlockEleHolder>(this,
                                                      getAbsSubSlice(start, stop,getSlice())

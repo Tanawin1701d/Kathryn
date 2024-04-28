@@ -79,6 +79,7 @@ namespace kathryn{
                 isMemLoad   <<= rhs.isMemLoad;
                 size        <<= rhs.size;
                 extendMode  <<= rhs.extendMode; return *this;
+
             }
         };
 
@@ -110,8 +111,7 @@ namespace kathryn{
                 isCmpLessThanUSign    <<= rhs.isCmpLessThanUSign;
                 isShiftLeftLogical    <<= rhs.isShiftLeftLogical;
                 isShiftRightLogical   <<= rhs.isShiftRightLogical;
-                isShiftRightArith     <<= rhs.isShiftRightArith;
-                return *this;
+                isShiftRightArith     <<= rhs.isShiftRightArith; return *this;
             }
         };
 
@@ -138,7 +138,7 @@ namespace kathryn{
                 isEq       <<= rhs.isEq;
                 isNEq      <<= rhs.isNEq;
                 isLt       <<= rhs.isLt;
-                isGe       <<= rhs.isGe;
+                isGe       <<= rhs.isGe; return *this;
             }
 
         };
@@ -153,7 +153,7 @@ namespace kathryn{
 
             ldPc& operator <<= (const ldPc& rhs){
                 isUopUse   <<=  rhs.isUopUse;
-                needPc     <<=  rhs.needPc;
+                needPc     <<=  rhs.needPc; return *this;
             }
         };
 
@@ -176,7 +176,7 @@ namespace kathryn{
                 opLs           <<= rhs.opLs;
                 opAlu          <<= rhs.opAlu;
                 opCtrlFlow     <<= rhs.opCtrlFlow;
-                opLdPc         <<= rhs.opLdPc;
+                opLdPc         <<= rhs.opLdPc; return *this;
             }
 
         };

@@ -21,13 +21,13 @@ namespace kathryn{
 
             makeWire(readEn, 1);
             StorageMgmt& storageMgmt;
-            Operable&    _reqPc;
+            Reg&    _reqPc;
             Operable&    readFin;
 
-            explicit Fetch(StorageMgmt& memMgmt, Operable& reqPc):
+            explicit Fetch(StorageMgmt& memMgmt, Reg& reqPc):
             storageMgmt(memMgmt),
             _reqPc(reqPc),
-            readFin(storageMgmt.addReader(readEn,_reqPc))
+            readFin(storageMgmt.addReader(readEn,_reqPc(MEM_ADDR_SL)))
             {}
 
 

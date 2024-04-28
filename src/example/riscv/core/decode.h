@@ -38,7 +38,7 @@ namespace kathryn{
 
             Slice IMM_J_20   {31, 32};
             Slice IMM_J_1_11 {21,31};
-            Slice IMM_J_11   {20};
+            Slice IMM_J_11   {20, 21};
             Slice IMM_J_12_20{12,20};
 
         public:
@@ -54,7 +54,7 @@ namespace kathryn{
                                 /////// deal with pc
                                 _decUop.pc     <<= fetchData.fetch_pc;
                                 _decUop.nextPc <<= fetchData.fetch_nextpc;
-                                auto &op = fetchData.fetch_instr(OP_ALL);
+                                auto& op = fetchData.fetch_instr(OP_ALL);
                                 zif(op(OP_H) == 0b00) {
                                     //////// load  immop aulpc ////////////////////////////////////////////////
                                     zif  (op(OP_L) == 0b000){ doLoadStoreDecode(fetchData.fetch_instr, _decUop, true);   }///zelif(op(2,5) == 0b11){//doMiscDecode(fetchBlk.fetch_instr);///}
@@ -181,7 +181,7 @@ namespace kathryn{
                 _decUop.regData[RS_3].setFromImm(getExtendExpr(rawNest, XLEN, false));
                 _decUop.regData[RS_des].setFromRegFile(instr(IDX_RD));
 
-                auto funct3 = instr(FUNCT3);
+                auto& funct3 = instr(FUNCT3);
 
                 _decUop.opLs.reset();
                 _decUop.opAlu.reset();
