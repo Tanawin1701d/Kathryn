@@ -37,4 +37,13 @@ namespace kathryn{
         assert(idx < DEPTH_SIZE);
         return memBlk[idx];
     }
+
+    ValRep&
+    MemSimEngine::getNextCycleVapRepSrc(kathryn::ull idx) {
+        assert(idx < DEPTH_SIZE);
+        if (pendingWrite.find(idx) == pendingWrite.end()){
+            pendingWrite[idx] = memBlk[idx];
+        }
+        return pendingWrite[idx];
+    }
 }

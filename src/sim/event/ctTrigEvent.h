@@ -58,6 +58,8 @@ namespace kathryn{
 
         void curCycleCollectData() override{};
 
+        void simStartNextCycle() override{};
+
         void simExitCurCycle() override{};
 
         SerializeEvent& getStartSerializer(){

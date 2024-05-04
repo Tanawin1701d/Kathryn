@@ -5,6 +5,7 @@
 #ifndef KATHRYN_RISCV_SIM_H
 #define KATHRYN_RISCV_SIM_H
 
+#include <fstream>
 #include "kathryn.h"
 #include "example/riscv/core/core.h"
 
@@ -51,10 +52,11 @@ namespace kathryn{
             void writeDecodeSlot (FlowBlockPipeBase* pipblock);
             void writeExecuteSlot(FlowBlockPipeBase* pipblock);
             void writeWbSlot     (FlowBlockPipeBase* pipblock);
-
             void writeReg        (const std::string& prefix,
                                   PIPE_STAGE pipeStage,
                                   RegEle&    regEle);
+
+            void readAssembly(const std::string& filePath);
 
         };
 

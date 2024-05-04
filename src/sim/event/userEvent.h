@@ -48,6 +48,8 @@ namespace kathryn{
 
      void curCycleCollectData() override{}
 
+     void simStartNextCycle() override{}
+
      void simExitCurCycle() override{}
 
      bool needToDelete() override{return true;}

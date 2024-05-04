@@ -25,19 +25,15 @@ namespace kathryn{
         }
 
         void RiscvSimInterface::describe() {
-
-            for (int writeAddr = 0;
-                 writeAddr < 400;////(1 << MEM_ADDR_IDX_ACTUAL_AL32);
-                 writeAddr++){
-                _core.memBlk._myMem.s(writeAddr, 0b0010011);
-            }
-            std::cout << TC_GREEN << "initialize mem finish" << TC_DEF << std::endl;
-
+            readAssembly("/media/tanawin/tanawin1701e/project2/riscvAsm/simpleRiscvAsm/example/test1/J_instr.out");
         }
 
         void RiscvSimInterface::describeCon() {
 
             for (int i = 0; i <= 100; i++){
+                if (i == 55){
+                    std::cout << i << std::endl;
+                }
                 conEndCycle();
                 recordSlot();
                 conNextCycle(1);
@@ -92,17 +88,27 @@ namespace kathryn{
             assert(pipblock != nullptr);
             if (writeSlotIfStall(RISC_FETCH, pipblock)){return;}
 
-            if (ull(_core.fetch.readEn)){
-                if (ull(_core.fetch.readFin)){
-                    slotWriter.addSlotVal(RISC_FETCH, "READ ADDR");
-                    slotWriter.addSlotVal(RISC_FETCH,
-                                          cvtNum2HexStr(ull(_core.fetch._reqPc)));
-                }else{
-                    slotWriter.addSlotVal(RISC_FETCH, "WAIT4MEM");
+
+            if (_core.fetch.fetchBlock->getFlowSimEngine()->isBlockOrNodeRunning()) {
+
+                if (ull(_core.fetch.readEn)) {
+                    if (ull(_core.fetch.readFin)) {
+                        slotWriter.addSlotVal(RISC_FETCH, "READ ADDR");
+                        slotWriter.addSlotVal(RISC_FETCH,
+                                              cvtNum2HexStr(ull(_core.fetch._reqPc)));
+                    } else {
+                        slotWriter.addSlotVal(RISC_FETCH, "FETCHING WAIT4MEM");
+                    }
+                } else {
+                    slotWriter.addSlotVal(RISC_FETCH, "FETCHING  WAIT4REQ");
                 }
+
             }else{
-                slotWriter.addSlotVal(RISC_FETCH, "WAIT4REQ");
+                slotWriter.addSlotVal(RISC_FETCH, "Unknown State");
             }
+
+            slotWriter.addSlotVal(RISC_FETCH, "isFin " + std::to_string(ull(_core.fetch.readFin)));
+            slotWriter.addSlotVal(RISC_FETCH, "isEn " + std::to_string(ull(_core.fetch.readEn)));
 
 
         }
@@ -136,10 +142,15 @@ namespace kathryn{
                 {0b11'100'11, "SYSTEM"},
             };
 
-            std::string decStr = (decMap.find(op) != decMap.end()) ? decMap[op]: "UNKNOWN";
-            slotWriter.addSlotVal(RISC_DECODE, decStr);
-            slotWriter.addSlotVal(RISC_DECODE, cvtNum2HexStr(pc));
-            slotWriter.addSlotVal(RISC_DECODE, cvtNum2HexStr(next_pc));
+            if (_core.decode.decodeBlk->getFlowSimEngine()->isBlockOrNodeRunning()) {
+
+                std::string decStr = (decMap.find(op) != decMap.end()) ? decMap[op] : "UNKNOWN";
+                slotWriter.addSlotVal(RISC_DECODE, decStr);
+                slotWriter.addSlotVal(RISC_DECODE, cvtNum2HexStr(pc));
+                slotWriter.addSlotVal(RISC_DECODE, cvtNum2HexStr(next_pc));
+            }else{
+                slotWriter.addSlotVal(RISC_DECODE, "UNKNOWN STATE");
+            }
 
         }
 
@@ -191,11 +202,34 @@ namespace kathryn{
                 slotWriter.addSlotVal(RISC_EXECUTE, "UNKNOWN_UOP");
             }
 
+            if (_core.execute.regAccessBlock
+                ->getFlowSimEngine()->isBlockOrNodeRunning()){
+                slotWriter.addSlotVal(RISC_EXECUTE, "REG_ACCESS");
+            }else if (_core.execute.aluBlock
+                    ->getFlowSimEngine()->isBlockOrNodeRunning()){
+                slotWriter.addSlotVal(RISC_EXECUTE, "SIMPLE_ALU");
+            }else if (_core.execute.aluBlock
+                    ->getFlowSimEngine()->isBlockOrNodeRunning()){
+                slotWriter.addSlotVal(RISC_EXECUTE, "COMPLEX_ALU");
+            }else{
+                slotWriter.addSlotVal(RISC_EXECUTE, "unknownState");
+            }
+
             /** register write */
 
             writeReg("r1", RISC_EXECUTE, decodedUop.regData[RS_1  ]);
             writeReg("r2", RISC_EXECUTE, decodedUop.regData[RS_2  ]);
+            writeReg("r3", RISC_EXECUTE, decodedUop.regData[RS_3  ]);
             writeReg("rd", RISC_EXECUTE, decodedUop.regData[RS_des]);
+            slotWriter.addSlotVal(RISC_EXECUTE, "readFin " + std::to_string(ull(_core.execute.readFn)));
+            slotWriter.addSlotVal(RISC_EXECUTE, "readEn " + std::to_string(ull(_core.execute.readEn)));
+            slotWriter.addSlotVal(RISC_EXECUTE, "finLS " + std::to_string(ull(_core.execute.testExit)));
+            slotWriter.addSlotVal(RISC_EXECUTE, "readAddr " + std::to_string(ull(_core.execute.readAddr)));
+            slotWriter.addSlotVal(RISC_EXECUTE, "m16 " + std::to_string(ull(_core.execute.m16)));
+            slotWriter.addSlotVal(RISC_EXECUTE, "read1020 " + std::to_string(ull(_core.memBlk._myMem.v(1020 >> 2))));
+            slotWriter.addSlotVal(RISC_EXECUTE, "read1024 " + std::to_string(ull(_core.memBlk._myMem.v(1024 >> 2))));
+            slotWriter.addSlotVal(RISC_EXECUTE, "read1028 " + std::to_string(ull(_core.memBlk._myMem.v(1028 >> 2))));
+            slotWriter.addSlotVal(RISC_EXECUTE, "resetSignal " + std::to_string(ull(_core.misPredic)));
 
 
         }
@@ -207,6 +241,8 @@ namespace kathryn{
             RegEle& wbReg = _core.wbData;
 
             writeReg("rwb", RISC_WB, wbReg);
+            slotWriter.addSlotVal
+            (RISC_WB, std::to_string(ull(wbReg.val)));
         }
 
         void RiscvSimInterface::writeReg(const std::string& prefix,
@@ -215,8 +251,44 @@ namespace kathryn{
 
             slotWriter.addSlotVal(pipeStage, prefix + " id " +
                                                     std::to_string(ull(regEle.idx)) + " v" +
-                                                    std::to_string(ull(regEle.valid))
+                                                    std::to_string(ull(regEle.valid)) + " val " +
+                                                    std::to_string(ull(regEle.val))
                                                     );
+        }
+
+
+        void RiscvSimInterface::readAssembly(const std::string& filePath){
+
+            ///////// initialize file
+            std::ifstream asmFile(filePath, std::ios::binary);
+            if (!asmFile.is_open()){assert(false);}
+            asmFile.seekg(0, std::ios::end);
+            std::streampos fileSize = asmFile.tellg();
+            assert((fileSize % 4) == 0);
+            asmFile.seekg(0, std::ios::beg);
+
+
+            /** read instruction from file and write it to memory block*/
+            uint32_t writeAddr = 0;
+            uint32_t instr;
+            while(asmFile.read(reinterpret_cast<char*>(&instr), sizeof instr)){
+                assert((instr & 0b11) == 0b11); ////// check instruction
+                _core.memBlk._myMem.s(writeAddr, instr);
+                std::cout << instr << std::endl;
+                writeAddr++;
+            }
+            asmFile.close();
+
+
+//            for (;
+//                 writeAddr < 400;////(1 << MEM_ADDR_IDX_ACTUAL_AL32);
+//                 writeAddr++){
+//                _core.memBlk._myMem.s(writeAddr, 0b0010011);
+//            }
+            std::cout << TC_GREEN << "initialize mem finish" << TC_DEF << std::endl;
+
+
+
         }
 
 

@@ -61,7 +61,7 @@ namespace kathryn{
             makeReg(isUopUse  , 1);
             makeReg(isMemLoad , 1); ///// else is store
             makeReg(size      , 2); //// 00 -> 8, 01 -> 16, 10 -> 32, 11-> reserve
-            makeReg(extendMode, 1); //// 0 zero extend 1 signExtend
+            makeReg(extendMode, 1); //// 0 zero extend 1 unsign Extend
 
             void set(bool isLoad, Operable& needSize, Operable& needExtendMode){
                 isUopUse <<= 1;
@@ -120,7 +120,7 @@ namespace kathryn{
             makeReg(isJalR    , 1);
             makeReg(isJal     , 1);
 
-            makeReg(extendMode, 1); //// 0 zero extend 1 signExtend
+            makeReg(extendMode, 1); //// 0 sign zero extend 1 unsigned
             makeReg(isEq      , 1);
             makeReg(isNEq     , 1);
             makeReg(isLt      , 1);

@@ -44,10 +44,11 @@ namespace kathryn{
         public:
             makeWire(invalidHighDec, 1);
             makeWire(invalidLowDec,  1);
+            FlowBlockBase* decodeBlk = nullptr;
 
             void flow(Operable& rst, FETCH_DATA& fetchData, UOp& _decUop) {
 
-                pipBlk { intrReset(rst);
+                pipBlk { intrReset(rst); intrStart(rst); exposeBlk(decodeBlk)
                     cdowhile(!nextPipReadySig) {
                         par {
                             zif(nextPipReadySig) {
@@ -57,10 +58,12 @@ namespace kathryn{
                                 auto& op = fetchData.fetch_instr(OP_ALL);
                                 zif(op(OP_H) == 0b00) {
                                     //////// load  immop aulpc ////////////////////////////////////////////////
-                                    zif  (op(OP_L) == 0b000){ doLoadStoreDecode(fetchData.fetch_instr, _decUop, true);   }///zelif(op(2,5) == 0b11){//doMiscDecode(fetchBlk.fetch_instr);///}
-                                    zelif(op(OP_L) == 0b100){ doOpDecode       (fetchData.fetch_instr, _decUop, false);}
-                                    zelse                      { doAulPcDecode    (fetchData.fetch_instr, _decUop);/*101*/         }
-                                    ///////////////////////////////////////////////////////////////////////////
+                                    zif  (op(OP_L) == 0b000) {
+                                        doLoadStoreDecode(fetchData.fetch_instr, _decUop, true);
+                                    }///zelif(op(2,5) == 0b11){//doMiscDecode(fetchBlk.fetch_instr);///}
+                                    zelif(op(OP_L) == 0b100) { doOpDecode(fetchData.fetch_instr, _decUop, false); }
+                                    zelse { doAulPcDecode(fetchData.fetch_instr, _decUop);/*101*/         }
+
                                 }zelif(op(OP_H) == 0b01) {
                                     //////////// store op luidcode////////////////////////////////////////////
                                     zif  (op(OP_L) == 0b000) { doLoadStoreDecode(fetchData.fetch_instr, _decUop, false); }
@@ -117,6 +120,8 @@ namespace kathryn{
                 }else{
                     /** for shift user only lower 5 bit*/
                     _decUop.regData[RS_2].setFromImm(getExtendExpr(instr(IMM_I_0_12), XLEN, false));
+//                    makeVal(testdd, 32, 7);
+//                    _decUop.regData[RS_2].setFromImm(testdd);
                 }
                 _decUop.regData[RS_3].reset();
                 _decUop.regData[RS_des].setFromRegFile(instr(IDX_RD));

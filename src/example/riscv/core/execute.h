@@ -31,6 +31,14 @@ namespace kathryn{
             makeWire(cmpLtSign, 1);
             makeWire(cmpLtUnSign, 1);
 
+            makeWire(testExit, 1);
+
+            makeWire(m16, 1);
+
+            FlowBlockBase* regAccessBlock = nullptr;
+            FlowBlockBase* aluBlock       = nullptr;
+            FlowBlockBase* complexExe     = nullptr;
+
             explicit Execute(UOp& decodedUop, StorageMgmt& memArb, RegEle& desReg):
             _decodedUop(decodedUop),
             rdes(desReg),
@@ -50,11 +58,15 @@ namespace kathryn{
             }
 
             void accessRegData(int idx, MemBlock& memBlock,BYPASS_DATA& bypassData){
-                RegEle& rs1    = _decodedUop.regData[idx];
-                RegEle& rsfill = _decodedUop.regData[idx];
-                zif( (~rs1.valid) & (rs1.idx != 0)){
-                    zif(bypassData.idx == rs1.idx){ rsfill.val <<= bypassData.value;}     /////// bypass?
-                    zelse                         { rsfill.val <<= memBlock[rs1.idx];} ///////// fill data
+                RegEle& rsx    = _decodedUop.regData[idx];
+                zif(~rsx.valid){
+                    rsx.valid <<= 1;
+                    zif(rsx.idx != 0) {
+                        zif(bypassData.idx == rsx.idx) { rsx.val <<= bypassData.value; }     /////// bypass?
+                        zelse { rsx.val <<= memBlock[rsx.idx]; } ///////// fill data
+                    }zelse{
+                        rsx.val   <<= 0;
+                    }
                 }
             }
 
@@ -63,14 +75,17 @@ namespace kathryn{
             void flow(Wire& misPredic, Wire& reStartPc, MemBlock& memBlock, BYPASS_DATA& bypassData){
 
                 pipBlk{
-                    par{
+                    par{ exposeBlk(regAccessBlock)
                         accessRegData(RS_1, memBlock, bypassData); ////// access register 1
                         accessRegData(RS_2,  memBlock, bypassData);
                         rdes <<= _decodedUop.regData[RS_des];
                     }
-                    par{ execAlu(misPredic, reStartPc);
+                    par{ exposeBlk(aluBlock)
+                        execAlu(misPredic, reStartPc);
                     }
-                    par{ execComplexAlu(); execLS(); }
+                    par{ exposeBlk(complexExe)
+                        execComplexAlu(); execLS();
+                    }
                 }
             }
 
@@ -97,12 +112,12 @@ namespace kathryn{
                                 (_decodedUop.opCtrlFlow.isJalR) |
                                 (_decodedUop.opCtrlFlow.isEq & rs1.val == rs2.val) |
                                 (_decodedUop.opCtrlFlow.isNEq & rs1.val != rs2.val) |
-                                (_decodedUop.opCtrlFlow.isLt & _decodedUop.opCtrlFlow.extendMode & cmpLtSign) |
-                                (_decodedUop.opCtrlFlow.isLt & (~_decodedUop.opCtrlFlow.extendMode) & cmpLtUnSign) |      //////// unsign
-                                (_decodedUop.opCtrlFlow.isGe & ( _decodedUop.opCtrlFlow.extendMode) & (~cmpLtSign)) |
-                                (_decodedUop.opCtrlFlow.isGe & (~_decodedUop.opCtrlFlow.extendMode) & (~cmpLtUnSign));
+                                (_decodedUop.opCtrlFlow.isLt & (_decodedUop.opCtrlFlow.extendMode ) & cmpLtUnSign)  |
+                                (_decodedUop.opCtrlFlow.isLt & (~_decodedUop.opCtrlFlow.extendMode) & cmpLtSign)    |      //////// unsign
+                                (_decodedUop.opCtrlFlow.isGe & ( _decodedUop.opCtrlFlow.extendMode) & (~cmpLtUnSign)) |
+                                (_decodedUop.opCtrlFlow.isGe & (~_decodedUop.opCtrlFlow.extendMode) & (~cmpLtSign));
                     zif(_decodedUop.opCtrlFlow.isJal){
-                        reStartPc    = _decodedUop.pc + rs1.val;
+                        reStartPc    = _decodedUop.pc + rs2.val;
                         rdes.val   <<= _decodedUop.pc + 4;
                         rdes.valid <<= 1;
                     }zelif(_decodedUop.opCtrlFlow.isJalR){
@@ -129,21 +144,27 @@ namespace kathryn{
                     cif(_decodedUop.opAlu.isShiftLeftLogical) {
                         cdowhile(rs2.val(0, 5) > 1){
                             rdes.val <<= rdes.val << (rs2.val(0, 5) > 0);
-                            rs2 .val <<= rs2.val - 1;
+                            zif(rs2.val(0, 5) > 1) {
+                                rs2.val <<= rs2.val - 1;
+                            }
                         }
                     }
 
                     cif(_decodedUop.opAlu.isShiftRightLogical) {
                         cdowhile(rs2.val(0, 5) > 1) {
                             rdes.val <<= rdes.val >> (rs2.val(0, 5) > 0);
-                            rs2 .val <<= rs2.val - 1;
+                            zif(rs2.val(0, 5) > 1) {
+                                rs2.val <<= rs2.val - 1;
+                            }
                         }
                     }
 
                     cif(_decodedUop.opAlu.isShiftRightArith) {
                         cdowhile(rs2.val(0, 5) > 1) {
                             rdes.val(0, XLEN - 1) <<= rdes.val(0, XLEN - 1) >> (rs2.val(0, 5) > 0);
-                            rs2 .val <<= rs2.val - 1;
+                            zif(rs2.val(0, 5) > 1) {
+                                rs2.val <<= rs2.val - 1;
+                            }
                         }
                     }
                 }
@@ -152,20 +173,34 @@ namespace kathryn{
             void execLS(){
 
                 cif(_decodedUop.opLs.isUopUse){
-                    cdowhile(!readFn){
+                    cdowhile(!readFn) {
                         readEn = 1;
                         zif((_decodedUop.opLs.size == 0b00) & readFn) {
-                            rdes.val <<= getExtendExpr(_memArb.readOutput(0, 8), XLEN, false);
+                            zif(_decodedUop.opLs.extendMode) { ////sign extend
+                                rdes.val <<= getExtendExpr(_memArb.readOutput(0, 8), XLEN, true);
+                            }zelse{
+                                rdes.val <<= getExtendExpr(_memArb.readOutput(0, 8), XLEN, false);
+                            }
                             zif(~_decodedUop.opLs.isMemLoad) {
-                                _memArb.reqWriteReq(g(_memArb.readOutput(8, XLEN), _decodedUop.regData[RS_2].val(0, 8)),readAddr
+                                _memArb.reqWriteReq(
+                                        g(_memArb.readOutput(8, XLEN), _decodedUop.regData[RS_2].val(0, 8)),
+                                        readAddr
                                 );
                             }
-                        }zif((_decodedUop.opLs.size == 0b01) & (readFn)) {
-                            rdes.val <<= getExtendExpr(_memArb.readOutput(0, 16), XLEN, false);
-                            zif(~_decodedUop.opLs.isMemLoad) {
-                                _memArb.reqWriteReq(g(_memArb.readOutput(16, XLEN), _decodedUop.regData[RS_2].val(0, 16)), readAddr);
+                        }
+                        zif((_decodedUop.opLs.size == 0b01) & (readFn)) {
+                            zif(_decodedUop.opLs.extendMode) { ////sign extend
+                                rdes.val <<= getExtendExpr(_memArb.readOutput(0, 16), XLEN, true);
+                            }zelse{
+                                rdes.val <<= getExtendExpr(_memArb.readOutput(0, 16), XLEN, false);
                             }
-                        }zif((_decodedUop.opLs.size == 0b10) & (readFn)) {
+                            zif(~_decodedUop.opLs.isMemLoad) {
+                                _memArb.reqWriteReq(
+                                        g(_memArb.readOutput(16, XLEN), _decodedUop.regData[RS_2].val(0, 16)),
+                                        readAddr);
+                            }
+                        }
+                        zif((_decodedUop.opLs.size == 0b10) & (readFn)) {
                             rdes.val <<= _memArb.readOutput;
                             zif(~_decodedUop.opLs.isMemLoad) {
                                 _memArb.reqWriteReq(_decodedUop.regData[RS_2].val, readAddr);

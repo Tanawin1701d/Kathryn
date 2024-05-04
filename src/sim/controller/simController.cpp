@@ -42,18 +42,22 @@ namespace kathryn{
 
                 EventBase* collectingEvent = eventQ.getNextEvent();
                 eventQ.popEvent();
+
+                ////// push in the same cycle
                 unlock();
-                collectingEvent->simStartCurCycle();
+                collectingEvent->simStartCurCycle(); ////// you must simfirst while collecting because some trigger may be
                 _curCycleEvents.push_back(collectingEvent);
                 lock();
             }
             unlock();
-
             /**
              * all event is simulated. For now, This cycle is stable.
              * */
             for (auto* curEvent: _curCycleEvents){
                 curEvent->curCycleCollectData();
+            }
+            for (auto* curEvent: _curCycleEvents){
+                curEvent->simStartNextCycle();
             }
             for (auto* curEvent: _curCycleEvents){
                 curEvent->simExitCurCycle();

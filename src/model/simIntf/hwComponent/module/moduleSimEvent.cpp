@@ -36,9 +36,6 @@ namespace kathryn{
 
     void ModuleSimEvent::simStartCurCycle() {
         if (_targetCycle == 0) {
-
-
-
             /** initiate reset Value*/
             ValRep resetVal = NumConverter::createValRep(1, 1);
             _resetWire->getRtlValItf()->setCurValSimStatus();
@@ -50,7 +47,7 @@ namespace kathryn{
 //        }
 //        std::cout << "--------------------------------------------------------" <<std::endl;
         _startModule->simStartCurCycle ();
-        _startModule->simStartNextCycle();
+//        _startModule->simStartNextCycle();
 //        std::cout << "--------------------------------------------------------" <<std::endl;
         /***set reset wire */
 
@@ -68,6 +65,10 @@ namespace kathryn{
         _writer->addNewValue("CLK", downClk);
 
 
+    }
+
+    void ModuleSimEvent::simStartNextCycle() {
+        _startModule->simStartNextCycle();
     }
 
     void ModuleSimEvent::simExitCurCycle() {

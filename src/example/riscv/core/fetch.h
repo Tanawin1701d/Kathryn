@@ -23,6 +23,7 @@ namespace kathryn{
             StorageMgmt& storageMgmt;
             Reg&    _reqPc;
             Operable&    readFin;
+            FlowBlockBase* fetchBlock = nullptr;
 
             explicit Fetch(StorageMgmt& memMgmt, Reg& reqPc):
             storageMgmt(memMgmt),
@@ -33,7 +34,7 @@ namespace kathryn{
 
             void flow(Operable& rst, FETCH_DATA& fetchdata){
 
-                pipBlk{ intrReset(rst); intrStart(rst);
+                pipBlk{ intrReset(rst); intrStart(rst); exposeBlk(fetchBlock)
                     par {
                         cdowhile(!readFin){
                             readEn = nextPipReadySig;

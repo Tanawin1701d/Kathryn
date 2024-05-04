@@ -44,7 +44,9 @@ namespace kathryn{
 
         bool isReadMode() const{return readMode;}
 
+        ull     getCurIndex();
         ValRep& getCurMemVal();
+        ValRep& getNextMemBaseVal();
         int     getExactIndexSize();
 
         /** override assignable (need to call controller)*/

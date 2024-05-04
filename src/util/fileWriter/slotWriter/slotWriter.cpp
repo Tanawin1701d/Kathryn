@@ -40,11 +40,15 @@ namespace kathryn{
                 /**check there is no line for print just nothing*/
                 if (ln < col[slIdx].size()){
                     /** before padding*/
-                    for (int pd = 0; pd < (slotWidth - col[slIdx][ln].size() + 1)/2; pd++){ result += ' ';}
+                    int beforeSpaceAmt = (slotWidth - ((int)col[slIdx][ln].size()) + 1)/2;
+                    for (int pd = 0; pd < beforeSpaceAmt; pd++){ result += ' ';}
                     /** in processing data*/
                     result += col[slIdx][ln];
                     /** after padding*/
-                    for (int pd = 0; pd < (slotWidth - col[slIdx][ln].size())/2; pd++){ result += ' ';}
+                     int backSpaceAmt = (slotWidth - (int)col[slIdx][ln].size())/2;
+                    for (int pd = 0; pd < backSpaceAmt; pd++){
+                        result += ' ';
+                    }
                 }else{
                     for (int pd = 0; pd < slotWidth; pd++){ result += ' ';}
                 }
@@ -87,7 +91,8 @@ namespace kathryn{
 
         /***write the data*/
         auto& curRow = *_rows.rbegin();
-        addData(curRow.getResultRow(COLUMNWIDTH));
+        std::string getData = curRow.getResultRow(COLUMNWIDTH);
+        addData(getData);
         std::string breakVal;
         for (int i = 0; i < (SLOTSIZE * (COLUMNWIDTH + 1)); i++){
             breakVal += "-";

@@ -75,6 +75,8 @@ namespace kathryn{
         for (auto agentHolder: memBlockAgents){
             agentHolder->getSimEngine()->simExitCurCycle();
         }
+        ///////// clear the pending
+        pendingWrite.clear();
 
 //        std::cout <<"---------mem regiion" << std::endl;
 //        for (int i = 0; i < DEPTH_SIZE; i++){

@@ -60,8 +60,8 @@ namespace kathryn{
                 cwhile(true) {
 
                     zif(*readEns[readEns.size()-1]) {
-                        readIdxMaster = *readAddress[0];
-                        (*readFinishes[0]) = 1;
+                        readIdxMaster = *readAddress[readEns.size()-1];
+                        (*readFinishes[readEns.size()-1]) = 1;
                     }
                     for (int i = ((int)readEns.size())-2; i >= 0; i--) {
                         zelif(*readEns[i]) {

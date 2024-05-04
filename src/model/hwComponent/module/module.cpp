@@ -272,22 +272,6 @@ namespace kathryn{
         setCurValSimStatus();
     }
 
-    void Module::simStartNextCycle() {
-        /**RTL SIM(SP)*/
-        for (int i = 0; i < SP_CNT_REG; i++){
-            simStartNextSubElement(_spRegs[i]);
-        }
-        /**RTL SIM(USER)*/
-        simStartNextSubElement(_userRegs);
-        simStartNextSubElement(_userMemBlks);
-            /**for wire expresssion and nest is not need to implement*/
-        /**COMPLEX SUB SIM*/
-        simStartNextSubElement(_userSubModules);
-            /**for flow block no next cycle to determine*/
-
-        setNextValSimStatus();
-    }
-
     void Module::curCycleCollectData() {
         /**RTL SIM(SP)*/
         for (int i = 0; i < SP_CNT_REG; i++){
@@ -303,6 +287,22 @@ namespace kathryn{
         /**COMPLEX SUB SIM*/
         curCollectData(_userSubModules);
         curCollectData(_flowBlockBases);
+    }
+
+    void Module::simStartNextCycle() {
+        /**RTL SIM(SP)*/
+        for (int i = 0; i < SP_CNT_REG; i++){
+            simStartNextSubElement(_spRegs[i]);
+        }
+        /**RTL SIM(USER)*/
+        simStartNextSubElement(_userRegs);
+        simStartNextSubElement(_userMemBlks);
+        /**for wire expresssion and nest is not need to implement*/
+        /**COMPLEX SUB SIM*/
+        simStartNextSubElement(_userSubModules);
+        /**for flow block no next cycle to determine*/
+
+        setNextValSimStatus();
     }
 
 

@@ -15,6 +15,7 @@ namespace kathryn{
     protected:
         /** we will not use sim engine anymore*/
         ValRep* memBlk = nullptr;
+        std::unordered_map<ull, ValRep> pendingWrite;
 
         bool               _isCurValSim  = false;
         bool               _isNextValSim = false;
@@ -34,7 +35,8 @@ namespace kathryn{
 
         void curCycleCollectData() override {assert(false);};
 
-        ValRep& getThisCycleValRep(ull idx);
+        ValRep& getThisCycleValRep   (ull idx);
+        ValRep& getNextCycleVapRepSrc(ull idx);
 
         //////// rtlValItf override
         void setCurValSimStatus () override{_isCurValSim  = true;}
@@ -62,13 +64,12 @@ namespace kathryn{
         bool               _isNextValSim = false;
 
         ValRep* _curAgentVal = nullptr;
-        ValRep  _nextAgentVal;
+        ValRep*  _nextAgentVal = nullptr;
         ////// prepare sim
 
     public:
 
-        explicit MemAgentSimEngine(int bitWidth):
-        _nextAgentVal(bitWidth)
+        explicit MemAgentSimEngine(int bitWidth)
         {}
 
         void prepareSim() override{
@@ -85,8 +86,9 @@ namespace kathryn{
             _isCurValSim  = false;
             _isNextValSim = false;
             if (!isReadMode()){ //// write mode
-                *_curAgentVal = _nextAgentVal;
+                *_curAgentVal = *_nextAgentVal;
             }
+            _nextAgentVal = nullptr;
             ////// may be there is no
         }
 
@@ -105,7 +107,7 @@ namespace kathryn{
         }
 
         ValRep&  getNextVal() override {
-            return _nextAgentVal;
+            return *_nextAgentVal;
         }
     };
 

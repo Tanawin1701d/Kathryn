@@ -143,8 +143,8 @@ namespace kathryn{
         void beforePrepareSim(VcdWriter* vcdWriter, FlowColEle* flowColEle) override;
         void prepareSim() override;
         void simStartCurCycle() override;
-        void simStartNextCycle() override;
         void curCycleCollectData() override;
+        void simStartNextCycle() override;
         void simExitCurCycle() override;
 
     protected:

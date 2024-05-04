@@ -47,23 +47,34 @@ namespace kathryn{
         AssignCallbackFromAgent::setMaster(this);
     }
 
-    ValRep&
-    MemBlockEleHolder::getCurMemVal(){
-        /**start simulate it first*/
+
+    ull
+    MemBlockEleHolder::getCurIndex(){
+        /** simulate index first*/
         _indexer->getSimItf()->simStartCurCycle();
         ValRep curValIndexer = _indexer->getSlicedCurValue();
         assert(curValIndexer.getLen() == getExactIndexSize());
-        /////std::cout << "indexer ==== " << curValIndexer.getVal()[0] << std::endl;
-        ////TODO we will deal overflow index later with this later
-
+        /**get curindex only ull support*/
         ull curIdx =  curValIndexer.getVal()[0];
-
         if (curIdx >= _master->getDepthSize()){
             curIdx  = 0;
         }
+        return curIdx;
+    }
 
+    ValRep&
+    MemBlockEleHolder::getCurMemVal(){
+        ull curIdx = getCurIndex();
         return _master->getThisCycleValRep(curIdx);
     }
+
+    ValRep&
+    MemBlockEleHolder::getNextMemBaseVal(){
+        ull curIdx = getCurIndex();
+        return _master->getNextCycleVapRepSrc(curIdx);
+    }
+
+
 
     int
     MemBlockEleHolder::getExactIndexSize(){
@@ -192,8 +203,8 @@ namespace kathryn{
 
         /////// copy current value to _nextAgentVal first then assign next value
         ////////// fyi getCurmemval is pointer to origin value
-        _nextAgentVal = _master->getCurMemVal();
-        _master->assignValRepCurCycle(_nextAgentVal);
+        _nextAgentVal = &(_master->getNextMemBaseVal());
+        _master->assignValRepCurCycle(*_nextAgentVal);
     }
 
 

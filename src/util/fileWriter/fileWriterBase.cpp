@@ -35,8 +35,11 @@ namespace kathryn{
             flush();
         }
         /**copy data to array*/
-        std::strcpy(_fileBuff + _nextBuffIdx, data.c_str());
-        _nextBuffIdx += (int)data.size();
+        if (!data.empty()){
+            std::strcpy(_fileBuff + _nextBuffIdx, data.c_str());
+            _nextBuffIdx += (int)data.size();
+        }
+
 
 
     }

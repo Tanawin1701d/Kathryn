@@ -35,15 +35,21 @@ namespace kathryn{
           * compute value that will be assigned in this cycle
           * */
         virtual void simStartCurCycle() = 0;
+
         /**
          * collect data from every compute unit
          * ex for reg wire unit will write data to cmd unit
          **/
          virtual void curCycleCollectData() = 0;
         /**
+        * compute value for next cycle
+        * */
+        virtual void simStartNextCycle() = 0;
+        /**
          * a function that used to specify compute unit whether
          * this cycle is finished
          * */
+
         virtual void simExitCurCycle() = 0;
 
 
