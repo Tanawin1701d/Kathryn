@@ -18,19 +18,11 @@ int main(int argc, char* argv[]) {
     initMdDebugger();
     initMfDebugger();
 
-    std::vector<std::string> cmd; ///// = {"test", "all"};
-
     if (argc < 2){
         std::cout << "there is no argument value" << std::endl;
     }
 
-    for (int i = 1; i < argc; i++){
-        std::string myarg = std::string(argv[i]);
-        cmd.push_back(myarg);
-    }
-
-
-    start(cmd);
+    start(std::string(argv[1]));
 
     finalizeMdDebugger();
     finalizeMfDebugger();

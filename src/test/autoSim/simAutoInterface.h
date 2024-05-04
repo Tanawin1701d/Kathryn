@@ -25,8 +25,7 @@ namespace kathryn{
 
         int getSimId() const {return _simId;}
 
-        void testAndPrint(std::string testName, ValRep& simVal, ValRep& rhs);
-        void testAndPrint(std::string testName, ull simVal, ull expect);
+
 
         virtual void simAssert(){};
         virtual void simDriven(){};

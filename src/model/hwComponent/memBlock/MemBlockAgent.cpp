@@ -20,7 +20,7 @@ namespace kathryn{
             _indexer(const_cast<Operable*>(indexer)){
         assert(_master  != nullptr);
         assert(_indexer != nullptr);
-        std::cout << _indexer->getOperableSlice().getSize() << "    actual " << getExactIndexSize() << std::endl;
+        ////std::cout << _indexer->getOperableSlice().getSize() << "    actual " << getExactIndexSize() << std::endl;
         assert(_indexer->getOperableSlice().getSize()
                == getExactIndexSize());
         AssignOpr::setMaster(this);

@@ -175,6 +175,7 @@ namespace kathryn{
                 cif(_decodedUop.opLs.isUopUse){
                     cdowhile(!readFn) {
                         readEn = 1;
+                        rdes.valid <<= _decodedUop.opLs.isMemLoad;
                         zif((_decodedUop.opLs.size == 0b00) & readFn) {
                             zif(_decodedUop.opLs.extendMode) { ////sign extend
                                 rdes.val <<= getExtendExpr(_memArb.readOutput(0, 8), XLEN, true);

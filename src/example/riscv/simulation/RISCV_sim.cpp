@@ -13,19 +13,22 @@ namespace kathryn{
 
 
         RiscvSimInterface::RiscvSimInterface(CYCLE       limitCycle,
-                                             std::string vcdFilePath,
-                                             std::string profileFilePath,
-                                             std::string slotFilePath,
+                                             std::string prefix,
+                                             std::string testType,
                                              Riscv& core):
-                SimInterface(limitCycle,std::move(vcdFilePath),std::move(profileFilePath)),
+                SimInterface(limitCycle,
+                             std::move(prefix + testType + "/owave.vcd"),
+                             std::move(prefix + testType + "/oprofile.prof")),
                 _core(core),
                 slotWriter({"fetch", "decode", "execute", "wb"},
                            25,
-                           std::move(slotFilePath)){
-        }
+                           std::move(prefix + testType + "/oslot.sl")),
+                _prefixFolder(prefix),
+                _testType(testType){}
 
         void RiscvSimInterface::describe() {
-            readAssembly("/media/tanawin/tanawin1701e/project2/riscvAsm/simpleRiscvAsm/example/test1/J_instr.out");
+            readAssembly (_prefixFolder + _testType + "/asm.out");
+            readAssertVal(_prefixFolder + _testType + "/ast.out");
         }
 
         void RiscvSimInterface::describeCon() {
@@ -37,6 +40,20 @@ namespace kathryn{
                 conEndCycle();
                 recordSlot();
                 conNextCycle(1);
+            }
+            bool pass = true;
+            for (int i = 0;  i < AMT_REG; i++){
+                if (_regTestVal[i] != _core.regFile.v(i)){
+                    pass = false;
+                    testAndPrint("fail reg" + std::to_string(i),
+                                 _core.regFile.v(i), _regTestVal[i]);
+                }
+
+            }
+            if (pass){
+                std::cout << TC_GREEN << "register val test pass" << TC_DEF << std::endl;
+            }else{
+                std::cout << TC_RED << "register val test fail" << TC_DEF << std::endl;
             }
 
         }
@@ -274,7 +291,7 @@ namespace kathryn{
             while(asmFile.read(reinterpret_cast<char*>(&instr), sizeof instr)){
                 assert((instr & 0b11) == 0b11); ////// check instruction
                 _core.memBlk._myMem.s(writeAddr, instr);
-                std::cout << instr << std::endl;
+                //////////////std::cout << instr << std::endl;
                 writeAddr++;
             }
             asmFile.close();
@@ -289,6 +306,23 @@ namespace kathryn{
 
 
 
+        }
+
+
+        void RiscvSimInterface::readAssertVal(const std::string& filePath){
+
+            std::vector<std::string> rawVals;
+
+            FileReaderBase reader(filePath);
+            rawVals = reader.readLines();
+
+            assert(rawVals.size() == AMT_REG);
+
+            for (int regIdx = 0; regIdx < AMT_REG; regIdx++){
+                ///std::cout << regIdx << " reg val  "<< stoul(rawVals[regIdx]) << std::endl;
+                _regTestVal[regIdx] = stoul(rawVals[regIdx]);
+                ///std::cout << regIdx << " reg val  "<< _regTestVal[regIdx] << std::endl;
+            }
         }
 
 

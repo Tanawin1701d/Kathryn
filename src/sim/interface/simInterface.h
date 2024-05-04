@@ -12,6 +12,7 @@
 #include "sim/event/userEvent.h"
 #include "sim/controller/simController.h"
 #include "sim/event/ctTrigEvent.h"
+#include "util/termColor/termColor.h"
 
 /////#define sim agent << [&]()
 
@@ -59,6 +60,10 @@ namespace kathryn{
         virtual void describeCon(){};
 
         /** user it to communicate about simulation trigger*/
+
+        /** test value helper*/
+        void testAndPrint(std::string testName, ValRep& simVal, ValRep& rhs);
+        void testAndPrint(std::string testName, ull simVal, ull expect);
 
     };
 

@@ -56,26 +56,40 @@ namespace kathryn{
                                 _decUop.pc     <<= fetchData.fetch_pc;
                                 _decUop.nextPc <<= fetchData.fetch_nextpc;
                                 auto& op = fetchData.fetch_instr(OP_ALL);
-                                zif(op(OP_H) == 0b00) {
-                                    //////// load  immop aulpc ////////////////////////////////////////////////
-                                    zif  (op(OP_L) == 0b000) {
-                                        doLoadStoreDecode(fetchData.fetch_instr, _decUop, true);
-                                    }///zelif(op(2,5) == 0b11){//doMiscDecode(fetchBlk.fetch_instr);///}
-                                    zelif(op(OP_L) == 0b100) { doOpDecode(fetchData.fetch_instr, _decUop, false); }
-                                    zelse { doAulPcDecode(fetchData.fetch_instr, _decUop);/*101*/         }
+                                zif (op(0,2) == 0b11) {
+                                    zif(op(OP_H) == 0b00) {
+                                        //////// load  immop aulpc ////////////////////////////////////////////////
+                                        zif  (op(OP_L) == 0b000) {
+                                            doLoadStoreDecode(fetchData.fetch_instr, _decUop, true);
+                                        }///zelif(op(2,5) == 0b11){//doMiscDecode(fetchBlk.fetch_instr);///}
+                                        zelif(op(OP_L) == 0b100) { doOpDecode(fetchData.fetch_instr, _decUop, false); }
+                                        zelse { doAulPcDecode(fetchData.fetch_instr, _decUop);/*101*/         }
 
-                                }zelif(op(OP_H) == 0b01) {
-                                    //////////// store op luidcode////////////////////////////////////////////
-                                    zif  (op(OP_L) == 0b000) { doLoadStoreDecode(fetchData.fetch_instr, _decUop, false); }
-                                    zelif(op(OP_L) == 0b100) { doOpDecode       (fetchData.fetch_instr, _decUop, true);}
-                                    zelse                       { doLuiDecode      (fetchData.fetch_instr, _decUop);               }   //(op(2,5) == 0b101) {
-                                    ////////////////////////////////////////////////////////////////////////
-                                }zelif(op(OP_H) == 0b11) { ////// 11   we dont support 10
-                                    ////////// branch jump with reg //////////////////////////
-                                    zif  (op(OP_L) == 0b000) { doBranchDecode(fetchData.fetch_instr, _decUop);}
-                                    zelif(op(OP_L) == 0b001) { doJalRDecode  (fetchData.fetch_instr, _decUop);}
-                                    zelse                       { doJalDecode   (fetchData.fetch_instr, _decUop);}/*(op(2,5) == 0b011){ this is 11*///}zelse{doSystemDecode(fetchBlk.fetch_instr);
-                                }zelse {invalidHighDec = 1;};
+                                    }
+                                    zelif(op(OP_H) == 0b01) {
+                                        //////////// store op luidcode////////////////////////////////////////////
+                                        zif  (op(OP_L) == 0b000) {
+                                            doLoadStoreDecode(fetchData.fetch_instr, _decUop, false);
+                                        }
+                                        zelif(op(OP_L) == 0b100) { doOpDecode(fetchData.fetch_instr, _decUop, true); }
+                                        zelse { doLuiDecode(fetchData.fetch_instr, _decUop); }   //(op(2,5) == 0b101) {
+                                        ////////////////////////////////////////////////////////////////////////
+                                    }
+                                    zelif(op(OP_H) == 0b11) { ////// 11   we dont support 10
+                                        ////////// branch jump with reg //////////////////////////
+                                        zif  (op(OP_L) == 0b000) { doBranchDecode(fetchData.fetch_instr, _decUop); }
+                                        zelif(op(OP_L) == 0b001) { doJalRDecode(fetchData.fetch_instr, _decUop); }
+                                        zelse {
+                                            doJalDecode(fetchData.fetch_instr, _decUop);
+                                        }/*(op(2,5) == 0b011){ this is 11*///}zelse{doSystemDecode(fetchBlk.fetch_instr);
+                                    }
+                                    zelse {
+                                        invalidHighDec = 1;
+                                        _decUop.reset();
+                                    }
+                                }zelse{
+                                    _decUop.reset();
+                                };
                             }
 
                         }

@@ -22,29 +22,7 @@ namespace kathryn{
     _simId(simId){
     }
 
-    void SimAutoInterface::testAndPrint(std::string testName, ValRep &simValLhs, ValRep& testValRhs) {
 
-        if ((simValLhs == testValRhs).getLogicalValue()){
-            std::cout << TC_GREEN << testName << " pass " << TC_DEF << std::endl;
-        }else{
-            std::cout << TC_RED << testName << " fail expect: "
-                      << testValRhs.getBiStr() << "  got : "
-                      << simValLhs.getBiStr() << TC_DEF << std::endl;
-        }
-    }
-
-    void SimAutoInterface::testAndPrint(std::string testName, ull simVal, ull expect) {
-
-        if (simVal == expect){
-            std::cout << TC_GREEN << testName << " pass " << TC_DEF << std::endl;
-        }else{
-            std::cout << TC_RED << testName << " fail expect: "
-                      << expect << "  got : "
-                      << simVal << TC_DEF << std::endl;
-        }
 
 
     }
-
-
-}

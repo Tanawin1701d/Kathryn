@@ -1,0 +1,8 @@
+ioOptimize = false
+
+testType = testRiscv
+
+; path to riscv result folder
+; do not forget to add / after the path
+
+prefix = /media/tanawin/tanawin1701e/project2/Kathryn/KOut/riscv/

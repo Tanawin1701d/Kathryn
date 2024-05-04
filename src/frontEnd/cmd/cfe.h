@@ -12,18 +12,18 @@
 #include "util/termColor/termColor.h"
 
 #include "example/riscv/simulation/RISCV_sim.h"
+#include "paramReader.h"
 
 
 namespace kathryn {
 
     void printWelcomeScreen();
 
-    void test(int idx,
-              std::vector<std::string>& args);
+    void test_simple(PARAM& params);
 
-    void start(std::vector<std::string>& args);
+    void start(std::string paramFilePath);
 
-    void test_riscv();
+    void test_riscv(PARAM& params);
 
 }
 

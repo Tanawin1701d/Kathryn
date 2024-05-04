@@ -8,6 +8,7 @@
 #include <fstream>
 #include "kathryn.h"
 #include "example/riscv/core/core.h"
+#include "frontEnd/cmd/paramReader.h"
 
 
 namespace kathryn{
@@ -27,14 +28,16 @@ namespace kathryn{
             Riscv&      _core;
             const int  AMT_STAGE = 4;
             SlotWriter slotWriter;
+            std::string _prefixFolder;
+            std::string _testType;
+            uint32_t    _regTestVal[AMT_REG];
 
 
         public:
 
             explicit RiscvSimInterface(CYCLE limitCycle,
-                                       std::string vcdFilePath,
-                                       std::string profileFilePath,
-                                       std::string slotFilePath,
+                                       std::string prefix,
+                                       std::string testType,
                                        Riscv& core
                                        );
 
@@ -57,21 +60,35 @@ namespace kathryn{
                                   RegEle&    regEle);
 
             void readAssembly(const std::string& filePath);
+            void readAssertVal(const std::string& filePath);
 
         };
 
         class RISCV_MNG{
         public:
-            void start(){
-                makeMod(riscCore, Riscv, false);
-                startModelKathryn();
-                RiscvSimInterface simulator(300,
-                                            "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/simAutoTestRiscv.vcd",
-                                            "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/profAutoRiscv.vcd",
-                                            "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/slotAutoRiscv.vcd",
-                                            (Riscv&)riscCore
-                                            );
-                simulator.simStart();
+            void start(PARAM& params){
+
+                std::string testTypes[] = {"Imm", "Reg", "Ls", "Jump", "Branch"};
+
+
+                for (std::string testType: testTypes) {
+                    /** test each type*/
+                    std::cout << TC_GREEN << "testing riscv instruction >>>> " + testType << std::endl;
+
+                    makeMod(riscCore, Riscv, false);
+                    startModelKathryn();
+                    RiscvSimInterface simulator(120,
+                                                params["prefix"],
+                                                testType,
+                                                (Riscv &) riscCore
+                    );
+                    ////// start simulate
+                    simulator.simStart();
+                    ////// reset system
+                    resetKathryn();
+                    std::cout << TC_GREEN << "--------------------------------" << std::endl;
+
+                }
 
 
             }

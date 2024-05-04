@@ -179,6 +179,13 @@ namespace kathryn{
                 opLdPc         <<= rhs.opLdPc; return *this;
             }
 
+            void reset(){
+                opLs.reset();
+                opLdPc.reset();
+                opCtrlFlow.reset();
+                opAlu.reset();
+            }
+
         };
 
         struct FETCH_DATA{

@@ -3,6 +3,7 @@
 //
 
 #include <cassert>
+#include <utility>
 #include "cfe.h"
 #include "test/autoSim/simMng.h"
 
@@ -22,41 +23,40 @@ namespace kathryn{
 
     }
 
-    void test(int idx, std::vector<std::string>& args){
-
-        if (idx >= args.size()){
-            std::cout << "test error no specify argument"  << std::endl;
-            assert(false);
-        }
-
-        if (args[idx] == "all"){
+    void test_simple(PARAM& params){
             startAutoSimTest();
-        }else{
-            std::cout << TC_RED << "FOR now we do not support specificTestCase" << TC_DEF << std::endl;
-        }
-
     }
 
-    void test_riscv(){
+    void test_riscv(PARAM& params){
 
         riscv::RISCV_MNG riscTestMng;
-        riscTestMng.start();
-        std::cout << TC_GREEN <<  " finish sim " << TC_DEF << std::endl;
-        resetKathryn();
+        riscTestMng.start(params);
+        std::cout << TC_GREEN <<  " finish rv sim " << TC_DEF << std::endl;
         /////////////////delete x;
 
     }
 
-    void start(std::vector<std::string>& args){
+    void start(std::string paramFilePath){
 
         printWelcomeScreen();
 
-        if (args.size() == 0){
-            std::cout << "[kathryn] there is no command to run" << std::endl;
-        }else if(args[0] == "test"){
-            test(1, args);
-        }else if(args[0] == "riscvBeta"){
-            test_riscv();
+
+
+
+        ParamReader paramReader(std::move(paramFilePath));
+        PARAM params = paramReader.getKeyVal();
+
+        if (params["ioOptimize"] == "true"){
+            std::ios_base::sync_with_stdio(false);
+            std::cin.tie(nullptr);
+        }
+
+        if (params["testType"] == "testSimple"){
+            test_simple(params);
+        }else if (params["testType"] == "testRiscv"){
+            test_riscv(params);
+        }else{
+            std::cout << "there is no command to test system" << std::endl;
         }
 
         std::cout << "[kathryn] exit program" << std::endl;
