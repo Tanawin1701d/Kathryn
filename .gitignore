@@ -3,7 +3,7 @@
 
 /KOut/MD.txt
 /KOut/MF.txt
-/KOut/*
-
-!/KOut/*.out
-!/KOut/*.asm
+##### ignore all output
+/KOut/**/*.vcd
+/KOut/**/*.prof
+/KOut/**/*.sl
