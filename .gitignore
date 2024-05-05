@@ -4,3 +4,6 @@
 /KOut/MD.txt
 /KOut/MF.txt
 /KOut/*
+
+!/KOut/*.out
+!/KOut/*.asm
