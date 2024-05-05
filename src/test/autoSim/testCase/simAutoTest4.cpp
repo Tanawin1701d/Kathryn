@@ -10,21 +10,21 @@ namespace kathryn{
 
     class testSimMod4: public Module{
     public:
-        makeReg(a0, 8);
-        makeReg(b0, 8);
+        mReg(a0, 8);
+        mReg(b0, 8);
         /** lane1*/
-        makeReg(a1, 8);
-        makeReg(b1, 8);
-        makeReg(c1, 8);
-        makeReg(d1, 8);
+        mReg(a1, 8);
+        mReg(b1, 8);
+        mReg(c1, 8);
+        mReg(d1, 8);
         /** lane2*/
-        makeReg(a2, 8);
-        makeReg(b2, 8);
-        makeReg(c2, 8);
+        mReg(a2, 8);
+        mReg(b2, 8);
+        mReg(c2, 8);
 
-        makeVal(iv,   8,48);
-        makeVal(iv2,  8,64);
-        makeVal(zero, 8, 0);
+        mVal(iv,   8,48);
+        mVal(iv2,  8,64);
+        mVal(zero, 8, 0);
 
 
         explicit testSimMod4(int x): Module(){}
@@ -102,7 +102,7 @@ namespace kathryn{
     public:
         explicit Sim4TestEle(int id): AutoTestEle(id){}
         void start() override{
-            makeMod(d, testSimMod4, 1);
+            mMod(d, testSimMod4, 1);
             startModelKathryn();
             sim4 simulator((testSimMod4*) &d);
             simulator.simStart();

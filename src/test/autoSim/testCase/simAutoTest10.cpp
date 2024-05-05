@@ -12,19 +12,19 @@ namespace kathryn{
     public:
         bool testAutoSkip = false;
 
-        makeReg(a, 8);
-        makeReg(b, 8);
-        makeReg(result, 8);
-        makeVal(resultCNA,  8, 255);
-        makeVal(resultCNB,  8, 128);
-        makeVal(resultCNB2, 8, 129);
-        makeVal(resultCNC, 8, 20);
+        mReg(a, 8);
+        mReg(b, 8);
+        mReg(result, 8);
+        mVal(resultCNA,  8, 255);
+        mVal(resultCNB,  8, 128);
+        mVal(resultCNB2, 8, 129);
+        mVal(resultCNC, 8, 20);
 
-        makeReg(innerA, 8);
-        makeReg(innerB, 8);
+        mReg(innerA, 8);
+        mReg(innerB, 8);
 
-        makeVal(innerValA, 8, 2);
-        makeVal(innerValB, 8, 3);
+        mVal(innerValA, 8, 2);
+        mVal(innerValB, 8, 3);
 
 
 
@@ -33,8 +33,8 @@ namespace kathryn{
         void flow() override{
 
             seq {
-                makeVal(bnk, 8, 48);
-                makeVal(akb, 8, 49);
+                mVal(bnk, 8, 48);
+                mVal(akb, 8, 49);
                 innerA <<= innerValA;
                 innerB <<= innerValB;
                 a <<= bnk;
@@ -102,7 +102,7 @@ namespace kathryn{
     public:
         explicit Sim10TestEle(int id): AutoTestEle(id){}
         void start() override{
-            makeMod(d, testSimMod10, 1);
+            mMod(d, testSimMod10, 1);
             startModelKathryn();
             sim10 simulator((testSimMod10*) &d);
             simulator.simStart();

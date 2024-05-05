@@ -12,9 +12,9 @@ namespace kathryn{
 
     class testSimMod33: public Module{
     public:
-        makeReg(a, 32);
-        makeReg(c, 32);
-        makeWire(x, 6);
+        mReg(a, 32);
+        mReg(c, 32);
+        mWire(x, 6);
 
         explicit testSimMod33(int x): Module(){}
 
@@ -74,7 +74,7 @@ namespace kathryn{
     public:
         explicit Sim33TestEle(int id): AutoTestEle(id){}
         void start() override{
-            makeMod(d, testSimMod33, 1);
+            mMod(d, testSimMod33, 1);
             startModelKathryn();
             sim33 simulator((testSimMod33*) &d);
             simulator.simStart();

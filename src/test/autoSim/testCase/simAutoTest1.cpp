@@ -10,10 +10,10 @@ namespace kathryn{
 
     class testSimMod: public Module{
     public:
-        makeReg(a, 8);
-        makeReg(b, 8);
-        makeReg(c, 8);
-        makeVal(iv, 8, 0b10101010);
+        mReg(a, 8);
+        mReg(b, 8);
+        mReg(c, 8);
+        mVal(iv, 8, 0b10101010);
 
         explicit testSimMod(int x): Module(){}
 
@@ -23,15 +23,15 @@ namespace kathryn{
                 a <<= iv;
                 b <<= a;
                 c <<= b;
-                makeVal(zero, 8, 0);
+                mVal(zero, 8, 0);
                 a <<= zero;
                 b <<= zero;
                 c <<= zero;
                 for (int i = 0; i < 4; i++){
-                    makeVal(x, 8, i+1);
+                    mVal(x, 8, i+1);
                     a <<= x;
                 }
-                makeVal(y, 8, 3);
+                mVal(y, 8, 3);
                 a <<= a << y;
             }
 
@@ -94,7 +94,7 @@ namespace kathryn{
     public:
         explicit Sim1TestEle(int id): AutoTestEle(id){}
         void start() override{
-            makeMod(d, testSimMod, 1);
+            mMod(d, testSimMod, 1);
             startModelKathryn();
             sim1 simulator((testSimMod*) &d);
             simulator.simStart();

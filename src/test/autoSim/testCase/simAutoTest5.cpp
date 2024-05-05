@@ -11,10 +11,10 @@ namespace kathryn{
     class testSimMod5: public Module{
     public:
         bool testAutoSkip = false;
-        makeVal(bnk, 32, 48);
-        makeVal(zero, 32, 0);
-        makeReg(a , 32);
-        makeReg(b , 32);
+        mVal(bnk, 32, 48);
+        mVal(zero, 32, 0);
+        mReg(a , 32);
+        mReg(b , 32);
 
         explicit testSimMod5(bool testAutoSkip): Module(){}
 
@@ -24,7 +24,7 @@ namespace kathryn{
             seq{
                 a <<= zero;
                 cwhile(a < (*valueToused)){
-                    makeVal(one, 32, 1);
+                    mVal(one, 32, 1);
                     a <<= a + one;
                 }
                 b <<= bnk;
@@ -78,7 +78,7 @@ namespace kathryn{
     public:
         explicit Sim5TestEle(int id): AutoTestEle(id){}
         void start() override{
-            makeMod(d, testSimMod5, 1);
+            mMod(d, testSimMod5, 1);
             startModelKathryn();
             sim5 simulator((testSimMod5*) &d);
             simulator.simStart();

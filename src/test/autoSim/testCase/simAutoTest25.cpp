@@ -13,19 +13,19 @@ namespace kathryn{
 
         box(myType){
             initBox(myType);
-            makeReg(test1, 8);
-            makeReg(test2, 8);
+            mReg(test1, 8);
+            mReg(test2, 8);
 
             box(nexType){
                 initBox(nexType);
-                makeReg(testn, 8);
+                mReg(testn, 8);
             };
 
-            makeBox(n, nexType);
+            mBox(n, nexType);
         };
 
-        makeBox(a, myType);
-        makeBox(b, myType);
+        mBox(a, myType);
+        mBox(b, myType);
 
         myType* ccccc;
 
@@ -38,7 +38,7 @@ namespace kathryn{
                 a.test2   <<= 50;
                 a.n.testn <<= 99;
                 b         <<= a;
-                makeBox(c, myType);
+                mBox(c, myType);
                 ccccc = &c;
                 c         = a;
             }
@@ -87,7 +87,7 @@ namespace kathryn{
     public:
         explicit Sim25TestEle(int id): AutoTestEle(id){}
         void start() override{
-            makeMod(d, testSimMod25, 1);
+            mMod(d, testSimMod25, 1);
             startModelKathryn();
             sim25 simulator((testSimMod25*) &d);
             simulator.simStart();

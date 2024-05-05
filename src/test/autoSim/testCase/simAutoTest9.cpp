@@ -12,14 +12,14 @@ namespace kathryn{
     public:
         bool testAutoSkip = false;
 
-        makeVal(bnk, 32, 48);
-        makeVal(akb, 32, 48);
-        makeVal(endConst, 112, 0b1111111111111111);
-        makeReg(cnt, 32);
-        makeReg(frd, 32);
-        makeReg(end, 3);
+        mVal(bnk, 32, 48);
+        mVal(akb, 32, 48);
+        mVal(endConst, 112, 0b1111111111111111);
+        mReg(cnt, 32);
+        mReg(frd, 32);
+        mReg(end, 3);
 
-        makeVal(one, 32,  1);
+        mVal(one, 32,  1);
 
 
         explicit testSimMod9(bool testAutoSkip): Module(){}
@@ -85,7 +85,7 @@ namespace kathryn{
     public:
         explicit Sim9TestEle(int id): AutoTestEle(id){}
         void start() override{
-            makeMod(d, testSimMod9, 1);
+            mMod(d, testSimMod9, 1);
             startModelKathryn();
             sim9 simulator((testSimMod9*) &d);
             simulator.simStart();

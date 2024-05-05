@@ -10,22 +10,22 @@ namespace kathryn{
 
     class testSimMod2: public Module{
     public:
-        makeReg(a, 8);
-        makeReg(b, 8);
-        makeReg(c, 8);
-        makeVal(iv, 8, 0b10101010);
+        mReg(a, 8);
+        mReg(b, 8);
+        mReg(c, 8);
+        mVal(iv, 8, 0b10101010);
 
         explicit testSimMod2(int x): Module(){}
 
         void flow() override{
 
-            makeVal(bnk, 8, 48);
-            makeVal(one, 8, 1);
-            makeVal(two, 8, 2);
-            makeVal(maxer, 8, 255);
-            makeReg(ota, 8);
-            makeReg(maxReg, 8);
-            makeReg(bwOrReg, 8);
+            mVal(bnk, 8, 48);
+            mVal(one, 8, 1);
+            mVal(two, 8, 2);
+            mVal(maxer, 8, 255);
+            mReg(ota, 8);
+            mReg(maxReg, 8);
+            mReg(bwOrReg, 8);
 
 
             par{
@@ -84,7 +84,7 @@ namespace kathryn{
     public:
         explicit Sim2TestEle(int id): AutoTestEle(id){}
         void start() override{
-            makeMod(d, testSimMod2, 1);
+            mMod(d, testSimMod2, 1);
             startModelKathryn();
             sim2 simulator((testSimMod2*) &d);
             simulator.simStart();
