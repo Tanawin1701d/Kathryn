@@ -8,6 +8,7 @@
 
 #include "model/controller/controller.h"
 #include "sim/interface/simInterface.h"
+#include "frontEnd/cmd/paramReader.h"
 #include "util/fileWriter/slotWriter/slotWriter.h"
 #include "util/logger/logger.h"
 
@@ -15,6 +16,7 @@ namespace kathryn{
 
     void startModelKathryn();
     void resetKathryn();
+    PARAM readParamKathryn(std::string filePath);
 
 }
 

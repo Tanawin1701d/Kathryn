@@ -41,6 +41,8 @@ namespace kathryn{
         MODEL_FLOW_INITED
     };
 
+
+
     class ModuleSimEngine;
 
     class Module : public Identifiable,
@@ -52,6 +54,7 @@ namespace kathryn{
 
     private:
        MODEL_STAGE              _mdStage = MODEL_UNINIT;
+
         /**all slave object that belong to this elements*/
         /** register that user to represent state*/
         std::vector<Reg*>           _spRegs[SP_CNT_REG]; ////// state/ cond/cycle wait use same ctrlflowRegbase class

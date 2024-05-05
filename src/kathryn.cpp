@@ -6,6 +6,7 @@
 #include "kathryn.h"
 
 
+
 namespace kathryn{
 
 
@@ -23,6 +24,13 @@ namespace kathryn{
         /** reset simulation layer*/
         getSimController()->reset();
 
+    }
+
+    PARAM readParamKathryn(std::string filePath){
+        ParamReader paramReader(std::move(filePath));
+        PARAM params = paramReader.getKeyVal();
+
+        return params;
     }
 
 

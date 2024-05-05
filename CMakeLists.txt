@@ -15,6 +15,7 @@ FILE(GLOB_RECURSE SRC_SIM     RELATIVE ${CMAKE_SOURCE_DIR} "src/sim/*.cpp")
 FILE(GLOB_RECURSE SRC_TEST    RELATIVE ${CMAKE_SOURCE_DIR} "src/test/*.cpp")
 FILE(GLOB_RECURSE SRC_UTIL    RELATIVE ${CMAKE_SOURCE_DIR} "src/util/*.cpp")
 FILE(GLOB_RECURSE SRC_EXAMPLE RELATIVE ${CMAKE_SOURCE_DIR} "src/example/*.cpp")
+FILE(GLOB_RECURSE SRC_PARAM   RELATIVE ${CMAKE_SOURCE_DIR} "src/params/*.cpp")
 
 
 add_executable(Kathryn
@@ -28,14 +29,6 @@ add_executable(Kathryn
         ${SRC_TEST}
         ${SRC_UTIL}
         ${SRC_EXAMPLE}
-#        src/example/riscv/element.h
-#        src/example/riscv/core/core.h
-#        src/example/riscv/core/decode.h
-#        src/example/riscv/subSystem/storageMgm.h
-#        src/example/riscv/core/execute.h
-#        src/example/riscv/core/writeBack.h
-#        src/example/riscv/core/fetch.h
-#        src/util/fileWriter/slotWriter/slotWriter.h
-#        src/example/riscv/simulation/RISCV_sim.h
-#        src/example/riscv/simulation/RISCV_sim.cpp
+        ${SRC_PARAM}
+
 )

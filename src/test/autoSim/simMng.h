@@ -18,7 +18,7 @@ namespace kathryn{
 
     void addSimTestToPool(AutoTestEle* simEle);
 
-    void startAutoSimTest();
+    void startAutoSimTest(PARAM& param);
 
 }
 

@@ -41,8 +41,8 @@ namespace kathryn{
 
     };
 
-    static std::string vcdPath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/simAutoTest9.vcd";
-    static std::string profilePath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/profAutoTest9.vcd";
+    ///static std::string vcdPath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/simAutoTest9.vcd";
+    ////static std::string profilePath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/profAutoTest9.vcd";
 
 
     class sim9 :public SimAutoInterface{
@@ -50,10 +50,10 @@ namespace kathryn{
 
         testSimMod9* _md;
 
-        sim9(testSimMod9* md):SimAutoInterface(2,
+        sim9(testSimMod9* md, int idx, const std::string& prefix):SimAutoInterface(idx,
                                               200,
-                                              vcdPath,
-                                              profilePath),
+                                              prefix + "simAutoResult"+std::to_string(idx)+".vcd",
+                                              prefix + "simAutoResult"+std::to_string(idx)+".prof"),
                              _md(md)
         {}
 
@@ -84,10 +84,10 @@ namespace kathryn{
     class Sim9TestEle: public AutoTestEle{
     public:
         explicit Sim9TestEle(int id): AutoTestEle(id){}
-        void start() override{
+        void start(std::string prefix) override{
             mMod(d, testSimMod9, 1);
             startModelKathryn();
-            sim9 simulator((testSimMod9*) &d);
+            sim9 simulator((testSimMod9*) &d, _simId, prefix);
             simulator.simStart();
         }
 

@@ -24,7 +24,7 @@ namespace kathryn{
     }
 
     void test_simple(PARAM& params){
-            startAutoSimTest();
+            startAutoSimTest(params);
     }
 
     void test_riscv(PARAM& params){
@@ -36,15 +36,9 @@ namespace kathryn{
 
     }
 
-    void start(std::string paramFilePath){
+    void start(PARAM& params){
 
         printWelcomeScreen();
-
-
-
-
-        ParamReader paramReader(std::move(paramFilePath));
-        PARAM params = paramReader.getKeyVal();
 
         if (params["ioOptimize"] == "true"){
             std::ios_base::sync_with_stdio(false);

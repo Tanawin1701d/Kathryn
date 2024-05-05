@@ -44,7 +44,7 @@ namespace kathryn{
     /** register handling*/
     void ModelController::on_reg_init(Reg* ptr) {
         assert(ptr != nullptr);
-        on_chk_and_lock_belongBlk(ptr, ptr);
+        on_box_tryAddToBox(ptr, ptr);
         /** assign reg to module */
         Module* targetModulePtr = getTopModulePtr();
         /** localize necessary destination*/
@@ -55,7 +55,6 @@ namespace kathryn{
         /** debug value*/
         logMF(ptr,
               "USER_REG is initialized and set parent to " + targetModulePtr->getIdentDebugValue());
-        on_chk_and_release_blk(ptr);
     }
 
     void ModelController::on_reg_update(AsmNode* asmNode, Reg* srcReg){
@@ -90,7 +89,7 @@ namespace kathryn{
      * */
     void ModelController::on_wire_init(Wire* ptr){
         assert(ptr != nullptr);
-        on_chk_and_lock_belongBlk(ptr, ptr);
+        on_box_tryAddToBox(ptr, ptr);
         Module* targetModulePtr = getTopModulePtr();
         /** localize necessary destination*/
         targetModulePtr->addUserWires(ptr);
@@ -101,7 +100,6 @@ namespace kathryn{
         /** debug value*/
         logMF(ptr,
               "user wire is initialized and set parent to " + targetModulePtr->getIdentDebugValue());
-        on_chk_and_release_blk(ptr);
     }
 
     void ModelController::on_wire_update(AsmNode* asmNode, Wire* srcWire) {
@@ -132,7 +130,7 @@ namespace kathryn{
     /** exprMetas*/
     void ModelController::on_expression_init(expression* ptr) {
         assert(ptr != nullptr);
-        on_chk_and_lock_belongBlk(ptr, ptr);
+        on_box_tryAddToBox(ptr, ptr);
         Module* targetModulePtr = getTopModulePtr();
         /** localize necessary destination*/
         targetModulePtr->addUserExpression(ptr);
@@ -142,7 +140,6 @@ namespace kathryn{
         /** debug value*/
         logMF(ptr,
               "expr is initializing and set parent to " + targetModulePtr->getIdentDebugValue());
-        on_chk_and_release_blk(ptr);
     }
 
     /** memBlock*/
@@ -186,7 +183,7 @@ namespace kathryn{
     /** nest*/
     void ModelController::on_nest_init(nest* ptr) {
         assert(ptr != nullptr);
-        on_chk_and_lock_belongBlk(ptr, ptr);
+        on_box_tryAddToBox(ptr, ptr);
         Module* targetModulePtr = getTopModulePtr();
         /** localize necessary destination*/
         targetModulePtr->addUserNest(ptr);
@@ -196,7 +193,6 @@ namespace kathryn{
         /** debug value*/
         logMF(ptr,
               "nest is initializing and set parent to " + targetModulePtr->getIdentDebugValue());
-        on_chk_and_release_blk(ptr);
     }
 
     void ModelController::on_nest_update(AsmNode* asmNode, nest* srcNest) {
@@ -228,7 +224,7 @@ namespace kathryn{
     /** value*/
     void ModelController::on_value_init(Val* ptr) {
         assert(ptr != nullptr);
-        on_chk_and_lock_belongBlk(ptr, ptr);
+        on_box_tryAddToBox(ptr, ptr);
         Module* targetModulePtr = getTopModulePtr();
         /** localize necessary destination*/
         targetModulePtr->addUserVal(ptr);
@@ -237,7 +233,6 @@ namespace kathryn{
         /** debug value*/
         logMF(ptr,
               "val is initializing and set parent to " + targetModulePtr->getIdentDebugValue());
-        on_chk_and_release_blk(ptr);
     }
 
     /** box*/
@@ -264,7 +259,6 @@ namespace kathryn{
     void ModelController::on_box_end_init(Box* ptr){
         /**check that the stack is not do somthing wrong*/
         assert(ptr == boxStack.top());
-        assert(boxLock == nullptr);
         boxStack.pop();
         logMF(ptr, "box is pick out from stack");
     }
@@ -294,23 +288,14 @@ namespace kathryn{
         }
     }
 
-    void ModelController::on_chk_and_lock_belongBlk(Assignable* asb, Operable* opr) {
+    void ModelController::on_box_tryAddToBox(Operable* opr, Assignable* asb){
         assert(asb != nullptr);
         assert(opr != nullptr);
         /**check that box is being fomation and make sure reg is from user */
-        if ( (boxLock == nullptr) && (!boxStack.empty()) ){
-            boxLock = asb;
+        if ( (!boxStack.empty()) && opr->castToIdent()->isUserVar()){
             boxStack.top()->addNestMeta({opr, asb});
-        }else{
-            return;
         }
 
-    }
-
-    void ModelController::on_chk_and_release_blk(Assignable* asb) {
-        if (asb == boxLock){
-            boxLock = nullptr;
-        }
     }
 
     /**

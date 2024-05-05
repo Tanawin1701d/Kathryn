@@ -21,7 +21,7 @@ namespace kathryn {
 
     void test_simple(PARAM& params);
 
-    void start(std::string paramFilePath);
+    void start(PARAM& params);
 
     void test_riscv(PARAM& params);
 

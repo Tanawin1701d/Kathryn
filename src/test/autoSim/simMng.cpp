@@ -29,7 +29,7 @@ namespace kathryn{
 
 
 
-    void startAutoSimTest(){
+    void startAutoSimTest(PARAM& params){
 
         std::cout << TC_BLUE << "[kathryn auto test] start auto test\n" << TC_DEF;
 
@@ -39,10 +39,13 @@ namespace kathryn{
 
         std::sort(testPool->begin(), testPool->end(), arrangeTestCmp);
 
+        assert(params.find("prefix") != params.end());
+        std::string prefixPath = params["prefix"];
+
         int testCase = 1;
         for (auto sif: *testPool){
             std::cout << TC_BLUE << "[kathryn auto test] " << "start sim testcase "<< testCase << " id: " << sif->getSimId()<< TC_DEF <<"\n";
-            sif->start();
+            sif->start(prefixPath);
             resetKathryn();
             std::cout << TC_BLUE << "[kathryn auto test] " << "finnish sim testcase "<< testCase << " id: " << sif->getSimId()  << TC_DEF <<"\n";
             testCase++;

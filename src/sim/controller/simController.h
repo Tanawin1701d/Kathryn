@@ -19,7 +19,7 @@ namespace kathryn{
 
     private:
         std::mutex _rsMtx;
-        CYCLE _limitCycle = 1;
+        CYCLE _limitCycle =  1;
         CYCLE _curCycle   = -1;
         EventQ eventQ;
 

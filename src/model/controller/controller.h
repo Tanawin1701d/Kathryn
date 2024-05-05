@@ -60,8 +60,6 @@ namespace kathryn {
         std::stack<Module_Stack_Element>  moduleStack;
         ////// box stack to determine which hw element belong to stack
         std::stack<Box*> boxStack;
-        ////// trace that the declare element should belong to box
-        Assignable* boxLock = nullptr; ///// the first element that in push in boxLock must be user but other is auto build element
         ////// flow describe stack
         std::stack<FlowBlockBase*> flowBlockStacks[FLOW_ST_CNT];
         /////// pattern flow block is subset of flowBlockStack
@@ -113,8 +111,10 @@ namespace kathryn {
         void on_box_init(Box* ptr);
         void on_box_end_init(Box* ptr);
         void on_box_update(AsmNode* asmNode, Box* box);
-        void on_chk_and_lock_belongBlk(Assignable* asb, Operable* opr);
-        void on_chk_and_release_blk(Assignable* asb);
+        void on_box_tryAddToBox(Operable* opr, Assignable* asb);
+
+        //void on_chk_and_lock_belongBlk(Assignable* asb, Operable* opr);
+        //void on_chk_and_release_blk(Assignable* asb);
 
         /**
          *

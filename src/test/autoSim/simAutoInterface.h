@@ -39,10 +39,6 @@ namespace kathryn{
 
         }
 
-        void flush(){
-            _vcdWriter->flush();
-        }
-
 
     };
 

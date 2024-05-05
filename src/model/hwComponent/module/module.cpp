@@ -345,8 +345,12 @@ namespace kathryn{
             assert(ele != nullptr);
             LogicSimEngine*  logicSimEngine = (LogicSimEngine*)(ele->getSimEngine());
 
+            bool shouldRecode = (_mdRecPol == MDE_REC_BOTH) ||
+                                (ele->isUserVar() && (_mdRecPol == MDE_REC_ONLY_USER)) ||
+                                ((!ele->isUserVar()) && (_mdRecPol == MDE_REC_ONLY_INTERNAL));
+
             logicSimEngine->beforePrepareSim(
-                    {true, /// for now
+                    {shouldRecode,
                              ele->concat_inheritName()+ "_" + ele->getVarName(),
                              writer
                             });

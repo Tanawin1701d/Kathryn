@@ -21,8 +21,12 @@ int main(int argc, char* argv[]) {
     if (argc < 2){
         std::cout << "there is no argument value" << std::endl;
     }
+    auto params = readParamKathryn(argv[1]);
 
-    start(std::string(argv[1]));
+
+    /***** model and simulation start here*/
+    start(params);
+    /*** finalize system*/
 
     finalizeMdDebugger();
     finalizeMfDebugger();
