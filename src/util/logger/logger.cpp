@@ -10,6 +10,11 @@
 namespace kathryn{
 
 
+    /****
+     * LAGACY model logger is now abandoned
+     * **/
+
+
     std::ofstream* outFileMF = nullptr;
     std::ofstream* outFileMD = nullptr;
 
@@ -19,12 +24,12 @@ namespace kathryn{
     std::vector<MdLogVal*> mdStorageVals;
 
     void initMdDebugger(){
-        outFileMD = new std::ofstream("/media/tanawin/tanawin1701e/project2/Kathryn/KOut/MD.txt");
+        ///outFileMD = new std::ofstream("/media/tanawin/tanawin1701e/project2/Kathryn/KOut/MD.txt");
     }
 
     void initMfDebugger(){
 
-        outFileMF = new std::ofstream("/media/tanawin/tanawin1701e/project2/Kathryn/KOut/MF.txt");
+        ////outFileMF = new std::ofstream("/media/tanawin/tanawin1701e/project2/Kathryn/KOut/MF.txt");
 
     }
 
@@ -48,14 +53,14 @@ namespace kathryn{
 
     void finalizeMdDebugger(){
 
-        for (int i = 0; i < mdStorageName.size(); i++){
-            *outFileMD << "[ " << mdStorageVals[i] << " ]\n";
-            printMdLogVal(outFileMD, 0, mdStorageVals[i]);
-            *outFileMD << "------------------------------\n";
-        }
-
-        outFileMD->close();
-        delete outFileMD;
+//        for (int i = 0; i < mdStorageName.size(); i++){
+//            *outFileMD << "[ " << mdStorageVals[i] << " ]\n";
+//            printMdLogVal(outFileMD, 0, mdStorageVals[i]);
+//            *outFileMD << "------------------------------\n";
+//        }
+//
+//        outFileMD->close();
+//        delete outFileMD;
     }
 
     void flushMfDebugger(){
@@ -74,21 +79,21 @@ namespace kathryn{
 
     void finalizeMfDebugger(){
 
-        outFileMF->close();
-        delete outFileMF;
+//        outFileMF->close();
+//        delete outFileMF;
     }
 
     void logMF(ModelDebuggable* mdDebug,
                const std::string& debugMsg){
-        mFValue x = { mdDebug, debugMsg};
-        mfStorage.push_back(x);
+//        mFValue x = { mdDebug, debugMsg};
+//        mfStorage.push_back(x);
     }
 
     void logMD(const std::string& mdName,
                MdLogVal* val){
-        assert(val != nullptr);
-        mdStorageName.push_back(mdName);
-        mdStorageVals.push_back(val);
+//        assert(val != nullptr);
+//        mdStorageName.push_back(mdName);
+//        mdStorageVals.push_back(val);
     }
 
 

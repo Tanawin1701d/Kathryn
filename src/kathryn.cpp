@@ -18,7 +18,8 @@ namespace kathryn{
     void resetKathryn(){
 
         /** flush model formation log value first*/
-        flushMfDebugger();
+        // flushMfDebugger();
+
         /** reset model layer*/
         getControllerPtr()->reset();
         /** reset simulation layer*/

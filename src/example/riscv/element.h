@@ -74,13 +74,6 @@ namespace kathryn{
                 isUopUse <<= 0;
             }
 
-            lsUop& operator <<=(const lsUop& rhs){
-                isUopUse    <<= rhs.isUopUse;
-                isMemLoad   <<= rhs.isMemLoad;
-                size        <<= rhs.size;
-                extendMode  <<= rhs.extendMode; return *this;
-
-            }
         };
 
         struct aluUop{
@@ -99,20 +92,6 @@ namespace kathryn{
             void reset(){
                 isUopUse <<= 0;
             }
-
-            aluUop& operator <<= (const aluUop& rhs){
-                isUopUse              <<= rhs.isUopUse;
-                isAdd                 <<= rhs.isAdd;
-                isSub                 <<= rhs.isSub;
-                isXor                 <<= rhs.isXor;
-                isOr                  <<= rhs.isOr;
-                isAnd                 <<= rhs.isAnd;
-                isCmpLessThanSign     <<= rhs.isCmpLessThanSign;
-                isCmpLessThanUSign    <<= rhs.isCmpLessThanUSign;
-                isShiftLeftLogical    <<= rhs.isShiftLeftLogical;
-                isShiftRightLogical   <<= rhs.isShiftRightLogical;
-                isShiftRightArith     <<= rhs.isShiftRightArith; return *this;
-            }
         };
 
         struct jumpUop{
@@ -130,17 +109,6 @@ namespace kathryn{
                 isUopUse <<= 0;
             }
 
-            jumpUop& operator <<= (const jumpUop& rhs){
-                isUopUse   <<= rhs.isUopUse;
-                isJalR     <<= rhs.isJalR;
-                isJal      <<= rhs.isJal;
-                extendMode <<= rhs.extendMode;
-                isEq       <<= rhs.isEq;
-                isNEq      <<= rhs.isNEq;
-                isLt       <<= rhs.isLt;
-                isGe       <<= rhs.isGe; return *this;
-            }
-
         };
 
         struct ldPc{
@@ -151,10 +119,6 @@ namespace kathryn{
                 isUopUse <<= 0;
             }
 
-            ldPc& operator <<= (const ldPc& rhs){
-                isUopUse   <<=  rhs.isUopUse;
-                needPc     <<=  rhs.needPc; return *this;
-            }
         };
 
         struct UOp{
@@ -166,18 +130,6 @@ namespace kathryn{
             aluUop  opAlu;
             jumpUop opCtrlFlow;
             ldPc    opLdPc;
-
-            UOp& operator <<= (const UOp& rhs){
-                for (int i = 0; i < RS_count; i++){
-                    regData[i] <<= rhs.regData[i];
-                }
-                pc             <<= rhs.pc;
-                nextPc         <<= rhs.pc;
-                opLs           <<= rhs.opLs;
-                opAlu          <<= rhs.opAlu;
-                opCtrlFlow     <<= rhs.opCtrlFlow;
-                opLdPc         <<= rhs.opLdPc; return *this;
-            }
 
             void reset(){
                 opLs.reset();

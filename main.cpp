@@ -15,8 +15,8 @@ int main(int argc, char* argv[]) {
 
 
     /**debugger*/
-    initMdDebugger();
-    initMfDebugger();
+    // initMdDebugger();
+    // initMfDebugger();
 
     if (argc < 2){
         std::cout << "there is no argument value" << std::endl;
@@ -28,8 +28,8 @@ int main(int argc, char* argv[]) {
     start(params);
     /*** finalize system*/
 
-    finalizeMdDebugger();
-    finalizeMfDebugger();
+    // finalizeMdDebugger();
+    // finalizeMfDebugger();
     ////////////////////////////////////
 
 
