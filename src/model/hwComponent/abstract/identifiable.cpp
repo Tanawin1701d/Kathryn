@@ -3,6 +3,8 @@
 //
 
 #include "identifiable.h"
+
+#include <utility>
 #include "model/hwComponent/module/module.h"
 
 
@@ -15,23 +17,26 @@ namespace kathryn{
      *
      * */
 
+
+
     ull  lastIdent = -1;
-    std::string varName = "UNNAME";
+    const VarMeta VARMETADEF = {"UN_INIT_VARMETA", false};
+    VarMeta varMeta = VARMETADEF;
 
     bool isVarNameRetrievable(ull deviceIdentId){
         return lastIdent == deviceIdentId;
     }
 
-    std::string retrieveVarName(){
+    VarMeta retrieveVarMeta(){
         lastIdent = -1;
-        std::string preRet = "UNNAME";
-        swap(varName, preRet);
+        VarMeta preRet = varMeta;
+        varMeta = VARMETADEF;
         return preRet;
     }
 
-    void setRetrieveVarName(std::string name){
+    void setRetrieveVarMeta(std::string name, bool isUserDec){
         lastIdent    = getLastIdentId();
-        varName      = std::move(name);
+        varMeta      = {std::move(name), isUserDec};
     }
 
 

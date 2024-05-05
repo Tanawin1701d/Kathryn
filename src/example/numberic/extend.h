@@ -17,7 +17,7 @@ namespace kathryn{
         assert(targetSize >= rawImm.getOperableSlice().getSize());
 
         int extraSize = targetSize - rawImm.getOperableSlice().getSize();
-        expression* rawImmExpr = &_make<expression>("extendRaw", rawImm.getOperableSlice().getSize());
+        expression* rawImmExpr = &_make<expression>("extendRaw", false,rawImm.getOperableSlice().getSize());
         (*rawImmExpr) = rawImm;
         assert(extraSize > 0);
         nest* resultNest;
@@ -34,7 +34,7 @@ namespace kathryn{
             Slice rawSlice = rawImm.getSlice();
             *signBit = *rawImm.doSlice( {rawSlice.getSize()-1,  rawSlice.getSize()});
             //////// make nest from last bit value
-            resultNest = &g(makeNestWithSameOneVal(*signBit, extraSize), *rawImmExpr);
+            resultNest = &g(makeNestWithSameOneVal(false,*signBit, extraSize), *rawImmExpr);
             resultNest->setVarName("extend_with_sign");
         }
         return *resultNest;

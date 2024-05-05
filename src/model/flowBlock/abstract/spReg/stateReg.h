@@ -18,7 +18,7 @@ namespace kathryn {
 
     class StateReg: public CtrlFlowRegBase{
         bool _rstReq = true; //// did reset event require
-        Val& upFullState;
+        Val& upFullState; /// optimize out
         Val& downFullState;
     protected:
         /**override data to init state regiter*/

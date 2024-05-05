@@ -11,15 +11,21 @@
 #include "model/controller/conInterf/controllerItf.h"
 #include "model/hwComponent/abstract/identifiable.h"
 
-#define makeMod(name, TypeName, ...) Module& name = _make<TypeName>(#name, __VA_ARGS__)
-#define makeWire( name, argument) Wire& name = _make<Wire>(#name,argument)
-#define makeReg( name, argument)  Reg& name = _make<Reg>(#name, argument)
-#define makeVal(name, ...) Val& name = _make<Val>(#name, __VA_ARGS__)
-#define makeMem(name, depth, width) MemBlock& name = _make<MemBlock>(#name, depth, width)
-#define g(...) makeNest(__VA_ARGS__)
+
+/** this is for user usage*/
+
+
+
+/** this is for internal use*/
+#define makeMod(name, TypeName, ...) Module&   name = _make<TypeName>(#name, false, __VA_ARGS__)
+#define makeWire( name, argument)    Wire&     name = _make<Wire>    (#name, false,argument)
+#define makeReg( name, argument)     Reg&      name = _make<Reg>     (#name, false, argument)
+#define makeVal(name, ...)           Val&      name = _make<Val>     (#name, false, __VA_ARGS__)
+#define makeMem(name, depth, width)  MemBlock& name = _make<MemBlock>(#name, false, depth, width)
+#define g(...) makeNest(false,__VA_ARGS__)
 #define box(tn) struct tn: Box
 #define initBox(tn)  auto& operator=(const tn& rhs) { Box::operator=((Box&) rhs); return *this;};
-#define makeBox(name, TypeName) TypeName& name = _make<TypeName>(#name)
+#define makeBox(name, TypeName) TypeName& name = _make<TypeName>(#name, false)
 
 
 #define var auto&
@@ -37,7 +43,7 @@ namespace kathryn {
 
 
     template<typename T, typename... Args>
-    T& _make(const std::string name,Args&&... args){
+    T& _make(const std::string name, bool isUserDec,Args&&... args){
         static_assert(std::is_base_of<HwCompControllerItf, T>::value,
                 "make model component must base on ModelController controllable"
                 );
@@ -47,7 +53,7 @@ namespace kathryn {
 
         /** make initializer*/
         unlockAlloc();
-        setRetrieveVarName(name);
+        setRetrieveVarMeta(name, isUserDec);
         auto objPtr = new T(std::forward<Args>(args)...);
         objPtr->com_final(); /** /* typicallly it is used only module and box*/
 
@@ -55,7 +61,7 @@ namespace kathryn {
     }
 
     template<typename T>
-    T& _make(const std::string name){
+    T& _make(const std::string name, bool isUserDec){
         static_assert(std::is_base_of<HwCompControllerItf, T>::value,
                       "make model component must base on ModelController controllable"
         );
@@ -65,7 +71,7 @@ namespace kathryn {
 
         /** make initializer*/
         unlockAlloc();
-        setRetrieveVarName(name);
+        setRetrieveVarMeta(name, isUserDec);
         auto objPtr = new T();
         objPtr->com_final(); /** /* typicallly it is used only module and box*/
 

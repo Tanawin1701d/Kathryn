@@ -18,8 +18,8 @@ namespace kathryn {
                                                   TYPE_STATE_REG,
                                                   false),
               _rstReq(rstReq),
-              upFullState  (_make<Val>("stateRegUpFull"  ,1, 1)),
-              downFullState(_make<Val>("stateRegDownFull",1, 0))
+              upFullState  (_make<Val>("stateRegUpFull",false, 1, 1)),
+              downFullState(_make<Val>("stateRegDownFull",false,1, 0))
     {
         com_init();
     };
@@ -38,7 +38,7 @@ namespace kathryn {
     void StateReg::makeUnSetStateEvent() {
         auto* event = new UpdateEvent({
             nullptr,
-            &((*this) == upFullState),
+            this,
             &downFullState,
             Slice({0, getSlice().getSize()}),
             DEFAULT_UE_PRI_INTERNAL_MIN
@@ -47,7 +47,7 @@ namespace kathryn {
     }
 
     Operable* StateReg::generateEndExpr(){
-        return (&((*this) == upFullState));
+        return this;
     }
 
 }

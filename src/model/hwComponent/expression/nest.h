@@ -36,18 +36,18 @@ namespace kathryn{
     class nest;
 
     template<typename OA, typename... T>
-    nest& makeNest(OA& oa, T&... args){
+    nest& makeNest(bool isUserDec,OA& oa, T&... args){
         auto nestList = getNestVec(oa, args...);
         int nestSize = 0;
         for (NestMeta nestMeta: nestList){
             assert(nestMeta.opr != nullptr);
             nestSize += nestMeta.opr->getOperableSlice().getSize();
         }
-        return _make<nest>("nest", nestSize, nestList);
+        return _make<nest>("nest", isUserDec, nestSize, nestList);
     }
 
     template<typename OA>
-    nest& makeNestWithSameOneVal(OA& oa, int targetAmt){
+    nest& makeNestWithSameOneVal(bool isUserDec, OA& oa, int targetAmt){
         assert(targetAmt > 0);
         std::vector<NestMeta> nestList;
         for(int i =0; i < targetAmt; i++){
@@ -55,7 +55,7 @@ namespace kathryn{
         }
         int singleTargetSize = nestList[0].opr->getOperableSlice().getSize();
         assert(singleTargetSize > 0);
-        return _make<nest>("nestWithSameSingleValue", singleTargetSize * targetAmt, nestList);
+        return _make<nest>("nestWithSameSingleValue", isUserDec, singleTargetSize * targetAmt, nestList);
     }
 
     class nest : public LogicComp<nest>{

@@ -17,9 +17,14 @@ typedef unsigned long long int ull;
 
 namespace kathryn {
 
-    bool        isVarNameRetrievable(ull deviceIdentId);
-    std::string retrieveVarName();
-    void        setRetrieveVarName(std::string name);
+    struct VarMeta{
+        std::string varName;
+        bool        isUser;
+    };
+
+    bool    isVarNameRetrievable(ull deviceIdentId);
+    VarMeta retrieveVarMeta();
+    void    setRetrieveVarMeta(std::string name, bool isUserDec);
 
 
     enum HW_COMPONENT_TYPE{
@@ -58,9 +63,10 @@ namespace kathryn {
         const std::string UNNAME_STR = "unnamed";
         /** name type such as Reg Wire ModuleClassName*/
         HW_COMPONENT_TYPE _type;
-        std::string       _varName; /// sub type of component typically we use for module
+        VarMeta           _varMeta; /// sub type of component typically we use for module
         /** local variable*/
         Module* _parent; /// if it is nullptr it is not localized
+        bool   _isUserDec = false;
         /// it will share among the same module
 
     public:
@@ -68,10 +74,12 @@ namespace kathryn {
         explicit Identifiable(HW_COMPONENT_TYPE type) :
                 IdentBase(),
                 _type(type),
-                _varName(UNNAME_STR),
+                _varMeta({"UN_INIT", false}),
                 _parent(nullptr)
             {
-            _varName = isVarNameRetrievable(_globalId) ? retrieveVarName() : UNNAME_STR;
+
+            if (isVarNameRetrievable(_globalId)){ _varMeta = retrieveVarMeta();}
+            if (!_varMeta.isUser){ _varMeta.varName += "INTERNAL";}
             _globalName = GLOBAL_PREFIX[type] + std::to_string(_globalId);
             };
 
@@ -82,7 +90,8 @@ namespace kathryn {
                 return *this;
             }
             _type       = ident._type;
-            _varName    = ident._varName + "_CP";
+            _varMeta    = ident._varMeta;
+            _varMeta.varName += "_CP";
             _parent     = ident._parent;
             return *this;
         }
@@ -92,8 +101,8 @@ namespace kathryn {
         HW_COMPONENT_TYPE  getType     () const {return _type;}
         /** get/set typeName (variable name)*/
         [[nodiscard]]
-        const std::string& getVarName() const {return _varName;}
-        void               setVarName(std::string typeName) { _varName = std::move(typeName);}
+        const std::string& getVarName() const {return _varMeta.varName;}
+        void               setVarName(std::string typeName) { _varMeta.varName = std::move(typeName);}
         /**build Inherit varname*/
         void               buildInheritName() override;
 
