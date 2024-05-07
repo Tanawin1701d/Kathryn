@@ -23,9 +23,9 @@ namespace kathryn{
         };
 
         struct RegEle{
-            makeReg(valid, 1);
-            makeReg(idx  , REG_IDX);
-            makeReg(val  , XLEN);
+            mReg(valid, 1);
+            mReg(idx  , REG_IDX);
+            mReg(val  , XLEN);
 
             void setFromRegFile(Operable& setIdx){
                 valid <<= 0;
@@ -58,10 +58,10 @@ namespace kathryn{
         };
 
         struct lsUop{
-            makeReg(isUopUse  , 1);
-            makeReg(isMemLoad , 1); ///// else is store
-            makeReg(size      , 2); //// 00 -> 8, 01 -> 16, 10 -> 32, 11-> reserve
-            makeReg(extendMode, 1); //// 0 zero extend 1 unsign Extend
+            mReg(isUopUse  , 1);
+            mReg(isMemLoad , 1); ///// else is store
+            mReg(size      , 2); //// 00 -> 8, 01 -> 16, 10 -> 32, 11-> reserve
+            mReg(extendMode, 1); //// 0 zero extend 1 unsign Extend
 
             void set(bool isLoad, Operable& needSize, Operable& needExtendMode){
                 isUopUse <<= 1;
@@ -77,17 +77,17 @@ namespace kathryn{
         };
 
         struct aluUop{
-            makeReg(isUopUse           , 1);
-            makeReg(isAdd              , 1);
-            makeReg(isSub              , 1);
-            makeReg(isXor              , 1);
-            makeReg(isOr               , 1);
-            makeReg(isAnd              , 1);
-            makeReg(isCmpLessThanSign  , 1);
-            makeReg(isCmpLessThanUSign , 1);
-            makeReg(isShiftLeftLogical , 1);
-            makeReg(isShiftRightLogical, 1);
-            makeReg(isShiftRightArith  , 1);
+            mReg(isUopUse           , 1);
+            mReg(isAdd              , 1);
+            mReg(isSub              , 1);
+            mReg(isXor              , 1);
+            mReg(isOr               , 1);
+            mReg(isAnd              , 1);
+            mReg(isCmpLessThanSign  , 1);
+            mReg(isCmpLessThanUSign , 1);
+            mReg(isShiftLeftLogical , 1);
+            mReg(isShiftRightLogical, 1);
+            mReg(isShiftRightArith  , 1);
 
             void reset(){
                 isUopUse <<= 0;
@@ -95,15 +95,15 @@ namespace kathryn{
         };
 
         struct jumpUop{
-            makeReg(isUopUse  , 1);
-            makeReg(isJalR    , 1);
-            makeReg(isJal     , 1);
+            mReg(isUopUse  , 1);
+            mReg(isJalR    , 1);
+            mReg(isJal     , 1);
 
-            makeReg(extendMode, 1); //// 0 sign zero extend 1 unsigned
-            makeReg(isEq      , 1);
-            makeReg(isNEq     , 1);
-            makeReg(isLt      , 1);
-            makeReg(isGe      , 1);
+            mReg(extendMode, 1); //// 0 sign zero extend 1 unsigned
+            mReg(isEq      , 1);
+            mReg(isNEq     , 1);
+            mReg(isLt      , 1);
+            mReg(isGe      , 1);
 
             void reset(){
                 isUopUse <<= 0;
@@ -112,8 +112,8 @@ namespace kathryn{
         };
 
         struct ldPc{
-            makeReg(isUopUse  , 1);
-            makeReg(needPc, 1); ///// read pc and make it extend
+            mReg(isUopUse  , 1);
+            mReg(needPc, 1); ///// read pc and m it extend
 
             void reset(){
                 isUopUse <<= 0;
@@ -123,8 +123,8 @@ namespace kathryn{
 
         struct UOp{
             RegEle  regData[RS_count];
-            makeReg(pc, XLEN);
-            makeReg(nextPc, XLEN);
+            mReg(pc, XLEN);
+            mReg(nextPc, XLEN);
             /** op code*/
             lsUop   opLs;
             aluUop  opAlu;
@@ -141,14 +141,14 @@ namespace kathryn{
         };
 
         struct FETCH_DATA{
-            makeReg(fetch_pc    , MEM_ADDR_IDX);
-            makeReg(fetch_nextpc, MEM_ADDR_IDX);
-            makeReg(fetch_instr, XLEN);
+            mReg(fetch_pc    , MEM_ADDR_IDX);
+            mReg(fetch_nextpc, MEM_ADDR_IDX);
+            mReg(fetch_instr, XLEN);
         };
 
         struct BYPASS_DATA{
-            makeWire(idx, REG_IDX);
-            makeWire(value, XLEN);
+            mWire(idx, REG_IDX);
+            mWire(value, XLEN);
         };
 
     }

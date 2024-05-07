@@ -19,9 +19,9 @@ namespace kathryn{
         class Riscv : public Module {
         public:
 
-            makeReg (pc       , XLEN);
-            makeWire(misPredic, 1);
-            makeWire(restartPc, XLEN);
+            mReg (pc       , XLEN);
+            mWire(misPredic, 1);
+            mWire(restartPc, XLEN);
             /** ele*/
             /***bypass ele*/
             FETCH_DATA  fetchData;
@@ -30,7 +30,7 @@ namespace kathryn{
             BYPASS_DATA bp;     ///// bypass data
 
             /** storage*/
-            makeMem(regFile, AMT_REG, XLEN);
+            mMem(regFile, AMT_REG, XLEN);
             StorageMgmt memBlk;
             /** pipline element*/
             Fetch       fetch;

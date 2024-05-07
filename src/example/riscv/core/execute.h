@@ -23,17 +23,17 @@ namespace kathryn{
             RegEle& rs3;
             /*** mem access*/
             StorageMgmt& _memArb;
-            makeWire(readEn, 1);
-            makeWire(readAddr, MEM_ADDR_IDX_ACTUAL_AL32);
+            mWire(readEn, 1);
+            mWire(readAddr, MEM_ADDR_IDX_ACTUAL_AL32);
             Operable& readFn;
-            makeReg(dummyReg, XLEN);
+            mReg(dummyReg, XLEN);
             /*** cmp val*/
-            makeWire(cmpLtSign, 1);
-            makeWire(cmpLtUnSign, 1);
+            mWire(cmpLtSign, 1);
+            mWire(cmpLtUnSign, 1);
 
-            makeWire(testExit, 1);
+            mWire(testExit, 1);
 
-            makeWire(m16, 1);
+            mWire(m16, 1);
 
             FlowBlockBase* regAccessBlock = nullptr;
             FlowBlockBase* aluBlock       = nullptr;

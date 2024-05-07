@@ -25,6 +25,8 @@ namespace kathryn {
 
     void test_riscv(PARAM& params);
 
+    void test_riscv_sort(PARAM& params);
+
 }
 
 #endif //KATHRYN_CFE_H

@@ -31,8 +31,8 @@ namespace kathryn{
             explicit StorageMgmt(int idxSize, int rowWidth) : ROW_WIDTH    (rowWidth),
                                                               AMT_ROW      (1 << idxSize),
                                                               IDX_SIZE     (idxSize),
-                                                              _myMem       (_make<MemBlock>("_myMem", false,AMT_ROW, ROW_WIDTH)),
-                                                              readIdxMaster(_make<Wire>("_readIndexer", false,IDX_SIZE)),
+                                                              _myMem       (_make<MemBlock>("_myMem", true,AMT_ROW, ROW_WIDTH)),
+                                                              readIdxMaster(_make<Wire>("_readIndexer", true,IDX_SIZE)),
                                                               readOutput   (_myMem[readIdxMaster]){}
 
             Operable& addReader(Operable& readEn, Operable &address) {
@@ -41,7 +41,7 @@ namespace kathryn{
 
                 readAddress .push_back(&address);
                 readEns     .push_back(&readEn);
-                readFinishes.push_back(&_make<Wire>("notifyReadReg_" + std::to_string(amountReadIdx), false,1));
+                readFinishes.push_back(&_make<Wire>("notifyReadReg_" + std::to_string(amountReadIdx), true,1));
                 amountReadIdx++;
                 return *(*readFinishes.rbegin());
             }

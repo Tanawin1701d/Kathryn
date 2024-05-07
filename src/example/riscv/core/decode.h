@@ -42,8 +42,8 @@ namespace kathryn{
             Slice IMM_J_12_20{12,20};
 
         public:
-            makeWire(invalidHighDec, 1);
-            makeWire(invalidLowDec,  1);
+            mWire(invalidHighDec, 1);
+            mWire(invalidLowDec,  1);
             FlowBlockBase* decodeBlk = nullptr;
 
             void flow(Operable& rst, FETCH_DATA& fetchData, UOp& _decUop) {
@@ -134,7 +134,7 @@ namespace kathryn{
                 }else{
                     /** for shift user only lower 5 bit*/
                     _decUop.regData[RS_2].setFromImm(getExtendExpr(instr(IMM_I_0_12), XLEN, false));
-//                    makeVal(testdd, 32, 7);
+//                    mVal(testdd, 32, 7);
 //                    _decUop.regData[RS_2].setFromImm(testdd);
                 }
                 _decUop.regData[RS_3].reset();
@@ -167,7 +167,7 @@ namespace kathryn{
 
             void doAulPcDecode(Reg& instr, UOp& _decUop,bool needPc = true){
                 _decUop.regData[RS_1].reset();
-                makeVal(fixdown, 12, 0);
+                mVal(fixdown, 12, 0);
                 _decUop.regData[RS_2]  .setFromImm(g(instr(IMM_U_12_32), fixdown));
                 _decUop.regData[RS_3]  .reset();
                 _decUop.regData[RS_des].setFromRegFile(instr(IDX_RD));
@@ -194,7 +194,7 @@ namespace kathryn{
                 _decUop.regData[RS_1].setFromRegFile(instr(IDX_R1));
                 _decUop.regData[RS_2].setFromRegFile(instr(IDX_R2));
 
-                makeVal(lastBit, 1, 0);
+                mVal(lastBit, 1, 0);
                 nest& rawNest = g(instr(IMM_B_12),instr(IMM_B_11),instr(IMM_B_5_11),instr(IMM_B_1_5), lastBit);
 
                 _decUop.regData[RS_3].setFromImm(getExtendExpr(rawNest, XLEN, false));
@@ -234,7 +234,7 @@ namespace kathryn{
                     _decUop.regData[RS_2].setFromImm(getExtendExpr(instr(IMM_I_0_12), XLEN, false));
                 }else{
                     _decUop.regData[RS_1].setZero();
-                    makeVal(lastBit, 1, 0);
+                    mVal(lastBit, 1, 0);
                     nest& rawNest = g(instr(IMM_J_20),instr(IMM_J_12_20),instr(IMM_J_11),instr(IMM_J_1_11), lastBit);
                     _decUop.regData[RS_2].setFromImm(getExtendExpr(rawNest, XLEN, false));
                 }

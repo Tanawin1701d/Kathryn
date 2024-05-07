@@ -12,10 +12,10 @@ namespace kathryn{
     namespace riscv{
 
 
-        RiscvSimInterface::RiscvSimInterface(CYCLE       limitCycle,
-                                             std::string prefix,
-                                             std::string testType,
-                                             Riscv& core):
+        RiscvSimSortInterface::RiscvSimSortInterface(CYCLE       limitCycle,
+                                                     std::string prefix,
+                                                     std::string testType,
+                                                     Riscv& core):
                 SimInterface(limitCycle,
                              std::move(prefix + testType + "/owave.vcd"),
                              std::move(prefix + testType + "/oprofile.prof")),
@@ -26,12 +26,12 @@ namespace kathryn{
                 _prefixFolder(prefix),
                 _testType(testType){}
 
-        void RiscvSimInterface::describe() {
+        void RiscvSimSortInterface::describe() {
             readAssembly (_prefixFolder + _testType + "/asm.out");
             readAssertVal(_prefixFolder + _testType + "/ast.out");
         }
 
-        void RiscvSimInterface::describeCon() {
+        void RiscvSimSortInterface::describeCon() {
 
             for (int i = 0; i <= 100; i++){
                 if (i == 55){
@@ -58,7 +58,7 @@ namespace kathryn{
 
         }
 
-        void RiscvSimInterface::recordSlot() {
+        void RiscvSimSortInterface::recordSlot() {
 
             /** please bare in mind that this recorder work correctly when
              *  it is the end of the cycle
@@ -81,8 +81,8 @@ namespace kathryn{
             slotWriter.iterateCycle();
         }
 
-        bool RiscvSimInterface::writeSlotIfStall(PIPE_STAGE stageIdx,
-                                                 FlowBlockPipeBase* pipfb) {
+        bool RiscvSimSortInterface::writeSlotIfStall(PIPE_STAGE2 stageIdx,
+                                                     FlowBlockPipeBase* pipfb) {
 
             ///////// if it is running in con thread type it will be run after model sim but before exit event of all type
             assert(pipfb != nullptr);
@@ -101,7 +101,7 @@ namespace kathryn{
             return recvRunning | sendRunning;
         }
 
-        void RiscvSimInterface::writeFetchSlot(FlowBlockPipeBase* pipblock) {
+        void RiscvSimSortInterface::writeFetchSlot(FlowBlockPipeBase* pipblock) {
             assert(pipblock != nullptr);
             if (writeSlotIfStall(RISC_FETCH, pipblock)){return;}
 
@@ -130,7 +130,7 @@ namespace kathryn{
 
         }
 
-        void RiscvSimInterface::writeDecodeSlot(FlowBlockPipeBase* pipblock) {
+        void RiscvSimSortInterface::writeDecodeSlot(FlowBlockPipeBase* pipblock) {
             assert(pipblock != nullptr);
 
             if (writeSlotIfStall(RISC_DECODE, pipblock)){return;}
@@ -171,7 +171,7 @@ namespace kathryn{
 
         }
 
-        void RiscvSimInterface::writeExecuteSlot(FlowBlockPipeBase* pipblock) {
+        void RiscvSimSortInterface::writeExecuteSlot(FlowBlockPipeBase* pipblock) {
             assert(pipblock != nullptr);
 
             if (writeSlotIfStall(RISC_EXECUTE, pipblock)){return;}
@@ -251,7 +251,7 @@ namespace kathryn{
 
         }
 
-        void RiscvSimInterface::writeWbSlot(FlowBlockPipeBase* pipblock) {
+        void RiscvSimSortInterface::writeWbSlot(FlowBlockPipeBase* pipblock) {
             assert(pipblock != nullptr);
             if (writeSlotIfStall(RISC_WB, pipblock)){return;}
 
@@ -262,9 +262,9 @@ namespace kathryn{
             (RISC_WB, std::to_string(ull(wbReg.val)));
         }
 
-        void RiscvSimInterface::writeReg(const std::string& prefix,
-                                         PIPE_STAGE         pipeStage,
-                                         RegEle&            regEle){
+        void RiscvSimSortInterface::writeReg(const std::string& prefix,
+                                             PIPE_STAGE2         pipeStage,
+                                             RegEle&            regEle){
 
             slotWriter.addSlotVal(pipeStage, prefix + " id " +
                                                     std::to_string(ull(regEle.idx)) + " v" +
@@ -274,7 +274,7 @@ namespace kathryn{
         }
 
 
-        void RiscvSimInterface::readAssembly(const std::string& filePath){
+        void RiscvSimSortInterface::readAssembly(const std::string& filePath){
 
             ///////// initialize file
             std::ifstream asmFile(filePath, std::ios::binary);
@@ -309,7 +309,7 @@ namespace kathryn{
         }
 
 
-        void RiscvSimInterface::readAssertVal(const std::string& filePath){
+        void RiscvSimSortInterface::readAssertVal(const std::string& filePath){
 
             std::vector<std::string> rawVals;
 

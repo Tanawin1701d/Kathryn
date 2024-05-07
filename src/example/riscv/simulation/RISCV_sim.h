@@ -15,14 +15,14 @@ namespace kathryn{
 
     namespace riscv{
 
-        enum PIPE_STAGE{
+        enum PIPE_STAGE2{
             RISC_FETCH   = 0,
             RISC_DECODE  = 1,
             RISC_EXECUTE = 2,
             RISC_WB      = 3
         };
 
-        class RiscvSimInterface: public SimInterface{
+        class RiscvSimSortInterface: public SimInterface{
         private:
 
             Riscv&      _core;
@@ -35,10 +35,10 @@ namespace kathryn{
 
         public:
 
-            explicit RiscvSimInterface(CYCLE limitCycle,
-                                       std::string prefix,
-                                       std::string testType,
-                                       Riscv& core
+            explicit RiscvSimSortInterface(CYCLE limitCycle,
+                                           std::string prefix,
+                                           std::string testType,
+                                           Riscv& core
                                        );
 
             void describe() override;
@@ -47,7 +47,7 @@ namespace kathryn{
 
             void recordSlot();
 
-            bool writeSlotIfStall(PIPE_STAGE stageIdx,
+            bool writeSlotIfStall(PIPE_STAGE2 stageIdx,
                                   FlowBlockPipeBase* pipfb);
 
 
@@ -56,7 +56,7 @@ namespace kathryn{
             void writeExecuteSlot(FlowBlockPipeBase* pipblock);
             void writeWbSlot     (FlowBlockPipeBase* pipblock);
             void writeReg        (const std::string& prefix,
-                                  PIPE_STAGE pipeStage,
+                                  PIPE_STAGE2 pipeStage,
                                   RegEle&    regEle);
 
             void readAssembly(const std::string& filePath);
@@ -75,12 +75,12 @@ namespace kathryn{
                     /** test each type*/
                     std::cout << TC_GREEN << "testing riscv instruction >>>> " + testType << std::endl;
 
-                    makeMod(riscCore, Riscv, false);
+                    mMod(riscCore, Riscv, false);
                     startModelKathryn();
-                    RiscvSimInterface simulator(120,
-                                                params["prefix"],
-                                                testType,
-                                                (Riscv &) riscCore
+                    RiscvSimSortInterface simulator(120,
+                                                    params["prefix"],
+                                                    testType,
+                                                    (Riscv &) riscCore
                     );
                     ////// start simulate
                     simulator.simStart();

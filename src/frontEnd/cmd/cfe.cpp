@@ -6,6 +6,7 @@
 #include <utility>
 #include "cfe.h"
 #include "test/autoSim/simMng.h"
+#include "example/riscv/simulation/RISCV_sim_sort.h"
 
 
 namespace kathryn{
@@ -36,19 +37,27 @@ namespace kathryn{
 
     }
 
-    void start(PARAM& params){
+    void test_riscv_sort(PARAM& params){
+        riscv::RISCV_MNG_SORT riscTestMng;
+        riscTestMng.start(params);
+        std::cout << TC_GREEN <<  " finish rv [sort] sim " << TC_DEF << std::endl;
+    }
+
+    void start(PARAM& params) {
 
         printWelcomeScreen();
 
-        if (params["ioOptimize"] == "true"){
+        if (params["ioOptimize"] == "true") {
             std::ios_base::sync_with_stdio(false);
             std::cin.tie(nullptr);
         }
 
-        if (params["testType"] == "testSimple"){
+        if (params["testType"] == "testSimple") {
             test_simple(params);
-        }else if (params["testType"] == "testRiscv"){
+        } else if (params["testType"] == "testRiscv") {
             test_riscv(params);
+        } else if (params["testType"] == "testRiscvSort"){
+            test_riscv_sort(params);
         }else{
             std::cout << "there is no command to test system" << std::endl;
         }

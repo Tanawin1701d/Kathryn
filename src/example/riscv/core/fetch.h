@@ -19,7 +19,7 @@ namespace kathryn{
 
         public:
 
-            makeWire(readEn, 1);
+            mWire(readEn, 1);
             StorageMgmt& storageMgmt;
             Reg&    _reqPc;
             Operable&    readFin;
@@ -40,7 +40,7 @@ namespace kathryn{
                             readEn = nextPipReadySig;
                             zif(readFin) {
                                 /** fetch data is shared among fetch and decoder
-                                 ** we must make sure it is ready to recv
+                                 ** we must m sure it is ready to recv
                                  * */
                                 fetchdata.fetch_instr <<= storageMgmt.readOutput;
                                 fetchdata.fetch_pc     <<= _reqPc;
