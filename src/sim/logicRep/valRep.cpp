@@ -13,6 +13,8 @@
 namespace kathryn{
 
 
+#ifndef NOTEXCEED64
+
     ValRep::ValRep(int len) {
 
         assert(len > 0);
@@ -25,6 +27,15 @@ namespace kathryn{
 
     ValRep::~ValRep() {
         delete[] _val;
+    }
+
+    ull* ValRep::getValPtr() {
+        return _val
+    }
+
+    ull ValRep::getVal64() const{
+        assert(_len <= bitSizeOfUll);
+        return _val[0];
     }
 
     ValRep::ValRep(const ValRep &rhs) {
@@ -538,6 +549,10 @@ namespace kathryn{
         shiftIdent._val[0] = (ull)rhs;
         return operator>>(shiftIdent);
     }
+
+
+#endif
+
 
 
 }

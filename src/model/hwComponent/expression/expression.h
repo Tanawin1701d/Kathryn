@@ -31,7 +31,7 @@ namespace kathryn {
     private:
         bool _valueAssinged = false;
         /** metas data that contain bi operation*/
-        LOGIC_OP _op;
+        const LOGIC_OP _op;
         Operable* _a;
         Operable* _b;
 

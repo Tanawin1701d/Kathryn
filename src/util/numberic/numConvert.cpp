@@ -10,7 +10,7 @@ namespace kathryn{
         ValRep preRet(bitSize);
         if (!val){return preRet;}
 
-        ull* preRetArr = preRet.getVal();
+        ull* preRetArr = preRet.getValPtr();
         for (int i = 0; i < preRet.getValArrSize(); i++){
             preRetArr[i] = (ull)(-1);
         }

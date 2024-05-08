@@ -30,7 +30,8 @@ namespace kathryn {
                                        dependState,
                                        &upFullState,
                                        Slice({0, 1}),
-                                       DEFAULT_UE_PRI_INTERNAL_MAX});
+                                       DEFAULT_UE_PRI_INTERNAL_MAX,
+                                       true});
         addUpdateMeta(event);
         return event;
     }
@@ -41,7 +42,8 @@ namespace kathryn {
             this,
             &downFullState,
             Slice({0, getSlice().getSize()}),
-            DEFAULT_UE_PRI_INTERNAL_MIN
+            DEFAULT_UE_PRI_INTERNAL_MIN,
+            true
         });
         addUpdateMeta(event);
     }

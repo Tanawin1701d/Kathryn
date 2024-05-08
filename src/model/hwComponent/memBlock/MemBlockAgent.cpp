@@ -55,7 +55,7 @@ namespace kathryn{
         ValRep curValIndexer = _indexer->getSlicedCurValue();
         assert(curValIndexer.getLen() == getExactIndexSize());
         /**get curindex only ull support*/
-        ull curIdx =  curValIndexer.getVal()[0];
+        ull curIdx =  curValIndexer.getVal64();
         if (curIdx >= _master->getDepthSize()){
             curIdx  = 0;
         }

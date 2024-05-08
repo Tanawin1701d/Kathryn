@@ -25,12 +25,16 @@ namespace kathryn{
      * bit occur this new class will operate with
      * new size based on shorter val representation
      */
+
     class ValRep{
     private:
         int   _len             = -1; //// userDefine size
         int   _valSize         = -1; //// size of array that contain ull
+#ifdef NOTEXCEED64
+        ull   _val             = 0;
+#else
         ull*  _val             = nullptr;
-
+#endif
 
     public:
         static const int bitSizeOfUll = sizeof(ull) << 3;
@@ -47,7 +51,8 @@ namespace kathryn{
 
         int getValArrSize() const{return _valSize;}
 
-        ull* getVal() const{return _val;}
+        ull* getValPtr();
+        ull  getVal64() const;
         /** build new valrep that have bigger than cur valrep the exceed bit wil
          * be assigned to 0
          * */
@@ -55,7 +60,7 @@ namespace kathryn{
         ValRep getZeroExtend(int targetSize);
         ValRep shink        (int targetSize);
         /** check define size*/
-        inline bool checkEqualBit(const ValRep& rhs) const{ return _len == rhs._len;}
+        [[nodiscard]] inline bool checkEqualBit(const ValRep& rhs) const{ return _len == rhs._len;}
         /** operation core*/
         ValRep bwOperator     (const ValRep& rhs,
                                const std::function<ull(ull, ull)>& operation);
@@ -68,6 +73,8 @@ namespace kathryn{
         bool   getLogicalValue() const;
         /** update value from slice*/
         ValRep slice(Slice sl);
+
+        void update(ValRep& srcVal);
         void updateOnSlice(ValRep srcVal, Slice desSl);
 
         /** bit level control*/

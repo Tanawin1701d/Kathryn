@@ -60,7 +60,7 @@ namespace kathryn{
             checkOverflow(sz, values);
             int amtEleToCpy = std::min(values.size(), (size_t)ret.getValArrSize());
             for (int i = 0; i < amtEleToCpy; i++) {
-                ret.getVal()[i] = values[i];
+                ret.getValPtr()[i] = values[i];
             }
 
             return ret;

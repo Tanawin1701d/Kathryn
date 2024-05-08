@@ -115,7 +115,7 @@ namespace kathryn {
             assert(getAssignMode() == AM_SIM);
             assert(getRtlValItf()->isCurValSim());
             assert(getRtlValItf()->getCurVal().getValArrSize() == 1);
-            return getRtlValItf()->getCurVal().getVal()[0];
+            return getRtlValItf()->getCurVal().getVal64();
         }
         explicit operator ValRep&(){
             assert(getAssignMode() == AM_SIM);

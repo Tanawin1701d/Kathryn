@@ -19,7 +19,7 @@ namespace kathryn {
 
     private:
         std::vector<SliceAgent<T>*> agentHolders;/// it is used to hold sliceAgent to prevent deletation
-        Slice _absSlice{}; /// it is absolute slice
+        const Slice _absSlice{}; /// it is absolute slice
     public:
 
         explicit Slicable(Slice absSlice) : _absSlice(absSlice){}
@@ -42,7 +42,7 @@ namespace kathryn {
             return oldSlice.getSubSlice({start, stop});
         }
         Slice getSlice() const { return _absSlice; }
-        void  setSlice(Slice slc) {_absSlice =  slc;}
+        ////void  setSlice(Slice slc) {_absSlice =  slc;}
 
     };
 

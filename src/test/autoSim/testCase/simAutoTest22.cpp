@@ -77,6 +77,8 @@ namespace kathryn{
         }
 
     };
-
+#ifndef NOTEXCEED64
     Sim22TestEle ele22(22);
+#endif
+
 }

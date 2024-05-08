@@ -29,10 +29,13 @@ namespace kathryn{
         Operable&                  valueToAssign;
         Slice                      desSlice;
         ASM_TYPE                   asmType;
-        AssignMeta(std::vector<UpdateEvent*>& u, Operable& v, Slice s, ASM_TYPE at): updateEventsPool(u),
+        bool                       desSliceEqToEvent;
+        AssignMeta(std::vector<UpdateEvent*>& u, Operable& v, Slice s, ASM_TYPE at, bool desSrc):
+                                                                        updateEventsPool(u),
                                                                         valueToAssign(v),
                                                                         desSlice(s),
-                                                                        asmType(at){}
+                                                                        asmType(at),
+                                                                        desSliceEqToEvent(desSrc){}
     };
     /**
     * Assignable represent hardware component that can memorize logic value or
@@ -93,7 +96,7 @@ namespace kathryn{
 
         /** generate update metas*/
         virtual AssignMeta* generateAssignMeta(Operable& srcValue, Slice desSlice, ASM_TYPE asmType){
-            return new AssignMeta(_updateMeta, srcValue, desSlice, asmType);
+            return new AssignMeta(_updateMeta, srcValue, desSlice, asmType, false);
         }
 
         /** generate the atomic node that is used to represent  state in the system*/

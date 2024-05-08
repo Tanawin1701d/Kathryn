@@ -28,6 +28,7 @@ namespace kathryn {
         Operable* srcUpdateValue     = nullptr; /// value to update.
         Slice     desUpdateSlice; /// slice to update must smaller or equal to srcUpdateValue.slice
         int priority = DEFAULT_UE_PRI_MIN;
+        const bool desSliceEqToEvent = false;
         ///priority for circuit if there are attention to update same register at a time 0 is highest 9 is lowest
 
         bool operator < (const UpdateEvent& rhs) const{
@@ -49,17 +50,22 @@ namespace kathryn {
                   shouldAssignValRep(srcUpdateState))){
                 return;
             }
+
             /**clarify slice*/
             Slice srcSlice = srcUpdateValue->getOperableSlice();
             Slice desSlice = desUpdateSlice;
-            assert(srcSlice.getSize() >= desSlice.getSize());
-            Slice neededSrcSlice = srcSlice.getSubSliceWithShinkMsb({0, desSlice.getSize()});
-            Slice neededDesSlice = desSlice.getSubSliceWithShinkMsb({0, srcSlice.getSize()});
-            /**get src value and slice */
-            assert(srcUpdateValue->getRtlValItf()->isCurValSim());
-            ValRep& rawSrcVal    = srcUpdateValue->getRtlValItf()->getCurVal();
-            ValRep  desireSrcVal = rawSrcVal.slice(neededSrcSlice);
-            desValRep.updateOnSlice(desireSrcVal, neededDesSlice);
+            if (desSliceEqToEvent){
+                desValRep.update(srcUpdateValue->getRtlValItf()->getCurVal());
+            }else {
+                assert(srcSlice.getSize() >= desSlice.getSize());
+                Slice neededSrcSlice = srcSlice.getSubSliceWithShinkMsb({0, desSlice.getSize()});
+                Slice neededDesSlice = desSlice.getSubSliceWithShinkMsb({0, srcSlice.getSize()});
+                /**get src value and slice */
+                assert(srcUpdateValue->getRtlValItf()->isCurValSim());
+                ValRep &rawSrcVal = srcUpdateValue->getRtlValItf()->getCurVal();
+                ValRep desireSrcVal = rawSrcVal.slice(neededSrcSlice);
+                desValRep.updateOnSlice(desireSrcVal, neededDesSlice);
+            }
         }
 
         void trySimAll() const{

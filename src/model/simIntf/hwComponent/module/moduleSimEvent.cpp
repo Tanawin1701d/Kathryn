@@ -42,9 +42,9 @@ namespace kathryn{
             _resetWire->getRtlValItf()->getCurVal() = resetVal;
         }
 
-//        if (_curCycle == 5){
-//            std::cout << "gotcha";
-//        }
+        if (_targetCycle == 6){
+            //std::cout << "gotcha";
+        }
 //        std::cout << "--------------------------------------------------------" <<std::endl;
         _startModule->simStartCurCycle ();
 //        _startModule->simStartNextCycle();

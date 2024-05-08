@@ -6,6 +6,7 @@
 #define KATHRYN_RISCV_SIM_SORT_H
 
 #include <fstream>
+#include <chrono>
 #include "kathryn.h"
 #include "example/riscv/core/core.h"
 #include "frontEnd/cmd/paramReader.h"
@@ -80,16 +81,23 @@ namespace kathryn{
 
                     mMod(riscCore, Riscv, false);
                     startModelKathryn();
-                    RiscvSimInterfaceSort simulator(20000,
+                    std::cout << TC_BLUE << "amount element in simulation" << GLOBAL_MODEL_ID <<std::endl;
+                    RiscvSimInterfaceSort simulator(100000,
                                                 params["prefix"],
                                                 "sorter",
                                                 (Riscv &) riscCore
                     );
+                    auto start = std::chrono::steady_clock::now();
                     ////// start simulate
                     simulator.simStart();
                     ////// reset system
                     resetKathryn();
                     std::cout << TC_GREEN << "--------------------------------" << std::endl;
+
+
+                auto end = std::chrono::steady_clock::now();
+                std::chrono::duration<double> elapsed_seconds = end - start;
+                std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";
 
                 }
 

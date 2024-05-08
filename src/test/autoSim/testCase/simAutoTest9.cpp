@@ -81,6 +81,7 @@ namespace kathryn{
     };
 
 
+
     class Sim9TestEle: public AutoTestEle{
     public:
         explicit Sim9TestEle(int id): AutoTestEle(id){}
@@ -93,8 +94,12 @@ namespace kathryn{
 
     };
 
+#ifndef NOTEXCEED64
+
     Sim9TestEle ele9(9);
 
+
+#endif
     ///sim2 testCase2;
 
 

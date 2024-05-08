@@ -112,5 +112,8 @@ namespace kathryn{
 
     };
 
+#ifndef NOTEXCEED64
     Sim13TestEle ele13(13);
+#endif
+
 }

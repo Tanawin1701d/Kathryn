@@ -88,7 +88,8 @@ namespace kathryn{
             rstWire,
             &rstRegVal,
             {0, getSlice().getSize()},
-            DEFAULT_UE_PRI_RST
+            DEFAULT_UE_PRI_RST,
+            true
         });
         addUpdateMeta(rstEvent);
     }
@@ -114,6 +115,11 @@ namespace kathryn{
     }
 
     void RegLogicSim::simStartNextCycle() {
+
+
+//        if (_master->getGlobalId() == 37){
+//            std::cout << "test";
+//        }
 
         assert(isCurValSim());
         assert(!isNextValSim());

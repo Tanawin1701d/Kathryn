@@ -45,7 +45,14 @@ namespace kathryn{
     AsmNode* Assignable::generateBasicNode(Operable& srcOpr, Slice desSlice, ASM_TYPE asmType){
 
         assert(desSlice.getSize() <= srcOpr.getOperableSlice().getSize());
-        auto* assMeta = new AssignMeta(_updateMeta, srcOpr, desSlice, asmType);
+        bool desSrcEqual = (srcOpr.getOperableSlice() == desSlice) &&
+                           (desSlice == getAssignSlice());
+        auto* assMeta = new AssignMeta(_updateMeta,
+                                       srcOpr,
+                                       desSlice,
+                                       asmType,
+                                       desSrcEqual ///// it is used to optimize simulation
+                                       );
         auto* asmNode = new AsmNode(assMeta);
         return asmNode;
 

@@ -235,13 +235,18 @@ namespace kathryn {
     }
 
     ValRep Operable::getSlicedCurValue(){
-        Slice targetSlice    = getOperableSlice();
-        Slice srcSlice       = getExactOperable().getOperableSlice();
         ValRep& rawSrcSimVal = getRtlValItf()->getCurVal();
-        /** integrity check */
-        assert(srcSlice.isContain(targetSlice) &&
-               (targetSlice.stop <= rawSrcSimVal.getLen()));
-        return rawSrcSimVal.slice(targetSlice);
+        if (getOperableSlice() == getExactOperable().getOperableSlice()){
+            return rawSrcSimVal;
+        }else {
+            Slice targetSlice = getOperableSlice();
+            Slice srcSlice = getExactOperable().getOperableSlice();
+            ValRep &rawSrcSimVal = getRtlValItf()->getCurVal();
+            /** integrity check */
+            assert(srcSlice.isContain(targetSlice) &&
+                   (targetSlice.stop <= rawSrcSimVal.getLen()));
+            return rawSrcSimVal.slice(targetSlice);
+        }
     }
 
     Operable& Operable::getMatchOperable( ull value) const {

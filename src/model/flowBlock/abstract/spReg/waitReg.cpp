@@ -41,7 +41,8 @@ namespace kathryn{
                                        dependState,
                                        &_upState,
                                        Slice({0, 1}),
-                                       DEFAULT_UE_PRI_INTERNAL_MAX});
+                                       DEFAULT_UE_PRI_INTERNAL_MAX,
+                                       true});
         addUpdateMeta(event);
         return event;
     }
@@ -51,7 +52,8 @@ namespace kathryn{
                                                 &((*this) == _upState),
                                                 &_downState,
                                                 Slice({0,1}),
-                                                DEFAULT_UE_PRI_INTERNAL_MIN
+                                                DEFAULT_UE_PRI_INTERNAL_MIN,
+                                                true
                                            });
         addUpdateMeta(resetEvent);
     }
@@ -62,7 +64,8 @@ namespace kathryn{
                                                 rst,
                                                 &_downState,
                                                 Slice({0,1}),
-                                                DEFAULT_UE_PRI_INTERNAL_MIN
+                                                DEFAULT_UE_PRI_INTERNAL_MIN,
+                                                true
                                            });
         addUpdateMeta(resetEvent);
     }
@@ -135,7 +138,8 @@ namespace kathryn{
             &((*this)(0)),
             &((*this)(1, _totalBitSize) + 1),
             Slice({1, _totalBitSize}),
-            DEFAULT_UE_PRI_INTERNAL_MAX-1
+            DEFAULT_UE_PRI_INTERNAL_MAX-1,
+            false
         });
         addUpdateMeta(event);
     }
@@ -150,7 +154,8 @@ namespace kathryn{
                                        dependState,
                                        _startCnt,
                                        Slice({0, _totalBitSize}),
-                                       DEFAULT_UE_PRI_INTERNAL_MAX});
+                                       DEFAULT_UE_PRI_INTERNAL_MAX,
+                                       true});
         addUpdateMeta(event);
         return event;
     }
@@ -162,7 +167,8 @@ namespace kathryn{
             &(*this)(0),
             IdleCnt,
             Slice({0, _totalBitSize}),
-            DEFAULT_UE_PRI_INTERNAL_MIN
+            DEFAULT_UE_PRI_INTERNAL_MIN,
+            true
                                            });
         addUpdateMeta(resetEvent);
 
@@ -176,7 +182,8 @@ namespace kathryn{
            rst,
            IdleCnt,
            Slice({0, _totalBitSize}),
-           DEFAULT_UE_PRI_INTERNAL_MIN
+           DEFAULT_UE_PRI_INTERNAL_MIN,
+           true
                                            });
         addUpdateMeta(resetEvent);
     }

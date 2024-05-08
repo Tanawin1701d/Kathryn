@@ -64,7 +64,8 @@ namespace kathryn{
                                                 nullptr,
                                                 &defWireVal,
                                                 {0, getSlice().getSize()},
-                                                DEFAULT_UE_PRI_MIN
+                                                DEFAULT_UE_PRI_MIN,
+                                                true
                                         });
         addUpdateMeta(defEvent);
     }

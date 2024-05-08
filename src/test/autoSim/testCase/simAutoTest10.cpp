@@ -42,13 +42,15 @@ namespace kathryn{
 
                 sif(a > b){
                     result <<= resultCNA;
-                }selif(a < b){
+                }
+                selif(a < b){
                     cif(innerA > innerB){
                         result <<= resultCNB;
                     }celse{
                         result <<= resultCNB2;
                     }
-                }selse{
+                }
+                selse{
                     result <<= resultCNC;
                 }
 
@@ -106,7 +108,7 @@ namespace kathryn{
 
     };
 
-    Sim10TestEle ele10(10);
+    Sim10TestEle ele10(-1);
 
     ///sim2 testCase2;
 
