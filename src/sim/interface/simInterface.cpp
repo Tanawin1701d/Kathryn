@@ -21,7 +21,7 @@ namespace kathryn{
     SimInterface::SimInterface(CYCLE limitCycle,
                                std::string vcdFilePath,
                                std::string profileFilePath):
-            _vcdWriter(new VcdWriter(std::move(vcdFilePath))),
+            _vcdWriter (new VcdWriter(std::move(vcdFilePath))),
             _flowWriter(new FlowWriter(std::move(profileFilePath))),
             _limitCycle(limitCycle)
     {
@@ -57,6 +57,7 @@ namespace kathryn{
         SimController* simCtrl = getSimController();
         assert(simCtrl != nullptr);
         simCtrl->start();
+        /** sim ctrl now finish next terminate our sim specifier*/
         if (conThread && conThread->joinable()){
             conThread->join();
         }

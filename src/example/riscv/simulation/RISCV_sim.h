@@ -68,10 +68,12 @@ namespace kathryn{
         public:
             void start(PARAM& params){
 
-                std::string testTypes[] = {"Imm", "Reg", "Ls", "Jump", "Branch"};
+                std::string testTypes[] = {"Imm", "Reg",
+                                           "Ls", "Jump",
+                                           "BranchSc"};
 
 
-                for (std::string testType: testTypes) {
+                for (const std::string& testType: testTypes) {
                     /** test each type*/
                     std::cout << TC_GREEN << "testing riscv instruction >>>> " + testType << std::endl;
 
