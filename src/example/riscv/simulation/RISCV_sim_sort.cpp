@@ -44,7 +44,7 @@ namespace kathryn{
                     std::cout << i << " pass" << std::endl;
                 }
                 conEndCycle();
-                //recordSlot();
+                recordSlot();
                 conNextCycle(1);
             }
 //            bool pass = true;

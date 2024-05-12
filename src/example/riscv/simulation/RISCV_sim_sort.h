@@ -82,7 +82,7 @@ namespace kathryn{
                     mMod(riscCore, Riscv, false);
                     startModelKathryn();
                     std::cout << TC_BLUE << "amount element in simulation" << GLOBAL_MODEL_ID <<std::endl;
-                    RiscvSimInterfaceSort simulator(100000,
+                    RiscvSimInterfaceSort simulator(20000,
                                                 params["prefix"],
                                                 "sorter",
                                                 (Riscv &) riscCore

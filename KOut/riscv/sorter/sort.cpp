@@ -21,7 +21,7 @@ void sort(){
 
 
     /////////// main loop
-    while (batchSize <=  AMT_DATA){
+    do{
 
         int  mainStart = 0;
         int  mainStop  = mainStart + batchSize;
@@ -31,7 +31,7 @@ void sort(){
 
         ///////// iterate trough each batch size
         //////////iterate loop
-        while (mainStart < AMT_DATA){
+        do{
 
             int i = mainStart;
             int j = mid;
@@ -39,7 +39,7 @@ void sort(){
 
             //////////////// compare loop
 
-            while (i < mid || j < mainStop){
+            do{
 
                 if ( (i<mid) && (j==mainStop) ){
                     abDes[resIdx] = abSrc[i];
@@ -56,15 +56,17 @@ void sort(){
                 }
                 resIdx++;
 
-            }
+            }while(i < mid || j < mainStop);
 
 
             mainStart = mainStop;
             mainStop  = mainStart + batchSize;
             mid       = mainStart  +  (batchSize >> 1);
-        }
+        }while(mainStart < AMT_DATA);
+
         std::swap(abSrc, abDes);
         batchSize = batchSize << 1;
-    }
+
+    }while(batchSize <=  AMT_DATA);
 
 }
