@@ -50,11 +50,8 @@ namespace kathryn{
                     }
                 }
             }
-
         };
-
     }
-
 }
 
 #endif //KATHRYN_FETCH_H
