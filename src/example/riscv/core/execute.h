@@ -54,7 +54,7 @@ namespace kathryn{
                                       (_decodedUop.regData[RS_1].val(XLEN - 1) == _decodedUop.regData[RS_2].val(XLEN - 1)) &
                                       (_decodedUop.regData[RS_1].val(0, XLEN - 1) < _decodedUop.regData[RS_2].val(0, XLEN - 1))
                              );
-                cmpLtUnSign = _decodedUop.regData[RS_1].val(0, XLEN - 1) < _decodedUop.regData[RS_2].val(0, XLEN - 1);
+                cmpLtUnSign = _decodedUop.regData[RS_1].val < _decodedUop.regData[RS_2].val;
             }
 
             void accessRegData(int idx, MemBlock& memBlock,BYPASS_DATA& bypassData){

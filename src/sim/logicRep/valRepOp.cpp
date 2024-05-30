@@ -148,15 +148,24 @@ namespace kathryn {
 
     std::string ValRep::getBiStr() {
 
-        std::string preRet;
-        preRet.resize(getLen());
-        ull cpyVal = _val;
-        for (int i = 0; i < getLen(); i++) {
+        // std::string preRet;
+        // preRet.resize(getLen());
+        // ull cpyVal = _val;
+        // for (int i = 0; i < getLen(); i++) {
+        //
+        //     preRet[getLen()-i-1] += '0' + (cpyVal&1);
+        //     cpyVal >>= 1;
+        //
+        // }
 
-            preRet[getLen()-i-1] += '0' + (cpyVal&1);
-            cpyVal >>= 1;
-
+        std::string preRet ;
+        assert(getLen() > 0);
+        for (int i = getValArrSize()-1; i >= 0; i--){
+            std::bitset<bitSizeOfUll> binaryRepresentation(_val);
+            preRet += binaryRepresentation.to_string();
         }
+        return preRet.substr(preRet.size() - getLen(), getLen());
+
         /////// std::cout << preRet << std::endl;
         return preRet;
     }

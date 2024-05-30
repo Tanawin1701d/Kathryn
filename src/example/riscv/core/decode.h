@@ -65,25 +65,21 @@ namespace kathryn{
                                         zelif(op(OP_L) == 0b100) { doOpDecode(fetchData.fetch_instr, _decUop, false); }
                                         zelse { doAulPcDecode(fetchData.fetch_instr, _decUop);/*101*/         }
 
-                                    }
-                                    zelif(op(OP_H) == 0b01) {
+                                    }zelif(op(OP_H) == 0b01) {
                                         //////////// store op luidcode////////////////////////////////////////////
                                         zif  (op(OP_L) == 0b000) {
                                             doLoadStoreDecode(fetchData.fetch_instr, _decUop, false);
-                                        }
-                                        zelif(op(OP_L) == 0b100) { doOpDecode(fetchData.fetch_instr, _decUop, true); }
+                                        }zelif(op(OP_L) == 0b100) { doOpDecode(fetchData.fetch_instr, _decUop, true); }
                                         zelse { doLuiDecode(fetchData.fetch_instr, _decUop); }   //(op(2,5) == 0b101) {
                                         ////////////////////////////////////////////////////////////////////////
-                                    }
-                                    zelif(op(OP_H) == 0b11) { ////// 11   we dont support 10
+                                    }zelif(op(OP_H) == 0b11) { ////// 11   we dont support 10
                                         ////////// branch jump with reg //////////////////////////
                                         zif  (op(OP_L) == 0b000) { doBranchDecode(fetchData.fetch_instr, _decUop); }
                                         zelif(op(OP_L) == 0b001) { doJalRDecode(fetchData.fetch_instr, _decUop); }
                                         zelse {
                                             doJalDecode(fetchData.fetch_instr, _decUop);
                                         }/*(op(2,5) == 0b011){ this is 11*///}zelse{doSystemDecode(fetchBlk.fetch_instr);
-                                    }
-                                    zelse {
+                                    }zelse {
                                         invalidHighDec = 1;
                                         _decUop.reset();
                                     }
