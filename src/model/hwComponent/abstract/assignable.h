@@ -11,7 +11,6 @@
 #include "operable.h"
 #include "model/hwComponent/abstract/operable.h"
 #include "model/hwComponent/abstract/Slice.h"
-#include "model/simIntf/modelSimEngineLegacy.h"
 #include "updateEvent.h"
 
 namespace kathryn{
@@ -29,13 +28,11 @@ namespace kathryn{
         Operable&                  valueToAssign;
         Slice                      desSlice;
         ASM_TYPE                   asmType;
-        bool                       desSliceEqToEvent;
-        AssignMeta(std::vector<UpdateEvent*>& u, Operable& v, Slice s, ASM_TYPE at, bool desSrc):
+        AssignMeta(std::vector<UpdateEvent*>& u, Operable& v, Slice s, ASM_TYPE at):
                                                                         updateEventsPool(u),
                                                                         valueToAssign(v),
                                                                         desSlice(s),
-                                                                        asmType(at),
-                                                                        desSliceEqToEvent(desSrc){}
+                                                                        asmType(at){}
     };
     /**
     * Assignable represent hardware component that can memorize logic value or
@@ -83,8 +80,8 @@ namespace kathryn{
                                    ASM_TYPE asmType);
 
 
-        virtual void  assignSimValue(ull    b){assert(false);}
-        virtual void  assignSimValue(ValRep b){assert(false);}
+        virtual void  assignSimValue(ull        b){assert(false);}
+        virtual void  assignSimValue(ValRep<64> b){assert(false);}
 
 
         virtual Slice getAssignSlice() = 0;
@@ -96,7 +93,7 @@ namespace kathryn{
 
         /** generate update metas*/
         virtual AssignMeta* generateAssignMeta(Operable& srcValue, Slice desSlice, ASM_TYPE asmType){
-            return new AssignMeta(_updateMeta, srcValue, desSlice, asmType, false);
+            return new AssignMeta(_updateMeta, srcValue, desSlice, asmType);
         }
 
         /** generate the atomic node that is used to represent  state in the system*/
@@ -107,19 +104,6 @@ namespace kathryn{
          * simulation task
          *
          * */
-
-        /////// assign value to val representation
-        ////////////////// usually it is call from sim Interface
-        /////// getFromCur means get value from current cycle or from back cycle
-        void assignValRepCurCycle(ValRep& desValRep){
-
-            for (auto curUpEvent : _updateMeta){
-                assert(curUpEvent != nullptr);
-                curUpEvent->trySimAll();
-                curUpEvent->tryAssignValRep(desValRep);
-            }
-
-        }
 
         static bool upEventCmp(const UpdateEvent* lhs, const UpdateEvent* rhs){
             assert(lhs != nullptr);

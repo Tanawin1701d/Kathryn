@@ -86,6 +86,7 @@ namespace kathryn {
          * */
         explicit ModelController();
         void start() override;
+        void startGenSimProxy(); ///// generate simproxy
         void reset() override;
         void clean() override;
         Module* getGlobalModule();

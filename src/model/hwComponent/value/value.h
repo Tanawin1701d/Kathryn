@@ -19,77 +19,39 @@
 namespace kathryn{
 
     class Val;
-    class ValLogicSim: public LogicSimEngine{
+    class ValSimEngine: public LogicSimEngine{
+    protected:
         Val* _master = nullptr;
     public:
-        ValLogicSim(Val* master,int sz, VCD_SIG_TYPE sigType, bool simForNext);
-        /** override simulation engine */
-        void initSim();
-        void simStartCurCycle() override;
-        void simExitCurCycle() override;
-
-
+        ValSimEngine(Val* master,VCD_SIG_TYPE sigType);
     };
+
     /** This class act as constant value */
     class Val: public LogicComp<Val>{
-        friend class ValLogicSim;
+        friend class ValSimEngine;
     protected:
         int    _size;
-        ValRep rawValue;
+        ull   _rawValue;
         /***the actual value will be assigned to val rep*/
-
         void com_init() override;
 
     public:
         /** todo we will make value save the value and range more precisly*/
         void com_final() override {};
 
-        template<typename... Args>
-        explicit Val(int size, Args... args):
+        explicit Val(int size, ull rawValue):
             LogicComp({0, size},
                       TYPE_VAL,
-                      new ValLogicSim(this,size,VST_INTEGER, false),
+                      new ValSimEngine(this,VST_INTEGER),
                       false),
             _size(size),
-            rawValue(NumConverter::createValRep(size, args...))
+            _rawValue(rawValue)
             {
                 assert(size > 0);
                 com_init();
-                ((ValLogicSim*)_simEngine)->initSim();
                 AssignOpr::setMaster(this);
                 AssignCallbackFromAgent::setMaster(this);
             }
-
-        explicit Val(int size):
-            LogicComp({0, size},
-                      TYPE_VAL,
-                      new ValLogicSim(this,size,VST_INTEGER, false),
-                      false),
-            _size(size),
-            rawValue(NumConverter::createValRep(size, 0))
-            {
-                assert(size > 0);
-                com_init();
-                ((ValLogicSim*)_simEngine)->initSim();
-                AssignOpr::setMaster(this);
-                AssignCallbackFromAgent::setMaster(this);
-            }
-
-        explicit Val(const ValRep& val):
-            LogicComp({0, val.getLen()},
-                      TYPE_VAL,
-                      new ValLogicSim(this,val.getLen(),VST_INTEGER, false),
-                      false),
-            _size(val.getLen()),
-            rawValue(val)
-            {
-                assert(val.getLen() > 0);
-                com_init();
-                ((ValLogicSim*)_simEngine)->initSim();
-                AssignOpr::setMaster(this);
-                AssignCallbackFromAgent::setMaster(this);
-            }
-
         /**
          * override assignable
          * */

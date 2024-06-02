@@ -36,7 +36,7 @@ namespace kathryn{
                 );
     }
 
-    void VcdWriter::addNewValue(const std::string& name, ValRep &val) {
+    void VcdWriter::addNewValue(const std::string& name, ValRepBase&val) {
         addData(
                 "b" + val.getBiStr() +
                 " " + name + "\n"

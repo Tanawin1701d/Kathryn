@@ -4,6 +4,7 @@
 
 #include "controller.h"
 
+#include "model/simIntf/base/proxyBuildMng.h"
 
 
 namespace kathryn{
@@ -28,6 +29,12 @@ namespace kathryn{
         on_module_end_init_components(globalModulePtr);
         on_globalModule_init_designFlow();
         on_module_final(moduleStack.top().md);
+    }
+
+    void ModelController::startGenSimProxy(){
+        assert(globalModulePtr != nullptr);
+        ProxyBuildMng mng(globalModulePtr);
+        mng.startWriteData();
     }
 
     void ModelController::reset(){

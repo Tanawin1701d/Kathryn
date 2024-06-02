@@ -1,119 +1,51 @@
 //
-// Created by tanawin on 19/2/2567.
+// Created by tanawin on 31/5/2024.
 //
 
-#ifndef KATHRYN_MEMSIMENGINE_H
-#define KATHRYN_MEMSIMENGINE_H
+#ifndef MODEL_SIMINTF_MEMSIMENGINE_H
+#define MODEL_SIMINTF_MEMSIMENGINE_H
 
-#include "sim/logicRep/valRep.h"
-#include "model/simIntf/base/modelSimEngine.h"
+
+#include "model/simIntf/base/modelProxy.h"
 
 namespace kathryn{
 
+    class MemBlock;
 
-    class MemSimEngine : public SimEngine{
-    protected:
-        /** we will not use sim engine anymore*/
-        ValRep* memBlk = nullptr;
-        std::unordered_map<ull, ValRep> pendingWrite;
-
-        bool               _isCurValSim  = false;
-        bool               _isNextValSim = false;
-
-        const ull DEPTH_SIZE = 0;
-        const int WIDTH_SIZE = 0;
-
-
+    class MemSimEngine: public ModelProxyBuild, public ModelProxyRetrieve{
+    private:
+        MemBlock* _master = nullptr;
     public:
-        MemSimEngine(ull depthSize, int widthSize);
-        ~MemSimEngine() override{
-            delete[] memBlk;
-        }
+        explicit MemSimEngine(MemBlock* master);
 
-        //////// simulatable override
-        void prepareSim() override;
+        ///////// create c++
+        void        proxyBuildInit()       override{};
+        std::string getVarName()           override;
+        ull         getVarId()             override;
+        
+        std::string createVariable()   override;
+        std::string createOp()         override{return "";}
+        std::string createMemorizeOp() override{return "";}
+        std::string registerToProxy()  override{return "";}
+        std::string createMemBlkAssOp()override{return "";}
+        std::string collectData()      override{return "";}
 
-        void curCycleCollectData() override {assert(false);};
 
-        ValRep& getThisCycleValRep   (ull idx);
-        ValRep& getNextCycleVapRepSrc(ull idx);
+        ///////// retrieve zone
 
-        //////// rtlValItf override
-        void setCurValSimStatus () override{_isCurValSim  = true;}
-        void setNextValSimStatus() override{_isNextValSim = true;}
-
-        bool     isCurValSim () const override{ return _isCurValSim; };
-        bool     isNextValSim() const override{ return _isNextValSim;};
-
-        ValRep&  getCurVal () override {
-            assert(false);
-        }
-
-        ValRep&  getNextVal() override {
-            assert(false);
-        }
-
+        void       proxyRetInit()          override {/*TODO*/};
 
 
     };
 
-
-    class MemAgentSimEngine : public SimEngine{
-    protected:
-        bool               _isCurValSim  = false;
-        bool               _isNextValSim = false;
-
-        ValRep* _curAgentVal = nullptr;
-        ValRep*  _nextAgentVal = nullptr;
-        ////// prepare sim
-
+    class MemSimEngineInterface{
     public:
-
-        explicit MemAgentSimEngine(int bitWidth)
-        {}
-
-        void prepareSim() override{
-            assert(false);
-        }
-
-        void curCycleCollectData() override{
-            assert(false);
-        }
-
-        void simExitCurCycle() override{
-            assert(_curAgentVal != nullptr);
-            /** transfer simStatus*/
-            _isCurValSim  = false;
-            _isNextValSim = false;
-            if (!isReadMode()){ //// write mode
-                *_curAgentVal = *_nextAgentVal;
-            }
-            _nextAgentVal = nullptr;
-            ////// may be there is no
-        }
-
-        virtual bool isReadMode() = 0;
-        //// the read/write mode will be balid when prepare sim was invoked.
-
-        void setCurValSimStatus () override{_isCurValSim  = true;}
-        void setNextValSimStatus() override{_isNextValSim = true;}
-
-        bool     isCurValSim () const override{ return _isCurValSim; };
-        bool     isNextValSim() const override{ return _isNextValSim;};
-
-        ValRep&  getCurVal () override {
-            assert(_curAgentVal != nullptr);
-            return *_curAgentVal;
-        }
-
-        ValRep&  getNextVal() override {
-            return *_nextAgentVal;
-        }
+        virtual ~MemSimEngineInterface() = 0;
+        virtual MemSimEngine* getSimEngine() = 0;
     };
-
 
 
 
 }
 
-#endif //KATHRYN_MEMSIMENGINE_H
+#endif //MODEL_SIMINTF_MEMSIMENGINE_H

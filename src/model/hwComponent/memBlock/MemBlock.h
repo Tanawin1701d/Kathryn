@@ -6,12 +6,15 @@
 #define KATHRYN_MEMBLOCK_H
 
 #include <map>
+#include <model/simIntf/hwComponent/memSimEngine.h>
+
 #include "model/hwComponent/abstract/identifiable.h"
 #include "model/controller/conInterf/controllerItf.h"
 #include "model/simIntf/base/modelSimEngine.h"
 #include "model/debugger/modelDebugger.h"
 #include "model/hwComponent/abstract/operable.h"
 #include "util/numberic/pmath.h"
+#include "model/simIntf/hwComponent/memSimEngine.h"
 #include "MemBlockAgent.h"
 
 
@@ -19,8 +22,7 @@ namespace kathryn{
 
     class MemBlock: public Identifiable,
                     public HwCompControllerItf,
-                    public MemSimEngine,
-                    public SimEngineInterface,
+                    public MemSimEngineInterface,
                     public ModelDebuggable{
     private:
         const ull DEPTH_SIZE = 0;
@@ -28,14 +30,11 @@ namespace kathryn{
 
         std::vector<MemBlockEleHolder*> memBlockAgents;
 
+        MemSimEngine* memSimEngine = nullptr;
 
     public:
         explicit MemBlock(ull depth, int width);
         ~MemBlock();
-
-        SimEngine* getSimEngine() override{
-            return static_cast<SimEngine*>(this);
-        }
 
         void com_init() override;
         void com_final() override{};
@@ -46,25 +45,14 @@ namespace kathryn{
 
         int getWidthSize() const {assert(WIDTH_SIZE != 0); return WIDTH_SIZE;}
         ull getDepthSize() const {assert(DEPTH_SIZE != 0); return DEPTH_SIZE;}
-
-        /**override simulatable*/
-        void   s(ull idx, ull value);
-        void   s(ull idx, ValRep value);
-        ValRep v(ull idx);
-
-        void simStartCurCycle() override;
-
-        void simStartNextCycle() override;
-
-        void simExitCurCycle() override;
+        auto& getMemBlockAgents(){return memBlockAgents;}
 
         /** override debugger*/
         std::string getMdIdentVal() override{
             return getIdentDebugValue();
         }
 
-
-
+        MemSimEngine* getSimEngine() override{return memSimEngine;}
 
     };
 

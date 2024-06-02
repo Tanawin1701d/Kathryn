@@ -27,7 +27,7 @@ namespace kathryn {
 
 
     class expression : public LogicComp<expression>{
-    friend class expressionLogicSim;
+    friend class expressionSimEngine;
     private:
         bool _valueAssinged = false;
         /** metas data that contain bi operation*/
@@ -101,13 +101,13 @@ namespace kathryn {
 
     };
 
-    class expressionLogicSim: public LogicSimEngine{
+    class expressionSimEngine: public LogicSimEngine{
         expression* _master = nullptr;
     public:
-        expressionLogicSim(expression* master,int sz, VCD_SIG_TYPE sigType, bool simForNext);
+        expressionSimEngine(expression* master, VCD_SIG_TYPE sigType);
+        void proxyBuildInit() override;
         /** override simulation engine */
-        void simStartCurCycle() override;
-
+        std::string createOp() override;
     };
 
 

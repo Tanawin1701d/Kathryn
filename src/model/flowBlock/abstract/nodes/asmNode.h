@@ -54,9 +54,7 @@ namespace kathryn {
                         nodeSrcs[0].dependNode->getStateOperating(), /////// you can not simply use genExitOpr because it is used to colab with reset
                         &assignMeta->valueToAssign,
                         assignMeta->desSlice,
-                        DEFAULT_UE_PRI_USER,
-                        assignMeta->desSliceEqToEvent
-                    });
+                        DEFAULT_UE_PRI_USER});
                     assignMeta->updateEventsPool.push_back(resultUpEvent);
 
                     ////////////////////////////////////////////////////////////////////////////////////////
@@ -75,9 +73,7 @@ namespace kathryn {
                              nodeSrc.dependNode->getExitOpr(),
                              &assignMeta->valueToAssign,
                              assignMeta->desSlice,
-                             DEFAULT_UE_PRI_USER,
-                             assignMeta->desSliceEqToEvent
-                                                             });
+                             DEFAULT_UE_PRI_USER});
                         assignMeta->updateEventsPool.push_back(resultUpEvent);
                     }
                 }else{
@@ -96,9 +92,7 @@ namespace kathryn {
                                                              nullptr,
                                                              &assignMeta->valueToAssign,
                                                              assignMeta->desSlice,
-                                                             DEFAULT_UE_PRI_USER,
-                                                             assignMeta->desSliceEqToEvent
-                                                     });
+                                                             DEFAULT_UE_PRI_USER});
 
                 assignMeta->updateEventsPool.push_back(resultUpEvent);
             }

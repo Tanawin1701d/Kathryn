@@ -12,7 +12,7 @@ namespace kathryn{
 
     Wire::Wire(int size) : LogicComp({0, size},
                                      TYPE_WIRE,
-                                     new WireLogicSim(this, size, VST_WIRE, false),
+                                     new WireSimEngine(this, VST_WIRE),
                                      true){
         com_init();
         AssignOpr::setMaster(this);
@@ -58,7 +58,7 @@ namespace kathryn{
     }
 
     void Wire::makeDefEvent(){
-        makeVal(defWireVal, genBiConValRep(0, getSlice().getSize()));
+        makeVal(defWireVal, 0);
         auto defEvent = new UpdateEvent({
                                                 nullptr,
                                                 nullptr,
@@ -109,22 +109,19 @@ namespace kathryn{
     }
 
     /**
-     * Wire Logic Sim
-     * */
-
-    WireLogicSim::WireLogicSim(Wire*        master,
-                               int          sz,
-                               VCD_SIG_TYPE sigType,
-                               bool         simForNext):
-            LogicSimEngine(sz, sigType, simForNext),
-            _master(master){}
-
-    void WireLogicSim::simStartCurCycle() {
-        if (isCurValSim()){
-            return;
-        }
-        setCurValSimStatus();
-        _master->assignValRepCurCycle(getCurVal());
+     *
+     *   wire sim engine
+     *
+     ***/
+    WireSimEngine::WireSimEngine(Wire* master, VCD_SIG_TYPE sigType):
+    LogicSimEngine(
+        (Assignable*) master,
+        (Identifiable*)master,
+        VST_WIRE,
+        false,
+        0),
+    _master(master){
+        assert(_master != nullptr);
     }
 
 }

@@ -1,49 +1,27 @@
 //
-// Created by tanawin on 19/2/2567.
+// Created by tanawin on 31/5/2024.
 //
 
-#include "model/simIntf/hwComponent/memSimEngine.h"
+#include "memSimEngine.h"
 
-
-#include<iostream>
+#include <model/hwComponent/memBlock/MemBlock.h>
 
 
 namespace kathryn{
 
 
-    MemSimEngine::MemSimEngine(ull depthSize, int widthSize):
-    memBlk(nullptr),
-    DEPTH_SIZE(depthSize),
-    WIDTH_SIZE(widthSize)
-    {
-         /** we will not allocate memory
-          * fo memory block right now
-          * we will allocate in prepare sim session
-          * */
+    MemSimEngine::MemSimEngine(MemBlock* master):
+    _master(master)
+    { assert(master != nullptr);}
+
+    std::string MemSimEngine::getVarName(){ return _master->getGlobalName();}
+
+    ull         MemSimEngine::getVarId(){return _master->getGlobalId();}
+
+    std::string MemSimEngine::createVariable(){
+        return "ValRep <" + std::to_string(_master->getWidthSize()) + ">"
+            + getVarName() +
+            "["+ std::to_string(_master->getDepthSize()) + "];";
     }
 
-    void
-    MemSimEngine::prepareSim(){
-        memBlk =  new ValRep[DEPTH_SIZE];
-        for (int i = 0; i < DEPTH_SIZE; i++){
-            memBlk[i] = ValRep(WIDTH_SIZE);
-        }
-
-    }
-
-    ValRep&
-    MemSimEngine::getThisCycleValRep(ull idx){
-        assert(memBlk != nullptr);
-        assert(idx < DEPTH_SIZE);
-        return memBlk[idx];
-    }
-
-    ValRep&
-    MemSimEngine::getNextCycleVapRepSrc(kathryn::ull idx) {
-        assert(idx < DEPTH_SIZE);
-        if (pendingWrite.find(idx) == pendingWrite.end()){
-            pendingWrite[idx] = memBlk[idx];
-        }
-        return pendingWrite[idx];
-    }
 }

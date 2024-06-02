@@ -22,7 +22,7 @@ namespace kathryn{
 
     nest::nest(int size, std::vector<NestMeta> nestList):
     LogicComp<nest>({0, size}, TYPE_NEST,
-                    new NestLogicSim(this, size,VST_WIRE, false),
+                    new NestSimEngine(this, VST_WIRE),
                     false),
     _nestList(std::move(nestList))
     {
@@ -134,7 +134,7 @@ namespace kathryn{
 
             /** get relative index of current destination*/
             int relDesStartBit = std::max(0         , absDesSlice.start - desIterAccumBit);
-            int relDesStopBit  = std::min(curDesSize, absDesSlice.stop - desIterAccumBit);
+            int relDesStopBit  = std::min(curDesSize, absDesSlice.stop  - desIterAccumBit);
             /**convert to abs index of current destination*/
             Slice desireDesSlice = curDesSlice.getSubSlice({relDesStartBit, relDesStopBit});
 
@@ -208,44 +208,50 @@ namespace kathryn{
      *
      * */
 
-    NestLogicSim::NestLogicSim(nest* master,
-                             int sz,
-                             VCD_SIG_TYPE sigType,
-                             bool simForNext):
-            LogicSimEngine(sz, sigType, simForNext),
-            _master(master){}
-
-    void NestLogicSim::simStartCurCycle() {
-        if (isCurValSim()){
-            return;
-        }
-        setCurValSimStatus();
-
-        /**get sim value and reset it*/
-        ValRep& desValRep = getCurVal();
-        desValRep.fillZeroToValrep(0);
-
-        int curStartBit = 0;
-
-        for (NestMeta meta: _master->_nestList){
-            Operable* opr = meta.opr;
-            /**slave opr first*/
-            assert(opr != nullptr);
-            opr->getSimItf()->simStartCurCycle();
-            assert(opr->getRtlValItf()->isCurValSim());
-            ValRep oprVal = opr->getSlicedCurValue();
-            assert(oprVal.getLen() == opr->getOperableSlice().getSize());
-
-            ///std::cout << oprVal.getBiStr() << std::endl;
-
-            /** cal next opr*/
-            desValRep.updateOnSlice(oprVal,
-                                    {curStartBit,
-                                           curStartBit + opr->getOperableSlice().getSize()}
-                                           );
-            curStartBit += opr->getOperableSlice().getSize();
-
-        }
-        assert(curStartBit == _master->getSlice().getSize());
+    NestSimEngine::NestSimEngine(nest* master,
+                             VCD_SIG_TYPE sigType):
+            LogicSimEngine(master, master, sigType, false, 0),
+            _master(master){
+        assert(_master != nullptr);
     }
+
+    void NestSimEngine::proxyBuildInit(){
+        for (NestMeta& meta: _master->_nestList){
+            dep.push_back(meta.opr->getLogicSimEngineFromOpr());
+        }
+    }
+
+
+    std::string NestSimEngine::createOp(){
+        ///////// build string
+        std::string retStr = "{ /////" + _ident->getGlobalName() + "\n";
+
+        /////////// we build from low priority to high priority
+
+        int startIdx = 0;
+
+        for (NestMeta& meta: _master->_nestList){
+            //////// data preparation
+            Operable* opr   = meta.opr;
+            Assignable* asb = meta.asb;
+            assert(opr != nullptr);
+            assert(asb != nullptr);
+            int curSize = opr->getOperableSlice().getSize();
+
+            retStr += "     ";
+            retStr += getVarName() +
+                ".updateOnSlice<"+ std::to_string(startIdx) + "," +
+                                   std::to_string(startIdx + curSize) + ">(" ;
+            retStr += getVarNameFromOpr(opr);
+            retStr += ".sliceAndShift<"+std::to_string(opr->getOperableSlice().start) + "," +
+                                        std::to_string(opr->getOperableSlice().stop ) + "," +
+                                        std::to_string(startIdx)
+                                       +">());\n";
+            startIdx += curSize;
+        }
+        retStr += "     }\n";
+        assert(startIdx == _asb->getAssignSlice().getSize());
+        return retStr;
+    }
+
 }

@@ -3,6 +3,8 @@
 //
 
 #include "register.h"
+
+#include "model/hwComponent/globalComponent/globalComponent.h"
 #include "model/hwComponent/expression/expression.h"
 #include "model/controller/controller.h"
 
@@ -13,7 +15,7 @@ namespace kathryn{
     Reg::Reg(int size, bool initCom, HW_COMPONENT_TYPE hwType, bool requiredAllocCheck) :
             LogicComp({0, size},
                       hwType,
-                      new RegLogicSim(this, size, VST_REG, true),
+                      new RegSimEngine(this, VST_REG),
                       requiredAllocCheck){
         AssignOpr::setMaster(this);
         AssignCallbackFromAgent::setMaster(this);
@@ -82,7 +84,7 @@ namespace kathryn{
     }
 
     void Reg::makeResetEvent(){
-        makeVal(rstRegVal, genBiConValRep(0, getSlice().getSize()));
+        makeVal(rstRegVal, 0);
         auto rstEvent = new UpdateEvent({
             nullptr,
             rstWire,
@@ -102,31 +104,11 @@ namespace kathryn{
      * Reg Logic Sim
      * */
 
-    RegLogicSim::RegLogicSim(Reg* master,
-                             int sz,
-                             VCD_SIG_TYPE sigType,
-                             bool simForNext):
-            LogicSimEngine(sz, sigType, simForNext),
-            _master(master){}
-
-    void RegLogicSim::simStartCurCycle() {
-        ///// if in This cycle the component is simmulated then skip simulation
-        assert(isCurValSim());
-    }
-
-    void RegLogicSim::simStartNextCycle() {
-
-
-//        if (_master->getGlobalId() == 37){
-//            std::cout << "test";
-//        }
-
-        assert(isCurValSim());
-        assert(!isNextValSim());
-
-        setNextValSimStatus();
-        getNextVal() = getCurVal(); ///// get curval to be next val because it may be no change
-        _master->assignValRepCurCycle(getNextVal());
+    RegSimEngine::RegSimEngine(Reg* master,
+                             VCD_SIG_TYPE sigType):
+            LogicSimEngine(master, master, sigType, true, 0),
+            _master(master){
+        assert(master != nullptr);
     }
 
 }

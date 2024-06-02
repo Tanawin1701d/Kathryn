@@ -5,7 +5,6 @@
 #ifndef KATHRYN_UPDATEEVENT_H
 #define KATHRYN_UPDATEEVENT_H
 
-#include "model/simIntf/modelSimEngineLegacy.h"
 #include "model/hwComponent/abstract/Slice.h"
 #include "model/hwComponent/abstract/operable.h"
 #include "operable.h"
@@ -33,51 +32,6 @@ namespace kathryn {
 
         bool operator < (const UpdateEvent& rhs) const{
             return priority < rhs.priority;
-        }
-
-        bool shouldAssignValRep(Operable* opr){
-            if (opr != nullptr){
-                assert(opr->getRtlValItf()->isCurValSim());
-                ValRep samplingVal           = opr->getSlicedCurValue();
-                return samplingVal.getLogicalValue();
-            }
-            return true;
-        }
-
-        void tryAssignValRep(ValRep& desValRep){
-            ////// check update state valid
-            if (!(shouldAssignValRep(srcUpdateCondition) &&
-                  shouldAssignValRep(srcUpdateState))){
-                return;
-            }
-
-            /**clarify slice*/
-            Slice srcSlice = srcUpdateValue->getOperableSlice();
-            Slice desSlice = desUpdateSlice;
-            if (desSliceEqToEvent){
-                desValRep.update(srcUpdateValue->getRtlValItf()->getCurVal());
-            }else {
-                assert(srcSlice.getSize() >= desSlice.getSize());
-                Slice neededSrcSlice = srcSlice.getSubSliceWithShinkMsb({0, desSlice.getSize()});
-                Slice neededDesSlice = desSlice.getSubSliceWithShinkMsb({0, srcSlice.getSize()});
-                /**get src value and slice */
-                assert(srcUpdateValue->getRtlValItf()->isCurValSim());
-                ValRep &rawSrcVal = srcUpdateValue->getRtlValItf()->getCurVal();
-                ValRep desireSrcVal = rawSrcVal.slice(neededSrcSlice);
-                desValRep.updateOnSlice(desireSrcVal, neededDesSlice);
-            }
-        }
-
-        void trySimAll() const{
-            trySim(srcUpdateCondition);
-            trySim(srcUpdateState);
-            trySim(srcUpdateValue);
-        }
-
-        static void trySim(Operable* opr){
-            if (opr != nullptr)
-                opr->getSimItf()->simStartCurCycle();
-                ///////// get exact operable due to it may be agent
         }
 
         [[nodiscard]] std::string getDebugString() const{

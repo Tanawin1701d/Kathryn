@@ -17,7 +17,7 @@ namespace kathryn{
                            int exp_size):
     LogicComp<expression>({0, exp_size},
                           TYPE_EXPRESSION,
-                          new expressionLogicSim(this, exp_size,VST_WIRE, false),
+                          new expressionSimEngine(this, VST_WIRE),
                           false),
     _valueAssinged(true),
     _op(op),
@@ -32,7 +32,7 @@ namespace kathryn{
     expression::expression(int exp_size):
     LogicComp<expression>({0, exp_size},
                           TYPE_EXPRESSION,
-                          new expressionLogicSim(this, exp_size,VST_WIRE, false),
+                          new expressionSimEngine(this, VST_WIRE),
                           false),
     _valueAssinged(false),
     _op(ASSIGN),
@@ -108,113 +108,83 @@ namespace kathryn{
      * expression sim
      * */
 
-    expressionLogicSim::expressionLogicSim(expression* master,
-                                           int sz,
-                                           VCD_SIG_TYPE sigType,
-                                           bool simForNext):
-            LogicSimEngine(sz, sigType, simForNext),
-            _master(master){}
+    expressionSimEngine::expressionSimEngine(expression* master,
+                                           VCD_SIG_TYPE sigType):
+            LogicSimEngine(master, master, sigType, false, 0),
+            _master(master){
+        assert(master != nullptr);
+    }
 
-    void expressionLogicSim::simStartCurCycle() {
+    void expressionSimEngine::proxyBuildInit(){
 
-
-        if (isCurValSim()){
-            return;
+        /////// add dependency
+        assert(_master->_a != nullptr);
+        dep.push_back(_master->_a->getLogicSimEngineFromOpr());
+        if (_master->_b != nullptr){
+            dep.push_back(_master->_b->getLogicSimEngineFromOpr());
         }
-        setCurValSimStatus();
 
-        ValRep  firstValRep(1); /**the size will be change*/
-        ValRep  secValRep  (1);
-        ValRep& desValRep   = getCurVal();
-        /**value a*/
-        Operable* a = _master->_a;
-        if (a != nullptr){
-            a->getSimItf()->simStartCurCycle();
-            assert(a->getRtlValItf()->isCurValSim());
-            firstValRep =  a->getSlicedCurValue();
-        }
-        Operable* b = _master->_b;
-        /**value b*/
-        if (b != nullptr){
-            b->getSimItf()->simStartCurCycle();
-            assert(b->getRtlValItf()->isCurValSim());
-            secValRep = b->getSlicedCurValue();
+    }
+
+
+    std::string expressionSimEngine::createOp(){
+
+        std::string retStr = "      { /////" + _ident->getGlobalName() + "\n";
+
+        assert(_asb   ->getAssignSlice().getSize() ==
+               _master->_a->getOperableSlice().getSize());
+
+        retStr += "     ";
+        retStr += getVarName();
+        retStr += " = ";
+
+        std::string _aSliced = getVarNameFromOpr(_master->_a) + ".slice<"+
+            std::to_string(_master->_a->getOperableSlice().start) + "," +
+            std::to_string(_master->_a->getOperableSlice().stop ) +">()";
+
+        std::string _bSliced;
+
+        if (_master->_b != nullptr){
+            _bSliced = getVarNameFromOpr(_master->_b) + ".slice<"+
+                std::to_string(_master->_b->getOperableSlice().start) + "," +
+                std::to_string(_master->_b->getOperableSlice().stop ) + "," +
+                std::to_string(_master->_a->getOperableSlice().getSize())+
+            +">()";
         }
 
 
         switch (_master->getOp()) {
-
-            case BITWISE_AND:
-                desValRep = (firstValRep) & (secValRep);
-                break;
-            case BITWISE_OR:
-                desValRep = (firstValRep) | (secValRep);
-                break;
-            case BITWISE_XOR:
-                desValRep = (firstValRep) ^ (secValRep);
-                break;
-            case BITWISE_INVR:
-                desValRep = ~(firstValRep);
-                break;
-            case BITWISE_SHL:
-                desValRep = (firstValRep) << (secValRep);
-                break;
-            case BITWISE_SHR:
-                desValRep = (firstValRep) >> (secValRep);
-                break;
-            case LOGICAL_AND:
-                desValRep = (firstValRep) && (secValRep);
-                break;
-            case LOGICAL_OR:
-                desValRep = (firstValRep) || (secValRep);
-                break;
-            case LOGICAL_NOT:
-                desValRep = !(firstValRep);
-                break;
-            case RELATION_EQ:
-                desValRep = (firstValRep) == (secValRep);
-                break;
-            case RELATION_NEQ:
-                desValRep = (firstValRep) != (secValRep);
-                break;
-            case RELATION_LE:
-                desValRep = (firstValRep) < (secValRep);
-                break;
-            case RELATION_LEQ:
-                desValRep = (firstValRep) <= (secValRep);
-                break;
-            case RELATION_GE:
-                desValRep = (firstValRep) > (secValRep);
-                break;
-            case RELATION_GEQ:
-                desValRep = (firstValRep) >= (secValRep);
-                break;
-            case ARITH_PLUS:
-                desValRep = (firstValRep) + (secValRep);
-                break;
-            case ARITH_MINUS:
-                desValRep = (firstValRep) - (secValRep);
-                break;
-            case ARITH_MUL:
-                desValRep = (firstValRep) * (secValRep);
-                break;
-            case ARITH_DIV:
-                desValRep = (firstValRep) / (secValRep);
-                break;
-            case ARITH_DIVR:
-                desValRep = (firstValRep) % (secValRep);
-                break;
-            case ASSIGN:
-                desValRep = firstValRep;
-                break;
+            case BITWISE_AND : retStr += _aSliced + " &    " + _bSliced; break;
+            case BITWISE_OR  : retStr += _aSliced + " |    " + _bSliced; break;
+            case BITWISE_XOR : retStr += _aSliced + " ^    " + _bSliced; break;
+            case BITWISE_INVR: retStr += " ~  "   + _aSliced;            break;
+            case BITWISE_SHL : retStr += _aSliced + " <<   " + _bSliced; break;
+            case BITWISE_SHR : retStr += _aSliced + " >>   " + _bSliced; break;
+            case LOGICAL_AND : retStr += _aSliced + " &&   " + _bSliced; break;
+            case LOGICAL_OR  : retStr += _aSliced + " ||   " + _bSliced; break;
+            case LOGICAL_NOT : retStr += " !    " + _aSliced;            break;
+            case RELATION_EQ : retStr += _aSliced + " ==   " + _bSliced; break;
+            case RELATION_NEQ: retStr += _aSliced + " !=   " + _bSliced; break;
+            case RELATION_LE : retStr += _aSliced + " <    " + _bSliced; break;
+            case RELATION_LEQ: retStr += _aSliced + " <=   " + _bSliced; break;
+            case RELATION_GE : retStr += _aSliced + " >    " + _bSliced; break;
+            case RELATION_GEQ: retStr += _aSliced + " >=   " + _bSliced; break;
+            case ARITH_PLUS  : retStr += _aSliced + " +    " + _bSliced; break;
+            case ARITH_MINUS : retStr += _aSliced + " -    " + _bSliced; break;
+            case ARITH_MUL   : retStr += _aSliced + " *    " + _bSliced; break;
+            case ARITH_DIV   : retStr += _aSliced + " /    " + _bSliced; break;
+            case ARITH_DIVR  : retStr += _aSliced + " %    " + _bSliced; break;
+            case ASSIGN      : retStr += " =    " + _aSliced;            break;
             case OP_DUMMY:
-            case LOGIC_OP_COUNT:
-                break;
+            case LOGIC_OP_COUNT: break;
         }
 
-        desValRep.fillZeroToValrep(_master->getSlice().getSize());
-        assert(_master->getSlice().start == 0);
-        assert(desValRep.getLen() == _master->getSlice().getSize());
+        retStr += ";\n";
+        retStr += "}\n";
+
+        return retStr;
+
     }
+
 
 }

@@ -5,122 +5,82 @@
 #ifndef KATHRYN_LOGICSIMENGINE_H
 #define KATHRYN_LOGICSIMENGINE_H
 
-#include "model/simIntf/base/modelSimEngine.h"
+#include "sim/simResWriter/simResWriter.h"
+#include "model/simIntf/base/modelProxy.h"
+#include "model/hwComponent/abstract/assignable.h"
+#include "model/hwComponent/abstract/Slice.h"
+
 
 namespace kathryn{
 
-class LogicSimEngine : public SimEngine{
-    private:
-        struct RTL_Meta_afterMf{
-            //// data that require to init after model formation
-            /// but before sim formation
-            bool         _recCmd  = false;
-            std::string  _recName = "UNDEFINED_SIGNAL_RECORD_NAME";
-            VcdWriter*   _writer  = nullptr;
-        };
+    class LogicSimEngine: public ModelProxyBuild, public ModelProxyRetrieve{
+
     protected:
-        bool               _simForNext   = false;
-        bool               _isSimMetaSet = false;
-        VCD_SIG_TYPE       _sigType = VST_DUMMY;
-        RTL_Meta_afterMf   _simMeta;
-        /** sz*/
-        int                _sz;
-        /** check that current and next cycle is simulate*/
-        bool               _isCurValSim;
-        bool               _isNextValSim;
-        /** value that system is simulated */
-        ValRep             _curVal;
-        ValRep             _nextVal;
-        /** idea we will use time array to store history of cycle
-         *  but for now we use cur cycle and next cycle
-         * */
+
+        Assignable*  _asb        = nullptr;
+        IdentBase*   _ident      = nullptr;
+        VCD_SIG_TYPE _vcdSigType = VST_DUMMY;
+        bool         _setToWrite = false;
+        bool         _isTempReq  = false; ///// request temp request
+        ull          _initVal    = 0;
+
+
+
     public:
+        LogicSimEngine(Assignable* asb, IdentBase*   ident,
+                       VCD_SIG_TYPE sigType, bool isTempReq,
+                        ull initVal
+                       );
 
-        explicit LogicSimEngine(int sz, VCD_SIG_TYPE sigType, bool simForNext):
-                _simForNext(simForNext),
-                _isSimMetaSet(false),
-                _sigType(sigType),
-                _simMeta(RTL_Meta_afterMf()),
-                _sz(sz),
-                _isCurValSim(simForNext),
-                _isNextValSim(false),
-                _curVal(sz),
-                _nextVal(sz){
-            assert(sz > 0);
-        }
+        void proxyBuildInit() override;
 
-        ~LogicSimEngine() override = default;
+        std::string getVarName() override{return _ident->getGlobalName();}
 
-        /** exit sim can be only invoked single time per cycle*/
-        /***
-         *
-         * simulation action
-         *
-         * */
+        ull         getVarId()   override{return _ident->getGlobalId();}
 
-        /**specific set element before prepare sim*/
-        virtual void beforePrepareSim(RTL_Meta_afterMf simMeta){
-            _isSimMetaSet = true;
-            _simMeta = std::move(simMeta);
-        }
+        void        setVCDWriteStatus(bool status){ _setToWrite = status;}
 
-        /** before sim controller start prepare the system*/
-        void prepareSim() override{
-            assert(_isSimMetaSet);
-            if (_simMeta._recCmd){
-                _simMeta._writer->addNewVar(_sigType,
-                                            _simMeta._recName,
-                                            {0,_curVal.getLen()}
-                );
-            }
-        }
+        std::string getVarNameFromOpr(Operable* opr);
 
-        void simStartCurCycle() override{
-            assert(false);
-        }
+        /*** c++ create section**/
 
-        /**simulate next cycle value for current cycle*/
-        void simStartNextCycle() override{
-            assert(false);
-        }
+        std::string createVariable()      override;
 
-        /****/
-        void curCycleCollectData() override{
-            assert(_isSimMetaSet);
-            if (_simMeta._recCmd){
-                /** request for record*/
-                assert(_simMeta._writer != nullptr);
-                _simMeta._writer->addNewValue(_simMeta._recName, _curVal);
-            }
-        }
+        std::string createOp()            override;
 
-        /**we sure that it can be invoked only one*/
-        void simExitCurCycle() override{
-            assert(isCurValSim());
-            _isCurValSim  = _isNextValSim;
-            _isNextValSim = false;
-            _curVal       = _nextVal;
-            _nextVal      = ValRep(_sz);
-        }
+        std::string createMemorizeOp()    override;
 
-        /**
-         *
-         * simValue interface
-         *
-         * */
+        std::string registerToProxy()     override{return "";}
 
-        void setCurValSimStatus () override{_isCurValSim  = true;}
-        void setNextValSimStatus() override{_isNextValSim = true;}
+        std::string createMemBlkAssOp()   override{return "";}
 
-        bool     isCurValSim () const override{ return _isCurValSim; };
-        bool     isNextValSim() const override{ return _isNextValSim;};
+        std::string collectData()         override{return "";}
 
-        ValRep&  getCurVal () override {return _curVal; };
-        ValRep&  getNextVal() override {return _nextVal;};
+        /////// TODO proxy
+        ///
+        /// TODO add vcd WRiter
+        ///
+        ///
+        ValRep<MAX_VAL_REP_SIZE>* proxyRepA = nullptr;
 
+        void proxyRetInit() override;
+        virtual ValRep<MAX_VAL_REP_SIZE>* getProxyRep();
     };
 
+    class LogicSimEngineInterface{
+    public:
+        virtual LogicSimEngine* getSimEngine() = 0;
 
+        explicit operator ull(){
+            ////// TODO
+        }
+
+        explicit operator ValRepBase(){
+            ////// TODO
+        }
+
+
+    };
 
 }
 

@@ -15,20 +15,16 @@
 #include "model/hwComponent/wire/wire.h"
 #include "model/hwComponent/expression/expression.h"
 #include "model/hwComponent/value/value.h"
-#include "model/hwComponent/globalComponent/globalComponent.h"
 #include "model/hwComponent/memBlock/MemBlock.h"
 #include "model/hwComponent/expression/nest.h"
 #include "model/hwComponent/box/box.h"
 
 #include "model/flowBlock/abstract/flowBlock_Base.h"
-#include "model/flowBlock/abstract/spReg/stateReg.h"
-#include "model/flowBlock/abstract/spReg/syncReg.h"
 #include "model/flowBlock/abstract/spReg/waitReg.h"
 #include "model/flowBlock/abstract/nodes/startNode.h"
 
-#include "moduleSimEngine.h"
-
 #include "model/debugger/modelDebugger.h"
+#include "model/simIntf/hwComponent/moduleSimEngine.h"
 #include "util/logger/logger.h"
 
 
@@ -47,9 +43,8 @@ namespace kathryn{
 
     class Module : public Identifiable,
                    public HwCompControllerItf,
-                   public ModuleSimEngine,
                    public ModelDebuggable,
-                   public SimEngineInterface
+                   public ModuleSimEngineInterface
                    {
 
     private:
@@ -71,6 +66,8 @@ namespace kathryn{
         std::vector<Module*>     _userSubModules;
         std::vector<Box*>        _userBoxs; //// it contain only head of box in module
 
+        ModuleSimEngine*         _moduleSimEngine = nullptr;
+
 
         /** when hardware components require data from outside class
          * the system must handle wire routing while synthesis
@@ -79,8 +76,8 @@ namespace kathryn{
         /** communicate to controller*/
         void com_init() override;
 
-        SimEngine* getSimEngine() override{
-            return static_cast<SimEngine*>(this);
+        ModuleSimEngine* getModuleSimEngine() override{
+            return _moduleSimEngine;
         }
 
     public:
@@ -118,9 +115,9 @@ namespace kathryn{
             return _spRegs[spRegType];
         }
         auto& getFlowBlocks(){return _flowBlockBases;}
-        /**explicit element that is buillt from user declaration*/
-        auto& getUserRegs(){return _userRegs; } /** the return contain only master flowblock*/
         auto& getAsmNodes(){return _bareNodes;} /**the return contain only dry assign node*/
+       /**explicit element that is buillt from user declaration*/
+        auto& getUserRegs(){return _userRegs; } /** the return contain only master flowblock*/
         auto& getUserWires(){return _userWires; }
         auto& getUserExpressions(){return _userExpressions; }
         auto& getUserVals(){return _userVals; }
@@ -142,31 +139,7 @@ namespace kathryn{
         void        addMdLog(MdLogVal* mdLogVal) override;
         std::string getMdIdentVal() override{return getIdentDebugValue();};
 
-        /** override simulation */
-        void beforePrepareSim(VcdWriter* vcdWriter, FlowColEle* flowColEle) override;
-        void prepareSim() override;
-        void simStartCurCycle() override;
-        void curCycleCollectData() override;
-        void simStartNextCycle() override;
-        void simExitCurCycle() override;
-
-    protected:
-        /** must able to get sim and cast to LogicSim Engine*/
-        template<typename T>
-        void beforePrepareSimSubElement_RTL_only(std::vector<T*>& subEleVec, VcdWriter* writer);
-        void beforePrepareSimSubElement_FB_only(std::vector<FlowBlockBase*>& subEleVec, FlowColEle* flowColEle);
-        /** must able to get sim*/
-        template<typename T>
-        void prepareSimSubElement               (std::vector<T*>& subEleVec);
-        template<typename T>
-        void simStartCurSubElement              (std::vector<T*>& subEleVec);
-        template<typename T>
-        void simStartNextSubElement             (std::vector<T*>& subEleVec);
-        template<typename T>
-        void curCollectData                     (std::vector<T*>& subEleVec);
-        template<typename T>
-        void simExitSubElement                  (std::vector<T*>& subEleVec);
-
+        ModuleSimEngine* getSimEngine() override{return _moduleSimEngine;}
 
     };
 

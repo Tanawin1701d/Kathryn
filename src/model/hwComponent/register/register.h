@@ -57,14 +57,10 @@ namespace kathryn{
         Operable* checkShortCircuit() override;
     };
 
-    class RegLogicSim: public LogicSimEngine{
+    class RegSimEngine: public LogicSimEngine{
         Reg* _master = nullptr;
     public:
-        RegLogicSim(Reg* master,int sz, VCD_SIG_TYPE sigType, bool simForNext);
-        /** override simulation engine */
-        void simStartCurCycle() override;
-        void simStartNextCycle() override;
-
+        RegSimEngine(Reg* master,VCD_SIG_TYPE sigType);
     };
 
 

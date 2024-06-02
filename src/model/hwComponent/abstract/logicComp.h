@@ -12,7 +12,6 @@
 #include "model/hwComponent/abstract/operable.h"
 #include "model/hwComponent/abstract/identifiable.h"
 #include "model/controller/conInterf/controllerItf.h"
-#include "model/simIntf/modelSimEngineLegacy.h"
 #include "model/simIntf/hwComponent/logicSimEngine.h"
 #include "model/debugger/modelDebugger.h"
 #include "util/numberic/numConvert.h"
@@ -29,15 +28,15 @@ namespace kathryn{
                       public Identifiable,
                       public HwCompControllerItf,
                       public ModelDebuggable,
-                      public SimEngineInterface{
+                      public LogicSimEngineInterface{
     protected:
-        SimEngine* _simEngine =  nullptr;
+        LogicSimEngine* _simEngine =  nullptr;
 
     public:
 
         explicit LogicComp(Slice slc,
                            HW_COMPONENT_TYPE hwType,
-                           SimEngine* simEngine,
+                           LogicSimEngine* simEngine,
                            bool requiredAllocCheck):
                 AssignOpr<TYPE_COMP>(),
                 Assignable(),
@@ -47,7 +46,6 @@ namespace kathryn{
                 HwCompControllerItf(requiredAllocCheck),
                 ////LogicSimEngine(slc.getSize(), sigType, simForNext),
                 ModelDebuggable(),
-                SimEngineInterface(),
                 _simEngine(simEngine)
                             {}
 
@@ -55,7 +53,7 @@ namespace kathryn{
             delete _simEngine;
         };
 
-        SimEngine* getSimEngine() override{
+        LogicSimEngine* getSimEngine() override{
             return _simEngine;
         }
 
@@ -70,6 +68,10 @@ namespace kathryn{
             return static_cast<Operable*>(this);
         }
 
+        LogicSimEngine* getLogicSimEngineFromOpr() override{
+            return _simEngine;
+        }
+
         /** operable override*/
         Slice getOperableSlice() const override{
             return Slicable<TYPE_COMP>::getSlice();
@@ -79,22 +81,10 @@ namespace kathryn{
             return *(Operable*)this;
         }
 
-
-        Simulatable* getSimItf() override{
-            return static_cast<Simulatable*>(getSimEngine());
-        }
-
-        RtlValItf* getRtlValItf() override{
-            return static_cast<RtlValItf*>(getSimEngine());
-        }
-
         Identifiable* castToIdent() override{
             return static_cast<Identifiable*>(this);
         }
-        ValRep& sv() override{
-            _simEngine->setCurValSimStatus();
-            return _simEngine->getCurVal();
-        }
+
 
         /**
          *
@@ -104,17 +94,13 @@ namespace kathryn{
         void assignSimValue(ull b) override{
             mfAssert(getAssignMode() == AM_SIM, "cannot assign in model mode");
             assert(_simEngine != nullptr);
-            getRtlValItf()->setCurValSimStatus();
-            getRtlValItf()->getCurVal() = NumConverter::createValRep(Slicable<TYPE_COMP>::getSlice().getSize(), b);
-
+            //////// TODO assign the value
+            (*(getSimEngine()->getProxyRep())) = b;
         }
 
         void assignSimValue(ValRep b) override{
             mfAssert(getAssignMode() == AM_SIM, "cannot assign in model mode");
-            assert(_simEngine != nullptr);
-            getRtlValItf()->setCurValSimStatus();
-            assert(b.getLen() == getRtlValItf()->getCurVal().getLen());
-            getRtlValItf()->getCurVal() = b;
+            (*getSimEngine()->getProxyRep()) = b;
         }
 
         Slice getAssignSlice() override{

@@ -59,15 +59,13 @@ namespace kathryn{
     }
 
     class nest : public LogicComp<nest>{
-        friend class NestLogicSim;
+        friend class NestSimEngine;
         private:
             /** the higher bit is most significant bit*/
             std::vector<NestMeta> _nestList;
 
-
         protected:
             void com_init() override;
-
 
         public:
 
@@ -78,20 +76,20 @@ namespace kathryn{
             void doBlockAsm    (Operable& srcOpr, Slice desSlice) override;
             void doNonBlockAsm (Operable& srcOpr, Slice desSlice) override;
 
-            void doBlockAsm(Operable& srcOpr,
-                            std::vector<AssignMeta*>& resultMetaCollector,
-                            Slice  absSrcSlice,
-                            Slice  absDesSlice) override;
-            void doNonBlockAsm(Operable& srcOpr,
-                               std::vector<AssignMeta*>& resultMetaCollector,
-                               Slice  absSrcSlice,
-                               Slice  absDesSlice) override;
+            void doBlockAsm    (Operable& srcOpr,
+                                std::vector<AssignMeta*>& resultMetaCollector,
+                                Slice  absSrcSlice,
+                                Slice  absDesSlice) override;
+            void doNonBlockAsm (Operable& srcOpr,
+                                std::vector<AssignMeta*>& resultMetaCollector,
+                                Slice  absSrcSlice,
+                                Slice  absDesSlice) override;
 
-            void doGlobalAsm(Operable& srcOpr,
-                             std::vector<AssignMeta*>& resultMetaCollector,
-                             Slice  absSrcSlice,
-                             Slice  absDesSlice,
-                             ASM_TYPE asmType) override {assert(false);/**disable this function*/}
+            void doGlobalAsm   (Operable& srcOpr,
+                                std::vector<AssignMeta*>& resultMetaCollector,
+                                Slice  absSrcSlice,
+                                Slice  absDesSlice,
+                                ASM_TYPE asmType) override {assert(false);/**disable this function*/}
 
             nest& operator = (Operable& b){ operatorEq(b);                                return *this;}
             nest& operator = (ull b)      { operatorEq(b);                                   return *this;}
@@ -120,12 +118,13 @@ namespace kathryn{
     };
 
 
-    class NestLogicSim: public LogicSimEngine{
+    class NestSimEngine: public LogicSimEngine{
         nest* _master = nullptr;
     public:
-        NestLogicSim(nest* master,int sz, VCD_SIG_TYPE sigType, bool simForNext);
-        /** override simulation engine */
-        void simStartCurCycle() override;
+        NestSimEngine(nest* master, VCD_SIG_TYPE sigType);
+        void        proxyBuildInit() override;
+        std::string createOp()       override;
+
     };
 
 

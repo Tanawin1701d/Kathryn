@@ -26,97 +26,110 @@ namespace kathryn{
      * new size based on shorter val representation
      */
 
-    class ValRep{
+    constexpr int bitSizeOfUll = sizeof(ull) << 3;
+
+    class ValRepBase{
+    protected:
+        const int _length = -1;
+        ull _val    = -1;
+    public:
+        ValRepBase(const int length, ull val): _length(length), _val(val){};
+
+        std::string getBiStr(){
+            std::string preRet ;
+            std::bitset<bitSizeOfUll> binaryRepresentation(_val);
+            preRet += binaryRepresentation.to_string();
+            return preRet;
+        }
+    };
+
+    template<int _len>
+    class ValRep: public ValRepBase{
     private:
-        int   _len             = -1; //// userDefine size
-        int   _valSize         = -1; //// size of array that contain ull
-#ifdef NOTEXCEED64
-        ull   _val             = 0;
-#else
-        ull*  _val             = nullptr;
-#endif
+        const ull MASK_USED = (_len == bitSizeOfUll) ? -1 : ((1 << _len) -1);
 
     public:
-        static const int bitSizeOfUll = sizeof(ull) << 3;
-        explicit  ValRep() = default;
-        explicit ValRep(int len);
+        ValRep(const ull value): ValRepBase(_len, value){}
+        /** convert to binary string*/
+        std::string getBiStr(){
 
-        ~ValRep();
-
-        ValRep(const ValRep& rhs);
-
-        int getLen() const{
-            return _len;
         }
 
-        int getValArrSize() const{return _valSize;}
+        template<int sl_start, int sl_stop>
+        inline ull buildMask(){
+            int size = sl_stop - sl_start;
+            ull mask = (size == bitSizeOfUll) ? -1 : ((1 << size) - 1);
+            return mask;
+        }
 
-        ull* getValPtr();
-        ull  getVal64() const;
-        /** build new valrep that have bigger than cur valrep the exceed bit wil
-         * be assigned to 0
-         * */
-         operator ull();
-        ValRep getZeroExtend(int targetSize);
-        ValRep shink        (int targetSize);
-        /** check define size*/
-        [[nodiscard]] inline bool checkEqualBit(const ValRep& rhs) const{ return _len == rhs._len;}
-        /** operation core*/
-        ValRep bwOperator     (const ValRep& rhs,
-                               const std::function<ull(ull, ull)>& operation);
-        ValRep logicalOperator(const ValRep& rhs,
-                               const std::function<bool(bool, bool)>& operation) const;
-        ValRep cmpOperator    (ValRep& rhs,
-                               const std::function<bool(ull* a, ull* b, int size)>& operation);
-        ValRep eqOperator     (const ValRep& rhs, bool checkEq);
-        /** get logical value in single bit*/
-        bool   getLogicalValue() const;
-        /** update value from slice*/
-        ValRep slice(Slice sl);
+        template<int sl_start, int sl_stop, int src_start>
+        inline ValRep<sl_stop - sl_start> sliceAndShift() const {
+            assert((sl_start>=0) && (sl_start < sl_stop) && (sl_stop <= bitSizeOfUll));
+            assert(src_start < bitSizeOfUll);
+            ull mask = buildMask<sl_start, sl_stop>();
+                mask = mask << sl_start;
+                mask &= _val;
+            if (sl_start <= src_start){
+                mask = mask << (src_start - sl_start);
+            }else{
+                mask = mask >>  (sl_start - src_start);
+            }
+            return ValRep<sl_stop - sl_start>(mask);
+        }
 
-        void update(ValRep& srcVal);
-        void updateOnSlice(ValRep srcVal, Slice desSl);
+        template<int sl_start, int sl_stop>
+        inline ValRep<sl_stop - sl_start> slice() const {
+            assert((sl_start>=0) && (sl_start < sl_stop) && (sl_stop <= bitSizeOfUll));
+            ull mask = buildMask<sl_start, sl_stop>();
+            return ValRep<sl_stop - sl_start>(mask & (_val >> sl_start));
+        }
 
-        /** bit level control*/
-        ull  getZeroMask(int startIdx, int stopIdx) const; //// mask zero at [startIdx, stopIdx) leave other bits with 1 value
-        void fillZeroToValrep(int startBit, int stopBit); //// fill all bit in valrep bit absolute start bit
-        void fillZeroToValrep(int startBit);
+        template<int sl_start, int sl_stop, int fixSize>
+        inline ValRep<fixSize> slice() const {
+            assert(fixSize >= (sl_stop - sl_start));
+            assert((sl_start>=0) && (sl_start < sl_stop) && (sl_stop <= bitSizeOfUll));
+            ull mask = buildMask<sl_start, sl_stop>();
+            return ValRep<fixSize>(mask & (_val >> sl_start));
+        }
 
-        /** convert to binary string*/
-        std::string getBiStr();
+        template<int sl_start, int sl_stop>
+        void updateOnSlice(ValRep<sl_stop - sl_start>& rhs){
+            ull mask = buildMask<sl_start, sl_stop>();
+            mask = mask << sl_start;
+            _val = _val & mask;
+            _val = _val | rhs._val;
+        }
 
-        ValRep& operator = (const ValRep& rhs);
+        inline ValRep& operator = (const ull value){ _val = value; return *this;}
 
         //////// required equal bit operator
-        ValRep operator &  (const ValRep& rhs);
-        ValRep operator |  (const ValRep& rhs);
-        ValRep operator ^  (const ValRep& rhs);
-        ValRep operator == (const ValRep& rhs);
-        ValRep operator != (const ValRep& rhs);
+        inline ValRep<_len> operator &  (const ValRep<_len>& rhs) const { return ValRep<_len>(_val  & rhs._val);}
+        inline ValRep<_len> operator |  (const ValRep<_len>& rhs) const { return ValRep<_len>(_val  | rhs._val);}
+        inline ValRep<_len> operator ^  (const ValRep<_len>& rhs) const { return ValRep<_len>(_val  ^ rhs._val);}
+        inline ValRep<_len> operator == (const ValRep<_len>& rhs) const { return ValRep<_len>(_val == rhs._val);}
+        inline ValRep<_len> operator != (const ValRep<_len>& rhs) const { return ValRep<_len>(_val != rhs._val);}
         //////// only one operand
-        ValRep operator ~ ();
+        inline ValRep<_len> operator ~ () const { return ValRep<_len>((~_val) & MASK_USED);}
 
         //////// not required equal bit operator
         ////////////// but need zero extend
-        ValRep operator && (const ValRep& rhs) const;
-        ValRep operator || (const ValRep& rhs) const;
-        ValRep operator !  () const;
-        ValRep operator <  (ValRep& rhs);
-        ValRep operator <= (ValRep& rhs);
-        ValRep operator >  (ValRep& rhs);
-        ValRep operator >= (ValRep& rhs);
+        inline ValRep<1> operator && (const ValRep<_len>& rhs) const{return ValRep<1>(_val && rhs._val);}
+        inline ValRep<1> operator || (const ValRep<_len>& rhs) const{return ValRep<1>(_val || rhs._val);}
+        inline ValRep<1> operator !  ()                        const{return ValRep<1>(!_val);           }
+        inline ValRep<1> operator <  (const ValRep<_len>& rhs) const{return ValRep<1>(_val < rhs._val); }
+        inline ValRep<1> operator <= (const ValRep<_len>& rhs) const{return ValRep<1>(_val <= rhs._val);}
+        inline ValRep<1> operator >  (const ValRep<_len>& rhs) const{return ValRep<1>(_val > rhs._val); }
+        inline ValRep<1> operator >= (const ValRep<_len>& rhs) const{return ValRep<1>(_val >= rhs._val);}
 
         ///// not required equal bit operator
-        ValRep operator +  (ValRep rhs);
-        ValRep operator -  (ValRep rhs);
-        ValRep operator *  (const ValRep&    ){assert(false);};
-        ValRep operator /  (const ValRep&    ){assert(false);};
-        ValRep operator %  (const ValRep&    ){assert(false);};
-        ValRep operator << (const ValRep& rhs);
-        ValRep operator << (int rhs);
-        ValRep operator >> (const ValRep& rhs);
-        ValRep operator >> (int rhs);
+        inline ValRep<_len> operator +  (const ValRep<_len>& rhs) const{return ValRep<_len>((_val + rhs._val) & MASK_USED);}
+        inline ValRep<_len> operator -  (const ValRep<_len>& rhs) const{return ValRep<_len>((_val + ~(rhs) + ValRep<_len>(1))._val & MASK_USED);}
+        inline ValRep<_len> operator *  (const ValRep<_len>&    ) const{assert(false);}
+        inline ValRep<_len> operator /  (const ValRep<_len>&    ) const{assert(false);}
+        inline ValRep<_len> operator %  (const ValRep<_len>&    ) const{assert(false);}
 
+        inline ValRep<_len> operator << (const ValRep<_len>& rhs) const{return ValRep<_len>((_val << rhs._val)& MASK_USED);}
+        inline ValRep<_len> operator >> (const ValRep<_len>& rhs) const{return ValRep<_len>((_val >> rhs._val)& MASK_USED);}
 
     };
 

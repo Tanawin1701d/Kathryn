@@ -16,7 +16,6 @@ namespace kathryn{
     }
 
     SliceAgent<Val>& Val::operator()(int start, int stop){
-
         auto ret = new SliceAgent<Val>(
                 this,
                 getAbsSubSlice(start, stop, getSlice())
@@ -49,27 +48,11 @@ namespace kathryn{
      * value simulation
      * */
 
-    ValLogicSim::ValLogicSim(Val* master,
-                             int sz,
-                             VCD_SIG_TYPE sigType,
-                             bool simForNext):
-            LogicSimEngine(sz, sigType, simForNext),
-            _master(master){}
-
-    void ValLogicSim::simStartCurCycle() {
-        /** val don't have to simulate*/
-    }
-
-    void ValLogicSim::simExitCurCycle() {
-        /** we do this to prevent iterate() function to prepare for next cycle*/
-    }
-
-    void ValLogicSim::initSim(){
-        setCurValSimStatus();
-        setNextValSimStatus();
-        getCurVal()  = _master->rawValue;
-        getNextVal() = _master->rawValue;
-    }
+    ValSimEngine::ValSimEngine(Val* master,
+                             VCD_SIG_TYPE sigType):
+    LogicSimEngine(master, master,
+                   VST_INTEGER, false, master->_rawValue),
+    _master(master){ assert(master != nullptr);}
 
 
 

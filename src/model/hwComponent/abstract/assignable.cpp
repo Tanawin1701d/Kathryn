@@ -30,8 +30,8 @@ namespace kathryn{
         assert(getAssignSlice().isContain(absDesSlice));
         ///assert(absSrcSlice == absDesSlice);
 
-        Slice desireSrcSlice = absSrcSlice.getMatchSizeSubSlice(absDesSlice);
-        Slice desireDesSlice = absDesSlice.getMatchSizeSubSlice(absSrcSlice);
+        Slice desireSrcSlice   = absSrcSlice.getMatchSizeSubSlice(absDesSlice);
+        Slice desireDesSlice   = absDesSlice.getMatchSizeSubSlice(absSrcSlice);
 
         Operable* exactSrcOpr  = &srcOpr.getExactOperable();
         Operable* slicedSrcOpr = exactSrcOpr->doSlice(desireSrcSlice);
@@ -45,14 +45,11 @@ namespace kathryn{
     AsmNode* Assignable::generateBasicNode(Operable& srcOpr, Slice desSlice, ASM_TYPE asmType){
 
         assert(desSlice.getSize() <= srcOpr.getOperableSlice().getSize());
-        bool desSrcEqual = (srcOpr.getOperableSlice() == desSlice) &&
-                           (desSlice == getAssignSlice());
+
         auto* assMeta = new AssignMeta(_updateMeta,
                                        srcOpr,
                                        desSlice,
-                                       asmType,
-                                       desSrcEqual ///// it is used to optimize simulation
-                                       );
+                                       asmType);
         auto* asmNode = new AsmNode(assMeta);
         return asmNode;
 

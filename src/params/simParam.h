@@ -15,7 +15,13 @@ namespace kathryn{
         MDE_REC_SKIP
     };
 
-    extern MODULE_VCD_REC_POL PARAM_VCD_REC_POL;
+    enum MODULE_FLOW_PERF_PARAM{
+        MFP_ON,
+        MFP_OFF
+    };
+
+    extern const MODULE_VCD_REC_POL PARAM_VCD_REC_POL;
+    extern const MODULE_FLOW_PERF_PARAM PARAM_PERF_REC_POL;
 
 }
 

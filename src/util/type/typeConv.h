@@ -11,6 +11,8 @@
 #include <algorithm>
 #include <iostream>
 
+#include "util/type/typeConv.h"
+
 namespace kathryn{
 
 
@@ -27,6 +29,13 @@ namespace kathryn{
         }
         return result;
 
+    }
+
+    template<typename T>
+    void appendVector(std::vector<T>& a, std::vector<T>& b){
+        for (auto eleb: b){
+            a.push_back(b);
+        }
     }
 
 }

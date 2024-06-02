@@ -66,6 +66,10 @@ namespace kathryn {
 
         /** slicable overload*/
 
+        LogicSimEngine* getLogicSimEngineFromOpr() override{
+            return _master->getLogicSimEngine();
+        };
+
         SliceAgent<T>& operator() (int start, int stop) override{
             auto ret =  new SliceAgent<T>(_master,
                                           Slicable<T>::getAbsSubSlice(start, stop, getOperableSlice())
@@ -139,28 +143,12 @@ namespace kathryn {
             return x.castToOperable();
         }
 
-
-
-        /** override simulation*/
-
-        Simulatable*    getSimItf() override{
-            return static_cast<Simulatable*>(_master->getSimEngine());
-        }
-        RtlValItf*      getRtlValItf() override{
-            return static_cast<RtlValItf*>(_master->getSimEngine());
-        }
-
         Identifiable* castToIdent() override{
             return static_cast<Identifiable*>(_master);
         }
 
-        ValRep& sv() override{
-            assert(false);
-        }
-
         Operable* checkShortCircuit() override{
             return _master->checkShortCircuit();
-
         }
     };
 }

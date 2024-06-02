@@ -7,7 +7,8 @@
 
 #include <cassert>
 #include <utility>
-#include "model/simIntf/modelSimEngineLegacy.h"
+#include "sim/logicRep/valRep.h"
+
 #include "sim/event/eventBase.h"
 
 
@@ -15,6 +16,7 @@ namespace kathryn{
 
 
     /**
+     * [legacy]
      *
      * process of simulation for kathryn model simulation sequence
      * ------ intiate phase ----------
@@ -60,36 +62,6 @@ namespace kathryn{
          * **/
 
 
-
-    };
-
-    class RtlValItf{
-    public:
-
-        virtual ~RtlValItf() = default;
-
-        virtual void setCurValSimStatus()  = 0;
-        virtual void setNextValSimStatus() = 0;
-
-        virtual bool     isCurValSim () const= 0;
-        virtual bool     isNextValSim() const= 0;
-
-        virtual ValRep&  getCurVal () = 0;
-        virtual ValRep&  getNextVal() = 0;
-
-    };
-
-    class SimEngine: public Simulatable, public RtlValItf{
-
-    public:
-        virtual ~SimEngine() = default;
-
-    };
-
-    class SimEngineInterface{
-
-    public:
-        virtual SimEngine* getSimEngine() = 0;
 
     };
 

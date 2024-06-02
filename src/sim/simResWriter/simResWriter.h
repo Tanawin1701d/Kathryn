@@ -8,6 +8,8 @@
 #include<cassert>
 #include<vector>
 #include<stack>
+
+#include "sim/logicRep/valRep.h"
 #include "util/fileWriter/fileWriterBase.h"
 #include "model/hwComponent/abstract/Slice.h"
 
@@ -25,8 +27,6 @@ namespace kathryn{
 
     std::string vcdSigTypeToStr(VCD_SIG_TYPE st);
 
-    class ValRep;
-
     /** for simulate data collection*/
     class VcdWriter : public FileWriterBase{
 
@@ -35,7 +35,7 @@ namespace kathryn{
         explicit VcdWriter(std::string fileName);
         ~VcdWriter() = default;
         void addNewVar(VCD_SIG_TYPE st, std::string name, Slice sl);
-        void addNewValue(const std::string& name, ValRep& val);
+        void addNewValue(const std::string& name, ValRepBase& val);
         void addNewTimeStamp(ull timeStamp);
 
 

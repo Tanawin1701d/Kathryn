@@ -11,10 +11,10 @@ namespace kathryn{
     MemBlock::MemBlock(ull depth, int width):
             Identifiable(TYPE_MEM_BLOCK),
             HwCompControllerItf(false),
-            MemSimEngine(depth, width),
             ModelDebuggable(),
             DEPTH_SIZE(depth),
-            WIDTH_SIZE(width)
+            WIDTH_SIZE(width),
+            memSimEngine(new MemSimEngine(this))
     {
         assert(width > 0);
         com_init();
@@ -40,66 +40,6 @@ namespace kathryn{
         auto* memBlockEleHolder = new MemBlockEleHolder(this, idx);
         memBlockAgents.push_back(memBlockEleHolder);
         return *memBlockEleHolder;
-    }
-
-
-
-    void MemBlock::simStartCurCycle(){
-        /////std::cout << "start CurMemBlk PreDeclar" << std::endl;
-        if (isCurValSim()){
-            return;
-        }
-
-        setCurValSimStatus();
-        for (auto agentHolder: memBlockAgents){
-            ////std::cout << "start CurMemBlk" << std::endl;
-            agentHolder->getSimEngine()->simStartCurCycle();
-        }
-    }
-
-    void MemBlock::simStartNextCycle(){
-        assert(!isNextValSim());
-        setNextValSimStatus(); /// it only can be invoked one;
-        ////std::cout << "start Next MemBlk PreDeclar" << std::endl;
-        for (auto agentHolder: memBlockAgents){
-            ////// we will sim only write mode else is not
-            if (!agentHolder->isReadMode()){
-                agentHolder->getSimEngine()->simStartNextCycle();
-            }
-        }
-    }
-
-    void MemBlock::simExitCurCycle(){
-        _isCurValSim = false;
-        _isNextValSim = false;
-        for (auto agentHolder: memBlockAgents){
-            agentHolder->getSimEngine()->simExitCurCycle();
-        }
-        ///////// clear the pending
-        pendingWrite.clear();
-
-//        std::cout <<"---------mem regiion" << std::endl;
-//        for (int i = 0; i < DEPTH_SIZE; i++){
-//            std::cout << memBlk[i].getBiStr() << std::endl;
-//        }
-    }
-
-    void MemBlock::s(ull idx, ull value) {
-        s(idx, NumConverter::createValRep(getWidthSize(), value));
-    }
-
-    void MemBlock::s(ull idx, ValRep value) {
-        mfAssert(getAssignMode() == AM_SIM, "can't do in model mode");
-        mfAssert(idx < getDepthSize(), "can't do in model mode");
-        assert(memBlk != nullptr);
-        memBlk[idx] = value;
-
-    }
-
-    ValRep MemBlock::v(ull idx) {
-        mfAssert(getAssignMode() == AM_SIM, "can't do in model mode");
-        mfAssert(idx < getDepthSize(), "can't do in model mode");
-        return memBlk[idx];
     }
 
 

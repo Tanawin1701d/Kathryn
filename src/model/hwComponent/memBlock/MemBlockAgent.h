@@ -9,9 +9,7 @@
 #include "model/hwComponent/abstract/operable.h"
 #include "model/hwComponent/abstract/assignable.h"
 #include "model/hwComponent/abstract/slicable.h"
-#include "model/simIntf/hwComponent/memSimEngine.h"
-#include "model/debugger/modelDebugger.h"
-#include "model/controller/conInterf/controllerItf.h"
+#include "model/simIntf/hwComponent/logicSimEngine.h"
 #include "model/hwComponent/abstract/logicComp.h"
 
 namespace kathryn{
@@ -21,7 +19,7 @@ namespace kathryn{
 
     /**this class is used to hold only one element in each memblock*/
     class MemBlockEleHolder: public LogicComp<MemBlockEleHolder>{
-        friend class MemEleHolderLogicSim;
+        friend class MemEleHolderSimEngine;
     private:
         ///bool setModeYet = false; /**the goal of setMode is to prevent duplicate read write in the same index*/
         bool readMode = true; /**Therefore, we should know that if it did not set mode it may be read mode*/
@@ -39,14 +37,12 @@ namespace kathryn{
         explicit MemBlockEleHolder(MemBlock* master, const Operable* indexer);
         explicit MemBlockEleHolder(MemBlock* master, int idx);
 
-        void com_init() override{};
+        void com_init () override{};
         void com_final() override{};
 
-        bool isReadMode() const{return readMode;}
+        bool isReadMode () const{return readMode;}
+        bool isWriteMode() const{return !readMode;}
 
-        ull     getCurIndex();
-        ValRep& getCurMemVal();
-        ValRep& getNextMemBaseVal();
         int     getExactIndexSize();
 
         /** override assignable (need to call controller)*/
@@ -70,7 +66,6 @@ namespace kathryn{
 
         /** Operable*/
         Identifiable*   castToIdent         () override;
-        ValRep&         sv                  () override;
 
         /** Slicable*/
         SliceAgent<MemBlockEleHolder>& operator() (int start, int stop) override;
@@ -85,14 +80,14 @@ namespace kathryn{
 
     };
 
-    class MemEleHolderLogicSim: public MemAgentSimEngine{
+    class MemEleHolderSimEngine: public LogicSimEngine{
         MemBlockEleHolder* _master = nullptr;
     public:
-        MemEleHolderLogicSim(MemBlockEleHolder* master, int bitWidth);
-        /** override simulation engine */
-        void simStartCurCycle () override;
-        void simStartNextCycle() override;
-        bool isReadMode       () override{return _master->readMode;};
+        MemEleHolderSimEngine(MemBlockEleHolder* master);
+
+        void        proxyBuildInit()    override;
+        std::string createOp()          override;
+        std::string createMemBlkAssOp() override;
 
     };
 

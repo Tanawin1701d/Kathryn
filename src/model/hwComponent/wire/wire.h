@@ -51,12 +51,10 @@ namespace kathryn{
 
     };
 
-    class WireLogicSim: public LogicSimEngine{
+    class WireSimEngine: public LogicSimEngine{
         Wire* _master;
     public:
-        WireLogicSim(Wire* master,int sz, VCD_SIG_TYPE sigType, bool simForNext);
-        /** override simulation engine */
-        void simStartCurCycle() override;
+        WireSimEngine(Wire* master, VCD_SIG_TYPE sigType);
     };
 
 }

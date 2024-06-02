@@ -12,7 +12,7 @@ namespace kathryn{
     MemBlockEleHolder::MemBlockEleHolder(MemBlock *master, const Operable* indexer):
             LogicComp<MemBlockEleHolder>({0, master->getWidthSize()},
                                          TYPE_MEM_BLOCK_INDEXER,
-                                         new MemEleHolderLogicSim(this, master->getWidthSize()),
+                                         new MemEleHolderSimEngine(this),
                                          false
                                           ),
             readMode(true),
@@ -31,7 +31,7 @@ namespace kathryn{
     MemBlockEleHolder::MemBlockEleHolder(MemBlock * master, const int idx):
             LogicComp<MemBlockEleHolder>({0, master->getWidthSize()},
                                          TYPE_MEM_BLOCK_INDEXER,
-                                         new MemEleHolderLogicSim(this, master->getWidthSize()),
+                                         new MemEleHolderSimEngine(this),
                                          false
             ),
             readMode(true),
@@ -46,35 +46,6 @@ namespace kathryn{
         AssignOpr::setMaster(this);
         AssignCallbackFromAgent::setMaster(this);
     }
-
-
-    ull
-    MemBlockEleHolder::getCurIndex(){
-        /** simulate index first*/
-        _indexer->getSimItf()->simStartCurCycle();
-        ValRep curValIndexer = _indexer->getSlicedCurValue();
-        assert(curValIndexer.getLen() == getExactIndexSize());
-        /**get curindex only ull support*/
-        ull curIdx =  curValIndexer.getVal64();
-        if (curIdx >= _master->getDepthSize()){
-            curIdx  = 0;
-        }
-        return curIdx;
-    }
-
-    ValRep&
-    MemBlockEleHolder::getCurMemVal(){
-        ull curIdx = getCurIndex();
-        return _master->getThisCycleValRep(curIdx);
-    }
-
-    ValRep&
-    MemBlockEleHolder::getNextMemBaseVal(){
-        ull curIdx = getCurIndex();
-        return _master->getNextCycleVapRepSrc(curIdx);
-    }
-
-
 
     int
     MemBlockEleHolder::getExactIndexSize(){
@@ -147,8 +118,6 @@ namespace kathryn{
     /*** override Operable*/
     Identifiable* MemBlockEleHolder::castToIdent() {return this;}
 
-    ValRep &MemBlockEleHolder::sv(){assert(false);}
-
     /***slicable*/
 
     SliceAgent<MemBlockEleHolder>&
@@ -180,32 +149,87 @@ namespace kathryn{
      *
      * */
 
-    MemEleHolderLogicSim::MemEleHolderLogicSim(MemBlockEleHolder* master,
-                                               int bitWidth):
-                          MemAgentSimEngine(bitWidth),
-                          _master(master){}
+    MemEleHolderSimEngine::MemEleHolderSimEngine(MemBlockEleHolder* master):
+    LogicSimEngine(master, master, VST_DUMMY, false, 0),
+    _master(master){
+        assert(master != nullptr);
+    }
 
-    void MemEleHolderLogicSim::simStartCurCycle() {
-        if (isCurValSim()){
-            return;
+    void MemEleHolderSimEngine::proxyBuildInit(){
+        assert(_master->_indexer != nullptr);
+        dep.push_back(_master->_indexer->getLogicSimEngineFromOpr());
+
+        ///// write mode
+        if (_master->isWriteMode()){
+            LogicSimEngine::proxyBuildInit();
         }
-        ////std::cout << "next======" << std::endl;
-        setCurValSimStatus();
-        _curAgentVal =  &_master->getCurMemVal();
     }
 
-    void MemEleHolderLogicSim::simStartNextCycle() {
-        assert(!isReadMode());
-        ////// curAgentVal is assigned already
-        assert(isNextValSim() == false);
-        setNextValSimStatus();
-        /// std::cout << "next======" << std::endl;
+    std::string MemEleHolderSimEngine::createOp(){
+        if (_master->isWriteMode()){ ///// write mode
+            return "";
+        }
+        ///
+        /////// read mode
+        ///
+        std::string retStr = "{ ///////" + _ident->getGlobalName() + "readMode\n";
 
-        /////// copy current value to _nextAgentVal first then assign next value
-        ////////// fyi getCurmemval is pointer to origin value
-        _nextAgentVal = &(_master->getNextMemBaseVal());
-        _master->assignValRepCurCycle(*_nextAgentVal);
+        retStr += "     ";
+        retStr += getVarName() + " = ";
+        retStr += _master->_master->getSimEngine()->getVarName();
+        retStr += "[" + getVarNameFromOpr(_master->_indexer) + "];\n";
+        return retStr;
     }
+
+    std::string MemEleHolderSimEngine::createMemBlkAssOp(){
+        if (_master->isReadMode()){
+            return "";
+        }
+
+        ///////// build string
+        std::string retStr = "{ /////" + _ident->getGlobalName() + "\n";
+
+        /////////// we build from low priority to high priority
+        for (UpdateEvent* updateEvent: _asb->getUpdateMeta()){
+            ////
+            ///check integrity
+            ///
+            assert(updateEvent->srcUpdateValue->getOperableSlice().getSize() ==
+                   updateEvent->desUpdateSlice.getSize());
+
+            retStr += "         if ( ";
+            bool isConOccur = false;
+            if (updateEvent->srcUpdateCondition != nullptr){
+                isConOccur = true;
+                retStr += getVarNameFromOpr(updateEvent->srcUpdateCondition);
+            }
+
+            if (updateEvent->srcUpdateState != nullptr){
+                if (isConOccur){
+                    retStr += " && ";
+                }
+                retStr += getVarNameFromOpr(updateEvent->srcUpdateState);
+            }
+
+            if (!isConOccur){
+                retStr += "true";
+            }
+
+            retStr += "){\n         ";
+            retStr += "         ";
+            retStr += _master->_master->getSimEngine()->getVarName();
+            retStr += "[" + getVarNameFromOpr(_master->_indexer) + "] = ";
+            retStr += getVarNameFromOpr(updateEvent->srcUpdateValue);
+            retStr += ".slice<"  + std::to_string(updateEvent->srcUpdateValue->getOperableSlice().start) + "," +
+                                   std::to_string(updateEvent->srcUpdateValue->getOperableSlice().stop ) + ">();\n";
+            retStr += "         }\n";
+        }
+
+        retStr += "     }\n";
+        return retStr;
+    }
+
+
 
 
 

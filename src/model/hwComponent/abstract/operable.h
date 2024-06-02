@@ -23,6 +23,7 @@ namespace kathryn {
     template<typename T>
     class LogicComp;
     class expression;
+    class LogicSimEngine;
     struct AssignMeta;
     class Operable{
 
@@ -90,41 +91,17 @@ namespace kathryn {
         virtual Operable&       getExactOperable () const = 0;
 
         virtual Operable*       doSlice(Slice sl) = 0; //// sl is abs value
-
-        virtual Simulatable*    getSimItf() = 0;
-        virtual RtlValItf*      getRtlValItf() = 0;
         /** please remind this is a copy not reference value*/
-        ValRep  getSlicedCurValue(); ///// get simvalue with sliced to match current opr
+        virtual LogicSimEngine* getLogicSimEngineFromOpr() = 0;
 
         /**downcasting*/
         virtual Identifiable*   castToIdent() = 0;
-        [[maybe_unused]] ///// sv is legacy now we can use operator = to enable simultion value
-        virtual ValRep&         sv() = 0;
 
-        Operable& getMatchOperable(ull value) const;
+        Operable&               getMatchOperable(ull value) const;
 
+        /** check logic section*/
         bool isInCheckPath = false;
-        virtual Operable* checkShortCircuit() = 0;
-
-
-
-        /** convert to value for simulation*/
-
-        explicit operator ull(){
-            //std::cout << "get simvalue is used" << std::endl;
-            assert(getAssignMode() == AM_SIM);
-            assert(getRtlValItf()->isCurValSim());
-            assert(getRtlValItf()->getCurVal().getValArrSize() == 1);
-            return getRtlValItf()->getCurVal().getVal64();
-        }
-        explicit operator ValRep&(){
-            assert(getAssignMode() == AM_SIM);
-            return getRtlValItf()->getCurVal();
-        }
-
-
-
-
+        virtual Operable*       checkShortCircuit() = 0;
 
     };
 

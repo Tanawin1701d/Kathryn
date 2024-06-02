@@ -35,5 +35,15 @@ add_executable(Kathryn
         ${SRC_UTIL}
         ${SRC_EXAMPLE}
         ${SRC_PARAM}
+        src/model/simIntf/hwComponent/moduleSimEngine.cpp
+        src/model/simIntf/hwComponent/moduleSimEngine.h
+        src/model/simIntf/base/proxyEvent.cpp
+        src/model/simIntf/base/proxyEvent.h
+        src/modelCompile/proxyEventUser.cpp
+        src/model/simIntf/base/proxyBuildMng.cpp
+        src/model/simIntf/base/proxyBuildMng.h
+        src/modelCompile/proxyEventUserColVCD.cpp
+        src/modelCompile/proxyEventUserPerf.cpp
+
 
 )
