@@ -20,6 +20,8 @@ namespace kathryn{
         const std::string desPath
         = "../src/modelCompile/proxyEventUser.cpp";
 
+        const std::string PERF_PREFIX = "PERF_";
+
     public:
         ProxyBuildMng(Module* startModule);
         ~ProxyBuildMng();
@@ -29,11 +31,20 @@ namespace kathryn{
         void startWriteModelSim();
         ////////// for create all variable
         void startWriteCreateVariable();
+        ////////// for start register function
+        void startWriteRegisterCallback();
         ////////// for wire expression memElehodler*   etc....
         void startWriteVolatileEleSim();
         ////////// for register
         void startWriteNonVolatileEleSim();
-
+        ///////// for create vcd Decvar
+        void startWriteVcdDecVar(bool isUser); //// else if internal
+        ///////// for create vcd Decvar
+        void startWriteVcdCol(bool isUser);
+        ///////// void start write perf create
+        void startWritePerfDec();
+        ///////// void start write perf col
+        void startWritePerfCol();
 
 
     };

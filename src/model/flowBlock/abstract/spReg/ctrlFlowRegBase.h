@@ -34,7 +34,9 @@ namespace kathryn{
                     initCom,
                     hw_type,
                     requireAlloc
-            ){}
+            ){
+            getSimEngine()->setFlowBlockIden(true);
+        }
 
         /** add depend State register return update event*/
         virtual UpdateEvent* addDependState(Operable* dependState, Operable* activateCond) = 0;

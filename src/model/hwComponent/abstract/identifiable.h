@@ -98,7 +98,7 @@ namespace kathryn {
 
         /** get hardware component type*/
         [[nodiscard]]
-        HW_COMPONENT_TYPE  getType     () const {return _type;}
+        HW_COMPONENT_TYPE  getType() const {return _type;}
         /** get/set typeName (variable name)*/
         [[nodiscard]]
         const std::string& getVarName() const {return _varMeta.varName;}

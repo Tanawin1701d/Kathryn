@@ -11,6 +11,7 @@
 namespace kathryn{
 
     class Module;
+    class LogicSimEngine;
     class ModuleSimEngine{
     protected:
         Module*         _module = nullptr;
@@ -20,16 +21,24 @@ namespace kathryn{
         std::vector<ModelProxyBuild*> recruitForCreateVar         ();
         std::vector<ModelProxyBuild*> recruitForVolatileEle       ();
         std::vector<ModelProxyBuild*> recruitForNonVolatileEle    ();
+        std::vector<LogicSimEngine*>  recruitAllLogicSimEngine    ();
 
         void recruitFromRegable(std::vector<ModelProxyBuild*>& result);
         void recruitFromWireable(std::vector<ModelProxyBuild*>& result); /// memblock is not include
 
-        template<typename T>
+        /** retrieve zone*/
+        void retrieveInit();
+
+        /** template zone*/
+        template<typename S, typename T>
         void recruitFromVector(
-            std::vector<ModelProxyBuild*>& result,
+            std::vector<S*>& result,
             std::vector<T>& eleVec);
 
-        ////// TODO for register
+        template<typename T>
+        void retrieveInitFromVector(std::vector<T*>& eleVec);
+
+
 
 
     };

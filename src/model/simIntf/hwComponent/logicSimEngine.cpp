@@ -2,13 +2,14 @@
 // Created by tanawin on 31/5/2024.
 //
 #include "logicSimEngine.h"
+#include "sim/controller/simController.h"
 
 
 
 namespace kathryn{
 
 
-    LogicSimEngine::LogicSimEngine(Assignable* asb, IdentBase* ident,
+    LogicSimEngine::LogicSimEngine(Assignable* asb, Identifiable* ident,
                                    VCD_SIG_TYPE sigType, bool isTempReq,
                                    ull initVal):
     _asb(asb),
@@ -54,7 +55,7 @@ namespace kathryn{
 
         std::string valSize = std::to_string(_asb->getAssignSlice().getSize());
 
-        return "ValRep<"+valSize+"> " + getVarName() + " = " + std::to_string(_initVal) + ";\n"
+        return "ValRep<"+valSize+"> " + getVarName() + " = " + std::to_string(_initVal) + "; "
                 + (_isTempReq ?
                    "ValRep<"+valSize+"> " + getVarName() + TEMP_VAR_SUFFIX + " = " + std::to_string(_initVal) + ";\n":
                    "");
@@ -115,6 +116,18 @@ namespace kathryn{
         }
         return "";
     }
+    ///////////////////// proxyRetInit
+    ///
+    void LogicSimEngine::proxyRetInit(){
+        ProxySimEvent* proxySimEvent = getSimController()->getProxySimEvent();
+        proxyRep = proxySimEvent->getValRep(getVarName());
+    }
+
+    ValRepBase* LogicSimEngine::getProxyRep(){
+        assert(proxyRep != nullptr);
+        return proxyRep;
+    }
+
 
 
 

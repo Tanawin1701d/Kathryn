@@ -17,17 +17,18 @@ namespace kathryn{
 
     protected:
 
-        Assignable*  _asb        = nullptr;
-        IdentBase*   _ident      = nullptr;
-        VCD_SIG_TYPE _vcdSigType = VST_DUMMY;
-        bool         _setToWrite = false;
-        bool         _isTempReq  = false; ///// request temp request
-        ull          _initVal    = 0;
+        Assignable*   _asb        = nullptr;
+        Identifiable* _ident      = nullptr;
+        VCD_SIG_TYPE  _vcdSigType = VST_DUMMY;
+        bool          _setToWrite = false;
+        bool          _isTempReq  = false; ///// request temp request
+        bool          _flowPerfBit= false; ////// it is used to set that this logic is used to be perf profiler
+        ull           _initVal    = 0;
 
 
 
     public:
-        LogicSimEngine(Assignable* asb, IdentBase*   ident,
+        LogicSimEngine(Assignable* asb, Identifiable*   ident,
                        VCD_SIG_TYPE sigType, bool isTempReq,
                         ull initVal
                        );
@@ -40,46 +41,35 @@ namespace kathryn{
 
         void        setVCDWriteStatus(bool status){ _setToWrite = status;}
 
+        VCD_SIG_TYPE getSigType() const {return _vcdSigType;}
+        Slice        getSize()    const {return _asb->getAssignSlice();}
+
         std::string getVarNameFromOpr(Operable* opr);
 
         /*** c++ create section**/
 
         std::string createVariable()      override;
-
         std::string createOp()            override;
-
         std::string createMemorizeOp()    override;
-
-        std::string registerToProxy()     override{return "";}
-
         std::string createMemBlkAssOp()   override{return "";}
 
-        std::string collectData()         override{return "";}
 
-        /////// TODO proxy
-        ///
-        /// TODO add vcd WRiter
-        ///
-        ///
-        ValRep<MAX_VAL_REP_SIZE>* proxyRepA = nullptr;
 
-        void proxyRetInit() override;
-        virtual ValRep<MAX_VAL_REP_SIZE>* getProxyRep();
+        bool        isFlowBlockIden()     override{return _flowPerfBit;}
+        bool        isUserDeclare()       override{return _ident->isUserVar();}
+
+        void        setFlowBlockIden(bool flowIden){_flowPerfBit = flowIden;}
+
+        /////// proxy
+        ///
+
+        void proxyRetInit()       override;
+        ValRepBase* getProxyRep() override;
     };
 
     class LogicSimEngineInterface{
     public:
         virtual LogicSimEngine* getSimEngine() = 0;
-
-        explicit operator ull(){
-            ////// TODO
-        }
-
-        explicit operator ValRepBase(){
-            ////// TODO
-        }
-
-
     };
 
 }

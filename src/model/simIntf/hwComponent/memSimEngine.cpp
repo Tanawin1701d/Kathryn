@@ -3,8 +3,8 @@
 //
 
 #include "memSimEngine.h"
-
-#include <model/hwComponent/memBlock/MemBlock.h>
+#include "sim/controller/simController.h"
+#include "model/hwComponent/memBlock/MemBlock.h"
 
 
 namespace kathryn{
@@ -22,6 +22,16 @@ namespace kathryn{
         return "ValRep <" + std::to_string(_master->getWidthSize()) + ">"
             + getVarName() +
             "["+ std::to_string(_master->getDepthSize()) + "];";
+    }
+
+    void MemSimEngine::proxyRetInit(){
+        ProxySimEvent* proxySimEvent = getSimController()->getProxySimEvent();
+        proxyRep = proxySimEvent->getValRep(getVarName());
+    }
+
+    ValRepBase* MemSimEngine::getProxyRep(){
+        assert(proxyRep != nullptr);
+        return proxyRep;
     }
 
 }

@@ -95,9 +95,19 @@ namespace kathryn{
         ///
         fileWriter->addData("namespace kathryn{\n\n\n\n\n\n");
 
+        ///////// global variable
         startWriteCreateVariable();
+        startWritePerfDec();
+        ///////// start  Writefunction
+        startWriteRegisterCallback();
+        startWriteVcdDecVar(true);
+        startWriteVcdDecVar(false);
         startWriteVolatileEleSim();
         startWriteNonVolatileEleSim();
+        startWriteVcdCol(true);
+        startWriteVcdCol(false);
+        startWritePerfCol();
+
 
         fileWriter->addData("\n\n\n\n\n\n}\n");
 
@@ -114,6 +124,24 @@ namespace kathryn{
         }
     }
 
+    void ProxyBuildMng::startWriteRegisterCallback(){
+        std::vector<ModelProxyBuild*> dayta =
+            moduleSimEngine->recruitForCreateVar();
+
+        fileWriter->addData("void ProxySimEvent::startRegisterCallBack(){\n");
+
+
+        for (ModelProxyBuild* mpb: dayta){
+                fileWriter->addData("       ");
+                fileWriter->addData("registerToCallBack(");
+                fileWriter->addData("\"" + mpb->getVarName()+ "\"");
+                fileWriter->addData(",");
+                fileWriter->addData(mpb->getVarName());
+                fileWriter->addData(");\n");
+        }
+    }
+
+
 
     //////// non volatile must do TOPOLOGY SORT FIRST
 
@@ -126,7 +154,6 @@ namespace kathryn{
          * 3.transfer op
          *
          */
-
         ///////////// do not worry about register simulation will get false new
         ///data from memory if there is update from memory to register because
         /// memEleHolder will provide temporary data to register simulation
@@ -178,6 +205,109 @@ namespace kathryn{
         fileWriter->addData("}\n");
 
     }
+
+
+    void ProxyBuildMng::startWriteVcdDecVar(bool isUser){
+        std::vector<LogicSimEngine*> dayta =
+            moduleSimEngine->recruitAllLogicSimEngine();
+
+        fileWriter->addData("void ProxySimEvent::startVcdDecVar");
+        fileWriter->addData((isUser? "User": "Internal"));
+        fileWriter->addData("(){\n");
+
+
+        for (LogicSimEngine* mpb: dayta){
+            if (mpb->isUserDeclare() == isUser){ ////// the registerable must always put to vcd file
+                fileWriter->addData("       ");
+                fileWriter->addData("vcdWriter->addNewVar(");
+
+                //////// sigtype
+                VCD_SIG_TYPE  vst = mpb->getSigType();
+                if (vst == VST_REG){
+                    fileWriter->addData("VST_REG");
+                }else if (vst == VST_WIRE){
+                    fileWriter->addData("VST_WIRE");
+                }else if (vst == VST_INTEGER){
+                    fileWriter->addData("VST_INTEGER");
+                }
+
+                /////// varname
+                fileWriter->addData(",");
+                fileWriter->addData("\""+ mpb->getVarName() +"\"");
+                fileWriter->addData(",");
+                fileWriter->addData("{" +
+                    std::to_string(mpb->getSize().start) + "," +
+                    std::to_string(mpb->getSize().stop)  + "};\n");
+            }
+        }
+        fileWriter->addData("}\n");
+    }
+
+    void ProxyBuildMng::startWriteVcdCol(bool isUser){
+        std::vector<LogicSimEngine*> dayta =
+            moduleSimEngine->recruitAllLogicSimEngine();
+
+        fileWriter->addData("void ProxySimEvent::startVcdCol");
+        fileWriter->addData((isUser? "User": "Internal"));
+        fileWriter->addData("(){\n");
+
+
+        for (ModelProxyBuild* mpb: dayta){
+            if (mpb->isUserDeclare() == isUser){ ////// the registerable must always put to vcd file
+                fileWriter->addData("       ");
+                fileWriter->addData("vcdWriter->addNewValue(");
+
+                fileWriter->addData("\""+ mpb->getVarName() +"\"");
+                fileWriter->addData(",");
+                fileWriter->addData(mpb->getVarName() +
+                                    ".genBiStr();\n");
+            }
+        }
+
+        fileWriter->addData("}\n");
+    }
+
+
+    void ProxyBuildMng::startWritePerfDec(){
+        std::vector<ModelProxyBuild*> dayta =
+            moduleSimEngine->recruitForCreateVar();
+
+        fileWriter->addData("/////////////////////// perf variable");
+
+
+        for (ModelProxyBuild* mpb: dayta){
+            if (mpb->isFlowBlockIden()){
+                fileWriter->addData("ull "+ PERF_PREFIX +mpb->getVarName());
+                fileWriter->addData(" = 0;\n");
+            }
+        }
+
+        fileWriter->addData("/////////////////////// perf finish initialize");
+
+    }
+
+    void ProxyBuildMng::startWritePerfCol(){
+        std::vector<ModelProxyBuild*> dayta =
+    moduleSimEngine->recruitForCreateVar();
+
+        fileWriter->addData("void ProxySimEvent::startPerfCol");
+        fileWriter->addData("(){\n");
+
+
+        for (ModelProxyBuild* mpb: dayta){
+            if (mpb->isFlowBlockIden()){
+                fileWriter(PERF_PREFIX + mpb->getVarName());
+                fileWriter(" += ");
+                fileWriter(mpb->getVarName() + ".getLogicValue();\n");
+            }
+        }
+
+        fileWriter->addData("}\n");
+    }
+
+
+
+
 
 
 

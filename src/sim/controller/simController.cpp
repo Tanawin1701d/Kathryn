@@ -3,14 +3,21 @@
 //
 
 #include "simController.h"
+#include "model/simIntf/base/proxyEvent.h"
 
 
 
 namespace kathryn{
 
     SimController::SimController():
-    _limitCycle(0)
+    _limitCycle(0),
+    proxySimEvent()
     {}
+
+    void SimController::setProxySimVcdFile(std::string vcdFilePath){
+        proxySimEvent.setVcdFilePath(vcdFilePath);
+    }
+
 
     void SimController::collectData() {
 
@@ -18,41 +25,42 @@ namespace kathryn{
 
     void SimController::start() {
 
+
         lock();
         while ( (!eventQ.isEmpty()) &&
                 (eventQ.getNextEvent()->getCurCycle() <= _limitCycle)
         ){
             EventBase* nextEvent = eventQ.getNextEvent();
-            /**we are sure that nextEvent is valid due to while loop at the top*/
 
+            /** simulate every cycle that event queue skip*/
+            CYCLE remainCycle = (nextEvent->getCurCycle()) - _curCycle;
+            for (int remCycle = 0; remCycle < remainCycle; remCycle++){
+                proxySimEvent.simStartCurCycle();
+                proxySimEvent.curCycleCollectData();
+                proxySimEvent.simStartNextCycle();
+                proxySimEvent.simExitCurCycle();
+            }
+            /**we are sure that nextEvent is valid due to while loop at the top*/
             assert(_curCycle != nextEvent->getCurCycle()); //// check therer is no same cycle used
             _curCycle = nextEvent->getCurCycle();
-            /**
-             * pull the data and collect it first
-             * */
             std::vector<EventBase*> _curCycleEvents;
-
             /**
              *
              * start cur cycle which allows same cycle queue adding
              *
              * */
-            while ((!eventQ.isEmpty()) &&
-                   (eventQ.getNextEvent()->getCurCycle() == _curCycle)){
 
-                EventBase* collectingEvent = eventQ.getNextEvent();
+            while ((!eventQ.isEmpty()) && (eventQ.getNextEvent()->getCurCycle() == _curCycle)){
+                _curCycleEvents.push_back(eventQ.getNextEvent());
                 eventQ.popEvent();
-
-                ////// push in the same cycle
-                unlock();
-                collectingEvent->simStartCurCycle(); ////// you must simfirst while collecting because some trigger may be
-                _curCycleEvents.push_back(collectingEvent);
-                lock();
             }
-            unlock();
             /**
              * all event is simulated. For now, This cycle is stable.
              * */
+            unlock();
+            for (auto* curEvent: _curCycleEvents){
+                curEvent->simStartCurCycle();
+            }
             for (auto* curEvent: _curCycleEvents){
                 curEvent->curCycleCollectData();
             }
@@ -67,6 +75,16 @@ namespace kathryn{
                     delete curEvent;
             }
             lock();
+
+        }
+        unlock();
+
+        lock();
+        for (; _curCycle < _limitCycle; _curCycle++){
+            proxySimEvent.simStartCurCycle();
+            proxySimEvent.curCycleCollectData();
+            proxySimEvent.simStartNextCycle();
+            proxySimEvent.simExitCurCycle();
         }
         unlock();
 
@@ -99,6 +117,10 @@ namespace kathryn{
         CYCLE cpyCycle = _curCycle;
         unlock();
         return cpyCycle;
+    }
+
+    ProxySimEvent* SimController::getProxySimEvent(){
+        return &proxySimEvent;
     }
 
     void SimController::lock(){

@@ -41,6 +41,8 @@ namespace kathryn{
             preRet += binaryRepresentation.to_string();
             return preRet;
         }
+
+        ull getVal()const {return _val;}
     };
 
     template<int _len>
@@ -99,6 +101,15 @@ namespace kathryn{
             _val = _val & mask;
             _val = _val | rhs._val;
         }
+
+        explicit operator bool(){
+            return _val > 0;
+        }
+
+        bool getLogicValue(){
+            return _val > 0;
+        }
+
 
         inline ValRep& operator = (const ull value){ _val = value; return *this;}
 

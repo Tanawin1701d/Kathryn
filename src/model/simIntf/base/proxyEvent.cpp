@@ -8,30 +8,26 @@
 namespace kathryn{
 
 
-    ProxySimEvent::ProxySimEvent(std::string vcdWriteDes):
-        EventBase(0,SIM_MODEL_PRIO),
-        VCD_WRITE_DES(vcdWriteDes),
-        vcdWriter(new VcdWriter(vcdWriteDes)){
+ProxySimEvent::ProxySimEvent():
+    EventBase(0,SIM_MODEL_PRIO)
+    {
 
+    startRegisterCallBack();
 
-        if ((PARAM_VCD_REC_POL == MDE_REC_BOTH) | (PARAM_VCD_REC_POL == MDE_REC_ONLY_USER)){
-            startVcdDecVarUser();
-        }
-
-        if ((PARAM_VCD_REC_POL == MDE_REC_BOTH) | (PARAM_VCD_REC_POL == MDE_REC_ONLY_INTERNAL)){
-            startVcdDecVarInternal();
-        }
-
+    if ((PARAM_VCD_REC_POL == MDE_REC_BOTH) | (PARAM_VCD_REC_POL == MDE_REC_ONLY_USER)){
+        startVcdDecVarUser();
+    }
+    if ((PARAM_VCD_REC_POL == MDE_REC_BOTH) | (PARAM_VCD_REC_POL == MDE_REC_ONLY_INTERNAL)){
+        startVcdDecVarInternal();
     }
 
-    ProxySimEvent::~ProxySimEvent(){
-        delete vcdWriter;
-    }
+}
+
+ProxySimEvent::~ProxySimEvent(){ delete vcdWriter;}
 
 
 
 void ProxySimEvent::simStartCurCycle(){
-
     ///// the order is very strict
     ///do not change to simulation order
     startVolatileEleSim(); ////// wire mem eleHolder nest expression
@@ -60,10 +56,10 @@ void ProxySimEvent::simStartNextCycle(){
 
 
 
-
-
-
-
+    void ProxySimEvent::setVcdFilePath(std::string vcdFilePath){
+        vcdWriteDes = std::move(vcdFilePath);
+        vcdWriter   = new VcdWriter(vcdWriteDes);
+    }
 
 
 }

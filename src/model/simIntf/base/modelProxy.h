@@ -7,6 +7,8 @@
 
 #include <cassert>
 #include <utility>
+#include "sim/simResWriter/simResWriter.h"
+
 #include "model/abstract/identBase/identBase.h"
 #include "sim/logicRep/valRep.h"
 
@@ -25,8 +27,8 @@ namespace kathryn{
         virtual             ~ModelProxyBuild() = 0;
         virtual void        proxyBuildInit()   = 0;
         //// pre initialize section fill dependency
-        virtual std::string getVarName()       = 0; //// prefix is not include
-        virtual ull         getVarId()         = 0; //// it is global id
+        virtual std::string  getVarName()       = 0; //// prefix is not include
+        virtual ull          getVarId()         = 0; //// it is global id
         std::vector<ModelProxyBuild*>& getDep() {return dep;}
 
         //// c++ create section
@@ -35,19 +37,20 @@ namespace kathryn{
         virtual std::string createMemorizeOp()    = 0;
         virtual std::string createMemBlkAssOp()   = 0;
 
-        virtual bool        isUserDeclare()       = 0;
-        virtual bool        isFlowCollectMeta();
+        virtual bool         isFlowBlockIden()     = 0;
+        virtual bool         isUserDeclare()       = 0;
+
 
 
     };
 
     class ModelProxyRetrieve{
     protected:
-        ull _proxyId = -1;
+        ValRepBase* proxyRep = nullptr;
     public:
-        virtual void proxyRetInit()                 = 0;
-        virtual      ~ModelProxyRetrieve()          = 0;
-        virtual void proxyRetrInit(ull proxyId){_proxyId = proxyId;}
+        virtual void        proxyRetInit();
+        virtual ValRepBase* getProxyRep();
+        virtual      ~ModelProxyRetrieve() = 0;
     };
 
     

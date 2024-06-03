@@ -23,18 +23,16 @@ namespace kathryn{
         std::string getVarName()           override;
         ull         getVarId()             override;
         
-        std::string createVariable()   override;
-        std::string createOp()         override{return "";}
-        std::string createMemorizeOp() override{return "";}
-        std::string registerToProxy()  override{return "";}
-        std::string createMemBlkAssOp()override{return "";}
-        std::string collectData()      override{return "";}
+        std::string createVariable()       override;
+        std::string createOp()             override{return "";}
+        std::string createMemorizeOp()     override{return "";}
+        std::string createMemBlkAssOp()    override{return "";}
 
+        bool        isFlowBlockIden()      override{return false;}
+        bool        isUserDeclare()        override{return false;}
 
-        ///////// retrieve zone
-
-        void       proxyRetInit()          override {/*TODO*/};
-
+        void        proxyRetInit()         override;
+        ValRepBase* getProxyRep()          override;
 
     };
 
