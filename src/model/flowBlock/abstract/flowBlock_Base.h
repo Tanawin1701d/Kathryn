@@ -22,7 +22,7 @@
 #include "model/flowBlock/abstract/nodes/stateNode.h"
 #include "model/flowBlock/abstract/nodes/logicNode.h"
 #include "flowIdentifiable.h"
-#include "model/simIntf/flowBlock/flowBlockSim.h"
+#include "model/simIntf/flowBlock/flowBaseSim.h"
 
 
 namespace kathryn {
@@ -87,8 +87,6 @@ namespace kathryn {
 
     class FlowBlockBase: public FlowIdentifiable,
                          public ModelDebuggable,
-                         ////public FlowSimEngine,
-                         public SimEngineInterface,
                          public FlowSimEngineInterface
                          {
     friend class FlowBlockSimEngine;
@@ -144,10 +142,7 @@ namespace kathryn {
                                      FB_CTRL_COM_META fbCtrlComMeta);
         virtual        ~FlowBlockBase();
 
-        SimEngine*     getSimEngine() override{
-                return _flowSimEngine;
-        }
-        FlowBaseSimEngine* getFlowSimEngine() override{
+        FlowBaseSimEngine* getSimEngine() override{
                 return _flowSimEngine;
         }
         /**
@@ -212,6 +207,8 @@ namespace kathryn {
                             getSubBlocks(){return _subBlocks;}
         std::vector<FlowBlockBase*>&
                             getConBlocks(){return _conBlocks;}
+        std::vector<Node*>&
+                            getSysNodes(){return _sysNodes;}
         /** lazy delete is the variable that tell controller whether
          * block should be pop from building stack when purifier is done
          * not when block is detach. Usually, It is used in if block

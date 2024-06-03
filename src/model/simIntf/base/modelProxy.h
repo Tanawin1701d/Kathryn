@@ -37,7 +37,6 @@ namespace kathryn{
         virtual std::string createMemorizeOp()    = 0;
         virtual std::string createMemBlkAssOp()   = 0;
 
-        virtual bool         isFlowBlockIden()     = 0;
         virtual bool         isUserDeclare()       = 0;
 
 
@@ -46,10 +45,10 @@ namespace kathryn{
 
     class ModelProxyRetrieve{
     protected:
-        ValRepBase* proxyRep = nullptr;
+        ValRepBase* proxyRep  = nullptr;
     public:
-        virtual void        proxyRetInit();
-        virtual ValRepBase* getProxyRep();
+        virtual void        proxyRetInit() = 0;
+        virtual ValRepBase* getProxyRep ();
         virtual      ~ModelProxyRetrieve() = 0;
     };
 

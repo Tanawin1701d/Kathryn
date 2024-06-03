@@ -57,8 +57,8 @@ namespace kathryn {
         Operable* condition  = nullptr;
     };
 
-    struct Node : public ModelDebuggable,
-                  public FlowSimEngineInterface{
+    struct Node : public ModelDebuggable
+                {
         NODE_TYPE                nodeType  = NODE_TYPE_CNT;
         std::vector<NodeSrcEdge> nodeSrcs;
         std::string              identName = "NODE_UNNAME";
@@ -67,23 +67,13 @@ namespace kathryn {
 
         /** simulate support register*/
         std::vector<CtrlFlowRegBase*> relatedCycleConsumeReg;
-        FlowNodeSimEngine*            flowNodeSimEngine = nullptr;
 
         Node(Node& rhs) = delete;
 
         explicit Node(NODE_TYPE nt):
-                nodeType(nt),
-                flowNodeSimEngine(new FlowNodeSimEngine(this)){};
+                nodeType(nt){};
 
-        ~Node(){
-            delete flowNodeSimEngine;
-        };
-
-        FlowBaseSimEngine* getFlowSimEngine() override{
-            assert(flowNodeSimEngine != nullptr);
-            return flowNodeSimEngine;
-        }
-
+        ~Node(){};
         NODE_TYPE getNodeType() const{
             return nodeType;
         }
@@ -177,20 +167,21 @@ namespace kathryn {
         virtual int       getCycleUsed() = 0;
         /** is Stateful node (reffer to node that consume at least 1 cycle from machine)*/
         virtual bool      isStateFullNode(){ return true; }
+        /** get state register if there are*/
+        virtual CtrlFlowRegBase*  getStateRegisterIfThere(){ return nullptr; }
+
 
         /** get debugger value*/
         std::string getMdIdentVal() override{
             std::string ret = NT_to_string(nodeType) + " @ " + std::to_string((ull)this);
             return ret;
         }
-
         void addMdLog(MdLogVal* mdLogVal) override{
             mdLogVal->addVal("[Node] " + getMdIdentVal() +  "have node dep");
             for (auto depSrc : nodeSrcs){
                 mdLogVal->addVal(depSrc.dependNode->getMdIdentVal());
             }
         }
-
         /** internal value identifier for debugging purpose*/
         void setInternalIdent(std::string identVal){
             identName = std::move(identVal);
