@@ -71,8 +71,8 @@ namespace kathryn{
 
              for ( int j = 0; j < 48; j++ ){
                 sim{
-                    ValRep testVal = NumConverter::createValRep(6, i);
-                    testAndPrint("check mem : " + std::to_string(i), _md->b.sv(), testVal);
+                    ull testVal = i;
+                    testAndPrint("check mem : " + std::to_string(i), (ull)_md->b, testVal);
                     i++;
                 };
                 incCycle(1);

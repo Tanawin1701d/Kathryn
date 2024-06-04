@@ -74,15 +74,15 @@ namespace kathryn{
             incCycle(7);
 
             sim {
-                ValRep testVal = NumConverter::createValRep(8, 48);
-                testAndPrint("check End Val", _md->d1.sv(), testVal);
+                ull testVal = 48;
+                testAndPrint("check End Val", (ull)_md->d1, testVal);
             };
 
             setCycle(6);
 
             sim{
-                ValRep testVal = NumConverter::createValRep(8, 64);
-                testAndPrint("check End Val", _md->c2.sv(), testVal);
+                ull testVal = 64;
+                testAndPrint("check End Val", (ull)_md->c2, testVal);
             };
         }
 
@@ -90,7 +90,7 @@ namespace kathryn{
             incCycle(2);
 
             sim {
-                _md->iv.sv() = NumConverter::createValRep(8, 48);
+                _md->iv = 48;
             };
             incCycle(1);
         }

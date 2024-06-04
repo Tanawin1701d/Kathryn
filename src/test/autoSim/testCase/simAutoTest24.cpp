@@ -62,7 +62,7 @@ namespace kathryn{
         void describeCon() override{
             conNextCycle(50);
             for (int i =1; i < 48; i++){
-                testAndPrint("checkMem with new system : " + std::to_string(i), ull(_md->storage.v(i)), i);
+                testAndPrint("checkMem with new system : " + std::to_string(i), ull(_md->storage.at(i)), i);
                 conEndCycle();
                 testAndPrint("checkMem wire assignment : " + std::to_string(i), ull(_md->b), i);
                 conNextCycle(1);

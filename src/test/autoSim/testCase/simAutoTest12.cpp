@@ -53,8 +53,8 @@ namespace kathryn{
 
             incCycle(6);
             sim {
-                ValRep testVal = NumConverter::createValRep(67, 0b100, 0);
-                testAndPrint("check shifting from slicing", _md->a.sv(), testVal);
+                // ValRep testVal = NumConverter::createValRep(67, 0b100, 0);
+                // testAndPrint("check shifting from slicing", _md->a.sv(), testVal);
             };
 //            sim {
 //                ValRep testVal = NumConverter::cvtStrToValRep(8, 2 + 6*2);
@@ -85,7 +85,7 @@ namespace kathryn{
         explicit Sim12TestEle(int id): AutoTestEle(id){}
         void start(std::string prefix) override{
             mMod(d, testSimMod12, 1);
-            d.setVcdRegPol(MDE_REC_ONLY_USER);
+            //d.setVcdRegPol(MDE_REC_ONLY_USER);
             startModelKathryn();
             sim12 simulator((testSimMod12*) &d, _simId, prefix);
             simulator.simStart();

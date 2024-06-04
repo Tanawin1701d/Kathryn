@@ -70,10 +70,8 @@ namespace kathryn{
                 testAndPrint("check End Val", (ull)_md->a, 32);
             };
             sim{
-                ValRep testVal = NumConverter::createValRep(8, 32);
-                ull cval(_md->a);
-                ValRep cValTest = NumConverter::createValRep(8, cval);
-                testAndPrint("check C Val", cValTest, testVal);
+                ull testVal = 32;
+                testAndPrint("check C Val", (ull)_md->a, testVal);
             };
         }
 
@@ -81,8 +79,8 @@ namespace kathryn{
             incCycle(2);
             for (int i = 0; i < 100; i++) {
                 sim {
-                    _md->iv.sv() = NumConverter::createValRep(8, 7);
-                    _md->c = 7;
+                    _md->iv = 7;
+                    _md->c  = 7;
                 };
                 incCycle(1);
             }

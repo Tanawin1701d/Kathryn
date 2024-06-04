@@ -52,8 +52,8 @@ namespace kathryn{
             incCycle(5);
 
             sim{
-                ValRep testVal = NumConverter::createValRep(32, 6);
-                testAndPrint("check expression on slicing", _md->c.sv(), testVal);
+                ull testVal = 6;
+                testAndPrint("check expression on slicing", (ull)_md->c, testVal);
             };
 
 //            sim {

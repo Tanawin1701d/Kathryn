@@ -64,12 +64,12 @@ namespace kathryn{
         void describeCon() override{
             conNextCycle(52);
             for (int i =0; i < 48; i++){
-                testAndPrint("checkMem with new system : " + std::to_string(i), ull(_md->storage.v(i)), i);
+                testAndPrint("checkMem with new system : " + std::to_string(i), (ull)(_md->storage.at(i)), i);
             }
             for(int i = 0; i < 48; i++){
-                ValRep testVal = NumConverter::createValRep(6, i);
+                ull testVal = i;
 
-                testAndPrint("checkMem : " + std::to_string(i), _md->b.sv(), testVal);
+                testAndPrint("checkMem : " + std::to_string(i), (ull)_md->b, testVal);
                 conNextCycle(1);
             }
         }

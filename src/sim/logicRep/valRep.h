@@ -43,6 +43,10 @@ namespace kathryn{
         }
 
         ull getVal()const {return _val;}
+
+        explicit operator ull() const{
+            return _val;
+        }
     };
 
     template<int _len>
