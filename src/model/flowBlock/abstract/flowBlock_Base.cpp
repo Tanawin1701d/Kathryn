@@ -26,7 +26,7 @@ namespace kathryn{
             /** exit management*/
             _areThereForceExit(false),
             _forceExitNode(nullptr),
-            _flowSimEngine(new FlowBlockSimEngine(this))
+            _flowSimEngine(new FlowBaseSimEngine(this))
     {
                 /**initialize interrupt node*/
                 for (int intType = 0; intType < INT_CNT; intType++){

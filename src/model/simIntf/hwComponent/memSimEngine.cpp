@@ -3,6 +3,7 @@
 //
 
 #include "memSimEngine.h"
+#include "modelCompile/proxyEventBase.h"
 #include "sim/controller/simController.h"
 #include "model/hwComponent/memBlock/MemBlock.h"
 
@@ -25,7 +26,7 @@ namespace kathryn{
     }
 
     void MemSimEngine::proxyRetInit(){
-        ProxySimEvent* proxySimEvent = getSimController()->getProxySimEvent();
+        ProxySimEventBase* proxySimEvent = getSimController()->getProxySimEventPtr();
         proxyRep = proxySimEvent->getValRep(getVarName());
     }
 

@@ -6,6 +6,9 @@
 #define KATHRYN_OPERABLE_H
 
 #include<memory>
+#include <model/debugger/modelDebugger.h>
+#include <model/simIntf/hwComponent/logicSimEngine.h>
+
 #include "Slice.h"
 #include "operation.h"
 #include "identifiable.h"
@@ -93,6 +96,17 @@ namespace kathryn {
         virtual Operable*       doSlice(Slice sl) = 0; //// sl is abs value
         /** please remind this is a copy not reference value*/
         virtual LogicSimEngine* getLogicSimEngineFromOpr() = 0;
+
+        explicit operator ull(){
+            LogicSimEngine* simEngine = getLogicSimEngineFromOpr();
+            mfAssert(getAssignMode() == AM_SIM, "can't retrieve data in model building mode");
+            mfAssert(simEngine != nullptr, "get value fail");
+            return simEngine->getProxyRep()->getVal();
+        }
+        explicit operator ValRepBase(){
+            LogicSimEngine* simEngine = getLogicSimEngineFromOpr();
+            return *simEngine->getProxyRep();
+        }
 
         /**downcasting*/
         virtual Identifiable*   castToIdent() = 0;

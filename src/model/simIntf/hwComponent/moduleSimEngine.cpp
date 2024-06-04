@@ -27,6 +27,8 @@ namespace kathryn{
         for (MemBlock* memBlock: _module->getUserMemBlks()){
             recruitFromVector(result, memBlock->getMemBlockAgents());
         }
+
+
         for (Module* subModule: _module->getUserSubModules()){
             std::vector<ModelProxyBuild*> subResult = subModule->getSimEngine()
             ->recruitForCreateVar();
@@ -104,11 +106,17 @@ namespace kathryn{
 
     }
 
-
-
-
-
-
+    std::vector<ModelProxyBuild*> ModuleSimEngine::recruitPerf(){
+        std::vector<ModelProxyBuild*> result;
+        ///////// recurte flow block in module
+        recruitFromVector(result, _module->getFlowBlocks());
+        for (Module* subModule: _module->getUserSubModules()){
+            std::vector<ModelProxyBuild*> subResult = subModule->getSimEngine()
+            ->recruitPerf();
+            appendVector(result, subResult);
+        }
+        return result;
+    }
 
     void ModuleSimEngine::recruitFromRegable
     (std::vector<ModelProxyBuild*>& result){
@@ -145,11 +153,15 @@ namespace kathryn{
         for (MemBlock* memBlock: _module->getUserMemBlks()){
             retrieveInitFromVector(memBlock->getMemBlockAgents());
         }
+
+        //////// for flowblock
+        retrieveInitFromVector(_module->getFlowBlocks());
+
+        ////////// subModule
         for (Module* subModule: _module->getUserSubModules()){
             subModule->getSimEngine()->retrieveInit();
         }
     }
-
 
     template<typename S, typename T>
     void ModuleSimEngine::recruitFromVector(

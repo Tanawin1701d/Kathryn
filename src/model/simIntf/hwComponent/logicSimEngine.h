@@ -55,7 +55,6 @@ namespace kathryn{
 
 
 
-        bool        isFlowBlockIden()     override{return _flowPerfBit;}
         bool        isUserDeclare()       override{return _ident->isUserVar();}
 
         void        setFlowBlockIden(bool flowIden){_flowPerfBit = flowIden;}

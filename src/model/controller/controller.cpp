@@ -31,11 +31,6 @@ namespace kathryn{
         on_module_final(moduleStack.top().md);
     }
 
-    void ModelController::startGenSimProxy(){
-        assert(globalModulePtr != nullptr);
-        ProxyBuildMng mng(globalModulePtr);
-        mng.startWriteData();
-    }
 
     void ModelController::reset(){
         pipeCtrl.reset();

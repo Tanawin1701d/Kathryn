@@ -12,15 +12,16 @@ add_definitions(-DNOTEXCEED64)
 INCLUDE_DIRECTORIES( ./src )
 
 
-FILE(GLOB_RECURSE SRC_ABS     RELATIVE ${CMAKE_SOURCE_DIR} "src/abstract/*.cpp")
-FILE(GLOB_RECURSE SRC_APP     RELATIVE ${CMAKE_SOURCE_DIR} "src/application/*.cpp")
-FILE(GLOB_RECURSE SRC_FED     RELATIVE ${CMAKE_SOURCE_DIR} "src/frontEnd/*.cpp")
-FILE(GLOB_RECURSE SRC_MODEL   RELATIVE ${CMAKE_SOURCE_DIR} "src/model/*.cpp")
-FILE(GLOB_RECURSE SRC_SIM     RELATIVE ${CMAKE_SOURCE_DIR} "src/sim/*.cpp")
-FILE(GLOB_RECURSE SRC_TEST    RELATIVE ${CMAKE_SOURCE_DIR} "src/test/*.cpp")
-FILE(GLOB_RECURSE SRC_UTIL    RELATIVE ${CMAKE_SOURCE_DIR} "src/util/*.cpp")
-FILE(GLOB_RECURSE SRC_EXAMPLE RELATIVE ${CMAKE_SOURCE_DIR} "src/example/*.cpp")
-FILE(GLOB_RECURSE SRC_PARAM   RELATIVE ${CMAKE_SOURCE_DIR} "src/params/*.cpp")
+FILE(GLOB_RECURSE SRC_ABS             RELATIVE ${CMAKE_SOURCE_DIR} "src/abstract/*.cpp")
+FILE(GLOB_RECURSE SRC_APP             RELATIVE ${CMAKE_SOURCE_DIR} "src/application/*.cpp")
+FILE(GLOB_RECURSE SRC_FED             RELATIVE ${CMAKE_SOURCE_DIR} "src/frontEnd/*.cpp")
+FILE(GLOB_RECURSE SRC_MODEL           RELATIVE ${CMAKE_SOURCE_DIR} "src/model/*.cpp")
+FILE(GLOB_RECURSE SRC_SIM             RELATIVE ${CMAKE_SOURCE_DIR} "src/sim/*.cpp")
+FILE(GLOB_RECURSE SRC_TEST            RELATIVE ${CMAKE_SOURCE_DIR} "src/test/*.cpp")
+FILE(GLOB_RECURSE SRC_UTIL            RELATIVE ${CMAKE_SOURCE_DIR} "src/util/*.cpp")
+FILE(GLOB_RECURSE SRC_EXAMPLE         RELATIVE ${CMAKE_SOURCE_DIR} "src/example/*.cpp")
+FILE(GLOB_RECURSE SRC_PARAM           RELATIVE ${CMAKE_SOURCE_DIR} "src/params/*.cpp")
+FILE(GLOB_RECURSE SRC_MODEL_COMPILE   RELATIVE ${CMAKE_SOURCE_DIR} "src/modelCompile/proxyEventBase.cpp")
 
 
 add_executable(Kathryn
@@ -35,7 +36,6 @@ add_executable(Kathryn
         ${SRC_UTIL}
         ${SRC_EXAMPLE}
         ${SRC_PARAM}
-
-
+        ${SRC_MODEL_COMPILE}
 
 )

@@ -4,6 +4,7 @@
 
 #include "proxyBuildMng.h"
 
+#include <dlfcn.h>
 #include <set>
 
 
@@ -14,14 +15,11 @@ namespace kathryn{
     moduleSimEngine(startModule->getSimEngine()),
     fileWriter(nullptr)
     {
-        fileWriter = new FileWriterBase(desPath);
         assert(fileWriter != nullptr);
         assert(startModule != nullptr);
     }
 
     ProxyBuildMng::~ProxyBuildMng(){
-        fileWriter->flush();
-        delete fileWriter;
     }
 
     std::vector<ModelProxyBuild*> ProxyBuildMng::doTopologySort(
@@ -31,7 +29,7 @@ namespace kathryn{
 
         struct MPD_META{
             ModelProxyBuild* mpd = nullptr;
-            int nextDepIdx = 0;
+            int nextDepIdx       = 0;
         };
 
         /** initialize variable*/
@@ -41,9 +39,7 @@ namespace kathryn{
         std::vector<ModelProxyBuild*> result;
         std::stack<MPD_META>          dfs;
         ///////////////////////////////////////////////
-        for (ModelProxyBuild* mdp: graph){ ///
-            inGraph.insert(mdp);
-        }
+        for (ModelProxyBuild* mdp: graph){ inGraph.insert(mdp);}
 
 
         for (auto ele: graph){
@@ -58,7 +54,7 @@ namespace kathryn{
                     continue;
                 }
 
-                bool isVisit  = visited.find(top.mpd)  != visited.end();
+                bool isVisit  = visited .find(top.mpd) != visited.end();
                 bool isResult = resulted.find(top.mpd) != resulted.end();
                 if (isVisit && isResult){
                     dfs.pop();
@@ -88,6 +84,8 @@ namespace kathryn{
 
     void ProxyBuildMng::startWriteModelSim(){
 
+        //// create file
+        fileWriter = new FileWriterBase(desGenPath);
         //// create include
         fileWriter->addData("#include \"src/modelCompile/proxyEvent.h\"\n");
 
@@ -110,6 +108,8 @@ namespace kathryn{
 
 
         fileWriter->addData("\n\n\n\n\n\n}\n");
+        fileWriter->flush();
+        delete fileWriter;
 
     }
 
@@ -270,16 +270,12 @@ namespace kathryn{
 
     void ProxyBuildMng::startWritePerfDec(){
         std::vector<ModelProxyBuild*> dayta =
-            moduleSimEngine->recruitForCreateVar();
+            moduleSimEngine->recruitPerf();
 
         fileWriter->addData("/////////////////////// perf variable");
 
-
         for (ModelProxyBuild* mpb: dayta){
-            if (mpb->isFlowBlockIden()){
-                fileWriter->addData("ull "+ PERF_PREFIX +mpb->getVarName());
-                fileWriter->addData(" = 0;\n");
-            }
+            fileWriter->addData(mpb->createVariable());
         }
 
         fileWriter->addData("/////////////////////// perf finish initialize");
@@ -288,30 +284,47 @@ namespace kathryn{
 
     void ProxyBuildMng::startWritePerfCol(){
         std::vector<ModelProxyBuild*> dayta =
-    moduleSimEngine->recruitForCreateVar();
+    moduleSimEngine->recruitPerf();
 
         fileWriter->addData("void ProxySimEvent::startPerfCol");
         fileWriter->addData("(){\n");
 
 
         for (ModelProxyBuild* mpb: dayta){
-            if (mpb->isFlowBlockIden()){
-                fileWriter(PERF_PREFIX + mpb->getVarName());
-                fileWriter(" += ");
-                fileWriter(mpb->getVarName() + ".getLogicValue();\n");
-            }
+            fileWriter->addData(mpb->createOp());
         }
 
         fileWriter->addData("}\n");
     }
 
+    void ProxyBuildMng::startCompile(){
+        int result = system(srcBuildPath.c_str());
+        if (result == 0){
+            std::cout << "compile successfully\n";
+        }else{
+            std::cerr << "Compilation failed with error code " << result << std::endl;
+        }
+    }
+
+    ProxySimEventBase* ProxyBuildMng::loadAndGetProxy(){
+        ProxySimEventBase* (*seCreator)();
+
+        ////// open dynamic link
+        void* handle = dlopen(desCompilePath.c_str(), RTLD_LAZY);
+        mfAssert(handle, "error loading simEngine lib @" +
+        desCompilePath + dlerror());
+        ////// resolve symbol
+        seCreator = (ProxySimEventBase*(*)()) dlsym(handle, "simEngineCreator");
+
+        ///// get the data
+        ProxySimEventBase* proxyBase = seCreator();
+        ////// close handle
+        ///
+        ///
+        dlclose(handle);
+
+        return proxyBase;
 
 
-
-
-
-
-
-
-
+    }
 }

@@ -71,7 +71,7 @@ namespace kathryn{
         CYCLE getCurCycle() const {return _targetCycle;}
         CYCLE getPriority() const {return _priority;}
 
-        void addNewEvent(EventBase* newEvent);
+        //void addNewEvent(EventBase* newEvent);
 
         virtual bool needToDelete(){
             return true;

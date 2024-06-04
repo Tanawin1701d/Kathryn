@@ -31,11 +31,22 @@ namespace kathryn{
         FlowColEle*    _writer        = nullptr;
     public:
         FlowBaseSimEngine(FlowBlockBase* flowBlockBase);
+        void        proxyBuildInit() override{};
         std::string getVarName()     override;
         std::string getVarNameCurStatus();
         ull         getVarId()       override;
-        std::string createVariable() override;
-        std::string createOp()       override; ///// we use op to do all operation
+
+        std::string createVariable()   override;
+        std::string createOp()         override; ///// we use op to do all operation
+        std::string createMemorizeOp() override;
+        std::string createMemBlkAssOp()override;
+        bool        isUserDeclare()    override;
+
+        ////////
+        ///
+        void        proxyRetInit()     override;
+        ValRepBase* getProxyRep()      override;
+
 
     };
 

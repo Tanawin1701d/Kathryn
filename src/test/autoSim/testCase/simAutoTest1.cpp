@@ -66,8 +66,8 @@ namespace kathryn{
         void simAssert() override{
             incCycle(13);
             sim {
-                ValRep testVal = NumConverter::createValRep(8, 32);
-                testAndPrint("check End Val", _md->a.sv(), testVal);
+
+                testAndPrint("check End Val", (ull)_md->a, 32);
             };
             sim{
                 ValRep testVal = NumConverter::createValRep(8, 32);

@@ -8,7 +8,7 @@
 #include <condition_variable>
 #include <thread>
 #include "model/controller/controller.h"
-#include "model/simIntf/hwComponent/module/moduleSimEvent.h"
+#include "modelCompile/proxyEventBase.h"
 #include "sim/event/userEvent.h"
 #include "sim/controller/simController.h"
 #include "sim/event/ctTrigEvent.h"
@@ -21,10 +21,11 @@ namespace kathryn{
     class SimInterface{
         friend class ConcreteTriggerEvent;
     protected:
+        std::string             SIM_CLIENT_PATH;
         VcdWriter*              _vcdWriter      = nullptr;
         FlowWriter*             _flowWriter     = nullptr;
-        ModuleSimEvent*         _ModuleSimEvent = nullptr;
-        std::vector<UserEvent*> _UserSimEvents;
+        ProxySimEventBase*      _modelSimEvent  = nullptr;
+        std::vector<UserEvent*> UserSimEvents;
         CYCLE                   _limitCycle = 0;
         UserEvent               simAgent;/** sim agent base can't change name*/
 
@@ -47,42 +48,24 @@ namespace kathryn{
     public:
         explicit SimInterface(CYCLE limitCycle,
                               std::string vcdFilePath,
-                              std::string profileFilePath);
+                              std::string profileFilePath,
+                              std::string clientSimPath
+                              );
 
         virtual ~SimInterface();
 
         void simStart();
-
         /**describe discreate event*/
         virtual void describe(){};
-
         /**describe concrete event*/
         virtual void describeCon(){};
-
-        /** user it to communicate about simulation trigger*/
-
         /** test value helper*/
-        void testAndPrint(std::string testName, ValRep& simVal, ValRep& rhs);
+        void testAndPrint(std::string testName, ValRepBase& simVal, ValRepBase& rhs);
         void testAndPrint(std::string testName, ull simVal, ull expect);
+        /** build proxy SimEvent*/
+        void createModelSimEvent();
 
-    };
 
-    class testItf: public SimInterface{
-
-        int x;
-
-        void describe() override{
-
-            sim{
-                x = 55;
-                incCycle(5);
-                sim{
-
-                };
-            };
-            incCycle(4);
-
-        }
     };
 
 }

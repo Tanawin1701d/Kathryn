@@ -47,6 +47,8 @@ namespace kathryn{
         ull getDepthSize() const {assert(DEPTH_SIZE != 0); return DEPTH_SIZE;}
         auto& getMemBlockAgents(){return memBlockAgents;}
 
+        ValRepBase& at(ull idx);
+
         /** override debugger*/
         std::string getMdIdentVal() override{
             return getIdentDebugValue();

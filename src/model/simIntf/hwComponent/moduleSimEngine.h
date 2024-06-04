@@ -17,11 +17,13 @@ namespace kathryn{
         Module*         _module = nullptr;
     public:
         explicit ModuleSimEngine(Module* module); //// todo module
-        /** create zone*/
+        /** create zone for hardware element*/
         std::vector<ModelProxyBuild*> recruitForCreateVar         ();
         std::vector<ModelProxyBuild*> recruitForVolatileEle       ();
         std::vector<ModelProxyBuild*> recruitForNonVolatileEle    ();
-        std::vector<LogicSimEngine*>  recruitAllLogicSimEngine    ();
+        std::vector<LogicSimEngine*>  recruitAllLogicSimEngine    (); ///// for vcdWrite
+        /** create zone for perf element*/
+        std::vector<ModelProxyBuild*> recruitPerf                 ();
 
         void recruitFromRegable(std::vector<ModelProxyBuild*>& result);
         void recruitFromWireable(std::vector<ModelProxyBuild*>& result); /// memblock is not include

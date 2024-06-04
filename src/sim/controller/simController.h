@@ -8,29 +8,28 @@
 #include<iostream>
 #include<mutex>
 
-#include "model/simIntf/base/proxyEvent.h"
 #include "sim/event/eventBase.h"
 #include "sim/event/eventQ.h"
 #include "abstract/mainControlable.h"
 
 namespace kathryn{
 
-    class ProxySimEvent;
+    class ProxySimEventBase;
     class Wire;
     class SimController: public MainControlable{
     private:
-        std::mutex _rsMtx;
-        CYCLE      _limitCycle =  1;
-        CYCLE      _curCycle   = -1;
-        EventQ     eventQ;
-        ProxySimEvent proxySimEvent;
+        std::mutex     _rsMtx;
+        CYCLE          _limitCycle    =  1;
+        CYCLE          _curCycle      = -1;
+        EventQ         eventQ;
+        ProxySimEventBase* _proxySimEvent = nullptr;
 
         void collectData();
 
     public:
 
         explicit SimController();
-        void  setProxySimVcdFile(std::string vcdFilePath);
+        void  setProxySimEvent(ProxySimEventBase* proxySimEvent);
         void  start() override;
         void  reset() override;
         void  clean() override;
@@ -38,7 +37,7 @@ namespace kathryn{
         void  saveData();
         void  setLimitCycle(CYCLE lmtCycle){_limitCycle = lmtCycle;}
         CYCLE getCurCycle();
-        ProxySimEvent* getProxySimEvent();
+        ProxySimEventBase* getProxySimEventPtr();
         void  lock();
         void  unlock();
 

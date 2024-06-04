@@ -19,7 +19,6 @@
 #include "model/flowBlock/abstract/spReg/syncReg.h"
 #include "model/debugger/modelDebugger.h"
 #include "model/simIntf/flowBlock/flowBaseSim.h"
-#include "model/simIntf/flowBlock/flowNodeSim.h"
 
 
 namespace kathryn {
@@ -124,6 +123,10 @@ namespace kathryn {
             relatedCycleConsumeReg.push_back(ctrlReg);
         }
 
+        std::vector<CtrlFlowRegBase*>& getCycleRelatedReg(){
+            return relatedCycleConsumeReg;
+        }
+
         std::vector<NodeSrcEdge>& getDependNodes() {return nodeSrcs;}
 
         /** interrupt handler*/
@@ -155,7 +158,6 @@ namespace kathryn {
          * **/
         /** unset event when state is raised there must be condition that bring this down*/
         virtual void      makeUnsetStateEvent(){assert(false);}
-
         virtual void      makeUserResetEvent(){assert(false);}
         /** provided src state data*/
         virtual Operable* getExitOpr(){ return nullptr; };
@@ -167,9 +169,6 @@ namespace kathryn {
         virtual int       getCycleUsed() = 0;
         /** is Stateful node (reffer to node that consume at least 1 cycle from machine)*/
         virtual bool      isStateFullNode(){ return true; }
-        /** get state register if there are*/
-        virtual CtrlFlowRegBase*  getStateRegisterIfThere(){ return nullptr; }
-
 
         /** get debugger value*/
         std::string getMdIdentVal() override{

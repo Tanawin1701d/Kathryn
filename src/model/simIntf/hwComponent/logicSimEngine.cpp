@@ -1,6 +1,8 @@
 //
 // Created by tanawin on 31/5/2024.
 //
+
+#include "modelCompile/proxyEventBase.h"
 #include "logicSimEngine.h"
 #include "sim/controller/simController.h"
 
@@ -119,7 +121,7 @@ namespace kathryn{
     ///////////////////// proxyRetInit
     ///
     void LogicSimEngine::proxyRetInit(){
-        ProxySimEvent* proxySimEvent = getSimController()->getProxySimEvent();
+        ProxySimEventBase* proxySimEvent = getSimController()->getProxySimEventPtr();
         proxyRep = proxySimEvent->getValRep(getVarName());
     }
 

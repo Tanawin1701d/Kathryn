@@ -2,10 +2,13 @@
 // Created by tanawin on 25/1/2567.
 //
 
-#include "simInterface.h"
+#include <iostream>
 
 #include <utility>
 
+#include "simInterface.h"
+
+#include <model/simIntf/base/proxyBuildMng.h>
 
 
 namespace kathryn{
@@ -20,16 +23,14 @@ namespace kathryn{
 
     SimInterface::SimInterface(CYCLE limitCycle,
                                std::string vcdFilePath,
-                               std::string profileFilePath):
+                               std::string profileFilePath,
+                               std::string clientSimPath = "error"
+                               ):
+            SIM_CLIENT_PATH(std::move(clientSimPath)),
             _vcdWriter (new VcdWriter(std::move(vcdFilePath))),
             _flowWriter(new FlowWriter(std::move(profileFilePath))),
             _limitCycle(limitCycle)
     {
-        _ModuleSimEvent = new ModuleSimEvent(getGlobalModulePtr(),
-                                             rstWire,
-                                             _vcdWriter,
-                                             _flowWriter->getstartEle()
-                                             );
         SimController* simCtrl = getSimController();
         assert(simCtrl != nullptr);
         simCtrl->setLimitCycle(limitCycle);
@@ -38,17 +39,15 @@ namespace kathryn{
     SimInterface::~SimInterface() {
         delete _vcdWriter;
         delete _flowWriter;
-        delete _ModuleSimEvent;
+        delete _modelSimEvent;
         /**no need to delete user event because sim controller will delete it */
     }
-
-
 
     void SimInterface::simStart() {
         /** set assiging mode*/
         setAssignMode(AM_SIM);
-        /***module sim Event is auto insert to event*/
-
+        /***compile and link module sim Event */
+        createModelSimEvent();
         /***con simulating*/
         describe();
         /**con simulating*/
@@ -80,9 +79,8 @@ namespace kathryn{
         /**build new auto start trigger*/
         lastCtTrigger = new ConcreteTriggerEvent(2,this,
                                                  [&](){return true;}, SIM_CC_TRIGGER_PRIO_FRONT_CYCLE);
-        conThread = std::make_unique<std::thread>(&SimInterface::describeConWrapper, this);
+        conThread = std::make_unique<std::thread>(&SimInterface::describeConWrapper,this);
         assert(conThread != nullptr);
-        /** to prevent simulation queue dead lock*/
     }
 
     void SimInterface::conCycleBase(CYCLE startCycle, int priority){
@@ -109,7 +107,7 @@ namespace kathryn{
         conCycleBase(startCycle, SIM_CC_TRIGGER_PRIO_FRONT_CYCLE);
     }
 
-    void SimInterface::conNextCycle(kathryn::CYCLE amtCycle) {
+    void SimInterface::conNextCycle(CYCLE amtCycle) {
         conCycle(conCurCycleUsed + amtCycle);
     }
 
@@ -127,9 +125,15 @@ namespace kathryn{
         /** to prevent queue stuck*/
     }
 
-    void SimInterface::testAndPrint(std::string testName, ValRep &simValLhs, ValRep& testValRhs) {
+    /***
+     *
+     * test value
+     *
+     */
 
-        if ((simValLhs == testValRhs).getLogicalValue()){
+    void SimInterface::testAndPrint(std::string testName, ValRepBase& simValLhs, ValRepBase& testValRhs) {
+
+        if (simValLhs.getVal() == testValRhs.getVal()){
             std::cout << TC_GREEN << testName << " pass " << TC_DEF << std::endl;
         }else{
             std::cout << TC_RED << testName << " fail expect: "
@@ -149,6 +153,29 @@ namespace kathryn{
         }
 
     }
+
+
+    /**
+     *
+     * create model client
+     *
+     */
+
+    void SimInterface::createModelSimEvent(){
+
+        /** generate c++ file**/
+        ProxyBuildMng buildMng(getGlobalModulePtr()); /// todo , SIM_CLIENT_PATH);
+        ///buildMng.startWriteModelSim();
+        buildMng.startCompile();
+        _modelSimEvent = buildMng.loadAndGetProxy();
+        _modelSimEvent->setVcdWriter(_vcdWriter);
+
+
+
+    }
+
+
+
 
 
 

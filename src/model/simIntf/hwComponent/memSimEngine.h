@@ -28,7 +28,6 @@ namespace kathryn{
         std::string createMemorizeOp()     override{return "";}
         std::string createMemBlkAssOp()    override{return "";}
 
-        bool        isFlowBlockIden()      override{return false;}
         bool        isUserDeclare()        override{return false;}
 
         void        proxyRetInit()         override;

@@ -52,10 +52,6 @@ namespace kathryn{
 
     public:
         ValRep(const ull value): ValRepBase(_len, value){}
-        /** convert to binary string*/
-        std::string getBiStr(){
-
-        }
 
         template<int sl_start, int sl_stop>
         inline ull buildMask(){

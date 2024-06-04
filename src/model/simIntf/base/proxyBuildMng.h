@@ -5,22 +5,27 @@
 #ifndef PROXYBUILDMNG_H
 #define PROXYBUILDMNG_H
 #include <string>
+#include <cstdlib>
+
 #include "model/hwComponent/module/module.h"
 #include "model/simIntf/hwComponent/moduleSimEngine.h"
 #include "util/fileWriter/fileWriterBase.h"
+#include "modelCompile/proxyEventBase.h"
 
 
 namespace kathryn{
 
     class ProxyBuildMng{
     protected:
-        Module* _startModule = nullptr;
+        Module*          _startModule    = nullptr;
         ModuleSimEngine* moduleSimEngine = nullptr;
-        FileWriterBase* fileWriter = nullptr;
-        const std::string desPath
-        = "../src/modelCompile/proxyEventUser.cpp";
-
-        const std::string PERF_PREFIX = "PERF_";
+        FileWriterBase* fileWriter       = nullptr;
+        const std::string desGenPath
+        = "../src/modelCompile/generated/proxyEventUser.cpp";
+        const std::string desCompilePath
+        = "../src/modelCompile/generated/build/simClient.so";
+        const std::string srcBuildPath
+        ="../src/modelCompile/startGen.sh";
 
     public:
         ProxyBuildMng(Module* startModule);
@@ -28,6 +33,7 @@ namespace kathryn{
         std::vector<ModelProxyBuild*>
         doTopologySort(std::vector<ModelProxyBuild*>& graph);
 
+        ////////// generate path
         void startWriteModelSim();
         ////////// for create all variable
         void startWriteCreateVariable();
@@ -45,6 +51,13 @@ namespace kathryn{
         void startWritePerfDec();
         ///////// void start write perf col
         void startWritePerfCol();
+
+
+        //////// compile file
+        void startCompile();
+        ///////// load path
+        ProxySimEventBase* loadAndGetProxy();
+
 
 
     };
