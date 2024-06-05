@@ -22,7 +22,6 @@ namespace kathryn{
         CYCLE          _limitCycle    =  1;
         CYCLE          _curCycle      = -1;
         EventQ         eventQ;
-        ProxySimEventBase* _proxySimEvent = nullptr;
 
         void collectData();
 
@@ -37,7 +36,6 @@ namespace kathryn{
         void  saveData();
         void  setLimitCycle(CYCLE lmtCycle){_limitCycle = lmtCycle;}
         CYCLE getCurCycle();
-        ProxySimEventBase* getProxySimEventPtr();
         void  lock();
         void  unlock();
 

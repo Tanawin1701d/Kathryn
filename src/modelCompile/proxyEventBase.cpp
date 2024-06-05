@@ -14,8 +14,7 @@ namespace kathryn{
 
 ProxySimEventBase::ProxySimEventBase():
     EventBase     (0,SIM_MODEL_PRIO),
-    _vcdWriter    (nullptr),
-    curCycle      (0){}
+    _vcdWriter    (nullptr){}
 
 ProxySimEventBase::~ProxySimEventBase(){delete _vcdWriter;}
 
@@ -43,8 +42,7 @@ void ProxySimEventBase::curCycleCollectData(){
             (PARAM_VCD_REC_POL == MDE_REC_ONLY_USER) |
             (PARAM_VCD_REC_POL == MDE_REC_ONLY_INTERNAL)
             ){
-            _vcdWriter->addNewTimeStamp(curCycle);
-            curCycle++;
+            _vcdWriter->addNewTimeStamp(getCurCycle()*10);
         }
 
         if ((PARAM_VCD_REC_POL == MDE_REC_BOTH) | (PARAM_VCD_REC_POL == MDE_REC_ONLY_USER)){
@@ -65,6 +63,12 @@ void ProxySimEventBase::simStartNextCycle(){
     ///data from memory if there is update from memory to register because
     /// memEleHolder will provide temporary data to register simulation
 }
+
+EventBase* ProxySimEventBase::genNextEvent(){
+    _targetCycle++;
+    return this;
+}
+
 
 
 }

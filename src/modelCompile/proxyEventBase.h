@@ -17,7 +17,6 @@ namespace kathryn{
     class ProxySimEventBase: public EventBase{
     protected:
         VcdWriter* _vcdWriter = nullptr;
-        CYCLE curCycle = 0;
 
         std::unordered_map<std::string, ValRepBase*>  callBack; //// for mem block use start point
         std::unordered_map<std::string, ValRepBase*>  callBackPerf;
@@ -35,6 +34,7 @@ namespace kathryn{
         void curCycleCollectData() override;
         void simStartNextCycle()   override;
         void simExitCurCycle()     override{}
+        EventBase* genNextEvent()        override;
 
         bool needToDelete()        override{return false;}
 

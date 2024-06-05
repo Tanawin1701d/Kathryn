@@ -7,8 +7,7 @@
 #include <utility>
 
 #include "simInterface.h"
-
-#include <model/simIntf/base/proxyBuildMng.h>
+#include "model/simIntf/base/proxyBuildMng.h"
 
 
 namespace kathryn{
@@ -131,7 +130,7 @@ namespace kathryn{
      *
      */
 
-    void SimInterface::testAndPrint(std::string testName, ValRepBase& simValLhs, ValRepBase& testValRhs) {
+    void SimInterface::testAndPrint(const std::string& testName, ValRepBase& simValLhs, ValRepBase& testValRhs) {
 
         if (simValLhs.getVal() == testValRhs.getVal()){
             std::cout << TC_GREEN << testName << " pass " << TC_DEF << std::endl;
@@ -142,7 +141,7 @@ namespace kathryn{
         }
     }
 
-    void SimInterface::testAndPrint(std::string testName, ull simVal, ull expect) {
+    void SimInterface::testAndPrint(const std::string& testName, ull simVal, ull expect) {
 
         if (simVal == expect) {
             std::cout << TC_GREEN << testName << " pass " << TC_DEF << std::endl;

@@ -17,7 +17,7 @@ namespace kathryn{
               prority),
               _simInterfaceMaster(simInterfaceMaster),
               _conditionTrigger(conditionTrigger){
-        addNewEvent(this);
+        getSimController()->addEvent(this);
     }
 
     void ConcreteTriggerEvent::simStartCurCycle() {

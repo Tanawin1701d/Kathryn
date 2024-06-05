@@ -51,6 +51,10 @@ namespace kathryn{
          * */
 
         virtual void simExitCurCycle() = 0;
+        /**
+         * gen next event if there are
+         */
+        virtual EventBase* genNextEvent() {return nullptr;}
 
 
         /** event base will be schedule by using priority queue
@@ -76,6 +80,7 @@ namespace kathryn{
         virtual bool needToDelete(){
             return true;
         }
+
     };
 
 

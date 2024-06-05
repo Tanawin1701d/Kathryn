@@ -8,14 +8,7 @@
 namespace kathryn{
 
     SimController::SimController():
-    _limitCycle(0),
-    _proxySimEvent(nullptr)
-    {}
-
-    void SimController::setProxySimEvent(ProxySimEventBase* proxySimEvent){
-        _proxySimEvent = proxySimEvent;
-    }
-
+    _limitCycle(0){}
 
     void SimController::collectData() {}
 
@@ -26,16 +19,8 @@ namespace kathryn{
         while ( (!eventQ.isEmpty()) &&
                 (eventQ.getNextEvent()->getCurCycle() <= _limitCycle)
         ){
-            EventBase* nextEvent = eventQ.getNextEvent();
 
-            /** simulate every cycle that event queue skip*/
-            CYCLE remainCycle = (nextEvent->getCurCycle()) - _curCycle;
-            for (int remCycle = 0; remCycle < remainCycle; remCycle++){
-                _proxySimEvent->simStartCurCycle();
-                _proxySimEvent->curCycleCollectData();
-                _proxySimEvent->simStartNextCycle();
-                _proxySimEvent->simExitCurCycle();
-            }
+            EventBase* nextEvent = eventQ.getNextEvent();
             /**we are sure that nextEvent is valid due to while loop at the top*/
             assert(_curCycle != nextEvent->getCurCycle()); //// check therer is no same cycle used
             _curCycle = nextEvent->getCurCycle();
@@ -67,20 +52,16 @@ namespace kathryn{
                 curEvent->simExitCurCycle();
             }
             for (auto curEvent: _curCycleEvents){
-                if (curEvent->needToDelete())
+                EventBase* afterEvent = curEvent->genNextEvent();
+                if (afterEvent != nullptr){
+                    addEvent(afterEvent);
+                }
+                if (curEvent->needToDelete()){
                     delete curEvent;
+                }
             }
             lock();
 
-        }
-        unlock();
-
-        lock();
-        for (; _curCycle < _limitCycle; _curCycle++){
-            _proxySimEvent->simStartCurCycle();
-            _proxySimEvent->curCycleCollectData();
-            _proxySimEvent->simStartNextCycle();
-            _proxySimEvent->simExitCurCycle();
         }
         unlock();
 
@@ -101,7 +82,6 @@ namespace kathryn{
         lock();
         _limitCycle = 1;
         eventQ.reset();
-        _proxySimEvent = nullptr; ///// proxy is create from sim interface
         unlock();
     }
 
@@ -114,10 +94,6 @@ namespace kathryn{
         CYCLE cpyCycle = _curCycle;
         unlock();
         return cpyCycle;
-    }
-
-    ProxySimEventBase* SimController::getProxySimEventPtr(){
-        return _proxySimEvent;
     }
 
     void SimController::lock(){

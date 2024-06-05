@@ -60,8 +60,8 @@ namespace kathryn{
         /**describe concrete event*/
         virtual void describeCon(){};
         /** test value helper*/
-        void testAndPrint(std::string testName, ValRepBase& simVal, ValRepBase& rhs);
-        void testAndPrint(std::string testName, ull simVal, ull expect);
+        void testAndPrint(const std::string& testName, ValRepBase& simVal, ValRepBase& rhs);
+        void testAndPrint(const std::string& testName, ull simVal, ull expect);
         /** build proxy SimEvent*/
         void createModelSimEvent();
 
