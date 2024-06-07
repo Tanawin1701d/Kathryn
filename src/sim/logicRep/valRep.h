@@ -5,11 +5,11 @@
 #ifndef KATHRYN_VALREP_H
 #define KATHRYN_VALREP_H
 
+#include <cassert>
 #include <functional>
 #include <string>
 #include <cstdio>
 #include <bitset>
-#include "model/hwComponent/abstract/Slice.h"
 
 namespace kathryn{
 
@@ -42,10 +42,18 @@ namespace kathryn{
             return preRet;
         }
 
+        void setVar(ull x){_val = x;}
+
         ull getVal()const {return _val;}
 
         explicit operator ull() const{
             return _val;
+        }
+
+        ValRepBase& operator = (const ValRepBase& rhs){
+            assert(_length == rhs._length);
+            _val = rhs._val;
+            return *this;
         }
     };
 

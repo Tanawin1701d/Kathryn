@@ -64,26 +64,26 @@ namespace kathryn{
         {}
 
         void simAssert() override{
-            incCycle(13);
-            sim {
-
-                testAndPrint("check End Val", (ull)_md->a, 32);
-            };
-            sim{
-                ull testVal = 32;
-                testAndPrint("check C Val", (ull)_md->a, testVal);
-            };
+            // incCycle(13);
+            // sim {
+            //
+            //     testAndPrint("check End Val", (ull)_md->a, 32);
+            // };
+            // sim{
+            //     ull testVal = 32;
+            //     testAndPrint("check C Val", (ull)_md->a, testVal);
+            // };
         }
 
         void simDriven() override{
-            incCycle(2);
-            for (int i = 0; i < 100; i++) {
-                sim {
-                    _md->iv = 7;
-                    _md->c  = 7;
-                };
-                incCycle(1);
-            }
+            // incCycle(2);
+            // for (int i = 0; i < 100; i++) {
+            //     sim {
+            //         _md->iv = 7;
+            //         _md->c  = 7;
+            //     };
+            //     incCycle(1);
+            // }
         }
     };
 

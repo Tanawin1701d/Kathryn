@@ -67,7 +67,7 @@ namespace kathryn {
         /** slicable overload*/
 
         LogicSimEngine* getLogicSimEngineFromOpr() override{
-            return _master->getLogicSimEngine();
+            return _master->getSimEngine();
         };
 
         SliceAgent<T>& operator() (int start, int stop) override{

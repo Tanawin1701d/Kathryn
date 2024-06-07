@@ -20,22 +20,34 @@ namespace kathryn{
         struct SerializeEvent{
             std::mutex  mtx;
             std::condition_variable conVar;
-            bool isProcessed = false;
+            CYCLE  lastCycleNotified =  -1;
 
-            void notify(){
+
+            void notify(CYCLE yourCycle){
                 mtx.lock();
-                isProcessed = true;
-                ///std::cout << "isPeocessed is set to true "<< isProcessed <<std::endl;
+                if (yourCycle >= lastCycleNotified){
+                    lastCycleNotified = yourCycle;
+                }
                 mtx.unlock();
                 conVar.notify_all();
 
             }
 
-            void wait(){
+            void wait(CYCLE yourCycle){
+
                 std::unique_lock<std::mutex> locker(mtx);
+                if (yourCycle <= lastCycleNotified){
+                    ////// other is ahead of us
+                    locker.unlock();
+                    return;
+                }
+
                 conVar.wait(locker, [&](){ /****std::cout << isProcessed << std::endl;****/
-                return isProcessed;});
+                return yourCycle <= lastCycleNotified;});
+                mtx.unlock();
+
             }
+
 
         };
 
@@ -44,8 +56,15 @@ namespace kathryn{
         SimInterface* _simInterfaceMaster = nullptr;
         std::function<bool()>& _conditionTrigger;
 
-        SerializeEvent startEvent;
-        SerializeEvent finishEvent;
+
+        SerializeEvent startSimCurEvent;
+        SerializeEvent finishSimCurEvent;
+        SerializeEvent startEndCycleEvent;
+        SerializeEvent finishEndCycleEvent;
+
+
+        CYCLE nextCycle = -1;
+        bool  stop       = false;
 
     public:
         explicit ConcreteTriggerEvent(CYCLE targetCycle,
@@ -58,17 +77,17 @@ namespace kathryn{
 
         void curCycleCollectData() override{};
 
-        void simStartNextCycle() override{};
+        void simStartNextCycle() override;
 
         void simExitCurCycle() override{};
 
-        SerializeEvent& getStartSerializer(){
-            return startEvent;
-        }
+        void setFutureCycle(CYCLE futureCycle){nextCycle = futureCycle;}
 
-        SerializeEvent& getFinishSerializer(){
-            return finishEvent;
-        }
+        EventBase* genNextEvent() override;
+
+        void markStop(){stop = 1;}
+
+        bool needToDelete() override{ return stop;}
 
 
     };

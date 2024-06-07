@@ -2,6 +2,8 @@
 // Created by tanawin on 3/12/2566.
 //
 
+#include "model/hwComponent/globalComponent/globalComponent.h"
+
 #include "controller.h"
 
 #include "util/logger/logger.h"

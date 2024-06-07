@@ -7,3 +7,5 @@
 /KOut/**/*.vcd
 /KOut/**/*.prof
 /KOut/**/*.sl
+src/modelCompile/build/*
+src/modelCompile/generated/*

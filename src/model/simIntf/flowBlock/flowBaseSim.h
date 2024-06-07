@@ -38,14 +38,15 @@ namespace kathryn{
 
         std::string createVariable()   override;
         std::string createOp()         override; ///// we use op to do all operation
-        std::string createMemorizeOp() override;
-        std::string createMemBlkAssOp()override;
-        bool        isUserDeclare()    override;
+        std::string createMemorizeOp() override{return "";}
+        std::string createMemBlkAssOp()override{return "";}
+        bool        isUserDeclare()    override{return false;}
 
         ////////
         ///
-        void        proxyRetInit()     override;
+        void        proxyRetInit(ProxySimEventBase* modelSimEvent)     override;
         ValRepBase* getProxyRep()      override;
+        bool        isBlockRunning();
 
 
     };

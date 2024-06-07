@@ -9,7 +9,6 @@
 #include <algorithm>
 
 #include "operable.h"
-#include "model/hwComponent/abstract/operable.h"
 #include "model/hwComponent/abstract/Slice.h"
 #include "updateEvent.h"
 

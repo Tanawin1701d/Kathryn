@@ -32,7 +32,7 @@ namespace kathryn{
 
             /** write data for sorting*/
             for (int i = 0; i < _numSize; i++){
-                _core.memBlk._myMem.s((_startNumIdx0 + 4*i)/4,_numSize - i + 10);
+                _core.memBlk._myMem.at((_startNumIdx0 + 4*i)/4).setVar(_numSize - i + 10);
             }
         }
 
@@ -96,13 +96,13 @@ namespace kathryn{
             assert(pipfb != nullptr);
             /** check recv block*/
             FlowBlockPipeCom* recvPipCom = pipfb->getRecvFbPipCom();
-            bool recvRunning = recvPipCom->getFlowSimEngine()->isBlockOrNodeRunning();
+            bool recvRunning = recvPipCom->getSimEngine()->isBlockRunning();
             if (recvRunning)
                 slotWriter.addSlotVal(stageIdx, "WAIT_RECV");
 
             /** check send block*/
             FlowBlockPipeCom* sendPipCom = pipfb->getSendFbPipCom();
-            bool sendRunning =  sendPipCom->getFlowSimEngine()->isBlockOrNodeRunning();
+            bool sendRunning =  sendPipCom->getSimEngine()->isBlockRunning();
             if (sendRunning)
                 slotWriter.addSlotVal(stageIdx, "WAIT_SEND");
 
@@ -114,7 +114,7 @@ namespace kathryn{
             if (writeSlotIfStall(RISC_FETCH_SORT, pipblock)){return;}
 
 
-            if (_core.fetch.fetchBlock->getFlowSimEngine()->isBlockOrNodeRunning()) {
+            if (_core.fetch.fetchBlock->getSimEngine()->isBlockRunning()) {
 
                 if (ull(_core.fetch.readEn)) {
                     if (ull(_core.fetch.readFin)) {
@@ -167,7 +167,7 @@ namespace kathryn{
                 {0b11'100'11, "SYSTEM"},
             };
 
-            if (_core.decode.decodeBlk->getFlowSimEngine()->isBlockOrNodeRunning()) {
+            if (_core.decode.decodeBlk->getSimEngine()->isBlockRunning()) {
 
                 std::string decStr = (decMap.find(op) != decMap.end()) ? decMap[op] : "UNKNOWN";
                 slotWriter.addSlotVal(RISC_DECODE_SORT, decStr);
@@ -228,13 +228,13 @@ namespace kathryn{
             }
 
             if (_core.execute.regAccessBlock
-                ->getFlowSimEngine()->isBlockOrNodeRunning()){
+                ->getSimEngine()->isBlockRunning()){
                 slotWriter.addSlotVal(RISC_EXECUTE_SORT, "REG_ACCESS");
             }else if (_core.execute.aluBlock
-                    ->getFlowSimEngine()->isBlockOrNodeRunning()){
+                    ->getSimEngine()->isBlockRunning()){
                 slotWriter.addSlotVal(RISC_EXECUTE_SORT, "SIMPLE_ALU");
             }else if (_core.execute.aluBlock
-                    ->getFlowSimEngine()->isBlockOrNodeRunning()){
+                    ->getSimEngine()->isBlockRunning()){
                 slotWriter.addSlotVal(RISC_EXECUTE_SORT, "COMPLEX_ALU");
             }else{
                 slotWriter.addSlotVal(RISC_EXECUTE_SORT, "unknownState");
@@ -251,9 +251,9 @@ namespace kathryn{
             slotWriter.addSlotVal(RISC_EXECUTE_SORT, "finLS " + std::to_string(ull(_core.execute.testExit)));
             slotWriter.addSlotVal(RISC_EXECUTE_SORT, "readAddr " + std::to_string(ull(_core.execute.readAddr)));
             slotWriter.addSlotVal(RISC_EXECUTE_SORT, "m16 " + std::to_string(ull(_core.execute.m16)));
-            slotWriter.addSlotVal(RISC_EXECUTE_SORT, "read1020 " + std::to_string(ull(_core.memBlk._myMem.v(1020 >> 2))));
-            slotWriter.addSlotVal(RISC_EXECUTE_SORT, "read1024 " + std::to_string(ull(_core.memBlk._myMem.v(1024 >> 2))));
-            slotWriter.addSlotVal(RISC_EXECUTE_SORT, "read1028 " + std::to_string(ull(_core.memBlk._myMem.v(1028 >> 2))));
+            slotWriter.addSlotVal(RISC_EXECUTE_SORT, "read1020 " + std::to_string(ull(_core.memBlk._myMem.at(1020 >> 2))));
+            slotWriter.addSlotVal(RISC_EXECUTE_SORT, "read1024 " + std::to_string(ull(_core.memBlk._myMem.at(1024 >> 2))));
+            slotWriter.addSlotVal(RISC_EXECUTE_SORT, "read1028 " + std::to_string(ull(_core.memBlk._myMem.at(1028 >> 2))));
             slotWriter.addSlotVal(RISC_EXECUTE_SORT, "resetSignal " + std::to_string(ull(_core.misPredic)));
 
 
@@ -284,12 +284,12 @@ namespace kathryn{
         void RiscvSimInterfaceSort::writeMem(){
             for (int i = 0; i < _numSize; i++){
                 slotWriter.addSlotVal(RISC_MEM_SORT, "idx" + std::to_string(i) + " " +
-                                        std::to_string(_core.memBlk._myMem.v((_startNumIdx0 + 4*i)/4)) + " addr " + std::to_string((_startNumIdx0 + 4*i)/4));
+                                        std::to_string(ull(_core.memBlk._myMem.at((_startNumIdx0 + 4*i)/4))) + " addr " + std::to_string((_startNumIdx0 + 4*i)/4));
             }
             slotWriter.addSlotVal(RISC_MEM_SORT, "------------------------------");
             for (int i = 0; i < _numSize; i++){
                 slotWriter.addSlotVal(RISC_MEM_SORT, "idx" + std::to_string(i) + " " +
-                                                std::to_string(_core.memBlk._myMem.v((_startNumIdx1 + 4*i)/4 ))
+                                                std::to_string((ull)(_core.memBlk._myMem.at((_startNumIdx1 + 4*i)/4 )))
                                                 + " addr " + std::to_string((_startNumIdx1 + 4*i)/4)
                                                 );
             }
@@ -313,7 +313,7 @@ namespace kathryn{
             uint32_t instr;
             while(asmFile.read(reinterpret_cast<char*>(&instr), sizeof instr)){
                 assert((instr & 0b11) == 0b11); ////// check instruction
-                _core.memBlk._myMem.s(writeAddr, instr);
+                _core.memBlk._myMem.at(writeAddr).setVar(instr);
                 //////////////std::cout << instr << std::endl;
                 writeAddr++;
             }

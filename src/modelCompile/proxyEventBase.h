@@ -7,6 +7,8 @@
 
 #include <unordered_map>
 #include <utility>
+
+#include "params/simParamType.h"
 #include "sim/logicRep/valRep.h"
 #include "sim/event/eventBase.h"
 #include "sim/simResWriter/simResWriter.h"
@@ -16,7 +18,8 @@ namespace kathryn{
 
     class ProxySimEventBase: public EventBase{
     protected:
-        VcdWriter* _vcdWriter = nullptr;
+        MODULE_VCD_REC_POL  _VCD_REC_POL = MDE_REC_SKIP;
+        VcdWriter*          _vcdWriter = nullptr;
 
         std::unordered_map<std::string, ValRepBase*>  callBack; //// for mem block use start point
         std::unordered_map<std::string, ValRepBase*>  callBackPerf;
@@ -38,7 +41,8 @@ namespace kathryn{
 
         bool needToDelete()        override{return false;}
 
-        void setVcdWriter(VcdWriter* vcdWriter){_vcdWriter = vcdWriter;}
+        void setVcdWritePol    (MODULE_VCD_REC_POL vcd_rec_pol){_VCD_REC_POL = vcd_rec_pol;}
+        void setVcdWriter      (VcdWriter*         vcdWriter  ){_vcdWriter   = vcdWriter;  }
         void registerToCallBack(const std::string& cbName, ValRepBase* val){
             assert(val != nullptr && (callBack.find(cbName) == callBack.end()));
             callBack.insert({cbName, val});

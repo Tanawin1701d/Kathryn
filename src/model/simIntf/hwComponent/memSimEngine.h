@@ -30,14 +30,14 @@ namespace kathryn{
 
         bool        isUserDeclare()        override{return false;}
 
-        void        proxyRetInit()         override;
+        void        proxyRetInit(ProxySimEventBase* modelSimEvent)override;
         ValRepBase* getProxyRep()          override;
 
     };
 
     class MemSimEngineInterface{
     public:
-        virtual ~MemSimEngineInterface() = 0;
+        virtual ~MemSimEngineInterface() = default;
         virtual MemSimEngine* getSimEngine() = 0;
     };
 

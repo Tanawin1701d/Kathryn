@@ -3,6 +3,7 @@
 //
 
 #include "userEvent.h"
+#include "sim/controller/simController.h"
 
 #include <utility>
 
@@ -17,7 +18,7 @@ namespace kathryn{
             _parent(parent),
             _activeFunc(std::move(activeFunc))
     {
-        addNewEvent(this);
+        getSimController()->addEvent(this);
     }
 
     UserEvent::UserEvent():

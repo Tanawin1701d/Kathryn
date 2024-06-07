@@ -19,19 +19,24 @@ namespace kathryn{
     protected:
         Module*          _startModule    = nullptr;
         ModuleSimEngine* moduleSimEngine = nullptr;
-        FileWriterBase* fileWriter       = nullptr;
-        const std::string desGenPath
+        FileWriterBase* proxyfileWriter  = nullptr;
+        void*           _handle          = nullptr;
+
+
+        const std::string srcGenPath
         = "../src/modelCompile/generated/proxyEventUser.cpp";
-        const std::string desCompilePath
-        = "../src/modelCompile/generated/build/simClient.so";
-        const std::string srcBuildPath
-        ="../src/modelCompile/startGen.sh";
+        const std::string srcBuilderPath
+        = "../src/modelCompile/startGen.sh";
+        const std::string srcDynLoadPath
+        = "../src/modelCompile/build/simClient.so";
 
     public:
-        ProxyBuildMng(Module* startModule);
+        ProxyBuildMng() = default;
         ~ProxyBuildMng();
         std::vector<ModelProxyBuild*>
         doTopologySort(std::vector<ModelProxyBuild*>& graph);
+
+        void setStartModule(Module* startModule);
 
         ////////// generate path
         void startWriteModelSim();
@@ -51,12 +56,12 @@ namespace kathryn{
         void startWritePerfDec();
         ///////// void start write perf col
         void startWritePerfCol();
-
-
         //////// compile file
         void startCompile();
         ///////// load path
         ProxySimEventBase* loadAndGetProxy();
+        ///////// disload
+        void unloadProxy();
 
 
 

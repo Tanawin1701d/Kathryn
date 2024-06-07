@@ -29,7 +29,7 @@ namespace kathryn{
         void recruitFromWireable(std::vector<ModelProxyBuild*>& result); /// memblock is not include
 
         /** retrieve zone*/
-        void retrieveInit();
+        void retrieveInit(ProxySimEventBase* simEventBase);
 
         /** template zone*/
         template<typename S, typename T>
@@ -38,7 +38,7 @@ namespace kathryn{
             std::vector<T>& eleVec);
 
         template<typename T>
-        void retrieveInitFromVector(std::vector<T*>& eleVec);
+        void retrieveInitFromVector(ProxySimEventBase* simEventBase,std::vector<T*>& eleVec);
 
 
 
@@ -47,7 +47,7 @@ namespace kathryn{
 
     class ModuleSimEngineInterface{
     public:
-        virtual ~ModuleSimEngineInterface() = 0;
+        virtual ~ModuleSimEngineInterface() = default;
         virtual ModuleSimEngine* getSimEngine() = 0;
     };
 

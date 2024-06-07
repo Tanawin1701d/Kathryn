@@ -43,8 +43,6 @@ namespace kathryn {
         void makeUserRstEvent(Operable* userRst) override;
         /** exit expression*/
         Operable* generateEndExpr() override;
-
-        bool isSimAtFullSyn();
     };
 
     std::string genConseBinaryValue(bool bitVal, int size);

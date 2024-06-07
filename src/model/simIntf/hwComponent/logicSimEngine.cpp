@@ -22,7 +22,7 @@ namespace kathryn{
     {
         assert(asb != nullptr);
         assert(ident != nullptr);
-        assert(_vcdSigType != VCD_SIG_TYPE::VST_DUMMY);
+        //assert(_vcdSigType != VCD_SIG_TYPE::VST_DUMMY);
         ///////// fill asb  to system to support topology sort
     }
 
@@ -47,7 +47,7 @@ namespace kathryn{
         }
     }
 
-    std::string getVarNameFromOpr(Operable* opr){
+    std::string LogicSimEngine::getVarNameFromOpr(Operable* opr){
         assert(opr != nullptr);
         return opr->getExactOperable().getLogicSimEngineFromOpr()->getVarName();
     }
@@ -120,9 +120,8 @@ namespace kathryn{
     }
     ///////////////////// proxyRetInit
     ///
-    void LogicSimEngine::proxyRetInit(){
-        ProxySimEventBase* proxySimEvent = getSimController()->getProxySimEventPtr();
-        proxyRep = proxySimEvent->getValRep(getVarName());
+    void LogicSimEngine::proxyRetInit(ProxySimEventBase* modelSimEvent){
+        proxyRep = modelSimEvent->getValRep(getVarName());
     }
 
     ValRepBase* LogicSimEngine::getProxyRep(){

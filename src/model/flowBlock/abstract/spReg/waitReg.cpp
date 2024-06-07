@@ -74,17 +74,6 @@ namespace kathryn{
         return &((*_condOpr) & ((*this) == _upState));
     }
 
-    bool CondWaitStateReg::isSimAtWaiting(){
-        /** register sim*/
-        assert(getRtlValItf()->isCurValSim());
-        ValRep& curVal = getRtlValItf()->getCurVal();
-        /** val sim*/
-        assert(_downState.getRtlValItf()->isCurValSim());
-        ValRep& restCurVal = _downState.getRtlValItf()->getCurVal();
-
-        return (curVal > restCurVal).getLogicalValue();
-    }
-
     /**
      *
      * cycle count wait state register
@@ -192,15 +181,5 @@ namespace kathryn{
         return &((*this)(0) & ((*this)(1, _totalBitSize) == (*_endCnt)));
     }
 
-    bool CycleWaitStateReg::isSimAtWaiting(){
-        /** register sim*/
-        assert(getRtlValItf()->isCurValSim());
-        ValRep& curVal = getRtlValItf()->getCurVal();
-        /** val sim*/
-        assert(IdleCnt->getRtlValItf()->isCurValSim());
-        ValRep& restCurVal = IdleCnt->getRtlValItf()->getCurVal();
-
-        return (curVal > restCurVal).getLogicalValue();
-    }
 
 }

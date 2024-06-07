@@ -7,6 +7,8 @@
 
 #include <cassert>
 #include <utility>
+#include "modelCompile/proxyEventBase.h"
+
 #include "sim/simResWriter/simResWriter.h"
 
 #include "model/abstract/identBase/identBase.h"
@@ -14,7 +16,7 @@
 
 namespace kathryn{
 
-    constexpr std::string TEMP_VAR_SUFFIX = "_TEMP";
+
 
     constexpr int MAX_VAL_REP_SIZE = 64;
 
@@ -22,9 +24,9 @@ namespace kathryn{
     class ModelProxyBuild{
     protected:
         std::vector<ModelProxyBuild*> dep;
-
+        std::string TEMP_VAR_SUFFIX = "_TEMP";
     public:
-        virtual             ~ModelProxyBuild() = 0;
+        virtual             ~ModelProxyBuild()= default;
         virtual void        proxyBuildInit()   = 0;
         //// pre initialize section fill dependency
         virtual std::string  getVarName()       = 0; //// prefix is not include
@@ -47,9 +49,9 @@ namespace kathryn{
     protected:
         ValRepBase* proxyRep  = nullptr;
     public:
-        virtual void        proxyRetInit() = 0;
-        virtual ValRepBase* getProxyRep ();
-        virtual      ~ModelProxyRetrieve() = 0;
+        virtual void        proxyRetInit(ProxySimEventBase* modelSimEvent) = 0;
+        virtual ValRepBase* getProxyRep () = 0;
+        virtual      ~ModelProxyRetrieve() = default;
     };
 
     

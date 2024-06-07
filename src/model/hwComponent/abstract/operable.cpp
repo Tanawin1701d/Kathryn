@@ -62,7 +62,7 @@ namespace kathryn {
     }
 
     expression& Operable::operator<<( Operable &b) {
-        mfAssert(b.getOperableSlice().getSize() <= ValRep::bitSizeOfUll,
+        mfAssert(b.getOperableSlice().getSize() <= bitSizeOfUll,
                  "operable<&> get mismatch bit size"
         );
         auto ret =  new expression(BITWISE_SHL,
@@ -74,7 +74,7 @@ namespace kathryn {
     }
 
     expression& Operable::operator>>( Operable &b) {
-        mfAssert(b.getOperableSlice().getSize() <= ValRep::bitSizeOfUll,
+        mfAssert(b.getOperableSlice().getSize() <= bitSizeOfUll,
                  "operable<&> get mismatch bit size"
         );
         auto ret =  new expression(BITWISE_SHR,
@@ -239,6 +239,18 @@ namespace kathryn {
             makeVal(optUserAutoVal, getOperableSlice().getSize(), value);
             /** todo check bit size */
             return optUserAutoVal;
+    }
+
+    Operable::operator ull(){
+        LogicSimEngine* simEngine = getLogicSimEngineFromOpr();
+        mfAssert(getAssignMode() == AM_SIM, "can't retrieve data in model building mode");
+        mfAssert(simEngine != nullptr, "get value fail");
+        return simEngine->getProxyRep()->getVal();
+    }
+    Operable::operator ValRepBase(){
+        mfAssert(getAssignMode() == AM_SIM, "can't retrieve data in model building mode");
+        LogicSimEngine* simEngine = getLogicSimEngineFromOpr();
+        return *simEngine->getProxyRep();
     }
 
 

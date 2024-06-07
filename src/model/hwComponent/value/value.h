@@ -39,7 +39,7 @@ namespace kathryn{
         /** todo we will make value save the value and range more precisly*/
         void com_final() override {};
 
-        explicit Val(int size, ull rawValue):
+        explicit Val(int size, ull rawValue = 0):
             LogicComp({0, size},
                       TYPE_VAL,
                       new ValSimEngine(this,VST_INTEGER),
@@ -52,6 +52,7 @@ namespace kathryn{
                 AssignOpr::setMaster(this);
                 AssignCallbackFromAgent::setMaster(this);
             }
+
         /**
          * override assignable
          * */

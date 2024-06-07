@@ -3,23 +3,16 @@
 //
 
 #include "proxyBuildMng.h"
-
+#include <cstdlib>
 #include <dlfcn.h>
 #include <set>
 
 
 namespace kathryn{
 
-    ProxyBuildMng::ProxyBuildMng(Module* startModule):
-    _startModule(startModule),
-    moduleSimEngine(startModule->getSimEngine()),
-    fileWriter(nullptr)
-    {
-        assert(fileWriter != nullptr);
-        assert(startModule != nullptr);
-    }
-
     ProxyBuildMng::~ProxyBuildMng(){
+        unloadProxy();
+        delete proxyfileWriter;
     }
 
     std::vector<ModelProxyBuild*> ProxyBuildMng::doTopologySort(
@@ -82,16 +75,24 @@ namespace kathryn{
     }
 
 
+    void ProxyBuildMng::setStartModule(Module* startModule){
+        _startModule    = startModule;
+        moduleSimEngine = startModule->getSimEngine();
+
+    }
+
+
+
     void ProxyBuildMng::startWriteModelSim(){
 
         //// create file
-        fileWriter = new FileWriterBase(desGenPath);
+        proxyfileWriter = new FileWriterBase(srcGenPath);
         //// create include
-        fileWriter->addData("#include \"src/modelCompile/proxyEvent.h\"\n");
+        proxyfileWriter->addData("#include \"src/modelCompile/proxyEvent.h\"\n");
 
         /// create namespace
         ///
-        fileWriter->addData("namespace kathryn{\n\n\n\n\n\n");
+        proxyfileWriter->addData("namespace kathryn{\n\n\n\n\n\n");
 
         ///////// global variable
         startWriteCreateVariable();
@@ -107,9 +108,9 @@ namespace kathryn{
         startWritePerfCol();
 
 
-        fileWriter->addData("\n\n\n\n\n\n}\n");
-        fileWriter->flush();
-        delete fileWriter;
+        proxyfileWriter->addData("\n\n\n\n\n\n}\n");
+        proxyfileWriter->flush();
+        delete proxyfileWriter;
 
     }
 
@@ -119,8 +120,8 @@ namespace kathryn{
             moduleSimEngine->recruitForCreateVar();
 
         for (ModelProxyBuild* mpb: dayta){
-            fileWriter->addData(mpb->createVariable());
-            fileWriter->addData("\n");
+            proxyfileWriter->addData(mpb->createVariable());
+            proxyfileWriter->addData("\n");
         }
     }
 
@@ -128,16 +129,16 @@ namespace kathryn{
         std::vector<ModelProxyBuild*> dayta =
             moduleSimEngine->recruitForCreateVar();
 
-        fileWriter->addData("void ProxySimEvent::startRegisterCallBack(){\n");
+        proxyfileWriter->addData("void ProxySimEvent::startRegisterCallBack(){\n");
 
 
         for (ModelProxyBuild* mpb: dayta){
-                fileWriter->addData("       ");
-                fileWriter->addData("registerToCallBack(");
-                fileWriter->addData("\"" + mpb->getVarName()+ "\"");
-                fileWriter->addData(",");
-                fileWriter->addData(mpb->getVarName());
-                fileWriter->addData(");\n");
+                proxyfileWriter->addData("       ");
+                proxyfileWriter->addData("registerToCallBack(");
+                proxyfileWriter->addData("\"" + mpb->getVarName()+ "\"");
+                proxyfileWriter->addData(",");
+                proxyfileWriter->addData(mpb->getVarName());
+                proxyfileWriter->addData(");\n");
         }
     }
 
@@ -158,15 +159,15 @@ namespace kathryn{
         ///data from memory if there is update from memory to register because
         /// memEleHolder will provide temporary data to register simulation
 
-        fileWriter->addData("void ProxySimEvent::startVolatileEleSim(){\n");
+        proxyfileWriter->addData("void ProxySimEvent::startVolatileEleSim(){\n");
 
         std::vector<ModelProxyBuild*> mpbs = moduleSimEngine->recruitForNonVolatileEle();
 
-        fileWriter->addData("////////////////////// standard op\n");
+        proxyfileWriter->addData("////////////////////// standard op\n");
         for (ModelProxyBuild* mpb: mpbs){
-            fileWriter->addData(mpb->createOp());
+            proxyfileWriter->addData(mpb->createOp());
         }
-        fileWriter->addData("}\n");
+        proxyfileWriter->addData("}\n");
 
     }
 
@@ -184,25 +185,25 @@ namespace kathryn{
         ///data from memory if there is update from memory to register because
         /// memEleHolder will provide temporary data to register simulation
 
-        fileWriter->addData("void ProxySimEvent::startNonVolatileEleSim(){\n");
+        proxyfileWriter->addData("void ProxySimEvent::startNonVolatileEleSim(){\n");
 
         std::vector<ModelProxyBuild*> mpbs = moduleSimEngine->recruitForNonVolatileEle();
 
-        fileWriter->addData("////////////////////// standard op\n");
+        proxyfileWriter->addData("////////////////////// standard op\n");
         for (ModelProxyBuild* mpb: mpbs){
-            fileWriter->addData(mpb->createOp());
+            proxyfileWriter->addData(mpb->createOp());
         }
-        fileWriter->addData("///////////////////// memory op\n");
+        proxyfileWriter->addData("///////////////////// memory op\n");
         for (ModelProxyBuild* mpb: mpbs){
-            fileWriter->addData(mpb->createMemBlkAssOp());
+            proxyfileWriter->addData(mpb->createMemBlkAssOp());
         }
-        fileWriter->addData("//////////////////// transfer Op\n");
+        proxyfileWriter->addData("//////////////////// transfer Op\n");
 
         for (ModelProxyBuild* mpb: mpbs){
-            fileWriter->addData(mpb->createMemorizeOp());
+            proxyfileWriter->addData(mpb->createMemorizeOp());
         }
 
-        fileWriter->addData("}\n");
+        proxyfileWriter->addData("}\n");
 
     }
 
@@ -211,60 +212,60 @@ namespace kathryn{
         std::vector<LogicSimEngine*> dayta =
             moduleSimEngine->recruitAllLogicSimEngine();
 
-        fileWriter->addData("void ProxySimEvent::startVcdDecVar");
-        fileWriter->addData((isUser? "User": "Internal"));
-        fileWriter->addData("(){\n");
+        proxyfileWriter->addData("void ProxySimEvent::startVcdDecVar");
+        proxyfileWriter->addData((isUser? "User": "Internal"));
+        proxyfileWriter->addData("(){\n");
 
 
         for (LogicSimEngine* mpb: dayta){
             if (mpb->isUserDeclare() == isUser){ ////// the registerable must always put to vcd file
-                fileWriter->addData("       ");
-                fileWriter->addData("vcdWriter->addNewVar(");
+                proxyfileWriter->addData("       ");
+                proxyfileWriter->addData("vcdWriter->addNewVar(");
 
                 //////// sigtype
                 VCD_SIG_TYPE  vst = mpb->getSigType();
                 if (vst == VST_REG){
-                    fileWriter->addData("VST_REG");
+                    proxyfileWriter->addData("VST_REG");
                 }else if (vst == VST_WIRE){
-                    fileWriter->addData("VST_WIRE");
+                    proxyfileWriter->addData("VST_WIRE");
                 }else if (vst == VST_INTEGER){
-                    fileWriter->addData("VST_INTEGER");
+                    proxyfileWriter->addData("VST_INTEGER");
                 }
 
                 /////// varname
-                fileWriter->addData(",");
-                fileWriter->addData("\""+ mpb->getVarName() +"\"");
-                fileWriter->addData(",");
-                fileWriter->addData("{" +
+                proxyfileWriter->addData(",");
+                proxyfileWriter->addData("\""+ mpb->getVarName() +"\"");
+                proxyfileWriter->addData(",");
+                proxyfileWriter->addData("{" +
                     std::to_string(mpb->getSize().start) + "," +
                     std::to_string(mpb->getSize().stop)  + "};\n");
             }
         }
-        fileWriter->addData("}\n");
+        proxyfileWriter->addData("}\n");
     }
 
     void ProxyBuildMng::startWriteVcdCol(bool isUser){
         std::vector<LogicSimEngine*> dayta =
             moduleSimEngine->recruitAllLogicSimEngine();
 
-        fileWriter->addData("void ProxySimEvent::startVcdCol");
-        fileWriter->addData((isUser? "User": "Internal"));
-        fileWriter->addData("(){\n");
+        proxyfileWriter->addData("void ProxySimEvent::startVcdCol");
+        proxyfileWriter->addData((isUser? "User": "Internal"));
+        proxyfileWriter->addData("(){\n");
 
 
         for (ModelProxyBuild* mpb: dayta){
             if (mpb->isUserDeclare() == isUser){ ////// the registerable must always put to vcd file
-                fileWriter->addData("       ");
-                fileWriter->addData("vcdWriter->addNewValue(");
+                proxyfileWriter->addData("       ");
+                proxyfileWriter->addData("vcdWriter->addNewValue(");
 
-                fileWriter->addData("\""+ mpb->getVarName() +"\"");
-                fileWriter->addData(",");
-                fileWriter->addData(mpb->getVarName() +
+                proxyfileWriter->addData("\""+ mpb->getVarName() +"\"");
+                proxyfileWriter->addData(",");
+                proxyfileWriter->addData(mpb->getVarName() +
                                     ".genBiStr();\n");
             }
         }
 
-        fileWriter->addData("}\n");
+        proxyfileWriter->addData("}\n");
     }
 
 
@@ -272,13 +273,13 @@ namespace kathryn{
         std::vector<ModelProxyBuild*> dayta =
             moduleSimEngine->recruitPerf();
 
-        fileWriter->addData("/////////////////////// perf variable");
+        proxyfileWriter->addData("/////////////////////// perf variable");
 
         for (ModelProxyBuild* mpb: dayta){
-            fileWriter->addData(mpb->createVariable());
+            proxyfileWriter->addData(mpb->createVariable());
         }
 
-        fileWriter->addData("/////////////////////// perf finish initialize");
+        proxyfileWriter->addData("/////////////////////// perf finish initialize");
 
     }
 
@@ -286,19 +287,19 @@ namespace kathryn{
         std::vector<ModelProxyBuild*> dayta =
     moduleSimEngine->recruitPerf();
 
-        fileWriter->addData("void ProxySimEvent::startPerfCol");
-        fileWriter->addData("(){\n");
+        proxyfileWriter->addData("void ProxySimEvent::startPerfCol");
+        proxyfileWriter->addData("(){\n");
 
 
         for (ModelProxyBuild* mpb: dayta){
-            fileWriter->addData(mpb->createOp());
+            proxyfileWriter->addData(mpb->createOp());
         }
 
-        fileWriter->addData("}\n");
+        proxyfileWriter->addData("}\n");
     }
 
     void ProxyBuildMng::startCompile(){
-        int result = system(srcBuildPath.c_str());
+        int result = system(srcBuilderPath.c_str());
         if (result == 0){
             std::cout << "compile successfully\n";
         }else{
@@ -307,24 +308,30 @@ namespace kathryn{
     }
 
     ProxySimEventBase* ProxyBuildMng::loadAndGetProxy(){
-        ProxySimEventBase* (*seCreator)();
+        //////// open dynamic link
+        _handle = dlopen(srcDynLoadPath.c_str(), RTLD_LAZY);
+        const char* dlopen_error = dlerror();
+        if (dlopen_error){
+            std::cerr << "can't dynamic open " << dlopen_error << std::endl;
+            exit(EXIT_FAILURE);
+        }
 
-        ////// open dynamic link
-        void* handle = dlopen(desCompilePath.c_str(), RTLD_LAZY);
-        mfAssert(handle, "error loading simEngine lib @" +
-        desCompilePath + dlerror());
-        ////// resolve symbol
-        seCreator = (ProxySimEventBase*(*)()) dlsym(handle, "simEngineCreator");
+        /////// dynamic load symbol
+        typedef ProxySimEventBase* (*SeCreator)();
+        SeCreator create = (SeCreator) dlsym(_handle, "create");
+        const char* dlsym_error = dlerror();
+        if (dlsym_error) {
+            std::cerr << "can't load symbol 'create': " << dlsym_error << std::endl;
+            dlclose(_handle);
+            exit(EXIT_FAILURE);
+        }
+        /////// create object
+        ProxySimEventBase* pixieEvent = create();
 
-        ///// get the data
-        ProxySimEventBase* proxyBase = seCreator();
-        ////// close handle
-        ///
-        ///
-        dlclose(handle);
+        return pixieEvent;
+    }
 
-        return proxyBase;
-
-
+    void ProxyBuildMng::unloadProxy(){
+        dlclose(_handle);
     }
 }

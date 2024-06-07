@@ -6,23 +6,19 @@
 
 namespace kathryn{
 
-    // ValRep genBiConValRep(bool val, int bitSize){
-    //     ValRep preRet(bitSize);
-    //     if (!val){return preRet;}
-    //
-    //     ull* preRetArr = preRet.getValPtr();
-    //     for (int i = 0; i < preRet.getValArrSize(); i++){
-    //         preRetArr[i] = (ull)(-1);
-    //     }
-    //     preRet.fillZeroToValrep(preRet.getLen());
-    //     return preRet;
-    // }
-    //
-    //
-    // std::string cvtNum2HexStr(ull x){
-    //     std::ostringstream oss;
-    //     oss << std::hex <<std::uppercase << ull(x);
-    //     return oss.str();
-    // }
+    ull genBiConValRep(bool val, int bitSize){
+        const int MAX_BIT = 64;
+        assert(bitSize <= MAX_BIT);
+        if (val)
+            return (bitSize < MAX_BIT) ? (1 << bitSize) : -1;
+        else
+            return 0;
+    }
+
+    std::string cvtNum2HexStr(ull x){
+        std::ostringstream oss;
+        oss << std::hex <<std::uppercase << ull(x);
+        return oss.str();
+    }
 
 }

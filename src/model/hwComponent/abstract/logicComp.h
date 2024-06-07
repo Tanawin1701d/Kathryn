@@ -95,7 +95,7 @@ namespace kathryn{
             mfAssert(getAssignMode() == AM_SIM, "cannot assign in model mode");
             assert(_simEngine != nullptr);
             //////// TODO assign the value
-            (*(getSimEngine()->getProxyRep())) = b;
+            getSimEngine()->getProxyRep()->setVar(b);
         }
 
         void assignSimValue(ValRepBase b) override{

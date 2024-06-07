@@ -10,6 +10,9 @@
 #include <cassert>
 
 
+#include "model/hwComponent/globalComponent/globalComponent.h"
+
+
 #include "model/hwComponent/abstract/identifiable.h"
 #include "model/hwComponent/register/register.h"
 #include "model/hwComponent/wire/wire.h"
@@ -76,10 +79,6 @@ namespace kathryn{
         /** communicate to controller*/
         void com_init() override;
 
-        ModuleSimEngine* getModuleSimEngine() override{
-            return _moduleSimEngine;
-        }
-
     public:
         explicit Module(bool initComp = true);
         ~Module() override;
@@ -139,7 +138,9 @@ namespace kathryn{
         void        addMdLog(MdLogVal* mdLogVal) override;
         std::string getMdIdentVal() override{return getIdentDebugValue();};
 
-        ModuleSimEngine* getSimEngine() override{return _moduleSimEngine;}
+        ModuleSimEngine* getSimEngine() override{
+            return _moduleSimEngine;
+        }
 
     };
 

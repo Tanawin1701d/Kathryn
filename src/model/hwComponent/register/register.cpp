@@ -84,7 +84,7 @@ namespace kathryn{
     }
 
     void Reg::makeResetEvent(){
-        makeVal(rstRegVal, 0);
+        makeVal(rstRegVal, getSlice().getSize(), 0);
         auto rstEvent = new UpdateEvent({
             nullptr,
             rstWire,

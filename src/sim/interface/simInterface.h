@@ -7,6 +7,7 @@
 
 #include <condition_variable>
 #include <thread>
+#include "model/simIntf/base/proxyBuildMng.h"
 #include "model/controller/controller.h"
 #include "modelCompile/proxyEventBase.h"
 #include "sim/event/userEvent.h"
@@ -28,6 +29,7 @@ namespace kathryn{
         std::vector<UserEvent*> UserSimEvents;
         CYCLE                   _limitCycle = 0;
         UserEvent               simAgent;/** sim agent base can't change name*/
+        ProxyBuildMng           _proxyBuildMng;
 
         /**concrete sim*/
 
@@ -37,7 +39,7 @@ namespace kathryn{
 
         void simStartConSim();
         /**for now we will not support Condition*/
-        void conCycleBase(CYCLE startCycle, int priority);
+        void conCycleBase(CYCLE startCycle);
         void conCycle(CYCLE startCycle);
         void conNextCycle(CYCLE amtCycle);
         void conEndCycle();
@@ -49,12 +51,14 @@ namespace kathryn{
         explicit SimInterface(CYCLE limitCycle,
                               std::string vcdFilePath,
                               std::string profileFilePath,
-                              std::string clientSimPath
+                              std::string clientSimPath = "error"
                               );
 
         virtual ~SimInterface();
 
         void simStart();
+        /**describe default value*/
+        void    describeDef();
         /**describe discreate event*/
         virtual void describe(){};
         /**describe concrete event*/

@@ -13,10 +13,11 @@ namespace kathryn{
 
     class Wire : public LogicComp<Wire>{
     protected:
+        bool _requireDefVal = false;
         void com_init() override;
 
     public:
-        explicit Wire(int size);
+        explicit Wire(int size, bool requireDefVal = true);
         void com_final() override {};
 
         /**override assignable*/

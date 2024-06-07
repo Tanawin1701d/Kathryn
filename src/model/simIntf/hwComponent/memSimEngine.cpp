@@ -25,9 +25,8 @@ namespace kathryn{
             "["+ std::to_string(_master->getDepthSize()) + "];";
     }
 
-    void MemSimEngine::proxyRetInit(){
-        ProxySimEventBase* proxySimEvent = getSimController()->getProxySimEventPtr();
-        proxyRep = proxySimEvent->getValRep(getVarName());
+    void MemSimEngine::proxyRetInit(ProxySimEventBase* modelSimEvent){
+        proxyRep = modelSimEvent->getValRep(getVarName());
     }
 
     ValRepBase* MemSimEngine::getProxyRep(){

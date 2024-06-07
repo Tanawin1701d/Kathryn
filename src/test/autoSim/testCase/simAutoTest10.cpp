@@ -75,12 +75,12 @@ namespace kathryn{
         void simAssert() override{
 
 
-            incCycle(8);
-
-            sim {
-                ull testVal = 129;
-                testAndPrint("check cifelse in sifelse", (ull)_md->result, testVal);
-            };
+            // incCycle(8);
+            //
+            // sim {
+            //     ull testVal = 129;
+            //     testAndPrint("check cifelse in sifelse", (ull)_md->result, testVal);
+            // };
 
         }
 

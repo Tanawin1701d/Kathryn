@@ -3,28 +3,30 @@
 //
 
 #include "proxyEventBase.h"
+#include "params/simParamType.h"
 
 
 #include <utility>
-#include "params/simParam.h"
-
 
 namespace kathryn{
 
 
 ProxySimEventBase::ProxySimEventBase():
     EventBase     (0,SIM_MODEL_PRIO),
-    _vcdWriter    (nullptr){}
+    _VCD_REC_POL  (MDE_REC_SKIP),
+    _vcdWriter    (nullptr){
+    std::cout << "constructor of proxy sim event base" << std::endl;
+}
 
 ProxySimEventBase::~ProxySimEventBase(){delete _vcdWriter;}
 
 void ProxySimEventBase::eventWarmUp(){
 
     startRegisterCallBack();
-    if ((PARAM_VCD_REC_POL == MDE_REC_BOTH) | (PARAM_VCD_REC_POL == MDE_REC_ONLY_USER)){
+    if ((_VCD_REC_POL == MDE_REC_BOTH) | (_VCD_REC_POL == MDE_REC_ONLY_USER)){
         startVcdDecVarUser();
     }
-    if ((PARAM_VCD_REC_POL == MDE_REC_BOTH) | (PARAM_VCD_REC_POL == MDE_REC_ONLY_INTERNAL)){
+    if ((_VCD_REC_POL == MDE_REC_BOTH) | (_VCD_REC_POL == MDE_REC_ONLY_INTERNAL)){
         startVcdDecVarInternal();
     }
 }
@@ -38,18 +40,18 @@ void ProxySimEventBase::simStartCurCycle(){
 void ProxySimEventBase::curCycleCollectData(){
     ///// start collect vcd
 
-        if ((PARAM_VCD_REC_POL == MDE_REC_BOTH) |
-            (PARAM_VCD_REC_POL == MDE_REC_ONLY_USER) |
-            (PARAM_VCD_REC_POL == MDE_REC_ONLY_INTERNAL)
+        if ((_VCD_REC_POL == MDE_REC_BOTH) |
+            (_VCD_REC_POL == MDE_REC_ONLY_USER) |
+            (_VCD_REC_POL == MDE_REC_ONLY_INTERNAL)
             ){
             _vcdWriter->addNewTimeStamp(getCurCycle()*10);
         }
 
-        if ((PARAM_VCD_REC_POL == MDE_REC_BOTH) | (PARAM_VCD_REC_POL == MDE_REC_ONLY_USER)){
+        if ((_VCD_REC_POL == MDE_REC_BOTH) | (_VCD_REC_POL == MDE_REC_ONLY_USER)){
             startVcdColUser();
         }
 
-        if ((PARAM_VCD_REC_POL == MDE_REC_BOTH) | (PARAM_VCD_REC_POL == MDE_REC_ONLY_INTERNAL)){
+        if ((_VCD_REC_POL == MDE_REC_BOTH) | (_VCD_REC_POL == MDE_REC_ONLY_INTERNAL)){
             startVcdColInternal();
         }
 

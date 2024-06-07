@@ -16,8 +16,8 @@ namespace kathryn {
                                                   TYPE_STATE_REG,
                                                   false),
                                 upState      (_make<Val>("upState"      , false, 1  , 1)),
-                                upFullState  (_make<Val>("upFullState"  , false,genBiConValRep(true , size))),
-                                downFullState(_make<Val>("downFullState",false,genBiConValRep(false, size))),
+                                upFullState  (_make<Val>("upFullState"  , false, size,genBiConValRep(true , size))),
+                                downFullState(_make<Val>("downFullState", false, size,genBiConValRep(false, size))),
                                 testWire(     _make<Wire>("testSyncWire", false, size)),
                                 endExpr(&(((*this) | testWire) == upFullState)),
                                 endExprInv(&(~(*endExpr))),
@@ -86,18 +86,6 @@ namespace kathryn {
         assert(nextFillActivateId == getOperableSlice().getSize());
         return endExpr;
     }
-
-    bool SyncReg::isSimAtFullSyn() {
-        /** register sim */
-        assert(getRtlValItf()->isCurValSim());
-        ValRep& curVal = getRtlValItf()->getCurVal();
-        /** val sim*/
-        assert(upFullState.getRtlValItf()->isCurValSim());
-        ValRep& fullStateRep       = upFullState.getRtlValItf()->getCurVal();
-        /**due to it return valrep we must check it is equal to 1*/
-        return (curVal == fullStateRep).getLogicalValue();
-    }
-
 
     std::string genConseBinaryValue(bool bitVal, int size){
 

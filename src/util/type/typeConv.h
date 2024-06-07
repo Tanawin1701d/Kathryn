@@ -34,7 +34,7 @@ namespace kathryn{
     template<typename T>
     void appendVector(std::vector<T>& a, std::vector<T>& b){
         for (auto eleb: b){
-            a.push_back(b);
+            a.push_back(eleb);
         }
     }
 

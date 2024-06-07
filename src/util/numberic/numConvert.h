@@ -70,9 +70,8 @@ namespace kathryn{
     //
     //     //// gen(1,5) => b11111
     //     //// gen(0,6) => b000000
-    //     ValRep genBiConValRep(bool val, int bitSize);
-
-        std::string cvtNum2HexStr(ull x);
+    ull genBiConValRep(bool val, int bitSize);
+    std::string cvtNum2HexStr(ull x);
 
 
 

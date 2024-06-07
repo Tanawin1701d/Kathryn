@@ -43,10 +43,10 @@ namespace kathryn{
             }
             bool pass = true;
             for (int i = 0;  i < AMT_REG; i++){
-                if (_regTestVal[i] != _core.regFile.v(i)){
+                if (_regTestVal[i] != (ull)_core.regFile.at(i)){
                     pass = false;
                     testAndPrint("fail reg" + std::to_string(i),
-                                 _core.regFile.v(i), _regTestVal[i]);
+                                 (ull)_core.regFile.at(i), _regTestVal[i]);
                 }
 
             }
@@ -88,13 +88,13 @@ namespace kathryn{
             assert(pipfb != nullptr);
             /** check recv block*/
             FlowBlockPipeCom* recvPipCom = pipfb->getRecvFbPipCom();
-            bool recvRunning = recvPipCom->getFlowSimEngine()->isBlockOrNodeRunning();
+            bool recvRunning = recvPipCom->getSimEngine()->isBlockRunning();
             if (recvRunning)
                 slotWriter.addSlotVal(stageIdx, "WAIT_RECV");
 
             /** check send block*/
             FlowBlockPipeCom* sendPipCom = pipfb->getSendFbPipCom();
-            bool sendRunning =  sendPipCom->getFlowSimEngine()->isBlockOrNodeRunning();
+            bool sendRunning =  sendPipCom->getSimEngine()->isBlockRunning();
             if (sendRunning)
                 slotWriter.addSlotVal(stageIdx, "WAIT_SEND");
 
@@ -106,7 +106,7 @@ namespace kathryn{
             if (writeSlotIfStall(RISC_FETCH, pipblock)){return;}
 
 
-            if (_core.fetch.fetchBlock->getFlowSimEngine()->isBlockOrNodeRunning()) {
+            if (_core.fetch.fetchBlock->getSimEngine()->isBlockRunning()) {
 
                 if (ull(_core.fetch.readEn)) {
                     if (ull(_core.fetch.readFin)) {
@@ -159,7 +159,7 @@ namespace kathryn{
                 {0b11'100'11, "SYSTEM"},
             };
 
-            if (_core.decode.decodeBlk->getFlowSimEngine()->isBlockOrNodeRunning()) {
+            if (_core.decode.decodeBlk->getSimEngine()->isBlockRunning()) {
 
                 std::string decStr = (decMap.find(op) != decMap.end()) ? decMap[op] : "UNKNOWN";
                 slotWriter.addSlotVal(RISC_DECODE, decStr);
@@ -220,13 +220,13 @@ namespace kathryn{
             }
 
             if (_core.execute.regAccessBlock
-                ->getFlowSimEngine()->isBlockOrNodeRunning()){
+                ->getSimEngine()->isBlockRunning()){
                 slotWriter.addSlotVal(RISC_EXECUTE, "REG_ACCESS");
             }else if (_core.execute.aluBlock
-                    ->getFlowSimEngine()->isBlockOrNodeRunning()){
+                    ->getSimEngine()->isBlockRunning()){
                 slotWriter.addSlotVal(RISC_EXECUTE, "SIMPLE_ALU");
             }else if (_core.execute.aluBlock
-                    ->getFlowSimEngine()->isBlockOrNodeRunning()){
+                    ->getSimEngine()->isBlockRunning()){
                 slotWriter.addSlotVal(RISC_EXECUTE, "COMPLEX_ALU");
             }else{
                 slotWriter.addSlotVal(RISC_EXECUTE, "unknownState");
@@ -243,9 +243,9 @@ namespace kathryn{
             slotWriter.addSlotVal(RISC_EXECUTE, "finLS " + std::to_string(ull(_core.execute.testExit)));
             slotWriter.addSlotVal(RISC_EXECUTE, "readAddr " + std::to_string(ull(_core.execute.readAddr)));
             slotWriter.addSlotVal(RISC_EXECUTE, "m16 " + std::to_string(ull(_core.execute.m16)));
-            slotWriter.addSlotVal(RISC_EXECUTE, "read1020 " + std::to_string(ull(_core.memBlk._myMem.v(1020 >> 2))));
-            slotWriter.addSlotVal(RISC_EXECUTE, "read1024 " + std::to_string(ull(_core.memBlk._myMem.v(1024 >> 2))));
-            slotWriter.addSlotVal(RISC_EXECUTE, "read1028 " + std::to_string(ull(_core.memBlk._myMem.v(1028 >> 2))));
+            slotWriter.addSlotVal(RISC_EXECUTE, "read1020 " + std::to_string(ull(_core.memBlk._myMem.at(1020 >> 2))));
+            slotWriter.addSlotVal(RISC_EXECUTE, "read1024 " + std::to_string(ull(_core.memBlk._myMem.at(1024 >> 2))));
+            slotWriter.addSlotVal(RISC_EXECUTE, "read1028 " + std::to_string(ull(_core.memBlk._myMem.at(1028 >> 2))));
             slotWriter.addSlotVal(RISC_EXECUTE, "resetSignal " + std::to_string(ull(_core.misPredic)));
 
 
@@ -290,7 +290,7 @@ namespace kathryn{
             uint32_t instr;
             while(asmFile.read(reinterpret_cast<char*>(&instr), sizeof instr)){
                 assert((instr & 0b11) == 0b11); ////// check instruction
-                _core.memBlk._myMem.s(writeAddr, instr);
+                _core.memBlk._myMem.at(writeAddr).setVar(instr);
                 //////////////std::cout << instr << std::endl;
                 writeAddr++;
             }

@@ -21,13 +21,21 @@ namespace kathryn{
     }
 
     void ConcreteTriggerEvent::simStartCurCycle() {
-        /**notify that it is time to coputenext*/
-        ///std::cout << "[TRIGGER]start trigger" << std::endl;
-        startEvent.notify();
-        ///std::cout << "[TRIGGER]wait for finish" << std::endl;
-        /** wait for con sim is finish due to we dont want it race with hybrid model*/
-        finishEvent.wait();
-        ///std::cout << "[TRIGGER]finish trigger" << std::endl;
+        startSimCurEvent.notify(getCurCycle());
+        finishSimCurEvent.wait(getCurCycle());
+    }
+
+    void ConcreteTriggerEvent::simStartNextCycle(){
+        startEndCycleEvent.notify(getCurCycle());
+        finishEndCycleEvent.wait(getCurCycle());
+    }
+
+
+
+    EventBase* ConcreteTriggerEvent::genNextEvent(){
+        if (stop){return nullptr;}
+        _targetCycle = nextCycle;
+        return this;
     }
 
 

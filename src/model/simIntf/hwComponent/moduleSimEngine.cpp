@@ -136,30 +136,30 @@ namespace kathryn{
     }
 
 
-    void ModuleSimEngine::retrieveInit(){
-        retrieveInitFromVector(_module->getSpRegs(SP_STATE_REG));
-        retrieveInitFromVector(_module->getSpRegs(SP_SYNC_REG));
-        retrieveInitFromVector(_module->getSpRegs(SP_COND_WAIT_REG));
-        retrieveInitFromVector(_module->getSpRegs(SP_CYCLE_WAIT_REG));
-        retrieveInitFromVector(_module->getUserRegs());
+    void ModuleSimEngine::retrieveInit(ProxySimEventBase* simEventBase){
+        retrieveInitFromVector(simEventBase,_module->getSpRegs(SP_STATE_REG));
+        retrieveInitFromVector(simEventBase,_module->getSpRegs(SP_SYNC_REG));
+        retrieveInitFromVector(simEventBase,_module->getSpRegs(SP_COND_WAIT_REG));
+        retrieveInitFromVector(simEventBase,_module->getSpRegs(SP_CYCLE_WAIT_REG));
+        retrieveInitFromVector(simEventBase,_module->getUserRegs());
         /////////// wire
-        retrieveInitFromVector(_module->getUserWires());
-        retrieveInitFromVector(_module->getUserExpressions());
-        retrieveInitFromVector(_module->getUserVals());
-        retrieveInitFromVector(_module->getUserNests());
+        retrieveInitFromVector(simEventBase,_module->getUserWires());
+        retrieveInitFromVector(simEventBase,_module->getUserExpressions());
+        retrieveInitFromVector(simEventBase,_module->getUserVals());
+        retrieveInitFromVector(simEventBase,_module->getUserNests());
 
         ////////// memory
-        retrieveInitFromVector(_module->getUserMemBlks());
+        retrieveInitFromVector(simEventBase,_module->getUserMemBlks());
         for (MemBlock* memBlock: _module->getUserMemBlks()){
-            retrieveInitFromVector(memBlock->getMemBlockAgents());
+            retrieveInitFromVector(simEventBase,memBlock->getMemBlockAgents());
         }
 
         //////// for flowblock
-        retrieveInitFromVector(_module->getFlowBlocks());
+        retrieveInitFromVector(simEventBase,_module->getFlowBlocks());
 
         ////////// subModule
         for (Module* subModule: _module->getUserSubModules()){
-            subModule->getSimEngine()->retrieveInit();
+            subModule->getSimEngine()->retrieveInit(simEventBase);
         }
     }
 
@@ -174,10 +174,12 @@ namespace kathryn{
     }
 
     template <typename T>
-    void ModuleSimEngine::retrieveInitFromVector(std::vector<T*>& eleVec){
+    void ModuleSimEngine::retrieveInitFromVector(
+        ProxySimEventBase* simEventBase,
+        std::vector<T*>& eleVec){
         for (auto elePtr: eleVec){
             assert(elePtr != nullptr);
-            elePtr->getSimEngine()->proxyRetInit();
+            elePtr->getSimEngine()->proxyRetInit(simEventBase);
         }
     }
 

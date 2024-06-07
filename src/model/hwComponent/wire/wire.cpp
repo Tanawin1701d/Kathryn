@@ -10,10 +10,12 @@
 namespace kathryn{
 
 
-    Wire::Wire(int size) : LogicComp({0, size},
+    Wire::Wire(int size, bool requireDefVal) : LogicComp({0, size},
                                      TYPE_WIRE,
                                      new WireSimEngine(this, VST_WIRE),
-                                     true){
+                                     true),
+                                     _requireDefVal(requireDefVal)
+    {
         com_init();
         AssignOpr::setMaster(this);
         AssignCallbackFromAgent::setMaster(this);
@@ -58,16 +60,19 @@ namespace kathryn{
     }
 
     void Wire::makeDefEvent(){
-        makeVal(defWireVal, 0);
-        auto defEvent = new UpdateEvent({
-                                                nullptr,
-                                                nullptr,
-                                                &defWireVal,
-                                                {0, getSlice().getSize()},
-                                                DEFAULT_UE_PRI_MIN,
-                                                true
-                                        });
-        addUpdateMeta(defEvent);
+        if (_requireDefVal){
+            makeVal(defWireVal, getSlice().getSize(), 0);
+            auto defEvent = new UpdateEvent({
+                                                    nullptr,
+                                                    nullptr,
+                                                    &defWireVal,
+                                                    {0, getSlice().getSize()},
+                                                    DEFAULT_UE_PRI_MIN,
+                                                    true
+                                            });
+
+            addUpdateMeta(defEvent);
+        }
     }
 
     /** override callback*/

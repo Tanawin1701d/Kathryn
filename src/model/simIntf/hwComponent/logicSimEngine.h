@@ -62,7 +62,7 @@ namespace kathryn{
         /////// proxy
         ///
 
-        void proxyRetInit()       override;
+        void proxyRetInit(ProxySimEventBase* modelSimEvent)       override;
         ValRepBase* getProxyRep() override;
     };
 

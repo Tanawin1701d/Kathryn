@@ -88,12 +88,11 @@ namespace kathryn{
 
     //////////////////// return initiate
     ///
-    void FlowBaseSimEngine::proxyRetInit(){
-        ProxySimEventBase* proxySimEvent = getSimController()->getProxySimEventPtr();
-        proxyRep = proxySimEvent->getValRepPerf(getVarName());
+    void FlowBaseSimEngine::proxyRetInit(ProxySimEventBase* modelSimEvent){
+        proxyRep = modelSimEvent->getValRepPerf(getVarName());
         ///////// subblock init
         for (FlowBlockBase* subBlock: _flowBlockBase->getSubBlocks()){
-            subBlock->getSimEngine()->proxyRetInit();
+            subBlock->getSimEngine()->proxyRetInit(modelSimEvent);
         }
         ///////// conblock init
         for (FlowBlockBase* conBlock: _flowBlockBase->getConBlocks()){
@@ -104,6 +103,11 @@ namespace kathryn{
     ValRepBase* FlowBaseSimEngine::getProxyRep(){
         assert(proxyRep != nullptr);
         return proxyRep;
+    }
+
+    bool FlowBaseSimEngine::isBlockRunning(){
+        assert(proxyRep != nullptr);
+        return proxyRep->getVal();
     }
 
 

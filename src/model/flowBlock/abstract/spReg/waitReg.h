@@ -46,9 +46,6 @@ namespace kathryn{
             std::cout << "we not support = operator in register";
             return *this;
         }
-
-        bool isSimAtWaiting();
-
     };
 
     /**
@@ -100,8 +97,6 @@ namespace kathryn{
             std::cout << "we not support = operator in register";
             return *this;
         }
-        bool isSimAtWaiting();
-
     };
 
     static int calBitUsed(int maxNumber){
