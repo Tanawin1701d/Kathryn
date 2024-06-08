@@ -181,13 +181,13 @@ namespace kathryn{
         return retStr;
     }
 
-    std::string MemEleHolderSimEngine::createMemBlkAssOp(){
+    std::string MemEleHolderSimEngine::createOpEndCycle(){
         if (_master->isReadMode()){
             return "";
         }
 
         ///////// build string
-        std::string retStr = "{ /////" + _ident->getGlobalName() + "\n";
+        std::string retStr = "      { /////" + _ident->getGlobalName() + "\n";
 
         /////////// we build from low priority to high priority
         for (UpdateEvent* updateEvent: _asb->getUpdateMeta()){

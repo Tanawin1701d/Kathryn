@@ -18,20 +18,30 @@ namespace kathryn{
     public:
         explicit ModuleSimEngine(Module* module); //// todo module
         /** create zone for hardware element*/
-        std::vector<ModelProxyBuild*> recruitForCreateVar         ();
-        std::vector<ModelProxyBuild*> recruitForVolatileEle       ();
-        std::vector<ModelProxyBuild*> recruitForNonVolatileEle    ();
-        std::vector<LogicSimEngine*>  recruitAllLogicSimEngine    (); ///// for vcdWrite
+        std::vector<ModelProxyBuild*> recruitForCreateVar     ();
+        std::vector<ModelProxyBuild*> recruitForOp            ();
+        std::vector<ModelProxyBuild*> recruitForOpEndCycle    ();
+        std::vector<LogicSimEngine*>  recruitAllLogicSimEngine(); ///// for vcdWrite
         /** create zone for perf element*/
-        std::vector<ModelProxyBuild*> recruitPerf                 ();
+        std::vector<ModelProxyBuild*> recruitPerf             ();
 
-        void recruitFromRegable(std::vector<ModelProxyBuild*>& result);
+        void recruitFromRegable (std::vector<ModelProxyBuild*>& result);
+        void recruitFromSpReg   (std::vector<ModelProxyBuild*>& result);
         void recruitFromWireable(std::vector<ModelProxyBuild*>& result); /// memblock is not include
+        void recruitFromMemBlk  (std::vector<ModelProxyBuild*>& result);
+        void recruitFromMemElh  (std::vector<ModelProxyBuild*>& result, bool isReadMode);
+
+
+
+
 
         /** retrieve zone*/
         void retrieveInit(ProxySimEventBase* simEventBase);
 
         /** template zone*/
+        template<typename T>
+        void recruitFromSubModule(std::vector<T*>& result, std::vector<T*> (ModuleSimEngine::*func)());
+
         template<typename S, typename T>
         void recruitFromVector(
             std::vector<S*>& result,
@@ -39,8 +49,6 @@ namespace kathryn{
 
         template<typename T>
         void retrieveInitFromVector(ProxySimEventBase* simEventBase,std::vector<T*>& eleVec);
-
-
 
 
     };

@@ -8,7 +8,7 @@ else
   rm build/*
 fi
 echo "now start compiling....."
-g++ -fPIC -shared -o build/simClient.so -I ../../src \
+g++  -fPIC -shared -o build/simClient.so -I ../../src \
 proxyEvent.cpp \
 proxyEventBase.cpp \
 ../util/fileWriter/fileWriterBase.cpp \

@@ -50,9 +50,7 @@ namespace kathryn{
 
         std::string createVariable()      override;
         std::string createOp()            override;
-        std::string createMemorizeOp()    override;
-        std::string createMemBlkAssOp()   override{return "";}
-
+        std::string createOpEndCycle()    override;
 
 
         bool        isUserDeclare()       override{return _ident->isUserVar();}

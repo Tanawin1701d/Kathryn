@@ -66,8 +66,8 @@ namespace kathryn{
     std::string LogicSimEngine::createOp(){
 
         ///////// build string
-        std::string retStr = "{ /////" + _ident->getGlobalName() + "\n";
-
+        std::string retStr = "      { /////" + _ident->getGlobalName() + "\n";
+        _asb->sortUpEventByPriority();
         /////////// we build from low priority to high priority
         for (UpdateEvent* updateEvent: _asb->getUpdateMeta()){
 
@@ -112,9 +112,9 @@ namespace kathryn{
         return retStr;
     }
 
-    std::string LogicSimEngine::createMemorizeOp(){
+    std::string LogicSimEngine::createOpEndCycle(){
         if (_isTempReq){
-            return getVarName() + TEMP_VAR_SUFFIX + " = " + getVarName() + ";\n";
+            return getVarName() + " = " + getVarName() + TEMP_VAR_SUFFIX + ";\n";
         }
         return "";
     }

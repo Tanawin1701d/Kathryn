@@ -224,7 +224,7 @@ namespace kathryn{
 
     std::string NestSimEngine::createOp(){
         ///////// build string
-        std::string retStr = "{ /////" + _ident->getGlobalName() + "\n";
+        std::string retStr = "      { /////" + _ident->getGlobalName() + "\n";
 
         /////////// we build from low priority to high priority
 

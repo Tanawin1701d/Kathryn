@@ -161,7 +161,7 @@ namespace kathryn{
 
         proxyfileWriter->addData("void ProxySimEvent::startVolatileEleSim(){\n");
 
-        std::vector<ModelProxyBuild*> mpbs = moduleSimEngine->recruitForNonVolatileEle();
+        std::vector<ModelProxyBuild*> mpbs = moduleSimEngine->recruitForOpEndCycle();
 
         proxyfileWriter->addData("////////////////////// standard op\n");
         for (ModelProxyBuild* mpb: mpbs){
@@ -187,7 +187,7 @@ namespace kathryn{
 
         proxyfileWriter->addData("void ProxySimEvent::startNonVolatileEleSim(){\n");
 
-        std::vector<ModelProxyBuild*> mpbs = moduleSimEngine->recruitForNonVolatileEle();
+        std::vector<ModelProxyBuild*> mpbs = moduleSimEngine->recruitForOpEndCycle();
 
         proxyfileWriter->addData("////////////////////// standard op\n");
         for (ModelProxyBuild* mpb: mpbs){
@@ -200,7 +200,7 @@ namespace kathryn{
         proxyfileWriter->addData("//////////////////// transfer Op\n");
 
         for (ModelProxyBuild* mpb: mpbs){
-            proxyfileWriter->addData(mpb->createMemorizeOp());
+            proxyfileWriter->addData(mpb->createOpEndCycle());
         }
 
         proxyfileWriter->addData("}\n");

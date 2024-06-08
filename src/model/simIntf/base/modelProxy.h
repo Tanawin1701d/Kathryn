@@ -35,12 +35,9 @@ namespace kathryn{
 
         //// c++ create section
         virtual std::string createVariable()      = 0;
-        virtual std::string createOp()            = 0;
-        virtual std::string createMemorizeOp()    = 0;
-        virtual std::string createMemBlkAssOp()   = 0;
-
-        virtual bool         isUserDeclare()       = 0;
-
+        virtual std::string createOp()            = 0; //// at the middle of the cycle
+        virtual std::string createOpEndCycle()    = 0; //// at the end of cycle
+        virtual bool        isUserDeclare()       = 0;
 
 
     };

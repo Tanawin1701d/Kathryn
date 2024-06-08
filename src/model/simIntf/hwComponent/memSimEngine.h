@@ -25,8 +25,7 @@ namespace kathryn{
         
         std::string createVariable()       override;
         std::string createOp()             override{return "";}
-        std::string createMemorizeOp()     override{return "";}
-        std::string createMemBlkAssOp()    override{return "";}
+        std::string createOpEndCycle()     override{return "";}
 
         bool        isUserDeclare()        override{return false;}
 

@@ -180,7 +180,7 @@ namespace kathryn{
         }
 
         retStr += ";\n";
-        retStr += "}\n";
+        retStr += "     }\n";
 
         return retStr;
 

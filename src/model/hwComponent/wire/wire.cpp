@@ -120,8 +120,8 @@ namespace kathryn{
      ***/
     WireSimEngine::WireSimEngine(Wire* master, VCD_SIG_TYPE sigType):
     LogicSimEngine(
-        (Assignable*) master,
-        (Identifiable*)master,
+        (Assignable*  ) master,
+        (Identifiable*) master,
         VST_WIRE,
         false,
         0),
