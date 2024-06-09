@@ -35,7 +35,7 @@ namespace kathryn{
 
         void proxyBuildInit() override;
 
-        std::string getVarName() override{return _ident->getGlobalName();}
+        std::string getVarName() override;
 
         ull         getVarId()   override{return _ident->getGlobalId();}
 

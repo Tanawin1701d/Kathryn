@@ -4,9 +4,10 @@
 
 #include "flowBaseSim.h"
 
-#include <sim/controller/simController.h>
+#include "sim/controller/simController.h"
 
-#include "modelCompile/proxyEventBase.h"
+#include "util/str/strUtil.h"
+#include "model/simIntf/base/proxyEventBase.h"
 
 #include "model/flowBlock/abstract/flowBlock_Base.h"
 
@@ -15,7 +16,8 @@ namespace kathryn{
 
     FlowBaseSimEngine::FlowBaseSimEngine(FlowBlockBase* flowBlockBase):
     _flowBlockBase(flowBlockBase),
-    _writer(nullptr){
+    _writer(nullptr),
+    _opSpace(0){
         assert(_flowBlockBase != nullptr);
     }
 
@@ -35,20 +37,57 @@ namespace kathryn{
         return _flowBlockBase->getGlobalId();
     }
 
+    void FlowBaseSimEngine::getRecurVarName(std::vector<std::string>& result){
+        result.push_back(getVarName());
+        for (FlowBlockBase* fb: _flowBlockBase->getSubBlocks()){
+            FlowBaseSimEngine* subBlockSimEngine = fb->getSimEngine();
+            subBlockSimEngine->getRecurVarName(result);
+        }
+        for (FlowBlockBase* fb: _flowBlockBase->getConBlocks()){
+            FlowBaseSimEngine* conBlockSimEngine = fb->getSimEngine();
+            conBlockSimEngine->getRecurVarName(result);
+        }
+    }
+
+    void FlowBaseSimEngine::getRecurVarNameCurStsatus(std::vector<std::string>& result){
+        result.push_back(getVarName());
+        for (FlowBlockBase* fb: _flowBlockBase->getSubBlocks()){
+            FlowBaseSimEngine* subBlockSimEngine = fb->getSimEngine();
+            subBlockSimEngine->getRecurVarNameCurStsatus(result);
+        }
+        for (FlowBlockBase* fb: _flowBlockBase->getConBlocks()){
+            FlowBaseSimEngine* conBlockSimEngine = fb->getSimEngine();
+            conBlockSimEngine->getRecurVarNameCurStsatus(result);
+
+        }
+    }
+
+
     std::string FlowBaseSimEngine::createVariable(){
-        return "ValRep<64> " + getVarName() + " = 0;\n" +
-               "ValRep<1> " + getVarNameCurStatus() +
-               " = 0;\n";
+        std::string ret = "ValRep<64> " + getVarName() + " = 0;" +
+               "ValRep<1> " + getVarNameCurStatus() + " = 0;\n";
+        for (FlowBlockBase* fb: _flowBlockBase->getSubBlocks()){
+            FlowBaseSimEngine* subBlockSimEngine = fb->getSimEngine();
+            ret += subBlockSimEngine->createVariable();
+        }
+        for (FlowBlockBase* fb: _flowBlockBase->getConBlocks()){
+            FlowBaseSimEngine* conBlockSimEngine = fb->getSimEngine();
+            ret += conBlockSimEngine->createVariable();
+        }
+        return ret;
     }
 
     std::string FlowBaseSimEngine::createOp(){
 
-        std::string preRet = "      { ////" + _flowBlockBase->getGlobalName() + "\n";
+        std::string space = genConString(' ', _opSpace);
+
+        std::string preRet =  space + "{ ////" + _flowBlockBase->getGlobalName() + "\n";
 
         //////////// subBlock build
         ///
         for (FlowBlockBase* fb: _flowBlockBase->getSubBlocks()){
             FlowBaseSimEngine* subBlockSimEngine = fb->getSimEngine();
+            subBlockSimEngine->setOpSpace(_opSpace + SUB_FLOWBLOCK_GEN_OP_SPACE);
             preRet += subBlockSimEngine->createOp();
         }
 
@@ -58,28 +97,29 @@ namespace kathryn{
             for (CtrlFlowRegBase* stateReg: sysNode->getCycleRelatedReg()){
                 if (stateReg != nullptr){
                     std::string regName = stateReg->getSimEngine()->getVarName();
-                    preRet += "         ";
-                    preRet += getVarNameCurStatus() + ".getVal() |= " + regName + ".getLogicValue();\n";
+                    preRet += space;
+                    preRet += getVarNameCurStatus() + ".getRefVal() |= " + regName + ".getLogicValue();\n";
                 }
             }
         }
         ///////////// sub block recruitment
         for (FlowBlockBase* fb: _flowBlockBase->getSubBlocks()){
             FlowBaseSimEngine* subBlockSimEngine = fb->getSimEngine();
-            preRet += "         ";
-            preRet += getVarNameCurStatus() + ".getVal() |= "
+            preRet += space;
+            preRet += getVarNameCurStatus() + ".getRefVal() |= "
                    + subBlockSimEngine->getVarNameCurStatus() + ".getVal();\n";
         }
-        preRet += "     ";
-        preRet += getVarName()          + ".getVal() += " +
-                  getVarNameCurStatus() + ".getLogicValue()\n";
+        preRet += space;
+        preRet += getVarName()          + ".getRefVal() += " +
+                  getVarNameCurStatus() + ".getLogicValue();\n";
 
-        preRet += "     }\n";
+        preRet +=  space + "}\n";
 
 
         //////////// do for con block
         for (FlowBlockBase* fb: _flowBlockBase->getConBlocks()){
             FlowBaseSimEngine* conBlockSimEngine = fb->getSimEngine();
+            conBlockSimEngine->setOpSpace(_opSpace);
             preRet += conBlockSimEngine->createOp();
         }
 

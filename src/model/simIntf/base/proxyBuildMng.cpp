@@ -12,7 +12,6 @@ namespace kathryn{
 
     ProxyBuildMng::~ProxyBuildMng(){
         unloadProxy();
-        delete proxyfileWriter;
     }
 
     std::vector<ModelProxyBuild*> ProxyBuildMng::doTopologySort(
@@ -36,39 +35,46 @@ namespace kathryn{
 
 
         for (auto ele: graph){
-            assert(!dfs.empty());
+            assert(dfs.empty());
             dfs.push({ele, 0});
 
             while(!dfs.empty()){
                 MPD_META& top = dfs.top();
 
                 if (inGraph.find(top.mpd) == inGraph.end()){
-                    dfs.pop();
+                    dfs.pop(); ///// not in region of interest
                     continue;
                 }
 
                 bool isVisit  = visited .find(top.mpd) != visited.end();
                 bool isResult = resulted.find(top.mpd) != resulted.end();
-                if (isVisit && isResult){
-                    dfs.pop();
-                    continue;
-                }
-                mfAssert(isVisit & (~isResult), "circle topology sort detected");
 
-                if(top.nextDepIdx == 0){ /// first time add
+
+                if (top.nextDepIdx == 0){
+                    ////////// first in in stack
+                    if (isVisit){
+                        mfAssert(isResult,
+                            "cycle dep detect at node " + top.mpd->getVarName());
+                        dfs.pop();
+                        continue;
+                    }
                     visited.insert(top.mpd);
                 }
+
+
                 if(top.nextDepIdx == top.mpd->getDep().size()){
-                    resulted.insert(top.mpd);
-                    result.push_back(top.mpd);
+                    //////////// last in stack
+                    if (!isResult){
+                        resulted.insert(top.mpd);
+                        result.push_back(top.mpd);
+                    }
                     dfs.pop();
-                    continue;
+
+                }else{ /////// in search
+                    ModelProxyBuild* nextEle = top.mpd->getDep()[top.nextDepIdx];
+                    dfs.push({nextEle, 0});
+                    top.nextDepIdx++;
                 }
-
-                ModelProxyBuild* nextEle = top.mpd->getDep()[top.nextDepIdx];
-                dfs.push({nextEle, 0});
-                top.nextDepIdx++;
-
             }
         }
         return result;
@@ -84,11 +90,11 @@ namespace kathryn{
 
 
     void ProxyBuildMng::startWriteModelSim(){
-
+        moduleSimEngine->proxyBuildInit();
         //// create file
         proxyfileWriter = new FileWriterBase(srcGenPath);
         //// create include
-        proxyfileWriter->addData("#include \"src/modelCompile/proxyEvent.h\"\n");
+        proxyfileWriter->addData("#include \"../proxyEvent.h\"\n");
 
         /// create namespace
         ///
@@ -106,6 +112,7 @@ namespace kathryn{
         startWriteVcdCol(true);
         startWriteVcdCol(false);
         startWritePerfCol();
+        startWriteCreateFunc();
 
 
         proxyfileWriter->addData("\n\n\n\n\n\n}\n");
@@ -121,25 +128,62 @@ namespace kathryn{
 
         for (ModelProxyBuild* mpb: dayta){
             proxyfileWriter->addData(mpb->createVariable());
-            proxyfileWriter->addData("\n");
         }
     }
 
+
+    void ProxyBuildMng::startWritePerfDec(){
+        std::vector<FlowBaseSimEngine*> dayta =
+            moduleSimEngine->recruitPerf();
+
+        proxyfileWriter->addData("/////////////////////// perf variable\n");
+
+        for (ModelProxyBuild* mpb: dayta){
+            proxyfileWriter->addData(mpb->createVariable());
+        }
+
+        proxyfileWriter->addData("/////////////////////// perf finish initialize\n");
+
+    }
+
+
+
     void ProxyBuildMng::startWriteRegisterCallback(){
-        std::vector<ModelProxyBuild*> dayta =
-            moduleSimEngine->recruitForCreateVar();
+
+        auto registerHelper = [&](std::string varName, bool isPerf){
+            assert(!varName.empty());
+            proxyfileWriter->addData("       ");
+            if (isPerf){
+                proxyfileWriter->addData("registerToCallBackPerf(");
+            }else{
+                proxyfileWriter->addData("registerToCallBack(");
+            }
+            proxyfileWriter->addData("\"" + varName+ "\"");
+            proxyfileWriter->addData(",");
+            proxyfileWriter->addData("&" + varName);
+            proxyfileWriter->addData(");\n");
+            proxyfileWriter->addData(R"(std::cout << "register to " << ")" + varName + "\"" + " << std::endl; \n");
+
+        };
 
         proxyfileWriter->addData("void ProxySimEvent::startRegisterCallBack(){\n");
 
-
-        for (ModelProxyBuild* mpb: dayta){
-                proxyfileWriter->addData("       ");
-                proxyfileWriter->addData("registerToCallBack(");
-                proxyfileWriter->addData("\"" + mpb->getVarName()+ "\"");
-                proxyfileWriter->addData(",");
-                proxyfileWriter->addData(mpb->getVarName());
-                proxyfileWriter->addData(");\n");
+        ///// for logic value
+        for (ModelProxyBuild* mpb:
+            moduleSimEngine->recruitForCreateVar()){
+            registerHelper(mpb->getVarName(), false);
         }
+        ///// for perf value     we are sure that name will not
+        for (FlowBaseSimEngine* mpb: moduleSimEngine->recruitPerf()){
+            std::vector<std::string> result;
+            mpb->getRecurVarName(result);
+            for (const std::string& varName: result){
+                registerHelper(varName, true);
+            }
+
+        }
+
+        proxyfileWriter->addData("}\n");
     }
 
 
@@ -159,12 +203,12 @@ namespace kathryn{
         ///data from memory if there is update from memory to register because
         /// memEleHolder will provide temporary data to register simulation
 
+
         proxyfileWriter->addData("void ProxySimEvent::startVolatileEleSim(){\n");
-
-        std::vector<ModelProxyBuild*> mpbs = moduleSimEngine->recruitForOpEndCycle();
-
+        std::vector<ModelProxyBuild*> mpbs = moduleSimEngine->recruitForOp();
+        std::vector<ModelProxyBuild*> actual_mpbs = doTopologySort(mpbs);
         proxyfileWriter->addData("////////////////////// standard op\n");
-        for (ModelProxyBuild* mpb: mpbs){
+        for (ModelProxyBuild* mpb: actual_mpbs){
             proxyfileWriter->addData(mpb->createOp());
         }
         proxyfileWriter->addData("}\n");
@@ -193,16 +237,10 @@ namespace kathryn{
         for (ModelProxyBuild* mpb: mpbs){
             proxyfileWriter->addData(mpb->createOp());
         }
-        proxyfileWriter->addData("///////////////////// memory op\n");
-        for (ModelProxyBuild* mpb: mpbs){
-            proxyfileWriter->addData(mpb->createMemBlkAssOp());
-        }
         proxyfileWriter->addData("//////////////////// transfer Op\n");
-
         for (ModelProxyBuild* mpb: mpbs){
             proxyfileWriter->addData(mpb->createOpEndCycle());
         }
-
         proxyfileWriter->addData("}\n");
 
     }
@@ -220,7 +258,7 @@ namespace kathryn{
         for (LogicSimEngine* mpb: dayta){
             if (mpb->isUserDeclare() == isUser){ ////// the registerable must always put to vcd file
                 proxyfileWriter->addData("       ");
-                proxyfileWriter->addData("vcdWriter->addNewVar(");
+                proxyfileWriter->addData("_vcdWriter->addNewVar(");
 
                 //////// sigtype
                 VCD_SIG_TYPE  vst = mpb->getSigType();
@@ -238,7 +276,7 @@ namespace kathryn{
                 proxyfileWriter->addData(",");
                 proxyfileWriter->addData("{" +
                     std::to_string(mpb->getSize().start) + "," +
-                    std::to_string(mpb->getSize().stop)  + "};\n");
+                    std::to_string(mpb->getSize().stop)  + "});\n");
             }
         }
         proxyfileWriter->addData("}\n");
@@ -256,36 +294,19 @@ namespace kathryn{
         for (ModelProxyBuild* mpb: dayta){
             if (mpb->isUserDeclare() == isUser){ ////// the registerable must always put to vcd file
                 proxyfileWriter->addData("       ");
-                proxyfileWriter->addData("vcdWriter->addNewValue(");
+                proxyfileWriter->addData("_vcdWriter->addNewValue(");
 
                 proxyfileWriter->addData("\""+ mpb->getVarName() +"\"");
                 proxyfileWriter->addData(",");
-                proxyfileWriter->addData(mpb->getVarName() +
-                                    ".genBiStr();\n");
+                proxyfileWriter->addData("&" + mpb->getVarName() + ");\n");
             }
         }
 
         proxyfileWriter->addData("}\n");
     }
 
-
-    void ProxyBuildMng::startWritePerfDec(){
-        std::vector<ModelProxyBuild*> dayta =
-            moduleSimEngine->recruitPerf();
-
-        proxyfileWriter->addData("/////////////////////// perf variable");
-
-        for (ModelProxyBuild* mpb: dayta){
-            proxyfileWriter->addData(mpb->createVariable());
-        }
-
-        proxyfileWriter->addData("/////////////////////// perf finish initialize");
-
-    }
-
     void ProxyBuildMng::startWritePerfCol(){
-        std::vector<ModelProxyBuild*> dayta =
-    moduleSimEngine->recruitPerf();
+        std::vector<FlowBaseSimEngine*> dayta = moduleSimEngine->recruitPerf();
 
         proxyfileWriter->addData("void ProxySimEvent::startPerfCol");
         proxyfileWriter->addData("(){\n");
@@ -298,8 +319,21 @@ namespace kathryn{
         proxyfileWriter->addData("}\n");
     }
 
+    void ProxyBuildMng::startWriteCreateFunc(){
+        proxyfileWriter->addData(
+        "extern \"C\" ProxySimEventBase* create() {\n"
+        "   std::cout << \"creating proxy simEvent in dynamic object\" << std::endl;\n"
+        "   return new ProxySimEvent();\n}\n\n"
+        );
+    }
+
+
     void ProxyBuildMng::startCompile(){
-        int result = system(srcBuilderPath.c_str());
+        std::string compileComand =
+            srcBuilderPath + " " + genName;
+
+        std::cout << "compile command is " << compileComand << std::endl;
+        int result = system(compileComand.c_str());
         if (result == 0){
             std::cout << "compile successfully\n";
         }else{
@@ -327,11 +361,19 @@ namespace kathryn{
         }
         /////// create object
         ProxySimEventBase* pixieEvent = create();
-
+        //pixieEvent->eventWarmUp();
+        //pixieEvent->startVcdDecVarInternal();
         return pixieEvent;
     }
 
+    void ProxyBuildMng::startRetrieveSimVal(ProxySimEventBase* simEvent){
+        assert(simEvent != nullptr);
+        assert(_startModule != nullptr);
+        moduleSimEngine->retrieveInit(simEvent);
+    }
+
     void ProxyBuildMng::unloadProxy(){
-        dlclose(_handle);
+        int closeStatus = dlclose(_handle);
+        assert(closeStatus == 0);
     }
 }

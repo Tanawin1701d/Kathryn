@@ -4,7 +4,9 @@
 
 #ifndef MODEL_SIMITF_HWCOMPONENT_MODULESIMENGINE_H
 #define MODEL_SIMITF_HWCOMPONENT_MODULESIMENGINE_H
-#include <model/simIntf/base/modelProxy.h>
+#include "model/simIntf/base/modelProxy.h"
+#include "model/simIntf/flowBlock/flowBaseSim.h"
+
 #include "util/fileWriter/fileWriterBase.h"
 
 
@@ -18,12 +20,13 @@ namespace kathryn{
     public:
         explicit ModuleSimEngine(Module* module); //// todo module
         /** create zone for hardware element*/
+        void                          proxyBuildInit          ();
         std::vector<ModelProxyBuild*> recruitForCreateVar     ();
         std::vector<ModelProxyBuild*> recruitForOp            ();
         std::vector<ModelProxyBuild*> recruitForOpEndCycle    ();
         std::vector<LogicSimEngine*>  recruitAllLogicSimEngine(); ///// for vcdWrite
         /** create zone for perf element*/
-        std::vector<ModelProxyBuild*> recruitPerf             ();
+        std::vector<FlowBaseSimEngine*> recruitPerf             ();
 
         void recruitFromRegable (std::vector<ModelProxyBuild*>& result);
         void recruitFromSpReg   (std::vector<ModelProxyBuild*>& result);

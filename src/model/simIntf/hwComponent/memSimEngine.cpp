@@ -3,7 +3,7 @@
 //
 
 #include "memSimEngine.h"
-#include "modelCompile/proxyEventBase.h"
+#include "model/simIntf/base/proxyEventBase.h"
 #include "sim/controller/simController.h"
 #include "model/hwComponent/memBlock/MemBlock.h"
 

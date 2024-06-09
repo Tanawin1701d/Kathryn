@@ -7,5 +7,9 @@
 /KOut/**/*.vcd
 /KOut/**/*.prof
 /KOut/**/*.sl
-src/modelCompile/build/*
-src/modelCompile/generated/*
+
+#### model compile
+modelCompile/cmake-build-debug
+modelCompile/.idea
+modelCompile/build/*
+modelCompile/generated/*

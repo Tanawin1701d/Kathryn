@@ -50,7 +50,7 @@ namespace kathryn{
             std::cout << TC_BLUE << "[kathryn auto test] " << "finnish sim testcase "<< testCase << " id: " << sif->getSimId()  << TC_DEF <<"\n";
             testCase++;
             std::cout << TC_BLUE << "----------------------" << TC_DEF << std::endl;
-            break;
+            ////break;
         }
 
     }

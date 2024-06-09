@@ -15,6 +15,27 @@ namespace kathryn{
     ModuleSimEngine::ModuleSimEngine(Module* module):
     _module(module){}
 
+    void ModuleSimEngine::proxyBuildInit(){
+        std::vector<ModelProxyBuild*> result;
+
+        /////////// recruit all variable
+        recruitFromRegable(result);
+        recruitFromWireable(result);
+        recruitFromMemBlk(result);
+        recruitFromMemElh(result, false);
+        recruitFromMemElh(result, true);
+            ///// init
+        for (ModelProxyBuild* mbp: result){
+            mbp->proxyBuildInit();
+        }
+        //////////
+        for (Module* md: _module->getUserSubModules()){
+            assert(md != nullptr);
+            md->getSimEngine()->proxyBuildInit();
+        }
+
+
+    }
 
     std::vector<ModelProxyBuild*> ModuleSimEngine::recruitForCreateVar(){
 
@@ -73,8 +94,8 @@ namespace kathryn{
 
     }
 
-    std::vector<ModelProxyBuild*> ModuleSimEngine::recruitPerf(){
-        std::vector<ModelProxyBuild*> result;
+    std::vector<FlowBaseSimEngine*> ModuleSimEngine::recruitPerf(){
+        std::vector<FlowBaseSimEngine*> result;
         ///////// recurte flow block in module
         recruitFromVector(result, _module->getFlowBlocks());
         recruitFromSubModule(result, &ModuleSimEngine::recruitPerf);

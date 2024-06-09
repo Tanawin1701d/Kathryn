@@ -18,7 +18,9 @@ namespace kathryn{
 
     class ProxySimEventBase: public EventBase{
     protected:
-        MODULE_VCD_REC_POL  _VCD_REC_POL = MDE_REC_SKIP;
+        const std::string   CLK_SIGNAL  = "CLK";
+        ValRep<1>           clkSignal = 0;
+        MODULE_VCD_REC_POL  VCD_REC_POL = MDE_REC_SKIP;
         VcdWriter*          _vcdWriter = nullptr;
 
         std::unordered_map<std::string, ValRepBase*>  callBack; //// for mem block use start point
@@ -41,12 +43,17 @@ namespace kathryn{
 
         bool needToDelete()        override{return false;}
 
-        void setVcdWritePol    (MODULE_VCD_REC_POL vcd_rec_pol){_VCD_REC_POL = vcd_rec_pol;}
+        void setVcdWritePol    (MODULE_VCD_REC_POL vcd_rec_pol){VCD_REC_POL = vcd_rec_pol;}
         void setVcdWriter      (VcdWriter*         vcdWriter  ){_vcdWriter   = vcdWriter;  }
         void registerToCallBack(const std::string& cbName, ValRepBase* val){
             assert(val != nullptr && (callBack.find(cbName) == callBack.end()));
             callBack.insert({cbName, val});
         }
+        void registerToCallBackPerf(const std::string& cbName, ValRepBase* val){
+            assert(val != nullptr && (callBackPerf.find(cbName) == callBackPerf.end()));
+            callBackPerf.insert({cbName, val});
+        }
+
 
         static ValRepBase* getValRepBase(std::unordered_map<std::string, ValRepBase*>& callBackSorce,
                                   std::string globalName){

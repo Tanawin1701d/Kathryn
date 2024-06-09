@@ -9,7 +9,7 @@
 #include <thread>
 #include "model/simIntf/base/proxyBuildMng.h"
 #include "model/controller/controller.h"
-#include "modelCompile/proxyEventBase.h"
+#include "model/simIntf/base/proxyEventBase.h"
 #include "sim/event/userEvent.h"
 #include "sim/controller/simController.h"
 #include "sim/event/ctTrigEvent.h"
@@ -22,7 +22,6 @@ namespace kathryn{
     class SimInterface{
         friend class ConcreteTriggerEvent;
     protected:
-        std::string             SIM_CLIENT_PATH;
         VcdWriter*              _vcdWriter      = nullptr;
         FlowWriter*             _flowWriter     = nullptr;
         ProxySimEventBase*      _modelSimEvent  = nullptr;
@@ -51,7 +50,7 @@ namespace kathryn{
         explicit SimInterface(CYCLE limitCycle,
                               std::string vcdFilePath,
                               std::string profileFilePath,
-                              std::string clientSimPath = "error"
+                              std::string genFileName = "proxySimAutoGen.cpp"
                               );
 
         virtual ~SimInterface();

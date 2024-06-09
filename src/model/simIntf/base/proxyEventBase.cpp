@@ -13,7 +13,7 @@ namespace kathryn{
 
 ProxySimEventBase::ProxySimEventBase():
     EventBase     (0,SIM_MODEL_PRIO),
-    _VCD_REC_POL  (MDE_REC_SKIP),
+    VCD_REC_POL  (MDE_REC_SKIP),
     _vcdWriter    (nullptr){
     std::cout << "constructor of proxy sim event base" << std::endl;
 }
@@ -23,10 +23,11 @@ ProxySimEventBase::~ProxySimEventBase(){delete _vcdWriter;}
 void ProxySimEventBase::eventWarmUp(){
 
     startRegisterCallBack();
-    if ((_VCD_REC_POL == MDE_REC_BOTH) | (_VCD_REC_POL == MDE_REC_ONLY_USER)){
+    _vcdWriter->addNewVar(VST_REG, CLK_SIGNAL, {0, 1});
+    if ((VCD_REC_POL == MDE_REC_BOTH) | (VCD_REC_POL == MDE_REC_ONLY_USER)){
         startVcdDecVarUser();
     }
-    if ((_VCD_REC_POL == MDE_REC_BOTH) | (_VCD_REC_POL == MDE_REC_ONLY_INTERNAL)){
+    if ((VCD_REC_POL == MDE_REC_BOTH) | (VCD_REC_POL == MDE_REC_ONLY_INTERNAL)){
         startVcdDecVarInternal();
     }
 }
@@ -40,19 +41,31 @@ void ProxySimEventBase::simStartCurCycle(){
 void ProxySimEventBase::curCycleCollectData(){
     ///// start collect vcd
 
-        if ((_VCD_REC_POL == MDE_REC_BOTH) |
-            (_VCD_REC_POL == MDE_REC_ONLY_USER) |
-            (_VCD_REC_POL == MDE_REC_ONLY_INTERNAL)
+        if ((VCD_REC_POL == MDE_REC_BOTH) |
+            (VCD_REC_POL == MDE_REC_ONLY_USER) |
+            (VCD_REC_POL == MDE_REC_ONLY_INTERNAL)
             ){
+
             _vcdWriter->addNewTimeStamp(getCurCycle()*10);
+            clkSignal = 1;
+            _vcdWriter->addNewValue(CLK_SIGNAL, &clkSignal);
         }
 
-        if ((_VCD_REC_POL == MDE_REC_BOTH) | (_VCD_REC_POL == MDE_REC_ONLY_USER)){
+        if ((VCD_REC_POL == MDE_REC_BOTH) | (VCD_REC_POL == MDE_REC_ONLY_USER)){
             startVcdColUser();
         }
 
-        if ((_VCD_REC_POL == MDE_REC_BOTH) | (_VCD_REC_POL == MDE_REC_ONLY_INTERNAL)){
+        if ((VCD_REC_POL == MDE_REC_BOTH) | (VCD_REC_POL == MDE_REC_ONLY_INTERNAL)){
             startVcdColInternal();
+        }
+
+        if ((VCD_REC_POL == MDE_REC_BOTH) |
+                (VCD_REC_POL == MDE_REC_ONLY_USER) |
+                (VCD_REC_POL == MDE_REC_ONLY_INTERNAL)
+                ){
+            _vcdWriter->addNewTimeStamp(getCurCycle()*10 + 5);
+            clkSignal = 0;
+            _vcdWriter->addNewValue(CLK_SIGNAL, &clkSignal);
         }
 
         /////// start collect per collection

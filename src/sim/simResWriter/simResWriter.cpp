@@ -36,12 +36,13 @@ namespace kathryn{
                 );
     }
 
-    void VcdWriter::addNewValue(const std::string& name, ValRepBase&val) {
+    void VcdWriter::addNewValue(const std::string& name, ValRepBase* val) {
         addData(
-                "b" + val.getBiStr() +
+                "b" + val->getBiStr() +
                 " " + name + "\n"
                 );
     }
+
 
     void VcdWriter::addNewTimeStamp(ull timeStamp){
         addData("#" + std::to_string(timeStamp) + "\n");

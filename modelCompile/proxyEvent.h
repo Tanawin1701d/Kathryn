@@ -5,7 +5,7 @@
 #ifndef MODEL_COMPILE_PROXY_EVENT_H
 #define MODEL_COMPILE_PROXY_EVENT_H
 
-#include "proxyEventBase.h"
+#include "model/simIntf/base/proxyEventBase.h"
 
 namespace kathryn{
 

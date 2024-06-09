@@ -14,7 +14,7 @@ namespace kathryn{
 
     void initiateGlobalComponent(){
 
-        rstWire   = &_make<Wire>("rstWire", false, 1);
+        rstWire   = &_make<Wire>("rstWire", false, 1, false);
         startNode = new StartNode(rstWire);
         startNode->assign();
     }

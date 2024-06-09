@@ -31,7 +31,7 @@ namespace kathryn{
     class ValRepBase{
     protected:
         const int _length = -1;
-        ull _val    = -1;
+        ull _val          = -1;
     public:
         ValRepBase(const int length, ull val): _length(length), _val(val){};
 
@@ -45,6 +45,8 @@ namespace kathryn{
         void setVar(ull x){_val = x;}
 
         ull getVal()const {return _val;}
+
+        ull& getRefVal() {return _val;}
 
         explicit operator ull() const{
             return _val;
@@ -60,20 +62,20 @@ namespace kathryn{
     template<int _len>
     class ValRep: public ValRepBase{
     private:
-        const ull MASK_USED = (_len == bitSizeOfUll) ? -1 : ((1 << _len) -1);
+        static const ull MASK_USED = (_len == bitSizeOfUll) ? -1 : ((1 << _len) -1);
 
     public:
         ValRep(const ull value): ValRepBase(_len, value){}
 
         template<int sl_start, int sl_stop>
-        inline ull buildMask(){
+        inline ull buildMask() const{
             int size = sl_stop - sl_start;
             ull mask = (size == bitSizeOfUll) ? -1 : ((1 << size) - 1);
             return mask;
         }
 
         template<int sl_start, int sl_stop, int src_start>
-        inline ValRep<sl_stop - sl_start> sliceAndShift() const {
+        inline  ValRep<sl_stop - sl_start> sliceAndShift() const {
             assert((sl_start>=0) && (sl_start < sl_stop) && (sl_stop <= bitSizeOfUll));
             assert(src_start < bitSizeOfUll);
             ull mask = buildMask<sl_start, sl_stop>();
@@ -88,14 +90,17 @@ namespace kathryn{
         }
 
         template<int sl_start, int sl_stop>
-        inline ValRep<sl_stop - sl_start> slice() const {
-            assert((sl_start>=0) && (sl_start < sl_stop) && (sl_stop <= bitSizeOfUll));
+        void updateOnSlice(const ValRep<sl_stop - sl_start>& rhs){
             ull mask = buildMask<sl_start, sl_stop>();
-            return ValRep<sl_stop - sl_start>(mask & (_val >> sl_start));
+            mask = mask << sl_start;
+            _val = _val & (~mask); ///////////// to clear old value
+            _val = _val | rhs._val;
         }
 
+
+
         template<int sl_start, int sl_stop, int fixSize>
-        inline ValRep<fixSize> slice() const {
+        inline  ValRep<fixSize> slice() const {
             assert(fixSize >= (sl_stop - sl_start));
             assert((sl_start>=0) && (sl_start < sl_stop) && (sl_stop <= bitSizeOfUll));
             ull mask = buildMask<sl_start, sl_stop>();
@@ -103,12 +108,11 @@ namespace kathryn{
         }
 
         template<int sl_start, int sl_stop>
-        void updateOnSlice(ValRep<sl_stop - sl_start>& rhs){
-            ull mask = buildMask<sl_start, sl_stop>();
-            mask = mask << sl_start;
-            _val = _val & mask;
-            _val = _val | rhs._val;
+        inline  ValRep<sl_stop - sl_start> slice() const {
+            return slice<sl_start, sl_stop, sl_stop - sl_start>();
         }
+
+
 
         explicit operator bool(){
             return _val > 0;
@@ -120,6 +124,7 @@ namespace kathryn{
 
 
         inline ValRep& operator = (const ull value){ _val = value; return *this;}
+        inline ValRep& operator = (const ValRep<_len>& value){_val = value._val; return *this;}
 
         //////// required equal bit operator
         inline ValRep<_len> operator &  (const ValRep<_len>& rhs) const { return ValRep<_len>(_val  & rhs._val);}
@@ -142,13 +147,15 @@ namespace kathryn{
 
         ///// not required equal bit operator
         inline ValRep<_len> operator +  (const ValRep<_len>& rhs) const{return ValRep<_len>((_val + rhs._val) & MASK_USED);}
-        inline ValRep<_len> operator -  (const ValRep<_len>& rhs) const{return ValRep<_len>((_val + ~(rhs) + ValRep<_len>(1))._val & MASK_USED);}
+        inline ValRep<_len> operator -  (const ValRep<_len>& rhs) const{return ValRep<_len>(((*this) + ~(rhs) + ValRep<_len>(1))._val & MASK_USED);}
         inline ValRep<_len> operator *  (const ValRep<_len>&    ) const{assert(false);}
         inline ValRep<_len> operator /  (const ValRep<_len>&    ) const{assert(false);}
         inline ValRep<_len> operator %  (const ValRep<_len>&    ) const{assert(false);}
 
         inline ValRep<_len> operator << (const ValRep<_len>& rhs) const{return ValRep<_len>((_val << rhs._val)& MASK_USED);}
         inline ValRep<_len> operator >> (const ValRep<_len>& rhs) const{return ValRep<_len>((_val >> rhs._val)& MASK_USED);}
+
+        inline explicit operator bool() const {return _val > 0;}
 
     };
 

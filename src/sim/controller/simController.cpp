@@ -3,7 +3,7 @@
 //
 
 #include "simController.h"
-#include "modelCompile/proxyEventBase.h"
+#include "model/simIntf/base/proxyEventBase.h"
 
 namespace kathryn{
 

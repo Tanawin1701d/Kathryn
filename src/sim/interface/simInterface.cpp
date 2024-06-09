@@ -25,12 +25,12 @@ namespace kathryn{
     SimInterface::SimInterface(CYCLE limitCycle,
                                std::string vcdFilePath,
                                std::string profileFilePath,
-                               std::string clientSimPath
+                               std::string genFileName
                                ):
-            SIM_CLIENT_PATH(std::move(clientSimPath)),
             _vcdWriter (new VcdWriter(std::move(vcdFilePath))),
             _flowWriter(new FlowWriter(std::move(profileFilePath))),
-            _limitCycle(limitCycle)
+            _limitCycle(limitCycle),
+            _proxyBuildMng(std::move(genFileName))
     {
         SimController* simCtrl = getSimController();
         assert(simCtrl != nullptr);
@@ -70,7 +70,14 @@ namespace kathryn{
 
 
     void SimInterface::describeDef(){
-        ////*rstWire = 1;
+        sim{
+            *rstWire = 1;
+        };
+        incCycle(1);
+        sim{
+            *rstWire = 0;
+        };
+
     }
 
 
@@ -168,11 +175,17 @@ namespace kathryn{
 
         /** generate c++ file**/
         _proxyBuildMng.setStartModule(getGlobalModulePtr()); /// todo , SIM_CLIENT_PATH);
-        ///buildMng.startWriteModelSim();
+        _proxyBuildMng.startWriteModelSim();
         _proxyBuildMng.startCompile();
         _modelSimEvent = _proxyBuildMng.loadAndGetProxy();
+
+        ///////// initialize both simevent and proxyBuildMng
         _modelSimEvent->setVcdWriter(_vcdWriter);
         _modelSimEvent->setVcdWritePol(PARAM_VCD_REC_POL);
+        _modelSimEvent->eventWarmUp();
+        _proxyBuildMng.startRetrieveSimVal(_modelSimEvent);
+
+        ////////// add to event queue
         getSimController()->addEvent(_modelSimEvent);
 
 

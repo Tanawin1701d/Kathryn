@@ -23,7 +23,7 @@ namespace kathryn{
     protected:
         Val* _master = nullptr;
     public:
-        ValSimEngine(Val* master,VCD_SIG_TYPE sigType);
+        ValSimEngine(Val* master,VCD_SIG_TYPE sigType, ull rawValue);
     };
 
     /** This class act as constant value */
@@ -42,7 +42,7 @@ namespace kathryn{
         explicit Val(int size, ull rawValue = 0):
             LogicComp({0, size},
                       TYPE_VAL,
-                      new ValSimEngine(this,VST_INTEGER),
+                      new ValSimEngine(this,VST_INTEGER, rawValue),
                       false),
             _size(size),
             _rawValue(rawValue)

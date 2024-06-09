@@ -7,7 +7,7 @@
 
 #include <cassert>
 #include <utility>
-#include "modelCompile/proxyEventBase.h"
+#include "proxyEventBase.h"
 
 #include "sim/simResWriter/simResWriter.h"
 

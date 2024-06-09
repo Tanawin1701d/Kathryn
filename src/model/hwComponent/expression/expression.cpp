@@ -131,8 +131,9 @@ namespace kathryn{
 
         std::string retStr = "      { /////" + _ident->getGlobalName() + "\n";
 
-        assert(_asb   ->getAssignSlice().getSize() ==
-               _master->_a->getOperableSlice().getSize());
+
+        assert(_asb   ->getAssignSlice().getSize());
+        assert(_master->_a->getOperableSlice().checkValidSlice());
 
         retStr += "     ";
         retStr += getVarName();
@@ -174,7 +175,7 @@ namespace kathryn{
             case ARITH_MUL   : retStr += _aSliced + " *    " + _bSliced; break;
             case ARITH_DIV   : retStr += _aSliced + " /    " + _bSliced; break;
             case ARITH_DIVR  : retStr += _aSliced + " %    " + _bSliced; break;
-            case ASSIGN      : retStr += " =    " + _aSliced;            break;
+            case ASSIGN      : retStr += _aSliced                      ; break;
             case OP_DUMMY:
             case LOGIC_OP_COUNT: break;
         }

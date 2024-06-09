@@ -2,7 +2,7 @@
 // Created by tanawin on 31/5/2024.
 //
 
-#include "modelCompile/proxyEventBase.h"
+#include "model/simIntf/base/proxyEventBase.h"
 #include "logicSimEngine.h"
 #include "sim/controller/simController.h"
 
@@ -47,6 +47,13 @@ namespace kathryn{
         }
     }
 
+    std::string LogicSimEngine::getVarName(){
+        return _ident->getGlobalName() +
+               (_ident->isUserVar() ?
+                   "_USER_" + _ident->getVarName() :
+                   "_SYS");
+    }
+
     std::string LogicSimEngine::getVarNameFromOpr(Operable* opr){
         assert(opr != nullptr);
         return opr->getExactOperable().getLogicSimEngineFromOpr()->getVarName();
@@ -59,8 +66,8 @@ namespace kathryn{
 
         return "ValRep<"+valSize+"> " + getVarName() + " = " + std::to_string(_initVal) + "; "
                 + (_isTempReq ?
-                   "ValRep<"+valSize+"> " + getVarName() + TEMP_VAR_SUFFIX + " = " + std::to_string(_initVal) + ";\n":
-                   "");
+                   "ValRep<"+valSize+"> " + getVarName() + TEMP_VAR_SUFFIX + " = " + std::to_string(_initVal) + ";":
+                   "") + "\n";
     }
 
     std::string LogicSimEngine::createOp(){
@@ -68,6 +75,9 @@ namespace kathryn{
         ///////// build string
         std::string retStr = "      { /////" + _ident->getGlobalName() + "\n";
         _asb->sortUpEventByPriority();
+        if (_isTempReq){
+            retStr += "         " + getVarName() + TEMP_VAR_SUFFIX + " = " + getVarName()  + ";\n";
+        }
         /////////// we build from low priority to high priority
         for (UpdateEvent* updateEvent: _asb->getUpdateMeta()){
 
@@ -89,6 +99,7 @@ namespace kathryn{
                     retStr += " && ";
                 }
                 retStr += getVarNameFromOpr(updateEvent->srcUpdateState);
+                isConOccur = true;
             }
 
             if (!isConOccur){
@@ -114,7 +125,7 @@ namespace kathryn{
 
     std::string LogicSimEngine::createOpEndCycle(){
         if (_isTempReq){
-            return getVarName() + " = " + getVarName() + TEMP_VAR_SUFFIX + ";\n";
+            return "    " + getVarName() + " = " + getVarName() + TEMP_VAR_SUFFIX + ";\n";
         }
         return "";
     }
