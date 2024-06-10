@@ -24,28 +24,28 @@ namespace kathryn{
         FileWriterBase* proxyfileWriter  = nullptr;
         void*           _handle          = nullptr;
 
+        const std::string TEST_NAME;
+
         const std::string PROJECT_DIR    = "..";
         const std::string MD_COMPILE_FOLDER = "modelCompile";
 
         const std::string genFolder      = "generated";
         const std::string dynObjFolder   = "build";
 
-        const std::string genName        = "proxyEvent.cpp";
         const std::string builderName    = "startGen.sh";
-        const std::string dynObjName     = "simClient.so";
 
 
         const std::string pathToModelFolder = PROJECT_DIR + "/" + MD_COMPILE_FOLDER;
 
         const std::string srcGenPath
-        = pathToModelFolder + "/" + genFolder + "/" + genName;
+        = pathToModelFolder + "/" + genFolder + "/" + TEST_NAME + ".cpp";
         const std::string srcBuilderPath
         = pathToModelFolder + "/" + builderName;
         const std::string srcDynLoadPath
-        = pathToModelFolder + "/" + dynObjFolder + "/" + dynObjName;
+        = pathToModelFolder + "/" + dynObjFolder + "/" + TEST_NAME +  ".so";
 
     public:
-        ProxyBuildMng(std::string userGenName): genName(std::move(userGenName)){};
+        ProxyBuildMng(std::string testName): TEST_NAME(std::move(testName)){};
         ~ProxyBuildMng();
         std::vector<ModelProxyBuild*>
         doTopologySort(std::vector<ModelProxyBuild*>& graph);

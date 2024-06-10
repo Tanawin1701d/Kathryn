@@ -60,6 +60,7 @@ namespace kathryn{
     }
 
 
+
     std::string LogicSimEngine::createVariable(){
 
         std::string valSize = std::to_string(_asb->getAssignSlice().getSize());
@@ -84,21 +85,23 @@ namespace kathryn{
             ////
             ///check integrity
             ///
-            assert(updateEvent->srcUpdateValue->getOperableSlice().getSize() ==
+            assert(updateEvent->srcUpdateValue->getOperableSlice().getSize() >=
                    updateEvent->desUpdateSlice.getSize());
 
             retStr += "         if ( ";
             bool isConOccur = false;
             if (updateEvent->srcUpdateCondition != nullptr){
                 isConOccur = true;
-                retStr += getVarNameFromOpr(updateEvent->srcUpdateCondition);
+                retStr += sliceVar(getVarNameFromOpr(updateEvent->srcUpdateCondition),
+                                   updateEvent->srcUpdateCondition->getOperableSlice());
             }
 
             if (updateEvent->srcUpdateState != nullptr){
                 if (isConOccur){
                     retStr += " && ";
                 }
-                retStr += getVarNameFromOpr(updateEvent->srcUpdateState);
+                retStr += sliceVar(getVarNameFromOpr(updateEvent->srcUpdateState),
+                                   updateEvent->srcUpdateState->getOperableSlice());
                 isConOccur = true;
             }
 
@@ -112,8 +115,10 @@ namespace kathryn{
                 ".updateOnSlice<"+ std::to_string(updateEvent->desUpdateSlice.start) + "," +
                                    std::to_string(updateEvent->desUpdateSlice.stop) + ">(" ;
             retStr += getVarNameFromOpr(updateEvent->srcUpdateValue);
-            retStr += ".sliceAndShift<"+std::to_string(updateEvent->srcUpdateValue->getOperableSlice().start) + "," +
-                                        std::to_string(updateEvent->srcUpdateValue->getOperableSlice().stop ) + "," +
+            int srcStart = updateEvent->srcUpdateValue->getOperableSlice().start;
+            int srcStop  = srcStart + updateEvent->desUpdateSlice.getSize();
+            retStr += ".sliceAndShift<"+std::to_string(srcStart) + "," +
+                                        std::to_string(srcStop) + "," +
                                         std::to_string(updateEvent->desUpdateSlice.start)
                                        +">());\n";
             retStr += "         }\n";

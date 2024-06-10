@@ -150,7 +150,7 @@ namespace kathryn{
      * */
 
     MemEleHolderSimEngine::MemEleHolderSimEngine(MemBlockEleHolder* master):
-    LogicSimEngine(master, master, VST_DUMMY, false, 0),
+    LogicSimEngine(master, master, VST_WIRE, false, 0),
     _master(master){
         assert(master != nullptr);
     }
@@ -172,12 +172,13 @@ namespace kathryn{
         ///
         /////// read mode
         ///
-        std::string retStr = "{ ///////" + _ident->getGlobalName() + "readMode\n";
+        std::string retStr = "      { ///////" + _ident->getGlobalName() + "  readMode\n";
 
         retStr += "     ";
         retStr += getVarName() + " = ";
         retStr += _master->_master->getSimEngine()->getVarName();
-        retStr += "[" + getVarNameFromOpr(_master->_indexer) + "];\n";
+        retStr += "[(ull)" + getVarNameFromOpr(_master->_indexer) + "];\n";
+        retStr += "     }\n";
         return retStr;
     }
 
@@ -209,6 +210,7 @@ namespace kathryn{
                     retStr += " && ";
                 }
                 retStr += getVarNameFromOpr(updateEvent->srcUpdateState);
+                isConOccur = true;
             }
 
             if (!isConOccur){
@@ -218,7 +220,7 @@ namespace kathryn{
             retStr += "){\n         ";
             retStr += "         ";
             retStr += _master->_master->getSimEngine()->getVarName();
-            retStr += "[" + getVarNameFromOpr(_master->_indexer) + "] = ";
+            retStr += "[(ull)" + getVarNameFromOpr(_master->_indexer) + "] = ";
             retStr += getVarNameFromOpr(updateEvent->srcUpdateValue);
             retStr += ".slice<"  + std::to_string(updateEvent->srcUpdateValue->getOperableSlice().start) + "," +
                                    std::to_string(updateEvent->srcUpdateValue->getOperableSlice().stop ) + ">();\n";

@@ -43,7 +43,7 @@ namespace kathryn{
     }
 
     ValRepBase& MemBlock::at(ull idx){
-        mfAssert(getAssignMode() == AM_MOD, "can't retrive memblock while"
+        mfAssert(getAssignMode() == AM_SIM, "can't retrive memblock while"
                                             " at " +std::to_string(idx) + " loading");
         mfAssert(idx < getDepthSize(), "can't retrive memblock while"
                                             " at " +std::to_string(idx) + " exceed index value");

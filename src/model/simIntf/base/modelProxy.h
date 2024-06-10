@@ -32,6 +32,10 @@ namespace kathryn{
         virtual std::string  getVarName()       = 0; //// prefix is not include
         virtual ull          getVarId()         = 0; //// it is global id
         std::vector<ModelProxyBuild*>& getDep() {return dep;}
+        std::string          sliceVar(std::string varName, Slice sl){
+            return varName + ".slice<" + std::to_string(sl.start) +
+                   ", " + std::to_string(sl.stop) + ">()";
+        }
 
         //// c++ create section
         virtual std::string createVariable()      = 0;

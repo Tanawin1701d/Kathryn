@@ -66,7 +66,6 @@ namespace kathryn {
         VarMeta           _varMeta; /// sub type of component typically we use for module
         /** local variable*/
         Module* _parent; /// if it is nullptr it is not localized
-        bool   _isUserDec = false;
         /// it will share among the same module
 
     public:
@@ -81,6 +80,7 @@ namespace kathryn {
             if (isVarNameRetrievable(_globalId)){ _varMeta = retrieveVarMeta();}
             if (!_varMeta.isUser){ _varMeta.varName += "INTERNAL";}
             _globalName = GLOBAL_PREFIX[type] + std::to_string(_globalId);
+
             };
 
         virtual ~Identifiable() = default;

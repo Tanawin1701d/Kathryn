@@ -17,8 +17,8 @@ else
 fi
 
 echo "now start compiling....."
-g++  -fPIC -shared -o build/simClient.so -I ../src \
-generated/$SRC_PROXYEVENT_NAME \
+g++  -fPIC -o3 -g -shared -o build/$SRC_PROXYEVENT_NAME.so -I ../src \
+generated/$SRC_PROXYEVENT_NAME.cpp \
 ../src/model/simIntf/base/proxyEventBase.cpp \
 ../src/util/fileWriter/fileWriterBase.cpp \
 ../src/sim/simResWriter/simResWriter.cpp

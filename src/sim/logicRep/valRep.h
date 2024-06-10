@@ -27,9 +27,9 @@ namespace kathryn{
      */
 
     constexpr int bitSizeOfUll = sizeof(ull) << 3;
-
+    constexpr ull MAX_VALREP_RAW = ((ull)-1);
     class ValRepBase{
-    protected:
+    public:
         const int _length = -1;
         ull _val          = -1;
     public:
@@ -62,15 +62,16 @@ namespace kathryn{
     template<int _len>
     class ValRep: public ValRepBase{
     private:
-        static const ull MASK_USED = (_len == bitSizeOfUll) ? -1 : ((1 << _len) -1);
+        static const ull MASK_USED = (_len == bitSizeOfUll) ? MAX_VALREP_RAW : ( (((ull)1) << _len) -1 );
 
     public:
+        ValRep(): ValRepBase(_len, 0){};
         ValRep(const ull value): ValRepBase(_len, value){}
 
         template<int sl_start, int sl_stop>
         inline ull buildMask() const{
             int size = sl_stop - sl_start;
-            ull mask = (size == bitSizeOfUll) ? -1 : ((1 << size) - 1);
+            ull mask = (size == bitSizeOfUll) ? -1 : ((((ull)1) << size) - 1);
             return mask;
         }
 
@@ -112,12 +113,6 @@ namespace kathryn{
             return slice<sl_start, sl_stop, sl_stop - sl_start>();
         }
 
-
-
-        explicit operator bool(){
-            return _val > 0;
-        }
-
         bool getLogicValue(){
             return _val > 0;
         }
@@ -130,8 +125,8 @@ namespace kathryn{
         inline ValRep<_len> operator &  (const ValRep<_len>& rhs) const { return ValRep<_len>(_val  & rhs._val);}
         inline ValRep<_len> operator |  (const ValRep<_len>& rhs) const { return ValRep<_len>(_val  | rhs._val);}
         inline ValRep<_len> operator ^  (const ValRep<_len>& rhs) const { return ValRep<_len>(_val  ^ rhs._val);}
-        inline ValRep<_len> operator == (const ValRep<_len>& rhs) const { return ValRep<_len>(_val == rhs._val);}
-        inline ValRep<_len> operator != (const ValRep<_len>& rhs) const { return ValRep<_len>(_val != rhs._val);}
+        inline ValRep<1>    operator == (const ValRep<_len>& rhs) const { return ValRep<1>(_val == rhs._val);}
+        inline ValRep<1>    operator != (const ValRep<_len>& rhs) const { return ValRep<1>(_val != rhs._val);}
         //////// only one operand
         inline ValRep<_len> operator ~ () const { return ValRep<_len>((~_val) & MASK_USED);}
 
@@ -155,7 +150,7 @@ namespace kathryn{
         inline ValRep<_len> operator << (const ValRep<_len>& rhs) const{return ValRep<_len>((_val << rhs._val)& MASK_USED);}
         inline ValRep<_len> operator >> (const ValRep<_len>& rhs) const{return ValRep<_len>((_val >> rhs._val)& MASK_USED);}
 
-        inline explicit operator bool() const {return _val > 0;}
+        inline explicit operator bool() const {return _val;}
 
     };
 

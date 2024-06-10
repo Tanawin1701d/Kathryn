@@ -43,15 +43,23 @@ namespace kathryn{
 
         bool needToDelete()        override{return false;}
 
+        int x [5];
+
         void setVcdWritePol    (MODULE_VCD_REC_POL vcd_rec_pol){VCD_REC_POL = vcd_rec_pol;}
         void setVcdWriter      (VcdWriter*         vcdWriter  ){_vcdWriter   = vcdWriter;  }
         void registerToCallBack(const std::string& cbName, ValRepBase* val){
             assert(val != nullptr && (callBack.find(cbName) == callBack.end()));
             callBack.insert({cbName, val});
         }
+        void registerToCallBack(const std::string& cbName, ValRepBase& val){
+            registerToCallBack(cbName, &val);
+        }
         void registerToCallBackPerf(const std::string& cbName, ValRepBase* val){
             assert(val != nullptr && (callBackPerf.find(cbName) == callBackPerf.end()));
             callBackPerf.insert({cbName, val});
+        }
+        void registerToCallBackPerf(const std::string& cbName, ValRepBase& val){
+            registerToCallBackPerf(cbName, &val);
         }
 
 

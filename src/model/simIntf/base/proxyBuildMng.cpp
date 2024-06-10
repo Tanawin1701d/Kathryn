@@ -160,9 +160,9 @@ namespace kathryn{
             }
             proxyfileWriter->addData("\"" + varName+ "\"");
             proxyfileWriter->addData(",");
-            proxyfileWriter->addData("&" + varName);
+            proxyfileWriter->addData(varName);
             proxyfileWriter->addData(");\n");
-            proxyfileWriter->addData(R"(std::cout << "register to " << ")" + varName + "\"" + " << std::endl; \n");
+            //proxyfileWriter->addData(R"(std::cout << "register to " << ")" + varName + "\"" + " << std::endl; \n");
 
         };
 
@@ -268,6 +268,8 @@ namespace kathryn{
                     proxyfileWriter->addData("VST_WIRE");
                 }else if (vst == VST_INTEGER){
                     proxyfileWriter->addData("VST_INTEGER");
+                }else{
+                    assert(false);
                 }
 
                 /////// varname
@@ -330,7 +332,7 @@ namespace kathryn{
 
     void ProxyBuildMng::startCompile(){
         std::string compileComand =
-            srcBuilderPath + " " + genName;
+            srcBuilderPath + " " + TEST_NAME;
 
         std::cout << "compile command is " << compileComand << std::endl;
         int result = system(compileComand.c_str());

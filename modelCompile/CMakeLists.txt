@@ -9,8 +9,9 @@ INCLUDE_DIRECTORIES( ../src )
 
 add_executable(modelCompile
         main.cpp
-        generated/proxyEvent.cpp
+        #generated/proxyEvent.cpp
         ../src/util/fileWriter/fileWriterBase.cpp
         ../src/model/simIntf/base/proxyEventBase.cpp
         ../src/sim/simResWriter/simResWriter.cpp
+        generated/simple_gen_file_15.cpp.cpp
  )

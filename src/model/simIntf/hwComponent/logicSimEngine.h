@@ -46,6 +46,7 @@ namespace kathryn{
 
         std::string getVarNameFromOpr(Operable* opr);
 
+
         /*** c++ create section**/
 
         std::string createVariable()      override;

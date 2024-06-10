@@ -19,11 +19,11 @@ namespace kathryn{
 
         void flow() override{
 
-            // for (int i = 0; i < 1; i++){
-            //     mReg(a, 8);
-            //     cnts.push_back(&a);
-            //     *cnts[i] <<= *cnts[i] + 1;
-            // }
+            for (int i = 0; i < 200; i++){
+                mReg(a, 8);
+                cnts.push_back(&a);
+                *cnts[i] <<= *cnts[i] + 1;
+            }
         }
 
     };
@@ -38,7 +38,7 @@ namespace kathryn{
         testSimMod34* _md;
 
         sim34(testSimMod34* md, int idx, const std::string& prefix):SimAutoInterface(idx,
-                                                 10,
+                                                 10000000,
                                                  prefix + "simAutoResult"+std::to_string(idx)+".vcd",
                                                  prefix + "simAutoResult"+std::to_string(idx)+".prof"),
                                 _md(md)

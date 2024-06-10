@@ -22,7 +22,7 @@ namespace kathryn{
     std::string MemSimEngine::createVariable(){
         return "ValRep <" + std::to_string(_master->getWidthSize()) + ">"
             + getVarName() +
-            "["+ std::to_string(_master->getDepthSize()) + "];";
+            "["+ std::to_string(_master->getDepthSize()) + "];\n";
     }
 
     void MemSimEngine::proxyRetInit(ProxySimEventBase* modelSimEvent){
