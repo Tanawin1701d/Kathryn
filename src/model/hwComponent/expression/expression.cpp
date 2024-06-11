@@ -139,21 +139,16 @@ namespace kathryn{
         retStr += getVarName();
         retStr += " = ";
 
-        std::string _aSliced = getVarNameFromOpr(_master->_a) + ".slice<"+
-            std::to_string(_master->_a->getOperableSlice().start) + "," +
-            std::to_string(_master->_a->getOperableSlice().stop ) +">()";
+        std::string _aSliced = getSliceStringFromOpr(_master->_a);
 
         std::string _bSliced;
 
         if (_master->_b != nullptr){
-            _bSliced = getVarNameFromOpr(_master->_b) + ".slice<"+
-                std::to_string(_master->_b->getOperableSlice().start) + "," +
-                std::to_string(_master->_b->getOperableSlice().stop ) + "," +
-                std::to_string(_master->_a->getOperableSlice().getSize())+
-            +">()";
+            _bSliced = getSliceStringFromOpr(_master->_b, _master->_a->getOperableSlice().getSize());
         }
 
 
+        ////// all operand expect to be equal
         switch (_master->getOp()) {
             case BITWISE_AND : retStr += _aSliced + " &    " + _bSliced; break;
             case BITWISE_OR  : retStr += _aSliced + " |    " + _bSliced; break;

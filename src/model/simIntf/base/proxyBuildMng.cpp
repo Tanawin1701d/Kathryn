@@ -324,7 +324,9 @@ namespace kathryn{
     void ProxyBuildMng::startWriteCreateFunc(){
         proxyfileWriter->addData(
         "extern \"C\" ProxySimEventBase* create() {\n"
+#ifdef MODELCOMPILEVB
         "   std::cout << \"creating proxy simEvent in dynamic object\" << std::endl;\n"
+#endif
         "   return new ProxySimEvent();\n}\n\n"
         );
     }
@@ -334,13 +336,17 @@ namespace kathryn{
         std::string compileComand =
             srcBuilderPath + " " + TEST_NAME;
 
-        std::cout << "compile command is " << compileComand << std::endl;
+#ifdef MODELCOMPILEVB
+            std::cout << "compile command is " << compileComand << std::endl;
+#endif
         int result = system(compileComand.c_str());
+#ifdef MODELCOMPILEVB
         if (result == 0){
             std::cout << "compile successfully\n";
         }else{
             std::cerr << "Compilation failed with error code " << result << std::endl;
         }
+#endif
     }
 
     ProxySimEventBase* ProxyBuildMng::loadAndGetProxy(){

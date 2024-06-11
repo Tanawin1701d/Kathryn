@@ -26,6 +26,87 @@ namespace kathryn{
         ///////// fill asb  to system to support topology sort
     }
 
+
+    std::string LogicSimEngine::getVarNameFromOpr(Operable* opr){
+        assert(opr != nullptr);
+        return opr->getExactOperable().getLogicSimEngineFromOpr()->getVarName();
+    }
+
+    std::string LogicSimEngine::getSliceStringFromOpr(Operable* opr, int fixLength){
+        assert(opr != nullptr);
+        LogicSimEngine* simEngine = opr->getLogicSimEngineFromOpr();
+        Slice           neededSlice = opr->getOperableSlice();
+        if (fixLength == -1){
+            //////// slice to operabe slice
+            return simEngine->genSliceTo(neededSlice);
+        }
+        return simEngine->genSliceToWithFixSize(neededSlice, fixLength);
+
+    }
+
+    std::string LogicSimEngine::genAssignAEqB(Slice desSlice, bool isDesTemp,
+                                              Operable* srcOpr, bool isShinkSrc){
+        assert(srcOpr != nullptr);
+
+        ////// src operand
+        Slice srcSlice            = srcOpr->getOperableSlice();
+        Slice shinkSrcSlice       = srcSlice.getSubSliceWithShinkMsb({0,
+                                                                        desSlice.getSize()});
+        Slice baseSrcSlice        = srcOpr->getExactOperable().getOperableSlice();
+        std::string srcVarName    = getVarNameFromOpr(srcOpr);
+
+        assert(srcSlice.getSize() >= desSlice.getSize());
+        ////// des operand
+        Slice       baseDesSlice  = _asb->getAssignSlice();
+        std::string desVarName    = isDesTemp ? getTempVarName() : getVarName();
+
+        if ((desSlice == baseDesSlice) &&
+            (srcSlice == baseSrcSlice) &&
+            (srcSlice == desSlice    ) &&
+            ( (!isShinkSrc) || (isShinkSrc && (srcSlice == shinkSrcSlice))   )
+        ){
+            ///////// optimize
+            return desVarName + " = " + srcVarName + ";";
+        }
+
+        int srcStop = (isShinkSrc) ? shinkSrcSlice.stop : srcSlice.stop;
+        return desVarName + ".updateOnSlice<" + std::to_string(desSlice.start) + ", " + std::to_string(desSlice.stop) + ">(" +
+               srcVarName + ".sliceAndShift<" + std::to_string(srcSlice.start) + ", " + std::to_string(srcStop) + ", "
+                                              + std::to_string(desSlice.start) + ">());";
+    }
+
+    std::string LogicSimEngine::genSliceTo(Slice desSlice){
+        ////// it will automatic shift to 0 index
+        ////// des operand
+        Slice       baseDesSlice  = _asb->getAssignSlice();
+        std::string desVarName    = getVarName();
+
+        if (baseDesSlice == desSlice){
+            return getVarName();
+        }
+        return getVarName() + ".slice<" + std::to_string(desSlice.start) + ", " +
+                                          std::to_string(desSlice.stop) + ">()";
+
+    }
+
+    std::string LogicSimEngine::genSliceToWithFixSize(Slice desSlice, int fixLength){
+        ////// it will automatic shift to 0 index
+        ////// des operand
+        Slice       baseDesSlice  = _asb->getAssignSlice();
+        std::string desVarName    = getVarName();
+
+        if ( (baseDesSlice == desSlice) &&
+             (fixLength == baseDesSlice.getSize())
+        ){
+            return getVarName();
+        }
+        return getVarName() + ".slice<" + std::to_string(desSlice.start) +  ", " +
+                                          std::to_string(desSlice.stop)  +  ", " +
+                                          std::to_string(fixLength)      +  ">()";
+
+    }
+
+
     void LogicSimEngine::proxyBuildInit(){
 
         _asb->sortUpEventByPriority();
@@ -54,12 +135,9 @@ namespace kathryn{
                    "_SYS");
     }
 
-    std::string LogicSimEngine::getVarNameFromOpr(Operable* opr){
-        assert(opr != nullptr);
-        return opr->getExactOperable().getLogicSimEngineFromOpr()->getVarName();
+    std::string LogicSimEngine::getTempVarName(){
+        return getVarName() + TEMP_VAR_SUFFIX;
     }
-
-
 
     std::string LogicSimEngine::createVariable(){
 
@@ -91,17 +169,16 @@ namespace kathryn{
             retStr += "         if ( ";
             bool isConOccur = false;
             if (updateEvent->srcUpdateCondition != nullptr){
+                retStr += getSliceStringFromOpr(updateEvent->srcUpdateCondition);
                 isConOccur = true;
-                retStr += sliceVar(getVarNameFromOpr(updateEvent->srcUpdateCondition),
-                                   updateEvent->srcUpdateCondition->getOperableSlice());
+
             }
 
             if (updateEvent->srcUpdateState != nullptr){
                 if (isConOccur){
                     retStr += " && ";
                 }
-                retStr += sliceVar(getVarNameFromOpr(updateEvent->srcUpdateState),
-                                   updateEvent->srcUpdateState->getOperableSlice());
+                retStr += getSliceStringFromOpr(updateEvent->srcUpdateState);
                 isConOccur = true;
             }
 
@@ -111,16 +188,7 @@ namespace kathryn{
 
             retStr += "){\n         ";
             retStr += "         ";
-            retStr += getVarName() + (_isTempReq ? TEMP_VAR_SUFFIX: "") +
-                ".updateOnSlice<"+ std::to_string(updateEvent->desUpdateSlice.start) + "," +
-                                   std::to_string(updateEvent->desUpdateSlice.stop) + ">(" ;
-            retStr += getVarNameFromOpr(updateEvent->srcUpdateValue);
-            int srcStart = updateEvent->srcUpdateValue->getOperableSlice().start;
-            int srcStop  = srcStart + updateEvent->desUpdateSlice.getSize();
-            retStr += ".sliceAndShift<"+std::to_string(srcStart) + "," +
-                                        std::to_string(srcStop) + "," +
-                                        std::to_string(updateEvent->desUpdateSlice.start)
-                                       +">());\n";
+            retStr += genAssignAEqB(updateEvent->desUpdateSlice, _isTempReq, updateEvent->srcUpdateValue, true) + "\n";
             retStr += "         }\n";
         }
 
@@ -130,7 +198,7 @@ namespace kathryn{
 
     std::string LogicSimEngine::createOpEndCycle(){
         if (_isTempReq){
-            return "    " + getVarName() + " = " + getVarName() + TEMP_VAR_SUFFIX + ";\n";
+            return "    " + getVarName() + " = " + getTempVarName() + ";\n";
         }
         return "";
     }

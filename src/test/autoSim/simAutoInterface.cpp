@@ -19,7 +19,7 @@ namespace kathryn{
     SimInterface(limitCycle,
                  std::move(vcdFilePath),
                  std::move(profileFilePath),
-                 "simple_gen_file_" + std::to_string(simId) + ".cpp"),
+                 "simple_gen_file_" + std::to_string(simId)),
     _simId(simId){
     }
 

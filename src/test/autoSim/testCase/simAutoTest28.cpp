@@ -23,15 +23,13 @@ namespace kathryn{
         void flow() override{
 
             cwhile(  c == 1 ){
-                cif(a < 10){
-                    intrStart(is); ////// it start at cif not inside cif
+                cif(a < 10){ intrStart(is); ////// it start at cif not inside cif
                     a = a+1;
                 }celse{
                     a = a+2;
                 };
 
-                sif(a2 < 7){
-                    intrStart(is); ////// it start at cif not inside sif
+                sif(a2 < 7){ intrStart(is); ////// it start at cif not inside sif
                     a2 = a2+1;
                 }selif(a2 < 23){
                     a2 = a2+2;
@@ -71,13 +69,23 @@ namespace kathryn{
             conNextCycle(5);
             testAndPrint("check intr ifelse trigger c start", ull(_md->c),1);
             conNextCycle(1);
-            testAndPrint("check intr par a start", ull(_md->a),1);
+            testAndPrint("check intr par a start",  ull(_md->a ),1);
+            testAndPrint("check intr par a2 start", ull(_md->a2),0);
+            conNextCycle(1);
+            testAndPrint("check intr par a start",  ull(_md->a ),1);
             testAndPrint("check intr par a2 start", ull(_md->a2),1);
             conNextCycle(1);
-            testAndPrint("check intr par a start", ull(_md->a),2);
+            testAndPrint("check intr par a start",  ull(_md->a ),2);
+            testAndPrint("check intr par a2 start", ull(_md->a2),1);
             conNextCycle(1);
+            testAndPrint("check intr par a start",  ull(_md->a ),2);
             testAndPrint("check intr par a2 start", ull(_md->a2),2);
-
+            conNextCycle(1);
+            testAndPrint("check intr par a start",  ull(_md->a ),3);
+            testAndPrint("check intr par a2 start", ull(_md->a2),2);
+            conNextCycle(1);
+            testAndPrint("check intr par a start",  ull(_md->a ),3);
+            testAndPrint("check intr par a2 start", ull(_md->a2),3);
         }
 
     };

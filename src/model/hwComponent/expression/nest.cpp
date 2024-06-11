@@ -239,14 +239,7 @@ namespace kathryn{
             int curSize = opr->getOperableSlice().getSize();
 
             retStr += "     ";
-            retStr += getVarName() +
-                ".updateOnSlice<"+ std::to_string(startIdx) + "," +
-                                   std::to_string(startIdx + curSize) + ">(" ;
-            retStr += getVarNameFromOpr(opr);
-            retStr += ".sliceAndShift<"+std::to_string(opr->getOperableSlice().start) + "," +
-                                        std::to_string(opr->getOperableSlice().stop ) + "," +
-                                        std::to_string(startIdx)
-                                       +">());\n";
+            retStr += genAssignAEqB({startIdx, startIdx + curSize}, false, opr, true) + "\n";
             startIdx += curSize;
         }
         retStr += "     }\n";

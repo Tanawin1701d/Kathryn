@@ -25,9 +25,16 @@ namespace kathryn{
         bool          _flowPerfBit= false; ////// it is used to set that this logic is used to be perf profiler
         ull           _initVal    = 0;
 
-
-
     public:
+        /** gen variable helper*/
+        std::string getVarNameFromOpr(Operable* opr);
+        std::string getSliceStringFromOpr(Operable* opr,int fixLength = -1);
+        std::string genAssignAEqB(Slice desSlice, bool isDesTemp,
+                                  Operable* srcOpr, bool shinkSrc);
+        std::string genSliceTo(Slice desSlice);
+        std::string genSliceToWithFixSize(Slice desSlice, int fixLength);
+
+
         LogicSimEngine(Assignable* asb, Identifiable*   ident,
                        VCD_SIG_TYPE sigType, bool isTempReq,
                         ull initVal
@@ -36,6 +43,7 @@ namespace kathryn{
         void proxyBuildInit() override;
 
         std::string getVarName() override;
+        std::string getTempVarName();
 
         ull         getVarId()   override{return _ident->getGlobalId();}
 
@@ -43,8 +51,6 @@ namespace kathryn{
 
         VCD_SIG_TYPE getSigType() const {return _vcdSigType;}
         Slice        getSize()    const {return _asb->getAssignSlice();}
-
-        std::string getVarNameFromOpr(Operable* opr);
 
 
         /*** c++ create section**/

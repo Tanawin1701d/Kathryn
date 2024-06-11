@@ -15,7 +15,9 @@ ProxySimEventBase::ProxySimEventBase():
     EventBase     (0,SIM_MODEL_PRIO),
     VCD_REC_POL  (MDE_REC_SKIP),
     _vcdWriter    (nullptr){
+#ifdef MODELCOMPILEVB
     std::cout << "constructor of proxy sim event base" << std::endl;
+#endif
 }
 
 ProxySimEventBase::~ProxySimEventBase(){delete _vcdWriter;}

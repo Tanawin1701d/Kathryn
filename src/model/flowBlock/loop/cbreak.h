@@ -13,7 +13,7 @@
 
 
 #define sbreak          for(auto kathrynBlock = new FlowBlockSCBreak();     kathrynBlock->doPrePostFunction(); kathrynBlock->step()){}
-#define sbreakCon(expr) for(auto kathrynBlock = new FlowBlockSCBreak(expr); kathrynBlock->doPrePostFunction(); kathrynBlock->step()){}
+////#define sbreakCon(expr) for(auto kathrynBlock = new FlowBlockSCBreak(expr); kathrynBlock->doPrePostFunction(); kathrynBlock->step()){}
 
 namespace kathryn{
 
@@ -23,6 +23,7 @@ namespace kathryn{
         NodeWrap* resultNodeWrap = nullptr;
 
         StateNode* breakNode      = nullptr;
+        ////////// mark as legacy we don't support scbreak con anymore
         PseudoNode* breakCondNode = nullptr; /// incase there is condition to break node
         DummyNode* normExitNode   = nullptr;
 

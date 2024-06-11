@@ -10,7 +10,7 @@ namespace kathryn{
         const int MAX_BIT = 64;
         assert(bitSize <= MAX_BIT);
         if (val)
-            return (bitSize < MAX_BIT) ? (1 << bitSize) : -1;
+            return (bitSize < MAX_BIT) ? ((((ull)1) << bitSize) - 1) : -1;
         else
             return 0;
     }

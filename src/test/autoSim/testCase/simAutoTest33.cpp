@@ -19,14 +19,13 @@ namespace kathryn{
         explicit testSimMod33(int x): Module(){}
 
         void flow() override{
-
             seq{
                 a <<= 1;
                 cdowhile(c <= 5){
                     par {
                         x = c;
                         c <<= c + 1;
-                        sbreakCon(c == 2);
+                        /////sbreakCon(c == 2);
                     }
                 }
             }

@@ -201,15 +201,15 @@ namespace kathryn{
             retStr += "         if ( ";
             bool isConOccur = false;
             if (updateEvent->srcUpdateCondition != nullptr){
+                retStr += getSliceStringFromOpr(updateEvent->srcUpdateCondition);
                 isConOccur = true;
-                retStr += getVarNameFromOpr(updateEvent->srcUpdateCondition);
             }
 
             if (updateEvent->srcUpdateState != nullptr){
                 if (isConOccur){
                     retStr += " && ";
                 }
-                retStr += getVarNameFromOpr(updateEvent->srcUpdateState);
+                retStr += getSliceStringFromOpr(updateEvent->srcUpdateState);
                 isConOccur = true;
             }
 
@@ -220,10 +220,8 @@ namespace kathryn{
             retStr += "){\n         ";
             retStr += "         ";
             retStr += _master->_master->getSimEngine()->getVarName();
-            retStr += "[(ull)" + getVarNameFromOpr(_master->_indexer) + "] = ";
-            retStr += getVarNameFromOpr(updateEvent->srcUpdateValue);
-            retStr += ".slice<"  + std::to_string(updateEvent->srcUpdateValue->getOperableSlice().start) + "," +
-                                   std::to_string(updateEvent->srcUpdateValue->getOperableSlice().stop ) + ">();\n";
+            retStr += "[(ull)" + getSliceStringFromOpr(_master->_indexer) + "] = ";
+            retStr += getSliceStringFromOpr(updateEvent->srcUpdateValue)  + ";\n";
             retStr += "         }\n";
         }
 

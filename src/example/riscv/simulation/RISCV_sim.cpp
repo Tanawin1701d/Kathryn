@@ -18,7 +18,9 @@ namespace kathryn{
                                                      Riscv& core):
                 SimInterface(limitCycle,
                              std::move(prefix + testType + "/owave.vcd"),
-                             std::move(prefix + testType + "/oprofile.prof")),
+                             std::move(prefix + testType + "/oprofile.prof"),
+                             "simpleRiscV"
+                             ),
                 _core(core),
                 slotWriter({"fetch", "decode", "execute", "wb"},
                            25,
