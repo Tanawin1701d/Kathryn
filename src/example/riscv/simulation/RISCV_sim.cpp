@@ -107,6 +107,7 @@ namespace kathryn{
             assert(pipblock != nullptr);
             if (writeSlotIfStall(RISC_FETCH, pipblock)){return;}
 
+            slotWriter.addSlotVal(RISC_FETCH, std::to_string(ull(_core.fetch.parCheck)));
 
             if (_core.fetch.fetchBlock->getSimEngine()->isBlockRunning()) {
 
@@ -134,6 +135,8 @@ namespace kathryn{
 
         void RiscvSimSortInterface::writeDecodeSlot(FlowBlockPipeBase* pipblock) {
             assert(pipblock != nullptr);
+
+            slotWriter.addSlotVal(RISC_FETCH, "parStart" + std::to_string(ull(_core.decode.parCheck)));
 
             if (writeSlotIfStall(RISC_DECODE, pipblock)){return;}
 

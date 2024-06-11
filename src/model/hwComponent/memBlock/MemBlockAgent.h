@@ -87,6 +87,8 @@ namespace kathryn{
 
         void        proxyBuildInit()    override;
         std::string createOp()          override;
+        std::string createOpReadMode();
+        std::string createOpWriteMode();
         std::string createOpEndCycle()  override;
 
     };

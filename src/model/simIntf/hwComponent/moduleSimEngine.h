@@ -22,8 +22,8 @@ namespace kathryn{
         /** create zone for hardware element*/
         void                          proxyBuildInit          ();
         std::vector<ModelProxyBuild*> recruitForCreateVar     ();
-        std::vector<ModelProxyBuild*> recruitForOp            ();
-        std::vector<ModelProxyBuild*> recruitForOpEndCycle    ();
+        std::vector<ModelProxyBuild*> recruitForVolatileOp            ();
+        std::vector<ModelProxyBuild*> recruitForNonVolatileOp    ();
         std::vector<LogicSimEngine*>  recruitAllLogicSimEngine(); ///// for vcdWrite
         /** create zone for perf element*/
         std::vector<FlowBaseSimEngine*> recruitPerf             ();

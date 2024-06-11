@@ -167,8 +167,18 @@ namespace kathryn{
 
     std::string MemEleHolderSimEngine::createOp(){
         if (_master->isWriteMode()){ ///// write mode
-            return "";
+            return createOpWriteMode();
         }
+
+        if (_master->isReadMode()){
+            return createOpReadMode();
+        }
+
+        assert(false);
+
+    }
+
+    std::string MemEleHolderSimEngine::createOpReadMode(){
         ///
         /////// read mode
         ///
@@ -182,11 +192,7 @@ namespace kathryn{
         return retStr;
     }
 
-    std::string MemEleHolderSimEngine::createOpEndCycle(){
-        if (_master->isReadMode()){
-            return "";
-        }
-
+    std::string MemEleHolderSimEngine::createOpWriteMode(){
         ///////// build string
         std::string retStr = "      { /////" + _ident->getGlobalName() + "\n";
 
@@ -227,6 +233,12 @@ namespace kathryn{
 
         retStr += "     }\n";
         return retStr;
+    }
+
+
+    std::string MemEleHolderSimEngine::createOpEndCycle(){
+        return "";
+
     }
 
 

@@ -135,6 +135,11 @@ namespace kathryn{
                    "_SYS");
     }
 
+    std::vector<std::string> LogicSimEngine::getRegisVarName(){
+        return {getVarName()};
+    }
+
+
     std::string LogicSimEngine::getTempVarName(){
         return getVarName() + TEMP_VAR_SUFFIX;
     }

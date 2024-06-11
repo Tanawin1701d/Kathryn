@@ -177,9 +177,11 @@ namespace kathryn{
         for (FlowBaseSimEngine* mpb: moduleSimEngine->recruitPerf()){
             std::vector<std::string> result;
             mpb->getRecurVarName(result);
+            mpb->getRecurVarNameCurStsatus(result);
             for (const std::string& varName: result){
                 registerHelper(varName, true);
             }
+
 
         }
 
@@ -205,7 +207,7 @@ namespace kathryn{
 
 
         proxyfileWriter->addData("void ProxySimEvent::startVolatileEleSim(){\n");
-        std::vector<ModelProxyBuild*> mpbs = moduleSimEngine->recruitForOp();
+        std::vector<ModelProxyBuild*> mpbs = moduleSimEngine->recruitForVolatileOp();
         std::vector<ModelProxyBuild*> actual_mpbs = doTopologySort(mpbs);
         proxyfileWriter->addData("////////////////////// standard op\n");
         for (ModelProxyBuild* mpb: actual_mpbs){
@@ -231,7 +233,7 @@ namespace kathryn{
 
         proxyfileWriter->addData("void ProxySimEvent::startNonVolatileEleSim(){\n");
 
-        std::vector<ModelProxyBuild*> mpbs = moduleSimEngine->recruitForOpEndCycle();
+        std::vector<ModelProxyBuild*> mpbs = moduleSimEngine->recruitForNonVolatileOp();
 
         proxyfileWriter->addData("////////////////////// standard op\n");
         for (ModelProxyBuild* mpb: mpbs){

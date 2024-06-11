@@ -17,6 +17,11 @@ namespace kathryn{
 
     std::string MemSimEngine::getVarName(){ return _master->getGlobalName();}
 
+    std::vector<std::string> MemSimEngine::getRegisVarName(){
+        return {getVarName()};
+    }
+
+
     ull         MemSimEngine::getVarId(){return _master->getGlobalId();}
 
     std::string MemSimEngine::createVariable(){

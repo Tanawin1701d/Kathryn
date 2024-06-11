@@ -42,12 +42,12 @@ namespace kathryn{
 
         void proxyBuildInit() override;
 
-        std::string getVarName() override;
-        std::string getTempVarName();
+        std::string              getVarName() override;
+        std::vector<std::string> getRegisVarName() override;
+        std::string              getTempVarName();
+        ull                      getVarId()   override{return _ident->getGlobalId();}
 
-        ull         getVarId()   override{return _ident->getGlobalId();}
-
-        void        setVCDWriteStatus(bool status){ _setToWrite = status;}
+        void                     setVCDWriteStatus(bool status){ _setToWrite = status;}
 
         VCD_SIG_TYPE getSigType() const {return _vcdSigType;}
         Slice        getSize()    const {return _asb->getAssignSlice();}

@@ -20,6 +20,7 @@ namespace kathryn{
         public:
 
             mWire(readEn, 1);
+            mWire(parCheck, 1);
             StorageMgmt& storageMgmt;
             Reg&    _reqPc;
             Operable&    readFin;
@@ -48,6 +49,8 @@ namespace kathryn{
                             }
                         }
                     }
+                    ////parCheck = 1;
+
                 }
             }
         };

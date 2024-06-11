@@ -53,21 +53,21 @@ namespace kathryn{
 
     }
 
-    std::vector<ModelProxyBuild*> ModuleSimEngine::recruitForOp(){
+    std::vector<ModelProxyBuild*> ModuleSimEngine::recruitForVolatileOp(){
         ///// wire and mem block agent
         std::vector<ModelProxyBuild*> result;
         recruitFromWireable(result);
         recruitFromMemElh(result, true);
-        recruitFromSubModule(result, &ModuleSimEngine::recruitForOp);
+        recruitFromSubModule(result, &ModuleSimEngine::recruitForVolatileOp);
         return result;
     }
 
-    std::vector<ModelProxyBuild*> ModuleSimEngine::recruitForOpEndCycle(){
+    std::vector<ModelProxyBuild*> ModuleSimEngine::recruitForNonVolatileOp(){
 
         std::vector<ModelProxyBuild*> result;
         recruitFromRegable(result);
         recruitFromMemElh(result, false); /// mem block not include here due to ele handle it by themselve
-        recruitFromSubModule(result, &ModuleSimEngine::recruitForOpEndCycle);
+        recruitFromSubModule(result, &ModuleSimEngine::recruitForNonVolatileOp);
         return result;
     }
 

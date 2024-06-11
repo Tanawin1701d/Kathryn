@@ -42,6 +42,7 @@ namespace kathryn{
             Slice IMM_J_12_20{12,20};
 
         public:
+            mWire(parCheck,       1);
             mWire(invalidHighDec, 1);
             mWire(invalidLowDec,  1);
             FlowBlockBase* decodeBlk = nullptr;
@@ -50,6 +51,7 @@ namespace kathryn{
 
                 pipBlk { intrReset(rst); intrStart(rst); exposeBlk(decodeBlk)
                     cdowhile(!nextPipReadySig) {
+                        ///parCheck = 1;
                         par {
                             zif(nextPipReadySig) {
                                 /////// deal with pc

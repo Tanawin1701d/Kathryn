@@ -30,18 +30,20 @@ namespace kathryn{
     class FlowBaseSimEngine: public ModelProxyBuild,
                              public ModelProxyRetrieve{
     protected:
-        FlowBlockBase* _flowBlockBase = nullptr;
-        FlowColEle*    _writer        = nullptr;
-        int            _opSpace       = 0;
+        FlowBlockBase* _flowBlockBase  = nullptr;
+        FlowColEle*    _writer         = nullptr;
+        int            _opSpace        = 0;
+        ValRepBase*    _proxyRepCurBit = nullptr;
 
     public:
         FlowBaseSimEngine(FlowBlockBase* flowBlockBase);
-        void        proxyBuildInit() override{};
-        std::string getVarName()     override;
-        std::string getVarNameCurStatus();
-        ull         getVarId()       override;
-        void getRecurVarName(std::vector<std::string>& result);
-        void getRecurVarNameCurStsatus(std::vector<std::string>& result);
+        void                     proxyBuildInit() override{};
+        std::string              getVarName()     override;
+        std::vector<std::string> getRegisVarName() override;
+        std::string              getVarNameCurStatus();
+        ull                      getVarId()       override;
+        void                     getRecurVarName(std::vector<std::string>& result);
+        void                     getRecurVarNameCurStsatus(std::vector<std::string>& result);
 
         std::string createVariable()   override;
         std::string createOp()         override; ///// we use op to do all operation

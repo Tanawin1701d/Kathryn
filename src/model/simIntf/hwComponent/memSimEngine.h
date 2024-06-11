@@ -19,9 +19,10 @@ namespace kathryn{
         explicit MemSimEngine(MemBlock* master);
 
         ///////// create c++
-        void        proxyBuildInit()       override{};
-        std::string getVarName()           override;
-        ull         getVarId()             override;
+        void                     proxyBuildInit()  override{};
+        std::string              getVarName()      override;
+        std::vector<std::string> getRegisVarName() override;
+        ull                      getVarId()        override;
         
         std::string createVariable()       override;
         std::string createOp()             override{return "";}
