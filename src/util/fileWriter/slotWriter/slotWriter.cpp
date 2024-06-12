@@ -73,12 +73,7 @@ namespace kathryn{
         _slotNames(slotNames)
         {
         /***initialize value and head of table*/
-        assert(SLOTSIZE > 0);
-        _rows.emplace_back(SLOTSIZE);
-        for (int i = 0; i < SLOTSIZE; i++){
-            addSlotVal(i, _slotNames[i]);
-        }
-        iterateCycle();
+        init();
 
     }
 
@@ -105,6 +100,17 @@ namespace kathryn{
         _rows.clear();
         _rows.emplace_back(SLOTSIZE);
     }
+
+    void SlotWriter::init(){
+        assert(SLOTSIZE > 0);
+        _rows.clear();
+        _rows.emplace_back(SLOTSIZE);
+        for (int i = 0; i < SLOTSIZE; i++){
+            addSlotVal(i, _slotNames[i]);
+        }
+        iterateCycle();
+    }
+
 
 
 }

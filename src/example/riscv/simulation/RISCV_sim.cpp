@@ -12,55 +12,72 @@ namespace kathryn{
     namespace riscv{
 
 
-        RiscvSimSortInterface::RiscvSimSortInterface(CYCLE       limitCycle,
-                                                     std::string prefix,
-                                                     std::string testType,
-                                                     Riscv& core):
+        RiscvSim::RiscvSim(CYCLE       limitCycle,
+                           const std::string& prefix,
+                           std::vector<std::string> testTypes,
+                           Riscv& core): ///// init first test case here
                 SimInterface(limitCycle,
-                             std::move(prefix + testType + "/owave.vcd"),
-                             std::move(prefix + testType + "/oprofile.prof"),
+                             "/tmp/vcdDummy",
+                             "/tmp/profdummy",
                              "simpleRiscV"
                              ),
                 _core(core),
                 slotWriter({"fetch", "decode", "execute", "wb"},
                            25,
-                           std::move(prefix + testType + "/oslot.sl")),
+                           std::move(prefix + testTypes[0] + "/oslot.sl")),
                 _prefixFolder(prefix),
-                _testType(testType){}
+                _testTypes(testTypes){}
 
-        void RiscvSimSortInterface::describe() {
-            readAssembly (_prefixFolder + _testType + "/asm.out");
-            readAssertVal(_prefixFolder + _testType + "/ast.out");
-        }
+        void RiscvSim::describeCon() {
 
-        void RiscvSimSortInterface::describeCon() {
 
-            for (int i = 0; i <= 100; i++){
-                if (i == 55){
-                    std::cout << i << std::endl;
-                }
-                conEndCycle();
-                recordSlot();
+            for (;_curTestCaseIdx < _testTypes.size(); _curTestCaseIdx++){
+                //////////////  read assembly and assertVal
+                std::cout << TC_GREEN << "testing riscv instruction >>>> " +
+                    _testTypes[_curTestCaseIdx] << TC_DEF << std::endl;
+                _vcdWriter-> renew(_prefixFolder + _testTypes[_curTestCaseIdx]+ "/owave.vcd");
+                _flowWriter->renew(_prefixFolder + _testTypes[_curTestCaseIdx]+ "/oprofile.prof");
+                slotWriter.  renew(_prefixFolder + _testTypes[_curTestCaseIdx]+ "/oslot.sl");
+
+                /////////// set reset wire to 1
+                *rstWire = 1;
+                ////////// value before cycle is running
                 conNextCycle(1);
-            }
-            bool pass = true;
-            for (int i = 0;  i < AMT_REG; i++){
-                if (_regTestVal[i] != (ull)_core.regFile.at(i)){
-                    pass = false;
-                    testAndPrint("fail reg" + std::to_string(i),
-                                 (ull)_core.regFile.at(i), _regTestVal[i]);
+                *rstWire = 0;
+                _core.pc = 0;
+                resetRegister();
+                readAssembly(_prefixFolder +  _testTypes[_curTestCaseIdx] + "/asm.out");
+                readAssertVal(_prefixFolder + _testTypes[_curTestCaseIdx] + "/ast.out");
+                //////////////////////////////////////////////////////////////////////
+
+                for (int i = 0; i <= 100; i++){
+                    // if (i == 55){
+                    //     std::cout << i << std::endl;
+                    // }
+                    conEndCycle();
+                    recordSlot();
+                    conNextCycle(1);
+                }
+                bool pass = true;
+                for (int i = 0;  i < AMT_REG; i++){
+                    if (_regTestVal[i] != (ull)_core.regFile.at(i)){
+                        pass = false;
+                        testAndPrint("fail reg" + std::to_string(i),
+                                     (ull)_core.regFile.at(i), _regTestVal[i]);
+                    }
+                }
+                if (pass){
+                    std::cout << TC_GREEN << "register val test pass" << TC_DEF << std::endl;
+                }else{
+                    std::cout << TC_RED << "register val test fail" << TC_DEF << std::endl;
                 }
 
-            }
-            if (pass){
-                std::cout << TC_GREEN << "register val test pass" << TC_DEF << std::endl;
-            }else{
-                std::cout << TC_RED << "register val test fail" << TC_DEF << std::endl;
+                ////////////////////////////////////////////////////////////////////////
             }
 
         }
 
-        void RiscvSimSortInterface::recordSlot() {
+        void RiscvSim::recordSlot() {
 
             /** please bare in mind that this recorder work correctly when
              *  it is the end of the cycle
@@ -83,7 +100,7 @@ namespace kathryn{
             slotWriter.iterateCycle();
         }
 
-        bool RiscvSimSortInterface::writeSlotIfStall(PIPE_STAGE2 stageIdx,
+        bool RiscvSim::writeSlotIfStall(PIPE_STAGE2 stageIdx,
                                                      FlowBlockPipeBase* pipfb) {
 
             ///////// if it is running in con thread type it will be run after model sim but before exit event of all type
@@ -103,7 +120,7 @@ namespace kathryn{
             return recvRunning | sendRunning;
         }
 
-        void RiscvSimSortInterface::writeFetchSlot(FlowBlockPipeBase* pipblock) {
+        void RiscvSim::writeFetchSlot(FlowBlockPipeBase* pipblock) {
             assert(pipblock != nullptr);
             if (writeSlotIfStall(RISC_FETCH, pipblock)){return;}
 
@@ -133,7 +150,7 @@ namespace kathryn{
 
         }
 
-        void RiscvSimSortInterface::writeDecodeSlot(FlowBlockPipeBase* pipblock) {
+        void RiscvSim::writeDecodeSlot(FlowBlockPipeBase* pipblock) {
             assert(pipblock != nullptr);
 
             slotWriter.addSlotVal(RISC_FETCH, "parStart" + std::to_string(ull(_core.decode.parCheck)));
@@ -176,7 +193,7 @@ namespace kathryn{
 
         }
 
-        void RiscvSimSortInterface::writeExecuteSlot(FlowBlockPipeBase* pipblock) {
+        void RiscvSim::writeExecuteSlot(FlowBlockPipeBase* pipblock) {
             assert(pipblock != nullptr);
 
             if (writeSlotIfStall(RISC_EXECUTE, pipblock)){return;}
@@ -256,7 +273,7 @@ namespace kathryn{
 
         }
 
-        void RiscvSimSortInterface::writeWbSlot(FlowBlockPipeBase* pipblock) {
+        void RiscvSim::writeWbSlot(FlowBlockPipeBase* pipblock) {
             assert(pipblock != nullptr);
             if (writeSlotIfStall(RISC_WB, pipblock)){return;}
 
@@ -267,7 +284,7 @@ namespace kathryn{
             (RISC_WB, std::to_string(ull(wbReg.val)));
         }
 
-        void RiscvSimSortInterface::writeReg(const std::string& prefix,
+        void RiscvSim::writeReg(const std::string& prefix,
                                              PIPE_STAGE2         pipeStage,
                                              RegEle&            regEle){
 
@@ -279,7 +296,7 @@ namespace kathryn{
         }
 
 
-        void RiscvSimSortInterface::readAssembly(const std::string& filePath){
+        void RiscvSim::readAssembly(const std::string& filePath){
 
             ///////// initialize file
             std::ifstream asmFile(filePath, std::ios::binary);
@@ -296,25 +313,32 @@ namespace kathryn{
             while(asmFile.read(reinterpret_cast<char*>(&instr), sizeof instr)){
                 assert((instr & 0b11) == 0b11); ////// check instruction
                 _core.memBlk._myMem.at(writeAddr).setVar(instr);
-                //////////////std::cout << instr << std::endl;
                 writeAddr++;
             }
             asmFile.close();
 
+            ///////////// fill it with zero
 
-//            for (;
-//                 writeAddr < 400;////(1 << MEM_ADDR_IDX_ACTUAL_AL32);
-//                 writeAddr++){
-//                _core.memBlk._myMem.s(writeAddr, 0b0010011);
-//            }
+            for (;writeAddr < _core.memBlk._myMem.getDepthSize(); writeAddr++){
+                _core.memBlk._myMem.at(writeAddr).setVar(0);
+            }
+
             std::cout << TC_GREEN << "initialize mem finish" << TC_DEF << std::endl;
 
 
 
         }
 
+        void RiscvSim::resetRegister(){
+            for (int i = 0; i < AMT_REG; i++){
+                _core.regFile.at(i).setVar(0);
+            }
 
-        void RiscvSimSortInterface::readAssertVal(const std::string& filePath){
+        }
+
+
+
+        void RiscvSim::readAssertVal(const std::string& filePath){
 
             std::vector<std::string> rawVals;
 

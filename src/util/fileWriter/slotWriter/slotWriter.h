@@ -39,7 +39,7 @@ namespace kathryn{
 
         void iterateCycle();
 
-
+        void init() override;
     };
 
 

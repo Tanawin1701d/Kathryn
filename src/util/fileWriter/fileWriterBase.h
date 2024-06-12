@@ -19,13 +19,21 @@ namespace kathryn{
         std::string    _fileName;
         std::ofstream* _outFile  = nullptr;
         char*          _fileBuff = nullptr;
-        int            _nextBuffIdx;
+        int            _nextBuffIdx{};
+
+    protected:
+        void openFile(const std::string& newPath);
+        void closeFile();
 
     public:
-        explicit FileWriterBase(std::string fileName);
-        virtual ~FileWriterBase();
+        explicit  FileWriterBase(const std::string& fileName);
+        virtual  ~FileWriterBase();
+        virtual void init(){};
         void addData(const std::string& data);
         void flush();
+        virtual void renew(const std::string& fileName);
+
+
     };
 
 

@@ -99,6 +99,8 @@ namespace kathryn{
         }
 
         void startWriteData();
+
+        void init() override;
     };
 
 

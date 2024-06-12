@@ -52,7 +52,9 @@ namespace kathryn{
 
     FlowWriter::FlowWriter(std::string fileName)
         : FileWriterBase(fileName){
-        startEle = new FlowColEle({"MAIN_FLOW_COLLECTOR",0});
+
+        init();
+
     }
 
     FlowWriter::~FlowWriter(){
@@ -82,4 +84,10 @@ namespace kathryn{
             }
         }
     }
+
+    void FlowWriter::init(){
+        delete startEle;
+        startEle = new FlowColEle({"MAIN_FLOW_COLLECTOR",0});
+    }
+
 }

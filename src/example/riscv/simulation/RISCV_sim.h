@@ -22,26 +22,26 @@ namespace kathryn{
             RISC_WB      = 3
         };
 
-        class RiscvSimSortInterface: public SimInterface{
+        class RiscvSim: public SimInterface{
         private:
 
-            Riscv&      _core;
-            const int  AMT_STAGE = 4;
-            SlotWriter slotWriter;
-            std::string _prefixFolder;
-            std::string _testType;
-            uint32_t    _regTestVal[AMT_REG];
+            Riscv&                   _core;
+            const int                AMT_STAGE = 4;
+            int                      _curTestCaseIdx = 0;
+            SlotWriter               slotWriter;
+            std::string              _prefixFolder;
+            /////// amount of test
+            std::vector<std::string> _testTypes;
+            uint32_t                 _regTestVal[AMT_REG]{};
 
 
         public:
 
-            explicit RiscvSimSortInterface(CYCLE limitCycle,
-                                           std::string prefix,
-                                           std::string testType,
-                                           Riscv& core
+            explicit RiscvSim(CYCLE limitCycle,
+                              const std::string& prefix,
+                              std::vector<std::string> testTypes,
+                              Riscv& core
                                        );
-
-            void describe() override;
 
             void describeCon() override;
 
@@ -60,6 +60,7 @@ namespace kathryn{
                                   RegEle&    regEle);
 
             void readAssembly(const std::string& filePath);
+            void resetRegister();
             void readAssertVal(const std::string& filePath);
 
         };
@@ -68,30 +69,22 @@ namespace kathryn{
         public:
             void start(PARAM& params){
 
-                std::string testTypes[] = {"Imm", "Reg",
-                                           "Ls", "Jump",
-                                           "BranchSc"};
+                std::vector<std::string> testTypes = {"Imm", "Reg",
+                                                      "Ls", "Jump",
+                                                      "BranchSc"};
 
-
-                for (const std::string& testType: testTypes) {
-                    /** test each type*/
-                    std::cout << TC_GREEN << "testing riscv instruction >>>> " + testType << std::endl;
-
-                    mMod(riscCore, Riscv, false);
-                    startModelKathryn();
-                    RiscvSimSortInterface simulator(120,
-                                                    params["prefix"],
-                                                    testType,
-                                                    (Riscv &) riscCore
-                    );
-                    ////// start simulate
-                    simulator.simStart();
-                    ////// reset system
-                    resetKathryn();
-                    std::cout << TC_GREEN << "--------------------------------" << std::endl;
-
-                }
-
+                mMod(riscCore, Riscv, false);
+                startModelKathryn();
+                RiscvSim simulator(1200,
+                                   params["prefix"],
+                                   testTypes,
+                                   (Riscv &) riscCore
+                );
+                ////// start simulate
+                simulator.simStart();
+                ////// reset system
+                resetKathryn();
+                std::cout << TC_GREEN << "--------------------------------" << std::endl;
 
             }
         };
