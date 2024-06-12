@@ -1,112 +1,59 @@
 //
-// Created by tanawin on 26/4/2567.
+// Created by tanawin on 12/6/2024.
 //
 
-#ifndef KATHRYN_RISCV_SIM_SORT_H
-#define KATHRYN_RISCV_SIM_SORT_H
-
-#include <fstream>
-#include <chrono>
-#include "kathryn.h"
-#include "example/riscv/core/core.h"
-#include "frontEnd/cmd/paramReader.h"
-
+#ifndef RISCV_SIM_SORT_H
+#define RISCV_SIM_SORT_H
+#include "RISCV_sim.h"
 
 namespace kathryn{
-
     namespace riscv{
-
-        enum PIPE_STAGE_SORT{
-            RISC_FETCH_SORT   = 0,
-            RISC_DECODE_SORT  = 1,
-            RISC_EXECUTE_SORT = 2,
-            RISC_WB_SORT      = 3,
-            RISC_MEM_SORT     = 4
-        };
-
-        class RiscvSimInterfaceSort: public SimInterface{
-        private:
-
-            Riscv&      _core;
-            const int  AMT_STAGE = 4;
-            SlotWriter slotWriter;
-            std::string _prefixFolder;
-            std::string _testType;
-            uint32_t    _regTestVal[AMT_REG];
-
+        class RiscvSimSort: public RiscvSim{
+        public:
+            uint32_t testFinRegIdx = 31;
             uint32_t _startNumIdx0 = 1 << 20;
             uint32_t _startNumIdx1 = 1 << (20 + 1);
-            uint32_t _numSize      = 4;
+            uint32_t _numSize      = 1024;
 
-
-        public:
-
-            explicit RiscvSimInterfaceSort(CYCLE limitCycle,
-                                       std::string prefix,
-                                       std::string testType,
-                                       Riscv& core
-                                       );
-
-            void describe() override;
+            RiscvSimSort(CYCLE limitCycle,
+                                  const std::string& prefix,
+                                  std::vector<std::string> testTypes,
+                                  Riscv& core):
+            RiscvSim(limitCycle,prefix,testTypes,core){}
 
             void describeCon() override;
 
-            void recordSlot();
+            void writeMem        () override;
 
-            bool writeSlotIfStall(PIPE_STAGE_SORT stageIdx,
-                                  FlowBlockPipeBase* pipfb);
-
-
-            void writeFetchSlot  (FlowBlockPipeBase* pipblock);
-            void writeDecodeSlot (FlowBlockPipeBase* pipblock);
-            void writeExecuteSlot(FlowBlockPipeBase* pipblock);
-            void writeWbSlot     (FlowBlockPipeBase* pipblock);
-            void writeReg        (const std::string& prefix,
-                                  PIPE_STAGE_SORT pipeStage,
-                                  RegEle&    regEle);
-            void writeMem        ();
-
-            void readAssembly(const std::string& filePath);
-            void readAssertVal(const std::string& filePath);
-
+            void readAssembly (const std::string& filePath) override;
+            void readAssertVal(const std::string& filePath) override{};
+            void testRegister() override {}
+            void dumpMem(uint32_t startAddr, uint32_t stopAddr);
         };
 
-        class RISCV_MNG_SORT{
+        class RISCV_SORT_MNG{
         public:
             void start(PARAM& params){
 
+                std::vector<std::string> testTypes = {"sorter"};
 
-                    /** test each type*/
-                    std::cout << TC_GREEN << "testing riscv instruction SORTING>>>> " << std::endl;
+                mMod(riscCore, Riscv, false);
+                startModelKathryn();
+                RiscvSimSort simulator(100000000,
+                                   params["prefix"],
+                                   testTypes,
+                                   (Riscv &) riscCore
+                );
+                ////// start simulate
+                simulator.simStart();
+                ////// reset system
+                resetKathryn();
+                std::cout << TC_GREEN << "--------------------------------" << std::endl;
 
-                    mMod(riscCore, Riscv, false);
-                    startModelKathryn();
-                    std::cout << TC_BLUE << "amount element in simulation" << GLOBAL_MODEL_ID <<std::endl;
-                    RiscvSimInterfaceSort simulator(20000,
-                                                params["prefix"],
-                                                "sorter",
-                                                (Riscv &) riscCore
-                    );
-                    auto start = std::chrono::steady_clock::now();
-                    ////// start simulate
-                    simulator.simStart();
-                    ////// reset system
-                    resetKathryn();
-                    std::cout << TC_GREEN << "--------------------------------" << std::endl;
-
-
-                auto end = std::chrono::steady_clock::now();
-                std::chrono::duration<double> elapsed_seconds = end - start;
-                std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";
-
-                }
-
-
+            }
         };
 
-
     }
-
 }
 
-#endif //KATHRYN_RISCV_SIM_H
+#endif //RISCV_SIM_SORT_H

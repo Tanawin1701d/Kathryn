@@ -38,6 +38,8 @@ add_executable(Kathryn
         ${SRC_EXAMPLE}
         ${SRC_PARAM}
         ${SRC_MODEL_COMPILE}
+        src/example/riscv/simulation/RISCV_sim_sort.cpp
+        src/example/riscv/simulation/RISCV_sim_sort.h
 
 
 )

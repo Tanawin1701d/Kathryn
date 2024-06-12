@@ -22,7 +22,7 @@ namespace kathryn{
                              "simpleRiscV"
                              ),
                 _core(core),
-                slotWriter({"fetch", "decode", "execute", "wb"},
+                slotWriter({"fetch", "decode", "execute", "wb", "mem"},
                            25,
                            std::move(prefix + testTypes[0] + "/oslot.sl")),
                 _prefixFolder(prefix),
@@ -49,8 +49,7 @@ namespace kathryn{
                 readAssembly(_prefixFolder +  _testTypes[_curTestCaseIdx] + "/asm.out");
                 readAssertVal(_prefixFolder + _testTypes[_curTestCaseIdx] + "/ast.out");
                 //////////////////////////////////////////////////////////////////////
-
-                for (int i = 0; i <= 100; i++){
+                for (int i = 0; i <= _limitCycle-10; i++){
                     // if (i == 55){
                     //     std::cout << i << std::endl;
                     // }
@@ -58,20 +57,8 @@ namespace kathryn{
                     recordSlot();
                     conNextCycle(1);
                 }
-                bool pass = true;
-                for (int i = 0;  i < AMT_REG; i++){
-                    if (_regTestVal[i] != (ull)_core.regFile.at(i)){
-                        pass = false;
-                        testAndPrint("fail reg" + std::to_string(i),
-                                     (ull)_core.regFile.at(i), _regTestVal[i]);
-                    }
-                }
-                if (pass){
-                    std::cout << TC_GREEN << "register val test pass" << TC_DEF << std::endl;
-                }else{
-                    std::cout << TC_RED << "register val test fail" << TC_DEF << std::endl;
-                }
-
+                //////////////////////////////////////////////////////////////////////
+                testRegister();
                 ////////////////////////////////////////////////////////////////////////
             }
 
@@ -96,6 +83,8 @@ namespace kathryn{
             /*** write back*/
             FlowBlockPipeBase* writeBack = pipStages[RISC_WB];
             writeWbSlot(writeBack);
+
+            writeMem();
 
             slotWriter.iterateCycle();
         }
@@ -284,6 +273,8 @@ namespace kathryn{
             (RISC_WB, std::to_string(ull(wbReg.val)));
         }
 
+
+
         void RiscvSim::writeReg(const std::string& prefix,
                                              PIPE_STAGE2         pipeStage,
                                              RegEle&            regEle){
@@ -351,6 +342,22 @@ namespace kathryn{
                 ///std::cout << regIdx << " reg val  "<< stoul(rawVals[regIdx]) << std::endl;
                 _regTestVal[regIdx] = stoul(rawVals[regIdx]);
                 ///std::cout << regIdx << " reg val  "<< _regTestVal[regIdx] << std::endl;
+            }
+        }
+
+        void RiscvSim::testRegister(){
+            bool pass = true;
+            for (int i = 0;  i < AMT_REG; i++){
+                if (_regTestVal[i] != (ull)_core.regFile.at(i)){
+                    pass = false;
+                    testAndPrint("fail reg" + std::to_string(i),
+                                 (ull)_core.regFile.at(i), _regTestVal[i]);
+                }
+            }
+            if (pass){
+                std::cout << TC_GREEN << "register val test pass" << TC_DEF << std::endl;
+            }else{
+                std::cout << TC_RED << "register val test fail" << TC_DEF << std::endl;
             }
         }
 

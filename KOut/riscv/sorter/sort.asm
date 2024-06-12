@@ -1,5 +1,8 @@
 ; init amt_data
-addi r1 r0 4
+; addi r1 r0 4
+addi r1 r0 1
+slli r1 r1 10
+
 ; a and b init
 addi r14 r0 1
 slli r14 r14 20

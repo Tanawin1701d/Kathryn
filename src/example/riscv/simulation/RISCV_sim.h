@@ -19,11 +19,12 @@ namespace kathryn{
             RISC_FETCH   = 0,
             RISC_DECODE  = 1,
             RISC_EXECUTE = 2,
-            RISC_WB      = 3
+            RISC_WB      = 3,
+            RISC_MEM     = 4
         };
 
         class RiscvSim: public SimInterface{
-        private:
+        protected:
 
             Riscv&                   _core;
             const int                AMT_STAGE = 4;
@@ -51,17 +52,19 @@ namespace kathryn{
                                   FlowBlockPipeBase* pipfb);
 
 
-            void writeFetchSlot  (FlowBlockPipeBase* pipblock);
-            void writeDecodeSlot (FlowBlockPipeBase* pipblock);
-            void writeExecuteSlot(FlowBlockPipeBase* pipblock);
-            void writeWbSlot     (FlowBlockPipeBase* pipblock);
-            void writeReg        (const std::string& prefix,
-                                  PIPE_STAGE2 pipeStage,
-                                  RegEle&    regEle);
+            void         writeFetchSlot  (FlowBlockPipeBase* pipblock);
+            void         writeDecodeSlot (FlowBlockPipeBase* pipblock);
+            void         writeExecuteSlot(FlowBlockPipeBase* pipblock);
+            void         writeWbSlot     (FlowBlockPipeBase* pipblock);
+            virtual void writeMem        (){}
+            void         writeReg        (const std::string& prefix,
+                                          PIPE_STAGE2 pipeStage,
+                                          RegEle&    regEle);
 
-            void readAssembly(const std::string& filePath);
-            void resetRegister();
-            void readAssertVal(const std::string& filePath);
+            virtual void readAssembly(const std::string& filePath);
+            void         resetRegister();
+            virtual void readAssertVal(const std::string& filePath);
+            virtual void testRegister();
 
         };
 

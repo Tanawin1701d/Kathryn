@@ -38,7 +38,7 @@ namespace kathryn{
     }
 
     void test_riscv_sort(PARAM& params){
-        riscv::RISCV_MNG_SORT riscTestMng;
+        riscv::RISCV_SORT_MNG riscTestMng;
         riscTestMng.start(params);
         std::cout << TC_GREEN <<  " finish rv [sort] sim " << TC_DEF << std::endl;
     }
