@@ -53,6 +53,20 @@ namespace kathryn{
 
     }
 
+    std::vector<ModelProxyBuild*> ModuleSimEngine::recruitForRegisVar(){
+        std::vector<ModelProxyBuild*> result;
+        /////// recruit sp register first
+        recruitFromRegable (result);
+        recruitFromVector(result, _module->getUserWires());
+        /** mem block and its subsidaries*/
+        recruitFromMemBlk(result);
+        //// skip mem ele holder recruitFromMemElh(result, true);
+        //// skip mem ele holder recruitFromMemElh(result, false);
+        recruitFromSubModule(result, &ModuleSimEngine::recruitForRegisVar);
+        return result;
+    }
+
+
     std::vector<ModelProxyBuild*> ModuleSimEngine::recruitForVolatileOp(){
         ///// wire and mem block agent
         std::vector<ModelProxyBuild*> result;
@@ -68,6 +82,18 @@ namespace kathryn{
         recruitFromRegable(result);
         recruitFromMemElh(result, false); /// mem block not include here due to ele handle it by themselve
         recruitFromSubModule(result, &ModuleSimEngine::recruitForNonVolatileOp);
+        return result;
+    }
+
+    std::vector<LogicSimEngine*> ModuleSimEngine::recruitForVcdVar(){
+        std::vector<LogicSimEngine*> result;
+        recruitFromVector(result, _module->getSpRegs(SP_STATE_REG));
+        recruitFromVector(result, _module->getSpRegs(SP_SYNC_REG));
+        recruitFromVector(result, _module->getSpRegs(SP_COND_WAIT_REG));
+        recruitFromVector(result, _module->getSpRegs(SP_CYCLE_WAIT_REG));
+        recruitFromVector(result, _module->getUserRegs());
+        recruitFromVector   (result, _module->getUserWires());
+        recruitFromSubModule(result, &ModuleSimEngine::recruitForVcdVar);
         return result;
     }
 
@@ -153,6 +179,13 @@ namespace kathryn{
 
 
     void ModuleSimEngine::retrieveInit(ProxySimEventBase* simEventBase){
+
+        /***
+         *
+         * must same as regist function
+         *
+         */
+
         retrieveInitFromVector(simEventBase,_module->getSpRegs(SP_STATE_REG));
         retrieveInitFromVector(simEventBase,_module->getSpRegs(SP_SYNC_REG));
         retrieveInitFromVector(simEventBase,_module->getSpRegs(SP_COND_WAIT_REG));
@@ -160,15 +193,8 @@ namespace kathryn{
         retrieveInitFromVector(simEventBase,_module->getUserRegs());
         /////////// wire
         retrieveInitFromVector(simEventBase,_module->getUserWires());
-        retrieveInitFromVector(simEventBase,_module->getUserExpressions());
-        retrieveInitFromVector(simEventBase,_module->getUserVals());
-        retrieveInitFromVector(simEventBase,_module->getUserNests());
-
         ////////// memory
         retrieveInitFromVector(simEventBase,_module->getUserMemBlks());
-        for (MemBlock* memBlock: _module->getUserMemBlks()){
-            retrieveInitFromVector(simEventBase,memBlock->getMemBlockAgents());
-        }
 
         //////// for flowblock
         retrieveInitFromVector(simEventBase,_module->getFlowBlocks());

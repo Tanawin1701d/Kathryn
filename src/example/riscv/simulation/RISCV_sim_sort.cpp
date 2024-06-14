@@ -51,7 +51,7 @@ namespace kathryn::riscv{
             }
             conEndCycle();
             //recordSlot();
-            conNextCycle(1);
+            conNextCycle(10000000);
             curCycleChecker++;
         }
         auto end = std::chrono::steady_clock::now();

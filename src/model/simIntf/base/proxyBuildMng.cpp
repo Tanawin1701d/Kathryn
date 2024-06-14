@@ -170,7 +170,7 @@ namespace kathryn{
 
         ///// for logic value
         for (ModelProxyBuild* mpb:
-            moduleSimEngine->recruitForCreateVar()){
+            moduleSimEngine->recruitForRegisVar()){
             registerHelper(mpb->getVarName(), false);
         }
         ///// for perf value     we are sure that name will not
@@ -250,7 +250,7 @@ namespace kathryn{
 
     void ProxyBuildMng::startWriteVcdDecVar(bool isUser){
         std::vector<LogicSimEngine*> dayta =
-            moduleSimEngine->recruitAllLogicSimEngine();
+            moduleSimEngine->recruitForVcdVar();
 
         proxyfileWriter->addData("void ProxySimEvent::startVcdDecVar");
         proxyfileWriter->addData((isUser? "User": "Internal"));
@@ -288,14 +288,14 @@ namespace kathryn{
 
     void ProxyBuildMng::startWriteVcdCol(bool isUser){
         std::vector<LogicSimEngine*> dayta =
-            moduleSimEngine->recruitAllLogicSimEngine();
+            moduleSimEngine->recruitForVcdVar();
 
         proxyfileWriter->addData("void ProxySimEvent::startVcdCol");
         proxyfileWriter->addData((isUser? "User": "Internal"));
         proxyfileWriter->addData("(){\n");
 
 
-        for (ModelProxyBuild* mpb: dayta){
+        for (LogicSimEngine* mpb: dayta){
             if (mpb->isUserDeclare() == isUser){ ////// the registerable must always put to vcd file
                 proxyfileWriter->addData("       ");
                 proxyfileWriter->addData("_vcdWriter->addNewValue(");
