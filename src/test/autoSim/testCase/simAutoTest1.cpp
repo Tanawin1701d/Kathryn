@@ -77,14 +77,14 @@ namespace kathryn{
         }
 
         void simDriven() override{
-            incCycle(2);
-            for (int i = 0; i < 100; i++) {
-                sim {
-                    _md->iv = 7;
-                    _md->c  = 7;
-                };
-                incCycle(1);
-            }
+            // incCycle(2);
+            // for (int i = 0; i < 100; i++) {
+            //     sim {
+            //         _md->iv = 7;
+            //         _md->c  = 7;
+            //     };
+            //     incCycle(1);
+            // }
         }
     };
 

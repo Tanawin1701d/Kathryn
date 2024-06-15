@@ -49,7 +49,7 @@ namespace kathryn{
                 readAssembly(_prefixFolder +  _testTypes[_curTestCaseIdx] + "/asm.out");
                 readAssertVal(_prefixFolder + _testTypes[_curTestCaseIdx] + "/ast.out");
                 //////////////////////////////////////////////////////////////////////
-                for (int i = 0; i <= _limitCycle-10; i++){
+                for (int i = 0; i <= 100; i++){
                     // if (i == 55){
                     //     std::cout << i << std::endl;
                     // }

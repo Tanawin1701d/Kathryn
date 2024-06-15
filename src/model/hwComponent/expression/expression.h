@@ -107,6 +107,8 @@ namespace kathryn {
         expressionSimEngine(expression* master, VCD_SIG_TYPE sigType);
         void proxyBuildInit() override;
         /** override simulation engine */
+        std::string createGlobalVariable() override;
+        std::string createLocalVariable()  override;
         std::string createOp() override;
     };
 

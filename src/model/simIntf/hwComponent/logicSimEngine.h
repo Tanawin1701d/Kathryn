@@ -29,6 +29,10 @@ namespace kathryn{
         /** gen variable helper*/
         std::string getVarNameFromOpr(Operable* opr);
         std::string getSliceStringFromOpr(Operable* opr,int fixLength = -1);
+
+
+        std::string genAssignWithSoleCondition (std::string auxAssStr = "");
+        std::string genAssignWithChainCondition(std::string auxAssStr = "");
         std::string genAssignAEqB(Slice desSlice, bool isDesTemp,
                                   Operable* srcOpr, bool shinkSrc);
         std::string genSliceTo(Slice desSlice);
@@ -55,9 +59,11 @@ namespace kathryn{
 
         /*** c++ create section**/
 
-        std::string createVariable()      override;
-        std::string createOp()            override;
-        std::string createOpEndCycle()    override;
+        std::string createGlobalVariable() override;
+        std::string createLocalVariable()  override{return "";}
+        std::string createOp()             override;
+        std::string createOpEndCycle()     override{return "";}
+        std::string createOpEndCycle2()    override;
 
 
         bool        isUserDeclare()       override{return _ident->isUserVar();}

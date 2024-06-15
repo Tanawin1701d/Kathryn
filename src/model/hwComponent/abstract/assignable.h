@@ -114,6 +114,8 @@ namespace kathryn{
             std::sort(_updateMeta.begin(), _updateMeta.end(), upEventCmp);
         }
 
+        bool checkDesIsFullyAssignAndEqual();
+
 
 
 

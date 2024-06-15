@@ -107,8 +107,8 @@ namespace kathryn{
         startWriteRegisterCallback();
         startWriteVcdDecVar(true);
         startWriteVcdDecVar(false);
-        startWriteVolatileEleSim();
-        startWriteNonVolatileEleSim();
+        startMainOpEleSim();
+        startFinalizeEleSim();
         startWriteVcdCol(true);
         startWriteVcdCol(false);
         startWritePerfCol();
@@ -127,7 +127,7 @@ namespace kathryn{
             moduleSimEngine->recruitForCreateVar();
 
         for (ModelProxyBuild* mpb: dayta){
-            proxyfileWriter->addData(mpb->createVariable());
+            proxyfileWriter->addData(mpb->createGlobalVariable());
         }
     }
 
@@ -139,7 +139,7 @@ namespace kathryn{
         proxyfileWriter->addData("/////////////////////// perf variable\n");
 
         for (ModelProxyBuild* mpb: dayta){
-            proxyfileWriter->addData(mpb->createVariable());
+            proxyfileWriter->addData(mpb->createGlobalVariable());
         }
 
         proxyfileWriter->addData("/////////////////////// perf finish initialize\n");
@@ -192,7 +192,7 @@ namespace kathryn{
 
     //////// non volatile must do TOPOLOGY SORT FIRST
 
-    void ProxyBuildMng::startWriteVolatileEleSim(){
+    void ProxyBuildMng::startMainOpEleSim(){
 
         /***
          *
@@ -205,19 +205,36 @@ namespace kathryn{
         ///data from memory if there is update from memory to register because
         /// memEleHolder will provide temporary data to register simulation
 
+        std::vector<ModelProxyBuild*> volatileEle    = moduleSimEngine->recruitForMainOpVolatile();
+        std::vector<ModelProxyBuild*> nonVolatileEle = moduleSimEngine->recruitForMainOpNonVolatile();
 
-        proxyfileWriter->addData("void ProxySimEvent::startVolatileEleSim(){\n");
-        std::vector<ModelProxyBuild*> mpbs = moduleSimEngine->recruitForVolatileOp();
-        std::vector<ModelProxyBuild*> actual_mpbs = doTopologySort(mpbs);
-        proxyfileWriter->addData("////////////////////// standard op\n");
-        for (ModelProxyBuild* mpb: actual_mpbs){
+        proxyfileWriter->addData("void ProxySimEvent::startMainOpEleSim(){\n");
+
+        //////////////////////// create local variable
+        for (ModelProxyBuild* mpb: volatileEle){
+            proxyfileWriter->addData(mpb->createLocalVariable());
+        }
+        for(ModelProxyBuild* mpb: nonVolatileEle){
+            proxyfileWriter->addData(mpb->createLocalVariable());
+        }
+        //////////////////////// volatile sim
+        proxyfileWriter->addData("//// do main sim volatile\n");
+        std::vector<ModelProxyBuild*> sortedVolatileEle = doTopologySort(volatileEle);
+        for (ModelProxyBuild* mpb: sortedVolatileEle){
             proxyfileWriter->addData(mpb->createOp());
         }
+
+        //////////////////////// nonVolatile sim
+        proxyfileWriter->addData("//// do main sim NON volatile\n");
+        for (ModelProxyBuild* mpb: nonVolatileEle){ /////// don't have to sort
+            proxyfileWriter->addData(mpb->createOp());
+        }
+
         proxyfileWriter->addData("}\n");
 
     }
 
-    void ProxyBuildMng::startWriteNonVolatileEleSim(){
+    void ProxyBuildMng::startFinalizeEleSim(){
 
         /***
          *
@@ -231,17 +248,17 @@ namespace kathryn{
         ///data from memory if there is update from memory to register because
         /// memEleHolder will provide temporary data to register simulation
 
-        proxyfileWriter->addData("void ProxySimEvent::startNonVolatileEleSim(){\n");
+        proxyfileWriter->addData("void ProxySimEvent::startFinalizeEleSim(){\n");
 
-        std::vector<ModelProxyBuild*> mpbs = moduleSimEngine->recruitForNonVolatileOp();
+        std::vector<ModelProxyBuild*> mpbs = moduleSimEngine->recruitForFinalizeOp();
 
-        proxyfileWriter->addData("////////////////////// standard op\n");
-        for (ModelProxyBuild* mpb: mpbs){
-            proxyfileWriter->addData(mpb->createOp());
-        }
-        proxyfileWriter->addData("//////////////////// transfer Op\n");
+        proxyfileWriter->addData("////////////////////// transfer  op priority 1\n");
         for (ModelProxyBuild* mpb: mpbs){
             proxyfileWriter->addData(mpb->createOpEndCycle());
+        }
+        proxyfileWriter->addData("//////////////////// transfer Op priority 2\n");
+        for (ModelProxyBuild* mpb: mpbs){
+            proxyfileWriter->addData(mpb->createOpEndCycle2());
         }
         proxyfileWriter->addData("}\n");
 

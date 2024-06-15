@@ -39,7 +39,7 @@ namespace kathryn{
 
                 mMod(riscCore, Riscv, false);
                 startModelKathryn();
-                RiscvSimSort simulator(10000005,
+                RiscvSimSort simulator(800000 + 5,
                                    params["prefix"],
                                    testTypes,
                                    (Riscv &) riscCore

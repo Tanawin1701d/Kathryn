@@ -56,5 +56,20 @@ namespace kathryn{
     }
 
 
+    bool Assignable::checkDesIsFullyAssignAndEqual(){
+
+        if (_updateMeta.empty()){ return true; }
+        Slice desIs = getAssignSlice();
+        for (UpdateEvent* udPtr: _updateMeta){
+            if (udPtr->desUpdateSlice == desIs){
+                continue;
+            }
+            return false;
+        }
+        return true;
+    }
+
+
+
 
 }

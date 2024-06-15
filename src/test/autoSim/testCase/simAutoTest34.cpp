@@ -67,5 +67,5 @@ namespace kathryn{
 
     };
 
-    Sim34TestEle ele34(-1);
+    Sim34TestEle ele34(34);
 }

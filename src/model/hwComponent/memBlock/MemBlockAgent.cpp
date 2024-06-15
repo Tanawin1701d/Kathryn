@@ -165,7 +165,30 @@ namespace kathryn{
         }
     }
 
+
+    std::string MemEleHolderSimEngine::createGlobalVariable(){
+
+        std::string valSize = std::to_string(_asb->getAssignSlice().getSize());
+        if(_master->isWriteMode()){
+            std::string indexerSize = std::to_string(_master->getExactIndexSize());
+            return "ValRep<"+valSize+"> "                + getVarName()    + " = " + std::to_string(_initVal) + "; "
+            +      "ValRep<1> "                          + getIsSetVar()   + " = 0;"
+            +      "ValRep<"+indexerSize+"> "            + getIndexerVar() + " = 0;";
+        }
+        return "";
+    }
+
+    std::string MemEleHolderSimEngine::createLocalVariable(){
+        std::string valSize = std::to_string(_asb->getAssignSlice().getSize());
+        if(_master->isReadMode()){
+            return "ValRep<"+valSize+"> " + getVarName() + " = " + std::to_string(_initVal) + "; \n";
+        }
+        return "";
+    }
+
+
     std::string MemEleHolderSimEngine::createOp(){
+        _asb->sortUpEventByPriority();
         if (_master->isWriteMode()){ ///// write mode
             return createOpWriteMode();
         }
@@ -177,6 +200,16 @@ namespace kathryn{
         assert(false);
 
     }
+
+
+    std::string MemEleHolderSimEngine::getIsSetVar(){
+        return getVarName() + IS_SET_SUFFIX;
+    }
+
+    std::string MemEleHolderSimEngine::getIndexerVar(){
+        return getVarName() + INDEXER_SUFFIX;
+    }
+
 
     std::string MemEleHolderSimEngine::createOpReadMode(){
         ///
@@ -193,50 +226,50 @@ namespace kathryn{
     }
 
     std::string MemEleHolderSimEngine::createOpWriteMode(){
+
+        std::string auxAssVal;
+        auxAssVal += "         ";
+        auxAssVal += getIsSetVar() + " = 1;\n";
+        ////////////// assign index value
+        auxAssVal += "         ";
+        auxAssVal += getIndexerVar() + " = " +
+                  getSliceStringFromOpr(_master->_indexer, _master->getExactIndexSize());
+        auxAssVal += ";\n";
+
         ///////// build string
         std::string retStr = "      { /////" + _ident->getGlobalName() + "\n";
-
-        /////////// we build from low priority to high priority
-        for (UpdateEvent* updateEvent: _asb->getUpdateMeta()){
-            ////
-            ///check integrity
-            ///
-            assert(updateEvent->srcUpdateValue->getOperableSlice().getSize() ==
-                   updateEvent->desUpdateSlice.getSize());
-
-            retStr += "         if ( ";
-            bool isConOccur = false;
-            if (updateEvent->srcUpdateCondition != nullptr){
-                retStr += getSliceStringFromOpr(updateEvent->srcUpdateCondition);
-                isConOccur = true;
-            }
-
-            if (updateEvent->srcUpdateState != nullptr){
-                if (isConOccur){
-                    retStr += " && ";
-                }
-                retStr += getSliceStringFromOpr(updateEvent->srcUpdateState);
-                isConOccur = true;
-            }
-
-            if (!isConOccur){
-                retStr += "true";
-            }
-
-            retStr += "){\n         ";
-            retStr += "         ";
-            retStr += _master->_master->getSimEngine()->getVarName();
-            retStr += "[(ull)" + getSliceStringFromOpr(_master->_indexer) + "] = ";
-            retStr += getSliceStringFromOpr(updateEvent->srcUpdateValue)  + ";\n";
-            retStr += "         }\n";
-        }
-
+        assert(_asb->checkDesIsFullyAssignAndEqual());
+        retStr += genAssignWithChainCondition(auxAssVal);
         retStr += "     }\n";
         return retStr;
     }
 
 
     std::string MemEleHolderSimEngine::createOpEndCycle(){
+
+        if (_master->isWriteMode()){
+            std::string retStr= "      { /////" + _ident->getGlobalName() + "\n";
+
+
+            retStr += "          if ( " + getIsSetVar() + " ){\n";
+
+            ///////////// add value
+            retStr += "         ";
+            retStr += _master->_master->getSimEngine()->getVarName();
+            retStr += "[(ull)" + getIndexerVar() + "] = " + getVarName() + ";\n";
+            ///////////// reset is set
+            retStr += "         ";
+            retStr += getIsSetVar();
+            retStr += " = 0;\n";
+
+            retStr += "         }\n";
+            retStr += "     }\n";
+
+            return retStr;
+        }
+
+
+
         return "";
 
     }

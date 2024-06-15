@@ -24,9 +24,11 @@ namespace kathryn{
         std::vector<std::string> getRegisVarName() override;
         ull                      getVarId()        override;
         
-        std::string createVariable()       override;
-        std::string createOp()             override{return "";}
-        std::string createOpEndCycle()     override{return "";}
+        std::string createGlobalVariable()  override;
+        std::string createLocalVariable()   override{return "";}
+        std::string createOp()              override{return "";}
+        std::string createOpEndCycle ()     override{return "";}
+        std::string createOpEndCycle2()     override{return "";}
 
         bool        isUserDeclare()        override{return false;}
 

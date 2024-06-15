@@ -30,16 +30,18 @@ namespace kathryn{
         virtual             ~ModelProxyBuild()= default;
         virtual void        proxyBuildInit()   = 0;
         //// pre initialize section fill dependency
-        virtual std::string              getVarName()       = 0; //// prefix is not include
+        virtual std::string              getVarName()      = 0; //// prefix is not include
         virtual std::vector<std::string> getRegisVarName() = 0;
-        virtual ull                      getVarId()         = 0; //// it is global id
+        virtual ull                      getVarId()        = 0; //// it is global id
         std::vector<ModelProxyBuild*>&   getDep() {return dep;}
 
         //// c++ create section
-        virtual std::string createVariable()      = 0;
-        virtual std::string createOp()            = 0; //// at the middle of the cycle
-        virtual std::string createOpEndCycle()    = 0; //// at the end of cycle
-        virtual bool        isUserDeclare()       = 0;
+        virtual std::string createGlobalVariable() = 0;
+        virtual std::string createLocalVariable()  = 0;
+        virtual std::string createOp()             = 0; //// at the middle of the cycle
+        virtual std::string createOpEndCycle()     = 0; //// have more priority
+        virtual std::string createOpEndCycle2()    = 0; //// have less priority
+        virtual bool        isUserDeclare()        = 0;
 
 
     };

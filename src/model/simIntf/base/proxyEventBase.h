@@ -72,8 +72,8 @@ namespace kathryn{
         ValRepBase*        getValRepPerf(std::string globalName){return getValRepBase(callBackPerf, std::move(globalName));}
         ////// sim proxy
         virtual void startRegisterCallBack()  = 0;
-        virtual void startVolatileEleSim()    = 0;
-        virtual void startNonVolatileEleSim() = 0;
+        virtual void startMainOpEleSim()      = 0;
+        virtual void startFinalizeEleSim()    = 0;
         ///// vcd collector
         virtual void startVcdDecVarUser()     = 0;
         virtual void startVcdDecVarInternal() = 0;

@@ -24,7 +24,7 @@ namespace kathryn{
 
     ull         MemSimEngine::getVarId(){return _master->getGlobalId();}
 
-    std::string MemSimEngine::createVariable(){
+    std::string MemSimEngine::createGlobalVariable(){
         return "ValRep <" + std::to_string(_master->getWidthSize()) + ">"
             + getVarName() +
             "["+ std::to_string(_master->getDepthSize()) + "];\n";

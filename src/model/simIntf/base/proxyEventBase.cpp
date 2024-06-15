@@ -37,7 +37,7 @@ void ProxySimEventBase::eventWarmUp(){
 void ProxySimEventBase::simStartCurCycle(){
     ///// the order is very strict
     ///do not change to simulation order
-    startVolatileEleSim(); ////// wire mem eleHolder nest expression
+    startMainOpEleSim(); ////// wire mem eleHolder nest expression
 }
 
 void ProxySimEventBase::curCycleCollectData(){
@@ -75,13 +75,14 @@ void ProxySimEventBase::curCycleCollectData(){
 }
 
 void ProxySimEventBase::simStartNextCycle(){
-    startNonVolatileEleSim(); //////// sim register change exact register
+    startFinalizeEleSim(); //////// sim register change exact register
     ///////////// do not wory about register simulation will get false new
     ///data from memory if there is update from memory to register because
     /// memEleHolder will provide temporary data to register simulation
 }
 
 EventBase* ProxySimEventBase::genNextEvent(){
+    ///////////////std::cout << _targetCycle << std::endl;
     _targetCycle++;
     return this;
 }

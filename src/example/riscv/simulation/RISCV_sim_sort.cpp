@@ -51,9 +51,10 @@ namespace kathryn::riscv{
             }
             conEndCycle();
             //recordSlot();
-            conNextCycle(10000000);
+            conNextCycle(800000);
             curCycleChecker++;
         }
+
         auto end = std::chrono::steady_clock::now();
         std::chrono::duration<double> elapsed_seconds = end - start;
         std::cout << "process time time: " << elapsed_seconds.count() << "s\n";

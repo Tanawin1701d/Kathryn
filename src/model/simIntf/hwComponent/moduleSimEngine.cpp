@@ -4,9 +4,7 @@
 
 #include "moduleSimEngine.h"
 
-#include <util/type/typeConv.h>
-
-
+#include "util/type/typeConv.h"
 #include "model/hwComponent/module/module.h"
 
 
@@ -33,7 +31,6 @@ namespace kathryn{
             assert(md != nullptr);
             md->getSimEngine()->proxyBuildInit();
         }
-
 
     }
 
@@ -67,21 +64,26 @@ namespace kathryn{
     }
 
 
-    std::vector<ModelProxyBuild*> ModuleSimEngine::recruitForVolatileOp(){
+    std::vector<ModelProxyBuild*> ModuleSimEngine::recruitForMainOpVolatile(){
         ///// wire and mem block agent
         std::vector<ModelProxyBuild*> result;
         recruitFromWireable(result);
         recruitFromMemElh(result, true);
-        recruitFromSubModule(result, &ModuleSimEngine::recruitForVolatileOp);
+        recruitFromSubModule(result, &ModuleSimEngine::recruitForMainOpVolatile);
         return result;
     }
 
-    std::vector<ModelProxyBuild*> ModuleSimEngine::recruitForNonVolatileOp(){
+    std::vector<ModelProxyBuild*> ModuleSimEngine::recruitForMainOpNonVolatile(){
+        return recruitForFinalizeOp();
+    }
+
+
+    std::vector<ModelProxyBuild*> ModuleSimEngine::recruitForFinalizeOp(){
 
         std::vector<ModelProxyBuild*> result;
         recruitFromRegable(result);
         recruitFromMemElh(result, false); /// mem block not include here due to ele handle it by themselve
-        recruitFromSubModule(result, &ModuleSimEngine::recruitForNonVolatileOp);
+        recruitFromSubModule(result, &ModuleSimEngine::recruitForFinalizeOp);
         return result;
     }
 
@@ -97,28 +99,28 @@ namespace kathryn{
         return result;
     }
 
-    std::vector<LogicSimEngine*> ModuleSimEngine::recruitAllLogicSimEngine(){
-
-        std::vector<LogicSimEngine*> result;
-        /////// recruit sp register first
-        recruitFromVector(result, _module->getSpRegs(SP_STATE_REG));
-        recruitFromVector(result, _module->getSpRegs(SP_SYNC_REG));
-        recruitFromVector(result, _module->getSpRegs(SP_COND_WAIT_REG));
-        recruitFromVector(result, _module->getSpRegs(SP_CYCLE_WAIT_REG));
-        recruitFromVector(result, _module->getUserRegs());
-        /////////// wire
-        recruitFromVector(result, _module->getUserWires());
-        recruitFromVector(result, _module->getUserExpressions());
-        recruitFromVector(result, _module->getUserVals());
-        recruitFromVector(result, _module->getUserNests());
-        ////////// memory
-        for (MemBlock* memBlock: _module->getUserMemBlks()){
-            recruitFromVector(result, memBlock->getMemBlockAgents());
-        }
-        recruitFromSubModule(result, &ModuleSimEngine::recruitAllLogicSimEngine);
-        return result;
-
-    }
+    // std::vector<LogicSimEngine*> ModuleSimEngine::recruitAllLogicSimEngine(){
+    //
+    //     std::vector<LogicSimEngine*> result;
+    //     /////// recruit sp register first
+    //     recruitFromVector(result, _module->getSpRegs(SP_STATE_REG));
+    //     recruitFromVector(result, _module->getSpRegs(SP_SYNC_REG));
+    //     recruitFromVector(result, _module->getSpRegs(SP_COND_WAIT_REG));
+    //     recruitFromVector(result, _module->getSpRegs(SP_CYCLE_WAIT_REG));
+    //     recruitFromVector(result, _module->getUserRegs());
+    //     /////////// wire
+    //     recruitFromVector(result, _module->getUserWires());
+    //     recruitFromVector(result, _module->getUserExpressions());
+    //     recruitFromVector(result, _module->getUserVals());
+    //     recruitFromVector(result, _module->getUserNests());
+    //     ////////// memory
+    //     for (MemBlock* memBlock: _module->getUserMemBlks()){
+    //         recruitFromVector(result, memBlock->getMemBlockAgents());
+    //     }
+    //     recruitFromSubModule(result, &ModuleSimEngine::recruitAllLogicSimEngine);
+    //     return result;
+    //
+    // }
 
     std::vector<FlowBaseSimEngine*> ModuleSimEngine::recruitPerf(){
         std::vector<FlowBaseSimEngine*> result;

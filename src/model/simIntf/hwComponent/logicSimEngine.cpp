@@ -144,7 +144,7 @@ namespace kathryn{
         return getVarName() + TEMP_VAR_SUFFIX;
     }
 
-    std::string LogicSimEngine::createVariable(){
+    std::string LogicSimEngine::createGlobalVariable(){
 
         std::string valSize = std::to_string(_asb->getAssignSlice().getSize());
 
@@ -154,17 +154,10 @@ namespace kathryn{
                    "") + "\n";
     }
 
-    std::string LogicSimEngine::createOp(){
 
-        ///////// build string
-        std::string retStr = "      { /////" + _ident->getGlobalName() + "\n";
-        _asb->sortUpEventByPriority();
-        if (_isTempReq){
-            retStr += "         " + getVarName() + TEMP_VAR_SUFFIX + " = " + getVarName()  + ";\n";
-        }
-        /////////// we build from low priority to high priority
+    std::string LogicSimEngine::genAssignWithSoleCondition(std::string auxAssStr){
+        std::string retStr;
         for (UpdateEvent* updateEvent: _asb->getUpdateMeta()){
-
             ////
             ///check integrity
             ///
@@ -194,14 +187,84 @@ namespace kathryn{
             retStr += "){\n         ";
             retStr += "         ";
             retStr += genAssignAEqB(updateEvent->desUpdateSlice, _isTempReq, updateEvent->srcUpdateValue, true) + "\n";
+            if (!auxAssStr.empty()){
+                retStr += auxAssStr + "\n";
+            }
             retStr += "         }\n";
+        }
+        return retStr;
+    }
+
+    std::string LogicSimEngine::genAssignWithChainCondition(std::string auxAssStr){
+
+        bool secondTime = false;
+        std::string retStr;
+        for (auto         updateEventItr  = _asb->getUpdateMeta().rbegin();
+                          updateEventItr != _asb->getUpdateMeta().rend();
+                        ++updateEventItr
+
+        ){
+            UpdateEvent* updateEvent = *updateEventItr;
+            ////
+            ///check integrity
+            ///
+            assert(updateEvent->srcUpdateValue->getOperableSlice().getSize() >=
+                   updateEvent->desUpdateSlice.getSize());
+
+
+            retStr += (secondTime ? "         else if ( " : "         if ( ");
+            bool isConOccur = false;
+            if (updateEvent->srcUpdateCondition != nullptr){
+                retStr += getSliceStringFromOpr(updateEvent->srcUpdateCondition);
+                isConOccur = true;
+
+            }
+
+            if (updateEvent->srcUpdateState != nullptr){
+                if (isConOccur){
+                    retStr += " && ";
+                }
+                retStr += getSliceStringFromOpr(updateEvent->srcUpdateState);
+                isConOccur = true;
+            }
+
+            if (!isConOccur){
+                retStr += "true";
+            }
+
+            retStr += "){\n         ";
+            retStr += "         ";
+            retStr += genAssignAEqB(updateEvent->desUpdateSlice, _isTempReq, updateEvent->srcUpdateValue, true) + "\n";
+            if (!auxAssStr.empty()){
+                retStr += auxAssStr + "\n";
+            }
+            retStr += "         }\n";
+            secondTime = true;
+        }
+        return retStr;
+
+    }
+
+    std::string LogicSimEngine::createOp(){
+
+        ///////// build string
+        std::string retStr = "      { /////" + _ident->getGlobalName() + "\n";
+        _asb->sortUpEventByPriority();
+        if (_isTempReq){
+            retStr += "         " + getVarName() + TEMP_VAR_SUFFIX + " = " + getVarName()  + ";\n";
+        }
+        /////////// we build from low priority to high priority
+        if (_asb->checkDesIsFullyAssignAndEqual()){
+            retStr += genAssignWithChainCondition();
+        }else{
+            retStr += genAssignWithSoleCondition();
         }
 
         retStr += "     }\n";
         return retStr;
     }
 
-    std::string LogicSimEngine::createOpEndCycle(){
+    std::string LogicSimEngine::createOpEndCycle2(){
         if (_isTempReq){
             return "    " + getVarName() + " = " + getTempVarName() + ";\n";
         }
@@ -214,7 +277,8 @@ namespace kathryn{
     }
 
     ValRepBase* LogicSimEngine::getProxyRep(){
-        assert(proxyRep != nullptr);
+        mfAssert(proxyRep != nullptr, "you might access the element that have not been tied with "
+                                      "registeration of proxy sim manager");
         return proxyRep;
     }
 

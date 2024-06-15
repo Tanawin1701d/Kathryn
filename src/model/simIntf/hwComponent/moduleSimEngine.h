@@ -20,13 +20,14 @@ namespace kathryn{
     public:
         explicit ModuleSimEngine(Module* module); //// todo module
         /** create zone for hardware element*/
-        void                          proxyBuildInit          ();
-        std::vector<ModelProxyBuild*> recruitForCreateVar     ();
-        std::vector<ModelProxyBuild*> recruitForRegisVar      (); ////// register
-        std::vector<ModelProxyBuild*> recruitForVolatileOp    ();
-        std::vector<ModelProxyBuild*> recruitForNonVolatileOp ();
-        std::vector<LogicSimEngine*> recruitForVcdVar        (); ////// register
-        std::vector<LogicSimEngine*>  recruitAllLogicSimEngine(); ///// for vcdWrite
+        void                          proxyBuildInit              ();
+        std::vector<ModelProxyBuild*> recruitForCreateVar         ();
+        std::vector<ModelProxyBuild*> recruitForRegisVar          (); ////// register
+        std::vector<ModelProxyBuild*> recruitForMainOpVolatile    (); ///// must do topologysort
+        std::vector<ModelProxyBuild*> recruitForMainOpNonVolatile ();
+        std::vector<ModelProxyBuild*> recruitForFinalizeOp        ();
+        std::vector<LogicSimEngine*>  recruitForVcdVar            (); ////// register
+        //std::vector<LogicSimEngine*>  recruitAllLogicSimEngine    (); ///// for vcdWrite
         /** create zone for perf element*/
         std::vector<FlowBaseSimEngine*> recruitPerf             ();
 

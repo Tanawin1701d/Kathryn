@@ -126,6 +126,18 @@ namespace kathryn{
 
     }
 
+    std::string expressionSimEngine::createGlobalVariable(){
+        //////////////// for expression
+        return "";
+    }
+
+    std::string expressionSimEngine::createLocalVariable(){
+        /////////// we bring the variable to local variable
+        return LogicSimEngine::createGlobalVariable();
+    }
+
+
+
 
     std::string expressionSimEngine::createOp(){
 

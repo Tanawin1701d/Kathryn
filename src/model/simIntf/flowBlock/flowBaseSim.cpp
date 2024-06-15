@@ -64,16 +64,16 @@ namespace kathryn{
     }
 
 
-    std::string FlowBaseSimEngine::createVariable(){
+    std::string FlowBaseSimEngine::createGlobalVariable(){
         std::string ret = "ValRep<64> " + getVarName() + " = 0;" +
                "ValRep<1> " + getVarNameCurStatus() + " = 0;\n";
         for (FlowBlockBase* fb: _flowBlockBase->getSubBlocks()){
             FlowBaseSimEngine* subBlockSimEngine = fb->getSimEngine();
-            ret += subBlockSimEngine->createVariable();
+            ret += subBlockSimEngine->createGlobalVariable();
         }
         for (FlowBlockBase* fb: _flowBlockBase->getConBlocks()){
             FlowBaseSimEngine* conBlockSimEngine = fb->getSimEngine();
-            ret += conBlockSimEngine->createVariable();
+            ret += conBlockSimEngine->createGlobalVariable();
         }
         return ret;
     }

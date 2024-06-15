@@ -14,8 +14,8 @@ namespace kathryn{
     public:
         ////// sim proxy
         void startRegisterCallBack()  override;
-        void startVolatileEleSim()    override;
-        void startNonVolatileEleSim() override;
+        void startMainOpEleSim()    override;
+        void startFinalizeEleSim() override;
         ///// vcd collector
         void startVcdDecVarUser()    override;
         void startVcdDecVarInternal()override;

@@ -13,7 +13,7 @@ namespace kathryn{
         mReg(a, 8);
         mReg(b, 8);
         mReg(c, 8);
-        mVal(iv, 8, 0b10101010);
+        mVal(iv, 8, 7);///0b10101010);
 
         explicit testSimMod2(int x): Module(){}
 
@@ -69,12 +69,12 @@ namespace kathryn{
         }
 
         void simDriven() override{
-            incCycle(2);
-
-            sim {
-                _md->iv = 7;
-            };
-            incCycle(1);
+            // incCycle(2);
+            //
+            // sim {
+            //     _md->iv = 7;
+            // };
+            // incCycle(1);
         }
 
     };

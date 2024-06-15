@@ -45,10 +45,12 @@ namespace kathryn{
         void                     getRecurVarName(std::vector<std::string>& result);
         void                     getRecurVarNameCurStsatus(std::vector<std::string>& result);
 
-        std::string createVariable()   override;
-        std::string createOp()         override; ///// we use op to do all operation
-        std::string createOpEndCycle() override{return "";}
-        bool        isUserDeclare()    override{return false;}
+        std::string createGlobalVariable()   override;
+        std::string createLocalVariable()    override{return "";}
+        std::string createOp()               override; ///// we use op to do all operation
+        std::string createOpEndCycle()       override{return "";}
+        std::string createOpEndCycle2()      override{return "";}
+        bool        isUserDeclare()          override{return false;}
 
         void        setOpSpace(int space){_opSpace = space; assert(space >= 0);}
 

@@ -89,9 +89,9 @@ namespace kathryn{
         void simDriven() override{
             incCycle(2);
 
-            sim {
-                _md->iv = 48;
-            };
+            // sim {
+            //     _md->iv = 48;
+            // };
             incCycle(1);
         }
 

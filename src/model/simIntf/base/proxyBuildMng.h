@@ -61,9 +61,9 @@ namespace kathryn{
         ////////// for start register function
         void startWriteRegisterCallback();
         ////////// for wire expression memElehodler*   etc....
-        void startWriteVolatileEleSim();
+        void startMainOpEleSim();
         ////////// for register
-        void startWriteNonVolatileEleSim();
+        void startFinalizeEleSim();
         ///////// for create vcd Decvar
         void startWriteVcdDecVar(bool isUser); //// else if internal
         ///////// for create vcd Decvar
