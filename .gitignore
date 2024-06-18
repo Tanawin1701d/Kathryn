@@ -7,6 +7,7 @@
 /KOut/**/*.vcd
 /KOut/**/*.prof
 /KOut/**/*.sl
+/KOut/**/*.dumpVar
 
 #### model compile
 modelCompile/cmake-build-debug
