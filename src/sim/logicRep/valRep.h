@@ -98,6 +98,14 @@ namespace kathryn{
             _val = _val | rhs._val;
         }
 
+        template<int sl_start, int sl_stop>
+        void updateOnSlice(const ull rhs){
+            ull mask = buildMask<sl_start, sl_stop>();
+            mask = mask << sl_start;
+            _val = _val & (~mask); ///////////// to clear old value
+            _val = _val | rhs;
+        }
+
 
 
         template<int sl_start, int sl_stop, int fixSize>
@@ -115,6 +123,15 @@ namespace kathryn{
 
         bool getLogicValue(){
             return _val > 0;
+        }
+
+        template<int desSize>
+        inline ValRep<desSize> extend() const{
+            ull desVal = 0;
+            if (_val & 1){
+                desVal = (desSize == bitSizeOfUll) ? -1 : ((1 << desSize)-1);
+            }
+            return ValRep<desSize>(desVal);
         }
 
 
@@ -149,6 +166,8 @@ namespace kathryn{
 
         inline ValRep<_len> operator << (const ValRep<_len>& rhs) const{return ValRep<_len>((_val << rhs._val)& MASK_USED);}
         inline ValRep<_len> operator >> (const ValRep<_len>& rhs) const{return ValRep<_len>((_val >> rhs._val)& MASK_USED);}
+
+
 
         inline explicit operator bool() const {return _val;}
 

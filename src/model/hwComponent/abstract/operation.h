@@ -34,8 +34,10 @@ namespace kathryn {
         ARITH_MUL,    // *
         ARITH_DIV,    // /
         ARITH_DIVR,   // %
+        EXTEND_BIT,   /// bit extender
         /** assign for build new variable*/
         ASSIGN,       // =
+
         /** other operator*/
         OP_DUMMY,
         LOGIC_OP_COUNT

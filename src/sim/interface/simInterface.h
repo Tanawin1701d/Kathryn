@@ -30,9 +30,11 @@ namespace kathryn{
         UserEvent               simAgent;/** sim agent base can't change name*/
         ProxyBuildMng           _proxyBuildMng;
 
+
         /**concrete sim*/
 
         std::unique_ptr<std::thread> conThread;
+        bool                         requireConSim  = true;
         ConcreteTriggerEvent*        lastCtTrigger = nullptr;
         CYCLE                        conCurCycleUsed = 2;
 
@@ -57,7 +59,7 @@ namespace kathryn{
 
         void simStart();
         /**describe default value*/
-        void    describeDef();
+        virtual void    describeDef();
         /**describe discreate event*/
         virtual void describe(){};
         /**describe concrete event*/
@@ -67,6 +69,8 @@ namespace kathryn{
         void testAndPrint(const std::string& testName, ull simVal, ull expect);
         /** build proxy SimEvent*/
         void createModelSimEvent();
+
+        ProxySimEventBase* getProxySimEvent(){return _modelSimEvent;}
 
 
     };

@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_compile_options(-O3)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-set(CMAKE_BUILD_TYPE Debug)
+#set(CMAKE_BUILD_TYPE Debug)
 
 #add_definitions(-DMODELCOMPILEVB) ### model compile verbose
 add_definitions(-DNOTEXCEED64)
@@ -40,6 +40,11 @@ add_executable(Kathryn
         ${SRC_MODEL_COMPILE}
         src/example/riscv/simulation/RISCV_sim_sort.cpp
         src/example/riscv/simulation/RISCV_sim_sort.h
+        src/example/riscv/simulation/autoSimEvent.cpp
+        src/example/riscv/simulation/autoSimEvent.h
+        src/example/riscv/simulation/slotRecorder.cpp
+        src/example/riscv/simulation/slotRecorder.h
+        src/example/riscv/simulation/autoSimEvent.cpp
 
 
 )

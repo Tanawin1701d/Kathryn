@@ -18,14 +18,6 @@
 
 namespace kathryn{
 
-    class Val;
-    class ValSimEngine: public LogicSimEngine{
-    protected:
-        Val* _master = nullptr;
-    public:
-        ValSimEngine(Val* master,VCD_SIG_TYPE sigType, ull rawValue);
-    };
-
     /** This class act as constant value */
     class Val: public LogicComp<Val>{
         friend class ValSimEngine;
@@ -39,19 +31,7 @@ namespace kathryn{
         /** todo we will make value save the value and range more precisly*/
         void com_final() override {};
 
-        explicit Val(int size, ull rawValue = 0):
-            LogicComp({0, size},
-                      TYPE_VAL,
-                      new ValSimEngine(this,VST_INTEGER, rawValue),
-                      false),
-            _size(size),
-            _rawValue(rawValue)
-            {
-                assert(size > 0);
-                com_init();
-                AssignOpr::setMaster(this);
-                AssignCallbackFromAgent::setMaster(this);
-            }
+        explicit Val(int size, ull rawValue = 0);
 
         /**
          * override assignable
@@ -87,6 +67,20 @@ namespace kathryn{
         Operable* checkShortCircuit() override;
 
 
+    };
+
+    class ValSimEngine: public LogicSimEngine{
+    protected:
+        Val* _master = nullptr;
+    public:
+        ValSimEngine(Val* master,VCD_SIG_TYPE sigType, ull rawValue);
+
+        /////////// slice value
+        std::string genSliceTo(Slice desSlice) override;
+        std::string genSliceToWithFixSize(Slice desSlice, int fixLength) override;
+        std::string genSliceAndShift(Slice desSlice, Slice srcSlice) override;
+        /////////// create global variable
+        std::string createGlobalVariable() override;
     };
 
 

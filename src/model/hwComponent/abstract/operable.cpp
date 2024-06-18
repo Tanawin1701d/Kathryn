@@ -234,6 +234,14 @@ namespace kathryn {
         return *ret;
     }
 
+    expression& Operable::extB(int desSize){
+        mfAssert(desSize > 0, "desSize must greater than 0");
+        mfAssert(getOperableSlice().getSize() == 1, "src extend bit must size must eeq to 1");
+        auto ret = new expression(EXTEND_BIT,this, nullptr, desSize);
+        return *ret;
+    }
+
+
 
     Operable& Operable::getMatchOperable( ull value) const {
             makeVal(optUserAutoVal, getOperableSlice().getSize(), value);

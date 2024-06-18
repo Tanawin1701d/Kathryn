@@ -10,6 +10,8 @@
 #include <memory>
 #include <cassert>
 #include <vector>
+#include "model/debugger/modelDebugger.h"
+
 #include "model/abstract/identBase/identBase.h"
 
 

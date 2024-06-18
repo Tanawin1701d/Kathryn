@@ -159,29 +159,32 @@ namespace kathryn{
             _bSliced = getSliceStringFromOpr(_master->_b, _master->_a->getOperableSlice().getSize());
         }
 
+        int desSize = _master->getSlice().getSize();
+
 
         ////// all operand expect to be equal
         switch (_master->getOp()) {
-            case BITWISE_AND : retStr += _aSliced + " &    " + _bSliced; break;
-            case BITWISE_OR  : retStr += _aSliced + " |    " + _bSliced; break;
-            case BITWISE_XOR : retStr += _aSliced + " ^    " + _bSliced; break;
-            case BITWISE_INVR: retStr += " ~  "   + _aSliced;            break;
-            case BITWISE_SHL : retStr += _aSliced + " <<   " + _bSliced; break;
-            case BITWISE_SHR : retStr += _aSliced + " >>   " + _bSliced; break;
-            case LOGICAL_AND : retStr += _aSliced + " &&   " + _bSliced; break;
-            case LOGICAL_OR  : retStr += _aSliced + " ||   " + _bSliced; break;
-            case LOGICAL_NOT : retStr += " !    " + _aSliced;            break;
-            case RELATION_EQ : retStr += _aSliced + " ==   " + _bSliced; break;
-            case RELATION_NEQ: retStr += _aSliced + " !=   " + _bSliced; break;
-            case RELATION_LE : retStr += _aSliced + " <    " + _bSliced; break;
-            case RELATION_LEQ: retStr += _aSliced + " <=   " + _bSliced; break;
-            case RELATION_GE : retStr += _aSliced + " >    " + _bSliced; break;
-            case RELATION_GEQ: retStr += _aSliced + " >=   " + _bSliced; break;
-            case ARITH_PLUS  : retStr += _aSliced + " +    " + _bSliced; break;
-            case ARITH_MINUS : retStr += _aSliced + " -    " + _bSliced; break;
-            case ARITH_MUL   : retStr += _aSliced + " *    " + _bSliced; break;
-            case ARITH_DIV   : retStr += _aSliced + " /    " + _bSliced; break;
-            case ARITH_DIVR  : retStr += _aSliced + " %    " + _bSliced; break;
+            case BITWISE_AND : retStr += _aSliced + " &    "    + _bSliced; break;
+            case BITWISE_OR  : retStr += _aSliced + " |    "    + _bSliced; break;
+            case BITWISE_XOR : retStr += _aSliced + " ^    "    + _bSliced; break;
+            case BITWISE_INVR: retStr += " ~  "   + _aSliced;               break;
+            case BITWISE_SHL : retStr += _aSliced + " <<   "    + _bSliced; break;
+            case BITWISE_SHR : retStr += _aSliced + " >>   "    + _bSliced; break;
+            case LOGICAL_AND : retStr += _aSliced + " &&   "    + _bSliced; break;
+            case LOGICAL_OR  : retStr += _aSliced + " ||   "    + _bSliced; break;
+            case LOGICAL_NOT : retStr += " !    " + _aSliced;               break;
+            case RELATION_EQ : retStr += _aSliced + " ==   "    + _bSliced; break;
+            case RELATION_NEQ: retStr += _aSliced + " !=   "    + _bSliced; break;
+            case RELATION_LE : retStr += _aSliced + " <    "    + _bSliced; break;
+            case RELATION_LEQ: retStr += _aSliced + " <=   "    + _bSliced; break;
+            case RELATION_GE : retStr += _aSliced + " >    "    + _bSliced; break;
+            case RELATION_GEQ: retStr += _aSliced + " >=   "    + _bSliced; break;
+            case ARITH_PLUS  : retStr += _aSliced + " +    "    + _bSliced; break;
+            case ARITH_MINUS : retStr += _aSliced + " -    "    + _bSliced; break;
+            case ARITH_MUL   : retStr += _aSliced + " *    "    + _bSliced; break;
+            case ARITH_DIV   : retStr += _aSliced + " /    "    + _bSliced; break;
+            case ARITH_DIVR  : retStr += _aSliced + " %    "    + _bSliced; break;
+            case EXTEND_BIT  : retStr += _aSliced + ".extend<"+ std::to_string(desSize)+">()";   break;
             case ASSIGN      : retStr += _aSliced                      ; break;
             case OP_DUMMY:
             case LOGIC_OP_COUNT: break;

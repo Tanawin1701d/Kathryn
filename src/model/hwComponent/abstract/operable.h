@@ -57,6 +57,8 @@ namespace kathryn {
         virtual expression& operator *  ( Operable& b);
         virtual expression& operator /  ( Operable& b);
         virtual expression& operator %  ( Operable& b);
+        /** extend bit*/
+        virtual expression& extB(int desSize);
         /** todo for now self assign operation such as += is not permit */
 
         /**

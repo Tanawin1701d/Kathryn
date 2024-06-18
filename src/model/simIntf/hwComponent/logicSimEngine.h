@@ -26,6 +26,7 @@ namespace kathryn{
         ull           _initVal    = 0;
 
     public:
+        ull createMask(Slice maskSlice);
         /** gen variable helper*/
         std::string getVarNameFromOpr(Operable* opr);
         std::string getSliceStringFromOpr(Operable* opr,int fixLength = -1);
@@ -33,10 +34,11 @@ namespace kathryn{
 
         std::string genAssignWithSoleCondition (std::string auxAssStr = "");
         std::string genAssignWithChainCondition(std::string auxAssStr = "");
-        std::string genAssignAEqB(Slice desSlice, bool isDesTemp,
-                                  Operable* srcOpr, bool shinkSrc);
-        std::string genSliceTo(Slice desSlice);
-        std::string genSliceToWithFixSize(Slice desSlice, int fixLength);
+        std::string genAssignAEqB(Slice     desSlice, bool isDesTemp,
+                                  Operable* srcOpr,   bool shinkSrc);
+        virtual std::string genSliceTo(Slice desSlice);
+        virtual std::string genSliceToWithFixSize(Slice desSlice, int   fixLength);
+        virtual std::string genSliceAndShift     (Slice desSlice, Slice srcSlice );
 
 
         LogicSimEngine(Assignable* asb, Identifiable*   ident,

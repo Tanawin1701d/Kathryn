@@ -26,6 +26,13 @@ namespace kathryn{
         ///////// fill asb  to system to support topology sort
     }
 
+    ull LogicSimEngine::createMask(Slice maskSlice){
+        assert((maskSlice.checkValidSlice()) && (maskSlice.stop <= bitSizeOfUll));
+        assert(maskSlice.start < bitSizeOfUll);
+        int size = maskSlice.getSize();
+        return (size == bitSizeOfUll) ? -1 : ((((ull)1) << size) - 1);
+    }
+
 
     std::string LogicSimEngine::getVarNameFromOpr(Operable* opr){
         assert(opr != nullptr);
@@ -52,6 +59,8 @@ namespace kathryn{
         Slice srcSlice            = srcOpr->getOperableSlice();
         Slice shinkSrcSlice       = srcSlice.getSubSliceWithShinkMsb({0,
                                                                         desSlice.getSize()});
+        LogicSimEngine*
+              srcLogicSimEngine   = srcOpr->getExactOperable().getLogicSimEngineFromOpr();
         Slice baseSrcSlice        = srcOpr->getExactOperable().getOperableSlice();
         std::string srcVarName    = getVarNameFromOpr(srcOpr);
 
@@ -71,8 +80,7 @@ namespace kathryn{
 
         int srcStop = (isShinkSrc) ? shinkSrcSlice.stop : srcSlice.stop;
         return desVarName + ".updateOnSlice<" + std::to_string(desSlice.start) + ", " + std::to_string(desSlice.stop) + ">(" +
-               srcVarName + ".sliceAndShift<" + std::to_string(srcSlice.start) + ", " + std::to_string(srcStop) + ", "
-                                              + std::to_string(desSlice.start) + ">());";
+               srcLogicSimEngine->genSliceAndShift(desSlice,{srcSlice.start, srcStop}) + ");";
     }
 
     std::string LogicSimEngine::genSliceTo(Slice desSlice){
@@ -104,6 +112,14 @@ namespace kathryn{
                                           std::to_string(desSlice.stop)  +  ", " +
                                           std::to_string(fixLength)      +  ">()";
 
+    }
+
+    std::string LogicSimEngine::genSliceAndShift(Slice desSlice, Slice srcSlice){
+        //////// srcSlice is this simEngine
+        return getVarName() + ".sliceAndShift<"
+                            + std::to_string(srcSlice.start) + ", "
+                            + std::to_string(srcSlice.stop) + ", "
+                            + std::to_string(desSlice.start) + ">()";
     }
 
 

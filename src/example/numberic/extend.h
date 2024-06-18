@@ -11,33 +11,20 @@ namespace kathryn{
 
 
     template<typename T>
-    nest& getExtendExpr(T& rawImm, int targetSize, bool unsignExtend) { ///// false is sign extend
+    Operable& getExtendExpr(T& rawImm, int targetSize, bool unsignExtend) { ///// false is sign extend
 
 
         assert(targetSize >= rawImm.getOperableSlice().getSize());
-
-        int extraSize = targetSize - rawImm.getOperableSlice().getSize();
-        expression* rawImmExpr = &_make<expression>("extendRaw", false,rawImm.getOperableSlice().getSize());
-        (*rawImmExpr) = rawImm;
-        assert(extraSize > 0);
-        nest* resultNest;
+        int   extraSize = targetSize - rawImm.getOperableSlice().getSize();
+        Slice lastBitSl =  rawImm.getOperableSlice();
+        lastBitSl = {lastBitSl.getSize()-1, lastBitSl.getSize()};
 
         if (unsignExtend){
-            makeVal(extendBits, extraSize);
-            resultNest = &g(extendBits, *rawImmExpr);
-            resultNest->setVarName("extend_with_usign");
+            makeVal(zeroExtend, extraSize, 0);
+            return g(zeroExtend, rawImm);
         }else{
-            ////// sign extension
-
-            ///////// get last bit and slice it
-            auto* signBit = new expression(1);
-            Slice rawSlice = rawImm.getSlice();
-            *signBit = *rawImm.doSlice( {rawSlice.getSize()-1,  rawSlice.getSize()});
-            //////// make nest from last bit value
-            resultNest = &g(makeNestWithSameOneVal(false,*signBit, extraSize), *rawImmExpr);
-            resultNest->setVarName("extend_with_sign");
+            return g(rawImm(lastBitSl).extB(extraSize), rawImm);
         }
-        return *resultNest;
     }
 }
 

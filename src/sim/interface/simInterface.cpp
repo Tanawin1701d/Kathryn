@@ -30,7 +30,8 @@ namespace kathryn{
             _vcdWriter (new VcdWriter(std::move(vcdFilePath))),
             _flowWriter(new FlowWriter(std::move(profileFilePath))),
             _limitCycle(limitCycle),
-            _proxyBuildMng(std::move(genFileName))
+            _proxyBuildMng(std::move(genFileName)),
+            requireConSim(true)
     {
         SimController* simCtrl = getSimController();
         assert(simCtrl != nullptr);
@@ -53,13 +54,15 @@ namespace kathryn{
         describeDef();
         describe();
         /**con simulating*/
-        simStartConSim();
+        if (requireConSim){
+            simStartConSim();
+        }
         /** start main thread*/
         SimController* simCtrl = getSimController();
         assert(simCtrl != nullptr);
         simCtrl->start();
         /** sim ctrl now finish next terminate our sim specifier*/
-        if (conThread && conThread->joinable()){
+        if (requireConSim && conThread && conThread->joinable()){
             conThread->join();
         }
         /** set assiging mode back*/
