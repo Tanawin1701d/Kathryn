@@ -69,31 +69,28 @@ namespace kathryn{
                    VST_INTEGER, false, rawValue),
     _master(master){ assert(master != nullptr);}
 
-    std::string
-    ValSimEngine::genSliceTo(Slice desSlice){
-        ull _mask = createMask(desSlice);
-        ull _val  = _initVal >> desSlice.start;
-        return std::to_string(_mask & _val);
-    }
 
-    std::string
-    ValSimEngine::genSliceToWithFixSize(Slice desSlice, int fixLength){
-        return genSliceTo(desSlice);
+    std::string ValSimEngine::genSrcOpr(){
+        return std::to_string(_initVal);
     }
-
-    std::string
-    ValSimEngine::genSliceAndShift(Slice desSlice, Slice srcSlice){
-        ull _mask = createMask(srcSlice);
-        ull _val  = _initVal >> srcSlice.start;
-            _val  = _val & _mask;
-        assert(desSlice.start < bitSizeOfUll);
-        return std::to_string(_val << desSlice.start);
+    std::string ValSimEngine::genSlicedOprTo(Slice srcSlice){
+        assert(srcSlice.checkValidSlice());
+        assert(srcSlice.start < bitSizeOfUll);
+        ull mask = createMask(srcSlice);
+        return std::to_string((_initVal >> srcSlice.start) & mask);
+    }
+    std::string ValSimEngine::genSlicedOprAndShift(Slice desSlice, Slice srcSlice ){
+        assert(srcSlice.checkValidSlice());
+        assert(srcSlice.start < bitSizeOfUll);
+        ull mask = createMask({srcSlice.start,
+                                 srcSlice.start +
+                                 std::min(desSlice.getSize(),srcSlice.getSize())});
+        return std::to_string(((_initVal >> srcSlice.start) & mask) << desSlice.start);
     }
 
     std::string
     ValSimEngine::createGlobalVariable(){
-        return "const ull " + getVarName() +
-        " = " + std::to_string(_initVal) + ";";
+        return "";
     }
 
 }

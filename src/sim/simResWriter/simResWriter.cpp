@@ -36,9 +36,12 @@ namespace kathryn{
                 );
     }
 
-    void VcdWriter::addNewValue(const std::string& name, ValRepBase* val) {
+    void VcdWriter::addNewValue(const std::string& name, ull val) {
+        std::string preRet ;
+        std::bitset<bitSizeOfUll> binaryRepresentation(val);
+        preRet += binaryRepresentation.to_string();
         addData(
-                "b" + val->getBiStr() +
+                "b" + preRet +
                 " " + name + "\n"
                 );
     }

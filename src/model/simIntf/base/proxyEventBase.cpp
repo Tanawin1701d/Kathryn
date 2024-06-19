@@ -50,7 +50,7 @@ void ProxySimEventBase::curCycleCollectData(){
 
             _vcdWriter->addNewTimeStamp(getCurCycle()*10);
             clkSignal = 1;
-            _vcdWriter->addNewValue(CLK_SIGNAL, &clkSignal);
+            _vcdWriter->addNewValue(CLK_SIGNAL, clkSignal);
         }
 
         if ((VCD_REC_POL == MDE_REC_BOTH) | (VCD_REC_POL == MDE_REC_ONLY_USER)){
@@ -67,7 +67,7 @@ void ProxySimEventBase::curCycleCollectData(){
                 ){
             _vcdWriter->addNewTimeStamp(getCurCycle()*10 + 5);
             clkSignal = 0;
-            _vcdWriter->addNewValue(CLK_SIGNAL, &clkSignal);
+            _vcdWriter->addNewValue(CLK_SIGNAL, clkSignal);
         }
 
         /////// start collect per collection

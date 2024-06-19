@@ -76,11 +76,12 @@ namespace kathryn{
         ValSimEngine(Val* master,VCD_SIG_TYPE sigType, ull rawValue);
 
         /////////// slice value
-        std::string genSliceTo(Slice desSlice) override;
-        std::string genSliceToWithFixSize(Slice desSlice, int fixLength) override;
-        std::string genSliceAndShift(Slice desSlice, Slice srcSlice) override;
+        std::string genSrcOpr                () override;
+        std::string genSlicedOprTo           (Slice srcSlice) override;
+        std::string genSlicedOprAndShift     (Slice desSlice, Slice srcSlice ) override;
         /////////// create global variable
         std::string createGlobalVariable() override;
+        std::string createOp() override{return "";}
     };
 
 

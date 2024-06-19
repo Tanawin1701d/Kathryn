@@ -11,6 +11,7 @@
 #include "model/hwComponent/abstract/Slice.h"
 
 
+
 namespace kathryn{
 
     class LogicSimEngine: public ModelProxyBuild, public ModelProxyRetrieve{
@@ -27,18 +28,21 @@ namespace kathryn{
 
     public:
         ull createMask(Slice maskSlice);
-        /** gen variable helper*/
-        std::string getVarNameFromOpr(Operable* opr);
-        std::string getSliceStringFromOpr(Operable* opr,int fixLength = -1);
+        ///////////////////////// get opr value from opr
+        std::string getSrcOprFromOpr(Operable* opr);
+        std::string getSlicedSrcOprFromOpr(Operable* opr);
+        std::string getSlicedAndShiftSrcOprFromOpr(Operable* opr, Slice desSlice);
 
+        //////////////////////// gen main operation
 
-        std::string genAssignWithSoleCondition (std::string auxAssStr = "");
-        std::string genAssignWithChainCondition(std::string auxAssStr = "");
-        std::string genAssignAEqB(Slice     desSlice, bool isDesTemp,
-                                  Operable* srcOpr,   bool shinkSrc);
-        virtual std::string genSliceTo(Slice desSlice);
-        virtual std::string genSliceToWithFixSize(Slice desSlice, int   fixLength);
-        virtual std::string genSliceAndShift     (Slice desSlice, Slice srcSlice );
+        std::string genOpWithSoleCondition           (const std::string& auxAssStr = "");
+        std::string genOpWithChainCondition          (const std::string& auxAssStr = "");
+        std::string genAssignAEqB                    (Slice     desSlice, bool isDesTemp,
+                                                      Operable* srcOpr);
+        ///////////////////////// sliced opr
+        virtual std::string genSrcOpr                ();
+        virtual std::string genSlicedOprTo           (Slice srcSlice);
+        virtual std::string genSlicedOprAndShift     (Slice desSlice, Slice srcSlice );
 
 
         LogicSimEngine(Assignable* asb, Identifiable*   ident,
@@ -48,15 +52,14 @@ namespace kathryn{
 
         void proxyBuildInit() override;
 
-        std::string              getVarName() override;
+        std::string              getVarName()      override;
         std::vector<std::string> getRegisVarName() override;
         std::string              getTempVarName();
-        ull                      getVarId()   override{return _ident->getGlobalId();}
-
+        ull                      getVarId()        override{return _ident->getGlobalId();}
         void                     setVCDWriteStatus(bool status){ _setToWrite = status;}
 
-        VCD_SIG_TYPE getSigType() const {return _vcdSigType;}
-        Slice        getSize()    const {return _asb->getAssignSlice();}
+        VCD_SIG_TYPE             getSigType() const {return _vcdSigType;}
+        Slice                    getSize()    const {return _asb->getAssignSlice();}
 
 
         /*** c++ create section**/

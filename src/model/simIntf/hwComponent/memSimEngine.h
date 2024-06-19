@@ -31,7 +31,6 @@ namespace kathryn{
         std::string createOpEndCycle2()     override{return "";}
 
         bool        isUserDeclare()        override{return false;}
-
         void        proxyRetInit(ProxySimEventBase* modelSimEvent)override;
         ValRepBase* getProxyRep()          override;
 

@@ -21,6 +21,9 @@ namespace kathryn{
         assert(_flowBlockBase != nullptr);
     }
 
+    FlowBaseSimEngine::~FlowBaseSimEngine(){
+        delete _proxyRepCurBit;
+    }
 
     std::string FlowBaseSimEngine::getVarName(){
         return "PERF_" + _flowBlockBase->getGlobalName();
@@ -65,8 +68,8 @@ namespace kathryn{
 
 
     std::string FlowBaseSimEngine::createGlobalVariable(){
-        std::string ret = "ValRep<64> " + getVarName() + " = 0;" +
-               "ValRep<1> " + getVarNameCurStatus() + " = 0;\n";
+        std::string ret = "ull " + getVarName() + " = 0;" +
+                          "ull " + getVarNameCurStatus() + " = 0;\n";
         for (FlowBlockBase* fb: _flowBlockBase->getSubBlocks()){
             FlowBaseSimEngine* subBlockSimEngine = fb->getSimEngine();
             ret += subBlockSimEngine->createGlobalVariable();
@@ -107,7 +110,7 @@ namespace kathryn{
                 if (stateReg != nullptr){
                     std::string regName = stateReg->getSimEngine()->getVarName();
                     preRet += space;
-                    preRet += getVarNameCurStatus() + ".getRefVal() |= " + regName + ".getLogicValue();\n";
+                    preRet += getVarNameCurStatus() + " |= " + regName + ";\n";
                 }
             }
         }
@@ -115,12 +118,12 @@ namespace kathryn{
         for (FlowBlockBase* fb: _flowBlockBase->getSubBlocks()){
             FlowBaseSimEngine* subBlockSimEngine = fb->getSimEngine();
             preRet += space;
-            preRet += getVarNameCurStatus() + ".getRefVal() |= "
-                   + subBlockSimEngine->getVarNameCurStatus() + ".getVal();\n";
+            preRet += getVarNameCurStatus() + " |= "
+                   +  subBlockSimEngine->getVarNameCurStatus() + ";\n";
         }
         preRet += space;
-        preRet += getVarName()          + ".getRefVal() += " +
-                  getVarNameCurStatus() + ".getLogicValue();\n";
+        preRet += getVarName()          + " += " +
+                  getVarNameCurStatus() + ";\n";
 
         preRet +=  space + "}\n";
 
@@ -141,8 +144,9 @@ namespace kathryn{
     //////////////////// return initiate
     ///
     void FlowBaseSimEngine::proxyRetInit(ProxySimEventBase* modelSimEvent){
-        proxyRep        = modelSimEvent->getValRepPerf(getVarName());
-        _proxyRepCurBit = modelSimEvent->getValRepPerf(getVarNameCurStatus());
+        proxyRep        = new ValRepBase(bitSizeOfUll,
+                                         *modelSimEvent->getValPerf(getVarName()));
+        _proxyRepCurBit = new ValRepBase(1,*modelSimEvent->getValPerf(getVarNameCurStatus()));
         ///////// subblock init
         for (FlowBlockBase* subBlock: _flowBlockBase->getSubBlocks()){
             subBlock->getSimEngine()->proxyRetInit(modelSimEvent);

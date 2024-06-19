@@ -238,8 +238,8 @@ namespace kathryn{
             assert(asb != nullptr);
             int curSize = opr->getOperableSlice().getSize();
 
-            retStr += "     ";
-            retStr += genAssignAEqB({startIdx, startIdx + curSize}, false, opr, true) + "\n";
+            retStr   += "     ";
+            retStr   += genAssignAEqB({startIdx, startIdx + curSize}, false, opr) + "\n";
             startIdx += curSize;
         }
         retStr += "     }\n";

@@ -18,7 +18,7 @@ namespace kathryn{
     std::string cvtNum2HexStr(ull x){
         std::ostringstream oss;
         oss << std::hex <<std::uppercase << ull(x);
-        return oss.str();
+        return "0x" + oss.str();
     }
 
 }

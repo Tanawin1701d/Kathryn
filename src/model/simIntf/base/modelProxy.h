@@ -38,7 +38,7 @@ namespace kathryn{
         //// c++ create section
         virtual std::string createGlobalVariable() = 0;
         virtual std::string createLocalVariable()  = 0;
-        virtual std::string createOp()             = 0; //// at the middle of the cycle
+        virtual std::string createOp()             = 0; //// compute the data but
         virtual std::string createOpEndCycle()     = 0; //// have more priority
         virtual std::string createOpEndCycle2()    = 0; //// have less priority
         virtual bool        isUserDeclare()        = 0;
@@ -52,7 +52,7 @@ namespace kathryn{
     public:
         virtual void        proxyRetInit(ProxySimEventBase* modelSimEvent) = 0;
         virtual ValRepBase* getProxyRep () = 0;
-        virtual      ~ModelProxyRetrieve() = default;
+        virtual      ~ModelProxyRetrieve() {delete proxyRep;}
     };
 
     

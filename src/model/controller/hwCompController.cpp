@@ -53,7 +53,7 @@ namespace kathryn{
         targetModulePtr->addUserReg(ptr);
         ptr->setParent(targetModulePtr);
         ptr->buildInheritName();
-        ptr->makeResetEvent();
+        ////ptr->makeResetEvent();
         /** debug value*/
         logMF(ptr,
               "USER_REG is initialized and set parent to " + targetModulePtr->getIdentDebugValue());

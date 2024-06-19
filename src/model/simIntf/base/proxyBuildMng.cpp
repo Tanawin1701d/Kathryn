@@ -84,10 +84,7 @@ namespace kathryn{
     void ProxyBuildMng::setStartModule(Module* startModule){
         _startModule    = startModule;
         moduleSimEngine = startModule->getSimEngine();
-
     }
-
-
 
     void ProxyBuildMng::startWriteModelSim(){
         moduleSimEngine->proxyBuildInit();
@@ -181,8 +178,6 @@ namespace kathryn{
             for (const std::string& varName: result){
                 registerHelper(varName, true);
             }
-
-
         }
 
         proxyfileWriter->addData("}\n");
@@ -319,7 +314,7 @@ namespace kathryn{
 
                 proxyfileWriter->addData("\""+ mpb->getVarName() +"\"");
                 proxyfileWriter->addData(",");
-                proxyfileWriter->addData("&" + mpb->getVarName() + ");\n");
+                proxyfileWriter->addData(mpb->getVarName() + ");\n");
             }
         }
 

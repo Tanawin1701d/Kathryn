@@ -19,12 +19,12 @@ namespace kathryn{
     class ProxySimEventBase: public EventBase{
     protected:
         const std::string   CLK_SIGNAL  = "CLK";
-        ValRep<1>           clkSignal = 0;
+        ull                 clkSignal   = 0;
         MODULE_VCD_REC_POL  VCD_REC_POL = MDE_REC_SKIP;
         VcdWriter*          _vcdWriter = nullptr;
 
-        std::unordered_map<std::string, ValRepBase*>  callBack; //// for mem block use start point
-        std::unordered_map<std::string, ValRepBase*>  callBackPerf;
+        std::unordered_map<std::string, ull*>  callBack; //// for mem block use start point
+        std::unordered_map<std::string, ull*>  callBackPerf;
 
         /////// for flow collection we will let flow model handle this instead
         /// we just collect only data that flow block use
@@ -47,29 +47,25 @@ namespace kathryn{
 
         void setVcdWritePol    (MODULE_VCD_REC_POL vcd_rec_pol){VCD_REC_POL = vcd_rec_pol;}
         void setVcdWriter      (VcdWriter*         vcdWriter  ){_vcdWriter   = vcdWriter;  }
-        void registerToCallBack(const std::string& cbName, ValRepBase* val){
-            assert(val != nullptr && (callBack.find(cbName) == callBack.end()));
-            callBack.insert({cbName, val});
+        void registerToCallBack(const std::string& cbName, ull& val){
+            assert(callBack.find(cbName) == callBack.end());
+            callBack.insert({cbName, &val});
         }
-        void registerToCallBack(const std::string& cbName, ValRepBase& val){
-            registerToCallBack(cbName, &val);
+        void registerToCallBack(const std::string& cbName, ull* val){
+            registerToCallBack(cbName, *val);
         }
-        void registerToCallBackPerf(const std::string& cbName, ValRepBase* val){
-            assert(val != nullptr && (callBackPerf.find(cbName) == callBackPerf.end()));
-            callBackPerf.insert({cbName, val});
-        }
-        void registerToCallBackPerf(const std::string& cbName, ValRepBase& val){
-            registerToCallBackPerf(cbName, &val);
+        void registerToCallBackPerf(const std::string& cbName, ull& val){
+            assert(callBackPerf.find(cbName) == callBackPerf.end());
+            callBackPerf.insert({cbName, &val});
         }
 
-
-        static ValRepBase* getValRepBase(std::unordered_map<std::string, ValRepBase*>& callBackSorce,
-                                  std::string globalName){
+        static ull* getValBase(std::unordered_map<std::string, ull*>& callBackSorce,
+                               const std::string& globalName){
             assert(callBackSorce.find(globalName) != callBackSorce.end());
             return callBackSorce[globalName];
         }
-        ValRepBase*        getValRep    (std::string globalName){return getValRepBase(callBack    , std::move(globalName));}
-        ValRepBase*        getValRepPerf(std::string globalName){return getValRepBase(callBackPerf, std::move(globalName));}
+        ull* getVal    (const std::string& globalName){return getValBase(callBack    , globalName);}
+        ull* getValPerf(const std::string& globalName){return getValBase(callBackPerf, globalName);}
         ////// sim proxy
         virtual void startRegisterCallBack()  = 0;
         virtual void startMainOpEleSim()      = 0;

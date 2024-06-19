@@ -83,6 +83,10 @@ namespace kathryn {
             if (!_varMeta.isUser){ _varMeta.varName += "INTERNAL";}
             _globalName = GLOBAL_PREFIX[type] + std::to_string(_globalId);
 
+            // if (_globalId == 1290){
+            //     mfAssert(false, "dddddd");
+            // }
+
             };
 
         virtual ~Identifiable() = default;

@@ -150,8 +150,8 @@ namespace kathryn{
             std::cout << TC_GREEN << testName << " pass " << TC_DEF << std::endl;
         }else{
             std::cout << TC_RED << testName << " fail expect: "
-                      << testValRhs.getBiStr() << "  got : "
-                      << simValLhs.getBiStr() << TC_DEF << std::endl;
+                      << std::to_string(testValRhs.getVal()) << "  got : "
+                      << std::to_string(simValLhs.getVal())  << TC_DEF << std::endl;
         }
     }
 

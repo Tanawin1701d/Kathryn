@@ -171,9 +171,9 @@ namespace kathryn{
         std::string valSize = std::to_string(_asb->getAssignSlice().getSize());
         if(_master->isWriteMode()){
             std::string indexerSize = std::to_string(_master->getExactIndexSize());
-            return "ValRep<"+valSize+"> "                + getVarName()    + " = " + std::to_string(_initVal) + "; "
-            +      "ValRep<1> "                          + getIsSetVar()   + " = 0;"
-            +      "ValRep<"+indexerSize+"> "            + getIndexerVar() + " = 0;";
+            return "ull " + getVarName()    + " = 0;"
+            +      "ull " + getIsSetVar()   + " = 0;"
+            +      "ull " + getIndexerVar() + " = 0;";
         }
         return "";
     }
@@ -181,7 +181,7 @@ namespace kathryn{
     std::string MemEleHolderSimEngine::createLocalVariable(){
         std::string valSize = std::to_string(_asb->getAssignSlice().getSize());
         if(_master->isReadMode()){
-            return "ValRep<"+valSize+"> " + getVarName() + " = " + std::to_string(_initVal) + "; \n";
+            return "ull " + getVarName() + " = " + std::to_string(_initVal) + "; \n";
         }
         return "";
     }
@@ -220,7 +220,7 @@ namespace kathryn{
         retStr += "     ";
         retStr += getVarName() + " = ";
         retStr += _master->_master->getSimEngine()->getVarName();
-        retStr += "[(ull)" + getVarNameFromOpr(_master->_indexer) + "];\n";
+        retStr += "["+ getSlicedSrcOprFromOpr(_master->_indexer) + "];\n";
         retStr += "     }\n";
         return retStr;
     }
@@ -233,13 +233,13 @@ namespace kathryn{
         ////////////// assign index value
         auxAssVal += "         ";
         auxAssVal += getIndexerVar() + " = " +
-                  getSliceStringFromOpr(_master->_indexer, _master->getExactIndexSize());
+                  getSlicedSrcOprFromOpr(_master->_indexer);
         auxAssVal += ";\n";
 
         ///////// build string
         std::string retStr = "      { /////" + _ident->getGlobalName() + "\n";
         assert(_asb->checkDesIsFullyAssignAndEqual());
-        retStr += genAssignWithChainCondition(auxAssVal);
+        retStr += genOpWithChainCondition(auxAssVal);
         retStr += "     }\n";
         return retStr;
     }
@@ -256,7 +256,7 @@ namespace kathryn{
             ///////////// add value
             retStr += "         ";
             retStr += _master->_master->getSimEngine()->getVarName();
-            retStr += "[(ull)" + getIndexerVar() + "] = " + getVarName() + ";\n";
+            retStr += "[" + getIndexerVar() + "] = " + getVarName() + ";\n";
             ///////////// reset is set
             retStr += "         ";
             retStr += getIsSetVar();

@@ -4,6 +4,9 @@
 
 #include "model/simIntf/base/proxyEventBase.h"
 #include "logicSimEngine.h"
+
+#include <util/numberic/numConvert.h>
+
 #include "sim/controller/simController.h"
 
 
@@ -34,35 +37,131 @@ namespace kathryn{
     }
 
 
-    std::string LogicSimEngine::getVarNameFromOpr(Operable* opr){
+    std::string LogicSimEngine::getSrcOprFromOpr(Operable* opr){
         assert(opr != nullptr);
-        return opr->getExactOperable().getLogicSimEngineFromOpr()->getVarName();
+        return opr->getExactOperable().
+                getLogicSimEngineFromOpr()->genSrcOpr();
     }
 
-    std::string LogicSimEngine::getSliceStringFromOpr(Operable* opr, int fixLength){
+    std::string LogicSimEngine::getSlicedSrcOprFromOpr(Operable* opr){
+        assert(opr != nullptr);
+        LogicSimEngine* simEngine   = opr->getLogicSimEngineFromOpr();
+        Slice           neededSlice = opr->getOperableSlice();
+        ////// slice to operabe slice
+        return simEngine->genSlicedOprTo(neededSlice);
+    }
+
+    std::string getSlicedAndShiftSrcOprFromOpr(Operable* opr, Slice desSlice){
         assert(opr != nullptr);
         LogicSimEngine* simEngine = opr->getLogicSimEngineFromOpr();
         Slice           neededSlice = opr->getOperableSlice();
-        if (fixLength == -1){
-            //////// slice to operabe slice
-            return simEngine->genSliceTo(neededSlice);
+        ////// slice to operabe slice
+        return simEngine->genSlicedOprAndShift(desSlice, neededSlice);
+    }
+
+
+    std::string LogicSimEngine::genOpWithSoleCondition(const std::string& auxAssStr){
+        std::string retStr;
+        for (UpdateEvent* updateEvent: _asb->getUpdateMeta()){
+            ////
+            ///check integrity
+            ///
+            assert(updateEvent->srcUpdateValue->getOperableSlice().getSize() >=
+                   updateEvent->desUpdateSlice.getSize());
+
+            retStr += "         if ( ";
+            bool isConOccur = false;
+
+            if (updateEvent->srcUpdateState != nullptr){
+
+                retStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateState);
+                isConOccur = true;
+            }
+
+            if (updateEvent->srcUpdateCondition != nullptr){
+                if (isConOccur){
+                    retStr += " && ";
+                }
+                retStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateCondition);
+                isConOccur = true;
+
+            }
+
+            if (!isConOccur){
+                retStr += "true";
+            }
+
+            retStr += "){\n         ";
+            retStr += "         ";
+            retStr += genAssignAEqB(updateEvent->desUpdateSlice, _isTempReq, updateEvent->srcUpdateValue) + "\n";
+            if (!auxAssStr.empty()){
+                retStr += auxAssStr + "\n";
+            }
+            retStr += "         }\n";
         }
-        return simEngine->genSliceToWithFixSize(neededSlice, fixLength);
+        return retStr;
+    }
+
+    std::string LogicSimEngine::genOpWithChainCondition(const std::string& auxAssStr){
+
+        bool secondTime = false;
+        std::string retStr;
+        for (auto         updateEventItr  = _asb->getUpdateMeta().rbegin();
+                          updateEventItr != _asb->getUpdateMeta().rend();
+                        ++updateEventItr
+
+        ){
+            UpdateEvent* updateEvent = *updateEventItr;
+            ////
+            ///check integrity
+            ///
+            assert(updateEvent->srcUpdateValue->getOperableSlice().getSize() >=
+                   updateEvent->desUpdateSlice.getSize());
+
+
+            retStr += (secondTime ? "         else if ( " : "         if ( ");
+            bool isConOccur = false;
+
+            if (updateEvent->srcUpdateState != nullptr){
+                retStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateState);
+                isConOccur = true;
+            }
+
+            if (updateEvent->srcUpdateCondition != nullptr){
+                if (isConOccur){
+                    retStr += " && ";
+                }
+                retStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateCondition);
+                isConOccur = true;
+            }
+
+            if (!isConOccur){
+                retStr += "true";
+            }
+
+            retStr += "){\n         ";
+            retStr += "         ";
+            retStr += genAssignAEqB(updateEvent->desUpdateSlice, _isTempReq, updateEvent->srcUpdateValue) + "\n";
+            if (!auxAssStr.empty()){
+                retStr += auxAssStr + "\n";
+            }
+            retStr += "         }\n";
+            secondTime = true;
+        }
+        return retStr;
 
     }
 
     std::string LogicSimEngine::genAssignAEqB(Slice desSlice, bool isDesTemp,
-                                              Operable* srcOpr, bool isShinkSrc){
+                                              Operable* srcOpr){
         assert(srcOpr != nullptr);
-
+        assert(desSlice.stop <= _asb->getAssignSlice().stop);
         ////// src operand
         Slice srcSlice            = srcOpr->getOperableSlice();
-        Slice shinkSrcSlice       = srcSlice.getSubSliceWithShinkMsb({0,
-                                                                        desSlice.getSize()});
         LogicSimEngine*
               srcLogicSimEngine   = srcOpr->getExactOperable().getLogicSimEngineFromOpr();
         Slice baseSrcSlice        = srcOpr->getExactOperable().getOperableSlice();
-        std::string srcVarName    = getVarNameFromOpr(srcOpr);
+        std::string srcVarName    = getSrcOprFromOpr(srcOpr);
 
         assert(srcSlice.getSize() >= desSlice.getSize());
         ////// des operand
@@ -71,55 +170,61 @@ namespace kathryn{
 
         if ((desSlice == baseDesSlice) &&
             (srcSlice == baseSrcSlice) &&
-            (srcSlice == desSlice    ) &&
-            ( (!isShinkSrc) || (isShinkSrc && (srcSlice == shinkSrcSlice))   )
-        ){
+            (srcSlice == desSlice    )){
             ///////// optimize
             return desVarName + " = " + srcVarName + ";";
         }
 
-        int srcStop = (isShinkSrc) ? shinkSrcSlice.stop : srcSlice.stop;
-        return desVarName + ".updateOnSlice<" + std::to_string(desSlice.start) + ", " + std::to_string(desSlice.stop) + ">(" +
-               srcLogicSimEngine->genSliceAndShift(desSlice,{srcSlice.start, srcStop}) + ");";
+
+        std::string ret;
+        std::string mask = cvtNum2HexStr(~(createMask(desSlice) << desSlice.start));
+        /////////////////////// clear old data
+        ret += desVarName + " &= " + mask + ";\n";
+        ret += "        ";
+        ////////////////////// create new data
+        ret += desVarName + " |= " + srcLogicSimEngine->genSlicedOprAndShift(desSlice,srcSlice)  + ";\n";
+        return ret;
     }
 
-    std::string LogicSimEngine::genSliceTo(Slice desSlice){
+    std::string LogicSimEngine::genSrcOpr(){
+        return getVarName();
+    }
+
+    std::string LogicSimEngine::genSlicedOprTo(Slice srcSlice){
+        assert( srcSlice.checkValidSlice() &&
+               (srcSlice.stop <= _asb->getAssignSlice().stop));
         ////// it will automatic shift to 0 index
         ////// des operand
-        Slice       baseDesSlice  = _asb->getAssignSlice();
+        Slice       baseSrcSlice  = _asb->getAssignSlice();
         std::string desVarName    = getVarName();
 
-        if (baseDesSlice == desSlice){
+        if (baseSrcSlice == srcSlice){
             return getVarName();
         }
-        return getVarName() + ".slice<" + std::to_string(desSlice.start) + ", " +
-                                          std::to_string(desSlice.stop) + ">()";
-
+        /// "( %h & ( %s >> %d ) )"
+        std::string mask      = cvtNum2HexStr(createMask(srcSlice));
+        std::string value     = getVarName();
+        std::string shftStart = std::to_string(srcSlice.start);
+        return "( " + mask + " & ( " + value + " >> " + shftStart + " ))";
     }
 
-    std::string LogicSimEngine::genSliceToWithFixSize(Slice desSlice, int fixLength){
-        ////// it will automatic shift to 0 index
-        ////// des operand
-        Slice       baseDesSlice  = _asb->getAssignSlice();
+    std::string LogicSimEngine::genSlicedOprAndShift(Slice desSlice, Slice srcSlice){
+        assert( srcSlice.checkValidSlice() &&
+               (srcSlice.stop <= _asb->getAssignSlice().stop));
+        assert(desSlice.getSize() <= srcSlice.getSize());
+
+        Slice       baseSrcSlice  = _asb->getAssignSlice();
         std::string desVarName    = getVarName();
 
-        if ( (baseDesSlice == desSlice) &&
-             (fixLength == baseDesSlice.getSize())
-        ){
-            return getVarName();
-        }
-        return getVarName() + ".slice<" + std::to_string(desSlice.start) +  ", " +
-                                          std::to_string(desSlice.stop)  +  ", " +
-                                          std::to_string(fixLength)      +  ">()";
+        if ( (baseSrcSlice == srcSlice) &&
+             (baseSrcSlice == desSlice)
+        ){ return getVarName();}
+        /// "( %h & ( %s >> %d ) )"
+        int actualSize = std::min(srcSlice.getSize(), desSlice.getSize());
+        std::string shftToDesStart = std::to_string(desSlice.start);
+        return "( " + genSlicedOprTo({srcSlice.start, srcSlice.start + actualSize})
+               + "<< " + shftToDesStart + ")";
 
-    }
-
-    std::string LogicSimEngine::genSliceAndShift(Slice desSlice, Slice srcSlice){
-        //////// srcSlice is this simEngine
-        return getVarName() + ".sliceAndShift<"
-                            + std::to_string(srcSlice.start) + ", "
-                            + std::to_string(srcSlice.stop) + ", "
-                            + std::to_string(desSlice.start) + ">()";
     }
 
 
@@ -155,7 +260,6 @@ namespace kathryn{
         return {getVarName()};
     }
 
-
     std::string LogicSimEngine::getTempVarName(){
         return getVarName() + TEMP_VAR_SUFFIX;
     }
@@ -164,102 +268,13 @@ namespace kathryn{
 
         std::string valSize = std::to_string(_asb->getAssignSlice().getSize());
 
-        return "ValRep<"+valSize+"> " + getVarName() + " = " + std::to_string(_initVal) + "; "
+        return "ull " + getVarName() + " = " + std::to_string(_initVal) + "; "
                 + (_isTempReq ?
-                   "ValRep<"+valSize+"> " + getVarName() + TEMP_VAR_SUFFIX + " = " + std::to_string(_initVal) + ";":
+                   "ull " + getVarName() + TEMP_VAR_SUFFIX + " = " + std::to_string(_initVal) + ";":
                    "") + "\n";
     }
 
 
-    std::string LogicSimEngine::genAssignWithSoleCondition(std::string auxAssStr){
-        std::string retStr;
-        for (UpdateEvent* updateEvent: _asb->getUpdateMeta()){
-            ////
-            ///check integrity
-            ///
-            assert(updateEvent->srcUpdateValue->getOperableSlice().getSize() >=
-                   updateEvent->desUpdateSlice.getSize());
-
-            retStr += "         if ( ";
-            bool isConOccur = false;
-            if (updateEvent->srcUpdateCondition != nullptr){
-                retStr += getSliceStringFromOpr(updateEvent->srcUpdateCondition);
-                isConOccur = true;
-
-            }
-
-            if (updateEvent->srcUpdateState != nullptr){
-                if (isConOccur){
-                    retStr += " && ";
-                }
-                retStr += getSliceStringFromOpr(updateEvent->srcUpdateState);
-                isConOccur = true;
-            }
-
-            if (!isConOccur){
-                retStr += "true";
-            }
-
-            retStr += "){\n         ";
-            retStr += "         ";
-            retStr += genAssignAEqB(updateEvent->desUpdateSlice, _isTempReq, updateEvent->srcUpdateValue, true) + "\n";
-            if (!auxAssStr.empty()){
-                retStr += auxAssStr + "\n";
-            }
-            retStr += "         }\n";
-        }
-        return retStr;
-    }
-
-    std::string LogicSimEngine::genAssignWithChainCondition(std::string auxAssStr){
-
-        bool secondTime = false;
-        std::string retStr;
-        for (auto         updateEventItr  = _asb->getUpdateMeta().rbegin();
-                          updateEventItr != _asb->getUpdateMeta().rend();
-                        ++updateEventItr
-
-        ){
-            UpdateEvent* updateEvent = *updateEventItr;
-            ////
-            ///check integrity
-            ///
-            assert(updateEvent->srcUpdateValue->getOperableSlice().getSize() >=
-                   updateEvent->desUpdateSlice.getSize());
-
-
-            retStr += (secondTime ? "         else if ( " : "         if ( ");
-            bool isConOccur = false;
-            if (updateEvent->srcUpdateCondition != nullptr){
-                retStr += getSliceStringFromOpr(updateEvent->srcUpdateCondition);
-                isConOccur = true;
-
-            }
-
-            if (updateEvent->srcUpdateState != nullptr){
-                if (isConOccur){
-                    retStr += " && ";
-                }
-                retStr += getSliceStringFromOpr(updateEvent->srcUpdateState);
-                isConOccur = true;
-            }
-
-            if (!isConOccur){
-                retStr += "true";
-            }
-
-            retStr += "){\n         ";
-            retStr += "         ";
-            retStr += genAssignAEqB(updateEvent->desUpdateSlice, _isTempReq, updateEvent->srcUpdateValue, true) + "\n";
-            if (!auxAssStr.empty()){
-                retStr += auxAssStr + "\n";
-            }
-            retStr += "         }\n";
-            secondTime = true;
-        }
-        return retStr;
-
-    }
 
     std::string LogicSimEngine::createOp(){
 
@@ -271,9 +286,9 @@ namespace kathryn{
         }
         /////////// we build from low priority to high priority
         if (_asb->checkDesIsFullyAssignAndEqual()){
-            retStr += genAssignWithChainCondition();
+            retStr += genOpWithChainCondition();
         }else{
-            retStr += genAssignWithSoleCondition();
+            retStr += genOpWithSoleCondition();
         }
 
         retStr += "     }\n";
@@ -289,7 +304,9 @@ namespace kathryn{
     ///////////////////// proxyRetInit
     ///
     void LogicSimEngine::proxyRetInit(ProxySimEventBase* modelSimEvent){
-        proxyRep = modelSimEvent->getValRep(getVarName());
+        proxyRep = new ValRepBase(
+                        _asb->getAssignSlice().getSize(),
+                        *modelSimEvent->getVal(getVarName()));
     }
 
     ValRepBase* LogicSimEngine::getProxyRep(){
