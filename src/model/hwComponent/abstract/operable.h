@@ -26,6 +26,7 @@ namespace kathryn {
     // class LogicComp;
     class expression;
     class LogicSimEngine;
+    class LogicGenBase;
     struct AssignMeta;
 
     class Operable{
@@ -98,6 +99,7 @@ namespace kathryn {
         virtual Operable*       doSlice(Slice sl) = 0; //// sl is abs value
         /** please remind this is a copy not reference value*/
         virtual LogicSimEngine* getLogicSimEngineFromOpr() = 0;
+        virtual LogicGenBase*   getLogicGenBase() = 0;
 
         explicit operator ull();
         explicit operator ValRepBase();

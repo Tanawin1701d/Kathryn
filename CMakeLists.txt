@@ -45,6 +45,25 @@ add_executable(Kathryn
         src/example/riscv/simulation/slotRecorder.cpp
         src/example/riscv/simulation/slotRecorder.h
         src/example/riscv/simulation/autoSimEvent.cpp
+        src/gen/controller/genController.cpp
+        src/gen/controller/genController.h
+        src/gen/proxyHwComp/module/moduleGen.cpp
+        src/gen/proxyHwComp/module/moduleGen.h
+        src/gen/proxyHwComp/register/regGen.cpp
+        src/gen/proxyHwComp/register/regGen.h
+        src/gen/proxyHwComp/abstract/logicGenBase.cpp
+        src/gen/proxyHwComp/abstract/logicGenBase.h
+        src/gen/proxyHwComp/value/valueGen.cpp
+        src/gen/proxyHwComp/value/valueGen.h
+        src/gen/proxyHwComp/wire/wireGen.cpp
+        src/gen/proxyHwComp/wire/wireGen.h
+        src/gen/proxyHwComp/memBlock/memGen.cpp
+        src/gen/proxyHwComp/memBlock/memGen.h
+        src/gen/proxyHwComp/expression/exprGen.cpp
+        src/gen/proxyHwComp/expression/exprGen.h
+        src/gen/proxyHwComp/expression/nestGen.cpp
+        src/gen/proxyHwComp/expression/nestGen.h
+        src/gen/proxyHwComp/abstract/logicCerf.h
 
 
 )
