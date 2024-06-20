@@ -64,6 +64,8 @@ namespace kathryn{
         SliceAgent<Val>& operator() (int idx) override;
         SliceAgent<Val>& operator() (Slice sl) override;
         Operable* doSlice(Slice sl) override;
+        bool      isConstOpr() override{return true;}
+        ull       getConstOpr() override{return _rawValue;}
         Operable* checkShortCircuit() override;
 
 

@@ -106,48 +106,78 @@ namespace kathryn{
 
         bool secondTime = false;
         std::string retStr;
-        for (auto         updateEventItr  = _asb->getUpdateMeta().rbegin();
-                          updateEventItr != _asb->getUpdateMeta().rend();
-                        ++updateEventItr
 
-        ){
-            UpdateEvent* updateEvent = *updateEventItr;
-            ////
-            ///check integrity
-            ///
-            assert(updateEvent->srcUpdateValue->getOperableSlice().getSize() >=
-                   updateEvent->desUpdateSlice.getSize());
+        int idx = 0;
+        int maxUpdateEvent = _asb->getUpdateMeta().size();
+        std::vector<UpdateEvent*> reversedUpdateEvents = _asb->getUpdateMeta();
+        std::reverse(reversedUpdateEvents.begin(), reversedUpdateEvents.end());
+
+        while (idx < maxUpdateEvent){
+            std::vector<UpdateEvent*> updateEventGrp;
+            updateEventGrp.push_back(reversedUpdateEvents[idx]);
+            for (idx = idx+1; idx < maxUpdateEvent; idx++){
+                UpdateEvent& curUpdateEvent = *reversedUpdateEvents[idx];
+                if (curUpdateEvent.priority == updateEventGrp[0]->priority){
+                    if ( curUpdateEvent.srcUpdateValue->isConstOpr() &&
+                         updateEventGrp[0]->srcUpdateValue->isConstOpr() &&
+                          (curUpdateEvent.srcUpdateValue->getConstOpr() ==
+                          updateEventGrp[0]->srcUpdateValue->getConstOpr())
+                    ){
+                        updateEventGrp.push_back(reversedUpdateEvents[idx]);
+                        continue; ///// grp updateEvent for const value
+                    }
+                    if(curUpdateEvent.srcUpdateValue ==
+                             updateEventGrp[0]->srcUpdateValue){
+                        updateEventGrp.push_back(reversedUpdateEvents[idx]);
+                        continue; ///// grp updateEvent for other value
+                    }
+                }
+                break;
+            }
+
+            assert(updateEventGrp[0]->srcUpdateValue->getOperableSlice().getSize() >=
+                   updateEventGrp[0]->desUpdateSlice.getSize());
 
 
             retStr += (secondTime ? "         else if ( " : "         if ( ");
-            bool isConOccur = false;
 
-            if (updateEvent->srcUpdateState != nullptr){
-                retStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateState);
-                isConOccur = true;
-            }
 
-            if (updateEvent->srcUpdateCondition != nullptr){
-                if (isConOccur){
-                    retStr += " && ";
+            for(UpdateEvent* updateEvent: updateEventGrp){
+                retStr += "(";
+                bool isSubConOccur = false;
+                if (updateEvent->srcUpdateState != nullptr){
+                    retStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateState);
+                    isSubConOccur = true;
                 }
-                retStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateCondition);
-                isConOccur = true;
-            }
 
-            if (!isConOccur){
-                retStr += "true";
+                if (updateEvent->srcUpdateCondition != nullptr){
+                    if (isSubConOccur){
+                        retStr += " && ";
+                    }
+                    retStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateCondition);
+                    isSubConOccur = true;
+                }
+
+                if (!isSubConOccur){
+                    retStr += "true";
+                }
+                retStr += ")\n          ";
+                if ((updateEvent) != (*updateEventGrp.rbegin())){
+                    retStr += " || ";
+                }
             }
 
             retStr += "){\n         ";
             retStr += "         ";
-            retStr += genAssignAEqB(updateEvent->desUpdateSlice, _isTempReq, updateEvent->srcUpdateValue) + "\n";
+            retStr += genAssignAEqB(updateEventGrp[0]->desUpdateSlice, _isTempReq, updateEventGrp[0]->srcUpdateValue) + "\n";
             if (!auxAssStr.empty()){
                 retStr += auxAssStr + "\n";
             }
             retStr += "         }\n";
             secondTime = true;
+
         }
+
         return retStr;
 
     }

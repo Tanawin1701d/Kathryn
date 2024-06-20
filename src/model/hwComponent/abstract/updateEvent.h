@@ -31,7 +31,14 @@ namespace kathryn {
         ///priority for circuit if there are attention to update same register at a time 0 is highest 9 is lowest
 
         bool operator < (const UpdateEvent& rhs) const{
-            return priority < rhs.priority;
+            if (priority < rhs.priority){
+                return true;
+            }else if (priority == rhs.priority){
+                if (srcUpdateValue->isConstOpr() && rhs.srcUpdateValue->isConstOpr()){
+                    return srcUpdateValue->getConstOpr() < rhs.srcUpdateValue->getConstOpr();
+                }
+            }
+            return false;
         }
 
         [[nodiscard]] std::string getDebugString() const{

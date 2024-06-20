@@ -104,12 +104,15 @@ namespace kathryn {
 
         /**downcasting*/
         virtual Identifiable*   castToIdent() = 0;
-
         Operable&               getMatchOperable(ull value) const;
 
         /** check logic section*/
         bool isInCheckPath = false;
         virtual Operable*       checkShortCircuit() = 0;
+
+        /** constant value dec*/
+        virtual bool            isConstOpr(){return false;}
+        virtual ull             getConstOpr(){assert(false);}
 
     };
 
