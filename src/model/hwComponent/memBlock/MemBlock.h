@@ -23,6 +23,7 @@ namespace kathryn{
     class MemBlock: public Identifiable,
                     public HwCompControllerItf,
                     public MemSimEngineInterface,
+                    public LogicGenInterface,
                     public ModelDebuggable{
     private:
         const ull DEPTH_SIZE = 0;
@@ -31,6 +32,7 @@ namespace kathryn{
         std::vector<MemBlockEleHolder*> memBlockAgents;
 
         MemSimEngine* memSimEngine = nullptr;
+        LogicGenBase* logicGenBase = nullptr;
 
     public:
         explicit MemBlock(ull depth, int width);
@@ -55,6 +57,7 @@ namespace kathryn{
         }
 
         MemSimEngine* getSimEngine() override{return memSimEngine;}
+        LogicGenBase* getLogicGen() override{return logicGenBase;}
 
     };
 

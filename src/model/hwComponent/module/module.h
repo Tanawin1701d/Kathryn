@@ -10,6 +10,7 @@
 #include <cassert>
 
 
+#include "gen/proxyHwComp/module/moduleGen.h"
 #include "model/hwComponent/globalComponent/globalComponent.h"
 
 
@@ -47,7 +48,8 @@ namespace kathryn{
     class Module : public Identifiable,
                    public HwCompControllerItf,
                    public ModelDebuggable,
-                   public ModuleSimEngineInterface
+                   public ModuleSimEngineInterface,
+                   public ModuleGenInterface
                    {
 
     private:
@@ -70,6 +72,7 @@ namespace kathryn{
         std::vector<Box*>        _userBoxs; //// it contain only head of box in module
 
         ModuleSimEngine*         _moduleSimEngine = nullptr;
+        ModuleGen*               _moduleGenEngine = nullptr;
 
 
         /** when hardware components require data from outside class
@@ -141,6 +144,12 @@ namespace kathryn{
         ModuleSimEngine* getSimEngine() override{
             return _moduleSimEngine;
         }
+
+        ModuleGen* getModuleGen() override{
+            return _moduleGenEngine;
+        }
+
+
 
     };
 

@@ -15,6 +15,7 @@
 #include "model/simIntf/hwComponent/logicSimEngine.h"
 #include "model/debugger/modelDebugger.h"
 #include "util/numberic/numConvert.h"
+#include "gen/proxyHwComp/abstract/logicGenBase.h"
 
 
 namespace kathryn{
@@ -28,9 +29,11 @@ namespace kathryn{
                       public Identifiable,
                       public HwCompControllerItf,
                       public ModelDebuggable,
-                      public LogicSimEngineInterface{
+                      public LogicSimEngineInterface,
+                      public LogicGenInterface{
     protected:
         LogicSimEngine* _simEngine =  nullptr;
+        LogicGenBase*   _genEngine =  nullptr;
 
     public:
 
@@ -51,10 +54,15 @@ namespace kathryn{
 
         virtual ~LogicComp() {
             delete _simEngine;
+            delete _genEngine;
         };
 
         LogicSimEngine* getSimEngine() override{
             return _simEngine;
+        }
+
+        LogicGenBase* getLogicGen() override{
+            return _genEngine;
         }
 
 

@@ -2,6 +2,10 @@
 // Created by tanawin on 20/6/2024.
 //
 
+
+#ifndef KATHRYN_GEN_PROXYHWCOMP_ABSTRCT
+#define KATHRYN_GEN_PROXYHWCOMP_ABSTRCT
+
 #include "model/hwComponent/abstract/assignable.h"
 #include "logicCerf.h"
 
@@ -13,6 +17,7 @@ namespace kathryn{
         ModuleGen*     _mdGenMaster = nullptr;
         logicLocalCef  _cerf{};
         Assignable*    _asb = nullptr;
+
     public:
         explicit LogicGenBase(ModuleGen*    mdGenMaster,
                               logicLocalCef cerf,
@@ -24,10 +29,12 @@ namespace kathryn{
         virtual void routeDep() = 0; ///// do routing
         ///// check zone
 
-        ///////// gen zone
+        ///////// get zone
         virtual std::string getOpr()      = 0;
-        virtual std::string decVariable() = 0;
-        virtual std::string decOp()       = 0;
+        //////// gen zone
+        virtual std::string decIo()             = 0;
+        virtual std::string decVariable()       = 0;
+        virtual std::string decOp()             = 0;
 
 
         ///////// getter
@@ -39,8 +46,15 @@ namespace kathryn{
             return _cerf;
         }
 
+    };
 
-
+    class LogicGenInterface{
+    public:
+        virtual ~LogicGenInterface() = default;
+        virtual LogicGenBase* getLogicGen() = 0;
     };
 
 }
+
+
+#endif

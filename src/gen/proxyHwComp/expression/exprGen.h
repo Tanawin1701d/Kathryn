@@ -4,8 +4,12 @@
 
 #ifndef EXPRESSION_H
 #define EXPRESSION_H
+#include "gen/proxyHwComp/abstract/logicGenBase.h"
 
 namespace kathryn{
+
+
+    class ExpreGen: public LogicGenBase{};
 
 }
 

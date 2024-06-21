@@ -27,7 +27,6 @@ namespace kathryn {
         Operable* srcUpdateValue     = nullptr; /// value to update.
         Slice     desUpdateSlice; /// slice to update must smaller or equal to srcUpdateValue.slice
         int priority = DEFAULT_UE_PRI_MIN;
-        const bool desSliceEqToEvent = false;
         ///priority for circuit if there are attention to update same register at a time 0 is highest 9 is lowest
 
         bool operator < (const UpdateEvent& rhs) const{

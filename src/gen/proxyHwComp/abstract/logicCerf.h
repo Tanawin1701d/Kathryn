@@ -31,6 +31,7 @@ namespace kathryn{
         std::string       userName;
         int               idx = -1;
         Slice             curSl;
+        bool              isIo;
         /** it requrire further check for it dependency**/
     };
 

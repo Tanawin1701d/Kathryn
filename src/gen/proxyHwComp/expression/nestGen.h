@@ -4,9 +4,13 @@
 
 #ifndef NESTGEN_H
 #define NESTGEN_H
+#include "gen/proxyHwComp/abstract/logicGenBase.h"
 
 namespace kathryn{
 
+    class NestGen: public LogicGenBase{
+
+    };
 
 }
 
