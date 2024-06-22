@@ -21,6 +21,7 @@ namespace kathryn{
     /** This class act as constant value */
     class Val: public LogicComp<Val>{
         friend class ValSimEngine;
+        friend class ValueGen;
     protected:
         int    _size;
         ull   _rawValue;

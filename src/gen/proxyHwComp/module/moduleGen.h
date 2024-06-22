@@ -46,7 +46,6 @@ namespace kathryn{
         std::unordered_map<Operable*, int> _autoOutputWireMap;
         std::vector<Wire*>                 _autoOutputWires;
 
-
         std::vector<Wire*>              _userDecInputWires;
         std::vector<Wire*>              _userOutputWires;
 
@@ -69,6 +68,9 @@ namespace kathryn{
                                  std::string (LogicGenBase::*func)(),
                                  FileWriterBase* fileWriter
         );
+
+
+        ///////////// main progress
 
         void startInitEle  ();
         void startRouteEle ();
@@ -94,14 +96,12 @@ namespace kathryn{
         Wire* addAutoIterWire(Operable* realSrc);
         bool  checkIsThereAutoInterWire(Operable* realSrc);
         Wire* getAutoInterWire(Operable* realSrc);
-
-
+        //////////////////////////////////////////////////////////////////
         Operable* routeSrcOprToThisModule(Operable* realSrc);
-
-
-
         int getDept() const{return depthFromGlobalModule;}
-
+        //////////////////////////////////////////////////////////////////
+        /////////////// module genFileName
+        std::string getSubModuleDec(ModuleGen* mdGen);
     };
 
     class ModuleGenInterface{

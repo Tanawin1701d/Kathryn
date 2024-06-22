@@ -3,3 +3,10 @@
 //
 
 #include "memGen.h"
+
+namespace kathryn{
+
+
+
+
+}

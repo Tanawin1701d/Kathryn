@@ -64,6 +64,8 @@ add_executable(Kathryn
         src/gen/proxyHwComp/expression/nestGen.cpp
         src/gen/proxyHwComp/expression/nestGen.h
         src/gen/proxyHwComp/abstract/logicCerf.h
+        src/gen/proxyHwComp/abstract/AssignGen.cpp
+        src/gen/proxyHwComp/abstract/AssignGen.h
 
 
 )

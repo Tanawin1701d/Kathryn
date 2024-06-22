@@ -8,8 +8,28 @@
 
 namespace kathryn{
 
+    class expression;
+    class ExprGen: public LogicGenBase{
 
-    class ExpreGen: public LogicGenBase{};
+    protected:
+        expression* _master = nullptr;
+
+        Operable*   _routedOprA = nullptr;
+        Operable*   _routedOprB = nullptr;
+
+
+    public:
+        explicit ExprGen(ModuleGen*    mdGenMaster,
+                         logicLocalCef cerf,
+                         Assignable*   asb,
+                         expression*   master);
+
+        void routeDep() override;
+
+        std::string decIo() override;
+        std::string decVariable() override;
+        std::string decOp() override;
+    };
 
 }
 

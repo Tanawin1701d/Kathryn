@@ -48,6 +48,7 @@ namespace kathryn{
 
     class nest : public LogicComp<nest>{
         friend class NestSimEngine;
+        friend class NestGen;
         private:
             /** the higher bit is most significant bit*/
             std::vector<NestMeta> _nestList;

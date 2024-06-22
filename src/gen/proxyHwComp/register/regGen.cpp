@@ -3,3 +3,35 @@
 //
 
 #include "regGen.h"
+
+
+namespace kathryn{
+
+    RegGen::RegGen(ModuleGen* mdGenMaster,
+                   logicLocalCef cerf,
+                   Assignable* asb,
+                   Reg* regMaster):
+    AssignGenBase(
+        mdGenMaster,
+        cerf,
+        (Assignable*)regMaster,
+        (Identifiable*)regMaster
+    ),_master(regMaster){}
+
+    std::string RegGen::decIo(){
+        assert(false);
+    }
+
+    std::string RegGen::decVariable(){
+        Slice sl = _master->getOperableSlice();
+        //////////// it act as wire
+        return "reg [" + std::to_string(sl.stop-1) +
+                ": 0] " +getOpr() + ";";
+    }
+
+    std::string RegGen::decOp(){
+        return AssignGenBase::assignOpBase(true);
+    }
+
+
+}

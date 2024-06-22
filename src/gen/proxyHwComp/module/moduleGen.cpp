@@ -147,6 +147,15 @@ namespace kathryn{
 
         recruitLogicGenBase(bridgeVec, _interWires);
         doOpLogicGenAndWrite(_memBlockElePool, LogicGenBase::decVariable, fileWriter);
+        /////////////////////// declare variable for submodule
+        std::vector<LogicGenBase*> outputOfSubModulePool;
+        for (ModuleGen* subMdGen: _subModulePool){
+            recruitLogicGenBase(outputOfSubModulePool,
+                                subMdGen->_autoOutputWires
+            );
+        }
+        doOpLogicGenAndWrite(outputOfSubModulePool, LogicGenBase::decVariable, fileWriter);
+
 
         //////// declare operation initiation
         doOpLogicGenAndWrite(_regPool        , LogicGenBase::decOp, fileWriter);
@@ -159,6 +168,11 @@ namespace kathryn{
 
         recruitLogicGenBase(bridgeVec, _interWires);
         doOpLogicGenAndWrite(_memBlockElePool, LogicGenBase::decOp, fileWriter);
+
+        ////////// declare submodule connectivity
+        for (ModuleGen* subMdGen: _subModulePool){
+            subMdGen->getSubModuleDec(subMdGen);
+        }
 
         //////// end module
 
@@ -342,6 +356,44 @@ namespace kathryn{
 
         return useInputAsModuleGen[0]->getAutoInputWire(realSrc);
     }
+
+    //////////////////////////// get module dec as sub
+    ///
+    std::string ModuleGen::getSubModuleDec(ModuleGen* subMdGen){
+        assert(subMdGen != nullptr);
+
+        std::vector<std::string> retStrs;
+
+        for (Wire* inputWire: subMdGen->_autoInputWires){
+            auto inputWireMeta = inputWire->getUpdateMeta();
+            assert(inputWireMeta.size() == 1);
+            LogicGenBase* curModConOpr = inputWireMeta[0]->srcUpdateValue->getLogicGenBase();
+            retStrs.push_back(
+                curModConOpr->getOpr(inputWireMeta[0]->srcUpdateValue->getOperableSlice()));
+        }
+
+        for (Wire* outputConnectWire: subMdGen->_autoOutputWires){
+            auto lgb = outputConnectWire->getLogicGenBase(); ///// logic gen base
+
+            retStrs.push_back(
+                lgb->getOpr(outputConnectWire->getOperableSlice())
+            );
+        }
+
+        std::string result;
+        bool isFirst = true;
+
+        for (int i = 0; i < ((int)retStrs.size())-1; i++){
+            if (!isFirst){
+                result += ",\n";
+            }
+            result += retStrs[i];
+            isFirst = false;
+        }
+        return result;
+    }
+
+
 
 
 

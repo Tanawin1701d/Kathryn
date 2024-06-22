@@ -1,0 +1,86 @@
+//
+// Created by tanawin on 22/6/2024.
+//
+
+#include "AssignGen.h"
+
+#include "gen/proxyHwComp/module/moduleGen.h"
+
+namespace kathryn{
+
+
+    AssignGenBase::~AssignGenBase(){
+        for (UpdateEvent* ude: translatedUpdateEvent){
+            delete ude;
+        }
+    }
+
+
+    void AssignGenBase::routeDep(){
+
+        assert(_asb != nullptr);
+        _asb->sortUpEventByPriority();
+        for (UpdateEvent* realUde: _asb->getUpdateMeta()){
+            auto* newEvent = new UpdateEvent();
+            if (realUde->srcUpdateCondition != nullptr){
+                Operable* conRouted =
+                    _mdGenMaster->routeSrcOprToThisModule(realUde->srcUpdateCondition);
+                newEvent->srcUpdateCondition = conRouted;
+
+            }
+            if (realUde->srcUpdateState != nullptr){
+                Operable* stateRouted =
+                    _mdGenMaster->routeSrcOprToThisModule(realUde->srcUpdateCondition);
+                newEvent->srcUpdateState = stateRouted;
+            }
+            assert(realUde->srcUpdateValue != nullptr);
+            Operable* updateValueRouted =
+            _mdGenMaster->routeSrcOprToThisModule(realUde->srcUpdateValue);
+            newEvent->srcUpdateValue = updateValueRouted;
+        }
+    }
+
+    std::string AssignGenBase::assignOpBase(bool isClockSen){
+        std::string retStr;
+        retStr += "always @(" +
+        retStr += isClockSen ? "clk" : "*";
+        retStr += ") begin\n";
+
+        for (UpdateEvent* upd: translatedUpdateEvent){
+            bool isStateConOcc = false;
+            retStr += "if ( ";
+            if (upd->srcUpdateState != nullptr){
+                isStateConOcc = true;
+                retStr += getOprStrFromOpr(upd->srcUpdateState);
+            }
+
+            if (upd->srcUpdateCondition != nullptr){
+                if (isStateConOcc){
+                    retStr += " && ";
+                }
+                isStateConOcc = true;
+                retStr += getOprStrFromOpr(upd->srcUpdateCondition);
+            }
+
+            if (!isStateConOcc){
+                retStr += "true";
+            }
+
+            retStr += ") begin\n";
+            retStr += assignmentLine(upd->desUpdateSlice, upd->srcUpdateValue);
+            retStr += "\n";
+            retStr += "end\n";
+
+        }
+        retStr += "end\n";
+        return retStr;
+    }
+
+    std::string AssignGenBase::assignmentLine(Slice desSlice, Operable* srcUpdateValue){
+        assert(srcUpdateValue != nullptr);
+        return getOpr(desSlice) + " <= " + getOprStrFromOpr(srcUpdateValue);
+    }
+
+
+
+}

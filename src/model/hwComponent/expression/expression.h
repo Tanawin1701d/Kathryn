@@ -28,7 +28,8 @@ namespace kathryn {
 
     class expression : public LogicComp<expression>{
     friend class expressionSimEngine;
-    private:
+    friend class ExprGen;
+    protected:
         bool _valueAssinged = false;
         /** metas data that contain bi operation*/
         const LOGIC_OP _op;

@@ -12,12 +12,34 @@ namespace kathryn{
 
     LogicGenBase::LogicGenBase(ModuleGen*    mdGenMaster,
                                logicLocalCef cerf,
-                               Assignable*   asb):
+                               Assignable*   asb,
+                               Identifiable* ident):
 _mdGenMaster(mdGenMaster),
 _cerf(std::move(cerf)),
-_asb(asb){
+_asb(asb),
+_ident(ident){
     assert(mdGenMaster != nullptr);
 }
+
+std::string LogicGenBase::getOprStrFromOpr(Operable* opr){
+    assert(opr != nullptr);
+    return opr->getExactOperable().
+        getLogicGenBase()->getOpr(opr->getOperableSlice());
+}
+
+std::string LogicGenBase::getOpr(){
+        assert(_ident != nullptr);
+        return _ident->getGlobalName();
+}
+
+std::string LogicGenBase::getOpr(Slice sl){
+        if (sl == _asb->getAssignSlice()){
+            return getOpr();
+        }
+        return _ident->getGlobalName() + "[" + std::to_string(sl.stop-1) +
+               ": " + std::to_string(sl.start) + "]";
+    }
+
 
 
 
