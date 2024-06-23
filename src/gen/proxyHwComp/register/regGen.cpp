@@ -9,7 +9,6 @@ namespace kathryn{
 
     RegGen::RegGen(ModuleGen* mdGenMaster,
                    logicLocalCef cerf,
-                   Assignable* asb,
                    Reg* regMaster):
     AssignGenBase(
         mdGenMaster,

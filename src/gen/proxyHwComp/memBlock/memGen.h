@@ -14,18 +14,20 @@ namespace kathryn{
 
     class MemGen: public LogicGenBase{
 
-        MemBlock* _master;
+        MemBlock* _master = nullptr;
 
     public:
         explicit MemGen(ModuleGen* mdGenMaster,
                         logicLocalCef cerf,
                         MemBlock* memBlockMaster);
 
-    };
+        std::string decIo      () override {return "";}
+        std::string decVariable() override;
+        std::string decOp      () override {return "";}
 
-    class MemEleholderGen: public LogicGenBase{
-
     };
+    //
+
 
 
 }

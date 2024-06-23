@@ -66,6 +66,8 @@ add_executable(Kathryn
         src/gen/proxyHwComp/abstract/logicCerf.h
         src/gen/proxyHwComp/abstract/AssignGen.cpp
         src/gen/proxyHwComp/abstract/AssignGen.h
+        src/gen/proxyHwComp/memBlock/memAgentGen.cpp
+        src/gen/proxyHwComp/memBlock/memAgentGen.h
 
 
 )

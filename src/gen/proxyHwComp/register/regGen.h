@@ -19,11 +19,7 @@ protected:
 public:
     RegGen(ModuleGen*    mdGenMaster,
             logicLocalCef cerf,
-            Assignable*   asb,
             Reg*          regMaster);
-
-    std::string getOpr() override;
-    std::string getOpr(Slice sl) override;
 
     std::string decIo()       override;
     std::string decVariable() override;

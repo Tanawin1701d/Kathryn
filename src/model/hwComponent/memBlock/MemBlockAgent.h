@@ -20,6 +20,7 @@ namespace kathryn{
     /**this class is used to hold only one element in each memblock*/
     class MemBlockEleHolder: public LogicComp<MemBlockEleHolder>{
         friend class MemEleHolderSimEngine;
+        friend class MemEleholderGen;
     private:
         ///bool setModeYet = false; /**the goal of setMode is to prevent duplicate read write in the same index*/
         bool readMode = true; /**Therefore, we should know that if it did not set mode it may be read mode*/
@@ -77,6 +78,9 @@ namespace kathryn{
         /** debug method to do will will make debug string more delightful*/
         std::string getMdDescribe() override {return Identifiable::getIdentDebugValue();}
         std::string getMdIdentVal() override {return Identifiable::getIdentDebugValue();}
+
+        Operable*   getIndexer(){ assert(_indexer != nullptr); return _indexer;}
+        MemBlock*   getMasterMemBlk(){assert(_master != nullptr); return _master;}
 
     };
 

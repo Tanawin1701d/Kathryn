@@ -19,9 +19,6 @@ namespace kathryn{
                 logicLocalCef cerf,
                 Wire*         wireMaster);
 
-        std::string getOpr() override;
-        std::string getOpr(Slice sl) override;
-
         std::string decIo()       override;
         std::string decVariable() override;
         std::string decOp()       override;
