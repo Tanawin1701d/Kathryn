@@ -123,7 +123,7 @@ namespace kathryn {
             );
         }
 
-        SliceAgent<T>& operator = (Operable& b)     { AssignOpr<SliceAgent<T>>::operatorEq(b);      return *this;}
+        SliceAgent<T>& operator = (Operable& b)     { AssignOpr<SliceAgent<T>>::operatorEq(b);   return *this;}
         SliceAgent<T>& operator = (ull b)           { AssignOpr<SliceAgent<T>>operatorEq(b);        return *this;}
         SliceAgent<T>& operator = (SliceAgent<T>& b){ if (this == &b){return *this;} operatorEq(b); return *this;}
 

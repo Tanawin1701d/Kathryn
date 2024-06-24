@@ -9,12 +9,20 @@
 
 namespace kathryn{
 
+    enum WIRE_IO_TYPE{
+        WIRE_IO_INPUT,
+        WIRE_IO_OUTPUT,
+        WIRE_IO_INTER
+    };
+
     class WireIo: public Wire{
 
-        bool _isInput;
+    protected:
+
+        WIRE_IO_TYPE _wireIoType;
 
     public:
-        WireIo(int size, bool isInput);
+        WireIo(int size, WIRE_IO_TYPE wireIoType);
 
         void buildHierarchy(Module* masterModule);
 
@@ -33,6 +41,9 @@ namespace kathryn{
                     })
             );
         }
+
+        [[nodiscard]]
+        WIRE_IO_TYPE getWireIoType()const{return _wireIoType;}
     };
 
 }

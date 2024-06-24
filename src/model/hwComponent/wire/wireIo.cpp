@@ -6,9 +6,9 @@
 
 namespace kathryn{
 
-    WireIo::WireIo(int size, bool isInput):
+    WireIo::WireIo(int size, WIRE_IO_TYPE wireIoType):
     Wire(size, false, false),
-    _isInput(isInput){}
+    _wireIoType(wireIoType){}
 
     void WireIo::buildHierarchy(Module* masterModule){
         assert(masterModule != nullptr);

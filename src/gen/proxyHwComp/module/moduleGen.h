@@ -17,6 +17,7 @@
 #include "model/hwComponent/value/value.h"
 #include "model/hwComponent/expression/nest.h"
 #include "model/flowBlock/abstract/spReg/waitReg.h"
+#include "model/hwComponent/wire/wireIo.h"
 
 
 namespace kathryn{
@@ -39,12 +40,13 @@ namespace kathryn{
         std::vector<ModuleGen*>     _subModulePool;
 
         std::unordered_map<Operable*, int> _interWireMap;
-        std::vector<Wire*>              _interWires;
+        std::vector<WireIo*>                 _interWires;
 
         std::unordered_map<Operable*, int> _autoInputWireMap;
-        std::vector<Wire*>                 _autoInputWires;
+        std::vector<WireIo*>                 _autoInputWires;
+
         std::unordered_map<Operable*, int> _autoOutputWireMap;
-        std::vector<Wire*>                 _autoOutputWires;
+        std::vector<WireIo*>                 _autoOutputWires;
 
         std::vector<Wire*>              _userDecInputWires;
         std::vector<Wire*>              _userOutputWires;
@@ -86,26 +88,28 @@ namespace kathryn{
         void startWriteFile(FileWriterBase* fileWriter);
 
         ////////////// io operation
-        Wire* addAutoWireBase  (Operable* opr,
+        WireIo* addAutoWireBase  (Operable* opr,
                                     Operable* realSrc,
-                                    std::vector<Wire*>& ioVec,
+                                    std::vector<WireIo*>& ioVec,
                                     std::unordered_map<Operable*, int>& ioMap,
-                                    const std::string& wireName);
+                                    const std::string& wireName,
+                                    WIRE_IO_TYPE wireIoType,
+                                    bool connectTheWire = true);
 
         //////////////////////////////////////////////////////////////////////
-        Operable* addAutoInputWire (Operable* opr, Operable* realSrc);
+        WireIo* addAutoInputWire (Operable* opr, Operable* realSrc);
         bool      checkIsThereAutoInputWire  (Operable* realSrc);
-        Operable* getAutoInputWire(Operable* realSrc);
+        WireIo* getAutoInputWire(Operable* realSrc);
         //////////////////////////////////////////////////////////////////////
-        Operable* addAutoOutputWire(Operable* opr, Operable* realSrc);
+        WireIo* addAutoOutputWire(Operable* opr, Operable* realSrc);
         bool      checkIsThereAutoOutputWire(Operable* realSrc);
-        Operable* getAutoOutputWire(Operable* realSrc);
+        WireIo* getAutoOutputWire(Operable* realSrc);
         //////////////////////////////////////////////////////////////////
-        Wire* addAutoIterWire(Operable* realSrc);
+        WireIo* addAutoInterWire(Operable* realSrc);
         bool  checkIsThereAutoInterWire(Operable* realSrc);
-        Wire* getAutoInterWire(Operable* realSrc);
+        WireIo* getAutoInterWire(Operable* realSrc);
         //////////////////////////////////////////////////////////////////
-        Operable* routeSrcOprToThisModule(Operable* realSrc);
+        Operable* routeSrcOprToThisModule(Operable* exactRealSrc);
         int getDept() const{return depthFromGlobalModule;}
         //////////////////////////////////////////////////////////////////
         /////////////// module genFileName
