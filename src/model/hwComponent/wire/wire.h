@@ -8,6 +8,7 @@
 #include<iostream>
 #include "model/hwComponent/abstract/logicComp.h"
 #include "model/controller/conInterf/controllerItf.h"
+#include "gen/proxyHwComp/wire/wireGen.h"
 
 namespace kathryn{
 
@@ -49,7 +50,8 @@ namespace kathryn{
         void makeDefEvent();
         Operable* checkShortCircuit() override;
 
-
+        /**override logicc gen base*/
+        void createLogicGen() override;
     };
 
     class WireSimEngine: public LogicSimEngine{

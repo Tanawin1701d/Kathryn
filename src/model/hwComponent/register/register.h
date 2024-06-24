@@ -7,6 +7,7 @@
 
 #include "model/hwComponent/abstract/logicComp.h"
 #include "model/controller/conInterf/controllerItf.h"
+#include "gen/proxyHwComp/register/regGen.h"
 
 namespace kathryn{
 
@@ -55,6 +56,9 @@ namespace kathryn{
         void makeResetEvent();
         /** return type*/
         Operable* checkShortCircuit() override;
+
+        /**override logicc gen base*/
+        void createLogicGen() override;
     };
 
     class RegSimEngine: public LogicSimEngine{

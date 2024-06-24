@@ -13,6 +13,8 @@
 #include <utility>
 #include "model/controller/conInterf/controllerItf.h"
 #include "model/hwComponent/abstract/logicComp.h"
+#include "gen/proxyHwComp/expression/nestGen.h"
+
 
 
 
@@ -103,6 +105,9 @@ namespace kathryn{
 
             /** check short circuit*/
             Operable* checkShortCircuit() override;
+
+            /**override logicc gen base*/
+            void createLogicGen() override;
 
     };
 

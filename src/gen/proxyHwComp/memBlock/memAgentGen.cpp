@@ -58,10 +58,20 @@ namespace kathryn{
     }
 
 
-    std::string a
+    std::string MemEleholderGen::assignmentLine(
+        Slice desSlice,
+        Operable* srcUpdateValue
+    ){
+        /////////// it only used in write
+        assert(desSlice == _master->getOperableSlice());
+        assert(srcUpdateValue != nullptr);
 
+        std::string   masterMemBlkOpr = _master->getMasterMemBlk()
+                                        ->getLogicGen()->getOpr();
+        std::string   indexerOpr      = getOprStrFromOpr(routedIndexer);
 
-
-
+        return masterMemBlkOpr + "[" + indexerOpr + "] <= " +
+            getOprStrFromOpr(srcUpdateValue) + ";";
+    }
 
 }

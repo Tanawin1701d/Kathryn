@@ -11,6 +11,7 @@
 #include "model/hwComponent/abstract/slicable.h"
 #include "model/simIntf/hwComponent/logicSimEngine.h"
 #include "model/hwComponent/abstract/logicComp.h"
+#include "gen/proxyHwComp/memBlock/memAgentGen.h"
 
 namespace kathryn{
 
@@ -81,6 +82,9 @@ namespace kathryn{
 
         Operable*   getIndexer(){ assert(_indexer != nullptr); return _indexer;}
         MemBlock*   getMasterMemBlk(){assert(_master != nullptr); return _master;}
+
+        /**override logicc gen base*/
+        void createLogicGen() override;
 
     };
 

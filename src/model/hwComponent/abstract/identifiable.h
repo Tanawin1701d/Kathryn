@@ -61,7 +61,7 @@ namespace kathryn {
 
     class Module;
     class Identifiable: public IdentBase {
-    private:
+    protected:
         const std::string UNNAME_STR = "unnamed";
         /** name type such as Reg Wire ModuleClassName*/
         HW_COMPONENT_TYPE _type;

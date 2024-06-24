@@ -15,7 +15,15 @@
 #include "model/simIntf/hwComponent/logicSimEngine.h"
 #include "model/debugger/modelDebugger.h"
 #include "util/numberic/numConvert.h"
+
 #include "gen/proxyHwComp/abstract/logicGenBase.h"
+// #include "gen/proxyHwComp/expression/exprGen.h"
+// #include "gen/proxyHwComp/expression/nestGen.h"
+// #include "gen/proxyHwComp/register/regGen.h"
+// #include "gen/proxyHwComp/value/valueGen.h"
+// #include "gen/proxyHwComp/wire/wireGen.h"
+// #include "gen/proxyHwComp/memBlock/memGen.h"
+// #include "gen/proxyHwComp/memBlock/memAgentGen.h"
 
 
 namespace kathryn{

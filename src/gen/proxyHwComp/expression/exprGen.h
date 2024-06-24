@@ -21,7 +21,6 @@ namespace kathryn{
     public:
         explicit ExprGen(ModuleGen*    mdGenMaster,
                          logicLocalCef cerf,
-                         Assignable*   asb,
                          expression*   master);
 
         void routeDep() override;

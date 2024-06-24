@@ -90,14 +90,29 @@ namespace kathryn{
             rstWire,
             &rstRegVal,
             {0, getSlice().getSize()},
-            DEFAULT_UE_PRI_RST,
-            true
+            DEFAULT_UE_PRI_RST
         });
         addUpdateMeta(rstEvent);
     }
 
     Operable* Reg::checkShortCircuit(){
         return nullptr;
+    }
+
+
+    void Reg::createLogicGen(){
+        _genEngine = new RegGen(
+            _parent->getModuleGen(),
+            {
+                getType(),
+                GEN_REG_GRP,
+                getGlobalName(),
+                -1,
+                getOperableSlice(),
+                false
+            },
+            this
+        );
     }
 
     /**

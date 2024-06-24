@@ -11,7 +11,6 @@ namespace kathryn{
 
     ExprGen::ExprGen(ModuleGen*    mdGenMaster,
                      logicLocalCef cerf,
-                     Assignable*   asb,
                      expression*   master):
         LogicGenBase(mdGenMaster,
                      std::move(cerf),

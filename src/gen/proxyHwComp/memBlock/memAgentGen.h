@@ -5,8 +5,6 @@
 #ifndef MEMAGENTGEN_H
 #define MEMAGENTGEN_H
 
-#include"model/hwComponent/memBlock/MemBlockAgent.h"
-
 #include"gen/proxyHwComp/abstract/AssignGen.h"
 
 

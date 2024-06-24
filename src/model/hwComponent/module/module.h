@@ -145,6 +145,8 @@ namespace kathryn{
             return _moduleSimEngine;
         }
 
+        void createModuleGen() override;
+
         ModuleGen* getModuleGen() override{
             return _moduleGenEngine;
         }

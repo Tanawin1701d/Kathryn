@@ -67,8 +67,7 @@ namespace kathryn{
                                                     nullptr,
                                                     &defWireVal,
                                                     {0, getSlice().getSize()},
-                                                    DEFAULT_UE_PRI_MIN,
-                                                    true
+                                                    DEFAULT_UE_PRI_MIN
                                             });
 
             addUpdateMeta(defEvent);
@@ -111,6 +110,23 @@ namespace kathryn{
 
         isInCheckPath = false;
         return nullptr;
+    }
+
+    void Wire::createLogicGen(){
+        assert(_parent->getModuleGen() == nullptr);
+
+        _genEngine = new WireGen(
+            _parent->getModuleGen(),
+            {
+                getType(),
+                GEN_WIRE_GRP,
+                getGlobalName(),
+                -1,
+                getOperableSlice(),
+                false
+            },
+            this
+        );
     }
 
     /**

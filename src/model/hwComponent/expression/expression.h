@@ -13,6 +13,7 @@
 
 #include "model/controller/conInterf/controllerItf.h"
 #include "model/hwComponent/abstract/logicComp.h"
+#include "gen/proxyHwComp/expression/exprGen.h"
 
 
 /**
@@ -99,6 +100,8 @@ namespace kathryn {
 
         /**check short*/
         Operable* checkShortCircuit() override;
+
+        void createLogicGen() override;
 
     };
 

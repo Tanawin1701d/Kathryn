@@ -3,6 +3,8 @@
 //
 
 #include "MemBlock.h"
+
+#include "gen/proxyHwComp/memBlock/memGen.h"
 #include "model/controller/controller.h"
 
 namespace kathryn{
@@ -50,5 +52,19 @@ namespace kathryn{
         return (*getSimEngine()->getProxyRep())[idx];
     }
 
+    void MemBlock::createLogicGen(){
+        _genEngine = new MemGen(
+            _parent->getModuleGen(),
+            {
+                getType(),
+                GEN_MEMBLK_GRP,
+                getGlobalName(),
+                -1,
+                {0, getWidthSize()},
+                false
+            },
+            this
+        );
+    }
 
 }

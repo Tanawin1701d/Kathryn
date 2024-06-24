@@ -21,6 +21,8 @@ namespace kathryn{
                         logicLocalCef cerf,
                         MemBlock* memBlockMaster);
 
+        void routeDep() override{};
+
         std::string decIo      () override {return "";}
         std::string decVariable() override;
         std::string decOp      () override {return "";}

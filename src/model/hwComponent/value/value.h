@@ -10,11 +10,10 @@
 
 #include "model/hwComponent/abstract/assignable.h"
 #include "model/hwComponent/abstract/operable.h"
-#include "model/hwComponent/abstract/identifiable.h"
-#include "model/controller/conInterf/controllerItf.h"
 #include "model/hwComponent/abstract/slicable.h"
 #include "model/hwComponent/abstract/logicComp.h"
 #include "util/numberic/numConvert.h"
+#include "gen/proxyHwComp/value/valueGen.h"
 
 namespace kathryn{
 
@@ -68,6 +67,9 @@ namespace kathryn{
         bool      isConstOpr() override{return true;}
         ull       getConstOpr() override{return _rawValue;}
         Operable* checkShortCircuit() override;
+
+        /**override logicc gen base*/
+        void createLogicGen() override;
 
 
     };

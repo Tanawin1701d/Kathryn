@@ -6,15 +6,16 @@
 #define KATHRYN_MEMBLOCK_H
 
 #include <map>
-#include <model/simIntf/hwComponent/memSimEngine.h>
 
 #include "model/hwComponent/abstract/identifiable.h"
 #include "model/controller/conInterf/controllerItf.h"
 #include "model/simIntf/base/modelSimEngine.h"
 #include "model/debugger/modelDebugger.h"
 #include "model/hwComponent/abstract/operable.h"
-#include "util/numberic/pmath.h"
 #include "model/simIntf/hwComponent/memSimEngine.h"
+#include "util/numberic/pmath.h"
+#include "gen/proxyHwComp/memBlock/memGen.h"
+
 #include "MemBlockAgent.h"
 
 
@@ -32,7 +33,7 @@ namespace kathryn{
         std::vector<MemBlockEleHolder*> memBlockAgents;
 
         MemSimEngine* memSimEngine = nullptr;
-        LogicGenBase* logicGenBase = nullptr;
+        LogicGenBase* _genEngine = nullptr;
 
     public:
         explicit MemBlock(ull depth, int width);
@@ -56,8 +57,11 @@ namespace kathryn{
             return getIdentDebugValue();
         }
 
+
         MemSimEngine* getSimEngine() override{return memSimEngine;}
-        LogicGenBase* getLogicGen() override{return logicGenBase;}
+
+        void          createLogicGen() override;
+        LogicGenBase* getLogicGen() override{return _genEngine;}
 
     };
 

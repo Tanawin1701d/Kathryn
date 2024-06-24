@@ -52,9 +52,17 @@ namespace kathryn{
         explicit ModuleGen(Module* master);
 
         template<typename T>
+        void createLogicGenBase(std::vector<T*>& srcs);
+
+        template<typename T>
         void recruitLogicGenBase(std::vector<LogicGenBase*>& des,
                                  std::vector<T*>& srcs
         );
+
+        template<typename T>
+        void createAndRecruitLogicGenBase(std::vector<LogicGenBase*>& des,
+                                 std::vector<T*>& srcs);
+
         void doOpLogicGenVec(std::vector<LogicGenBase*>& des,
                              void (LogicGenBase::*func)());
         // std::vector<std::string>
@@ -107,6 +115,7 @@ namespace kathryn{
     class ModuleGenInterface{
     public:
         virtual ~ModuleGenInterface() = default;
+        virtual void       createModuleGen() = 0;
         virtual ModuleGen* getModuleGen() = 0;
 
     };

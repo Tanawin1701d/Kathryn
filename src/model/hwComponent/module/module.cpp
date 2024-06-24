@@ -35,6 +35,9 @@ namespace kathryn{
         deleteSubElement(_userSubModules);
         deleteSubElement(_userBoxs);
 
+        delete _moduleSimEngine;
+        delete _moduleGenEngine;
+
     }
 
     void Module::com_init() {
@@ -185,6 +188,11 @@ namespace kathryn{
         return "";
 
     }
+
+    void Module::createModuleGen(){
+        _moduleGenEngine = new ModuleGen(_parent);
+    }
+
 
     void Module::addMdLog(MdLogVal *mdLogVal) {
         mdLogVal->addVal("[ " + getMdIdentVal() + " ]");

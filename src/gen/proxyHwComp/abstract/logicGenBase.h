@@ -59,8 +59,9 @@ namespace kathryn{
 
     class LogicGenInterface{
     public:
-        virtual ~LogicGenInterface() = default;
-        virtual LogicGenBase* getLogicGen() = 0;
+        virtual               ~LogicGenInterface() = default;
+        virtual void          createLogicGen()     = 0;
+        virtual LogicGenBase* getLogicGen()        = 0;
     };
 
 }

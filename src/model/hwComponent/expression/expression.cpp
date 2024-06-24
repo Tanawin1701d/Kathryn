@@ -102,6 +102,22 @@ namespace kathryn{
         return nullptr;
     }
 
+    void expression::createLogicGen(){
+        _genEngine = new ExprGen(
+            _parent->getModuleGen(),
+            {
+                getType(),
+                GEN_EXPRE_GRP,
+                getGlobalName(),
+                -1,
+                getOperableSlice(),
+                false
+            },
+            this
+        );
+    }
+
+
 
     /**
      *

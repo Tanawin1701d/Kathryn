@@ -143,6 +143,21 @@ namespace kathryn{
         return x.castToOperable();
     }
 
+    void MemBlockEleHolder::createLogicGen(){
+        _genEngine = new MemEleholderGen(
+            _parent->getModuleGen(),
+            {
+                getType(),
+                GEN_MEMBLK_ELE_GRP,
+                getGlobalName(),
+                -1,
+                getOperableSlice(),
+                false
+            },
+            this
+        );
+    }
+
     /**
      *
      * MemEleSimEngine

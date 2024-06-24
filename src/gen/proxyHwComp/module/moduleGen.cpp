@@ -11,6 +11,13 @@
 namespace kathryn{
 
     template<typename T>
+    void ModuleGen::createLogicGenBase(std::vector<T*>& srcs){
+        for(T* src: srcs){
+            src->createLogicGen();
+        }
+    }
+
+    template<typename T>
     void ModuleGen::recruitLogicGenBase(std::vector<LogicGenBase*>& des,
                                  std::vector<T*>& srcs){
         for(T* src: srcs){
@@ -18,6 +25,14 @@ namespace kathryn{
             assert(logicGenBase != nullptr);
             des.push_back(logicGenBase);
         }
+    }
+
+    template<typename T>
+    void ModuleGen::createAndRecruitLogicGenBase(
+        std::vector<LogicGenBase*>& des,
+        std::vector<T*>& srcs){
+        createLogicGenBase(srcs);
+        recruitLogicGenBase(des, srcs);
     }
 
     void ModuleGen::doOpLogicGenVec(
@@ -69,20 +84,20 @@ namespace kathryn{
     void ModuleGen::startInitEle(){
 
         for (int spIdx = 0; spIdx < SP_CNT_REG; spIdx++){
-            recruitLogicGenBase(
+            createAndRecruitLogicGenBase(
                 _regPool,
                 _master->getSpRegs((SP_REG_TYPE)spIdx));
         }
-        recruitLogicGenBase(_regPool, _master->getUserRegs());
-        recruitLogicGenBase(_wirePool,_master->getUserWires());
-        recruitLogicGenBase(_exprPool,_master->getUserExpressions());
-        recruitLogicGenBase(_nestPool,_master->getUserNests());
-        recruitLogicGenBase(_valPool, _master->getUserVals());
+        createAndRecruitLogicGenBase(_regPool, _master->getUserRegs());
+        createAndRecruitLogicGenBase(_wirePool,_master->getUserWires());
+        createAndRecruitLogicGenBase(_exprPool,_master->getUserExpressions());
+        createAndRecruitLogicGenBase(_nestPool,_master->getUserNests());
+        createAndRecruitLogicGenBase(_valPool, _master->getUserVals());
 
-        recruitLogicGenBase(_memBlockPool, _master->getUserMemBlks());
+        createAndRecruitLogicGenBase(_memBlockPool, _master->getUserMemBlks());
 
         for (MemBlock* memBlock: _master->getUserMemBlks()){
-            recruitLogicGenBase(_memBlockElePool, memBlock->getMemBlockAgents());
+            createAndRecruitLogicGenBase(_memBlockElePool, memBlock->getMemBlockAgents());
         }
 
         for (Module* subModule: _master->getUserSubModules()){
