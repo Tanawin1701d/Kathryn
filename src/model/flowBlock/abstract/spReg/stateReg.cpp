@@ -13,7 +13,7 @@ namespace kathryn {
         ctrl->on_sp_reg_init(this, SP_STATE_REG);
     }
 
-    StateReg::StateReg(bool rstReq): CtrlFlowRegBase(        1,
+    StateReg::StateReg(bool rstReq): CtrlFlowRegBase(1,
                                                   false,
                                                   TYPE_STATE_REG,
                                                   false),
@@ -30,8 +30,8 @@ namespace kathryn {
                                        dependState,
                                        &upFullState,
                                        Slice({0, 1}),
-                                       DEFAULT_UE_PRI_INTERNAL_MAX,
-                                       true});
+                                       DEFAULT_UE_PRI_INTERNAL_MAX
+                                       });
         addUpdateMeta(event);
         return event;
     }
@@ -42,8 +42,7 @@ namespace kathryn {
             this,
             &downFullState,
             Slice({0, getSlice().getSize()}),
-            DEFAULT_UE_PRI_INTERNAL_MIN,
-            true
+            DEFAULT_UE_PRI_INTERNAL_MIN
         });
         addUpdateMeta(event);
     }

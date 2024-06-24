@@ -4,7 +4,7 @@
 
 #include "moduleGen.h"
 
-#include <model/hwComponent/module/module.h>
+#include "model/hwComponent/module/module.h"
 
 #include "gen/proxyHwComp/abstract/logicGenBase.h"
 
@@ -83,6 +83,15 @@ namespace kathryn{
 
     void ModuleGen::startInitEle(){
 
+
+        //////// init the sub module elements first
+        for (Module* subModule: _master->getUserSubModules()){
+            subModule->createModuleGen();
+            subModule->getModuleGen()->startInitEle();
+            _subModulePool.push_back(subModule->getModuleGen());
+        }
+
+        //////// init all logic element wo test
         for (int spIdx = 0; spIdx < SP_CNT_REG; spIdx++){
             createAndRecruitLogicGenBase(
                 _regPool,
@@ -100,14 +109,7 @@ namespace kathryn{
             createAndRecruitLogicGenBase(_memBlockElePool, memBlock->getMemBlockAgents());
         }
 
-        for (Module* subModule: _master->getUserSubModules()){
-            _subModulePool.push_back(subModule->getModuleGen());
-        }
-
     }
-
-
-
 
     void ModuleGen::startRouteEle(){
 
@@ -196,7 +198,7 @@ namespace kathryn{
 
 
     Wire* ModuleGen::addAutoWireBase(
-        Operable* opr,
+        Operable* opr,      /////////
         Operable* realSrc,
         std::vector<Wire*>& ioVec,
         std::unordered_map<Operable*, int>& ioMap,

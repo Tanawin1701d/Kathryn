@@ -73,6 +73,10 @@ namespace kathryn{
             return _genEngine;
         }
 
+        LogicGenBase* getLogicGenBase() override{
+            return _genEngine;
+        }
+
 
         /** iterable override*/
 

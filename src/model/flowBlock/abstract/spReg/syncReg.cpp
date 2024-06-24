@@ -35,8 +35,8 @@ namespace kathryn {
                                        dependState,
                                        &upState,
                                        Slice({nextFillActivateId, nextFillActivateId + 1}),
-                                       DEFAULT_UE_PRI_INTERNAL_MAX,
-                                       false});
+                                       DEFAULT_UE_PRI_INTERNAL_MAX
+        });
         addUpdateMeta(event);
         ////// assign observe wire
         auto* testEvent = new UpdateEvent({
@@ -44,8 +44,7 @@ namespace kathryn {
             dependState,
             &upState,
             Slice({nextFillActivateId, nextFillActivateId + 1}),
-            DEFAULT_UE_PRI_INTERNAL_MAX,
-            false
+            DEFAULT_UE_PRI_INTERNAL_MAX
         });
         testWire.addUpdateMeta(testEvent);
 
@@ -63,8 +62,7 @@ namespace kathryn {
             &(((*this) | testWire) == upFullState),
             &downFullState,
             Slice({0, getSlice().getSize()}),
-            DEFAULT_UE_PRI_INTERNAL_MIN,
-            true
+            DEFAULT_UE_PRI_INTERNAL_MIN
         });
         addUpdateMeta(event);
     }
@@ -76,8 +74,7 @@ namespace kathryn {
           userRst,
           &downFullState,
           Slice({0, getSlice().getSize()}),
-          DEFAULT_UE_PRI_INTERNAL_MIN, ////// we priority set event first rst must be lower
-          true
+          DEFAULT_UE_PRI_INTERNAL_MIN////// we priority set event first rst must be lower
                                       });
         addUpdateMeta(event);
     }

@@ -10,13 +10,17 @@
 namespace kathryn{
 
 
-    Wire::Wire(int size, bool requireDefVal) : LogicComp({0, size},
+    Wire::Wire(int size,
+        bool requireDefVal,
+        bool initCom) : LogicComp({0, size},
                                      TYPE_WIRE,
                                      new WireSimEngine(this, VST_WIRE),
                                      true),
                                      _requireDefVal(requireDefVal)
     {
-        com_init();
+        if (com_init){
+            com_init();
+        }
         AssignOpr::setMaster(this);
         AssignCallbackFromAgent::setMaster(this);
     }
