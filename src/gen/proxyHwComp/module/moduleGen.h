@@ -4,7 +4,7 @@
 
 #ifndef MODULEGEN_H
 #define MODULEGEN_H
-#include "unordered_map";
+#include "unordered_map"
 #include "gen/proxyHwComp/expression/exprGen.h"
 #include "gen/proxyHwComp/expression/nestGen.h"
 #include "gen/proxyHwComp/register/regGen.h"
@@ -29,13 +29,13 @@ namespace kathryn{
         Module* _master           = nullptr;
         int depthFromGlobalModule = 0;
     public:
-        std::vector<LogicGenBase*>   _regPool;
-        std::vector<LogicGenBase*>   _wirePool;
-        std::vector<LogicGenBase*>   _exprPool;
-        std::vector<LogicGenBase*>   _nestPool;
-        std::vector<LogicGenBase*>   _valPool;
-        std::vector<LogicGenBase*>   _memBlockPool;
-        std::vector<LogicGenBase*>   _memBlockElePool;
+        LogicGenBaseVec   _regPool;
+        LogicGenBaseVec   _wirePool;
+        LogicGenBaseVec   _exprPool;
+        LogicGenBaseVec   _nestPool;
+        LogicGenBaseVec   _valPool;
+        LogicGenBaseVec   _memBlockPool;
+        LogicGenBaseVec   _memBlockElePool;
 
         std::vector<ModuleGen*>      _subModulePool;
 
@@ -57,28 +57,13 @@ namespace kathryn{
         void createLogicGenBase(std::vector<T*>& srcs);
 
         template<typename T>
-        void recruitLogicGenBase(std::vector<LogicGenBase*>& des,
+        void recruitLogicGenBase(LogicGenBaseVec& des,
                                  std::vector<T*>& srcs
         );
 
         template<typename T>
-        void createAndRecruitLogicGenBase(std::vector<LogicGenBase*>& des,
+        void createAndRecruitLogicGenBase(LogicGenBaseVec& des,
                                  std::vector<T*>& srcs);
-
-        void doOpLogicGenVec(std::vector<LogicGenBase*>& src,
-                             void (LogicGenBase::*func)());
-        void
-        doOpLogicGenVec(std::vector<std::string>&   result,
-                        std::vector<LogicGenBase*>& src,
-                        std::string (LogicGenBase::*func)());
-
-        void doOpLogicGenAndWrite(std::vector<LogicGenBase*>& src,
-                                 std::string (LogicGenBase::*func)(),
-                                 FileWriterBase* fileWriter,
-                                 const std::string& seperator = ""
-        );
-
-
         ///////////// main progress
 
         void startInitEle  ();

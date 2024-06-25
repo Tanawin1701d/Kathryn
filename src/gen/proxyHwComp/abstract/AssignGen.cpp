@@ -30,13 +30,15 @@ namespace kathryn{
             }
             if (realUde->srcUpdateState != nullptr){
                 Operable* stateRouted =
-                    _mdGenMaster->routeSrcOprToThisModule(realUde->srcUpdateCondition);
+                    _mdGenMaster->routeSrcOprToThisModule(realUde->srcUpdateState);
                 newEvent->srcUpdateState = stateRouted;
             }
             assert(realUde->srcUpdateValue != nullptr);
             Operable* updateValueRouted =
             _mdGenMaster->routeSrcOprToThisModule(realUde->srcUpdateValue);
             newEvent->srcUpdateValue = updateValueRouted;
+
+            translatedUpdateEvent.push_back(newEvent);
         }
     }
 

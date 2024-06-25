@@ -10,6 +10,7 @@
 namespace kathryn{
 
 
+    class Val;
     class ValueGen: public LogicGenBase{
         Val* _master = nullptr;
 

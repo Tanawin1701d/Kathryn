@@ -3,7 +3,7 @@
 //
 
 #include "regGen.h"
-
+#include "model/hwComponent/register/register.h"
 
 namespace kathryn{
 

@@ -21,7 +21,7 @@ namespace kathryn{
         explicit Wire(int size,
             bool requireDefVal = true,
             bool initCom       = true);
-        void com_final() override;
+        void com_final() override{};
 
         /**override assignable*/
         void doBlockAsm(Operable& srcOpr, Slice desSlice) override;

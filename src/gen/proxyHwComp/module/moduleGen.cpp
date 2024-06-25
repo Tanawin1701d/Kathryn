@@ -24,7 +24,7 @@ namespace kathryn{
     }
 
     template<typename T>
-    void ModuleGen::recruitLogicGenBase(std::vector<LogicGenBase*>& des,
+    void ModuleGen::recruitLogicGenBase(LogicGenBaseVec& des,
                                  std::vector<T*>& srcs){
         for(T* src: srcs){
             LogicGenBase* logicGenBase = src->getLogicGen();
@@ -35,50 +35,11 @@ namespace kathryn{
 
     template<typename T>
     void ModuleGen::createAndRecruitLogicGenBase(
-        std::vector<LogicGenBase*>& des,
+        LogicGenBaseVec& des,
         std::vector<T*>& srcs){
         createLogicGenBase(srcs);
         recruitLogicGenBase(des, srcs);
     }
-
-    void ModuleGen::doOpLogicGenVec(
-    std::vector<LogicGenBase*>& src,
-    void (LogicGenBase::*func)()
-    ){
-        for (LogicGenBase* lgb: src){
-            lgb->*func();
-        }
-    }
-
-    void
-    doOpLogicGenVec(std::vector<std::string>&   result,
-                        std::vector<LogicGenBase*>& src,
-                        std::string (LogicGenBase::*func)()){
-        for (LogicGenBase* lgb: src){
-            result.push_back(lgb->*func());
-        }
-    }
-
-    void ModuleGen::doOpLogicGenAndWrite(
-        std::vector<LogicGenBase*>& src,
-        std::string (LogicGenBase::*func)(),
-        FileWriterBase* fileWriter,
-        const std::string& seperator
-        ){
-        //////
-        /// generate string and immediatry write to file
-        ///
-        bool isFirst = true;
-        for (LogicGenBase* logicEle: src){
-            if (!isFirst){
-                fileWriter->addData(",");
-            }
-            fileWriter->addData(logicEle->*func());
-            fileWriter->addData("\n");
-            isFirst = false;
-        }
-    }
-
 
     void ModuleGen::startInitEle(){
 
@@ -117,13 +78,13 @@ namespace kathryn{
             mdGen->startRouteEle();
         }
         /////////// module gen
-        doOpLogicGenVec(_regPool        , LogicGenBase::routeDep);
-        doOpLogicGenVec(_wirePool       , LogicGenBase::routeDep);
-        doOpLogicGenVec(_exprPool       , LogicGenBase::routeDep);
-        doOpLogicGenVec(_nestPool       , LogicGenBase::routeDep);
-        doOpLogicGenVec(_valPool        , LogicGenBase::routeDep);
-        doOpLogicGenVec(_memBlockPool   , LogicGenBase::routeDep);
-        doOpLogicGenVec(_memBlockElePool, LogicGenBase::routeDep);
+        _regPool        .routeDepAll();
+        _wirePool       .routeDepAll();
+        _exprPool       .routeDepAll();
+        _nestPool       .routeDepAll();
+        _valPool        .routeDepAll();
+        _memBlockPool   .routeDepAll();
+        _memBlockElePool.routeDepAll();
 
     }
 
@@ -132,10 +93,10 @@ namespace kathryn{
     }
 
     void ModuleGen::startWriteFile(FileWriterBase* fileWriter){
-        std::vector<LogicGenBase*> inputVec;
-        std::vector<LogicGenBase*> outputVec;
-        std::vector<LogicGenBase*> bridgeVec;
-        recruitLogicGenBase (inputVec, _autoInputWires);
+        LogicGenBaseVec inputVec;
+        LogicGenBaseVec outputVec;
+        LogicGenBaseVec bridgeVec;
+        recruitLogicGenBase(inputVec, _autoInputWires);
         recruitLogicGenBase(outputVec, _autoOutputWires);
         recruitLogicGenBase(bridgeVec, _interWires);
 
@@ -143,55 +104,55 @@ namespace kathryn{
         fileWriter->addData(_master->getGlobalName());
         fileWriter->addData("(\n");
         //////// declare input element
-        doOpLogicGenAndWrite(inputVec, LogicGenBase::decIo, fileWriter);
+        writeGenVec(inputVec.getDecIos(),fileWriter, ",\n");
         if (!inputVec.empty()){
-            fileWriter->addData(",");
+            fileWriter->addData(",\n");
         }
         //////// declare output element
-        doOpLogicGenAndWrite(outputVec, LogicGenBase::decIo, fileWriter);
+        writeGenVec(outputVec.getDecIos(), fileWriter, ",\n");
 
         fileWriter->addData(");\n");
 
         //////// todo do it with sub module
 
         //////// declare variable initiation
-        doOpLogicGenAndWrite(_regPool        , LogicGenBase::decVariable, fileWriter);
-        doOpLogicGenAndWrite(_wirePool       , LogicGenBase::decVariable, fileWriter);
-        doOpLogicGenAndWrite(_exprPool       , LogicGenBase::decVariable, fileWriter);
-        doOpLogicGenAndWrite(_nestPool       , LogicGenBase::decVariable, fileWriter);
-        doOpLogicGenAndWrite(_valPool        , LogicGenBase::decVariable, fileWriter);
-        doOpLogicGenAndWrite(_memBlockPool   , LogicGenBase::decVariable, fileWriter);
-        doOpLogicGenAndWrite(_memBlockElePool, LogicGenBase::decVariable, fileWriter);
-        doOpLogicGenAndWrite(bridgeVec       , LogicGenBase::decVariable, fileWriter);
+        writeGenVec(_regPool.getDecVars()        , fileWriter, "\n");
+        writeGenVec(_wirePool.getDecVars()       , fileWriter, "\n");
+        writeGenVec(_exprPool.getDecVars()       , fileWriter, "\n");
+        writeGenVec(_nestPool.getDecVars()       , fileWriter, "\n");
+        writeGenVec(_valPool.getDecVars()        , fileWriter, "\n");
+        writeGenVec(_memBlockPool.getDecVars()   , fileWriter, "\n");
+        writeGenVec(_memBlockElePool.getDecVars(), fileWriter, "\n");
+        writeGenVec(bridgeVec.getDecVars()       , fileWriter, "\n");
 
         /////////////////////// declare variable for submodule connenection
         ////////////////////////////////// there is no need to do op on this wire due to
         ////////////////////////////////// sub module is driver not us
 
-        std::vector<LogicGenBase*> subModuleOutputRepresent;
+        LogicGenBaseVec subModuleOutputRepresent;
         for (ModuleGen* subMdGen: _subModulePool){
             recruitLogicGenBase(subModuleOutputRepresent,
                                 subMdGen->_autoOutputWires
             );
         }
-        doOpLogicGenAndWrite(subModuleOutputRepresent, LogicGenBase::decVariable, fileWriter);
+        writeGenVec(subModuleOutputRepresent.getDecVars(), fileWriter, "\n");
 
         //////// declare operation initiation
-        doOpLogicGenAndWrite(_regPool        , LogicGenBase::decOp, fileWriter);
-        doOpLogicGenAndWrite(_wirePool       , LogicGenBase::decOp, fileWriter);
-        doOpLogicGenAndWrite(_exprPool       , LogicGenBase::decOp, fileWriter);
-        doOpLogicGenAndWrite(_nestPool       , LogicGenBase::decOp, fileWriter);
-        doOpLogicGenAndWrite(_valPool        , LogicGenBase::decOp, fileWriter);
-        doOpLogicGenAndWrite(_memBlockPool   , LogicGenBase::decOp, fileWriter);
-        doOpLogicGenAndWrite(_memBlockElePool, LogicGenBase::decOp, fileWriter);
-        doOpLogicGenAndWrite(bridgeVec       , LogicGenBase::decOp, fileWriter);
-        doOpLogicGenAndWrite(outputVec       , LogicGenBase::decOp, fileWriter);
+        writeGenVec(_regPool.getDecOps()        , fileWriter, "\n");
+        writeGenVec(_wirePool.getDecOps()       , fileWriter, "\n");
+        writeGenVec(_exprPool.getDecOps()       , fileWriter, "\n");
+        writeGenVec(_nestPool.getDecOps()       , fileWriter, "\n");
+        writeGenVec(_valPool.getDecOps()        , fileWriter, "\n");
+        writeGenVec(_memBlockPool.getDecOps()   , fileWriter, "\n");
+        writeGenVec(_memBlockElePool.getDecOps(), fileWriter, "\n");
+        writeGenVec(bridgeVec.getDecOps()       , fileWriter, "\n");
+        writeGenVec(outputVec.getDecOps()       , fileWriter, "\n");
         ////////// declare submodule connectivity
         for (ModuleGen* subMdGen: _subModulePool){
-            subMdGen->getSubModuleDec(subMdGen);
+            fileWriter->addData(subMdGen->getSubModuleDec(subMdGen));
         }
         //////// end module
-        fileWriter->addData("endmodule\n");
+        fileWriter->addData("\nendmodule\n");
     }
 
 
@@ -371,8 +332,8 @@ namespace kathryn{
             return useInputAsModuleGen[0]->getAutoInputWire(exactRealSrc);
         }
         ////// it is exact operable
-        return useInputAsModuleGen[0]
-        ->getAutoInputWire(exactRealSrc)(realSrc->getOperableSlice());
+        return &((*useInputAsModuleGen[0]->getAutoInputWire(exactRealSrc))
+                (realSrc->getOperableSlice()));
     }
 
     //////////////////////////// get module dec as sub
@@ -388,14 +349,17 @@ namespace kathryn{
         result += "(\n";
 
         ////////////////// declare input and output
-        std::vector<LogicGenBase*> inputGenEle;
-        std::vector<LogicGenBase*> outputGenEle;
+        LogicGenBaseVec inputGenEle;
+        LogicGenBaseVec outputGenEle;
         recruitLogicGenBase(inputGenEle, _autoInputWires);
         recruitLogicGenBase(outputGenEle, _autoOutputWires);
 
-
-        doOpLogicGenVec(retStrs, inputGenEle , &LogicGenBase::getOpr);
-        doOpLogicGenVec(retStrs, outputGenEle, &LogicGenBase::getOpr);
+        for (const std::string& inputStr : inputGenEle.getOprs()){
+            retStrs.push_back(inputStr);
+        }
+        for (const std::string& outputStr: outputGenEle.getOprs()){
+            retStrs.push_back(outputStr);
+        }
 
         bool isFirst = true;
 
@@ -409,7 +373,6 @@ namespace kathryn{
 
         result += ");\n";
         return result;
-
     }
 
     std::string ModuleGen::getOpr(){

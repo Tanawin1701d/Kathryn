@@ -4,11 +4,12 @@
 
 #ifndef NESTGEN_H
 #define NESTGEN_H
+
 #include "gen/proxyHwComp/abstract/logicGenBase.h"
-#include "model/hwComponent/expression/nest.h"
 
 namespace kathryn{
 
+    class nest;
     class NestGen: public LogicGenBase{
     private:
         std::vector<Operable*> _routedNestList;
@@ -18,6 +19,9 @@ namespace kathryn{
         explicit NestGen(ModuleGen*    mdGenMaster,
                          logicLocalCef cerf,
                          nest*         nestMaster);
+
+        ~NestGen() override = default;
+
         ////////// routing zone
         void routeDep() override;
 

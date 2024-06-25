@@ -3,6 +3,7 @@
 //
 
 #include "memGen.h"
+#include "model/hwComponent/memBlock/MemBlock.h"
 
 namespace kathryn{
 

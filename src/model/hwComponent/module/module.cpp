@@ -190,7 +190,7 @@ namespace kathryn{
     }
 
     void Module::createModuleGen(){
-        _moduleGenEngine = new ModuleGen(_parent);
+        _moduleGenEngine = new ModuleGen(this);
     }
 
 

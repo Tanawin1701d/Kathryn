@@ -12,7 +12,7 @@
 
 namespace kathryn{
 
-
+class Reg;
 class RegGen: public AssignGenBase{
 protected:
     Reg* _master = nullptr;

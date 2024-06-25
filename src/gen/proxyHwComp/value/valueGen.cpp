@@ -3,6 +3,7 @@
 //
 
 #include "valueGen.h"
+#include "model/hwComponent/value/value.h"
 
 namespace kathryn{
 

@@ -103,6 +103,8 @@ namespace kathryn{
             SliceAgent<nest>& operator() (Slice sl) override;
             Operable* doSlice(Slice sl) override;
 
+            std::vector<NestMeta>& getNestList() {return _nestList;}
+
             /** check short circuit*/
             Operable* checkShortCircuit() override;
 

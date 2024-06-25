@@ -4,7 +4,10 @@
 
 #include "nestGen.h"
 
-#include "gen/proxyHwComp/module/moduleGen.h"
+#include <utility>
+#include <gen/proxyHwComp/module/moduleGen.h>
+
+#include "model/hwComponent/expression/nest.h"
 
 
 namespace kathryn{
@@ -13,11 +16,20 @@ namespace kathryn{
                      logicLocalCef cerf,
                      nest*         nestMaster):
     LogicGenBase(mdGenMaster,
-                 cerf,
+                 std::move(cerf),
                  (Assignable*) nestMaster,
                  (Identifiable*) nestMaster),
     _master(nestMaster){
         assert(nestMaster != nullptr);
+    }
+
+    void NestGen::routeDep(){
+        std::vector<NestMeta> nestList = _master->getNestList();
+        for (NestMeta& ele: nestList){
+            assert(ele.opr != nullptr);
+            Operable* routedOpr = _mdGenMaster->routeSrcOprToThisModule(ele.opr);
+            _routedNestList.push_back(routedOpr);
+        }
     }
 
     std::string NestGen::decIo(){

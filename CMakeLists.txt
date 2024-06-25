@@ -3,8 +3,8 @@ project(Kathryn)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_compile_options(-O3)
-set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+#add_compile_options(-O3)
+#set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 #set(CMAKE_BUILD_TYPE Debug)
 
 #add_definitions(-DMODELCOMPILEVB) ### model compile verbose
@@ -18,6 +18,7 @@ FILE(GLOB_RECURSE SRC_APP             RELATIVE ${CMAKE_SOURCE_DIR} "src/applicat
 FILE(GLOB_RECURSE SRC_FED             RELATIVE ${CMAKE_SOURCE_DIR} "src/frontEnd/*.cpp")
 FILE(GLOB_RECURSE SRC_MODEL           RELATIVE ${CMAKE_SOURCE_DIR} "src/model/*.cpp")
 FILE(GLOB_RECURSE SRC_SIM             RELATIVE ${CMAKE_SOURCE_DIR} "src/sim/*.cpp")
+FILE(GLOB_RECURSE SRC_GEN             RELATIVE ${CMAKE_SOURCE_DIR} "src/gen/*.cpp")
 FILE(GLOB_RECURSE SRC_TEST            RELATIVE ${CMAKE_SOURCE_DIR} "src/test/*.cpp")
 FILE(GLOB_RECURSE SRC_UTIL            RELATIVE ${CMAKE_SOURCE_DIR} "src/util/*.cpp")
 FILE(GLOB_RECURSE SRC_EXAMPLE         RELATIVE ${CMAKE_SOURCE_DIR} "src/example/*.cpp")
@@ -33,46 +34,10 @@ add_executable(Kathryn
         ${SRC_FED}
         ${SRC_MODEL}
         ${SRC_SIM}
+        ${SRC_GEN}
         ${SRC_TEST}
         ${SRC_UTIL}
         ${SRC_EXAMPLE}
         ${SRC_PARAM}
         ${SRC_MODEL_COMPILE}
-        src/example/riscv/simulation/RISCV_sim_sort.cpp
-        src/example/riscv/simulation/RISCV_sim_sort.h
-        src/example/riscv/simulation/autoSimEvent.cpp
-        src/example/riscv/simulation/autoSimEvent.h
-        src/example/riscv/simulation/slotRecorder.cpp
-        src/example/riscv/simulation/slotRecorder.h
-        src/example/riscv/simulation/autoSimEvent.cpp
-        src/gen/controller/genController.cpp
-        src/gen/controller/genController.h
-        src/gen/proxyHwComp/module/moduleGen.cpp
-        src/gen/proxyHwComp/module/moduleGen.h
-        src/gen/proxyHwComp/register/regGen.cpp
-        src/gen/proxyHwComp/register/regGen.h
-        src/gen/proxyHwComp/abstract/logicGenBase.cpp
-        src/gen/proxyHwComp/abstract/logicGenBase.h
-        src/gen/proxyHwComp/value/valueGen.cpp
-        src/gen/proxyHwComp/value/valueGen.h
-        src/gen/proxyHwComp/wire/wireGen.cpp
-        src/gen/proxyHwComp/wire/wireGen.h
-        src/gen/proxyHwComp/memBlock/memGen.cpp
-        src/gen/proxyHwComp/memBlock/memGen.h
-        src/gen/proxyHwComp/expression/exprGen.cpp
-        src/gen/proxyHwComp/expression/exprGen.h
-        src/gen/proxyHwComp/expression/nestGen.cpp
-        src/gen/proxyHwComp/expression/nestGen.h
-        src/gen/proxyHwComp/abstract/logicCerf.h
-        src/gen/proxyHwComp/abstract/AssignGen.cpp
-        src/gen/proxyHwComp/abstract/AssignGen.h
-        src/gen/proxyHwComp/memBlock/memAgentGen.cpp
-        src/gen/proxyHwComp/memBlock/memAgentGen.h
-        src/model/hwComponent/wire/wireIo.cpp
-        src/model/hwComponent/wire/wireIo.h
-        src/test/autoGen/testCase/genAutoTest1.cpp
-        src/test/autoGen/testCase/genAutoTest1.h
-        src/model/hwComponent/wire/wireSubType.h
-
-
 )

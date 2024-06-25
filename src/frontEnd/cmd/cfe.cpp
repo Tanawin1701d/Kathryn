@@ -60,7 +60,7 @@ namespace kathryn{
         } else if (params["testType"] == "testRiscvSort"){
             test_riscv_sort(params);
         }else if (params["testType"]  == "testGen"){
-            startGen();
+            startGen(params);
         }else{
             std::cout << "there is no command to test system" << std::endl;
         }

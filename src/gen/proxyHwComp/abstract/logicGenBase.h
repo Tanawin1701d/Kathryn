@@ -7,7 +7,7 @@
 #define KATHRYN_GEN_PROXYHWCOMP_ABSTRCT
 
 #include <utility>
-
+#include "util/fileWriter/fileWriterBase.h"
 #include "model/hwComponent/abstract/assignable.h"
 #include "logicCerf.h"
 
@@ -32,16 +32,16 @@ namespace kathryn{
         std::string getOprStrFromOpr(Operable* opr);
 
         ///////// routing zone
-        virtual void routeDep() = 0; ///// do routing
+        virtual void routeDep() {assert(false);} ///// do routing
         ///// check zone
 
         ///////// get zone
         virtual std::string getOpr()        ;
         virtual std::string getOpr(Slice sl);
         //////// gen zone
-        virtual std::string decIo()             = 0;
-        virtual std::string decVariable()       = 0;
-        virtual std::string decOp()             = 0;
+        virtual std::string decIo()       {assert(false);}
+        virtual std::string decVariable() {assert(false);}
+        virtual std::string decOp()       {assert(false);}
 
 
         ///////// getter
@@ -56,6 +56,60 @@ namespace kathryn{
     };
 
 
+    class LogicGenBaseVec: public std::vector<LogicGenBase*>{
+    public:
+        void routeDepAll(){
+            for (auto& x : *this){
+                x->routeDep();
+            }
+        }
+
+        std::vector<std::string> getOprs(){
+            std::vector<std::string> result;
+            for (auto& x : *this){
+                result.push_back(x->getOpr());
+            }
+            return result;
+        }
+
+        std::vector<std::string> getDecIos(){
+            std::vector<std::string> result;
+            for (auto& x : *this){
+                result.push_back(x->decIo());
+            }
+            return result;
+        }
+
+        std::vector<std::string> getDecVars(){
+            std::vector<std::string> result;
+            for (auto& x : *this){
+                result.push_back(x->decVariable());
+            }
+            return result;
+        }
+
+        std::vector<std::string> getDecOps(){
+            std::vector<std::string> result;
+            for (auto& x : *this){
+                result.push_back(x->decOp());
+            }
+            return result;
+        }
+    };
+
+    inline void writeGenVec(const std::vector<std::string>& src,
+                     FileWriterBase* fw,
+                     const std::string& sep){
+        assert(fw != nullptr);
+        bool isFirst = true;
+        for (const std::string& x: src){
+            if(!isFirst){
+                fw->addData(sep);
+            }
+            fw->addData(x);
+            isFirst = false;
+        }
+    }
 
     class LogicGenInterface{
     public:

@@ -7,7 +7,7 @@
 
 namespace kathryn{
 
-    void startGen();
+    void startGen(PARAM& params);
 
 }
 
