@@ -28,7 +28,7 @@ namespace kathryn{
         Slice sl = _master->getOperableSlice();
 
         return "wire [" + std::to_string(sl.stop-1) +
-            ": 0]" + getOpr() + ";";
+            ": 0] " + getOpr() + ";";
     }
 
     std::string NestGen::decOp(){

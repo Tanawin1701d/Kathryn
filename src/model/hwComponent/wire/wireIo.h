@@ -6,14 +6,11 @@
 #define WIREIO_H
 
 #include"wire.h"
+#include"wireSubType.h"
 
 namespace kathryn{
 
-    enum WIRE_IO_TYPE{
-        WIRE_IO_INPUT,
-        WIRE_IO_OUTPUT,
-        WIRE_IO_INTER
-    };
+
 
     class WireIo: public Wire{
 
@@ -44,6 +41,8 @@ namespace kathryn{
 
         [[nodiscard]]
         WIRE_IO_TYPE getWireIoType()const{return _wireIoType;}
+
+        void createLogicGen() override;
     };
 
 }

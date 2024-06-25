@@ -11,6 +11,7 @@
 
 namespace kathryn{
 
+    class MemBlockEleHolder;
     class MemEleholderGen: public AssignGenBase{
     protected:
         MemBlockEleHolder* _master     = nullptr;

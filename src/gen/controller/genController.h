@@ -26,6 +26,8 @@ namespace kathryn{
 
         explicit GenController() = default;
 
+        virtual ~GenController() = default;
+
         void initEnv(PARAM& param);
 
         void start() override{};
@@ -42,9 +44,7 @@ namespace kathryn{
 
     };
 
-
-
-
+    GenController* getGenController();
 
 }
 

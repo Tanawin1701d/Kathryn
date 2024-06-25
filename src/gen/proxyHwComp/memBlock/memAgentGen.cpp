@@ -5,6 +5,7 @@
 #include "memGen.h"
 #include "memAgentGen.h"
 #include "gen/proxyHwComp/module/moduleGen.h"
+#include "model/hwComponent/memBlock/MemBlockAgent.h"
 
 namespace kathryn{
 

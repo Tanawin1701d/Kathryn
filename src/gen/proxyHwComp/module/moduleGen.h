@@ -37,19 +37,19 @@ namespace kathryn{
         std::vector<LogicGenBase*>   _memBlockPool;
         std::vector<LogicGenBase*>   _memBlockElePool;
 
-        std::vector<ModuleGen*>     _subModulePool;
+        std::vector<ModuleGen*>      _subModulePool;
 
         std::unordered_map<Operable*, int> _interWireMap;
-        std::vector<WireIo*>                 _interWires;
+        std::vector<WireIo*>                _interWires;
 
         std::unordered_map<Operable*, int> _autoInputWireMap;
-        std::vector<WireIo*>                 _autoInputWires;
+        std::vector<WireIo*>               _autoInputWires;
 
         std::unordered_map<Operable*, int> _autoOutputWireMap;
-        std::vector<WireIo*>                 _autoOutputWires;
+        std::vector<WireIo*>               _autoOutputWires;
 
-        std::vector<Wire*>              _userDecInputWires;
-        std::vector<Wire*>              _userOutputWires;
+        std::vector<Wire*>                 _userDecInputWires;
+        std::vector<Wire*>                 _userOutputWires;
 
         explicit ModuleGen(Module* master);
 
@@ -65,18 +65,17 @@ namespace kathryn{
         void createAndRecruitLogicGenBase(std::vector<LogicGenBase*>& des,
                                  std::vector<T*>& srcs);
 
-        void doOpLogicGenVec(std::vector<LogicGenBase*>& des,
+        void doOpLogicGenVec(std::vector<LogicGenBase*>& src,
                              void (LogicGenBase::*func)());
-        // std::vector<std::string>
-        //     doOpLogicGenVec(std::vector<LogicGenBase*>& src,
-        //                     std::string (LogicGenBase::*func)());
-        //
-        // void writeThisVector(std::vector<std::string>& writeData,
-        //                      FileWriterBase* fileWriter);
+        void
+        doOpLogicGenVec(std::vector<std::string>&   result,
+                        std::vector<LogicGenBase*>& src,
+                        std::string (LogicGenBase::*func)());
 
         void doOpLogicGenAndWrite(std::vector<LogicGenBase*>& src,
                                  std::string (LogicGenBase::*func)(),
-                                 FileWriterBase* fileWriter
+                                 FileWriterBase* fileWriter,
+                                 const std::string& seperator = ""
         );
 
 
@@ -97,23 +96,24 @@ namespace kathryn{
                                     bool connectTheWire = true);
 
         //////////////////////////////////////////////////////////////////////
-        WireIo* addAutoInputWire (Operable* opr, Operable* realSrc);
-        bool      checkIsThereAutoInputWire  (Operable* realSrc);
-        WireIo* getAutoInputWire(Operable* realSrc);
+        WireIo* addAutoInputWire          (Operable* opr, Operable* realSrc);
+        bool    checkIsThereAutoInputWire (Operable* realSrc);
+        WireIo* getAutoInputWire          (Operable* realSrc);
         //////////////////////////////////////////////////////////////////////
-        WireIo* addAutoOutputWire(Operable* opr, Operable* realSrc);
-        bool      checkIsThereAutoOutputWire(Operable* realSrc);
-        WireIo* getAutoOutputWire(Operable* realSrc);
+        WireIo* addAutoOutputWire         (Operable* opr, Operable* realSrc);
+        bool    checkIsThereAutoOutputWire(Operable* realSrc);
+        WireIo* getAutoOutputWire         (Operable* realSrc);
         //////////////////////////////////////////////////////////////////
-        WireIo* addAutoInterWire(Operable* realSrc);
-        bool  checkIsThereAutoInterWire(Operable* realSrc);
-        WireIo* getAutoInterWire(Operable* realSrc);
+        WireIo* addAutoInterWire          (Operable* realSrc);
+        bool    checkIsThereAutoInterWire (Operable* realSrc);
+        WireIo* getAutoInterWire          (Operable* realSrc);
         //////////////////////////////////////////////////////////////////
-        Operable* routeSrcOprToThisModule(Operable* exactRealSrc);
-        int getDept() const{return depthFromGlobalModule;}
+        Operable* routeSrcOprToThisModule (Operable* exactRealSrc);
+        int       getDept() const{return depthFromGlobalModule;}
         //////////////////////////////////////////////////////////////////
         /////////////// module genFileName
         std::string getSubModuleDec(ModuleGen* mdGen);
+        std::string getOpr();
     };
 
     class ModuleGenInterface{
@@ -123,8 +123,6 @@ namespace kathryn{
         virtual ModuleGen* getModuleGen() = 0;
 
     };
-
-
 
 }
 

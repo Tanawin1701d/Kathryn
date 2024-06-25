@@ -150,6 +150,10 @@ namespace kathryn {
         Operable* checkShortCircuit() override{
             return _master->checkShortCircuit();
         }
+
+        LogicGenBase* getLogicGenBase() override{
+            assert(false); ///// can't getlogic genbase from slice opr
+        }
     };
 }
 

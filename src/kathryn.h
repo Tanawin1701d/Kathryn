@@ -7,6 +7,7 @@
 
 
 #include "model/controller/controller.h"
+#include "gen/controller/genController.h"
 #include "sim/interface/simInterface.h"
 #include "frontEnd/cmd/paramReader.h"
 #include "util/fileWriter/slotWriter/slotWriter.h"

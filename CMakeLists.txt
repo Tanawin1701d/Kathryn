@@ -70,6 +70,9 @@ add_executable(Kathryn
         src/gen/proxyHwComp/memBlock/memAgentGen.h
         src/model/hwComponent/wire/wireIo.cpp
         src/model/hwComponent/wire/wireIo.h
+        src/test/autoGen/testCase/genAutoTest1.cpp
+        src/test/autoGen/testCase/genAutoTest1.h
+        src/model/hwComponent/wire/wireSubType.h
 
 
 )

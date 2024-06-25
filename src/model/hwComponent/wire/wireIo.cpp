@@ -3,6 +3,7 @@
 //
 
 #include "wireIo.h"
+#include "model/hwComponent/module/module.h"
 
 namespace kathryn{
 
@@ -14,6 +15,24 @@ namespace kathryn{
         assert(masterModule != nullptr);
         setParent(masterModule);
         buildInheritName();
+    }
+
+    void WireIo::createLogicGen(){
+        assert(_parent->getModuleGen() == nullptr);
+
+        _genEngine = new WireGen(
+            _parent->getModuleGen(),
+            {
+                getType(),
+                GEN_WIRE_GRP,
+                getGlobalName(),
+                -1,
+                getOperableSlice(),
+                false
+            },
+            this,
+            _wireIoType
+        );
     }
 
 

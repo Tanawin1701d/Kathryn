@@ -18,7 +18,7 @@ namespace kathryn{
                                      true),
                                      _requireDefVal(requireDefVal)
     {
-        if (com_init){
+        if (initCom){
             com_init();
         }
         AssignOpr::setMaster(this);

@@ -10,6 +10,12 @@
 
 namespace kathryn{
 
+
+    ModuleGen::ModuleGen(Module* master):
+    _master(master){
+        assert(_master != nullptr);
+    }
+
     template<typename T>
     void ModuleGen::createLogicGenBase(std::vector<T*>& srcs){
         for(T* src: srcs){
@@ -36,53 +42,47 @@ namespace kathryn{
     }
 
     void ModuleGen::doOpLogicGenVec(
-    std::vector<LogicGenBase*>& des,
+    std::vector<LogicGenBase*>& src,
     void (LogicGenBase::*func)()
     ){
-
-        for (LogicGenBase* lgb: des){
+        for (LogicGenBase* lgb: src){
             lgb->*func();
         }
     }
 
-    // std::vector<std::string> ModuleGen::doOpLogicGenVec(
-    //     std::vector<LogicGenBase*>& src,
-    //     std::string (LogicGenBase::*func)()
-    // ){
-    //     std::vector<std::string> result;
-    //     for(LogicGenBase* lgb: src){
-    //         result.push_back(lgb->*func());
-    //     }
-    //     return result;
-    // }
-    //
-    // void ModuleGen::writeThisVector(std::vector<std::string>& writeData,
-    //                                 FileWriterBase* fileWriter
-    // ){
-    //     assert(fileWriter != nullptr);
-    //     for(std::string& dayta: writeData){
-    //         fileWriter->addData(dayta);
-    //     }
-    // }
+    void
+    doOpLogicGenVec(std::vector<std::string>&   result,
+                        std::vector<LogicGenBase*>& src,
+                        std::string (LogicGenBase::*func)()){
+        for (LogicGenBase* lgb: src){
+            result.push_back(lgb->*func());
+        }
+    }
 
     void ModuleGen::doOpLogicGenAndWrite(
         std::vector<LogicGenBase*>& src,
         std::string (LogicGenBase::*func)(),
-        FileWriterBase* fileWriter
+        FileWriterBase* fileWriter,
+        const std::string& seperator
         ){
         //////
         /// generate string and immediatry write to file
         ///
+        bool isFirst = true;
         for (LogicGenBase* logicEle: src){
+            if (!isFirst){
+                fileWriter->addData(",");
+            }
             fileWriter->addData(logicEle->*func());
             fileWriter->addData("\n");
+            isFirst = false;
         }
-
     }
 
 
     void ModuleGen::startInitEle(){
 
+        depthFromGlobalModule = _master->getModuleGen()->getDept() + 1;
 
         //////// init the sub module elements first
         for (Module* subModule: _master->getUserSubModules()){
@@ -102,7 +102,6 @@ namespace kathryn{
         createAndRecruitLogicGenBase(_exprPool,_master->getUserExpressions());
         createAndRecruitLogicGenBase(_nestPool,_master->getUserNests());
         createAndRecruitLogicGenBase(_valPool, _master->getUserVals());
-
         createAndRecruitLogicGenBase(_memBlockPool, _master->getUserMemBlks());
 
         for (MemBlock* memBlock: _master->getUserMemBlks()){
@@ -136,17 +135,19 @@ namespace kathryn{
         std::vector<LogicGenBase*> inputVec;
         std::vector<LogicGenBase*> outputVec;
         std::vector<LogicGenBase*> bridgeVec;
+        recruitLogicGenBase (inputVec, _autoInputWires);
+        recruitLogicGenBase(outputVec, _autoOutputWires);
+        recruitLogicGenBase(bridgeVec, _interWires);
 
         fileWriter->addData("module ");
         fileWriter->addData(_master->getGlobalName());
         fileWriter->addData("(\n");
         //////// declare input element
-
-        recruitLogicGenBase(inputVec, _autoInputWires);
         doOpLogicGenAndWrite(inputVec, LogicGenBase::decIo, fileWriter);
+        if (!inputVec.empty()){
+            fileWriter->addData(",");
+        }
         //////// declare output element
-
-        recruitLogicGenBase(outputVec, _autoOutputWires);
         doOpLogicGenAndWrite(outputVec, LogicGenBase::decIo, fileWriter);
 
         fileWriter->addData(");\n");
@@ -161,17 +162,17 @@ namespace kathryn{
         doOpLogicGenAndWrite(_valPool        , LogicGenBase::decVariable, fileWriter);
         doOpLogicGenAndWrite(_memBlockPool   , LogicGenBase::decVariable, fileWriter);
         doOpLogicGenAndWrite(_memBlockElePool, LogicGenBase::decVariable, fileWriter);
-
-        recruitLogicGenBase(bridgeVec, _interWires);
-        doOpLogicGenAndWrite(_memBlockElePool, LogicGenBase::decVariable, fileWriter);
-        /////////////////////// declare variable for submodule
-        std::vector<LogicGenBase*> outputOfSubModulePool;
+        doOpLogicGenAndWrite(bridgeVec       , LogicGenBase::decVariable, fileWriter);
+        /////////////////////// declare variable for submodule connenection
+        ////////////////////////////////// there is no need to do op on this wire due to
+        ////////////////////////////////// sub module is driver not us
+        std::vector<LogicGenBase*> subModuleOutputRepresent;
         for (ModuleGen* subMdGen: _subModulePool){
-            recruitLogicGenBase(outputOfSubModulePool,
+            recruitLogicGenBase(subModuleOutputRepresent,
                                 subMdGen->_autoOutputWires
             );
         }
-        doOpLogicGenAndWrite(outputOfSubModulePool, LogicGenBase::decVariable, fileWriter);
+        doOpLogicGenAndWrite(subModuleOutputRepresent, LogicGenBase::decVariable, fileWriter);
 
 
         //////// declare operation initiation
@@ -182,10 +183,7 @@ namespace kathryn{
         doOpLogicGenAndWrite(_valPool        , LogicGenBase::decOp, fileWriter);
         doOpLogicGenAndWrite(_memBlockPool   , LogicGenBase::decOp, fileWriter);
         doOpLogicGenAndWrite(_memBlockElePool, LogicGenBase::decOp, fileWriter);
-
-        recruitLogicGenBase(bridgeVec, _interWires);
-        doOpLogicGenAndWrite(_memBlockElePool, LogicGenBase::decOp, fileWriter);
-
+        doOpLogicGenAndWrite(bridgeVec       , LogicGenBase::decOp, fileWriter);
         ////////// declare submodule connectivity
         for (ModuleGen* subMdGen: _subModulePool){
             subMdGen->getSubModuleDec(subMdGen);
@@ -218,6 +216,7 @@ namespace kathryn{
             if (connectTheWire){
                 newAddedWire.connectTo(opr);
             }
+            newAddedWire.buildHierarchy(_master);
             ioVec.push_back(&newAddedWire);
             ioMap.insert({realSrc, ioVec.size()-1});
             //////////////////////////////////////////////
@@ -293,7 +292,7 @@ namespace kathryn{
 
         Operable* exactRealSrc = &realSrc->getExactOperable();
 
-        ModuleGen* desModuleGen   = this;
+        ModuleGen* desModuleGen = this;
         ModuleGen* srcModuleGen = exactRealSrc->getLogicGenBase()->getModuleGen();
 
         if (srcModuleGen == desModuleGen){
@@ -357,7 +356,7 @@ namespace kathryn{
         ///
         ////////////////////////////////////
         Operable* outputWire = exactRealSrc;
-        for(int idx = 1; idx < (int)useOutputAsModuleGen.size(); idx++){
+        for(int idx = 0; idx < ((int)useOutputAsModuleGen.size()-1); idx++){
             ModuleGen& curMdGen = *useOutputAsModuleGen[idx];
             if (curMdGen.checkIsThereAutoOutputWire(exactRealSrc)){
                 outputWire = curMdGen.getAutoOutputWire(exactRealSrc);
@@ -382,41 +381,39 @@ namespace kathryn{
         assert(subMdGen != nullptr);
 
         std::vector<std::string> retStrs;
-
-        for (Wire* inputWire: subMdGen->_autoInputWires){
-            auto inputWireMeta = inputWire->getUpdateMeta();
-            assert(inputWireMeta.size() == 1);
-            LogicGenBase* curModConOpr = inputWireMeta[0]->srcUpdateValue->getLogicGenBase();
-            retStrs.push_back(
-                curModConOpr->getOpr(inputWireMeta[0]->srcUpdateValue->getOperableSlice()));
-        }
-
-        for (Wire* outputConnectWire: subMdGen->_autoOutputWires){
-            auto lgb = outputConnectWire->getLogicGenBase(); ///// logic gen base
-
-            retStrs.push_back(
-                lgb->getOpr(outputConnectWire->getOperableSlice())
-            );
-        }
-
         std::string result;
+
+        result += subMdGen->getOpr() + "  ";
+        result += subMdGen->getOpr();
+        result += "(\n";
+
+        ////////////////// declare input and output
+        std::vector<LogicGenBase*> inputGenEle;
+        std::vector<LogicGenBase*> outputGenEle;
+        recruitLogicGenBase(inputGenEle, _autoInputWires);
+        recruitLogicGenBase(outputGenEle, _autoOutputWires);
+
+
+        doOpLogicGenVec(retStrs, inputGenEle , &LogicGenBase::getOpr);
+        doOpLogicGenVec(retStrs, outputGenEle, &LogicGenBase::getOpr);
+
         bool isFirst = true;
 
-        for (int i = 0; i < ((int)retStrs.size())-1; i++){
+        for (const std::string& retStr: retStrs){
             if (!isFirst){
                 result += ",\n";
             }
-            result += retStrs[i];
+            result += retStr;
             isFirst = false;
         }
+
+        result += ");\n";
         return result;
+
     }
 
-
-
-
-
-
-
+    std::string ModuleGen::getOpr(){
+        return _master->getGlobalName();
+    }
 
 }
