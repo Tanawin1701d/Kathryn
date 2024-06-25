@@ -163,9 +163,11 @@ namespace kathryn{
         doOpLogicGenAndWrite(_memBlockPool   , LogicGenBase::decVariable, fileWriter);
         doOpLogicGenAndWrite(_memBlockElePool, LogicGenBase::decVariable, fileWriter);
         doOpLogicGenAndWrite(bridgeVec       , LogicGenBase::decVariable, fileWriter);
+
         /////////////////////// declare variable for submodule connenection
         ////////////////////////////////// there is no need to do op on this wire due to
         ////////////////////////////////// sub module is driver not us
+
         std::vector<LogicGenBase*> subModuleOutputRepresent;
         for (ModuleGen* subMdGen: _subModulePool){
             recruitLogicGenBase(subModuleOutputRepresent,
@@ -173,7 +175,6 @@ namespace kathryn{
             );
         }
         doOpLogicGenAndWrite(subModuleOutputRepresent, LogicGenBase::decVariable, fileWriter);
-
 
         //////// declare operation initiation
         doOpLogicGenAndWrite(_regPool        , LogicGenBase::decOp, fileWriter);
@@ -184,13 +185,12 @@ namespace kathryn{
         doOpLogicGenAndWrite(_memBlockPool   , LogicGenBase::decOp, fileWriter);
         doOpLogicGenAndWrite(_memBlockElePool, LogicGenBase::decOp, fileWriter);
         doOpLogicGenAndWrite(bridgeVec       , LogicGenBase::decOp, fileWriter);
+        doOpLogicGenAndWrite(outputVec       , LogicGenBase::decOp, fileWriter);
         ////////// declare submodule connectivity
         for (ModuleGen* subMdGen: _subModulePool){
             subMdGen->getSubModuleDec(subMdGen);
         }
-
         //////// end module
-
         fileWriter->addData("endmodule\n");
     }
 
