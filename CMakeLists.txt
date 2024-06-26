@@ -40,4 +40,8 @@ add_executable(Kathryn
         ${SRC_EXAMPLE}
         ${SRC_PARAM}
         ${SRC_MODEL_COMPILE}
+        src/test/autoGen/genMng.cpp
+        src/test/autoGen/genMng.h
+        src/test/autoGen/testCase/genEle.cpp
+        src/test/autoGen/testCase/genEle.h
 )

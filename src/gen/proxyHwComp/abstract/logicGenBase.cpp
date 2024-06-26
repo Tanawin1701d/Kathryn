@@ -29,9 +29,9 @@ std::string LogicGenBase::getOprStrFromOpr(Operable* opr){
 
 std::string LogicGenBase::getOpr(){
     assert(_ident != nullptr);
-    if (!_ident->isUserVar()){
-        return _ident->getGlobalName();
-    }
+    // if (!_ident->isUserVar()){
+    //     return _ident->getGlobalName();
+    // }
     return _ident->getGlobalName() + "_" + _ident->getVarName();
 
 }
