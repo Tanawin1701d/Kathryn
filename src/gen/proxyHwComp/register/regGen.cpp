@@ -32,5 +32,11 @@ namespace kathryn{
         return AssignGenBase::assignOpBase(true);
     }
 
+    GLOB_IO_TYPE RegGen::getGlobIoStatus(){
+        _master->checkIntegrity();
+        return _master->getGlobIoType();
+    }
+
+
 
 }

@@ -24,6 +24,8 @@ public:
     std::string decIo()       override;
     std::string decVariable() override;
     std::string decOp()       override;
+
+    GLOB_IO_TYPE getGlobIoStatus() override;
 };
 
 

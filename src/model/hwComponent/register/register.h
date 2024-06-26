@@ -8,12 +8,13 @@
 #include "model/hwComponent/abstract/logicComp.h"
 #include "model/controller/conInterf/controllerItf.h"
 #include "gen/proxyHwComp/register/regGen.h"
+#include "model/hwComponent/abstract/globIo.h"
 
 namespace kathryn{
 
 
 
-    class Reg : public LogicComp<Reg>{
+    class Reg : public LogicComp<Reg>, public GlobIo{
 
     protected:
         void com_init() override;
@@ -56,6 +57,10 @@ namespace kathryn{
         void makeResetEvent();
         /** return type*/
         Operable* checkShortCircuit() override;
+        bool      checkIntegrity() override{
+            return getGlobIoType() != GLOB_IO_INPUT; ////// can not use it as output
+        }
+        Operable* getOprFromGlobIo() override{return this;}
 
         /**override logicc gen base*/
         void createLogicGen() override;

@@ -9,10 +9,11 @@
 #include "model/hwComponent/abstract/logicComp.h"
 #include "model/controller/conInterf/controllerItf.h"
 #include "gen/proxyHwComp/wire/wireGen.h"
+#include "model/hwComponent/abstract/globIo.h"
 
 namespace kathryn{
 
-    class Wire : public LogicComp<Wire>{
+    class Wire : public LogicComp<Wire>, public GlobIo{
     protected:
         bool _requireDefVal = false;
         void com_init() override;
@@ -54,6 +55,8 @@ namespace kathryn{
 
         /**override logicc gen base*/
         void createLogicGen() override;
+        bool checkIntegrity() override{return true;}
+        Operable* getOprFromGlobIo() override{return this;}
     };
 
     class WireSimEngine: public LogicSimEngine{

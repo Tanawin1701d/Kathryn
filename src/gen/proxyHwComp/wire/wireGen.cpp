@@ -74,6 +74,12 @@ namespace kathryn{
         return assignOpBase(false);
     }
 
+    GLOB_IO_TYPE WireGen::getGlobIoStatus(){
+        _master->checkIntegrity();
+        return _master->getGlobIoType();
+    }
+
+
 
 
 

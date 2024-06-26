@@ -5,8 +5,6 @@
 
 #include "kathryn.h"
 
-
-
 namespace kathryn{
 
 
@@ -24,6 +22,9 @@ namespace kathryn{
         getControllerPtr()->reset();
         /** reset simulation layer*/
         getSimController()->reset();
+        /** clean global io declaration*/
+        cleanGlobPool();
+
 
     }
 

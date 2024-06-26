@@ -28,6 +28,8 @@ namespace kathryn{
         std::string decVariable() override; ///// in case output there is no need dec variable
         std::string decOp()       override;
 
+        GLOB_IO_TYPE getGlobIoStatus() override;
+
 
     };
 

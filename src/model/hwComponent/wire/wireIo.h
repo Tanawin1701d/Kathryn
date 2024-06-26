@@ -11,7 +11,11 @@
 namespace kathryn{
 
 
-
+    /**
+     *
+     * for now wireio is not exposed to user it use as internal generating route
+     *
+     */
     class WireIo: public Wire{
 
     protected:

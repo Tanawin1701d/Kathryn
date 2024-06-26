@@ -74,6 +74,7 @@ namespace kathryn{
         void startCmpModule(ModuleGen* rhsMdg);
         void startWriteFile(FileWriterBase* fileWriter);
 
+
         ////////////// io operation
         WireIo* addAutoWireBase  (Operable* opr,
                                     Operable* realSrc,

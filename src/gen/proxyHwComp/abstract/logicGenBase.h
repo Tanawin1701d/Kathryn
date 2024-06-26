@@ -10,6 +10,7 @@
 #include "util/fileWriter/fileWriterBase.h"
 #include "model/hwComponent/abstract/assignable.h"
 #include "logicCerf.h"
+#include "model/hwComponent/abstract/globIo.h"
 
 namespace kathryn{
 
@@ -28,20 +29,18 @@ namespace kathryn{
                               Identifiable* ident
         );
         virtual ~LogicGenBase() = default;
-
         std::string getOprStrFromOpr(Operable* opr);
-
         ///////// routing zone
         virtual void routeDep() {assert(false);} ///// do routing
-        ///// check zone
-
         ///////// get zone
-        virtual std::string getOpr()        ;
+        virtual std::string getOpr();
         virtual std::string getOpr(Slice sl);
         //////// gen zone
-        virtual std::string decIo()       {assert(false);}
-        virtual std::string decVariable() {assert(false);}
-        virtual std::string decOp()       {assert(false);}
+        virtual std::string  decIo()       {assert(false);}
+        virtual std::string  decVariable() {assert(false);}
+        virtual std::string  decOp()       {assert(false);}
+        /////// glob io check
+        virtual GLOB_IO_TYPE getGlobIoStatus(){return GLOB_IO_TYPE::GLOB_IO_NOT_BOTH;}
 
 
         ///////// getter
