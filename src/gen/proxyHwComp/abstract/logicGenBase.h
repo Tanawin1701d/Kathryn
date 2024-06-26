@@ -53,6 +53,8 @@ namespace kathryn{
             return _cerf;
         }
 
+        virtual void addDirectUpdateEvent(UpdateEvent* updateEvent){assert(false);}
+
     };
 
 

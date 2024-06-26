@@ -26,9 +26,9 @@ namespace kathryn{
         void connectTo(Operable* opr){
             assert(opr != nullptr);
             assert(opr->getOperableSlice().getSize() == getOperableSlice().getSize());
-            std::vector<UpdateEvent*>& updateVecs = getUpdateMeta();
-            assert(updateVecs.empty());
-            updateVecs.push_back(
+            assert(_genEngine != nullptr);
+            //////////////////////// directly to system
+            _genEngine->addDirectUpdateEvent(
                 new UpdateEvent({
                     nullptr,
                     nullptr,

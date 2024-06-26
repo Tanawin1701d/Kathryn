@@ -28,15 +28,20 @@ std::string LogicGenBase::getOprStrFromOpr(Operable* opr){
 }
 
 std::string LogicGenBase::getOpr(){
-        assert(_ident != nullptr);
+    assert(_ident != nullptr);
+    if (!_ident->isUserVar()){
         return _ident->getGlobalName();
+    }
+    return _ident->getGlobalName() + "_" + _ident->getVarName();
+
 }
 
 std::string LogicGenBase::getOpr(Slice sl){
+        assert(sl.checkValidSlice());
         if (sl == _asb->getAssignSlice()){
             return getOpr();
         }
-        return _ident->getGlobalName() + "[" + std::to_string(sl.stop-1) +
+        return getOpr() + "[" + std::to_string(sl.stop-1) +
                ": " + std::to_string(sl.start) + "]";
     }
 

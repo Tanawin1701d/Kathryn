@@ -28,6 +28,11 @@ namespace kathryn{
 
         virtual std::string assignmentLine(Slice desSlice, Operable* srcUpdateValue);
 
+        void addDirectUpdateEvent(UpdateEvent* updateEvent) override{
+            assert(updateEvent != nullptr);
+            translatedUpdateEvent.push_back(updateEvent);
+        }
+
 
 
     };

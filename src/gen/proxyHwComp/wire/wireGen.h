@@ -12,7 +12,6 @@ namespace kathryn{
     class Wire;
     class WireGen: public AssignGenBase{
     protected:
-        bool _isWireIo = false;
         WIRE_IO_TYPE _ioType;
         Wire* _master = nullptr;
     public:
@@ -26,8 +25,10 @@ namespace kathryn{
                 WIRE_IO_TYPE  ioType);
 
         std::string decIo()       override;
-        std::string decVariable() override;
+        std::string decVariable() override; ///// in case output there is no need dec variable
         std::string decOp()       override;
+
+
     };
 
 }

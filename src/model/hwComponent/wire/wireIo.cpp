@@ -18,7 +18,7 @@ namespace kathryn{
     }
 
     void WireIo::createLogicGen(){
-        assert(_parent->getModuleGen() == nullptr);
+        //// assert(_parent->getModuleGen() == nullptr);
 
         _genEngine = new WireGen(
             _parent->getModuleGen(),

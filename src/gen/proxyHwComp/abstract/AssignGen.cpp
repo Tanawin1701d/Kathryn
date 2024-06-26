@@ -37,7 +37,8 @@ namespace kathryn{
             Operable* updateValueRouted =
             _mdGenMaster->routeSrcOprToThisModule(realUde->srcUpdateValue);
             newEvent->srcUpdateValue = updateValueRouted;
-
+            newEvent->desUpdateSlice = realUde->desUpdateSlice;
+            newEvent->priority       = realUde->priority;
             translatedUpdateEvent.push_back(newEvent);
         }
     }
@@ -45,12 +46,12 @@ namespace kathryn{
     std::string AssignGenBase::assignOpBase(bool isClockSen){
         std::string retStr;
         retStr += "always @(" +
-        retStr += isClockSen ? "clk" : "*";
+        retStr += isClockSen ? "posedge clk" : "*";
         retStr += ") begin\n";
 
         for (UpdateEvent* upd: translatedUpdateEvent){
             bool isStateConOcc = false;
-            retStr += "if ( ";
+            retStr += "     if ( ";
             if (upd->srcUpdateState != nullptr){
                 isStateConOcc = true;
                 retStr += getOprStrFromOpr(upd->srcUpdateState);
@@ -69,9 +70,10 @@ namespace kathryn{
             }
 
             retStr += ") begin\n";
+            retStr += "         ";
             retStr += assignmentLine(upd->desUpdateSlice, upd->srcUpdateValue);
             retStr += "\n";
-            retStr += "end\n";
+            retStr += "     end\n";
 
         }
         retStr += "end\n";
@@ -80,7 +82,7 @@ namespace kathryn{
 
     std::string AssignGenBase::assignmentLine(Slice desSlice, Operable* srcUpdateValue){
         assert(srcUpdateValue != nullptr);
-        return getOpr(desSlice) + " <= " + getOprStrFromOpr(srcUpdateValue);
+        return getOpr(desSlice) + " <= " + getOprStrFromOpr(srcUpdateValue) + ";";
     }
 
 

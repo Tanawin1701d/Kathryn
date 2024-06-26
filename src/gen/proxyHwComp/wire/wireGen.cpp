@@ -18,7 +18,7 @@ namespace kathryn{
         ):
     AssignGenBase(mdGenMaster,std::move(cerf),
         (Assignable*) wireMaster, (Identifiable*) wireMaster),
-     _isWireIo(false),
+    _ioType(WIRE_IO_NORMAL),
     _master(wireMaster){}
 
     WireGen::WireGen(
@@ -29,39 +29,48 @@ namespace kathryn{
         ):
     AssignGenBase(mdGenMaster,std::move(cerf),
         (Assignable*) wireMaster, (Identifiable*) wireMaster),
-     _isWireIo(true),
      _ioType(ioType),
     _master(wireMaster){}
 
     std::string WireGen::decIo(){
-        assert(_isWireIo);
         assert((_ioType == WIRE_IO_INPUT) || (_ioType == WIRE_IO_OUTPUT));
         Slice sl = _master->getOperableSlice();
         return std::string((_ioType == WIRE_IO_INPUT) ? "input" : "output") +
-            "wire[" + std::to_string(sl.stop-1) +": 0] " + getOpr();
+            " wire[" + std::to_string(sl.stop-1) +": 0] " + getOpr();
     }
 
     std::string WireGen::decVariable(){
-        assert(!_isWireIo);
+
         Slice sl = _master->getOperableSlice();
-        //////////// it act as wire
-        return "reg [" + std::to_string(sl.stop-1) +
+        std::string prefix;
+
+        if (_ioType == WIRE_IO_INPUT){
+            prefix = "wire ";
+        }else if (_ioType == WIRE_IO_OUTPUT){
+            prefix = "wire ";
+        }else if (_ioType == WIRE_IO_INTER){
+            prefix = "wire ";
+        }else if (_ioType == WIRE_IO_NORMAL){
+            prefix = "reg ";
+        }
+
+        return prefix + " [" + std::to_string(sl.stop-1) +
                 ": 0] " +getOpr() + ";";
     }
 
 
     std::string WireGen::decOp(){
-        if (_isWireIo){
-            if(_ioType == WIRE_IO_INPUT){
-                return ""; /////// input no need to do operation
-            }
-            if (_ioType == WIRE_IO_OUTPUT){
-                UpdateEvent* singleUpdateEvent = _master->getUpdateMeta()[0];
-                assert(singleUpdateEvent != nullptr);
-                return "assign " + getOpr() + " = " +
-                    getOprStrFromOpr(singleUpdateEvent->srcUpdateValue) + ";";
-            }
+        if ((_ioType == WIRE_IO_INPUT) ||
+            (_ioType == WIRE_IO_OUTPUT)||
+            (_ioType == WIRE_IO_INTER)
+           ){
+            assert(!translatedUpdateEvent.empty());
+            UpdateEvent* singleUpdateEvent = translatedUpdateEvent[0];
+            assert(singleUpdateEvent != nullptr);
+            return "assign " + getOpr() + " = " +
+                getOprStrFromOpr(singleUpdateEvent->srcUpdateValue) + ";";
         }
+
         return assignOpBase(false);
     }
 

@@ -39,6 +39,9 @@ namespace kathryn{
 
         std::vector<ModuleGen*>      _subModulePool;
 
+        LogicGenBaseVec              _inputSubModulePool;
+        LogicGenBaseVec              _outputSubModulePool;
+
         std::unordered_map<Operable*, int> _interWireMap;
         std::vector<WireIo*>                _interWires;
 
