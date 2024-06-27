@@ -54,6 +54,10 @@ namespace kathryn{
         std::vector<Wire*>                 _userDecInputWires;
         std::vector<Wire*>                 _userOutputWires;
 
+        /////// only top module will have this
+        std::vector<WireIo*>               _globalInputs;
+        std::vector<WireIo*>               _globalOutputs;
+
         explicit ModuleGen(Module* master);
 
         template<typename T>
@@ -101,6 +105,14 @@ namespace kathryn{
         int       getDept() const{return depthFromGlobalModule;}
         //////////////////////////////////////////////////////////////////
         /////////////// module genFileName
+        std::vector<std::string> getIoDec(
+            const LogicGenBaseVec& inputVec,
+            const LogicGenBaseVec& outputVec,
+            const LogicGenBaseVec& globInputVec,
+            const LogicGenBaseVec& globOutputVec
+        );
+        LogicGenBaseVec recruiteGlobIoIfTop(bool isInput);
+
         std::string getSubModuleDec(ModuleGen* mdGen);
         std::string getOpr();
     };

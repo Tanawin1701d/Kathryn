@@ -5,7 +5,7 @@
 #include "moduleGen.h"
 
 #include "model/hwComponent/module/module.h"
-
+#include "model/hwComponent/abstract/globPool.h"
 #include "gen/proxyHwComp/abstract/logicGenBase.h"
 
 namespace kathryn{
@@ -90,7 +90,7 @@ namespace kathryn{
         _valPool        .routeDepAll();
         _memBlockPool   .routeDepAll();
         _memBlockElePool.routeDepAll();
-        /////////// recruit submodule
+        /////////// route global module to the wire Io
 
     }
 
@@ -130,18 +130,14 @@ namespace kathryn{
         fileWriter->addData(_master->getGlobalName());
         fileWriter->addData("(\n");
         //////// declare input element
-        writeGenVec(inputVec.getDecIos(),fileWriter, ",\n");
-        if ((!inputVec.empty()) && (!outputVec.empty())){
-            fileWriter->addData(",\n");
-        }
-        //////// declare output element
-        writeGenVec(outputVec.getDecIos(), fileWriter, ",\n");
 
-        if ((!inputVec.empty()) || (!outputVec.empty())){
-            fileWriter->addData(",\n");
-        }
-        fileWriter->addData("input wire clk\n");
-        fileWriter->addData(");\n");
+        std::vector<std::string> ioVec =
+            getIoDec(inputVec,outputVec,
+                recruiteGlobIoIfTop(true),
+                recruiteGlobIoIfTop(false));
+        ioVec.emplace_back("input wire clk");
+        writeGenVec(ioVec, fileWriter, ",\n");
+        fileWriter->addData("\n);\n");
 
         //////// todo with sub module
 
@@ -378,6 +374,20 @@ namespace kathryn{
         ////// it is exact operable
         return &((*useInputAsModuleGen[0]->getAutoInputWire(exactRealSrc))
                 (realSrc->getOperableSlice()));
+    }
+
+    LogicGenBaseVec ModuleGen::recruiteGlobIoIfTop(bool isInput){
+        if (!_master->isTopModule()){
+            return {};
+        }
+        std::vector<GlobIo*> globIoPool = getGlobPool(isInput);
+        LogicGenBaseVec lgbv;
+        for (GlobIo* globIo: globIoPool){
+            LogicGenBase* logicGenPtr = globIo->getLogicGenFromGlobIo();
+            assert(logicGenPtr != nullptr);
+            lgbv.push_back(logicGenPtr);
+        }
+        return lgbv;
     }
 
     //////////////////////////// get module dec as sub

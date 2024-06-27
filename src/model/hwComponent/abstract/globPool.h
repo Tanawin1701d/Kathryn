@@ -9,8 +9,8 @@
 namespace kathryn{
 
 
-    void addToGlobPool(Operable* src);
-    std::vector<Operable*>& getGlobPool();
+    void addToGlobPool(GlobIo* src);
+    std::vector<GlobIo*>& getGlobPool(bool isInput);
     void cleanGlobPool();
 
 }

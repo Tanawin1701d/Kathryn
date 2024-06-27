@@ -4,6 +4,8 @@
 
 #include "module.h"
 
+#include <util/termColor/termColor.h>
+
 
 #include "model/controller/controller.h"
 
@@ -112,6 +114,17 @@ namespace kathryn{
     void Module::addUserBox(Box* box){
         assert(box != nullptr);
         _userBoxs.push_back(box);
+    }
+
+    bool Module::isTopModule(){
+        if (_parent != nullptr){
+            std::cout << TC_YELLOW <<"warning the top module have other host module" << TC_DEF << std::endl;
+        }
+        return _isTopModule;
+    }
+
+    void Module::setTopModule(){
+        _isTopModule = true;
     }
 
     void Module::buildAll(){

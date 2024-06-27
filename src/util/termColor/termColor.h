@@ -15,6 +15,7 @@ namespace kathryn{
     enum Code {
         FG_RED      = 31,
         FG_GREEN    = 32,
+        FG_YELLOW   = 33,
         FG_BLUE     = 34,
         FG_DEFAULT  = 39,
         BG_RED      = 41,
@@ -35,6 +36,7 @@ namespace kathryn{
     extern TC TC_BLUE;
     extern TC TC_RED;
     extern TC TC_GREEN;
+    extern TC TC_YELLOW;
     extern TC TC_DEF;
 
 

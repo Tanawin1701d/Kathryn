@@ -60,7 +60,7 @@ namespace kathryn{
         bool      checkIntegrity() override{
             return getGlobIoType() != GLOB_IO_INPUT; ////// can not use it as output
         }
-        Operable* getOprFromGlobIo() override{return this;}
+        LogicGenBase* getLogicGenFromGlobIo() override{assert(_genEngine != nullptr); return _genEngine;}
 
         /**override logicc gen base*/
         void createLogicGen() override;

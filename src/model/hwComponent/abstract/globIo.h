@@ -5,8 +5,6 @@
 #ifndef GLOBIO_H
 #define GLOBIO_H
 
-
-
 namespace kathryn{
 
 
@@ -16,7 +14,7 @@ namespace kathryn{
         GLOB_IO_NOT_BOTH
     };
 
-    class Operable;
+    class LogicGenBase;
     class GlobIo{
     protected:
         GLOB_IO_TYPE _globIoType = GLOB_IO_NOT_BOTH;
@@ -25,7 +23,7 @@ namespace kathryn{
         void asInputGlob ();
         void asOutputGlob();
         virtual bool checkIntegrity() = 0;
-        virtual Operable* getOprFromGlobIo() = 0;
+        virtual LogicGenBase* getLogicGenFromGlobIo() = 0;
         GLOB_IO_TYPE getGlobIoType(){ return _globIoType;}
 
     };

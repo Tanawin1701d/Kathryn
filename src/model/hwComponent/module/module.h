@@ -53,8 +53,8 @@ namespace kathryn{
                    {
 
     private:
-       MODEL_STAGE              _mdStage = MODEL_UNINIT;
-
+        MODEL_STAGE              _mdStage = MODEL_UNINIT;
+        bool                     _isTopModule = false;
         /**all slave object that belong to this elements*/
         /** register that user to represent state*/
         std::vector<Reg*>           _spRegs[SP_CNT_REG]; ////// state/ cond/cycle wait use same ctrlflowRegbase class
@@ -127,6 +127,10 @@ namespace kathryn{
         auto& getUserNests(){return _userNests;}
         auto& getUserSubModules(){return _userSubModules;}
         auto& getBoxs(){return _userBoxs;}
+
+        /** is Top Module*/
+        bool isTopModule();
+        void setTopModule();
 
 
         /** Functions which allow user to custom  their module design flow*/

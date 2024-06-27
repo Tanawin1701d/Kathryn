@@ -56,7 +56,7 @@ namespace kathryn{
         /**override logicc gen base*/
         void createLogicGen() override;
         bool checkIntegrity() override{return true;}
-        Operable* getOprFromGlobIo() override{return this;}
+        LogicGenBase* getLogicGenFromGlobIo() override{assert(_genEngine != nullptr); return _genEngine;}
     };
 
     class WireSimEngine: public LogicSimEngine{

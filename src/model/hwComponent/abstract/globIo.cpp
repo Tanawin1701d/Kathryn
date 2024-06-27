@@ -9,12 +9,12 @@ namespace kathryn{
 
 void GlobIo::asInputGlob(){
     _globIoType = GLOB_IO_INPUT;
-    addToGlobPool(getOprFromGlobIo());
+    addToGlobPool(this);
 }
 
 void GlobIo::asOutputGlob(){
     _globIoType = GLOB_IO_OUTPUT;
-    addToGlobPool(getOprFromGlobIo());
+    addToGlobPool(this);
 }
 
 

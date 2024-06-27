@@ -43,7 +43,7 @@ std::string LogicGenBase::getOpr(Slice sl){
         }
         return getOpr() + "[" + std::to_string(sl.stop-1) +
                ": " + std::to_string(sl.start) + "]";
-    }
+}
 
 
 

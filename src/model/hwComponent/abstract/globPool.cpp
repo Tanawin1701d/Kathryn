@@ -2,26 +2,33 @@
 // Created by tanawin on 26/6/2024.
 //
 
-#include "globPool.h"
-
-#include <kathryn.h>
-
+#include <cassert>
+#include <vector>
+#include "model/hwComponent/abstract/globIo.h"
 
 namespace kathryn{
 
-    std::vector<Operable*> globPool;
+    std::vector<GlobIo*> globInputPool;
+    std::vector<GlobIo*> globOutputPool;
 
-    void addToGlobPool(Operable* src){
+    void addToGlobPool(GlobIo* src){
         assert(src != nullptr);
-        globPool.push_back(src);
+        if (src->getGlobIoType() == GLOB_IO_INPUT){
+            globInputPool.push_back(src); return;
+        }
+        if (src->getGlobIoType() == GLOB_IO_OUTPUT){
+            globOutputPool.push_back(src); return;
+        }
+        assert(false);
     }
 
-    std::vector<Operable*>& getGlobPool(){
-        return globPool;
+    std::vector<GlobIo*>& getGlobPool(bool isInput){
+        return isInput ? globInputPool : globOutputPool;
     }
 
     void cleanGlobPool(){
-        globPool.clear();
+        globInputPool.clear();
+        globOutputPool.clear();
     }
 
 
