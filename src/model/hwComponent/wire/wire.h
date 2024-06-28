@@ -55,8 +55,13 @@ namespace kathryn{
 
         /**override logicc gen base*/
         void createLogicGen() override;
-        bool checkIntegrity() override{return true;}
-        LogicGenBase* getLogicGenFromGlobIo() override{assert(_genEngine != nullptr); return _genEngine;}
+
+        /** override global input*/
+        std::string  getGlobIoName()           override;
+        bool checkIntegrity()                override;
+        void connectToThisIo(WireIo* wireIo) override;
+        Operable* getOprFromGlobIo()         override;
+
     };
 
     class WireSimEngine: public LogicSimEngine{

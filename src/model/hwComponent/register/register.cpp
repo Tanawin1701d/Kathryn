@@ -115,6 +115,21 @@ namespace kathryn{
         );
     }
 
+    std::string  Reg::getGlobIoName(){
+        return "Glob_" + getGlobalName() + "_" + getVarName();
+
+    }
+    bool Reg::checkIntegrity(){
+        return getGlobIoType() != GLOB_IO_INPUT;
+    }
+    void Reg::connectToThisIo(WireIo* wireIo){
+        /////// it can't connect because it can't take wireIo as a input
+        mfAssert(false, "can't use it as global input");
+    }
+    Operable* Reg::getOprFromGlobIo(){
+        return this;
+    };
+
     /**
      * Reg Logic Sim
      * */

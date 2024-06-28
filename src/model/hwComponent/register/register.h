@@ -57,13 +57,15 @@ namespace kathryn{
         void makeResetEvent();
         /** return type*/
         Operable* checkShortCircuit() override;
-        bool      checkIntegrity() override{
-            return getGlobIoType() != GLOB_IO_INPUT; ////// can not use it as output
-        }
-        LogicGenBase* getLogicGenFromGlobIo() override{assert(_genEngine != nullptr); return _genEngine;}
 
         /**override logicc gen base*/
         void createLogicGen() override;
+
+        /** override global input*/
+        std::string  getGlobIoName()           override;
+        bool checkIntegrity()                override;
+        void connectToThisIo(WireIo* wireIo) override;
+        Operable* getOprFromGlobIo()         override;
     };
 
     class RegSimEngine: public LogicSimEngine{

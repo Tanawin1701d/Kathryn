@@ -22,13 +22,15 @@ namespace kathryn{
         Module*           _masterModule    = nullptr;
         ModuleGen*        _masterModuleGen = nullptr;
 
+        void initGlobEle(bool isInput);
+
     public:
 
         explicit GenController() = default;
 
         virtual ~GenController() = default;
 
-        void initEnv(PARAM& param);
+        void initEnv(const PARAM& param);
 
         void start() override{};
 
@@ -41,6 +43,8 @@ namespace kathryn{
         void reset() override;
 
         void clean() override;
+
+
 
     };
 

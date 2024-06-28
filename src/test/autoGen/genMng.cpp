@@ -21,7 +21,7 @@ namespace kathryn{
         std::sort(genTestCase.begin(), genTestCase.end());
         for (GenEle* genEle: genTestCase){
             std::cout << TC_BLUE << "gen test case " << genEle->getId() << TC_DEF << std::endl;
-            genEle->start(param);
+            genEle->startGen(param);
             std::cout << TC_BLUE << "finish gen test case" << genEle->getId() << TC_DEF << std::endl;
         }
     }

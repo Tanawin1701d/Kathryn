@@ -133,6 +133,31 @@ namespace kathryn{
         );
     }
 
+    /** override global input*/
+    std::string  Wire::getGlobIoName(){
+        return "Glob_" + getGlobalName() + "_" + getVarName();
+    }
+    bool Wire::checkIntegrity(){
+        return true;
+    }
+    void Wire::connectToThisIo(WireIo* wireIo){
+        assert(getGlobIoType() == GLOB_IO_INPUT);
+        addUpdateMeta(
+            new UpdateEvent({
+                nullptr,
+                nullptr,
+                wireIo,
+                getOperableSlice(),
+                DEFAULT_UE_PRI_MIN
+                }
+            )
+        );
+    }
+    Operable* Wire::getOprFromGlobIo(){ return this;}
+
+    /////// global input pool
+
+
     /**
      *
      *   wire sim engine

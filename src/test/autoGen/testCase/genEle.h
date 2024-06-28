@@ -10,8 +10,11 @@ namespace kathryn{
     class GenEle{
         int _id;
     public:
+        explicit GenEle(int id);
 
-        explicit GenEle(int id): _id(id){}
+        virtual ~GenEle() = default;
+
+        void startGen(const PARAM& param);
 
         virtual void start(const PARAM& param) = 0;
 

@@ -24,6 +24,8 @@ namespace kathryn{
                 Wire*         wireMaster,
                 WIRE_IO_TYPE  ioType);
 
+        std::string getOpr()     override;
+
         std::string decIo()       override;
         std::string decVariable() override; ///// in case output there is no need dec variable
         std::string decOp()       override;

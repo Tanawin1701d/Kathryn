@@ -55,7 +55,7 @@ namespace kathryn{
 
         if (_routedOprB != nullptr){
             _bSliced = getOprStrFromOpr(_routedOprB);
-            bSize    = _master->getOperableSlice().getSize();
+            bSize    = _master->_b->getOperableSlice().getSize();
         }
 
         retStr += "assign " + getOpr() + " = ";

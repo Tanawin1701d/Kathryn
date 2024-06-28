@@ -7,7 +7,7 @@
 #include "cfe.h"
 #include "test/autoSim/simMng.h"
 #include "example/riscv/simulation/RISCV_sim_sort.h"
-#include "test/autoGen/testCase/genAutoTest1.h"
+#include "test/autoGen/genMng.h"
 
 
 namespace kathryn{
@@ -60,7 +60,7 @@ namespace kathryn{
         } else if (params["testType"] == "testRiscvSort"){
             test_riscv_sort(params);
         }else if (params["testType"]  == "testGen"){
-            startGen(params);
+            startGenEle(params);
         }else{
             std::cout << "there is no command to test system" << std::endl;
         }

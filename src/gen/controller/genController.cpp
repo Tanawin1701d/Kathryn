@@ -3,22 +3,27 @@
 //
 
 #include "genController.h"
-
-#include <model/controller/controller.h>
+#include "model/controller/controller.h"
+#include "model/hwComponent/abstract/globPool.h"
 
 
 namespace kathryn{
 
-    void GenController::initEnv(PARAM& param){
-        _desVerilogPath = param[_desPathParamPrefix];
+    void GenController::initEnv(const PARAM& param){
+        _desVerilogPath = param.find(_desPathParamPrefix)->second;
         _verilogWriter  = new FileWriterBase(_desVerilogPath);
         _masterModule   = getGlobalModulePtr();
     }
 
     void GenController::initEle(){
+
         _masterModule->createModuleGen();
+        _masterModule->setTopModule();
         _masterModuleGen = _masterModule->getModuleGen();
         _masterModuleGen->startInitEle();
+        initGlobEle(true); ///// init input
+        initGlobEle(false); ////// init output
+
     }
 
     void GenController::routeIo(){
@@ -47,6 +52,43 @@ namespace kathryn{
             genCtrl = new GenController();
         }
         return genCtrl;
+    }
+
+
+
+
+    ///////////////////////// inside element
+
+    void GenController::initGlobEle(bool isInput){
+        assert(_masterModule != nullptr);
+        assert(_masterModuleGen != nullptr);
+        std::vector<WireIo*>& desSaveIo = isInput ? _masterModuleGen->getGlobalInputs()
+                                                  : _masterModuleGen->getGlobalOutputs();
+        ///////
+        /////// input/output
+        ///////
+        for(GlobIo* srcToBeGlobIo: getGlobPool(isInput)){
+            assert(srcToBeGlobIo != nullptr);
+            Operable* originOpr = srcToBeGlobIo->getOprFromGlobIo();
+            assert(originOpr != nullptr);
+            //////// the host wire require inserting
+            auto& inputIo = _make<WireIo>(
+                    srcToBeGlobIo->getGlobIoName(),
+                    true,
+                    originOpr->getOperableSlice().getSize(),
+                    isInput ? WIRE_IO_INPUT_GLOB : WIRE_IO_OUTPUT_GLOB
+                );
+            inputIo.buildHierarchy(_masterModule);
+            inputIo.createLogicGen();
+            /////// connect
+            if(isInput){
+                srcToBeGlobIo->connectToThisIo(&inputIo);
+            }else{
+                inputIo.connectTo(originOpr, false); /////// it may needs to be route
+            }
+            desSaveIo.push_back(&inputIo);
+        }
+
     }
 
 

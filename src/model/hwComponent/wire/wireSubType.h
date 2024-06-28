@@ -11,7 +11,9 @@ namespace kathryn{
         WIRE_IO_INPUT,
         WIRE_IO_OUTPUT,
         WIRE_IO_INTER,
-        WIRE_IO_NORMAL
+        WIRE_IO_NORMAL,
+        WIRE_IO_INPUT_GLOB,
+        WIRE_IO_OUTPUT_GLOB
     };
 
 }

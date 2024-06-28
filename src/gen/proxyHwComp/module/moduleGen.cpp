@@ -77,7 +77,17 @@ namespace kathryn{
     }
 
     void ModuleGen::startRouteEle(){
-
+        /////////// route io
+        if (_master->isTopModule()){
+            ////////////////////////// recruit first
+            LogicGenBaseVec inputLogicGenBase;
+            LogicGenBaseVec outputLogicGenBase;
+            recruitLogicGenBase(inputLogicGenBase,_globalInputs);
+            recruitLogicGenBase(outputLogicGenBase, _globalOutputs);
+            /////////////////////////// route dep for global io
+            inputLogicGenBase.routeDepAll();
+            outputLogicGenBase.routeDepAll();
+        }
         /////////// module gen
         for(ModuleGen* mdGen: _subModulePool){
             mdGen->startRouteEle();
@@ -90,8 +100,6 @@ namespace kathryn{
         _valPool        .routeDepAll();
         _memBlockPool   .routeDepAll();
         _memBlockElePool.routeDepAll();
-        /////////// route global module to the wire Io
-
     }
 
     void ModuleGen::startCmpModule(ModuleGen* rhsMdg){
@@ -99,6 +107,8 @@ namespace kathryn{
     }
 
     void ModuleGen::startWriteFile(FileWriterBase* fileWriter){
+        LogicGenBaseVec globInputVec;
+        LogicGenBaseVec globOutputVec;
         LogicGenBaseVec inputVec;
         LogicGenBaseVec outputVec;
         LogicGenBaseVec bridgeVec;
@@ -106,9 +116,11 @@ namespace kathryn{
         LogicGenBaseVec subModuleInputRepresent;
 
         ///////////// recruit io /////////////////////////////////////
-        recruitLogicGenBase(inputVec, _autoInputWires);
-        recruitLogicGenBase(outputVec, _autoOutputWires);
-        recruitLogicGenBase(bridgeVec, _interWires);
+        recruitLogicGenBase(globInputVec , _globalInputs);
+        recruitLogicGenBase(globOutputVec, _globalOutputs);
+        recruitLogicGenBase(inputVec     , _autoInputWires);
+        recruitLogicGenBase(outputVec    , _autoOutputWires);
+        recruitLogicGenBase(bridgeVec    , _interWires);
         for (ModuleGen* subMdGen: _subModulePool){
             recruitLogicGenBase(subModuleOutputRepresent,
                                 subMdGen->_autoOutputWires);
@@ -127,19 +139,24 @@ namespace kathryn{
                             "////////////////////////////////////////////////////////////////////////////////\n"
                             );
         fileWriter->addData("module ");
-        fileWriter->addData(_master->getGlobalName());
-        fileWriter->addData("(\n");
-        //////// declare input element
+        fileWriter->addData(_master->getGlobalName() + "(\n");
 
-        std::vector<std::string> ioVec =
-            getIoDec(inputVec,outputVec,
-                recruiteGlobIoIfTop(true),
-                recruiteGlobIoIfTop(false));
+        //////// declare input/output element
+        std::vector<std::string> ioVec = getIoDec(inputVec,outputVec,globInputVec,globOutputVec);
         ioVec.emplace_back("input wire clk");
         writeGenVec(ioVec, fileWriter, ",\n");
         fileWriter->addData("\n);\n");
 
-        //////// todo with sub module
+        /***                          |   wire declaration   |   wire operation   |
+         * ------------------------------------------------------------------------
+         * glob/auto input  wire ---->           no          |         no
+         * glob/auto output wire ---->           no          |        yes
+         * submodule input wire  ---->          yes          |        yes
+         * submodule output wire ---->          yes          |         no
+         * ------------------------------------------------------------------------
+         * bridge wire           ---->          yes          |        yes
+         * ------------------------------------------------------------------------
+         */
 
         /*
          * declare variable initiation
@@ -152,24 +169,18 @@ namespace kathryn{
         writeGenVec(_nestPool.getDecVars()               , fileWriter, "\n"); fileWriter->addData("\n////_valPool\n");
         writeGenVec(_valPool.getDecVars()                , fileWriter, "\n"); fileWriter->addData("\n////_memBlockPool\n");
         writeGenVec(_memBlockPool.getDecVars()           , fileWriter, "\n"); fileWriter->addData("\n////_memBlockElePool\n");
-        writeGenVec(_memBlockElePool.getDecVars()        , fileWriter, "\n"); fileWriter->addData("\n////bridgeVec\n");
-        writeGenVec(bridgeVec.getDecVars()               , fileWriter, "\n"); fileWriter->addData("\n////input of submodule\n");
+        writeGenVec(_memBlockElePool.getDecVars()        , fileWriter, "\n"); fileWriter->addData("\n////input of submodule\n");
         writeGenVec(subModuleInputRepresent.getDecVars() , fileWriter, "\n"); fileWriter->addData("\n////output of submodule\n");
-        writeGenVec(subModuleOutputRepresent.getDecVars(), fileWriter, "\n"); fileWriter->addData("\n\n");
-        ////////// no need to declare output
+        writeGenVec(subModuleOutputRepresent.getDecVars(), fileWriter, "\n"); fileWriter->addData("\n////bridgeVec\n");
+        writeGenVec(bridgeVec.getDecVars()               , fileWriter, "\n");
 
         fileWriter->addData("///////////////////////////////////////////////\n"
                             "//////////////////// operation///////////////////\n"
                             "/////////////////////////////////////////////////\n"
                             );
 
-        /////////////////////// declare variable for submodule connenection
-        ////////////////////////////////// there is no need to do op on this wire due to
-        ////////////////////////////////// sub module is driver not us
 
 
-
-        //////// declare operation initiation
         fileWriter->addData("\n///regOp\n");
         writeGenVec(_regPool.getDecOps()                 , fileWriter, "\n"); fileWriter->addData("\n///_wirePoolOp\n");
         writeGenVec(_wirePool.getDecOps()                , fileWriter, "\n"); fileWriter->addData("\n///_exprPoolOp\n");
@@ -177,10 +188,11 @@ namespace kathryn{
         writeGenVec(_nestPool.getDecOps()                , fileWriter, "\n"); fileWriter->addData("\n///_valPoolOp\n");
         writeGenVec(_valPool.getDecOps()                 , fileWriter, "\n"); fileWriter->addData("\n///_memBlockPoolOp\n");
         writeGenVec(_memBlockPool.getDecOps()            , fileWriter, "\n"); fileWriter->addData("\n///_memBlockElePoolOp\n");
-        writeGenVec(_memBlockElePool.getDecOps()         , fileWriter, "\n"); fileWriter->addData("\n///bridgeVecOp\n");
-        writeGenVec(bridgeVec.getDecOps()                , fileWriter, "\n"); fileWriter->addData("\n///outputVecOp\n");
-        writeGenVec(outputVec.getDecOps()                , fileWriter, "\n"); fileWriter->addData("\n////input of submodule\n");
-        writeGenVec(subModuleInputRepresent.getDecOps()  , fileWriter, "\n"); fileWriter->addData("\n");
+        writeGenVec(_memBlockElePool.getDecOps()         , fileWriter, "\n"); fileWriter->addData("\n///outputVecOp\n");
+        writeGenVec(outputVec.getDecOps()                , fileWriter, "\n"); fileWriter->addData("\n///outputVecOp global\n");
+        writeGenVec(globOutputVec.getDecOps()            , fileWriter, "\n"); fileWriter->addData("\n////input of submodule\n");
+        writeGenVec(subModuleInputRepresent.getDecOps()  , fileWriter, "\n"); fileWriter->addData("\n///bridgeVecOp\n");
+        writeGenVec(bridgeVec.getDecOps()                , fileWriter, "\n");
         ////////// declare submodule connectivity
         fileWriter->addData("/// sub module declaration\n");
         for (ModuleGen* subMdGen: _subModulePool){
@@ -216,7 +228,7 @@ namespace kathryn{
             newAddedWire.buildHierarchy(_master);
             newAddedWire.createLogicGen();
             if (connectTheWire){
-                newAddedWire.connectTo(opr);
+                newAddedWire.connectTo(opr, true);
             }
             ioVec.push_back(&newAddedWire);
             ioMap.insert({realSrc, ioVec.size()-1});
@@ -339,7 +351,7 @@ namespace kathryn{
         /// des series do it as input
         /// we assure the vector have at least one element in size
         /// //////////////////////////////////
-        Operable* inputWire = interWire;
+        WireIo* inputWire = interWire;
         for(int idx = ((int)useInputAsModuleGen.size()-2); idx >= 0; idx--){
             ModuleGen& curMdGen = *useInputAsModuleGen[idx];
             if (curMdGen.checkIsThereAutoInputWire(exactRealSrc)){
@@ -365,29 +377,31 @@ namespace kathryn{
             }
             outputWire = curMdGen.addAutoOutputWire(outputWire, exactRealSrc);
         }
-        interWire->connectTo(outputWire);
+        interWire->connectTo(outputWire, true);
         //////////////////////////////
 
         if (realSrc->getOperableSlice() == exactRealSrc->getOperableSlice()){
-            return useInputAsModuleGen[0]->getAutoInputWire(exactRealSrc);
+            return inputWire;
         }
         ////// it is exact operable
-        return &((*useInputAsModuleGen[0]->getAutoInputWire(exactRealSrc))
+        return &((*inputWire)
                 (realSrc->getOperableSlice()));
     }
 
-    LogicGenBaseVec ModuleGen::recruiteGlobIoIfTop(bool isInput){
-        if (!_master->isTopModule()){
-            return {};
-        }
-        std::vector<GlobIo*> globIoPool = getGlobPool(isInput);
-        LogicGenBaseVec lgbv;
-        for (GlobIo* globIo: globIoPool){
-            LogicGenBase* logicGenPtr = globIo->getLogicGenFromGlobIo();
-            assert(logicGenPtr != nullptr);
-            lgbv.push_back(logicGenPtr);
-        }
-        return lgbv;
+    std::vector<std::string> ModuleGen::getIoDec(
+        const LogicGenBaseVec& inputVec,
+        const LogicGenBaseVec& outputVec,
+        const LogicGenBaseVec& globInputVec,
+        const LogicGenBaseVec& globOutputVec){
+
+        std::vector<std::string> result;
+
+        for (LogicGenBase* lgb: inputVec)     {result.push_back(lgb->decIo());}
+        for (LogicGenBase* lgb: outputVec)    {result.push_back(lgb->decIo());}
+        for (LogicGenBase* lgb: globInputVec) {result.push_back(lgb->decIo());}
+        for (LogicGenBase* lgb: globOutputVec){result.push_back(lgb->decIo());}
+
+        return result;
     }
 
     //////////////////////////// get module dec as sub

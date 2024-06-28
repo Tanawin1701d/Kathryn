@@ -80,7 +80,7 @@ namespace kathryn {
             {
 
             if (isVarNameRetrievable(_globalId)){ _varMeta = retrieveVarMeta();}
-            if (!_varMeta.isUser){ _varMeta.varName += "INTERNAL";}
+            if (!_varMeta.isUser){ _varMeta.varName += "_INTERNAL";}
             _globalName = GLOBAL_PREFIX[type] + std::to_string(_globalId);
 
             if (_globalId == 15){

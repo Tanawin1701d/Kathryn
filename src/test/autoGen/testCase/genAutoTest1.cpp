@@ -3,7 +3,7 @@
 //
 
 #include "kathryn.h"
-#include "genAutoTest1.h"
+#include "genEle.h"
 
 namespace kathryn{
 
@@ -11,34 +11,36 @@ namespace kathryn{
     public:
         mReg(a, 8);
         mReg(b, 8);
+        mWire(c, 8);
 
         explicit testGenMod1(int x): Module(){}
 
         void flow() override{
 
-
+            a.asOutputGlob();
+            c.asInputGlob();
 
             seq{
-                a <<= b;
+                cif(c == 0){
+                    a <<= b;
+                }
             }
 
         }
 
     };
 
-    void startGen(PARAM& params){
-        mMod(news, testGenMod1, 1);
-        startModelKathryn();
+    class GenEle1: public GenEle{
 
-        GenController* genCtrl = getGenController();
-        assert(genCtrl != nullptr);
-        genCtrl->initEnv(params);
-        genCtrl->initEle();
-        genCtrl->routeIo();
-        genCtrl->generateEveryModule();
-        genCtrl->reset();
+    public:
+        explicit GenEle1(int id):GenEle(id){}
 
-    }
+        void start(const PARAM& param) override{
+            mMod(myMd, testGenMod1, 1);
+        }
 
+    };
+
+    GenEle1 testCase(1);
 
 }

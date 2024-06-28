@@ -51,9 +51,9 @@ namespace kathryn{
         std::unordered_map<Operable*, int> _autoOutputWireMap;
         std::vector<WireIo*>               _autoOutputWires;
 
+        //////// now we didn't use it
         std::vector<Wire*>                 _userDecInputWires;
         std::vector<Wire*>                 _userOutputWires;
-
         /////// only top module will have this
         std::vector<WireIo*>               _globalInputs;
         std::vector<WireIo*>               _globalOutputs;
@@ -104,6 +104,10 @@ namespace kathryn{
         Operable* routeSrcOprToThisModule (Operable* exactRealSrc);
         int       getDept() const{return depthFromGlobalModule;}
         //////////////////////////////////////////////////////////////////
+        std::vector<WireIo*>& getGlobalInputs (){return _globalInputs; }
+        std::vector<WireIo*>& getGlobalOutputs(){return _globalOutputs;}
+
+        //////////////////////////////////////////////////////////////////
         /////////////// module genFileName
         std::vector<std::string> getIoDec(
             const LogicGenBaseVec& inputVec,
@@ -111,8 +115,6 @@ namespace kathryn{
             const LogicGenBaseVec& globInputVec,
             const LogicGenBaseVec& globOutputVec
         );
-        LogicGenBaseVec recruiteGlobIoIfTop(bool isInput);
-
         std::string getSubModuleDec(ModuleGen* mdGen);
         std::string getOpr();
     };

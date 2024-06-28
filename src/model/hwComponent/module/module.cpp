@@ -117,13 +117,13 @@ namespace kathryn{
     }
 
     bool Module::isTopModule(){
-        if (_parent != nullptr){
-            std::cout << TC_YELLOW <<"warning the top module have other host module" << TC_DEF << std::endl;
-        }
         return _isTopModule;
     }
 
     void Module::setTopModule(){
+        if (_parent != nullptr){
+            std::cout << TC_YELLOW <<"warning the top module have other host module" << TC_DEF << std::endl;
+        }
         _isTopModule = true;
     }
 
