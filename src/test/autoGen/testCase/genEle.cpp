@@ -15,7 +15,7 @@ namespace kathryn{
     }
 
 
-    void GenEle::startGen(const PARAM& params){
+    void GenEle::startGen(PARAM& params){
 
         start(params);
         startModelKathryn();
@@ -25,7 +25,7 @@ namespace kathryn{
         genCtrl->initEle();
         genCtrl->routeIo();
         genCtrl->generateEveryModule();
-        genCtrl->reset();
+        resetKathryn();
 
 
     }

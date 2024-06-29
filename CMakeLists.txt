@@ -48,4 +48,7 @@ add_executable(Kathryn
         src/model/hwComponent/abstract/globPool.cpp
         src/model/hwComponent/abstract/globPool.h
         src/model/hwComponent/abstract/globIo.cpp
+        src/test/autoGen/testCase/genAutoTest2.cpp
+        src/params/genParam.cpp
+        src/params/genParam.h
 )

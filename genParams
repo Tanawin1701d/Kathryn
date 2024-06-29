@@ -1,3 +1,5 @@
 testType = testGen
 
-genPath = /media/tanawin/tanawin1701e/project2/Kathryn/KOut/genTest/test.v
+; gen Path is prefix
+
+genPath = /media/tanawin/tanawin1701e/project2/Kathryn/KOut/genTest/test

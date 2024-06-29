@@ -12,7 +12,7 @@ namespace kathryn{
 
     void addGenEle(GenEle* genEle);
 
-    void startGenEle(const PARAM& param);
+    void startGenEle(PARAM& param);
 
 
 }

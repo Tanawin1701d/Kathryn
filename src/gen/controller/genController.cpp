@@ -9,8 +9,8 @@
 
 namespace kathryn{
 
-    void GenController::initEnv(const PARAM& param){
-        _desVerilogPath = param.find(_desPathParamPrefix)->second;
+    void GenController::initEnv(PARAM& param){
+        _desVerilogPath = param[_desPathParamPrefix];
         _verilogWriter  = new FileWriterBase(_desVerilogPath);
         _masterModule   = getGlobalModulePtr();
     }
@@ -37,6 +37,7 @@ namespace kathryn{
     void GenController::reset(){
         _verilogWriter->flush();
         delete _verilogWriter;
+        _verilogWriter = nullptr;
     }
 
     void GenController::clean(){

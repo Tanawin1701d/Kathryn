@@ -14,9 +14,9 @@ namespace kathryn{
 
         virtual ~GenEle() = default;
 
-        void startGen(const PARAM& param);
+        void startGen(PARAM& param);
 
-        virtual void start(const PARAM& param) = 0;
+        virtual void start(PARAM& param) = 0;
 
         int getId() const{return _id;}
 

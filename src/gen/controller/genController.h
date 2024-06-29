@@ -30,7 +30,7 @@ namespace kathryn{
 
         virtual ~GenController() = default;
 
-        void initEnv(const PARAM& param);
+        void initEnv(PARAM& param);
 
         void start() override{};
 

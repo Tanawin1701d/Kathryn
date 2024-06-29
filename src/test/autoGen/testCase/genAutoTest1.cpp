@@ -35,7 +35,7 @@ namespace kathryn{
     public:
         explicit GenEle1(int id):GenEle(id){}
 
-        void start(const PARAM& param) override{
+        void start(PARAM& param) override{
             mMod(myMd, testGenMod1, 1);
         }
 

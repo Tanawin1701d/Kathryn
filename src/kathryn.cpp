@@ -22,6 +22,8 @@ namespace kathryn{
         getControllerPtr()->reset();
         /** reset simulation layer*/
         getSimController()->reset();
+        /** reset generator*/
+        getGenController()->reset();
         /** clean global io declaration*/
         cleanGlobPool();
 

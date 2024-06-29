@@ -60,6 +60,7 @@ namespace kathryn{
          * */
         if (!_basicNodes.empty()){
             basicStNode = new StateNode();
+            basicStNode->setInternalIdent("parStateReg_" + std::to_string(getGlobalId()));
             addSysNode(basicStNode);
             fillIntResetToNodeIfThere(basicStNode);
             /** add basic assignment to depend on stateNode*/
