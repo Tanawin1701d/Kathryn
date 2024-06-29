@@ -35,7 +35,9 @@ namespace kathryn{
     }
 
     void GenController::reset(){
-        _verilogWriter->flush();
+        if (_verilogWriter != nullptr){
+            _verilogWriter->flush();
+        }
         delete _verilogWriter;
         _verilogWriter = nullptr;
     }

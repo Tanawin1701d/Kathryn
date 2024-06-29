@@ -13,9 +13,9 @@ namespace kathryn{
         bool testAutoSkip = false;
         mVal(bnk, 32, 48);
         mVal(zero, 32, 0);
-        mVal(hf, 20, 64);
-        mVal(nine, 20, 9);
-        mVal(ele, 20, 11);
+        mVal(hf, 32, 64);
+        mVal(nine, 32, 9);
+        mVal(ele, 32, 11);
         mReg(a , 32);
         mReg(b , 32);
         mReg(c , 32);
