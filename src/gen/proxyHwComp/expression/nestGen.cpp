@@ -16,7 +16,6 @@ namespace kathryn{
                      logicLocalCef cerf,
                      nest*         nestMaster):
     LogicGenBase(mdGenMaster,
-                 std::move(cerf),
                  (Assignable*) nestMaster,
                  (Identifiable*) nestMaster),
     _master(nestMaster){

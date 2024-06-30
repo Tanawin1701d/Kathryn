@@ -17,7 +17,6 @@ namespace kathryn{
 
     public:
         explicit NestGen(ModuleGen*    mdGenMaster,
-                         logicLocalCef cerf,
                          nest*         nestMaster);
 
         ~NestGen() override = default;

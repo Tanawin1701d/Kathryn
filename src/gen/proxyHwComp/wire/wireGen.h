@@ -16,7 +16,6 @@ namespace kathryn{
         Wire* _master = nullptr;
     public:
         WireGen(ModuleGen*    mdGenMaster,
-                logicLocalCef cerf,
                 Wire*         wireMaster);
 
         WireGen(ModuleGen*    mdGenMaster,

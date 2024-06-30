@@ -8,11 +8,9 @@
 namespace kathryn{
 
     MemGen::MemGen(ModuleGen* mdGenMaster,
-                        logicLocalCef cerf,
                         MemBlock* memBlockMaster):
     LogicGenBase(
         mdGenMaster,
-        cerf,
         (Assignable*) memBlockMaster,
         (Identifiable*) memBlockMaster
     ),

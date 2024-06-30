@@ -11,7 +11,6 @@ namespace kathryn{
                        logicLocalCef cerf,
                        Val*          master):
     LogicGenBase(mdGenMaster,
-                 std::move(cerf),
                  (Assignable*) master,
                  (Identifiable*) master),
 

@@ -9,7 +9,7 @@
 #include <utility>
 #include "util/fileWriter/fileWriterBase.h"
 #include "model/hwComponent/abstract/assignable.h"
-#include "logicCerf.h"
+#include "cerf.h"
 #include "model/hwComponent/abstract/globIo.h"
 
 namespace kathryn{
@@ -24,7 +24,6 @@ namespace kathryn{
 
     public:
         explicit LogicGenBase(ModuleGen*    mdGenMaster,
-                              logicLocalCef cerf,
                               Assignable*   asb,
                               Identifiable* ident
         );
@@ -32,6 +31,10 @@ namespace kathryn{
         std::string getOprStrFromOpr(Operable* opr);
         ///////// routing zone
         virtual void routeDep() {assert(false);} ///// do routing
+        ///////// generate cerificate
+        virtual void genCerf(MODULE_GEN_GRP mgg, int grpIdx, int idx);
+        ///////// start compare
+        virtual bool compare(LogicGenBase* lgb);
         ///////// get zone
         virtual std::string getOpr();
         virtual std::string getOpr(Slice sl);
@@ -44,6 +47,9 @@ namespace kathryn{
         /////// glob io check
         virtual GLOB_IO_TYPE getGlobIoStatus(){return GLOB_IO_TYPE::GLOB_IO_NOT_BOTH;}
 
+        bool checkCerfEqLocally(const logicLocalCef& rhsCerf);
+        bool cmpEachOpr(Operable* srcA, Operable* srcB,
+                              ModuleGen* srcMdA, ModuleGen* srcMdB);
 
         ///////// getter
         [[nodiscard]] ModuleGen* getModuleGen() const{
@@ -97,6 +103,14 @@ namespace kathryn{
                 result.push_back(x->decOp());
             }
             return result;
+        }
+
+        void genCerf(MODULE_GEN_GRP mgg, int grp){
+            int idx = 0;
+            for (auto& x: *this){
+                x->genCerf(mgg, grp, idx);
+                idx++;
+            }
         }
     };
 

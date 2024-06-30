@@ -25,9 +25,11 @@ namespace kathryn{
 
     class Module;
     class ModuleGen{
-    private:
-        Module* _master           = nullptr;
-        int depthFromGlobalModule = 0;
+    protected:
+        Module*       _master           = nullptr;
+        int           depthFromGlobalModule = 0;
+        logicLocalCef _cerf;
+
     public:
         LogicGenBaseVec   _regPool;
         LogicGenBaseVec   _wirePool;
@@ -39,10 +41,7 @@ namespace kathryn{
 
         std::vector<ModuleGen*>      _subModulePool;
 
-        LogicGenBaseVec              _inputSubModulePool;
-        LogicGenBaseVec              _outputSubModulePool;
-
-        std::unordered_map<Operable*, int> _interWireMap;
+        std::unordered_map<Operable*, int>  _interWireMap;
         std::vector<WireIo*>                _interWires;
 
         std::unordered_map<Operable*, int> _autoInputWireMap;
@@ -75,6 +74,7 @@ namespace kathryn{
 
         void startInitEle  ();
         void startRouteEle ();
+        void genCerfAll    (int idx); /// idx that it is submodule
         void startCmpModule(ModuleGen* rhsMdg);
         void startWriteFile(FileWriterBase* fileWriter);
 
@@ -117,6 +117,12 @@ namespace kathryn{
         );
         std::string getSubModuleDec(ModuleGen* mdGen);
         std::string getOpr();
+
+        //////////////////////////////////////////////////////////////////
+        ////////////// everyElement cerf
+        void genCerfToEachElement();
+        void genCerfToThisModule(int idx);
+
     };
 
     class ModuleGenInterface{

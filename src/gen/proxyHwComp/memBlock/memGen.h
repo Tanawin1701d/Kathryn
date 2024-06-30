@@ -18,7 +18,6 @@ namespace kathryn{
 
     public:
         explicit MemGen(ModuleGen* mdGenMaster,
-                        logicLocalCef cerf,
                         MemBlock* memBlockMaster);
 
         void routeDep() override{};

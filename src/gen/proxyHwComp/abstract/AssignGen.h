@@ -15,10 +15,9 @@ namespace kathryn{
         std::vector<UpdateEvent*> translatedUpdateEvent;
     public:
         explicit AssignGenBase(ModuleGen*    mdGenMaster,
-                              logicLocalCef cerf,
                               Assignable*   asb,
                               Identifiable* ident
-        ):LogicGenBase(mdGenMaster, std::move(cerf), asb, ident){}
+        ):LogicGenBase(mdGenMaster, asb, ident){}
 
         ~AssignGenBase() override;
 
@@ -32,6 +31,11 @@ namespace kathryn{
             assert(updateEvent != nullptr);
             translatedUpdateEvent.push_back(updateEvent);
         }
+
+
+        bool cmpAssignGenBase(AssignGenBase* asgb);
+
+
 
 
 

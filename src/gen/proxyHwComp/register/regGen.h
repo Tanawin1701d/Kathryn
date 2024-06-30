@@ -18,12 +18,13 @@ protected:
     Reg* _master = nullptr;
 public:
     RegGen(ModuleGen*    mdGenMaster,
-            logicLocalCef cerf,
             Reg*          regMaster);
 
     std::string decIo()       override;
     std::string decVariable() override;
     std::string decOp()       override;
+
+    bool compare(LogicGenBase* lgb) override;
 
     GLOB_IO_TYPE getGlobIoStatus() override;
 };

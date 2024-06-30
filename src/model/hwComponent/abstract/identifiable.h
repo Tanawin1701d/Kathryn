@@ -20,13 +20,16 @@ typedef unsigned long long int ull;
 namespace kathryn {
 
     struct VarMeta{
+        std::string varType; //// for module use module type
         std::string varName;
         bool        isUser;
     };
 
     bool    isVarNameRetrievable(ull deviceIdentId);
     VarMeta retrieveVarMeta();
-    void    setRetrieveVarMeta(std::string name, bool isUserDec);
+    void    setRetrieveVarMeta(std::string varType,
+                               std::string name,
+                               bool isUserDec);
 
 
     enum HW_COMPONENT_TYPE{
@@ -110,8 +113,9 @@ namespace kathryn {
         [[nodiscard]]
         const std::string& getVarName() const {return _varMeta.varName;}
         void               setVarName(std::string typeName) { _varMeta.varName = std::move(typeName);}
-
         bool               isUserVar() const {return _varMeta.isUser;}
+        [[nodiscard]]
+        VarMeta            getVarMeta() const{return _varMeta;}
 
         /**build Inherit varname*/
         void               buildInheritName() override;

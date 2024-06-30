@@ -20,7 +20,7 @@ namespace kathryn{
 
 
     ull  lastIdent = -1;
-    const VarMeta VARMETADEF = {"UN_INIT_VARMETA", false};
+    const VarMeta VARMETADEF = {"UN_INIT_VARMETA_TYPE","UN_INIT_VARMETA_TYPE", false};
     VarMeta varMeta = VARMETADEF;
 
     bool isVarNameRetrievable(ull deviceIdentId){
@@ -34,9 +34,9 @@ namespace kathryn{
         return preRet;
     }
 
-    void setRetrieveVarMeta(std::string name, bool isUserDec){
+    void setRetrieveVarMeta(std::string varType,std::string name, bool isUserDec){
         lastIdent    = getLastIdentId();
-        varMeta      = {std::move(name), isUserDec};
+        varMeta      = {std::move(varType), std::move(name), isUserDec};
     }
 
 

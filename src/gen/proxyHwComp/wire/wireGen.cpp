@@ -13,11 +13,10 @@ namespace kathryn{
 
     WireGen::WireGen(
         ModuleGen*    mdGenMaster,
-        logicLocalCef cerf,
         Wire*         wireMaster
         ):
-    AssignGenBase(mdGenMaster,std::move(cerf),
-        (Assignable*) wireMaster, (Identifiable*) wireMaster),
+    AssignGenBase(mdGenMaster, (Assignable*) wireMaster,
+        (Identifiable*) wireMaster),
     _ioType(WIRE_IO_NORMAL),
     _master(wireMaster){}
 
@@ -27,8 +26,7 @@ namespace kathryn{
         Wire*         wireMaster,
         WIRE_IO_TYPE  ioType
         ):
-    AssignGenBase(mdGenMaster,std::move(cerf),
-        (Assignable*) wireMaster, (Identifiable*) wireMaster),
+    AssignGenBase(mdGenMaster,(Assignable*) wireMaster, (Identifiable*) wireMaster),
      _ioType(ioType),
     _master(wireMaster){}
 

@@ -17,7 +17,6 @@ namespace kathryn{
     public:
 
         explicit ValueGen(ModuleGen*        mdGenMaster,
-                              logicLocalCef cerf,
                               Val*          master
         );
 

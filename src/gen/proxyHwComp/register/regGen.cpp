@@ -8,11 +8,9 @@
 namespace kathryn{
 
     RegGen::RegGen(ModuleGen* mdGenMaster,
-                   logicLocalCef cerf,
                    Reg* regMaster):
     AssignGenBase(
         mdGenMaster,
-        cerf,
         (Assignable*)regMaster,
         (Identifiable*)regMaster
     ),_master(regMaster){}
@@ -30,6 +28,12 @@ namespace kathryn{
 
     std::string RegGen::decOp(){
         return AssignGenBase::assignOpBase(true);
+    }
+
+    bool RegGen::compare(LogicGenBase* lgb){
+        assert(lgb->getLogicCef().comptype == HW_COMPONENT_TYPE::TYPE_REG);
+        auto* rhs = dynamic_cast<RegGen*>(lgb);
+        return checkCerfEqLocally(rhs->_cerf) &&
     }
 
     GLOB_IO_TYPE RegGen::getGlobIoStatus(){

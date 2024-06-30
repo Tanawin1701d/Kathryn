@@ -85,6 +85,31 @@ namespace kathryn{
         return getOpr(desSlice) + " <= " + getOprStrFromOpr(srcUpdateValue) + ";";
     }
 
+    bool AssignGenBase::cmpAssignGenBase(AssignGenBase* asgb){
+        assert(asgb != nullptr);
+        if ( translatedUpdateEvent.size() != asgb->translatedUpdateEvent.size()){
+            return false;
+        }
+
+        for (int idx = 0; idx < translatedUpdateEvent.size(); idx++){
+            UpdateEvent* a = translatedUpdateEvent[idx];
+            UpdateEvent* b = asgb->translatedUpdateEvent[idx];
+            ////// compare each element
+            if (
+                (!cmpEachOpr(a->srcUpdateCondition,b->srcUpdateCondition,
+                getModuleGen(), asgb->getModuleGen())) ||
+                (!cmpEachOpr(a->srcUpdateState, b->srcUpdateState,
+                getModuleGen(), asgb->getModuleGen())) ||
+                (!cmpEachOpr(a->srcUpdateValue, b->srcUpdateValue,
+                getModuleGen(), asgb->getModuleGen()))
+            ){
+                return false;
+            }
+        }
+        return true;
+
+    }
+
 
 
 }

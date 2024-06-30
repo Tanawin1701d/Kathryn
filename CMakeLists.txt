@@ -51,4 +51,5 @@ add_executable(Kathryn
         src/test/autoGen/testCase/genAutoTest2.cpp
         src/params/genParam.cpp
         src/params/genParam.h
+        src/gen/proxyHwComp/module/moduleGenCmp.cpp
 )

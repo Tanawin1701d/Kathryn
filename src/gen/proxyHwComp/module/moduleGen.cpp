@@ -102,6 +102,16 @@ namespace kathryn{
         _memBlockElePool.routeDepAll();
     }
 
+    void ModuleGen::genCerfAll(int idx){
+        genCerfToThisModule(idx);
+        genCerfToEachElement();
+        for (int subIdx = 0; subIdx < _subModulePool.size(); subIdx++){
+            ModuleGen* mdGen = _subModulePool[subIdx];
+            assert(mdGen != nullptr);
+            mdGen->genCerfAll(subIdx);
+        }
+    }
+
     void ModuleGen::startCmpModule(ModuleGen* rhsMdg){
         assert(false);
     }
@@ -446,6 +456,38 @@ namespace kathryn{
 
     std::string ModuleGen::getOpr(){
         return _master->getGlobalName();
+    }
+
+
+    ////////////////////////////////////////////////////////////////
+    ///////////////////// every element cerf
+    void ModuleGen::genCerfToEachElement(){
+
+        LogicGenBaseVec _interWireVec;
+        LogicGenBaseVec _autoInputGenVec;
+        LogicGenBaseVec _autoOutputGenVec;
+        recruitLogicGenBase(_interWireVec, _interWires);
+        recruitLogicGenBase(_autoInputGenVec, _autoInputWires);
+        recruitLogicGenBase(_autoOutputGenVec, _autoOutputWires);
+
+        _regPool        .genCerf(GEN_REG_GRP, 0);
+        _wirePool       .genCerf(GEN_WIRE_GRP, 1);
+        _exprPool       .genCerf(GEN_EXPRE_GRP, 2);
+        _nestPool       .genCerf(GEN_NEST_GRP, 3);
+        _valPool        .genCerf(GEN_VAL_GRP, 4);
+        _memBlockPool   .genCerf(GEN_MEMBLK_GRP, 5);
+        _memBlockElePool.genCerf(GEN_MEMBLK_ELE_GRP, 6);
+        //////// io wire
+        _interWireVec.genCerf(GEN_INTER_WIRE_GRP, 7);
+        _autoInputGenVec.genCerf(GEN_AUTO_INPUT_WIRE_GRP, 8);
+        _autoOutputGenVec.genCerf(GEN_AUTO_OUTPUT_WIRE_GRP, 9);
+    }
+
+    void ModuleGen::genCerfToThisModule(int idx){
+        _cerf.comptype = TYPE_MODULE;
+        _cerf.md_gen_grp = GEN_MODULE_GRP;
+        _cerf.varMeta    = _master->getVarMeta();
+        _cerf.idx        = idx;
     }
 
 }

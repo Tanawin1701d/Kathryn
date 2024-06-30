@@ -11,11 +11,9 @@ namespace kathryn{
 
     MemEleholderGen::MemEleholderGen(
         ModuleGen*  mdGenMaster,
-        logicLocalCef cerf,
         MemBlockEleHolder* mhMaster
     ): AssignGenBase(
         mdGenMaster,
-        cerf,
         (Assignable*) mhMaster,
         (Identifiable*) mhMaster
     ),

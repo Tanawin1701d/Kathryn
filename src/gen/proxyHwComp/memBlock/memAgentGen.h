@@ -19,7 +19,6 @@ namespace kathryn{
     public:
         explicit MemEleholderGen(
             ModuleGen*  mdGenMaster,
-            logicLocalCef cerf,
             MemBlockEleHolder* mhMaster
         );
 
