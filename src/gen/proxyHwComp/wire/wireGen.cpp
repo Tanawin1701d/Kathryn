@@ -95,6 +95,7 @@ namespace kathryn{
             /////////////// when compare output dep is submodule
             return checkCerfEqLocally(rhs->_cerf) && cmpAssignGenBase(rhs, SUBMOD);
         }
+        ///////////// the dep of input wire is master module
         return checkCerfEqLocally(rhs->_cerf) && cmpAssignGenBase(rhs, MASTERMOD);
 
         ////////////// input dep is master

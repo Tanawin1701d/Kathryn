@@ -62,9 +62,7 @@ namespace kathryn{
             assert(_mdGenMaster != nullptr);
             return _mdGenMaster;
         }
-        [[nodiscard]] logicLocalCef getLogicCef() const{
-            return _cerf;
-        }
+        [[nodiscard]] logicLocalCef getLogicCef() const{return _cerf;}
 
         virtual void addDirectUpdateEvent(UpdateEvent* updateEvent){assert(false);}
 
