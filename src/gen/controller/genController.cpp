@@ -76,6 +76,7 @@ namespace kathryn{
             assert(originOpr != nullptr);
             //////// the host wire require inserting
             auto& inputIo = _make<WireIo>(
+                    "WireIo",
                     srcToBeGlobIo->getGlobIoName(),
                     true,
                     originOpr->getOperableSlice().getSize(),
