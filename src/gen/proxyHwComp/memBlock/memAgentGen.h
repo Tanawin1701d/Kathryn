@@ -28,6 +28,8 @@ namespace kathryn{
         std::string decVariable() override;
         std::string decOp() override;
 
+        bool compare(LogicGenBase* lgb) override;
+
         std::string assignmentLine(Slice desSlice, Operable* srcUpdateValue) override;
     };
 

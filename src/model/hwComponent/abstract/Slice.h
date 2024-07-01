@@ -62,6 +62,10 @@ namespace kathryn{
             return (start == b.start) && (stop == b.stop);
         }
 
+        bool operator != (const Slice& b) const{
+            return !(*this == b);
+        }
+
 
     };
 

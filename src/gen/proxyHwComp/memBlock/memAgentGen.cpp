@@ -56,6 +56,21 @@ namespace kathryn{
 
     }
 
+    bool MemEleholderGen::compare(LogicGenBase* lgb){
+        assert(lgb->getLogicCef().comptype == TYPE_MEM_BLOCK_INDEXER);
+        auto* rhs = dynamic_cast<MemEleholderGen*>(lgb);
+
+        bool cerfTest    = checkCerfEqLocally(rhs->_cerf);
+        bool rwModeTest  = _master->isReadMode() == rhs->_master->isReadMode();
+        bool AssignTest  = cmpAssignGenBase(rhs, SUBMOD);
+        bool indexerTest = cmpEachOpr(routedIndexer, rhs->routedIndexer,
+                                getModuleGen(), rhs->getModuleGen(),
+                                SUBMOD
+                            );
+        return cerfTest & rwModeTest & AssignTest & indexerTest;
+    }
+
+
 
     std::string MemEleholderGen::assignmentLine(
         Slice desSlice,

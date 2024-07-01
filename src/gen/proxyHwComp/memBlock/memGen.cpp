@@ -25,5 +25,15 @@ namespace kathryn{
     }
 
 
+    bool MemGen::compare(LogicGenBase* lgb){
+        assert(lgb->getLogicCef().comptype == TYPE_MEM_BLOCK);
+
+        auto* rhs = dynamic_cast<MemGen*>(lgb);
+        ////// check depth only; do not check width because cerf handle it
+        return checkCerfEqLocally(rhs->_cerf) &&
+            (_master->getDepthSize() == rhs->_master->getDepthSize());
+    }
+
+
 
 }

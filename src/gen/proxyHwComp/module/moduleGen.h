@@ -26,9 +26,9 @@ namespace kathryn{
     class Module;
     class ModuleGen{
     protected:
-        Module*       _master           = nullptr;
-        int           depthFromGlobalModule = 0;
-        logicLocalCef _cerf;
+        Module*        _master           = nullptr;
+        int            depthFromGlobalModule = 0;
+        moduleLocalCef _cerf;
 
     public:
         LogicGenBaseVec   _regPool;
@@ -39,10 +39,11 @@ namespace kathryn{
         LogicGenBaseVec   _memBlockPool;
         LogicGenBaseVec   _memBlockElePool;
 
-        std::vector<ModuleGen*>      _subModulePool;
+
 
         std::unordered_map<Operable*, int>  _interWireMap;
         std::vector<WireIo*>                _interWires;
+
 
         std::unordered_map<Operable*, int> _autoInputWireMap;
         std::vector<WireIo*>               _autoInputWires;
@@ -57,29 +58,47 @@ namespace kathryn{
         std::vector<WireIo*>               _globalInputs;
         std::vector<WireIo*>               _globalOutputs;
 
+        std::vector<ModuleGen*>            _subModulePool;
+
+
         explicit ModuleGen(Module* master);
 
         template<typename T>
         void createLogicGenBase(std::vector<T*>& srcs);
 
         template<typename T>
-        void recruitLogicGenBase(LogicGenBaseVec& des,
-                                 std::vector<T*>& srcs
-        );
+        void ModuleGen::recruitLogicGenBase(LogicGenBaseVec& des,
+                                 std::vector<T*>& srcs){
+            for(T* src: srcs){
+                LogicGenBase* logicGenBase = src->getLogicGen();
+                assert(logicGenBase != nullptr);
+                des.push_back(logicGenBase);
+            }
+        }
+
+        template<typename T>
+        LogicGenBaseVec ModuleGen::recruitLogicGenBase(std::vector<T*>& srcs){
+            LogicGenBaseVec result;
+            recruitLogicGenBase(result, srcs);
+            return result;
+        }
 
         template<typename T>
         void createAndRecruitLogicGenBase(LogicGenBaseVec& des,
                                  std::vector<T*>& srcs);
-        ///////////// main progress
+        /*
+         * main progress
+         */
 
         void startInitEle  ();
         void startRouteEle ();
         void genCerfAll    (int idx); /// idx that it is submodule
-        void startCmpModule(ModuleGen* rhsMdg);
+        bool startCmpModule(ModuleGen* rhsMdg);
         void startWriteFile(FileWriterBase* fileWriter);
 
-
-        ////////////// io operation
+        /*
+         * routing operation
+         */
         WireIo* addAutoWireBase  (Operable* opr,
                                     Operable* realSrc,
                                     std::vector<WireIo*>& ioVec,
@@ -87,28 +106,27 @@ namespace kathryn{
                                     const std::string& wireName,
                                     WIRE_IO_TYPE wireIoType,
                                     bool connectTheWire = true);
-
-        //////////////////////////////////////////////////////////////////////
+        //// input wire
         WireIo* addAutoInputWire          (Operable* opr, Operable* realSrc);
         bool    checkIsThereAutoInputWire (Operable* realSrc);
         WireIo* getAutoInputWire          (Operable* realSrc);
-        //////////////////////////////////////////////////////////////////////
+        //// output wire
         WireIo* addAutoOutputWire         (Operable* opr, Operable* realSrc);
         bool    checkIsThereAutoOutputWire(Operable* realSrc);
         WireIo* getAutoOutputWire         (Operable* realSrc);
-        //////////////////////////////////////////////////////////////////
+        //// inter wire
         WireIo* addAutoInterWire          (Operable* realSrc);
         bool    checkIsThereAutoInterWire (Operable* realSrc);
         WireIo* getAutoInterWire          (Operable* realSrc);
-        //////////////////////////////////////////////////////////////////
+        //// route opr
         Operable* routeSrcOprToThisModule (Operable* exactRealSrc);
         int       getDept() const{return depthFromGlobalModule;}
-        //////////////////////////////////////////////////////////////////
+        //// global io
         std::vector<WireIo*>& getGlobalInputs (){return _globalInputs; }
         std::vector<WireIo*>& getGlobalOutputs(){return _globalOutputs;}
-
-        //////////////////////////////////////////////////////////////////
-        /////////////// module genFileName
+        /**
+         * file generator
+         */
         std::vector<std::string> getIoDec(
             const LogicGenBaseVec& inputVec,
             const LogicGenBaseVec& outputVec,
@@ -117,12 +135,13 @@ namespace kathryn{
         );
         std::string getSubModuleDec(ModuleGen* mdGen);
         std::string getOpr();
-
-        //////////////////////////////////////////////////////////////////
-        ////////////// everyElement cerf
+        /**
+         *  cmp function
+         */
         void genCerfToEachElement();
         void genCerfToThisModule(int idx);
-
+        bool cmpCerfEqLocally(const moduleLocalCef& rhs) const;
+        moduleLocalCef getCerf() const{return _cerf;}
     };
 
     class ModuleGenInterface{

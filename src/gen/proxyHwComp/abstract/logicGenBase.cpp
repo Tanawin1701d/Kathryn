@@ -71,37 +71,48 @@ bool LogicGenBase::checkCerfEqLocally(const logicLocalCef& rhsCerf){
 }
 
 bool LogicGenBase::cmpEachOpr(Operable* srcA, Operable* srcB,
-                              ModuleGen* srcMdA, ModuleGen* srcMdB){
+                              ModuleGen* srcMdA, ModuleGen* srcMdB,
+                              OUT_SEARCH_POL searchPol){
 
-        bool isANull = srcA == nullptr;
-        bool isBNull = srcB == nullptr;
+        Operable* exactSrcA = &srcA->getExactOperable();
+        Operable* exactSrcB = &srcB->getExactOperable();
+
+        bool isANull = exactSrcA == nullptr;
+        bool isBNull = exactSrcB == nullptr;
 
         if (isANull | isBNull){
             return isANull == isBNull; ///// if one is not null and one is null escape it
         }
 
+        if (srcA->getOperableSlice() != srcB->getOperableSlice()){return false;}
 
-        bool isAStayInMd = srcA->getLogicGenBase()->getModuleGen() == srcMdA;
-        bool isBStayInMd = srcB->getLogicGenBase()->getModuleGen() == srcMdB;
+
+        bool isAStayInMd = exactSrcA->getLogicGenBase()->getModuleGen() == srcMdA;
+        bool isBStayInMd = exactSrcB->getLogicGenBase()->getModuleGen() == srcMdB;
 
         if (isAStayInMd  ^ isBStayInMd){
             return false; //// not stay in the same module but one is
         }
-
-        if (isAStayInMd){
-            return srcA->getLogicGenBase()->
-                   checkCerfEqLocally(srcB->getLogicGenBase()->_cerf);
+        /////////// searchPol is how to do operand when it out of its location
+        /////////// same logic
+        if (searchPol == MASTERMOD){
+            ///////// we don't work anything with work
+            return exactSrcA->getLogicGenBase()->
+                    checkCerfEqLocally(exactSrcB->getLogicGenBase()->_cerf);
+        }else if (searchPol == SUBMOD){
+            ///////// check the sub commodule cerf
+            bool checkLogicCef =  exactSrcA->getLogicGenBase()->
+                                  checkCerfEqLocally(exactSrcB->getLogicGenBase()->_cerf);
+            if (isAStayInMd){
+                return checkLogicCef;
+            }else{
+                bool checkMdCerf =
+                    exactSrcA->getLogicGenBase()->getModuleGen()->cmpCerfEqLocally(
+                        exactSrcB->getLogicGenBase()->getModuleGen()->getCerf()
+                    );
+                return checkLogicCef & checkMdCerf;
+            }
         }
-
-        ///////// we must check cerf of its master module
-
-        bool sameLogicCerf = srcA->getLogicGenBase()->
-                              checkCerfEqLocally(srcB->getLogicGenBase()->_cerf);
-
-        bool sameMdCerf = false;
-        return sameLogicCerf & sameMdCerf;
-
-
     }
 
 

@@ -85,6 +85,22 @@ namespace kathryn{
         return assignOpBase(false);
     }
 
+    bool WireGen::compare(LogicGenBase* lgb){
+        assert(lgb->getLogicCef().comptype == HW_COMPONENT_TYPE::TYPE_WIRE);
+        auto* rhs = dynamic_cast<WireGen*>(lgb);
+        if( (_ioType == WIRE_IO_OUTPUT) ||
+            (_ioType == WIRE_IO_OUTPUT_GLOB) ||
+            (_ioType == WIRE_IO_INTER) ||
+            (_ioType == WIRE_IO_NORMAL)){
+            /////////////// when compare output dep is submodule
+            return checkCerfEqLocally(rhs->_cerf) && cmpAssignGenBase(rhs, SUBMOD);
+        }
+        return checkCerfEqLocally(rhs->_cerf) && cmpAssignGenBase(rhs, MASTERMOD);
+
+        ////////////// input dep is master
+
+    }
+
     GLOB_IO_TYPE WireGen::getGlobIoStatus(){
         _master->checkIntegrity();
         return _master->getGlobIoType();

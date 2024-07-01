@@ -8,7 +8,6 @@
 namespace kathryn{
 
     ValueGen::ValueGen(ModuleGen*    mdGenMaster,
-                       logicLocalCef cerf,
                        Val*          master):
     LogicGenBase(mdGenMaster,
                  (Assignable*) master,
@@ -26,4 +25,12 @@ namespace kathryn{
     }
 
     std::string ValueGen::decOp(){return "";}
+
+    bool ValueGen::compare(LogicGenBase* lgb){
+        assert(lgb->getLogicCef().comptype == TYPE_VAL);
+        auto* rhs = dynamic_cast<ValueGen*>(lgb);
+        return checkCerfEqLocally(rhs->_cerf) &&
+            (_master->getConstOpr() == rhs->_master->getConstOpr());
+    }
+
 }

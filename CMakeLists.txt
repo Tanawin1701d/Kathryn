@@ -52,4 +52,6 @@ add_executable(Kathryn
         src/params/genParam.cpp
         src/params/genParam.h
         src/gen/proxyHwComp/module/moduleGenCmp.cpp
+        src/gen/proxyHwComp/module/moduleRouting.cpp
+        src/gen/proxyHwComp/module/moduleWrite.cpp
 )

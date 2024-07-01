@@ -33,7 +33,11 @@ namespace kathryn{
         }
 
 
-        bool cmpAssignGenBase(AssignGenBase* asgb);
+
+
+        bool cmpAssignGenBase(AssignGenBase* asgb, OUT_SEARCH_POL searchPol);
+        //// vice vesa is master module
+        //// it mean implicitly outside is equal
 
 
 

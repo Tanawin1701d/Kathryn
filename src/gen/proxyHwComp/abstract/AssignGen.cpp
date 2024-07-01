@@ -85,7 +85,8 @@ namespace kathryn{
         return getOpr(desSlice) + " <= " + getOprStrFromOpr(srcUpdateValue) + ";";
     }
 
-    bool AssignGenBase::cmpAssignGenBase(AssignGenBase* asgb){
+    bool AssignGenBase::cmpAssignGenBase(AssignGenBase* asgb,
+                                         OUT_SEARCH_POL searchPol){
         assert(asgb != nullptr);
         if ( translatedUpdateEvent.size() != asgb->translatedUpdateEvent.size()){
             return false;
@@ -97,11 +98,11 @@ namespace kathryn{
             ////// compare each element
             if (
                 (!cmpEachOpr(a->srcUpdateCondition,b->srcUpdateCondition,
-                getModuleGen(), asgb->getModuleGen())) ||
+                getModuleGen(), asgb->getModuleGen(), searchPol)) ||
                 (!cmpEachOpr(a->srcUpdateState, b->srcUpdateState,
-                getModuleGen(), asgb->getModuleGen())) ||
+                getModuleGen(), asgb->getModuleGen(), searchPol)) ||
                 (!cmpEachOpr(a->srcUpdateValue, b->srcUpdateValue,
-                getModuleGen(), asgb->getModuleGen()))
+                getModuleGen(), asgb->getModuleGen(), searchPol))
             ){
                 return false;
             }

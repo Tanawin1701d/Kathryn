@@ -14,6 +14,11 @@
 
 namespace kathryn{
 
+    enum OUT_SEARCH_POL{
+        SUBMOD,
+        MASTERMOD
+    };
+
     class ModuleGen;
     class LogicGenBase{
     protected:
@@ -48,8 +53,9 @@ namespace kathryn{
         virtual GLOB_IO_TYPE getGlobIoStatus(){return GLOB_IO_TYPE::GLOB_IO_NOT_BOTH;}
 
         bool checkCerfEqLocally(const logicLocalCef& rhsCerf);
-        bool cmpEachOpr(Operable* srcA, Operable* srcB,
-                              ModuleGen* srcMdA, ModuleGen* srcMdB);
+        bool cmpEachOpr(Operable* exactSrcA, Operable* exactSrcB,
+                              ModuleGen* srcMdA, ModuleGen* srcMdB,
+                              OUT_SEARCH_POL searchPol);
 
         ///////// getter
         [[nodiscard]] ModuleGen* getModuleGen() const{
@@ -111,6 +117,28 @@ namespace kathryn{
                 x->genCerf(mgg, grp, idx);
                 idx++;
             }
+        }
+
+        bool compare(LogicGenBaseVec& lgbVec){
+            if (size() != lgbVec.size()){
+                return false;
+            }
+            bool cmpRes = false;
+            for (int idx = 0; idx < size(); idx++){
+                cmpRes &= (*this)[idx]->compare(lgbVec[idx]);
+            }
+            return cmpRes;
+        }
+
+        bool compareCefOnly(LogicGenBaseVec& lgbVec){
+            if (size() != lgbVec.size()){
+                return false;
+            }
+            bool cmpRes = false;
+            for (int idx = 0; idx < size(); idx++){
+                cmpRes &= (*this)[idx]->checkCerfEqLocally(lgbVec[idx]->getLogicCef());
+            }
+            return cmpRes;
         }
     };
 

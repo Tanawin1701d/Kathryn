@@ -21,6 +21,8 @@ namespace kathryn{
         GEN_INTER_WIRE_GRP,
         GEN_AUTO_INPUT_WIRE_GRP,
         GEN_AUTO_OUTPUT_WIRE_GRP,
+        GEN_GLOB_INPUT_GRP,
+        GEN_GLOB_OUTPUT_GRP,
         GEN_USER_DEC_INPUT_GRP,
         GEN_USER_DEC_OUTPUT_GRP,
         GEN_MODULE_GRP
@@ -38,7 +40,6 @@ namespace kathryn{
     };
 
 	struct moduleLocalCef{
-		MODULE_GEN_GRP    md_gen_grp;
 		VarMeta           varMeta;
 		int               idx; //////// idx of sub  module to master
 
