@@ -17,9 +17,7 @@ namespace kathryn {
                                                   false,
                                                   TYPE_STATE_REG,
                                                   false),
-              _rstReq(rstReq),
-              upFullState  (_make<Val>("stateRegUpFull",false, 1, 1)),
-              downFullState(_make<Val>("stateRegDownFull",false,1, 0))
+              _rstReq(rstReq)
     {
         com_init();
     };
@@ -28,7 +26,7 @@ namespace kathryn {
         assert(dependState != nullptr);
         auto* event = new UpdateEvent({activateCond,
                                        dependState,
-                                       &upFullState,
+                                       &stateRegUpFull,
                                        Slice({0, 1}),
                                        DEFAULT_UE_PRI_INTERNAL_MAX
                                        });
@@ -40,7 +38,7 @@ namespace kathryn {
         auto* event = new UpdateEvent({
             nullptr,
             this,
-            &downFullState,
+            &stateRegDownFull,
             Slice({0, getSlice().getSize()}),
             DEFAULT_UE_PRI_INTERNAL_MIN
         });

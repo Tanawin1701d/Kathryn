@@ -129,10 +129,8 @@ namespace kathryn{
         _cerf.idx        = idx;
     }
 
-    bool ModuleGen::cmpCerfEqLocally(const moduleLocalCef& rhs) const{
-        return (_cerf.varMeta.isUser  == rhs.varMeta.isUser) &&
-               (_cerf.varMeta.varType  == rhs.varMeta.varType) &&
-               (_cerf.idx  == rhs.idx);
+    bool ModuleGen::cmpCerfEqLocally(const ModuleGen& rhs) const{
+        return _cerf.cmpAsSubModule(rhs.getCerf());
     }
 
 }

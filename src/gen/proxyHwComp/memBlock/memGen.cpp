@@ -30,7 +30,7 @@ namespace kathryn{
 
         auto* rhs = dynamic_cast<MemGen*>(lgb);
         ////// check depth only; do not check width because cerf handle it
-        return checkCerfEqLocally(rhs->_cerf) &&
+        return checkCerfEqLocally(*rhs) &&
             (_master->getDepthSize() == rhs->_master->getDepthSize());
     }
 

@@ -15,8 +15,8 @@ namespace kathryn{
     Pipe::Pipe(PIPID pipeId):
     _pipeId(pipeId)
     {
-        _masterReadyToSend = &_make<expression>("_masterReadyToSend" + std::to_string(_pipeId),false,1);
-        _slaveReadyToRecv  = &_make<expression>("_slaveReadyToRecv"  + std::to_string(_pipeId),false,1);
+        _masterReadyToSend = &makeOprProxyExpr("_masterReadyToSend" + std::to_string(_pipeId),1);
+        _slaveReadyToRecv  = &makeOprProxyExpr("_slaveReadyToRecv"  + std::to_string(_pipeId),false,1);
     }
 
     Pipe::Pipe(const Pipe& rhs){
@@ -41,12 +41,12 @@ namespace kathryn{
     }
 
     void Pipe::setDummyStartPipe(){
-        _dummyStart = &_make<Val>("dummyStartPipe",false, 1,1);
+        _dummyStart = &makeOprVal("dummyStartPipe", 1,1);
         *_masterReadyToSend = *_dummyStart;
     }
 
     void Pipe::setDummyStopPipe(){
-        _dummyStop = &_make<Val>("dummyStopPipe", false, 1,1);
+        _dummyStop = &makeOprVal("dummyStopPipe",1,1);
         *_slaveReadyToRecv = *_dummyStop;
     }
 

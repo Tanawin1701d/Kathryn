@@ -97,7 +97,7 @@ namespace kathryn{
     bool ExprGen::compare(LogicGenBase* lgb){
         assert(lgb->getLogicCef().comptype == HW_COMPONENT_TYPE::TYPE_EXPRESSION);
         auto* rhs = dynamic_cast<ExprGen*>(lgb);
-        bool cerfCheck = checkCerfEqLocally(rhs->_cerf);
+        bool cerfCheck = checkCerfEqLocally(*rhs);
         bool opCheck   = _master->getOp() == rhs->_master->getOp();
         bool oprACheck = cmpEachOpr(_routedOprA, rhs->_routedOprA,
                             getModuleGen(), rhs->getModuleGen(), SUBMOD

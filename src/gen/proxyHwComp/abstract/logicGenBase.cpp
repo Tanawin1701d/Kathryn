@@ -34,6 +34,7 @@ void LogicGenBase::genCerf(MODULE_GEN_GRP mgg,int grpIdx, int idx){
         _cerf.comptype   = _ident->getType();
         _cerf.md_gen_grp = mgg;
         _cerf.varMeta    = _ident->getVarMeta();
+        _cerf.varMeta.varType =
         _cerf.grpIdx     = grpIdx;
         _cerf.idx        = idx;
         _cerf.curSl      = _asb->getAssignSlice();
@@ -58,16 +59,8 @@ std::string LogicGenBase::getOpr(Slice sl){
 }
 
 
-bool LogicGenBase::checkCerfEqLocally(const logicLocalCef& rhsCerf){
-        bool ans = true;
-        ans &= _cerf.comptype          == rhsCerf.comptype;
-        ans &= _cerf.md_gen_grp        == rhsCerf.md_gen_grp;
-        ans &= _cerf.varMeta.varType  == rhsCerf.varMeta.varType;
-        ans &= _cerf.varMeta.isUser   == rhsCerf.varMeta.isUser;
-        ans &= _cerf.grpIdx           == rhsCerf.grpIdx;
-        ans &= _cerf.idx              == rhsCerf.idx;
-        ans &= _cerf.curSl            == rhsCerf.curSl;
-        return ans;
+bool LogicGenBase::checkCerfEqLocally(const LogicGenBase& rhsGenBase){
+        return _cerf.cmpLocal(rhsGenBase.getLogicCef());
 }
 
 bool LogicGenBase::cmpEachOpr(Operable* srcA, Operable* srcB,
@@ -98,17 +91,17 @@ bool LogicGenBase::cmpEachOpr(Operable* srcA, Operable* srcB,
         if (searchPol == MASTERMOD){
             ///////// we don't work anything with work
             return exactSrcA->getLogicGenBase()->
-                    checkCerfEqLocally(exactSrcB->getLogicGenBase()->_cerf);
+                    checkCerfEqLocally(*exactSrcB->getLogicGenBase());
         }else if (searchPol == SUBMOD){
             ///////// check the sub commodule cerf
             bool checkLogicCef =  exactSrcA->getLogicGenBase()->
-                                  checkCerfEqLocally(exactSrcB->getLogicGenBase()->_cerf);
+                                  checkCerfEqLocally(*exactSrcB->getLogicGenBase());
             if (isAStayInMd){
                 return checkLogicCef;
             }else{
                 bool checkMdCerf =
                     exactSrcA->getLogicGenBase()->getModuleGen()->cmpCerfEqLocally(
-                        exactSrcB->getLogicGenBase()->getModuleGen()->getCerf()
+                        *exactSrcB->getLogicGenBase()->getModuleGen()
                     );
                 return checkLogicCef & checkMdCerf;
             }

@@ -45,7 +45,7 @@ namespace kathryn{
             assert(nestMeta.opr != nullptr);
             nestSize += nestMeta.opr->getOperableSlice().getSize();
         }
-        return _make<nest>("nest", isUserDec, nestSize, nestList);
+        return _make<nest>("uncatagorizedYet", "nest", isUserDec, nestSize, nestList);
     }
 
     class nest : public LogicComp<nest>{

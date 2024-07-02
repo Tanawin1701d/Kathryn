@@ -52,7 +52,7 @@ namespace kathryn{
         /////// glob io check
         virtual GLOB_IO_TYPE getGlobIoStatus(){return GLOB_IO_TYPE::GLOB_IO_NOT_BOTH;}
 
-        bool checkCerfEqLocally(const logicLocalCef& rhsCerf);
+        bool checkCerfEqLocally(const LogicGenBase& rhsGenBase);
         bool cmpEachOpr(Operable* exactSrcA, Operable* exactSrcB,
                               ModuleGen* srcMdA, ModuleGen* srcMdB,
                               OUT_SEARCH_POL searchPol);
@@ -134,7 +134,7 @@ namespace kathryn{
             }
             bool cmpRes = false;
             for (int idx = 0; idx < size(); idx++){
-                cmpRes &= (*this)[idx]->checkCerfEqLocally(lgbVec[idx]->getLogicCef());
+                cmpRes &= (*this)[idx]->checkCerfEqLocally(*lgbVec[idx]);
             }
             return cmpRes;
         }

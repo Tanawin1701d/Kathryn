@@ -42,14 +42,11 @@ namespace kathryn{
         bool connectTheWire){
             assert(opr     != nullptr);
             assert(realSrc != nullptr);
-            WireIo& newAddedWire =
-                _make<WireIo>("Wire",
-                              wireName +
-                              std::to_string(ioVec.size()),
-                              false,
-                              opr->getOperableSlice().getSize(),
-                              wireIoType
-                              );
+        WireIo& newAddedWire = makeOprIoWire(wireName + std::to_string(ioVec.size()),
+                                              opr->getOperableSlice().getSize(),
+                                              wireIoType
+                                );
+
             ///////// addd update Event for only connection
             newAddedWire.buildHierarchy(_master);
             newAddedWire.createLogicGen();

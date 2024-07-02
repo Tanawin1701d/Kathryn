@@ -105,7 +105,7 @@ namespace kathryn{
             assert(nwOfPipBlk != nullptr);
             _resultNodeWrap->transferEntNodeFrom(nwOfPipBlk);
         }
-        _dummyExitVal = &_make<Val>("dummyExitOfPipeWrapper", false, 1, 0);
+        _dummyExitVal = &makeOprVal("dummyExitOfPipeWrapper", 1, 0);
         _dummyExitNode = new DummyNode(_dummyExitVal);
         addSysNode(_dummyExitNode);
         _resultNodeWrap->addExitNode(_dummyExitNode);
@@ -150,7 +150,7 @@ namespace kathryn{
     FlowBlockPipeWrapper::UserCheckNextSignal::UserCheckNextSignal(int pipIdx):
     srcPipId(pipIdx),
     desPipId(pipIdx+1),
-    expr(&_make<expression>("userCheckSignal" + std::to_string(pipIdx), false, 1))
+    expr(&makeOprProxyExpr("userCheckSignal" + std::to_string(pipIdx), false, 1))
     {}
 
     void FlowBlockPipeWrapper::UserCheckNextSignal::connectSignal(std::vector<Pipe*> &allPip) {

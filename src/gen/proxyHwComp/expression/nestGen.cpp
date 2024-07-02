@@ -64,7 +64,7 @@ namespace kathryn{
     bool NestGen::compare(LogicGenBase* lgb){
         assert(lgb->getLogicCef().comptype == HW_COMPONENT_TYPE::TYPE_NEST);
         auto* rhs      = dynamic_cast<NestGen*>(lgb);
-        bool cerfCheck = checkCerfEqLocally(rhs->_cerf);
+        bool cerfCheck = checkCerfEqLocally(*rhs);
         ///////// check cerf and nest list size first
         if ( !(cerfCheck &&
                (_routedNestList.size() == rhs->_routedNestList.size())

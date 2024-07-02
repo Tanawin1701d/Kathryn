@@ -75,10 +75,8 @@ namespace kathryn{
             Operable* originOpr = srcToBeGlobIo->getOprFromGlobIo();
             assert(originOpr != nullptr);
             //////// the host wire require inserting
-            auto& inputIo = _make<WireIo>(
-                    "WireIo",
+            auto& inputIo = makeOprIoWire(
                     srcToBeGlobIo->getGlobIoName(),
-                    true,
                     originOpr->getOperableSlice().getSize(),
                     isInput ? WIRE_IO_INPUT_GLOB : WIRE_IO_OUTPUT_GLOB
                 );

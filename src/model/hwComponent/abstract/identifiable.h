@@ -23,6 +23,12 @@ namespace kathryn {
         std::string varType; //// for module use module type
         std::string varName;
         bool        isUser;
+
+        bool operator == (const VarMeta& rhs) const {
+            return (varType == rhs.varType) &
+                   (varName == rhs.varName) &
+                   (isUser  == rhs.isUser );
+        } 
     };
 
     bool    isVarNameRetrievable(ull deviceIdentId);

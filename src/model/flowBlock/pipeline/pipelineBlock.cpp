@@ -122,7 +122,7 @@ namespace kathryn{
 
 
         /** fire exit node*/
-        _exitNode  = new DummyNode(&_make<Val>("pipeBlockExit", false, 1,0));
+        _exitNode  = new DummyNode(&makeOprVal("pipeBlockExit", 1,0));
         addSysNode(_exitNode);
 
         /** manage result node warap*/

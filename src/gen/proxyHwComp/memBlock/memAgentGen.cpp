@@ -60,7 +60,7 @@ namespace kathryn{
         assert(lgb->getLogicCef().comptype == TYPE_MEM_BLOCK_INDEXER);
         auto* rhs = dynamic_cast<MemEleholderGen*>(lgb);
 
-        bool cerfTest    = checkCerfEqLocally(rhs->_cerf);
+        bool cerfTest    = checkCerfEqLocally(*rhs);
         bool rwModeTest  = _master->isReadMode() == rhs->_master->isReadMode();
         bool AssignTest  = cmpAssignGenBase(rhs, SUBMOD);
         bool indexerTest = cmpEachOpr(routedIndexer, rhs->routedIndexer,

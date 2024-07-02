@@ -64,7 +64,7 @@ namespace kathryn{
         addSysNode(breakNode);
         fillIntResetToNodeIfThere(breakNode);
 
-        normExitNode = new DummyNode(&_make<Val>("cbreakDum", false, 1, 0));
+        normExitNode = new DummyNode(&makeOprVal("cbreakDum", 1, 0));
         addSysNode(normExitNode);
         /////////normExitNode->addDependNode(breakNode);
         normExitNode->assign();

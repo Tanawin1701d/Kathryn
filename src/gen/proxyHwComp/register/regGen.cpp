@@ -37,7 +37,7 @@ namespace kathryn{
                 (lgb->getLogicCef().comptype == HW_COMPONENT_TYPE::TYPE_CYCLE_WAIT_STATE_REG)
         );
         auto* rhs = dynamic_cast<RegGen*>(lgb);
-        return checkCerfEqLocally(rhs->_cerf) && cmpAssignGenBase(rhs, SUBMOD);
+        return checkCerfEqLocally(*rhs) && cmpAssignGenBase(rhs, SUBMOD);
     }
 
     GLOB_IO_TYPE RegGen::getGlobIoStatus(){

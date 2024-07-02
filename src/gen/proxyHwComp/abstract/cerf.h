@@ -37,11 +37,28 @@ namespace kathryn{
         int               idx     = -1;
         Slice             curSl;
         /** it requrire further check for it dependency**/
+        bool cmpLocal(const logicLocalCef& rhs) const{
+            //////// this is assume that it is in the analogy module
+            bool result = true;
+            result &= (comptype == rhs.comptype);
+            result &= (md_gen_grp == rhs.md_gen_grp);
+            result &= (varMeta.isUser == rhs.varMeta.isUser);
+            result &= (varMeta.varName == rhs.varMeta.varName);
+            result &= (grpIdx     == rhs.grpIdx);
+            result &= (idx        == rhs.idx);
+            result &= (curSl      == rhs.curSl);
+            return result;
+        }
     };
 
 	struct moduleLocalCef{
 		VarMeta           varMeta;
 		int               idx; //////// idx of sub  module to master
+
+		///// lhs and rhs is sub module of SOME module make compare it is the same
+	    bool cmpAsSubModule(const moduleLocalCef& rhs) const{
+			return (varMeta == rhs.varMeta) & (idx == rhs.idx);
+	    }
 
 	};
 

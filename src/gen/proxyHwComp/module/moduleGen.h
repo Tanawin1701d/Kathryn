@@ -140,7 +140,7 @@ namespace kathryn{
          */
         void genCerfToEachElement();
         void genCerfToThisModule(int idx);
-        bool cmpCerfEqLocally(const moduleLocalCef& rhs) const;
+        bool cmpCerfEqLocally(const ModuleGen& rhs) const;
         moduleLocalCef getCerf() const{return _cerf;}
     };
 

@@ -93,10 +93,10 @@ namespace kathryn{
             (_ioType == WIRE_IO_INTER) ||
             (_ioType == WIRE_IO_NORMAL)){
             /////////////// when compare output dep is submodule
-            return checkCerfEqLocally(rhs->_cerf) && cmpAssignGenBase(rhs, SUBMOD);
+            return checkCerfEqLocally(*rhs) && cmpAssignGenBase(rhs, SUBMOD);
         }
         ///////////// the dep of input wire is master module
-        return checkCerfEqLocally(rhs->_cerf) && cmpAssignGenBase(rhs, MASTERMOD);
+        return checkCerfEqLocally(*rhs) && cmpAssignGenBase(rhs, MASTERMOD);
 
         ////////////// input dep is master
 
