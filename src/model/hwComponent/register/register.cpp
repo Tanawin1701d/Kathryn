@@ -103,14 +103,6 @@ namespace kathryn{
     void Reg::createLogicGen(){
         _genEngine = new RegGen(
             _parent->getModuleGen(),
-            {
-                getType(),
-                GEN_REG_GRP,
-                getGlobalName(),
-                -1,
-                getOperableSlice(),
-                false
-            },
             this
         );
     }

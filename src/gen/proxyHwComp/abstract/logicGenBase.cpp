@@ -106,6 +106,7 @@ bool LogicGenBase::cmpEachOpr(Operable* srcA, Operable* srcB,
                 return checkLogicCef & checkMdCerf;
             }
         }
+        return false;
     }
 
 

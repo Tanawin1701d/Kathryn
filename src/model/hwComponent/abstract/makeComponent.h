@@ -27,6 +27,7 @@
 #define makeVal(name, ...)           Val&      name = _make<Val>     ("uncatagorizedYet" , #name, false, __VA_ARGS__)
 #define makeMem(name, depth, width)  MemBlock& name = _make<MemBlock>("uncatagorizedYet" , #name, false, depth, width)
 
+#define makeOprWireWoDef( varyName, argument)  _make<Wire>      ("uncatagorizedYet" ,  varyName, false,argument, false)
 #define makeOprWire( varyName, argument)       _make<Wire>      ("uncatagorizedYet" ,  varyName, false,argument)
 #define makeOprReg( varyName, argument)        _make<Reg>       ("uncatagorizedYet" ,  varyName, false, argument)
 #define makeOprVal(varyName, ...)              _make<Val>       ("uncatagorizedYet" ,  varyName, false, __VA_ARGS__)

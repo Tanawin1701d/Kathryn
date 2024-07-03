@@ -16,7 +16,7 @@ namespace kathryn{
     _pipeId(pipeId)
     {
         _masterReadyToSend = &makeOprProxyExpr("_masterReadyToSend" + std::to_string(_pipeId),1);
-        _slaveReadyToRecv  = &makeOprProxyExpr("_slaveReadyToRecv"  + std::to_string(_pipeId),false,1);
+        _slaveReadyToRecv  = &makeOprProxyExpr("_slaveReadyToRecv"  + std::to_string(_pipeId),1);
     }
 
     Pipe::Pipe(const Pipe& rhs){

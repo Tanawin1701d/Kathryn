@@ -55,14 +55,6 @@ namespace kathryn{
     void MemBlock::createLogicGen(){
         _genEngine = new MemGen(
             _parent->getModuleGen(),
-            {
-                getType(),
-                GEN_MEMBLK_GRP,
-                getGlobalName(),
-                -1,
-                {0, getWidthSize()},
-                false
-            },
             this
         );
     }

@@ -22,14 +22,6 @@ namespace kathryn{
 
         _genEngine = new WireGen(
             _parent->getModuleGen(),
-            {
-                getType(),
-                GEN_WIRE_GRP,
-                getGlobalName(),
-                -1,
-                getOperableSlice(),
-                false
-            },
             this,
             _wireIoType
         );

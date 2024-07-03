@@ -203,14 +203,6 @@ namespace kathryn{
     void nest::createLogicGen(){
         _genEngine = new NestGen(
             _parent->getModuleGen(),
-            {
-                getType(),
-                GEN_EXPRE_GRP,
-                getGlobalName(),
-                -1,
-                getOperableSlice(),
-                false
-            },
             this
         );
     }

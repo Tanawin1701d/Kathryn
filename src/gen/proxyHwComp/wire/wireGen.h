@@ -19,7 +19,6 @@ namespace kathryn{
                 Wire*         wireMaster);
 
         WireGen(ModuleGen*    mdGenMaster,
-                logicLocalCef cerf,
                 Wire*         wireMaster,
                 WIRE_IO_TYPE  ioType);
 

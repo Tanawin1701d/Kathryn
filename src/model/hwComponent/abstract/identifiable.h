@@ -84,7 +84,7 @@ namespace kathryn {
         explicit Identifiable(HW_COMPONENT_TYPE type) :
                 IdentBase(),
                 _type(type),
-                _varMeta({"UN_INIT", false}),
+                _varMeta({"UN_INIT_TYPE","UN_INIT_VN", false}),
                 _parent(nullptr)
             {
 

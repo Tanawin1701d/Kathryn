@@ -150,7 +150,7 @@ namespace kathryn{
     FlowBlockPipeWrapper::UserCheckNextSignal::UserCheckNextSignal(int pipIdx):
     srcPipId(pipIdx),
     desPipId(pipIdx+1),
-    expr(&makeOprProxyExpr("userCheckSignal" + std::to_string(pipIdx), false, 1))
+    expr(&makeOprProxyExpr("userCheckSignal" + std::to_string(pipIdx), 1))
     {}
 
     void FlowBlockPipeWrapper::UserCheckNextSignal::connectSignal(std::vector<Pipe*> &allPip) {

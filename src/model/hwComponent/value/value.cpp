@@ -59,14 +59,6 @@ namespace kathryn{
     void Val::createLogicGen(){
         _genEngine = new ValueGen(
             _parent->getModuleGen(),
-            {
-                getType(),
-                GEN_VAL_GRP,
-                getGlobalName(),
-                -1,
-                getOperableSlice(),
-                false
-            },
             this
         );
     }

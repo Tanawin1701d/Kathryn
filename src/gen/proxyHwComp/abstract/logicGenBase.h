@@ -39,7 +39,7 @@ namespace kathryn{
         ///////// generate cerificate
         virtual void genCerf(MODULE_GEN_GRP mgg, int grpIdx, int idx);
         ///////// start compare
-        virtual bool compare(LogicGenBase* lgb);
+        virtual bool compare(LogicGenBase* lgb) = 0;
         ///////// get zone
         virtual std::string getOpr();
         virtual std::string getOpr(Slice sl);
