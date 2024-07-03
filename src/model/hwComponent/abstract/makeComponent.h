@@ -31,8 +31,8 @@
 #define makeOprReg( varyName, argument)        _make<Reg>       ("uncatagorizedYet" ,  varyName, false, argument)
 #define makeOprVal(varyName, ...)              _make<Val>       ("uncatagorizedYet" ,  varyName, false, __VA_ARGS__)
 #define makeOprMem(varyName, depth, width)     _make<MemBlock>  ("uncatagorizedYet" ,  varyName, false, depth, width)
-#define makeOprProxyExpr(varyName, size)       _make<expression>("uncatagorizedYet" ,  varyName, size)
-#define makeOprIoWire(varyName, size, type)    _make<WireIo>    ("uncatagorizedYet" ,  varyName, size, type)
+#define makeOprProxyExpr(varyName, size)       _make<expression>("uncatagorizedYet" ,  varyName, false, size)
+#define makeOprIoWire(varyName, size, type)    _make<WireIo>    ("uncatagorizedYet" ,  varyName, false, size, type)
 /////#define g(...) makeNest(false,__VA_ARGS__)
 #define makeBox(name, TypeName) TypeName& name = _make<TypeName>("uncatagorizedYet", #name, false)
 

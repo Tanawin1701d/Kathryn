@@ -26,12 +26,32 @@ namespace kathryn{
 
     }
 
+    void GenController::start(){
+        initEle();
+        routeIo();
+        recruitModToGenSystem();
+        generateEveryModule();
+    }
+
     void GenController::routeIo(){
+        //////// it is recursive function
         _masterModuleGen->startRouteEle();
+        _masterModuleGen->finalizeRouteEle();
+    }
+
+    void GenController::recruitModToGenSystem() {
+        //////// buttom up only
+        _masterModuleGen->startPutToGenSystem(&_genStructure);
     }
 
     void GenController::generateEveryModule(){
-        _masterModuleGen->startWriteFile(_verilogWriter);
+
+        for (ModuleGen* masterModuleGen:
+        _genStructure.getAllMasterModuleGen()){
+            assert(masterModuleGen != nullptr);
+            masterModuleGen->
+            startWriteFile(_verilogWriter, &_genStructure);
+        }
     }
 
     void GenController::reset(){
@@ -92,6 +112,8 @@ namespace kathryn{
         }
 
     }
+
+
 
 
 }

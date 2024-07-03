@@ -6,14 +6,16 @@
 #define GENCONTROLLER_H
 #include "frontEnd/cmd/paramReader.h"
 #include "model/hwComponent/module/module.h"
-
 #include "abstract/mainControlable.h"
-
 #include "util/fileWriter/fileWriterBase.h"
+#include "genStructure.h"
 
 namespace kathryn{
 
 
+
+
+    struct ModuleChecker;
     class GenController: public MainControlable{
     protected:
         const std::string _desPathParamPrefix = "genPath";
@@ -21,6 +23,10 @@ namespace kathryn{
         FileWriterBase*   _verilogWriter   = nullptr;
         Module*           _masterModule    = nullptr;
         ModuleGen*        _masterModuleGen = nullptr;
+        GenStructure      _genStructure;
+
+
+
 
         void initGlobEle(bool isInput);
 
@@ -30,13 +36,16 @@ namespace kathryn{
 
         virtual ~GenController() = default;
 
-        void initEnv(PARAM& param);
+        void start() override;
 
-        void start() override{};
+        void initEnv(PARAM& param);
 
         void initEle();
 
         void routeIo();
+
+        void recruitModToGenSystem(); ////// it require bottom un generating
+        ////// according to generation structure
 
         void generateEveryModule();
 
@@ -44,9 +53,15 @@ namespace kathryn{
 
         void clean() override;
 
+        //////// module compare checker
+
+
+
 
 
     };
+
+
 
     GenController* getGenController();
 

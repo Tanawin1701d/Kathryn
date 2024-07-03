@@ -22,9 +22,7 @@ namespace kathryn{
         GenController* genCtrl = getGenController();
         assert(genCtrl != nullptr);
         genCtrl->initEnv(params);
-        genCtrl->initEle();
-        genCtrl->routeIo();
-        genCtrl->generateEveryModule();
+        genCtrl->start();
         resetKathryn();
 
 

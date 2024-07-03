@@ -2,25 +2,17 @@
 // Created by tanawin on 1/7/2024.
 //
 #include "model/hwComponent/module/module.h"
+#include "gen/controller/genController.h"
 
 namespace kathryn{
 
 
-    void ModuleGen::startWriteFile(FileWriterBase* fileWriter){
-        LogicGenBaseVec globInputVec;
-        LogicGenBaseVec globOutputVec;
-        LogicGenBaseVec inputVec;
-        LogicGenBaseVec outputVec;
-        LogicGenBaseVec bridgeVec;
+    void ModuleGen::startWriteFile(FileWriterBase* fileWriter, GenStructure* genStructure){
+        assert(genStructure != nullptr);
         LogicGenBaseVec subModuleOutputRepresent;
         LogicGenBaseVec subModuleInputRepresent;
 
         ///////////// recruit io /////////////////////////////////////
-        recruitLogicGenBase(globInputVec , _globalInputs);
-        recruitLogicGenBase(globOutputVec, _globalOutputs);
-        recruitLogicGenBase(inputVec     , _autoInputWires);
-        recruitLogicGenBase(outputVec    , _autoOutputWires);
-        recruitLogicGenBase(bridgeVec    , _interWires);
         for (ModuleGen* subMdGen: _subModulePool){
             recruitLogicGenBase(subModuleOutputRepresent,
                                 subMdGen->_autoOutputWires);
@@ -42,7 +34,10 @@ namespace kathryn{
         fileWriter->addData(_master->getGlobalName() + "(\n");
 
         //////// declare input/output element
-        std::vector<std::string> ioVec = getIoDec(inputVec,outputVec,globInputVec,globOutputVec);
+        std::vector<std::string> ioVec = getIoDec(_autoInputWirePool,
+                                                  _autoOutputWirePool,
+                                                  _globalInputPool,
+                                                  _globalOutputPool);
         ioVec.emplace_back("input wire clk");
         writeGenVec(ioVec, fileWriter, ",\n");
         fileWriter->addData("\n);\n");
@@ -72,7 +67,7 @@ namespace kathryn{
         writeGenVec(_memBlockElePool.getDecVars()        , fileWriter, "\n"); fileWriter->addData("\n////input of submodule\n");
         writeGenVec(subModuleInputRepresent.getDecVars() , fileWriter, "\n"); fileWriter->addData("\n////output of submodule\n");
         writeGenVec(subModuleOutputRepresent.getDecVars(), fileWriter, "\n"); fileWriter->addData("\n////bridgeVec\n");
-        writeGenVec(bridgeVec.getDecVars()               , fileWriter, "\n");
+        writeGenVec(_interWirePool.getDecVars()               , fileWriter, "\n");
 
         fileWriter->addData("///////////////////////////////////////////////\n"
                             "//////////////////// operation///////////////////\n"
@@ -82,28 +77,25 @@ namespace kathryn{
 
 
         fileWriter->addData("\n///regOp\n");
-        writeGenVec(_regPool.getDecOps()                 , fileWriter, "\n"); fileWriter->addData("\n///_wirePoolOp\n");
-        writeGenVec(_wirePool.getDecOps()                , fileWriter, "\n"); fileWriter->addData("\n///_exprPoolOp\n");
-        writeGenVec(_exprPool.getDecOps()                , fileWriter, "\n"); fileWriter->addData("\n///_nestPoolOp\n");
-        writeGenVec(_nestPool.getDecOps()                , fileWriter, "\n"); fileWriter->addData("\n///_valPoolOp\n");
-        writeGenVec(_valPool.getDecOps()                 , fileWriter, "\n"); fileWriter->addData("\n///_memBlockPoolOp\n");
-        writeGenVec(_memBlockPool.getDecOps()            , fileWriter, "\n"); fileWriter->addData("\n///_memBlockElePoolOp\n");
-        writeGenVec(_memBlockElePool.getDecOps()         , fileWriter, "\n"); fileWriter->addData("\n///outputVecOp\n");
-        writeGenVec(outputVec.getDecOps()                , fileWriter, "\n"); fileWriter->addData("\n///outputVecOp global\n");
-        writeGenVec(globOutputVec.getDecOps()            , fileWriter, "\n"); fileWriter->addData("\n////input of submodule\n");
-        writeGenVec(subModuleInputRepresent.getDecOps()  , fileWriter, "\n"); fileWriter->addData("\n///bridgeVecOp\n");
-        writeGenVec(bridgeVec.getDecOps()                , fileWriter, "\n");
+        writeGenVec(_regPool.getDecOps()               , fileWriter, "\n"); fileWriter->addData("\n///_wirePoolOp\n");
+        writeGenVec(_wirePool.getDecOps()              , fileWriter, "\n"); fileWriter->addData("\n///_exprPoolOp\n");
+        writeGenVec(_exprPool.getDecOps()              , fileWriter, "\n"); fileWriter->addData("\n///_nestPoolOp\n");
+        writeGenVec(_nestPool.getDecOps()              , fileWriter, "\n"); fileWriter->addData("\n///_valPoolOp\n");
+        writeGenVec(_valPool.getDecOps()               , fileWriter, "\n"); fileWriter->addData("\n///_memBlockPoolOp\n");
+        writeGenVec(_memBlockPool.getDecOps()          , fileWriter, "\n"); fileWriter->addData("\n///_memBlockElePoolOp\n");
+        writeGenVec(_memBlockElePool.getDecOps()       , fileWriter, "\n"); fileWriter->addData("\n///outputVecOp\n");
+        writeGenVec(_autoOutputWirePool.getDecOps()    , fileWriter, "\n"); fileWriter->addData("\n///outputVecOp global\n");
+        writeGenVec(_globalOutputPool.getDecOps()      , fileWriter, "\n"); fileWriter->addData("\n////input of submodule\n");
+        writeGenVec(subModuleInputRepresent.getDecOps(), fileWriter, "\n"); fileWriter->addData("\n///bridgeVecOp\n");
+        writeGenVec(_interWirePool.getDecOps()         , fileWriter, "\n");
         ////////// declare submodule connectivity
         fileWriter->addData("/// sub module declaration\n");
         for (ModuleGen* subMdGen: _subModulePool){
-            fileWriter->addData(subMdGen->getSubModuleDec(subMdGen));
+            fileWriter->addData(subMdGen->getSubModuleDec(subMdGen, genStructure));
         }
         //////// end module
         fileWriter->addData("\nendmodule\n\n");
 
-        for (ModuleGen* subMdGen: _subModulePool){
-            subMdGen->startWriteFile(fileWriter);
-        }
     }
 
 
@@ -126,33 +118,32 @@ namespace kathryn{
 
     //////////////////////////// get module dec as sub
     ///
-    std::string ModuleGen::getSubModuleDec(ModuleGen* subMdGen){
+    std::string ModuleGen::getSubModuleDec(ModuleGen* subMdGen, GenStructure* genStructure){
+        assert(genStructure != nullptr);
         assert(subMdGen != nullptr);
 
-        std::vector<std::string> retStrs;
+        std::vector<std::string> ioStrs;
         std::string result;
 
-        result += subMdGen->getOpr() + "  ";
+        /////// get the host module to generate
+        ModuleGen* hostModuleGen = genStructure->getMasterModuleGen(subMdGen);
+
+        ////// declare submodule
+        result += hostModuleGen->getOpr() + "  ";
         result += subMdGen->getOpr();
         result += "(\n";
 
         ////////////////// declare input and output
-        LogicGenBaseVec inputGenEle;
-        LogicGenBaseVec outputGenEle;
-        recruitLogicGenBase(inputGenEle, _autoInputWires);
-        recruitLogicGenBase(outputGenEle, _autoOutputWires);
 
-        for (const std::string& inputStr : inputGenEle.getOprs()){
-            retStrs.push_back(inputStr);
+        for (const std::string& inputStr : _autoInputWirePool.getOprs()){
+            ioStrs.push_back(inputStr);
         }
-        for (const std::string& outputStr: outputGenEle.getOprs()){
-            retStrs.push_back(outputStr);
+        for (const std::string& outputStr: _autoOutputWirePool.getOprs()){
+            ioStrs.push_back(outputStr);
         }
-        retStrs.push_back("clk");
-
+        ioStrs.push_back("clk");
         bool isFirst = true;
-
-        for (const std::string& retStr: retStrs){
+        for (const std::string& retStr: ioStrs){
             if (!isFirst){
                 result += ",\n";
             }

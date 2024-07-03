@@ -23,12 +23,24 @@
 namespace kathryn{
 
 
+    enum MODULE_GEN_PROGRESS{
+        MGP_UNINIT,
+        MGP_INITED_ELE,
+        MGP_ROUTED,
+        MGP_MARK_PRE_WRITE,
+        MGP_MARK_PRE_REDUNDANT
+    };
+
+
     class Module;
+    class GenStructure;
     class ModuleGen{
     protected:
         Module*        _master           = nullptr;
         int            depthFromGlobalModule = 0;
         moduleLocalCef _cerf;
+        moduleGlobalCef _globCerf;
+        MODULE_GEN_PROGRESS _mgp = MGP_UNINIT;
 
     public:
         LogicGenBaseVec   _regPool;
@@ -38,7 +50,12 @@ namespace kathryn{
         LogicGenBaseVec   _valPool;
         LogicGenBaseVec   _memBlockPool;
         LogicGenBaseVec   _memBlockElePool;
-
+        ///// ioPool it can be use after finalize Route Ele is used
+        LogicGenBaseVec   _interWirePool;
+        LogicGenBaseVec   _autoInputWirePool;
+        LogicGenBaseVec   _autoOutputWirePool;
+        LogicGenBaseVec   _globalInputPool;
+        LogicGenBaseVec   _globalOutputPool;
 
 
         std::unordered_map<Operable*, int>  _interWireMap;
@@ -67,7 +84,7 @@ namespace kathryn{
         void createLogicGenBase(std::vector<T*>& srcs);
 
         template<typename T>
-        void ModuleGen::recruitLogicGenBase(LogicGenBaseVec& des,
+        void recruitLogicGenBase(LogicGenBaseVec& des,
                                  std::vector<T*>& srcs){
             for(T* src: srcs){
                 LogicGenBase* logicGenBase = src->getLogicGen();
@@ -77,7 +94,7 @@ namespace kathryn{
         }
 
         template<typename T>
-        LogicGenBaseVec ModuleGen::recruitLogicGenBase(std::vector<T*>& srcs){
+        LogicGenBaseVec recruitLogicGenBase(std::vector<T*>& srcs){
             LogicGenBaseVec result;
             recruitLogicGenBase(result, srcs);
             return result;
@@ -86,15 +103,21 @@ namespace kathryn{
         template<typename T>
         void createAndRecruitLogicGenBase(LogicGenBaseVec& des,
                                  std::vector<T*>& srcs);
+
+        MODULE_GEN_PROGRESS getGenProgress()const {return _mgp;}
+
         /*
          * main progress
          */
 
         void startInitEle  ();
         void startRouteEle ();
+        void finalizeRouteEle();
         void genCerfAll    (int idx); /// idx that it is submodule
-        bool startCmpModule(ModuleGen* rhsMdg);
-        void startWriteFile(FileWriterBase* fileWriter);
+
+        bool startCmpModule(ModuleGen* rhsMdg, GenStructure* genStructure);
+        void startPutToGenSystem(GenStructure* genStructure);
+        void startWriteFile(FileWriterBase* fileWriter, GenStructure* genStructure);
 
         /*
          * routing operation
@@ -133,7 +156,7 @@ namespace kathryn{
             const LogicGenBaseVec& globInputVec,
             const LogicGenBaseVec& globOutputVec
         );
-        std::string getSubModuleDec(ModuleGen* mdGen);
+        std::string getSubModuleDec(ModuleGen* mdGen, GenStructure* genStructure);
         std::string getOpr();
         /**
          *  cmp function
@@ -142,6 +165,7 @@ namespace kathryn{
         void genCerfToThisModule(int idx);
         bool cmpCerfEqLocally(const ModuleGen& rhs) const;
         moduleLocalCef getCerf() const{return _cerf;}
+        moduleGlobalCef getGlobCerf() const{return _globCerf;}
     };
 
     class ModuleGenInterface{

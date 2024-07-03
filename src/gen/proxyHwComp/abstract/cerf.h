@@ -62,6 +62,29 @@ namespace kathryn{
 
 	};
 
+	struct moduleGlobalCef{
+		VarMeta varMeta;
+
+		bool operator < (const moduleGlobalCef& rhs) const{
+			if (varMeta.isUser < rhs.varMeta.isUser){
+				return true;
+			}else if (varMeta.isUser == rhs.varMeta.isUser){
+				return varMeta.varType < rhs.varMeta.varType;
+			}
+			return false;
+		}
+
+        bool operator == (const moduleGlobalCef& rhs) const{
+            return (varMeta.isUser == rhs.varMeta.isUser  ) &
+                   (varMeta.varType == rhs.varMeta.varType);
+        }
+
+        bool operator != (const moduleGlobalCef& rhs) const{
+            return ! ((*this) == rhs);
+        }
+
+	};
+
 
 
 }

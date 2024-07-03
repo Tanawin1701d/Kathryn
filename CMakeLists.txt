@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.28)
+cmake_minimum_required(VERSION 3.25)
 project(Kathryn)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -40,18 +40,4 @@ add_executable(Kathryn
         ${SRC_EXAMPLE}
         ${SRC_PARAM}
         ${SRC_MODEL_COMPILE}
-        src/test/autoGen/genMng.cpp
-        src/test/autoGen/genMng.h
-        src/test/autoGen/testCase/genEle.cpp
-        src/test/autoGen/testCase/genEle.h
-        src/model/hwComponent/abstract/globIo.h
-        src/model/hwComponent/abstract/globPool.cpp
-        src/model/hwComponent/abstract/globPool.h
-        src/model/hwComponent/abstract/globIo.cpp
-        src/test/autoGen/testCase/genAutoTest2.cpp
-        src/params/genParam.cpp
-        src/params/genParam.h
-        src/gen/proxyHwComp/module/moduleGenCmp.cpp
-        src/gen/proxyHwComp/module/moduleRouting.cpp
-        src/gen/proxyHwComp/module/moduleWrite.cpp
-)
+        src/gen/controller/genStructure.cpp src/gen/controller/genStructure.h)

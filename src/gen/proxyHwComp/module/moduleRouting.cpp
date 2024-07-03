@@ -32,6 +32,17 @@ namespace kathryn{
         _memBlockElePool.routeDepAll();
     }
 
+    void ModuleGen::finalizeRouteEle() {
+        for(ModuleGen* mdGen: _subModulePool){
+            mdGen->finalizeRouteEle();
+        }
+        recruitLogicGenBase(_interWirePool, _interWires);
+        recruitLogicGenBase(_autoInputWirePool, _autoInputWires);
+        recruitLogicGenBase(_autoOutputWirePool, _autoOutputWires);
+        recruitLogicGenBase(_globalInputPool, _globalInputs);
+        recruitLogicGenBase(_globalOutputPool, _globalOutputs);
+    }
+
     WireIo* ModuleGen::addAutoWireBase(
         Operable* opr,      ///////// opr is exact opr
         Operable* realSrc,  ///////// realSrc is exact opr too
