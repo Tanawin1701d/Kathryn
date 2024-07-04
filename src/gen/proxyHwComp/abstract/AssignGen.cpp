@@ -66,7 +66,7 @@ namespace kathryn{
             }
 
             if (!isStateConOcc){
-                retStr += "true";
+                retStr += " 1 ";
             }
 
             retStr += ") begin\n";
