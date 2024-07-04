@@ -29,6 +29,7 @@ namespace kathryn{
     void GenController::start(){
         initEle();
         routeIo();
+        genCefAll();
         recruitModToGenSystem();
         generateEveryModule();
     }
@@ -38,6 +39,13 @@ namespace kathryn{
         _masterModuleGen->startRouteEle();
         _masterModuleGen->finalizeRouteEle();
     }
+
+    void GenController::genCefAll(){
+        _masterModuleGen->genCerfAll(0);
+    }
+
+
+
 
     void GenController::recruitModToGenSystem() {
         //////// buttom up only
@@ -60,6 +68,7 @@ namespace kathryn{
         }
         delete _verilogWriter;
         _verilogWriter = nullptr;
+        _genStructure.reset();
     }
 
     void GenController::clean(){

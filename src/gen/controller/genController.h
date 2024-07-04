@@ -44,6 +44,8 @@ namespace kathryn{
 
         void routeIo();
 
+        void genCefAll();
+
         void recruitModToGenSystem(); ////// it require bottom un generating
         ////// according to generation structure
 

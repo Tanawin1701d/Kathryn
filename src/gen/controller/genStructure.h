@@ -38,6 +38,7 @@ namespace kathryn{
         void addNewModule(ModuleGen* newMd);
         ModuleGen* getMasterModuleGen(ModuleGen* mdg);
         std::vector<ModuleGen*> getAllMasterModuleGen();
+        void reset() {_mdCheckStorage.clear();}
 
     };
 }
