@@ -40,4 +40,4 @@ add_executable(Kathryn
         ${SRC_EXAMPLE}
         ${SRC_PARAM}
         ${SRC_MODEL_COMPILE}
-        src/gen/controller/genStructure.cpp src/gen/controller/genStructure.h)
+        )

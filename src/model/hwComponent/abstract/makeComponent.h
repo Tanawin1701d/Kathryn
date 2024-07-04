@@ -13,7 +13,7 @@
 
 
 /** this is for user usage*/
-#define mMod(name, TypeName, ...) Module&   name = _make<TypeName>(#TypeName, #name, true, __VA_ARGS__)
+#define mMod(name, TypeName, ...) TypeName& name = _make<TypeName>(#TypeName, #name, true, __VA_ARGS__)
 #define mWire( name, argument)    Wire&     name = _make<Wire>    ("uncatagorizedYet", #name, true,argument)
 #define mReg( name, argument)     Reg&      name = _make<Reg>     ("uncatagorizedYet", #name, true, argument)
 #define mVal(name, ...)           Val&      name = _make<Val>     ("uncatagorizedYet", #name, true, __VA_ARGS__)

@@ -121,7 +121,7 @@ namespace kathryn{
             if (size() != lgbVec.size()){
                 return false;
             }
-            bool cmpRes = false;
+            bool cmpRes = true;
             for (int idx = 0; idx < size(); idx++){
                 cmpRes &= (*this)[idx]->compare(lgbVec[idx]);
             }
@@ -132,7 +132,7 @@ namespace kathryn{
             if (size() != lgbVec.size()){
                 return false;
             }
-            bool cmpRes = false;
+            bool cmpRes = true;
             for (int idx = 0; idx < size(); idx++){
                 cmpRes &= (*this)[idx]->checkCerfEqLocally(*lgbVec[idx]);
             }

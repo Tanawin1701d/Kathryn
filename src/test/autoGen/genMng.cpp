@@ -18,8 +18,12 @@ namespace kathryn{
         genTestCase.push_back(genEle);
     }
 
+    bool genEleCmp(GenEle*& lhs, GenEle*& rhs){
+        return lhs->getId() < rhs->getId();
+    }
+
     void startGenEle(PARAM& param){
-        std::sort(genTestCase.begin(), genTestCase.end());
+        std::sort(genTestCase.begin(), genTestCase.end(), genEleCmp);
         std::string originDesPrefix = param[GEN_PATH_PREFIX];
 
         for (GenEle* genEle: genTestCase){

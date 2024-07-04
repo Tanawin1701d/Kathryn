@@ -23,7 +23,7 @@ namespace kathryn{
         assert(iterA != _masterSrcModuleMap.end());
         assert(iterB != _masterSrcModuleMap.end());
 
-        return iterA == iterB;
+        return iterA->second == iterB->second;
     }
 
     void ModuleChecker::addToGrp(ModuleGen* mdA){
@@ -96,6 +96,7 @@ namespace kathryn{
         ModuleChecker& moduleChecker = iter->second;
         ModuleGen* masterGen = moduleChecker.getMasterModuleGen(mdg);
         assert(masterGen != nullptr);
+        std::cout << "get gen " << mdg->getCerf().varMeta.varName << " return " << masterGen->getCerf().varMeta.varName << std::endl;
         return masterGen;
     }
 

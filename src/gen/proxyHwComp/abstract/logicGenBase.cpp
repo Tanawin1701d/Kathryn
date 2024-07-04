@@ -67,15 +67,16 @@ bool LogicGenBase::cmpEachOpr(Operable* srcA, Operable* srcB,
                               ModuleGen* srcMdA, ModuleGen* srcMdB,
                               OUT_SEARCH_POL searchPol){
 
-        Operable* exactSrcA = &srcA->getExactOperable();
-        Operable* exactSrcB = &srcB->getExactOperable();
 
-        bool isANull = exactSrcA == nullptr;
-        bool isBNull = exactSrcB == nullptr;
+        bool isANull = srcA == nullptr;
+        bool isBNull = srcB == nullptr;
 
         if (isANull | isBNull){
             return isANull == isBNull; ///// if one is not null and one is null escape it
         }
+
+        Operable* exactSrcA = &srcA->getExactOperable();
+        Operable* exactSrcB = &srcB->getExactOperable();
 
         if (srcA->getOperableSlice() != srcB->getOperableSlice()){return false;}
 

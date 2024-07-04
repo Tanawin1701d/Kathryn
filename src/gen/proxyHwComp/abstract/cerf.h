@@ -43,7 +43,9 @@ namespace kathryn{
             result &= (comptype == rhs.comptype);
             result &= (md_gen_grp == rhs.md_gen_grp);
             result &= (varMeta.isUser == rhs.varMeta.isUser);
-            result &= (varMeta.varName == rhs.varMeta.varName);
+        	if(varMeta.isUser){
+        		result &= (varMeta.varName == rhs.varMeta.varName); ////// if it is user we check the value name but internal we don't
+        	}
             result &= (grpIdx     == rhs.grpIdx);
             result &= (idx        == rhs.idx);
             result &= (curSl      == rhs.curSl);
