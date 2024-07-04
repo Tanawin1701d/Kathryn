@@ -53,7 +53,7 @@ namespace kathryn{
         bool connectTheWire){
             assert(opr     != nullptr);
             assert(realSrc != nullptr);
-        WireIo& newAddedWire = makeOprIoWire(wireName + std::to_string(ioVec.size()),
+        WireIo& newAddedWire = makeOprIoWire("addAutoWireBase_uninit",
                                               opr->getOperableSlice().getSize(),
                                               wireIoType
                                 );
@@ -64,6 +64,13 @@ namespace kathryn{
             if (connectTheWire){
                 newAddedWire.connectTo(opr, true);
             }
+
+            newAddedWire.setVarName(wireName +
+                                    std::to_string(ioVec.size()) +
+                                    "_" +
+                                    realSrc->getLogicGenBase()->
+                                    getIdent()->getVarName()
+                                    );
             ioVec.push_back(&newAddedWire);
             ioMap.insert({realSrc, ioVec.size()-1});
             //////////////////////////////////////////////
@@ -77,7 +84,7 @@ namespace kathryn{
              realSrc,
              _autoInputWires,
              _autoInputWireMap,
-             "autoInputWire_",
+             "AIP_",
              WIRE_IO_INPUT);
     }
 
@@ -97,7 +104,7 @@ namespace kathryn{
             realSrc,
             _autoOutputWires,
             _autoOutputWireMap,
-            "autoOutputWire_",
+            "AOP_",
             WIRE_IO_OUTPUT);
     }
 
@@ -117,7 +124,7 @@ namespace kathryn{
         return addAutoWireBase(realSrc, realSrc,
         _interWires,
         _interWireMap,
-        "autoInterWire_",
+        "ABD_",
         WIRE_IO_INTER,
         false);
     }

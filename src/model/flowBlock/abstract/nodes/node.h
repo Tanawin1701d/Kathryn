@@ -151,8 +151,8 @@ namespace kathryn {
             }else{
                 return rawExit;
             }
-
         }
+
         /**
          * function that allow sp node custom their behavior
          * **/
