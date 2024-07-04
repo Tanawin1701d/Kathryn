@@ -146,6 +146,9 @@ namespace kathryn{
         assert(fw != nullptr);
         bool isFirst = true;
         for (const std::string& x: src){
+            if (x.empty()){
+                continue;
+            }
             if(!isFirst){
                 fw->addData(sep);
             }

@@ -67,7 +67,7 @@ namespace kathryn{
         writeGenVec(_memBlockElePool.getDecVars()        , fileWriter, "\n"); fileWriter->addData("\n////input of submodule\n");
         writeGenVec(subModuleInputRepresent.getDecVars() , fileWriter, "\n"); fileWriter->addData("\n////output of submodule\n");
         writeGenVec(subModuleOutputRepresent.getDecVars(), fileWriter, "\n"); fileWriter->addData("\n////bridgeVec\n");
-        writeGenVec(_interWirePool.getDecVars()               , fileWriter, "\n");
+        writeGenVec(_interWirePool.getDecVars()               , fileWriter, "\n");fileWriter->addData("\n");
 
         fileWriter->addData("///////////////////////////////////////////////\n"
                             "//////////////////// operation///////////////////\n"

@@ -92,7 +92,7 @@ namespace kathryn {
             if (!_varMeta.isUser){ _varMeta.varName += "_INTERNAL";}
             _globalName = GLOBAL_PREFIX[type] + std::to_string(_globalId);
 
-            if (_globalId == 71){
+            if (_globalId == 115){
                 //mfAssert(false, "dddddd");
                 int x = 0;
             }

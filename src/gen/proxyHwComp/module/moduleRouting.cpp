@@ -178,7 +178,7 @@ namespace kathryn{
         /////////////////////////////////////
         ModuleGen* apogee    = *useInputAsModuleGen.rbegin();
         WireIo*    interWire = nullptr;
-        if (checkIsThereAutoInterWire(exactRealSrc)){
+        if (apogee->checkIsThereAutoInterWire(exactRealSrc)){
             interWire = apogee->getAutoInterWire(exactRealSrc);
         }else{
             interWire = apogee->addAutoInterWire(exactRealSrc);
