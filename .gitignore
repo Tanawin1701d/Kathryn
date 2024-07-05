@@ -8,7 +8,10 @@
 /KOut/**/*.prof
 /KOut/**/*.sl
 /KOut/**/*.dumpVar
+###### model output and program is system generated
 /KOut/genTest/model
+/KOut/genTest/output
+/KOut/genTest/program
 
 #### model compile
 modelCompile/cmake-build-debug
