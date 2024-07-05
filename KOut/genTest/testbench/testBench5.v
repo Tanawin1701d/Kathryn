@@ -27,21 +27,38 @@ top top_md(
 
 );
 
+integer amtError = 0;
 integer cycle;
 initial begin
     $dumpfile("output/5.vcd");
-    $dumpvars(0, rst);
-    $dumpvars(0, a);
-    $dumpvars(0, b);
-    $dumpvars(0, c);
-    $dumpvars(0, clk);
-    $dumpvars(0, top_md.SR_ST304_startNode);
-    $dumpvars(0, top_md.MODULE307.SR_ST313_seqStateReg_312_0);
-    $dumpvars(0, top_md.MODULE307.SR_ST317_seqStateReg_312_1);
-    $dumpvars(0, top_md.MODULE307.SR_ST321_seqStateReg_312_2);
+    $dumpvars(0, tb);
+
     rst = 1;
     #(CLK_PEROID);
     rst = 0;
+    #(CLK_PEROID);
+    if (a !=  0) begin $display("a expect  0"); amtError = amtError + 1; end
+    if (b !=  0) begin $display("b expect  0"); amtError = amtError + 1; end
+    if (c !=  0) begin $display("c expect  0"); amtError = amtError + 1; end
+    #(CLK_PEROID);
+    if (a != 48) begin $display("a expect  48"); amtError = amtError + 1; end
+    if (b !=  0) begin $display("b expect  0"); amtError = amtError + 1; end
+    if (c !=  0) begin $display("c expect  0"); amtError = amtError + 1; end
+    #(CLK_PEROID);
+    if (a != 48) begin $display("a expect  48"); amtError = amtError + 1; end
+    if (b != 48) begin $display("b expect  48"); amtError = amtError + 1; end
+    if (c !=  0) begin $display("c expect  0"); amtError = amtError + 1; end
+    #(CLK_PEROID);
+    if (a != 48) begin $display("a expect  48"); amtError = amtError + 1; end
+    if (b != 48) begin $display("b expect  48"); amtError = amtError + 1; end
+    if (c != 48) begin $display("c expect  48"); amtError = amtError + 1; end
+
+    if (amtError > 0) begin
+        $display("FAIL THIS TEST CASE");
+    end else begin
+        $display("PASS");
+    end
+
     for (cycle = 0; cycle < 99; cycle = cycle + 1)begin
         #(CLK_PEROID);
     end
