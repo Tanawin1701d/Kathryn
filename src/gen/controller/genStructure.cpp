@@ -96,7 +96,7 @@ namespace kathryn{
         ModuleChecker& moduleChecker = iter->second;
         ModuleGen* masterGen = moduleChecker.getMasterModuleGen(mdg);
         assert(masterGen != nullptr);
-        std::cout << "get gen " << mdg->getCerf().varMeta.varName << " return " << masterGen->getCerf().varMeta.varName << std::endl;
+        ///std::cout << "get gen " << mdg->getCerf().varMeta.varName << " return " << masterGen->getCerf().varMeta.varName << std::endl;
         return masterGen;
     }
 

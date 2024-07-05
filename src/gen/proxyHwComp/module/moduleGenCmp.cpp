@@ -41,7 +41,7 @@ namespace kathryn{
              (_cerf.varMeta.varType != rhsMdg->_cerf.varMeta.varType)
         ){ return false;}
 
-        std::cout << "start deep cmp @ " << _cerf.varMeta.varName << "  with " << rhsMdg->_cerf.varMeta.varName << std::endl;
+        //std::cout << "start deep cmp @ " << _cerf.varMeta.varName << "  with " << rhsMdg->_cerf.varMeta.varName << std::endl;
 
         //////// compare standard
         bool prelimResult = true;
@@ -60,7 +60,7 @@ namespace kathryn{
         prelimResult &= _globalInputPool   .compareCefOnly(rhsMdg->_globalInputPool);
         prelimResult &= _autoInputWirePool .compareCefOnly(rhsMdg->_autoInputWirePool);
 
-        std::cout << "prelim res " << prelimResult << std::endl;
+        ///std::cout << "prelim res " << prelimResult << std::endl;
         if(!prelimResult) {return false;}
 
         ////// compare sub module input
@@ -79,7 +79,7 @@ namespace kathryn{
             /////// compare output
             subResult &= lhsSubModuleGen->_globalOutputPool.compareCefOnly(rhsSubModuleGen->_globalOutputPool);
             subResult &= lhsSubModuleGen->_autoOutputWirePool.compareCefOnly(rhsSubModuleGen->_autoOutputWirePool);
-            std::cout << "subTest res " << subResult << std::endl;
+            //std::cout << "subTest res " << subResult << std::endl;
             if (!subResult){return false;}
         }
 

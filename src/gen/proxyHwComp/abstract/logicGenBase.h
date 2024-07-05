@@ -63,7 +63,7 @@ namespace kathryn{
             return _mdGenMaster;
         }
         [[nodiscard]] logicLocalCef getLogicCef() const{return _cerf;}
-        [[nodiscard]] Identifiable* getIdent() const {return _ident;}
+        [[nodiscard]] Identifiable* getIdent()    const {return _ident;}
 
         virtual void addDirectUpdateEvent(UpdateEvent* updateEvent){assert(false);}
 

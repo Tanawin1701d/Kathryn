@@ -34,7 +34,6 @@ void LogicGenBase::genCerf(MODULE_GEN_GRP mgg,int grpIdx, int idx){
         _cerf.comptype   = _ident->getType();
         _cerf.md_gen_grp = mgg;
         _cerf.varMeta    = _ident->getVarMeta();
-        _cerf.varMeta.varType =
         _cerf.grpIdx     = grpIdx;
         _cerf.idx        = idx;
         _cerf.curSl      = _asb->getAssignSlice();
