@@ -8,7 +8,7 @@
 /KOut/**/*.prof
 /KOut/**/*.sl
 /KOut/**/*.dumpVar
-/KOut/genTest
+/KOut/genTest/model
 
 #### model compile
 modelCompile/cmake-build-debug
