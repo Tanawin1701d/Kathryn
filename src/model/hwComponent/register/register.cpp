@@ -107,10 +107,6 @@ namespace kathryn{
         );
     }
 
-    std::string  Reg::getGlobIoName(){
-        return "Glob_" + getGlobalName() + "_" + getVarName();
-
-    }
     bool Reg::checkIntegrity(){
         return getGlobIoType() != GLOB_IO_INPUT;
     }

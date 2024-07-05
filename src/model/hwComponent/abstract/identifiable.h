@@ -121,7 +121,7 @@ namespace kathryn {
         void               setVarName(std::string typeName) { _varMeta.varName = std::move(typeName);}
         bool               isUserVar() const {return _varMeta.isUser;}
         [[nodiscard]]
-        VarMeta            getVarMeta() const{return _varMeta;}
+        VarMeta&           getVarMeta() {return _varMeta;}
 
         /**build Inherit varname*/
         void               buildInheritName() override;

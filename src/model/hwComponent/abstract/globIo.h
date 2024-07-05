@@ -20,12 +20,14 @@ namespace kathryn{
 
     class GlobIo{
     protected:
+        std::string ioValue = "";
         GLOB_IO_TYPE _globIoType = GLOB_IO_NOT_BOTH;
     public:
         virtual ~GlobIo() = default;
-        void asInputGlob ();
-        void asOutputGlob();
-        virtual std::string  getGlobIoName()           = 0;
+        void asInputGlob (std::string value = "");
+        void asOutputGlob(std::string value = "");
+        void setIoName(const std::string&);
+        virtual std::string  getGlobIoName();
         virtual bool checkIntegrity()                = 0;
         virtual void connectToThisIo(WireIo* wireIo) = 0;
         virtual Operable* getOprFromGlobIo()         = 0;

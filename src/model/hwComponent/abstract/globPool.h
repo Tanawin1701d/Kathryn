@@ -4,6 +4,8 @@
 
 #ifndef GLOBPOOL_H
 #define GLOBPOOL_H
+
+#include "globIo.h"
 #include "operable.h"
 
 namespace kathryn{
@@ -12,6 +14,9 @@ namespace kathryn{
     void addToGlobPool(GlobIo* src);
     std::vector<GlobIo*>& getGlobPool(bool isInput);
     void cleanGlobPool();
+
+    bool checkIsThereIoName(const std::string& test);
+    void addToNameList(const std::string& ioName);
 
 }
 

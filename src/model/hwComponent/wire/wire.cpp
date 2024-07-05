@@ -126,9 +126,6 @@ namespace kathryn{
     }
 
     /** override global input*/
-    std::string  Wire::getGlobIoName(){
-        return "Glob_" + getGlobalName() + "_" + getVarName();
-    }
     bool Wire::checkIntegrity(){
         return true;
     }

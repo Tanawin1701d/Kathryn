@@ -2,17 +2,24 @@
 // Created by tanawin on 26/6/2024.
 //
 
+#include "globPool.h"
+
 #include <cassert>
 #include <vector>
+#include <set>
 #include "model/hwComponent/abstract/globIo.h"
 
 namespace kathryn{
 
+    ////////// it is used to check how much wire is used
+    std::set<std::string> globIoName;
     std::vector<GlobIo*> globInputPool;
     std::vector<GlobIo*> globOutputPool;
 
     void addToGlobPool(GlobIo* src){
         assert(src != nullptr);
+        checkIsThereIoName(src->getGlobIoName());
+        addToNameList(src->getGlobIoName());
         if (src->getGlobIoType() == GLOB_IO_INPUT){
             globInputPool.push_back(src); return;
         }
@@ -29,6 +36,15 @@ namespace kathryn{
     void cleanGlobPool(){
         globInputPool.clear();
         globOutputPool.clear();
+    }
+
+    bool checkIsThereIoName(const std::string& test){
+        auto iter = globIoName.find(test);
+        return iter != globIoName.end();
+    }
+
+    void addToNameList(const std::string& ioName){
+        globIoName.insert(ioName);
     }
 
 

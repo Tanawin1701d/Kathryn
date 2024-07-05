@@ -17,8 +17,8 @@ namespace kathryn{
 
         void flow() override{
 
-            a.asOutputGlob();
-            c.asInputGlob();
+            a.asOutputGlob("outA");
+            c.asInputGlob("inC");
 
             seq{
                 cif(c == 0){

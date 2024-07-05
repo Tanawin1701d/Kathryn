@@ -62,7 +62,6 @@ namespace kathryn{
         void createLogicGen() override;
 
         /** override global input*/
-        std::string  getGlobIoName()           override;
         bool checkIntegrity()                override;
         void connectToThisIo(WireIo* wireIo) override;
         Operable* getOprFromGlobIo()         override;
