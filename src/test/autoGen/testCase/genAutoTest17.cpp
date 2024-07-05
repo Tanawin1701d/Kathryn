@@ -26,15 +26,25 @@ namespace kathryn{
 
             seq{
                 par{
-                    a = 8;
+                    a = 0;
                     b = 0;
                     c = 0;
                     d = 0;
                 }
-                syWait(5);
-                b <<= 1;
-                syWait(a);
-                c <<= 2;
+
+                cwhile(a < 47){
+                    par{
+                        storage[a(0, 6)] <<= a;
+                        a <<= a + 1;
+                    }
+                }
+
+                cwhile(b < 47){
+                    par{
+                        c <<= storage[b(0,6)];
+                        b <<= b + 1;
+                    }
+                }
 
             }
         }

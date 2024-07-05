@@ -18,14 +18,14 @@ namespace kathryn{
         /** flush model formation log value first*/
         // flushMfDebugger();
 
+        /** clean global io declaration*/
+        cleanGlobPool();
         /** reset model layer*/
         getControllerPtr()->reset();
         /** reset simulation layer*/
         getSimController()->reset();
         /** reset generator*/
         getGenController()->reset();
-        /** clean global io declaration*/
-        cleanGlobPool();
 
 
     }

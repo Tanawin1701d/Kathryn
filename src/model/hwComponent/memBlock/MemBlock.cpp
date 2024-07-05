@@ -32,15 +32,24 @@ namespace kathryn{
         ctrl->on_memBlk_init(this);
     }
 
+    void MemBlock::initEnvForMemHolder(MemBlockEleHolder* memEleHolder){
+        assert(memEleHolder != nullptr);
+        assert(getParent() != nullptr);
+        memEleHolder->setParent(getParent());
+        memEleHolder->buildInheritName();
+        memBlockAgents.push_back(memEleHolder);
+    }
+
+
     MemBlockEleHolder& MemBlock::operator[](const Operable& indexer) {
         auto* memBlockEleHolder = new MemBlockEleHolder(this, &indexer);
-        memBlockAgents.push_back(memBlockEleHolder);
+        initEnvForMemHolder(memBlockEleHolder);
         return *memBlockEleHolder;
     }
 
     MemBlockEleHolder& MemBlock::operator[](const int idx) {
         auto* memBlockEleHolder = new MemBlockEleHolder(this, idx);
-        memBlockAgents.push_back(memBlockEleHolder);
+        initEnvForMemHolder(memBlockEleHolder);
         return *memBlockEleHolder;
     }
 

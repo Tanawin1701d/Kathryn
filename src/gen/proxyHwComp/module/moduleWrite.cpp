@@ -31,7 +31,12 @@ namespace kathryn{
                             "////////////////////////////////////////////////////////////////////////////////\n"
                             );
         fileWriter->addData("module ");
-        fileWriter->addData(_master->getGlobalName() + "(\n");
+
+        if (_master->isTopModule()){
+            fileWriter->addData(" top(\n");
+        }else{
+            fileWriter->addData(_master->getGlobalName() + "(\n");
+        }
 
         //////// declare input/output element
         std::vector<std::string> ioVec = getIoDec(_autoInputWirePool,

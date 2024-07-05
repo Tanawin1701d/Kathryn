@@ -42,8 +42,9 @@ namespace kathryn{
         void com_init() override;
         void com_final() override{};
 
-        MemBlockEleHolder& operator[] (const Operable& indexer);
+        void initEnvForMemHolder(MemBlockEleHolder* memEleHolder);
 
+        MemBlockEleHolder& operator[] (const Operable& indexer);
         MemBlockEleHolder& operator[] (const int idx);
 
         int getWidthSize() const {assert(WIDTH_SIZE != 0); return WIDTH_SIZE;}
@@ -56,7 +57,6 @@ namespace kathryn{
         std::string getMdIdentVal() override{
             return getIdentDebugValue();
         }
-
 
         MemSimEngine* getSimEngine() override{return memSimEngine;}
 
