@@ -27,7 +27,7 @@ FILE(GLOB_RECURSE SRC_MODEL_COMPILE   RELATIVE ${CMAKE_SOURCE_DIR} "src/modelCom
 
 
 add_executable(Kathryn
-        main.cpp
+        main2.cpp
         src/kathryn.cpp
         ${SRC_ABS}
         ${SRC_APP}

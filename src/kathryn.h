@@ -18,6 +18,7 @@
 namespace kathryn{
 
     void startModelKathryn();
+    void startGenKathryn(PARAM& params);
     void resetKathryn();
     PARAM readParamKathryn(std::string filePath);
 

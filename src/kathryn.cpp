@@ -13,6 +13,13 @@ namespace kathryn{
         getControllerPtr()->start();
     }
 
+    void startGenKathryn(PARAM& params){
+        GenController* genCtrl = getGenController();
+        assert(genCtrl != nullptr);
+        genCtrl->initEnv(params);
+        genCtrl->start();
+    }
+
     void resetKathryn(){
 
         /** flush model formation log value first*/
