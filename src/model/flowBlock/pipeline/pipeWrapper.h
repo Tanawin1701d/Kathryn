@@ -54,8 +54,8 @@ namespace kathryn{
 
         /** for controller add the local element to this sub block*/
         void addElementInFlowBlock(Node* node) override;
-        void addSubFlowBlock(FlowBlockBase* subBlock) override;
-        void addConFlowBlock(FlowBlockBase* conBlock) override;
+        void addSubFlowBlock      (FlowBlockBase* subBlock) override;
+        void addConFlowBlock      (FlowBlockBase* conBlock) override;
         NodeWrap* sumarizeBlock() override;
         /** add next start signal*/
         expression& getNextPipBlockReadySignal();
@@ -65,11 +65,11 @@ namespace kathryn{
         void onDetachBlock() override;
         /** for module to build hardware component*/
 
-        void buildHwMaster() override;
+        void buildHwMaster   () override;
         void buildHwComponent() override;
 
         /** Loop macro to notice position of system*/
-        void doPreFunction() override;
+        void doPreFunction () override;
         void doPostFunction() override;
 
         /**get debug*/

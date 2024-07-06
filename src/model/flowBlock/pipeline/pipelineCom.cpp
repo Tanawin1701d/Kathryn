@@ -108,10 +108,10 @@ namespace kathryn{
 
         /*** wait node*/
         _waitNode->addDependNode(upCondNode, &!(*checkToGoSignal));
-        _waitNode->addDependNode(_waitNode, &!(*checkToGoSignal));
+        _waitNode->addDependNode(_waitNode , &!(*checkToGoSignal));
         _waitNode->assign();
         /*** endNode*/
-        endNode->addDependNode(_waitNode, checkToGoSignal);
+        endNode->addDependNode(_waitNode , checkToGoSignal);
         endNode->addDependNode(upCondNode, checkToGoSignal);
         endNode->assign();
         /***/

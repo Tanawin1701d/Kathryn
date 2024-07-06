@@ -36,7 +36,7 @@ namespace kathryn{
         NodeWrap*    _resultNodeWrap = nullptr;
 
         PseudoNode* upCondNode = nullptr;
-        StateNode*  _waitNode   = nullptr;
+        StateNode*  _waitNode  = nullptr;
         PseudoNode* endNode    = nullptr;
 
     public:
