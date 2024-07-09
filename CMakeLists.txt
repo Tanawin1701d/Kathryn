@@ -42,5 +42,9 @@ add_executable(Kathryn
         ${SRC_EXAMPLE}
         ${SRC_PARAM}
         ${SRC_MODEL_COMPILE}
+        src/lib/instr/instrBase.cpp
+        src/lib/instr/instrBase.h
+        src/lib/instr/instrEle.cpp
+        src/lib/instr/instrEle.h
 
 )
