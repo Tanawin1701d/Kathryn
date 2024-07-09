@@ -3,7 +3,7 @@ project(Kathryn)
 
 set(CMAKE_CXX_STANDARD 17)
 
-#add_compile_options(-O3)
+add_compile_options(-O3)
 #set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 #set(CMAKE_BUILD_TYPE Debug)
 
@@ -27,8 +27,9 @@ FILE(GLOB_RECURSE SRC_MODEL_COMPILE   RELATIVE ${CMAKE_SOURCE_DIR} "src/modelCom
 
 
 add_executable(Kathryn
-        #main.cpp
+        main.cpp
         #main2.cpp
+        #main3.cpp
         src/kathryn.cpp
         ${SRC_ABS}
         ${SRC_APP}
@@ -41,5 +42,5 @@ add_executable(Kathryn
         ${SRC_EXAMPLE}
         ${SRC_PARAM}
         ${SRC_MODEL_COMPILE}
-        main3.cpp
+
 )
