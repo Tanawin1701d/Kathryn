@@ -50,7 +50,7 @@ namespace kathryn{
         int   _regCnt = -1;
         Slice _srcSlice = {};
 
-        explicit RegIdxAsm(token& tk);
+        explicit RegIdxAsm(const token& tk);
         void doAsm() override;
     };
 
@@ -61,32 +61,47 @@ namespace kathryn{
         std::vector<Slice> _desSlices;
 
         explicit ImmAsm() = default;
-        void     addImmMeta(token& tk);
+        void     addImmMeta(const token& tk);
         void     doAsm() override;
 
     };
 
+    struct UopAsm;
+
     struct OpcodeAsm: AsmWorker{
+        UopAsm*                  _uopMaster = nullptr;
         std::vector<Slice>       _srcSlices;
         std::vector<std::string> _expectValues;
         ////// op structure destination
-        explicit OpcodeAsm() = default;
-        void     addOpMeta(token& tk);
-        void     doAsm() override;
+        explicit    OpcodeAsm() = default;
+        void        addOpMeta(const token& tk);
+        void        setUopMaster(UopAsm* uopMaster);
+        void        doAsm() override;
+        std::string getSumOpcode() const;
     };
 
-    struct InstrType{
-        ///// src instr
+    struct UopAsm{
+        ///// meta data
+        InstrRepo*  _master = nullptr;
+        std::string _uopName;
+        int         _typeIdx  = -1; //// type of instruction
+        int         _uopIdx   = -1; ///// micro op id
         std::vector<token>     _tokens;
+        std::string _flattedOpcode;
         ///// asm worker
         std::vector<RegIdxAsm> _srcRegAsms;
         std::vector<RegIdxAsm> _desRegAsms;
         OpcodeAsm              _opAsm;
         ImmAsm                 _immAsm;
 
-        InstrType(std::vector<token> tokens);
+        UopAsm(InstrRepo* master,
+               std::vector<token> tokens,std::string uopName,
+               int typeIdx, int uopIdx);
         ///////// read token and build Asm worker
         void intepretToken();
+        void assignMasterToAsm();
+        void startGetSumOpcode();
+        std::string getFlattenOpcode(){return _flattedOpcode;}
         ///////// do assignment to declare the state of this micro-op
         void doAllAsm();
 
