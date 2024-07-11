@@ -9,6 +9,8 @@
 #include<cassert>
 #include "model/hwComponent/abstract/Slice.h"
 #include "model/hwComponent/register/register.h"
+#include "model/hwComponent/value/value.h"
+#include "model/hwComponent/expression/expression.h"
 
 
 namespace kathryn{
@@ -18,6 +20,7 @@ namespace kathryn{
     constexpr  int TOKEN_ASM_TYPE_IDX = 1; //// at splitedValue
     constexpr  char TOKEN_ASM_TYPE_REG_IDX  = 'r'; //// register idx
     constexpr  char TOKEN_ASM_TYPE_IMM_IDX  = 'i'; //// imm idx
+    constexpr  char TOKEN_ASM_TYPE_UOP_IDX  = 'u'; //// imm idx
 
 
     struct token{
@@ -34,12 +37,13 @@ namespace kathryn{
         virtual ~AsmWorker() = default;
         virtual void doAsm() = 0;
         void setMaster(InstrRepo* master){
-            assert(_master != nullptr);
+            assert(master != nullptr);
             _master = master;
         }
     };
 
     struct RegIdxAsm: AsmWorker{
+        ///// for src register <#{bitsize}-rs#{idx}>
         constexpr int TOKEN_TYPE_IDX = 1;
         constexpr int TOKEN_TYPE_START_IDX = 0;
         constexpr int TOKEN_TYPE_END_IDX   = 2;
@@ -51,14 +55,30 @@ namespace kathryn{
         Slice _srcSlice = {};
 
         explicit RegIdxAsm(const token& tk);
-        void doAsm() override;
+        void     doAsm() override;
     };
 
     struct ImmAsm: AsmWorker{
-        constexpr int TOKEN_FILLA_IDX = 2;
-        constexpr int TOKEN_FILLB_IDX = 3;
-        std::vector<Slice> _srcSlices;
-        std::vector<Slice> _desSlices;
+        /// for <#{bitsize}-i#{idx}-#{startBit}-#{stopBit}-#{zeroExtend? z: e}>
+        /// ----> [startBit, stopBit)
+        constexpr char ZEROEXTEND       = 'z';
+        constexpr int TOKEN_TYPE_IDX    = 1;
+        constexpr int TOKEN_TYPE_SIZE   = 1;
+        constexpr int TOKEN_FILLA_IDX   = 2;
+        constexpr int TOKEN_FILLB_IDX   = 3;
+        constexpr int TOKEN_FILLEXT_IDX = 4;
+        struct IterImm{
+            bool  needDummySrc = false; /// src Slice will be neglected
+            Slice srcSlice;
+            Slice desSlice;
+            Operable* sliced = nullptr;
+            bool operator < (const IterImm& rhs){
+                return desSlice.start < rhs.desSlice.start;
+            }
+        };
+        std::vector<IterImm> immSlicer;
+        int  _regCnt     = -1;
+        bool _signedExtend = true;
 
         explicit ImmAsm() = default;
         void     addImmMeta(const token& tk);
@@ -66,45 +86,59 @@ namespace kathryn{
 
     };
 
-    struct UopAsm;
+    struct MOP;
 
-    struct OpcodeAsm: AsmWorker{
-        UopAsm*                  _uopMaster = nullptr;
-        std::vector<Slice>       _srcSlices;
-        std::vector<std::string> _expectValues;
-        ////// op structure destination
-        explicit    OpcodeAsm() = default;
-        void        addOpMeta(const token& tk);
-        void        setUopMaster(UopAsm* uopMaster);
-        void        doAsm() override;
-        std::string getSumOpcode() const;
+    struct UopAsm: AsmWorker{
+        ///// meta data
+        MOP*               _mopMaster = nullptr;
+        std::vector<token> _uopTokens;
+        std::string        _uopName;
+        int                _uopIdx = -1;
+
+        std::vector<token> _opTokens;
+        ///// asm worker
+
+        UopAsm(MOP* master,std::vector<token> tokens,
+               std::string uopName, int uopIdx);
+        void addUopIdentToken(std::vector<token> tokens);
+        void doAsm();
+
+
     };
 
-    struct UopAsm{
-        ///// meta data
-        InstrRepo*  _master = nullptr;
-        std::string _uopName;
-        int         _typeIdx  = -1; //// type of instruction
-        int         _uopIdx   = -1; ///// micro op id
-        std::vector<token>     _tokens;
-        std::string _flattedOpcode;
-        ///// asm worker
+    //// <5-u> <1100110>    <----- //// left for uop //// right for mop
+
+    struct MOP{
+        ///// meta data at start
+        InstrRepo* _master = nullptr;
+        std::vector<token>     _masterTokens; ///// master of all token
+        std::string _mopName;
+        int _mopIdx = -1;
+        ///// after interpret and fetch
+        std::vector<token>     _opcodeTokens;
+        std::vector<token>     _masterUopTokens;
+        std::string            _flattedInstr; ///// fill when flattendMop
         std::vector<RegIdxAsm> _srcRegAsms;
         std::vector<RegIdxAsm> _desRegAsms;
-        OpcodeAsm              _opAsm;
         ImmAsm                 _immAsm;
+        std::vector<UopAsm>    _uops;
 
-        UopAsm(InstrRepo* master,
-               std::vector<token> tokens,std::string uopName,
-               int typeIdx, int uopIdx);
-        ///////// read token and build Asm worker
-        void intepretToken();
-        void assignMasterToAsm();
-        void startGetSumOpcode();
-        std::string getFlattenOpcode(){return _flattedOpcode;}
-        ///////// do assignment to declare the state of this micro-op
-        void doAllAsm();
+        MOP(InstrRepo* master,
+            std::vector<token>& masterTokens,
+            std::string mopName,
+            int mopIdx);
 
+        void        addMasterToken(std::vector<token>& masterTokens){_masterTokens = masterTokens;}
+        void        interpretMasterToken();
+        void        createUop(std::vector<token>& uopTokens, const std::string& uopName);
+        void        assignMaster(); //// assign master to all node
+        void        flattenMop();
+        [[nodiscard]]
+        std::string getFlattenUop() const{return _flattedInstr;}
+        [[nodiscard]]
+        int         getAmtUop() const{return _uops.size();}
+        void        doAllAsm();
+        void        unsetUnusedReg(const bool* eff, int size, bool isSrc);
     };
 
 }

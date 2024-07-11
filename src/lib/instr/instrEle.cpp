@@ -4,10 +4,17 @@
 #include "instrEle.h"
 #include "instrBase.h"
 #include <utility>
+#include <model/hwComponent/expression/nest.h>
+
 #include "util/str/strUtil.h"
 
 namespace kathryn{
 
+    /**
+     *
+     * reg idx asm
+     *
+     ***/
 
     RegIdxAsm::RegIdxAsm(const token& tk){
         std::string asmType = tk.splitedValue[TOKEN_TYPE_IDX].
@@ -24,58 +31,109 @@ namespace kathryn{
         _srcSlice = tk.sl;
 
         assert(_regCnt >= 0);
+        if ( isRead){ assert(_regCnt < _master->getAmtSrcReg());}
+        if (!isRead){ assert(_regCnt < _master->getAmtDesReg());}
+        assert(_srcSlice.stop <= _master->getOprSize());
         assert(_srcSlice.checkValidSlice());
     }
+
+    void RegIdxAsm::doAsm(){
+        assert(_master != nullptr);
+        OPR_HW& opr = isRead ? _master->getSrcReg(_regCnt)
+                             : _master->getDesReg(_regCnt);
+        auto slicedRegFileIdx = _master->getInstrOpr()->doSlice(_srcSlice);
+        opr.setOnlyIndex(slicedRegFileIdx);
+    }
+
+
+    /**
+     *
+     * imm idx asm
+     *
+     ***/
 
     void ImmAsm::addImmMeta(const token& tk){
         assert(tk.splitedValue.size() == (TOKEN_FILLB_IDX+1));
         assert(tk.sl.checkValidSlice());
-        _srcSlices.push_back(tk.sl);
+
         // fill to [a, b)
+        _regCnt   = std::stoi(tk.splitedValue[TOKEN_TYPE_IDX].substr(TOKEN_TYPE_SIZE)); //// start number to end
         int fillA = std::stoi(tk.splitedValue[TOKEN_FILLA_IDX]);
         int fillB = std::stoi(tk.splitedValue[TOKEN_FILLB_IDX]);
         Slice fillSl = {fillA, fillB};
         assert(fillSl.checkValidSlice());
-        _desSlices.push_back(fillSl);
+        immSlicer.push_back({
+            false,
+            tk.sl,
+            fillSl,
+            _master->getInstrOpr()->doSlice(tk.sl)
+        });
+
+        if ( (tk.splitedValue.size() > TOKEN_FILLEXT_IDX) &&
+             (tk.splitedValue[TOKEN_FILLEXT_IDX][0] == ZEROEXTEND)){
+            _signedExtend = false;
+        }
     }
 
-    void OpcodeAsm::addOpMeta(const token& tk){
-        assert(tk.sl.checkValidSlice());
-        assert(tk.value.size() == tk.sl.getSize());
-        _srcSlices.push_back(tk.sl);
-        _expectValues.push_back(tk.value);
+    void ImmAsm::doAsm(){
 
-    }
+        ////// start sort first
+        std::sort(immSlicer.begin(), immSlicer.end());
+        assert(!immSlicer.empty());
+        std::vector<IterImm> arrangedOpr;
+        ///// arrange all imm to proper slot and make dummy if there is no
+        /// imm to fill that slot fill it with dummy initialize the dummy
+        int curStartIdx = 0;
+        for(int idx = 0; idx < immSlicer.size(); idx++){
+            IterImm& iterImm = immSlicer[idx];
+            if (curStartIdx != iterImm.desSlice.start){
+                arrangedOpr.emplace_back(true,{}, {curStartIdx, iterImm.desSlice.start}, nullptr);
+            }
+            arrangedOpr.push_back(iterImm);
+            curStartIdx = iterImm.desSlice.stop;
+        }
+        assert(!arrangedOpr.empty());
+        assert(!arrangedOpr.rbegin()->needDummySrc);
+        if (curStartIdx != _master->getOprSize()){
+            arrangedOpr.emplace_back(true, {}, {curStartIdx, _master->getOprSize()}, nullptr);
+        }
+        curStartIdx = _master->getOprSize();
 
-    void OpcodeAsm::setUopMaster(UopAsm* uopMaster){
-        assert(uopMaster != nullptr);
-        _uopMaster = uopMaster;
-    }
+        //// initialize the dummy
 
-    std::string OpcodeAsm::getSumOpcode() const{
-        int instrSize = _master->getInstrSize();
-        std::string result = genConString('0', instrSize);
-
-        assert(_srcSlices.size() == _expectValues.size());
-
-        for (int iter = 0; iter < _srcSlices.size(); iter++){
-            int curBitSet = _srcSlices[iter].start;
-            assert(_srcSlices[iter].getSize() == _expectValues[iter].size());
-            assert(_srcSlices[iter].checkValidSlice() &&
-                   _srcSlices[iter].stop <= instrSize
-            );
-
-            for (int expectValIdx = (int)_expectValues[iter].size()-1;
-                     expectValIdx >= 0;
-                     expectValIdx--
-                ){
-                //// v------------ last bit
-                int actualStart = (instrSize - 1) - curBitSet;
-                result[actualStart] = _expectValues[iter][expectValIdx];
-                curBitSet++;
+        for(int idx = 0; idx < (((int)arrangedOpr.size())-1); idx++){
+            if (arrangedOpr[idx].needDummySrc){
+                arrangedOpr[idx].sliced =
+                    &makeOprVal("immFill", arrangedOpr[idx].desSlice.getSize(), 0);
             }
         }
-        return result;
+
+        //// do extend bit if there needed
+        if(arrangedOpr.rbegin()->needDummySrc){
+            assert(arrangedOpr.size() >= 2);
+            IterImm& lastIter    = *arrangedOpr.rbegin();
+            IterImm& srcToExtend = *(arrangedOpr.rbegin()+1);
+            if (_signedExtend){
+                Operable* srcOpr = srcToExtend.sliced;
+                int srcSize = srcOpr->getOperableSlice().getSize();
+                Operable* onlylastBit = srcOpr->doSlice({srcSize-1, srcSize});
+                lastIter.sliced  = &onlylastBit->extB(lastIter.desSlice.getSize());
+            }else{
+                lastIter.sliced  = &makeOprVal("lastImmFIll", lastIter.desSlice.getSize(), 0);
+            }
+        }
+
+
+        ///// do nest
+        std::vector<NestMeta> metas;
+        for(IterImm imm: immSlicer){
+            NestMeta meta = {imm.sliced, nullptr};
+            metas.push_back(meta);
+        }
+        nest& nested = gManInternal(metas);
+        //// put it to operand
+        OPR_HW& opr = _master->getSrcReg(_regCnt);
+        opr.setImm(&nested);
     }
 
     /***
@@ -106,25 +164,78 @@ namespace kathryn{
      *
      */
 
-    UopAsm::UopAsm(InstrRepo* master,
-                   std::vector<token> tokens,std::string uopName,
-                   int typeIdx, int uopIdx):
-    _master (master),
-    _uopName(std::move(uopName)),
-    _typeIdx(typeIdx),
-    _uopIdx (uopIdx),
-    _tokens (std::move(tokens))
-    { assert(_master != nullptr);}
+    UopAsm::UopAsm(MOP* master,
+                   std::vector<token> tokens,
+                   std::string uopName,
+                   int uopIdx):
+    _mopMaster    (master),
+    _uopTokens (std::move(tokens)),
+    _uopName   (std::move(uopName)),
+    _uopIdx    (uopIdx)
+    { assert(_mopMaster != nullptr);}
+
+    void UopAsm::addUopIdentToken(std::vector<token> tokens){
+        _opTokens = std::move(tokens);
+        assert(_opTokens.size() == _uopTokens.size());
+    }
+
+    void UopAsm::doAsm(){
+        //// get hardware and set condition
+        assert(!_mopMaster->_masterUopTokens.empty());
+        assert(_mopMaster->_masterUopTokens.size() == _uopTokens.size());
+        std::vector<Operable*> matchOpr;
+
+        ///// genMatch expression
+        for(int idx = 0; idx < (int)_mopMaster->_masterUopTokens.size(); idx++){
+            Slice instrSlice = _mopMaster->_masterUopTokens[idx].sl;
+            Operable* slicedInstr =
+                _mopMaster->_master->getInstrOpr()->doSlice(instrSlice);
+            ull cvtMatchStr = std::stoull(_uopTokens[idx].splitedValue[0], nullptr, 2);
+            Val& matchVal = makeOprVal(_uopName + "_uopMc", instrSlice.getSize(), cvtMatchStr);
+
+            matchOpr.push_back( &((*slicedInstr) == matchVal));
+        }
+
+        ////// genAll match is equal
+        Operable* result = matchOpr[0];
+        for (int idx = 1; idx < matchOpr.size(); idx++){
+         result = &((*result) & (*matchOpr[idx]));
+        }
+        ////// assign to hardware
+        int mopIdx = _mopMaster->_mopIdx;
+        InstrRepo* repo = _mopMaster->_master;
+        repo->getOp(mopIdx).setUop(_uopIdx, result);
+    }
 
 
-    void UopAsm::intepretToken(){
+    /***
+     *
+     *
+     * mop
+     *
+     *
+     */
 
-        for (const token& tk: _tokens){
+    MOP::MOP(InstrRepo* master,
+             std::vector<token>& masterTokens,
+             std::string mopName,
+            int mopIdx
+    ):
+    _master(master),
+    _masterTokens(masterTokens),
+    _mopName(std::move(mopName)),
+    _mopIdx(mopIdx)
+    { assert(master != nullptr);}
+
+
+    void MOP::interpretMasterToken(){
+
+        for (const token& tk: _masterTokens){
             std::vector<std::string> dec = tk.splitedValue;
             assert(!dec.empty());
             if (dec.size() == 1){
                 /////// it is op
-                _opAsm.addOpMeta(tk);
+                _opcodeTokens.push_back(tk);
                 continue;
             }
             if(dec[TOKEN_ASM_TYPE_IDX][0] == TOKEN_ASM_TYPE_REG_IDX){
@@ -136,29 +247,58 @@ namespace kathryn{
             if(dec[TOKEN_ASM_TYPE_IDX][0] == TOKEN_ASM_TYPE_IMM_IDX){
                 _immAsm.addImmMeta(tk);
             }
+
+            if(dec[TOKEN_ASM_TYPE_IDX][0] == TOKEN_ASM_TYPE_UOP_IDX){
+                _masterUopTokens.push_back(tk);
+            }
         }
     }
 
-    void UopAsm::assignMasterToAsm(){
-        for (RegIdxAsm& srcRegAsm: _srcRegAsms){
-            srcRegAsm.setMaster(_master);
+    void MOP::createUop(std::vector<token>& uopDataTokens, const std::string& uopName){
+        assert(uopDataTokens.size() == _masterUopTokens.size());
+        _uops.emplace_back(
+            this,
+            uopDataTokens,
+            uopName,
+            _uops.size());
+    }
+
+    void MOP::assignMaster(){
+        ////// assign instr repo to all
+        for (RegIdxAsm& regIdxAsm: _srcRegAsms){
+            regIdxAsm.setMaster(_master);
         }
-        for (RegIdxAsm& desRegAsm: _desRegAsms){
-            desRegAsm.setMaster(_master);
+        for (RegIdxAsm& regIdxAsm: _desRegAsms){
+            regIdxAsm.setMaster(_master);
         }
-        _opAsm .setMaster(_master);
-        _opAsm.setUopMaster(this);
         _immAsm.setMaster(_master);
+        for (UopAsm& uopAsm: _uops){
+            uopAsm.setMaster(_master);
+        }
     }
 
-    void UopAsm::startGetSumOpcode(){
-        _flattedOpcode = _opAsm.getSumOpcode();
+
+    void MOP::flattenMop(){
+        _flattedInstr = genConString('0', _master->getInstrSize());
+        for(token& tk: _opcodeTokens){
+            int actualStrStart = _master->getOprSize() - tk.sl.stop;
+            int actualStrStop  = _master->getOprSize() - tk.sl.start + 1;
+            assert((actualStrStop-actualStrStart) == tk.sl.getSize());
+            _flattedInstr.replace(
+                actualStrStart,
+                actualStrStop-actualStrStart,
+                tk.splitedValue[0]
+            );
+        }
     }
 
-    void UopAsm::doAllAsm(){
+
+    void MOP::doAllAsm(){
+
         bool effSrc[_master->getAmtSrcReg()] = {};
         bool effDes[_master->getAmtDesReg()] = {};
-        /** declare assignment*/
+        /** declare assignment and check the effective hardware*/
+        /** for register*/
         for (RegIdxAsm& srcRegAsm: _srcRegAsms){
             srcRegAsm.doAsm();
             effSrc[srcRegAsm._regCnt] = true; //// mark it is used
@@ -167,9 +307,37 @@ namespace kathryn{
             desRegAsm.doAsm();
             effDes[desRegAsm._regCnt] = true;
         }
-        _opAsm .doAsm();
+        for (UopAsm& uopAsm:  _uops){
+            uopAsm.doAsm();
+        }
         _immAsm.doAsm();
+        effSrc[_immAsm._regCnt] = true;
+
+        /** disable unused hw*/
+        unsetUnusedReg(effSrc, _master->getAmtSrcReg(), true);
+        unsetUnusedReg(effDes, _master->getAmtDesReg(), false);
+
+
+        for(int iterMopIdx = 0; iterMopIdx < _master->getAmtMop(); iterMopIdx++){
+            if (iterMopIdx == _mopIdx){
+                _master->getOp(_mopIdx).set();
+            }else{
+                _master->getOp(iterMopIdx).reset();
+            }
+        }
+
 
     }
+
+    void MOP::unsetUnusedReg(const bool* eff, int size, bool isSrc){
+
+        for (int regIdx = 0; regIdx < size; regIdx++){
+            OPR_HW& regHw = isSrc ? _master->getSrcReg(regIdx) : _master->getDesReg(regIdx);
+            if (!eff[regIdx]){
+                regHw.reset();
+            }
+        }
+    }
+
 
 }

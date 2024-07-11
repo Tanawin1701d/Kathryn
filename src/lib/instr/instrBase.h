@@ -21,6 +21,9 @@ namespace kathryn{
         Reg& valid;
 
         explicit OPR_HW(int archSize, int idxSize, int regNo);
+        void reset();
+        void setOnlyIndex(Operable* opr); ///// the value must get manual from regfile
+        void setImm(Operable* opr); ///// the value will be added and valid
     };
 
     struct RULE;
@@ -32,6 +35,10 @@ namespace kathryn{
         explicit OP_HW(int typeId,
                        const std::string& typeName,
                        std::vector<UopAsm>& uops);
+
+        void set();
+        void setUop(int idx, Operable* condition);
+        void reset();
     };
 
     /***  rule meta data*/
@@ -46,19 +53,10 @@ namespace kathryn{
         RULE    (int typeIdx, int uopIdx,
                  std::string  name,std::string  rule);
         void    startTokeniz(int instrBitSize);
-        UopAsm  genUopAsm(InstrRepo* repo) const;
-        bool operator < (const RULE& rhs) const{ return _typeIdx < rhs._typeIdx;}
+        bool    operator < (const RULE& rhs) const{ return _typeIdx < rhs._typeIdx;}
     };
 
-    struct MOP{
-        std::string mopName;
-        int _typeIdx = -1;
-        std::vector<UopAsm> _uops;
 
-        void addUopAsm(UopAsm uopAsm){_uops.push_back(std::move(uopAsm));}
-        int  getAmtUop() const{return _uops.size();}
-        bool checkValidMop() const;
-    };
 
     class InstrRepo{
     protected:
@@ -67,6 +65,7 @@ namespace kathryn{
         ///// we don't allow to add rule any more
         ///// meta data
         const int INSTR_SIZE    = -1;
+        const int OPR_SIZE      = 32;
         const int _amtInstrType = -1;
         const int _amtSrcOpr   = -1;
         const int _amtDesOpr   = -1;
@@ -88,6 +87,7 @@ namespace kathryn{
 
         explicit      InstrRepo(int instrSize, int amtInstrType,
                                 int amtSrcOpr, int amtDesOpr,
+                                int oprSize,
                                 Operable* instr);
                       ~InstrRepo();
         void          addRule(const std::string& rule,
@@ -97,13 +97,28 @@ namespace kathryn{
         void          declareHw();
         virtual  void genDecodeLogic();
 
-        //////// get zone
-        int getInstrSize () const{return INSTR_SIZE;}
+
+        //// src reg
+
         OPR_HW& getSrcReg(int idx);
         int     getAmtSrcReg() const{return _amtSrcOpr;}
         OPR_HW& getDesReg(int idx);
         int     getAmtDesReg() const{return _amtDesOpr;}
         OP_HW&  getOp    (int typeId);
+        int     getAmtMop()     const{return (int)mops.size();}
+
+        Operable* getInstrOpr() const{return _instr;}
+        int     getInstrSize () const{return INSTR_SIZE;}
+
+        int     getOprSize()   const{return OPR_SIZE;}
+
+
+
+
+        //// hardware operation helper
+
+
+
     };
 
 

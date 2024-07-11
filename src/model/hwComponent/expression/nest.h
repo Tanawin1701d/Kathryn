@@ -48,6 +48,14 @@ namespace kathryn{
         return _make<nest>("uncatagorizedYet", "nest", isUserDec, nestSize, nestList);
     }
 
+    nest& makeNestMan(bool isUser, std::vector<NestMeta> groupedMeta){
+        int nestSize = 0;
+        for (NestMeta nestMeta: groupedMeta){
+            nestSize += nestMeta.opr->getOperableSlice().getSize();
+        }
+        return _make<nest>("uncatagorizedYet", "nest", isUser, nestSize, groupedMeta);
+    }
+
     class nest : public LogicComp<nest>{
         friend class NestSimEngine;
         friend class NestGen;

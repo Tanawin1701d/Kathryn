@@ -77,16 +77,6 @@ namespace kathryn{
         }
         assert(tokenSt.empty());
     }
-
-    UopAsm RULE::genUopAsm(InstrRepo* repo) const{
-        assert(repo != nullptr);
-        assert(_typeIdx > 0);
-        assert(_uopIdx > 0);
-        return {repo, _tokens, _name, _typeIdx, _uopIdx};
-    }
-
-    bool MOP::checkValidMop() const{ return (_typeIdx >= 0) && (!_uops.empty()); }
-
 /////////////////////////
 
     std::pair<
@@ -144,12 +134,13 @@ namespace kathryn{
 
     InstrRepo::InstrRepo(int instrSize, int amtInstrType,
                          int amtSrcOpr, int amtDesOpr,
-                         Operable* instr):
-    _instr(instr),
-    INSTR_SIZE(instrSize),
+                         int oprSize  ,Operable* instr):
+    _instr       (instr),
+    INSTR_SIZE   (instrSize),
+    OPR_SIZE     (oprSize),
     _amtInstrType(amtInstrType),
-    _amtSrcOpr(amtSrcOpr),
-    _amtDesOpr(amtDesOpr){
+    _amtSrcOpr   (amtSrcOpr),
+    _amtDesOpr   (amtDesOpr){
         mops.resize(amtInstrType);
         assert(instr != nullptr);
         assert(instrSize    > 0);
@@ -205,14 +196,14 @@ namespace kathryn{
         //////// declareOperand
         for (int i = 0; i < _amtSrcOpr; i++){
             srcOprs.push_back(new OPR_HW(
-                INSTR_SIZE,
-                log2Ceil(INSTR_SIZE),
+                OPR_SIZE,
+                log2Ceil(OPR_SIZE),
                 i));
         }
         for (int i = 0; i < _amtDesOpr; i++){
             desOprs.push_back(new OPR_HW(
-                INSTR_SIZE,
-                log2Ceil(INSTR_SIZE),
+                OPR_SIZE,
+                log2Ceil(OPR_SIZE),
                 i));
         }
 
@@ -246,4 +237,27 @@ namespace kathryn{
         return *opcodes[typeId];
     }
 
+
+
+
+    /////// hardware operation helper
+
+    void OPR_HW::reset(){
+        valid <<= 1;
+        idx   <<= 0;
+    }
+
+    void OP_HW::set(){
+        _set <<= 1;
+    }
+
+    void OP_HW::reset(){
+        _set <<= 0;
+    }
+
+    void OP_HW::setUop(int idx, Operable* condition){
+        assert(condition != nullptr);
+        assert(condition->getOperableSlice().getSize() == 1);
+        (*_uopSets.at(idx)) <<= (*condition);
+    }
 }
