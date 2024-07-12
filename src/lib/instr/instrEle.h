@@ -24,11 +24,12 @@ namespace kathryn{
 
 
     struct token{
-
-        Slice sl;
+        Slice sl{};
         std::string value;
         std::vector<std::string> splitedValue;
-        void finalToken();
+        explicit token() = default;
+        void finalToken(int startBit);
+        void addRawChar(char ch){value.push_back(ch);}
     };
 
     ///// the component that used to be instruction and micro-op material
@@ -94,13 +95,11 @@ namespace kathryn{
         std::vector<token> _uopTokens;
         std::string        _uopName;
         int                _uopIdx = -1;
-
-        std::vector<token> _opTokens;
         ///// asm worker
 
-        UopAsm(MOP* master,std::vector<token> tokens,
+        UopAsm(MOP* master,
+               std::vector<token> tokens,
                std::string uopName, int uopIdx);
-        void addUopIdentToken(std::vector<token> tokens);
         void doAsm();
 
 
@@ -128,7 +127,6 @@ namespace kathryn{
             std::string mopName,
             int mopIdx);
 
-        void        addMasterToken(std::vector<token>& masterTokens){_masterTokens = masterTokens;}
         void        interpretMasterToken();
         void        createUop(std::vector<token>& uopTokens, const std::string& uopName);
         void        assignMaster(); //// assign master to all node

@@ -16,24 +16,24 @@ namespace kathryn{
     /***  the hardware stucture*/
 
     struct OPR_HW{
+        Reg& valid;
         Reg& data;
         Reg& idx;
-        Reg& valid;
 
         explicit OPR_HW(int archSize, int idxSize, int regNo);
         void reset();
-        void setOnlyIndex(Operable* opr); ///// the value must get manual from regfile
-        void setImm(Operable* opr); ///// the value will be added and valid
+        void setOnlyIndex(Operable* index); ///// the value must get manual from regfile
+        void setImm(Operable* value); ///// the value will be added and valid
     };
 
     struct RULE;
     struct OP_HW{
-        int _typeIdx = -1;
-        std::string _typeName;
+        int _mopIdx = -1;
+        std::string _mopName;
         Reg& _set;
         std::vector<Reg*> _uopSets;
-        explicit OP_HW(int typeId,
-                       const std::string& typeName,
+        explicit OP_HW(int mopIdx,
+                       const std::string& mopName,
                        std::vector<UopAsm>& uops);
 
         void set();
@@ -44,16 +44,13 @@ namespace kathryn{
     /***  rule meta data*/
 
     struct RULE{
-        int         _typeIdx = -1;
-        int         _uopIdx    = -1;
+        int         _mopIdx = -1;
         std::string _name;
         std::string _rule;
         std::vector<token> _tokens;
 
-        RULE    (int typeIdx, int uopIdx,
-                 std::string  name,std::string  rule);
-        void    startTokeniz(int instrBitSize);
-        bool    operator < (const RULE& rhs) const{ return _typeIdx < rhs._typeIdx;}
+        RULE    (int mopIdx, std::string  name,std::string  rule);
+        void    startTokeniz();
     };
 
 
@@ -61,42 +58,41 @@ namespace kathryn{
     class InstrRepo{
     protected:
         Operable* _instr = nullptr;
-        bool decodeLock = false; //// if startTokenizing
         ///// we don't allow to add rule any more
         ///// meta data
-        const int INSTR_SIZE    = -1;
-        const int OPR_SIZE      = 32;
-        const int _amtInstrType = -1;
-        const int _amtSrcOpr   = -1;
-        const int _amtDesOpr   = -1;
-        std::vector<MOP>  mops;
-        std::vector<RULE> rules;
+        const int INSTR_WIDTH    = -1;
+        const int OPR_WIDTH      = -1;
+              int _amtMopType  = -1;
+        const int _amtSrcOpr     = -1;
+        const int _amtDesOpr     = -1;
+        std::vector<MOP>    mops;
+        std::vector<RULE>   mopRules;
+        std::vector<RULE>   uopRules;
         ////// hardware component
         std::vector<OPR_HW*> srcOprs;
         std::vector<OPR_HW*> desOprs;
         std::vector<OP_HW* > opcodes; //// index is type idx
         ////// index in uop is uopIdx as well
         std::pair<
-            std::vector<UopAsm*>,
-            std::vector<UopAsm*>
-        >
-            seperateUopByopcode(std::vector<UopAsm*>& uops, int bitIdx);
-        void genDecInternal(std::vector<UopAsm*>& uops, int bitIdx);
+            std::vector<MOP*>,
+            std::vector<MOP*>
+        >    seperateMopByopcode(std::vector<MOP*>& mops, int bitIdx);
+        void genDecInternal     (std::vector<MOP*>& uops, int bitIdx);
 
     public:
 
-        explicit      InstrRepo(int instrSize, int amtInstrType,
-                                int amtSrcOpr, int amtDesOpr,
-                                int oprSize,
+        explicit      InstrRepo(int instrSize, int amtSrcOpr,
+                                int amtDesOpr, int oprSize,
                                 Operable* instr);
-                      ~InstrRepo();
-        void          addRule(const std::string& rule,
-                              const std::string& ruleName,
-                              int typeIdx,int uopIdx);
-        void          convertRuleToMop();
+        virtual       ~InstrRepo();
+        void          addMop(const std::string& rule,
+                             const std::string& ruleName);
+        void          addUop(const std::string& rule,
+                             const std::string& ruleName,
+                             int                masterMop);
+        void          processToken();
         void          declareHw();
         virtual  void genDecodeLogic();
-
 
         //// src reg
 
@@ -108,25 +104,11 @@ namespace kathryn{
         int     getAmtMop()     const{return (int)mops.size();}
 
         Operable* getInstrOpr() const{return _instr;}
-        int     getInstrSize () const{return INSTR_SIZE;}
+        int     getInstrSize () const{return INSTR_WIDTH;}
 
-        int     getOprSize()   const{return OPR_SIZE;}
-
-
-
-
-        //// hardware operation helper
-
-
+        int     getOprSize()   const{return OPR_WIDTH;}
 
     };
-
-
-
-
-
-
-
 
 }
 

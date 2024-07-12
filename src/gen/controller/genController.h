@@ -56,11 +56,6 @@ namespace kathryn{
         void clean() override;
 
         //////// module compare checker
-
-
-
-
-
     };
 
 

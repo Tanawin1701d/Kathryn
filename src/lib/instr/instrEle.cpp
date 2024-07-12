@@ -10,6 +10,30 @@
 
 namespace kathryn{
 
+    /***
+    *
+    * TOKEN
+    *
+    */
+
+    void token::finalToken(int startBit){
+        /////// sl.start is filled you must compute sl.stop
+        try{
+            assert(startBit >= 0);
+            sl.start = startBit;
+            splitedValue = splitStr(value, '-');
+            if(splitedValue.size() == 1){
+                sl.stop = sl.start + ((int)value.size());
+            }else{
+                sl.stop = sl.start  + std::stoi(splitedValue[0]);
+            }
+            assert(sl.checkValidSlice());
+
+        }catch (...){
+            assert(false); /// can't determine size
+        }
+    }
+
     /**
      *
      * reg idx asm
@@ -53,7 +77,7 @@ namespace kathryn{
      ***/
 
     void ImmAsm::addImmMeta(const token& tk){
-        assert(tk.splitedValue.size() == (TOKEN_FILLB_IDX+1));
+        assert(tk.splitedValue.size() >= (TOKEN_FILLB_IDX+1));
         assert(tk.sl.checkValidSlice());
 
         // fill to [a, b)
@@ -76,6 +100,10 @@ namespace kathryn{
     }
 
     void ImmAsm::doAsm(){
+
+        if (immSlicer.empty()){
+            return;
+        }
 
         ////// start sort first
         std::sort(immSlicer.begin(), immSlicer.end());
@@ -138,28 +166,6 @@ namespace kathryn{
 
     /***
      *
-     * TOKEN
-     *
-     */
-
-    void token::finalToken(){
-        /////// sl.start is filled you must compute sl.stop
-        try{
-            splitedValue = splitStr(value, '-');
-            if(splitedValue.size() == 1){
-                sl.start = sl.stop - ((int)value.size());
-            }else{
-                sl.start = sl.stop - std::stoi(splitedValue[0]);
-            }
-            assert(sl.checkValidSlice());
-
-        }catch (...){
-            assert(false); /// can't determine size
-        }
-    }
-
-    /***
-     *
      * Instruction type
      *
      */
@@ -173,11 +179,6 @@ namespace kathryn{
     _uopName   (std::move(uopName)),
     _uopIdx    (uopIdx)
     { assert(_mopMaster != nullptr);}
-
-    void UopAsm::addUopIdentToken(std::vector<token> tokens){
-        _opTokens = std::move(tokens);
-        assert(_opTokens.size() == _uopTokens.size());
-    }
 
     void UopAsm::doAsm(){
         //// get hardware and set condition
@@ -202,9 +203,8 @@ namespace kathryn{
          result = &((*result) & (*matchOpr[idx]));
         }
         ////// assign to hardware
-        int mopIdx = _mopMaster->_mopIdx;
-        InstrRepo* repo = _mopMaster->_master;
-        repo->getOp(mopIdx).setUop(_uopIdx, result);
+        int        mopIdx = _mopMaster->_mopIdx;
+        _master->getOp(mopIdx).setUop(_uopIdx, result);
     }
 
 
@@ -216,10 +216,10 @@ namespace kathryn{
      *
      */
 
-    MOP::MOP(InstrRepo* master,
+    MOP::MOP(InstrRepo*          master,
              std::vector<token>& masterTokens,
-             std::string mopName,
-            int mopIdx
+             std::string         mopName,
+            int                  mopIdx
     ):
     _master(master),
     _masterTokens(masterTokens),
@@ -246,6 +246,7 @@ namespace kathryn{
             }
             if(dec[TOKEN_ASM_TYPE_IDX][0] == TOKEN_ASM_TYPE_IMM_IDX){
                 _immAsm.addImmMeta(tk);
+                continue;
             }
 
             if(dec[TOKEN_ASM_TYPE_IDX][0] == TOKEN_ASM_TYPE_UOP_IDX){
@@ -281,8 +282,8 @@ namespace kathryn{
     void MOP::flattenMop(){
         _flattedInstr = genConString('0', _master->getInstrSize());
         for(token& tk: _opcodeTokens){
-            int actualStrStart = _master->getOprSize() - tk.sl.stop;
-            int actualStrStop  = _master->getOprSize() - tk.sl.start + 1;
+            int actualStrStart = _master->getInstrSize() - tk.sl.stop;
+            int actualStrStop  = _master->getInstrSize() - tk.sl.start + 1;
             assert((actualStrStop-actualStrStart) == tk.sl.getSize());
             _flattedInstr.replace(
                 actualStrStart,
@@ -311,7 +312,9 @@ namespace kathryn{
             uopAsm.doAsm();
         }
         _immAsm.doAsm();
-        effSrc[_immAsm._regCnt] = true;
+        if (_immAsm._regCnt != -1){
+            effSrc[_immAsm._regCnt] = true;
+        }
 
         /** disable unused hw*/
         unsetUnusedReg(effSrc, _master->getAmtSrcReg(), true);
