@@ -24,12 +24,33 @@ namespace kathryn{
     LogicComp<nest>({0, size}, TYPE_NEST,
                     new NestSimEngine(this, VST_WIRE),
                     false),
+    readOnly(false),
     _nestList(std::move(nestList))
     {
         int testSize = 0;
         for (NestMeta meta: _nestList){
             assert(meta.opr != nullptr);
             testSize += meta.opr->getOperableSlice().getSize();
+        }
+        assert(testSize == size);
+        com_init();
+        AssignOpr::setMaster(this);
+        AssignCallbackFromAgent::setMaster(this);
+    }
+
+    //////////// for read only element
+
+    nest::nest(int size, const std::vector<Operable*>& nestListReadOnly):
+    LogicComp<nest>({0, size}, TYPE_NEST,
+                    new NestSimEngine(this, VST_WIRE),
+                    false),
+    readOnly(true)
+    {
+        int testSize = 0;
+        for (Operable* opr: nestListReadOnly){
+            assert(opr != nullptr);
+            testSize += opr->getOperableSlice().getSize();
+            _nestList.push_back({opr, nullptr});
         }
         assert(testSize == size);
         com_init();
@@ -112,7 +133,7 @@ namespace kathryn{
                           Slice absSrcSlice,
                           Slice absDesSlice,
                           bool isblockingAsm){
-
+        mfAssert(!readOnly, "this nest list is readonly mode");
         assert(absSrcSlice.getSize() >= absDesSlice.getSize());
         assert(absSrcSlice.stop <= srcOpr.getOperableSlice().getSize());
         assert(absDesSlice.stop <= getOperableSlice().getSize());

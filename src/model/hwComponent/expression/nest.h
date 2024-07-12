@@ -56,11 +56,21 @@ namespace kathryn{
         return _make<nest>("uncatagorizedYet", "nest", isUser, nestSize, groupedMeta);
     }
 
+    nest& makeNestManReadOnly(bool isUser, std::vector<Operable*> nestListReadOnly){
+        int nestSize = 0;
+        for(Operable* opr: nestListReadOnly){
+            assert(opr != nullptr);
+            nestSize += opr->getOperableSlice().getSize();
+        }
+        return _make<nest>("uncatagorizedYet", "nest", isUser, nestSize, nestListReadOnly);
+    }
+
     class nest : public LogicComp<nest>{
         friend class NestSimEngine;
         friend class NestGen;
         private:
             /** the higher bit is most significant bit*/
+            bool readOnly = false;
             std::vector<NestMeta> _nestList;
 
         protected:
@@ -69,6 +79,7 @@ namespace kathryn{
         public:
 
             explicit nest(int size, std::vector<NestMeta> nestList);
+            explicit nest(int size, const std::vector<Operable*>& nestList);
 
             void com_final() override {};
             /** override assignable*/
