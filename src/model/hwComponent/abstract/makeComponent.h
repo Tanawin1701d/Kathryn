@@ -21,6 +21,8 @@
 #define g(...) makeNest(true,__VA_ARGS__)
 #define gMan(...) makeNestMan(true, __VA_ARGS__)
 #define mBox(name, TypeName) TypeName& name = _make<TypeName>("uncatagorizedYet",#name, true)
+
+#define mOprReg(varyName, argument)        _make<Reg>       ("uncatagorizedYet" ,  varyName, true, argument)
 /** this is for internal use nest is not allow here (only useNest man)*/
 #define makeMod(name, TypeName, ...) Module&   name = _make<TypeName>(#TypeName, #name, false, __VA_ARGS__)
 #define makeWire( name, argument)    Wire&     name = _make<Wire>    ("uncatagorizedYet" , #name, false,argument)
@@ -28,6 +30,7 @@
 #define makeVal(name, ...)           Val&      name = _make<Val>     ("uncatagorizedYet" , #name, false, __VA_ARGS__)
 #define makeMem(name, depth, width)  MemBlock& name = _make<MemBlock>("uncatagorizedYet" , #name, false, depth, width)
 #define gManInternal(...) makeNestMan(false, __VA_ARGS__)
+#define gManInternalReadOnly(...) makeNestManReadOnly(false, __VA_ARGS__)
 
 #define makeOprWireWoDef( varyName, argument)  _make<Wire>      ("uncatagorizedYet" ,  varyName, false,argument, false)
 #define makeOprWire( varyName, argument)       _make<Wire>      ("uncatagorizedYet" ,  varyName, false,argument)

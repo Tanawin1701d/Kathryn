@@ -40,7 +40,7 @@ namespace kathryn{
      *
      ***/
 
-    RegIdxAsm::RegIdxAsm(const token& tk){
+    RegIdxAsm::RegIdxAsm(InstrRepo* master, const token& tk): AsmWorker(master){
         std::string asmType = tk.splitedValue[TOKEN_TYPE_IDX].
                                substr(TOKEN_TYPE_START_IDX,
                                       TOKEN_TYPE_END_IDX);
@@ -85,6 +85,7 @@ namespace kathryn{
         int fillA = std::stoi(tk.splitedValue[TOKEN_FILLA_IDX]);
         int fillB = std::stoi(tk.splitedValue[TOKEN_FILLB_IDX]);
         Slice fillSl = {fillA, fillB};
+        assert((fillB-fillA) == std::stoi(tk.splitedValue[0]));
         assert(fillSl.checkValidSlice());
         immSlicer.push_back({
             false,
@@ -115,7 +116,7 @@ namespace kathryn{
         for(int idx = 0; idx < immSlicer.size(); idx++){
             IterImm& iterImm = immSlicer[idx];
             if (curStartIdx != iterImm.desSlice.start){
-                arrangedOpr.emplace_back(true,{}, {curStartIdx, iterImm.desSlice.start}, nullptr);
+                arrangedOpr.push_back({true,{-1,-1}, {curStartIdx, iterImm.desSlice.start}, nullptr});
             }
             arrangedOpr.push_back(iterImm);
             curStartIdx = iterImm.desSlice.stop;
@@ -123,7 +124,7 @@ namespace kathryn{
         assert(!arrangedOpr.empty());
         assert(!arrangedOpr.rbegin()->needDummySrc);
         if (curStartIdx != _master->getOprSize()){
-            arrangedOpr.emplace_back(true, {}, {curStartIdx, _master->getOprSize()}, nullptr);
+            arrangedOpr.push_back({true, {-1,-1}, {curStartIdx, _master->getOprSize()}, nullptr});
         }
         curStartIdx = _master->getOprSize();
 
@@ -153,12 +154,11 @@ namespace kathryn{
 
 
         ///// do nest
-        std::vector<NestMeta> metas;
-        for(IterImm imm: immSlicer){
-            NestMeta meta = {imm.sliced, nullptr};
-            metas.push_back(meta);
+        std::vector<Operable*> metas;
+        for(IterImm imm: arrangedOpr){
+            metas.push_back(imm.sliced);
         }
-        nest& nested = gManInternal(metas);
+        nest& nested = gManInternalReadOnly(metas);
         //// put it to operand
         OPR_HW& opr = _master->getSrcReg(_regCnt);
         opr.setImm(&nested);
@@ -170,11 +170,12 @@ namespace kathryn{
      *
      */
 
-    UopAsm::UopAsm(MOP* master,
+    UopAsm::UopAsm(InstrRepo* master, MOP* mopMaster,
                    std::vector<token> tokens,
                    std::string uopName,
                    int uopIdx):
-    _mopMaster    (master),
+    AsmWorker(master),
+    _mopMaster    (mopMaster),
     _uopTokens (std::move(tokens)),
     _uopName   (std::move(uopName)),
     _uopIdx    (uopIdx)
@@ -224,7 +225,8 @@ namespace kathryn{
     _master(master),
     _masterTokens(masterTokens),
     _mopName(std::move(mopName)),
-    _mopIdx(mopIdx)
+    _mopIdx(mopIdx),
+    _immAsm(_master)
     { assert(master != nullptr);}
 
 
@@ -239,7 +241,7 @@ namespace kathryn{
                 continue;
             }
             if(dec[TOKEN_ASM_TYPE_IDX][0] == TOKEN_ASM_TYPE_REG_IDX){
-                RegIdxAsm worker(tk);
+                RegIdxAsm worker(_master,tk);
                 if (worker.isRead){_srcRegAsms.push_back(worker);}
                 else              {_desRegAsms.push_back(worker);}
                 continue;
@@ -258,24 +260,11 @@ namespace kathryn{
     void MOP::createUop(std::vector<token>& uopDataTokens, const std::string& uopName){
         assert(uopDataTokens.size() == _masterUopTokens.size());
         _uops.emplace_back(
+            _master,
             this,
             uopDataTokens,
             uopName,
             _uops.size());
-    }
-
-    void MOP::assignMaster(){
-        ////// assign instr repo to all
-        for (RegIdxAsm& regIdxAsm: _srcRegAsms){
-            regIdxAsm.setMaster(_master);
-        }
-        for (RegIdxAsm& regIdxAsm: _desRegAsms){
-            regIdxAsm.setMaster(_master);
-        }
-        _immAsm.setMaster(_master);
-        for (UopAsm& uopAsm: _uops){
-            uopAsm.setMaster(_master);
-        }
     }
 
 
@@ -283,7 +272,7 @@ namespace kathryn{
         _flattedInstr = genConString('0', _master->getInstrSize());
         for(token& tk: _opcodeTokens){
             int actualStrStart = _master->getInstrSize() - tk.sl.stop;
-            int actualStrStop  = _master->getInstrSize() - tk.sl.start + 1;
+            int actualStrStop  = _master->getInstrSize() - tk.sl.start;
             assert((actualStrStop-actualStrStart) == tk.sl.getSize());
             _flattedInstr.replace(
                 actualStrStart,

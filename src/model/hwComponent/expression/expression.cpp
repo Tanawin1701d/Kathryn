@@ -203,7 +203,7 @@ namespace kathryn{
                 retStr += "  &   " + desMask;                 break;
             }
             case EXTEND_BIT  :{
-                retStr += _aSliced + " ? " + desMask + " : 0";  break;
+                retStr += _aSliced + " ? " + "((ull)" + desMask + ") : ((ull)0)";  break;
             }
             case ASSIGN      :{  retStr += _aSliced; break;}
             case OP_DUMMY:

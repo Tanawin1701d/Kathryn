@@ -35,39 +35,36 @@ namespace kathryn{
     ///// the component that used to be instruction and micro-op material
     struct AsmWorker{
         InstrRepo* _master = nullptr;
+        AsmWorker(InstrRepo* master): _master(master){ assert(master != nullptr);}
         virtual ~AsmWorker() = default;
         virtual void doAsm() = 0;
-        void setMaster(InstrRepo* master){
-            assert(master != nullptr);
-            _master = master;
-        }
     };
 
     struct RegIdxAsm: AsmWorker{
         ///// for src register <#{bitsize}-rs#{idx}>
-        constexpr int TOKEN_TYPE_IDX = 1;
-        constexpr int TOKEN_TYPE_START_IDX = 0;
-        constexpr int TOKEN_TYPE_END_IDX   = 2;
-        constexpr int TOKEN_REG_NUM_START_IDX = 2;
-        constexpr char TOKEN_TYPE_SRC[3] = "rs";
-        constexpr char TOKEN_TYPE_DES[3] = "rd";
+        const int TOKEN_TYPE_IDX = 1;
+        const int TOKEN_TYPE_START_IDX = 0;
+        const int TOKEN_TYPE_END_IDX   = 2;
+        const int TOKEN_REG_NUM_START_IDX = 2;
+        const char TOKEN_TYPE_SRC[3] = "rs";
+        const char TOKEN_TYPE_DES[3] = "rd";
         bool  isRead  = false; // else is Write
         int   _regCnt = -1;
         Slice _srcSlice = {};
 
-        explicit RegIdxAsm(const token& tk);
+        explicit RegIdxAsm(InstrRepo* master,const token& tk);
         void     doAsm() override;
     };
 
     struct ImmAsm: AsmWorker{
         /// for <#{bitsize}-i#{idx}-#{startBit}-#{stopBit}-#{zeroExtend? z: e}>
         /// ----> [startBit, stopBit)
-        constexpr char ZEROEXTEND       = 'z';
-        constexpr int TOKEN_TYPE_IDX    = 1;
-        constexpr int TOKEN_TYPE_SIZE   = 1;
-        constexpr int TOKEN_FILLA_IDX   = 2;
-        constexpr int TOKEN_FILLB_IDX   = 3;
-        constexpr int TOKEN_FILLEXT_IDX = 4;
+        const char ZEROEXTEND       = 'z';
+        const int TOKEN_TYPE_IDX    = 1;
+        const int TOKEN_TYPE_SIZE   = 1;
+        const int TOKEN_FILLA_IDX   = 2;
+        const int TOKEN_FILLB_IDX   = 3;
+        const int TOKEN_FILLEXT_IDX = 4;
         struct IterImm{
             bool  needDummySrc = false; /// src Slice will be neglected
             Slice srcSlice;
@@ -81,7 +78,7 @@ namespace kathryn{
         int  _regCnt     = -1;
         bool _signedExtend = true;
 
-        explicit ImmAsm() = default;
+        explicit ImmAsm(InstrRepo* master): AsmWorker(master){};
         void     addImmMeta(const token& tk);
         void     doAsm() override;
 
@@ -97,7 +94,7 @@ namespace kathryn{
         int                _uopIdx = -1;
         ///// asm worker
 
-        UopAsm(MOP* master,
+        UopAsm(InstrRepo* master, MOP* mopMaster,
                std::vector<token> tokens,
                std::string uopName, int uopIdx);
         void doAsm();
@@ -129,7 +126,6 @@ namespace kathryn{
 
         void        interpretMasterToken();
         void        createUop(std::vector<token>& uopTokens, const std::string& uopName);
-        void        assignMaster(); //// assign master to all node
         void        flattenMop();
         [[nodiscard]]
         std::string getFlattenUop() const{return _flattedInstr;}

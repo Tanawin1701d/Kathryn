@@ -48,22 +48,8 @@ namespace kathryn{
         return _make<nest>("uncatagorizedYet", "nest", isUserDec, nestSize, nestList);
     }
 
-    nest& makeNestMan(bool isUser, std::vector<NestMeta> groupedMeta){
-        int nestSize = 0;
-        for (NestMeta nestMeta: groupedMeta){
-            nestSize += nestMeta.opr->getOperableSlice().getSize();
-        }
-        return _make<nest>("uncatagorizedYet", "nest", isUser, nestSize, groupedMeta);
-    }
-
-    nest& makeNestManReadOnly(bool isUser, std::vector<Operable*> nestListReadOnly){
-        int nestSize = 0;
-        for(Operable* opr: nestListReadOnly){
-            assert(opr != nullptr);
-            nestSize += opr->getOperableSlice().getSize();
-        }
-        return _make<nest>("uncatagorizedYet", "nest", isUser, nestSize, nestListReadOnly);
-    }
+    nest& makeNestMan(bool isUser, const std::vector<NestMeta>& groupedMeta);
+    nest& makeNestManReadOnly(bool isUser, const std::vector<Operable*>& nestListReadOnly);
 
     class nest : public LogicComp<nest>{
         friend class NestSimEngine;

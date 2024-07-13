@@ -14,6 +14,24 @@ namespace kathryn{
         return {};
     }
 
+    nest& makeNestMan(bool isUser, const std::vector<NestMeta>& groupedMeta){
+        int nestSize = 0;
+        for (NestMeta nestMeta: groupedMeta){
+            nestSize += nestMeta.opr->getOperableSlice().getSize();
+        }
+        return _make<nest>("uncatagorizedYet", "nest", isUser, nestSize, groupedMeta);
+    }
+
+    nest& makeNestManReadOnly(bool isUser,
+        const std::vector<Operable*>& nestListReadOnly){
+        int nestSize = 0;
+        for(Operable* opr: nestListReadOnly){
+            assert(opr != nullptr);
+            nestSize += opr->getOperableSlice().getSize();
+        }
+        return _make<nest>("uncatagorizedYet", "nest", isUser, nestSize, nestListReadOnly);
+    }
+
     /** nest class*/
 
     void nest::com_init() {
@@ -264,7 +282,9 @@ namespace kathryn{
             Operable* opr   = meta.opr;
             Assignable* asb = meta.asb;
             assert(opr != nullptr);
-            assert(asb != nullptr);
+            if (!_master->readOnly){
+                assert(asb != nullptr);
+            }
             int curSize = opr->getOperableSlice().getSize();
 
             retStr   += "     ";

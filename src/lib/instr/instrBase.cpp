@@ -16,12 +16,13 @@ namespace kathryn{
 
 ////////////////////////// OPR HW
 
-    OPR_HW::OPR_HW(int archSize, int idxSize, int regNo):
-    data (makeOprReg("regData"  + std::to_string(regNo), archSize)),
-    idx  (makeOprReg("regIdx"   + std::to_string(regNo), idxSize)),
-    valid(makeOprReg("regValid" + std::to_string(regNo), 1)){
-        assert(1 << idxSize >= archSize);
-        assert(regNo > 0);
+    OPR_HW::OPR_HW(int archSize, int idxSize, int regNo, bool isSrc):
+    _isSrc(isSrc),
+    data (mOprReg("regData"  + std::to_string(regNo) + (isSrc ? "Src": "Des"), archSize)),
+    idx  (mOprReg("regIdx"   + std::to_string(regNo) + (isSrc ? "Src": "Des"), idxSize)),
+    valid(mOprReg("regValid" + std::to_string(regNo) + (isSrc ? "Src": "Des"), 1)){
+        assert( (1 << idxSize) >= archSize);
+        assert(regNo >= 0);
     }
 
     void OPR_HW::reset(){
@@ -64,10 +65,10 @@ namespace kathryn{
                  std::vector<UopAsm>& uops):
     _mopIdx(mopIdx),
     _mopName(mopName),
-    _set(makeOprReg("mop_" + mopName, 1)){
+    _set(mOprReg("mop_" + mopName, 1)){
         assert(mopIdx >= 0);
         for(UopAsm& uop: uops){
-            _uopSets.push_back(&makeOprReg("uop_" + uop._uopName, 1));
+            _uopSets.push_back(&mOprReg("uop_" + uop._uopName, 1));
         }
     }
 
@@ -201,12 +202,12 @@ namespace kathryn{
         _amtMopType++;
     }
 
-    void InstrRepo::addUop(const std::string& rule,
-                           const std::string& ruleName,
-                           int                masterMop){
-        assert(!rule.empty());
-        assert(masterMop < _amtMopType);
-        uopRules.emplace_back(masterMop, ruleName, rule);
+    void InstrRepo::addUop(std::vector<UOP_INPUT_META> uopMetas){
+        for (UOP_INPUT_META& uopMeta: uopMetas){
+            assert(!uopMeta.rule.empty());
+            assert(uopMeta.mopIdx < _amtMopType);
+            uopRules.emplace_back(uopMeta.mopIdx, uopMeta.ruleName, uopMeta.rule);
+        }
     }
 
     void InstrRepo::processToken(){
@@ -231,7 +232,6 @@ namespace kathryn{
         }
 
         for(int i = 0; i < mopRules.size(); i++){
-            mops[i].assignMaster(); //// assign their master to make it accessible
             mops[i].flattenMop(); ///// generate data
         }
     }
@@ -242,13 +242,13 @@ namespace kathryn{
             srcOprs.push_back(new OPR_HW(
                 OPR_WIDTH,
                 log2Ceil(OPR_WIDTH),
-                i));
+                i, true));
         }
         for (int i = 0; i < _amtDesOpr; i++){
             desOprs.push_back(new OPR_HW(
                 OPR_WIDTH,
                 log2Ceil(OPR_WIDTH),
-                i));
+                i, false));
         }
 
         for (int i = 0; i < mops.size(); i++){
@@ -274,8 +274,8 @@ namespace kathryn{
         assert(idx < _amtDesOpr);
         return *desOprs[idx];
     }
-    OP_HW&  InstrRepo::getOp    (int typeId){
-        assert(typeId < _amtMopType);
-        return *opcodes[typeId];
+    OP_HW&  InstrRepo::getOp    (int mopIdx){
+        assert(mopIdx < _amtMopType);
+        return *opcodes[mopIdx];
     }
 }

@@ -16,11 +16,12 @@ namespace kathryn{
     /***  the hardware stucture*/
 
     struct OPR_HW{
+        bool _isSrc = true;
         Reg& valid;
         Reg& data;
         Reg& idx;
 
-        explicit OPR_HW(int archSize, int idxSize, int regNo);
+        explicit OPR_HW(int archSize, int idxSize, int regNo, bool isSrc);
         void reset();
         void setOnlyIndex(Operable* index); ///// the value must get manual from regfile
         void setImm(Operable* value); ///// the value will be added and valid
@@ -53,6 +54,13 @@ namespace kathryn{
         void    startTokeniz();
     };
 
+    struct UOP_INPUT_META{
+        std::string rule;
+        std::string ruleName;
+        int mopIdx;
+    };
+
+
 
 
     class InstrRepo{
@@ -62,7 +70,7 @@ namespace kathryn{
         ///// meta data
         const int INSTR_WIDTH    = -1;
         const int OPR_WIDTH      = -1;
-              int _amtMopType  = -1;
+              int _amtMopType    = -1;
         const int _amtSrcOpr     = -1;
         const int _amtDesOpr     = -1;
         std::vector<MOP>    mops;
@@ -81,15 +89,13 @@ namespace kathryn{
 
     public:
 
-        explicit      InstrRepo(int instrSize, int amtSrcOpr,
-                                int amtDesOpr, int oprSize,
+        explicit      InstrRepo(int instrWidth, int amtSrcOpr,
+                                int amtDesOpr , int oprWidth,
                                 Operable* instr);
         virtual       ~InstrRepo();
         void          addMop(const std::string& rule,
                              const std::string& ruleName);
-        void          addUop(const std::string& rule,
-                             const std::string& ruleName,
-                             int                masterMop);
+        void          addUop(std::vector<UOP_INPUT_META> uopMetas);
         void          processToken();
         void          declareHw();
         virtual  void genDecodeLogic();

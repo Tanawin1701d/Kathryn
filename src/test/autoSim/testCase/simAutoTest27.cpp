@@ -67,8 +67,6 @@ namespace kathryn{
             testAndPrint("check intr par c stay", ull(_md->c),1);
             conNextCycle(1);
             testAndPrint("check intr par a start", ull(_md->a),2);
-
-
         }
 
     };
