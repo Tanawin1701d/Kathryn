@@ -74,19 +74,19 @@ namespace kathryn{
 
             void flow(Wire& misPredic, Wire& reStartPc, MemBlock& memBlock, BYPASS_DATA& bypassData){
 
-                pipBlk{
-                    par{ exposeBlk(regAccessBlock)
-                        accessRegData(rs0, memBlock, bypassData); ////// access register 1
-                        accessRegData(rs1,  memBlock, bypassData);
-                        rdes <<= _decodedUop.repo.getDesReg(0);
-                    }
-                    par{ exposeBlk(aluBlock)
-                        execAlu(misPredic, reStartPc);
-                    }
-                    par{ exposeBlk(complexExe)
-                        execComplexAlu(); execLS();
-                    }
-                }
+                // pipBlk{
+                //     par{ exposeBlk(regAccessBlock)
+                //         accessRegData(rs0, memBlock, bypassData); ////// access register 1
+                //         accessRegData(rs1,  memBlock, bypassData);
+                //         rdes <<= _decodedUop.repo.getDesReg(0);
+                //     }
+                //     par{ exposeBlk(aluBlock)
+                //         execAlu(misPredic, reStartPc);
+                //     }
+                //     par{ exposeBlk(complexExe)
+                //         execComplexAlu(); execLS();
+                //     }
+                // }
             }
 
             void execAlu(Wire& misPredic,Wire& reStartPc){
@@ -140,76 +140,76 @@ namespace kathryn{
 
             void execComplexAlu(){
 
-                cif(_decodedUop.opAlu.isUopUse) {
-
-                    cif(_decodedUop.opAlu.isShiftLeftLogical) {
-                        cdowhile(rs2.val(0, 5) > 1){
-                            rdes.val <<= rdes.val << (rs2.val(0, 5) > 0);
-                            zif(rs2.val(0, 5) > 1) {
-                                rs2.val <<= rs2.val - 1;
-                            }
-                        }
-                    }
-
-                    cif(_decodedUop.opAlu.isShiftRightLogical) {
-                        cdowhile(rs2.val(0, 5) > 1) {
-                            rdes.val <<= rdes.val >> (rs2.val(0, 5) > 0);
-                            zif(rs2.val(0, 5) > 1) {
-                                rs2.val <<= rs2.val - 1;
-                            }
-                        }
-                    }
-
-                    cif(_decodedUop.opAlu.isShiftRightArith) {
-                        cdowhile(rs2.val(0, 5) > 1) {
-                            rdes.val(0, XLEN - 1) <<= rdes.val(0, XLEN - 1) >> (rs2.val(0, 5) > 0);
-                            zif(rs2.val(0, 5) > 1) {
-                                rs2.val <<= rs2.val - 1;
-                            }
-                        }
-                    }
-                }
+                // cif(_decodedUop.opAlu.isUopUse) {
+                //
+                //     cif(_decodedUop.opAlu.isShiftLeftLogical) {
+                //         cdowhile(rs2.val(0, 5) > 1){
+                //             rdes.val <<= rdes.val << (rs2.val(0, 5) > 0);
+                //             zif(rs2.val(0, 5) > 1) {
+                //                 rs2.val <<= rs2.val - 1;
+                //             }
+                //         }
+                //     }
+                //
+                //     cif(_decodedUop.opAlu.isShiftRightLogical) {
+                //         cdowhile(rs2.val(0, 5) > 1) {
+                //             rdes.val <<= rdes.val >> (rs2.val(0, 5) > 0);
+                //             zif(rs2.val(0, 5) > 1) {
+                //                 rs2.val <<= rs2.val - 1;
+                //             }
+                //         }
+                //     }
+                //
+                //     cif(_decodedUop.opAlu.isShiftRightArith) {
+                //         cdowhile(rs2.val(0, 5) > 1) {
+                //             rdes.val(0, XLEN - 1) <<= rdes.val(0, XLEN - 1) >> (rs2.val(0, 5) > 0);
+                //             zif(rs2.val(0, 5) > 1) {
+                //                 rs2.val <<= rs2.val - 1;
+                //             }
+                //         }
+                //     }
+                // }
             }
 
             void execLS(){
 
-                cif(_decodedUop.opLs.isUopUse){
-                    cdowhile(!readFn) {
-                        readEn = 1;
-                        rdes.valid <<= _decodedUop.opLs.isMemLoad;
-                        zif((_decodedUop.opLs.size == 0b00) & readFn) {
-                            zif(_decodedUop.opLs.extendMode) { ////sign extend
-                                rdes.val <<= getExtendExpr(_memArb.readOutput(0, 8), XLEN, true);
-                            }zelse{
-                                rdes.val <<= getExtendExpr(_memArb.readOutput(0, 8), XLEN, false);
-                            }
-                            zif(~_decodedUop.opLs.isMemLoad) {
-                                _memArb.reqWriteReq(
-                                        g(_memArb.readOutput(8, XLEN), _decodedUop.regData[RS_2].val(0, 8)),
-                                        readAddr
-                                );
-                            }
-                        }
-                        zif((_decodedUop.opLs.size == 0b01) & (readFn)) {
-                            zif(_decodedUop.opLs.extendMode) { ////sign extend
-                                rdes.val <<= getExtendExpr(_memArb.readOutput(0, 16), XLEN, true);
-                            }zelse{
-                                rdes.val <<= getExtendExpr(_memArb.readOutput(0, 16), XLEN, false);
-                            }
-                            zif(~_decodedUop.opLs.isMemLoad) {
-                                _memArb.reqWriteReq(
-                                        g(_memArb.readOutput(16, XLEN), _decodedUop.regData[RS_2].val(0, 16)),
-                                        readAddr);
-                            }
-                        }
-                        zif((_decodedUop.opLs.size == 0b10) & (readFn)) {
-                            rdes.val <<= _memArb.readOutput;
-                            zif(~_decodedUop.opLs.isMemLoad) {
-                                _memArb.reqWriteReq(_decodedUop.regData[RS_2].val, readAddr);
-                            }
-                        }
-                    }
-                }
+                // cif(_decodedUop.opLs.isUopUse){
+                //     cdowhile(!readFn) {
+                //         readEn = 1;
+                //         rdes.valid <<= _decodedUop.opLs.isMemLoad;
+                //         zif((_decodedUop.opLs.size == 0b00) & readFn) {
+                //             zif(_decodedUop.opLs.extendMode) { ////sign extend
+                //                 rdes.val <<= getExtendExpr(_memArb.readOutput(0, 8), XLEN, true);
+                //             }zelse{
+                //                 rdes.val <<= getExtendExpr(_memArb.readOutput(0, 8), XLEN, false);
+                //             }
+                //             zif(~_decodedUop.opLs.isMemLoad) {
+                //                 _memArb.reqWriteReq(
+                //                         g(_memArb.readOutput(8, XLEN), _decodedUop.regData[RS_2].val(0, 8)),
+                //                         readAddr
+                //                 );
+                //             }
+                //         }
+                //         zif((_decodedUop.opLs.size == 0b01) & (readFn)) {
+                //             zif(_decodedUop.opLs.extendMode) { ////sign extend
+                //                 rdes.val <<= getExtendExpr(_memArb.readOutput(0, 16), XLEN, true);
+                //             }zelse{
+                //                 rdes.val <<= getExtendExpr(_memArb.readOutput(0, 16), XLEN, false);
+                //             }
+                //             zif(~_decodedUop.opLs.isMemLoad) {
+                //                 _memArb.reqWriteReq(
+                //                         g(_memArb.readOutput(16, XLEN), _decodedUop.regData[RS_2].val(0, 16)),
+                //                         readAddr);
+                //             }
+                //         }
+                //         zif((_decodedUop.opLs.size == 0b10) & (readFn)) {
+                //             rdes.val <<= _memArb.readOutput;
+                //             zif(~_decodedUop.opLs.isMemLoad) {
+                //                 _memArb.reqWriteReq(_decodedUop.regData[RS_2].val, readAddr);
+                //             }
+                //         }
+                //     }
+                // }
             }
 
         };

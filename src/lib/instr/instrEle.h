@@ -8,6 +8,8 @@
 #include<map>
 #include<vector>
 #include<cassert>
+#include <set>
+
 #include "model/hwComponent/abstract/Slice.h"
 #include "model/hwComponent/register/register.h"
 #include "model/hwComponent/value/value.h"
@@ -18,19 +20,31 @@ namespace kathryn{
 
     class InstrRepo;
 
-    constexpr  int TOKEN_ASM_TYPE_IDX = 1; //// at splitedValue
+    /////// for decoder
+    constexpr  int TOKEN_DEC_TYPE_IDX = 1; //// at splitedValue
+    /////// for slave matching
+    constexpr  int TOKEN_ASM_UOP_IDENT= 0;
     constexpr  char TOKEN_ASM_TYPE_REG_IDX  = 'r'; //// register idx
     constexpr  char TOKEN_ASM_TYPE_IMM_IDX  = 'i'; //// imm idx
     constexpr  char TOKEN_ASM_TYPE_UOP_IDX  = 'u'; //// imm idx
 
+    Operable* joinOpr(std::vector<Operable*> srcOprs, LOGIC_OP lop);
 
     struct token{
+        bool  isSizeDet = false;
         Slice sl{};
         std::string value;
         std::vector<std::string> splitedValue;
         explicit token() = default;
-        void finalToken(int startBit);
+        void splitToken();
+        void sizeDet(int startBit);
         void addRawChar(char ch){value.push_back(ch);}
+    };
+
+    struct TOKEN_GRP{
+        std::vector<token> _tokens;
+        TOKEN_GRP(std::string rawValue, bool reqSizeDet);
+        /////// it will determine size
     };
 
     ///// the component that used to be instruction and micro-op material
@@ -85,20 +99,16 @@ namespace kathryn{
 
     };
 
-    struct MasterRule;
-    struct TOKEN_GRP{
-        std::vector<token> tokens;
-        TOKEN_GRP(std::string rawValue);
-    };
-
     struct MatchSlaveVal{
         TOKEN_GRP    _matchRule;
         TOKEN_GRP    _matcher;
         std::string  _effUopName;
 
-        MatchSlaveVal(std::string matchRule,
-                      std::string matchVal,
+        MatchSlaveVal(const std::string& matchRule,
+                      const std::string& matchVal,
                       std::string effUopName);
+
+        Operable* getActCond(std::map<std::string, token> slaveTokenMap, Operable* instr);
 
     };
 
@@ -121,20 +131,25 @@ namespace kathryn{
 
         /////// slave side
         std::map<std::string, token> _slaveTokenMap; //// name of uopIdentfier like u2 -> token
-        std::vector<MatchSlaveVal>   _slaveRule;
+        std::vector<MatchSlaveVal>   _slaveRules;
+        std::set<std::string>        _dummyUopSetter;
 
         MasterRule(InstrRepo* repo, std::string mopName, std::string rule);
+        void flattenMop();
+        [[nodiscard]]
+        std::string getFlattenOp() const{return _flattenOp;}
 
-        std::string getFlattenOp(){return _flattenOp;}
-
-        MasterRule& addSlaveDec(const std::string& slaveRule,
+        ////////// add decode
+        MasterRule& ad(const std::string& slaveRule,
                                 const std::vector<MatchSlaveValInput>& slaveMatch);
+
+        MasterRule& adm(const std::vector<std::string>& uopsName);
 
         void doAsm();
 
+        void doUopAsm();
+
         void unsetUnusedReg(const bool* eff, int size, bool isSrc);
-
-
 
     };
 

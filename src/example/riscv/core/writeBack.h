@@ -16,16 +16,16 @@ namespace kathryn{
         class WriteBack{
         public:
 
-            void flow(RegEle& desReg, MemBlock& regFile, BYPASS_DATA& bypassData){
-                pipBlk{
-                    par {
-                        zif((desReg.valid) && (desReg.idx != 0)) {
-                            regFile[desReg.idx] <<= desReg.val;
-                            bypassData.idx = desReg.idx;
-                            bypassData.value = desReg.val;
-                        }
-                    }
-                }
+            void flow(/**RegEle& desReg, */MemBlock& regFile, BYPASS_DATA& bypassData){
+                // pipBlk{
+                //     par {
+                //         zif((desReg.valid) && (desReg.idx != 0)) {
+                //             regFile[desReg.idx] <<= desReg.val;
+                //             bypassData.idx = desReg.idx;
+                //             bypassData.value = desReg.val;
+                //         }
+                //     }
+                // }
             }
         };
     }

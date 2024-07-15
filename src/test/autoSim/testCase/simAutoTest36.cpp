@@ -16,15 +16,17 @@ namespace kathryn{
 
         explicit testSimMod36(int x): Module(),
         repo(32,3, 1, 32, &instr){
-            repo.addDecRule("<7-u><5-rs1><5-rs0><3-u><5-rd0><0110011>", "rType");
-            repo.addDecRule("<12-i1-0-12><5-rs0><3-u><5-rd0><0010011>", "iType");
 
-            repo.addSubDecRule({{"<0000000><000>","add", "rType"},{"<0100000><000>","sub", "rType"},
-                         {"<0000000><001>","sll", "rType"},{"<0000000><010>","slt", "rType"},
-                         {"<0000000><011>","sltu","rType"},{"<0000000><100>","xor", "rType"}});
+            repo.addMop({"rType", {"add", "sll", "sltu", "sub", "slt", "xor"}});
 
-            repo.addSubDecRule({{"<000>", "addi", "iType"}, {"<100>", "slti", "iType"}});
-            repo.processToken();
+            repo.addDecRule("rType", "<7-ub><5-rs1><5-rs0><3-ua><5-rd0><0110011>").
+            ad("<ub><ua>",{{"<0000000><000>","add" },{"<0100000><000>","sub"},
+                           {"<0000000><001>","sll" },{"<0000000><010>","slt"},
+                           {"<0000000><011>","sltu"},{"<0000000><100>","xor"}});
+
+            repo.addDecRule("rType", "<12-i1-0-12><5-rs0><3-ua><5-rd0><0010011>").
+            ad("<ua>"    ,{{"<000>", "add"},{"<100>", "xor"}});
+
             repo.declareHw();
         }
 
@@ -51,8 +53,12 @@ namespace kathryn{
 
         void describeCon() override{
 
+            OP_HW& opHw =  _md->repo.getOp("rType");
+
             _md->instr.assignSimValue(0b0000000'01000'00010'010'00100'0110011);
             conNextCycle(1);
+
+            std::cout << "------------ test slt rType" << std::endl;
             testAndPrint("src0Valid",(ull)_md->repo.getSrcReg(0).valid, 0);
             testAndPrint("src0idx"  ,(ull)_md->repo.getSrcReg(0).idx  , 2);
 
@@ -62,20 +68,22 @@ namespace kathryn{
             testAndPrint("des1Valid",(ull)_md->repo.getDesReg(0).valid, 0);
             testAndPrint("des1idx"  ,(ull)_md->repo.getDesReg(0).idx  , 4);
 
-            testAndPrint("mopSet",(ull)_md->repo.getOp(0)._set, 1);
-            for (int uop = 0; uop < 6; uop++){
-                if (uop == 3){
-                    testAndPrint("uopSet",(ull)*_md->repo.getOp(0)._uopSets[uop], 1);
+            /////////// test
+
+            testAndPrint("mopSet", (ull)opHw._set, 1);
+            for (auto[uopName, idx]: opHw.uopMapIdx){
+                if (uopName == "slt"){
+                    testAndPrint("testUop", (ull)*opHw._uopSets[idx], 1);
                 }else{
-                    testAndPrint("uopSet",(ull)*_md->repo.getOp(0)._uopSets[uop], 0);
+                    testAndPrint("testUop false", (ull)*opHw._uopSets[idx], 0);
                 }
             }
-            testAndPrint("mopSet",(ull)_md->repo.getOp(1)._set, 0);
 
 
 
             _md->instr.assignSimValue(0b100100000000'00101'100'01010'0010011);
             conNextCycle(1);
+            std::cout << "------------ test xor iType" << std::endl;
             testAndPrint("src0Valid",(ull)_md->repo.getSrcReg(0).valid, 0);
             testAndPrint("src0idx"  ,(ull)_md->repo.getSrcReg(0).idx  , 5);
 
@@ -86,18 +94,19 @@ namespace kathryn{
             testAndPrint("des1Valid",(ull)_md->repo.getDesReg(0).valid, 0);
             testAndPrint("des1idx"  ,(ull)_md->repo.getDesReg(0).idx  , 10);
 
-            testAndPrint("mopSet",(ull)_md->repo.getOp(1)._set, 1);
-            for (int uop = 0; uop < 2; uop++){
-                if (uop == 1){
-                    testAndPrint("uopSet",(ull)*_md->repo.getOp(1)._uopSets[uop], 1);
+            testAndPrint("mopSet", (ull)opHw._set, 1);
+            for (auto[uopName, idx]: opHw.uopMapIdx){
+                if (uopName == "xor"){
+                    testAndPrint("testUop", (ull)*opHw._uopSets[idx], 1);
                 }else{
-                    testAndPrint("uopSet",(ull)*_md->repo.getOp(1)._uopSets[uop], 0);
+                    testAndPrint("testUop false", (ull)*opHw._uopSets[idx], 0);
                 }
             }
-            testAndPrint("mopSet",(ull)_md->repo.getOp(0)._set, 0);
-            _md->instr.assignSimValue(0b0000000'01010'00111'100'10000'0110011);
+
+            _md->instr.assignSimValue(0b0000000'01010'00111'000'10000'0110011);
             conNextCycle(1);
 
+            std::cout << "------------ test add rType" << std::endl;
             testAndPrint("src0Valid",(ull)_md->repo.getSrcReg(0).valid, 0);
             testAndPrint("src0idx"  ,(ull)_md->repo.getSrcReg(0).idx  , 7);
 
@@ -107,15 +116,17 @@ namespace kathryn{
             testAndPrint("des1Valid",(ull)_md->repo.getDesReg(0).valid, 0);
             testAndPrint("des1idx"  ,(ull)_md->repo.getDesReg(0).idx  , 16);
 
-            testAndPrint("mopSet",(ull)_md->repo.getOp(0)._set, 1);
-            for (int uop = 0; uop < 6; uop++){
-                if (uop == 5){
-                    testAndPrint("uopSet",(ull)*_md->repo.getOp(0)._uopSets[uop], 1);
+
+            testAndPrint("mopSet", (ull)opHw._set, 1);
+            for (auto[uopName, idx]: opHw.uopMapIdx){
+                if (uopName == "add"){
+                    testAndPrint("testUop", (ull)*opHw._uopSets[idx], 1);
                 }else{
-                    testAndPrint("uopSet",(ull)*_md->repo.getOp(0)._uopSets[uop], 0);
+                    testAndPrint("testUop false", (ull)*opHw._uopSets[idx], 0);
                 }
             }
-            testAndPrint("mopSet",(ull)_md->repo.getOp(1)._set, 0);
+
+
 
         }
     };

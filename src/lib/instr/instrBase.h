@@ -6,6 +6,10 @@
 #define INSTRREP_H
 #include <vector>
 #include <map>
+#include <set>
+#include <utility>
+
+
 #include "model/hwComponent/register/register.h"
 #include "model/hwComponent/abstract/Slice.h"
 #include "instrEle.h"
@@ -83,7 +87,7 @@ namespace kathryn{
         virtual       ~InstrRepo();
         void          addMop(const MOP_META& mopMeta);
         //////// add rule
-        void          addDecRule(const std::string& workOnMopName,
+        MasterRule&   addDecRule(const std::string& workOnMopName,
                                  const std::string& rule);
         //////// hardware declaration
         void          declareHw(); ////// define when addMop is added that ok;
@@ -91,7 +95,6 @@ namespace kathryn{
         virtual  void genDecodeLogic(); ////// gen logic
 
         //// src reg
-
         OPR_HW& getSrcReg   (int idx);
         int     getAmtSrcReg() const{return _amtSrcOpr;}
         OPR_HW& getDesReg   (int idx);
@@ -99,8 +102,6 @@ namespace kathryn{
         OP_HW&  getOp       (int typeId);
         OP_HW&  getOp       (const std::string& mopIdx);
         int     getAmtMop   ()     const{return (int)opcodes.size();}
-
-
 
 
         Operable* getInstrOpr() const{return _instr;}

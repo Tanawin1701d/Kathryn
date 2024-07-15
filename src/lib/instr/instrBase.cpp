@@ -3,9 +3,6 @@
 //
 
 #include "instrBase.h"
-
-#include <set>
-#include <utility>
 #include "model/flowBlock/cond/zelif.h"
 #include "model/flowBlock/cond/zif.h"
 #include "util/numberic/pmath.h"
@@ -14,8 +11,7 @@
 
 
 namespace kathryn{
-
-////////////////////////// OPR HW
+    ////////////////////////// OPR HW
 
     OPR_HW::OPR_HW(int archSize, int idxSize, int regNo, bool isSrc):
     _isSrc(isSrc),
@@ -48,7 +44,7 @@ namespace kathryn{
 
 
 
-////////////////////////// OP HW
+    ////////////////////////// OP HW
     OP_HW::OP_HW(int mopIdx,
                  const std::string& mopName,
                  std::vector<std::string>& uopNames):
@@ -86,12 +82,12 @@ namespace kathryn{
         return *_uopSets[uopIdx];
     }
 
-////////////////////
-/////// InstrRepo
-////////////////////
+    ////////////////////
+    /////// InstrRepo
+    ////////////////////
 
 
-bool MOP_META::checkValid() const{
+    bool MOP_META::checkValid() const{
 
         std::set<std::string> x;
 
@@ -103,40 +99,40 @@ bool MOP_META::checkValid() const{
         }
         return true;
 
-}
+    }
 
 
     std::pair<
             std::vector<MasterRule*>,
             std::vector<MasterRule*>
     >
-    InstrRepo::seperateMopByopcode(std::vector<MasterRule*>& grpMop, int bitIdx){
+    InstrRepo::seperateMopByopcode(std::vector<MasterRule*>& msrs, int bitIdx){
         std::vector<MasterRule*> mopWithZero;
         std::vector<MasterRule*> mopWithOne;
 
-        for (MasterRule* mop: grpMop){
-            assert(mop != nullptr);
-            char decVal = mop->getFlattenOp()[bitIdx];
+        for (MasterRule* msr: msrs){  //// msr master rule
+            assert(msr != nullptr);
+            char decVal = msr->getFlattenOp()[bitIdx];
             switch(decVal){
-            case '0' : {mopWithZero.push_back(mop); break;}
-            case '1' : {mopWithOne .push_back(mop); break;}
+            case '0' : {mopWithZero.push_back(msr); break;}
+            case '1' : {mopWithOne .push_back(msr); break;}
             default : {assert(false);}
             }
         }
         return {mopWithZero, mopWithOne};
     }
 
-    void InstrRepo::genDecInternal(std::vector<MasterRule*>& grpMop, int bitIdx){
-        if (grpMop.empty()){return;}
+    void InstrRepo::genDecInternal(std::vector<MasterRule*>& msrs, int bitIdx){
+        if (msrs.empty()){return;}
 
         if (bitIdx == -1){
-            assert(grpMop.size() == 1); ///// there must be only one
-            grpMop[0]->doAsm();
+            assert(msrs.size() == 1); ///// there must be only one
+            msrs[0]->doAsm();
             return;
         }
 
         auto [zeros, ones] =
-            seperateMopByopcode(grpMop, bitIdx);
+            seperateMopByopcode(msrs, bitIdx);
 
         bool zeroEmpty = zeros.empty();
         bool oneEmpty  = ones .empty();
@@ -162,15 +158,15 @@ bool MOP_META::checkValid() const{
     }
 
 
-InstrRepo::InstrRepo(int instrWidth, int amtSrcOpr,
-                     int amtDesOpr , int oprWidth,
-                     Operable* instr):
-    _instr     (instr     ),
-    INSTR_WIDTH(instrWidth),
-    OPR_WIDTH  (oprWidth  ),
-    _amtMopType(0),
-    _amtSrcOpr (amtSrcOpr),
-    _amtDesOpr (amtDesOpr){
+    InstrRepo::InstrRepo(int instrWidth, int amtSrcOpr,
+                         int amtDesOpr , int oprWidth,
+                         Operable* instr):
+        _instr     (instr     ),
+        INSTR_WIDTH(instrWidth),
+        OPR_WIDTH  (oprWidth  ),
+        _amtMopType(0),
+        _amtSrcOpr (amtSrcOpr),
+        _amtDesOpr (amtDesOpr){
         assert(instr != nullptr);
         assert(INSTR_WIDTH  > 0);
         assert(OPR_WIDTH    > 0);
@@ -178,31 +174,33 @@ InstrRepo::InstrRepo(int instrWidth, int amtSrcOpr,
         assert(amtDesOpr   >= 0);
     }
 
-InstrRepo::~InstrRepo(){
-    for(OPR_HW* oprHw: srcOprs){
-        delete oprHw;
+    InstrRepo::~InstrRepo(){
+        for(OPR_HW* oprHw: srcOprs){
+            delete oprHw;
+        }
+        for(OPR_HW* oprHw: desOprs){
+            delete oprHw;
+        }
+        for(OP_HW*   opHw: opcodes){
+            delete opHw;
+        }
     }
-    for(OPR_HW* oprHw: desOprs){
-        delete oprHw;
-    }
-    for(OP_HW*   opHw: opcodes){
-        delete opHw;
-    }
-}
 
-void InstrRepo::addMop(const MOP_META& mopMeta){
+    void InstrRepo::addMop(const MOP_META& mopMeta){
         assert(mopMeta.checkValid());
         assert(opcodeMap.find(mopMeta.mopName) == opcodeMap.end());
         opcodeMap.insert({mopMeta.mopName, mopMetas.size()});
         mopMetas.push_back(mopMeta);
-}
+        _amtMopType++;
+    }
 
-void InstrRepo::addDecRule(const std::string& workOnMopName,
-                           const std::string& rule){
+    MasterRule& InstrRepo::addDecRule(const std::string& workOnMopName,
+                               const std::string& rule){
         masterRules.emplace_back(this, workOnMopName, rule);
-}
+        return *masterRules.rbegin();
+    }
 
-void InstrRepo::declareHw(){
+    void InstrRepo::declareHw(){
         //////// declareOperand
         for (int i = 0; i < _amtSrcOpr; i++){
             srcOprs.push_back(new OPR_HW(
@@ -222,10 +220,10 @@ void InstrRepo::declareHw(){
                 new OP_HW(i,mopMetas[i].mopName,
                     mopMetas[i].uopNames));
         }
-}
+    }
 
 
-void InstrRepo::genDecodeLogic(){
+    void InstrRepo::genDecodeLogic(){
 
         std::vector<MasterRule*> masterRulePool;
         for (MasterRule& msr: masterRules){
@@ -233,23 +231,22 @@ void InstrRepo::genDecodeLogic(){
         }
         genDecInternal(masterRulePool, INSTR_WIDTH-1);
 
-}
+    }
 
-OPR_HW& InstrRepo::getSrcReg(int idx){
-    assert(idx < _amtSrcOpr);
-    return *srcOprs[idx];
-}
-OPR_HW& InstrRepo::getDesReg(int idx){
-    assert(idx < _amtDesOpr);
-    return *desOprs[idx];
-}
-OP_HW&  InstrRepo::getOp    (int mopIdx){
-    assert(mopIdx < _amtMopType);
-    return *opcodes[mopIdx];
-}
-OP_HW&  InstrRepo::getOp    (const std::string& mopName){
-    assert(opcodeMap.find(mopName) != opcodeMap.end());
-    return getOp(opcodeMap[mopName]);
-}
-
+    OPR_HW& InstrRepo::getSrcReg(int idx){
+        assert(idx < _amtSrcOpr);
+        return *srcOprs[idx];
+    }
+    OPR_HW& InstrRepo::getDesReg(int idx){
+        assert(idx < _amtDesOpr);
+        return *desOprs[idx];
+    }
+    OP_HW&  InstrRepo::getOp    (int mopIdx){
+        assert(mopIdx < _amtMopType);
+        return *opcodes[mopIdx];
+    }
+    OP_HW&  InstrRepo::getOp    (const std::string& mopName){
+        assert(opcodeMap.find(mopName) != opcodeMap.end());
+        return getOp(opcodeMap[mopName]);
+    }
 }

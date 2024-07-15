@@ -16,8 +16,6 @@ namespace kathryn{
 
     namespace riscv {
 
-        struct
-
 
         class Riscv : public Module {
         public:
@@ -29,7 +27,7 @@ namespace kathryn{
             /***bypass ele*/
             FETCH_DATA  fetchData;
             UOp         decData;
-            RegEle      wbData; //// write back data
+           // RegEle      wbData; //// write back data
             BYPASS_DATA bp;     ///// bypass data
 
             /** storage*/

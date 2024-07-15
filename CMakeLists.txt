@@ -23,6 +23,7 @@ FILE(GLOB_RECURSE SRC_TEST            RELATIVE ${CMAKE_SOURCE_DIR} "src/test/*.c
 FILE(GLOB_RECURSE SRC_UTIL            RELATIVE ${CMAKE_SOURCE_DIR} "src/util/*.cpp")
 FILE(GLOB_RECURSE SRC_EXAMPLE         RELATIVE ${CMAKE_SOURCE_DIR} "src/example/*.cpp")
 FILE(GLOB_RECURSE SRC_PARAM           RELATIVE ${CMAKE_SOURCE_DIR} "src/params/*.cpp")
+FILE(GLOB_RECURSE SRC_LIB             RELATIVE ${CMAKE_SOURCE_DIR} "src/lib/*.cpp")
 FILE(GLOB_RECURSE SRC_MODEL_COMPILE   RELATIVE ${CMAKE_SOURCE_DIR} "src/modelCompile/proxyEventBase.cpp")
 
 
@@ -39,12 +40,8 @@ add_executable(Kathryn
         ${SRC_GEN}
         ${SRC_TEST}
         ${SRC_UTIL}
-        ${SRC_EXAMPLE}
+        #${SRC_EXAMPLE}
         ${SRC_PARAM}
+        ${SRC_LIB}
         ${SRC_MODEL_COMPILE}
-        src/lib/instr/instrBase.cpp
-        src/lib/instr/instrBase.h
-        src/lib/instr/instrEle.cpp
-        src/lib/instr/instrEle.h
-
 )
