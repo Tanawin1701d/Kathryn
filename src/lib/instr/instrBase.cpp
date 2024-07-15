@@ -4,6 +4,7 @@
 
 #include "instrBase.h"
 
+#include <set>
 #include <utility>
 #include "model/flowBlock/cond/zelif.h"
 #include "model/flowBlock/cond/zif.h"
@@ -45,82 +46,77 @@ namespace kathryn{
         data  <<= *opr;
     }
 
-    void OP_HW::set(){
-        _set <<= 1;
-    }
 
-    void OP_HW::reset(){
-        _set <<= 0;
-    }
-
-    void OP_HW::setUop(int idx, Operable* condition){
-        assert(condition != nullptr);
-        assert(condition->getOperableSlice().getSize() == 1);
-        (*_uopSets.at(idx)) <<= (*condition);
-    }
 
 ////////////////////////// OP HW
     OP_HW::OP_HW(int mopIdx,
                  const std::string& mopName,
-                 std::vector<UopAsm>& uops):
+                 std::vector<std::string>& uopNames):
     _mopIdx(mopIdx),
     _mopName(mopName),
     _set(mOprReg("mop_" + mopName, 1)){
         assert(mopIdx >= 0);
-        for(UopAsm& uop: uops){
-            _uopSets.push_back(&mOprReg("uop_" + uop._uopName, 1));
+        for(const std::string& uopName: uopNames){
+            int uopIdx = _uopSets.size();
+            _uopSets.push_back(&mOprReg("uop_" + uopName, 1));
+            assert(uopMapIdx.find(uopName)==uopMapIdx.end());
+            uopMapIdx.insert({uopName, uopIdx});
         }
     }
 
-///////////////////////// RULE
+    void OP_HW::set(){ _set <<= 1;}
 
-    RULE::RULE(int mopIdx, std::string  name, std::string  rule):
-    _mopIdx(mopIdx),
-    _name  (std::move(name)),
-    _rule  (std::move(rule)){
-        assert(_mopIdx >= 0);
+    void OP_HW::reset(){_set <<= 0;}
+
+    void OP_HW::setUop(const std::string& uopName, Operable* condition){
+        assert(condition != nullptr);
+        assert(condition->getOperableSlice().getSize() == 1);
+        assert(uopMapIdx.find(uopName) != uopMapIdx.end());
+        int idx = uopMapIdx[uopName];
+        (*_uopSets.at(idx)) <<= (*condition);
     }
 
-    void RULE::startTokeniz(){
-        std::stack<token> tokenSt;
-        /////// iterate all in string
-        for (int idx = 0; idx < _rule.size(); idx++){
-            char bitChar = _rule[idx];
-            switch (bitChar){
-                case '<':{tokenSt.emplace(); break;}
-                case '>':{
-                    token topToken = tokenSt.top();
-                    _tokens.push_back(topToken);
-                    tokenSt.pop();
-                    break;
-                }
-                default:{
-                    assert(!tokenSt.empty());
-                    tokenSt.top().addRawChar(bitChar); break;
-                }
+    Reg& OP_HW::isSet(){ return _set;}
+
+    Reg& OP_HW::isUopSet(const std::string& uopName){
+        assert(uopMapIdx.find(uopName) != uopMapIdx.end());
+        int uopIdx = uopMapIdx[uopName];
+        assert(uopIdx < _uopSets.size());
+        assert(_uopSets[uopIdx] != nullptr);
+        return *_uopSets[uopIdx];
+    }
+
+////////////////////
+/////// InstrRepo
+////////////////////
+
+
+bool MOP_META::checkValid() const{
+
+        std::set<std::string> x;
+
+        for (const auto& uopName: uopNames){
+            if(x.find(uopName) != x.end()){
+                return false;
             }
+            x.insert(uopName);
         }
+        return true;
 
-        int nextStartIdx = 0;
-        for (auto tk = _tokens.rbegin(); tk != _tokens.rend(); tk++){
-            tk->finalToken(nextStartIdx);
-            nextStartIdx += tk->sl.getSize();
-        }
-        assert(tokenSt.empty());
-    }
-/////////////////////////
+}
+
 
     std::pair<
-            std::vector<MOP*>,
-            std::vector<MOP*>
+            std::vector<MasterRule*>,
+            std::vector<MasterRule*>
     >
-    InstrRepo::seperateMopByopcode(std::vector<MOP*>& grpMop, int bitIdx){
-        std::vector<MOP*> mopWithZero;
-        std::vector<MOP*> mopWithOne;
+    InstrRepo::seperateMopByopcode(std::vector<MasterRule*>& grpMop, int bitIdx){
+        std::vector<MasterRule*> mopWithZero;
+        std::vector<MasterRule*> mopWithOne;
 
-        for (MOP* mop: grpMop){
+        for (MasterRule* mop: grpMop){
             assert(mop != nullptr);
-            char decVal = mop->getFlattenUop()[bitIdx];
+            char decVal = mop->getFlattenOp()[bitIdx];
             switch(decVal){
             case '0' : {mopWithZero.push_back(mop); break;}
             case '1' : {mopWithOne .push_back(mop); break;}
@@ -130,12 +126,12 @@ namespace kathryn{
         return {mopWithZero, mopWithOne};
     }
 
-    void InstrRepo::genDecInternal(std::vector<MOP*>& grpMop, int bitIdx){
+    void InstrRepo::genDecInternal(std::vector<MasterRule*>& grpMop, int bitIdx){
         if (grpMop.empty()){return;}
 
         if (bitIdx == -1){
             assert(grpMop.size() == 1); ///// there must be only one
-            grpMop[0]->doAllAsm();
+            grpMop[0]->doAsm();
             return;
         }
 
@@ -165,9 +161,10 @@ namespace kathryn{
 
     }
 
-    InstrRepo::InstrRepo(int instrWidth, int amtSrcOpr,
-                         int amtDesOpr , int oprWidth,
-                         Operable* instr):
+
+InstrRepo::InstrRepo(int instrWidth, int amtSrcOpr,
+                     int amtDesOpr , int oprWidth,
+                     Operable* instr):
     _instr     (instr     ),
     INSTR_WIDTH(instrWidth),
     OPR_WIDTH  (oprWidth  ),
@@ -181,62 +178,31 @@ namespace kathryn{
         assert(amtDesOpr   >= 0);
     }
 
-    InstrRepo::~InstrRepo(){
-        for(OPR_HW* oprHw: srcOprs){
-            delete oprHw;
-        }
-        for(OPR_HW* oprHw: desOprs){
-            delete oprHw;
-        }
-        for(OP_HW*   opHw: opcodes){
-            delete opHw;
-        }
-
+InstrRepo::~InstrRepo(){
+    for(OPR_HW* oprHw: srcOprs){
+        delete oprHw;
     }
-
-
-    void InstrRepo::addMop(const std::string& rule,
-                           const std::string& ruleName){
-        assert(!rule.empty());
-        mopRules.emplace_back(_amtMopType, ruleName, rule);
-        _amtMopType++;
+    for(OPR_HW* oprHw: desOprs){
+        delete oprHw;
     }
-
-    void InstrRepo::addUop(std::vector<UOP_INPUT_META> uopMetas){
-        for (UOP_INPUT_META& uopMeta: uopMetas){
-            assert(!uopMeta.rule.empty());
-            assert(uopMeta.mopIdx < _amtMopType);
-            uopRules.emplace_back(uopMeta.mopIdx, uopMeta.ruleName, uopMeta.rule);
-        }
+    for(OP_HW*   opHw: opcodes){
+        delete opHw;
     }
+}
 
-    void InstrRepo::processToken(){
-        for (RULE& rule: mopRules){
-            rule.startTokeniz();
-        }
-        for (RULE& rule: uopRules){
-            rule.startTokeniz();
-        }
+void InstrRepo::addMop(const MOP_META& mopMeta){
+        assert(mopMeta.checkValid());
+        assert(opcodeMap.find(mopMeta.mopName) == opcodeMap.end());
+        opcodeMap.insert({mopMeta.mopName, mopMetas.size()});
+        mopMetas.push_back(mopMeta);
+}
 
-        /////// init mop
-        for(int i = 0; i < mopRules.size(); i++){
-            assert(i == mopRules[i]._mopIdx);
-            mops.emplace_back(this, mopRules[i]._tokens, mopRules[i]._name, i);
-            mops[i].interpretMasterToken();
-        }
+void InstrRepo::addDecRule(const std::string& workOnMopName,
+                           const std::string& rule){
+        masterRules.emplace_back(this, workOnMopName, rule);
+}
 
-        for (int uopIdx = 0;  uopIdx < uopRules.size(); uopIdx++){
-            RULE& uopRule = uopRules[uopIdx];
-            assert(uopRule._mopIdx < _amtMopType);
-            mops[uopRule._mopIdx].createUop(uopRule._tokens, uopRule._name);
-        }
-
-        for(int i = 0; i < mopRules.size(); i++){
-            mops[i].flattenMop(); ///// generate data
-        }
-    }
-
-    void InstrRepo::declareHw(){
+void InstrRepo::declareHw(){
         //////// declareOperand
         for (int i = 0; i < _amtSrcOpr; i++){
             srcOprs.push_back(new OPR_HW(
@@ -251,31 +217,39 @@ namespace kathryn{
                 i, false));
         }
 
-        for (int i = 0; i < mops.size(); i++){
-            opcodes.push_back(new OP_HW(i, mops[i]._mopName,mops[i]._uops));
+        for (int i = 0; i < mopMetas.size(); i++){
+            opcodes.push_back(
+                new OP_HW(i,mopMetas[i].mopName,
+                    mopMetas[i].uopNames));
         }
-    }
+}
 
-    void InstrRepo::genDecodeLogic(){
-        /////// recruit all uop
-        std::vector<MOP*> poolMop;
-        for (MOP& mop: mops){
-            poolMop.push_back(&mop);
+
+void InstrRepo::genDecodeLogic(){
+
+        std::vector<MasterRule*> masterRulePool;
+        for (MasterRule& msr: masterRules){
+            masterRulePool.push_back(&msr);
         }
-        /////// generate all uop
-        genDecInternal(poolMop, INSTR_WIDTH-1);
-    }
+        genDecInternal(masterRulePool, INSTR_WIDTH-1);
 
-    OPR_HW& InstrRepo::getSrcReg(int idx){
-        assert(idx < _amtSrcOpr);
-        return *srcOprs[idx];
-    }
-    OPR_HW& InstrRepo::getDesReg(int idx){
-        assert(idx < _amtDesOpr);
-        return *desOprs[idx];
-    }
-    OP_HW&  InstrRepo::getOp    (int mopIdx){
-        assert(mopIdx < _amtMopType);
-        return *opcodes[mopIdx];
-    }
+}
+
+OPR_HW& InstrRepo::getSrcReg(int idx){
+    assert(idx < _amtSrcOpr);
+    return *srcOprs[idx];
+}
+OPR_HW& InstrRepo::getDesReg(int idx){
+    assert(idx < _amtDesOpr);
+    return *desOprs[idx];
+}
+OP_HW&  InstrRepo::getOp    (int mopIdx){
+    assert(mopIdx < _amtMopType);
+    return *opcodes[mopIdx];
+}
+OP_HW&  InstrRepo::getOp    (const std::string& mopName){
+    assert(opcodeMap.find(mopName) != opcodeMap.end());
+    return getOp(opcodeMap[mopName]);
+}
+
 }

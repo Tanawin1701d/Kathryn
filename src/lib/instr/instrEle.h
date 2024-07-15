@@ -5,6 +5,7 @@
 #ifndef INSTRELE_H
 #define INSTRELE_H
 
+#include<map>
 #include<vector>
 #include<cassert>
 #include "model/hwComponent/abstract/Slice.h"
@@ -84,56 +85,62 @@ namespace kathryn{
 
     };
 
-    struct MOP;
+    struct MasterRule;
+    struct TOKEN_GRP{
+        std::vector<token> tokens;
+        TOKEN_GRP(std::string rawValue);
+    };
 
-    struct UopAsm: AsmWorker{
-        ///// meta data
-        MOP*               _mopMaster = nullptr;
-        std::vector<token> _uopTokens;
-        std::string        _uopName;
-        int                _uopIdx = -1;
-        ///// asm worker
+    struct MatchSlaveVal{
+        TOKEN_GRP    _matchRule;
+        TOKEN_GRP    _matcher;
+        std::string  _effUopName;
 
-        UopAsm(InstrRepo* master, MOP* mopMaster,
-               std::vector<token> tokens,
-               std::string uopName, int uopIdx);
+        MatchSlaveVal(std::string matchRule,
+                      std::string matchVal,
+                      std::string effUopName);
+
+    };
+
+    struct MatchSlaveValInput{
+        std::string  matchVal;
+        std::string  effUop;
+    };
+
+
+    struct MasterRule{
+        InstrRepo*         _master = nullptr;
+        std::string        _mopName;
+        TOKEN_GRP          _masterTokens;
+        std::vector<token> _opcodeTokens;
+        std::string        _flattenOp;
+        /////// register
+        std::vector<RegIdxAsm>  _srcRegAsms;
+        std::vector<RegIdxAsm>  _desRegAsms;
+        ImmAsm _immAsm;
+
+        /////// slave side
+        std::map<std::string, token> _slaveTokenMap; //// name of uopIdentfier like u2 -> token
+        std::vector<MatchSlaveVal>   _slaveRule;
+
+        MasterRule(InstrRepo* repo, std::string mopName, std::string rule);
+
+        std::string getFlattenOp(){return _flattenOp;}
+
+        MasterRule& addSlaveDec(const std::string& slaveRule,
+                                const std::vector<MatchSlaveValInput>& slaveMatch);
+
         void doAsm();
 
+        void unsetUnusedReg(const bool* eff, int size, bool isSrc);
+
+
 
     };
 
-    //// <5-u> <1100110>    <----- //// left for uop //// right for mop
+    ////// todo
 
-    struct MOP{
-        ///// meta data at start
-        InstrRepo* _master = nullptr;
-        std::vector<token>     _masterTokens; ///// master of all token
-        std::string _mopName;
-        int _mopIdx = -1;
-        ///// after interpret and fetch
-        std::vector<token>     _opcodeTokens;
-        std::vector<token>     _masterUopTokens;
-        std::string            _flattedInstr; ///// fill when flattendMop
-        std::vector<RegIdxAsm> _srcRegAsms;
-        std::vector<RegIdxAsm> _desRegAsms;
-        ImmAsm                 _immAsm;
-        std::vector<UopAsm>    _uops;
 
-        MOP(InstrRepo* master,
-            std::vector<token>& masterTokens,
-            std::string mopName,
-            int mopIdx);
-
-        void        interpretMasterToken();
-        void        createUop(std::vector<token>& uopTokens, const std::string& uopName);
-        void        flattenMop();
-        [[nodiscard]]
-        std::string getFlattenUop() const{return _flattedInstr;}
-        [[nodiscard]]
-        int         getAmtUop() const{return _uops.size();}
-        void        doAllAsm();
-        void        unsetUnusedReg(const bool* eff, int size, bool isSrc);
-    };
 
 }
 

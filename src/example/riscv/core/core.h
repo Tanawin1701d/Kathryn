@@ -16,6 +16,8 @@ namespace kathryn{
 
     namespace riscv {
 
+        struct
+
 
         class Riscv : public Module {
         public:
@@ -42,6 +44,7 @@ namespace kathryn{
             FlowBlockPipeWrapper* pipProbe = nullptr;
 
             explicit Riscv(bool x):
+            decData(fetchData.fetch_instr),
             memBlk (MEM_ADDR_IDX_ACTUAL_AL32, XLEN), //// -2 due to it is 4 byte align
             fetch  (memBlk, pc),
             execute(decData, memBlk, wbData){}

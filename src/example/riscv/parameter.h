@@ -9,13 +9,15 @@ namespace kathryn{
 
     namespace riscv {
 
-        static const int   XLEN                     = 32;
-        static const int   MEM_ADDR_IDX             = 32;
-        static const int   MEM_ADDR_IDX_ACTUAL      = 28; /////256 megabyte
-        static const int   REG_IDX                  =  5;
-        static const int   UOP_WIDTH                =  7;
-        static const int   AMT_REG                  = 32;
+        constexpr int   XLEN                     = 32;
+        constexpr int   MEM_ADDR_IDX             = 32;
+        constexpr int   MEM_ADDR_IDX_ACTUAL      = 28; /////256 megabyte
+        constexpr int   REG_IDX                  =  5;
+        constexpr int   UOP_WIDTH                =  7;
+        constexpr int   AMT_REG                  = 32;
 
+        constexpr int   AMT_DEC_SRC_REG          = 3;
+        constexpr int   AMT_DEC_DES_REG          = 1;
 
         static const int   MEM_ADDR_IDX_ACTUAL_AL32 = MEM_ADDR_IDX_ACTUAL-2; /////256 megabyte
         static const Slice MEM_ADDR_SL              = {2, MEM_ADDR_IDX_ACTUAL};

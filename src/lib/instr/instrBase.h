@@ -5,6 +5,7 @@
 #ifndef INSTRREP_H
 #define INSTRREP_H
 #include <vector>
+#include <map>
 #include "model/hwComponent/register/register.h"
 #include "model/hwComponent/abstract/Slice.h"
 #include "instrEle.h"
@@ -26,42 +27,29 @@ namespace kathryn{
         void setOnlyIndex(Operable* index); ///// the value must get manual from regfile
         void setImm(Operable* value); ///// the value will be added and valid
     };
-
-    struct RULE;
     struct OP_HW{
         int _mopIdx = -1;
         std::string _mopName;
         Reg& _set;
         std::vector<Reg*> _uopSets;
+        std::map<std::string, int> uopMapIdx;
         explicit OP_HW(int mopIdx,
                        const std::string& mopName,
-                       std::vector<UopAsm>& uops);
-
+                       std::vector<std::string>& uops);
+        ////// operation on reg
         void set();
-        void setUop(int idx, Operable* condition);
+        void setUop(const std::string& idx, Operable* condition);
         void reset();
+        ////// get value
+        Reg& isSet();
+        Reg& isUopSet(const std::string& uopName);
     };
+    struct MOP_META{
+        std::string mopName;
+        std::vector<std::string> uopNames;
 
-    /***  rule meta data*/
-
-    struct RULE{
-        int         _mopIdx = -1;
-        std::string _name;
-        std::string _rule;
-        std::vector<token> _tokens;
-
-        RULE    (int mopIdx, std::string  name,std::string  rule);
-        void    startTokeniz();
+        [[nodiscard]] bool checkValid() const;
     };
-
-    struct UOP_INPUT_META{
-        std::string rule;
-        std::string ruleName;
-        int mopIdx;
-    };
-
-
-
 
     class InstrRepo{
     protected:
@@ -73,19 +61,19 @@ namespace kathryn{
               int _amtMopType    = -1;
         const int _amtSrcOpr     = -1;
         const int _amtDesOpr     = -1;
-        std::vector<MOP>    mops;
-        std::vector<RULE>   mopRules;
-        std::vector<RULE>   uopRules;
+        std::vector<MasterRule> masterRules;
+        std::vector<MOP_META>   mopMetas;
         ////// hardware component
         std::vector<OPR_HW*> srcOprs;
         std::vector<OPR_HW*> desOprs;
         std::vector<OP_HW* > opcodes; //// index is type idx
+        std::map<std::string, int> opcodeMap;
         ////// index in uop is uopIdx as well
         std::pair<
-            std::vector<MOP*>,
-            std::vector<MOP*>
-        >    seperateMopByopcode(std::vector<MOP*>& mops, int bitIdx);
-        void genDecInternal     (std::vector<MOP*>& uops, int bitIdx);
+            std::vector<MasterRule*>,
+            std::vector<MasterRule*>
+        >    seperateMopByopcode(std::vector<MasterRule*>& msrs, int bitIdx); ///// master rules
+        void genDecInternal     (std::vector<MasterRule*>& msrs, int bitIdx);
 
     public:
 
@@ -93,26 +81,31 @@ namespace kathryn{
                                 int amtDesOpr , int oprWidth,
                                 Operable* instr);
         virtual       ~InstrRepo();
-        void          addMop(const std::string& rule,
-                             const std::string& ruleName);
-        void          addUop(std::vector<UOP_INPUT_META> uopMetas);
-        void          processToken();
-        void          declareHw();
-        virtual  void genDecodeLogic();
+        void          addMop(const MOP_META& mopMeta);
+        //////// add rule
+        void          addDecRule(const std::string& workOnMopName,
+                                 const std::string& rule);
+        //////// hardware declaration
+        void          declareHw(); ////// define when addMop is added that ok;
+        //////// gen the logic
+        virtual  void genDecodeLogic(); ////// gen logic
 
         //// src reg
 
-        OPR_HW& getSrcReg(int idx);
+        OPR_HW& getSrcReg   (int idx);
         int     getAmtSrcReg() const{return _amtSrcOpr;}
-        OPR_HW& getDesReg(int idx);
+        OPR_HW& getDesReg   (int idx);
         int     getAmtDesReg() const{return _amtDesOpr;}
-        OP_HW&  getOp    (int typeId);
-        int     getAmtMop()     const{return (int)mops.size();}
+        OP_HW&  getOp       (int typeId);
+        OP_HW&  getOp       (const std::string& mopIdx);
+        int     getAmtMop   ()     const{return (int)opcodes.size();}
+
+
+
 
         Operable* getInstrOpr() const{return _instr;}
         int     getInstrSize () const{return INSTR_WIDTH;}
-
-        int     getOprSize()   const{return OPR_WIDTH;}
+        int     getOprSize()    const{return OPR_WIDTH;}
 
     };
 

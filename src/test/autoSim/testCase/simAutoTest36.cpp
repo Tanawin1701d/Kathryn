@@ -16,14 +16,14 @@ namespace kathryn{
 
         explicit testSimMod36(int x): Module(),
         repo(32,3, 1, 32, &instr){
-            repo.addMop("<7-u><5-rs1><5-rs0><3-u><5-rd0><0110011>", "rType");
-            repo.addMop("<12-i1-0-12><5-rs0><3-u><5-rd0><0010011>", "iType");
+            repo.addDecRule("<7-u><5-rs1><5-rs0><3-u><5-rd0><0110011>", "rType");
+            repo.addDecRule("<12-i1-0-12><5-rs0><3-u><5-rd0><0010011>", "iType");
 
-            repo.addUop({{"<0000000><000>","add", 0},{"<0100000><000>","sub", 0},
-                         {"<0000000><001>","sll", 0},{"<0000000><010>","slt", 0},
-                         {"<0000000><011>","sltu",0},{"<0000000><100>","xor", 0}});
+            repo.addSubDecRule({{"<0000000><000>","add", "rType"},{"<0100000><000>","sub", "rType"},
+                         {"<0000000><001>","sll", "rType"},{"<0000000><010>","slt", "rType"},
+                         {"<0000000><011>","sltu","rType"},{"<0000000><100>","xor", "rType"}});
 
-            repo.addUop({{"<000>", "addi", 1}, {"<100>", "slti", 1}});
+            repo.addSubDecRule({{"<000>", "addi", "iType"}, {"<100>", "slti", "iType"}});
             repo.processToken();
             repo.declareHw();
         }

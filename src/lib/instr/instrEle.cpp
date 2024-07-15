@@ -170,7 +170,7 @@ namespace kathryn{
      *
      */
 
-    UopAsm::UopAsm(InstrRepo* master, MOP* mopMaster,
+    UopAsm::UopAsm(InstrRepo* master, MASTER_RULE* mopMaster,
                    std::vector<token> tokens,
                    std::string uopName,
                    int uopIdx):
@@ -217,7 +217,7 @@ namespace kathryn{
      *
      */
 
-    MOP::MOP(InstrRepo*          master,
+    MASTER_RULE::MASTER_RULE(InstrRepo*          master,
              std::vector<token>& masterTokens,
              std::string         mopName,
             int                  mopIdx
@@ -230,9 +230,65 @@ namespace kathryn{
     { assert(master != nullptr);}
 
 
-    void MOP::interpretMasterToken(){
+    void MASTER_RULE::interpretMasterToken(){
 
-        for (const token& tk: _masterTokens){
+
+    }
+
+    void MASTER_RULE::createUop(std::vector<token>& uopDataTokens, const std::string& uopName){
+        assert(uopDataTokens.size() == _masterUopTokens.size());
+        int uopIdx = (int)_uops.size();
+        _uops.emplace_back(
+            _master,
+            this,
+            uopDataTokens,
+            uopName,
+            uopIdx);
+        assert(uopIdxMap.find(uopName) == uopIdxMap.end());
+        uopIdxMap.insert({uopName, uopIdx});
+    }
+
+
+    void MASTER_RULE::flattenMop(){
+        _flattedInstr = genConString('0', _master->getInstrSize());
+        for(token& tk: _opcodeTokens){
+            int actualStrStart = _master->getInstrSize() - tk.sl.stop;
+            int actualStrStop  = _master->getInstrSize() - tk.sl.start;
+            assert((actualStrStop-actualStrStart) == tk.sl.getSize());
+            _flattedInstr.replace(
+                actualStrStart,
+                actualStrStop-actualStrStart,
+                tk.splitedValue[0]
+            );
+        }
+    }
+
+
+    /////////////////////////
+    /// MatchSlaveVal
+    /////////////////////////
+
+    MatchSlaveVal::MatchSlaveVal(std::string matchRule,
+                                 std::string matchVal,
+                                 std::string uopName):
+    _matchRule(std::move(matchRule)),
+    _matcher(std::move(matchVal)),
+    _effUopName(std::move(uopName)){}
+
+    ////////////////////////////
+    /// MasterRule
+    ////////////////////////////
+    ///
+
+    MasterRule::MasterRule
+    (InstrRepo* repo, std::string mopName,std::string rule):
+    _master(repo),
+    _mopName(std::move(mopName)),
+    _masterTokens(std::move(rule)),
+    _immAsm(_master){
+
+        ///////////////// inteprt The token
+        for (const token& tk: _masterTokens.tokens){
             std::vector<std::string> dec = tk.splitedValue;
             assert(!dec.empty());
             if (dec.size() == 1){
@@ -252,38 +308,26 @@ namespace kathryn{
             }
 
             if(dec[TOKEN_ASM_TYPE_IDX][0] == TOKEN_ASM_TYPE_UOP_IDX){
-                _masterUopTokens.push_back(tk);
+                ///// u1
+                std::string uopIdent = dec[TOKEN_ASM_TYPE_IDX];
+                //////////                    v------------ ujanway   -> token
+                _slaveTokenMap.insert({uopIdent, tk});
             }
+
         }
+
     }
 
-    void MOP::createUop(std::vector<token>& uopDataTokens, const std::string& uopName){
-        assert(uopDataTokens.size() == _masterUopTokens.size());
-        _uops.emplace_back(
-            _master,
-            this,
-            uopDataTokens,
-            uopName,
-            _uops.size());
-    }
-
-
-    void MOP::flattenMop(){
-        _flattedInstr = genConString('0', _master->getInstrSize());
-        for(token& tk: _opcodeTokens){
-            int actualStrStart = _master->getInstrSize() - tk.sl.stop;
-            int actualStrStop  = _master->getInstrSize() - tk.sl.start;
-            assert((actualStrStop-actualStrStart) == tk.sl.getSize());
-            _flattedInstr.replace(
-                actualStrStart,
-                actualStrStop-actualStrStart,
-                tk.splitedValue[0]
-            );
+    MasterRule& MasterRule::addSlaveDec(const std::string& slaveRule,
+                                        const std::vector<MatchSlaveValInput>&
+                                        slaveMatch){
+        for(const auto& match : slaveMatch){
+            _slaveRule.emplace_back(slaveRule, match.matchVal, match.effUop);
         }
+        return *this;
     }
 
-
-    void MOP::doAllAsm(){
+    void MasterRule::doAsm(){
 
         bool effSrc[_master->getAmtSrcReg()] = {};
         bool effDes[_master->getAmtDesReg()] = {};
@@ -297,9 +341,6 @@ namespace kathryn{
             desRegAsm.doAsm();
             effDes[desRegAsm._regCnt] = true;
         }
-        for (UopAsm& uopAsm:  _uops){
-            uopAsm.doAsm();
-        }
         _immAsm.doAsm();
         if (_immAsm._regCnt != -1){
             effSrc[_immAsm._regCnt] = true;
@@ -310,19 +351,16 @@ namespace kathryn{
         unsetUnusedReg(effDes, _master->getAmtDesReg(), false);
 
 
-        for(int iterMopIdx = 0; iterMopIdx < _master->getAmtMop(); iterMopIdx++){
-            if (iterMopIdx == _mopIdx){
-                _master->getOp(_mopIdx).set();
-            }else{
-                _master->getOp(iterMopIdx).reset();
-            }
-        }
+        /**
+         *
+         *  TODO set mop and uop now
+         *
+         ***/
 
 
     }
 
-    void MOP::unsetUnusedReg(const bool* eff, int size, bool isSrc){
-
+    void MasterRule::unsetUnusedReg(const bool* eff, int size, bool isSrc){
         for (int regIdx = 0; regIdx < size; regIdx++){
             OPR_HW& regHw = isSrc ? _master->getSrcReg(regIdx) : _master->getDesReg(regIdx);
             if (!eff[regIdx]){
@@ -330,6 +368,4 @@ namespace kathryn{
             }
         }
     }
-
-
 }
