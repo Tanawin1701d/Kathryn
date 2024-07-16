@@ -40,8 +40,9 @@ add_executable(Kathryn
         ${SRC_GEN}
         ${SRC_TEST}
         ${SRC_UTIL}
-        #${SRC_EXAMPLE}
+        ${SRC_EXAMPLE}
         ${SRC_PARAM}
         ${SRC_LIB}
         ${SRC_MODEL_COMPILE}
+
 )

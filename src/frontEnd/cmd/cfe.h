@@ -11,7 +11,9 @@
 
 #include "util/termColor/termColor.h"
 
-// #include "example/riscv/simulation/RISCV_sim.h"
+#include "example/riscv/simulation/RISCV_sim.h"
+#include "example/riscv/simulation/RISCV_sim_sort.h"
+
 #include "paramReader.h"
 
 

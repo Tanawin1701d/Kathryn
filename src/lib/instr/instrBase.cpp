@@ -249,4 +249,44 @@ namespace kathryn{
         assert(opcodeMap.find(mopName) != opcodeMap.end());
         return getOp(opcodeMap[mopName]);
     }
+
+
+    InstrRepoDebugMsg InstrRepo::getGetDbgMsg(){
+
+        InstrRepoDebugMsg msg;
+
+        std::set<std::string> runningMop;
+
+        for(OP_HW* opHw: opcodes){
+            assert(opHw != nullptr);
+            if ((ull)opHw->isSet()){
+                runningMop.insert(opHw->_mopName);
+            }
+        }
+
+        if (runningMop.size() > 1){
+            msg.errorCause += "multiple Op exist: ";
+            for (auto mopName: runningMop){
+                msg.errorCause += mopName + " ";
+            }
+            return msg;
+        }else if (runningMop.size() == 0){
+            msg.mopName = "no Mop decoded";
+            return msg;
+        }
+        msg.mopName = *runningMop.begin();
+
+        std::vector<std::string> runningUop;
+
+        OP_HW* opHw = &getOp(*runningMop.begin());
+        for (const auto& [uopName, idx]: opHw->uopMapIdx){
+            if ((ull)opHw->_uopSets[idx]){
+                runningUop.push_back(uopName);
+                msg.uopName += " " + uopName;
+            }
+        }
+        return msg;
+    }
+
+
 }

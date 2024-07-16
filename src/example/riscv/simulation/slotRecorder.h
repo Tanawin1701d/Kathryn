@@ -47,7 +47,7 @@ namespace kathryn{
             virtual void writeMem        (){}
             void         writeReg        (const std::string& prefix,
                                           PIPE_STAGE2 pipeStage,
-                                          RegEle&    regEle);
+                                          OPR_HW&    regEle);
 
 
         };

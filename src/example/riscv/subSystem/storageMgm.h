@@ -47,10 +47,13 @@ namespace kathryn{
             }
 
 
-            void reqWriteReq(Operable& x, Operable &idx) {
-                assert(idx.getOperableSlice().getSize() == IDX_SIZE);
-                assert(x.getOperableSlice().getSize() == ROW_WIDTH);
-                _myMem[idx] <<= x;
+            void reqWriteReq(Operable& en, Operable& idx, Operable& data) {
+                assert(idx.getOperableSlice().getSize()  == IDX_SIZE);
+                assert(data.getOperableSlice().getSize() == ROW_WIDTH);
+                assert(en.getOperableSlice().getSize() == 1);
+                zif (en){
+                    _myMem[idx] <<= data;
+                }
             }
 
             void buildReadFlow() {

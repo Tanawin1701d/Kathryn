@@ -20,6 +20,12 @@ namespace kathryn{
 
     /***  the hardware stucture*/
 
+    struct InstrRepoDebugMsg{
+        std::string mopName;
+        std::string uopName;
+        std::string errorCause;
+    };
+
     struct OPR_HW{
         bool _isSrc = true;
         Reg& valid;
@@ -30,6 +36,13 @@ namespace kathryn{
         void reset();
         void setOnlyIndex(Operable* index); ///// the value must get manual from regfile
         void setImm(Operable* value); ///// the value will be added and valid
+
+        OPR_HW& operator <<=(const OPR_HW& rhs){
+            valid <<= rhs.valid;
+            data  <<= rhs.data;
+            idx   <<= rhs.idx;
+            return *this;
+        }
     };
     struct OP_HW{
         int _mopIdx = -1;
@@ -107,6 +120,10 @@ namespace kathryn{
         Operable* getInstrOpr() const{return _instr;}
         int     getInstrSize () const{return INSTR_WIDTH;}
         int     getOprSize()    const{return OPR_WIDTH;}
+
+        ////////// for debug msg
+        ///
+        InstrRepoDebugMsg getGetDbgMsg();
 
     };
 

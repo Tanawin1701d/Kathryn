@@ -20,10 +20,9 @@ namespace kathryn{
             mReg(pc, XLEN);
             mReg(nextPc, XLEN);
 
-            explicit UOp(Operable* instr):
-                        repo(XLEN, AMT_DEC_SRC_REG,
-                        AMT_DEC_DES_REG ,XLEN,instr)
-            {assert(instr != nullptr);}
+            explicit UOp(Operable& instr):
+                repo(XLEN, AMT_DEC_SRC_REG,
+                AMT_DEC_DES_REG ,XLEN,&instr){}
         };
 
         struct FETCH_DATA{

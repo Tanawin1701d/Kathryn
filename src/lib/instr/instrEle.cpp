@@ -16,12 +16,16 @@ namespace kathryn{
 
         for (int i = 1; i < srcOprs.size(); i++){
             switch(lop){
-            case BITWISE_AND:
+            case BITWISE_AND:{
                 result = &((*result) & (*srcOprs[i]));
                 break;
+            }
+            case BITWISE_OR:{
+                result = &((*result) | (*srcOprs[i]));
+                break;
+            }
             default: {assert(false);}
             }
-
         }
         return result;
     }
@@ -241,13 +245,25 @@ namespace kathryn{
         std::vector<Operable*> activateConditions;
         for (int matchIdx = 0; matchIdx < _matchRule._tokens.size(); matchIdx++){
             token matchRuleToken = _matchRule._tokens[matchIdx];
-            token instrSliceToken = slaveTokenMap[matchRuleToken.splitedValue[TOKEN_ASM_UOP_IDENT]];
+
             token matchValueToken = _matcher._tokens[matchIdx];
-            Operable* slicedInstr = instr->doSlice(instrSliceToken.sl);
+
+            Slice targetSl = {-1,-1};
+            if (matchRuleToken.splitedValue[TOKEN_ASM_UOP_IDENT][0] == TOKEN_ASM_TYPE_UOP_IDX){
+                token instrSliceToken = slaveTokenMap[matchRuleToken.splitedValue[TOKEN_ASM_UOP_IDENT]];
+                targetSl = instrSliceToken.sl;
+            }else if (matchRuleToken.splitedValue[TOKEN_ASM_UOP_IDENT][0] == TOKEN_ASM_TYPE_UOP_DIR_IDX){
+                targetSl = {std::stoi(matchRuleToken.splitedValue[TOKEN_ASM_UOP_DIRECT_START_IDX]),
+                                 std::stoi(matchRuleToken.splitedValue[TOKEN_ASM_UOP_DIRECT_STOP_IDX])};
+            }
+            assert(targetSl.checkValidSlice());
+            assert(targetSl.stop <= instr->getOperableSlice().getSize());
+
+
+            Operable* slicedInstr = instr->doSlice(targetSl);
 
             assert(matchRuleToken.sl == Slice());
             assert(matchValueToken.sl == Slice());
-            assert(instrSliceToken.sl.checkValidSlice());
 
             std::string rawMatchValue = matchValueToken.splitedValue[TOKEN_ASM_UOP_IDENT];
             ull         matchValue   = std::stoi(rawMatchValue, nullptr, 2);
@@ -389,7 +405,7 @@ namespace kathryn{
             if (activateCons.empty()){
                 opHw.setUop(uopName, &makeOprVal("setDummy",1,0));
             }else{
-                opHw.setUop(uopName, joinOpr(activateCons, BITWISE_AND));
+                opHw.setUop(uopName, joinOpr(activateCons, BITWISE_OR));
             }
         }
 

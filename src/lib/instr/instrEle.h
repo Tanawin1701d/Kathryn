@@ -23,10 +23,18 @@ namespace kathryn{
     /////// for decoder
     constexpr  int TOKEN_DEC_TYPE_IDX = 1; //// at splitedValue
     /////// for slave matching
+    ///   <ua>
     constexpr  int TOKEN_ASM_UOP_IDENT= 0;
-    constexpr  char TOKEN_ASM_TYPE_REG_IDX  = 'r'; //// register idx
-    constexpr  char TOKEN_ASM_TYPE_IMM_IDX  = 'i'; //// imm idx
-    constexpr  char TOKEN_ASM_TYPE_UOP_IDX  = 'u'; //// imm idx
+    ///   <s-25-28>
+    constexpr  int TOKEN_ASM_UOP_DIRECT_START_IDX = 1;
+    constexpr  int TOKEN_ASM_UOP_DIRECT_STOP_IDX  = 2;
+
+
+    constexpr  char TOKEN_ASM_TYPE_REG_IDX      = 'r'; //// register idx
+    constexpr  char TOKEN_ASM_TYPE_IMM_IDX      = 'i'; //// imm idx
+    constexpr  char TOKEN_ASM_TYPE_UOP_IDX      = 'u'; //// imm idx
+    constexpr  char TOKEN_ASM_TYPE_UOP_DIR_IDX  = 's'; //// imm idx
+
 
     Operable* joinOpr(std::vector<Operable*> srcOprs, LOGIC_OP lop);
 

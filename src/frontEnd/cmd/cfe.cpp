@@ -6,7 +6,6 @@
 #include <utility>
 #include "cfe.h"
 #include "test/autoSim/simMng.h"
-/// #include "example/riscv/simulation/RISCV_sim_sort.h"
 #include "test/autoGen/genMng.h"
 
 
@@ -30,18 +29,17 @@ namespace kathryn{
     }
 
     void test_riscv(PARAM& params){
-
-               ////riscv::RISCV_MNG riscTestMng;
-               ////riscTestMng.start(params);
-               ////std::cout << TC_GREEN <<  " finish rv sim " << TC_DEF << std::endl;
+        riscv::RISCV_MNG riscTestMng;
+        riscTestMng.start(params);
+        std::cout << TC_GREEN <<  " finish rv sim " << TC_DEF << std::endl;
         /////////////////delete x;
 
     }
 
     void test_riscv_sort(PARAM& params){
-        // riscv::RISCV_SORT_MNG riscTestMng;
-        // riscTestMng.start(params);
-        // std::cout << TC_GREEN <<  " finish rv [sort] sim " << TC_DEF << std::endl;
+        riscv::RISCV_SORT_MNG riscTestMng;
+        riscTestMng.start(params);
+        std::cout << TC_GREEN <<  " finish rv [sort] sim " << TC_DEF << std::endl;
     }
 
     void start(PARAM& params) {

@@ -85,7 +85,7 @@ namespace kathryn::riscv{
         void SlotRecorder::writeDecodeSlot(FlowBlockPipeBase* pipblock) {
             assert(pipblock != nullptr);
 
-            _slotWriter->addSlotVal(RISC_FETCH, "parStart" + std::to_string(ull(_riscv->decode.parCheck)));
+            //_slotWriter->addSlotVal(RISC_FETCH, "parStart" + std::to_string(ull(_riscv->decode.parCheck)));
 
             if (writeSlotIfStall(RISC_DECODE, pipblock)){return;}
 
@@ -131,47 +131,24 @@ namespace kathryn::riscv{
             if (writeSlotIfStall(RISC_EXECUTE, pipblock)){return;}
 
             UOp& decodedUop = _riscv->execute._decodedUop;
-
+            InstrRepo& instrRepo = decodedUop.repo;
             /** decode
              *
              * uop
              *
              * */
-            if (ull(decodedUop.opLs.isUopUse)){
-                int size = 8 * (1 << ull(decodedUop.opLs.size));
-                _slotWriter->addSlotVal(RISC_EXECUTE,
-                                      (ull(decodedUop.opLs.isMemLoad) ? "LOAD": "STORE") +
-                                      std::to_string(size));
-            }else if (ull(decodedUop.opAlu.isUopUse)){
-                _slotWriter->addSlotVal(RISC_EXECUTE,
-                                      ull(decodedUop.opAlu.isAdd)        ? "Add":
-                                      ull(decodedUop.opAlu.isSub)              ? "Sub":
-                                      ull(decodedUop.opAlu.isXor)              ? "Xor":
-                                      ull(decodedUop.opAlu.isOr)               ? "Or":
-                                      ull(decodedUop.opAlu.isAnd)              ? "And":
-                                      ull(decodedUop.opAlu.isCmpLessThanSign)  ? "CmpLessThanSign":
-                                      ull(decodedUop.opAlu.isCmpLessThanUSign) ? "CmpLessThanUSign":
-                                      ull(decodedUop.opAlu.isShiftLeftLogical) ? "ShiftLeftLogical":
-                                      ull(decodedUop.opAlu.isShiftRightLogical)? "ShiftRightLogical":
-                                      ull(decodedUop.opAlu.isShiftRightArith)  ? "ShiftRightArith":
-                                      "UNKNOW_alu"
-                );
 
-            }else if (ull(decodedUop.opCtrlFlow.isUopUse)){
+            InstrRepoDebugMsg decodedDebugMsg = instrRepo.getGetDbgMsg();
+
+            _slotWriter->addSlotVal(RISC_EXECUTE,
+                                    "mop " + decodedDebugMsg.mopName);
+            _slotWriter->addSlotVal(RISC_EXECUTE,
+                                    "uop" + decodedDebugMsg.uopName);
+            if (decodedDebugMsg.uopName.empty()){
                 _slotWriter->addSlotVal(RISC_EXECUTE,
-                                      ull(decodedUop.opCtrlFlow.isJal)  ? "JAL":
-                                      ull(decodedUop.opCtrlFlow.isJalR) ? "JALR":
-                                      ull(decodedUop.opCtrlFlow.isEq)   ? "JALEQ":
-                                      ull(decodedUop.opCtrlFlow.isNEq)  ? "BRA_NEQ":
-                                      ull(decodedUop.opCtrlFlow.isLt)   ? "BRA_LT":
-                                      ull(decodedUop.opCtrlFlow.isGe)   ? "BRA_GE":
-                                      "UNKNOW_BRANCH"
-                );
-            }else if (ull(decodedUop.opLdPc.isUopUse)){
-                _slotWriter->addSlotVal(RISC_EXECUTE,ull(decodedUop.opLdPc.needPc) ? "LDPC": "LDPC_PC");
-            }else{
-                _slotWriter->addSlotVal(RISC_EXECUTE, "UNKNOWN_UOP");
+                                        "error" + decodedDebugMsg.errorCause);
             }
+
 
             if (_riscv->execute.regAccessBlock
                 ->getSimEngine()->isBlockRunning()){
@@ -188,15 +165,14 @@ namespace kathryn::riscv{
 
             /** register write */
 
-            writeReg("r1", RISC_EXECUTE, decodedUop.regData[RS_1  ]);
-            writeReg("r2", RISC_EXECUTE, decodedUop.regData[RS_2  ]);
-            writeReg("r3", RISC_EXECUTE, decodedUop.regData[RS_3  ]);
-            writeReg("rd", RISC_EXECUTE, decodedUop.regData[RS_des]);
+            writeReg("r1", RISC_EXECUTE, instrRepo.getSrcReg(0));
+            writeReg("r2", RISC_EXECUTE, instrRepo.getSrcReg(1));
+            writeReg("r3", RISC_EXECUTE, instrRepo.getSrcReg(2));
+            writeReg("rd", RISC_EXECUTE, instrRepo.getDesReg(0));
             _slotWriter->addSlotVal(RISC_EXECUTE, "readFin " + std::to_string(ull(_riscv->execute.readFn)));
             _slotWriter->addSlotVal(RISC_EXECUTE, "readEn " + std::to_string(ull(_riscv->execute.readEn)));
             _slotWriter->addSlotVal(RISC_EXECUTE, "finLS " + std::to_string(ull(_riscv->execute.testExit)));
             _slotWriter->addSlotVal(RISC_EXECUTE, "readAddr " + std::to_string(ull(_riscv->execute.readAddr)));
-            _slotWriter->addSlotVal(RISC_EXECUTE, "m16 " + std::to_string(ull(_riscv->execute.m16)));
             _slotWriter->addSlotVal(RISC_EXECUTE, "read1020 " + std::to_string(ull(_riscv->memBlk._myMem.at(1020 >> 2))));
             _slotWriter->addSlotVal(RISC_EXECUTE, "read1024 " + std::to_string(ull(_riscv->memBlk._myMem.at(1024 >> 2))));
             _slotWriter->addSlotVal(RISC_EXECUTE, "read1028 " + std::to_string(ull(_riscv->memBlk._myMem.at(1028 >> 2))));
@@ -209,24 +185,24 @@ namespace kathryn::riscv{
             assert(pipblock != nullptr);
             if (writeSlotIfStall(RISC_WB, pipblock)){return;}
 
-            RegEle& wbReg = _riscv->wbData;
+            OPR_HW& wbReg = _riscv->wbData;
 
             writeReg("rwb", RISC_WB, wbReg);
             _slotWriter->addSlotVal
-            (RISC_WB, std::to_string(ull(wbReg.val)));
+            (RISC_WB, std::to_string(ull(wbReg.data)));
         }
 
 
 
         void SlotRecorder::writeReg(const std::string& prefix,
-                                             PIPE_STAGE2         pipeStage,
-                                             RegEle&            regEle){
+                                             PIPE_STAGE2  pipeStage,
+                                             OPR_HW&      regEle){
 
             _slotWriter->addSlotVal(pipeStage, prefix + " id " +
-                                                    std::to_string(ull(regEle.idx)) + " v" +
-                                                    std::to_string(ull(regEle.valid)) + " val " +
-                                                    std::to_string(ull(regEle.val))
-                                                    );
+                                    std::to_string(ull(regEle.idx)) + " v" +
+                                    std::to_string(ull(regEle.valid)) + " val " +
+                                    std::to_string(ull(regEle.data))
+                                    );
         }
 
 }
