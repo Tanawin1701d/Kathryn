@@ -60,6 +60,8 @@ namespace kathryn{
         ////// get value
         Reg& isSet();
         Reg& isUopSet(const std::string& uopName);
+
+        bool isThereUop(const std::string& uopName);
     };
     struct MOP_META{
         std::string mopName;
@@ -78,6 +80,7 @@ namespace kathryn{
               int _amtMopType    = -1;
         const int _amtSrcOpr     = -1;
         const int _amtDesOpr     = -1;
+        TOKEN_GRP _prefixCheck;
         std::vector<MasterRule> masterRules;
         std::vector<MOP_META>   mopMetas;
         ////// hardware component
@@ -102,6 +105,7 @@ namespace kathryn{
         //////// add rule
         MasterRule&   addDecRule(const std::string& workOnMopName,
                                  const std::string& rule);
+        void          addFixPrefix(const std::string& preFixRule);
         //////// hardware declaration
         void          declareHw(); ////// define when addMop is added that ok;
         //////// gen the logic
@@ -124,6 +128,8 @@ namespace kathryn{
         ////////// for debug msg
         ///
         InstrRepoDebugMsg getGetDbgMsg();
+        bool isThereOpDec(const std::string& opName);
+        bool isThereUopDec(std::string opName, const std::string& uopName);
 
     };
 

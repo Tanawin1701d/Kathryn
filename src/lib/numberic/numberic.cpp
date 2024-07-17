@@ -12,7 +12,8 @@ namespace kathryn{
         assert(sign.getOperableSlice().getSize() == 1);
 
         int amtToExtend = targetSize - value.getOperableSlice().getSize();
-        return gManInternalReadOnly( {&((sign & 1).extB(amtToExtend)), &value});
+                                /////   v---- lsb                  v----- msb
+        return gManInternalReadOnly( {&value, &((sign & 1).extB(amtToExtend))});
 
     }
 

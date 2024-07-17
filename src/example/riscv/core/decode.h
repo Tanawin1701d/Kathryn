@@ -21,7 +21,7 @@ namespace kathryn{
             explicit Decode(UOp& uop): _uop(uop){
 
                 InstrRepo& repo = _uop.repo;
-
+                repo.addFixPrefix("<11>");
                 repo.addMop({"ldst", {"lsb", "lsh", "lsw", "usign", "isload"}});
                 repo.addMop({"br", {"beq","bge","bne","bltu","blt","bgeu"}});
                 repo.addMop({"jal", {"needpc"}});
@@ -34,7 +34,7 @@ namespace kathryn{
                 /////////////////////////////////////////////////////////////////////////////////////
                 /// load
                 repo.addDecRule("ldst", "<12-i2-0-12><5-rs0><1-ufb><2-ufa><5-rd0><0000011>").
-                ad("<ufa>",{{"<000>", "lsb"}, {"<001>", "lsh"}, {"<010>", "lsw"}}).
+                ad("<ufa>",{{"<00>", "lsb"}, {"<01>", "lsh"}, {"<10>", "lsw"}}).
                 ad("<ufb>", {{"<1>", "usign"}}).
                 adm({"isload"});
                 /// store
@@ -63,7 +63,7 @@ namespace kathryn{
                 repo.addDecRule("op", "<12-i1-0-12><5-rs0><3-ua><5-rd0><0010011>").
                 ad("<ua>", {{"<000>","add" }, {"<010>","slt"},{"<011>","sltu"},
                             {"<100>","xor" }, {"<110>","or" },{"<111>","and"},
-                            {"<001>","sl"  }})
+                            {"<001>","sll"  }})
                 .ad("<s-30-31><ua>", {{"<1><101>", "sra"}, {"<0><101>","sr"}});
                 ////// 101 auipc/lui
                 repo.addDecRule("ldpc", "<20-i1-12-32><5-rd0><0010111>").adm({"needpc"});

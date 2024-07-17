@@ -23,7 +23,7 @@ namespace kathryn{
     }
 
     void OPR_HW::reset(){
-        valid <<= 1;
+        valid <<= 0;
         idx   <<= 0;
     }
 
@@ -80,6 +80,10 @@ namespace kathryn{
         assert(uopIdx < _uopSets.size());
         assert(_uopSets[uopIdx] != nullptr);
         return *_uopSets[uopIdx];
+    }
+
+    bool OP_HW::isThereUop(const std::string& uopName){
+        return uopMapIdx.find(uopName) != uopMapIdx.end();
     }
 
     ////////////////////
@@ -200,6 +204,10 @@ namespace kathryn{
         return *masterRules.rbegin();
     }
 
+    void InstrRepo::addFixPrefix(const std::string& prefixRule){
+        _prefixCheck = TOKEN_GRP(prefixRule, true);
+    }
+
     void InstrRepo::declareHw(){
         //////// declareOperand
         for (int i = 0; i < _amtSrcOpr; i++){
@@ -229,7 +237,24 @@ namespace kathryn{
         for (MasterRule& msr: masterRules){
             masterRulePool.push_back(&msr);
         }
-        genDecInternal(masterRulePool, INSTR_WIDTH-1);
+        if (_prefixCheck._tokens.empty()){
+            genDecInternal(masterRulePool, INSTR_WIDTH-1);
+        }else{
+            assert(_prefixCheck._tokens.size() == 1);
+            token& prefix = _prefixCheck._tokens[0];
+            ull checkVal = stoi(prefix.splitedValue[0], nullptr, 2);
+            zif ( (*_instr->doSlice(prefix.sl)) == checkVal){
+                genDecInternal(masterRulePool, INSTR_WIDTH-1);
+            }zelse{
+
+                for (OP_HW* opHw: opcodes){
+                    assert(opHw != nullptr);
+                    opHw->reset();
+                }
+
+
+            }
+        }
 
     }
 
@@ -280,13 +305,30 @@ namespace kathryn{
 
         OP_HW* opHw = &getOp(*runningMop.begin());
         for (const auto& [uopName, idx]: opHw->uopMapIdx){
-            if ((ull)opHw->_uopSets[idx]){
+            if ((ull)*opHw->_uopSets[idx]){
                 runningUop.push_back(uopName);
                 msg.uopName += " " + uopName;
+                /////std::cout << "uopName " << (ull)opHw->_uopSets[idx] << std::endl;
             }
         }
         return msg;
     }
+
+    bool InstrRepo::isThereOpDec(const std::string& opName){
+        return opcodeMap.find(opName) != opcodeMap.end();
+    }
+
+    bool InstrRepo::isThereUopDec(std::string opName, const std::string& uopName){
+        if (!isThereOpDec(opName)){ return false;}
+
+
+        for (const std::string& uopInGrp: mopMetas[opcodeMap[opName]].uopNames){
+            if (uopName == uopInGrp){ return true;}
+        }
+        return false;
+
+    }
+
 
 
 }

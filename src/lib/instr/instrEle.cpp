@@ -340,6 +340,9 @@ namespace kathryn{
                                         const std::vector<MatchSlaveValInput>&
                                         slaveMatch){
         for(const auto& match : slaveMatch){
+            ////// check uop first is match uop
+
+            assert(_master->isThereUopDec(_mopName, match.effUop));
             _slaveRules.emplace_back(slaveRule, match.matchVal, match.effUop);
         }
         return *this;

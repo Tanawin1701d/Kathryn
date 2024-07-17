@@ -33,6 +33,7 @@ namespace kathryn{
 
 
             for (;_curTestCaseIdx < _testTypes.size(); _curTestCaseIdx++){
+                std::cout << TC_BLUE << "[RISCV] test type is " << _testTypes[_curTestCaseIdx] << TC_DEF << std::endl;
                 //////////////  read assembly and assertVal
 
                 _vcdWriter-> renew(_prefixFolder + _testTypes[_curTestCaseIdx]+ "/owave.vcd");

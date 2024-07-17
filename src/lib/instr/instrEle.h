@@ -52,6 +52,7 @@ namespace kathryn{
     struct TOKEN_GRP{
         std::vector<token> _tokens;
         TOKEN_GRP(std::string rawValue, bool reqSizeDet);
+        TOKEN_GRP() = default;
         /////// it will determine size
     };
 

@@ -176,10 +176,10 @@ namespace kathryn{
                         }
                         zif(ldst.isUopSet("lsw")){
                             poolWriteData = rs2.data;
-                            finReadData   = rs2.data;
+                            finReadData   = _memArb.readOutput;
                         }
                         rdes.data <<= finReadData;
-                        _memArb.reqWriteReq(~ldst.isUopSet("isload"),readAddr, rs2.data);
+                        _memArb.reqWriteReq(~ldst.isUopSet("isload"),readAddr, poolWriteData);
                     }
                 }
             }
