@@ -44,5 +44,17 @@ add_executable(Kathryn
         ${SRC_PARAM}
         ${SRC_LIB}
         ${SRC_MODEL_COMPILE}
+        src/sim/modelSimEngine/hwComponent/wire/wireSim.cpp
+        src/sim/modelSimEngine/hwComponent/wire/wireSim.h
+        src/sim/modelSimEngine/hwComponent/value/valueSim.cpp
+        src/sim/modelSimEngine/hwComponent/value/valueSim.h
+        src/sim/modelSimEngine/hwComponent/register/registerSim.cpp
+        src/sim/modelSimEngine/hwComponent/register/registerSim.h
+        src/sim/modelSimEngine/hwComponent/expression/expressionSim.cpp
+        src/sim/modelSimEngine/hwComponent/expression/expressionSim.h
+        src/sim/modelSimEngine/hwComponent/memBlk/memAgentSim.cpp
+        src/sim/modelSimEngine/hwComponent/memBlk/memAgentSim.h
+        src/sim/modelSimEngine/hwComponent/expression/nestSim.cpp
+        src/sim/modelSimEngine/hwComponent/expression/nestSim.h
 
 )

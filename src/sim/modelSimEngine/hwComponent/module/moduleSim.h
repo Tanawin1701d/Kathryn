@@ -4,8 +4,9 @@
 
 #ifndef MODEL_SIMITF_HWCOMPONENT_MODULESIMENGINE_H
 #define MODEL_SIMITF_HWCOMPONENT_MODULESIMENGINE_H
-#include "model/simIntf/base/modelProxy.h"
-#include "model/simIntf/flowBlock/flowBaseSim.h"
+#include "sim/modelSimEngine/base/modelProxy.h"
+#include "sim/modelSimEngine/hwComponent/abstract/logicSimEngine.h"
+#include "sim/modelSimEngine/flowBlock/flowBaseSim.h"
 
 #include "util/fileWriter/fileWriterBase.h"
 

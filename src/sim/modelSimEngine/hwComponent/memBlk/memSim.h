@@ -6,7 +6,9 @@
 #define MODEL_SIMINTF_MEMSIMENGINE_H
 
 
-#include "model/simIntf/base/modelProxy.h"
+#include "sim/modelSimEngine/base/modelProxy.h"
+#include "sim/modelSimEngine/base/proxyEventBase.h"
+
 
 namespace kathryn{
 

@@ -74,20 +74,7 @@ namespace kathryn{
 
     };
 
-    class ValSimEngine: public LogicSimEngine{
-    protected:
-        Val* _master = nullptr;
-    public:
-        ValSimEngine(Val* master,VCD_SIG_TYPE sigType, ull rawValue);
 
-        /////////// slice value
-        std::string genSrcOpr                () override;
-        std::string genSlicedOprTo           (Slice srcSlice) override;
-        std::string genSlicedOprAndShift     (Slice desSlice, Slice srcSlice ) override;
-        /////////// create global variable
-        std::string createGlobalVariable() override;
-        std::string createOp() override{return "";}
-    };
 
 
 }

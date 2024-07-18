@@ -6,6 +6,7 @@
 
 #include "gen/proxyHwComp/memBlock/memGen.h"
 #include "model/controller/controller.h"
+#include "sim/modelSimEngine/hwComponent/memBlk/memSim.h"
 
 namespace kathryn{
 

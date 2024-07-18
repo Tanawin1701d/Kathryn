@@ -63,11 +63,7 @@ namespace kathryn{
 
     };
 
-    class WireSimEngine: public LogicSimEngine{
-        Wire* _master;
-    public:
-        WireSimEngine(Wire* master, VCD_SIG_TYPE sigType);
-    };
+
 
 }
 

@@ -5,6 +5,7 @@
 #include "wire.h"
 #include "model/hwComponent/expression/expression.h"
 #include "model/controller/controller.h"
+#include "sim/modelSimEngine/hwComponent/wire/wireSim.h"
 
 
 namespace kathryn{
@@ -147,20 +148,6 @@ namespace kathryn{
     /////// global input pool
 
 
-    /**
-     *
-     *   wire sim engine
-     *
-     ***/
-    WireSimEngine::WireSimEngine(Wire* master, VCD_SIG_TYPE sigType):
-    LogicSimEngine(
-        (Assignable*  ) master,
-        (Identifiable*) master,
-        VST_WIRE,
-        false,
-        0),
-    _master(master){
-        assert(_master != nullptr);
-    }
+
 
 }

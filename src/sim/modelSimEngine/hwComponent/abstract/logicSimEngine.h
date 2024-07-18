@@ -6,7 +6,8 @@
 #define KATHRYN_LOGICSIMENGINE_H
 
 #include "sim/simResWriter/simResWriter.h"
-#include "model/simIntf/base/modelProxy.h"
+#include "sim/modelSimEngine/base/modelProxy.h"
+#include "sim/modelSimEngine/base/proxyEventBase.h"
 #include "model/hwComponent/abstract/assignable.h"
 #include "model/hwComponent/abstract/Slice.h"
 

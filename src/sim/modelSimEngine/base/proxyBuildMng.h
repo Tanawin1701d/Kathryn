@@ -10,8 +10,14 @@
 
 #include "proxyEventBase.h"
 #include "model/hwComponent/module/module.h"
-#include "model/simIntf/hwComponent/moduleSimEngine.h"
+
+#include "sim/modelSimEngine/flowBlock/flowBaseSim.h"
+#include "sim/modelSimEngine/hwComponent/abstract/logicSimEngine.h"
+#include "sim/modelSimEngine/hwComponent/module/moduleSimEngine.h"
 #include "util/fileWriter/fileWriterBase.h"
+#include "modelProxy.h"
+
+
 
 
 

@@ -7,6 +7,7 @@
 #include "model/hwComponent/globalComponent/globalComponent.h"
 #include "model/hwComponent/expression/expression.h"
 #include "model/controller/controller.h"
+#include "sim/modelSimEngine/hwComponent/register/registerSim.h"
 
 
 namespace kathryn{
@@ -122,11 +123,6 @@ namespace kathryn{
      * Reg Logic Sim
      * */
 
-    RegSimEngine::RegSimEngine(Reg* master,
-                             VCD_SIG_TYPE sigType):
-            LogicSimEngine(master, master, sigType, true, 0),
-            _master(master){
-        assert(master != nullptr);
-    }
+
 
 }

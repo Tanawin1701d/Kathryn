@@ -67,11 +67,7 @@ namespace kathryn{
         Operable* getOprFromGlobIo()         override;
     };
 
-    class RegSimEngine: public LogicSimEngine{
-        Reg* _master = nullptr;
-    public:
-        RegSimEngine(Reg* master,VCD_SIG_TYPE sigType);
-    };
+
 
 
 }

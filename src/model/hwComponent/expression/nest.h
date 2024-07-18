@@ -118,25 +118,6 @@ namespace kathryn{
 
     };
 
-
-    class NestSimEngine: public LogicSimEngine{
-        nest* _master = nullptr;
-    public:
-        NestSimEngine(nest* master, VCD_SIG_TYPE sigType);
-        void        proxyBuildInit() override;
-        std::string createOp()       override;
-
-    };
-
-
-
-
-
-
-
-
-
-
 }
 
 #endif //KATHRYN_NEST_H

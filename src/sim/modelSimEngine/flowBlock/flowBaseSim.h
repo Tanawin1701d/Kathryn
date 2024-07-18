@@ -7,11 +7,8 @@
 #ifndef KATHRYN_SIMITF_FLOWBLOCK_FLOWBLOCKSIMENGINE_H
 #define KATHRYN_SIMITF_FLOWBLOCK_FLOWBLOCKSIMENGINE_H
 
-#include <model/simIntf/base/modelProxy.h>
-
+#include "sim/modelSimEngine/base/modelProxy.h"
 #include "sim/simResWriter/simResWriter.h"
-
-#include "model/simIntf/base/modelSimEngine.h"
 
 namespace kathryn{
 
