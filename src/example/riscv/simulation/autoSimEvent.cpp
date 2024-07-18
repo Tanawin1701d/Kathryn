@@ -57,17 +57,19 @@ namespace kathryn::riscv{
         //*/
         auto start = std::chrono::steady_clock::now();
 
-        while(_master->_core.regFile.at(testFinRegIdx).getVal() != 1){
+        ull& x = _master->_core.regFile.at(testFinRegIdx).getRefVal();
+        ProxySimEventBase* proxy = _master->getProxySimEvent();
+        while(x != 1){
             // if ( (_curCycleCal % (((ull)1) << 20)) == 0){
             //     std::cout << "now simulate pass " << _curCycleCal << std::endl;
             // }
-            _master->getProxySimEvent()->simStartCurCycle();
-            _master->getProxySimEvent()->curCycleCollectData();
+            proxy->simStartCurCycle();
+            proxy->curCycleCollectData();
             /** slot recorder*/
 
             //////
-            _master->getProxySimEvent()->simStartNextCycle();
-            _master->getProxySimEvent()->simExitCurCycle();
+            proxy->simStartNextCycle();
+            proxy->simExitCurCycle();
             _curCycleCal++;
         }
 
