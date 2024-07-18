@@ -23,6 +23,7 @@ namespace kathryn{
         void startVcdColInternal()   override;
         ///// start flowblock CollectData
         void startPerfCol()          override;
+        void startOptimizeSim()      override;
 
     };
 

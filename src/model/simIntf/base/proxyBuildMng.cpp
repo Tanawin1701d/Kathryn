@@ -110,6 +110,7 @@ namespace kathryn{
         startWriteVcdCol(false);
         startWritePerfCol();
         startWriteCreateFunc();
+        startWriteOptimize();
 
 
         proxyfileWriter->addData("\n\n\n\n\n\n}\n");
@@ -203,7 +204,7 @@ namespace kathryn{
         std::vector<ModelProxyBuild*> volatileEle    = moduleSimEngine->recruitForMainOpVolatile();
         std::vector<ModelProxyBuild*> nonVolatileEle = moduleSimEngine->recruitForMainOpNonVolatile();
 
-        proxyfileWriter->addData("void ProxySimEvent::startMainOpEleSim(){\n");
+        proxyfileWriter->addData("__attribute__((always_inline)) inline void startMainOpEleSimSkeleton(){\n");
 
         //////////////////////// create local variable
         for (ModelProxyBuild* mpb: volatileEle){
@@ -227,6 +228,10 @@ namespace kathryn{
 
         proxyfileWriter->addData("}\n");
 
+        proxyfileWriter->addData("void ProxySimEvent::startMainOpEleSim(){\n");
+        ///proxyfileWriter->addData("    startMainOpEleSimSkeleton();\n");
+        proxyfileWriter->addData("}\n");
+
     }
 
     void ProxyBuildMng::startFinalizeEleSim(){
@@ -243,7 +248,7 @@ namespace kathryn{
         ///data from memory if there is update from memory to register because
         /// memEleHolder will provide temporary data to register simulation
 
-        proxyfileWriter->addData("void ProxySimEvent::startFinalizeEleSim(){\n");
+        proxyfileWriter->addData("__attribute__((always_inline)) inline void startFinalizeEleSimSkeleton(){\n");
 
         std::vector<ModelProxyBuild*> mpbs = moduleSimEngine->recruitForFinalizeOp();
 
@@ -256,6 +261,12 @@ namespace kathryn{
             proxyfileWriter->addData(mpb->createOpEndCycle2());
         }
         proxyfileWriter->addData("}\n");
+
+        proxyfileWriter->addData("inline void ProxySimEvent::startFinalizeEleSim(){\n");
+        //proxyfileWriter->addData("      startFinalizeEleSimSkeleton();\n");
+        proxyfileWriter->addData("}\n");
+
+
 
     }
 
@@ -343,6 +354,30 @@ namespace kathryn{
 #endif
         "   return new ProxySimEvent();\n}\n\n"
         );
+    }
+
+    void ProxyBuildMng::startWriteOptimize(){
+
+        proxyfileWriter->addData("void startOptimizeSimSkeleton()");
+        proxyfileWriter->addData("{\n"
+                                 "WIRE1_SYS = 1;"
+                                 "  startMainOpEleSimSkeleton();\n"
+                                 "  startFinalizeEleSimSkeleton();\n"
+                                 "WIRE1_SYS = 0;"
+                                 "while(MEM_BLOCK25[31] != 1){\n"
+                                 "  startMainOpEleSimSkeleton();\n"
+                                 "  startFinalizeEleSimSkeleton();\n"
+                                 "}\n"
+                                 "}\n");
+
+
+        proxyfileWriter->addData("void ProxySimEvent::startOptimizeSim()");
+        proxyfileWriter->addData("{\n"
+                                 "startOptimizeSimSkeleton();"
+                                 "}\n"
+                                 "\n");
+
+
     }
 
 

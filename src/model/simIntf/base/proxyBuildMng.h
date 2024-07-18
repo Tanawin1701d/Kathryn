@@ -72,6 +72,8 @@ namespace kathryn{
         void startWritePerfCol();
         //////// void start write creator
         void startWriteCreateFunc();
+        //////// void start write for optimization
+        void startWriteOptimize();
 
 
         //////// compile file

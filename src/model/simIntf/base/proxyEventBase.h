@@ -78,6 +78,12 @@ namespace kathryn{
         ///// start flowblock CollectData
         virtual void startPerfCol()           = 0;
 
+        /////////////////////////////////////////
+        ////// start sim optimize ///////////////
+        /////////////////////////////////////////
+
+        virtual void startOptimizeSim()       = 0;
+
     };
 
 
