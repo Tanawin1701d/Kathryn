@@ -112,6 +112,7 @@ namespace kathryn{
         /// register callback
         startWriteRegisterCallback();
         /// vcd DecVar
+
         startWriteVcdDecVar(true);
         startWriteVcdDecVar(false);
         /// main op sim
