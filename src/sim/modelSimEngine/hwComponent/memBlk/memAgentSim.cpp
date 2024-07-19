@@ -6,6 +6,7 @@
 
 #include "model/hwComponent/memBlock/MemBlockAgent.h"
 #include "model/hwComponent/memBlock/MemBlock.h"
+#include "sim/modelSimEngine/hwComponent/abstract/genHelper.h"
 
 namespace kathryn{
 
@@ -34,35 +35,34 @@ namespace kathryn{
     }
 
 
-    std::string MemEleHolderSimEngine::createGlobalVariable(){
+    void MemEleHolderSimEngine::createGlobalVariable(CbBaseCxx& cb){
 
-        std::string valSize = std::to_string(_asb->getAssignSlice().getSize());
+        //std::string valSize = std::to_string(_asb->getAssignSlice().getSize());
         if(_master->isWriteMode()){
-            std::string indexerSize = std::to_string(_master->getExactIndexSize());
-            return "ull " + getVarName()    + " = 0;"
-            +      "ull " + getIsSetVar()   + " = 0;"
-            +      "ull " + getIndexerVar() + " = 0;";
+            ////std::string indexerSize = std::to_string(_master->getExactIndexSize());
+
+            cb.addSt("ull " + getVarName()    + " = 0", false);
+            cb.addSt("ull " + getIsSetVar()   + " = 0", false);
+            cb.addSt("ull " + getIndexerVar() + " = 0", true);
         }
-        return "";
     }
 
-    std::string MemEleHolderSimEngine::createLocalVariable(){
+    void MemEleHolderSimEngine::createLocalVariable(CbBaseCxx& cb){
         std::string valSize = std::to_string(_asb->getAssignSlice().getSize());
         if(_master->isReadMode()){
-            return "ull " + getVarName() + " = " + std::to_string(_initVal) + "; \n";
+            cb.addSt("ull " + getVarName() + " = " + std::to_string(_initVal));
         }
-        return "";
     }
 
 
-    std::string MemEleHolderSimEngine::createOp(){
+    void MemEleHolderSimEngine::createOp(CbBaseCxx& cb){
         _asb->sortUpEventByPriority();
         if (_master->isWriteMode()){ ///// write mode
-            return createOpWriteMode();
+            return createOpWriteMode(cb);
         }
 
         if (_master->isReadMode()){
-            return createOpReadMode();
+            return createOpReadMode(cb);
         }
 
         assert(false);
@@ -79,66 +79,49 @@ namespace kathryn{
     }
 
 
-    std::string MemEleHolderSimEngine::createOpReadMode(){
+    void MemEleHolderSimEngine::createOpReadMode(CbBaseCxx& cb){
         ///
         /////// read mode
         ///
-        std::string retStr = "      { ///////" + _ident->getGlobalName() + "  readMode\n";
+        cb.addCm(_ident->getGlobalName() + "  readMode");
 
-        retStr += "     ";
-        retStr += getVarName() + " = ";
-        retStr += _master->_master->getSimEngine()->getVarName();
-        retStr += "["+ getSlicedSrcOprFromOpr(_master->_indexer) + "];\n";
-        retStr += "     }\n";
-        return retStr;
+        cb.addSt( getVarName() + " = " +
+         _master->_master->getSimEngine()->getVarName() +
+         "["+ getSlicedSrcOprFromOpr(_master->_indexer) + "]");
+
     }
 
-    std::string MemEleHolderSimEngine::createOpWriteMode(){
+    void MemEleHolderSimEngine::createOpWriteMode(CbBaseCxx& cb){
 
+        ////////////// calculate aux Val
         std::string auxAssVal;
-        auxAssVal += "         ";
         auxAssVal += getIsSetVar() + " = 1;\n";
         ////////////// assign index value
-        auxAssVal += "         ";
         auxAssVal += getIndexerVar() + " = " +
                   getSlicedSrcOprFromOpr(_master->_indexer);
-        auxAssVal += ";\n";
 
         ///////// build string
-        std::string retStr = "      { /////" + _ident->getGlobalName() + "\n";
+        cb.addCm(_ident->getGlobalName());
         assert(_asb->checkDesIsFullyAssignAndEqual());
-        retStr += genOpWithChainCondition(auxAssVal);
-        retStr += "     }\n";
-        return retStr;
+        createOpWithSoleCondition(cb);
     }
 
 
-    std::string MemEleHolderSimEngine::createOpEndCycle(){
+    void MemEleHolderSimEngine::createOpEndCycle(CbBaseCxx& cb){
 
         if (_master->isWriteMode()){
-            std::string retStr= "      { /////" + _ident->getGlobalName() + "\n";
+            cb.addCm(_ident->getGlobalName());
 
-
-            retStr += "          if ( " + getIsSetVar() + " ){\n";
+            CbIfCxx  ifBlock& = cb.addIf(getIsSetVar());
 
             ///////////// add value
-            retStr += "         ";
-            retStr += _master->_master->getSimEngine()->getVarName();
-            retStr += "[" + getIndexerVar() + "] = " + getVarName() + ";\n";
+            ifBlock.addSt(
+            _master->_master->getSimEngine()->getVarName() +
+            "[" + getIndexerVar() + "] = " + getVarName()
+            );
             ///////////// reset is set
-            retStr += "         ";
-            retStr += getIsSetVar();
-            retStr += " = 0;\n";
-
-            retStr += "         }\n";
-            retStr += "     }\n";
-
-            return retStr;
+            ifBlock.addSt(getIsSetVar() + " = 0");
         }
-
-
-
-        return "";
 
     }
 

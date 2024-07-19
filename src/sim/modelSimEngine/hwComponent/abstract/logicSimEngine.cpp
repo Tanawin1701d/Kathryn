@@ -3,6 +3,8 @@
 //
 
 #include "logicSimEngine.h"
+
+#include "genHelper.h"
 #include "util/numberic/numConvert.h"
 #include "sim/controller/simController.h"
 
@@ -22,153 +24,45 @@ namespace kathryn{
         ///////// fill asb  to system to support topology sort
     }
 
-    ull LogicSimEngine::createMask(Slice maskSlice){
-        assert((maskSlice.checkValidSlice()) && (maskSlice.stop <= bitSizeOfUll));
-        assert(maskSlice.start < bitSizeOfUll);
-        int size = maskSlice.getSize();
-        return (size == bitSizeOfUll) ? -1 : ((((ull)1) << size) - 1);
-    }
-
-
-    std::string LogicSimEngine::getSrcOprFromOpr(Operable* opr){
-        assert(opr != nullptr);
-        return opr->getExactOperable().
-                    getLogicSimEngineFromOpr()->genSrcOpr();
-    }
-
-    std::string LogicSimEngine::getSlicedSrcOprFromOpr(Operable* opr){
-        assert(opr != nullptr);
-        LogicSimEngine* simEngine = opr->getLogicSimEngineFromOpr();
-        Slice neededSlice = opr->getOperableSlice();
-        ////// slice to operabe slice
-        return simEngine->genSlicedOprTo(neededSlice);
-    }
-
-    std::string getSlicedAndShiftSrcOprFromOpr(Operable* opr, Slice desSlice){
-        assert(opr != nullptr);
-        LogicSimEngine* simEngine = opr->getLogicSimEngineFromOpr();
-        Slice neededSlice = opr->getOperableSlice();
-        ////// slice to operabe slice
-        return simEngine->genSlicedOprAndShift(desSlice, neededSlice);
-    }
-
-
-    std::string LogicSimEngine::genOpWithSoleCondition(const std::string& auxAssStr){
-        std::string retStr;
+    void LogicSimEngine::createOpWithSoleCondition(CbBaseCxx& cb,
+                                                   const std::string& auxAssStr){
         for (UpdateEvent* updateEvent : _asb->getUpdateMeta()){
             ////
             ///check integrity
             ///
             assert(updateEvent->srcUpdateValue->getOperableSlice().getSize() >=
                 updateEvent->desUpdateSlice.getSize());
-
-            retStr += "         if ( ";
+            std::string condStr;
+            std::string assStr;
             bool isConOccur = false;
-
+            ////  gather activate condition
             if (updateEvent->srcUpdateState != nullptr){
-                retStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateState);
+                condStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateState);
                 isConOccur = true;
             }
-
             if (updateEvent->srcUpdateCondition != nullptr){
                 if (isConOccur){
-                    retStr += " && ";
+                    condStr += " && ";
                 }
-                retStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateCondition);
+                condStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateCondition);
                 isConOccur = true;
             }
+            assStr = genAssignAEqB(updateEvent->desUpdateSlice,
+                                                _isTempReq,
+                                                updateEvent->srcUpdateValue);
 
-            if (!isConOccur){
-                retStr += "true";
-            }
 
-            retStr += "){\n         ";
-            retStr += "         ";
-            retStr += genAssignAEqB(updateEvent->desUpdateSlice, _isTempReq, updateEvent->srcUpdateValue) + "\n";
-            if (!auxAssStr.empty()){
-                retStr += auxAssStr + "\n";
+            if (isConOccur){
+                auto ifBlock = cb.addIf(condStr);
+                     ifBlock.addSt(assStr);
+                     if (!auxAssStr.empty()){
+                         ifBlock.addSt(auxAssStr);
+                     }
+            }else{
+                cb.addSt(assStr);
+                cb.addSt(auxAssStr);
             }
-            retStr += "         }\n";
         }
-        return retStr;
-    }
-
-    std::string LogicSimEngine::genOpWithChainCondition(const std::string& auxAssStr){
-        bool secondTime = false;
-        std::string retStr;
-
-        int idx = 0;
-        int maxUpdateEvent = _asb->getUpdateMeta().size();
-        std::vector<UpdateEvent*> reversedUpdateEvents = _asb->getUpdateMeta();
-        std::reverse(reversedUpdateEvents.begin(), reversedUpdateEvents.end());
-
-        while (idx < maxUpdateEvent){
-            std::vector<UpdateEvent*> updateEventGrp;
-            updateEventGrp.push_back(reversedUpdateEvents[idx]);
-            for (idx = idx + 1; idx < maxUpdateEvent; idx++){
-                UpdateEvent& curUpdateEvent = *reversedUpdateEvents[idx];
-                if (curUpdateEvent.priority == updateEventGrp[0]->priority){
-                    if (curUpdateEvent.srcUpdateValue->isConstOpr() &&
-                        updateEventGrp[0]->srcUpdateValue->isConstOpr() &&
-                        (curUpdateEvent.srcUpdateValue->getConstOpr() ==
-                            updateEventGrp[0]->srcUpdateValue->getConstOpr())
-                    ){
-                        updateEventGrp.push_back(reversedUpdateEvents[idx]);
-                        continue; ///// grp updateEvent for const value
-                    }
-                    if (curUpdateEvent.srcUpdateValue ==
-                        updateEventGrp[0]->srcUpdateValue){
-                        updateEventGrp.push_back(reversedUpdateEvents[idx]);
-                        continue; ///// grp updateEvent for other value
-                    }
-                }
-                break;
-            }
-
-            assert(updateEventGrp[0]->srcUpdateValue->getOperableSlice().getSize() >=
-                updateEventGrp[0]->desUpdateSlice.getSize());
-
-
-            retStr += (secondTime ? "         else if ( " : "         if ( ");
-
-
-            for (UpdateEvent* updateEvent : updateEventGrp){
-                retStr += "(";
-                bool isSubConOccur = false;
-                if (updateEvent->srcUpdateState != nullptr){
-                    retStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateState);
-                    isSubConOccur = true;
-                }
-
-                if (updateEvent->srcUpdateCondition != nullptr){
-                    if (isSubConOccur){
-                        retStr += " && ";
-                    }
-                    retStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateCondition);
-                    isSubConOccur = true;
-                }
-
-                if (!isSubConOccur){
-                    retStr += "true";
-                }
-                retStr += ")\n          ";
-                if ((updateEvent) != (*updateEventGrp.rbegin())){
-                    retStr += " || ";
-                }
-            }
-
-            retStr += "){\n         ";
-            retStr += "         ";
-            retStr += genAssignAEqB(updateEventGrp[0]->desUpdateSlice, _isTempReq,
-                                    updateEventGrp[0]->srcUpdateValue) + "\n";
-            if (!auxAssStr.empty()){
-                retStr += auxAssStr + "\n";
-            }
-            retStr += "         }\n";
-            secondTime = true;
-        }
-
-        return retStr;
     }
 
     std::string LogicSimEngine::genAssignAEqB(Slice desSlice, bool isDesTemp,
@@ -176,22 +70,21 @@ namespace kathryn{
         assert(srcOpr != nullptr);
         assert(desSlice.stop <= _asb->getAssignSlice().stop);
         ////// src operand
-        Slice srcSlice = srcOpr->getOperableSlice();
-        LogicSimEngine*
-            srcLogicSimEngine = srcOpr->getExactOperable().getLogicSimEngineFromOpr();
-        Slice baseSrcSlice = srcOpr->getExactOperable().getOperableSlice();
-        std::string srcVarName = getSrcOprFromOpr(srcOpr);
+        Slice           srcSlice          = srcOpr->getOperableSlice();
+        LogicSimEngine* srcLogicSimEngine = srcOpr->getExactOperable().getLogicSimEngineFromOpr();
+        Slice           baseSrcSlice      = srcOpr->getExactOperable().getOperableSlice();
+        std::string     srcVarName        = getSrcOprFromOpr(srcOpr);
 
         assert(srcSlice.getSize() >= desSlice.getSize());
         ////// des operand
-        Slice baseDesSlice = _asb->getAssignSlice();
-        std::string desVarName = isDesTemp ? getTempVarName() : getVarName();
+        Slice       baseDesSlice = _asb->getAssignSlice();
+        std::string desVarName   = isDesTemp ? getTempVarName() : getVarName();
 
         if ((desSlice == baseDesSlice) &&
             (srcSlice == baseSrcSlice) &&
             (srcSlice == desSlice)){
             ///////// optimize
-            return desVarName + " = " + srcVarName + ";";
+            return desVarName + " = " + srcVarName;
         }
 
 
@@ -279,40 +172,32 @@ namespace kathryn{
         return getVarName() + TEMP_VAR_SUFFIX;
     }
 
-    std::string LogicSimEngine::createGlobalVariable(){
+    void LogicSimEngine::createGlobalVariable(CbBaseCxx& cb){
         std::string valSize = std::to_string(_asb->getAssignSlice().getSize());
 
-        return "ull " + getVarName() + " = " + std::to_string(_initVal) + "; "
-            + (_isTempReq
-                   ? "ull " + getVarName() + TEMP_VAR_SUFFIX + " = " + std::to_string(_initVal) + ";"
-                   : "") + "\n";
+        ////////"; will be auto add"
+        cb.addSt("ull " + getVarName() + " = " + std::to_string(_initVal), !_isTempReq);
+        if (_isTempReq){
+            cb.addSt("ull " + getTempVarName() + " = " + std::to_string(_initVal));
+        }
     }
 
 
-    std::string LogicSimEngine::createOp(){
+    void LogicSimEngine::createOp(CbBaseCxx& cb){
         ///////// build string
-        std::string retStr = "      { /////" + _ident->getGlobalName() + "\n";
+        cb.addCm(_ident->getGlobalName());
         _asb->sortUpEventByPriority();
         if (_isTempReq){
-            retStr += "         " + getVarName() + TEMP_VAR_SUFFIX + " = " + getVarName() + ";\n";
+            cb.addSt(getTempVarName() + " = " + getVarName());
         }
-        /////////// we build from low priority to high priority
-        if (_asb->checkDesIsFullyAssignAndEqual()){
-            retStr += genOpWithChainCondition();
-        }
-        else{
-            retStr += genOpWithSoleCondition();
-        }
-
-        retStr += "     }\n";
-        return retStr;
+        createOpWithSoleCondition(cb);
+        // if (_asb->checkDesIsFullyAssignAndEqual()){
     }
 
-    std::string LogicSimEngine::createOpEndCycle2(){
+    void LogicSimEngine::createOpEndCycle2(CbBaseCxx& cb){
         if (_isTempReq){
-            return "    " + getVarName() + " = " + getTempVarName() + ";\n";
+             cb.addSt(getVarName() + " = " + getTempVarName());
         }
-        return "";
     }
 
     ///////////////////// proxyRetInit
@@ -329,3 +214,110 @@ namespace kathryn{
         return proxyRep;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// std::string genOpWithChainCondition          (const std::string& auxAssStr = "");
+// std::string LogicSimEngine::genOpWithChainCondition(const std::string& auxAssStr){
+//         bool secondTime = false;
+//         std::string retStr;
+//
+//         int idx = 0;
+//         int maxUpdateEvent = _asb->getUpdateMeta().size();
+//         std::vector<UpdateEvent*> reversedUpdateEvents = _asb->getUpdateMeta();
+//         std::reverse(reversedUpdateEvents.begin(), reversedUpdateEvents.end());
+//
+//         while (idx < maxUpdateEvent){
+//             std::vector<UpdateEvent*> updateEventGrp;
+//             updateEventGrp.push_back(reversedUpdateEvents[idx]);
+//             for (idx = idx + 1; idx < maxUpdateEvent; idx++){
+//                 UpdateEvent& curUpdateEvent = *reversedUpdateEvents[idx];
+//                 if (curUpdateEvent.priority == updateEventGrp[0]->priority){
+//                     if (curUpdateEvent.srcUpdateValue->isConstOpr() &&
+//                         updateEventGrp[0]->srcUpdateValue->isConstOpr() &&
+//                         (curUpdateEvent.srcUpdateValue->getConstOpr() ==
+//                             updateEventGrp[0]->srcUpdateValue->getConstOpr())
+//                     ){
+//                         updateEventGrp.push_back(reversedUpdateEvents[idx]);
+//                         continue; ///// grp updateEvent for const value
+//                     }
+//                     if (curUpdateEvent.srcUpdateValue ==
+//                         updateEventGrp[0]->srcUpdateValue){
+//                         updateEventGrp.push_back(reversedUpdateEvents[idx]);
+//                         continue; ///// grp updateEvent for other value
+//                     }
+//                 }
+//                 break;
+//             }
+//
+//             assert(updateEventGrp[0]->srcUpdateValue->getOperableSlice().getSize() >=
+//                 updateEventGrp[0]->desUpdateSlice.getSize());
+//
+//
+//             retStr += (secondTime ? "         else if ( " : "         if ( ");
+//
+//
+//             for (UpdateEvent* updateEvent : updateEventGrp){
+//                 retStr += "(";
+//                 bool isSubConOccur = false;
+//                 if (updateEvent->srcUpdateState != nullptr){
+//                     retStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateState);
+//                     isSubConOccur = true;
+//                 }
+//
+//                 if (updateEvent->srcUpdateCondition != nullptr){
+//                     if (isSubConOccur){
+//                         retStr += " && ";
+//                     }
+//                     retStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateCondition);
+//                     isSubConOccur = true;
+//                 }
+//
+//                 if (!isSubConOccur){
+//                     retStr += "true";
+//                 }
+//                 retStr += ")\n          ";
+//                 if ((updateEvent) != (*updateEventGrp.rbegin())){
+//                     retStr += " || ";
+//                 }
+//             }
+//
+//             retStr += "){\n         ";
+//             retStr += "         ";
+//             retStr += genAssignAEqB(updateEventGrp[0]->desUpdateSlice, _isTempReq,
+//                                     updateEventGrp[0]->srcUpdateValue) + "\n";
+//             if (!auxAssStr.empty()){
+//                 retStr += auxAssStr + "\n";
+//             }
+//             retStr += "         }\n";
+//             secondTime = true;
+//         }
+//
+//         return retStr;
+//     }

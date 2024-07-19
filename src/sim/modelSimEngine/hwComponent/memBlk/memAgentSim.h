@@ -16,22 +16,22 @@ namespace kathryn{
         const std::string INDEXER_SUFFIX = "_indexer";
         MemBlockEleHolder* _master = nullptr;
     public:
-        MemEleHolderSimEngine(MemBlockEleHolder* master);
+        explicit MemEleHolderSimEngine(MemBlockEleHolder* master);
 
         void        proxyBuildInit()    override;
 
-        std::string createGlobalVariable() override;
-        std::string createLocalVariable () override;
+        void createGlobalVariable(CbBaseCxx& cb) override;
+        void createLocalVariable (CbBaseCxx& cb) override;
 
-        std::string createOp()             override;
-        std::string createOpEndCycle()     override;
-        std::string createOpEndCycle2()    override{return "";};
+        void createOp         (CbBaseCxx& cb) override;
+        void createOpEndCycle (CbBaseCxx& cb) override;
+        void createOpEndCycle2(CbBaseCxx& cb) override{}
 
         std::string getIsSetVar();
         std::string getIndexerVar();
 
-        std::string createOpReadMode();
-        std::string createOpWriteMode();
+        void createOpReadMode (CbBaseCxx& cb);
+        void createOpWriteMode(CbBaseCxx& cb);
 
     };
 

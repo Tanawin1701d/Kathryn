@@ -28,7 +28,7 @@
 #include "model/flowBlock/abstract/nodes/startNode.h"
 
 #include "model/debugger/modelDebugger.h"
-#include "sim/modelSimEngine/hwComponent/module/moduleSimEngine.h"
+#include "sim/modelSimEngine/hwComponent/module/moduleSim.h"
 #include "util/logger/logger.h"
 
 

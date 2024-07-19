@@ -21,10 +21,9 @@ namespace kathryn{
 
     ull MemSimEngine::getVarId(){ return _master->getGlobalId(); }
 
-    std::string MemSimEngine::createGlobalVariable(){
-        return "ull "
-            + getVarName() +
-            "[" + std::to_string(_master->getDepthSize()) + "];\n";
+    void MemSimEngine::createGlobalVariable(CbBaseCxx& cb){
+        std::string sizeStr = std::to_string(_master->getDepthSize());
+        cb.addSt("ull "+ getVarName() + "[" + sizeStr + "]");
     }
 
     void MemSimEngine::proxyRetInit(ProxySimEventBase* modelSimEvent){

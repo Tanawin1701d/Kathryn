@@ -4,6 +4,7 @@
 
 #include "valueSim.h"
 #include "model/hwComponent/value/value.h"
+#include "sim/modelSimEngine/hwComponent/abstract/genHelper.h"
 
 
 namespace kathryn{
@@ -39,10 +40,8 @@ namespace kathryn{
         return std::to_string(((_initVal >> srcSlice.start) & mask) << desSlice.start);
     }
 
-    std::string
-    ValSimEngine::createGlobalVariable(){
-        return "";
-    }
+    void
+    ValSimEngine::createGlobalVariable(CbBaseCxx& cb){}
 
 
 }

@@ -21,8 +21,8 @@ namespace kathryn{
         std::string genSlicedOprTo           (Slice srcSlice) override;
         std::string genSlicedOprAndShift     (Slice desSlice, Slice srcSlice ) override;
         /////////// create global variable
-        std::string createGlobalVariable() override;
-        std::string createOp() override{return "";}
+        void        createGlobalVariable(CbBaseCxx& cb) override;
+        void        createOp(CbBaseCxx& cb) override{}
     };
 
 }

@@ -13,7 +13,7 @@
 
 #include "sim/modelSimEngine/flowBlock/flowBaseSim.h"
 #include "sim/modelSimEngine/hwComponent/abstract/logicSimEngine.h"
-#include "sim/modelSimEngine/hwComponent/module/moduleSimEngine.h"
+#include "sim/modelSimEngine/hwComponent/module/moduleSim.h"
 #include "util/fileWriter/fileWriterBase.h"
 #include "modelProxy.h"
 
@@ -68,18 +68,22 @@ namespace kathryn{
         void startWriteRegisterCallback();
         ////////// for wire expression memElehodler*   etc....
         void startMainOpEleSim();
+        void startMainOpEleSimSke();
         ////////// for register
         void startFinalizeEleSim();
+        void startFinalizeEleSimSke();
         ///////// for create vcd Decvar
         void startWriteVcdDecVar(bool isUser); //// else if internal
         ///////// for create vcd Decvar
         void startWriteVcdCol(bool isUser);
+        void startWriteVcdColSke(bool isUser);
         ///////// void start write perf col
         void startWritePerfCol();
+        void startWritePerfColSke();
         //////// void start write creator
         void startWriteCreateFunc();
         //////// void start write for optimization
-        void startWriteOptimize();
+        void startWriteMainSim();
 
 
         //////// compile file

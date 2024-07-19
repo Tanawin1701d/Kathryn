@@ -56,5 +56,11 @@ add_executable(Kathryn
         src/sim/modelSimEngine/hwComponent/memBlk/memAgentSim.h
         src/sim/modelSimEngine/hwComponent/expression/nestSim.cpp
         src/sim/modelSimEngine/hwComponent/expression/nestSim.h
+        src/util/fileWriter/codeWriter/cppWriter.cpp
+        src/util/fileWriter/codeWriter/cppWriter.h
+        src/util/fileWriter/codeWriter/codeBaseWriter.cpp
+        src/util/fileWriter/codeWriter/codeBaseWriter.h
+        src/sim/modelSimEngine/hwComponent/abstract/genHelper.cpp
+        src/sim/modelSimEngine/hwComponent/abstract/genHelper.h
 
 )

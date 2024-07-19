@@ -32,13 +32,13 @@ namespace kathryn{
         /** create zone for perf element*/
         std::vector<FlowBaseSimEngine*> recruitPerf             ();
 
-        void recruitFromRegable (std::vector<ModelProxyBuild*>& result);
+        ////// stateFull u stateLess u memBlk u memElh(R) u memElh(W)
+        void recruitStateFullEle(std::vector<ModelProxyBuild*>& result);
+        void recruitStateLessEle(std::vector<ModelProxyBuild*>& result);
+        void recruitMemBlk      (std::vector<ModelProxyBuild*>& result);
+        void recruitMemElh      (std::vector<ModelProxyBuild*>& result, bool isReadMode);
+
         void recruitFromSpReg   (std::vector<ModelProxyBuild*>& result);
-        void recruitFromWireable(std::vector<ModelProxyBuild*>& result); /// memblock is not include
-        void recruitFromMemBlk  (std::vector<ModelProxyBuild*>& result);
-        void recruitFromMemElh  (std::vector<ModelProxyBuild*>& result, bool isReadMode);
-
-
 
 
 

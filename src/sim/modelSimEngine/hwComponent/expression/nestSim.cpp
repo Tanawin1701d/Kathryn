@@ -28,12 +28,11 @@ namespace kathryn{
     }
 
 
-    std::string NestSimEngine::createOp(){
+    void NestSimEngine::createOp(CbBaseCxx& cb){
         ///////// build string
-        std::string retStr = "      { /////" + _ident->getGlobalName() + "\n";
+        cb.addCm(_ident->getGlobalName());
 
         /////////// we build from low priority to high priority
-
         int startIdx = 0;
 
         for (NestMeta& meta: _master->_nestList){
@@ -45,14 +44,10 @@ namespace kathryn{
                 assert(asb != nullptr);
             }
             int curSize = opr->getOperableSlice().getSize();
-
-            retStr   += "     ";
-            retStr   += genAssignAEqB({startIdx, startIdx + curSize}, false, opr) + "\n";
+            cb.addSt(genAssignAEqB({startIdx, startIdx + curSize}, false, opr));
             startIdx += curSize;
         }
-        retStr += "     }\n";
         assert(startIdx == _asb->getAssignSlice().getSize());
-        return retStr;
     }
 
 }

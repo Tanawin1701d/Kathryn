@@ -14,6 +14,8 @@
 #include "sim/simResWriter/simResWriter.h"
 #include "model/abstract/identBase/identBase.h"
 #include "sim/logicRep/valRep.h"
+#include "util/fileWriter/codeWriter/cppWriter.h"
+
 
 namespace kathryn{
 
@@ -36,12 +38,12 @@ namespace kathryn{
         std::vector<ModelProxyBuild*>&   getDep() {return dep;}
 
         //// c++ create section
-        virtual std::string createGlobalVariable() = 0;
-        virtual std::string createLocalVariable()  = 0;
-        virtual std::string createOp()             = 0; //// compute the data but
-        virtual std::string createOpEndCycle()     = 0; //// have more priority
-        virtual std::string createOpEndCycle2()    = 0; //// have less priority
-        virtual bool        isUserDeclare()        = 0;
+        virtual void createGlobalVariable (CbBaseCxx& cb) = 0;
+        virtual void createLocalVariable  (CbBaseCxx& cb) = 0;
+        virtual void createOp             (CbBaseCxx& cb) = 0; //// compute the data but
+        virtual void createOpEndCycle     (CbBaseCxx& cb) = 0; //// have more priority
+        virtual void createOpEndCycle2    (CbBaseCxx& cb) = 0; //// have less priority
+        virtual bool isUserDeclare()        = 0;
 
 
     };

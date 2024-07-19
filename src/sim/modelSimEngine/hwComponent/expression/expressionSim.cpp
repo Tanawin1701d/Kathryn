@@ -4,6 +4,7 @@
 
 #include "expressionSim.h"
 #include "model/hwComponent/expression/expression.h"
+#include "sim/modelSimEngine/hwComponent/abstract/genHelper.h"
 
 
 namespace kathryn{
@@ -32,15 +33,16 @@ namespace kathryn{
 
     }
 
-    std::string expressionSimEngine::createPreCompile(){
+    void expressionSimEngine::createLocalVariable(CbBaseCxx& cb){
+        cb.addSt("ull " + getVarName());
+    }
 
-        if (_isCached){
-            return _cachedPrecompile;
-        }
-        _isCached = true;
+    void expressionSimEngine::createOp(CbBaseCxx& cb){
 
-        std::string retStr = "(";
 
+        std::string retStr;
+
+        retStr += getVarName() + " = (";
 
         assert(_asb   ->getAssignSlice().getSize());
         assert(_master->_a->getOperableSlice().checkValidSlice());
@@ -55,9 +57,9 @@ namespace kathryn{
             bSize    = _master->_b->getOperableSlice().getSize();
         }
 
-
         int desSize = _master->getSlice().getSize();
 
+        //////// if this variable have only x bit we must set only x bit other 64-x must be exterminated
         std::string desMask = cvtNum2HexStr(createMask(_master->getSlice()));
 
         ////// all operand expect to be equal
@@ -65,9 +67,9 @@ namespace kathryn{
             case BITWISE_AND : {assert(aSize == bSize); retStr += _aSliced + " &    "    + _bSliced; break;}
             case BITWISE_OR  : {assert(aSize == bSize); retStr += _aSliced + " |    "    + _bSliced; break;}
             case BITWISE_XOR : {assert(aSize == bSize); retStr += _aSliced + " ^    "    + _bSliced; break;}
-            case BITWISE_INVR: {                        retStr += "(~  "   + _aSliced    + ") & " + desMask;break;}
-            case BITWISE_SHL : {                        retStr += "( " + _aSliced + " <<   "    + _bSliced + ") & " + desMask; break;}
-            case BITWISE_SHR : {                        retStr += "( " + _aSliced + " >>   "    + _bSliced + ") & " + desMask; break;}
+            case BITWISE_INVR: {                        retStr += "(~  "+ _aSliced + ") & " + desMask;break;}
+            case BITWISE_SHL : {                        retStr += "( "  + _aSliced + " <<   "    + _bSliced + ") & " + desMask; break;}
+            case BITWISE_SHR : {                        retStr += "( "     + _aSliced + " >>   "    + _bSliced + ") & " + desMask; break;}
             case LOGICAL_AND : {assert(aSize == bSize); retStr += _aSliced + " &&   "    + _bSliced; break;}
             case LOGICAL_OR  : {assert(aSize == bSize); retStr += _aSliced + " ||   "    + _bSliced; break;}
             case LOGICAL_NOT : {                      ; retStr += " !    " + _aSliced;               break;}
@@ -110,30 +112,7 @@ namespace kathryn{
 
         retStr += ")";
 
-        _cachedPrecompile = retStr;
-        return retStr;
-    }
-
-    std::string expressionSimEngine::getVarName(){
-        return createPreCompile();
-    }
-
-    std::string expressionSimEngine::createGlobalVariable(){
-        //////////////// for expression
-        return "";
-    }
-
-    std::string expressionSimEngine::createLocalVariable(){
-        /////////// we bring the variable to local variable
-        return "";///"ull " + getVarName() + ";\n";
-    }
-
-
-
-
-    std::string expressionSimEngine::createOp(){
-        return "";
-
+        cb.addSt(retStr);
 
     }
 

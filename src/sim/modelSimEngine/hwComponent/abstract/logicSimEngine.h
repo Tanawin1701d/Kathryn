@@ -10,6 +10,7 @@
 #include "sim/modelSimEngine/base/proxyEventBase.h"
 #include "model/hwComponent/abstract/assignable.h"
 #include "model/hwComponent/abstract/Slice.h"
+#include "util/fileWriter/codeWriter/cppWriter.h"
 
 
 
@@ -28,16 +29,9 @@ namespace kathryn{
         ull           _initVal    = 0;
 
     public:
-        ull createMask(Slice maskSlice);
-        ///////////////////////// get opr value from opr
-        std::string getSrcOprFromOpr(Operable* opr);
-        std::string getSlicedSrcOprFromOpr(Operable* opr);
-        std::string getSlicedAndShiftSrcOprFromOpr(Operable* opr, Slice desSlice);
-
         //////////////////////// gen main operation
 
-        std::string genOpWithSoleCondition           (const std::string& auxAssStr = "");
-        std::string genOpWithChainCondition          (const std::string& auxAssStr = "");
+        void createOpWithSoleCondition               (CbBaseCxx& cb,const std::string& auxAssStr = "");
         std::string genAssignAEqB                    (Slice     desSlice, bool isDesTemp,
                                                       Operable* srcOpr);
         ///////////////////////// sliced opr
@@ -65,11 +59,11 @@ namespace kathryn{
 
         /*** c++ create section**/
 
-        std::string createGlobalVariable() override;
-        std::string createLocalVariable()  override{return "";}
-        std::string createOp()             override;
-        std::string createOpEndCycle()     override{return "";}
-        std::string createOpEndCycle2()    override;
+        void createGlobalVariable(CbBaseCxx& cb) override;
+        void createLocalVariable (CbBaseCxx& cb) override{}
+        void createOp            (CbBaseCxx& cb) override;
+        void createOpEndCycle    (CbBaseCxx& cb) override{}
+        void createOpEndCycle2   (CbBaseCxx& cb) override;
 
 
         bool        isUserDeclare()       override{return _ident->isUserVar();}

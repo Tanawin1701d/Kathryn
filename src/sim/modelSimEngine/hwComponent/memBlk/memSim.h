@@ -26,11 +26,11 @@ namespace kathryn{
         std::vector<std::string> getRegisVarName() override;
         ull                      getVarId()        override;
         
-        std::string createGlobalVariable()  override;
-        std::string createLocalVariable()   override{return "";}
-        std::string createOp()              override{return "";}
-        std::string createOpEndCycle ()     override{return "";}
-        std::string createOpEndCycle2()     override{return "";}
+        void createGlobalVariable(CbBaseCxx& cb) override;
+        void createLocalVariable (CbBaseCxx& cb) override{}
+        void createOp            (CbBaseCxx& cb) override{}
+        void createOpEndCycle    (CbBaseCxx& cb) override{}
+        void createOpEndCycle2   (CbBaseCxx& cb) override{}
 
         bool        isUserDeclare()        override{return false;}
         void        proxyRetInit(ProxySimEventBase* modelSimEvent)override;

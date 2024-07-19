@@ -14,8 +14,8 @@ namespace kathryn{
         nest* _master = nullptr;
     public:
         NestSimEngine(nest* master, VCD_SIG_TYPE sigType);
-        void        proxyBuildInit() override;
-        std::string createOp()       override;
+        void proxyBuildInit() override;
+        void createOp(CbBaseCxx& cb) override;
 
     };
 
