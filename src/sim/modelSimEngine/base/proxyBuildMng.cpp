@@ -81,6 +81,11 @@ namespace kathryn{
         return result;
     }
 
+    std::string ProxyBuildMng::genFunctionDec(bool classRef,
+                                              const std::string& funcName){
+        return "void " + (classRef ? (BASE_CLASS_NAME + "::"): "") + funcName + "()";
+    }
+
 
     void ProxyBuildMng::setStartModule(Module* startModule){
         _startModule = startModule;
@@ -101,17 +106,33 @@ namespace kathryn{
         ///////// global variable
         startWriteCreateVariable();
         startWritePerfDec();
+        //////////////////////////////
         ///////// start  Writefunction
+        //////////////////////////////
+        /// register callback
         startWriteRegisterCallback();
+        /// vcd DecVar
         startWriteVcdDecVar(true);
         startWriteVcdDecVar(false);
+        /// main op sim
+        startMainOpEleSimSke();
         startMainOpEleSim();
+        /// final op sim
+        startFinalizeEleSimSke();
         startFinalizeEleSim();
+        /// vcd collect
+        startWriteVcdColSke(true);
+        startWriteVcdColSke(false);
+        /// vcd col
         startWriteVcdCol(true);
         startWriteVcdCol(false);
+        /// perf col
+        startWritePerfColSke();
         startWritePerfCol();
+        /// main sim
+        startWriteMainSimSke(true, true, true);
+        startWriteMainSim();
         startWriteCreateFunc();
-        startWriteOptimize();
 
 
         proxyfileWriter->addData("\n\n\n\n\n\n}\n");
@@ -121,12 +142,16 @@ namespace kathryn{
 
     void ProxyBuildMng::startWriteCreateVariable(){
         assert(moduleSimEngine != nullptr);
+        /////// recruit modelBuilder for create variable
         std::vector<ModelProxyBuild*> dayta =
             moduleSimEngine->recruitForCreateVar();
-
+        /////// generate the data
+        CbBaseCxx cb;
         for (ModelProxyBuild* mpb : dayta){
-            proxyfileWriter->addData(mpb->createGlobalVariable());
+            mpb->createGlobalVariable(cb);
         }
+        ////////// write file
+        proxyfileWriter->addData(cb.toString(0));
     }
 
 
@@ -136,10 +161,11 @@ namespace kathryn{
 
         proxyfileWriter->addData("/////////////////////// perf variable\n");
 
+        CbBaseCxx cb;
         for (ModelProxyBuild* mpb : dayta){
-            proxyfileWriter->addData(mpb->createGlobalVariable());
+            mpb->createGlobalVariable(cb);
         }
-
+        proxyfileWriter->addData(cb.toString(0));
         proxyfileWriter->addData("/////////////////////// perf finish initialize\n");
     }
 
@@ -149,19 +175,18 @@ namespace kathryn{
             assert(!varName.empty());
             proxyfileWriter->addData("       ");
             if (isPerf){
-                proxyfileWriter->addData("registerToCallBackPerf(");
+                proxyfileWriter->addData(REGIS_CALLBACK_PERF + "(");
             }
             else{
-                proxyfileWriter->addData("registerToCallBack(");
+                proxyfileWriter->addData(REGIS_CALLBACK_LOGIC + "(");
             }
             proxyfileWriter->addData("\"" + varName + "\"");
             proxyfileWriter->addData(",");
             proxyfileWriter->addData(varName);
             proxyfileWriter->addData(");\n");
-            //proxyfileWriter->addData(R"(std::cout << "register to " << ")" + varName + "\"" + " << std::endl; \n");
         };
 
-        proxyfileWriter->addData("void ProxySimEvent::startRegisterCallBack(){\n");
+        proxyfileWriter->addData(genFunctionDec(true, REGIS_CALLBACK)+ "{\n");
 
         ///// for logic value
         for (ModelProxyBuild* mpb :
@@ -184,7 +209,7 @@ namespace kathryn{
 
     //////// non volatile must do TOPOLOGY SORT FIRST
 
-    void ProxyBuildMng::startMainOpEleSim(){
+    void ProxyBuildMng::startMainOpEleSimSke(){
         /***
          *
          * 1.standard op
@@ -196,68 +221,93 @@ namespace kathryn{
         ///data from memory if there is update from memory to register because
         /// memEleHolder will provide temporary data to register simulation
 
-        std::vector<ModelProxyBuild*> volatileEle = moduleSimEngine->recruitForMainOpVolatile();
+        std::vector<ModelProxyBuild*> volatileEle    = moduleSimEngine->recruitForMainOpVolatile();
         std::vector<ModelProxyBuild*> nonVolatileEle = moduleSimEngine->recruitForMainOpNonVolatile();
 
-        proxyfileWriter->addData("__attribute__((always_inline)) inline void startMainOpEleSimSkeleton(){\n");
+        proxyfileWriter->addData("__attribute__((always_inline)) inline " +
+                                 genFunctionDec(false, MAINOP_SIM + SKE_SUFFIX) +
+                                 "{\n");
 
         //////////////////////// create local variable
+        CbBaseCxx cbInitVal;
         for (ModelProxyBuild* mpb : volatileEle){
-            proxyfileWriter->addData(mpb->createLocalVariable());
+            mpb->createLocalVariable(cbInitVal);
         }
         for (ModelProxyBuild* mpb : nonVolatileEle){
-            proxyfileWriter->addData(mpb->createLocalVariable());
+            mpb->createLocalVariable(cbInitVal);
         }
+        proxyfileWriter->addData(cbInitVal.toString(0));
         //////////////////////// volatile sim
         proxyfileWriter->addData("//// do main sim volatile\n");
+        CbBaseCxx cbVolatileSim;
         std::vector<ModelProxyBuild*> sortedVolatileEle = doTopologySort(volatileEle);
         for (ModelProxyBuild* mpb : sortedVolatileEle){
-            proxyfileWriter->addData(mpb->createOp());
+            mpb->createOp(cbVolatileSim);
         }
-
+        proxyfileWriter->addData(cbVolatileSim.toString(0));
         //////////////////////// nonVolatile sim
         proxyfileWriter->addData("//// do main sim NON volatile\n");
+        CbBaseCxx cbNonVolatileSim;
         for (ModelProxyBuild* mpb : nonVolatileEle){
             /////// don't have to sort
-            proxyfileWriter->addData(mpb->createOp());
+            mpb->createOp(cbNonVolatileSim);
         }
+        proxyfileWriter->addData(cbNonVolatileSim.toString(0));
 
         proxyfileWriter->addData("}\n");
 
-        proxyfileWriter->addData("void ProxySimEvent::startMainOpEleSim(){\n");
-        ///proxyfileWriter->addData("    startMainOpEleSimSkeleton();\n");
+
+    }
+
+    void ProxyBuildMng::startMainOpEleSim(){
+        proxyfileWriter->addData(genFunctionDec(true, BASE_CLASS_NAME) + "{\n");
+        proxyfileWriter->addData(BASE_CLASS_NAME + SKE_SUFFIX + "();\n");
+        proxyfileWriter->addData("}\n");
+    }
+
+    void ProxyBuildMng::startFinalizeEleSimSke(){
+        /***
+         *
+         * 1.standard op
+         * 2.memAssign memnt
+         * 3.transfer op
+         *
+         */
+
+        ///////////// do not worry about register simulation will get false new
+        ///data from memory if there is update from memory to register because
+        /// memEleHolder will provide temporary data to register simulation
+
+        proxyfileWriter->addData("__attribute__((always_inline)) inline "+
+                                 genFunctionDec(false, FIZOP_SIM + SKE_SUFFIX)+
+                                 "{\n");
+
+        std::vector<ModelProxyBuild*> mpbs = moduleSimEngine->recruitForFinalizeOp();
+
+        //////////////////// priority 1 ///////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////
+        CbBaseCxx cbFinal1; ///// typically memOp
+        proxyfileWriter->addData("////////////////////// transfer  op priority 1\n");
+        for (ModelProxyBuild* mpb : mpbs){
+            mpb->createOpEndCycle(cbFinal1);
+        }
+        proxyfileWriter->addData(cbFinal1.toString(0));
+        //////////////////// priority 2 ///////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////
+        CbBaseCxx cbFinal2; ///// typically memOp
+        proxyfileWriter->addData("//////////////////// transfer Op priority 2\n");
+        for (ModelProxyBuild* mpb : mpbs){
+            mpb->createOpEndCycle2(cbFinal2);
+
+        }
+        proxyfileWriter->addData(cbFinal2.toString(0));
+
         proxyfileWriter->addData("}\n");
     }
 
     void ProxyBuildMng::startFinalizeEleSim(){
-        /***
-         *
-         * 1.standard op
-         * 2.memAssign memnt
-         * 3.transfer op
-         *
-         */
-
-        ///////////// do not worry about register simulation will get false new
-        ///data from memory if there is update from memory to register because
-        /// memEleHolder will provide temporary data to register simulation
-
-        proxyfileWriter->addData("__attribute__((always_inline)) inline void startFinalizeEleSimSkeleton(){\n");
-
-        std::vector<ModelProxyBuild*> mpbs = moduleSimEngine->recruitForFinalizeOp();
-
-        proxyfileWriter->addData("////////////////////// transfer  op priority 1\n");
-        for (ModelProxyBuild* mpb : mpbs){
-            proxyfileWriter->addData(mpb->createOpEndCycle());
-        }
-        proxyfileWriter->addData("//////////////////// transfer Op priority 2\n");
-        for (ModelProxyBuild* mpb : mpbs){
-            proxyfileWriter->addData(mpb->createOpEndCycle2());
-        }
-        proxyfileWriter->addData("}\n");
-
-        proxyfileWriter->addData("inline void ProxySimEvent::startFinalizeEleSim(){\n");
-        //proxyfileWriter->addData("      startFinalizeEleSimSkeleton();\n");
+        proxyfileWriter->addData(genFunctionDec(true, FIZOP_SIM) + "{\n");
+        proxyfileWriter->addData(FIZOP_SIM + SKE_SUFFIX +"();\n");
         proxyfileWriter->addData("}\n");
     }
 
@@ -266,9 +316,9 @@ namespace kathryn{
         std::vector<LogicSimEngine*> dayta =
             moduleSimEngine->recruitForVcdVar();
 
-        proxyfileWriter->addData("void ProxySimEvent::startVcdDecVar");
-        proxyfileWriter->addData((isUser ? "User" : "Internal"));
-        proxyfileWriter->addData("(){\n");
+        std::string fSuffix = isUser ? USER_SUFFIX: INTERNAL_SUFFIX;
+        proxyfileWriter->addData(genFunctionDec(true, VCD_DEC + fSuffix));
+        proxyfileWriter->addData("{\n");
 
 
         for (LogicSimEngine* mpb : dayta){
@@ -304,13 +354,14 @@ namespace kathryn{
         proxyfileWriter->addData("}\n");
     }
 
-    void ProxyBuildMng::startWriteVcdCol(bool isUser){
+    void ProxyBuildMng::startWriteVcdColSke(bool isUser){
         std::vector<LogicSimEngine*> dayta =
             moduleSimEngine->recruitForVcdVar();
 
-        proxyfileWriter->addData("void ProxySimEvent::startVcdCol");
-        proxyfileWriter->addData((isUser ? "User" : "Internal"));
-        proxyfileWriter->addData("(){\n");
+        std::string fSuffix = isUser ? USER_SUFFIX: INTERNAL_SUFFIX;
+        proxyfileWriter->addData("__attribute__((always_inline)) inline " +
+            genFunctionDec(false, VCD_COL + fSuffix + SKE_SUFFIX));
+        proxyfileWriter->addData("{\n");
 
 
         for (LogicSimEngine* mpb : dayta){
@@ -328,18 +379,40 @@ namespace kathryn{
         proxyfileWriter->addData("}\n");
     }
 
-    void ProxyBuildMng::startWritePerfCol(){
+    void ProxyBuildMng::startWriteVcdCol(bool isUser){
+
+        std::string fSuffix = isUser ? USER_SUFFIX: INTERNAL_SUFFIX;
+        proxyfileWriter->addData(genFunctionDec(true, VCD_COL + fSuffix ));
+        proxyfileWriter->addData("{\n");
+        proxyfileWriter->addData("{\n");
+        proxyfileWriter->addData("      startVcdColSke");
+        proxyfileWriter->addData(isUser ? "User" : "Internal");
+        proxyfileWriter->addData("();\n");
+        proxyfileWriter->addData("}\n");
+
+    }
+
+    void ProxyBuildMng::startWritePerfColSke(){
         std::vector<FlowBaseSimEngine*> dayta = moduleSimEngine->recruitPerf();
 
-        proxyfileWriter->addData("void ProxySimEvent::startPerfCol");
-        proxyfileWriter->addData("(){\n");
+        proxyfileWriter->addData("__attribute__((always_inline)) inline " +
+            genFunctionDec(false, PERF_COL+  SKE_SUFFIX));
+        proxyfileWriter->addData("{\n");
 
-
+        CbBaseCxx cb;
         for (ModelProxyBuild* mpb : dayta){
-            proxyfileWriter->addData(mpb->createOp());
+            mpb->createOp(cb);
         }
-
+        proxyfileWriter->addData(cb.toString(0));
         proxyfileWriter->addData("}\n");
+    }
+
+
+    void ProxyBuildMng::startWritePerfCol(){
+        proxyfileWriter->addData(genFunctionDec(true, PERF_COL) + "{\n");
+        proxyfileWriter->addData("      startPerfColSke();\n");
+        proxyfileWriter->addData("}\n");
+
     }
 
     void ProxyBuildMng::startWriteCreateFunc(){
@@ -352,25 +425,24 @@ namespace kathryn{
         );
     }
 
-    void ProxyBuildMng::startWriteOptimize(){
-        proxyfileWriter->addData("void startOptimizeSimSkeleton()");
-        proxyfileWriter->addData("{\n"
-            "WIRE1_SYS = 1;"
-            "  startMainOpEleSimSkeleton();\n"
-            "  startFinalizeEleSimSkeleton();\n"
-            "WIRE1_SYS = 0;"
-            "while(MEM_BLOCK25[31] != 1){\n"
-            "  startMainOpEleSimSkeleton();\n"
-            "  startFinalizeEleSimSkeleton();\n"
-            "}\n"
-            "}\n");
+    void ProxyBuildMng::startWriteMainSimSke(bool userVcdCol,
+                                             bool sysVcdCol,
+                                             bool perfCol){
+        proxyfileWriter->addData(genFunctionDec(false, MAIN_SIM + SKE_SUFFIX) + "{\n");
+        proxyfileWriter->addData("while(true){\n");
+        /////// TODO add tricker Event
+        proxyfileWriter->addData(MAINOP_SIM + SKE_SUFFIX + "();\n");
+        if (userVcdCol){ proxyfileWriter->addData(VCD_COL + USER_SUFFIX     + SKE_SUFFIX + "();\n");}
+        if (sysVcdCol) { proxyfileWriter->addData(VCD_COL + INTERNAL_SUFFIX + SKE_SUFFIX + "();\n");}
+        proxyfileWriter->addData(FIZOP_SIM + SKE_SUFFIX + "();\n");
+        if (perfCol){ proxyfileWriter->addData(PERF_COL + SKE_SUFFIX + "();\n");}
+        proxyfileWriter->addData("}\n");
+    }
 
-
-        proxyfileWriter->addData("void ProxySimEvent::startOptimizeSim()");
-        proxyfileWriter->addData("{\n"
-            "startOptimizeSimSkeleton();"
-            "}\n"
-            "\n");
+    void ProxyBuildMng::startWriteMainSim(){
+        proxyfileWriter->addData(genFunctionDec(true, MAIN_SIM) + "{\n");
+        proxyfileWriter->addData( MAIN_SIM + SKE_SUFFIX + "();\n");
+        proxyfileWriter->addData("}\n");
     }
 
 

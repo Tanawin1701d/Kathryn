@@ -50,11 +50,28 @@ namespace kathryn{
         const std::string srcDynLoadPath
         = pathToModelFolder + "/" + dynObjFolder + "/" + TEST_NAME +  ".so";
 
+        ///////// [functionName][?userIdent][?ske suffix]
+        const std::string BASE_CLASS_NAME = "ProxySimEvent";
+        const std::string SKE_SUFFIX           = "Ske";
+        const std::string USER_SUFFIX          = "User";
+        const std::string INTERNAL_SUFFIX      = "Internal";
+        const std::string REGIS_CALLBACK       = "startRegisterCallBack";
+        const std::string REGIS_CALLBACK_LOGIC = "startRegisterCallBack";
+        const std::string REGIS_CALLBACK_PERF  = "registerToCallBackPerf";
+        const std::string MAINOP_SIM = "startMainOpEleSim";
+        const std::string FIZOP_SIM  = "startFinalizeEleSim";
+        const std::string VCD_DEC    = "startVcdDecVar"; //// must have User or Internal as a suffix
+        const std::string VCD_COL    = "startVcdCol";
+        const std::string PERF_COL   = "startPerfCol";
+        const std::string MAIN_SIM   = "mainSim";
+
     public:
         ProxyBuildMng(std::string testName): TEST_NAME(std::move(testName)){};
         ~ProxyBuildMng();
         std::vector<ModelProxyBuild*>
         doTopologySort(std::vector<ModelProxyBuild*>& graph);
+
+        std::string genFunctionDec(bool classRef, const std::string& funcName);
 
         void setStartModule(Module* startModule);
 
@@ -67,23 +84,27 @@ namespace kathryn{
         ////////// for start register function
         void startWriteRegisterCallback();
         ////////// for wire expression memElehodler*   etc....
-        void startMainOpEleSim();
         void startMainOpEleSimSke();
+        void startMainOpEleSim();
         ////////// for register
-        void startFinalizeEleSim();
         void startFinalizeEleSimSke();
+        void startFinalizeEleSim();
         ///////// for create vcd Decvar
         void startWriteVcdDecVar(bool isUser); //// else if internal
         ///////// for create vcd Decvar
         void startWriteVcdCol(bool isUser);
         void startWriteVcdColSke(bool isUser);
         ///////// void start write perf col
-        void startWritePerfCol();
         void startWritePerfColSke();
+        void startWritePerfCol();
+        //////// void start write for optimization
+        void startWriteMainSimSke(bool userVcdCol,
+                                  bool sysVcdCol,
+                                  bool perfCol);
+        void startWriteMainSim();
         //////// void start write creator
         void startWriteCreateFunc();
-        //////// void start write for optimization
-        void startWriteMainSim();
+
 
 
         //////// compile file
