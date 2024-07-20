@@ -13,6 +13,8 @@ namespace kathryn{
 
     extern const MODULE_VCD_REC_POL PARAM_VCD_REC_POL;
     extern const MODULE_FLOW_PERF_PARAM PARAM_PERF_REC_POL;
+    ///////// amt function that proxySim can call back in each iteration
+
 
 }
 

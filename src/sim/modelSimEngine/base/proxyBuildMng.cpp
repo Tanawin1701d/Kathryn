@@ -7,7 +7,7 @@
 #include <cstdlib>
 #include <dlfcn.h>
 #include <set>
-
+#include "params/simParam.h"
 
 
 namespace kathryn{
@@ -86,6 +86,13 @@ namespace kathryn{
         return "void " + (classRef ? (BASE_CLASS_NAME + "::"): "") + funcName + "()";
     }
 
+    std::string ProxyBuildMng::genDummyFunctionFullDec(bool classRef,
+                                              const std::string& funcName){
+
+        return genFunctionDec(classRef, funcName) +  "{}\n";
+
+    }
+
 
     void ProxyBuildMng::setStartModule(Module* startModule){
         _startModule = startModule;
@@ -93,12 +100,21 @@ namespace kathryn{
     }
 
     void ProxyBuildMng::startWriteModelSim(){
+
+        bool userVcd = (PARAM_VCD_REC_POL == MDE_REC_BOTH) ||
+                       (PARAM_VCD_REC_POL == MDE_REC_ONLY_USER);
+
+        bool internalVcd = (PARAM_VCD_REC_POL == MDE_REC_BOTH) ||
+                           (PARAM_VCD_REC_POL == MDE_REC_ONLY_INTERNAL);
+
+        bool perfCol      = PARAM_PERF_REC_POL == MFP_ON;
+
+
         moduleSimEngine->proxyBuildInit();
         //// create file
         proxyfileWriter = new FileWriterBase(srcGenPath);
         //// create include
         proxyfileWriter->addData("#include \"../proxyEvent.h\"\n");
-
         /// create namespace
         ///
         proxyfileWriter->addData("namespace kathryn{\n\n\n\n\n\n");
@@ -111,34 +127,56 @@ namespace kathryn{
         //////////////////////////////
         /// register callback
         startWriteRegisterCallback();
-        /// vcd DecVar
+        //// callbackMng
+        startWriteCallBackCheckAndRet();
+        startWriteCallBackGetAmt();
+        startWriteCallbackGetNo();
+        /// vcd DecVar collect
+        if (userVcd){
+            startWriteVcdDecVar (true);
+            startWriteVcdColSke (true);
+            startWriteVcdCol    (true);
+        }else{
+            ///// no need to build ske
+            proxyfileWriter->addData(genDummyFunctionFullDec(true, VCD_DEC));
+            proxyfileWriter->addData(genDummyFunctionFullDec(true, VCD_COL));
+        }
+        if (internalVcd){
+            startWriteVcdDecVar (false);
+            startWriteVcdColSke (false);
+            startWriteVcdCol    (false);
+        }else{
+            ///// no need to build ske
+            proxyfileWriter->addData(genDummyFunctionFullDec(true, VCD_DEC + INTERNAL_SUFFIX));
+            proxyfileWriter->addData(genDummyFunctionFullDec(true, VCD_COL + INTERNAL_SUFFIX));
+        }
+        /// perfcollection
+        if (perfCol){
+            startWritePerfColSke();
+            startWritePerfCol();
+        }else{
+            proxyfileWriter->addData(genDummyFunctionFullDec(true, PERF_COL));
+        }
 
-        startWriteVcdDecVar(true);
-        startWriteVcdDecVar(false);
         /// main op sim
         startMainOpEleSimSke();
         startMainOpEleSim();
         /// final op sim
         startFinalizeEleSimSke();
         startFinalizeEleSim();
-        /// vcd collect
-        startWriteVcdColSke(true);
-        startWriteVcdColSke(false);
-        /// vcd col
-        startWriteVcdCol(true);
-        startWriteVcdCol(false);
-        /// perf col
-        startWritePerfColSke();
-        startWritePerfCol();
         /// main sim
-        startWriteMainSimSke(true, true, true);
+        startWriteMainSimSke(userVcd, internalVcd, perfCol);
         startWriteMainSim();
         startWriteCreateFunc();
-
-
+        /// w flush
         proxyfileWriter->addData("\n\n\n\n\n\n}\n");
         proxyfileWriter->flush();
         delete proxyfileWriter;
+    }
+
+    void ProxyBuildMng::startWriteCallBackVar(){
+        proxyfileWriter->addData(CALLBACK_VAR_ARR_NAME + "["+ MAX_SIZE_CB_ARR+"];\n");
+        proxyfileWriter->addData(CALLBACK_VAR_AMT +";\n");
     }
 
     void ProxyBuildMng::startWriteCreateVariable(){
@@ -205,6 +243,146 @@ namespace kathryn{
         }
 
         proxyfileWriter->addData("}\n");
+    }
+
+
+    void ProxyBuildMng::startWriteCallBackCheckAndRet(){
+
+        proxyfileWriter->addData("__attribute__((always_inline)) inline bool " +
+            CALLBACK_CHECK_FUNC_NAME + "(){\n");
+        proxyfileWriter->addData("bool shouldRet = false;\n");
+
+        for (int i = 0; i < callBackEvents->size(); i++ ){
+            std::string condition = (*callBackEvents)[i].getCondStr();
+            CbIfCxx x(false, condition);
+            x.addSt("shouldRet = true");
+            x.addSt(CALLBACK_VAR_ARR_NAME + "[" + CALLBACK_VAR_AMT + "] = " + std::to_string(i) );
+            x.addSt(CALLBACK_VAR_AMT + "++");
+            proxyfileWriter->addData(x.toString(0));
+        }
+
+
+        proxyfileWriter->addData("return shouldRet;\n");
+        proxyfileWriter->addData("}\n");
+
+    }
+
+    void ProxyBuildMng::startWriteCallBackGetAmt(){
+        proxyfileWriter->addData("int " + BASE_CLASS_NAME + "::" + CALLBACK_GET_AMT + "()");
+        proxyfileWriter->addData("{\n");
+        proxyfileWriter->addData("return " + CALLBACK_VAR_AMT + ";\n");
+        proxyfileWriter->addData("}\n");
+    }
+
+    void ProxyBuildMng::startWriteCallbackGetNo(){
+        proxyfileWriter->addData("int " + BASE_CLASS_NAME + "::" + CALLBACK_GET_NO + "(int idx)");
+        proxyfileWriter->addData("{\n");
+        proxyfileWriter->addData("return " + CALLBACK_VAR_ARR_NAME +"(idx);\n");
+        proxyfileWriter->addData("}\n");
+    }
+
+
+        void ProxyBuildMng::startWriteVcdDecVar(bool isUser){
+        std::vector<LogicSimEngine*> dayta =
+            moduleSimEngine->recruitForVcdVar();
+
+        std::string fSuffix = isUser ? USER_SUFFIX: INTERNAL_SUFFIX;
+        proxyfileWriter->addData(genFunctionDec(true, VCD_DEC + fSuffix));
+        proxyfileWriter->addData("{\n");
+
+
+        for (LogicSimEngine* mpb : dayta){
+            if (mpb->isUserDeclare() == isUser){
+                ////// the registerable must always put to vcd file
+                proxyfileWriter->addData("       ");
+                proxyfileWriter->addData("_vcdWriter->addNewVar(");
+
+                //////// sigtype
+                VCD_SIG_TYPE vst = mpb->getSigType();
+                if (vst == VST_REG){
+                    proxyfileWriter->addData("VST_REG");
+                }
+                else if (vst == VST_WIRE){
+                    proxyfileWriter->addData("VST_WIRE");
+                }
+                else if (vst == VST_INTEGER){
+                    proxyfileWriter->addData("VST_INTEGER");
+                }
+                else{
+                    assert(false);
+                }
+
+                /////// varname
+                proxyfileWriter->addData(",");
+                proxyfileWriter->addData("\"" + mpb->getVarName() + "\"");
+                proxyfileWriter->addData(",");
+                proxyfileWriter->addData("{" +
+                    std::to_string(mpb->getSize().start) + "," +
+                    std::to_string(mpb->getSize().stop) + "});\n");
+            }
+        }
+        proxyfileWriter->addData("}\n");
+    }
+
+    void ProxyBuildMng::startWriteVcdColSke(bool isUser){
+        std::vector<LogicSimEngine*> dayta =
+            moduleSimEngine->recruitForVcdVar();
+
+        std::string fSuffix = isUser ? USER_SUFFIX: INTERNAL_SUFFIX;
+        proxyfileWriter->addData("__attribute__((always_inline)) inline " +
+            genFunctionDec(false, VCD_COL + fSuffix + SKE_SUFFIX));
+        proxyfileWriter->addData("{\n");
+
+
+        for (LogicSimEngine* mpb : dayta){
+            if (mpb->isUserDeclare() == isUser){
+                ////// the registerable must always put to vcd file
+                proxyfileWriter->addData("       ");
+                proxyfileWriter->addData("_vcdWriter->addNewValue(");
+
+                proxyfileWriter->addData("\"" + mpb->getVarName() + "\"");
+                proxyfileWriter->addData(",");
+                proxyfileWriter->addData(mpb->getVarName() + ");\n");
+            }
+        }
+
+        proxyfileWriter->addData("}\n");
+    }
+
+    void ProxyBuildMng::startWriteVcdCol(bool isUser){
+
+        std::string fSuffix = isUser ? USER_SUFFIX: INTERNAL_SUFFIX;
+        proxyfileWriter->addData(genFunctionDec(true, VCD_COL + fSuffix ));
+        proxyfileWriter->addData("{\n");
+        proxyfileWriter->addData("{\n");
+        proxyfileWriter->addData("      startVcdColSke");
+        proxyfileWriter->addData(isUser ? "User" : "Internal");
+        proxyfileWriter->addData("();\n");
+        proxyfileWriter->addData("}\n");
+
+    }
+
+    void ProxyBuildMng::startWritePerfColSke(){
+        std::vector<FlowBaseSimEngine*> dayta = moduleSimEngine->recruitPerf();
+
+        proxyfileWriter->addData("__attribute__((always_inline)) inline " +
+            genFunctionDec(false, PERF_COL+  SKE_SUFFIX));
+        proxyfileWriter->addData("{\n");
+
+        CbBaseCxx cb;
+        for (ModelProxyBuild* mpb : dayta){
+            mpb->createOp(cb);
+        }
+        proxyfileWriter->addData(cb.toString(0));
+        proxyfileWriter->addData("}\n");
+    }
+
+
+    void ProxyBuildMng::startWritePerfCol(){
+        proxyfileWriter->addData(genFunctionDec(true, PERF_COL) + "{\n");
+        proxyfileWriter->addData("      startPerfColSke();\n");
+        proxyfileWriter->addData("}\n");
+
     }
 
 
@@ -312,110 +490,6 @@ namespace kathryn{
         proxyfileWriter->addData("}\n");
     }
 
-
-    void ProxyBuildMng::startWriteVcdDecVar(bool isUser){
-        std::vector<LogicSimEngine*> dayta =
-            moduleSimEngine->recruitForVcdVar();
-
-        std::string fSuffix = isUser ? USER_SUFFIX: INTERNAL_SUFFIX;
-        proxyfileWriter->addData(genFunctionDec(true, VCD_DEC + fSuffix));
-        proxyfileWriter->addData("{\n");
-
-
-        for (LogicSimEngine* mpb : dayta){
-            if (mpb->isUserDeclare() == isUser){
-                ////// the registerable must always put to vcd file
-                proxyfileWriter->addData("       ");
-                proxyfileWriter->addData("_vcdWriter->addNewVar(");
-
-                //////// sigtype
-                VCD_SIG_TYPE vst = mpb->getSigType();
-                if (vst == VST_REG){
-                    proxyfileWriter->addData("VST_REG");
-                }
-                else if (vst == VST_WIRE){
-                    proxyfileWriter->addData("VST_WIRE");
-                }
-                else if (vst == VST_INTEGER){
-                    proxyfileWriter->addData("VST_INTEGER");
-                }
-                else{
-                    assert(false);
-                }
-
-                /////// varname
-                proxyfileWriter->addData(",");
-                proxyfileWriter->addData("\"" + mpb->getVarName() + "\"");
-                proxyfileWriter->addData(",");
-                proxyfileWriter->addData("{" +
-                    std::to_string(mpb->getSize().start) + "," +
-                    std::to_string(mpb->getSize().stop) + "});\n");
-            }
-        }
-        proxyfileWriter->addData("}\n");
-    }
-
-    void ProxyBuildMng::startWriteVcdColSke(bool isUser){
-        std::vector<LogicSimEngine*> dayta =
-            moduleSimEngine->recruitForVcdVar();
-
-        std::string fSuffix = isUser ? USER_SUFFIX: INTERNAL_SUFFIX;
-        proxyfileWriter->addData("__attribute__((always_inline)) inline " +
-            genFunctionDec(false, VCD_COL + fSuffix + SKE_SUFFIX));
-        proxyfileWriter->addData("{\n");
-
-
-        for (LogicSimEngine* mpb : dayta){
-            if (mpb->isUserDeclare() == isUser){
-                ////// the registerable must always put to vcd file
-                proxyfileWriter->addData("       ");
-                proxyfileWriter->addData("_vcdWriter->addNewValue(");
-
-                proxyfileWriter->addData("\"" + mpb->getVarName() + "\"");
-                proxyfileWriter->addData(",");
-                proxyfileWriter->addData(mpb->getVarName() + ");\n");
-            }
-        }
-
-        proxyfileWriter->addData("}\n");
-    }
-
-    void ProxyBuildMng::startWriteVcdCol(bool isUser){
-
-        std::string fSuffix = isUser ? USER_SUFFIX: INTERNAL_SUFFIX;
-        proxyfileWriter->addData(genFunctionDec(true, VCD_COL + fSuffix ));
-        proxyfileWriter->addData("{\n");
-        proxyfileWriter->addData("{\n");
-        proxyfileWriter->addData("      startVcdColSke");
-        proxyfileWriter->addData(isUser ? "User" : "Internal");
-        proxyfileWriter->addData("();\n");
-        proxyfileWriter->addData("}\n");
-
-    }
-
-    void ProxyBuildMng::startWritePerfColSke(){
-        std::vector<FlowBaseSimEngine*> dayta = moduleSimEngine->recruitPerf();
-
-        proxyfileWriter->addData("__attribute__((always_inline)) inline " +
-            genFunctionDec(false, PERF_COL+  SKE_SUFFIX));
-        proxyfileWriter->addData("{\n");
-
-        CbBaseCxx cb;
-        for (ModelProxyBuild* mpb : dayta){
-            mpb->createOp(cb);
-        }
-        proxyfileWriter->addData(cb.toString(0));
-        proxyfileWriter->addData("}\n");
-    }
-
-
-    void ProxyBuildMng::startWritePerfCol(){
-        proxyfileWriter->addData(genFunctionDec(true, PERF_COL) + "{\n");
-        proxyfileWriter->addData("      startPerfColSke();\n");
-        proxyfileWriter->addData("}\n");
-
-    }
-
     void ProxyBuildMng::startWriteCreateFunc(){
         proxyfileWriter->addData(
             "extern \"C\" ProxySimEventBase* create() {\n"
@@ -430,7 +504,7 @@ namespace kathryn{
                                              bool sysVcdCol,
                                              bool perfCol){
         proxyfileWriter->addData(genFunctionDec(false, MAIN_SIM + SKE_SUFFIX) + "{\n");
-        proxyfileWriter->addData("while(true){\n");
+        proxyfileWriter->addData("while(!" + CALLBACK_CHECK_FUNC_NAME + "()){\n");
         /////// TODO add tricker Event
         proxyfileWriter->addData(MAINOP_SIM + SKE_SUFFIX + "();\n");
         if (userVcdCol){ proxyfileWriter->addData(VCD_COL + USER_SUFFIX     + SKE_SUFFIX + "();\n");}
@@ -442,6 +516,7 @@ namespace kathryn{
 
     void ProxyBuildMng::startWriteMainSim(){
         proxyfileWriter->addData(genFunctionDec(true, MAIN_SIM) + "{\n");
+        proxyfileWriter->addData(CALLBACK_VAR_AMT + " = 0;\n");
         proxyfileWriter->addData( MAIN_SIM + SKE_SUFFIX + "();\n");
         proxyfileWriter->addData("}\n");
     }

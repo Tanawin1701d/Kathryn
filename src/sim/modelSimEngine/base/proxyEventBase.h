@@ -35,11 +35,12 @@ namespace kathryn{
         ~ProxySimEventBase() override;
         ////// sim base
         void eventWarmUp();
-        void simStartCurCycle()    override;
-        void curCycleCollectData() override;
-        void simStartNextCycle()   override;
-        void simExitCurCycle()     override{}
-        EventBase* genNextEvent()        override;
+        void simStartLongRunCycle() override;
+        void simStartCurCycle()     override;
+        void curCycleCollectData()  override;
+        void simStartNextCycle()    override;
+        void simExitCurCycle()      override{}
+        EventBase* genNextEvent()   override;
 
         bool needToDelete()        override{return false;}
 
@@ -82,7 +83,7 @@ namespace kathryn{
         ////// start sim optimize ///////////////
         /////////////////////////////////////////
 
-        virtual void startOptimizeSim()       = 0;
+        virtual void mainSim() = 0;
 
     };
 

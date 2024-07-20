@@ -10,7 +10,7 @@
 
 namespace kathryn{
     ProxySimEventBase::ProxySimEventBase():
-        EventBase(0, SIM_MODEL_PRIO),
+        EventBase(0, SIM_MODEL_PRIO, true),
         VCD_REC_POL(MDE_REC_SKIP),
         _vcdWriter(nullptr){
 #ifdef MODELCOMPILEVB
@@ -29,6 +29,11 @@ namespace kathryn{
         if ((VCD_REC_POL == MDE_REC_BOTH) | (VCD_REC_POL == MDE_REC_ONLY_INTERNAL)){
             startVcdDecVarInternal();
         }
+    }
+
+    void ProxySimEventBase::simStartLongRunCycle(){
+        assert(_isLongRangeSim);
+        mainSim();
     }
 
     void ProxySimEventBase::simStartCurCycle(){

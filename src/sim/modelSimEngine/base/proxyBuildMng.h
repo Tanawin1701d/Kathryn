@@ -16,9 +16,7 @@
 #include "sim/modelSimEngine/hwComponent/module/moduleSim.h"
 #include "util/fileWriter/fileWriterBase.h"
 #include "modelProxy.h"
-
-
-
+#include "traceEvent.h"
 
 
 namespace kathryn{
@@ -65,6 +63,15 @@ namespace kathryn{
         const std::string PERF_COL   = "startPerfCol";
         const std::string MAIN_SIM   = "mainSim";
 
+        const std::string CALLBACK_VAR_ARR_NAME    = "kathrynCallBackMeta";
+        const std::string MAX_SIZE_CB_ARR          = "MAX_PROX_CALLBACK_FUNCTION";
+        const std::string CALLBACK_VAR_AMT         = "kathrynCallBackAmt";
+        const std::string CALLBACK_GET_AMT         = "getCallBackAmt";
+        const std::string CALLBACK_GET_NO          = "getCallBackNo";
+        const std::string CALLBACK_CHECK_FUNC_NAME = "checkCallBack";
+
+        std::vector<TraceEvent>*  callBackEvents = nullptr;
+
     public:
         ProxyBuildMng(std::string testName): TEST_NAME(std::move(testName)){};
         ~ProxyBuildMng();
@@ -72,31 +79,39 @@ namespace kathryn{
         doTopologySort(std::vector<ModelProxyBuild*>& graph);
 
         std::string genFunctionDec(bool classRef, const std::string& funcName);
+        std::string genDummyFunctionFullDec(bool classRef, const std::string& funcName);
 
         void setStartModule(Module* startModule);
 
         ////////// generate path
         void startWriteModelSim();
+        ///////// for wrate call back meta
+        void startWriteCallBackVar();
         ////////// for create all variable
         void startWriteCreateVariable();
         ///////// void start write perf create
         void startWritePerfDec();
         ////////// for start register function
         void startWriteRegisterCallback();
+        ////////// call back function
+        void startWriteCallBackCheckAndRet();
+        void startWriteCallBackGetAmt();
+        void startWriteCallbackGetNo();
+        ///////// for create vcd Decvar
+        void startWriteVcdDecVar(bool isUser); //// else if internal
+        ///////// for create vcd Decvar
+        void startWriteVcdCol(bool isUser);
+        void startWriteVcdColSke(bool isUser);
+
+        ///////// void start write perf col
+        void startWritePerfColSke();
+        void startWritePerfCol();
         ////////// for wire expression memElehodler*   etc....
         void startMainOpEleSimSke();
         void startMainOpEleSim();
         ////////// for register
         void startFinalizeEleSimSke();
         void startFinalizeEleSim();
-        ///////// for create vcd Decvar
-        void startWriteVcdDecVar(bool isUser); //// else if internal
-        ///////// for create vcd Decvar
-        void startWriteVcdCol(bool isUser);
-        void startWriteVcdColSke(bool isUser);
-        ///////// void start write perf col
-        void startWritePerfColSke();
-        void startWritePerfCol();
         //////// void start write for optimization
         void startWriteMainSimSke(bool userVcdCol,
                                   bool sysVcdCol,

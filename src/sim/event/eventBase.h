@@ -15,21 +15,29 @@ namespace kathryn{
     static int SIM_USER_PRIO_FRONT_CYCLE  = 10;
     static int SIM_USER_PRIO_BACK_CYCLE  = 8;
     static int SIM_MODEL_PRIO = 9;
+    constexpr int MAX_PROX_CALLBACK_FUNCTION = 25;
 
     class EventBase{
     protected:
         CYCLE _targetCycle = 0;
         int   _priority = 0;
+        //////// when this event is finish it may req callback function
+        ///////  limitCycle
+        bool  _isLongRangeSim = false;
+        CYCLE _amtLimitLongRangeCycle = 1;
 
     public:
 
-        explicit EventBase(CYCLE curCycle, int priority):
+        explicit EventBase(CYCLE curCycle, int priority, bool longRangeSim):
                 _targetCycle(curCycle),
-                _priority(priority)
+                _priority(priority),
+                _isLongRangeSim(longRangeSim)
             {}
 
         /** it is very crucial to do virtual deconstructor*/
         virtual ~EventBase() = default;
+
+        virtual void simStartLongRunCycle() = 0;
         /**
           * compute value that will be assigned in this cycle
           * */
@@ -79,6 +87,20 @@ namespace kathryn{
         virtual bool needToDelete(){
             return true;
         }
+        virtual int getCallBackNo(int idx) const{
+            return -1;
+        }
+        virtual int getCallBackAmt() const{
+            return 0;
+        }
+
+        void setLongRangeSim(CYCLE amtCycle){
+            assert(_isLongRangeSim);
+            _amtLimitLongRangeCycle = amtCycle;
+            assert(amtCycle > 0);
+        }
+
+        bool isLongRageSim(){return _isLongRangeSim;}
 
     };
 

@@ -62,5 +62,7 @@ add_executable(Kathryn
         src/util/fileWriter/codeWriter/codeBaseWriter.h
         src/sim/modelSimEngine/hwComponent/abstract/genHelper.cpp
         src/sim/modelSimEngine/hwComponent/abstract/genHelper.h
+        src/sim/modelSimEngine/base/traceEvent.cpp
+        src/sim/modelSimEngine/base/traceEvent.h
 
 )
