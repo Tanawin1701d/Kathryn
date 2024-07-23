@@ -111,6 +111,7 @@ namespace kathryn{
         }
 
         void sortUpEventByPriority(){
+            ////////std::cout << _updateMeta.size() << std::endl;
             std::sort(_updateMeta.begin(), _updateMeta.end(), upEventCmp);
         }
 

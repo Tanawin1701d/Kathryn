@@ -10,7 +10,7 @@
 
 namespace kathryn{
     ProxySimEventBase::ProxySimEventBase():
-        EventBase(0, SIM_MODEL_PRIO, true),
+        EventBase(0, SIM_MODEL_PRIO, false),
         VCD_REC_POL(MDE_REC_SKIP),
         _vcdWriter(nullptr){
 #ifdef MODELCOMPILEVB
@@ -33,17 +33,32 @@ namespace kathryn{
 
     void ProxySimEventBase::simStartLongRunCycle(){
         assert(_isLongRangeSim);
-        mainSim();
+        std::cout << "start long range run with amount lim cycle "<<
+            _amtLimitLongRangeCycle << std::endl;
+        amtLRSim = mainSim();
+
+        //////std::cout << "long range get  amtLRSim "<< amtLRSim << std::endl;
     }
 
     void ProxySimEventBase::simStartCurCycle(){
         ///// the order is very strict
         ///do not change to simulation order
+        ///std::cout << "startSimCur maybe" << std::endl;
+        if (isLongRageSim()){
+            ////std::cout << "skip cause long range run" << std::endl;
+            return;
+        }
+        ////std::cout << "startSimCur" << std::endl;
         startMainOpEleSim(); ////// wire mem eleHolder nest expression
     }
 
     void ProxySimEventBase::curCycleCollectData(){
         ///// start collect vcd
+        ///
+        if (isLongRageSim()){
+            ////std::cout << "skip cause long range run" << std::endl;
+            return;
+        }
 
         if ((VCD_REC_POL == MDE_REC_BOTH) |
             (VCD_REC_POL == MDE_REC_ONLY_USER) |
@@ -76,6 +91,10 @@ namespace kathryn{
     }
 
     void ProxySimEventBase::simStartNextCycle(){
+        if (isLongRageSim()){
+            /////std::cout << "skip cause long range run" << std::endl;
+            return;
+        }
         startFinalizeEleSim();
         //////// sim register change exact register
            ///////////// do not wory about register simulation will get false new
@@ -85,7 +104,11 @@ namespace kathryn{
 
     EventBase* ProxySimEventBase::genNextEvent(){
         ///////////////std::cout << _targetCycle << std::endl;
-        _targetCycle++;
+        if (isLongRageSim()){
+            _targetCycle += getAmtLRsim();
+        }else{
+            _targetCycle++;
+        }
         return this;
     }
 }

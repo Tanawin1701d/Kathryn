@@ -11,10 +11,10 @@ namespace kathryn{
 
     typedef long long int CYCLE;
 
-    static int SIM_CC_TRIGGER_PRIO_FRONT_CYCLE = 10;
-    static int SIM_USER_PRIO_FRONT_CYCLE  = 10;
-    static int SIM_USER_PRIO_BACK_CYCLE  = 8;
-    static int SIM_MODEL_PRIO = 9;
+    constexpr int SIM_CC_TRIGGER_PRIO_FRONT_CYCLE = 10;
+    constexpr int SIM_USER_PRIO_FRONT_CYCLE  = 10;
+    constexpr int SIM_MODEL_PRIO = 9;
+    constexpr int SIM_USER_PRIO_BACK_CYCLE  = 8;
     constexpr int MAX_PROX_CALLBACK_FUNCTION = 25;
 
     class EventBase{
@@ -87,10 +87,10 @@ namespace kathryn{
         virtual bool needToDelete(){
             return true;
         }
-        virtual int getCallBackNo(int idx) const{
+        [[nodiscard]] virtual int getCallBackNo(int idx) const{
             return -1;
         }
-        virtual int getCallBackAmt() const{
+        [[nodiscard]] virtual int getCallBackAmt() const{
             return 0;
         }
 
@@ -100,7 +100,7 @@ namespace kathryn{
             assert(amtCycle > 0);
         }
 
-        bool isLongRageSim(){return _isLongRangeSim;}
+        bool isLongRageSim() const{return _isLongRangeSim;}
 
     };
 

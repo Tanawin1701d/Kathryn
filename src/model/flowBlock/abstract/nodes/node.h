@@ -18,7 +18,7 @@
 #include "model/flowBlock/abstract/spReg/stateReg.h"
 #include "model/flowBlock/abstract/spReg/syncReg.h"
 #include "model/debugger/modelDebugger.h"
-#include "model/simIntf/flowBlock/flowBaseSim.h"
+#include "sim/modelSimEngine/flowBlock/flowBaseSim.h"
 
 
 namespace kathryn {

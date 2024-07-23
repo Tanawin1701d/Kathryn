@@ -53,11 +53,11 @@ namespace kathryn{
 
 
             if (isConOccur){
-                auto ifBlock = cb.addIf(condStr);
-                     ifBlock.addSt(assStr);
-                     if (!auxAssStr.empty()){
-                         ifBlock.addSt(auxAssStr);
-                     }
+                CbIfCxx& ifBlock = cb.addIf(condStr);
+                ifBlock.addSt(assStr);
+                if (!auxAssStr.empty()){
+                    ifBlock.addSt(auxAssStr);
+                }
             }else{
                 cb.addSt(assStr);
                 cb.addSt(auxAssStr);
@@ -85,7 +85,7 @@ namespace kathryn{
             (srcSlice == desSlice)){
             ///////// optimize
             return desVarName + " = " + srcVarName;
-        }
+            }
 
 
         std::string ret;
@@ -140,6 +140,7 @@ namespace kathryn{
 
 
     void LogicSimEngine::proxyBuildInit(){
+        //// std::cout << _ident->getVarName() << std::endl;
         _asb->sortUpEventByPriority();
         for (UpdateEvent* updateEvent : _asb->getUpdateMeta()){
             if (updateEvent->srcUpdateCondition != nullptr){
@@ -190,13 +191,17 @@ namespace kathryn{
         if (_isTempReq){
             cb.addSt(getTempVarName() + " = " + getVarName());
         }
-        createOpWithSoleCondition(cb);
-        // if (_asb->checkDesIsFullyAssignAndEqual()){
+
+        if (_asb->checkDesIsFullyAssignAndEqual()){
+            genOpWithChainCondition(cb);
+        }else{
+            createOpWithSoleCondition(cb);
+        }
     }
 
     void LogicSimEngine::createOpEndCycle2(CbBaseCxx& cb){
         if (_isTempReq){
-             cb.addSt(getVarName() + " = " + getTempVarName());
+            cb.addSt(getVarName() + " = " + getTempVarName());
         }
     }
 
@@ -213,111 +218,90 @@ namespace kathryn{
                  "registeration of proxy sim manager");
         return proxyRep;
     }
+
+
+
+
+ void LogicSimEngine::genOpWithChainCondition(CbBaseCxx& cb, const std::string& auxAssStr){
+
+        CbIfCxx* firstIfStatement = nullptr;
+
+         int idx = 0;
+         int maxUpdateEvent = _asb->getUpdateMeta().size();
+         std::vector<UpdateEvent*> reversedUpdateEvents = _asb->getUpdateMeta();
+         std::reverse(reversedUpdateEvents.begin(), reversedUpdateEvents.end());
+
+         while (idx < maxUpdateEvent){
+
+             std::vector<UpdateEvent*> updateEventGrp;
+             updateEventGrp.push_back(reversedUpdateEvents[idx]);
+             for (idx = idx + 1; idx < maxUpdateEvent; idx++){
+                 UpdateEvent& curUpdateEvent = *reversedUpdateEvents[idx];
+                 if (curUpdateEvent.priority == updateEventGrp[0]->priority){
+                     if (curUpdateEvent.srcUpdateValue->isConstOpr() &&
+                         updateEventGrp[0]->srcUpdateValue->isConstOpr() &&
+                         (curUpdateEvent.srcUpdateValue->getConstOpr() ==
+                             updateEventGrp[0]->srcUpdateValue->getConstOpr())
+                     ){
+                         updateEventGrp.push_back(reversedUpdateEvents[idx]);
+                         continue; ///// grp updateEvent for const value
+                     }
+                     if (curUpdateEvent.srcUpdateValue ==
+                         updateEventGrp[0]->srcUpdateValue){
+                         updateEventGrp.push_back(reversedUpdateEvents[idx]);
+                         continue; ///// grp updateEvent for other value
+                     }
+                 }
+                 break;
+             }
+
+             assert(updateEventGrp[0]->srcUpdateValue->getOperableSlice().getSize() >=
+                 updateEventGrp[0]->desUpdateSlice.getSize());
+
+
+             std::string conStr;
+
+             for (UpdateEvent* updateEvent : updateEventGrp){
+                 bool isSubConOccur = false;
+                 conStr += "(";
+                 if (updateEvent->srcUpdateState != nullptr){
+                     conStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateState);
+                     isSubConOccur = true;
+                 }
+
+                 if (updateEvent->srcUpdateCondition != nullptr){
+                     if (isSubConOccur){
+                         conStr += " && ";
+                     }
+                     conStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateCondition);
+                     isSubConOccur = true;
+                 }
+
+                 if (!isSubConOccur){
+                     conStr += "true";
+                 }
+                 conStr += ")";
+                 if ((updateEvent) != (*updateEventGrp.rbegin())){
+                     conStr += " || ";
+                 }
+             }
+
+
+             CbIfCxx* curIfStatement = nullptr;
+             if (firstIfStatement == nullptr){
+                 firstIfStatement = &cb.addIf(conStr);
+                 curIfStatement   = firstIfStatement;
+             }else{
+                 curIfStatement   = &firstIfStatement->addElif(conStr);
+             }
+
+
+             curIfStatement->addSt(genAssignAEqB(updateEventGrp[0]->desUpdateSlice, _isTempReq,
+                                   updateEventGrp[0]->srcUpdateValue));
+             if (!auxAssStr.empty()){
+                 curIfStatement->addSt(auxAssStr);
+             }
+         }
+
+     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// std::string genOpWithChainCondition          (const std::string& auxAssStr = "");
-// std::string LogicSimEngine::genOpWithChainCondition(const std::string& auxAssStr){
-//         bool secondTime = false;
-//         std::string retStr;
-//
-//         int idx = 0;
-//         int maxUpdateEvent = _asb->getUpdateMeta().size();
-//         std::vector<UpdateEvent*> reversedUpdateEvents = _asb->getUpdateMeta();
-//         std::reverse(reversedUpdateEvents.begin(), reversedUpdateEvents.end());
-//
-//         while (idx < maxUpdateEvent){
-//             std::vector<UpdateEvent*> updateEventGrp;
-//             updateEventGrp.push_back(reversedUpdateEvents[idx]);
-//             for (idx = idx + 1; idx < maxUpdateEvent; idx++){
-//                 UpdateEvent& curUpdateEvent = *reversedUpdateEvents[idx];
-//                 if (curUpdateEvent.priority == updateEventGrp[0]->priority){
-//                     if (curUpdateEvent.srcUpdateValue->isConstOpr() &&
-//                         updateEventGrp[0]->srcUpdateValue->isConstOpr() &&
-//                         (curUpdateEvent.srcUpdateValue->getConstOpr() ==
-//                             updateEventGrp[0]->srcUpdateValue->getConstOpr())
-//                     ){
-//                         updateEventGrp.push_back(reversedUpdateEvents[idx]);
-//                         continue; ///// grp updateEvent for const value
-//                     }
-//                     if (curUpdateEvent.srcUpdateValue ==
-//                         updateEventGrp[0]->srcUpdateValue){
-//                         updateEventGrp.push_back(reversedUpdateEvents[idx]);
-//                         continue; ///// grp updateEvent for other value
-//                     }
-//                 }
-//                 break;
-//             }
-//
-//             assert(updateEventGrp[0]->srcUpdateValue->getOperableSlice().getSize() >=
-//                 updateEventGrp[0]->desUpdateSlice.getSize());
-//
-//
-//             retStr += (secondTime ? "         else if ( " : "         if ( ");
-//
-//
-//             for (UpdateEvent* updateEvent : updateEventGrp){
-//                 retStr += "(";
-//                 bool isSubConOccur = false;
-//                 if (updateEvent->srcUpdateState != nullptr){
-//                     retStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateState);
-//                     isSubConOccur = true;
-//                 }
-//
-//                 if (updateEvent->srcUpdateCondition != nullptr){
-//                     if (isSubConOccur){
-//                         retStr += " && ";
-//                     }
-//                     retStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateCondition);
-//                     isSubConOccur = true;
-//                 }
-//
-//                 if (!isSubConOccur){
-//                     retStr += "true";
-//                 }
-//                 retStr += ")\n          ";
-//                 if ((updateEvent) != (*updateEventGrp.rbegin())){
-//                     retStr += " || ";
-//                 }
-//             }
-//
-//             retStr += "){\n         ";
-//             retStr += "         ";
-//             retStr += genAssignAEqB(updateEventGrp[0]->desUpdateSlice, _isTempReq,
-//                                     updateEventGrp[0]->srcUpdateValue) + "\n";
-//             if (!auxAssStr.empty()){
-//                 retStr += auxAssStr + "\n";
-//             }
-//             retStr += "         }\n";
-//             secondTime = true;
-//         }
-//
-//         return retStr;
-//     }

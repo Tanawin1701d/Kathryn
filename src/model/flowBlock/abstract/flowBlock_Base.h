@@ -22,7 +22,7 @@
 #include "model/flowBlock/abstract/nodes/stateNode.h"
 #include "model/flowBlock/abstract/nodes/logicNode.h"
 #include "flowIdentifiable.h"
-#include "model/simIntf/flowBlock/flowBaseSim.h"
+#include "sim/modelSimEngine/flowBlock/flowBaseSim.h"
 
 
 namespace kathryn {

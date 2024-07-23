@@ -18,9 +18,10 @@ struct CbFuncDec;
 
 struct CbBaseCxx: CbBase{
 
-    ~CbBaseCxx() override = default;
+    CbBaseCxx(): CbBase(){}
+    ~CbBaseCxx()  = default;
     CbIfCxx& addIf(std::string condition);
-    virtual CbFuncDec& addFuc(std::string funcName, std::string msClassName, std::string retType);
+    CbBaseCxx& addSubBlock();
     std::string toString(int ident) override;
 
 
@@ -34,19 +35,12 @@ struct CbIfCxx: CbBaseCxx{
     std::vector<CbIfCxx> _contBlock;
 
     CbIfCxx(bool isSubChain, std::string condtion);
-    ~CbIfCxx() override = default;
+    ~CbIfCxx() = default;
 
     CbIfCxx& addElif(std::string condition);
     std::string toString(int ident) override;
 
 
-};
-
-struct CbFuncDec: CbBaseCxx{
-
-    CbFuncDec(std::string funcName, std::string msClassName, std::string retType);
-    ~CbFuncDec() override = default;
-    CbFuncDec& addFuc(std::string funcName, std::string msClassName, std::string retType) override;
 };
 
 }

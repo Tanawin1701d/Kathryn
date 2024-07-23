@@ -14,8 +14,7 @@
 namespace kathryn{
     FlowBaseSimEngine::FlowBaseSimEngine(FlowBlockBase* flowBlockBase):
         _flowBlockBase(flowBlockBase),
-        _writer(nullptr),
-        _opSpace(0){
+        _writer(nullptr){
         assert(_flowBlockBase != nullptr);
     }
 
@@ -64,77 +63,74 @@ namespace kathryn{
     }
 
 
-    std::string FlowBaseSimEngine::createGlobalVariable(){
+    void FlowBaseSimEngine::createGlobalVariable(CbBaseCxx& cb){
         std::string ret = "ull " + getVarName() + " = 0;" +
             "ull " + getVarNameCurStatus() + " = 0;\n";
+
+
+        cb.addSt("ull " + getVarName() + " = 0");
+        cb.addSt("ull " + getVarNameCurStatus() + " = 0");
+
+
         for (FlowBlockBase* fb : _flowBlockBase->getSubBlocks()){
             FlowBaseSimEngine* subBlockSimEngine = fb->getSimEngine();
-            ret += subBlockSimEngine->createGlobalVariable();
+            subBlockSimEngine->createGlobalVariable(cb);
         }
         for (FlowBlockBase* fb : _flowBlockBase->getConBlocks()){
             FlowBaseSimEngine* conBlockSimEngine = fb->getSimEngine();
-            ret += conBlockSimEngine->createGlobalVariable();
+            conBlockSimEngine->createGlobalVariable(cb);
         }
-        return ret;
     }
 
-    std::string FlowBaseSimEngine::createOp(){
-        std::string space = genConString(' ', _opSpace);
+    void FlowBaseSimEngine::createOp(CbBaseCxx& cb){
 
-        std::string preRet = space + "{ ////" + _flowBlockBase->getGlobalName() + "\n";
-
+        cb.addCm("////////////////////////////////////");
+        cb.addCm(_flowBlockBase->getGlobalName());
         ////////////////////////////////////////////////////////////////////////////
         //////////// subBlock build
         ////////////////////////////////////////////////////////////////////////////
         for (FlowBlockBase* fb : _flowBlockBase->getSubBlocks()){
             FlowBaseSimEngine* subBlockSimEngine = fb->getSimEngine();
-            subBlockSimEngine->setOpSpace(_opSpace + SUB_FLOWBLOCK_GEN_OP_SPACE);
-            preRet += subBlockSimEngine->createOp();
+            subBlockSimEngine->createOp(cb.addSubBlock());
         }
 
         /////////////////////////////////////////////////////////////////////////////
         ///////////// this block purpose
         /////////////////////////////////////////////////////////////////////////////
-
-        preRet += space;
-        preRet += getVarNameCurStatus() + " = 0;\n";
+        cb.addSt(getVarNameCurStatus() + " = 0");
 
         //////////// basic node recruitment
+        cb.addCm("basic node rc");
         for (Node* sysNode : _flowBlockBase->getSysNodes()){
             assert(sysNode != nullptr);
             for (CtrlFlowRegBase* stateReg : sysNode->getCycleRelatedReg()){
                 if (stateReg != nullptr){
                     std::string regName = stateReg->getSimEngine()->getVarName();
-                    preRet += space;
-                    preRet += getVarNameCurStatus() + " |= " + regName + ";\n";
+                    cb.addSt( getVarNameCurStatus() + " |= " + regName);
                 }
             }
         }
         ///////////// sub block recruitment
         for (FlowBlockBase* fb : _flowBlockBase->getSubBlocks()){
             FlowBaseSimEngine* subBlockSimEngine = fb->getSimEngine();
-            preRet += space;
-            preRet += getVarNameCurStatus() + " |= "
-                + subBlockSimEngine->getVarNameCurStatus() + ";\n";
+            cb.addSt( getVarNameCurStatus() + " |= "
+                + subBlockSimEngine->getVarNameCurStatus());
         }
-        preRet += space;
-        preRet += getVarName() + " += " +
-            getVarNameCurStatus() + ";\n";
+        cb.addSt(getVarName() + " += " + getVarNameCurStatus());
 
-        preRet += space + "}\n";
 
         ////////////////////////////////////////////////////////////////////////////
         /////////////// conblock block purpose
         ////////////////////////////////////////////////////////////////////////////
 
         //////////// do for con block
+
         for (FlowBlockBase* fb : _flowBlockBase->getConBlocks()){
             FlowBaseSimEngine* conBlockSimEngine = fb->getSimEngine();
-            conBlockSimEngine->setOpSpace(_opSpace);
-            preRet += conBlockSimEngine->createOp();
+            conBlockSimEngine->createOp(cb);
         }
 
-        return preRet;
+        cb.addCm("////////////////////////////////////");
     }
 
     //////////////////// return initiate

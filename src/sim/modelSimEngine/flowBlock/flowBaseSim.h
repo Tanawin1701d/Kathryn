@@ -29,7 +29,6 @@ namespace kathryn{
     protected:
         FlowBlockBase* _flowBlockBase  = nullptr;
         FlowColEle*    _writer         = nullptr;
-        int            _opSpace        = 0;
         ValRepBase*    _proxyRepCurBit = nullptr;
 
     public:
@@ -43,14 +42,12 @@ namespace kathryn{
         void                     getRecurVarName(std::vector<std::string>& result);
         void                     getRecurVarNameCurStsatus(std::vector<std::string>& result);
 
-        std::string createGlobalVariable()   override;
-        std::string createLocalVariable()    override{return "";}
-        std::string createOp()               override; ///// we use op to do all operation
-        std::string createOpEndCycle()       override{return "";}
-        std::string createOpEndCycle2()      override{return "";}
+        void createGlobalVariable (CbBaseCxx& cb) override;
+        void createLocalVariable  (CbBaseCxx& cb) override{}
+        void createOp             (CbBaseCxx& cb) override; ///// we use op to do all operation
+        void createOpEndCycle     (CbBaseCxx& cb) override{}
+        void createOpEndCycle2    (CbBaseCxx& cb) override{}
         bool        isUserDeclare()          override{return false;}
-
-        void        setOpSpace(int space){_opSpace = space; assert(space >= 0);}
 
         ////////
         ///

@@ -22,6 +22,11 @@ namespace kathryn{
         explicit Wire(int size,
             bool requireDefVal = true,
             bool initCom       = true);
+
+        // ~Wire(){
+        //     std::cout << "wire is freee" << std::endl;
+        // }
+
         void com_final() override{};
 
         /**override assignable*/

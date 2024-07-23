@@ -5,7 +5,7 @@
 #ifndef MODEL_COMPILE_PROXY_EVENT_H
 #define MODEL_COMPILE_PROXY_EVENT_H
 
-#include "model/simIntf/base/proxyEventBase.h"
+#include "sim/modelSimEngine/base/proxyEventBase.h"
 
 namespace kathryn{
 
@@ -14,16 +14,22 @@ namespace kathryn{
     public:
         ////// sim proxy
         void startRegisterCallBack()  override;
-        void startMainOpEleSim()    override;
-        void startFinalizeEleSim() override;
+        void startMainOpEleSim()      override;
+        void startFinalizeEleSim()    override;
         ///// vcd collector
-        void startVcdDecVarUser()    override;
-        void startVcdDecVarInternal()override;
-        void startVcdColUser()       override;
-        void startVcdColInternal()   override;
+        void startVcdDecVarUser()     override;
+        void startVcdDecVarInternal() override;
+        void startVcdColUser()        override;
+        void startVcdColInternal()    override;
         ///// start flowblock CollectData
-        void startPerfCol()          override;
-        void startOptimizeSim()      override;
+        void startPerfCol()           override;
+        CYCLE mainSim() override;
+
+        ////// set callback system
+        int getCallBackNo(int idx) const override;
+        int getCallBackAmt() const override;
+
+
 
     };
 

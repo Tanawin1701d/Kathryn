@@ -54,7 +54,7 @@ namespace kathryn{
         const std::string USER_SUFFIX          = "User";
         const std::string INTERNAL_SUFFIX      = "Internal";
         const std::string REGIS_CALLBACK       = "startRegisterCallBack";
-        const std::string REGIS_CALLBACK_LOGIC = "startRegisterCallBack";
+        const std::string REGIS_CALLBACK_LOGIC = "registerToCallBack";
         const std::string REGIS_CALLBACK_PERF  = "registerToCallBackPerf";
         const std::string MAINOP_SIM = "startMainOpEleSim";
         const std::string FIZOP_SIM  = "startFinalizeEleSim";
@@ -73,15 +73,17 @@ namespace kathryn{
         std::vector<TraceEvent>*  callBackEvents = nullptr;
 
     public:
-        ProxyBuildMng(std::string testName): TEST_NAME(std::move(testName)){};
+        explicit ProxyBuildMng(std::string testName):
+        TEST_NAME(std::move(testName)){};
         ~ProxyBuildMng();
         std::vector<ModelProxyBuild*>
         doTopologySort(std::vector<ModelProxyBuild*>& graph);
 
-        std::string genFunctionDec(bool classRef, const std::string& funcName);
+        std::string genFunctionDec(bool classRef, const std::string& funcName, const std::string& retType = "void");
         std::string genDummyFunctionFullDec(bool classRef, const std::string& funcName);
 
         void setStartModule(Module* startModule);
+        void setTracer(std::vector<TraceEvent>* tracers);
 
         ////////// generate path
         void startWriteModelSim();

@@ -24,6 +24,8 @@ namespace kathryn{
         recruitMemElh(result, true);
         ///// init
         for (ModelProxyBuild* mbp : result){
+            ///std::cout << "--------" << std::endl;
+            ///std::cout << mbp->getVarName() << std::endl;
             mbp->proxyBuildInit();
         }
         //////////

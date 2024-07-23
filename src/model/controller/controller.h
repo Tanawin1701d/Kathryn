@@ -39,7 +39,10 @@ namespace kathryn {
         MODULE_INIT, /** module element is declared but not yet init design flow only for element initialization*/
         MODULE_END_GLOB_DECLARE, /** module end init element*/
         MODULE_INIT_DESIGN_FLOW, /** module start init design flow*/
-        MODULE_END /** module finalize*/
+        MODULE_END, /** module finalize*/
+
+        MODULE_INIT_AUX,
+        MODULE_FINAL_AUX
 
     };
 
@@ -122,14 +125,18 @@ namespace kathryn {
          *
          * */
 
-        ////// for global component
+        ////// for global module
         void on_globalModule_init_component();
         void on_globalModule_init_designFlow();
-        ////// for basic component
+        void on_globalModule_init_auxilaryComponent(); ///// for init some readonly logic for simulation trigger
+        void on_globalModule_final_auxilaryComponent();
+        ////// for nomal module
         void on_module_init_components(Module* ptr);
         void on_module_end_init_components(Module* ptr);
         void on_module_init_designFlow(Module* ptr); /** todo make design flow implement correctly*/
         void on_module_final(Module* ptr);
+
+
 
         /**
          *

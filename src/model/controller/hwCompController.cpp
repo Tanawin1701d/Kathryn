@@ -309,6 +309,7 @@ namespace kathryn{
      *
      * */
 
+    ///////// global module
 
     void ModelController::on_globalModule_init_component() {
         /**initiate component*/
@@ -329,6 +330,33 @@ namespace kathryn{
         moduleStack.push(Module_Stack_Element{globalModulePtr, MODULE_INIT_DESIGN_FLOW});
         globalModulePtr->buildAll();
     }
+
+    void ModelController::on_globalModule_init_auxilaryComponent(){
+
+        assert(globalModulePtr != nullptr);
+        assert(moduleStack.empty());
+        assert(isAllFlowStackEmpty());
+        moduleStack.push(Module_Stack_Element{globalModulePtr, MODULE_INIT_AUX});
+
+    }
+
+    void ModelController::on_globalModule_final_auxilaryComponent(){
+
+        assert(!moduleStack.empty());
+        assert(moduleStack.top().state == MODULE_INIT_AUX);
+        moduleStack.top().state = MODULE_INIT_AUX;
+        moduleStack.pop();
+
+    }
+
+
+
+
+
+
+
+
+    ///////// normal module
 
 
     void ModelController::on_module_init_components(Module* ptr) {

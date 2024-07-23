@@ -40,7 +40,13 @@ namespace kathryn{
                UserEvent* parent,
                int pri);
 
+     UserEvent(std::function<void(UserEvent&)> activeFunc,
+               CYCLE simCycle,
+               int pri);
+
      UserEvent();
+
+     void simStartLongRunCycle() override{assert(false);}
 
      void simStartCurCycle() override{
          _activeFunc(*this);

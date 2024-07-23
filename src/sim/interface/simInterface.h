@@ -7,12 +7,12 @@
 
 #include <condition_variable>
 #include <thread>
-#include "model/simIntf/base/proxyBuildMng.h"
+#include "sim/modelSimEngine/base/proxyBuildMng.h"
 #include "model/controller/controller.h"
-#include "model/simIntf/base/proxyEventBase.h"
 #include "sim/event/userEvent.h"
 #include "sim/controller/simController.h"
 #include "sim/event/ctTrigEvent.h"
+#include "sim/modelSimEngine/base/traceEvent.h"
 #include "util/termColor/termColor.h"
 
 /////#define sim agent << [&]()
@@ -31,8 +31,11 @@ namespace kathryn{
         ProxyBuildMng           _proxyBuildMng;
 
 
+        std::vector<TraceEvent> _traceEvents;
+        CYCLE                   _nextLimitAmtLRC  = INT64_MAX; //// next limit amount long run cyclc
+        ///////////////////
         /**concrete sim*/
-
+        ///////////////////
         std::unique_ptr<std::thread> conThread;
         bool                         requireConSim  = true;
         ConcreteTriggerEvent*        lastCtTrigger = nullptr;
@@ -46,6 +49,16 @@ namespace kathryn{
         void conEndCycle();
         //// to initialize system and finalize system
         void describeConWrapper();
+        //////////////////////////////////////////////////////
+        ///////////////////
+        ////**trigger mng*/
+        enum SIM_INTERFACE_EVENT{
+            EXIT_SIM
+        };
+        void setNextLimitAmtLRC(CYCLE amtCycle);
+        void trig(Operable& opr, std::function<void()> callback);
+        void trig(Operable& opr, SIM_INTERFACE_EVENT event);
+        void describeModelTriggerWrapper();
 
 
     public:
@@ -60,10 +73,13 @@ namespace kathryn{
         void simStart();
         /**describe default value*/
         virtual void    describeDef();
+        /**describe model trigger value*/
+        virtual void    describeModelTrigger(){};
         /**describe discreate event*/
         virtual void describe(){};
         /**describe concrete event*/
         virtual void describeCon(){};
+
         /** test value helper*/
         void testAndPrint(const std::string& testName, ValRepBase& simVal, ValRepBase& rhs);
         void testAndPrint(const std::string& testName, ull simVal, ull expect);

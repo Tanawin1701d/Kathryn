@@ -138,11 +138,13 @@ namespace kathryn{
             mMod(d, testSimMod36, 1);
             startModelKathryn();
             sim36 simulator((testSimMod36*) &d, _simId, prefix);
+            //std::cout << getGlobalModulePtr()->getUserWires()[0]->getVarName() << std::endl;
+            //std::cout << getGlobalModulePtr()->getUserWires()[0]->getSimEngine()->getVarName() << std::endl;
             simulator.simStart();
         }
 
     };
 
-    Sim36TestEle ele36(-1);
+    Sim36TestEle ele36(36);
 
 }

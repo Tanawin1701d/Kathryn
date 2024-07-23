@@ -4,6 +4,7 @@
 
 #include "wireSim.h"
 
+#include <model/hwComponent/wire/wire.h>
 
 
 namespace kathryn{
@@ -22,6 +23,8 @@ namespace kathryn{
         false,
         0),
     _master(master){
+        ///std::cout << "wire simengine is created" << std::endl;
+        //std::cout << master->getVarName() << std::endl;
         assert(_master != nullptr);
     }
 

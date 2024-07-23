@@ -82,8 +82,9 @@ namespace kathryn{
     }
 
     std::string ProxyBuildMng::genFunctionDec(bool classRef,
-                                              const std::string& funcName){
-        return "void " + (classRef ? (BASE_CLASS_NAME + "::"): "") + funcName + "()";
+                                              const std::string& funcName,
+                                              const std::string& retType){
+        return retType + " " + (classRef ? (BASE_CLASS_NAME + "::"): "") + funcName + "()";
     }
 
     std::string ProxyBuildMng::genDummyFunctionFullDec(bool classRef,
@@ -97,6 +98,10 @@ namespace kathryn{
     void ProxyBuildMng::setStartModule(Module* startModule){
         _startModule = startModule;
         moduleSimEngine = startModule->getSimEngine();
+    }
+    void ProxyBuildMng::setTracer(std::vector<TraceEvent>* tracers){
+        assert(tracers != nullptr);
+        callBackEvents = tracers;
     }
 
     void ProxyBuildMng::startWriteModelSim(){
@@ -120,6 +125,9 @@ namespace kathryn{
         proxyfileWriter->addData("namespace kathryn{\n\n\n\n\n\n");
 
         ///////// global variable
+        proxyfileWriter->addData("int " + CALLBACK_VAR_AMT +"=0;\n");
+        proxyfileWriter->addData("int " + CALLBACK_VAR_ARR_NAME +"["+
+            MAX_SIZE_CB_ARR + "];\n");
         startWriteCreateVariable();
         startWritePerfDec();
         //////////////////////////////
@@ -138,8 +146,8 @@ namespace kathryn{
             startWriteVcdCol    (true);
         }else{
             ///// no need to build ske
-            proxyfileWriter->addData(genDummyFunctionFullDec(true, VCD_DEC));
-            proxyfileWriter->addData(genDummyFunctionFullDec(true, VCD_COL));
+            proxyfileWriter->addData(genDummyFunctionFullDec(true, VCD_DEC + USER_SUFFIX));
+            proxyfileWriter->addData(genDummyFunctionFullDec(true, VCD_COL + USER_SUFFIX));
         }
         if (internalVcd){
             startWriteVcdDecVar (false);
@@ -268,16 +276,16 @@ namespace kathryn{
     }
 
     void ProxyBuildMng::startWriteCallBackGetAmt(){
-        proxyfileWriter->addData("int " + BASE_CLASS_NAME + "::" + CALLBACK_GET_AMT + "()");
+        proxyfileWriter->addData("int " + BASE_CLASS_NAME + "::" + CALLBACK_GET_AMT + "() const");
         proxyfileWriter->addData("{\n");
         proxyfileWriter->addData("return " + CALLBACK_VAR_AMT + ";\n");
         proxyfileWriter->addData("}\n");
     }
 
     void ProxyBuildMng::startWriteCallbackGetNo(){
-        proxyfileWriter->addData("int " + BASE_CLASS_NAME + "::" + CALLBACK_GET_NO + "(int idx)");
+        proxyfileWriter->addData("int " + BASE_CLASS_NAME + "::" + CALLBACK_GET_NO + "(int idx) const");
         proxyfileWriter->addData("{\n");
-        proxyfileWriter->addData("return " + CALLBACK_VAR_ARR_NAME +"(idx);\n");
+        proxyfileWriter->addData("return " + CALLBACK_VAR_ARR_NAME +"[idx];\n");
         proxyfileWriter->addData("}\n");
     }
 
@@ -439,8 +447,8 @@ namespace kathryn{
     }
 
     void ProxyBuildMng::startMainOpEleSim(){
-        proxyfileWriter->addData(genFunctionDec(true, BASE_CLASS_NAME) + "{\n");
-        proxyfileWriter->addData(BASE_CLASS_NAME + SKE_SUFFIX + "();\n");
+        proxyfileWriter->addData(genFunctionDec(true, MAINOP_SIM) + "{\n");
+        proxyfileWriter->addData(MAINOP_SIM + SKE_SUFFIX + "();\n");
         proxyfileWriter->addData("}\n");
     }
 
@@ -503,21 +511,28 @@ namespace kathryn{
     void ProxyBuildMng::startWriteMainSimSke(bool userVcdCol,
                                              bool sysVcdCol,
                                              bool perfCol){
-        proxyfileWriter->addData(genFunctionDec(false, MAIN_SIM + SKE_SUFFIX) + "{\n");
-        proxyfileWriter->addData("while(!" + CALLBACK_CHECK_FUNC_NAME + "()){\n");
+        proxyfileWriter->addData("CYCLE " + MAIN_SIM + SKE_SUFFIX + "(CYCLE kathryn_longrangeLim){\n");
+        proxyfileWriter->addData("CYCLE kathryn_longrangeCnt  = 0;\n");
+        proxyfileWriter->addData("do{\n");
         /////// TODO add tricker Event
         proxyfileWriter->addData(MAINOP_SIM + SKE_SUFFIX + "();\n");
         if (userVcdCol){ proxyfileWriter->addData(VCD_COL + USER_SUFFIX     + SKE_SUFFIX + "();\n");}
         if (sysVcdCol) { proxyfileWriter->addData(VCD_COL + INTERNAL_SUFFIX + SKE_SUFFIX + "();\n");}
         proxyfileWriter->addData(FIZOP_SIM + SKE_SUFFIX + "();\n");
         if (perfCol){ proxyfileWriter->addData(PERF_COL + SKE_SUFFIX + "();\n");}
+        proxyfileWriter->addData("kathryn_longrangeCnt++;\n");
+        proxyfileWriter->addData("}"); //// out of while loop
+        proxyfileWriter->addData("while(!" + CALLBACK_CHECK_FUNC_NAME + "() && "
+                                "(kathryn_longrangeCnt < kathryn_longrangeLim)"
+                                                                        ");\n");
+        proxyfileWriter->addData("return kathryn_longrangeCnt;\n");
         proxyfileWriter->addData("}\n");
     }
 
     void ProxyBuildMng::startWriteMainSim(){
-        proxyfileWriter->addData(genFunctionDec(true, MAIN_SIM) + "{\n");
+        proxyfileWriter->addData("CYCLE " + BASE_CLASS_NAME + "::"+ MAIN_SIM + "(){\n");
         proxyfileWriter->addData(CALLBACK_VAR_AMT + " = 0;\n");
-        proxyfileWriter->addData( MAIN_SIM + SKE_SUFFIX + "();\n");
+        proxyfileWriter->addData( "return " + MAIN_SIM + SKE_SUFFIX + "(_amtLimitLongRangeCycle);\n");
         proxyfileWriter->addData("}\n");
     }
 

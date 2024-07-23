@@ -20,18 +20,20 @@ namespace kathryn{
 
     protected:
 
-        Assignable*   _asb        = nullptr;
-        Identifiable* _ident      = nullptr;
-        VCD_SIG_TYPE  _vcdSigType = VST_DUMMY;
-        bool          _setToWrite = false;
-        bool          _isTempReq  = false; ///// request temp request
-        bool          _flowPerfBit= false; ////// it is used to set that this logic is used to be perf profiler
-        ull           _initVal    = 0;
+        Assignable*   _asb                = nullptr;
+        Identifiable* _ident              = nullptr;
+        VCD_SIG_TYPE  _vcdSigType         = VST_DUMMY;
+        bool          _setToWrite         = false;
+        bool          _isTempReq          = false; ///// request temp request
+        bool          _flowPerfBit        = false; ////// it is used to set that this logic is used to be perf profiler
+        ull           _initVal            = 0;
+        bool          _reqGlobDec = false;
 
     public:
         //////////////////////// gen main operation
 
-        void createOpWithSoleCondition               (CbBaseCxx& cb,const std::string& auxAssStr = "");
+        void createOpWithSoleCondition               (CbBaseCxx& cb, const std::string& auxAssStr = "");
+        void genOpWithChainCondition                 (CbBaseCxx& cb, const std::string& auxAssStr = "");
         std::string genAssignAEqB                    (Slice     desSlice, bool isDesTemp,
                                                       Operable* srcOpr);
         ///////////////////////// sliced opr
@@ -69,6 +71,7 @@ namespace kathryn{
         bool        isUserDeclare()       override{return _ident->isUserVar();}
 
         void        setFlowBlockIden(bool flowIden){_flowPerfBit = flowIden;}
+        void        reqGlobDec(){ _reqGlobDec = true;}
 
         /////// proxy
         ///

@@ -11,6 +11,7 @@
 #include "sim/event/eventBase.h"
 #include "sim/event/eventQ.h"
 #include "abstract/mainControlable.h"
+#include "sim/modelSimEngine/base/traceEvent.h"
 
 namespace kathryn{
 
@@ -18,26 +19,33 @@ namespace kathryn{
     class Wire;
     class SimController: public MainControlable{
     private:
-        std::mutex     _rsMtx;
-        CYCLE          _limitCycle    =  1;
-        CYCLE          _curCycle      = -1;
-        EventQ         eventQ;
+        std::mutex              _rsMtx;
+        CYCLE                   _limitCycle    =  1;
+        CYCLE                   _curCycle      = -1;
+        EventQ                  eventQ;
+        bool                    stopMark        = false;
+        ///// the trace idx is the idx of vector
+        std::vector<TraceEvent>* _mdTraceMap   = nullptr;
+        CYCLE*                   _amtLrLimUser = nullptr; //// amount cylce that user limit
 
         void collectData();
 
     public:
 
         explicit SimController();
-        void  setProxySimEvent(ProxySimEventBase* proxySimEvent);
         void  start() override;
         void  reset() override;
         void  clean() override;
         void  addEvent(EventBase* event);
         void  saveData();
-        void  setLimitCycle(CYCLE lmtCycle){_limitCycle = lmtCycle;}
+        void  setLimitCycle(CYCLE lmtCycle);
+        void  setTriggerMap(std::vector<TraceEvent>* mdTraceMap);
+        void  setLrLimUser(CYCLE* amtLrLimUser);
+        void  stopSim();
         CYCLE getCurCycle();
         void  lock();
         void  unlock();
+
 
     };
 

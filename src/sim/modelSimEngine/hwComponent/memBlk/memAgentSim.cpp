@@ -45,11 +45,15 @@ namespace kathryn{
             cb.addSt("ull " + getIsSetVar()   + " = 0", false);
             cb.addSt("ull " + getIndexerVar() + " = 0", true);
         }
+
+        if (_reqGlobDec && _master->isReadMode()){
+            cb.addSt("ull " + getVarName() + " = " + std::to_string(_initVal));
+        }
     }
 
     void MemEleHolderSimEngine::createLocalVariable(CbBaseCxx& cb){
         std::string valSize = std::to_string(_asb->getAssignSlice().getSize());
-        if(_master->isReadMode()){
+        if((!_reqGlobDec) && _master->isReadMode()){
             cb.addSt("ull " + getVarName() + " = " + std::to_string(_initVal));
         }
     }
@@ -95,7 +99,7 @@ namespace kathryn{
 
         ////////////// calculate aux Val
         std::string auxAssVal;
-        auxAssVal += getIsSetVar() + " = 1;\n";
+        auxAssVal += getIsSetVar() + " = 1; ";
         ////////////// assign index value
         auxAssVal += getIndexerVar() + " = " +
                   getSlicedSrcOprFromOpr(_master->_indexer);
@@ -103,7 +107,7 @@ namespace kathryn{
         ///////// build string
         cb.addCm(_ident->getGlobalName());
         assert(_asb->checkDesIsFullyAssignAndEqual());
-        createOpWithSoleCondition(cb);
+        createOpWithSoleCondition(cb, auxAssVal);
     }
 
 
@@ -112,7 +116,7 @@ namespace kathryn{
         if (_master->isWriteMode()){
             cb.addCm(_ident->getGlobalName());
 
-            CbIfCxx  ifBlock& = cb.addIf(getIsSetVar());
+            CbIfCxx&  ifBlock = cb.addIf(getIsSetVar());
 
             ///////////// add value
             ifBlock.addSt(

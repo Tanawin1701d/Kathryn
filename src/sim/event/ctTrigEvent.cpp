@@ -14,7 +14,8 @@ namespace kathryn{
                                                std::function<bool()> conditionTrigger,
                                                int prority):
     EventBase(targetCycle,
-              prority),
+              prority,
+              false),
               _simInterfaceMaster(simInterfaceMaster),
               _conditionTrigger(conditionTrigger){
         getSimController()->addEvent(this);

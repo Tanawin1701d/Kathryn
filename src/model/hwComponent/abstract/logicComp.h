@@ -12,8 +12,8 @@
 #include "model/hwComponent/abstract/operable.h"
 #include "model/hwComponent/abstract/identifiable.h"
 #include "model/controller/conInterf/controllerItf.h"
-#include "model/simIntf/hwComponent/logicSimEngine.h"
 #include "model/debugger/modelDebugger.h"
+#include "sim/modelSimEngine/hwComponent/abstract/logicSimEngine.h"
 #include "util/numberic/numConvert.h"
 
 #include "gen/proxyHwComp/abstract/logicGenBase.h"

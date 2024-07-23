@@ -18,6 +18,13 @@ namespace kathryn{
         return *ifBlock;
     }
 
+    CbBaseCxx& CbBaseCxx::addSubBlock(){
+        auto* subBlock = new CbBaseCxx();
+        appendSubBlock(subBlock);
+        return *subBlock;
+    }
+
+
     std::string CbBaseCxx::toString(int ident){
 
         //////// the local idx of eachtype
@@ -31,14 +38,17 @@ namespace kathryn{
 
             if (nextStCheckIdx < _codeSt.size() &&
                 _codeSt[nextStCheckIdx].order == mainOrder){
-                preRet += identVal + _codeSt[nextStCheckIdx].st + ";\n";
+                preRet += identVal;
+                if (_codeSt[nextStCheckIdx].isComment){preRet += "////";}
+                preRet += identVal + _codeSt[nextStCheckIdx].st + ";";
+                if (_codeSt[nextStCheckIdx].ln){preRet += "\n";}
                 nextStCheckIdx++;
                 continue;
             }
 
             if (nextSbCheckIdx < _sbOrder.size() &&
                 _sbOrder[nextSbCheckIdx] == mainOrder){
-                _subBlocks[nextSbCheckIdx]->toString(ident + CXX_IDENT);
+                preRet += _subBlocks[nextSbCheckIdx]->toString(ident + CXX_IDENT);
                 nextSbCheckIdx++;
                 continue;
             }

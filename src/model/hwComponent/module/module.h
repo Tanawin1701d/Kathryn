@@ -38,7 +38,7 @@ namespace kathryn{
     enum MODEL_STAGE{
         MODEL_UNINIT,
         MODEL_GLOB_INITED,
-        MODEL_FLOW_INITED
+        MODEL_FLOW_INITED,
     };
 
 

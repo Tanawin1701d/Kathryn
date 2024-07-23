@@ -33,8 +33,17 @@ namespace kathryn{
 
     }
 
+    void expressionSimEngine::createGlobalVariable(CbBaseCxx& cb){
+        if (_reqGlobDec){
+            cb.addSt("ull " + getVarName());
+        }
+    }
+
+
     void expressionSimEngine::createLocalVariable(CbBaseCxx& cb){
-        cb.addSt("ull " + getVarName());
+        if (!_reqGlobDec){
+            cb.addSt("ull " + getVarName());
+        }
     }
 
     void expressionSimEngine::createOp(CbBaseCxx& cb){

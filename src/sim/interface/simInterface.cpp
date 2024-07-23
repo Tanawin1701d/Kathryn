@@ -7,9 +7,7 @@
 #include <utility>
 
 #include "simInterface.h"
-
 #include "params/simParam.h"
-#include "model/simIntf/base/proxyBuildMng.h"
 
 
 namespace kathryn{
@@ -49,6 +47,7 @@ namespace kathryn{
         /** set assiging mode*/
         setAssignMode(AM_SIM);
         /***compile and link module sim Event */
+        describeModelTriggerWrapper();
         createModelSimEvent();
         /***con simulating*/
         describeDef();
@@ -60,6 +59,8 @@ namespace kathryn{
         /** start main thread*/
         SimController* simCtrl = getSimController();
         assert(simCtrl != nullptr);
+        simCtrl->setTriggerMap(&_traceEvents);
+        simCtrl->setLrLimUser(&_nextLimitAmtLRC);
         simCtrl->start();
         /** sim ctrl now finish next terminate our sim specifier*/
         if (requireConSim && conThread && conThread->joinable()){
@@ -138,6 +139,42 @@ namespace kathryn{
         /** to prevent queue stuck*/
     }
 
+
+    /**
+     *
+     * trigger manager
+     *
+     ***/
+
+    void SimInterface::setNextLimitAmtLRC(CYCLE amtCycle){
+        assert(amtCycle > 0);
+        _nextLimitAmtLRC = amtCycle;
+    }
+
+    void SimInterface::trig(Operable& opr, std::function<void()> callback){
+        _traceEvents.emplace_back(opr, callback);
+    }
+
+    void SimInterface::trig(Operable& opr, SIM_INTERFACE_EVENT event){
+        switch (event){
+            case EXIT_SIM:{
+                _traceEvents.emplace_back(opr, [](){
+                    getSimController()->stopSim();
+                });
+            }
+            default : {assert(false);}
+        }
+        ///// TODO make the system exit  and
+
+    }
+
+    void SimInterface::describeModelTriggerWrapper(){
+        getControllerPtr()->on_globalModule_init_auxilaryComponent();
+        describeModelTrigger();
+        getControllerPtr()->on_globalModule_final_auxilaryComponent();
+    }
+
+
     /***
      *
      * test value
@@ -178,6 +215,7 @@ namespace kathryn{
 
         /** generate c++ file**/
         _proxyBuildMng.setStartModule(getGlobalModulePtr()); /// todo , SIM_CLIENT_PATH);
+        _proxyBuildMng.setTracer(&_traceEvents);
         _proxyBuildMng.startWriteModelSim();
         _proxyBuildMng.startCompile();
         _modelSimEvent = _proxyBuildMng.loadAndGetProxy();

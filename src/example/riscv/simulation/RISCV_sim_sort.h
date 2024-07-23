@@ -4,7 +4,6 @@
 
 #ifndef RISCV_SIM_SORT_H
 #define RISCV_SIM_SORT_H
-#include "autoSimEvent.h"
 #include "RISCV_sim.h"
 
 namespace kathryn{
@@ -14,10 +13,11 @@ namespace kathryn{
             uint32_t testFinRegIdx = 31;
             uint32_t _startNumIdx0 = 1 << 20;
             uint32_t _startNumIdx1 = 1 << (20 + 1);
-            RiscvSimEvent* _riscvSimEvent = nullptr;
 
             const int AMT_TEST_CASE = -1;
-            int       testCaseId    = 0;
+            int       testCaseId    = -1;
+
+            std::chrono::time_point<std::chrono::steady_clock> start;
 
             RiscvSimSort(CYCLE limitCycle,
                                   const std::string& prefix,
@@ -31,11 +31,13 @@ namespace kathryn{
                 requireConSim = false;
             }
 
-            ~RiscvSimSort(){
-                delete _riscvSimEvent;
-            };
+            void prepareNextTc();
 
+            /////// discription
+            void describeModelTrigger() override;
             void describeDef() override;
+            void describeCon() override;
+
             void readAssertVal(const std::string& filePath) override{}
             void testRegister() override {}
             void dumpMem(uint32_t startAddr, uint32_t stopAddr);

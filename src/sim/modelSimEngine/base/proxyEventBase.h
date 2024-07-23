@@ -26,6 +26,8 @@ namespace kathryn{
         std::unordered_map<std::string, ull*>  callBack; //// for mem block use start point
         std::unordered_map<std::string, ull*>  callBackPerf;
 
+        CYCLE amtLRSim = 0; ///// amount of long run in each [simStartLongRunCycle]
+
         /////// for flow collection we will let flow model handle this instead
         /// we just collect only data that flow block use
 
@@ -44,8 +46,7 @@ namespace kathryn{
 
         bool needToDelete()        override{return false;}
 
-        int x [5];
-
+        void setLongRunType    (bool isLongRun)                {_isLongRangeSim = isLongRun;}
         void setVcdWritePol    (MODULE_VCD_REC_POL vcd_rec_pol){VCD_REC_POL = vcd_rec_pol;}
         void setVcdWriter      (VcdWriter*         vcdWriter  ){_vcdWriter   = vcdWriter;  }
         void registerToCallBack(const std::string& cbName, ull& val){
@@ -67,6 +68,7 @@ namespace kathryn{
         }
         ull* getVal    (const std::string& globalName){return getValBase(callBack    , globalName);}
         ull* getValPerf(const std::string& globalName){return getValBase(callBackPerf, globalName);}
+        CYCLE getAmtLRsim() const{return amtLRSim;}
         ////// sim proxy
         virtual void startRegisterCallBack()  = 0;
         virtual void startMainOpEleSim()      = 0;
@@ -83,7 +85,7 @@ namespace kathryn{
         ////// start sim optimize ///////////////
         /////////////////////////////////////////
 
-        virtual void mainSim() = 0;
+        virtual CYCLE mainSim() = 0;
 
     };
 

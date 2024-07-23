@@ -4,9 +4,6 @@
 
 #include "controller.h"
 
-#include "model/simIntf/base/proxyBuildMng.h"
-
-
 namespace kathryn{
 
     /** central initializer*/

@@ -16,11 +16,14 @@ echo "[COMPILE SCRIPT] sim file is: $SRC_PROXYEVENT_NAME @ dir: $(pwd)"
 #  #rm build/*    # for debug mode
 #fi
 
+
+# 2> optec.txt -fopt-info-all
+
 echo -n "[COMPILE SCRIPT] compiling....."
 sleep 1
-time g++ -fPIC -fopt-info-all -O2  -shared -o build/$SRC_PROXYEVENT_NAME.so -I ../src 2> optec.txt \
+time g++ -fopt-info-all -fPIC -O2  -shared -o build/$SRC_PROXYEVENT_NAME.so -I ../src 2> optec.txt  \
 generated/$SRC_PROXYEVENT_NAME.cpp \
-../src/model/simIntf/base/proxyEventBase.cpp \
+../src/sim/modelSimEngine/base/proxyEventBase.cpp \
 ../src/util/fileWriter/fileWriterBase.cpp \
 ../src/sim/simResWriter/simResWriter.cpp
 echo  "\r[COMPILE SCRIPT] compiled"
