@@ -18,10 +18,6 @@ namespace kathryn{
         assert(_flowBlockBase != nullptr);
     }
 
-    FlowBaseSimEngine::~FlowBaseSimEngine(){
-        delete _proxyRepCurBit;
-    }
-
     std::string FlowBaseSimEngine::getVarName(){
         return "PERF_" + _flowBlockBase->getGlobalName();
     }
@@ -37,6 +33,11 @@ namespace kathryn{
     ull FlowBaseSimEngine::getVarId(){
         return _flowBlockBase->getGlobalId();
     }
+
+    SIM_VALREP_TYPE FlowBaseSimEngine::getValR_Type(){
+        return SVT_U64;
+    }
+
 
     void FlowBaseSimEngine::getRecurVarName(std::vector<std::string>& result){
         result.push_back(getVarName());
@@ -136,9 +137,11 @@ namespace kathryn{
     //////////////////// return initiate
     ///
     void FlowBaseSimEngine::proxyRetInit(ProxySimEventBase* modelSimEvent){
-        proxyRep = new ValRepBase(bitSizeOfUll,
-                                  *modelSimEvent->getValPerf(getVarName()));
-        _proxyRepCurBit = new ValRepBase(1, *modelSimEvent->getValPerf(getVarNameCurStatus()));
+        proxyRep = modelSimEvent->getValPerf(getVarName());
+        proxyRep.setSize(bitSizeOfUll);
+
+        _proxyRepCurBit = modelSimEvent->getValPerf(getVarNameCurStatus());
+        _proxyRepCurBit.setSize(1);
         ///////// subblock init
         for (FlowBlockBase* subBlock : _flowBlockBase->getSubBlocks()){
             subBlock->getSimEngine()->proxyRetInit(modelSimEvent);
@@ -149,13 +152,12 @@ namespace kathryn{
         }
     }
 
-    ValRepBase* FlowBaseSimEngine::getProxyRep(){
-        assert(proxyRep != nullptr);
+    ValRepBase& FlowBaseSimEngine::getProxyRep(){
         return proxyRep;
     }
 
     bool FlowBaseSimEngine::isBlockRunning(){
-        assert(_proxyRepCurBit != nullptr);
-        return _proxyRepCurBit->getVal();
+        assert(_proxyRepCurBit.isInUsed());
+        return _proxyRepCurBit.getVal();
     }
 }

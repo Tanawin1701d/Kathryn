@@ -54,7 +54,7 @@ namespace kathryn{
     public:
         virtual void        proxyRetInit(ProxySimEventBase* modelSimEvent) = 0;
         virtual ValRepBase& getProxyRep () = 0;
-        virtual      ~ModelProxyRetrieve() {}
+        virtual      ~ModelProxyRetrieve() = default;
     };
 
     

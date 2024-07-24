@@ -29,16 +29,17 @@ namespace kathryn{
     protected:
         FlowBlockBase* _flowBlockBase  = nullptr;
         FlowColEle*    _writer         = nullptr;
-        ValRepBase*    _proxyRepCurBit = nullptr;
+        ValRepBase     _proxyRepCurBit;
 
     public:
         FlowBaseSimEngine(FlowBlockBase* flowBlockBase);
-        ~FlowBaseSimEngine() override;
+        ~FlowBaseSimEngine() = default;
         void                     proxyBuildInit() override{};
         std::string              getVarName()     override;
         std::vector<std::string> getRegisVarName() override;
         std::string              getVarNameCurStatus();
         ull                      getVarId()       override;
+        SIM_VALREP_TYPE          getValR_Type()   override;
         void                     getRecurVarName(std::vector<std::string>& result);
         void                     getRecurVarNameCurStsatus(std::vector<std::string>& result);
 
@@ -52,7 +53,7 @@ namespace kathryn{
         ////////
         ///
         void        proxyRetInit(ProxySimEventBase* modelSimEvent)     override;
-        ValRepBase* getProxyRep()      override;
+        ValRepBase& getProxyRep()      override;
         bool        isBlockRunning();
 
 

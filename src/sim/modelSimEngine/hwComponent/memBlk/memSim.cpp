@@ -21,6 +21,11 @@ namespace kathryn{
 
     ull MemSimEngine::getVarId(){ return _master->getGlobalId(); }
 
+    SIM_VALREP_TYPE MemSimEngine::getValR_Type(){
+        return getMatchSVT(_master->getWidthSize());
+    }
+
+
     void MemSimEngine::createGlobalVariable(CbBaseCxx& cb){
         std::string sizeStr = std::to_string(_master->getDepthSize());
         SIM_VALREP_TYPE svt     = getValR_Type();

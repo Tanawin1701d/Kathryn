@@ -23,13 +23,18 @@ namespace kathryn{
 
 
     std::string ValSimEngine::genSrcOpr(){
-        return std::to_string(_initVal);
+        std::string retVal = SVT_toType(getValR_Type());
+        retVal += "(" + std::to_string(_initVal) + CXX_ULL_SUFFIX + ")";
+        return retVal;
     }
     std::string ValSimEngine::genSlicedOprTo(Slice srcSlice, SIM_VALREP_TYPE svt){
         assert(srcSlice.checkValidSlice());
         assert(srcSlice.start < bitSizeOfUll);
         ull mask = createMask(srcSlice);
-        return std::to_string((_initVal >> srcSlice.start) & mask);
+        ull value = (_initVal >> srcSlice.start) & mask;
+        std::string retVal = SVT_toType(svt);
+        retVal += "(" + std::to_string(value) + CXX_ULL_SUFFIX + ")";
+        return retVal;
     }
     std::string ValSimEngine::genSlicedOprAndShift(Slice desSlice, Slice srcSlice,
                                                    SIM_VALREP_TYPE svt){
@@ -38,7 +43,10 @@ namespace kathryn{
         ull mask = createMask({srcSlice.start,
                                  srcSlice.start +
                                  std::min(desSlice.getSize(),srcSlice.getSize())});
-        return std::to_string(((_initVal >> srcSlice.start) & mask) << desSlice.start);
+        ull value = ((_initVal >> srcSlice.start) & mask) << desSlice.start;
+        std::string retVal = SVT_toType(svt);
+        retVal += "(" + std::to_string(value) + CXX_ULL_SUFFIX + ")";
+        return retVal;
     }
 
     void

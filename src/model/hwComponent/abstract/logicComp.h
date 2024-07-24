@@ -115,7 +115,7 @@ namespace kathryn{
             mfAssert(getAssignMode() == AM_SIM, "cannot assign in model mode");
             assert(_simEngine != nullptr);
             //////// TODO assign the value
-            getSimEngine()->getProxyRep()->setVar(b);
+            getSimEngine()->getProxyRep().setVar(b);
         }
 
         Slice getAssignSlice() override{

@@ -112,7 +112,7 @@ namespace kathryn{
             case ARITH_DIV   :{assert(false);}
             case ARITH_DIVR  :{assert(false);}
             case EXTEND_BIT  :{
-                assert(bSize == 1);
+                assert(aSize == 1);
                 retStr = getVarName() + ".ext(+ " + desSizeStr +"," + _aSliced +")";
                 needCloseBracket = false;
                 break;

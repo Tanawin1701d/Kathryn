@@ -95,10 +95,10 @@ namespace kathryn{
         /////// read mode
         ///
         cb.addCm(_ident->getGlobalName() + "  readMode");
-
+        ////// we are so sure that it is the same as the width
         cb.addSt( getVarName() + " = " +
          _master->_master->getSimEngine()->getVarName() +
-         "["+ getSlicedSrcOprFromOpr(_master->_indexer) + "]");
+         "["+ getSlicedSrcOprFromOpr(_master->_indexer) + ".toIndexer()]");
 
     }
 
@@ -109,7 +109,10 @@ namespace kathryn{
         auxAssVal += getIsSetVar() + " = 1; ";
         ////////////// assign index value
         auxAssVal += getIndexerVar() + " = " +
-                  getSlicedSrcOprFromOpr(_master->_indexer);
+                  getSlicedSrcOprFromOpr(
+                      _master->_indexer,
+                      getMatchSVT(_master->_indexer->getOperableSlice().getSize())
+                  );
 
         ///////// build string
         cb.addCm(_ident->getGlobalName());
@@ -128,7 +131,7 @@ namespace kathryn{
             ///////////// add value
             ifBlock.addSt(
             _master->_master->getSimEngine()->getVarName() +
-            "[" + getIndexerVar() + "] = " + getVarName()
+            "[" + getIndexerVar() + ".toIndexer()] = " + getVarName()
             );
             ///////////// reset is set
             ifBlock.addSt(getIsSetVar() + " = 0");

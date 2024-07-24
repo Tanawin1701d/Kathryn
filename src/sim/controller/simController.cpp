@@ -22,7 +22,7 @@ namespace kathryn{
             EventBase* nextEvent = eventQ.getNextEvent();
             /**we are sure that nextEvent is valid due to while loop at the top*/
             assert(_curCycle != nextEvent->getCurCycle()); //// check therer is no same cycle used
-            std::cout << "curCycle is " << _curCycle << std::endl;
+            ////std::cout << "curCycle is " << _curCycle << std::endl;
             _curCycle = nextEvent->getCurCycle();
             std::vector<EventBase*> _curCycleEvents;
 

@@ -29,6 +29,7 @@ namespace kathryn{
         std::unordered_map<std::string, ValR<uint64_t>*> callBack64; //// for mem block use start point
 
         std::unordered_map<std::string, ValR<uint64_t>*> callBackPerf;
+        std::unordered_map<std::string, ValR<uint8_t>*> callBackPerfCurbit;
 
         CYCLE amtLRSim = 0; ///// amount of long run in each [simStartLongRunCycle]
 
@@ -91,6 +92,10 @@ namespace kathryn{
             callBackPerf.insert({cbName, &val});
         }
 
+        void registerToCallBackPerf(const std::string& cbName, ValR<uint8_t>& val){
+            assert(callBackPerfCurbit.find(cbName) == callBackPerfCurbit.end());
+            callBackPerfCurbit.insert({cbName, &val});
+        }
 
         ValRepBase getVal    (const std::string& globalName){
 
@@ -114,6 +119,10 @@ namespace kathryn{
             if (callBackPerf.find(globalName) != callBackPerf.end()){
                 return {sizeof(uint64_t), &callBackPerf.find(globalName)->second->_data};
             }
+            if (callBackPerfCurbit.find(globalName) != callBackPerfCurbit.end()){
+                return {sizeof(uint8_t), &callBackPerfCurbit.find(globalName)->second->_data};
+            }
+            assert(false);
         }
 
         CYCLE getAmtLRsim() const{return amtLRSim;}

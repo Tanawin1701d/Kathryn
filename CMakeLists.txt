@@ -3,8 +3,8 @@ project(Kathryn)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_compile_options(-O3)
-set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+#add_compile_options(-O3)
+#set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 #set(CMAKE_BUILD_TYPE Debug)
 
 #add_definitions(-DMODELCOMPILEVB) ### model compile verbose

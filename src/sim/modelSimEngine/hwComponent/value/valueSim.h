@@ -9,6 +9,8 @@
 
 namespace kathryn{
 
+    constexpr char CXX_ULL_SUFFIX [] = "ULL";
+
     class Val;
     class ValSimEngine: public LogicSimEngine{
     protected:

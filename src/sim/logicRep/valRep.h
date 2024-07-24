@@ -11,6 +11,7 @@
 #include <cstdio>
 #include <bitset>
 #include <limits>
+#include <iostream>
 
 namespace kathryn{
 
@@ -32,9 +33,9 @@ namespace kathryn{
 
     class ValRepBase{
     public:
-        const int _byteSize = -1;
-        int       _length   = -1;
-        void*     _val      = nullptr; //////// value at that idx
+        int   _byteSize = -1;
+        int   _length   = -1;
+        void* _val      = nullptr; //////// value at that idx
 
     public:
         ValRepBase(const int byteSize, void* val):
@@ -86,12 +87,7 @@ namespace kathryn{
             return getVal();
         }
 
-        ValRepBase& operator = (const ValRepBase& rhs){
-            assert(_length == rhs._length);
-            assert(_byteSize == rhs._byteSize);
-            setVar(rhs.getVal());
-            return *this;
-        }
+        ValRepBase& operator = (const ValRepBase& rhs) = default;
 
         ValRepBase operator [] (ull idx){
             if (_byteSize == 1){
@@ -117,10 +113,10 @@ namespace kathryn{
     struct ValR{
         T _data;
 
+        ValR(): _data(0){}
         ValR(const T& data):_data(data){}
         ////////// bitwise
         __attribute__((always_inline)) ValR<T> operator &  (const ValR<T>& rhs) const{ return {(T)(_data & rhs._data)}; }
-
         __attribute__((always_inline)) ValR<T> operator |  (const ValR<T>& rhs) const{ return {(T)(_data | rhs._data)}; }
         __attribute__((always_inline)) ValR<T> operator ^  (const ValR<T>& rhs) const{ return {(T)(_data ^ rhs._data)}; }
         __attribute__((always_inline)) ValR<T> operator ~  ()                   const{ return {(T)(~_data)};            }
@@ -152,6 +148,7 @@ namespace kathryn{
         }
 
         __attribute__((always_inline)) ValR<T>& operator |=  (const ValR<T>& rhs){
+            //std::cout << "|= " << _data << " after or " << (_data | rhs._data) << std::endl;
             _data |= rhs._data; return *this;
         }
 
@@ -160,33 +157,83 @@ namespace kathryn{
             if (x){
                 if (size == (sizeof(T)*8)){
                     _data = std::numeric_limits<T>::max();
+                }else{
+                    _data = (((T)1 << size) - 1);
                 }
-                _data = (((T)1 << size) - 1);
+            }else{
+                _data = 0;
             }
-            _data = 0;
+
+        }
+
+
+        ///////// rhs is ull
+
+        __attribute__((always_inline)) ValR<T> operator &  (const ull& rhs) const{ return operator & (ValR<T>(rhs));}
+        __attribute__((always_inline)) ValR<T> operator |  (const ull& rhs) const{ return operator | (ValR<T>(rhs));}
+        __attribute__((always_inline)) ValR<T> operator ^  (const ull& rhs) const{ return operator ^ (ValR<T>(rhs));}
+        //__attribute__((always_inline)) ValR<T> operator ~  ()                   const{ return {(T)(~_data)};            }
+        __attribute__((always_inline)) ValR<T> operator << (const ull& rhs) const{ return operator << (ValR<uint64_t>(rhs));}
+        __attribute__((always_inline)) ValR<T> operator >> (const ull& rhs) const{ return operator >> (ValR<uint64_t>(rhs)); }
+        ////////// logical
+        __attribute__((always_inline)) ValR<uint8_t> operator && (const ull& rhs) const { return operator && (ValR<T>(rhs));}
+        __attribute__((always_inline)) ValR<uint8_t> operator || (const ull& rhs) const { return operator || (ValR<T>(rhs));}
+        //__attribute__((always_inline)) ValR<uint8_t> operator !  ()                   const { return operator ! (ValR<T>(rhs));}
+        ////////// relational
+        __attribute__((always_inline)) ValR<uint8_t> operator == (const ull& rhs) const{ return operator == (ValR<T>(rhs));}
+        __attribute__((always_inline)) ValR<uint8_t> operator != (const ull& rhs) const{ return operator != (ValR<T>(rhs));}
+        __attribute__((always_inline)) ValR<uint8_t> operator <  (const ull& rhs) const{ return operator < (ValR<T>(rhs)); }
+        __attribute__((always_inline)) ValR<uint8_t> operator <= (const ull& rhs) const{ return operator <= (ValR<T>(rhs));}
+        __attribute__((always_inline)) ValR<uint8_t> operator >  (const ull& rhs) const{ return operator > (ValR<T>(rhs)); }
+        __attribute__((always_inline)) ValR<uint8_t> operator >= (const ull& rhs) const{ return operator >= (ValR<T>(rhs));}
+
+        ////////// relational
+        __attribute__((always_inline)) ValR<T> operator +  (const ull& rhs) const{ return operator + (ValR<T>(rhs));}
+        __attribute__((always_inline)) ValR<T> operator -  (const ull& rhs) const{ return operator - (ValR<T>(rhs));}
+        __attribute__((always_inline)) ValR<T> operator *  (const ull& ) const{ assert(false);}
+        __attribute__((always_inline)) ValR<T> operator /  (const ull& ) const{ assert(false);}
+        __attribute__((always_inline)) ValR<T> operator %  (const ull& ) const{ assert(false);}
+
+        __attribute__((always_inline)) ValR<T>& operator &=  (const ull& rhs){
+            return operator &= (ValR<T>(rhs));
+        }
+
+        __attribute__((always_inline)) ValR<T>& operator |=  (const ull& rhs){
+            return operator |= (ValR<T>(rhs));
         }
 
         __attribute__((always_inline)) T    buildMask (const int size){
+            // if (size == 32){
+            //     std::cout << std::numeric_limits<T>::max() << std::endl;
+            //     std::cout << sizeof(T)*8 << std::endl;
+            // }
             return ((size >= (sizeof(T)*8)) ? std::numeric_limits<T>::max() : (((T)1 << size) - 1));
         }
 
         ////// fundamental function do it own data
         __attribute__((always_inline)) ValR<T>& operator = (const ValR<T>& rhs){_data = rhs._data; return *this;}
-        __attribute__((always_inline)) void    fixSize (int size){
+        __attribute__((always_inline)) ValR<T>& fixSize (int size){
             _data  &= buildMask(size);
+            return *this;
         }
 
-        __attribute__((always_inline)) void    clear (const int a, const int b){
+        __attribute__((always_inline)) ValR<T>&    clear (const int a, const int b){
+            //std::cout << "clear " << a << " " << b << std::endl;
             const int size = b-a;
             T mask = buildMask(size);
+            //std::cout << "data before " << _data << std::endl;
             _data &= (~(mask << a));
+            //std::cout << "data after " << _data << std::endl;
+            return *this;
         }
 
         /////// do it on slice and shift
 
         __attribute__((always_inline)) ValR<T>  slice (const int a, const int b) const{
+
             uint8_t size = b-a;
-            uint8_t mask = ((size >= (sizeof(T)*8)) ? std::numeric_limits<T>::max() : (((T)1 << size) - 1));
+            T mask = ((size >= (sizeof(T)*8)) ? std::numeric_limits<T>::max() : (((T)1 << size) - 1));
+            //std::cout << "slice " << a <<  " " << b << "org is " << _data << " result is " << (T)((T)(_data >> a) & mask) << std::endl;
             return (T)((T)(_data >> a) & mask);
         }
 
@@ -199,6 +246,14 @@ namespace kathryn{
             return _data;
         }
 
+        __attribute__((always_inline)) operator ull() const{
+            return _data;
+        }
+
+        __attribute__((always_inline)) ull toIndexer() const{
+            return _data;
+        }
+
         template<typename D>
         __attribute__((always_inline)) ValR<D> cast() const{
             return ValR<D>((D)_data); //// if D is less than T, system mustbe terminate
@@ -206,6 +261,12 @@ namespace kathryn{
 
 
     };
+
+
+    // int ma(){
+    //     ValR<uint8_t> x;
+    //     auto y = (x << 3ULL).fixSize(8);
+    // }
 
 
     //

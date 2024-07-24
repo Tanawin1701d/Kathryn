@@ -89,7 +89,6 @@ namespace kathryn{
 
 
         std::string ret;
-        std::string mask = cvtNum2HexStr(~(createMask(desSlice) << desSlice.start));
         std::string desAStr = std::to_string(desSlice.start);
         std::string desBStr = std::to_string(desSlice.stop);
         /////////////////////// clear old data
