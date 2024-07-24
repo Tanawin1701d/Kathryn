@@ -25,13 +25,14 @@ namespace kathryn{
     std::string ValSimEngine::genSrcOpr(){
         return std::to_string(_initVal);
     }
-    std::string ValSimEngine::genSlicedOprTo(Slice srcSlice){
+    std::string ValSimEngine::genSlicedOprTo(Slice srcSlice, SIM_VALREP_TYPE svt){
         assert(srcSlice.checkValidSlice());
         assert(srcSlice.start < bitSizeOfUll);
         ull mask = createMask(srcSlice);
         return std::to_string((_initVal >> srcSlice.start) & mask);
     }
-    std::string ValSimEngine::genSlicedOprAndShift(Slice desSlice, Slice srcSlice ){
+    std::string ValSimEngine::genSlicedOprAndShift(Slice desSlice, Slice srcSlice,
+                                                   SIM_VALREP_TYPE svt){
         assert(srcSlice.checkValidSlice());
         assert(srcSlice.start < bitSizeOfUll);
         ull mask = createMask({srcSlice.start,

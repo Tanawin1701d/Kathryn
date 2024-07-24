@@ -218,6 +218,8 @@ namespace kathryn{
 
 
     void ProxyBuildMng::startWriteRegisterCallback(){
+
+
         auto registerHelper = [&](std::string varName, bool isPerf){
             assert(!varName.empty());
             proxyfileWriter->addData("       ");

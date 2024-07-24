@@ -23,17 +23,18 @@ namespace kathryn{
 
     void MemSimEngine::createGlobalVariable(CbBaseCxx& cb){
         std::string sizeStr = std::to_string(_master->getDepthSize());
-        cb.addSt("ull "+ getVarName() + "[" + sizeStr + "]");
+        SIM_VALREP_TYPE svt     = getValR_Type();
+        std::string     typeStr = SVT_toType(svt);
+        cb.addSt(typeStr + " " + getVarName() + "[" + sizeStr + "]");
     }
 
     void MemSimEngine::proxyRetInit(ProxySimEventBase* modelSimEvent){
-        proxyRep = new ValRepBase(
-            _master->getWidthSize(),
-            *modelSimEvent->getVal(getVarName()));
+        proxyRep = modelSimEvent->getVal(getVarName());
+        proxyRep.setSize(_master->getWidthSize());
     }
 
-    ValRepBase* MemSimEngine::getProxyRep(){
-        assert(proxyRep != nullptr);
+    ValRepBase& MemSimEngine::getProxyRep(){
+        assert(proxyRep.isInUsed());
         return proxyRep;
     }
 }

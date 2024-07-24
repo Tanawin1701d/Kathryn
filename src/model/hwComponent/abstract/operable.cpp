@@ -253,12 +253,12 @@ namespace kathryn {
         LogicSimEngine* simEngine = getLogicSimEngineFromOpr();
         mfAssert(getAssignMode() == AM_SIM, "can't retrieve data in model building mode");
         mfAssert(simEngine != nullptr, "get value fail");
-        return simEngine->getProxyRep()->getVal();
+        return simEngine->getProxyRep().getVal();
     }
     Operable::operator ValRepBase(){
         mfAssert(getAssignMode() == AM_SIM, "can't retrieve data in model building mode");
         LogicSimEngine* simEngine = getLogicSimEngineFromOpr();
-        return *simEngine->getProxyRep();
+        return simEngine->getProxyRep();
     }
 
 

@@ -118,11 +118,6 @@ namespace kathryn{
             getSimEngine()->getProxyRep()->setVar(b);
         }
 
-        void assignSimValue(ValRepBase b) override{
-            mfAssert(getAssignMode() == AM_SIM, "cannot assign in model mode");
-            (*getSimEngine()->getProxyRep()) = b;
-        }
-
         Slice getAssignSlice() override{
             return Slicable<TYPE_COMP>::getSlice();
         }

@@ -64,12 +64,12 @@ namespace kathryn{
 
 
     void FlowBaseSimEngine::createGlobalVariable(CbBaseCxx& cb){
-        std::string ret = "ull " + getVarName() + " = 0;" +
-            "ull " + getVarNameCurStatus() + " = 0;\n";
+        SIM_VALREP_TYPE svt = getValR_Type();
+        std::string typeStr = SVT_toType(svt);
+        std::string typeSingleBitStr = SVT_toType(SVT_U8);
 
-
-        cb.addSt("ull " + getVarName() + " = 0");
-        cb.addSt("ull " + getVarNameCurStatus() + " = 0");
+        cb.addSt(typeStr + " " + getVarName() + " = 0");
+        cb.addSt(typeSingleBitStr + " " + getVarNameCurStatus() + " = 0");
 
 
         for (FlowBlockBase* fb : _flowBlockBase->getSubBlocks()){

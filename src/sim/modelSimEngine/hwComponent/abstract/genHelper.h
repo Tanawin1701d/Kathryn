@@ -9,12 +9,16 @@
 
 #include "model/hwComponent/abstract/assignable.h"
 #include "model/hwComponent/abstract/Slice.h"
+#include "sim/modelSimEngine/base/simValType.h"
 
 
 namespace kathryn{
     std::string getSrcOprFromOpr(Operable* opr);
     std::string getSlicedSrcOprFromOpr(Operable* opr);
-    std::string getSlicedAndShiftSrcOprFromOpr(Operable* opr, Slice desSlice);
+    std::string getSlicedSrcOprFromOpr(Operable* opr, SIM_VALREP_TYPE desField ); ///// the des field that the sliced should be placed
+    std::string getSlicedAndShiftSrcOprFromOpr(Operable* opr, Slice desSlice, SIM_VALREP_TYPE desField);
+
+
 
     ull createMask(Slice maskSlice);
 }

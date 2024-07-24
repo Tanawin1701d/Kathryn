@@ -44,5 +44,7 @@ add_executable(Kathryn
         ${SRC_PARAM}
         ${SRC_LIB}
         ${SRC_MODEL_COMPILE}
+        src/sim/modelSimEngine/base/simValType.cpp
+        src/sim/modelSimEngine/base/simValType.h
 
 )

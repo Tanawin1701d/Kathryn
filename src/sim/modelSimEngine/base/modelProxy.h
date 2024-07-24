@@ -15,11 +15,10 @@
 #include "model/abstract/identBase/identBase.h"
 #include "sim/logicRep/valRep.h"
 #include "util/fileWriter/codeWriter/cppWriter.h"
+#include "simValType.h"
 
 
 namespace kathryn{
-
-
 
     constexpr int MAX_VAL_REP_SIZE = 64;
 
@@ -36,6 +35,7 @@ namespace kathryn{
         virtual std::vector<std::string> getRegisVarName() = 0;
         virtual ull                      getVarId()        = 0; //// it is global id
         std::vector<ModelProxyBuild*>&   getDep() {return dep;}
+        virtual SIM_VALREP_TYPE          getValR_Type()    = 0;
 
         //// c++ create section
         virtual void createGlobalVariable (CbBaseCxx& cb) = 0;
@@ -50,11 +50,11 @@ namespace kathryn{
 
     class ModelProxyRetrieve{
     protected:
-        ValRepBase* proxyRep  = nullptr;
+        ValRepBase proxyRep;
     public:
         virtual void        proxyRetInit(ProxySimEventBase* modelSimEvent) = 0;
-        virtual ValRepBase* getProxyRep () = 0;
-        virtual      ~ModelProxyRetrieve() {delete proxyRep;}
+        virtual ValRepBase& getProxyRep () = 0;
+        virtual      ~ModelProxyRetrieve() {}
     };
 
     

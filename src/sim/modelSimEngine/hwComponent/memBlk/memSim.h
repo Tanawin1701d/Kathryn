@@ -34,7 +34,7 @@ namespace kathryn{
 
         bool        isUserDeclare()        override{return false;}
         void        proxyRetInit(ProxySimEventBase* modelSimEvent)override;
-        ValRepBase* getProxyRep()          override;
+        ValRepBase& getProxyRep()          override;
 
     };
 

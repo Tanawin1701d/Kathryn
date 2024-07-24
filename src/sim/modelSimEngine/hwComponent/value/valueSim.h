@@ -18,8 +18,9 @@ namespace kathryn{
 
         /////////// slice value
         std::string genSrcOpr                () override;
-        std::string genSlicedOprTo           (Slice srcSlice) override;
-        std::string genSlicedOprAndShift     (Slice desSlice, Slice srcSlice ) override;
+        std::string genSlicedOprTo           (Slice srcSlice, SIM_VALREP_TYPE svt) override;
+        std::string genSlicedOprAndShift     (Slice desSlice, Slice srcSlice,
+                                              SIM_VALREP_TYPE svt ) override;
         /////////// create global variable
         void        createGlobalVariable(CbBaseCxx& cb) override;
         void        createOp(CbBaseCxx& cb) override{}

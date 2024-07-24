@@ -10,6 +10,7 @@
 #include <string>
 #include <cstdio>
 #include <bitset>
+#include <limits>
 
 namespace kathryn{
 
@@ -28,46 +29,185 @@ namespace kathryn{
 
     constexpr int bitSizeOfUll = sizeof(ull) << 3;
     constexpr ull MAX_VALREP_RAW = ((ull)-1);
+
     class ValRepBase{
     public:
-        const int _length = -1;
-        const ull _idx     = 0; ////// exact Idx
-        ull&      _val; //////// value at that idx
+        const int _byteSize = -1;
+        int       _length   = -1;
+        void*     _val      = nullptr; //////// value at that idx
 
     public:
-        ValRepBase(const int length, ull& val): _length(length), _val(val){};
-        ValRepBase(const int length, ull& val, ull idx): _length(length), _idx(idx), _val(val){}
-        //
-        // std::string getBiStr(){
-        //     std::string preRet ;
-        //     std::bitset<bitSizeOfUll> binaryRepresentation(_val);
-        //     preRet += binaryRepresentation.to_string();
-        //     return preRet;
-        // }
+        ValRepBase(const int byteSize, void* val):
+        _byteSize(byteSize),
+        _val(val){};
+
+        ValRepBase(){}
+
+        void setVar(ull x) const{
+            if (_byteSize == 1){
+                (*static_cast<uint8_t*>(_val)) = (uint8_t)(x);
+            }else if (_byteSize == 2){
+                (*static_cast<uint16_t*>(_val)) = (uint16_t)(x);
+            }else if (_byteSize == 4){
+                (*static_cast<uint32_t*>(_val)) = (uint32_t)(x);
+            }else if (_byteSize == 8){
+                (*static_cast<uint64_t*>(_val)) = (uint64_t)(x);
+            }
+        }
+
+        bool isInUsed() const{
+            return _val != nullptr;
+        }
+
+        void setSize(int size){
+            _length = size;
+        }
+
+        ull getVal()const{
+
+            if (_byteSize == 1){
+                return *static_cast<uint8_t*>(_val);
+            }
+            if (_byteSize == 2){
+                return *static_cast<uint16_t*>(_val);
+            }
+            if (_byteSize == 4){
+                return *static_cast<uint32_t*>(_val);
+            }
+            if (_byteSize == 8){
+                return *static_cast<uint64_t*>(_val);
+            }
+            assert(false);
 
 
-        void setVar(ull x){_val = x;}
-
-        ull getVal()const {return _val;}
-
-        ull& getRefVal() {return _val;}
+        }
 
         explicit operator ull() const{
-            return _val;
+            return getVal();
         }
 
         ValRepBase& operator = (const ValRepBase& rhs){
             assert(_length == rhs._length);
-            _val = rhs._val;
+            assert(_byteSize == rhs._byteSize);
+            setVar(rhs.getVal());
             return *this;
         }
 
         ValRepBase operator [] (ull idx){
-            return {_length, *((&_val) + idx), _idx + idx};
+            if (_byteSize == 1){
+                return {_byteSize, static_cast<uint8_t*>(_val) + idx};
+            }
+            if (_byteSize == 2){
+                return {_byteSize, static_cast<uint16_t*>(_val) + idx};
+            }
+            if (_byteSize == 4){
+                return {_byteSize, static_cast<uint32_t*>(_val) + idx};
+            }
+            if (_byteSize == 8){
+                return {_byteSize, static_cast<uint64_t*>(_val) + idx};
+            }
+            assert(false);
         }
 
 
     };
+
+
+    template<typename T>
+    struct ValR{
+        T _data;
+
+        ValR(const T& data):_data(data){}
+        ////////// bitwise
+        __attribute__((always_inline)) ValR<T> operator &  (const ValR<T>& rhs) const{ return {(T)(_data & rhs._data)}; }
+
+        __attribute__((always_inline)) ValR<T> operator |  (const ValR<T>& rhs) const{ return {(T)(_data | rhs._data)}; }
+        __attribute__((always_inline)) ValR<T> operator ^  (const ValR<T>& rhs) const{ return {(T)(_data ^ rhs._data)}; }
+        __attribute__((always_inline)) ValR<T> operator ~  ()                   const{ return {(T)(~_data)};            }
+        template<typename R>
+        __attribute__((always_inline)) ValR<T> operator << (const ValR<R>& rhs) const{ return {(T)(_data << rhs._data)};}
+        template<typename R>
+        __attribute__((always_inline)) ValR<T> operator >> (const ValR<R>& rhs) const{ return {(T)(_data >> rhs._data)};}
+        ////////// logical
+        __attribute__((always_inline)) ValR<uint8_t> operator && (const ValR<T>& rhs) const{ return {(uint8_t)(_data && rhs._data)};}
+        __attribute__((always_inline)) ValR<uint8_t> operator || (const ValR<T>& rhs) const{ return {(uint8_t)(_data || rhs._data)};}
+        __attribute__((always_inline)) ValR<uint8_t> operator !  ()                   const{ return {(uint8_t)(!_data)};}
+        ////////// relational
+        __attribute__((always_inline)) ValR<uint8_t> operator == (const ValR<T>& rhs) const{ return {(uint8_t)(_data == rhs._data)};}
+        __attribute__((always_inline)) ValR<uint8_t> operator != (const ValR<T>& rhs) const{ return {(uint8_t)(_data != rhs._data)};}
+        __attribute__((always_inline)) ValR<uint8_t> operator <  (const ValR<T>& rhs) const{ return {(uint8_t)(_data <  rhs._data)};}
+        __attribute__((always_inline)) ValR<uint8_t> operator <= (const ValR<T>& rhs) const{ return {(uint8_t)(_data <= rhs._data)};}
+        __attribute__((always_inline)) ValR<uint8_t> operator >  (const ValR<T>& rhs) const{ return {(uint8_t)(_data >  rhs._data)};}
+        __attribute__((always_inline)) ValR<uint8_t> operator >= (const ValR<T>& rhs) const{ return {(uint8_t)(_data >= rhs._data)};}
+
+        ////////// relational
+        __attribute__((always_inline)) ValR<T> operator +  (const ValR<T>& rhs) const{ return {(T)(_data + rhs._data)};}
+        __attribute__((always_inline)) ValR<T> operator -  (const ValR<T>& rhs) const{ return {(T)(_data - rhs._data)};}
+        __attribute__((always_inline)) ValR<T> operator *  (const ValR<T>& rhs) const{ assert(false);}
+        __attribute__((always_inline)) ValR<T> operator /  (const ValR<T>& rhs) const{ assert(false);}
+        __attribute__((always_inline)) ValR<T> operator %  (const ValR<T>& rhs) const{ assert(false);}
+
+        __attribute__((always_inline)) ValR<T>& operator &=  (const ValR<T>& rhs){
+            _data &= rhs._data; return *this;
+        }
+
+        __attribute__((always_inline)) ValR<T>& operator |=  (const ValR<T>& rhs){
+            _data |= rhs._data; return *this;
+        }
+
+        ////// bit extend
+        __attribute__((always_inline)) void ext(int size, const ValR<uint8_t> x ){
+            if (x){
+                if (size == (sizeof(T)*8)){
+                    _data = std::numeric_limits<T>::max();
+                }
+                _data = (((T)1 << size) - 1);
+            }
+            _data = 0;
+        }
+
+        __attribute__((always_inline)) T    buildMask (const int size){
+            return ((size >= (sizeof(T)*8)) ? std::numeric_limits<T>::max() : (((T)1 << size) - 1));
+        }
+
+        ////// fundamental function do it own data
+        __attribute__((always_inline)) ValR<T>& operator = (const ValR<T>& rhs){_data = rhs._data; return *this;}
+        __attribute__((always_inline)) void    fixSize (int size){
+            _data  &= buildMask(size);
+        }
+
+        __attribute__((always_inline)) void    clear (const int a, const int b){
+            const int size = b-a;
+            T mask = buildMask(size);
+            _data &= (~(mask << a));
+        }
+
+        /////// do it on slice and shift
+
+        __attribute__((always_inline)) ValR<T>  slice (const int a, const int b) const{
+            uint8_t size = b-a;
+            uint8_t mask = ((size >= (sizeof(T)*8)) ? std::numeric_limits<T>::max() : (((T)1 << size) - 1));
+            return (T)((T)(_data >> a) & mask);
+        }
+
+        __attribute__((always_inline)) ValR<T>  shift(const int start) const{
+            return ValR<T>((T)(_data << start));
+        }
+
+
+        __attribute__((always_inline)) operator bool() const{
+            return _data;
+        }
+
+        template<typename D>
+        __attribute__((always_inline)) ValR<D> cast() const{
+            return ValR<D>((D)_data); //// if D is less than T, system mustbe terminate
+        }
+
+
+    };
+
+
     //
     // template<int _len>
     // class ValRep: public ValRepBase{

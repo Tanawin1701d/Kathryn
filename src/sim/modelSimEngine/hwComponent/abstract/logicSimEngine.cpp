@@ -90,11 +90,13 @@ namespace kathryn{
 
         std::string ret;
         std::string mask = cvtNum2HexStr(~(createMask(desSlice) << desSlice.start));
+        std::string desAStr = std::to_string(desSlice.start);
+        std::string desBStr = std::to_string(desSlice.stop);
         /////////////////////// clear old data
-        ret += desVarName + " &= " + mask + ";\n";
+        ret += desVarName + ".clear(" + desAStr +","+ desBStr +");\n";
         ret += "        ";
         ////////////////////// create new data
-        ret += desVarName + " |= " + srcLogicSimEngine->genSlicedOprAndShift(desSlice, srcSlice) + ";\n";
+        ret += desVarName + " |= " + srcLogicSimEngine->genSlicedOprAndShift(desSlice, srcSlice, getValR_Type()) + ";\n";
         return ret;
     }
 
@@ -102,40 +104,43 @@ namespace kathryn{
         return getVarName();
     }
 
-    std::string LogicSimEngine::genSlicedOprTo(Slice srcSlice){
+    std::string LogicSimEngine::genSlicedOprTo(Slice srcSlice, SIM_VALREP_TYPE desField){
         assert(srcSlice.checkValidSlice() &&
             (srcSlice.stop <= _asb->getAssignSlice().stop));
         ////// it will automatic shift to 0 index
         ////// des operand
         Slice baseSrcSlice = _asb->getAssignSlice();
-        std::string desVarName = getVarName();
+        SIM_VALREP_TYPE baseType = getValR_Type();
 
-        if (baseSrcSlice == srcSlice){
+        if ( (baseSrcSlice == srcSlice) &&
+             (baseType     == desField)
+        ){
             return getVarName();
         }
-        /// "( %h & ( %s >> %d ) )"
-        std::string mask = cvtNum2HexStr(createMask(srcSlice));
-        std::string value = getVarName();
-        std::string shftStart = std::to_string(srcSlice.start);
-        return "( " + mask + " & ( " + value + " >> " + shftStart + " ))";
+
+        std::string desTypeStr = SVT_toUnitType(desField);
+        std::string aStr = std::to_string(srcSlice.start);
+        std::string bStr = std::to_string(srcSlice.stop);
+        return getVarName()+".slice(" +aStr+","+bStr+").cast<"+desTypeStr+">()";
     }
 
-    std::string LogicSimEngine::genSlicedOprAndShift(Slice desSlice, Slice srcSlice){
+    std::string LogicSimEngine::genSlicedOprAndShift(Slice desSlice, Slice srcSlice, SIM_VALREP_TYPE desField){
         assert(srcSlice.checkValidSlice() &&
             (srcSlice.stop <= _asb->getAssignSlice().stop));
         assert(desSlice.getSize() <= srcSlice.getSize());
 
         Slice baseSrcSlice = _asb->getAssignSlice();
-        std::string desVarName = getVarName();
+        SIM_VALREP_TYPE baseType = getValR_Type();
 
         if ((baseSrcSlice == srcSlice) &&
-            (baseSrcSlice == desSlice)
+            (baseSrcSlice == desSlice) &&
+            (baseType     == desField)
         ){ return getVarName(); }
-        /// "( %h & ( %s >> %d ) )"
+        ///// may be our destination may have shorter bit width
         int actualSize = std::min(srcSlice.getSize(), desSlice.getSize());
         std::string shftToDesStart = std::to_string(desSlice.start);
-        return "( " + genSlicedOprTo({srcSlice.start, srcSlice.start + actualSize})
-            + "<< " + shftToDesStart + ")";
+        return "( " + genSlicedOprTo({srcSlice.start, srcSlice.start + actualSize}, desField)
+              +".shift("+shftToDesStart+"))";
     }
 
 
@@ -173,13 +178,22 @@ namespace kathryn{
         return getVarName() + TEMP_VAR_SUFFIX;
     }
 
+    SIM_VALREP_TYPE LogicSimEngine::getValR_Type(){
+        return getMatchSVT(_asb->getAssignSlice().getSize());
+    }
+
+
     void LogicSimEngine::createGlobalVariable(CbBaseCxx& cb){
         std::string valSize = std::to_string(_asb->getAssignSlice().getSize());
 
         ////////"; will be auto add"
-        cb.addSt("ull " + getVarName() + " = " + std::to_string(_initVal), !_isTempReq);
+
+        SIM_VALREP_TYPE svt = getValR_Type();
+        std::string typeStr = SVT_toType(svt);
+
+        cb.addSt( typeStr + " " + getVarName() + " = " + std::to_string(_initVal), !_isTempReq);
         if (_isTempReq){
-            cb.addSt("ull " + getTempVarName() + " = " + std::to_string(_initVal));
+            cb.addSt(typeStr + " " + getTempVarName() + " = " + std::to_string(_initVal));
         }
     }
 
@@ -208,13 +222,12 @@ namespace kathryn{
     ///////////////////// proxyRetInit
     ///
     void LogicSimEngine::proxyRetInit(ProxySimEventBase* modelSimEvent){
-        proxyRep = new ValRepBase(
-            _asb->getAssignSlice().getSize(),
-            *modelSimEvent->getVal(getVarName()));
+        proxyRep = modelSimEvent->getVal(getVarName());
+        proxyRep.setSize(_asb->getAssignSlice().getSize());
     }
 
-    ValRepBase* LogicSimEngine::getProxyRep(){
-        mfAssert(proxyRep != nullptr, "you might access the element that have not been tied with "
+    ValRepBase& LogicSimEngine::getProxyRep(){
+        mfAssert(proxyRep.isInUsed(), "you might access the element that have not been tied with "
                  "registeration of proxy sim manager");
         return proxyRep;
     }
@@ -222,86 +235,86 @@ namespace kathryn{
 
 
 
- void LogicSimEngine::genOpWithChainCondition(CbBaseCxx& cb, const std::string& auxAssStr){
+    void LogicSimEngine::genOpWithChainCondition(CbBaseCxx& cb, const std::string& auxAssStr){
 
-        CbIfCxx* firstIfStatement = nullptr;
+           CbIfCxx* firstIfStatement = nullptr;
 
-         int idx = 0;
-         int maxUpdateEvent = _asb->getUpdateMeta().size();
-         std::vector<UpdateEvent*> reversedUpdateEvents = _asb->getUpdateMeta();
-         std::reverse(reversedUpdateEvents.begin(), reversedUpdateEvents.end());
+            int idx = 0;
+            int maxUpdateEvent = _asb->getUpdateMeta().size();
+            std::vector<UpdateEvent*> reversedUpdateEvents = _asb->getUpdateMeta();
+            std::reverse(reversedUpdateEvents.begin(), reversedUpdateEvents.end());
 
-         while (idx < maxUpdateEvent){
+            while (idx < maxUpdateEvent){
 
-             std::vector<UpdateEvent*> updateEventGrp;
-             updateEventGrp.push_back(reversedUpdateEvents[idx]);
-             for (idx = idx + 1; idx < maxUpdateEvent; idx++){
-                 UpdateEvent& curUpdateEvent = *reversedUpdateEvents[idx];
-                 if (curUpdateEvent.priority == updateEventGrp[0]->priority){
-                     if (curUpdateEvent.srcUpdateValue->isConstOpr() &&
-                         updateEventGrp[0]->srcUpdateValue->isConstOpr() &&
-                         (curUpdateEvent.srcUpdateValue->getConstOpr() ==
-                             updateEventGrp[0]->srcUpdateValue->getConstOpr())
-                     ){
-                         updateEventGrp.push_back(reversedUpdateEvents[idx]);
-                         continue; ///// grp updateEvent for const value
-                     }
-                     if (curUpdateEvent.srcUpdateValue ==
-                         updateEventGrp[0]->srcUpdateValue){
-                         updateEventGrp.push_back(reversedUpdateEvents[idx]);
-                         continue; ///// grp updateEvent for other value
-                     }
-                 }
-                 break;
-             }
+                std::vector<UpdateEvent*> updateEventGrp;
+                updateEventGrp.push_back(reversedUpdateEvents[idx]);
+                for (idx = idx + 1; idx < maxUpdateEvent; idx++){
+                    UpdateEvent& curUpdateEvent = *reversedUpdateEvents[idx];
+                    if (curUpdateEvent.priority == updateEventGrp[0]->priority){
+                        if (curUpdateEvent.srcUpdateValue->isConstOpr() &&
+                            updateEventGrp[0]->srcUpdateValue->isConstOpr() &&
+                            (curUpdateEvent.srcUpdateValue->getConstOpr() ==
+                                updateEventGrp[0]->srcUpdateValue->getConstOpr())
+                        ){
+                            updateEventGrp.push_back(reversedUpdateEvents[idx]);
+                            continue; ///// grp updateEvent for const value
+                        }
+                        if (curUpdateEvent.srcUpdateValue ==
+                            updateEventGrp[0]->srcUpdateValue){
+                            updateEventGrp.push_back(reversedUpdateEvents[idx]);
+                            continue; ///// grp updateEvent for other value
+                        }
+                    }
+                    break;
+                }
 
-             assert(updateEventGrp[0]->srcUpdateValue->getOperableSlice().getSize() >=
-                 updateEventGrp[0]->desUpdateSlice.getSize());
-
-
-             std::string conStr;
-
-             for (UpdateEvent* updateEvent : updateEventGrp){
-                 bool isSubConOccur = false;
-                 conStr += "(";
-                 if (updateEvent->srcUpdateState != nullptr){
-                     conStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateState);
-                     isSubConOccur = true;
-                 }
-
-                 if (updateEvent->srcUpdateCondition != nullptr){
-                     if (isSubConOccur){
-                         conStr += " && ";
-                     }
-                     conStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateCondition);
-                     isSubConOccur = true;
-                 }
-
-                 if (!isSubConOccur){
-                     conStr += "true";
-                 }
-                 conStr += ")";
-                 if ((updateEvent) != (*updateEventGrp.rbegin())){
-                     conStr += " || ";
-                 }
-             }
+                assert(updateEventGrp[0]->srcUpdateValue->getOperableSlice().getSize() >=
+                    updateEventGrp[0]->desUpdateSlice.getSize());
 
 
-             CbIfCxx* curIfStatement = nullptr;
-             if (firstIfStatement == nullptr){
-                 firstIfStatement = &cb.addIf(conStr);
-                 curIfStatement   = firstIfStatement;
-             }else{
-                 curIfStatement   = &firstIfStatement->addElif(conStr);
-             }
+                std::string conStr;
+
+                for (UpdateEvent* updateEvent : updateEventGrp){
+                    bool isSubConOccur = false;
+                    conStr += "(";
+                    if (updateEvent->srcUpdateState != nullptr){
+                        conStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateState);
+                        isSubConOccur = true;
+                    }
+
+                    if (updateEvent->srcUpdateCondition != nullptr){
+                        if (isSubConOccur){
+                            conStr += " && ";
+                        }
+                        conStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateCondition);
+                        isSubConOccur = true;
+                    }
+
+                    if (!isSubConOccur){
+                        conStr += "true";
+                    }
+                    conStr += ")";
+                    if ((updateEvent) != (*updateEventGrp.rbegin())){
+                        conStr += " || ";
+                    }
+                }
 
 
-             curIfStatement->addSt(genAssignAEqB(updateEventGrp[0]->desUpdateSlice, _isTempReq,
-                                   updateEventGrp[0]->srcUpdateValue));
-             if (!auxAssStr.empty()){
-                 curIfStatement->addSt(auxAssStr);
-             }
-         }
+                CbIfCxx* curIfStatement = nullptr;
+                if (firstIfStatement == nullptr){
+                    firstIfStatement = &cb.addIf(conStr);
+                    curIfStatement   = firstIfStatement;
+                }else{
+                    curIfStatement   = &firstIfStatement->addElif(conStr);
+                }
 
-     }
+
+                curIfStatement->addSt(genAssignAEqB(updateEventGrp[0]->desUpdateSlice, _isTempReq,
+                                      updateEventGrp[0]->srcUpdateValue));
+                if (!auxAssStr.empty()){
+                    curIfStatement->addSt(auxAssStr);
+                }
+            }
+
+        }
 }

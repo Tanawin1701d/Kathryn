@@ -23,8 +23,12 @@ namespace kathryn{
         MODULE_VCD_REC_POL  VCD_REC_POL = MDE_REC_SKIP;
         VcdWriter*          _vcdWriter = nullptr;
 
-        std::unordered_map<std::string, ull*>  callBack; //// for mem block use start point
-        std::unordered_map<std::string, ull*>  callBackPerf;
+        std::unordered_map<std::string, ValR<uint8_t>*>  callBack8; //// for mem block use start point
+        std::unordered_map<std::string, ValR<uint16_t>*> callBack16; //// for mem block use start point
+        std::unordered_map<std::string, ValR<uint32_t>*> callBack32; //// for mem block use start point
+        std::unordered_map<std::string, ValR<uint64_t>*> callBack64; //// for mem block use start point
+
+        std::unordered_map<std::string, ValR<uint64_t>*> callBackPerf;
 
         CYCLE amtLRSim = 0; ///// amount of long run in each [simStartLongRunCycle]
 
@@ -49,25 +53,69 @@ namespace kathryn{
         void setLongRunType    (bool isLongRun)                {_isLongRangeSim = isLongRun;}
         void setVcdWritePol    (MODULE_VCD_REC_POL vcd_rec_pol){VCD_REC_POL = vcd_rec_pol;}
         void setVcdWriter      (VcdWriter*         vcdWriter  ){_vcdWriter   = vcdWriter;  }
-        void registerToCallBack(const std::string& cbName, ull& val){
-            assert(callBack.find(cbName) == callBack.end());
-            callBack.insert({cbName, &val});
+        ///////// register callback 8
+        void registerToCallBack(const std::string& cbName, ValR<uint8_t>& val){
+            registerToCallBack(cbName, &val);
         }
-        void registerToCallBack(const std::string& cbName, ull* val){
-            registerToCallBack(cbName, *val);
+        void registerToCallBack(const std::string& cbName, ValR<uint8_t>* val){
+            assert(callBack8.find(cbName) == callBack8.end());
+            callBack8.insert({cbName, val});
         }
-        void registerToCallBackPerf(const std::string& cbName, ull& val){
+        ///////// register callback 16
+        void registerToCallBack(const std::string& cbName, ValR<uint16_t>& val){
+            registerToCallBack(cbName, &val);
+        }
+        void registerToCallBack(const std::string& cbName, ValR<uint16_t>* val){
+            assert(callBack16.find(cbName) == callBack16.end());
+            callBack16.insert({cbName, val});
+        }
+        ///////// register callback 32
+        void registerToCallBack(const std::string& cbName, ValR<uint32_t>& val){
+            registerToCallBack(cbName, &val);
+        }
+        void registerToCallBack(const std::string& cbName, ValR<uint32_t>* val){
+            assert(callBack32.find(cbName) == callBack32.end());
+            callBack32.insert({cbName, val});
+        }
+        ///////// register callback 64
+        void registerToCallBack(const std::string& cbName, ValR<uint64_t>& val){
+            registerToCallBack(cbName, &val);
+        }
+        void registerToCallBack(const std::string& cbName, ValR<uint64_t>* val){
+            assert(callBack64.find(cbName) == callBack64.end());
+            callBack64.insert({cbName, val});
+        }
+
+        void registerToCallBackPerf(const std::string& cbName, ValR<uint64_t>& val){
             assert(callBackPerf.find(cbName) == callBackPerf.end());
             callBackPerf.insert({cbName, &val});
         }
 
-        static ull* getValBase(std::unordered_map<std::string, ull*>& callBackSorce,
-                               const std::string& globalName){
-            assert(callBackSorce.find(globalName) != callBackSorce.end());
-            return callBackSorce[globalName];
+
+        ValRepBase getVal    (const std::string& globalName){
+
+            if (callBack8.find(globalName) != callBack8.end()){
+                return {sizeof(uint8_t), &callBack8.find(globalName)->second->_data};
+            }
+            if (callBack16.find(globalName) != callBack16.end()){
+                return {sizeof(uint16_t), &callBack16.find(globalName)->second->_data};
+            }
+            if (callBack32.find(globalName) != callBack32.end()){
+                return {sizeof(uint32_t), &callBack32.find(globalName)->second->_data};
+            }
+            if (callBack64.find(globalName) != callBack64.end()){
+                return {sizeof(uint64_t), &callBack64.find(globalName)->second->_data};
+            }
+            assert(false);
+
         }
-        ull* getVal    (const std::string& globalName){return getValBase(callBack    , globalName);}
-        ull* getValPerf(const std::string& globalName){return getValBase(callBackPerf, globalName);}
+
+        ValRepBase getValPerf(const std::string& globalName){
+            if (callBackPerf.find(globalName) != callBackPerf.end()){
+                return {sizeof(uint64_t), &callBackPerf.find(globalName)->second->_data};
+            }
+        }
+
         CYCLE getAmtLRsim() const{return amtLRSim;}
         ////// sim proxy
         virtual void startRegisterCallBack()  = 0;

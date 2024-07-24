@@ -80,8 +80,6 @@ namespace kathryn{
 
 
         virtual void  assignSimValue(ull        b){assert(false);}
-        virtual void  assignSimValue(ValRepBase b){assert(false);}
-
 
         virtual Slice getAssignSlice() = 0;
 

@@ -27,7 +27,7 @@ namespace kathryn{
         bool          _isTempReq          = false; ///// request temp request
         bool          _flowPerfBit        = false; ////// it is used to set that this logic is used to be perf profiler
         ull           _initVal            = 0;
-        bool          _reqGlobDec = false;
+        bool          _reqGlobDec         = false;
 
     public:
         //////////////////////// gen main operation
@@ -38,8 +38,8 @@ namespace kathryn{
                                                       Operable* srcOpr);
         ///////////////////////// sliced opr
         virtual std::string genSrcOpr                ();
-        virtual std::string genSlicedOprTo           (Slice srcSlice);
-        virtual std::string genSlicedOprAndShift     (Slice desSlice, Slice srcSlice );
+        virtual std::string genSlicedOprTo           (Slice srcSlice, SIM_VALREP_TYPE desField);
+        virtual std::string genSlicedOprAndShift     (Slice desSlice, Slice srcSlice, SIM_VALREP_TYPE desField);
 
 
         LogicSimEngine(Assignable* asb, Identifiable*   ident,
@@ -53,6 +53,7 @@ namespace kathryn{
         std::vector<std::string> getRegisVarName() override;
         std::string              getTempVarName();
         ull                      getVarId()        override{return _ident->getGlobalId();}
+        SIM_VALREP_TYPE          getValR_Type()    override;
         void                     setVCDWriteStatus(bool status){ _setToWrite = status;}
 
         VCD_SIG_TYPE             getSigType() const {return _vcdSigType;}
@@ -77,7 +78,7 @@ namespace kathryn{
         ///
 
         void proxyRetInit(ProxySimEventBase* modelSimEvent)       override;
-        ValRepBase* getProxyRep() override;
+        ValRepBase& getProxyRep() override;
     };
 
     class LogicSimEngineInterface{

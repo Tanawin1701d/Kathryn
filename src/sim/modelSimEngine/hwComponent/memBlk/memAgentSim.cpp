@@ -38,23 +38,30 @@ namespace kathryn{
     void MemEleHolderSimEngine::createGlobalVariable(CbBaseCxx& cb){
 
         //std::string valSize = std::to_string(_asb->getAssignSlice().getSize());
+        SIM_VALREP_TYPE svt              = getValR_Type();
+        std::string     typeStr          = SVT_toType(svt);
         if(_master->isWriteMode()){
             ////std::string indexerSize = std::to_string(_master->getExactIndexSize());
+            ///
+            std::string     typeSingleBitStr = SVT_toType(SVT_U8);
+            std::string     typeIndexStr  = SVT_toType(
+                                                getMatchSVT(_master->getExactIndexSize()));
 
-            cb.addSt("ull " + getVarName()    + " = 0", false);
-            cb.addSt("ull " + getIsSetVar()   + " = 0", false);
-            cb.addSt("ull " + getIndexerVar() + " = 0", true);
+            cb.addSt(typeStr          + " " + getVarName()    + " = 0", false);
+            cb.addSt(typeSingleBitStr + " " + getIsSetVar()   + " = 0", false);
+            cb.addSt(typeIndexStr     + " " + getIndexerVar() + " = 0", true);
         }
 
         if (_reqGlobDec && _master->isReadMode()){
-            cb.addSt("ull " + getVarName() + " = " + std::to_string(_initVal));
+            cb.addSt(typeStr + " " + getVarName() + " = " + std::to_string(_initVal));
         }
     }
 
     void MemEleHolderSimEngine::createLocalVariable(CbBaseCxx& cb){
-        std::string valSize = std::to_string(_asb->getAssignSlice().getSize());
+        SIM_VALREP_TYPE svt              = getValR_Type();
+        std::string     typeStr          = SVT_toType(svt);
         if((!_reqGlobDec) && _master->isReadMode()){
-            cb.addSt("ull " + getVarName() + " = " + std::to_string(_initVal));
+            cb.addSt(typeStr + " " + getVarName() + " = " + std::to_string(_initVal));
         }
     }
 
