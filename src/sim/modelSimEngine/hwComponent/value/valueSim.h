@@ -19,13 +19,10 @@ namespace kathryn{
         ValSimEngine(Val* master,VCD_SIG_TYPE sigType, ull rawValue);
 
         /////////// slice value
-        std::string genSrcOpr                () override;
-        std::string genSlicedOprTo           (Slice srcSlice, SIM_VALREP_TYPE svt) override;
-        std::string genSlicedOprAndShift     (Slice desSlice, Slice srcSlice,
-                                              SIM_VALREP_TYPE svt ) override;
+        ValR genSrcOpr() override;
         /////////// create global variable
-        void        createGlobalVariable(CbBaseCxx& cb) override;
-        void        createOp(CbBaseCxx& cb) override{}
+        void createGlobalVariable(CbBaseCxx& cb) override;
+        void createOp(CbBaseCxx& cb) override{}
     };
 
 }

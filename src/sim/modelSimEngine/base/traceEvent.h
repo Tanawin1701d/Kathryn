@@ -26,7 +26,7 @@ namespace kathryn{
         }
 
         [[nodiscard]] std::string getCondStr() const{
-            return getSlicedSrcOprFromOpr(_condOpr);
+            return getSlicedSrcOprFromOpr(_condOpr).toString();
         }
 
         void execCallBack() const{

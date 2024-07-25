@@ -18,16 +18,17 @@ namespace kathryn{
         assert(_flowBlockBase != nullptr);
     }
 
-    std::string FlowBaseSimEngine::getVarName(){
-        return "PERF_" + _flowBlockBase->getGlobalName();
+    ValR FlowBaseSimEngine::getValRep(){
+        return {SVT_U8, bitSizeOfUll, "PERF_" + _flowBlockBase->getGlobalName()};
     }
 
-    std::string FlowBaseSimEngine::getVarNameCurStatus(){
-        return getVarName() + "_CURBIT";
+    ValR FlowBaseSimEngine::getVarNameCurStatus(){
+        ValR base = getValRep();
+        return {SVT_U8, 1, base.getData()+"_CURBIT"};
     }
 
     std::vector<std::string> FlowBaseSimEngine::getRegisVarName(){
-        return {getVarName(), getVarNameCurStatus()};
+        return {getValRep().getData(), getVarNameCurStatus().getData()};
     }
 
     ull FlowBaseSimEngine::getVarId(){
@@ -40,7 +41,7 @@ namespace kathryn{
 
 
     void FlowBaseSimEngine::getRecurVarName(std::vector<std::string>& result){
-        result.push_back(getVarName());
+        result.push_back(getValRep().getData());
         for (FlowBlockBase* fb : _flowBlockBase->getSubBlocks()){
             FlowBaseSimEngine* subBlockSimEngine = fb->getSimEngine();
             subBlockSimEngine->getRecurVarName(result);
@@ -52,7 +53,7 @@ namespace kathryn{
     }
 
     void FlowBaseSimEngine::getRecurVarNameCurStsatus(std::vector<std::string>& result){
-        result.push_back(getVarNameCurStatus());
+        result.push_back(getVarNameCurStatus().getData());
         for (FlowBlockBase* fb : _flowBlockBase->getSubBlocks()){
             FlowBaseSimEngine* subBlockSimEngine = fb->getSimEngine();
             subBlockSimEngine->getRecurVarNameCurStsatus(result);
@@ -69,8 +70,8 @@ namespace kathryn{
         std::string typeStr = SVT_toType(svt);
         std::string typeSingleBitStr = SVT_toType(SVT_U8);
 
-        cb.addSt(typeStr + " " + getVarName() + " = 0");
-        cb.addSt(typeSingleBitStr + " " + getVarNameCurStatus() + " = 0");
+        cb.addSt(getValRep().buildVar(0));
+        cb.addSt(getVarNameCurStatus().buildVar(0));
 
 
         for (FlowBlockBase* fb : _flowBlockBase->getSubBlocks()){
@@ -98,7 +99,7 @@ namespace kathryn{
         /////////////////////////////////////////////////////////////////////////////
         ///////////// this block purpose
         /////////////////////////////////////////////////////////////////////////////
-        cb.addSt(getVarNameCurStatus() + " = 0");
+        cb.addSt(getVarNameCurStatus().eq(ValR(SVT_U8, 1, "0")).toString());
 
         //////////// basic node recruitment
         cb.addCm("basic node rc");
@@ -106,18 +107,26 @@ namespace kathryn{
             assert(sysNode != nullptr);
             for (CtrlFlowRegBase* stateReg : sysNode->getCycleRelatedReg()){
                 if (stateReg != nullptr){
-                    std::string regName = stateReg->getSimEngine()->getVarName();
-                    cb.addSt( getVarNameCurStatus() + " |= " + regName);
+                    ValR stateRegRep = stateReg->getSimEngine()->getValRep();
+                    cb.addSt( getVarNameCurStatus()
+                        .eq(getVarNameCurStatus() | stateRegRep)
+                        .toString());
                 }
             }
         }
         ///////////// sub block recruitment
         for (FlowBlockBase* fb : _flowBlockBase->getSubBlocks()){
             FlowBaseSimEngine* subBlockSimEngine = fb->getSimEngine();
-            cb.addSt( getVarNameCurStatus() + " |= "
-                + subBlockSimEngine->getVarNameCurStatus());
+            cb.addSt( getVarNameCurStatus()
+                .eq(getVarNameCurStatus()| subBlockSimEngine->getVarNameCurStatus())
+                .toString()
+            );
+
         }
-        cb.addSt(getVarName() + " += " + getVarNameCurStatus());
+        cb.addSt(
+            (getValRep()+
+                 getVarNameCurStatus().cast(SVT_U64, bitSizeOfUll)
+                 ).toString());
 
 
         ////////////////////////////////////////////////////////////////////////////
@@ -137,10 +146,10 @@ namespace kathryn{
     //////////////////// return initiate
     ///
     void FlowBaseSimEngine::proxyRetInit(ProxySimEventBase* modelSimEvent){
-        proxyRep = modelSimEvent->getValPerf(getVarName());
+        proxyRep = modelSimEvent->getValPerf(getValRep().getData());
         proxyRep.setSize(bitSizeOfUll);
 
-        _proxyRepCurBit = modelSimEvent->getValPerf(getVarNameCurStatus());
+        _proxyRepCurBit = modelSimEvent->getValPerf(getVarNameCurStatus().getData());
         _proxyRepCurBit.setSize(1);
         ///////// subblock init
         for (FlowBlockBase* subBlock : _flowBlockBase->getSubBlocks()){

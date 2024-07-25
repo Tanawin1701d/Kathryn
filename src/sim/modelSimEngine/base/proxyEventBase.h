@@ -23,13 +23,13 @@ namespace kathryn{
         MODULE_VCD_REC_POL  VCD_REC_POL = MDE_REC_SKIP;
         VcdWriter*          _vcdWriter = nullptr;
 
-        std::unordered_map<std::string, ValR<uint8_t>*>  callBack8; //// for mem block use start point
-        std::unordered_map<std::string, ValR<uint16_t>*> callBack16; //// for mem block use start point
-        std::unordered_map<std::string, ValR<uint32_t>*> callBack32; //// for mem block use start point
-        std::unordered_map<std::string, ValR<uint64_t>*> callBack64; //// for mem block use start point
+        std::unordered_map<std::string, uint8_t*>  callBack8; //// for mem block use start point
+        std::unordered_map<std::string, uint16_t*> callBack16; //// for mem block use start point
+        std::unordered_map<std::string, uint32_t*> callBack32; //// for mem block use start point
+        std::unordered_map<std::string, uint64_t*> callBack64; //// for mem block use start point
 
-        std::unordered_map<std::string, ValR<uint64_t>*> callBackPerf;
-        std::unordered_map<std::string, ValR<uint8_t>*> callBackPerfCurbit;
+        std::unordered_map<std::string, uint64_t*> callBackPerf;
+        std::unordered_map<std::string, uint8_t*> callBackPerfCurbit;
 
         CYCLE amtLRSim = 0; ///// amount of long run in each [simStartLongRunCycle]
 
@@ -55,44 +55,44 @@ namespace kathryn{
         void setVcdWritePol    (MODULE_VCD_REC_POL vcd_rec_pol){VCD_REC_POL = vcd_rec_pol;}
         void setVcdWriter      (VcdWriter*         vcdWriter  ){_vcdWriter   = vcdWriter;  }
         ///////// register callback 8
-        void registerToCallBack(const std::string& cbName, ValR<uint8_t>& val){
+        void registerToCallBack(const std::string& cbName, uint8_t& val){
             registerToCallBack(cbName, &val);
         }
-        void registerToCallBack(const std::string& cbName, ValR<uint8_t>* val){
+        void registerToCallBack(const std::string& cbName, uint8_t* val){
             assert(callBack8.find(cbName) == callBack8.end());
             callBack8.insert({cbName, val});
         }
         ///////// register callback 16
-        void registerToCallBack(const std::string& cbName, ValR<uint16_t>& val){
+        void registerToCallBack(const std::string& cbName, uint16_t& val){
             registerToCallBack(cbName, &val);
         }
-        void registerToCallBack(const std::string& cbName, ValR<uint16_t>* val){
+        void registerToCallBack(const std::string& cbName, uint16_t* val){
             assert(callBack16.find(cbName) == callBack16.end());
             callBack16.insert({cbName, val});
         }
         ///////// register callback 32
-        void registerToCallBack(const std::string& cbName, ValR<uint32_t>& val){
+        void registerToCallBack(const std::string& cbName, uint32_t& val){
             registerToCallBack(cbName, &val);
         }
-        void registerToCallBack(const std::string& cbName, ValR<uint32_t>* val){
+        void registerToCallBack(const std::string& cbName, uint32_t* val){
             assert(callBack32.find(cbName) == callBack32.end());
             callBack32.insert({cbName, val});
         }
         ///////// register callback 64
-        void registerToCallBack(const std::string& cbName, ValR<uint64_t>& val){
+        void registerToCallBack(const std::string& cbName, uint64_t& val){
             registerToCallBack(cbName, &val);
         }
-        void registerToCallBack(const std::string& cbName, ValR<uint64_t>* val){
+        void registerToCallBack(const std::string& cbName, uint64_t* val){
             assert(callBack64.find(cbName) == callBack64.end());
             callBack64.insert({cbName, val});
         }
 
-        void registerToCallBackPerf(const std::string& cbName, ValR<uint64_t>& val){
+        void registerToCallBackPerf(const std::string& cbName, uint64_t& val){
             assert(callBackPerf.find(cbName) == callBackPerf.end());
             callBackPerf.insert({cbName, &val});
         }
 
-        void registerToCallBackPerf(const std::string& cbName, ValR<uint8_t>& val){
+        void registerToCallBackPerf(const std::string& cbName, uint8_t& val){
             assert(callBackPerfCurbit.find(cbName) == callBackPerfCurbit.end());
             callBackPerfCurbit.insert({cbName, &val});
         }
@@ -100,16 +100,16 @@ namespace kathryn{
         ValRepBase getVal    (const std::string& globalName){
 
             if (callBack8.find(globalName) != callBack8.end()){
-                return {sizeof(uint8_t), &callBack8.find(globalName)->second->_data};
+                return {sizeof(uint8_t), &callBack8.find(globalName)->second};
             }
             if (callBack16.find(globalName) != callBack16.end()){
-                return {sizeof(uint16_t), &callBack16.find(globalName)->second->_data};
+                return {sizeof(uint16_t), &callBack16.find(globalName)->second};
             }
             if (callBack32.find(globalName) != callBack32.end()){
-                return {sizeof(uint32_t), &callBack32.find(globalName)->second->_data};
+                return {sizeof(uint32_t), &callBack32.find(globalName)->second};
             }
             if (callBack64.find(globalName) != callBack64.end()){
-                return {sizeof(uint64_t), &callBack64.find(globalName)->second->_data};
+                return {sizeof(uint64_t), &callBack64.find(globalName)->second};
             }
             assert(false);
 
@@ -117,10 +117,10 @@ namespace kathryn{
 
         ValRepBase getValPerf(const std::string& globalName){
             if (callBackPerf.find(globalName) != callBackPerf.end()){
-                return {sizeof(uint64_t), &callBackPerf.find(globalName)->second->_data};
+                return {sizeof(uint64_t), &callBackPerf.find(globalName)->second};
             }
             if (callBackPerfCurbit.find(globalName) != callBackPerfCurbit.end()){
-                return {sizeof(uint8_t), &callBackPerfCurbit.find(globalName)->second->_data};
+                return {sizeof(uint8_t), &callBackPerfCurbit.find(globalName)->second};
             }
             assert(false);
         }

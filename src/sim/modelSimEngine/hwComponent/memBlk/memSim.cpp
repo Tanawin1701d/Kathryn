@@ -12,10 +12,15 @@ namespace kathryn{
     MemSimEngine::MemSimEngine(MemBlock* master):
         _master(master){ assert(master != nullptr); }
 
-    std::string MemSimEngine::getVarName(){ return _master->getGlobalName(); }
+    ValR MemSimEngine::getValRep(){
+        std::string     name = _master->getGlobalName();
+        int             size = _master->getWidthSize();
+        SIM_VALREP_TYPE svt  = getMatchSVT(size);
+        return {svt, size, name};
+    }
 
     std::vector<std::string> MemSimEngine::getRegisVarName(){
-        return {getVarName()};
+        return {getValRep().getData()};
     }
 
 
@@ -27,14 +32,12 @@ namespace kathryn{
 
 
     void MemSimEngine::createGlobalVariable(CbBaseCxx& cb){
-        std::string sizeStr = std::to_string(_master->getDepthSize());
-        SIM_VALREP_TYPE svt     = getValR_Type();
-        std::string     typeStr = SVT_toType(svt);
-        cb.addSt(typeStr + " " + getVarName() + "[" + sizeStr + "]");
+        ull depth = _master->getDepthSize();
+        cb.addSt(getValRep().buildMemVar(depth));
     }
 
     void MemSimEngine::proxyRetInit(ProxySimEventBase* modelSimEvent){
-        proxyRep = modelSimEvent->getVal(getVarName());
+        proxyRep = modelSimEvent->getVal(getValRep().getData());
         proxyRep.setSize(_master->getWidthSize());
     }
 

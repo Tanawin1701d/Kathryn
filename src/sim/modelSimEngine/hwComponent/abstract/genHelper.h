@@ -13,12 +13,12 @@
 
 
 namespace kathryn{
-    std::string getSrcOprFromOpr(Operable* opr);
-    std::string getSlicedSrcOprFromOpr(Operable* opr);
-    std::string getSlicedSrcOprFromOpr(Operable* opr, SIM_VALREP_TYPE desField ); ///// the des field that the sliced should be placed
-    std::string getSlicedAndShiftSrcOprFromOpr(Operable* opr, Slice desSlice, SIM_VALREP_TYPE desField);
-
-
+    ValR getSrcOprFromOpr      (Operable* opr);
+    ValR getSlicedSrcOprFromOpr(Operable* opr);
+    ValR getSlicedSrcOprFromOpr(Operable* opr, SIM_VALREP_TYPE desField ); ///// the des field that the sliced should be placed
+    ValR getSlicedAndShiftSrcOprFromOpr
+                               (Operable* opr, Slice desSlice,
+                                SIM_VALREP_TYPE desField);
 
     ull createMask(Slice maskSlice);
 }

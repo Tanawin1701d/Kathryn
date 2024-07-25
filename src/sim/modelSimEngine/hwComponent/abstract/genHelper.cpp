@@ -8,21 +8,21 @@
 
 namespace kathryn{
 
-    std::string getSrcOprFromOpr(Operable* opr){
+    ValR getSrcOprFromOpr(Operable* opr){
         assert(opr != nullptr);
         return opr->getExactOperable().
-                    getLogicSimEngineFromOpr()->genSrcOpr();
+                getLogicSimEngineFromOpr()->genSrcOpr();
     }
 
 
-    std::string getSlicedSrcOprFromOpr(Operable* opr){
+    ValR getSlicedSrcOprFromOpr(Operable* opr){
         assert(opr != nullptr);
         LogicSimEngine* simEngine = opr->getLogicSimEngineFromOpr();
         ////// slice to operabe slice
         return getSlicedSrcOprFromOpr(opr, simEngine->getValR_Type());
     }
 
-    std::string getSlicedSrcOprFromOpr(Operable* opr, SIM_VALREP_TYPE desField){
+    ValR getSlicedSrcOprFromOpr(Operable* opr, SIM_VALREP_TYPE desField){
         assert(opr != nullptr);
         LogicSimEngine* simEngine = opr->getLogicSimEngineFromOpr();
         Slice neededSlice = opr->getOperableSlice();
@@ -30,7 +30,7 @@ namespace kathryn{
         return simEngine->genSlicedOprTo(neededSlice, desField);
     }
 
-    std::string getSlicedAndShiftSrcOprFromOpr(Operable* opr, Slice desSlice, SIM_VALREP_TYPE desField){
+    ValR getSlicedAndShiftSrcOprFromOpr(Operable* opr, Slice desSlice, SIM_VALREP_TYPE desField){
         assert(opr != nullptr);
         LogicSimEngine* simEngine = opr->getLogicSimEngineFromOpr();
         Slice neededSlice = opr->getOperableSlice();

@@ -22,7 +22,7 @@ namespace kathryn{
 
         ///////// create c++
         void                     proxyBuildInit()  override{};
-        std::string              getVarName()      override;
+        ValR                     getValRep()      override;
         std::vector<std::string> getRegisVarName() override;
         ull                      getVarId()        override;
         SIM_VALREP_TYPE          getValR_Type()    override;

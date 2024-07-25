@@ -37,9 +37,9 @@ namespace kathryn{
         std::string genAssignAEqB                    (Slice     desSlice, bool isDesTemp,
                                                       Operable* srcOpr);
         ///////////////////////// sliced opr
-        virtual std::string genSrcOpr                ();
-        virtual std::string genSlicedOprTo           (Slice srcSlice, SIM_VALREP_TYPE desField);
-        virtual std::string genSlicedOprAndShift     (Slice desSlice, Slice srcSlice, SIM_VALREP_TYPE desField);
+        virtual ValR genSrcOpr                ();
+        virtual ValR genSlicedOprTo           (Slice srcSlice, SIM_VALREP_TYPE desField);
+        virtual ValR genSlicedOprAndShift     (Slice desSlice, Slice srcSlice, SIM_VALREP_TYPE desField);
 
 
         LogicSimEngine(Assignable* asb, Identifiable*   ident,
@@ -49,14 +49,17 @@ namespace kathryn{
 
         void proxyBuildInit() override;
 
-        std::string              getVarName()      override;
+        //std::string              getVarName()      override;
+        ValR                     getValRep() override;
         std::vector<std::string> getRegisVarName() override;
-        std::string              getTempVarName();
+        ValR                     getTempValRep();
         ull                      getVarId()        override{return _ident->getGlobalId();}
         SIM_VALREP_TYPE          getValR_Type()    override;
         void                     setVCDWriteStatus(bool status){ _setToWrite = status;}
 
+        [[nodiscard]]
         VCD_SIG_TYPE             getSigType() const {return _vcdSigType;}
+        [[nodiscard]]
         Slice                    getSize()    const {return _asb->getAssignSlice();}
 
 
@@ -83,6 +86,7 @@ namespace kathryn{
 
     class LogicSimEngineInterface{
     public:
+        virtual ~LogicSimEngineInterface() = default;
         virtual LogicSimEngine* getSimEngine() = 0;
     };
 

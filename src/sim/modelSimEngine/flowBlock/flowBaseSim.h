@@ -35,9 +35,9 @@ namespace kathryn{
         FlowBaseSimEngine(FlowBlockBase* flowBlockBase);
         ~FlowBaseSimEngine() = default;
         void                     proxyBuildInit() override{};
-        std::string              getVarName()     override;
+        ValR                     getValRep()     override;
         std::vector<std::string> getRegisVarName() override;
-        std::string              getVarNameCurStatus();
+        ValR                    getVarNameCurStatus();
         ull                      getVarId()       override;
         SIM_VALREP_TYPE          getValR_Type()   override;
         void                     getRecurVarName(std::vector<std::string>& result);

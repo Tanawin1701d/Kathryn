@@ -31,7 +31,7 @@ namespace kathryn{
         virtual             ~ModelProxyBuild()= default;
         virtual void        proxyBuildInit()   = 0;
         //// pre initialize section fill dependency
-        virtual std::string              getVarName()      = 0; //// prefix is not include
+        virtual ValR                     getValRep()       = 0; //// prefix is not include
         virtual std::vector<std::string> getRegisVarName() = 0;
         virtual ull                      getVarId()        = 0; //// it is global id
         std::vector<ModelProxyBuild*>&   getDep() {return dep;}

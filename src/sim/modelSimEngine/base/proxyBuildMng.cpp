@@ -54,7 +54,7 @@ namespace kathryn{
                     ////////// first in in stack
                     if (isVisit){
                         mfAssert(isResult,
-                                 "cycle dep detect at node " + top.mpd->getVarName());
+                                 "cycle dep detect at node " + top.mpd->getValRep().getData());
                         dfs.pop();
                         continue;
                     }
@@ -240,7 +240,7 @@ namespace kathryn{
         ///// for logic value
         for (ModelProxyBuild* mpb :
              moduleSimEngine->recruitForRegisVar()){
-            registerHelper(mpb->getVarName(), false);
+            registerHelper(mpb->getValRep().getData(), false);
         }
         ///// for perf value     we are sure that name will not
         for (FlowBaseSimEngine* mpb : moduleSimEngine->recruitPerf()){
@@ -324,7 +324,7 @@ namespace kathryn{
 
                 /////// varname
                 proxyfileWriter->addData(",");
-                proxyfileWriter->addData("\"" + mpb->getVarName() + "\"");
+                proxyfileWriter->addData("\"" + mpb->getValRep().getData() + "\"");
                 proxyfileWriter->addData(",");
                 proxyfileWriter->addData("{" +
                     std::to_string(mpb->getSize().start) + "," +
@@ -350,9 +350,9 @@ namespace kathryn{
                 proxyfileWriter->addData("       ");
                 proxyfileWriter->addData("_vcdWriter->addNewValue(");
 
-                proxyfileWriter->addData("\"" + mpb->getVarName() + "\"");
+                proxyfileWriter->addData("\"" + mpb->getValRep().getData() + "\"");
                 proxyfileWriter->addData(",");
-                proxyfileWriter->addData(mpb->getVarName() + ");\n");
+                proxyfileWriter->addData(mpb->getValRep().getData() + ");\n");
             }
         }
 

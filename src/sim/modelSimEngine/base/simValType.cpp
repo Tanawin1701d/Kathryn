@@ -57,6 +57,12 @@ namespace kathryn{
     }
 
 
+    int getSvtMaxBitSize(SIM_VALREP_TYPE svt){
+        int idx = svt;
+        return 8* (1 << idx);
+    }
+
+
 
 
 }

@@ -5,7 +5,6 @@
 #include "logicSimEngine.h"
 
 #include "genHelper.h"
-#include "util/numberic/numConvert.h"
 #include "sim/controller/simController.h"
 
 
@@ -37,14 +36,14 @@ namespace kathryn{
             bool isConOccur = false;
             ////  gather activate condition
             if (updateEvent->srcUpdateState != nullptr){
-                condStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateState);
+                condStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateState).toString();
                 isConOccur = true;
             }
             if (updateEvent->srcUpdateCondition != nullptr){
                 if (isConOccur){
                     condStr += " && ";
                 }
-                condStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateCondition);
+                condStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateCondition).toString();
                 isConOccur = true;
             }
             assStr = genAssignAEqB(updateEvent->desUpdateSlice,
@@ -71,39 +70,42 @@ namespace kathryn{
         assert(desSlice.stop <= _asb->getAssignSlice().stop);
         ////// src operand
         Slice           srcSlice          = srcOpr->getOperableSlice();
-        LogicSimEngine* srcLogicSimEngine = srcOpr->getExactOperable().getLogicSimEngineFromOpr();
         Slice           baseSrcSlice      = srcOpr->getExactOperable().getOperableSlice();
-        std::string     srcVarName        = getSrcOprFromOpr(srcOpr);
+        ValR            srcVar            = getSrcOprFromOpr(srcOpr);
 
         assert(srcSlice.getSize() >= desSlice.getSize());
         ////// des operand
         Slice       baseDesSlice = _asb->getAssignSlice();
-        std::string desVarName   = isDesTemp ? getTempVarName() : getVarName();
+        ValR        desVar       = isDesTemp ? getTempValRep() : getValRep();
 
         if ((desSlice == baseDesSlice) &&
             (srcSlice == baseSrcSlice) &&
             (srcSlice == desSlice)){
             ///////// optimize
-            return desVarName + " = " + srcVarName;
-            }
+            return desVar.eq(srcVar).toString();
+        }
 
 
         std::string ret;
         std::string desAStr = std::to_string(desSlice.start);
         std::string desBStr = std::to_string(desSlice.stop);
         /////////////////////// clear old data
-        ret += desVarName + ".clear(" + desAStr +","+ desBStr +");\n";
+        ret += desVar.clear(desSlice).toString() + ";\n";
         ret += "        ";
         ////////////////////// create new data
-        ret += desVarName + " |= " + srcLogicSimEngine->genSlicedOprAndShift(desSlice, srcSlice, getValR_Type()) + ";\n";
+
+        ret += desVar
+        .eq(getSlicedAndShiftSrcOprFromOpr(srcOpr, desSlice, getValR_Type()))
+        .toString() + ";";
+
         return ret;
     }
 
-    std::string LogicSimEngine::genSrcOpr(){
-        return getVarName();
+    ValR LogicSimEngine::genSrcOpr(){
+        return getValRep();
     }
 
-    std::string LogicSimEngine::genSlicedOprTo(Slice srcSlice, SIM_VALREP_TYPE desField){
+    ValR LogicSimEngine::genSlicedOprTo(Slice srcSlice, SIM_VALREP_TYPE desField){
         assert(srcSlice.checkValidSlice() &&
             (srcSlice.stop <= _asb->getAssignSlice().stop));
         ////// it will automatic shift to 0 index
@@ -114,16 +116,19 @@ namespace kathryn{
         if ( (baseSrcSlice == srcSlice) &&
              (baseType     == desField)
         ){
-            return getVarName();
+            return getValRep();
         }
 
         std::string desTypeStr = SVT_toUnitType(desField);
         std::string aStr = std::to_string(srcSlice.start);
         std::string bStr = std::to_string(srcSlice.stop);
-        return getVarName()+".slice(" +aStr+","+bStr+").cast<"+desTypeStr+">()";
+        return getValRep()
+                .slice(srcSlice)
+                .cast(desField, srcSlice.getSize());
+
     }
 
-    std::string LogicSimEngine::genSlicedOprAndShift(Slice desSlice, Slice srcSlice, SIM_VALREP_TYPE desField){
+    ValR LogicSimEngine::genSlicedOprAndShift(Slice desSlice, Slice srcSlice, SIM_VALREP_TYPE desField){
         assert(srcSlice.checkValidSlice() &&
             (srcSlice.stop <= _asb->getAssignSlice().stop));
         assert(desSlice.getSize() <= srcSlice.getSize());
@@ -134,12 +139,11 @@ namespace kathryn{
         if ((baseSrcSlice == srcSlice) &&
             (baseSrcSlice == desSlice) &&
             (baseType     == desField)
-        ){ return getVarName(); }
+        ){ return getValRep();}
         ///// may be our destination may have shorter bit width
         int actualSize = std::min(srcSlice.getSize(), desSlice.getSize());
-        std::string shftToDesStart = std::to_string(desSlice.start);
-        return "( " + genSlicedOprTo({srcSlice.start, srcSlice.start + actualSize}, desField)
-              +".shift("+shftToDesStart+"))";
+        return genSlicedOprTo({srcSlice.start, srcSlice.start + actualSize}, desField).
+                shift(desSlice.start);
     }
 
 
@@ -164,17 +168,23 @@ namespace kathryn{
         }
     }
 
-    std::string LogicSimEngine::getVarName(){
-        return _ident->getGlobalName() +
+    ValR LogicSimEngine::getValRep(){
+        std::string name = _ident->getGlobalName() +
             (_ident->isUserVar() ? "_USER_" + _ident->getVarName() : "_SYS");
+
+        int size = _asb->getAssignSlice().getSize();
+        SIM_VALREP_TYPE svt = getMatchSVT(size);
+        return {svt, size, name};
     }
 
     std::vector<std::string> LogicSimEngine::getRegisVarName(){
-        return {getVarName()};
+        return {getValRep().getData()};
     }
 
-    std::string LogicSimEngine::getTempVarName(){
-        return getVarName() + TEMP_VAR_SUFFIX;
+    ValR LogicSimEngine::getTempValRep(){
+        ValR base = getValRep();
+        base.setData(base.getData() + TEMP_VAR_SUFFIX);
+        return base;
     }
 
     SIM_VALREP_TYPE LogicSimEngine::getValR_Type(){
@@ -190,9 +200,9 @@ namespace kathryn{
         SIM_VALREP_TYPE svt = getValR_Type();
         std::string typeStr = SVT_toType(svt);
 
-        cb.addSt( typeStr + " " + getVarName() + " = " + std::to_string(_initVal), !_isTempReq);
+        cb.addSt( getValRep().buildVar(_initVal), !_isTempReq);
         if (_isTempReq){
-            cb.addSt(typeStr + " " + getTempVarName() + " = " + std::to_string(_initVal));
+            cb.addSt(getTempValRep().buildVar(_initVal));
         }
     }
 
@@ -202,7 +212,9 @@ namespace kathryn{
         cb.addCm(_ident->getGlobalName());
         _asb->sortUpEventByPriority();
         if (_isTempReq){
-            cb.addSt(getTempVarName() + " = " + getVarName());
+            cb.addSt( //// build temp variable first
+                getTempValRep().eq(getValRep()).toString()
+            );
         }
 
         if (_asb->checkDesIsFullyAssignAndEqual()){
@@ -214,14 +226,16 @@ namespace kathryn{
 
     void LogicSimEngine::createOpEndCycle2(CbBaseCxx& cb){
         if (_isTempReq){
-            cb.addSt(getVarName() + " = " + getTempVarName());
+            cb.addSt(
+                getValRep().eq(getTempValRep()).toString()
+            );
         }
     }
 
     ///////////////////// proxyRetInit
     ///
     void LogicSimEngine::proxyRetInit(ProxySimEventBase* modelSimEvent){
-        proxyRep = modelSimEvent->getVal(getVarName());
+        proxyRep = modelSimEvent->getVal(getValRep().toString());
         proxyRep.setSize(_asb->getAssignSlice().getSize());
     }
 
@@ -239,7 +253,7 @@ namespace kathryn{
            CbIfCxx* firstIfStatement = nullptr;
 
             int idx = 0;
-            int maxUpdateEvent = _asb->getUpdateMeta().size();
+            int maxUpdateEvent = static_cast<int>(_asb->getUpdateMeta().size());
             std::vector<UpdateEvent*> reversedUpdateEvents = _asb->getUpdateMeta();
             std::reverse(reversedUpdateEvents.begin(), reversedUpdateEvents.end());
 
@@ -277,7 +291,7 @@ namespace kathryn{
                     bool isSubConOccur = false;
                     conStr += "(";
                     if (updateEvent->srcUpdateState != nullptr){
-                        conStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateState);
+                        conStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateState).toString();
                         isSubConOccur = true;
                     }
 
@@ -285,7 +299,7 @@ namespace kathryn{
                         if (isSubConOccur){
                             conStr += " && ";
                         }
-                        conStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateCondition);
+                        conStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateCondition).toString();
                         isSubConOccur = true;
                     }
 

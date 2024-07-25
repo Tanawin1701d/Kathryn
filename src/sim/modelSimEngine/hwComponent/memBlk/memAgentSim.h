@@ -27,8 +27,8 @@ namespace kathryn{
         void createOpEndCycle (CbBaseCxx& cb) override;
         void createOpEndCycle2(CbBaseCxx& cb) override{}
 
-        std::string getIsSetVar();
-        std::string getIndexerVar();
+        ValR getIsSetVar();
+        ValR getIndexerVar();
 
         void createOpReadMode (CbBaseCxx& cb);
         void createOpWriteMode(CbBaseCxx& cb);

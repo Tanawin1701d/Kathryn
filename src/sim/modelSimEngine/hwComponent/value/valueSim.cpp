@@ -22,31 +22,12 @@ namespace kathryn{
     _master(master){ assert(master != nullptr);}
 
 
-    std::string ValSimEngine::genSrcOpr(){
-        std::string retVal = SVT_toType(getValR_Type());
-        retVal += "(" + std::to_string(_initVal) + CXX_ULL_SUFFIX + ")";
-        return retVal;
-    }
-    std::string ValSimEngine::genSlicedOprTo(Slice srcSlice, SIM_VALREP_TYPE svt){
-        assert(srcSlice.checkValidSlice());
-        assert(srcSlice.start < bitSizeOfUll);
-        ull mask = createMask(srcSlice);
-        ull value = (_initVal >> srcSlice.start) & mask;
-        std::string retVal = SVT_toType(svt);
-        retVal += "(" + std::to_string(value) + CXX_ULL_SUFFIX + ")";
-        return retVal;
-    }
-    std::string ValSimEngine::genSlicedOprAndShift(Slice desSlice, Slice srcSlice,
-                                                   SIM_VALREP_TYPE svt){
-        assert(srcSlice.checkValidSlice());
-        assert(srcSlice.start < bitSizeOfUll);
-        ull mask = createMask({srcSlice.start,
-                                 srcSlice.start +
-                                 std::min(desSlice.getSize(),srcSlice.getSize())});
-        ull value = ((_initVal >> srcSlice.start) & mask) << desSlice.start;
-        std::string retVal = SVT_toType(svt);
-        retVal += "(" + std::to_string(value) + CXX_ULL_SUFFIX + ")";
-        return retVal;
+    ValR ValSimEngine::genSrcOpr(){
+        int size = _asb->getAssignSlice().getSize();
+
+        ValR x(getValR_Type(), size,
+            std::to_string(_initVal)+CXX_ULL_SUFFIX);
+        return x.cast(getValR_Type(), size);
     }
 
     void

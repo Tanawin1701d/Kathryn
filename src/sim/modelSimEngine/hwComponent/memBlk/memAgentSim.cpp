@@ -41,19 +41,14 @@ namespace kathryn{
         SIM_VALREP_TYPE svt              = getValR_Type();
         std::string     typeStr          = SVT_toType(svt);
         if(_master->isWriteMode()){
-            ////std::string indexerSize = std::to_string(_master->getExactIndexSize());
-            ///
-            std::string     typeSingleBitStr = SVT_toType(SVT_U8);
-            std::string     typeIndexStr  = SVT_toType(
-                                                getMatchSVT(_master->getExactIndexSize()));
 
-            cb.addSt(typeStr          + " " + getVarName()    + " = 0", false);
-            cb.addSt(typeSingleBitStr + " " + getIsSetVar()   + " = 0", false);
-            cb.addSt(typeIndexStr     + " " + getIndexerVar() + " = 0", true);
+            cb.addSt(getValRep    ().buildVar(_initVal) , false);
+            cb.addSt(getIsSetVar  ().buildVar(0)   , false);
+            cb.addSt(getIndexerVar().buildVar(0)   , true);
         }
 
         if (_reqGlobDec && _master->isReadMode()){
-            cb.addSt(typeStr + " " + getVarName() + " = " + std::to_string(_initVal));
+            cb.addSt(getValRep().buildVar(_initVal));
         }
     }
 
@@ -61,7 +56,7 @@ namespace kathryn{
         SIM_VALREP_TYPE svt              = getValR_Type();
         std::string     typeStr          = SVT_toType(svt);
         if((!_reqGlobDec) && _master->isReadMode()){
-            cb.addSt(typeStr + " " + getVarName() + " = " + std::to_string(_initVal));
+            cb.addSt(getValRep().buildVar(_initVal));
         }
     }
 
@@ -81,12 +76,16 @@ namespace kathryn{
     }
 
 
-    std::string MemEleHolderSimEngine::getIsSetVar(){
-        return getVarName() + IS_SET_SUFFIX;
+    ValR MemEleHolderSimEngine::getIsSetVar(){
+        std::string name = getValRep()._data + IS_SET_SUFFIX;
+        return {SVT_U8, 1, name};
     }
 
-    std::string MemEleHolderSimEngine::getIndexerVar(){
-        return getVarName() + INDEXER_SUFFIX;
+    ValR MemEleHolderSimEngine::getIndexerVar(){
+        std::string name = getValRep()._data + INDEXER_SUFFIX;
+        int         size = _master->getExactIndexSize();
+        SIM_VALREP_TYPE matchValType = getMatchSVT(size);
+        return {matchValType, size, name};
     }
 
 
@@ -96,23 +95,21 @@ namespace kathryn{
         ///
         cb.addCm(_ident->getGlobalName() + "  readMode");
         ////// we are so sure that it is the same as the width
-        cb.addSt( getVarName() + " = " +
-         _master->_master->getSimEngine()->getVarName() +
-         "["+ getSlicedSrcOprFromOpr(_master->_indexer) + ".toIndexer()]");
+        ValR memValR = _master->_master->getSimEngine()->getValRep();
+        ////////// we must fix indexer type to match main memory
+        ValR indexer = getSlicedSrcOprFromOpr(_master->_indexer,getIndexerVar()._valType);
 
+        cb.addSt(getValRep().eq(memValR.index(indexer))
+        .toString());
     }
 
     void MemEleHolderSimEngine::createOpWriteMode(CbBaseCxx& cb){
 
-        ////////////// calculate aux Val
-        std::string auxAssVal;
-        auxAssVal += getIsSetVar() + " = 1; ";
-        ////////////// assign index value
-        auxAssVal += getIndexerVar() + " = " +
-                  getSlicedSrcOprFromOpr(
-                      _master->_indexer,
-                      getMatchSVT(_master->_indexer->getOperableSlice().getSize())
-                  );
+        ValR setterEq  = getIsSetVar().eq(ValR(SVT_U8, 1, "1"));
+        ValR indexer   = getSlicedSrcOprFromOpr(_master->_indexer,getIndexerVar()._valType);
+        ////// index and push to local variable
+        ValR indexerEq = getIndexerVar().eq(indexer);
+        std::string auxAssVal = setterEq.toString() + "; " + indexer.toString() + ";";
 
         ///////// build string
         cb.addCm(_ident->getGlobalName());
@@ -126,15 +123,16 @@ namespace kathryn{
         if (_master->isWriteMode()){
             cb.addCm(_ident->getGlobalName());
 
-            CbIfCxx&  ifBlock = cb.addIf(getIsSetVar());
+            CbIfCxx&  ifBlock = cb.addIf(getIsSetVar().toString());
+            ValR memBlkValR = _master->_master->getSimEngine()->getValRep();
+
+            ValR assEq = memBlkValR.index(getIndexerVar()).eq(getValRep());
+            ValR rstSetFlag = getIsSetVar().eq(ValR(SVT_U8, 1, "0"));
 
             ///////////// add value
-            ifBlock.addSt(
-            _master->_master->getSimEngine()->getVarName() +
-            "[" + getIndexerVar() + ".toIndexer()] = " + getVarName()
-            );
+            ifBlock.addSt(assEq.toString());
             ///////////// reset is set
-            ifBlock.addSt(getIsSetVar() + " = 0");
+            ifBlock.addSt(rstSetFlag.toString());
         }
 
     }
