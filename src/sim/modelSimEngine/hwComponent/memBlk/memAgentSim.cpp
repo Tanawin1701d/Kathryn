@@ -37,9 +37,6 @@ namespace kathryn{
 
     void MemEleHolderSimEngine::createGlobalVariable(CbBaseCxx& cb){
 
-        //std::string valSize = std::to_string(_asb->getAssignSlice().getSize());
-        SIM_VALREP_TYPE svt              = getValR_Type();
-        std::string     typeStr          = SVT_toType(svt);
         if(_master->isWriteMode()){
 
             cb.addSt(getValRep    ().buildVar(_initVal) , false);
@@ -53,13 +50,10 @@ namespace kathryn{
     }
 
     void MemEleHolderSimEngine::createLocalVariable(CbBaseCxx& cb){
-        SIM_VALREP_TYPE svt              = getValR_Type();
-        std::string     typeStr          = SVT_toType(svt);
         if((!_reqGlobDec) && _master->isReadMode()){
             cb.addSt(getValRep().buildVar(_initVal));
         }
     }
-
 
     void MemEleHolderSimEngine::createOp(CbBaseCxx& cb){
         _asb->sortUpEventByPriority();
@@ -78,14 +72,13 @@ namespace kathryn{
 
     ValR MemEleHolderSimEngine::getIsSetVar(){
         std::string name = getValRep()._data + IS_SET_SUFFIX;
-        return {SVT_U8, 1, name};
+        return {SIM_VALREP_TYPE_ALL(1), 1, name};
     }
 
     ValR MemEleHolderSimEngine::getIndexerVar(){
         std::string name = getValRep()._data + INDEXER_SUFFIX;
         int         size = _master->getExactIndexSize();
-        SIM_VALREP_TYPE matchValType = getMatchSVT(size);
-        return {matchValType, size, name};
+        return {SIM_VALREP_TYPE_ALL(size), size, name};
     }
 
 
@@ -105,16 +98,16 @@ namespace kathryn{
 
     void MemEleHolderSimEngine::createOpWriteMode(CbBaseCxx& cb){
 
-        ValR setterEq  = getIsSetVar().eq(ValR(SVT_U8, 1, "1"));
+        ValR setterEq  = getIsSetVar().eq(ValR(SIM_VALREP_TYPE_ALL(1), 1, "1"));
         ValR indexer   = getSlicedSrcOprFromOpr(_master->_indexer,getIndexerVar()._valType);
         ////// index and push to local variable
         ValR indexerEq = getIndexerVar().eq(indexer);
-        std::string auxAssVal = setterEq.toString() + "; " + indexer.toString() + ";";
+        std::string auxAssVal = setterEq.toString() + "; " + indexerEq.toString() + ";";
 
         ///////// build string
         cb.addCm(_ident->getGlobalName());
         assert(_asb->checkDesIsFullyAssignAndEqual());
-        createOpWithSoleCondition(cb, auxAssVal);
+        genOpWithChainCondition(cb, auxAssVal);
     }
 
 
@@ -127,7 +120,7 @@ namespace kathryn{
             ValR memBlkValR = _master->_master->getSimEngine()->getValRep();
 
             ValR assEq = memBlkValR.index(getIndexerVar()).eq(getValRep());
-            ValR rstSetFlag = getIsSetVar().eq(ValR(SVT_U8, 1, "0"));
+            ValR rstSetFlag = getIsSetVar().eq(ValR(SIM_VALREP_TYPE_ALL(1), 1, "0"));
 
             ///////////// add value
             ifBlock.addSt(assEq.toString());
@@ -136,13 +129,4 @@ namespace kathryn{
         }
 
     }
-
-
-
-
-
-
-
-
-
 }

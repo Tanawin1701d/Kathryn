@@ -35,7 +35,7 @@ namespace kathryn{
         virtual std::vector<std::string> getRegisVarName() = 0;
         virtual ull                      getVarId()        = 0; //// it is global id
         std::vector<ModelProxyBuild*>&   getDep() {return dep;}
-        virtual SIM_VALREP_TYPE          getValR_Type()    = 0;
+        virtual SIM_VALREP_TYPE_ALL      getValR_Type()    = 0;
 
         //// c++ create section
         virtual void createGlobalVariable (CbBaseCxx& cb) = 0;

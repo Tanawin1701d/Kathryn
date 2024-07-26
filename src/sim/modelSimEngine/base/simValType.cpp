@@ -9,34 +9,24 @@
 
 namespace kathryn{
 
-    std::string SVT_toUnitType(SIM_VALREP_TYPE svt){
+    std::string SVT_toUnitType(SIM_VALREP_TYPE_ALL svt){
 
-        int idx = static_cast<int>(svt);
+        if (svt.type == SVT_U64M){
+            return "UintX<" + std::to_string(svt.subType) + ">";
+        }
 
+        int idx = static_cast<int>(svt.type);
         assert(idx < static_cast<int>(SVT_CNT));
         std::string mapper[SVT_CNT] = {"uint8_t", "uint16_t",
                                        "uint32_t", "uint64_t"};
         return mapper[idx];
     }
 
-    std::string SVT_toType(SIM_VALREP_TYPE svt){
-
-        std::string ret;
-
-        ret += SIM_VALREP_BASE_NAME;
-        ret += "<";
-        ret += SVT_toUnitType(svt);
-        ret += ">";
-
-        return ret;
-
-    }
-
-    SIM_VALREP_TYPE getMatchSVT(Operable* opr){
+    SIM_VALREP_TYPE_ALL getMatchSVT_ALL(Operable* opr){
         assert(opr != nullptr);
         int size = opr->getOperableSlice().getSize();
-
-        return getMatchSVT(size);
+        assert(size > 0);
+        return SIM_VALREP_TYPE_ALL(size);
     }
 
     SIM_VALREP_TYPE getMatchSVT(int size){
@@ -57,9 +47,16 @@ namespace kathryn{
     }
 
 
-    int getSvtMaxBitSize(SIM_VALREP_TYPE svt){
-        int idx = svt;
+    int getSvtMaxBitSize(SIM_VALREP_TYPE_ALL svt){
+        if (svt.type == SVT_U64M){
+            return bitSizeOfUll * svt.subType;
+        }
+        int idx = svt.type;
         return 8* (1 << idx);
+    }
+
+    int getArrSize(int size){
+        return (size + bitSizeOfUll - 1) / bitSizeOfUll;
     }
 
 

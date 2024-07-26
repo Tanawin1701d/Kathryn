@@ -19,7 +19,7 @@ namespace kathryn{
         ValSimEngine(Val* master,VCD_SIG_TYPE sigType, ull rawValue);
 
         /////////// slice value
-        ValR genSrcOpr() override;
+        ValR getValRep() override;
         /////////// create global variable
         void createGlobalVariable(CbBaseCxx& cb) override;
         void createOp(CbBaseCxx& cb) override{}

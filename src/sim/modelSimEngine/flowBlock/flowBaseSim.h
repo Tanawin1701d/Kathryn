@@ -37,9 +37,9 @@ namespace kathryn{
         void                     proxyBuildInit() override{};
         ValR                     getValRep()     override;
         std::vector<std::string> getRegisVarName() override;
-        ValR                    getVarNameCurStatus();
+        ValR                     getVarNameCurStatus();
         ull                      getVarId()       override;
-        SIM_VALREP_TYPE          getValR_Type()   override;
+        SIM_VALREP_TYPE_ALL      getValR_Type()   override;
         void                     getRecurVarName(std::vector<std::string>& result);
         void                     getRecurVarNameCurStsatus(std::vector<std::string>& result);
 

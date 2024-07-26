@@ -22,7 +22,7 @@ namespace kathryn{
         return getSlicedSrcOprFromOpr(opr, simEngine->getValR_Type());
     }
 
-    ValR getSlicedSrcOprFromOpr(Operable* opr, SIM_VALREP_TYPE desField){
+    ValR getSlicedSrcOprFromOpr(Operable* opr, SIM_VALREP_TYPE_ALL desField){
         assert(opr != nullptr);
         LogicSimEngine* simEngine = opr->getLogicSimEngineFromOpr();
         Slice neededSlice = opr->getOperableSlice();
@@ -30,7 +30,7 @@ namespace kathryn{
         return simEngine->genSlicedOprTo(neededSlice, desField);
     }
 
-    ValR getSlicedAndShiftSrcOprFromOpr(Operable* opr, Slice desSlice, SIM_VALREP_TYPE desField){
+    ValR getSlicedAndShiftSrcOprFromOpr(Operable* opr, Slice desSlice, SIM_VALREP_TYPE_ALL desField){
         assert(opr != nullptr);
         LogicSimEngine* simEngine = opr->getLogicSimEngineFromOpr();
         Slice neededSlice = opr->getOperableSlice();

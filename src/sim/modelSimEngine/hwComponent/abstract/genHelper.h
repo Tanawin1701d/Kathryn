@@ -15,10 +15,10 @@
 namespace kathryn{
     ValR getSrcOprFromOpr      (Operable* opr);
     ValR getSlicedSrcOprFromOpr(Operable* opr);
-    ValR getSlicedSrcOprFromOpr(Operable* opr, SIM_VALREP_TYPE desField ); ///// the des field that the sliced should be placed
+    ValR getSlicedSrcOprFromOpr(Operable* opr, SIM_VALREP_TYPE_ALL desField ); ///// the des field that the sliced should be placed
     ValR getSlicedAndShiftSrcOprFromOpr
                                (Operable* opr, Slice desSlice,
-                                SIM_VALREP_TYPE desField);
+                                SIM_VALREP_TYPE_ALL desField);
 
     ull createMask(Slice maskSlice);
 }

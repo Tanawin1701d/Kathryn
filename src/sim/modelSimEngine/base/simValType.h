@@ -17,37 +17,61 @@ namespace kathryn{
 
     class Operable;
 
-    constexpr char SIM_VALREP_BASE_NAME [] = "ValR";
-
     enum SIM_VALREP_TYPE{
-        SVT_U8 = 0,
-        SVT_U16 = 1,
-        SVT_U32 = 2,
-        SVT_U64 = 3,
+        SVT_U8   = 0,
+        SVT_U16  = 1,
+        SVT_U32  = 2,
+        SVT_U64  = 3,
         SVT_U64M = 4,
         SVT_ERR  = 5,
         SVT_CNT  = 6
     };
-    std::string SVT_toUnitType(SIM_VALREP_TYPE svt);
-    std::string SVT_toType(SIM_VALREP_TYPE svt);
 
-    SIM_VALREP_TYPE getMatchSVT(Operable* opr);
-    SIM_VALREP_TYPE getMatchSVT(int size);
-    int             getSvtMaxBitSize(SIM_VALREP_TYPE svt);
+    struct SIM_VALREP_TYPE_ALL;
+    SIM_VALREP_TYPE_ALL getMatchSVT_ALL(Operable* opr);
+    SIM_VALREP_TYPE     getMatchSVT(int size);
+    std::string         SVT_toUnitType(SIM_VALREP_TYPE_ALL svt);
+    int                 getSvtMaxBitSize(SIM_VALREP_TYPE_ALL svt);
+    int                 getArrSize(int size);
+
+    struct SIM_VALREP_TYPE_ALL{
+        SIM_VALREP_TYPE type;
+        int             subType;
+
+        explicit SIM_VALREP_TYPE_ALL(int bitSize):
+        type(getMatchSVT(bitSize)),
+        subType(-1){
+            if (type == SVT_U64M){
+                subType = getArrSize(bitSize);
+            }
+        }
+
+        explicit SIM_VALREP_TYPE_ALL():
+        type(SVT_ERR),
+        subType(-1){}
+
+        bool operator == (const SIM_VALREP_TYPE_ALL& rhs) const{
+            return (type == rhs.type) && (subType == rhs.subType);
+        }
+
+    };
+
+
 
     struct ValR{
-        SIM_VALREP_TYPE _valType = SVT_ERR;
-        int _size = -1 ;
+        SIM_VALREP_TYPE_ALL _valType = SIM_VALREP_TYPE_ALL();
+        int valSubType = -1;  ////// incase svt u64m valSubType is represetn arrSize
+        int _size      = -1 ;
         std::string _data = "unused";
 
 
         ValR(): _valType(){}
-        ValR(SIM_VALREP_TYPE valType, int size, std::string data):
+        ValR(SIM_VALREP_TYPE_ALL valType, int size, std::string data):
         _valType(valType),
         _size(size),
         _data(std::move(data)){}
 
-        ValR(SIM_VALREP_TYPE valType, int size):
+        ValR(SIM_VALREP_TYPE_ALL valType, int size):
         _valType(valType),
         _size(size){}
 
@@ -56,19 +80,19 @@ namespace kathryn{
         ValR operator |  (const ValR& rhs) const{ assert(_size == rhs._size); return {_valType, _size, "( " + _data  + " | " +  rhs._data + ")"}; }
         ValR operator ^  (const ValR& rhs) const{ assert(_size == rhs._size); return {_valType, _size, "( " + _data  + " ^ " +  rhs._data + ")"}; }
         ValR operator ~  ()                const{                             return {_valType, _size, "(~" + _data + ")"};}
-        ValR operator << (const ValR& rhs) const{ assert(_size == rhs._size); return {_valType, _size, "(" + _data +  " << " + rhs._data + ")"};}
-        ValR operator >> (const ValR& rhs) const{ assert(_size == rhs._size); return {_valType, _size, "(" + _data +  " >> " + rhs._data + ")"};}
+        ValR operator << (const ValR& rhs) const{                             return {_valType, _size, "(" + _data +  " << " + rhs._data + ")"};}
+        ValR operator >> (const ValR& rhs) const{                             return {_valType, _size, "(" + _data +  " >> " + rhs._data + ")"};}
         ////////// logical
-        ValR operator && (const ValR& rhs) const{ assert(_size == rhs._size); return {SVT_U8, 1, "(" + _data +  "&&" +  rhs._data + ")"};}
-        ValR operator || (const ValR& rhs) const{ assert(_size == rhs._size); return {SVT_U8, 1, "(" + _data +  "||" +  rhs._data + ")"};}
-        ValR operator !  ()                const{                             return {SVT_U8, 1, "(!" + _data + ")"};}
+        ValR operator && (const ValR& rhs) const{ assert(_size == rhs._size); return {SIM_VALREP_TYPE_ALL(1), 1, "(" + _data +  "&&" +  rhs._data + ")"};}
+        ValR operator || (const ValR& rhs) const{ assert(_size == rhs._size); return {SIM_VALREP_TYPE_ALL(1), 1, "(" + _data +  "||" +  rhs._data + ")"};}
+        ValR operator !  ()                const{                             return {SIM_VALREP_TYPE_ALL(1), 1, "(!" + _data + ")"};}
         ////////// relational
-        ValR operator == (const ValR& rhs) const{ assert(_size == rhs._size); return {SVT_U8, 1, "(" + _data + "==" +  rhs._data + ")"};}
-        ValR operator != (const ValR& rhs) const{ assert(_size == rhs._size); return {SVT_U8, 1, "(" + _data + "!=" +  rhs._data + ")"};}
-        ValR operator <  (const ValR& rhs) const{ assert(_size == rhs._size); return {SVT_U8, 1, "(" + _data + "< " +  rhs._data + ")"};}
-        ValR operator <= (const ValR& rhs) const{ assert(_size == rhs._size); return {SVT_U8, 1, "(" + _data + "<=" +  rhs._data + ")"};}
-        ValR operator >  (const ValR& rhs) const{ assert(_size == rhs._size); return {SVT_U8, 1, "(" + _data + "> " +  rhs._data + ")"};}
-        ValR operator >= (const ValR& rhs) const{ assert(_size == rhs._size); return {SVT_U8, 1, "(" + _data + ">=" +  rhs._data + ")"};}
+        ValR operator == (const ValR& rhs) const{ assert(_size == rhs._size); return {SIM_VALREP_TYPE_ALL(1), 1, "(" + _data + "==" +  rhs._data + ")"};}
+        ValR operator != (const ValR& rhs) const{ assert(_size == rhs._size); return {SIM_VALREP_TYPE_ALL(1), 1, "(" + _data + "!=" +  rhs._data + ")"};}
+        ValR operator <  (const ValR& rhs) const{ assert(_size == rhs._size); return {SIM_VALREP_TYPE_ALL(1), 1, "(" + _data + "< " +  rhs._data + ")"};}
+        ValR operator <= (const ValR& rhs) const{ assert(_size == rhs._size); return {SIM_VALREP_TYPE_ALL(1), 1, "(" + _data + "<=" +  rhs._data + ")"};}
+        ValR operator >  (const ValR& rhs) const{ assert(_size == rhs._size); return {SIM_VALREP_TYPE_ALL(1), 1, "(" + _data + "> " +  rhs._data + ")"};}
+        ValR operator >= (const ValR& rhs) const{ assert(_size == rhs._size); return {SIM_VALREP_TYPE_ALL(1), 1, "(" + _data + ">=" +  rhs._data + ")"};}
 
         ////////// relational
         ValR operator +  (const ValR& rhs) const{ assert(_size == rhs._size); return {_valType, _size, "(" + _data + "+" + rhs._data + ")"};}
@@ -80,21 +104,27 @@ namespace kathryn{
 
         [[nodiscard]]
         std::string buildMask (const int size, const int start = 0) const{
-            assert( (size + start) < getSvtMaxBitSize(_valType));
-            ull value = (size == bitSizeOfUll) ? (INT64_MAX << start) : ((1ULL << size - 1) << start);
+            if(_valType.type == SVT_U64M){
+                return "(" + SVT_toUnitType(_valType) + "(0).buildMask(" + std::to_string(size) + "," + std::to_string(start) + "))";
+            }
+            assert( (size + start) <= getSvtMaxBitSize(_valType));
+            ull value = (size == bitSizeOfUll) ? (INT64_MAX << start) : (((1ULL << size) - 1) << start);
             return "(static_cast<" + SVT_toUnitType(_valType) +">(" + cvtNum2HexStr(value) + "))";
 
         }
 
         [[nodiscard]]
         std::string buildZero() const{
+            if(_valType.type == SVT_U64M){
+                return "(" + SVT_toUnitType(_valType) + "(0))";
+            }
             return "(static_cast<" + SVT_toUnitType(_valType) +">(0))";
         }
 
         ////// bit extend
         ValR ext(int size) const{
 
-            ValR des(getMatchSVT(size), size);
+            ValR des(SIM_VALREP_TYPE_ALL(size), size);
             des.setData("("+_data + " ? " + des.buildMask(size) + " : " + des.buildZero() + ")");
             return des;
 
@@ -120,25 +150,48 @@ namespace kathryn{
             return ValR(_valType, _size, _data + " = " + rhs._data);
         }
 
+        ValR partialOr(const ValR& rhs){ //// this is like or but not check actual size only check simtype
+            assert(_valType == rhs._valType);
+            return {_valType, _size, "( " + _data  + " | " +  rhs._data + ")"};
+        }
+
 
         [[nodiscard]]
         ValR slice (Slice sl) const{
             assert( (sl.start >= 0));
             int  targetSize = sl.getSize();
             assert(targetSize <= _size);
-            return { _valType, _size,"(("+_data+">>"+std::to_string(sl.start)+")&" + buildMask(targetSize)+")"};
+            if (sl.start == 0){
+                return { _valType, _size,"(" + _data +"&" + buildMask(targetSize)+")"};
+            }else{
+                return { _valType, _size,"(("+_data+">>"+std::to_string(sl.start)+")&" + buildMask(targetSize)+")"};
+            }
+
         }
 
         ValR shift(const int start) const{
-            assert( (start + _size) < getSvtMaxBitSize(_valType));
+            assert( (start + _size) <= getSvtMaxBitSize(_valType));
+            if (start == 0){
+                return *this;
+            }
+
             return {_valType, _size,"(" +_data + "<<" + std::to_string(start) + ")"};
         }
 
-        ValR cast(SIM_VALREP_TYPE desVt, int size) const{
+        ValR castBase(SIM_VALREP_TYPE_ALL desVt, int size) const{
+
+            if ((desVt.type == SVT_U64M)  && (_valType.type != SVT_U64M)){
+                return {desVt, size, "UintX<" + std::to_string(desVt.subType) + ">(" + _data + ")"};
+            }
+
+            return {desVt, size, "static_cast<" + SVT_toUnitType(desVt) + ">(" + _data + ")"};
+        }
+
+        ValR cast(SIM_VALREP_TYPE_ALL desVt, int size) const{
             if (_valType == desVt){
                 return {desVt, size, _data};
             }
-            return {desVt, size, "static_cast<" + SVT_toUnitType(desVt) + ">(" + _data + ")"};
+            return castBase(desVt, size);
         }
 
         void setData(std::string dayta){
@@ -153,10 +206,6 @@ namespace kathryn{
         std::string getData() const{
             return _data;
         }
-
-
-
-
 
         [[nodiscard]]
         std::string buildVar(ull initVal) const{

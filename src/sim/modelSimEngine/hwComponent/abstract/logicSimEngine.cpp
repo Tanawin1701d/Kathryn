@@ -90,12 +90,13 @@ namespace kathryn{
         std::string desAStr = std::to_string(desSlice.start);
         std::string desBStr = std::to_string(desSlice.stop);
         /////////////////////// clear old data
-        ret += desVar.clear(desSlice).toString() + ";\n";
+        ret += desVar.eq(desVar.clear(desSlice)).toString() + ";\n";
         ret += "        ";
         ////////////////////// create new data
 
+        ValR fillVal = getSlicedAndShiftSrcOprFromOpr(srcOpr, desSlice, getValR_Type());
         ret += desVar
-        .eq(getSlicedAndShiftSrcOprFromOpr(srcOpr, desSlice, getValR_Type()))
+        .eq(desVar.partialOr(fillVal))
         .toString() + ";";
 
         return ret;
@@ -105,13 +106,13 @@ namespace kathryn{
         return getValRep();
     }
 
-    ValR LogicSimEngine::genSlicedOprTo(Slice srcSlice, SIM_VALREP_TYPE desField){
+    ValR LogicSimEngine::genSlicedOprTo(Slice srcSlice, SIM_VALREP_TYPE_ALL desField){
         assert(srcSlice.checkValidSlice() &&
             (srcSlice.stop <= _asb->getAssignSlice().stop));
         ////// it will automatic shift to 0 index
         ////// des operand
         Slice baseSrcSlice = _asb->getAssignSlice();
-        SIM_VALREP_TYPE baseType = getValR_Type();
+        SIM_VALREP_TYPE_ALL baseType = getValR_Type();
 
         if ( (baseSrcSlice == srcSlice) &&
              (baseType     == desField)
@@ -119,7 +120,6 @@ namespace kathryn{
             return getValRep();
         }
 
-        std::string desTypeStr = SVT_toUnitType(desField);
         std::string aStr = std::to_string(srcSlice.start);
         std::string bStr = std::to_string(srcSlice.stop);
         return getValRep()
@@ -128,13 +128,13 @@ namespace kathryn{
 
     }
 
-    ValR LogicSimEngine::genSlicedOprAndShift(Slice desSlice, Slice srcSlice, SIM_VALREP_TYPE desField){
+    ValR LogicSimEngine::genSlicedOprAndShift(Slice desSlice, Slice srcSlice, SIM_VALREP_TYPE_ALL desField){
         assert(srcSlice.checkValidSlice() &&
             (srcSlice.stop <= _asb->getAssignSlice().stop));
         assert(desSlice.getSize() <= srcSlice.getSize());
 
         Slice baseSrcSlice = _asb->getAssignSlice();
-        SIM_VALREP_TYPE baseType = getValR_Type();
+        SIM_VALREP_TYPE_ALL baseType = getValR_Type();
 
         if ((baseSrcSlice == srcSlice) &&
             (baseSrcSlice == desSlice) &&
@@ -173,8 +173,8 @@ namespace kathryn{
             (_ident->isUserVar() ? "_USER_" + _ident->getVarName() : "_SYS");
 
         int size = _asb->getAssignSlice().getSize();
-        SIM_VALREP_TYPE svt = getMatchSVT(size);
-        return {svt, size, name};
+        SIM_VALREP_TYPE_ALL valType = getValR_Type();
+        return {valType, size, name};
     }
 
     std::vector<std::string> LogicSimEngine::getRegisVarName(){
@@ -187,8 +187,8 @@ namespace kathryn{
         return base;
     }
 
-    SIM_VALREP_TYPE LogicSimEngine::getValR_Type(){
-        return getMatchSVT(_asb->getAssignSlice().getSize());
+    SIM_VALREP_TYPE_ALL LogicSimEngine::getValR_Type(){
+        return SIM_VALREP_TYPE_ALL(_asb->getAssignSlice().getSize());
     }
 
 
@@ -196,9 +196,6 @@ namespace kathryn{
         std::string valSize = std::to_string(_asb->getAssignSlice().getSize());
 
         ////////"; will be auto add"
-
-        SIM_VALREP_TYPE svt = getValR_Type();
-        std::string typeStr = SVT_toType(svt);
 
         cb.addSt( getValRep().buildVar(_initVal), !_isTempReq);
         if (_isTempReq){

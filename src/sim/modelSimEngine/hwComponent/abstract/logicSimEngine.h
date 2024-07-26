@@ -38,8 +38,8 @@ namespace kathryn{
                                                       Operable* srcOpr);
         ///////////////////////// sliced opr
         virtual ValR genSrcOpr                ();
-        virtual ValR genSlicedOprTo           (Slice srcSlice, SIM_VALREP_TYPE desField);
-        virtual ValR genSlicedOprAndShift     (Slice desSlice, Slice srcSlice, SIM_VALREP_TYPE desField);
+        virtual ValR genSlicedOprTo           (Slice srcSlice, SIM_VALREP_TYPE_ALL desField);
+        virtual ValR genSlicedOprAndShift     (Slice desSlice, Slice srcSlice, SIM_VALREP_TYPE_ALL desField);
 
 
         LogicSimEngine(Assignable* asb, Identifiable*   ident,
@@ -54,7 +54,7 @@ namespace kathryn{
         std::vector<std::string> getRegisVarName() override;
         ValR                     getTempValRep();
         ull                      getVarId()        override{return _ident->getGlobalId();}
-        SIM_VALREP_TYPE          getValR_Type()    override;
+        SIM_VALREP_TYPE_ALL      getValR_Type()    override;
         void                     setVCDWriteStatus(bool status){ _setToWrite = status;}
 
         [[nodiscard]]

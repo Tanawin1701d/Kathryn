@@ -19,12 +19,14 @@ namespace kathryn{
     }
 
     ValR FlowBaseSimEngine::getValRep(){
-        return {SVT_U8, bitSizeOfUll, "PERF_" + _flowBlockBase->getGlobalName()};
+        return {SIM_VALREP_TYPE_ALL(bitSizeOfUll),
+            bitSizeOfUll,
+            "PERF_" + _flowBlockBase->getGlobalName()};
     }
 
     ValR FlowBaseSimEngine::getVarNameCurStatus(){
         ValR base = getValRep();
-        return {SVT_U8, 1, base.getData()+"_CURBIT"};
+        return {SIM_VALREP_TYPE_ALL(bitSizeOfUll), 1, base.getData()+"_CURBIT"};
     }
 
     std::vector<std::string> FlowBaseSimEngine::getRegisVarName(){
@@ -35,8 +37,8 @@ namespace kathryn{
         return _flowBlockBase->getGlobalId();
     }
 
-    SIM_VALREP_TYPE FlowBaseSimEngine::getValR_Type(){
-        return SVT_U64;
+    SIM_VALREP_TYPE_ALL FlowBaseSimEngine::getValR_Type(){
+        return SIM_VALREP_TYPE_ALL(bitSizeOfUll);
     }
 
 
@@ -66,9 +68,6 @@ namespace kathryn{
 
 
     void FlowBaseSimEngine::createGlobalVariable(CbBaseCxx& cb){
-        SIM_VALREP_TYPE svt = getValR_Type();
-        std::string typeStr = SVT_toType(svt);
-        std::string typeSingleBitStr = SVT_toType(SVT_U8);
 
         cb.addSt(getValRep().buildVar(0));
         cb.addSt(getVarNameCurStatus().buildVar(0));
@@ -99,7 +98,7 @@ namespace kathryn{
         /////////////////////////////////////////////////////////////////////////////
         ///////////// this block purpose
         /////////////////////////////////////////////////////////////////////////////
-        cb.addSt(getVarNameCurStatus().eq(ValR(SVT_U8, 1, "0")).toString());
+        cb.addSt(getVarNameCurStatus().eq(ValR(SIM_VALREP_TYPE_ALL(1), 1, "0")).toString());
 
         //////////// basic node recruitment
         cb.addCm("basic node rc");
@@ -125,7 +124,7 @@ namespace kathryn{
         }
         cb.addSt(
             (getValRep()+
-                 getVarNameCurStatus().cast(SVT_U64, bitSizeOfUll)
+                 getVarNameCurStatus().cast(SIM_VALREP_TYPE_ALL(bitSizeOfUll), bitSizeOfUll)
                  ).toString());
 
 

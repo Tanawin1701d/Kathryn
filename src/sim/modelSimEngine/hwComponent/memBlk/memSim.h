@@ -25,7 +25,7 @@ namespace kathryn{
         ValR                     getValRep()      override;
         std::vector<std::string> getRegisVarName() override;
         ull                      getVarId()        override;
-        SIM_VALREP_TYPE          getValR_Type()    override;
+        SIM_VALREP_TYPE_ALL      getValR_Type()    override;
         
         void createGlobalVariable(CbBaseCxx& cb) override;
         void createLocalVariable (CbBaseCxx& cb) override{}

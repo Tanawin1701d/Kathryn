@@ -100,16 +100,16 @@ namespace kathryn{
         ValRepBase getVal    (const std::string& globalName){
 
             if (callBack8.find(globalName) != callBack8.end()){
-                return {sizeof(uint8_t), &callBack8.find(globalName)->second};
+                return {sizeof(uint8_t), callBack8.find(globalName)->second};
             }
             if (callBack16.find(globalName) != callBack16.end()){
-                return {sizeof(uint16_t), &callBack16.find(globalName)->second};
+                return {sizeof(uint16_t), callBack16.find(globalName)->second};
             }
             if (callBack32.find(globalName) != callBack32.end()){
-                return {sizeof(uint32_t), &callBack32.find(globalName)->second};
+                return {sizeof(uint32_t), callBack32.find(globalName)->second};
             }
             if (callBack64.find(globalName) != callBack64.end()){
-                return {sizeof(uint64_t), &callBack64.find(globalName)->second};
+                return {sizeof(uint64_t), callBack64.find(globalName)->second};
             }
             assert(false);
 
@@ -117,10 +117,10 @@ namespace kathryn{
 
         ValRepBase getValPerf(const std::string& globalName){
             if (callBackPerf.find(globalName) != callBackPerf.end()){
-                return {sizeof(uint64_t), &callBackPerf.find(globalName)->second};
+                return {sizeof(uint64_t), callBackPerf.find(globalName)->second};
             }
             if (callBackPerfCurbit.find(globalName) != callBackPerfCurbit.end()){
-                return {sizeof(uint8_t), &callBackPerfCurbit.find(globalName)->second};
+                return {sizeof(uint8_t), callBackPerfCurbit.find(globalName)->second};
             }
             assert(false);
         }

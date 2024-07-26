@@ -35,14 +35,14 @@ namespace kathryn{
 
     void expressionSimEngine::createGlobalVariable(CbBaseCxx& cb){
         if (_reqGlobDec){
-            cb.addSt(getValRep().toString());
+            cb.addSt(getValRep().buildVar());
         }
     }
 
 
     void expressionSimEngine::createLocalVariable(CbBaseCxx& cb){
         if (!_reqGlobDec){
-            cb.addSt(getValRep().toString());
+            cb.addSt(getValRep().buildVar());
         }
     }
 
@@ -59,13 +59,13 @@ namespace kathryn{
 
 
         /****/
-        ValR _aSliced = getSlicedSrcOprFromOpr(_master->_a, getMatchSVT(_master->_a));
+        ValR _aSliced = getSlicedSrcOprFromOpr(_master->_a, getMatchSVT_ALL(_master->_a));
         ValR _bSliced;
         int aSize = _master->_a->getOperableSlice().getSize();
         assert(aSize == _aSliced._size);
         int bSize = 0;
         if (_master->_b != nullptr){
-            _bSliced = getSlicedSrcOprFromOpr(_master->_b, getMatchSVT(_master->_b));
+            _bSliced = getSlicedSrcOprFromOpr(_master->_b, getMatchSVT_ALL(_master->_b));
             bSize    = _master->_b->getOperableSlice().getSize();
             assert(bSize == _bSliced._size);
         }

@@ -15,8 +15,8 @@ namespace kathryn{
     ValR MemSimEngine::getValRep(){
         std::string     name = _master->getGlobalName();
         int             size = _master->getWidthSize();
-        SIM_VALREP_TYPE svt  = getMatchSVT(size);
-        return {svt, size, name};
+
+        return {SIM_VALREP_TYPE_ALL(size), size, name};
     }
 
     std::vector<std::string> MemSimEngine::getRegisVarName(){
@@ -26,8 +26,8 @@ namespace kathryn{
 
     ull MemSimEngine::getVarId(){ return _master->getGlobalId(); }
 
-    SIM_VALREP_TYPE MemSimEngine::getValR_Type(){
-        return getMatchSVT(_master->getWidthSize());
+    SIM_VALREP_TYPE_ALL MemSimEngine::getValR_Type(){
+        return SIM_VALREP_TYPE_ALL(_master->getWidthSize());
     }
 
 

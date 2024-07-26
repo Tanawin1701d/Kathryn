@@ -22,12 +22,13 @@ namespace kathryn{
     _master(master){ assert(master != nullptr);}
 
 
-    ValR ValSimEngine::genSrcOpr(){
+    ValR ValSimEngine::getValRep(){
         int size = _asb->getAssignSlice().getSize();
 
         ValR x(getValR_Type(), size,
             std::to_string(_initVal)+CXX_ULL_SUFFIX);
-        return x.cast(getValR_Type(), size);
+        /////// due to ull string init we must cast first
+        return x.castBase(x._valType, x._size);
     }
 
     void
