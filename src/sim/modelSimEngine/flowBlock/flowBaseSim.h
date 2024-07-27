@@ -28,7 +28,6 @@ namespace kathryn{
                              public ModelProxyRetrieve{
     protected:
         FlowBlockBase* _flowBlockBase  = nullptr;
-        FlowColEle*    _writer         = nullptr;
         ValRepBase     _proxyRepCurBit;
 
     public:

@@ -13,6 +13,7 @@
 #include "util/fileWriter/fileWriterBase.h"
 #include "model/hwComponent/abstract/Slice.h"
 
+
 namespace kathryn{
 
     enum VCD_SIG_TYPE{
@@ -43,65 +44,28 @@ namespace kathryn{
     };
 
 
-    /***/
 
-    struct FlowColEle{
-        std::string localName;
-        int freq = 0;
-        std::vector<FlowColEle*> subEle;
-        /** for printing and traversing*/
-        int nextPrintedId = 0;
-        int curprintIdent = 0;
+    class Module;
+    class FlowBlockBase;
 
-        FlowColEle* populateSubEle(){
-            subEle.push_back(new FlowColEle);
-            return *subEle.rbegin();
-        }
-
-        bool isAllSubElePrinted() const{
-            return nextPrintedId == subEle.size();
-        }
-        FlowColEle* getNextPrintSubEle(){
-            subEle[nextPrintedId]->curprintIdent = curprintIdent + 4;
-            return subEle[nextPrintedId];
-        }
-        void iteratePrintIdx(){
-            nextPrintedId++;
-        }
-
-        std::string getPrintStr() const{
-            std::string ret;
-            for (int i = 0; i < curprintIdent; i++){
-                ret += " ";
-            }
-            ret += localName;
-            ret += "      ";
-            ret += std::to_string(freq);
-            ret += "\n";
-            return ret;
-        }
-
-
-
-    };
-
+    constexpr int CONFLOW_IDENT = 3;
+    constexpr int SUBFLOW_IDENT = 6;
+    constexpr int SUBMOD_IDENT  = 6;
     class FlowWriter : public FileWriterBase{
-    private:
-        FlowColEle* startEle = nullptr;
-
     public:
-        explicit FlowWriter(std::string fileName);
+        Module* _topRecMod = nullptr;
+
+        explicit FlowWriter(const std::string& fileName);
 
         ~FlowWriter();
 
-        FlowColEle* getstartEle() {
-            assert(startEle != nullptr);
-            return startEle;
-        }
+        void startColFlowBlock(FlowBlockBase* fb, int ident);
+
+        void startColModule(Module* moduleToRec, int ident);
 
         void startWriteData();
 
-        void init() override;
+        void init(Module* topModule);
     };
 
 

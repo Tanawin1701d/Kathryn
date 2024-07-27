@@ -13,8 +13,7 @@
 
 namespace kathryn{
     FlowBaseSimEngine::FlowBaseSimEngine(FlowBlockBase* flowBlockBase):
-        _flowBlockBase(flowBlockBase),
-        _writer(nullptr){
+        _flowBlockBase(flowBlockBase){
         assert(_flowBlockBase != nullptr);
     }
 

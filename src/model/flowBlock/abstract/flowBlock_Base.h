@@ -89,7 +89,6 @@ namespace kathryn {
                          public ModelDebuggable,
                          public FlowSimEngineInterface
                          {
-    friend class FlowBlockSimEngine;
     protected:
 
         struct sortEle{
