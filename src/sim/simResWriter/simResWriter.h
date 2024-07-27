@@ -36,6 +36,7 @@ namespace kathryn{
         ~VcdWriter() = default;
         void addNewVar(VCD_SIG_TYPE st, std::string name, Slice sl);
         void addNewValue(const std::string& name, ull val);
+        void addNewValue(const std::string& name, const std::string& value);
         void addNewTimeStamp(ull timeStamp);
 
 

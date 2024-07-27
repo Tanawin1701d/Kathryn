@@ -12,6 +12,7 @@ namespace kathryn{
 
     class ProxySimEvent: public ProxySimEventBase{
     public:
+        void intCodeWarmUp()          override;
         ////// sim proxy
         void startRegisterCallBack()  override;
         void startMainOpEleSim()      override;

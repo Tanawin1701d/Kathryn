@@ -40,12 +40,18 @@ namespace kathryn{
         std::string preRet ;
         std::bitset<bitSizeOfUll> binaryRepresentation(val);
         preRet += binaryRepresentation.to_string();
-        addData(
-                "b" + preRet +
-                " " + name + "\n"
-                );
+
+        addNewValue(name, preRet);
     }
 
+    void VcdWriter::addNewValue(const std::string& name, const std::string& value){
+        ///std::cout << "addDayta"  << name << "    " << value << std::endl;
+        addData(
+            "b" + value +
+            " " + name  + "\n"
+        );
+
+    }
 
     void VcdWriter::addNewTimeStamp(ull timeStamp){
         addData("#" + std::to_string(timeStamp) + "\n");

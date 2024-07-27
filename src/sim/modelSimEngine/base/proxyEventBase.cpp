@@ -55,6 +55,7 @@ namespace kathryn{
     void ProxySimEventBase::curCycleCollectData(){
         ///// start collect vcd
         ///
+        //std::cout << "ddddd" << std::endl;
         if (isLongRageSim()){
             ////std::cout << "skip cause long range run" << std::endl;
             return;
@@ -64,13 +65,19 @@ namespace kathryn{
             (VCD_REC_POL == MDE_REC_ONLY_USER) |
             (VCD_REC_POL == MDE_REC_ONLY_INTERNAL)
         ){
+            //std::cout << "add Time Stamp" << std::endl;
+            assert(_vcdWriter !=nullptr);
+            //std::cout << _vcdWriter << std::endl;
             _vcdWriter->addNewTimeStamp(getCurCycle() * 10);
             clkSignal = 1;
             _vcdWriter->addNewValue(CLK_SIGNAL, clkSignal);
+            //std::cout << "add Time Stamp fin" << std::endl;
         }
 
         if ((VCD_REC_POL == MDE_REC_BOTH) | (VCD_REC_POL == MDE_REC_ONLY_USER)){
+            //std::cout << "add vcd user col" << std::endl;
             startVcdColUser();
+            //std::cout << "add vcd fin" << std::endl;
         }
 
         if ((VCD_REC_POL == MDE_REC_BOTH) | (VCD_REC_POL == MDE_REC_ONLY_INTERNAL)){
@@ -87,6 +94,7 @@ namespace kathryn{
         }
 
         /////// start collect per collection
+        //std::cout << "before start perf" << std::endl;
         startPerfCol();
     }
 

@@ -23,10 +23,11 @@ namespace kathryn{
         MODULE_VCD_REC_POL  VCD_REC_POL = MDE_REC_SKIP;
         VcdWriter*          _vcdWriter = nullptr;
 
-        std::unordered_map<std::string, uint8_t*>  callBack8; //// for mem block use start point
-        std::unordered_map<std::string, uint16_t*> callBack16; //// for mem block use start point
-        std::unordered_map<std::string, uint32_t*> callBack32; //// for mem block use start point
-        std::unordered_map<std::string, uint64_t*> callBack64; //// for mem block use start point
+        std::unordered_map<std::string, uint8_t*>    callBack8; //// for mem block use start point
+        std::unordered_map<std::string, uint16_t*>   callBack16; //// for mem block use start point
+        std::unordered_map<std::string, uint32_t*>   callBack32; //// for mem block use start point
+        std::unordered_map<std::string, uint64_t*>   callBack64; //// for mem block use start point
+        std::unordered_map<std::string, UintX_Base*> callBack64M;
 
         std::unordered_map<std::string, uint64_t*> callBackPerf;
         std::unordered_map<std::string, uint8_t*> callBackPerfCurbit;
@@ -42,6 +43,7 @@ namespace kathryn{
         ~ProxySimEventBase() override;
         ////// sim base
         void eventWarmUp();
+        virtual void intCodeWarmUp() = 0; ///// internal code warm up
         void simStartLongRunCycle() override;
         void simStartCurCycle()     override;
         void curCycleCollectData()  override;
@@ -87,6 +89,15 @@ namespace kathryn{
             callBack64.insert({cbName, val});
         }
 
+        ///////// register callback 64M
+        void registerToCallBack(const std::string& cbName, UintX_Base& val){
+            registerToCallBack(cbName, &val);
+        }
+        void registerToCallBack(const std::string& cbName, UintX_Base* val){
+            assert(callBack64M.find(cbName) == callBack64M.end());
+            callBack64M.insert({cbName, val});
+        }
+
         void registerToCallBackPerf(const std::string& cbName, uint64_t& val){
             assert(callBackPerf.find(cbName) == callBackPerf.end());
             callBackPerf.insert({cbName, &val});
@@ -110,6 +121,9 @@ namespace kathryn{
             }
             if (callBack64.find(globalName) != callBack64.end()){
                 return {sizeof(uint64_t), callBack64.find(globalName)->second};
+            }
+            if (callBack64M.find(globalName) != callBack64M.end()){
+                return {sizeof(uint64_t), callBack64M.find(globalName)->second->getDataBase()};
             }
             assert(false);
 

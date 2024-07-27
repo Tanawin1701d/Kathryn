@@ -128,12 +128,15 @@ namespace kathryn{
         proxyfileWriter->addData("int " + CALLBACK_VAR_AMT +"=0;\n");
         proxyfileWriter->addData("int " + CALLBACK_VAR_ARR_NAME +"["+
             MAX_SIZE_CB_ARR + "];\n");
+        proxyfileWriter->addData(VCD_WRITER_TYPE + "* " +
+                                 VCD_WRITER_VAR_INT + "= nullptr;\n");
         startWriteCreateVariable();
         startWritePerfDec();
         //////////////////////////////
         ///////// start  Writefunction
         //////////////////////////////
         /// register callback
+        startWriteInitInternalWarmUp();
         startWriteRegisterCallback();
         //// callbackMng
         startWriteCallBackCheckAndRet();
@@ -216,6 +219,13 @@ namespace kathryn{
         proxyfileWriter->addData("/////////////////////// perf finish initialize\n");
     }
 
+    void ProxyBuildMng::startWriteInitInternalWarmUp(){
+
+        proxyfileWriter->addData(genFunctionDec(true, INTERNAL_WARMUP)+ "{\n");
+        proxyfileWriter->addData(VCD_WRITER_VAR_INT + "=" + VCD_WRITER_VAR_BASE_CL  + ";\n");
+        proxyfileWriter->addData("}\n");
+
+    }
 
     void ProxyBuildMng::startWriteRegisterCallback(){
 
@@ -342,17 +352,24 @@ namespace kathryn{
         proxyfileWriter->addData("__attribute__((always_inline)) inline " +
             genFunctionDec(false, VCD_COL + fSuffix + SKE_SUFFIX));
         proxyfileWriter->addData("{\n");
-
+        //proxyfileWriter->addData("}\n");
+        //return;
 
         for (LogicSimEngine* mpb : dayta){
             if (mpb->isUserDeclare() == isUser){
                 ////// the registerable must always put to vcd file
                 proxyfileWriter->addData("       ");
-                proxyfileWriter->addData("_vcdWriter->addNewValue(");
+                proxyfileWriter->addData(VCD_WRITER_VAR_INT + "->addNewValue(");
 
                 proxyfileWriter->addData("\"" + mpb->getValRep().getData() + "\"");
                 proxyfileWriter->addData(",");
-                proxyfileWriter->addData(mpb->getValRep().getData() + ");\n");
+                if (mpb->getValR_Type().type == SVT_U64M){
+                    //proxyfileWriter->addData("0");
+                    proxyfileWriter->addData(mpb->getValRep().getData() + ".toBiStr()");
+                }else{
+                    proxyfileWriter->addData(mpb->getValRep().getData());
+                }
+                proxyfileWriter->addData(");\n");
             }
         }
 
@@ -363,10 +380,9 @@ namespace kathryn{
 
         std::string fSuffix = isUser ? USER_SUFFIX: INTERNAL_SUFFIX;
         proxyfileWriter->addData(genFunctionDec(true, VCD_COL + fSuffix ));
+
         proxyfileWriter->addData("{\n");
-        proxyfileWriter->addData("{\n");
-        proxyfileWriter->addData("      startVcdColSke");
-        proxyfileWriter->addData(isUser ? "User" : "Internal");
+        proxyfileWriter->addData("      " + VCD_COL + fSuffix + SKE_SUFFIX);
         proxyfileWriter->addData("();\n");
         proxyfileWriter->addData("}\n");
 

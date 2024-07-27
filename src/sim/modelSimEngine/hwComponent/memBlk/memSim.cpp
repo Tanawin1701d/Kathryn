@@ -39,6 +39,10 @@ namespace kathryn{
     void MemSimEngine::proxyRetInit(ProxySimEventBase* modelSimEvent){
         proxyRep = modelSimEvent->getVal(getValRep().getData());
         proxyRep.setSize(_master->getWidthSize());
+        if (getValR_Type().type == SVT_U64M){
+            assert(getValR_Type().subType > 0);
+            proxyRep.setContinLength(getValR_Type().subType);
+        }
     }
 
     ValRepBase& MemSimEngine::getProxyRep(){

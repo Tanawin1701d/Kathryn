@@ -33,9 +33,10 @@ namespace kathryn{
 
     class ValRepBase{
     public:
-        int   _byteSize = -1;
-        int   _length   = -1;
-        void* _val      = nullptr; //////// value at that idx
+        int   _byteSize     = -1;
+        int   _length       = -1;
+        int   _continLength = -1; //// for more than 64 bit, it is checker for arrsize that can iterate from _val
+        void* _val          = nullptr; //////// value at that idx
 
     public:
         ValRepBase(const int byteSize, void* val):
@@ -52,7 +53,26 @@ namespace kathryn{
             }else if (_byteSize == 4){
                 (*static_cast<uint32_t*>(_val)) = (uint32_t)(x);
             }else if (_byteSize == 8){
-                (*static_cast<uint64_t*>(_val)) = (uint64_t)(x);
+                if (_continLength == -1){
+                    (*static_cast<uint64_t*>(_val)) = (uint64_t)(x);
+                }else if (_continLength > 0){
+                    (*static_cast<uint64_t*>(_val)) = (uint64_t)(x);
+                    for(int i = 1; i < _continLength; i++){
+                        *(static_cast<uint64_t*>(_val) + i) = (uint64_t)(0);
+                    }
+                }else{
+                    assert(false);
+                }
+            }
+        }
+
+        void setLargeVar(std::vector<ull> x) const{
+            assert(_continLength  > 0);
+            assert(_byteSize     == 8);
+            if (_continLength > 0){
+                for(int i = 0; i < _continLength; i++){
+                    *(static_cast<uint64_t*>(_val) + i) = x[i];
+                }
             }
         }
 
@@ -61,7 +81,13 @@ namespace kathryn{
         }
 
         void setSize(int size){
+            assert(size > 0);
             _length = size;
+        }
+
+        void setContinLength(int size){
+            assert(size > 0);
+            _continLength = size;
         }
 
         ull getVal()const{
@@ -76,11 +102,24 @@ namespace kathryn{
                 return *static_cast<uint32_t*>(_val);
             }
             if (_byteSize == 8){
+                if (_continLength >= 0){
+                    //// warning system should be declared here.
+                }
                 return *static_cast<uint64_t*>(_val);
             }
             assert(false);
 
 
+        }
+
+        std::vector<ull> getLargeVal()const{
+            assert(_continLength > 0);
+            assert(_byteSize == 8);
+            std::vector<ull> result;
+            for (int idx = 0; idx < _continLength; idx++){
+                result.push_back(*(static_cast<uint64_t*>(_val) + idx));
+            }
+            return result;
         }
 
         explicit operator ull() const{
@@ -100,17 +139,28 @@ namespace kathryn{
                 return {_byteSize, static_cast<uint32_t*>(_val) + idx};
             }
             if (_byteSize == 8){
-                return {_byteSize, static_cast<uint64_t*>(_val) + idx};
+                if (_continLength == -1){
+                    return {_byteSize, static_cast<uint64_t*>(_val) + idx};
+                }
+                if (_continLength > 0){
+                    return {_byteSize, static_cast<uint64_t*>(_val) + (_continLength * idx)};
+                }
             }
             assert(false);
         }
 
+    };
+
+
+    struct UintX_Base{
+
+        virtual ull* getDataBase() = 0;
 
     };
 
 
     template<int arrSize>
-    struct UintX{
+    struct UintX: UintX_Base{
     public:
         ull _data[arrSize] = {};
 
@@ -128,6 +178,11 @@ namespace kathryn{
             return res;
         }
 
+        ull* getDataBase() override{
+            return _data;
+        }
+
+
         bool getBiValue(){
             for (ull x : _data){
                 if (x){
@@ -135,6 +190,15 @@ namespace kathryn{
                 }
             }
             return false;
+        }
+
+        std::string toBiStr(){
+            std::string preRet;
+            for(int i = arrSize - 1; i >= 0; i--){
+                std::bitset<bitSizeOfUll> binaryRepresentation(_data[i]);
+                preRet += binaryRepresentation.to_string();
+            }
+            return preRet;
         }
 
         UintX<arrSize> operator & (const UintX<arrSize>& rhs) const{
@@ -154,9 +218,14 @@ namespace kathryn{
             return res;
         }
 
+        template<int T>
+        UintX<arrSize> operator << (UintX<T> amt){
+            return operator << (amt._data[0]);
+        }
+
         UintX<arrSize> operator << (int amt){
 
-            int fullShift = amt / bitSizeOfUll;
+            int fullShift    = amt / bitSizeOfUll;
             int partialShift = amt % bitSizeOfUll;
             UintX<arrSize> result;
 
@@ -170,14 +239,19 @@ namespace kathryn{
                 int desHigherPlateIdx = desLowerPlateIdx + 1;
 
                 if (desLowerPlateIdx < arrSize){
-                    _data[desLowerPlateIdx] |= lowerPlate;
+                    result._data[desLowerPlateIdx] |= lowerPlate;
                 }
                 if (desHigherPlateIdx < arrSize){
-                    _data[desHigherPlateIdx] |= higherPlate;
+                    result._data[desHigherPlateIdx] |= higherPlate;
                 }
             }
             return result;
 
+        }
+
+        template<int T>
+        UintX<arrSize> operator >> (UintX<T> amt){
+            return operator >> (amt._data[0]);
         }
 
         UintX<arrSize> operator >> (int amt){
@@ -196,10 +270,10 @@ namespace kathryn{
                 int desHigherPlateIdx = desLowerPlateIdx + 1;
 
                 if ((desLowerPlateIdx < arrSize) && (desLowerPlateIdx >= 0)){
-                    _data[desLowerPlateIdx] |= lowerPlate;
+                    result._data[desLowerPlateIdx] |= lowerPlate;
                 }
                 if ((desHigherPlateIdx < arrSize) && (desHigherPlateIdx >= 0)){
-                    _data[desHigherPlateIdx] |= higherPlate;
+                    result._data[desHigherPlateIdx] |= higherPlate;
                 }
             }
             return result;
@@ -316,7 +390,7 @@ namespace kathryn{
             _data[0] = eq;
             return *this;
         }
-
+        ////////                       96
         UintX<arrSize> buildMask(int size, int start){
             int startIdx = size / bitSizeOfUll;
             int partialIdx = size % bitSizeOfUll;
@@ -324,9 +398,11 @@ namespace kathryn{
             UintX result = *this;
 
             ull startCleaner = (1ULL << partialIdx) - 1;
-            result._data[startIdx] &= startCleaner;
-            for (int idx = startIdx + 1; idx < arrSize; idx++){
-                result._data[idx] = 0;
+            if (startIdx < arrSize){
+                result._data[startIdx] = startCleaner;
+            }
+            for (int idx = startIdx - 1; idx >= 0; idx--){
+                result._data[idx] = UINT64_MAX;
             }
             return result << start;
         }
@@ -358,13 +434,6 @@ namespace kathryn{
                 result._data[i] = _data[i];
             }
         }
-
-
-
-
-
-
-
 
     };
 

@@ -53,6 +53,7 @@ namespace kathryn{
         const std::string SKE_SUFFIX           = "Ske";
         const std::string USER_SUFFIX          = "User";
         const std::string INTERNAL_SUFFIX      = "Internal";
+        const std::string INTERNAL_WARMUP      = "intCodeWarmUp";
         const std::string REGIS_CALLBACK       = "startRegisterCallBack";
         const std::string REGIS_CALLBACK_LOGIC = "registerToCallBack";
         const std::string REGIS_CALLBACK_PERF  = "registerToCallBackPerf";
@@ -69,6 +70,9 @@ namespace kathryn{
         const std::string CALLBACK_GET_AMT         = "getCallBackAmt";
         const std::string CALLBACK_GET_NO          = "getCallBackNo";
         const std::string CALLBACK_CHECK_FUNC_NAME = "checkCallBack";
+        const std::string VCD_WRITER_TYPE          = "VcdWriter";
+        const std::string VCD_WRITER_VAR_INT       = "_vcdWriterInternal";
+        const std::string VCD_WRITER_VAR_BASE_CL   = "_vcdWriter";
 
         std::vector<TraceEvent>*  callBackEvents = nullptr;
 
@@ -93,6 +97,8 @@ namespace kathryn{
         void startWriteCreateVariable();
         ///////// void start write perf create
         void startWritePerfDec();
+        ////////// start write internal warmup
+        void startWriteInitInternalWarmUp();
         ////////// for start register function
         void startWriteRegisterCallback();
         ////////// call back function

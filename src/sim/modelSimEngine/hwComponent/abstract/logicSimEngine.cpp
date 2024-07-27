@@ -234,6 +234,10 @@ namespace kathryn{
     void LogicSimEngine::proxyRetInit(ProxySimEventBase* modelSimEvent){
         proxyRep = modelSimEvent->getVal(getValRep().toString());
         proxyRep.setSize(_asb->getAssignSlice().getSize());
+        if (getValR_Type().type == SVT_U64M){
+            assert(getValR_Type().subType > 0);
+            proxyRep.setContinLength(getValR_Type().subType);
+        }
     }
 
     ValRepBase& LogicSimEngine::getProxyRep(){

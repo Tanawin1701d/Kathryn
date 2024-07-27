@@ -62,9 +62,10 @@ namespace kathryn {
     }
 
     expression& Operable::operator<<( Operable &b) {
-        mfAssert(b.getOperableSlice().getSize() <= bitSizeOfUll,
-                 "operable<&> get mismatch bit size"
-        );
+        // mfAssert(b.getOperableSlice().getSize() <= bitSizeOfUll,
+        //          "operable<&> get mismatch bit size"
+        // );
+        std::cout << "warning there is shift bit that greater than 64" << std::endl;
         auto ret =  new expression(BITWISE_SHL,
                                      this,
                                      &b,
@@ -74,9 +75,10 @@ namespace kathryn {
     }
 
     expression& Operable::operator>>( Operable &b) {
-        mfAssert(b.getOperableSlice().getSize() <= bitSizeOfUll,
-                 "operable<&> get mismatch bit size"
-        );
+        // mfAssert(b.getOperableSlice().getSize() <= bitSizeOfUll,
+        //          "operable<&> get mismatch bit size"
+        // );
+        std::cout << "warning there is shift bit that greater than 64" << std::endl;
         auto ret =  new expression(BITWISE_SHR,
                                      this,
                                      &b,

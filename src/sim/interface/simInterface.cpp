@@ -224,6 +224,7 @@ namespace kathryn{
         _modelSimEvent->setVcdWriter(_vcdWriter);
         _modelSimEvent->setVcdWritePol(PARAM_VCD_REC_POL);
         _modelSimEvent->eventWarmUp();
+        _modelSimEvent->intCodeWarmUp();
         _proxyBuildMng.startRetrieveSimVal(_modelSimEvent);
 
         ////////// add to event queue
