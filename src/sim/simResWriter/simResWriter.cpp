@@ -67,10 +67,6 @@ namespace kathryn{
     FlowWriter::FlowWriter(const std::string& fileName)
         : FileWriterBase(fileName){}
 
-    FlowWriter::~FlowWriter(){
-        startWriteData();
-    }
-
     void FlowWriter::startColFlowBlock(FlowBlockBase* fb, int ident){
 
         /////// this cycle ident

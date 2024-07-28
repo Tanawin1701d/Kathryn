@@ -8,6 +8,7 @@
 
 #include "node.h"
 #include "asmNode.h"
+#include "logicNode.h"
 
 namespace kathryn{
 
@@ -71,6 +72,7 @@ namespace kathryn{
 
     struct SynNode : Node{
         SyncReg* _synReg;
+        PseudoNode* _forceExitNode = nullptr;
 
         /**in SynNode condition and dependState is disengage*/
         explicit SynNode(int synSize) :
@@ -89,16 +91,28 @@ namespace kathryn{
             if (isThrereIntReset()) {
                 _synReg->makeUserRstEvent(intReset->getExitOpr());
             }
+            if (_forceExitNode != nullptr){
+                _synReg->makeUserRstEvent(_forceExitNode->getExitOpr());
+            }
         }
 
         Operable* getExitOpr() override{return bindWithRstOutPutIfReset(_synReg->generateEndExpr());}
 
+        void setForceExitEvent(PseudoNode* nd){
+            assert(nd != nullptr);
+            _forceExitNode = nd;
+        }
+
         void assign() override{
             _synReg->setVarName(identName);
             /** make start event*/
+            Operable* notForceExit  = nullptr;
+            if (_forceExitNode){
+                notForceExit = &(~(*_forceExitNode->getExitOpr()));
+            }
             for (auto dependNode : nodeSrcs){
                 assert(dependNode.condition == nullptr);
-                _synReg->addDependState(dependNode.dependNode->getExitOpr(), nullptr);
+                _synReg->addDependState(dependNode.dependNode->getExitOpr(), notForceExit);
             }
             /** make unset event*/
             makeUnsetStateEvent();

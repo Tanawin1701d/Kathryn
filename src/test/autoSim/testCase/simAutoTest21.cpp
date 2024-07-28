@@ -70,5 +70,5 @@ namespace kathryn{
 
     };
 
-    Sim21TestEle ele21(21);
+    Sim21TestEle ele21(-1);
 }

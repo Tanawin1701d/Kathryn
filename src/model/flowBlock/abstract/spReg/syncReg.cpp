@@ -28,10 +28,14 @@ namespace kathryn {
     };
 
     UpdateEvent* SyncReg::addDependState(Operable* dependState, Operable* activateCond){
-        assert(activateCond == nullptr);
+        ///assert(activateCond == nullptr);
         assert(dependState != nullptr);
+        Operable* actualCondition = endExprInv;
+        if (activateCond != nullptr){
+            actualCondition = &( (*actualCondition) & (*activateCond));
+        }
         /** if endExpr rise, it is neccessary to tel register to rise*/
-        auto* event = new UpdateEvent({endExprInv,
+        auto* event = new UpdateEvent({  actualCondition ,
                                        dependState,
                                        &upState,
                                        Slice({nextFillActivateId, nextFillActivateId + 1}),
@@ -40,7 +44,7 @@ namespace kathryn {
         addUpdateMeta(event);
         ////// assign observe wire
         auto* testEvent = new UpdateEvent({
-            nullptr,
+            activateCond,
             dependState,
             &upState,
             Slice({nextFillActivateId, nextFillActivateId + 1}),

@@ -57,6 +57,7 @@ namespace kathryn{
         /** build node*/
 
         _waitNode = new WaitCondNode(_exitCond);
+        addSysNode(_waitNode);
         fillIntResetToNodeIfThere(_waitNode);
         _waitNode->setInternalIdent("waitCond"+std::to_string(getGlobalId()));
 

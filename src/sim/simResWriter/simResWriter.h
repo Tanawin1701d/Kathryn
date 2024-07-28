@@ -57,7 +57,7 @@ namespace kathryn{
 
         explicit FlowWriter(const std::string& fileName);
 
-        ~FlowWriter();
+        ~FlowWriter() = default;
 
         void startColFlowBlock(FlowBlockBase* fb, int ident);
 

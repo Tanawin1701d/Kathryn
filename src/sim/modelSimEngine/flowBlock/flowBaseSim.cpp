@@ -25,7 +25,7 @@ namespace kathryn{
 
     ValR FlowBaseSimEngine::getVarNameCurStatus(){
         ValR base = getValRep();
-        return {SIM_VALREP_TYPE_ALL(bitSizeOfUll), 1, base.getData()+"_CURBIT"};
+        return {SIM_VALREP_TYPE_ALL(1), 1, base.getData()+"_CURBIT"};
     }
 
     std::vector<std::string> FlowBaseSimEngine::getRegisVarName(){
@@ -106,24 +106,37 @@ namespace kathryn{
             for (CtrlFlowRegBase* stateReg : sysNode->getCycleRelatedReg()){
                 if (stateReg != nullptr){
                     ValR stateRegRep = stateReg->getSimEngine()->getValRep();
+                    ValR checkRegRep =
+                        ValR(SIM_VALREP_TYPE_ALL(stateRegRep.getSize()), stateRegRep.getSize(), "0");
                     cb.addSt( getVarNameCurStatus()
-                        .eq(getVarNameCurStatus() | stateRegRep)
+                        .eq(getVarNameCurStatus() | (stateRegRep != checkRegRep))
                         .toString());
                 }
             }
         }
+
         ///////////// sub block recruitment
-        for (FlowBlockBase* fb : _flowBlockBase->getSubBlocks()){
-            FlowBaseSimEngine* subBlockSimEngine = fb->getSimEngine();
+        cb.addCm("sub block recruitment");
+        for (FlowBlockBase* subFb : _flowBlockBase->getSubBlocks()){
+            FlowBaseSimEngine* subBlockSimEngine = subFb->getSimEngine();
             cb.addSt( getVarNameCurStatus()
-                .eq(getVarNameCurStatus()| subBlockSimEngine->getVarNameCurStatus())
+                .eq(getVarNameCurStatus() | subBlockSimEngine->getVarNameCurStatus())
                 .toString()
             );
+            for(FlowBlockBase* conOfSubFb: subFb->getConBlocks()){
+                FlowBaseSimEngine* conOfSubFbSimEngine = conOfSubFb->getSimEngine();
+                cb.addSt( getVarNameCurStatus()
+                  .eq(getVarNameCurStatus() | conOfSubFbSimEngine->getVarNameCurStatus())
+                  .toString()
+              );
+            }
 
         }
         cb.addSt(
-            (getValRep()+
-                 getVarNameCurStatus().cast(SIM_VALREP_TYPE_ALL(bitSizeOfUll), bitSizeOfUll)
+                getValRep().eq(
+                        (getValRep()+
+                        getVarNameCurStatus().cast(SIM_VALREP_TYPE_ALL(bitSizeOfUll), bitSizeOfUll)
+                        )
                  ).toString());
 
 
@@ -155,7 +168,7 @@ namespace kathryn{
         }
         ///////// conblock init
         for (FlowBlockBase* conBlock : _flowBlockBase->getConBlocks()){
-            conBlock->getSimEngine()->proxyBuildInit();
+            conBlock->getSimEngine()->proxyRetInit(modelSimEvent);
         }
     }
 

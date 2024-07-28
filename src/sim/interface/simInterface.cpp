@@ -49,6 +49,7 @@ namespace kathryn{
         /***compile and link module sim Event */
         describeModelTriggerWrapper();
         createModelSimEvent();
+        initPerfCol();
         /***con simulating*/
         describeDef();
         describe();
@@ -68,6 +69,7 @@ namespace kathryn{
         }
         /** set assiging mode back*/
         setAssignMode(AM_MOD);
+        finalPerfCol();
         /** finish*/
 
     }
@@ -230,9 +232,20 @@ namespace kathryn{
         ////////// add to event queue
         getSimController()->addEvent(_modelSimEvent);
 
-
-
     }
+
+    void SimInterface::initPerfCol(){
+        Module* globalMd = getGlobalModulePtr();
+        assert(globalMd != nullptr);
+        assert(_flowWriter != nullptr);
+        _flowWriter->init(globalMd);
+    }
+
+    void SimInterface::finalPerfCol(){
+        assert(_flowWriter != nullptr);
+        _flowWriter->startWriteData();
+    }
+
 
 
 

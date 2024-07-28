@@ -85,8 +85,12 @@ namespace kathryn{
         void testAndPrint(const std::string& testName, ull simVal, ull expect);
         /** build proxy SimEvent*/
         void createModelSimEvent();
+        void initPerfCol();
+        void finalPerfCol();
 
         ProxySimEventBase* getProxySimEvent(){return _modelSimEvent;}
+
+
 
 
     };

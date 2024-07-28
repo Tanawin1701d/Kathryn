@@ -30,7 +30,9 @@ namespace kathryn{
                         cif(a == 16) {
                             par {
                                 sbreak;
-                                b <<= 15;
+                                seq{
+                                    b <<= 15;
+                                }
                             }
                         }
                         d = 7;

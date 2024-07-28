@@ -60,7 +60,6 @@ namespace kathryn{
 
     struct ValR{
         SIM_VALREP_TYPE_ALL _valType = SIM_VALREP_TYPE_ALL();
-        int valSubType = -1;  ////// incase svt u64m valSubType is represetn arrSize
         int _size      = -1 ;
         std::string _data = "unused";
 
@@ -74,6 +73,9 @@ namespace kathryn{
         ValR(SIM_VALREP_TYPE_ALL valType, int size):
         _valType(valType),
         _size(size){}
+
+        int                 getSize() const {return _size;}
+        SIM_VALREP_TYPE_ALL getType() const {return _valType;}
 
         ////////// bitwise
         ValR operator &  (const ValR& rhs) const{ assert(_size == rhs._size); return {_valType, _size, "( " + _data  + " & " +  rhs._data + ")"}; }

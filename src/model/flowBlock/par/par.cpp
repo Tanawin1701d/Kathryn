@@ -223,6 +223,10 @@ namespace kathryn{
             synNode = new SynNode(synSize);
             addSysNode(synNode);
             fillIntResetToNodeIfThere(synNode);
+            ///////[warning] this time we ensure that gensumforceExit is declared
+            if(_forceExitNode){
+                synNode->setForceExitEvent(_forceExitNode);
+            }
             synNode->setInternalIdent(
                     "parSynNode_" +
                     std::to_string(getGlobalId())

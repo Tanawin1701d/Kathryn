@@ -69,6 +69,7 @@ namespace kathryn{
                 Node(WAITCYCLE_NODE)
         {
             _cycleWaitStateReg = new CycleWaitStateReg(opr);
+            addCycleRelatedReg(_cycleWaitStateReg);
         }
 
         void makeUnsetStateEvent() override{
