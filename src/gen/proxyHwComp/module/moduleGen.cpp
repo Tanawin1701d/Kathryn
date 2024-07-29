@@ -41,12 +41,13 @@ namespace kathryn{
 
         //////// init the sub module elements first
         for (Module* subModule: _master->getUserSubModules()){
-            subModule->createModuleGen();
-            subModule->getModuleGen()->startInitEle();
-            _subModulePool.push_back(subModule->getModuleGen());
+            subModule->createModuleGen(); //// create submodule gen first
+            subModule->getModuleGen()->startInitEle(); //// init sub module element
+            _subModulePool.push_back(subModule->getModuleGen()); //// add to this module pool
         }
 
         //////// init all logic element wo test
+        /////////////////// logic element should not be recursively called, it should be atomic
         for (int spIdx = 0; spIdx < SP_CNT_REG; spIdx++){
             createAndRecruitLogicGenBase(
                 _regPool,

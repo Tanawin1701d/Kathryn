@@ -99,6 +99,8 @@ namespace kathryn{
         ///////
         /////// input/output
         ///////
+
+        /////////// get it from global pool
         for(GlobIo* srcToBeGlobIo: getGlobPool(isInput)){
             assert(srcToBeGlobIo != nullptr);
             Operable* originOpr = srcToBeGlobIo->getOprFromGlobIo();

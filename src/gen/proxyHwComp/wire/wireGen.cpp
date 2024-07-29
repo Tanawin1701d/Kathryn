@@ -106,10 +106,4 @@ namespace kathryn{
         return _master->getGlobIoType();
     }
 
-
-
-
-
-
-
 }
