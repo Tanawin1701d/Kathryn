@@ -94,14 +94,14 @@ namespace kathryn{
     void GenController::initGlobEle(bool isInput){
         assert(_masterModule != nullptr);
         assert(_masterModuleGen != nullptr);
-        std::vector<WireIo*>& desSaveIo = isInput ? _masterModuleGen->getGlobalInputs()
+        std::vector<WireIoAuto*>& desSaveIo = isInput ? _masterModuleGen->getGlobalInputs()
                                                   : _masterModuleGen->getGlobalOutputs();
         ///////
         /////// input/output
         ///////
 
         /////////// get it from global pool
-        for(GlobIo* srcToBeGlobIo: getGlobPool(isInput)){
+        for(GlobIoItf* srcToBeGlobIo: getGlobPool(isInput)){
             assert(srcToBeGlobIo != nullptr);
             Operable* originOpr = srcToBeGlobIo->getOprFromGlobIo();
             assert(originOpr != nullptr);

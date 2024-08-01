@@ -39,13 +39,13 @@ namespace kathryn{
 
 
     std::string WireGen::decIo(){
-        assert((_ioType == WIRE_IO_INPUT) ||
-            (_ioType == WIRE_IO_OUTPUT) ||
+        assert((_ioType == WIRE_IO_AUTO_INPUT) ||
+            (_ioType == WIRE_IO_AUTO_OUTPUT) ||
             (_ioType == WIRE_IO_INPUT_GLOB) ||
             (_ioType == WIRE_IO_OUTPUT_GLOB)
             );
         Slice sl = _master->getOperableSlice();
-        return std::string(((_ioType == WIRE_IO_INPUT) || (_ioType == WIRE_IO_INPUT_GLOB)) ? "input" : "output") +
+        return std::string(((_ioType == WIRE_IO_AUTO_INPUT) || (_ioType == WIRE_IO_INPUT_GLOB)) ? "input" : "output") +
             " wire[" + std::to_string(sl.stop-1) +": 0] " + getOpr();
     }
 
@@ -54,9 +54,9 @@ namespace kathryn{
         Slice sl = _master->getOperableSlice();
         std::string prefix;
 
-        if ( (_ioType == WIRE_IO_INPUT) || (_ioType == WIRE_IO_INPUT_GLOB)){
+        if ( (_ioType == WIRE_IO_AUTO_INPUT) || (_ioType == WIRE_IO_INPUT_GLOB)){
             prefix = "wire ";
-        }else if (_ioType == WIRE_IO_OUTPUT || (_ioType == WIRE_IO_OUTPUT_GLOB)){
+        }else if (_ioType == WIRE_IO_AUTO_OUTPUT || (_ioType == WIRE_IO_OUTPUT_GLOB)){
             prefix = "wire ";
         }else if (_ioType == WIRE_IO_INTER){
             prefix = "wire ";
@@ -70,8 +70,8 @@ namespace kathryn{
 
 
     std::string WireGen::decOp(){
-        if ((_ioType == WIRE_IO_INPUT) || (_ioType == WIRE_IO_INPUT_GLOB)   ||
-            (_ioType == WIRE_IO_OUTPUT)|| (_ioType == WIRE_IO_OUTPUT_GLOB)  ||
+        if ((_ioType == WIRE_IO_AUTO_INPUT) || (_ioType == WIRE_IO_INPUT_GLOB)   ||
+            (_ioType == WIRE_IO_AUTO_OUTPUT)|| (_ioType == WIRE_IO_OUTPUT_GLOB)  ||
             (_ioType == WIRE_IO_INTER)
            ){
             assert(!translatedUpdateEvent.empty());
@@ -87,7 +87,7 @@ namespace kathryn{
     bool WireGen::compare(LogicGenBase* lgb){
         assert(lgb->getLogicCef().comptype == HW_COMPONENT_TYPE::TYPE_WIRE);
         auto* rhs = dynamic_cast<WireGen*>(lgb);
-        if( (_ioType == WIRE_IO_OUTPUT) ||
+        if( (_ioType == WIRE_IO_AUTO_OUTPUT) ||
             (_ioType == WIRE_IO_OUTPUT_GLOB) ||
             (_ioType == WIRE_IO_INTER) ||
             (_ioType == WIRE_IO_NORMAL)){

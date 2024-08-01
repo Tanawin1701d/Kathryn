@@ -53,6 +53,8 @@ namespace kathryn{
         /////// recruit sp register first
         recruitStateFullEle(result);
         recruitFromVector(result, _module->getUserWires());
+        recruitFromVector(result, _module->getUserIoInputWires());
+        recruitFromVector(result, _module->getUserIoOutputWires());
         /** mem block and its subsidaries*/
         recruitMemBlk(result);
         //// skip mem ele holder recruitFromMemElh(result, true);
@@ -92,6 +94,8 @@ namespace kathryn{
         }
         recruitFromVector(result, _module->getUserRegs());
         recruitFromVector(result, _module->getUserWires());
+        recruitFromVector(result, _module->getUserIoInputWires());
+        recruitFromVector(result, _module->getUserIoOutputWires());
         recruitFromSubModule(result, &ModuleSimEngine::recruitForVcdVar);
         return result;
     }
@@ -121,6 +125,8 @@ namespace kathryn{
     void ModuleSimEngine::recruitStateLessEle
     (std::vector<ModelProxyBuild*>& result){
         recruitFromVector(result, _module->getUserWires());
+        recruitFromVector(result, _module->getUserIoInputWires());   //// io user wire
+        recruitFromVector(result, _module->getUserIoOutputWires());  //// io user wire
         recruitFromVector(result, _module->getUserExpressions());
         recruitFromVector(result, _module->getUserVals());
         recruitFromVector(result, _module->getUserNests());
@@ -173,6 +179,8 @@ namespace kathryn{
         retrieveInitFromVector(simEventBase, _module->getUserRegs());
         /////////// wire
         retrieveInitFromVector(simEventBase, _module->getUserWires());
+        retrieveInitFromVector(simEventBase, _module->getUserIoInputWires());
+        retrieveInitFromVector(simEventBase, _module->getUserIoOutputWires());
         ////////// memory
         retrieveInitFromVector(simEventBase, _module->getUserMemBlks());
 

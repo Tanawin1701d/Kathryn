@@ -9,19 +9,19 @@
 
 namespace kathryn{
 
-void GlobIo::asInputGlob(std::string value){
+void GlobIoItf::asInputGlob(std::string value){
     _globIoType = GLOB_IO_INPUT;
     setIoName(std::move(value));
     addToGlobPool(this);
 }
 
-void GlobIo::asOutputGlob(std::string value){
+void GlobIoItf::asOutputGlob(std::string value){
     _globIoType = GLOB_IO_OUTPUT;
     setIoName(std::move(value));
     addToGlobPool(this);
 }
 
-void GlobIo::setIoName(const std::string& value){
+void GlobIoItf::setIoName(const std::string& value){
     if (value.empty()){
         Identifiable* origin = getOprFromGlobIo()->castToIdent();
         assert(origin != nullptr);
@@ -31,7 +31,7 @@ void GlobIo::setIoName(const std::string& value){
     }
 }
 
-std::string GlobIo::getGlobIoName(){
+std::string GlobIoItf::getGlobIoName(){
     return ioValue;
 }
 

@@ -130,7 +130,7 @@ namespace kathryn{
     bool Wire::checkIntegrity(){
         return true;
     }
-    void Wire::connectToThisIo(WireIo* wireIo){
+    void Wire::connectToThisIo(WireIoAuto* wireIo){
         assert(getGlobIoType() == GLOB_IO_INPUT);
         addUpdateMeta(
             new UpdateEvent({

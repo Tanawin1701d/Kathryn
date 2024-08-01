@@ -16,7 +16,7 @@
 
 #include "model/hwComponent/abstract/identifiable.h"
 #include "model/hwComponent/register/register.h"
-#include "model/hwComponent/wire/wire.h"
+#include "model/hwComponent/wire/wireIoUser.h"
 #include "model/hwComponent/expression/expression.h"
 #include "model/hwComponent/value/value.h"
 #include "model/hwComponent/memBlock/MemBlock.h"
@@ -28,6 +28,7 @@
 #include "model/flowBlock/abstract/nodes/startNode.h"
 
 #include "model/debugger/modelDebugger.h"
+
 #include "sim/modelSimEngine/hwComponent/module/moduleSim.h"
 #include "util/logger/logger.h"
 
@@ -64,6 +65,8 @@ namespace kathryn{
         /** user component*/
         std::vector<Reg*>        _userRegs;
         std::vector<Wire*>       _userWires;
+        std::vector<WireIoUser*> _userInputWires;
+        std::vector<WireIoUser*> _userOutputWires;
         std::vector<expression*> _userExpressions;
         std::vector<Val*>        _userVals;
         std::vector<MemBlock*>   _userMemBlks;
@@ -103,6 +106,8 @@ namespace kathryn{
         /**explicit element that is buillt from user declaration*/
         void addUserReg        (Reg* reg);
         void addUserWires      (Wire* wire);
+        void addUserInputWires (WireIoUser* wire);
+        void addUserOutputWires(WireIoUser* wire);
         void addUserExpression (expression* expr);
         void addUserVal        (Val* val);
         void addUserMemBlk     (MemBlock* memBlock);
@@ -121,6 +126,8 @@ namespace kathryn{
        /**explicit element that is buillt from user declaration*/
         auto& getUserRegs(){return _userRegs; } /** the return contain only master flowblock*/
         auto& getUserWires(){return _userWires; }
+        auto& getUserIoInputWires(){return _userInputWires;}
+        auto& getUserIoOutputWires(){return _userOutputWires;}
         auto& getUserExpressions(){return _userExpressions; }
         auto& getUserVals(){return _userVals; }
         auto& getUserMemBlks(){return _userMemBlks;}

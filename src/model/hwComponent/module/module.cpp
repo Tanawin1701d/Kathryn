@@ -84,6 +84,18 @@ namespace kathryn{
         _userWires.push_back(wire);
     }
 
+    void Module::addUserInputWires (WireIoUser* wire){
+        assert(wire != nullptr);
+        assert(wire->getWireIoType() == WIRE_IO_USER_INPUT);
+        _userInputWires.push_back(wire);
+    }
+
+    void Module::addUserOutputWires(WireIoUser* wire){
+        assert(wire != nullptr);
+        assert(wire->getWireIoType() == WIRE_IO_USER_OUPUT);
+        _userOutputWires.push_back(wire);
+    }
+
     void Module::addUserExpression(expression* expr) {
         assert(expr != nullptr);
         _userExpressions.push_back(expr);

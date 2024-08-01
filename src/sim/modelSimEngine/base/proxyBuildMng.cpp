@@ -419,7 +419,7 @@ namespace kathryn{
          *
          * 1.standard op
          * 2.memAssign memnt
-         * 3.transfer op
+         * 3.transfer op  (assign to temp)
          *
          */
         ///////////// do not worry about register simulation will get false new

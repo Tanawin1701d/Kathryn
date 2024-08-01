@@ -14,7 +14,9 @@
 
 /** this is for user usage*/
 #define mMod(name, TypeName, ...) TypeName& name = _make<TypeName>(#TypeName, #name, true, __VA_ARGS__)
-#define mWire( name, argument)    Wire&     name = _make<Wire>    ("uncatagorizedYet", #name, true,argument)
+#define mWire(name, argument)    Wire&      name = _make<Wire>    ("uncatagorizedYet", #name, true,argument)
+#define mInput(name, argument)   Wire&      name = _make<WireIoUser>("uncatagorizedYet", #name, true,argument, WIRE_IO_USER_INPUT)
+#define mOutput(name, argument)  Wire&      name = _make<WireIoUser>("uncatagorizedYet", #name, true,argument, WIRE_IO_USER_OUPUT)
 #define mReg( name, argument)     Reg&      name = _make<Reg>     ("uncatagorizedYet", #name, true, argument)
 #define mVal(name, ...)           Val&      name = _make<Val>     ("uncatagorizedYet", #name, true, __VA_ARGS__)
 #define mMem(name, depth, width)  MemBlock& name = _make<MemBlock>("uncatagorizedYet", #name, true, depth, width)
@@ -38,7 +40,7 @@
 #define makeOprVal(varyName, ...)              _make<Val>       ("uncatagorizedYet" ,  varyName, false, __VA_ARGS__)
 #define makeOprMem(varyName, depth, width)     _make<MemBlock>  ("uncatagorizedYet" ,  varyName, false, depth, width)
 #define makeOprProxyExpr(varyName, size)       _make<expression>("uncatagorizedYet" ,  varyName, false, size)
-#define makeOprIoWire(varyName, size, type)    _make<WireIo>    ("uncatagorizedYet" ,  varyName, true, size, type)
+#define makeOprIoWire(varyName, size, type)    _make<WireIoAuto>("uncatagorizedYet" ,  varyName, true, size, type)
 /////#define g(...) makeNest(false,__VA_ARGS__)
 #define makeBox(name, TypeName) TypeName& name = _make<TypeName>("uncatagorizedYet", #name, false)
 

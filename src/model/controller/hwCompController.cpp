@@ -97,11 +97,30 @@ namespace kathryn{
         targetModulePtr->addUserWires(ptr);
         ptr->setParent(targetModulePtr);
         ptr->buildInheritName();
-        ptr->makeDefEvent();
+        ptr->makeDefEvent(); //// only in the class that set reqdefevent is set
 
         /** debug value*/
         logMF(ptr,
               "user wire is initialized and set parent to " + targetModulePtr->getIdentDebugValue());
+    }
+
+    void ModelController::on_wire_user_io_init(WireIoUser* ptr){
+        assert(ptr != nullptr);
+        on_box_tryAddToBox(ptr, ptr);
+        Module* targetModulePtr = getTopModulePtr();
+        /** localize necessary destination*/
+        if (ptr->getWireIoType() == WIRE_IO_USER_INPUT){
+            targetModulePtr->addUserInputWires(ptr);
+        }else if (ptr->getWireIoType() == WIRE_IO_USER_OUPUT){
+            targetModulePtr->addUserOutputWires(ptr);
+        }else{assert(false);}
+        ptr->setParent(targetModulePtr);
+        ptr->buildInheritName();
+        ///ptr->makeDefEvent(); /// noneed at all
+
+        /** debug value*/
+        logMF(ptr,
+              "user io wire is initialized and set parent to " + targetModulePtr->getIdentDebugValue());
     }
 
     void ModelController::on_wire_update(AsmNode* asmNode, Wire* srcWire) {

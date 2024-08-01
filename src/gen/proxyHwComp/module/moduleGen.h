@@ -59,21 +59,21 @@ namespace kathryn{
 
 
         std::unordered_map<Operable*, int>  _interWireMap;
-        std::vector<WireIo*>                _interWires;
+        std::vector<WireIoAuto*>                _interWires;
 
 
         std::unordered_map<Operable*, int> _autoInputWireMap;
-        std::vector<WireIo*>               _autoInputWires;
+        std::vector<WireIoAuto*>               _autoInputWires;
 
         std::unordered_map<Operable*, int> _autoOutputWireMap;
-        std::vector<WireIo*>               _autoOutputWires;
+        std::vector<WireIoAuto*>               _autoOutputWires;
 
         //////// now we didn't use it
         std::vector<Wire*>                 _userDecInputWires;
         std::vector<Wire*>                 _userOutputWires;
         /////// only top module will have this
-        std::vector<WireIo*>               _globalInputs;
-        std::vector<WireIo*>               _globalOutputs;
+        std::vector<WireIoAuto*>               _globalInputs;
+        std::vector<WireIoAuto*>               _globalOutputs;
 
         std::vector<ModuleGen*>            _subModulePool;
 
@@ -122,31 +122,31 @@ namespace kathryn{
         /*
          * routing operation
          */
-        WireIo* addAutoWireBase  (Operable* opr,
+        WireIoAuto* addAutoWireBase  (Operable* opr,
                                     Operable* realSrc,
-                                    std::vector<WireIo*>& ioVec,
+                                    std::vector<WireIoAuto*>& ioVec,
                                     std::unordered_map<Operable*, int>& ioMap,
                                     const std::string& wireName,
                                     WIRE_IO_TYPE wireIoType,
                                     bool connectTheWire = true);
         //// input wire
-        WireIo* addAutoInputWire          (Operable* opr, Operable* realSrc);
+        WireIoAuto* addAutoInputWire          (Operable* opr, Operable* realSrc);
         bool    checkIsThereAutoInputWire (Operable* realSrc);
-        WireIo* getAutoInputWire          (Operable* realSrc);
+        WireIoAuto* getAutoInputWire          (Operable* realSrc);
         //// output wire
-        WireIo* addAutoOutputWire         (Operable* opr, Operable* realSrc);
+        WireIoAuto* addAutoOutputWire         (Operable* opr, Operable* realSrc);
         bool    checkIsThereAutoOutputWire(Operable* realSrc);
-        WireIo* getAutoOutputWire         (Operable* realSrc);
+        WireIoAuto* getAutoOutputWire         (Operable* realSrc);
         //// inter wire
-        WireIo* addAutoInterWire          (Operable* realSrc);
+        WireIoAuto* addAutoInterWire          (Operable* realSrc);
         bool    checkIsThereAutoInterWire (Operable* realSrc);
-        WireIo* getAutoInterWire          (Operable* realSrc);
+        WireIoAuto* getAutoInterWire          (Operable* realSrc);
         //// route opr
         Operable* routeSrcOprToThisModule (Operable* exactRealSrc);
         int       getDept() const{return depthFromGlobalModule;}
         //// global io
-        std::vector<WireIo*>& getGlobalInputs (){return _globalInputs; }
-        std::vector<WireIo*>& getGlobalOutputs(){return _globalOutputs;}
+        std::vector<WireIoAuto*>& getGlobalInputs (){return _globalInputs; }
+        std::vector<WireIoAuto*>& getGlobalOutputs(){return _globalOutputs;}
         /**
          * file generator
          */

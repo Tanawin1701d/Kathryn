@@ -13,7 +13,7 @@
 
 namespace kathryn{
 
-    class Wire : public LogicComp<Wire>, public GlobIo{
+    class Wire : public LogicComp<Wire>, public GlobIoItf{
     protected:
         bool _requireDefVal = false;
         void com_init() override;
@@ -63,7 +63,7 @@ namespace kathryn{
 
         /** override global input*/
         bool checkIntegrity()                override;
-        void connectToThisIo(WireIo* wireIo) override;
+        void connectToThisIo(WireIoAuto* wireIo) override;
         Operable* getOprFromGlobIo()         override;
 
     };

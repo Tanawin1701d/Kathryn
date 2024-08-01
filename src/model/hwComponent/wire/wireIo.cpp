@@ -7,17 +7,17 @@
 
 namespace kathryn{
 
-    WireIo::WireIo(int size, WIRE_IO_TYPE wireIoType):
+    WireIoAuto::WireIoAuto(int size, WIRE_IO_TYPE wireIoType):
     Wire(size, false, false),
     _wireIoType(wireIoType){}
 
-    void WireIo::buildHierarchy(Module* masterModule){
+    void WireIoAuto::buildHierarchy(Module* masterModule){
         assert(masterModule != nullptr);
         setParent(masterModule);
         buildInheritName();
     }
 
-    void WireIo::createLogicGen(){
+    void WireIoAuto::createLogicGen(){
         //// assert(_parent->getModuleGen() == nullptr);
 
         _genEngine = new WireGen(

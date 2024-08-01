@@ -13,10 +13,10 @@ namespace kathryn{
 
     ////////// it is used to check how much wire is used
     std::set<std::string> globIoName;
-    std::vector<GlobIo*> globInputPool;
-    std::vector<GlobIo*> globOutputPool;
+    std::vector<GlobIoItf*> globInputPool;
+    std::vector<GlobIoItf*> globOutputPool;
 
-    void addToGlobPool(GlobIo* src){
+    void addToGlobPool(GlobIoItf* src){
         assert(src != nullptr);
         checkIsThereIoName(src->getGlobIoName());
         addToNameList(src->getGlobIoName());
@@ -29,7 +29,7 @@ namespace kathryn{
         assert(false);
     }
 
-    std::vector<GlobIo*>& getGlobPool(bool isInput){
+    std::vector<GlobIoItf*>& getGlobPool(bool isInput){
         return isInput ? globInputPool : globOutputPool;
     }
 

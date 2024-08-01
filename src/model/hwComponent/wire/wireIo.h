@@ -13,17 +13,19 @@ namespace kathryn{
 
     /**
      *
-     * for now wireio is not exposed to user it use as internal generating route
+     * for now wireio is not exposed to model layer it use as internal
+     * generating route
+     *
      *
      */
-    class WireIo: public Wire{
+    class WireIoAuto: public Wire{
 
     protected:
 
         WIRE_IO_TYPE _wireIoType;
 
     public:
-        WireIo(int size, WIRE_IO_TYPE wireIoType);
+        WireIoAuto(int size, WIRE_IO_TYPE wireIoType);
 
         void buildHierarchy(Module* masterModule);
 
