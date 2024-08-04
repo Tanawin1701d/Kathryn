@@ -40,7 +40,7 @@ namespace kathryn{
         return checkCerfEqLocally(*rhs) && cmpAssignGenBase(rhs, SUBMOD);
     }
 
-    GLOB_IO_TYPE RegGen::getGlobIoStatus(){
+    WIRE_MARKER_TYPE RegGen::getGlobIoStatus(){
         _master->checkIntegrity();
         return _master->getGlobIoType();
     }

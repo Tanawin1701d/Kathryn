@@ -22,17 +22,19 @@ namespace kathryn{
         _asb->sortUpEventByPriority();
         for (UpdateEvent* realUde: _asb->getUpdateMeta()){
             auto* newEvent = new UpdateEvent();
+            ////////// route update condition
             if (realUde->srcUpdateCondition != nullptr){
                 Operable* conRouted =
                     _mdGenMaster->routeSrcOprToThisModule(realUde->srcUpdateCondition);
                 newEvent->srcUpdateCondition = conRouted;
-
             }
+            ////////// route update state
             if (realUde->srcUpdateState != nullptr){
                 Operable* stateRouted =
                     _mdGenMaster->routeSrcOprToThisModule(realUde->srcUpdateState);
                 newEvent->srcUpdateState = stateRouted;
             }
+            ////////// route update value
             assert(realUde->srcUpdateValue != nullptr);
             Operable* updateValueRouted =
             _mdGenMaster->routeSrcOprToThisModule(realUde->srcUpdateValue);

@@ -42,7 +42,7 @@ namespace kathryn{
         }
     }
 
-    WireAutoGen* ModuleGen::genAutoWireBase(
+    WireAuto* ModuleGen::genAutoWireBase(
         Operable* opr,      ///////// opr is exact opr
         Operable* realSrc,  ///////// realSrc is exact opr too
         const std::string& wireName,
@@ -54,9 +54,9 @@ namespace kathryn{
         assert(wireGenType < WIRE_AUTO_GEN_CNT);
 
         std::unordered_map<Operable*, int>& genMap = _genWireMaps[wireGenType];
-        std::vector<WireAutoGen*>&          genVec = _genWires[wireGenType];
+        std::vector<WireAuto*>&          genVec = _genWires[wireGenType];
 
-        WireAutoGen& newAddedWire = makeOprIoWire("addAutoWireBase_uninit",
+        WireAuto& newAddedWire = makeOprIoWire("addAutoWireBase_uninit",
                                               opr->getOperableSlice().getSize(),
                                               wireGenType);
 
@@ -84,9 +84,9 @@ namespace kathryn{
         return genMap.find(realSrc) != genMap.end();
     }
 
-    WireAutoGen* ModuleGen::getAutoGenWire(Operable* realSrc, WIRE_AUTO_GEN_TYPE wireGenType){
+    WireAuto* ModuleGen::getAutoGenWire(Operable* realSrc, WIRE_AUTO_GEN_TYPE wireGenType){
         std::unordered_map<Operable*, int>& genMap = _genWireMaps[wireGenType];
-        std::vector<WireAutoGen*>&          genVec = _genWires[wireGenType];
+        std::vector<WireAuto*>&          genVec = _genWires[wireGenType];
         return genVec.at(genMap[realSrc]);
     }
 
@@ -135,7 +135,7 @@ namespace kathryn{
         /// inter wire
         /////////////////////////////////////
         ModuleGen* apogee    = *useInputAsModuleGen.rbegin();
-        WireAutoGen*    interWire = nullptr;
+        WireAuto*    interWire = nullptr;
         if (apogee->isThereAutoGenWire(exactRealSrc, WIRE_AUTO_GEN_INTER)){
             interWire = apogee->getAutoGenWire(exactRealSrc, WIRE_AUTO_GEN_INTER);
         }else{
@@ -149,7 +149,7 @@ namespace kathryn{
         /// des series do it as input
         /// we assure the vector have at least one element in size
         /// //////////////////////////////////
-        WireAutoGen* inputWire = interWire;
+        WireAuto* inputWire = interWire;
         for(int idx = ((int)useInputAsModuleGen.size()-2); idx >= 0; idx--){
             ModuleGen& curMdGen = *useInputAsModuleGen[idx];
             if (curMdGen.isThereAutoGenWire(exactRealSrc, WIRE_AUTO_GEN_INPUT)){

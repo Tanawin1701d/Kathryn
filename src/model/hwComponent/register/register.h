@@ -14,7 +14,7 @@ namespace kathryn{
 
 
 
-    class Reg : public LogicComp<Reg>, public GlobIo{
+    class Reg : public LogicComp<Reg>, public WireMarker{
 
     protected:
         void com_init() override;
@@ -63,7 +63,7 @@ namespace kathryn{
 
         /** override global input*/
         bool checkIntegrity()                     override;
-        void connectToThisIo(WireAutoGen* wireIo) override;
+        void connectToThisIo(WireAuto* wireIo) override;
         Operable* getOprFromGlobIo()              override;
     };
 

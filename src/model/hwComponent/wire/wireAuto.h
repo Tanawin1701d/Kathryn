@@ -16,14 +16,14 @@ namespace kathryn{
      * for now wireio is not exposed to user it use as internal generating route
      *
      */
-    class WireAutoGen: public Wire{
+    class WireAuto: public Wire{
 
     protected:
 
         WIRE_AUTO_GEN_TYPE _wireIoType;
 
     public:
-        WireAutoGen(int size, WIRE_AUTO_GEN_TYPE wireIoType);
+        WireAuto(int size, WIRE_AUTO_GEN_TYPE wireIoType);
 
         void buildHierarchy(Module* masterModule);
 

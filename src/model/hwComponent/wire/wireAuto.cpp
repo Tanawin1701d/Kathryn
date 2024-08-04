@@ -7,20 +7,20 @@
 
 namespace kathryn{
 
-    WireAutoGen::WireAutoGen(int size, WIRE_AUTO_GEN_TYPE wireIoType):
+    WireAuto::WireAuto(int size, WIRE_AUTO_GEN_TYPE wireIoType):
     Wire(size, false, false),
     _wireIoType(wireIoType){}
 
-    void WireAutoGen::buildHierarchy(Module* masterModule){
+    void WireAuto::buildHierarchy(Module* masterModule){
         assert(masterModule != nullptr);
         setParent(masterModule);
         buildInheritName();
     }
 
-    void WireAutoGen::createLogicGen(){
+    void WireAuto::createLogicGen(){
         //// assert(_parent->getModuleGen() == nullptr);
 
-        _genEngine = new WireGen(
+        _genEngine = new WireAutoGen(
             _parent->getModuleGen(),
             this,
             _wireIoType

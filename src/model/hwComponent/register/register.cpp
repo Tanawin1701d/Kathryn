@@ -109,9 +109,9 @@ namespace kathryn{
     }
 
     bool Reg::checkIntegrity(){
-        return getGlobIoType() != GLOB_IO_INPUT;
+        return getGlobIoType() != WMT_GLOB_INPUT;
     }
-    void Reg::connectToThisIo(WireAutoGen* wireIo){
+    void Reg::connectToThisIo(WireAuto* wireIo){
         /////// it can't connect because it can't take wireIo as a input
         mfAssert(false, "can't use it as global input");
     }

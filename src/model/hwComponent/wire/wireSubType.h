@@ -13,7 +13,6 @@ namespace kathryn{
         WIRE_AUTO_GEN_INTER       = 2,
         WIRE_AUTO_GEN_GLOB_INPUT  = 3,
         WIRE_AUTO_GEN_GLOB_OUTPUT = 4,
-        WIRE_AUTO_GEN_NORMAL      = 5,
         WIRE_AUTO_GEN_CNT         = 6
     };
 

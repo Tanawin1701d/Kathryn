@@ -11,9 +11,9 @@
 namespace kathryn{
 
 
-    void addToGlobPool(GlobIo* src);
-    std::vector<GlobIo*>& getGlobPool(bool isInput);
-    std::vector<GlobIo*>& getMdIoPool(bool isInput);
+    void addToGlobPool(WireMarker* src);
+    std::vector<WireMarker*>& getGlobPool(bool isInput);
+    std::vector<WireMarker*>& getMdIoPool(bool isInput);
 
     void cleanGlobPool();
 

@@ -2,38 +2,38 @@
 // Created by tanawin on 26/6/2024.
 //
 
-#include "globIo.h"
+#include "WireMarker.h"
 
 #include <utility>
 #include "globPool.h"
 
 namespace kathryn{
 
-void GlobIo::asInputGlob(std::string value){
-    _ioType = GLOB_IO_INPUT;
+void WireMarker::asInputGlob(std::string value){
+    _marker = WMT_GLOB_INPUT;
     setIoName(std::move(value));
     addToGlobPool(this);
 }
 
-void GlobIo::asInput(std::string value){
-    _ioType = GLOB_IO_INPUT_MD;
+void WireMarker::asInput(std::string value){
+    _marker = WMT_INPUT_MD;
     setIoName(std::move(value));
     addToGlobPool(this);
 }
 
-void GlobIo::asOutputGlob(std::string value){
-    _ioType = GLOB_IO_OUTPUT;
+void WireMarker::asOutputGlob(std::string value){
+    _marker = WMT_GLOB_OUTPUT;
     setIoName(std::move(value));
     addToGlobPool(this);
 }
 
-void GlobIo::asOutput(std::string value){
-    _ioType = GLOB_IO_OUTPUT_MD;
+void WireMarker::asOutput(std::string value){
+    _marker = WMT_OUTPUT_MD;
     setIoName(std::move(value));
     addToGlobPool(this);
 }
 
-void GlobIo::setIoName(const std::string& value){
+void WireMarker::setIoName(const std::string& value){
     if (value.empty()){
         Identifiable* origin = getOprFromGlobIo()->castToIdent();
         assert(origin != nullptr);
@@ -43,7 +43,7 @@ void GlobIo::setIoName(const std::string& value){
     }
 }
 
-std::string GlobIo::getGlobIoName(){
+std::string WireMarker::getGlobIoName(){
     return ioValue;
 }
 

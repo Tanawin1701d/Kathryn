@@ -120,7 +120,7 @@ namespace kathryn{
     void Wire::createLogicGen(){
         assert(_parent->getModuleGen() != nullptr);
 
-        _genEngine = new WireGen(
+        _genEngine = new WireAutoGen(
             _parent->getModuleGen(),
             this
         );
@@ -130,8 +130,8 @@ namespace kathryn{
     bool Wire::checkIntegrity(){
         return true;
     }
-    void Wire::connectToThisIo(WireAutoGen* wireIo){
-        assert(getGlobIoType() == GLOB_IO_INPUT);
+    void Wire::connectToThisIo(WireAuto* wireIo){
+        assert(getMarker() == WMT_GLOB_INPUT);
         addUpdateMeta(
             new UpdateEvent({
                 nullptr,

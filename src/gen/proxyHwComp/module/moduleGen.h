@@ -56,7 +56,7 @@ namespace kathryn{
         ////// genWireMap gen engine must create when wire is build and
         /// add to the structure
         std::unordered_map<Operable*, int> _genWireMaps[WIRE_AUTO_GEN_CNT];
-        std::vector<WireAutoGen*>          _genWires   [WIRE_AUTO_GEN_CNT];
+        std::vector<WireAuto*>          _genWires   [WIRE_AUTO_GEN_CNT];
         std::vector<ModuleGen*>            _subModulePool;
 
         explicit ModuleGen(Module* master);
@@ -103,17 +103,17 @@ namespace kathryn{
         /*
          * routing operation
          */
-        WireAutoGen* genAutoWireBase(Operable* opr, Operable* realSrc,
+        WireAuto* genAutoWireBase(Operable* opr, Operable* realSrc,
                                      const std::string& wireName,
                                      WIRE_AUTO_GEN_TYPE wireGenType,
                                      bool               connectTheWire = true);
         bool         isThereAutoGenWire(Operable* realSrc, WIRE_AUTO_GEN_TYPE wireGenType);
-        WireAutoGen* getAutoGenWire    (Operable* realSrc, WIRE_AUTO_GEN_TYPE wireGenType);
+        WireAuto* getAutoGenWire    (Operable* realSrc, WIRE_AUTO_GEN_TYPE wireGenType);
         //// route opr
         Operable* routeSrcOprToThisModule (Operable* exactRealSrc);
         int       getDept() const{return depthFromGlobalModule;}
         //// global io
-        std::vector<WireAutoGen*>& getAutoGenWireRefs (WIRE_AUTO_GEN_TYPE genWireType){
+        std::vector<WireAuto*>& getAutoGenWireRefs (WIRE_AUTO_GEN_TYPE genWireType){
             return _genWires[genWireType];
         }
 
