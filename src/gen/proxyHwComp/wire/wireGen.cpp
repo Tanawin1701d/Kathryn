@@ -3,7 +3,7 @@
 //
 
 #include "wireGen.h"
-#include "model/hwComponent/wire/wireIo.h"
+#include "model/hwComponent/wire/wireAutoGen.h"
 
 
 #include <utility>
@@ -17,21 +17,21 @@ namespace kathryn{
         ):
     AssignGenBase(mdGenMaster, (Assignable*) wireMaster,
         (Identifiable*) wireMaster),
-    _ioType(WIRE_IO_NORMAL),
+    _ioType(WIRE_AUTO_GEN_NORMAL),
     _master(wireMaster){}
 
     WireGen::WireGen(
         ModuleGen*    mdGenMaster,
         Wire*         wireMaster,
-        WIRE_IO_TYPE  ioType
+        WIRE_AUTO_GEN_TYPE  ioType
         ):
     AssignGenBase(mdGenMaster,(Assignable*) wireMaster, (Identifiable*) wireMaster),
      _ioType(ioType),
     _master(wireMaster){}
 
     std::string WireGen::getOpr(){
-        if ((_ioType == WIRE_IO_INPUT_GLOB) ||
-            (_ioType == WIRE_IO_OUTPUT_GLOB)){
+        if ((_ioType == WIRE_AUTO_GEN_GLOB_INPUT) ||
+            (_ioType == WIRE_AUTO_GEN_GLOB_OUTPUT)){
             return _master->getVarName();
         }
         return LogicGenBase::getOpr();
@@ -39,13 +39,13 @@ namespace kathryn{
 
 
     std::string WireGen::decIo(){
-        assert((_ioType == WIRE_IO_INPUT) ||
-            (_ioType == WIRE_IO_OUTPUT) ||
-            (_ioType == WIRE_IO_INPUT_GLOB) ||
-            (_ioType == WIRE_IO_OUTPUT_GLOB)
+        assert((_ioType == WIRE_AUTO_GEN_INPUT) ||
+            (_ioType == WIRE_AUTO_GEN_OUTPUT) ||
+            (_ioType == WIRE_AUTO_GEN_GLOB_INPUT) ||
+            (_ioType == WIRE_AUTO_GEN_GLOB_OUTPUT)
             );
         Slice sl = _master->getOperableSlice();
-        return std::string(((_ioType == WIRE_IO_INPUT) || (_ioType == WIRE_IO_INPUT_GLOB)) ? "input" : "output") +
+        return std::string(((_ioType == WIRE_AUTO_GEN_INPUT) || (_ioType == WIRE_AUTO_GEN_GLOB_INPUT)) ? "input" : "output") +
             " wire[" + std::to_string(sl.stop-1) +": 0] " + getOpr();
     }
 
@@ -54,13 +54,13 @@ namespace kathryn{
         Slice sl = _master->getOperableSlice();
         std::string prefix;
 
-        if ( (_ioType == WIRE_IO_INPUT) || (_ioType == WIRE_IO_INPUT_GLOB)){
+        if ( (_ioType == WIRE_AUTO_GEN_INPUT) || (_ioType == WIRE_AUTO_GEN_GLOB_INPUT)){
             prefix = "wire ";
-        }else if (_ioType == WIRE_IO_OUTPUT || (_ioType == WIRE_IO_OUTPUT_GLOB)){
+        }else if (_ioType == WIRE_AUTO_GEN_OUTPUT || (_ioType == WIRE_AUTO_GEN_GLOB_OUTPUT)){
             prefix = "wire ";
-        }else if (_ioType == WIRE_IO_INTER){
+        }else if (_ioType == WIRE_AUTO_GEN_INTER){
             prefix = "wire ";
-        }else if (_ioType == WIRE_IO_NORMAL){
+        }else if (_ioType == WIRE_AUTO_GEN_NORMAL){
             prefix = "reg ";
         }
 
@@ -70,9 +70,9 @@ namespace kathryn{
 
 
     std::string WireGen::decOp(){
-        if ((_ioType == WIRE_IO_INPUT) || (_ioType == WIRE_IO_INPUT_GLOB)   ||
-            (_ioType == WIRE_IO_OUTPUT)|| (_ioType == WIRE_IO_OUTPUT_GLOB)  ||
-            (_ioType == WIRE_IO_INTER)
+        if ((_ioType == WIRE_AUTO_GEN_INPUT) || (_ioType == WIRE_AUTO_GEN_GLOB_INPUT)   ||
+            (_ioType == WIRE_AUTO_GEN_OUTPUT)|| (_ioType == WIRE_AUTO_GEN_GLOB_OUTPUT)  ||
+            (_ioType == WIRE_AUTO_GEN_INTER)
            ){
             assert(!translatedUpdateEvent.empty());
             UpdateEvent* singleUpdateEvent = translatedUpdateEvent[0];
@@ -87,10 +87,10 @@ namespace kathryn{
     bool WireGen::compare(LogicGenBase* lgb){
         assert(lgb->getLogicCef().comptype == HW_COMPONENT_TYPE::TYPE_WIRE);
         auto* rhs = dynamic_cast<WireGen*>(lgb);
-        if( (_ioType == WIRE_IO_OUTPUT) ||
-            (_ioType == WIRE_IO_OUTPUT_GLOB) ||
-            (_ioType == WIRE_IO_INTER) ||
-            (_ioType == WIRE_IO_NORMAL)){
+        if( (_ioType == WIRE_AUTO_GEN_OUTPUT) ||
+            (_ioType == WIRE_AUTO_GEN_GLOB_OUTPUT) ||
+            (_ioType == WIRE_AUTO_GEN_INTER) ||
+            (_ioType == WIRE_AUTO_GEN_NORMAL)){
             /////////////// when compare output dep is submodule
             return checkCerfEqLocally(*rhs) && cmpAssignGenBase(rhs, SUBMOD);
         }

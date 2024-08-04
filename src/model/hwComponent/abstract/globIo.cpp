@@ -10,13 +10,25 @@
 namespace kathryn{
 
 void GlobIo::asInputGlob(std::string value){
-    _globIoType = GLOB_IO_INPUT;
+    _ioType = GLOB_IO_INPUT;
+    setIoName(std::move(value));
+    addToGlobPool(this);
+}
+
+void GlobIo::asInput(std::string value){
+    _ioType = GLOB_IO_INPUT_MD;
     setIoName(std::move(value));
     addToGlobPool(this);
 }
 
 void GlobIo::asOutputGlob(std::string value){
-    _globIoType = GLOB_IO_OUTPUT;
+    _ioType = GLOB_IO_OUTPUT;
+    setIoName(std::move(value));
+    addToGlobPool(this);
+}
+
+void GlobIo::asOutput(std::string value){
+    _ioType = GLOB_IO_OUTPUT_MD;
     setIoName(std::move(value));
     addToGlobPool(this);
 }

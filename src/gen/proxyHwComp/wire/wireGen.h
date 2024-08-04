@@ -12,7 +12,7 @@ namespace kathryn{
     class Wire;
     class WireGen: public AssignGenBase{
     protected:
-        WIRE_IO_TYPE _ioType;
+        WIRE_AUTO_GEN_TYPE _ioType;
         Wire* _master = nullptr;
     public:
         WireGen(ModuleGen*    mdGenMaster,
@@ -20,7 +20,7 @@ namespace kathryn{
 
         WireGen(ModuleGen*    mdGenMaster,
                 Wire*         wireMaster,
-                WIRE_IO_TYPE  ioType);
+                WIRE_AUTO_GEN_TYPE  ioType);
 
         std::string getOpr()     override;
 

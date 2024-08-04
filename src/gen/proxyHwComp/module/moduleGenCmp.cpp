@@ -53,14 +53,18 @@ namespace kathryn{
         prelimResult &= _memBlockPool   .compare(rhsMdg->_memBlockPool);
         prelimResult &= _memBlockElePool.compare(rhsMdg->_memBlockElePool);
 
-        /////// compare io wire //////// compare only output
-        prelimResult &= _globalOutputPool  .compare       (rhsMdg->_globalOutputPool);
-        prelimResult &= _autoOutputWirePool.compare       (rhsMdg->_autoOutputWirePool);
-        prelimResult &= _interWirePool     .compare       (rhsMdg->_interWirePool);
-        prelimResult &= _globalInputPool   .compareCefOnly(rhsMdg->_globalInputPool);
-        prelimResult &= _autoInputWirePool .compareCefOnly(rhsMdg->_autoInputWirePool);
+        WIRE_AUTO_GEN_TYPE autoGenInputGrps  [] = {WIRE_AUTO_GEN_INPUT , WIRE_AUTO_GEN_GLOB_INPUT};
+        WIRE_AUTO_GEN_TYPE autoGenOutputGrps [] = {WIRE_AUTO_GEN_OUTPUT, WIRE_AUTO_GEN_GLOB_OUTPUT};
 
-        ///std::cout << "prelim res " << prelimResult << std::endl;
+        /////// compare auto gen output and interwire
+        for (auto wireTypeIdx: autoGenOutputGrps){
+            prelimResult &= _genWirePools[wireTypeIdx].compare(rhsMdg->_genWirePools[wireTypeIdx]);
+        }
+        prelimResult &= _genWirePools[WIRE_AUTO_GEN_INTER].compare(rhsMdg->_genWirePools[WIRE_AUTO_GEN_INTER]);
+        /////// compare auto genInput
+        for (auto wireTypeIdx: autoGenInputGrps){
+            prelimResult &= _genWirePools[wireTypeIdx].compareCefOnly(rhsMdg->_genWirePools[wireTypeIdx]);
+        }
         if(!prelimResult) {return false;}
 
         ////// compare sub module input
@@ -74,11 +78,16 @@ namespace kathryn{
             /////// compare the context of sub module
             subResult &= genStructure->isTheSameModule(lhsSubModuleGen, rhsSubModuleGen);
             /////// compare input
-            subResult &= lhsSubModuleGen->_globalInputPool  .compare(rhsSubModuleGen->_globalInputPool);
-            subResult &= lhsSubModuleGen->_autoInputWirePool.compare(rhsSubModuleGen->_autoInputWirePool);
+            for (auto wireTypeIdx: autoGenInputGrps){
+                subResult &= lhsSubModuleGen->_genWirePools[wireTypeIdx]
+                              .compare(rhsSubModuleGen->_genWirePools[wireTypeIdx]);
+            }
             /////// compare output
-            subResult &= lhsSubModuleGen->_globalOutputPool.compareCefOnly(rhsSubModuleGen->_globalOutputPool);
-            subResult &= lhsSubModuleGen->_autoOutputWirePool.compareCefOnly(rhsSubModuleGen->_autoOutputWirePool);
+            ///
+            for (auto wireTypeIdx: autoGenOutputGrps){
+                subResult &= lhsSubModuleGen->_genWirePools[wireTypeIdx]
+                              .compareCefOnly(rhsSubModuleGen->_genWirePools[wireTypeIdx]);
+            }
             //std::cout << "subTest res " << subResult << std::endl;
             if (!subResult){return false;}
         }
@@ -92,17 +101,6 @@ namespace kathryn{
     ///////////////////// every element cerf
     void ModuleGen::genCerfToEachElement(){
 
-        LogicGenBaseVec _interWireVec;
-        LogicGenBaseVec _autoInputGenVec;
-        LogicGenBaseVec _autoOutputGenVec;
-        LogicGenBaseVec _globInputGenVec;
-        LogicGenBaseVec _globOutputGenVec;
-        recruitLogicGenBase(_interWireVec, _interWires);
-        recruitLogicGenBase(_autoInputGenVec, _autoInputWires);
-        recruitLogicGenBase(_autoOutputGenVec, _autoOutputWires);
-        recruitLogicGenBase(_globInputGenVec, _globalInputs);
-        recruitLogicGenBase(_globOutputGenVec, _globalOutputs);
-
         _regPool        .genCerf(GEN_REG_GRP, 0);
         _wirePool       .genCerf(GEN_WIRE_GRP, 1);
         _exprPool       .genCerf(GEN_EXPRE_GRP, 2);
@@ -111,11 +109,9 @@ namespace kathryn{
         _memBlockPool   .genCerf(GEN_MEMBLK_GRP, 5);
         _memBlockElePool.genCerf(GEN_MEMBLK_ELE_GRP, 6);
         //////// io wire
-        _interWirePool     .genCerf(GEN_INTER_WIRE_GRP, 7);
-        _autoInputWirePool .genCerf(GEN_AUTO_INPUT_WIRE_GRP, 8);
-        _autoOutputWirePool.genCerf(GEN_AUTO_OUTPUT_WIRE_GRP, 9);
-        _globalInputPool   .genCerf(GEN_AUTO_INPUT_WIRE_GRP, 10);
-        _globalOutputPool  .genCerf(GEN_AUTO_OUTPUT_WIRE_GRP, 11);
+        for (int genWireIdx = 0; genWireIdx < WIRE_AUTO_GEN_CNT; genWireIdx++){
+            _genWirePools[genWireIdx].genCerf(GEN_WIRE_AUTO_GRP, 7 + genWireIdx);
+        }
     }
 
     void ModuleGen::genCerfToThisModule(int idx){

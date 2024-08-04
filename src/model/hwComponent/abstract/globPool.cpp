@@ -13,8 +13,11 @@ namespace kathryn{
 
     ////////// it is used to check how much wire is used
     std::set<std::string> globIoName;
-    std::vector<GlobIo*> globInputPool;
-    std::vector<GlobIo*> globOutputPool;
+    std::vector<GlobIo*>  globInputPool;
+    std::vector<GlobIo*>  globOutputPool;
+    std::vector<GlobIo*>  mdInputPool;
+    std::vector<GlobIo*>  mdOutputPool;
+
 
     void addToGlobPool(GlobIo* src){
         assert(src != nullptr);
@@ -26,16 +29,29 @@ namespace kathryn{
         if (src->getGlobIoType() == GLOB_IO_OUTPUT){
             globOutputPool.push_back(src); return;
         }
+        if (src->getGlobIoType() == GLOB_IO_INPUT_MD){
+            mdInputPool.push_back(src); return;
+        }
+        if (src->getGlobIoType() == GLOB_IO_OUTPUT_MD){
+            mdOutputPool.push_back(src); return;
+        }
         assert(false);
     }
 
     std::vector<GlobIo*>& getGlobPool(bool isInput){
-        return isInput ? globInputPool : globOutputPool;
+        return isInput ? globInputPool: globOutputPool;
+    }
+
+    std::vector<GlobIo*>& getMdIoPool(bool isInput){
+        return isInput ? mdInputPool: mdOutputPool;
     }
 
     void cleanGlobPool(){
-        globInputPool.clear();
+        globIoName    .clear();
+        globInputPool .clear();
         globOutputPool.clear();
+        mdInputPool   .clear();
+        mdOutputPool  .clear();
     }
 
     bool checkIsThereIoName(const std::string& test){

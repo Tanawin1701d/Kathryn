@@ -2,22 +2,22 @@
 // Created by tanawin on 24/6/2024.
 //
 
-#include "wireIo.h"
+#include "wireAutoGen.h"
 #include "model/hwComponent/module/module.h"
 
 namespace kathryn{
 
-    WireIo::WireIo(int size, WIRE_IO_TYPE wireIoType):
+    WireAutoGen::WireAutoGen(int size, WIRE_AUTO_GEN_TYPE wireIoType):
     Wire(size, false, false),
     _wireIoType(wireIoType){}
 
-    void WireIo::buildHierarchy(Module* masterModule){
+    void WireAutoGen::buildHierarchy(Module* masterModule){
         assert(masterModule != nullptr);
         setParent(masterModule);
         buildInheritName();
     }
 
-    void WireIo::createLogicGen(){
+    void WireAutoGen::createLogicGen(){
         //// assert(_parent->getModuleGen() == nullptr);
 
         _genEngine = new WireGen(

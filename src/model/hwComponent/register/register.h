@@ -62,9 +62,9 @@ namespace kathryn{
         void createLogicGen() override;
 
         /** override global input*/
-        bool checkIntegrity()                override;
-        void connectToThisIo(WireIo* wireIo) override;
-        Operable* getOprFromGlobIo()         override;
+        bool checkIntegrity()                     override;
+        void connectToThisIo(WireAutoGen* wireIo) override;
+        Operable* getOprFromGlobIo()              override;
     };
 
 

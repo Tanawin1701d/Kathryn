@@ -17,7 +17,7 @@
 #include "model/hwComponent/value/value.h"
 #include "model/hwComponent/expression/nest.h"
 #include "model/flowBlock/abstract/spReg/waitReg.h"
-#include "model/hwComponent/wire/wireIo.h"
+#include "model/hwComponent/wire/wireAutoGen.h"
 
 
 namespace kathryn{
@@ -50,33 +50,14 @@ namespace kathryn{
         LogicGenBaseVec   _valPool;
         LogicGenBaseVec   _memBlockPool;
         LogicGenBaseVec   _memBlockElePool;
-        ///// ioPool it can be use after finalize Route Ele is used
-        LogicGenBaseVec   _interWirePool;
-        LogicGenBaseVec   _autoInputWirePool;
-        LogicGenBaseVec   _autoOutputWirePool;
-        LogicGenBaseVec   _globalInputPool;
-        LogicGenBaseVec   _globalOutputPool;
+        ///// genWirePool it can be use after finalize Route Ele is used
+        LogicGenBaseVec   _genWirePools[WIRE_AUTO_GEN_CNT];
 
-
-        std::unordered_map<Operable*, int>  _interWireMap;
-        std::vector<WireIo*>                _interWires;
-
-
-        std::unordered_map<Operable*, int> _autoInputWireMap;
-        std::vector<WireIo*>               _autoInputWires;
-
-        std::unordered_map<Operable*, int> _autoOutputWireMap;
-        std::vector<WireIo*>               _autoOutputWires;
-
-        //////// now we didn't use it
-        std::vector<Wire*>                 _userDecInputWires;
-        std::vector<Wire*>                 _userOutputWires;
-        /////// only top module will have this
-        std::vector<WireIo*>               _globalInputs;
-        std::vector<WireIo*>               _globalOutputs;
-
+        ////// genWireMap gen engine must create when wire is build and
+        /// add to the structure
+        std::unordered_map<Operable*, int> _genWireMaps[WIRE_AUTO_GEN_CNT];
+        std::vector<WireAutoGen*>          _genWires   [WIRE_AUTO_GEN_CNT];
         std::vector<ModuleGen*>            _subModulePool;
-
 
         explicit ModuleGen(Module* master);
 
@@ -122,40 +103,24 @@ namespace kathryn{
         /*
          * routing operation
          */
-        WireIo* addAutoWireBase  (Operable* opr,
-                                    Operable* realSrc,
-                                    std::vector<WireIo*>& ioVec,
-                                    std::unordered_map<Operable*, int>& ioMap,
-                                    const std::string& wireName,
-                                    WIRE_IO_TYPE wireIoType,
-                                    bool connectTheWire = true);
-        //// input wire
-        WireIo* addAutoInputWire          (Operable* opr, Operable* realSrc);
-        bool    checkIsThereAutoInputWire (Operable* realSrc);
-        WireIo* getAutoInputWire          (Operable* realSrc);
-        //// output wire
-        WireIo* addAutoOutputWire         (Operable* opr, Operable* realSrc);
-        bool    checkIsThereAutoOutputWire(Operable* realSrc);
-        WireIo* getAutoOutputWire         (Operable* realSrc);
-        //// inter wire
-        WireIo* addAutoInterWire          (Operable* realSrc);
-        bool    checkIsThereAutoInterWire (Operable* realSrc);
-        WireIo* getAutoInterWire          (Operable* realSrc);
+        WireAutoGen* genAutoWireBase(Operable* opr, Operable* realSrc,
+                                     const std::string& wireName,
+                                     WIRE_AUTO_GEN_TYPE wireGenType,
+                                     bool               connectTheWire = true);
+        bool         isThereAutoGenWire(Operable* realSrc, WIRE_AUTO_GEN_TYPE wireGenType);
+        WireAutoGen* getAutoGenWire    (Operable* realSrc, WIRE_AUTO_GEN_TYPE wireGenType);
         //// route opr
         Operable* routeSrcOprToThisModule (Operable* exactRealSrc);
         int       getDept() const{return depthFromGlobalModule;}
         //// global io
-        std::vector<WireIo*>& getGlobalInputs (){return _globalInputs; }
-        std::vector<WireIo*>& getGlobalOutputs(){return _globalOutputs;}
+        std::vector<WireAutoGen*>& getAutoGenWireRefs (WIRE_AUTO_GEN_TYPE genWireType){
+            return _genWires[genWireType];
+        }
+
         /**
          * file generator
          */
-        std::vector<std::string> getIoDec(
-            const LogicGenBaseVec& inputVec,
-            const LogicGenBaseVec& outputVec,
-            const LogicGenBaseVec& globInputVec,
-            const LogicGenBaseVec& globOutputVec
-        );
+        std::vector<std::string> getIoDec();
         std::string getSubModuleDec(ModuleGen* mdGen, GenStructure* genStructure);
         std::string getOpr();
         /**

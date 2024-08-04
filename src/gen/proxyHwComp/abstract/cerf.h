@@ -18,13 +18,7 @@ namespace kathryn{
         GEN_VAL_GRP,
         GEN_MEMBLK_GRP,
         GEN_MEMBLK_ELE_GRP,
-        GEN_INTER_WIRE_GRP,
-        GEN_AUTO_INPUT_WIRE_GRP,
-        GEN_AUTO_OUTPUT_WIRE_GRP,
-        GEN_GLOB_INPUT_GRP,
-        GEN_GLOB_OUTPUT_GRP,
-        GEN_USER_DEC_INPUT_GRP,
-        GEN_USER_DEC_OUTPUT_GRP,
+    	GEN_WIRE_AUTO_GRP,
         GEN_MODULE_GRP
     };
 

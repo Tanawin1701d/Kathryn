@@ -13,6 +13,8 @@ namespace kathryn{
 
     void addToGlobPool(GlobIo* src);
     std::vector<GlobIo*>& getGlobPool(bool isInput);
+    std::vector<GlobIo*>& getMdIoPool(bool isInput);
+
     void cleanGlobPool();
 
     bool checkIsThereIoName(const std::string& test);

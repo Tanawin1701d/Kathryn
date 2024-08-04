@@ -7,13 +7,14 @@
 
 namespace kathryn{
 
-    enum WIRE_IO_TYPE{
-        WIRE_IO_INPUT,
-        WIRE_IO_OUTPUT,
-        WIRE_IO_INTER,
-        WIRE_IO_NORMAL,
-        WIRE_IO_INPUT_GLOB,
-        WIRE_IO_OUTPUT_GLOB
+    enum WIRE_AUTO_GEN_TYPE{
+        WIRE_AUTO_GEN_INPUT       = 0,
+        WIRE_AUTO_GEN_OUTPUT      = 1,
+        WIRE_AUTO_GEN_INTER       = 2,
+        WIRE_AUTO_GEN_GLOB_INPUT  = 3,
+        WIRE_AUTO_GEN_GLOB_OUTPUT = 4,
+        WIRE_AUTO_GEN_NORMAL      = 5,
+        WIRE_AUTO_GEN_CNT         = 6
     };
 
 }
