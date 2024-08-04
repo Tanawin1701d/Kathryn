@@ -7,10 +7,22 @@
 namespace kathryn{
 
 
+
+    /*
+     * ///////////////////////////////////////////
+     * 1. auto input
+     * 2. auto output
+     * 3. global input
+     * 4. global output
+     * 5. bci
+     * 6. clk
+     *
+     *
+     ***/
+
+
     void ModuleGen::startWriteFile(FileWriterBase* fileWriter, GenStructure* genStructure){
         assert(genStructure != nullptr);
-        LogicGenBaseVec subModuleOutputRepresent;
-        LogicGenBaseVec subModuleInputRepresent;
 
         ///////////// recruit io /////////////////////////////////////
         for (ModuleGen* subMdGen: _subModulePool){

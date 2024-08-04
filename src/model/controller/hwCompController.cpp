@@ -104,7 +104,7 @@ namespace kathryn{
               "user wire is initialized and set parent to " + targetModulePtr->getIdentDebugValue());
     }
 
-    void ModelController::on_wire_user_io_init(WireIoUser* ptr){
+    void ModelController::on_wire_user_io_init(WireIo* ptr){
         assert(ptr != nullptr);
         on_box_tryAddToBox(ptr, ptr);
         Module* targetModulePtr = getTopModulePtr();

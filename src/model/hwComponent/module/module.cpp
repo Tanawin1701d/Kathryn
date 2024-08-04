@@ -84,13 +84,13 @@ namespace kathryn{
         _userWires.push_back(wire);
     }
 
-    void Module::addUserInputWires (WireIoUser* wire){
+    void Module::addUserInputWires (WireIo* wire){
         assert(wire != nullptr);
         assert(wire->getWireIoType() == WIRE_IO_USER_INPUT);
         _userInputWires.push_back(wire);
     }
 
-    void Module::addUserOutputWires(WireIoUser* wire){
+    void Module::addUserOutputWires(WireIo* wire){
         assert(wire != nullptr);
         assert(wire->getWireIoType() == WIRE_IO_USER_OUPUT);
         _userOutputWires.push_back(wire);
@@ -138,6 +138,16 @@ namespace kathryn{
         }
         _isTopModule = true;
     }
+
+    bool Module::isConstModule(){
+        return _isConstMod;
+    }
+
+    void Module::setConstModule(){
+        assert(_isConstMod);
+        _isConstMod = true;
+    }
+
 
     void Module::buildAll(){
         /**declare to model controller that this module is initialize*/

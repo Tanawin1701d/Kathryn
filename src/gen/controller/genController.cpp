@@ -94,7 +94,7 @@ namespace kathryn{
     void GenController::initGlobEle(bool isInput){
         assert(_masterModule != nullptr);
         assert(_masterModuleGen != nullptr);
-        std::vector<WireIoAuto*>& desSaveIo = isInput ? _masterModuleGen->getGlobalInputs()
+        std::vector<WireIo*>& desSaveIo = isInput ? _masterModuleGen->getGlobalInputs()
                                                   : _masterModuleGen->getGlobalOutputs();
         ///////
         /////// input/output

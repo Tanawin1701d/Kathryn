@@ -12,10 +12,11 @@ namespace kathryn{
     enum GLOB_IO_TYPE{
         GLOB_IO_INPUT,
         GLOB_IO_OUTPUT,
+        GLOB_IO_BCI,
         GLOB_IO_NOT_BOTH
     };
 
-    class WireIoAuto;
+    class WireIo;
     class Operable;
 
     class GlobIoItf{
@@ -27,11 +28,12 @@ namespace kathryn{
         void asInputGlob (std::string value = "");
         void asOutputGlob(std::string value = "");
         void setIoName(const std::string&);
+        virtual void asBci();
         virtual std::string  getGlobIoName();
-        virtual bool checkIntegrity()                = 0;
-        virtual void connectToThisIo(WireIoAuto* wireIo) = 0;
-        virtual Operable* getOprFromGlobIo()         = 0;
-        GLOB_IO_TYPE getGlobIoType(){ return _globIoType;}
+        virtual bool         checkIntegrity()                    = 0;
+        virtual void         connectToThisIo(WireIo* wireIo) = 0;
+        virtual Operable*    getOprFromGlobIo()             = 0;
+        GLOB_IO_TYPE         getGlobIoType(){ return _globIoType;}
 
     };
 

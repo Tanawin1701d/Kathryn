@@ -15,6 +15,7 @@ namespace kathryn{
     std::set<std::string> globIoName;
     std::vector<GlobIoItf*> globInputPool;
     std::vector<GlobIoItf*> globOutputPool;
+    std::vector<GlobIoItf*> bciPool;
 
     void addToGlobPool(GlobIoItf* src){
         assert(src != nullptr);
@@ -26,11 +27,24 @@ namespace kathryn{
         if (src->getGlobIoType() == GLOB_IO_OUTPUT){
             globOutputPool.push_back(src); return;
         }
+
         assert(false);
+    }
+
+    void addToBciPool(GlobIoItf* src){
+        assert(src != nullptr);
+        if (src->getGlobIoType() == GLOB_IO_BCI){
+            bciPool.push_back(src); return;
+        }
+        assert(false);
+
     }
 
     std::vector<GlobIoItf*>& getGlobPool(bool isInput){
         return isInput ? globInputPool : globOutputPool;
+    }
+    std::vector<GlobIoItf*>& getBciPool(){
+        return bciPool;
     }
 
     void cleanGlobPool(){

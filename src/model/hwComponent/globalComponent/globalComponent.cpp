@@ -15,7 +15,9 @@ namespace kathryn{
     void initiateGlobalComponent(){
 
         rstWire   = &makeOprWireWoDef("rstWire", 1);
+        rstWire->asBci();
         rstWire->asInputGlob("rst");
+
         startNode = new StartNode(rstWire);
         startNode->assign();
     }

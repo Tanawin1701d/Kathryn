@@ -38,6 +38,7 @@ namespace kathryn{
         void recruitMemBlk      (std::vector<ModelProxyBuild*>& result);
         void recruitMemElh      (std::vector<ModelProxyBuild*>& result, bool isReadMode);
 
+        void recruitFromWire    (std::vector<ModelProxyBuild*>& result);
         void recruitFromSpReg   (std::vector<ModelProxyBuild*>& result);
 
 

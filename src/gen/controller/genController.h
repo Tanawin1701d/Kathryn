@@ -30,6 +30,7 @@ namespace kathryn{
 
         void initGlobEle(bool isInput);
 
+
     public:
 
         explicit GenController() = default;

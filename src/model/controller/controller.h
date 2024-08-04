@@ -99,7 +99,7 @@ namespace kathryn {
         void on_reg_update(AsmNode* asmNode, Reg* srcReg);
         /** wire handling*/
         void on_wire_init(Wire* ptr);
-        void on_wire_user_io_init(WireIoUser* ptr);
+        void on_wire_user_io_init(WireIo* ptr);
         void on_wire_update(AsmNode* asmNode, Wire* srcWire);
         /** exprMetas handling*/
         void on_expression_init(expression* ptr);

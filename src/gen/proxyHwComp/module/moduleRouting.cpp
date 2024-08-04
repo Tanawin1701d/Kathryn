@@ -12,8 +12,8 @@ namespace kathryn{
             ////////////////////////// recruit first
             LogicGenBaseVec inputLogicGenBase;
             LogicGenBaseVec outputLogicGenBase;
-            recruitLogicGenBase(inputLogicGenBase,_globalInputs);
-            recruitLogicGenBase(outputLogicGenBase, _globalOutputs);
+            recruitLogicGenBase(inputLogicGenBase,  _ioWires[WIRE_IO_INPUT_GLOB ]);
+            recruitLogicGenBase(outputLogicGenBase, _ioWires[WIRE_IO_OUTPUT_GLOB]);
             /////////////////////////// route dep for global io
             inputLogicGenBase.routeDepAll();
             outputLogicGenBase.routeDepAll();
@@ -30,41 +30,38 @@ namespace kathryn{
         _valPool        .routeDepAll();
         _memBlockPool   .routeDepAll();
         _memBlockElePool.routeDepAll();
+        /////////// no need to route io wire because it is the true level already
     }
 
     void ModuleGen::finalizeRouteEle() {
         for(ModuleGen* mdGen: _subModulePool){
             mdGen->finalizeRouteEle();
         }
-        recruitLogicGenBase(_interWirePool, _interWires);
-        recruitLogicGenBase(_autoInputWirePool, _autoInputWires);
-        recruitLogicGenBase(_autoOutputWirePool, _autoOutputWires);
-        recruitLogicGenBase(_globalInputPool, _globalInputs);
-        recruitLogicGenBase(_globalOutputPool, _globalOutputs);
+        ////// recruit all io wire to logicgen base
+        for (int i = 0; i < AMT_PHY_WIRE; i++){
+            createAndRecruitLogicGenBase(_ioWirePools[i], _ioWires[i]);
+        }
     }
 
-    WireIoAuto* ModuleGen::addAutoWireBase(
-        Operable* opr,      ///////// opr is exact opr
-        Operable* realSrc,  ///////// realSrc is exact opr too
-        std::vector<WireIoAuto*>& ioVec,
-        std::unordered_map<Operable*, int>& ioMap,
+    WireIo* ModuleGen::addAutoWireBase(
+        Operable*          opr,      ///////// opr is exact opr
+        Operable*          realSrc,  ///////// realSrc is exact opr too
         const std::string& wireName,
-        WIRE_IO_TYPE wireIoType,
-        bool connectTheWire){
+        WIRE_IO_TYPE       wireIoType,
+        bool               connectTheWire){
             assert(opr     != nullptr);
             assert(realSrc != nullptr);
-        WireIoAuto& newAddedWire = makeOprIoWire("addAutoWireBase_uninit",
+        assert((wireIoType == WIRE_IO_AUTO_INPUT) || (wireIoType == WIRE_IO_AUTO_OUTPUT));
+        std::vector<WireIo*>&               ioVec = _ioWires[wireIoType];
+        std::unordered_map<Operable*, int>& ioMap = _ioWireMaps[wireIoType];
+        WireIo& newAddedWire = makeOprIoWire("addAutoWireBase_uninit",
                                               opr->getOperableSlice().getSize(),
                                               wireIoType
                                 );
-
             ///////// addd update Event for only connection
             newAddedWire.buildHierarchy(_master);
             newAddedWire.createLogicGen();
-            if (connectTheWire){
-                newAddedWire.connectTo(opr, true);
-            }
-
+            if (connectTheWire){ newAddedWire.connectTo(opr, true);}
             newAddedWire.setVarName(wireName +
                                     std::to_string(ioVec.size()) +
                                     "_" +
@@ -77,66 +74,16 @@ namespace kathryn{
             return &newAddedWire;
     }
 
-    /////////////////////////////// input wire
-
-    WireIoAuto* ModuleGen::addAutoInputWire(Operable* opr,Operable* realSrc){
-         return addAutoWireBase(opr,
-             realSrc,
-             _autoInputWires,
-             _autoInputWireMap,
-             "AIP_",
-             WIRE_IO_AUTO_INPUT);
+    bool ModuleGen::isThereIoWire(Operable* realSrc, WIRE_IO_TYPE wireIoType){
+        assert(wireIoType < AMT_PHY_WIRE);
+        return _ioWireMaps[wireIoType].find(realSrc) != _ioWireMaps[wireIoType].end();
     }
 
-    bool ModuleGen::checkIsThereAutoInputWire(Operable* realSrc){
-        assert(realSrc != nullptr);
-        return _autoInputWireMap.find(realSrc) != _autoInputWireMap.end();
-    }
-
-    WireIoAuto* ModuleGen::getAutoOutputWire(Operable* realSrc){
-        assert(checkIsThereAutoOutputWire(realSrc));
-        return _autoOutputWires[_autoOutputWireMap[realSrc]];
-    }
-
-    /////////////////////////////// output wire
-    WireIoAuto* ModuleGen::addAutoOutputWire(Operable* opr,Operable* realSrc){
-        return addAutoWireBase(opr,
-            realSrc,
-            _autoOutputWires,
-            _autoOutputWireMap,
-            "AOP_",
-            WIRE_IO_AUTO_OUTPUT);
-    }
-
-    bool ModuleGen::checkIsThereAutoOutputWire(Operable* realSrc){
-        assert(realSrc != nullptr);
-        return _autoOutputWireMap.find(realSrc) != _autoOutputWireMap.end();
-    }
-
-    WireIoAuto* ModuleGen::getAutoInputWire(Operable* realSrc){
-        assert(checkIsThereAutoInputWire(realSrc));
-        return _autoInputWires[_autoInputWireMap[realSrc]];
-    }
-
-    ///////////////////////////////// inter wire
-
-    WireIoAuto* ModuleGen::addAutoInterWire(Operable* realSrc){
-        return addAutoWireBase(realSrc, realSrc,
-        _interWires,
-        _interWireMap,
-        "ABD_",
-        WIRE_IO_INTER,
-        false);
-    }
-
-    bool ModuleGen::checkIsThereAutoInterWire(Operable* realSrc){
-        assert(realSrc != nullptr);
-        return _interWireMap.find(realSrc) != _interWireMap.end();
-    }
-
-    WireIoAuto* ModuleGen::getAutoInterWire(Operable* realSrc){
-        assert(checkIsThereAutoInterWire(realSrc));
-        return _interWires[_interWireMap[realSrc]];
+    WireIo* ModuleGen::getIoWire(Operable* realSrc, WIRE_IO_TYPE wireIoType){
+        std::vector<WireIo*>& ioVec = _ioWires[wireIoType];
+        int linkOprIdx              = _ioWireMaps[wireIoType][realSrc];
+        assert(linkOprIdx < ioVec.size());
+        return ioVec[linkOprIdx];
     }
 
     /////////////////////////////// routing wire
@@ -183,26 +130,31 @@ namespace kathryn{
         /////////////////////////////////////
         /// inter wire
         /////////////////////////////////////
-        ModuleGen* apogee    = *useInputAsModuleGen.rbegin();
-        WireIoAuto*    interWire = nullptr;
-        if (apogee->checkIsThereAutoInterWire(exactRealSrc)){
-            interWire = apogee->getAutoInterWire(exactRealSrc);
+        ModuleGen* apogeeMod = *useInputAsModuleGen.rbegin();
+        WireIo*    interWire = nullptr;
+        if (apogeeMod->isThereIoWire(exactRealSrc, WIRE_IO_INTER)){
+            interWire = apogeeMod->getIoWire(exactRealSrc, WIRE_IO_INTER);
         }else{
-            interWire = apogee->addAutoInterWire(exactRealSrc);
+            interWire = apogeeMod->addAutoWireBase(exactRealSrc,
+                                                       exactRealSrc,
+                                                       "INTER_",
+                                                       WIRE_IO_INTER,false);
         }
         ////////////////////////////////////
         ///
         /// des series do it as input
         /// we assure the vector have at least one element in size
         /// //////////////////////////////////
-        WireIoAuto* inputWire = interWire;
+        WireIo* inputWire = interWire;
         for(int idx = ((int)useInputAsModuleGen.size()-2); idx >= 0; idx--){
             ModuleGen& curMdGen = *useInputAsModuleGen[idx];
-            if (curMdGen.checkIsThereAutoInputWire(exactRealSrc)){
-                inputWire = curMdGen.getAutoInputWire(exactRealSrc);
+            if (curMdGen.isThereIoWire(exactRealSrc, WIRE_IO_AUTO_INPUT)){
+                inputWire = curMdGen.getIoWire(exactRealSrc, WIRE_IO_AUTO_INPUT);
                 continue;
             }
-            inputWire = curMdGen.addAutoInputWire(inputWire, exactRealSrc);
+            inputWire = curMdGen.addAutoWireBase(
+                inputWire, exactRealSrc,
+                "AI_", WIRE_IO_AUTO_INPUT, true);
         }
 
 
@@ -215,11 +167,12 @@ namespace kathryn{
         Operable* outputWire = exactRealSrc;
         for(int idx = 0; idx < ((int)useOutputAsModuleGen.size()-1); idx++){
             ModuleGen& curMdGen = *useOutputAsModuleGen[idx];
-            if (curMdGen.checkIsThereAutoOutputWire(exactRealSrc)){
-                outputWire = curMdGen.getAutoOutputWire(exactRealSrc);
+            if (curMdGen.isThereIoWire(exactRealSrc, WIRE_IO_AUTO_OUTPUT)){
+                outputWire = curMdGen.getIoWire(exactRealSrc, WIRE_IO_AUTO_OUTPUT);
                 continue;
             }
-            outputWire = curMdGen.addAutoOutputWire(outputWire, exactRealSrc);
+            outputWire = curMdGen.addAutoWireBase(outputWire, exactRealSrc,
+                "AO_", WIRE_IO_AUTO_OUTPUT, true);
         }
         interWire->connectTo(outputWire, true);
         //////////////////////////////

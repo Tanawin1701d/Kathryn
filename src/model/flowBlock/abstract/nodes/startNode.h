@@ -11,8 +11,7 @@
 namespace kathryn{
 
     struct StartNode : Node{
-        makeVal(upState  , 1, 1);
-        makeVal(downState, 1, 0);
+        makeWire(checkWire, 1);
 
         StateReg* _startState = nullptr;
         Operable* _rstSig     = nullptr;
@@ -31,13 +30,19 @@ namespace kathryn{
 
         Operable* getExitOpr() override{
             assert(_rstSig != nullptr);
-            return &(*_startState == upState);
+            return &(checkWire);
         }
 
         void assign() override{
+            ////// start node
             _startState->addDependState(_rstSig, nullptr);
             makeUnsetStateEvent();
             _startState->setVarName("startNode");
+            ////// check wire
+            checkWire = *_startState;
+            checkWire.asBci();
+            checkWire.setVarName("startWireRep");
+
             /**no need to reset due to it used*/
         }
 

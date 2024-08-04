@@ -12,6 +12,7 @@ namespace kathryn{
 
 
     void addToGlobPool(GlobIoItf* src);
+    void addToBciPool(GlobIoItf* src);
     std::vector<GlobIoItf*>& getGlobPool(bool isInput);
     void cleanGlobPool();
 

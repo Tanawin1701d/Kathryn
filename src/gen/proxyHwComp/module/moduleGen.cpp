@@ -30,6 +30,16 @@ namespace kathryn{
         recruitLogicGenBase(des, srcs);
     }
 
+    void ModuleGen::initializeIoWire(std::unordered_map<Operable*, int>& ioMap,
+                                     std::vector<WireIo*>& ioVec,
+                                     std::vector<WireIo*>& srcVec){
+        ioVec = srcVec;
+        for(int idx = 0; idx < ioVec.size(); idx++){
+            ioMap.insert({ioVec[idx], idx});
+        }
+    }
+
+
     void ModuleGen::startInitEle(){
 
         if (_master->getParent() == nullptr){
@@ -63,6 +73,14 @@ namespace kathryn{
         for (MemBlock* memBlock: _master->getUserMemBlks()){
             createAndRecruitLogicGenBase(_memBlockElePool, memBlock->getMemBlockAgents());
         }
+
+        /////// io wire initialization
+        initializeIoWire(_ioWireMaps[WIRE_IO_USER_INPUT],
+                         _ioWires[WIRE_IO_USER_INPUT],
+                         _master->getUserIoInputWires());
+        initializeIoWire(_ioWireMaps[WIRE_IO_USER_OUPUT],
+                        _ioWires[WIRE_IO_USER_OUPUT],
+                        _master->getUserIoOutputWires());
 
     }
 }

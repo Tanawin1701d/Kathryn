@@ -21,6 +21,12 @@ void GlobIoItf::asOutputGlob(std::string value){
     addToGlobPool(this);
 }
 
+void GlobIoItf::asBci(){
+    _globIoType = GLOB_IO_BCI;
+    addToBciPool(this);
+}
+
+
 void GlobIoItf::setIoName(const std::string& value){
     if (value.empty()){
         Identifiable* origin = getOprFromGlobIo()->castToIdent();

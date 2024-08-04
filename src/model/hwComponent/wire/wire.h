@@ -63,7 +63,7 @@ namespace kathryn{
 
         /** override global input*/
         bool checkIntegrity()                override;
-        void connectToThisIo(WireIoAuto* wireIo) override;
+        void connectToThisIo(WireIo* wireIo) override;
         Operable* getOprFromGlobIo()         override;
 
     };

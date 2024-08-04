@@ -56,6 +56,7 @@ namespace kathryn{
     private:
         MODEL_STAGE              _mdStage = MODEL_UNINIT;
         bool                     _isTopModule = false;
+        bool                     _isConstMod  = false;
         /**all slave object that belong to this elements*/
         /** register that user to represent state*/
         std::vector<Reg*>           _spRegs[SP_CNT_REG]; ////// state/ cond/cycle wait use same ctrlflowRegbase class
@@ -65,8 +66,8 @@ namespace kathryn{
         /** user component*/
         std::vector<Reg*>        _userRegs;
         std::vector<Wire*>       _userWires;
-        std::vector<WireIoUser*> _userInputWires;
-        std::vector<WireIoUser*> _userOutputWires;
+        std::vector<WireIo*>     _userInputWires;
+        std::vector<WireIo*>     _userOutputWires;
         std::vector<expression*> _userExpressions;
         std::vector<Val*>        _userVals;
         std::vector<MemBlock*>   _userMemBlks;
@@ -106,8 +107,8 @@ namespace kathryn{
         /**explicit element that is buillt from user declaration*/
         void addUserReg        (Reg* reg);
         void addUserWires      (Wire* wire);
-        void addUserInputWires (WireIoUser* wire);
-        void addUserOutputWires(WireIoUser* wire);
+        void addUserInputWires (WireIo* wire);
+        void addUserOutputWires(WireIo* wire);
         void addUserExpression (expression* expr);
         void addUserVal        (Val* val);
         void addUserMemBlk     (MemBlock* memBlock);
@@ -138,6 +139,9 @@ namespace kathryn{
         /** is Top Module*/
         bool isTopModule();
         void setTopModule();
+        /** is const module*/
+        bool isConstModule();
+        void setConstModule();
 
 
         /** Functions which allow user to custom  their module design flow*/

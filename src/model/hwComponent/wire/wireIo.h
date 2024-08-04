@@ -17,15 +17,19 @@ namespace kathryn{
      * generating route
      *
      *
+     * -----------------------------------------------------------------
+     *
      */
-    class WireIoAuto: public Wire{
+    class WireIo: public Wire{
 
     protected:
 
         WIRE_IO_TYPE _wireIoType;
 
+        void com_init() override;
+
     public:
-        WireIoAuto(int size, WIRE_IO_TYPE wireIoType);
+        WireIo(int size, WIRE_IO_TYPE wireIoType);
 
         void buildHierarchy(Module* masterModule);
 
@@ -63,6 +67,12 @@ namespace kathryn{
         WIRE_IO_TYPE getWireIoType()const{return _wireIoType;}
 
         void createLogicGen() override;
+
+        ////// this ensure that the wire is purely assign as it be
+        /// no condition no state trigger only assign value
+        /// for now it allow for user check TODO
+        bool verifyInternalWireLocalization();
+
     };
 
 }

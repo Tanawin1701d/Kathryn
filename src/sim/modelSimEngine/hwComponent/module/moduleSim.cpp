@@ -52,9 +52,7 @@ namespace kathryn{
         std::vector<ModelProxyBuild*> result;
         /////// recruit sp register first
         recruitStateFullEle(result);
-        recruitFromVector(result, _module->getUserWires());
-        recruitFromVector(result, _module->getUserIoInputWires());
-        recruitFromVector(result, _module->getUserIoOutputWires());
+        recruitFromWire(result);
         /** mem block and its subsidaries*/
         recruitMemBlk(result);
         //// skip mem ele holder recruitFromMemElh(result, true);
@@ -124,9 +122,7 @@ namespace kathryn{
 
     void ModuleSimEngine::recruitStateLessEle
     (std::vector<ModelProxyBuild*>& result){
-        recruitFromVector(result, _module->getUserWires());
-        recruitFromVector(result, _module->getUserIoInputWires());   //// io user wire
-        recruitFromVector(result, _module->getUserIoOutputWires());  //// io user wire
+        recruitFromWire(result);
         recruitFromVector(result, _module->getUserExpressions());
         recruitFromVector(result, _module->getUserVals());
         recruitFromVector(result, _module->getUserNests());
@@ -146,6 +142,14 @@ namespace kathryn{
             }
         }
     }
+
+
+    void ModuleSimEngine::recruitFromWire(std::vector<ModelProxyBuild*>& result){
+        recruitFromVector(result, _module->getUserWires());
+        recruitFromVector(result, _module->getUserIoInputWires());   //// io user wire
+        recruitFromVector(result, _module->getUserIoOutputWires());  //// io user wire
+    }
+
 
 
     void ModuleSimEngine::recruitFromSpReg
