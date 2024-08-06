@@ -31,7 +31,6 @@ namespace kathryn{
             /*** cmp val*/
             mWire(cmpLtSign, 1);
             mWire(cmpLtUnSign, 1);
-            mWire(testExit, 1);
 
             FlowBlockBase* regAccessBlock = nullptr;
             FlowBlockBase* aluBlock       = nullptr;
@@ -105,7 +104,6 @@ namespace kathryn{
                 auto jmop = _decodedUop.repo.getOp("jal");
                 zif(bmop.isSet() | jmop.isSet()){
                     /** this work only if predic pc is eq to pc+4*/
-
                     misPredic = (jmop.isSet()) |
                                 (bmop.isUopSet("beq") & rs1.data == rs2.data) |
                                 (bmop.isUopSet("bne") & rs1.data != rs2.data) |

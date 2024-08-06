@@ -171,7 +171,7 @@ namespace kathryn::riscv{
             writeReg("rd", RISC_EXECUTE, instrRepo.getDesReg(0));
             _slotWriter->addSlotVal(RISC_EXECUTE, "readFin " + std::to_string(ull(_riscv->execute.readFn)));
             _slotWriter->addSlotVal(RISC_EXECUTE, "readEn " + std::to_string(ull(_riscv->execute.readEn)));
-            _slotWriter->addSlotVal(RISC_EXECUTE, "finLS " + std::to_string(ull(_riscv->execute.testExit)));
+            //_slotWriter->addSlotVal(RISC_EXECUTE, "finLS " + std::to_string(ull(_riscv->execute.testExit)));
             _slotWriter->addSlotVal(RISC_EXECUTE, "readAddr " + std::to_string(ull(_riscv->execute.readAddr)));
             _slotWriter->addSlotVal(RISC_EXECUTE, "read1020 " + std::to_string(ull(_riscv->memBlk._myMem.at(1020 >> 2))));
             _slotWriter->addSlotVal(RISC_EXECUTE, "read1024 " + std::to_string(ull(_riscv->memBlk._myMem.at(1024 >> 2))));

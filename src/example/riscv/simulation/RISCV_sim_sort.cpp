@@ -33,6 +33,9 @@ namespace kathryn::riscv{
 
             ////////// send reset signal to next cyclc
         }
+
+        finalPerfCol();
+
         testCaseId++;
         if (testCaseId == AMT_TEST_CASE){
             getSimController()->stopSim();
@@ -40,9 +43,11 @@ namespace kathryn::riscv{
         }
 
 
+
         std::string testSizeStr = std::to_string(testCaseId);
         resetRegister();
         readAssembly(_prefixFolder + _testTypes[0] + "/asm" + testSizeStr + ".out");
+        _flowWriter->renew(_prefixFolder + _testTypes[0]+ "/oprofile"+ testSizeStr +".prof");
         for (int i = 0; i < calculateAmtNumber(); i++){
             _core.memBlk._myMem.at((_startNumIdx0 + 4*i)/4)
             .setVar(calculateAmtNumber() - i + 10);
