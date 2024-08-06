@@ -45,28 +45,38 @@ namespace kathryn{
 
         //////// compare standard
         bool prelimResult = true;
-        prelimResult &= _regPool        .compare(rhsMdg->_regPool);
-        prelimResult &= _wirePool       .compare(rhsMdg->_wirePool);
-        prelimResult &= _exprPool       .compare(rhsMdg->_exprPool);
-        prelimResult &= _nestPool       .compare(rhsMdg->_nestPool);
-        prelimResult &= _valPool        .compare(rhsMdg->_valPool);
-        prelimResult &= _memBlockPool   .compare(rhsMdg->_memBlockPool);
-        prelimResult &= _memBlockElePool.compare(rhsMdg->_memBlockElePool);
+        prelimResult &= _regPool                 .compare(rhsMdg->_regPool);
+        prelimResult &= _wirePool                .compare(rhsMdg->_wirePool);
+        prelimResult &= _wirePoolWithInputMarker .compare(rhsMdg->_wirePoolWithInputMarker );
+        prelimResult &= _wirePoolWithOutputMarker.compare(rhsMdg->_wirePoolWithOutputMarker);
+        prelimResult &= _exprPool                .compare(rhsMdg->_exprPool);
+        prelimResult &= _nestPool                .compare(rhsMdg->_nestPool);
+        prelimResult &= _valPool                 .compare(rhsMdg->_valPool);
+        prelimResult &= _memBlockPool            .compare(rhsMdg->_memBlockPool);
+        prelimResult &= _memBlockElePool         .compare(rhsMdg->_memBlockElePool);
 
         WIRE_AUTO_GEN_TYPE autoGenInputGrps  [] = {WIRE_AUTO_GEN_INPUT , WIRE_AUTO_GEN_GLOB_INPUT};
         WIRE_AUTO_GEN_TYPE autoGenOutputGrps [] = {WIRE_AUTO_GEN_OUTPUT, WIRE_AUTO_GEN_GLOB_OUTPUT};
 
-        /////// compare auto gen output and interwire
+        /////// COMPARE OUTPUT IO
         for (auto wireTypeIdx: autoGenOutputGrps){
             prelimResult &= _genWirePools[wireTypeIdx].compare(rhsMdg->_genWirePools[wireTypeIdx]);
         }
-        prelimResult &= _genWirePools[WIRE_AUTO_GEN_INTER].compare(rhsMdg->_genWirePools[WIRE_AUTO_GEN_INTER]);
-        /////// compare auto genInput
+        prelimResult &= _wirePoolWithOutputMarker.compare(rhsMdg->_wirePoolWithOutputMarker);
+        /////// COMPARE INPUT IO
         for (auto wireTypeIdx: autoGenInputGrps){
             prelimResult &= _genWirePools[wireTypeIdx].compareCefOnly(rhsMdg->_genWirePools[wireTypeIdx]);
         }
+        prelimResult &= _wirePoolWithInputMarker.compareCefOnly(rhsMdg->_wirePoolWithInputMarker);
+        /////// COMPARE INTER WIRE
+        prelimResult &= _genWirePools[WIRE_AUTO_GEN_INTER].compare(rhsMdg->_genWirePools[WIRE_AUTO_GEN_INTER]);
         if(!prelimResult) {return false;}
 
+        /*
+         *
+         * SUB MODULE CMP
+         *
+         */
         ////// compare sub module input
         if (_subModulePool.size() != rhsMdg->_subModulePool.size()){return false;}
 
@@ -75,20 +85,21 @@ namespace kathryn{
         for (int idx = 0; idx < _subModulePool.size(); idx++){
             ModuleGen* lhsSubModuleGen  = _subModulePool[idx];
             ModuleGen* rhsSubModuleGen  = rhsMdg->_subModulePool[idx];
-            /////// compare the context of sub module
+            /////// COMPARE SUB MODULE
             subResult &= genStructure->isTheSameModule(lhsSubModuleGen, rhsSubModuleGen);
-            /////// compare input
+            /////// COMPARE SUB MODULE INPUT IO
             for (auto wireTypeIdx: autoGenInputGrps){
                 subResult &= lhsSubModuleGen->_genWirePools[wireTypeIdx]
                               .compare(rhsSubModuleGen->_genWirePools[wireTypeIdx]);
             }
-            /////// compare output
-            ///
+            subResult &= lhsSubModuleGen->_wirePoolWithInputMarker.compare(rhsMdg->_wirePoolWithInputMarker);
+            /////// COMPARE SUB MODULE OUTPUT IO
             for (auto wireTypeIdx: autoGenOutputGrps){
                 subResult &= lhsSubModuleGen->_genWirePools[wireTypeIdx]
                               .compareCefOnly(rhsSubModuleGen->_genWirePools[wireTypeIdx]);
             }
-            //std::cout << "subTest res " << subResult << std::endl;
+            subResult &= lhsSubModuleGen->_wirePoolWithOutputMarker.compareCefOnly(rhsMdg->_wirePoolWithOutputMarker);
+            ////////////////////////////////////
             if (!subResult){return false;}
         }
 
@@ -101,16 +112,18 @@ namespace kathryn{
     ///////////////////// every element cerf
     void ModuleGen::genCerfToEachElement(){
 
-        _regPool        .genCerf(GEN_REG_GRP, 0);
-        _wirePool       .genCerf(GEN_WIRE_GRP, 1);
-        _exprPool       .genCerf(GEN_EXPRE_GRP, 2);
-        _nestPool       .genCerf(GEN_NEST_GRP, 3);
-        _valPool        .genCerf(GEN_VAL_GRP, 4);
-        _memBlockPool   .genCerf(GEN_MEMBLK_GRP, 5);
-        _memBlockElePool.genCerf(GEN_MEMBLK_ELE_GRP, 6);
+        _regPool                .genCerf(GEN_REG_GRP,       0);
+        _wirePool               .genCerf(GEN_WIRE_GRP,      1);
+        _wirePoolWithInputMarker.genCerf(GEN_WIRE_GRP,      2);
+        _wirePoolWithInputMarker.genCerf(GEN_WIRE_GRP,      3);
+        _exprPool               .genCerf(GEN_EXPRE_GRP,     4);
+        _nestPool               .genCerf(GEN_NEST_GRP,      5);
+        _valPool                .genCerf(GEN_VAL_GRP,       6);
+        _memBlockPool           .genCerf(GEN_MEMBLK_GRP,    7);
+        _memBlockElePool        .genCerf(GEN_MEMBLK_ELE_GRP,8);
         //////// io wire
         for (int genWireIdx = 0; genWireIdx < WIRE_AUTO_GEN_CNT; genWireIdx++){
-            _genWirePools[genWireIdx].genCerf(GEN_WIRE_AUTO_GRP, 7 + genWireIdx);
+            _genWirePools[genWireIdx].genCerf(GEN_WIRE_AUTO_GRP, 9 + genWireIdx);
         }
     }
 

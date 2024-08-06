@@ -4,7 +4,6 @@
 
 #include "wireAutoGen.h"
 #include "model/hwComponent/wire/wireAuto.h"
-#include <utility>
 
 namespace kathryn{
 

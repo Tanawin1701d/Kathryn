@@ -12,8 +12,8 @@ namespace kathryn{
 
     struct StartNode : Node{
         makeVal(upState  , 1, 1);
-        makeVal(downState, 1, 0);
 
+        expression* exitExpr  = nullptr;
         StateReg* _startState = nullptr;
         Operable* _rstSig     = nullptr;
 
@@ -22,6 +22,7 @@ namespace kathryn{
                 _startState(new StateReg(false)),
                 _rstSig(rstSig){
                 assert(_rstSig != nullptr);
+                exitExpr = &(*_startState == upState);
         }
 
         void makeUnsetStateEvent() override{
@@ -31,13 +32,16 @@ namespace kathryn{
 
         Operable* getExitOpr() override{
             assert(_rstSig != nullptr);
-            return &(*_startState == upState);
+            assert(exitExpr != nullptr);
+            return exitExpr;
         }
 
         void assign() override{
             _startState->addDependState(_rstSig, nullptr);
             makeUnsetStateEvent();
             _startState->setVarName("startNode");
+            exitExpr->setVarName("startExpr");
+
             /**no need to reset due to it used*/
         }
 

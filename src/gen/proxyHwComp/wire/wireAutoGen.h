@@ -10,7 +10,11 @@
 namespace kathryn{
 
     class Wire;
-    /** wire auto*/
+    /** Wire which is NOT exposed to model it is auto generate wire
+     * cause of auto generate is
+     * auto input/output routing
+     * global input/output wire representation
+     */
     class WireAutoGen: public AssignGenBase{
     protected:
         WIRE_AUTO_GEN_TYPE _autoWireGenType; ///// active when isModelWire is false

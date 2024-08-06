@@ -5,7 +5,7 @@
 #include "genController.h"
 #include "model/controller/controller.h"
 #include "model/hwComponent/abstract/globPool.h"
-#include "model/hwComponent/wire/wireAutoGen.h"
+#include "model/hwComponent/wire/wireAuto.h"
 
 
 namespace kathryn{
@@ -96,7 +96,7 @@ namespace kathryn{
         assert(_masterModule != nullptr);
         assert(_masterModuleGen != nullptr);
         std::vector<WireAuto*>& desSaveIo = isInput ? _masterModuleGen->_genWires[WIRE_AUTO_GEN_GLOB_INPUT]
-                                                       : _masterModuleGen->_genWires[WIRE_AUTO_GEN_GLOB_INPUT];
+                                                    : _masterModuleGen->_genWires[WIRE_AUTO_GEN_GLOB_OUTPUT];
         ///////
         /////// input/output
         ///////
@@ -116,7 +116,13 @@ namespace kathryn{
             inputIo.createLogicGen();
             /////// connect
             if(isInput){
-                srcToBeGlobIo->connectToThisIo(&inputIo);
+                auto connectEvent = new UpdateEvent({nullptr,
+                                        nullptr,
+                                        &inputIo,
+                                        inputIo.getOperableSlice(),
+                                        DEFAULT_UE_PRI_MIN
+                                    });
+                srcToBeGlobIo->getAsbFromWireMarker()->addUpdateMeta(connectEvent);
             }else{
                 inputIo.connectTo(originOpr, false); /////// it may needs to be route
             }

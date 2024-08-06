@@ -2,6 +2,7 @@
 // Created by tanawin on 1/7/2024.
 //
 
+#include "model/hwComponent/wire/wireAuto.h"
 #include "model/hwComponent/module/module.h"
 
 namespace kathryn{
@@ -12,7 +13,7 @@ namespace kathryn{
             ////////////////////////// recruit first
             LogicGenBaseVec inputLogicGenBase;
             LogicGenBaseVec outputLogicGenBase;
-            recruitLogicGenBase(inputLogicGenBase, _genWires[WIRE_AUTO_GEN_GLOB_INPUT]);
+            recruitLogicGenBase(inputLogicGenBase , _genWires[WIRE_AUTO_GEN_GLOB_INPUT]);
             recruitLogicGenBase(outputLogicGenBase, _genWires[WIRE_AUTO_GEN_GLOB_OUTPUT]);
             /////////////////////////// route dep for global io
             inputLogicGenBase.routeDepAll();
@@ -23,13 +24,15 @@ namespace kathryn{
             mdGen->startRouteEle();
         }
         /////////// module gen
-        _regPool        .routeDepAll();
-        _wirePool       .routeDepAll();
-        _exprPool       .routeDepAll();
-        _nestPool       .routeDepAll();
-        _valPool        .routeDepAll();
-        _memBlockPool   .routeDepAll();
-        _memBlockElePool.routeDepAll();
+        _regPool                 .routeDepAll();
+        _wirePool                .routeDepAll();
+        _wirePoolWithInputMarker .routeDepAll();
+        _wirePoolWithOutputMarker.routeDepAll();
+        _exprPool                .routeDepAll();
+        _nestPool                .routeDepAll();
+        _valPool                 .routeDepAll();
+        _memBlockPool            .routeDepAll();
+        _memBlockElePool         .routeDepAll();
     }
 
     void ModuleGen::finalizeRouteEle() {
@@ -103,6 +106,18 @@ namespace kathryn{
         ////// if it is same module then return that operable
         if (srcModuleGen == desModuleGen){
             return realSrc;
+        }
+        //////// check is it output of the submodule and it is user output wire
+        Module* parentSrcModule = srcModuleGen->getMasterModule()->getParent();
+        if ((parentSrcModule != nullptr) &&
+            (parentSrcModule->getModuleGen() == desModuleGen)){ //// check that src is submodule of this module
+                Module* subModule = srcModuleGen->getMasterModule();
+                for (Wire* outputWire: subModule->getUserWiresByMarker(WMT_OUTPUT_MD)){
+                    if (exactRealSrc == ((Operable*)outputWire)){
+                        ///////// if it is match return realSrc
+                        return realSrc;
+                    }
+                }
         }
 
         //// now it must be routed in some way

@@ -2,7 +2,9 @@
 // Created by tanawin on 1/7/2024.
 //
 #include "model/hwComponent/module/module.h"
+
 #include "gen/controller/genController.h"
+
 
 namespace kathryn{
 
@@ -12,12 +14,22 @@ namespace kathryn{
         LogicGenBaseVec subModuleOutputRepresent;
         LogicGenBaseVec subModuleInputRepresent;
 
-        ///////////// recruit io /////////////////////////////////////
+        ///////////// recruit io of sub module/////////////////////////////////////
         for (ModuleGen* subMdGen: _subModulePool){
+            /////////// output
             recruitLogicGenBase(subModuleOutputRepresent,
                                 subMdGen->_genWires[WIRE_AUTO_GEN_OUTPUT]);
+            for (LogicGenBase* mdOutput: subMdGen->_wirePoolWithOutputMarker){
+                assert(mdOutput != nullptr);
+                subModuleOutputRepresent.push_back(mdOutput);
+            }
+            ////////// input
             recruitLogicGenBase(subModuleInputRepresent,
                                 subMdGen->_genWires[WIRE_AUTO_GEN_INPUT]);
+            for (LogicGenBase* mdInput: subMdGen->_wirePoolWithInputMarker){
+                assert(mdInput != nullptr);
+                subModuleInputRepresent.push_back(mdInput);
+            }
         }
         ///////////////////////////////////////////////////////////
 
@@ -35,7 +47,7 @@ namespace kathryn{
         if (_master->isTopModule()){
             fileWriter->addData(" top(\n");
         }else{
-            fileWriter->addData(_master->getGlobalName() + "(\n");
+            fileWriter->addData(getOpr() + "(\n");
         }
 
         //////// declare input/output element
@@ -44,15 +56,15 @@ namespace kathryn{
         writeGenVec(ioVec, fileWriter, ",\n");
         fileWriter->addData("\n);\n");
 
-        /***                          |   wire declaration   |   wire operation   |
-         * ------------------------------------------------------------------------
-         * glob/auto input  wire ---->           no          |         no
-         * glob/auto output wire ---->           no          |        yes
-         * submodule input wire  ---->          yes          |        yes
-         * submodule output wire ---->          yes          |         no
-         * ------------------------------------------------------------------------
-         * bridge wire           ---->          yes          |        yes
-         * ------------------------------------------------------------------------
+        /***                               |   wire declaration   |   wire operation   |
+         * -----------------------------------------------------------------------------
+         * glob/auto/user input  wire ---->           no          |         no
+         * glob/auto/user output wire ---->           no          |        yes
+         * submodule input wire       ---->          yes          |        yes
+         * submodule output wire      ---->          yes          |         no
+         * -----------------------------------------------------------------------------
+         * bridge wire                ---->          yes          |        yes
+         * -----------------------------------------------------------------------------
          */
 
         /*
@@ -85,7 +97,8 @@ namespace kathryn{
         writeGenVec(_nestPool.getDecOps()                               , fileWriter, "\n"); fileWriter->addData("\n///_valPoolOp\n");
         writeGenVec(_valPool.getDecOps()                                , fileWriter, "\n"); fileWriter->addData("\n///_memBlockPoolOp\n");
         writeGenVec(_memBlockPool.getDecOps()                           , fileWriter, "\n"); fileWriter->addData("\n///_memBlockElePoolOp\n");
-        writeGenVec(_memBlockElePool.getDecOps()                        , fileWriter, "\n"); fileWriter->addData("\n///outputVecOp\n");
+        writeGenVec(_memBlockElePool.getDecOps()                        , fileWriter, "\n"); fileWriter->addData("\n///output User VecOp\n");
+        writeGenVec(_wirePoolWithOutputMarker.getDecOps()               , fileWriter, "\n"); fileWriter->addData("\n///outputVecOp\n");
         writeGenVec(_genWirePools[WIRE_AUTO_GEN_OUTPUT].getDecOps()     , fileWriter, "\n"); fileWriter->addData("\n///outputVecOp global\n");
         writeGenVec(_genWirePools[WIRE_AUTO_GEN_GLOB_OUTPUT].getDecOps(), fileWriter, "\n"); fileWriter->addData("\n////input of submodule\n");
         writeGenVec(subModuleInputRepresent.getDecOps()                 , fileWriter, "\n"); fileWriter->addData("\n///bridgeVecOp\n");
@@ -105,7 +118,8 @@ namespace kathryn{
     std::vector<std::string> ModuleGen::getIoDec(){
 
         std::vector<std::string> result;
-
+        for (LogicGenBase* lgb: _wirePoolWithInputMarker                ){result.push_back(lgb->decIo());}
+        for (LogicGenBase* lgb: _wirePoolWithOutputMarker               ){result.push_back(lgb->decIo());}
         for (LogicGenBase* lgb: _genWirePools[WIRE_AUTO_GEN_INPUT]      ){result.push_back(lgb->decIo());}
         for (LogicGenBase* lgb: _genWirePools[WIRE_AUTO_GEN_OUTPUT]     ){result.push_back(lgb->decIo());}
         for (LogicGenBase* lgb: _genWirePools[WIRE_AUTO_GEN_GLOB_INPUT] ){result.push_back(lgb->decIo());}
@@ -132,7 +146,12 @@ namespace kathryn{
         result += "(\n";
 
         ////////////////// declare input and output
-
+        for (const std::string& inputStr : _wirePoolWithInputMarker.getOprs()){
+            ioStrs.push_back(inputStr);
+        }
+        for (const std::string& outputStr: _wirePoolWithOutputMarker.getOprs()){
+            ioStrs.push_back(outputStr);
+        }
         for (const std::string& inputStr : _genWirePools[WIRE_AUTO_GEN_INPUT].getOprs()){
             ioStrs.push_back(inputStr);
         }
@@ -154,7 +173,7 @@ namespace kathryn{
     }
 
     std::string ModuleGen::getOpr(){
-        return _master->getGlobalName();
+        return _master->getGlobalName() + "_" + _master->getVarName();
     }
 
 

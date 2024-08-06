@@ -109,15 +109,18 @@ namespace kathryn{
     }
 
     bool Reg::checkIntegrity(){
-        return getGlobIoType() != WMT_GLOB_INPUT;
+        return getMarker() != WMT_GLOB_INPUT &&
+               getMarker() != WMT_INPUT_MD   &&
+               getMarker() != WMT_OUTPUT_MD;
     }
-    void Reg::connectToThisIo(WireAuto* wireIo){
-        /////// it can't connect because it can't take wireIo as a input
-        mfAssert(false, "can't use it as global input");
-    }
+
     Operable* Reg::getOprFromGlobIo(){
         return this;
     };
+
+    Assignable* Reg::getAsbFromWireMarker(){
+        return this;
+    }
 
     /**
      * Reg Logic Sim

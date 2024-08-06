@@ -62,8 +62,8 @@ bool LogicGenBase::checkCerfEqLocally(const LogicGenBase& rhsGenBase){
         return _cerf.cmpLocal(rhsGenBase.getLogicCef());
 }
 
-bool LogicGenBase::cmpEachOpr(Operable* srcA, Operable* srcB,
-                              ModuleGen* srcMdA, ModuleGen* srcMdB,
+bool LogicGenBase::cmpEachOpr(Operable*  srcA,  Operable*  srcB,
+                              ModuleGen* srcMdA,ModuleGen* srcMdB,
                               OUT_SEARCH_POL searchPol){
 
 
@@ -83,6 +83,7 @@ bool LogicGenBase::cmpEachOpr(Operable* srcA, Operable* srcB,
         bool isAStayInMd = exactSrcA->getLogicGenBase()->getModuleGen() == srcMdA;
         bool isBStayInMd = exactSrcB->getLogicGenBase()->getModuleGen() == srcMdB;
 
+        ////// if one is stay and other one is not
         if (isAStayInMd  ^ isBStayInMd){
             return false; //// not stay in the same module but one is
         }
@@ -92,7 +93,9 @@ bool LogicGenBase::cmpEachOpr(Operable* srcA, Operable* srcB,
             ///////// we don't work anything with work
             return exactSrcA->getLogicGenBase()->
                     checkCerfEqLocally(*exactSrcB->getLogicGenBase());
-        }else if (searchPol == SUBMOD){
+        }
+
+        if (searchPol == SUBMOD){
             ///////// check the sub commodule cerf
             bool checkLogicCef =  exactSrcA->getLogicGenBase()->
                                   checkCerfEqLocally(*exactSrcB->getLogicGenBase());
@@ -108,14 +111,4 @@ bool LogicGenBase::cmpEachOpr(Operable* srcA, Operable* srcB,
         }
         return false;
     }
-
-
-
-
-
-
-
-
-
-
 }

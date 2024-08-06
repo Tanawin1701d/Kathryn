@@ -4,20 +4,24 @@
 
 #ifndef MODULEGEN_H
 #define MODULEGEN_H
+
 #include "unordered_map"
 #include "gen/proxyHwComp/expression/exprGen.h"
 #include "gen/proxyHwComp/expression/nestGen.h"
 #include "gen/proxyHwComp/register/regGen.h"
 #include "gen/proxyHwComp/value/valueGen.h"
 #include "gen/proxyHwComp/wire/wireGen.h"
+#include "gen/proxyHwComp/abstract/logicGenBase.h"
+
+
 #include "model/hwComponent/memBlock/MemBlock.h"
 #include "model/hwComponent/register/register.h"
-#include "model/hwComponent/wire/wire.h"
+#include "model/hwComponent/wire/wireAuto.h"
+#include "model/hwComponent/wire/wireSubType.h"
 #include "model/hwComponent/expression/expression.h"
 #include "model/hwComponent/value/value.h"
 #include "model/hwComponent/expression/nest.h"
 #include "model/flowBlock/abstract/spReg/waitReg.h"
-#include "model/hwComponent/wire/wireAutoGen.h"
 
 
 namespace kathryn{
@@ -45,6 +49,8 @@ namespace kathryn{
     public:
         LogicGenBaseVec   _regPool;
         LogicGenBaseVec   _wirePool;
+        LogicGenBaseVec   _wirePoolWithInputMarker; //// with marker that mark as input of the module
+        LogicGenBaseVec   _wirePoolWithOutputMarker; //// with marker that mark as output of the module
         LogicGenBaseVec   _exprPool;
         LogicGenBaseVec   _nestPool;
         LogicGenBaseVec   _valPool;
@@ -56,45 +62,22 @@ namespace kathryn{
         ////// genWireMap gen engine must create when wire is build and
         /// add to the structure
         std::unordered_map<Operable*, int> _genWireMaps[WIRE_AUTO_GEN_CNT];
-        std::vector<WireAuto*>          _genWires   [WIRE_AUTO_GEN_CNT];
+        std::vector<WireAuto*>             _genWires   [WIRE_AUTO_GEN_CNT];
         std::vector<ModuleGen*>            _subModulePool;
 
         explicit ModuleGen(Module* master);
 
-        template<typename T>
-        void createLogicGenBase(std::vector<T*>& srcs);
-
-        template<typename T>
-        void recruitLogicGenBase(LogicGenBaseVec& des,
-                                 std::vector<T*>& srcs){
-            for(T* src: srcs){
-                LogicGenBase* logicGenBase = src->getLogicGen();
-                assert(logicGenBase != nullptr);
-                des.push_back(logicGenBase);
-            }
-        }
-
-        template<typename T>
-        LogicGenBaseVec recruitLogicGenBase(std::vector<T*>& srcs){
-            LogicGenBaseVec result;
-            recruitLogicGenBase(result, srcs);
-            return result;
-        }
-
-        template<typename T>
-        void createAndRecruitLogicGenBase(LogicGenBaseVec& des,
-                                 std::vector<T*>& srcs);
-
         MODULE_GEN_PROGRESS getGenProgress()const {return _mgp;}
+        Module* getMasterModule() const {return _master;}
 
         /*
          * main progress
          */
 
-        void startInitEle  ();
-        void startRouteEle ();
+        void startInitEle    ();
+        void startRouteEle   ();
         void finalizeRouteEle();
-        void genCerfAll    (int idx); /// idx that it is submodule
+        void genCerfAll      (int idx); /// idx that it is submodule
 
         bool startCmpModule(ModuleGen* rhsMdg, GenStructure* genStructure);
         void startPutToGenSystem(GenStructure* genStructure);
@@ -131,6 +114,41 @@ namespace kathryn{
         bool cmpCerfEqLocally(const ModuleGen& rhs) const;
         moduleLocalCef getCerf() const{return _cerf;}
         moduleGlobalCef getGlobCerf() const{return _globCerf;}
+
+        /**
+         * recruit function
+         */
+
+        template<typename T>
+        void createLogicGenBase(std::vector<T*>& srcs){
+            for(T* src: srcs){
+                src->createLogicGen();
+            }
+        }
+
+        template<typename T>
+        void recruitLogicGenBase(LogicGenBaseVec& des,
+                                 std::vector<T*>& srcs){
+            for(T* src: srcs){
+                LogicGenBase* logicGenBase = src->getLogicGen();
+                assert(logicGenBase != nullptr);
+                des.push_back(logicGenBase);
+            }
+        }
+
+        template<typename T>
+        LogicGenBaseVec recruitLogicGenBase(std::vector<T*>& srcs){
+            LogicGenBaseVec result;
+            recruitLogicGenBase(result, srcs);
+            return result;
+        }
+
+        template<typename T>
+        void createAndRecruitLogicGenBase(LogicGenBaseVec& des,
+        std::vector<T*>& srcs){
+            createLogicGenBase(srcs);
+            recruitLogicGenBase(des, srcs);
+        }
     };
 
     class ModuleGenInterface{

@@ -23,10 +23,6 @@ namespace kathryn{
             bool requireDefVal = true,
             bool initCom       = true);
 
-        // ~Wire(){
-        //     std::cout << "wire is freee" << std::endl;
-        // }
-
         void com_final() override{};
 
         /**override assignable*/
@@ -60,11 +56,10 @@ namespace kathryn{
 
         /**override logicc gen base*/
         void createLogicGen() override;
-
         /** override global input*/
         bool checkIntegrity()                  override;
-        void connectToThisIo(WireAuto* wireIo) override;
         Operable* getOprFromGlobIo()           override;
+        Assignable* getAsbFromWireMarker()     override;
 
     };
 

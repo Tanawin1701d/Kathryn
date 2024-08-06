@@ -15,6 +15,8 @@
 /** this is for user usage*/
 #define mMod(name, TypeName, ...) TypeName& name = _make<TypeName>(#TypeName, #name, true, __VA_ARGS__)
 #define mWire( name, argument)    Wire&     name = _make<Wire>    ("uncatagorizedYet", #name, true,argument)
+#define mIn( name, argument)      Wire&     name = _makeIo<Wire>  (true,"uncatagorizedYet", #name, true,argument, false)
+#define mOut( name, argument)     Wire&     name = _makeIo<Wire>  (false,"uncatagorizedYet", #name, true,argument, false)
 #define mReg( name, argument)     Reg&      name = _make<Reg>     ("uncatagorizedYet", #name, true, argument)
 #define mVal(name, ...)           Val&      name = _make<Val>     ("uncatagorizedYet", #name, true, __VA_ARGS__)
 #define mMem(name, depth, width)  MemBlock& name = _make<MemBlock>("uncatagorizedYet", #name, true, depth, width)
@@ -60,8 +62,6 @@ namespace kathryn {
 
     void unlockAlloc();
 
-
-
     template<typename T, typename... Args>
     T& _make(const std::string& typeName, const std::string& name, bool isUserDec,Args&&... args){
         static_assert(std::is_base_of<HwCompControllerItf, T>::value,
@@ -78,6 +78,17 @@ namespace kathryn {
         objPtr->com_final(); /** /* typicallly it is used only module and box*/
 
         return *objPtr;
+    }
+
+    template<typename T, typename... Args>
+    T& _makeIo(bool isInput, const std::string& typeName, const std::string& name, bool isUserDec,Args&&... args){
+        T& x = _make<T>(typeName, name, isUserDec, args...);
+        if (isInput){
+            x.asInput();
+        }else{
+            x.asOutput();
+        }
+        return x;
     }
 
     // we will use it later for declaration of zero argument

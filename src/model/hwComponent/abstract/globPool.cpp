@@ -7,7 +7,6 @@
 #include <cassert>
 #include <vector>
 #include <set>
-#include "model/hwComponent/abstract/globIo.h"
 
 namespace kathryn{
 
@@ -23,16 +22,16 @@ namespace kathryn{
         assert(src != nullptr);
         checkIsThereIoName(src->getGlobIoName());
         addToNameList(src->getGlobIoName());
-        if (src->getGlobIoType() == WMT_GLOB_INPUT){
+        if (src->getMarker() == WMT_GLOB_INPUT){
             globInputPool.push_back(src); return;
         }
-        if (src->getGlobIoType() == WMT_GLOB_OUTPUT){
+        if (src->getMarker() == WMT_GLOB_OUTPUT){
             globOutputPool.push_back(src); return;
         }
-        if (src->getGlobIoType() == WMT_INPUT_MD){
+        if (src->getMarker() == WMT_INPUT_MD){
             mdInputPool.push_back(src); return;
         }
-        if (src->getGlobIoType() == WMT_OUTPUT_MD){
+        if (src->getMarker() == WMT_OUTPUT_MD){
             mdOutputPool.push_back(src); return;
         }
         assert(false);

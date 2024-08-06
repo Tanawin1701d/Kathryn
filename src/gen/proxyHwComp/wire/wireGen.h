@@ -4,13 +4,16 @@
 
 #ifndef WIREGEN_H
 #define WIREGEN_H
-#include "model/hwComponent/wire/wireAuto.h"
+
 #include "gen/proxyHwComp/abstract/AssignGen.h"
 
 namespace kathryn{
 
     class Wire;
-    /** normal wire may be user io*/
+    /**
+     * Wire which is exposed to model it may be marked to be
+     * input/output io wire or normal wire
+     */
     class WireGen: public AssignGenBase{
     protected:
         Wire* _master = nullptr;

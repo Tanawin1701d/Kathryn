@@ -20,6 +20,7 @@ namespace kathryn{
 
     class WireAuto;
     class Operable;
+    class Assignable;
 
     class WireMarker{
     protected:
@@ -28,14 +29,14 @@ namespace kathryn{
     public:
         virtual ~WireMarker() = default;
         void asInputGlob (std::string value = "");
-        void asInput     (std::string value = "");
+        void asInput     (std::string value = "defInputName");
         void asOutputGlob(std::string value = "");
-        void asOutput    (std::string value = "");
+        void asOutput    (std::string value = "defOutputName");
         void setIoName   (const std::string&);
         virtual std::string  getGlobIoName();
         virtual bool checkIntegrity       ()                 = 0;
-        virtual void connectToThisIo      (WireAuto* wireIo) = 0;
         virtual Operable* getOprFromGlobIo()                 = 0;
+        virtual Assignable* getAsbFromWireMarker()           = 0;
         WIRE_MARKER_TYPE getMarker        (){ return _marker;}
 
     };

@@ -3,6 +3,7 @@
 //
 
 #include "wire.h"
+#include "wireAuto.h"
 #include "model/hwComponent/expression/expression.h"
 #include "model/controller/controller.h"
 #include "sim/modelSimEngine/hwComponent/wire/wireSim.h"
@@ -120,7 +121,7 @@ namespace kathryn{
     void Wire::createLogicGen(){
         assert(_parent->getModuleGen() != nullptr);
 
-        _genEngine = new WireAutoGen(
+        _genEngine = new WireGen(
             _parent->getModuleGen(),
             this
         );
@@ -130,20 +131,9 @@ namespace kathryn{
     bool Wire::checkIntegrity(){
         return true;
     }
-    void Wire::connectToThisIo(WireAuto* wireIo){
-        assert(getMarker() == WMT_GLOB_INPUT);
-        addUpdateMeta(
-            new UpdateEvent({
-                nullptr,
-                nullptr,
-                wireIo,
-                getOperableSlice(),
-                DEFAULT_UE_PRI_MIN
-                }
-            )
-        );
-    }
-    Operable* Wire::getOprFromGlobIo(){ return this;}
+    Operable*   Wire::getOprFromGlobIo(){ return this;}
+    Assignable* Wire::getAsbFromWireMarker(){ return this;}
+
 
     /////// global input pool
 

@@ -42,7 +42,7 @@ namespace kathryn{
 
     WIRE_MARKER_TYPE RegGen::getGlobIoStatus(){
         _master->checkIntegrity();
-        return _master->getGlobIoType();
+        return _master->getMarker();
     }
 
 

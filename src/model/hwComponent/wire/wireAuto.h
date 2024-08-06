@@ -2,8 +2,8 @@
 // Created by tanawin on 24/6/2024.
 //
 
-#ifndef WIREIO_H
-#define WIREIO_H
+#ifndef WIREAUTO_H
+#define WIREAUTO_H
 
 #include"wire.h"
 #include"wireSubType.h"

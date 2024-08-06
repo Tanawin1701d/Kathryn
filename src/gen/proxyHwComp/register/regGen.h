@@ -26,7 +26,7 @@ public:
 
     bool compare(LogicGenBase* lgb) override;
 
-    GLOB_IO_TYPE getGlobIoStatus() override;
+    WIRE_MARKER_TYPE getGlobIoStatus() override;
 };
 
 

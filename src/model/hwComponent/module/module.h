@@ -121,6 +121,7 @@ namespace kathryn{
        /**explicit element that is buillt from user declaration*/
         auto& getUserRegs(){return _userRegs; } /** the return contain only master flowblock*/
         auto& getUserWires(){return _userWires; }
+        std::vector<Wire*> getUserWiresByMarker(WIRE_MARKER_TYPE wmt);
         auto& getUserExpressions(){return _userExpressions; }
         auto& getUserVals(){return _userVals; }
         auto& getUserMemBlks(){return _userMemBlks;}

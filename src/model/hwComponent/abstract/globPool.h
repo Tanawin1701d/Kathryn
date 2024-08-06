@@ -5,7 +5,7 @@
 #ifndef GLOBPOOL_H
 #define GLOBPOOL_H
 
-#include "globIo.h"
+#include "WireMarker.h"
 #include "operable.h"
 
 namespace kathryn{

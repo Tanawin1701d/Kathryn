@@ -32,9 +32,6 @@ namespace kathryn{
             translatedUpdateEvent.push_back(updateEvent);
         }
 
-
-
-
         bool cmpAssignGenBase(AssignGenBase* asgb, OUT_SEARCH_POL searchPol);
         //// vice vesa is master module
         //// it mean implicitly outside is equal

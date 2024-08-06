@@ -2,7 +2,7 @@
 // Created by tanawin on 24/6/2024.
 //
 
-#include "wireAutoGen.h"
+#include "gen/proxyHwComp/wire/wireAutoGen.h"
 #include "model/hwComponent/module/module.h"
 
 namespace kathryn{

@@ -10,7 +10,7 @@
 #include "util/fileWriter/fileWriterBase.h"
 #include "model/hwComponent/abstract/assignable.h"
 #include "cerf.h"
-#include "model/hwComponent/abstract/globIo.h"
+#include "model/hwComponent/abstract/WireMarker.h"
 
 namespace kathryn{
 
@@ -19,6 +19,10 @@ namespace kathryn{
         MASTERMOD
     };
 
+    /** compare Stategy
+     * CP_LC_ONLY
+     * CP_
+     */
     class ModuleGen;
     class LogicGenBase{
     protected:
@@ -50,12 +54,12 @@ namespace kathryn{
         virtual std::string  decVariable() {assert(false);}
         virtual std::string  decOp()       {assert(false);}
         /////// glob io check
-        virtual GLOB_IO_TYPE getGlobIoStatus(){return GLOB_IO_TYPE::GLOB_IO_NOT_BOTH;}
+        virtual WIRE_MARKER_TYPE  getGlobIoStatus(){return WIRE_MARKER_TYPE::WMT_NONE;}
 
         bool checkCerfEqLocally(const LogicGenBase& rhsGenBase);
-        bool cmpEachOpr(Operable* exactSrcA, Operable* exactSrcB,
-                              ModuleGen* srcMdA, ModuleGen* srcMdB,
-                              OUT_SEARCH_POL searchPol);
+        bool cmpEachOpr(Operable*  exactSrcA, Operable*  exactSrcB,
+                        ModuleGen* srcMdA,    ModuleGen* srcMdB,
+                        OUT_SEARCH_POL searchPol);
 
         ///////// getter
         [[nodiscard]] ModuleGen* getModuleGen() const{

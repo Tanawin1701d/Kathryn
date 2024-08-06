@@ -127,6 +127,19 @@ namespace kathryn{
         _isTopModule = true;
     }
 
+    std::vector<Wire*>
+    Module::getUserWiresByMarker(WIRE_MARKER_TYPE wmt){
+        std::vector<Wire*> result;
+        for (Wire* wire: getUserWires()){
+            assert(wire != nullptr);
+            if (wire->getMarker() == wmt){
+                result.push_back(wire);
+            }
+        }
+        return result;
+    }
+
+
     void Module::buildAll(){
         /**declare to model controller that this module is initialize*/
         flow();

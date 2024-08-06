@@ -3,6 +3,7 @@
 //
 
 #include "wireGen.h"
+#include "model/hwComponent/wire/wire.h"
 
 
 namespace kathryn{
@@ -22,7 +23,7 @@ namespace kathryn{
 
         if (_master->getMarker() == WMT_INPUT_MD || _master->getMarker() == WMT_OUTPUT_MD){
             assert(_master->getUpdateMeta().size() == 1);
-            UpdateEvent* singleUpdateEvent = new UpdateEvent();
+            auto* singleUpdateEvent = new UpdateEvent();
             *singleUpdateEvent = *_master->getUpdateMeta()[0];
             translatedUpdateEvent.push_back(singleUpdateEvent);
             return;

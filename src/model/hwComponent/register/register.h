@@ -8,7 +8,7 @@
 #include "model/hwComponent/abstract/logicComp.h"
 #include "model/controller/conInterf/controllerItf.h"
 #include "gen/proxyHwComp/register/regGen.h"
-#include "model/hwComponent/abstract/globIo.h"
+#include "model/hwComponent/abstract/WireMarker.h"
 
 namespace kathryn{
 
@@ -63,8 +63,9 @@ namespace kathryn{
 
         /** override global input*/
         bool checkIntegrity()                     override;
-        void connectToThisIo(WireAuto* wireIo) override;
         Operable* getOprFromGlobIo()              override;
+        Assignable* getAsbFromWireMarker()        override;
+
     };
 
 
