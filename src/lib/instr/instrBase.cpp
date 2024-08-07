@@ -60,9 +60,9 @@ namespace kathryn{
         }
     }
 
-    void OP_HW::set(){ _set <<= 1;}
+    void OP_HW::set(){ _set <<= 1; std::cout << " SET" << _mopName << std::endl;}
 
-    void OP_HW::reset(){_set <<= 0;}
+    void OP_HW::reset(){_set <<= 0; std::cout << " XXX" << _mopName << std::endl;}
 
     void OP_HW::setUop(const std::string& uopName, Operable* condition){
         assert(condition != nullptr);
@@ -131,7 +131,9 @@ namespace kathryn{
 
         if (bitIdx == -1){
             assert(msrs.size() == 1); ///// there must be only one
+            std::cout << "do asm for " << msrs[0]->_mopName << std::endl;
             msrs[0]->doAsm();
+            std::cout << "---------------------------" << std::endl;
             return;
         }
 

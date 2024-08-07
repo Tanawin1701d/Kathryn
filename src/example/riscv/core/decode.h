@@ -27,7 +27,7 @@ namespace kathryn{
                 repo.addMop({"jal", {"needpc"}});
                 repo.addMop({"ldpc", {"needpc"}});
                 repo.addMop({"op",{"add","sll","sltu","sr", "sra","and",
-                                                      "sub","slt","xor","or"}});
+                    "sub","slt","xor","or"}});
 
                 /////////////////////////////////////////////////////////////////////////////////////
                 ////// load/store/and////////////////////////////////////////////////////////////////
@@ -67,7 +67,7 @@ namespace kathryn{
                 .ad("<s-30-31><ua>", {{"<1><101>", "sra"}, {"<0><101>","sr"}});
                 ////// 101 auipc/lui
                 repo.addDecRule("ldpc", "<20-i1-12-32><5-rd0><0010111>").adm({"needpc"});
-                repo.addDecRule("ldpc", "<20-i1-12-32><5-rd0><0110111>" );
+                repo.addDecRule("ldpc", "<20-i1-12-32><5-rd0><0110111>");
 
 
                 repo.declareHw();

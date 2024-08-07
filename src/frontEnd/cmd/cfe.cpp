@@ -5,6 +5,8 @@
 #include <cassert>
 #include <utility>
 #include "cfe.h"
+
+#include "example/riscv/generation/RISCV_gen.h"
 #include "test/autoSim/simMng.h"
 #include "test/autoGen/genMng.h"
 
@@ -42,6 +44,13 @@ namespace kathryn{
         std::cout << TC_GREEN <<  " finish rv [sort] sim " << TC_DEF << std::endl;
     }
 
+    void test_riscv_gen(PARAM& params){
+        riscv::RISCV_GEN_MNG riscGenMng;
+        riscGenMng.startGen(params);
+        std::cout << TC_GREEN << "finish rv [gen]" << TC_DEF << std::endl;
+    }
+
+
     void start(PARAM& params) {
 
         printWelcomeScreen();
@@ -57,6 +66,8 @@ namespace kathryn{
             test_riscv(params);
         } else if (params["testType"] == "testRiscvSort"){
             test_riscv_sort(params);
+        }else if (params["testType"] == "testGenRiscv"){
+            test_riscv_gen(params);
         }else if (params["testType"]  == "testGen"){
             startGenEle(params);
         }else{

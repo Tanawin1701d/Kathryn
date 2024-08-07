@@ -44,5 +44,7 @@ add_executable(Kathryn
         ${SRC_PARAM}
         ${SRC_LIB}
         ${SRC_MODEL_COMPILE}
+        src/example/riscv/generation/RISCV_gen.cpp
+        src/example/riscv/generation/RISCV_gen.h
 
 )

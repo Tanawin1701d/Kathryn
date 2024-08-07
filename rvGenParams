@@ -1,0 +1,5 @@
+testType = testGenRiscv
+
+; gen Path is prefix of the file include file name
+
+genPath = /media/tanawin/tanawin1701e/project2/Kathryn/KOut/riscv/gen/genFile.v
