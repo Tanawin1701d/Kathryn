@@ -22,6 +22,7 @@
 #include "model/flowBlock/cond/zelif.h"
 #include "model/flowBlock/cond/if.h"
 #include "model/flowBlock/cond/elif.h"
+#include "model/flowBlock/pick/pick.h"
 #include "model/flowBlock/abstract/spReg/stateReg.h"
 #include "model/flowBlock/abstract/spReg/syncReg.h"
 #include "model/flowBlock/time/wait.h"

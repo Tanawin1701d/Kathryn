@@ -28,6 +28,8 @@ namespace kathryn{
                   }) {}
 
     FlowBlockElif::~FlowBlockElif(){
+        //// delete resultNodeWrapper; it is derive from inside block do not delete
+
     };
 
     void FlowBlockElif::addElementInFlowBlock(Node* node) {

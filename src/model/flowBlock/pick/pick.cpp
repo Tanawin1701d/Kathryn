@@ -20,6 +20,9 @@ namespace kathryn{
 
     FlowBlockPick::~FlowBlockPick(){
         delete resultNodeWrap;
+        delete jointNode;
+        delete autoExitNode;
+        delete exitNode;
     }
 
     void FlowBlockPick::addElementInFlowBlock(Node* node){
@@ -71,6 +74,7 @@ namespace kathryn{
         for (int sid = 0; sid < nodeWrapOfPickCondBlocks.size(); sid++){
             nodeWrapOfPickCondBlocks[sid]
             ->addDependNodeToAllNode(jointNode,pickCondBlocks[sid]->getCondition());
+            nodeWrapOfPickCondBlocks[sid]->assignAllNode();
         }
 
         ////// build auto exitNode if needed

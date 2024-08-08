@@ -38,7 +38,7 @@ namespace kathryn{
         testSimMod34* _md;
 
         sim34(testSimMod34* md, int idx, const std::string& prefix):SimAutoInterface(idx,
-                                                 10000000,
+                                                 100,
                                                  prefix + "simAutoResult"+std::to_string(idx)+".vcd",
                                                  prefix + "simAutoResult"+std::to_string(idx)+".prof"),
                                 _md(md)

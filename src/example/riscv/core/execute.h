@@ -79,8 +79,11 @@ namespace kathryn{
                     par{ exposeBlk(aluBlock)
                         execAlu(misPredic, reStartPc);
                     }
-                    par{ exposeBlk(complexExe)
-                        execComplexAlu(); execLS();
+                    par{
+                        pick{ exposeBlk(complexExe)
+                            execComplexAlu(); execLS();
+                            pickDef
+                        }
                     }
                 }
             }
@@ -136,19 +139,18 @@ namespace kathryn{
 
             void execComplexAlu(){
                 auto op = _decodedUop.repo.getOp("op");
-                cif(op.isSet()) {
-                    cif(op.isUopSet("sll") | op.isUopSet("sra") |
-                        op.isUopSet("sr")){
-                        cdowhile(rs2.data(0, 5) > 1){
-                            zif (op.isUopSet("sll")){ rdes.data <<= rdes.data << (rs2.data(0, 5) > 0);}
-                            zif (op.isUopSet("sra")){
-                                rdes.data(0, XLEN - 1) <<= (rdes.data(0, XLEN - 1) >> (rs2.data(0, 5) > 0));
-                            }
-                            zif (op.isUopSet("sr")){ rdes.data <<= rdes.data >> (rs2.data(0, 5) > 0);}
-
-                            zif(rs2.data(0, 5) > 1) { rs2.data <<= rs2.data - 1;}
+                pif(op.isSet() & (op.isUopSet("sll") | op.isUopSet("sra") |
+                        op.isUopSet("sr"))) {
+                    cdowhile(rs2.data(0, 5) > 1){
+                        zif (op.isUopSet("sll")){ rdes.data <<= rdes.data << (rs2.data(0, 5) > 0);}
+                        zif (op.isUopSet("sra")){
+                            rdes.data(0, XLEN - 1) <<= (rdes.data(0, XLEN - 1) >> (rs2.data(0, 5) > 0));
                         }
+                        zif (op.isUopSet("sr")){ rdes.data <<= rdes.data >> (rs2.data(0, 5) > 0);}
+
+                        zif(rs2.data(0, 5) > 1) { rs2.data <<= rs2.data - 1;}
                     }
+
                 }
             }
 
@@ -158,7 +160,7 @@ namespace kathryn{
                 mWire(poolWriteData, XLEN);
                 mWire(finReadData,   XLEN);
 
-                cif(ldst.isSet()){
+                pif(ldst.isSet()){
                     cdowhile(!readFn) {
                         readEn = 1;
                         rdes.valid <<= ldst.isUopSet("isload");

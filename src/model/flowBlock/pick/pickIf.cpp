@@ -20,8 +20,7 @@ namespace kathryn{
     condition(&cond){}
 
     FlowBlockPickCond::~FlowBlockPickCond(){
-        delete conNode;
-        delete resultNodeWrapper;
+        //// delete resultNodeWrapper; it is derive from inside block do not delete
     }
 
     void FlowBlockPickCond::addElementInFlowBlock(Node* node){

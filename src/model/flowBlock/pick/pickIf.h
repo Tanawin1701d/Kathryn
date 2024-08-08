@@ -23,7 +23,6 @@ namespace kathryn{
         FlowBlockBase* implicitFlowBlock = nullptr;
         Operable*      condition = nullptr;
 
-        PseudoNode*    conNode = nullptr;
         NodeWrap*      resultNodeWrapper = nullptr;
 
     public:
