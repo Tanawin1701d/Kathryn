@@ -13,6 +13,7 @@
 /KOut/genTest/output
 /KOut/genTest/program
 /KOut/genExample
+/KOut/riscv/gen/*
 
 #### model compile
 modelCompile/cmake-build-debug
