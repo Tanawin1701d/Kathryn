@@ -73,7 +73,7 @@ namespace kathryn{
 
             retStr += ") begin\n";
             retStr += "         ";
-            retStr += assignmentLine(upd->desUpdateSlice, upd->srcUpdateValue);
+            retStr += assignmentLine(upd->desUpdateSlice, upd->srcUpdateValue, isClockSen);
             retStr += "\n";
             retStr += "     end\n";
 
@@ -82,9 +82,10 @@ namespace kathryn{
         return retStr;
     }
 
-    std::string AssignGenBase::assignmentLine(Slice desSlice, Operable* srcUpdateValue){
+    std::string AssignGenBase::assignmentLine(Slice desSlice, Operable* srcUpdateValue, bool isDelayedAsm){
         assert(srcUpdateValue != nullptr);
-        return getOpr(desSlice) + " <= " + getOprStrFromOpr(srcUpdateValue) + ";";
+        std::string asmOpr = isDelayedAsm ? " <= " : " = ";
+        return getOpr(desSlice) + asmOpr + getOprStrFromOpr(srcUpdateValue) + ";";
     }
 
     bool AssignGenBase::cmpAssignGenBase(AssignGenBase* asgb,

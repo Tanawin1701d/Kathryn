@@ -12,6 +12,7 @@ namespace kathryn{
 
     void GenController::initEnv(PARAM& param){
         _desVerilogPath = param[_desPathParamPrefix];
+        _desSynName     = param[_desSynthesisPrefix];
         _verilogWriter  = new FileWriterBase(_desVerilogPath);
         _masterModule   = getGlobalModulePtr();
     }
@@ -63,6 +64,15 @@ namespace kathryn{
         }
     }
 
+    void GenController::startSynthesis(){
+
+        assert(!_desSynName.empty());
+        _verilogWriter->flush();
+        std::string compileComand =
+            pathToVivadoLaunch + " " + _desSynName + " " + _desVerilogPath;
+        system(compileComand.c_str());
+    }
+
     void GenController::reset(){
         if (_verilogWriter != nullptr){
             _verilogWriter->flush();
@@ -73,6 +83,7 @@ namespace kathryn{
     }
 
     void GenController::clean(){
+
         reset();
     }
 

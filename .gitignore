@@ -13,10 +13,16 @@
 /KOut/genTest/output
 /KOut/genTest/program
 /KOut/genExample
-/KOut/riscv/gen/*
+/KOut/riscv/gen/*.v
+/KOut/riscv/gen/obj_dir
+
 
 #### model compile
 modelCompile/cmake-build-debug
 modelCompile/.idea
 modelCompile/build/*
 modelCompile/generated/*
+
+#### synthesisRunner
+synthesisRunner/generatedTcl/*
+synthesisRunner/project/*

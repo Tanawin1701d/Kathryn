@@ -25,7 +25,7 @@ namespace kathryn{
 
         std::string assignOpBase(bool isClockSen);
 
-        virtual std::string assignmentLine(Slice desSlice, Operable* srcUpdateValue);
+        virtual std::string assignmentLine(Slice desSlice, Operable* srcUpdateValue, bool isDelayedAsm);
 
         void addDirectUpdateEvent(UpdateEvent* updateEvent) override{
             assert(updateEvent != nullptr);

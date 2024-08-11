@@ -74,8 +74,10 @@ namespace kathryn{
 
     std::string MemEleholderGen::assignmentLine(
         Slice desSlice,
-        Operable* srcUpdateValue
+        Operable* srcUpdateValue,
+        bool isDelayedAsm
     ){
+        assert(isDelayedAsm);
         /////////// it only used in write
         assert(desSlice == _master->getOperableSlice());
         assert(srcUpdateValue != nullptr);

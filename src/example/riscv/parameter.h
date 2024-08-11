@@ -12,7 +12,7 @@ namespace kathryn{
 
         constexpr int   XLEN                     = 32;
         constexpr int   MEM_ADDR_IDX             = 32;
-        constexpr int   MEM_ADDR_IDX_ACTUAL      = 28; /////256 megabyte
+        constexpr int   MEM_ADDR_IDX_ACTUAL      = 10;/////= 10; /////256 megabyte it should be 28
         constexpr int   REG_IDX                  =  5;
         constexpr int   UOP_WIDTH                =  7;
         constexpr int   AMT_REG                  = 32;

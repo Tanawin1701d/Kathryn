@@ -17,6 +17,12 @@ namespace kathryn{
         public:
 
             void flow(OPR_HW& desReg, MemBlock& regFile, BYPASS_DATA& bypassData){
+
+                desReg.idx  .asOutputGlob("writeIdx");
+                desReg.data .asOutputGlob("writeData");
+                desReg.valid.asOutputGlob("valid");
+
+
                 pipBlk{
                     par {
                         zif((desReg.valid) && (desReg.idx != 0)) {

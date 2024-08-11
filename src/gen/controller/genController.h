@@ -18,8 +18,13 @@ namespace kathryn{
     struct ModuleChecker;
     class GenController: public MainControlable{
     protected:
+        const std::string pathToSynthesisRunner = "../synthesisRunner";
+        const std::string pathToVivadoLaunch    = pathToSynthesisRunner + "/launchVivado.sh";
+
         const std::string _desPathParamPrefix = "genPath";
+        const std::string _desSynthesisPrefix = "synName";
         std::string       _desVerilogPath;
+        std::string       _desSynName;
         FileWriterBase*   _verilogWriter   = nullptr;
         Module*           _masterModule    = nullptr;
         ModuleGen*        _masterModuleGen = nullptr;
@@ -50,6 +55,11 @@ namespace kathryn{
         ////// according to generation structure
 
         void generateEveryModule();
+
+
+        /////// this is optional /////////////
+        void startSynthesis();
+        /////////////////////////////////////
 
         void reset() override;
 
