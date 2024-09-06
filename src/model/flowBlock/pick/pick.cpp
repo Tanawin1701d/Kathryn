@@ -144,13 +144,17 @@ namespace kathryn{
         onDetachBlock();
     }
 
+    void FlowBlockPick::addMdLog(MdLogVal* mdLogVal){
+        assert(jointNode != nullptr);
+        assert(autoExitNode != nullptr);
+        assert(exitNode != nullptr);
 
-
-
-
-
-
-
+        mdLogVal->addVal("[" + FlowBlockBase::getMdIdentVal() + "]");
+        mdLogVal->addVal("jointNode    :" + jointNode   ->getMdIdentVal());
+        mdLogVal->addVal("autoExitNode :" + autoExitNode->getMdIdentVal());
+        mdLogVal->addVal("exitNode     :" + exitNode    ->getMdIdentVal());
+        addMdLogRecur(mdLogVal);
+    }
 
 
 

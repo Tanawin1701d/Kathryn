@@ -11,7 +11,7 @@
 namespace kathryn{
 
 
-    void ModelDebuggable::addMdLog(MdLogVal *mdLogVal) {
+    void ModelDebuggable::addMdLog(MdLogVal* mdLogVal) {
 
         assert(mdLogVal != nullptr);
         mdLogVal->addVal("This model log is not implemented.");

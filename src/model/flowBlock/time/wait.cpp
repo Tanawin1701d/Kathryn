@@ -85,7 +85,7 @@ namespace kathryn{
     }
 
     void FlowBlockCondWait::addMdLog(MdLogVal *mdLogVal) {
-        mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() + "]");
+        mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() + " ]");
         mdLogVal->addVal("exitVal cond is " + _exitCond->castToIdent()->getIdentDebugValue());
         mdLogVal->addVal("waitNode is " + _waitNode->getMdIdentVal()+ " " +_waitNode->getMdDescribe());
     }

@@ -80,10 +80,6 @@ namespace kathryn{
 
         /** iterable override*/
 
-        std::string getMdIdentVal() override{
-            return getIdentDebugValue();
-        }
-
         Operable* castToOpr(){
             return static_cast<Operable*>(this);
         }
@@ -137,6 +133,21 @@ namespace kathryn{
         Assignable* getAssignableFromAssignCallbacker() override{
             return this;
         }
+
+        /** debuggable   override*/
+
+        std::string getMdIdentVal() override{
+            return getIdentDebugValue();
+        }
+
+        void addMdLog(MdLogVal* mdLogVal) override{
+            assert(mdLogVal != nullptr);
+            mdLogVal->addVal("[LOGIC COMP] " +
+            getIdentDebugValue() + " is declared");
+        }
+
+
+
 
     };
 

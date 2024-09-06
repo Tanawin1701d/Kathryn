@@ -10,7 +10,10 @@
 
 namespace kathryn{
 
-
+    /**
+     * The base class of the model of the hardware to recursively debugable
+     *
+     * */
     class ModelDebuggable{
 
     public:
@@ -24,7 +27,7 @@ namespace kathryn{
 
     };
 
-
+    /////// the assertation to make sure that the system is running correctly
     void mfAssert(bool valid, std::string msg);
 
 

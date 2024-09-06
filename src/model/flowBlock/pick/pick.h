@@ -57,6 +57,9 @@ namespace kathryn{
 
         void setReqAutoExit(){reqAutoExit = true;}
 
+        /** debug*/
+        virtual void addMdLog(MdLogVal* mdLogVal) override;
+
     };
 
 }

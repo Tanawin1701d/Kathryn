@@ -42,6 +42,7 @@ void readFileToMem(Vtop* core, int testCaseIdx){
     uint32_t writeAddr = 0;
     uint32_t instr;
 
+    std::cout << "start writing file" << std::endl;
     while(asmFile.read(reinterpret_cast<char*>(&instr), sizeof instr)){
             assert((instr & 0b11) == 0b11); ////// check instruction
             core->top__DOT__MODULE7_riscCore__DOT__MEM_BLOCK26___05FmyMem_SYS[writeAddr]

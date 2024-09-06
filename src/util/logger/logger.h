@@ -32,8 +32,6 @@ namespace kathryn{
             subVal.push_back(sub);
             return sub;
         }
-
-
     };
 
     extern std::string outPath;
