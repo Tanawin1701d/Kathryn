@@ -15,7 +15,7 @@
 /KOut/genExample
 /KOut/riscv/gen/*.v
 /KOut/riscv/gen/obj_dir
-/KOut/riscv/.vscode
+/KOut/riscv/gen/.vscode
 
 
 #### model compile
