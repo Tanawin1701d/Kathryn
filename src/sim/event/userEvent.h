@@ -87,13 +87,7 @@ namespace kathryn{
 
      void operator << (std::function<void(UserEvent&)> simBehaviour);
 
-
  };
-
-
-
-
-
 
 }
 

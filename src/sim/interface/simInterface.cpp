@@ -149,7 +149,8 @@ namespace kathryn{
      ***/
 
     void SimInterface::setNextLimitAmtLRC(CYCLE amtCycle){
-        assert(amtCycle > 0);
+        smAssert(amtCycle > 0,
+        "invalid longRange cycle user Limit =" + std::to_string(amtCycle));
         _nextLimitAmtLRC = amtCycle;
     }
 
@@ -166,7 +167,7 @@ namespace kathryn{
             }
             default : {assert(false);}
         }
-        ///// TODO make the system exit  and
+
 
     }
 

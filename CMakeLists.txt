@@ -50,5 +50,7 @@ add_executable(Kathryn
         src/model/flowBlock/pick/pick.h
         src/model/flowBlock/pick/pickIf.cpp
         src/model/flowBlock/pick/pickIf.h
+        src/sim/debugger/simDebugger.cpp
+        src/sim/debugger/simDebugger.h
 
 )

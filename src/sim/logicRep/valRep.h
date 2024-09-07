@@ -13,6 +13,8 @@
 #include <limits>
 #include <iostream>
 
+#include "sim/debugger/simDebugger.h"
+
 namespace kathryn{
 
     typedef unsigned long long ull;
@@ -61,9 +63,12 @@ namespace kathryn{
                         *(static_cast<uint64_t*>(_val) + i) = (uint64_t)(0);
                     }
                 }else{
-                    assert(false);
+                    smAssert(false, "valRep detect unknown range of this value");
                 }
+            }else{
+                smAssert(false, "valRep detect unknown byte type of this value");
             }
+
         }
 
         void setLargeVar(std::vector<ull> x) const{
@@ -103,18 +108,21 @@ namespace kathryn{
             }
             if (_byteSize == 8){
                 if (_continLength >= 0){
-                    //// warning system should be declared here.
+                    smWarn(false, "this variable is larger than 8 byte integer");
                 }
                 return *static_cast<uint64_t*>(_val);
             }
-            assert(false);
+            smAssert(false, "invalid byteSize for get var");
 
 
         }
 
         std::vector<ull> getLargeVal()const{
-            assert(_continLength > 0);
-            assert(_byteSize == 8);
+
+            smAssert(_continLength > 0, "invalid range for large var");
+            smAssert(_byteSize == 8   , "invalid byteSize for large var");
+
+
             std::vector<ull> result;
             for (int idx = 0; idx < _continLength; idx++){
                 result.push_back(*(static_cast<uint64_t*>(_val) + idx));
@@ -146,416 +154,295 @@ namespace kathryn{
                     return {_byteSize, static_cast<uint64_t*>(_val) + (_continLength * idx)};
                 }
             }
-            assert(false);
+            smAssert(false, "invalid byte type while slicing");
+
         }
 
     };
 
 
-    struct UintX_Base{
-
-        virtual ull* getDataBase() = 0;
-
-    };
-
-
-    template<int arrSize>
-    struct UintX: UintX_Base{
-    public:
-        ull _data[arrSize] = {};
-
-        UintX(){}
-
-        UintX(ull x){
-            _data[0] = x;
-        }
-
-        UintX<arrSize> doIdxByIdx (const UintX<arrSize>& rhs, const std::function<ull(ull, ull)>& op) const{
-            UintX<arrSize> res;
-            for (int i = 0; i < arrSize; i++){
-                res._data[i] = op(_data[i],rhs._data[i]);
-            }
-            return res;
-        }
-
-        ull* getDataBase() override{
-            return _data;
-        }
-
-
-        bool getBiValue(){
-            for (ull x : _data){
-                if (x){
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        std::string toBiStr(){
-            std::string preRet;
-            for(int i = arrSize - 1; i >= 0; i--){
-                std::bitset<bitSizeOfUll> binaryRepresentation(_data[i]);
-                preRet += binaryRepresentation.to_string();
-            }
-            return preRet;
-        }
-
-        UintX<arrSize> operator & (const UintX<arrSize>& rhs) const{
-            return doIdxByIdx(rhs, [&](ull a, ull b){return a & b;});
-        }
-        UintX<arrSize> operator | (const UintX<arrSize>& rhs) const{
-            return doIdxByIdx(rhs, [&](ull a, ull b){return a | b;});
-        }
-        UintX<arrSize> operator ^ (const UintX<arrSize>& rhs) const{
-            return doIdxByIdx(rhs, [&](ull a, ull b){return a ^ b;});
-        }
-        UintX<arrSize> operator ~ () const{
-            UintX<arrSize> res;
-            for (int i = 0; i < arrSize; i++){
-                res._data[i] = ~_data[i];
-            }
-            return res;
-        }
-
-        template<int T>
-        UintX<arrSize> operator << (UintX<T> amt){
-            return operator << (amt._data[0]);
-        }
-
-        UintX<arrSize> operator << (int amt){
-
-            int fullShift    = amt / bitSizeOfUll;
-            int partialShift = amt % bitSizeOfUll;
-            UintX<arrSize> result;
-
-            for (int i = 0; i < arrSize; i++){
-                ull lowerPlate = _data[i] << partialShift;
-
-                ull higherPlate = (partialShift == 0) ? 0ULL
-                                                      : _data[i] >> (bitSizeOfUll-partialShift);
-
-                int desLowerPlateIdx  = i + fullShift;
-                int desHigherPlateIdx = desLowerPlateIdx + 1;
-
-                if (desLowerPlateIdx < arrSize){
-                    result._data[desLowerPlateIdx] |= lowerPlate;
-                }
-                if (desHigherPlateIdx < arrSize){
-                    result._data[desHigherPlateIdx] |= higherPlate;
-                }
-            }
-            return result;
-
-        }
-
-        template<int T>
-        UintX<arrSize> operator >> (UintX<T> amt){
-            return operator >> (amt._data[0]);
-        }
-
-        UintX<arrSize> operator >> (int amt){
-
-            int fullShift = amt / bitSizeOfUll;
-            int partialShift = amt % bitSizeOfUll;
-            UintX<arrSize> result;
-
-            for (int i = 0; i < arrSize; i++){
-                ull lowerPlate = (partialShift == 0) ? 0ULL
-                                                     : (_data[i] << (bitSizeOfUll-partialShift));
-
-                ull higherPlate = _data[i] >> partialShift;
-
-                int desLowerPlateIdx  = i - fullShift - 1;
-                int desHigherPlateIdx = desLowerPlateIdx + 1;
-
-                if ((desLowerPlateIdx < arrSize) && (desLowerPlateIdx >= 0)){
-                    result._data[desLowerPlateIdx] |= lowerPlate;
-                }
-                if ((desHigherPlateIdx < arrSize) && (desHigherPlateIdx >= 0)){
-                    result._data[desHigherPlateIdx] |= higherPlate;
-                }
-            }
-            return result;
-
-        }
-
-        uint8_t operator && (const UintX<arrSize>& rhs){
-            return getBiValue() && rhs.getBiValue();
-        }
-        uint8_t operator || (const UintX<arrSize>& rhs){
-            return getBiValue() || rhs.getBiValue();
-        }
-        uint8_t operator ! (){
-            return !getBiValue();
-        }
-
-        uint8_t operator == (const UintX<arrSize>& rhs) const{
-
-            for (int i = 0; i < arrSize; i++){
-                if (_data[i] != rhs._data[i]){
-                    return 0;
-                }
-            }
-            return 1;
-        }
-
-        uint8_t operator != (const UintX<arrSize>& rhs) const{
-            for (int i = 0; i < arrSize; i++){
-                if (_data[i] != rhs._data[i]){
-                    return 1;
-                }
-            }
-            return 0;
-        }
-
-        uint8_t operator < (const UintX<arrSize>& rhs) const{
-            for (int i = 0; i < arrSize; i++){
-                if (_data[i] < rhs._data[i]){
-                    return 1;
-                }
-                if (_data[i] > rhs._data[i]){
-                    return 0;
-                }
-            }
-            return 0;
-        }
-
-        uint8_t operator <= (const UintX<arrSize>& rhs) const{
-            for (int i = 0; i < arrSize; i++){
-                if (_data[i] < rhs._data[i]){
-                    return 1;
-                }
-                if (_data[i] > rhs._data[i]){
-                    return 0;
-                }
-            }
-            return 1;
-        }
-
-        uint8_t operator > (const UintX<arrSize>& rhs) const{
-            for (int i = 0; i < arrSize; i++){
-                if (_data[i] > rhs._data[i]){
-                    return 1;
-                }
-                if (_data[i] < rhs._data[i]){
-                    return 0;
-                }
-            }
-            return 0;
-        }
-
-        uint8_t operator >= (const UintX<arrSize>& rhs) const{
-            for (int i = 0; i < arrSize; i++){
-                if (_data[i] > rhs._data[i]){
-                    return 1;
-                }
-                if (_data[i] < rhs._data[i]){
-                    return 0;
-                }
-            }
-            return 1;
-        }
-
-        UintX<arrSize> operator + (const UintX<arrSize>& rhs) const{
-            UintX<arrSize> result;
-            bool overflow = false;
-            for (int i = 0; i < arrSize; i++){
-                result._data[i] = _data[i] + rhs._data[i] + overflow;
-                overflow = false;
-                if ((result._data[i] < _data[i]) || (result._data[i] < rhs._data[i])){
-                    overflow = true;
-                }
-            }
-            return result;
-        }
-
-        UintX<arrSize> operator - (const UintX<arrSize>& rhs) const{
-            assert(false);
-        }
-
-        UintX<arrSize> operator * (const UintX<arrSize>& rhs) const{
-            assert(false);
-        }
-
-        UintX<arrSize> operator / (const UintX<arrSize>& rhs) const{
-            assert(false);
-        }
-
-        UintX<arrSize> operator % (const UintX<arrSize>& rhs) const{
-            assert(false);
-        }
-
-        UintX<arrSize>& operator = (const ull& eq) const{
-            _data[0] = eq;
-            return *this;
-        }
-        ////////                       96
-        UintX<arrSize> buildMask(int size, int start){
-            int startIdx = size / bitSizeOfUll;
-            int partialIdx = size % bitSizeOfUll;
-
-            UintX result = *this;
-
-            ull startCleaner = (1ULL << partialIdx) - 1;
-            if (startIdx < arrSize){
-                result._data[startIdx] = startCleaner;
-            }
-            for (int idx = startIdx - 1; idx >= 0; idx--){
-                result._data[idx] = UINT64_MAX;
-            }
-            return result << start;
-        }
-
-        explicit operator uint8_t() const{
-            return _data[0];
-        }
-
-        explicit operator uint16_t() const{
-            return _data[0];
-        }
-
-        explicit operator uint32_t() const{
-            return _data[0];
-        }
-
-        explicit operator uint64_t() const{
-            return _data[0];
-        }
-
-        explicit operator bool() const{
-            return _data[0];
-        }
-
-        template<int sz>
-        explicit operator UintX<sz>() const{
-            UintX<sz> result;
-            for (int i = 0; i < std::min(sz, arrSize); i++){
-                result._data[i] = _data[i];
-            }
-        }
-
-    };
-
-
-    // int ma(){
-    //     ValR<uint8_t> x;
-    //     auto y = (x << 3ULL).fixSize(8);
-    // }
-
-
+    // struct UintX_Base{
     //
-    // template<int _len>
-    // class ValRep: public ValRepBase{
-    // private:
-    //     static const ull MASK_USED = (_len == bitSizeOfUll) ? MAX_VALREP_RAW : ( (((ull)1) << _len) -1 );
+    //     virtual ull* getDataBase() = 0;
     //
+    // };
+    //
+    //
+    // template<int arrSize>
+    // struct UintX: UintX_Base{
     // public:
-    //     ValRep(): ValRepBase(_len, 0){};
-    //     ValRep(const ull value): ValRepBase(_len, value){}
+    //     ull _data[arrSize] = {};
     //
-    //     template<int sl_start, int sl_stop>
-    //     inline ull buildMask() const{
-    //         int size = sl_stop - sl_start;
-    //         ull mask = (size == bitSizeOfUll) ? -1 : ((((ull)1) << size) - 1);
-    //         return mask;
+    //     UintX(){}
+    //
+    //     UintX(ull x){
+    //         _data[0] = x;
     //     }
     //
-    //     template<int sl_start, int sl_stop, int src_start>
-    //     inline  ValRep<sl_stop - sl_start> sliceAndShift() const {
-    //         assert((sl_start>=0) && (sl_start < sl_stop) && (sl_stop <= bitSizeOfUll));
-    //         assert(src_start < bitSizeOfUll);
-    //         ull mask = buildMask<sl_start, sl_stop>();
-    //             mask = mask << sl_start;
-    //             mask &= _val;
-    //         if (sl_start <= src_start){
-    //             mask = mask << (src_start - sl_start);
-    //         }else{
-    //             mask = mask >>  (sl_start - src_start);
+    //     UintX<arrSize> doIdxByIdx (const UintX<arrSize>& rhs, const std::function<ull(ull, ull)>& op) const{
+    //         UintX<arrSize> res;
+    //         for (int i = 0; i < arrSize; i++){
+    //             res._data[i] = op(_data[i],rhs._data[i]);
     //         }
-    //         return ValRep<sl_stop - sl_start>(mask);
+    //         return res;
     //     }
     //
-    //     template<int sl_start, int sl_stop>
-    //     void updateOnSlice(const ValRep<sl_stop - sl_start>& rhs){
-    //         ull mask = buildMask<sl_start, sl_stop>();
-    //         mask = mask << sl_start;
-    //         _val = _val & (~mask); ///////////// to clear old value
-    //         _val = _val | rhs._val;
-    //     }
-    //
-    //     template<int sl_start, int sl_stop>
-    //     void updateOnSlice(const ull rhs){
-    //         ull mask = buildMask<sl_start, sl_stop>();
-    //         mask = mask << sl_start;
-    //         _val = _val & (~mask); ///////////// to clear old value
-    //         _val = _val | rhs;
+    //     ull* getDataBase() override{
+    //         return _data;
     //     }
     //
     //
-    //
-    //     template<int sl_start, int sl_stop, int fixSize>
-    //     inline  ValRep<fixSize> slice() const {
-    //         assert(fixSize >= (sl_stop - sl_start));
-    //         assert((sl_start>=0) && (sl_start < sl_stop) && (sl_stop <= bitSizeOfUll));
-    //         ull mask = buildMask<sl_start, sl_stop>();
-    //         return ValRep<fixSize>(mask & (_val >> sl_start));
-    //     }
-    //
-    //     template<int sl_start, int sl_stop>
-    //     inline  ValRep<sl_stop - sl_start> slice() const {
-    //         return slice<sl_start, sl_stop, sl_stop - sl_start>();
-    //     }
-    //
-    //     bool getLogicValue(){
-    //         return _val > 0;
-    //     }
-    //
-    //     template<int desSize>
-    //     inline ValRep<desSize> extend() const{
-    //         ull desVal = 0;
-    //         if (_val & 1){
-    //             desVal = (desSize == bitSizeOfUll) ? -1 : ((1 << desSize)-1);
+    //     bool getBiValue(){
+    //         for (ull x : _data){
+    //             if (x){
+    //                 return true;
+    //             }
     //         }
-    //         return ValRep<desSize>(desVal);
+    //         return false;
     //     }
     //
+    //     std::string toBiStr(){
+    //         std::string preRet;
+    //         for(int i = arrSize - 1; i >= 0; i--){
+    //             std::bitset<bitSizeOfUll> binaryRepresentation(_data[i]);
+    //             preRet += binaryRepresentation.to_string();
+    //         }
+    //         return preRet;
+    //     }
     //
-    //     inline ValRep& operator = (const ull value){ _val = value; return *this;}
-    //     inline ValRep& operator = (const ValRep<_len>& value){_val = value._val; return *this;}
+    //     UintX<arrSize> operator & (const UintX<arrSize>& rhs) const{
+    //         return doIdxByIdx(rhs, [&](ull a, ull b){return a & b;});
+    //     }
+    //     UintX<arrSize> operator | (const UintX<arrSize>& rhs) const{
+    //         return doIdxByIdx(rhs, [&](ull a, ull b){return a | b;});
+    //     }
+    //     UintX<arrSize> operator ^ (const UintX<arrSize>& rhs) const{
+    //         return doIdxByIdx(rhs, [&](ull a, ull b){return a ^ b;});
+    //     }
+    //     UintX<arrSize> operator ~ () const{
+    //         UintX<arrSize> res;
+    //         for (int i = 0; i < arrSize; i++){
+    //             res._data[i] = ~_data[i];
+    //         }
+    //         return res;
+    //     }
     //
-    //     //////// required equal bit operator
-    //     inline ValRep<_len> operator &  (const ValRep<_len>& rhs) const { return ValRep<_len>(_val  & rhs._val);}
-    //     inline ValRep<_len> operator |  (const ValRep<_len>& rhs) const { return ValRep<_len>(_val  | rhs._val);}
-    //     inline ValRep<_len> operator ^  (const ValRep<_len>& rhs) const { return ValRep<_len>(_val  ^ rhs._val);}
-    //     inline ValRep<1>    operator == (const ValRep<_len>& rhs) const { return ValRep<1>(_val == rhs._val);}
-    //     inline ValRep<1>    operator != (const ValRep<_len>& rhs) const { return ValRep<1>(_val != rhs._val);}
-    //     //////// only one operand
-    //     inline ValRep<_len> operator ~ () const { return ValRep<_len>((~_val) & MASK_USED);}
+    //     template<int T>
+    //     UintX<arrSize> operator << (UintX<T> amt){
+    //         return operator << (amt._data[0]);
+    //     }
     //
-    //     //////// not required equal bit operator
-    //     ////////////// but need zero extend
-    //     inline ValRep<1> operator && (const ValRep<_len>& rhs) const{return ValRep<1>(_val && rhs._val);}
-    //     inline ValRep<1> operator || (const ValRep<_len>& rhs) const{return ValRep<1>(_val || rhs._val);}
-    //     inline ValRep<1> operator !  ()                        const{return ValRep<1>(!_val);           }
-    //     inline ValRep<1> operator <  (const ValRep<_len>& rhs) const{return ValRep<1>(_val < rhs._val); }
-    //     inline ValRep<1> operator <= (const ValRep<_len>& rhs) const{return ValRep<1>(_val <= rhs._val);}
-    //     inline ValRep<1> operator >  (const ValRep<_len>& rhs) const{return ValRep<1>(_val > rhs._val); }
-    //     inline ValRep<1> operator >= (const ValRep<_len>& rhs) const{return ValRep<1>(_val >= rhs._val);}
+    //     UintX<arrSize> operator << (int amt){
     //
-    //     ///// not required equal bit operator
-    //     inline ValRep<_len> operator +  (const ValRep<_len>& rhs) const{return ValRep<_len>((_val + rhs._val) & MASK_USED);}
-    //     inline ValRep<_len> operator -  (const ValRep<_len>& rhs) const{return ValRep<_len>(((*this) + ~(rhs) + ValRep<_len>(1))._val & MASK_USED);}
-    //     inline ValRep<_len> operator *  (const ValRep<_len>&    ) const{assert(false);}
-    //     inline ValRep<_len> operator /  (const ValRep<_len>&    ) const{assert(false);}
-    //     inline ValRep<_len> operator %  (const ValRep<_len>&    ) const{assert(false);}
+    //         int fullShift    = amt / bitSizeOfUll;
+    //         int partialShift = amt % bitSizeOfUll;
+    //         UintX<arrSize> result;
     //
-    //     inline ValRep<_len> operator << (const ValRep<_len>& rhs) const{return ValRep<_len>((_val << rhs._val)& MASK_USED);}
-    //     inline ValRep<_len> operator >> (const ValRep<_len>& rhs) const{return ValRep<_len>((_val >> rhs._val)& MASK_USED);}
+    //         for (int i = 0; i < arrSize; i++){
+    //             ull lowerPlate = _data[i] << partialShift;
     //
+    //             ull higherPlate = (partialShift == 0) ? 0ULL
+    //                                                   : _data[i] >> (bitSizeOfUll-partialShift);
     //
+    //             int desLowerPlateIdx  = i + fullShift;
+    //             int desHigherPlateIdx = desLowerPlateIdx + 1;
     //
-    //     inline explicit operator bool() const {return _val;}
+    //             if (desLowerPlateIdx < arrSize){
+    //                 result._data[desLowerPlateIdx] |= lowerPlate;
+    //             }
+    //             if (desHigherPlateIdx < arrSize){
+    //                 result._data[desHigherPlateIdx] |= higherPlate;
+    //             }
+    //         }
+    //         return result;
+    //
+    //     }
+    //
+    //     template<int T>
+    //     UintX<arrSize> operator >> (UintX<T> amt){
+    //         return operator >> (amt._data[0]);
+    //     }
+    //
+    //     UintX<arrSize> operator >> (int amt){
+    //
+    //         int fullShift = amt / bitSizeOfUll;
+    //         int partialShift = amt % bitSizeOfUll;
+    //         UintX<arrSize> result;
+    //
+    //         for (int i = 0; i < arrSize; i++){
+    //             ull lowerPlate = (partialShift == 0) ? 0ULL
+    //                                                  : (_data[i] << (bitSizeOfUll-partialShift));
+    //
+    //             ull higherPlate = _data[i] >> partialShift;
+    //
+    //             int desLowerPlateIdx  = i - fullShift - 1;
+    //             int desHigherPlateIdx = desLowerPlateIdx + 1;
+    //
+    //             if ((desLowerPlateIdx < arrSize) && (desLowerPlateIdx >= 0)){
+    //                 result._data[desLowerPlateIdx] |= lowerPlate;
+    //             }
+    //             if ((desHigherPlateIdx < arrSize) && (desHigherPlateIdx >= 0)){
+    //                 result._data[desHigherPlateIdx] |= higherPlate;
+    //             }
+    //         }
+    //         return result;
+    //
+    //     }
+    //
+    //     uint8_t operator && (const UintX<arrSize>& rhs){
+    //         return getBiValue() && rhs.getBiValue();
+    //     }
+    //     uint8_t operator || (const UintX<arrSize>& rhs){
+    //         return getBiValue() || rhs.getBiValue();
+    //     }
+    //     uint8_t operator ! (){
+    //         return !getBiValue();
+    //     }
+    //
+    //     uint8_t operator == (const UintX<arrSize>& rhs) const{
+    //
+    //         for (int i = 0; i < arrSize; i++){
+    //             if (_data[i] != rhs._data[i]){
+    //                 return 0;
+    //             }
+    //         }
+    //         return 1;
+    //     }
+    //
+    //     uint8_t operator != (const UintX<arrSize>& rhs) const{
+    //         for (int i = 0; i < arrSize; i++){
+    //             if (_data[i] != rhs._data[i]){
+    //                 return 1;
+    //             }
+    //         }
+    //         return 0;
+    //     }
+    //
+    //     uint8_t operator < (const UintX<arrSize>& rhs) const{
+    //         for (int i = 0; i < arrSize; i++){
+    //             if (_data[i] < rhs._data[i]){
+    //                 return 1;
+    //             }
+    //             if (_data[i] > rhs._data[i]){
+    //                 return 0;
+    //             }
+    //         }
+    //         return 0;
+    //     }
+    //
+    //     uint8_t operator <= (const UintX<arrSize>& rhs) const{
+    //         for (int i = 0; i < arrSize; i++){
+    //             if (_data[i] < rhs._data[i]){
+    //                 return 1;
+    //             }
+    //             if (_data[i] > rhs._data[i]){
+    //                 return 0;
+    //             }
+    //         }
+    //         return 1;
+    //     }
+    //
+    //     uint8_t operator > (const UintX<arrSize>& rhs) const{
+    //         for (int i = 0; i < arrSize; i++){
+    //             if (_data[i] > rhs._data[i]){
+    //                 return 1;
+    //             }
+    //             if (_data[i] < rhs._data[i]){
+    //                 return 0;
+    //             }
+    //         }
+    //         return 0;
+    //     }
+    //
+    //     uint8_t operator >= (const UintX<arrSize>& rhs) const{
+    //         for (int i = 0; i < arrSize; i++){
+    //             if (_data[i] > rhs._data[i]){
+    //                 return 1;
+    //             }
+    //             if (_data[i] < rhs._data[i]){
+    //                 return 0;
+    //             }
+    //         }
+    //         return 1;
+    //     }
+    //
+    //     UintX<arrSize> operator + (const UintX<arrSize>& rhs) const{
+    //         UintX<arrSize> result;
+    //         bool overflow = false;
+    //         for (int i = 0; i < arrSize; i++){
+    //             result._data[i] = _data[i] + rhs._data[i] + overflow;
+    //             overflow = false;
+    //             if ((result._data[i] < _data[i]) || (result._data[i] < rhs._data[i])){
+    //                 overflow = true;
+    //             }
+    //         }
+    //         return result;
+    //     }
+    //
+    //     UintX<arrSize> operator - (const UintX<arrSize>& rhs) const{
+    //         assert(false);
+    //     }
+    //
+    //     UintX<arrSize> operator * (const UintX<arrSize>& rhs) const{
+    //         assert(false);
+    //     }
+    //
+    //     UintX<arrSize> operator / (const UintX<arrSize>& rhs) const{
+    //         assert(false);
+    //     }
+    //
+    //     UintX<arrSize> operator % (const UintX<arrSize>& rhs) const{
+    //         assert(false);
+    //     }
+    //
+    //     UintX<arrSize>& operator = (const ull& eq) const{
+    //         _data[0] = eq;
+    //         return *this;
+    //     }
+    //     ////////                       96
+    //     UintX<arrSize> buildMask(int size, int start){
+    //         int startIdx = size / bitSizeOfUll;
+    //         int partialIdx = size % bitSizeOfUll;
+    //
+    //         UintX result = *this;
+    //
+    //         ull startCleaner = (1ULL << partialIdx) - 1;
+    //         if (startIdx < arrSize){
+    //             result._data[startIdx] = startCleaner;
+    //         }
+    //         for (int idx = startIdx - 1; idx >= 0; idx--){
+    //             result._data[idx] = UINT64_MAX;
+    //         }
+    //         return result << start;
+    //     }
+    //
+    //     explicit operator uint8_t() const{
+    //         return _data[0];
+    //     }
+    //
+    //     explicit operator uint16_t() const{
+    //         return _data[0];
+    //     }
+    //
+    //     explicit operator uint32_t() const{
+    //         return _data[0];
+    //     }
+    //
+    //     explicit operator uint64_t() const{
+    //         return _data[0];
+    //     }
+    //
+    //     explicit operator bool() const{
+    //         return _data[0];
+    //     }
+    //
+    //     template<int sz>
+    //     explicit operator UintX<sz>() const{
+    //         UintX<sz> result;
+    //         for (int i = 0; i < std::min(sz, arrSize); i++){
+    //             result._data[i] = _data[i];
+    //         }
+    //     }
     //
     // };
 

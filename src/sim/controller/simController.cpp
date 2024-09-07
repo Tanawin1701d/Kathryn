@@ -21,7 +21,8 @@ namespace kathryn{
 
             EventBase* nextEvent = eventQ.getNextEvent();
             /**we are sure that nextEvent is valid due to while loop at the top*/
-            assert(_curCycle != nextEvent->getCurCycle()); //// check therer is no same cycle used
+            smAssert(_curCycle < nextEvent->getCurCycle(),
+            "simCtrl dectects backward or equal cycle"); //// check therer is no same cycle used
             ////std::cout << "curCycle is " << _curCycle << std::endl;
             _curCycle = nextEvent->getCurCycle();
             std::vector<EventBase*> _curCycleEvents;
@@ -62,17 +63,23 @@ namespace kathryn{
                     ///////////// intepret the cycle to run
                     lrc++;
                     CYCLE amtLimitByQueue  = nextEventOccurAt - curEvent->getCurCycle();
-                    assert(amtLimitByQueue > 0 && amtUserLimit > 0);
+                    smAssert(amtLimitByQueue > 0 && amtUserLimit > 0,
+                        "longRangeSim cycle invalid :amtLimitByQueue " + std::to_string(amtLimitByQueue) +
+                        " , amtUserLimit" + std::to_string(amtUserLimit)
+                    );
                     curEvent->setLongRangeSim(std::min(amtUserLimit, amtLimitByQueue));
                     ///////////// start running
                     curEvent->simStartLongRunCycle();
+                    ///////////// call back check
                     for (int callBackIdx = 0; callBackIdx < curEvent->getCallBackAmt(); callBackIdx++){
                         int callBackNo = curEvent->getCallBackNo(callBackIdx);
-                        assert(callBackNo < _mdTraceMap->size());
+                        smAssert(callBackNo < _mdTraceMap->size(),
+                            "invalid call back number got " + std::to_string(callBackNo) +
+                                " there are only " + std::to_string(_mdTraceMap->size()));
                         (*_mdTraceMap)[callBackNo].execCallBack();
                     }
                 }
-                assert(lrc <= 1); ///// we must have only or non for long rage sim
+                assert(lrc <= 1, "there should have no more than one lrc"); ///// we must have only or non for long rage sim
             }
             for (auto curEvent: _curCycleEvents){
                 EventBase* afterEvent = curEvent->genNextEvent();
@@ -125,13 +132,6 @@ namespace kathryn{
         reset();
     }
 
-    CYCLE SimController::getCurCycle(){
-        lock();
-        CYCLE cpyCycle = _curCycle;
-        unlock();
-        return cpyCycle;
-    }
-
     void SimController::setTriggerMap(std::vector<TraceEvent>* mdTraceMap){
         lock();
         assert(mdTraceMap != nullptr);
@@ -151,6 +151,25 @@ namespace kathryn{
         stopMark = true;
         unlock();
     }
+
+    CYCLE SimController::getCurCycle(){
+        lock();
+        CYCLE cpyCycle = _curCycle;
+        unlock();
+        return cpyCycle;
+    }
+
+    ull SimController::getAmtCycle(){
+        lock();
+        ull curSize = eventQ.getSize();
+        unlock();
+        return curSize;
+    }
+
+    ull SimController::getAmtCycle_force(){
+        return eventQ.getSize();
+    }
+
 
     void SimController::lock(){
         _rsMtx.lock();

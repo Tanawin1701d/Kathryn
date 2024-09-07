@@ -8,6 +8,7 @@
 #include<iostream>
 #include<mutex>
 
+#include "sim/debugger/simDebugger.h"
 #include "sim/event/eventBase.h"
 #include "sim/event/eventQ.h"
 #include "abstract/mainControlable.h"
@@ -43,6 +44,8 @@ namespace kathryn{
         void  setLrLimUser(CYCLE* amtLrLimUser);
         void  stopSim();
         CYCLE getCurCycle();
+        ull   getAmtCycle();
+        ull   getAmtCycle_force();
         void  lock();
         void  unlock();
 
