@@ -1,13 +1,13 @@
 /.idea/
 /cmake-build-debug/
 
-/KOut/MD.txt
-/KOut/MF.txt
 ##### ignore all output
 /KOut/**/*.vcd
 /KOut/**/*.prof
 /KOut/**/*.sl
 /KOut/**/*.dumpVar
+
+###### generate system
 ###### model output and program is system generated
 /KOut/genTest/model
 /KOut/genTest/output
@@ -21,9 +21,5 @@
 #### model compile
 modelCompile/cmake-build-debug
 modelCompile/.idea
-modelCompile/build/*
-modelCompile/generated/*
 
 #### synthesisRunner
-synthesisRunner/generatedTcl/*
-synthesisRunner/project/*
