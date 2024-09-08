@@ -4,11 +4,10 @@
 
 #include "simDebugger.h"
 
-#include <sim/controller/simController.h>
-#include <util/termColor/termColor.h>
+#include "sim/controller/simController.h"
+#include "util/termColor/termColor.h"
 
 namespace kathryn{
-
 
     void smAssert(bool valid, const std::string& msg){
 
@@ -27,7 +26,7 @@ namespace kathryn{
                   << std::endl;
         ///// -----------------------------------------------------------
 
-        assert(false);
+        throw std::runtime_error(msg);
     }
 
 

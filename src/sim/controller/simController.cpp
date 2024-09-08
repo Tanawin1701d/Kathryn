@@ -79,7 +79,7 @@ namespace kathryn{
                         (*_mdTraceMap)[callBackNo].execCallBack();
                     }
                 }
-                assert(lrc <= 1, "there should have no more than one lrc"); ///// we must have only or non for long rage sim
+                smAssert(lrc <= 1, "there should have no more than one lrc"); ///// we must have only or non for long rage sim
             }
             for (auto curEvent: _curCycleEvents){
                 EventBase* afterEvent = curEvent->genNextEvent();

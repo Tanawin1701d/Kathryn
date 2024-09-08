@@ -70,7 +70,8 @@ namespace kathryn{
         _verilogWriter->flush();
         std::string compileComand =
             pathToVivadoLaunch + " " + _desSynName + " " + _desVerilogPath;
-        system(compileComand.c_str());
+        int synResult = system(compileComand.c_str());
+        std::cout << "synResult is :" << synResult << std::endl;
     }
 
     void GenController::reset(){

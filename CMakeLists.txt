@@ -44,13 +44,4 @@ add_executable(Kathryn
         ${SRC_PARAM}
         ${SRC_LIB}
         ${SRC_MODEL_COMPILE}
-        src/example/riscv/generation/RISCV_gen.cpp
-        src/example/riscv/generation/RISCV_gen.h
-        src/model/flowBlock/pick/pick.cpp
-        src/model/flowBlock/pick/pick.h
-        src/model/flowBlock/pick/pickIf.cpp
-        src/model/flowBlock/pick/pickIf.h
-        src/sim/debugger/simDebugger.cpp
-        src/sim/debugger/simDebugger.h
-
 )
