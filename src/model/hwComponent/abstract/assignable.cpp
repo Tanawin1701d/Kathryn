@@ -18,6 +18,51 @@ namespace kathryn{
         return assUserAutoVal;
     }
 
+
+    std::vector<std::vector<UpdateEvent*>>
+    grpEventByPriorityValueAndPriority(std::vector<UpdateEvent*>& updateEvents){
+
+        /**init variable*/
+        std::vector<std::vector<UpdateEvent*>> ret;
+        int idx = 0;
+
+        /**iterate all element*/
+        while (idx < updateEvents.size()){
+            /** do initialize*/
+            std::vector<UpdateEvent*> eventGroup;
+            UpdateEvent* masterEvent = updateEvents[idx];
+            assert(masterEvent != nullptr);
+            eventGroup.push_back(updateEvents[idx]);
+            /** getSlave event */
+            for (idx = idx + 1; idx < updateEvents.size(); idx++){
+                UpdateEvent* slaveEvent = updateEvents[idx];
+                assert(slaveEvent != nullptr);
+                if (masterEvent->priority == slaveEvent->priority){
+                    if (masterEvent->srcUpdateValue->isConstOpr() &&
+                        slaveEvent ->srcUpdateValue->isConstOpr() &&
+                        (masterEvent->srcUpdateValue->getConstOpr() ==
+                         slaveEvent ->srcUpdateValue->getConstOpr())
+                    ){
+                        eventGroup.push_back(slaveEvent);
+                        continue;
+                    }
+                    if (masterEvent->srcUpdateValue == slaveEvent->srcUpdateValue){
+                        eventGroup.push_back(slaveEvent);
+                        continue;
+                    }
+                }
+                ///////////// mismatch occur
+                break;
+            }
+            assert(!eventGroup.empty());
+            ret.push_back(eventGroup);
+        }
+        return ret;
+    }
+
+
+    //////////
+
     void Assignable::doGlobalAsm(
             Operable& srcOpr,
             std::vector<AssignMeta*>& resultMetaCollector,
@@ -68,6 +113,9 @@ namespace kathryn{
         }
         return true;
     }
+
+
+
 
 
 

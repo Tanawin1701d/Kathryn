@@ -20,6 +20,9 @@ namespace kathryn{
 
     protected:
 
+        bool isConstant = false;
+        ull  constVal = -1; ////
+
         WIRE_AUTO_GEN_TYPE _wireIoType;
 
     public:
@@ -61,6 +64,19 @@ namespace kathryn{
         WIRE_AUTO_GEN_TYPE getWireIoType()const{return _wireIoType;}
 
         void createLogicGen() override;
+
+        void setConstant(ull value){
+            isConstant = true;
+            constVal   = value;
+        }
+
+        bool isConstOpr() override{
+            return isConstant;
+        }
+
+        ull getConstOpr() override{
+            return constVal;
+        }
     };
 
 }

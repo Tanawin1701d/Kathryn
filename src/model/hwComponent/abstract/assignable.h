@@ -17,7 +17,8 @@ namespace kathryn{
 
 
 
-    /** This is used to describe what and where to update that send to controller and let flow block determine*/
+    /** This is used to describe what and where to update
+     * that send to controller and let flow block determine*/
     enum ASM_TYPE{
         ASM_DIRECT = 0,
         ASM_EQ_DEPNODE = 1
@@ -39,6 +40,14 @@ namespace kathryn{
     * */
     /** to make value when constant input is used*/
     Operable& getMatchAssignOperable(ull value, int size);
+
+    /** to group updateEvent by priority and the value
+     * the order of input vector must be sort by priority first
+     */
+    std::vector<std::vector<UpdateEvent*>>
+    grpEventByPriorityValueAndPriority(
+        std::vector<UpdateEvent*>& updateEvents
+    );
 
     struct AsmNode;
     class Assignable{
@@ -114,8 +123,6 @@ namespace kathryn{
         }
 
         bool checkDesIsFullyAssignAndEqual();
-
-
 
 
 

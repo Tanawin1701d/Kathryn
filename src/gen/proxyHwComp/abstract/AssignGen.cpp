@@ -20,6 +20,8 @@ namespace kathryn{
 
         assert(_asb != nullptr);
         _asb->sortUpEventByPriority();
+        isDesAssignFullyEqual = _asb->checkDesIsFullyAssignAndEqual();
+
         for (UpdateEvent* realUde: _asb->getUpdateMeta()){
             auto* newEvent = new UpdateEvent();
             ////////// route update condition
@@ -51,6 +53,90 @@ namespace kathryn{
         retStr += isClockSen ? "posedge clk" : "*";
         retStr += ") begin\n";
 
+        if (isDesAssignFullyEqual){
+            retStr += assignOpBase_chainCondition(isClockSen);
+        }else{
+            retStr += assignOpBase_soleCondition(isClockSen);
+        }
+
+        retStr += "end\n";
+        return retStr;
+    }
+
+    std::string AssignGenBase::assignOpBase_chainCondition(bool isClockSen){
+
+        std::string retStr;
+        std::vector<std::vector<UpdateEvent*>> updateEvents =
+        grpEventByPriorityValueAndPriority(translatedUpdateEvent);
+
+        bool ifBlockDetect = false;
+
+        for (auto r_iter_begin  = updateEvents.rbegin();
+                  r_iter_begin != updateEvents.rend();
+                  r_iter_begin++){
+
+            std::vector<UpdateEvent*>& updateEventGrp = *r_iter_begin;
+            std::string conStr;
+
+            ////// manage the group condition
+            int conIdx = 0;
+            for (UpdateEvent* updateEvent : updateEventGrp){
+                bool isSubConOccur = false;
+                conStr += "(";
+                //// update state
+                if (updateEvent->srcUpdateState != nullptr){
+                    conStr += getOprStrFromOpr(updateEvent->srcUpdateState);
+                    isSubConOccur = true;
+                }
+                //// update condition
+                if (updateEvent->srcUpdateCondition != nullptr){
+                    if (isSubConOccur){
+                        conStr += " && ";
+                    }
+                    conStr += getOprStrFromOpr(updateEvent->srcUpdateCondition);
+                    isSubConOccur = true;
+                }
+                //// dummy result;
+                if (!isSubConOccur){
+                    conStr += " 1 ";
+                }
+                conStr += ")";
+                conIdx++;
+                if (conIdx < updateEventGrp.size()){
+                    conStr += " || ";
+                }
+            }
+
+            //// put the assign condition
+
+            if (!ifBlockDetect){
+                retStr += "     if ( ";
+                ifBlockDetect = true;
+            }else{
+                retStr += "  else if (";
+            }
+            retStr += conStr + " ) begin";
+
+            retStr += " //// ";
+            retStr += " priority " + std::to_string(updateEventGrp[0]->priority);
+            retStr += "\n";
+
+            retStr += "         ";
+            retStr += assignmentLine(updateEventGrp[0]->desUpdateSlice,
+                                     updateEventGrp[0]->srcUpdateValue,
+                                     isClockSen);
+            retStr += "\n";
+            retStr += "     end";
+
+        }
+        retStr += "\n";
+        return retStr;
+
+    }
+
+
+    std::string AssignGenBase::assignOpBase_soleCondition(bool isClockSen){
+        std::string retStr;
         for (UpdateEvent* upd: translatedUpdateEvent){
             bool isStateConOcc = false;
             retStr += "     if ( ";
@@ -78,9 +164,9 @@ namespace kathryn{
             retStr += "     end\n";
 
         }
-        retStr += "end\n";
         return retStr;
     }
+
 
     std::string AssignGenBase::assignmentLine(Slice desSlice, Operable* srcUpdateValue, bool isDelayedAsm){
         assert(srcUpdateValue != nullptr);

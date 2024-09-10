@@ -11,8 +11,8 @@ namespace kathryn{
 
     class AssignGenBase: public LogicGenBase{
     protected:
-
         std::vector<UpdateEvent*> translatedUpdateEvent;
+        bool isDesAssignFullyEqual = false; //// it check destination assign is fully equal
     public:
         explicit AssignGenBase(ModuleGen*    mdGenMaster,
                               Assignable*   asb,
@@ -24,6 +24,9 @@ namespace kathryn{
         void routeDep() override;
 
         std::string assignOpBase(bool isClockSen);
+
+        std::string assignOpBase_chainCondition(bool isClockSen);
+        std::string assignOpBase_soleCondition (bool isClockSen);
 
         virtual std::string assignmentLine(Slice desSlice, Operable* srcUpdateValue, bool isDelayedAsm);
 

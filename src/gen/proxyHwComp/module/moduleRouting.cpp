@@ -57,7 +57,7 @@ namespace kathryn{
         assert(wireGenType < WIRE_AUTO_GEN_CNT);
 
         std::unordered_map<Operable*, int>& genMap = _genWireMaps[wireGenType];
-        std::vector<WireAuto*>&          genVec = _genWires[wireGenType];
+        std::vector<WireAuto*>&             genVec = _genWires[wireGenType];
 
         WireAuto& newAddedWire = makeOprIoWire("addAutoWireBase_uninit",
                                               opr->getOperableSlice().getSize(),
@@ -68,6 +68,14 @@ namespace kathryn{
             newAddedWire.createLogicGen();
             if (connectTheWire){
                 newAddedWire.connectTo(opr, true);
+            }
+
+            if (realSrc->castToIdent()->getGlobalId() == 605){
+                std::cout << "605 dectect";
+            }
+
+            if (realSrc->isConstOpr()){
+                newAddedWire.setConstant(realSrc->getConstOpr());
             }
 
             newAddedWire.setVarName(wireName +
