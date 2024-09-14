@@ -20,6 +20,8 @@ namespace kathryn{
 
     void resetGlobalComponent();
 
+    Operable& getResetSignal();
+
 
 }
 

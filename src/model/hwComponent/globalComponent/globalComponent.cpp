@@ -26,4 +26,8 @@ namespace kathryn{
          startNode = nullptr;
     }
 
+    Operable& getResetSignal(){
+        return *rstWire;
+    }
+
 }
