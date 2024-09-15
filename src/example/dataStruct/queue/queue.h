@@ -53,7 +53,7 @@ namespace kathryn{
         Operable& isFull () { return curSize == WORD_AMT;}
         Operable& isEmpty() { return curSize == 0;}
 
-        Operable& getFront() {return headWord;}
+        Wire& getFront() {return headWord;}
 
         ////// no execption for overflow
         void enQueue(Operable& data){

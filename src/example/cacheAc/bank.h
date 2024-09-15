@@ -22,6 +22,7 @@
             mReg(timerCnt, 16);
 
 
+
             CacheBankBase(KV_PARAM kv_param, const int amount_word,
                 const int extendWordBit):
             _kb_param(kv_param),
@@ -32,7 +33,7 @@
 
             virtual void           decodePacket()    = 0;
             virtual void           maintenanceBank() = 0;
-            virtual BankInterface* getBankInterface() = 0;
+            virtual BankInputInterface* getBankInterface() = 0;
 
             void flow() override{
                 doTimer();

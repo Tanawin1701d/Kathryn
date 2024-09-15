@@ -52,5 +52,9 @@ add_executable(Kathryn
         src/example/dataStruct/queue/queue.h
         src/example/dataStruct/queue/queue.h
         src/example/cacheAc/simpleServer/simpleBank.h
+        src/example/cacheAc/simpleServer/simpleIngress.h
+        src/example/cacheAc/simpleServer/simpleSystem.h
+        src/example/cacheAc/outgress.h
+        src/example/cacheAc/simpleServer/simpleOutgress.h
 
 )

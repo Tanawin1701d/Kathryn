@@ -21,12 +21,12 @@ namespace kathryn::cacheServer{
         ////////////////////////////////////////////
         Queue inputQueue;
         ////// to do make input egress
-        std::vector<BankInterface*> _bankInterfaces;
+        std::vector<BankInputInterface*> _bankInterfaces;
         ///// it is package on each bank for control
 
         IngressBase(
             SERVER_PARAM                svParam,
-            std::vector<BankInterface*> bankInterfaces):
+            std::vector<BankInputInterface*> bankInterfaces):
         _svParam(svParam),
         inputQueue(_svParam.kvParam.KEY_SIZE + 1, _svParam.ingrQueueSize),
         _bankInterfaces(std::move(bankInterfaces)){}
@@ -44,7 +44,6 @@ namespace kathryn::cacheServer{
         }
 
         virtual void diverseToBank() = 0;
-
         virtual int  getAvailableBank(){return (int)_bankInterfaces.size();}
     };
 

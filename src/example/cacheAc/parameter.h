@@ -19,8 +19,7 @@
         struct SERVER_PARAM{
             KV_PARAM kvParam;
             int      ingrQueueSize = 8;
-            int      amtBank = 1;
-            int      amtWordPerBank = 1;
+            int      prefixBit     = 2; ////// it mean key bit is set to 6 == 64 element perbank
 
         };
 

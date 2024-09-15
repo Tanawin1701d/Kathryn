@@ -13,7 +13,7 @@ namespace kathryn::cacheServer{
     class SimpleBank: public CacheBankBase{
     public:
         const int _suffixBit = -1;
-        BankInterface smBankInterface;
+        BankInputInterface smBankInterface;
         mReg(cleanCnt, _suffixBit);
 
         //////////////////////////////////////////////////////////
@@ -55,7 +55,7 @@ namespace kathryn::cacheServer{
             }
         }
 
-        BankInterface* getBankInterface() override{
+        BankInputInterface* getBankInterface() override{
             return &smBankInterface;
         }
 

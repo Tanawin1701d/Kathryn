@@ -9,9 +9,6 @@
 #include "ingress.h"
 #include<vector>
 
-
-
-
 namespace kathryn::cacheServer{
 
         class ServerBase: public Module{
@@ -21,12 +18,16 @@ namespace kathryn::cacheServer{
             std::vector<CacheBankBase*> _banks;
             ///////// constructor
             explicit ServerBase(SERVER_PARAM svParam):_svParam(svParam){
-                assert(svParam.amtBank > 0);
-                assert(svParam.amtWordPerBank > 0);
+
+            }
+            ~ServerBase() override{
+                delete _ingress;
+                for (CacheBankBase* bank: _banks){ delete bank; }
             }
             ///////// start build the element
             void initServer(){
-                for (int bankId = 0; bankId < _svParam.amtBank; bankId++) {
+                int amtBank = 1 << _svParam.prefixBit;
+                for (int bankId = 0; bankId < amtBank; bankId++) {
                     _banks.push_back(genBank(bankId));
                 }
                 _ingress = genIngress();
@@ -37,9 +38,9 @@ namespace kathryn::cacheServer{
             virtual IngressBase*   genIngress()     = 0;
 
             ///////// getter
-            IngressBase* getIngress() const{
+            IngressBase& getIngress() const{
                 assert(_ingress != nullptr);
-                return _ingress;
+                return *_ingress;
             }
             std::vector<CacheBankBase*>& getRefBanks(){return _banks;}
 
