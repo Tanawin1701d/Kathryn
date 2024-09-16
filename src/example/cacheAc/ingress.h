@@ -19,7 +19,7 @@ namespace kathryn::cacheServer{
     public:
         const SERVER_PARAM _svParam;
         ////////////////////////////////////////////
-        Queue inputQueue;
+        Queue inputQueue;///// | isLoad<1> | key |
         ////// to do make input egress
         std::vector<BankInputInterface*> _bankInterfaces;
         ///// it is package on each bank for control
@@ -28,7 +28,9 @@ namespace kathryn::cacheServer{
             SERVER_PARAM                svParam,
             std::vector<BankInputInterface*> bankInterfaces):
         _svParam(svParam),
-        inputQueue(_svParam.kvParam.KEY_SIZE + 1, _svParam.ingrQueueSize),
+        inputQueue(
+            1 + _svParam.kvParam.KEY_SIZE + _svParam.kvParam.VALUE_SIZE,
+            _svParam.ingrQueueSize),
         _bankInterfaces(std::move(bankInterfaces)){}
 
         void flow() override{

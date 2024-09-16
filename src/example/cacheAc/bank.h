@@ -18,7 +18,7 @@
             const int LIMIT_TIME = 60000;
             const int AMT_WORD   = 1;
 
-            mMem(poolData, AMT_WORD, _bankInterface.getValueBitWidth());
+            mMem(poolData, AMT_WORD, _kb_param.KEY_SIZE + EXTEND_BIT);
             mReg(timerCnt, 16);
 
 
@@ -31,9 +31,10 @@
 
             ~CacheBankBase() override = default;
 
-            virtual void           decodePacket()    = 0;
-            virtual void           maintenanceBank() = 0;
-            virtual BankInputInterface* getBankInterface() = 0;
+            virtual void                 decodePacket()           = 0;
+            virtual void                 maintenanceBank()        = 0;
+            virtual BankInputInterface*  getBankInputInterface()  = 0;
+            virtual BankOutputInterface* getBankOutputInterface() = 0;
 
             void flow() override{
                 doTimer();
@@ -41,6 +42,9 @@
             }
 
             void doTimer(){
+                zif(getResetSignal()){
+                    timerCnt <<= 0;
+                }
                 cwhile(true){
                     zif(timerCnt == LIMIT_TIME) timerCnt <<= 0;
                     zelse                       timerCnt <<= timerCnt + 1;

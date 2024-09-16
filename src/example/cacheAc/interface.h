@@ -14,8 +14,10 @@
         struct BankInputInterface{
             const KV_PARAM& _param;
             mReg (key   , _param.KEY_SIZE); ////// pure key
-            mReg (isLoad, 1);               ////// is loaded or not
-            mWire(isFree, 1);               ////// is free bank ---> specify It
+            mReg (value , _param.VALUE_SIZE);
+            mReg (isLoad, 1);
+            mWire(readyToSend, 1);           ////// is loaded or not
+            mWire(readyToRcv,  1);               ////// is free  bank ---> specify It
             /////// constructor
             explicit BankInputInterface(const KV_PARAM& param):
             _param(param){}

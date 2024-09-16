@@ -13,7 +13,8 @@ namespace kathryn::cacheServer{
     class SimpleBank: public CacheBankBase{
     public:
         const int _suffixBit = -1;
-        BankInputInterface smBankInterface;
+        BankInputInterface inputItf;
+        BankOutputInterface outputItf;
         mReg(cleanCnt, _suffixBit);
 
         //////////////////////////////////////////////////////////
@@ -21,9 +22,10 @@ namespace kathryn::cacheServer{
         //////////////////////////////////////////////////////////
 
         explicit SimpleBank(KV_PARAM kv_param, int suffixBit):
-        _suffixBit(suffixBit),
         CacheBankBase(kv_param, 1 << suffixBit, 1),
-        smBankInterface(kv_param)
+        _suffixBit(suffixBit),
+        inputItf(kv_param),
+        outputItf(kv_param)
         {
             ////// build size of
             assert(suffixBit > 0);
@@ -33,13 +35,21 @@ namespace kathryn::cacheServer{
 
             mVal(validBitAss, 1,1);
 
-            cif(smBankInterface.isLoad){
-                /** put to outgress*/
-            }celse{
-                writeMem(
-                    smBankInterface.key(0, smBankInterface.getKeyBitWidth()-_suffixBit),
-                    g(validBitAss, smBankInterface.value)
-                );
+            seq{
+                //////// one cycle
+                zif (inputItf.readyToSend){
+                    inputItf.readyToRcv = 1;
+                }
+                //////// next cycle
+                cif(inputItf.readyToSend){
+                    par{
+                        zif (inputItf.isLoad){
+                            //// TODO next
+                        }zelse{
+                            //// TODO next
+                        }
+                    }
+                }
             }
         }
 
@@ -55,8 +65,12 @@ namespace kathryn::cacheServer{
             }
         }
 
-        BankInputInterface* getBankInterface() override{
-            return &smBankInterface;
+        BankInputInterface* getBankInputInterface() override{
+            return &inputItf;
+        }
+
+        BankOutputInterface* getBankOutputInterface() override{
+            return &outputItf;
         }
 
 

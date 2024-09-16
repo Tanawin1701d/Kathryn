@@ -4,6 +4,7 @@
 
 #ifndef SIMPLESYSTEM_H
 #define SIMPLESYSTEM_H
+#include "simpleOutgress.h"
 #include "example/cacheAc/system.h"
 #include "example/cacheAc/simpleServer/simpleBank.h"
 #include "example/cacheAc/simpleServer/simpleIngress.h"
@@ -27,12 +28,21 @@ namespace kathryn::cacheServer{
         }
 
         IngressBase* genIngress() override{
-            std::vector<BankInputInterface*> bankItf;
+            std::vector<BankInputInterface*> bankInItf;
             for (CacheBankBase* bank: _banks){
                 assert(bank != nullptr);
-                bankItf.push_back(bank->getBankInterface())
+                bankInItf.push_back(bank->getBankInputInterface());
             }
-            return new SimpleIngress(_svParam, )
+            return new SimpleIngress(_svParam, bankInItf);
+        }
+
+        OutgressBase* genOutgress() override{
+            std::vector<BankOutputInterface*> bankOutItf;
+            for (CacheBankBase* bank: _banks){
+                assert(bank != nullptr);
+                bankOutItf.push_back(bank->getBankOutputInterface());
+            }
+            return new SimpleOutgress(_svParam, bankOutItf);
         }
 
     };
