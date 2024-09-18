@@ -20,10 +20,6 @@ namespace kathryn::cacheServer{
         _svParam(svParam),
         _outputInterfaces(std::move(outputInterfaces)){}
 
-
-
-
-
     };
 
 }

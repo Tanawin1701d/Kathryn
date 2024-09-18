@@ -8,15 +8,15 @@
 #include "bank.h"
 #include "ingress.h"
 #include "outgress.h"
-#include<vector>
+#include <vector>
 
 namespace kathryn::cacheServer{
 
         class ServerBase: public Module{
         public:
-            SERVER_PARAM _svParam;
-            IngressBase* _ingress   = nullptr;
-            OutgressBase* _outgress = nullptr;
+            SERVER_PARAM                _svParam;
+            IngressBase*                _ingress  = nullptr;
+            OutgressBase*               _outgress = nullptr;
             std::vector<CacheBankBase*> _banks;
             ///////// constructor
             explicit ServerBase(SERVER_PARAM svParam):_svParam(svParam){
@@ -33,8 +33,8 @@ namespace kathryn::cacheServer{
                 for (int bankId = 0; bankId < amtBank; bankId++) {
                     _banks.push_back(genBank(bankId));
                 }
-                _ingress = genIngress();
-                ////// to do gen outgress
+                _ingress  =  genIngress();
+                _outgress =  genOutgress();
             }
             ///////// gen element that used to init server
             virtual CacheBankBase* genBank    (int idx) = 0;

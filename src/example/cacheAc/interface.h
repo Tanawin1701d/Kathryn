@@ -13,20 +13,38 @@
 
         struct BankInputInterface{
             const KV_PARAM& _param;
+
+            /** register  parameter*/
             mReg (key   , _param.KEY_SIZE); ////// pure key
             mReg (value , _param.VALUE_SIZE);
             mReg (isLoad, 1);
+
+            /** io parameter*/
+            mWire(readyToRcv,  1);           ////// is free  bank ---> specify It
             mWire(readyToSend, 1);           ////// is loaded or not
-            mWire(readyToRcv,  1);               ////// is free  bank ---> specify It
+            mWire(requestKey,   _param.KEY_SIZE);
+            mWire(requestValue, _param.VALUE_SIZE);
+            mWire(requestMode,  1); ////// 1 is load else write
+
             /////// constructor
             explicit BankInputInterface(const KV_PARAM& param):
             _param(param){}
             BankInputInterface(const BankInputInterface& pb):
             _param(pb._param){}
             virtual ~BankInputInterface() = default;
-            ////////  data and  meta data retrieve
-            virtual int getKeyBitWidth()  {return _param.KEY_SIZE;}
-            virtual int getValueBitWidth(){return _param.VALUE_SIZE;}
+
+            void tryRecv(){
+                zif (readyToSend){
+                    readyToRcv = 1;
+                    key    <<= requestKey;
+                    value  <<= requestValue;
+                    isLoad <<= requestMode;
+                }
+            }
+
+            Operable& isRcv(){
+                return readyToRcv;
+            }
         };
 
         struct BankOutputInterface{
@@ -39,14 +57,16 @@
             explicit BankOutputInterface(const KV_PARAM& param):
             _param(param){}
 
-
-
-
-
+            void forceSend(Operable& key, Operable& value){
+                cdowhile(~readyToRcv){
+                    resultKey = key;
+                    resultValue = value;
+                    readyToSend = 1;
+                }
+            }
 
 
         };
-
 
     }
 

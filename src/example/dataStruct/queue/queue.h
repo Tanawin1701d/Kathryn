@@ -78,6 +78,8 @@ namespace kathryn{
             qReset = 1;
         }
 
+
+
     };
 
 }

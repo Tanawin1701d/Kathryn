@@ -36,17 +36,22 @@ namespace kathryn::cacheServer{
             mVal(validBitAss, 1,1);
 
             seq{
-                //////// one cycle
-                zif (inputItf.readyToSend){
-                    inputItf.readyToRcv = 1;
-                }
+                //////// first cycle
+                par{inputItf.tryRecv();}  //////// take one cycle
                 //////// next cycle
-                cif(inputItf.readyToSend){
+                cif(inputItf.isRcv()){
                     par{
-                        zif (inputItf.isLoad){
-                            //// TODO next
-                        }zelse{
-                            //// TODO next
+                        cif (inputItf.isLoad){ ////// is load /////try until outgress is recv
+                            outputItf.forceSend(inputItf.key, getValue(inputItf.key));
+                        }celse{ //// is write
+                            ///// write to memory now
+                            if (_kb_param.replacePol == OVER_WRITE) {
+                                writeMem(inputItf.key, inputItf.value);
+                            }else{ ////// avoid conflict policy
+                                zif(getValidBit(inputItf.key)){
+                                    writeMem(inputItf.key, inputItf.value);
+                                }
+                            }
                         }
                     }
                 }
@@ -56,10 +61,10 @@ namespace kathryn::cacheServer{
         void maintenanceBank() override{
             seq{
                 cleanCnt <<= 0;
-                cdowhile(cleanCnt != (1 << _suffixBit - 1)){
+                cdowhile(cleanCnt != ( (1 << _suffixBit) - 1)){
                     par{
                         cleanCnt <<= cleanCnt + 1;
-                        writeMem(cleanCnt, 0);
+                        resetMem(cleanCnt);
                     }
                 }
             }

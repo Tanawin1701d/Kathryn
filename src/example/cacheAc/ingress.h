@@ -19,10 +19,11 @@ namespace kathryn::cacheServer{
     public:
         const SERVER_PARAM _svParam;
         ////////////////////////////////////////////
-        Queue inputQueue;///// | isLoad<1> | key |
+        Queue inputQueue;///// | isLoad<1> | key | value
         ////// to do make input egress
         std::vector<BankInputInterface*> _bankInterfaces;
-        ///// it is package on each bank for control
+
+        mWire(reqToDequeue, _bankInterfaces.size());
 
         IngressBase(
             SERVER_PARAM                svParam,
@@ -33,19 +34,7 @@ namespace kathryn::cacheServer{
             _svParam.ingrQueueSize),
         _bankInterfaces(std::move(bankInterfaces)){}
 
-        void flow() override{
-            ////////// for put data to bank
-            cwhile (true){
-                /////// for now we assume we have packet queue
-                cif (inputQueue.isEmpty()){
-                    syWait(1);
-                }celse{
-                    diverseToBank();
-                }
-            }
-        }
 
-        virtual void diverseToBank() = 0;
         virtual int  getAvailableBank(){return (int)_bankInterfaces.size();}
     };
 
