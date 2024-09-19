@@ -18,6 +18,7 @@ namespace kathryn::cacheServer{
         mReg(curBankItr, SUFFIX_BIT);
         mReg(oKey  , _svParam.kvParam.KEY_SIZE);
         mReg(oValue, _svParam.kvParam.VALUE_SIZE);
+        mReg(valid , 1);
 
         explicit SimpleOutgress(SERVER_PARAM svParam,
                                 std::vector<BankOutputInterface*> outputInterfaces):
@@ -40,7 +41,10 @@ namespace kathryn::cacheServer{
                         oKey   <<= _outputInterfaces[idx]->resultKey;
                         oValue <<= _outputInterfaces[idx]->resultValue;
                         _outputInterfaces[idx]->readyToRcv = 1;
-                    }
+                        valid  <<= 1;
+                    }zelse{
+                        valid <<= 0;
+                    };
                 }
                 curBankItr <<= curBankItr + 1;
             }

@@ -6,7 +6,7 @@
 #define KATHRYN_PARAMETER_H
 
 
-
+#include<iostream>
 
     namespace kathryn::cacheServer{
 
@@ -18,7 +18,7 @@
         struct KV_PARAM{
             int KEY_SIZE = 8; ///// key size if the cache
             int VALUE_SIZE = 32; //////// value bitwidth
-            REPLACE_POL replacePol;
+            REPLACE_POL replacePol = OVER_WRITE;
 
 
         };
@@ -29,6 +29,11 @@
             int      prefixBit     = 2; ////// it mean key bit is set to 6 == 64 element perbank
             ////// prefix bit must lower than key size
 
+        };
+
+        struct KV_DEBUG{
+            std::string key;
+            std::string value;
         };
 
 

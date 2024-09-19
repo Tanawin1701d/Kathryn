@@ -28,6 +28,7 @@
             std::vector<Operable*>     writeIndexers;
             std::vector<Operable*>     writeValues;
 
+            ///////////// <valid bit><value>
             mMem(poolData, AMT_WORD, _kb_param.VALUE_SIZE + EXTEND_WORD_BIT);
             mReg(timerCnt, 16);
 
@@ -143,6 +144,27 @@
 
             void resetMem(Operable& idx){
                 writeMem(idx, DUMMY_RESET_VALUE);
+            }
+
+            /** this work only for simulation */
+            /*** return vector of key and value  ***/
+            std::vector<KV_DEBUG> getActiveValueDebug(){
+
+                std::vector<KV_DEBUG> result;
+
+                for (int row = 0; row < AMT_WORD; row++){
+                        ///// check the valid bit
+                        ///////// this is set to < 64
+                        ull readData = poolData.at(row).getVal();
+                        bool valid = (readData >> _kb_param.VALUE_SIZE);
+
+                        if (valid){
+                            std::string key   = std::to_string(row);
+                            std::string value = std::to_string(readData & (((ull)1) << _kb_param.VALUE_SIZE));
+                            result.push_back({key, value});
+                        }
+                }
+                return result;
             }
 
 

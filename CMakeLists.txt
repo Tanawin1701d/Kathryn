@@ -49,12 +49,14 @@ add_executable(Kathryn
         src/example/cacheAc/system.h
         src/example/cacheAc/parameter.h
         src/example/cacheAc/ingress.h
+        src/example/cacheAc/outgress.h
         src/example/dataStruct/queue/queue.h
         src/example/dataStruct/queue/queue.h
         src/example/cacheAc/simpleServer/simpleBank.h
         src/example/cacheAc/simpleServer/simpleIngress.h
         src/example/cacheAc/simpleServer/simpleSystem.h
-        src/example/cacheAc/outgress.h
-        src/example/cacheAc/simpleServer/simpleOutgress.h
 
+        src/example/cacheAc/simpleServer/unitTest/cacheSlotWriter.h
+        src/example/cacheAc/simpleServer/simpleOutgress.h
+        src/example/cacheAc/simpleServer/unitTest/systemTest.h
 )

@@ -33,7 +33,8 @@ namespace kathryn::cacheServer{
                 assert(bank != nullptr);
                 bankInItf.push_back(bank->getBankInputInterface());
             }
-            return new SimpleIngress(_svParam, bankInItf);
+            mMod(ingr, SimpleIngress, _svParam, bankInItf);
+            return &ingr;
         }
 
         OutgressBase* genOutgress() override{
@@ -42,7 +43,8 @@ namespace kathryn::cacheServer{
                 assert(bank != nullptr);
                 bankOutItf.push_back(bank->getBankOutputInterface());
             }
-            return new SimpleOutgress(_svParam, bankOutItf);
+            mMod(outr, SimpleOutgress, _svParam, bankOutItf);
+            return &outr;
         }
 
     };

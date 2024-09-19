@@ -79,6 +79,42 @@ namespace kathryn{
         }
 
 
+        /** get debug (this work only when simulation is started only )*/
+
+        std::vector<std::vector<std::string>>
+        getSimDebug(std::vector<int> subSizes){ ///// seperate site
+            ///////// checkSum;
+            int checkSum = 0;
+            for (int sz: subSizes)
+                checkSum += sz;
+            assert(checkSum == WORD_SZ);
+
+            ull curSizeInQueue = (ull)curSize;
+            ull actualIdx      = (ull)headPos;
+
+            ////////// retrieve the data
+            std::vector<std::vector<std::string>> result;
+
+            for (ull curRead = 0; curRead < curSizeInQueue; curRead++){
+                std::vector<std::string> currentResult;
+                ull readData = queueMem.at(actualIdx).getVal();
+                ////////// read in each row
+                for (auto rIter = subSizes.rbegin();
+                          rIter != subSizes.rend();
+                          rIter++){
+                    ull suffixMask = (*rIter == 64) ? UINT64_MAX : ((1 << (*rIter))-1);
+                    ull curSuffix = readData & suffixMask;
+                    currentResult.push_back(std::to_string(curSuffix));
+                    readData = readData >> (*rIter);
+                }
+
+                result.push_back(currentResult);
+                actualIdx = (actualIdx + 1) % WORD_AMT;
+            }
+            return result;
+        }
+
+
 
     };
 

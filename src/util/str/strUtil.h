@@ -16,6 +16,8 @@ namespace kathryn{
 
     std::vector<std::string> splitStr(const std::string& str, char dilem);
 
+
+
 }
 
 #endif //KATHRYN_STRUTIL_H
