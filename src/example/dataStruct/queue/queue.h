@@ -22,7 +22,6 @@ namespace kathryn{
         mWire(headWord , WORD_SZ);
         mWire(deqIntend, 1);
         mWire(enIntend , 1);
-        mWire(qReset   , 1);
 
 
         explicit Queue(const int word_size, const int word_amt):
@@ -61,7 +60,7 @@ namespace kathryn{
             /** it is supposed to work parallely*/
             enIntend = 1;
             queueMem[lastPos] <<= data;
-            zif(lastPos == WORD_AMT){
+            zif(lastPos == (WORD_AMT-1)){
                 lastPos <<= 0;
             }zelse{
                 lastPos <<= lastPos + 1;
@@ -73,11 +72,6 @@ namespace kathryn{
             deqIntend = 1;
             headPos <<= headPos + 1;
         }
-
-        void reset(){
-            qReset = 1;
-        }
-
 
         /** get debug (this work only when simulation is started only )*/
 
@@ -114,8 +108,30 @@ namespace kathryn{
             return result;
         }
 
+        bool checkValidValue(ull value){
+            ull checkValue = WORD_SZ == 64 ? UINT64_MAX : ((((ull) 1) << WORD_SZ) - 1);
+            checkValue = ~checkValue;
 
+            return !(value & checkValue);
+        }
 
+        void pushDataSim(ull value){
+            assert(checkValidValue(value));
+            assert( ((ull)curSize) != WORD_AMT);
+
+            ValRepBase cs   = ((ValRepBase)curSize);
+            ValRepBase lp   = ((ValRepBase)lastPos);
+
+            ////////// set new curSize
+            cs.setVar(cs.getVal() + 1);
+            ////////// modify the data
+            queueMem.at((ull)lp).setVar(value);
+            /////////  update last pos
+            if ( ((ull)lp) == (WORD_AMT-1) ){
+                lp.setVar(( ((ull)lp) == (WORD_AMT-1) ) ? 0: ((ull)lp + 1));
+            }
+
+        }
     };
 
 }

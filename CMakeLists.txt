@@ -59,4 +59,5 @@ add_executable(Kathryn
         src/example/cacheAc/simpleServer/unitTest/cacheSlotWriter.h
         src/example/cacheAc/simpleServer/simpleOutgress.h
         src/example/cacheAc/simpleServer/unitTest/systemTest.h
+        src/example/cacheAc/simpleServer/unitTest/systemTest.cpp
 )

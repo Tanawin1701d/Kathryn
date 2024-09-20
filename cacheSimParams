@@ -1,0 +1,10 @@
+ioOptimize = false
+
+testType = testSimpleCacheAcc
+
+; path to riscv result folder
+; do not forget to add / after the path
+
+vcdFile = /media/tanawin/tanawin1701e/project2/Kathryn/KOut/cacheServer/out.vcd
+profFile = /media/tanawin/tanawin1701e/project2/Kathryn/KOut/cacheServer/out.prof
+slotFile = /media/tanawin/tanawin1701e/project2/Kathryn/KOut/cacheServer/out.slot
