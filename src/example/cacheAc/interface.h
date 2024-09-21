@@ -20,17 +20,15 @@
             mReg (isLoad, 1);
 
             /** io parameter*/
-            mWire(readyToRcv,  1);           ////// is free  bank ---> specify It
-            mWire(readyToSend, 1);           ////// is loaded or not
-            mWire(requestKey,   _param.KEY_SIZE);
+            mWire(readyToRcv  , 1); ////// cache bank specify that we are ready to rcv
+            mWire(readyToSend , 1); ////// ingress desire that they are ready to send
+            mWire(requestKey  , _param.KEY_SIZE);
             mWire(requestValue, _param.VALUE_SIZE);
-            mWire(requestMode,  1); ////// 1 is load else write
+            mWire(requestMode , 1); ////// 1 is load else write
 
             /////// constructor
             explicit BankInputInterface(const KV_PARAM& param):
             _param(param){}
-            BankInputInterface(const BankInputInterface& pb):
-            _param(pb._param){}
             virtual ~BankInputInterface() = default;
 
             void tryRecv(){
@@ -64,8 +62,6 @@
                     readyToSend = 1;
                 }
             }
-
-
         };
 
     }

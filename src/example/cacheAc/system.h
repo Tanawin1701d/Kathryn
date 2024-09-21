@@ -8,6 +8,7 @@
 #include "bank.h"
 #include "ingress.h"
 #include "outgress.h"
+#include "parameter.h"
 #include <vector>
 
 namespace kathryn::cacheServer{
@@ -19,13 +20,11 @@ namespace kathryn::cacheServer{
             OutgressBase*               _outgress = nullptr;
             std::vector<CacheBankBase*> _banks;
             ///////// constructor
-            explicit ServerBase(SERVER_PARAM svParam):_svParam(svParam){
-
-            }
+            explicit ServerBase(SERVER_PARAM svParam):_svParam(svParam){}
             ~ServerBase() override{
                 delete _ingress;
                 delete _outgress;
-                for (CacheBankBase* bank: _banks){ delete bank; }
+                for (CacheBankBase* bank: _banks){delete bank;}
             }
             ///////// start build the element
             void initServer(){
@@ -53,7 +52,6 @@ namespace kathryn::cacheServer{
             }
 
             std::vector<CacheBankBase*>& getRefBanks(){return _banks;}
-
         };
 
     }
