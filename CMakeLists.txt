@@ -61,4 +61,7 @@ add_executable(Kathryn
         src/example/cacheAc/simpleServer/unitTest/systemTest.h
         src/example/cacheAc/simpleServer/unitTest/systemTest.cpp
         src/example/cacheAc/parameter.h
+        src/example/interface/handShake/singleHandShake.h
+        src/example/interface/handShake/singleHandShake.h
+        src/example/interface/handShake/singleHandShake.h
 )

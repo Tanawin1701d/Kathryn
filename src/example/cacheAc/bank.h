@@ -81,11 +81,15 @@
             }
 
             void doSchedule(){
+                BankInputInterface* inItf = getBankInputInterface();
+
                 cwhile(true){
                     cif(timerCnt == LIMIT_TIME){
                         maintenanceBank();
-                    }celse{
+                    }celif(inItf->isValid() | inItf->isReqSuccess()){
                         decodePacket();
+                    }celse{
+                        syWait(1);
                     }
                 }
             }

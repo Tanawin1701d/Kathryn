@@ -7,65 +7,72 @@
 
 #include "kathryn.h"
 #include "parameter.h"
+#include "example/interface/handShake/singleHandShake.h"
 
 
-    namespace kathryn::cacheServer{
+namespace kathryn::cacheServer{
 
-        struct BankInputInterface{
-            const KV_PARAM& _param;
+    struct INPUT_PARAM{
+        Operable& iKey;
+        Operable& iValue;
+        Operable& iIsLoad;
+    };
 
-            /** register  parameter*/
-            mReg (key   , _param.KEY_SIZE); ////// pure key
-            mReg (value , _param.VALUE_SIZE);
-            mReg (isLoad, 1);
+    struct BankInputInterface: I_SHS{
 
-            /** io parameter*/
-            mWire(readyToRcv  , 1); ////// cache bank specify that we are ready to rcv
-            mWire(readyToSend , 1); ////// ingress desire that they are ready to send
-            mWire(requestKey  , _param.KEY_SIZE);
-            mWire(requestValue, _param.VALUE_SIZE);
-            mWire(requestMode , 1); ////// 1 is load else write
+        const KV_PARAM& _param;
+        INPUT_PARAM*    _inputParam = nullptr;
 
-            /////// constructor
-            explicit BankInputInterface(const KV_PARAM& param):
+        mReg(key   , _param.KEY_SIZE);   ////// pure key
+        mReg(value , _param.VALUE_SIZE); ////// pure value
+        mReg(isLoad, 1);                 ////// pure isLoad
+
+        BankInputInterface(KV_PARAM& param):
+        _param(param){}
+
+        void transfer() override{
+            key    <<= _inputParam->iKey;
+            value  <<= _inputParam->iValue;
+            isLoad <<= _inputParam->iIsLoad;
+        }
+
+        void setInputParam(INPUT_PARAM& inputParam){
+            _inputParam = &inputParam;
+        }
+
+    };
+
+    struct BankOutputInterface: I_SHS{
+        const KV_PARAM& _param;
+        mWire(resultKey  , _param.KEY_SIZE);
+        mWire(resultValue, _param.VALUE_SIZE);
+
+        explicit BankOutputInterface(const KV_PARAM& param):
             _param(param){}
-            virtual ~BankInputInterface() = default;
 
-            void tryRecv(){
-                zif (readyToSend){
-                    readyToRcv = 1;
-                    key    <<= requestKey;
-                    value  <<= requestValue;
-                    isLoad <<= requestMode;
+        //////// acknowledge Signal used to tell that output is finish sent
+        //////// this function should be used as parallel
+        void forceSend(BankInputInterface& inputItf,
+                       Operable& key,
+                       Operable& value
+
+        ){
+
+            cdowhile(~isReqSuccess()){
+                requestToSend();
+                resultKey = key;
+                resultValue = value;
+                zif(isReqSuccess()){
+                    inputItf.tellFinish();
                 }
             }
 
-            Operable& isRcv(){
-                return readyToRcv;
-            }
-        };
+        }
 
-        struct BankOutputInterface{
-            const KV_PARAM& _param;
-            mWire(resultKey  , _param.KEY_SIZE);
-            mWire(resultValue, _param.VALUE_SIZE);
-            mWire(readyToRcv , 1); ////// out gress specify
-            mWire(readyToSend, 1); ////// bank specify
+        void transfer() override{}
 
-            explicit BankOutputInterface(const KV_PARAM& param):
-            _param(param){}
+    };
 
-            void forceSend(Operable& key, Operable& value){
-                cdowhile(~readyToRcv){
-                    resultKey = key;
-                    resultValue = value;
-                    readyToSend = 1;
-                }
-            }
-        };
-
-    }
-
-
+}
 
 #endif //KATHRYN_PACKETBASE_H

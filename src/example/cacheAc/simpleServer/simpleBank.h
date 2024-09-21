@@ -29,30 +29,24 @@ namespace kathryn::cacheServer{
         {
             ////// build size of
             assert(suffixBit > 0);
+
+
         }
 
         void decodePacket() override{
 
-            mVal(validBitAss, 1,1);
-
-            seq{
-                //////// first cycle
-                par{inputItf.tryRecv();}  //////// take one cycle
-                //////// next cycle
-                cif(inputItf.isRcv()){
-                    par{
-                        cif (inputItf.isLoad){ ////// is load /////try until outgress is recv
-                            outputItf.forceSend(inputItf.key, getValue(inputItf.key));
-                        }celse{ //// is write
-                            ///// write to memory now
-                            if (_kb_param.replacePol == OVER_WRITE) {
-                                writeMem(inputItf.key, inputItf.value);
-                            }else{ ////// avoid conflict policy
-                                zif(getValidBit(inputItf.key)){
-                                    writeMem(inputItf.key, inputItf.value);
-                                }
-                            }
-                        }
+            cif (inputItf.isLoad){ ////// is load /////try until outgress is recv
+                outputItf.forceSend(
+                    inputItf,
+                    inputItf.key,
+                    readMem(inputItf.key));
+            }celse{ //// is write
+                ///// write to memory now
+                if (_kb_param.replacePol == OVER_WRITE) {
+                    writeMem(inputItf.key, inputItf.value);
+                }else{ ////// avoid conflict policy
+                    zif(getValidBit(inputItf.key)){
+                        writeMem(inputItf.key, inputItf.value);
                     }
                 }
             }
