@@ -38,6 +38,11 @@ namespace kathryn{
             reqToSend = 1;
         }
 
+        void requestToSendOn(Operable& opr){
+            assert(opr.getOperableSlice().getSize() == 1);
+            reqToSend = opr;
+        }
+
         void tellFinish(){
             lastItemFin = 1;
         }

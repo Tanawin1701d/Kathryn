@@ -23,9 +23,12 @@ namespace kathryn::cacheServer{
         const KV_PARAM& _param;
         INPUT_PARAM*    _inputParam = nullptr;
 
+
         mReg(key   , _param.KEY_SIZE);   ////// pure key
         mReg(value , _param.VALUE_SIZE); ////// pure value
         mReg(isLoad, 1);                 ////// pure isLoad
+
+        ull bankId = 0;
 
         BankInputInterface(KV_PARAM& param):
         _param(param){}
@@ -36,9 +39,12 @@ namespace kathryn::cacheServer{
             isLoad <<= _inputParam->iIsLoad;
         }
 
-        void setInputParam(INPUT_PARAM& inputParam){
+        void setInputParam(INPUT_PARAM inputParam){
             _inputParam = &inputParam;
         }
+
+
+
 
     };
 

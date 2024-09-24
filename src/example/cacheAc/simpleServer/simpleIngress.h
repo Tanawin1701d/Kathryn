@@ -31,20 +31,25 @@ namespace kathryn::cacheServer{
             int endKeyIdx     = startKeyIdx + _svParam.kvParam.KEY_SIZE;
             int startModeIdx  = endKeyIdx;
             /////////////////////////////////////////////////
-            int stopIdent  = _svParam.kvParam.KEY_SIZE;
-            int startIdent = _svParam.kvParam.KEY_SIZE - _svParam.prefixBit;
+            int stopIdent  = startKeyIdx + _svParam.kvParam.KEY_SIZE;
+            int startIdent = startKeyIdx + _svParam.kvParam.KEY_SIZE - _svParam.prefixBit;
 
 
             //////// deal with bank interface
             for (int i = 0; i < _bankInterfaces.size(); i++){
                 BankInputInterface& bankInItf = *_bankInterfaces[i];
                 ////// assign reqToDequeue signal that it is ready to receive
-                reqToDequeue(i) = bankInItf.readyToRcv;
+                reqToDequeue(i) = bankInItf.isReqSuccess();
                 ////// assign ready to send signal
-                bankInItf.readyToSend  = queueAvail && bankInItf.requestKey(startIdent, stopIdent);
-                bankInItf.requestKey   = inputQueue.getFront()(startKeyIdx, endKeyIdx);
-                bankInItf.requestValue = inputQueue.getFront()(startValueIdx, endValueIdx);
-                bankInItf.requestMode  = inputQueue.getFront()(startModeIdx);
+                bankInItf.requestToSendOn(
+                    queueAvail &
+                    (inputQueue.getFront()(startIdent, stopIdent) == bankInItf.bankId)
+                );
+                bankInItf.setInputParam({
+                       inputQueue.getFront()(startKeyIdx, endKeyIdx),
+                       inputQueue.getFront()(startValueIdx, endValueIdx),
+                       inputQueue.getFront()(startModeIdx)
+                    });
             }
 
             /////// deal with queue
