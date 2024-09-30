@@ -18,14 +18,14 @@ namespace kathryn::cacheServer{
 
     class CacheSimItf: public SimInterface{
 
-        SimpleServer& _server;
+        SimpleServer&   _server;
         CacheSlotWriter _cacheSlotWriter;
 
 
     public:
 
         CacheSimItf(PARAM& params, SimpleServer& server):
-        SimInterface(1000000,
+        SimInterface(100000,
                      params[VCD_FILE_PARAM],
                      params[PROF_FILE_PARAM],
                      "cacheModel"
@@ -46,13 +46,13 @@ namespace kathryn::cacheServer{
                 Queue &queue = _server.getIngress().inputQueue;
                 //// create meta data
                 int BANK_AMT = 1 << _server._svParam.prefixBit;
-                int subEleSize = _server._svParam.kvParam.KEY_SIZE - _server._svParam.prefixBit;
+                int AMT_PER_BANK = 1 << (_server._svParam.kvParam.KEY_SIZE - _server._svParam.prefixBit);
                 ///// push data to the queue
                 for (int idx = 0; idx < queue.WORD_AMT; idx++) {
                     queue.pushDataSim(
                             genIncomePacket(
                                     idx % BANK_AMT,
-                                    idx % subEleSize,
+                                    idx % AMT_PER_BANK,
                                     idx,
                                     false) ///// for now we set all element to write
                     );
@@ -62,7 +62,7 @@ namespace kathryn::cacheServer{
 
         void describeCon() override{
             //////////////   record slot
-            for (int cycle = 1; cycle < 990000; cycle++){
+            for (int cycle = 1; cycle < 90000; cycle++){
                 _cacheSlotWriter.recordSlot();
                 conNextCycle(1);
             }
@@ -70,18 +70,18 @@ namespace kathryn::cacheServer{
 
 
 
-        ull genIncomePacket(int bankIdx, int subEle,int value, bool isLoad){
+        ull genIncomePacket(int bankIdx, int idxInBank, int value, bool isLoad){
             ull baseElement = 0;
 
-            int valueSize  = _server._svParam.kvParam.VALUE_SIZE;
-            int keySize    = _server._svParam.kvParam.KEY_SIZE;
-            int subEleSize = _server._svParam.kvParam.KEY_SIZE - _server._svParam.prefixBit;
-            assert(subEleSize > 0);
+            int valueSize   = _server._svParam.kvParam.VALUE_SIZE;
+            int keySize     = _server._svParam.kvParam.KEY_SIZE;
+            int bankKeySize = _server._svParam.kvParam.KEY_SIZE - _server._svParam.prefixBit;
+            assert(bankKeySize > 0);
 
             /**** create mask value for each specific field*/
             ull maskValue = value;
-            ull maskKey   = (((ull)(bankIdx)) << (subEleSize)) |
-                            ((ull)subEleSize);
+            ull maskKey   = (((ull)(bankIdx)) << (bankKeySize)) |
+                            ((ull)idxInBank);
             ull maskLoad  = isLoad;
 
             /**** bitwise all component to composed the packet*/

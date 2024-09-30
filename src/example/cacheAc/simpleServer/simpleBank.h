@@ -26,14 +26,17 @@ namespace kathryn::cacheServer{
         _suffixBit(suffixBit),
         inputItf(kv_param),
         outputItf(kv_param)
-        {
-            ////// build size of
+        {   ////// build size of
             assert(suffixBit > 0);
-
-
         }
 
+        //// Both decodePacket and maintenance bank are created in flow stage
         void decodePacket() override{
+
+            ///////// build the input interface logic
+            inputItf.buildLogic();
+            ///////// build the output interface logic
+            outputItf.buildLogic();
 
             cif (inputItf.isLoad){ ////// is load /////try until outgress is recv
                 outputItf.forceSend(
@@ -64,13 +67,14 @@ namespace kathryn::cacheServer{
             }
         }
 
-        BankInputInterface* getBankInputInterface() override{
-            return &inputItf;
+        void initInterface() override{
+            inputItf .buildLogic();
+            outputItf.buildLogic();
         }
 
-        BankOutputInterface* getBankOutputInterface() override{
-            return &outputItf;
-        }
+        BankInputInterface* getBankInputInterface() override{return &inputItf;}
+
+        BankOutputInterface* getBankOutputInterface() override{return &outputItf;}
 
     };
 

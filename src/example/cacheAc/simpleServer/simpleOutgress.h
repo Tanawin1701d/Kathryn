@@ -14,44 +14,46 @@ namespace kathryn::cacheServer{
     class SimpleOutgress: public OutgressBase{
     public:
 
-        const int SUFFIX_BIT;
+        const int SUFFIX_BIT = -1;
         mReg(curBankItr, SUFFIX_BIT);
         mReg(oKey  , _svParam.kvParam.KEY_SIZE);
         mReg(oValue, _svParam.kvParam.VALUE_SIZE);
-        mReg(valid , 1);
+        mReg(curResBank, SUFFIX_BIT);
+        mReg(oValid, 1);
+        mWire(areThereFin, 1 << _outputInterfaces.size());
 
         explicit SimpleOutgress(SERVER_PARAM svParam,
                                 std::vector<BankOutputInterface*> outputInterfaces):
         OutgressBase(svParam, std::move(outputInterfaces)),
         SUFFIX_BIT(svParam.kvParam.KEY_SIZE - svParam.prefixBit){
             assert(SUFFIX_BIT > 0);
-
-            zif(getResetSignal()){
-                curBankItr <<= 0;
-            }
         }
 
         void flow() override{
 
-            cwhile(true){
-                for (int idx = 0; idx < _outputInterfaces.size(); idx++){
-                    zif( (curBankItr == idx) &&
-                         (_outputInterfaces[idx]->readyToSend)
-                    ){
-                        oKey   <<= _outputInterfaces[idx]->resultKey;
-                        oValue <<= _outputInterfaces[idx]->resultValue;
-                        _outputInterfaces[idx]->readyToRcv = 1;
-                        valid  <<= 1;
-                    }zelse{
-                        valid <<= 0;
-                    };
-                }
-                curBankItr <<= curBankItr + 1;
+            zif(getResetSignal()){
+                curBankItr <<= 0;
+                oValid     <<= 0;
             }
 
+            for (int idx = 0; idx < _outputInterfaces.size(); idx++){
+                zif( (curBankItr == idx) &&
+                     (_outputInterfaces[idx]->isValid() &
+                      _outputInterfaces[idx]->isReqSuccess())
+                ){
+                    oKey   <<= _outputInterfaces[idx]->resultKey;
+                    oValue <<= _outputInterfaces[idx]->resultValue;
+                    _outputInterfaces[idx]->tellFinish();
+                    curResBank <<= curBankItr;
+                    areThereFin(idx) = 1;
+                }
+            }
+            curBankItr <<= curBankItr + 1;
+
+            zif (areThereFin)
+                oValid <<= 1;
 
         }
-
     };
 
 }

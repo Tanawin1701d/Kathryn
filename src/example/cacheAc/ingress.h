@@ -11,8 +11,6 @@
 #include "interface.h"
 #include "example/dataStruct/queue/queue.h"
 
-
-
 namespace kathryn::cacheServer{
 
     class IngressBase: public Module{
@@ -26,14 +24,13 @@ namespace kathryn::cacheServer{
         mWire(reqToDequeue, _bankInterfaces.size());
 
         IngressBase(
-            SERVER_PARAM                svParam,
+            SERVER_PARAM                     svParam,
             std::vector<BankInputInterface*> bankInterfaces):
         _svParam(svParam),
         inputQueue(
             1 + _svParam.kvParam.KEY_SIZE + _svParam.kvParam.VALUE_SIZE,
             _svParam.ingrQueueSize),
         _bankInterfaces(std::move(bankInterfaces)){}
-
 
         virtual int  getAvailableBank(){return (int)_bankInterfaces.size();}
     };
