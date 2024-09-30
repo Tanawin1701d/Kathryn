@@ -15,35 +15,41 @@ namespace kathryn::cacheServer{
     public:
         const int SUFFIX_BIT = 0;
 
-        explicit SimpleServer(SERVER_PARAM svParam):
+        explicit SimpleServer(const SERVER_PARAM& svParam):
         ServerBase(svParam),
         SUFFIX_BIT(_svParam.kvParam.KEY_SIZE - _svParam.prefixBit){
             assert(SUFFIX_BIT > 0);
+            initServer();
         }
 
         ~SimpleServer() override = default;
 
         CacheBankBase* genBank(int idx) override{
-            return new SimpleBank(_svParam.kvParam, SUFFIX_BIT);
+            mMod(smBank, SimpleBank, _svParam.kvParam, SUFFIX_BIT);
+            return &smBank;
         }
 
         IngressBase* genIngress() override{
             std::vector<BankInputInterface*> bankInItf;
+            assert(!_banks.empty());
             for (CacheBankBase* bank: _banks){
                 assert(bank != nullptr);
                 bankInItf.push_back(bank->getBankInputInterface());
             }
             mMod(ingr, SimpleIngress, _svParam, bankInItf);
+            _ingress = &ingr;
             return &ingr;
         }
 
         OutgressBase* genOutgress() override{
             std::vector<BankOutputInterface*> bankOutItf;
+            assert(!_banks.empty());
             for (CacheBankBase* bank: _banks){
                 assert(bank != nullptr);
                 bankOutItf.push_back(bank->getBankOutputInterface());
             }
             mMod(outr, SimpleOutgress, _svParam, bankOutItf);
+            _outgress = &outr;
             return &outr;
         }
 

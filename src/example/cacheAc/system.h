@@ -45,12 +45,10 @@ namespace kathryn::cacheServer{
                 assert(_ingress != nullptr);
                 return *_ingress;
             }
-
             OutgressBase& getOutgress() const{
                 assert(_outgress != nullptr);
                 return *_outgress;
             }
-
             std::vector<CacheBankBase*>& getRefBanks(){return _banks;}
         };
 

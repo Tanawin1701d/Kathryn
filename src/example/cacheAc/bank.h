@@ -52,15 +52,13 @@
                 const int extendWordBit):
             _kb_param(kv_param),
             EXTEND_WORD_BIT(extendWordBit),
-            AMT_WORD(amount_word){
-
-
-            }
+            AMT_WORD(amount_word){}
 
             ~CacheBankBase() override = default;
 
             virtual void                 decodePacket()           = 0; ////// retrieve packet from queue do it your own
             virtual void                 maintenanceBank()        = 0; ////// do  maintenance bank
+            virtual void                 initInterface()          = 0;
             virtual BankInputInterface*  getBankInputInterface()  = 0; ////// get the bank input interface
             virtual BankOutputInterface* getBankOutputInterface() = 0; ////// get the bank output interface
 
@@ -68,6 +66,7 @@
                 doTimer();
                 doSchedule();
                 doShardMem();
+                initInterface();
             }
 
             void doTimer(){
@@ -105,7 +104,6 @@
                 }
 
                 //////// write the data
-
                 zif (globWriteEnable){
                     poolData[globWriteIndexer] <<= globWriteValue;
                 }
@@ -119,10 +117,6 @@
                 }
             }
 
-
-
-
-
             Operable& readMem(Operable& idx){
                 Wire& bit = makeOprWire("readEnSig" + std::to_string(readCountIdx++), 1) = 1;
                 assert(idx.getOperableSlice().getSize() == _kb_param.KEY_SIZE);
@@ -135,13 +129,14 @@
                 Wire& bit = makeOprWire("writeEnSig" + std::to_string(writeCountIdx++), 1) = 1;
                 assert(idx.getOperableSlice().getSize() == _kb_param.KEY_SIZE);
                 writeActivation.push_back(&bit);
-                writeIndexers.push_back(&idx);
-                writeValues.push_back(&value);
+                writeIndexers  .push_back(&idx);
+                writeValues    .push_back(&value);
             }
 
             Operable& getValidBit(Operable& idx){
                 return *readMem(idx).doSlice({_kb_param.VALUE_SIZE, _kb_param.VALUE_SIZE + 1});
             }
+
             Operable& getValue(Operable& idx){
                 return *readMem(idx).doSlice({0, _kb_param.VALUE_SIZE});
             }
@@ -155,12 +150,11 @@
             std::vector<KV_DEBUG> getActiveValueDebug(){
 
                 std::vector<KV_DEBUG> result;
-
                 for (int row = 0; row < AMT_WORD; row++){
                         ///// check the valid bit
                         ///////// this is set to < 64
-                        ull readData = poolData.at(row).getVal();
-                        bool valid = (readData >> _kb_param.VALUE_SIZE);
+                        ull  readData = poolData.at(row).getVal();
+                        bool valid    = (readData >> _kb_param.VALUE_SIZE);
 
                         if (valid){
                             std::string key   = std::to_string(row);

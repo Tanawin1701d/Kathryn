@@ -23,28 +23,27 @@ namespace kathryn::cacheServer{
         const KV_PARAM& _param;
         INPUT_PARAM*    _inputParam = nullptr;
 
-
         mReg(key   , _param.KEY_SIZE);   ////// pure key
         mReg(value , _param.VALUE_SIZE); ////// pure value
         mReg(isLoad, 1);                 ////// pure isLoad
 
         ull bankId = 0;
 
-        BankInputInterface(KV_PARAM& param):
+        explicit BankInputInterface(KV_PARAM& param):
         _param(param){}
 
+        ~BankInputInterface(){delete _inputParam;}
+
         void transfer() override{
+            assert(_inputParam != nullptr);
             key    <<= _inputParam->iKey;
             value  <<= _inputParam->iValue;
             isLoad <<= _inputParam->iIsLoad;
         }
 
         void setInputParam(INPUT_PARAM inputParam){
-            _inputParam = &inputParam;
+            _inputParam = new INPUT_PARAM(inputParam);
         }
-
-
-
 
     };
 
@@ -63,7 +62,6 @@ namespace kathryn::cacheServer{
                        Operable& value
 
         ){
-
             cdowhile(~isReqSuccess()){
                 requestToSend();
                 resultKey = key;
@@ -72,7 +70,6 @@ namespace kathryn::cacheServer{
                     inputItf.tellFinish();
                 }
             }
-
         }
 
         void transfer() override{}

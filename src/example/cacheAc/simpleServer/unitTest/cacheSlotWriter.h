@@ -72,7 +72,7 @@ namespace kathryn::cacheServer{
         void recordOutgress(){
             SimpleOutgress& outgr = *((SimpleOutgress*)_simpleServer._outgress);
 
-            if ( ((ull)outgr.valid) == 0 ){
+            if ( ((ull)outgr.oValid) == 0 ){
                 addSlotVal(OUTR_SLOT_IDX, "nop");
                 return;
             }
