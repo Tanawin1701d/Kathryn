@@ -14,6 +14,9 @@ namespace kathryn{
     std::vector<NestMeta> getNestVec(){
         return {};
     }
+    std::vector<Operable*> getNestVecReadOnly(){
+        return {};
+    }
 
     nest& makeNestMan(bool isUser, const std::vector<NestMeta>& groupedMeta){
         int nestSize = 0;

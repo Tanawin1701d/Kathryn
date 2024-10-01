@@ -55,6 +55,10 @@ namespace kathryn{
             return reqResult;
         }
 
+        Operable& isReqToSend(){
+            return reqToSend;
+        }
+
     };
 
 }

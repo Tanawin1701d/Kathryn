@@ -16,7 +16,9 @@ namespace kathryn::cacheServer{
         BankInputInterface inputItf;
         BankOutputInterface outputItf;
         mReg(cleanCnt, _suffixBit);
+        Operable& inputInBankKey; //// only key that used to indicate bank
 
+        mWire(isWriting, 1);
         //////////////////////////////////////////////////////////
         ///   | valid_bit | data_bit |
         //////////////////////////////////////////////////////////
@@ -25,7 +27,8 @@ namespace kathryn::cacheServer{
         CacheBankBase(kv_param, 1 << suffixBit, 1),
         _suffixBit(suffixBit),
         inputItf(kv_param),
-        outputItf(kv_param)
+        outputItf(kv_param),
+        inputInBankKey(inputItf.key(0, _suffixBit))
         {   ////// build size of
             assert(suffixBit > 0);
         }
@@ -33,30 +36,37 @@ namespace kathryn::cacheServer{
         //// Both decodePacket and maintenance bank are created in flow stage
         void decodePacket() override{
 
-            ///////// build the input interface logic
-            inputItf.buildLogic();
-            ///////// build the output interface logic
-            outputItf.buildLogic();
+            auto [enValue, readValue] = getValue(inputInBankKey);
+
+
+            std::cout << "packet is decoding" << std::endl;
 
             cif (inputItf.isLoad){ ////// is load /////try until outgress is recv
                 outputItf.forceSend(
                     inputItf,
                     inputItf.key,
-                    readMem(inputItf.key));
+                    readValue,
+                    enValue);
             }celse{ //// is write
                 ///// write to memory now
-                if (_kb_param.replacePol == OVER_WRITE) {
-                    writeMem(inputItf.key, inputItf.value);
+                if (_kb_param.replacePol == OVER_WRITE){
+                    writeMem(inputInBankKey, inputItf.value);
                 }else{ ////// avoid conflict policy
-                    zif(getValidBit(inputItf.key)){
-                        writeMem(inputItf.key, inputItf.value);
-                    }
+//                    zif(getValidBit(inputInBankKey)){
+//                        writeMem(inputInBankKey, inputItf.value);
+//                    }
+                    writeMem(inputInBankKey, inputItf.value);
                 }
+
+                isWriting = 1;
+                inputItf.tellFinish();
             }
+
         }
 
         void maintenanceBank() override{
             seq{
+
                 cleanCnt <<= 0;
                 cdowhile(cleanCnt != ( (1 << _suffixBit) - 1)){
                     par{
@@ -72,8 +82,7 @@ namespace kathryn::cacheServer{
             outputItf.buildLogic();
         }
 
-        BankInputInterface* getBankInputInterface() override{return &inputItf;}
-
+        BankInputInterface*  getBankInputInterface () override{return &inputItf;}
         BankOutputInterface* getBankOutputInterface() override{return &outputItf;}
 
     };

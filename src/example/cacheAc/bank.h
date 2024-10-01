@@ -35,16 +35,19 @@
             /** global memory management*/
 
             /////// for read
-            mWire(globReadIndexer, _kb_param.KEY_SIZE);
+            mWire(globReadIndexer, log2Ceil(AMT_WORD));
             mWire(globReadOutput , _kb_param.VALUE_SIZE + EXTEND_WORD_BIT);
 
             /////// for write
             mWire(globWriteEnable , 1);
-            mWire(globWriteIndexer, _kb_param.KEY_SIZE);
+            mWire(globWriteIndexer, log2Ceil(AMT_WORD));
             mWire(globWriteValue , _kb_param.VALUE_SIZE + EXTEND_WORD_BIT);
 
 
             mVal(DUMMY_RESET_VALUE, _kb_param.VALUE_SIZE + EXTEND_WORD_BIT, 0);
+
+
+            mWire(wa, 1);
 
 
 
@@ -53,8 +56,6 @@
             _kb_param(kv_param),
             EXTEND_WORD_BIT(extendWordBit),
             AMT_WORD(amount_word){}
-
-            ~CacheBankBase() override = default;
 
             virtual void                 decodePacket()           = 0; ////// retrieve packet from queue do it your own
             virtual void                 maintenanceBank()        = 0; ////// do  maintenance bank
@@ -88,7 +89,8 @@
                     }celif(inItf->isValid() | inItf->isReqSuccess()){
                         decodePacket();
                     }celse{
-                        syWait(1);
+                        wa = 1;
+                        ////syWait(1);
                     }
                 }
             }
@@ -112,33 +114,37 @@
                 for (int idx = 0; idx < writeActivation.size(); idx++){
                     zif (*writeActivation[idx]){
                         globWriteIndexer = *writeIndexers[idx];
-                        globWriteValue   = *writeValues[idx];
+                        mVal(valid, 1, 1);
+                        globWriteValue   = gr(valid, *writeValues[idx]);
                     }
                 }
             }
 
-            Operable& readMem(Operable& idx){
-                Wire& bit = makeOprWire("readEnSig" + std::to_string(readCountIdx++), 1) = 1;
-                assert(idx.getOperableSlice().getSize() == _kb_param.KEY_SIZE);
+            std::pair<Wire&, Operable&> readMem(Operable& idx){
+                Wire& bit = makeOprWire("readEnSig" + std::to_string(readCountIdx++), 1);
+                assert(idx.getOperableSlice().getSize() == log2Ceil(AMT_WORD));
                 readActivation.push_back(&bit);
                 readIndexers.push_back(&idx);
-                return globReadOutput;
+                return {bit, globReadOutput};
             }
 
             void writeMem(Operable& idx, Operable& value){
-                Wire& bit = makeOprWire("writeEnSig" + std::to_string(writeCountIdx++), 1) = 1;
-                assert(idx.getOperableSlice().getSize() == _kb_param.KEY_SIZE);
-                writeActivation.push_back(&bit);
+                Wire& activateWire = makeOprWire("writeEnSig" + std::to_string(writeCountIdx++), 1) = 1;
+
+                assert(idx.getOperableSlice().getSize() == log2Ceil(AMT_WORD));
+                writeActivation.push_back(&activateWire);
                 writeIndexers  .push_back(&idx);
                 writeValues    .push_back(&value);
             }
 
-            Operable& getValidBit(Operable& idx){
-                return *readMem(idx).doSlice({_kb_param.VALUE_SIZE, _kb_param.VALUE_SIZE + 1});
+            std::pair<Wire&, Operable&> getValidBit(Operable& idx){
+                auto [enSig, globOutput] = readMem(idx);
+                return {enSig, *globOutput.doSlice({_kb_param.VALUE_SIZE, _kb_param.VALUE_SIZE + 1})};
             }
 
-            Operable& getValue(Operable& idx){
-                return *readMem(idx).doSlice({0, _kb_param.VALUE_SIZE});
+            std::pair<Wire&, Operable&> getValue(Operable& idx){
+                auto [enSig, globOutput] = readMem(idx);
+                return {enSig, *globOutput.doSlice({0, _kb_param.VALUE_SIZE})};
             }
 
             void resetMem(Operable& idx){

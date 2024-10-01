@@ -15,22 +15,21 @@ namespace kathryn::cacheServer{
 
         class ServerBase: public Module{
         public:
-            SERVER_PARAM                _svParam;
-            IngressBase*                _ingress  = nullptr;
-            OutgressBase*               _outgress = nullptr;
-            std::vector<CacheBankBase*> _banks;
+            SERVER_PARAM                      _svParam;
+            IngressBase*                      _ingress  = nullptr;
+            OutgressBase*                     _outgress = nullptr;
+            std::vector<CacheBankBase*>       _banks;
+            std::vector<BankInputInterface*>  _bankInputItfs;  //// bank input  interfaces
+            std::vector<BankOutputInterface*> _bankOutputItfs; //// bank output interfaces
             ///////// constructor
             explicit ServerBase(SERVER_PARAM svParam):_svParam(svParam){}
-            ~ServerBase() override{
-                delete _ingress;
-                delete _outgress;
-                for (CacheBankBase* bank: _banks){delete bank;}
-            }
             ///////// start build the element
             void initServer(){
                 int amtBank = 1 << _svParam.prefixBit;
                 for (int bankId = 0; bankId < amtBank; bankId++) {
-                    _banks.push_back(genBank(bankId));
+                    _banks         .push_back(genBank(bankId));
+                    _bankInputItfs .push_back(_banks[bankId]->getBankInputInterface());
+                    _bankOutputItfs.push_back(_banks[bankId]->getBankOutputInterface());
                 }
                 _ingress  =  genIngress();
                 _outgress =  genOutgress();
