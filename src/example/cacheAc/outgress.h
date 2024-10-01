@@ -12,7 +12,7 @@ namespace kathryn::cacheServer{
 
     class OutgressBase: public Module{
     public:
-        const SERVER_PARAM _svParam;
+        const SERVER_PARAM                _svParam;
         std::vector<BankOutputInterface*> _outputInterfaces;
 
         OutgressBase(SERVER_PARAM svParam,

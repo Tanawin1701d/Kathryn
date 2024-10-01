@@ -30,22 +30,6 @@ namespace kathryn{
         ADDR_WIDTH(log2Ceil(word_amt)){
             assert(word_size > 0);
             assert(word_amt  > 0);
-            headWord = queueMem[headPos];
-
-            /////////// this will run every cycle
-            zif (getResetSignal()){
-                curSize <<= 0;
-                headPos <<= 0;
-                lastPos <<= 1;
-            }zelif(deqIntend ^ enIntend){
-                zif(deqIntend){
-                    curSize <<= curSize - 1;
-                }zelse{
-                    curSize <<= curSize + 1;
-                }
-            }
-            ////////////////////////////////////
-
         }
 
 
@@ -73,10 +57,30 @@ namespace kathryn{
             headPos <<= headPos + 1;
         }
 
+        void initLogic(){
+
+            headWord = queueMem[headPos];
+
+            /////////// this will run every cycle
+            zif (getResetSignal()){
+                curSize <<= 0;
+                headPos <<= 0;
+                lastPos <<= 1;
+            }zelif(deqIntend ^ enIntend){
+                zif(deqIntend){
+                    curSize <<= curSize - 1;
+                }zelse{
+                    curSize <<= curSize + 1;
+                }
+            }
+
+        }
+
         /** get debug (this work only when simulation is started only )*/
 
         std::vector<std::vector<std::string>>
         getSimDebug(std::vector<int> subSizes){ ///// seperate site
+            ///////// subSize[n] | subSize[n-1]| subSize[n-2] | ..... | subSize[0] |
             ///////// checkSum;
             int checkSum = 0;
             for (int sz: subSizes)
@@ -96,7 +100,7 @@ namespace kathryn{
                 for (auto rIter = subSizes.rbegin();
                           rIter != subSizes.rend();
                           rIter++){
-                    ull suffixMask = (*rIter == 64) ? UINT64_MAX : ((1 << (*rIter))-1);
+                    ull suffixMask = (*rIter == 64) ? UINT64_MAX : ((((ull)1) << (*rIter))-1);
                     ull curSuffix = readData & suffixMask;
                     currentResult.push_back(std::to_string(curSuffix));
                     readData = readData >> (*rIter);
@@ -108,7 +112,7 @@ namespace kathryn{
             return result;
         }
 
-        bool checkValidValue(ull value){
+        bool checkValidValue(ull value) const{
             ull checkValue = WORD_SZ == 64 ? UINT64_MAX : ((((ull) 1) << WORD_SZ) - 1);
             checkValue = ~checkValue;
 
@@ -118,7 +122,7 @@ namespace kathryn{
         void pushDataSim(ull value){
             assert(checkValidValue(value));
             assert( ((ull)curSize) != WORD_AMT);
-
+            ////////// std::cout << (ull)curSize << std::endl;
             ValRepBase cs   = ((ValRepBase)curSize);
             ValRepBase lp   = ((ValRepBase)lastPos);
 
@@ -127,9 +131,7 @@ namespace kathryn{
             ////////// modify the data
             queueMem.at((ull)lp).setVar(value);
             /////////  update last pos
-            if ( ((ull)lp) == (WORD_AMT-1) ){
-                lp.setVar(( ((ull)lp) == (WORD_AMT-1) ) ? 0: ((ull)lp + 1));
-            }
+            lp.setVar(( ((ull)lp) == (WORD_AMT-1) ) ? 0: ((ull)lp + 1));
 
         }
     };

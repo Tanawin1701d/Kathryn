@@ -22,34 +22,18 @@ namespace kathryn::cacheServer{
             initServer();
         }
 
-        ~SimpleServer() override = default;
-
         CacheBankBase* genBank(int idx) override{
             mMod(smBank, SimpleBank, _svParam.kvParam, SUFFIX_BIT);
             return &smBank;
         }
 
         IngressBase* genIngress() override{
-            std::vector<BankInputInterface*> bankInItf;
-            assert(!_banks.empty());
-            for (CacheBankBase* bank: _banks){
-                assert(bank != nullptr);
-                bankInItf.push_back(bank->getBankInputInterface());
-            }
-            mMod(ingr, SimpleIngress, _svParam, bankInItf);
-            _ingress = &ingr;
+            mMod(ingr, SimpleIngress, _svParam, _bankInputItfs);
             return &ingr;
         }
 
         OutgressBase* genOutgress() override{
-            std::vector<BankOutputInterface*> bankOutItf;
-            assert(!_banks.empty());
-            for (CacheBankBase* bank: _banks){
-                assert(bank != nullptr);
-                bankOutItf.push_back(bank->getBankOutputInterface());
-            }
-            mMod(outr, SimpleOutgress, _svParam, bankOutItf);
-            _outgress = &outr;
+            mMod(outr, SimpleOutgress, _svParam, _bankOutputItfs);
             return &outr;
         }
 

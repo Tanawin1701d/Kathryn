@@ -21,6 +21,7 @@
 #define mVal(name, ...)           Val&      name = _make<Val>     ("uncatagorizedYet", #name, true, __VA_ARGS__)
 #define mMem(name, depth, width)  MemBlock& name = _make<MemBlock>("uncatagorizedYet", #name, true, depth, width)
 #define g(...) makeNest(true,__VA_ARGS__)
+#define gr(...) makeNestReadOnly(true, __VA_ARGS__)
 #define gMan(...) makeNestMan(true, __VA_ARGS__)
 #define mBox(name, TypeName) TypeName& name = _make<TypeName>("uncatagorizedYet",#name, true)
 

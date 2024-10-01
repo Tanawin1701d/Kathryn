@@ -26,6 +26,8 @@ namespace kathryn{
         Assignable* asb;
     };
 
+    /////////// for nest vector read and write are acceptable
+
     std::vector<NestMeta> getNestVec();
 
     template<typename OA, typename... T>
@@ -48,6 +50,24 @@ namespace kathryn{
         return _make<nest>("uncatagorizedYet", "nest", isUserDec, nestSize, nestList);
     }
 
+    /////////// for nest vector read is only acceptable
+
+    std::vector<Operable*> getNestVecReadOnly();
+
+    template<typename... T>
+    std::vector<Operable*> getNestVecReadOnly(Operable& firstOperable, T&... args){
+        std::vector<Operable*> deepGet = getNestVecReadOnly(args...);
+        deepGet.push_back(&firstOperable);
+        return deepGet;
+    }
+
+    template<typename S, typename... T>
+    nest& makeNestReadOnly(bool isUserDec, S& firstOperable, T&... args){
+        auto nestList = getNestVecReadOnly(firstOperable, args...);
+        return makeNestManReadOnly(isUserDec, nestList);
+    }
+
+    //////////// for manual built
     nest& makeNestMan(bool isUser, const std::vector<NestMeta>& groupedMeta);
     nest& makeNestManReadOnly(bool isUser, const std::vector<Operable*>& nestListReadOnly);
 

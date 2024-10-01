@@ -12,7 +12,7 @@
 namespace kathryn::cacheServer{
 
 
-    constexpr char VCD_FILE_PARAM        [] = "vcdFile";
+    constexpr char VCD_FILE_PARAM        [] = "vcdFile" ;
     constexpr char PROF_FILE_PARAM       [] = "profFile";
     constexpr char CACHE_SLOT_FILE_PARAM [] = "slotFile";
 
@@ -34,7 +34,7 @@ namespace kathryn::cacheServer{
         _cacheSlotWriter(_server, params[CACHE_SLOT_FILE_PARAM])
         {}
 
-        void describeDef() override{}
+        //////void describeDef() override{}
 
         void describe() override{
             /////////// we must prevent this because the queue meta data will be reset
@@ -88,6 +88,8 @@ namespace kathryn::cacheServer{
             baseElement |= maskValue;
             baseElement |= (maskKey << valueSize);
             baseElement |= maskLoad << (valueSize + keySize);
+
+            std::cout << "value " << maskValue << " key " << maskKey << " mode " << maskLoad << std::endl;
 
             return baseElement;
         }

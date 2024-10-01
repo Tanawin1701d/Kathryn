@@ -18,7 +18,7 @@ namespace kathryn{
 
         _globalId = GLOBAL_MODEL_ID++;
 
-        if (_globalId == 46){
+        if (_globalId == 92){
             int dsdgdfgfd= 5;
         }
     }

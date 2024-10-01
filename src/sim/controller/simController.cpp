@@ -26,6 +26,8 @@ namespace kathryn{
             _curCycle = nextEvent->getCurCycle();
             std::vector<EventBase*> _curCycleEvents;
 
+            ///// std::cout << "cur cycle" << _curCycle << std::endl;
+
             /**
              *
              * start cur cycle which allows same cycle queue adding

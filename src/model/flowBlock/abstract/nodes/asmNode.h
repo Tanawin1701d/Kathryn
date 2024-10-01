@@ -86,9 +86,10 @@ namespace kathryn {
         /** assign with no flow block related*/
         void dryAssign() override{
             assert(!_assignMetas.empty());
+            assert(nodeSrcs.empty());
             for (auto* assignMeta: _assignMetas) {
                 auto resultUpEvent = new UpdateEvent({
-                                                             nullptr,
+                                                             _preCondition,
                                                              nullptr,
                                                              &assignMeta->valueToAssign,
                                                              assignMeta->desSlice,

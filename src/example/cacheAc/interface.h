@@ -45,12 +45,17 @@ namespace kathryn::cacheServer{
             _inputParam = new INPUT_PARAM(inputParam);
         }
 
+        ////// for get bank key
+
+
     };
 
     struct BankOutputInterface: I_SHS{
         const KV_PARAM& _param;
         mWire(resultKey  , _param.KEY_SIZE);
         mWire(resultValue, _param.VALUE_SIZE);
+
+        mWire(outTest, 1);
 
         explicit BankOutputInterface(const KV_PARAM& param):
             _param(param){}
@@ -59,13 +64,16 @@ namespace kathryn::cacheServer{
         //////// this function should be used as parallel
         void forceSend(BankInputInterface& inputItf,
                        Operable& key,
-                       Operable& value
+                       Operable& value,
+                       Wire&     readEn
 
         ){
             cdowhile(~isReqSuccess()){
                 requestToSend();
-                resultKey = key;
+                resultKey   = key;
                 resultValue = value;
+                readEn      = 1;
+                outTest     = 1;
                 zif(isReqSuccess()){
                     inputItf.tellFinish();
                 }

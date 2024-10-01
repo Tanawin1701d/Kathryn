@@ -15,16 +15,17 @@ namespace kathryn::cacheServer{
     public:
 
         const int SUFFIX_BIT = -1;
+
         mReg(curBankItr, SUFFIX_BIT);
-        mReg(oKey  , _svParam.kvParam.KEY_SIZE);
-        mReg(oValue, _svParam.kvParam.VALUE_SIZE);
+        mReg(oKey      , _svParam.kvParam.KEY_SIZE);
+        mReg(oValue    , _svParam.kvParam.VALUE_SIZE);
         mReg(curResBank, SUFFIX_BIT);
         mReg(oValid, 1);
-        mWire(areThereFin, 1 << _outputInterfaces.size());
+        mWire(areThereFin, _outputInterfaces.size());
 
         explicit SimpleOutgress(SERVER_PARAM svParam,
                                 std::vector<BankOutputInterface*> outputInterfaces):
-        OutgressBase(svParam, std::move(outputInterfaces)),
+        OutgressBase(svParam, outputInterfaces),
         SUFFIX_BIT(svParam.kvParam.KEY_SIZE - svParam.prefixBit){
             assert(SUFFIX_BIT > 0);
         }
@@ -37,13 +38,12 @@ namespace kathryn::cacheServer{
             }
 
             for (int idx = 0; idx < _outputInterfaces.size(); idx++){
-                zif( (curBankItr == idx) &&
-                     (_outputInterfaces[idx]->isValid() &
-                      _outputInterfaces[idx]->isReqSuccess())
-                ){
-                    oKey   <<= _outputInterfaces[idx]->resultKey;
-                    oValue <<= _outputInterfaces[idx]->resultValue;
+                zif( (curBankItr == idx) & _outputInterfaces[idx]->isReqToSend()
+                ){  ////// tell that we are finish
                     _outputInterfaces[idx]->tellFinish();
+
+                    oKey       <<= _outputInterfaces[idx]->resultKey;
+                    oValue     <<= _outputInterfaces[idx]->resultValue;
                     curResBank <<= curBankItr;
                     areThereFin(idx) = 1;
                 }
