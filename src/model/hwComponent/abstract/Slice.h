@@ -31,6 +31,7 @@ namespace kathryn{
             ;
         }
 
+        /** b is used to retrieve sizeOnly*/
         Slice getMatchSizeSubSlice(Slice b){
             assert(b.checkValidSlice());
             assert(checkValidSlice());
@@ -47,6 +48,7 @@ namespace kathryn{
                     std::min(stop, start + b.stop)};
         }
 
+        ////// indexer is relative value
         Slice getSubSlice(Slice indexer) const{
             assert(indexer.checkValidSlice());
             assert( (start + indexer.stop) <= stop);

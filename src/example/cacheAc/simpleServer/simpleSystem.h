@@ -23,7 +23,7 @@ namespace kathryn::cacheServer{
         }
 
         CacheBankBase* genBank(int idx) override{
-            mMod(smBank, SimpleBank, _svParam.kvParam, SUFFIX_BIT);
+            mMod(smBank, SimpleBank, _svParam.kvParam, SUFFIX_BIT, idx);
             return &smBank;
         }
 

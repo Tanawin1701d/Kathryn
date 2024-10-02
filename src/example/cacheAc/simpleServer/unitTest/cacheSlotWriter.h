@@ -59,6 +59,11 @@ namespace kathryn::cacheServer{
             SERVER_PARAM svParam = _simpleServer._svParam;
             Queue& ingressQueue = _simpleServer._ingress->inputQueue;
 
+            addSlotVal(INGR_SLOT_IDX, "reqResBank0 " + std::to_string((ull)_simpleServer._ingress->_bankInterfaces[0]->reqResult));
+            addSlotVal(INGR_SLOT_IDX, "reqResBank1 " + std::to_string((ull)_simpleServer._ingress->_bankInterfaces[1]->reqResult));
+
+            addSlotVal(INGR_SLOT_IDX, "reqToDeq " + std::to_string((ull)_simpleServer._ingress->reqToDequeue));
+            addSlotVal(INGR_SLOT_IDX, "deqIntd " + std::to_string((ull)ingressQueue.deqIntend));
             addSlotVal(INGR_SLOT_IDX, "headPos " + std::to_string((ull)ingressQueue.headPos));
             addSlotVal(INGR_SLOT_IDX, "lastPos " + std::to_string((ull)ingressQueue.lastPos));
             addSlotVal(INGR_SLOT_IDX, "curSize " + std::to_string((ull)ingressQueue.curSize));

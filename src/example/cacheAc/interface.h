@@ -29,8 +29,9 @@ namespace kathryn::cacheServer{
 
         ull bankId = 0;
 
-        explicit BankInputInterface(KV_PARAM& param):
-        _param(param){}
+        explicit BankInputInterface(KV_PARAM& param, int bId):
+        _param(param),
+        bankId(bId){}
 
         ~BankInputInterface(){delete _inputParam;}
 

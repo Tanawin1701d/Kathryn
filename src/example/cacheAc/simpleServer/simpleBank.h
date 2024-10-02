@@ -12,25 +12,27 @@ namespace kathryn::cacheServer{
 
     class SimpleBank: public CacheBankBase{
     public:
-        const int _suffixBit = -1;
-        BankInputInterface inputItf;
+        const int           _suffixBit = -1; ///// size of suffix bit
+        const int           _bankId    = -1;
+        BankInputInterface  inputItf;
         BankOutputInterface outputItf;
-        mReg(cleanCnt, _suffixBit);
-        Operable& inputInBankKey; //// only key that used to indicate bank
-
-        mWire(isWriting, 1);
+        Operable&           inputInBankKey; //// only key that used to indicate bank
+        mReg(cleanCnt  , _suffixBit);
+        mWire(isWriting, 1         );
         //////////////////////////////////////////////////////////
         ///   | valid_bit | data_bit |
         //////////////////////////////////////////////////////////
 
-        explicit SimpleBank(KV_PARAM kv_param, int suffixBit):
-        CacheBankBase(kv_param, 1 << suffixBit, 1),
-        _suffixBit(suffixBit),
-        inputItf(kv_param),
-        outputItf(kv_param),
+        explicit SimpleBank(KV_PARAM kv_param, int suffixBit, int bankId):
+        CacheBankBase (kv_param, 1 << suffixBit, 1),
+        _suffixBit    (suffixBit),
+        _bankId       (bankId),
+        inputItf      (kv_param, _bankId),
+        outputItf     (kv_param),
         inputInBankKey(inputItf.key(0, _suffixBit))
         {   ////// build size of
             assert(suffixBit > 0);
+            assert(bankId < (1 << suffixBit));
         }
 
         //// Both decodePacket and maintenance bank are created in flow stage
@@ -66,7 +68,6 @@ namespace kathryn::cacheServer{
 
         void maintenanceBank() override{
             seq{
-
                 cleanCnt <<= 0;
                 cdowhile(cleanCnt != ( (1 << _suffixBit) - 1)){
                     par{

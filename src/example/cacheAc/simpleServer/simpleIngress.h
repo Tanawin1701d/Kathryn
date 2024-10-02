@@ -15,32 +15,30 @@ namespace kathryn::cacheServer{
     class SimpleIngress: public IngressBase{
     public:
 
-
-
         int startValueIdx = 0;
         int endValueIdx   = _svParam.kvParam.VALUE_SIZE;
         int startKeyIdx   = endValueIdx;
         int endKeyIdx     = startKeyIdx + _svParam.kvParam.KEY_SIZE;
         int startModeIdx  = endKeyIdx;
         /////////////////////////////////////////////////
-        int stopIdent  = startKeyIdx + _svParam.kvParam.KEY_SIZE;
-        int startIdent = startKeyIdx + _svParam.kvParam.KEY_SIZE - _svParam.prefixBit;
+        int stopIdent     = startKeyIdx + _svParam.kvParam.KEY_SIZE;
+        int startIdent    = startKeyIdx + _svParam.kvParam.KEY_SIZE - _svParam.prefixBit;
 
-        Wire& frontSig; ////// |isLoad|key|value|
+        Wire&     frontSig; ////// |isLoad|key|value|
         Operable& frontKey;
         Operable& frontValue;
         Operable& frontIsload;
         Operable& frontBankIdent;
 
         explicit SimpleIngress(
-            SERVER_PARAM                svParam,
+            SERVER_PARAM                     svParam,
             std::vector<BankInputInterface*> bankInterfaces):
         IngressBase(svParam, std::move(bankInterfaces)),
         frontSig(inputQueue.getFront()),
         frontKey      (frontSig(startKeyIdx  , endKeyIdx   )),
         frontValue    (frontSig(startValueIdx, endValueIdx )),
-        frontIsload   (frontSig(startModeIdx                     )),
-        frontBankIdent(frontSig(startIdent   , stopIdent   )){
+        frontIsload   (frontSig(startModeIdx                   )),
+        frontBankIdent(frontSig(startIdent   , stopIdent       )){
 
             for (auto & _bankInterface : _bankInterfaces)
                 _bankInterface->setInputParam({frontKey,frontValue,frontIsload});
@@ -54,7 +52,7 @@ namespace kathryn::cacheServer{
             //////// deal with bank interface
             for (int i = 0; i < _bankInterfaces.size(); i++){
                 BankInputInterface* bankInItf = _bankInterfaces[i];
-                ////// assign reqToDequeue signal that it is ready to receive
+                ////// assign reqToDequeue signal that bank is ready to receive
                 reqToDequeue(i) = bankInItf->isReqSuccess();
                 ////// assign ready to send signal
                 bankInItf->requestToSendOn(queueAvail & (frontBankIdent == bankInItf->bankId));
