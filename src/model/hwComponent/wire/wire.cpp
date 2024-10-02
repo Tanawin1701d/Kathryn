@@ -38,7 +38,8 @@ namespace kathryn{
 
     void Wire::doNonBlockAsm(Operable &srcOpr, Slice desSlice) {
         assert(getAssignMode() == AM_MOD);
-        Slice finalizeDesSlice = getSlice().getMatchSizeSubSlice(desSlice);
+        assert(getSlice().isContain(desSlice));
+        Slice finalizeDesSlice = desSlice.getMatchSizeSubSlice(srcOpr.getOperableSlice());
         ctrl->on_wire_update(
                 generateBasicNode(srcOpr, finalizeDesSlice, ASM_DIRECT),
                 this);

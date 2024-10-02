@@ -63,6 +63,7 @@ namespace kathryn::cacheServer{
         void describeCon() override{
             //////////////   record slot
             for (int cycle = 1; cycle < 90000; cycle++){
+                conEndCycle();
                 _cacheSlotWriter.recordSlot();
                 conNextCycle(1);
             }

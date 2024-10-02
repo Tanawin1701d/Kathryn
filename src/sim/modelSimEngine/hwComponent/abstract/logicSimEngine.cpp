@@ -66,6 +66,9 @@ namespace kathryn{
 
     std::string LogicSimEngine::genAssignAEqB(Slice desSlice, bool isDesTemp,
                                               Operable* srcOpr){
+        if (_ident->getGlobalId() == 103){
+            std::cout << "got 103" << std::endl;
+        }
         assert(srcOpr != nullptr);
         assert(desSlice.stop <= _asb->getAssignSlice().stop);
         ////// src operand

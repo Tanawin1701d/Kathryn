@@ -15,9 +15,9 @@ namespace kathryn{
         const int WORD_AMT = 0;
         const int ADDR_WIDTH = 0;
         mMem(queueMem, WORD_AMT, WORD_SZ);
-        mReg(headPos, ADDR_WIDTH);
-        mReg(lastPos, ADDR_WIDTH);
-        mReg(curSize, ADDR_WIDTH);
+        mReg(headPos , ADDR_WIDTH);
+        mReg(lastPos , ADDR_WIDTH);
+        mReg(curSize , ADDR_WIDTH);
 
         mWire(headWord , WORD_SZ);
         mWire(deqIntend, 1);
@@ -49,23 +49,24 @@ namespace kathryn{
             }zelse{
                 lastPos <<= lastPos + 1;
             }
-
         }
 
         void deQueue(){
             deqIntend = 1;
-            headPos <<= headPos + 1;
+            zif (headPos == (WORD_AMT-1)){
+                headPos <<= 0;
+            }zelse{
+                headPos <<= headPos + 1;
+            }
         }
 
         void initLogic(){
-
             headWord = queueMem[headPos];
-
             /////////// this will run every cycle
             zif (getResetSignal()){
                 curSize <<= 0;
                 headPos <<= 0;
-                lastPos <<= 1;
+                lastPos <<= 0;
             }zelif(deqIntend ^ enIntend){
                 zif(deqIntend){
                     curSize <<= curSize - 1;
@@ -73,7 +74,6 @@ namespace kathryn{
                     curSize <<= curSize + 1;
                 }
             }
-
         }
 
         /** get debug (this work only when simulation is started only )*/
@@ -131,7 +131,9 @@ namespace kathryn{
             ////////// modify the data
             queueMem.at((ull)lp).setVar(value);
             /////////  update last pos
+            std::cout << "lp bef-> " << lp.getVal() << std::endl;
             lp.setVar(( ((ull)lp) == (WORD_AMT-1) ) ? 0: ((ull)lp + 1));
+            std::cout << "lp after-> " << lp.getVal() << std::endl;
 
         }
     };
