@@ -164,7 +164,7 @@
 
                         if (valid){
                             std::string key   = std::to_string(row);
-                            std::string value = std::to_string(readData & (((ull)1) << _kb_param.VALUE_SIZE));
+                            std::string value = std::to_string(readData & (((ull)1 << _kb_param.VALUE_SIZE)-1) );
                             result.push_back({key, value});
                         }
                 }

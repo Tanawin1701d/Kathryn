@@ -43,7 +43,7 @@ namespace kathryn::cacheServer{
 
             std::cout << "packet is decoding" << std::endl;
 
-            cif (inputItf.isLoad){ ////// is load /////try until outgress is recv
+            cif (inputItf.nextIsLoad()){ ////// is load /////try until outgress is recv
                 outputItf.forceSend(
                     inputItf,
                     inputItf.key,

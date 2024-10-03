@@ -14,20 +14,20 @@ namespace kathryn::cacheServer{
     class SimpleOutgress: public OutgressBase{
     public:
 
-        const int SUFFIX_BIT = -1;
+        const int PREFIX_BIT = -1;
 
-        mReg(curBankItr, SUFFIX_BIT);
+        mReg(curBankItr, PREFIX_BIT);
         mReg(oKey      , _svParam.kvParam.KEY_SIZE);
         mReg(oValue    , _svParam.kvParam.VALUE_SIZE);
-        mReg(curResBank, SUFFIX_BIT);
+        mReg(curResBank, PREFIX_BIT);
         mReg(oValid, 1);
         mWire(areThereFin, _outputInterfaces.size());
 
         explicit SimpleOutgress(SERVER_PARAM svParam,
                                 std::vector<BankOutputInterface*> outputInterfaces):
         OutgressBase(svParam, outputInterfaces),
-        SUFFIX_BIT(svParam.kvParam.KEY_SIZE - svParam.prefixBit){
-            assert(SUFFIX_BIT > 0);
+        PREFIX_BIT(svParam.prefixBit){
+            assert(PREFIX_BIT > 0);
         }
 
         void flow() override{
@@ -50,8 +50,9 @@ namespace kathryn::cacheServer{
             }
             curBankItr <<= curBankItr + 1;
 
-            zif (areThereFin)
-                oValid <<= 1;
+            zif (areThereFin) oValid <<= 1;
+            zelse oValid <<= 0;
+
 
         }
     };

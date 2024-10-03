@@ -46,6 +46,11 @@ namespace kathryn::cacheServer{
             _inputParam = new INPUT_PARAM(inputParam);
         }
 
+        Operable& nextIsLoad(){
+            //////// we need to make sure that decision is correct for next cycle
+            return (reqResult & _inputParam->iIsLoad) | (~reqResult & valid & isLoad);
+        }
+
         ////// for get bank key
 
 
