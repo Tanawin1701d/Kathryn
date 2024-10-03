@@ -25,7 +25,7 @@ namespace kathryn::cacheServer{
     public:
 
         CacheSimItf(PARAM& params, SimpleServer& server):
-        SimInterface(100000,
+        SimInterface(600,
                      params[VCD_FILE_PARAM],
                      params[PROF_FILE_PARAM],
                      "cacheModel"
@@ -58,11 +58,33 @@ namespace kathryn::cacheServer{
                     );
                 }
             };
+
+            incCycle(100);
+
+            sim {
+
+                Queue& queue = _server.getIngress().inputQueue;
+                int BANK_AMT = 1 << _server._svParam.prefixBit;
+                int AMT_PER_BANK = 1 << (_server._svParam.kvParam.KEY_SIZE - _server._svParam.prefixBit);
+
+                for (int idx = queue.WORD_AMT-1; idx >= 0; idx--){
+                    queue.pushDataSim(
+                            genIncomePacket(
+                                    idx % BANK_AMT,
+                                    idx % AMT_PER_BANK,
+                                    idx,
+                                    true) ///// for now we set all element to write
+                    );
+                }
+
+            };
+
+
         }
 
         void describeCon() override{
             //////////////   record slot
-            for (int cycle = 1; cycle < 90000; cycle++){
+            for (int cycle = 1; cycle < 500; cycle++){
                 conEndCycle();
                 _cacheSlotWriter.recordSlot();
                 conNextCycle(1);

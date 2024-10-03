@@ -102,7 +102,23 @@ namespace kathryn::cacheServer{
                 assert(cacheBanks[bankIdx] != nullptr);
                 auto filledElement = cacheBanks[bankIdx]->getActiveValueDebug();
 
-                BankInputInterface& inputInterface = ((SimpleBank*)cacheBanks[bankIdx])->inputItf;
+                BankInputInterface&  inputInterface   = ((SimpleBank*)cacheBanks[bankIdx])->inputItf;
+                BankOutputInterface& outputInterface  = ((SimpleBank*)cacheBanks[bankIdx])->outputItf;
+                SimpleBank&          simpleBank       = *(SimpleBank*)cacheBanks[bankIdx];
+
+                addSlotVal(BANK_SLOT_START_IDX + bankIdx,
+                           "valid " +
+                           std::to_string((ull)inputInterface.valid));
+                addSlotVal(BANK_SLOT_START_IDX + bankIdx,
+                           "value " +
+                           std::to_string((ull)inputInterface.value));
+                addSlotVal(BANK_SLOT_START_IDX + bankIdx,
+                           "key " +
+                           std::to_string((ull)inputInterface.key));
+                addSlotVal(BANK_SLOT_START_IDX + bankIdx,
+                           "mode " +
+                           std::to_string((ull)inputInterface.isLoad));
+                //-----------------------------------------------------------------------------------
 
                 addSlotVal(BANK_SLOT_START_IDX + bankIdx,
                            "timer " +
@@ -138,6 +154,39 @@ namespace kathryn::cacheServer{
                 addSlotVal(BANK_SLOT_START_IDX + bankIdx,
                            "lasatItemFin " +
                            std::to_string((ull)inputInterface.lastItemFin));
+
+                addSlotVal(BANK_SLOT_START_IDX + bankIdx,
+                           "------- read Result");
+
+                addSlotVal(BANK_SLOT_START_IDX + bankIdx,
+                           "resultKey" + std::to_string((ull)outputInterface.resultKey));
+
+                addSlotVal(BANK_SLOT_START_IDX + bankIdx,
+                           "resultValue" + std::to_string((ull)outputInterface.resultValue));
+
+                addSlotVal(BANK_SLOT_START_IDX + bankIdx,
+                                "ReqResult " + std::to_string((ull)outputInterface.reqResult));
+
+                addSlotVal(BANK_SLOT_START_IDX + bankIdx,
+                           "isReqToSend " +
+                           std::to_string((ull)outputInterface.isReqToSend()));
+
+                addSlotVal(BANK_SLOT_START_IDX + bankIdx,
+                           "isValid " +
+                           std::to_string((ull)outputInterface.valid));
+
+                addSlotVal(BANK_SLOT_START_IDX + bankIdx,
+                           "lasatItemFin " +
+                           std::to_string((ull)outputInterface.lastItemFin));
+
+                addSlotVal(BANK_SLOT_START_IDX + bankIdx,
+                           "globReadIdx " +
+                           std::to_string((ull)simpleBank.globReadIndexer));
+
+                addSlotVal(BANK_SLOT_START_IDX + bankIdx,
+                           "readActivation " +
+                           std::to_string((ull)(*simpleBank.readActivation[0])));
+
 
                 for (auto[key, val]: filledElement){
                     addSlotVal(BANK_SLOT_START_IDX + bankIdx, "k " + key + " v " + val);
