@@ -5,6 +5,7 @@
 /KOut/MF.txt
 ##### ignore all output
 /KOut/**/*.vcd
+/KOut/**/*.slot
 /KOut/**/*.prof
 /KOut/**/*.sl
 /KOut/**/*.dumpVar
