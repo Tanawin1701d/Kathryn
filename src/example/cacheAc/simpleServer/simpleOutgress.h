@@ -5,6 +5,8 @@
 #ifndef SIMPLEOUTGRESS_H
 #define SIMPLEOUTGRESS_H
 
+#include <utility>
+
 #include "kathryn.h"
 #include "example/cacheAc/outgress.h"
 
@@ -25,7 +27,7 @@ namespace kathryn::cacheServer{
 
         explicit SimpleOutgress(SERVER_PARAM svParam,
                                 std::vector<BankOutputInterface*> outputInterfaces):
-        OutgressBase(svParam, outputInterfaces),
+        OutgressBase(svParam, std::move(outputInterfaces)),
         PREFIX_BIT(svParam.prefixBit){
             assert(PREFIX_BIT > 0);
         }
@@ -40,10 +42,10 @@ namespace kathryn::cacheServer{
             for (int idx = 0; idx < _outputInterfaces.size(); idx++){
                 zif( (curBankItr == idx) & _outputInterfaces[idx]->isReqToSend()
                 ){  ////// tell that we are finish
-                    _outputInterfaces[idx]->tellFinish();
+                    _outputInterfaces[idx]->declareReadyToRcv();
 
-                    oKey       <<= _outputInterfaces[idx]->resultKey;
-                    oValue     <<= _outputInterfaces[idx]->resultValue;
+                    oKey       <<= *_outputInterfaces[idx]->resultKey;
+                    oValue     <<= *_outputInterfaces[idx]->resultValue;
                     curResBank <<= curBankItr;
                     areThereFin(idx) = 1;
                 }

@@ -28,6 +28,8 @@
 #include "model/flowBlock/time/wait.h"
 #include "model/hwComponent/memBlock/MemBlock.h"
 #include "model/flowBlock/pipeline/pipeWrapper.h"
+#include "model/interface/singleHandShake/shs.h"
+
 
 #include "util/type/typeConv.h"
 #include "util/str/strUtil.h"
@@ -116,6 +118,8 @@ namespace kathryn {
         void on_box_end_init(Box* ptr);
         void on_box_update(AsmNode* asmNode, Box* box);
         void on_box_tryAddToBox(Operable* opr, Assignable* asb);
+        /** interface handling*/
+        void on_itf_init(ModelInterface* ptr);
 
         //void on_chk_and_lock_belongBlk(Assignable* asb, Operable* opr);
         //void on_chk_and_release_blk(Assignable* asb);

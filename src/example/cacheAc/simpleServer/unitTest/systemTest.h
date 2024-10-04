@@ -43,7 +43,7 @@ namespace kathryn::cacheServer{
 
             sim {
                 //// get queue
-                Queue &queue = _server.getIngress().inputQueue;
+                Queue &queue = _server.getIngress().qMem;
                 //// create meta data
                 int BANK_AMT = 1 << _server._svParam.prefixBit;
                 int AMT_PER_BANK = 1 << (_server._svParam.kvParam.KEY_SIZE - _server._svParam.prefixBit);
@@ -63,7 +63,7 @@ namespace kathryn::cacheServer{
 
             sim {
 
-                Queue& queue = _server.getIngress().inputQueue;
+                Queue& queue = _server.getIngress().qMem;
                 int BANK_AMT = 1 << _server._svParam.prefixBit;
                 int AMT_PER_BANK = 1 << (_server._svParam.kvParam.KEY_SIZE - _server._svParam.prefixBit);
 

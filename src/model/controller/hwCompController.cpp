@@ -297,6 +297,20 @@ namespace kathryn{
         if ( (!boxStack.empty()) && opr->castToIdent()->isUserVar()){
             boxStack.top()->addNestMeta({opr, asb});
         }
+    }
+
+
+    void ModelController::on_itf_init(ModelInterface* ptr){
+
+        assert(ptr != nullptr);
+        Module* targetModulePtr = getTopModulePtr();
+        /** localize necessary destination*/
+        targetModulePtr->addUserItf(ptr);
+        ptr->setParent(targetModulePtr);
+        ptr->buildInheritName();
+        /** debug value*/
+        logMF(ptr,
+              "val is initializing and set parent to " + targetModulePtr->getIdentDebugValue());
 
     }
 

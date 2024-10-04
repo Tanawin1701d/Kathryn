@@ -17,7 +17,7 @@ namespace kathryn::cacheServer{
     public:
         const SERVER_PARAM _svParam;
         ////////////////////////////////////////////
-        Queue inputQueue;///// | isLoad<1> | key | value
+        Queue qMem;///// | isLoad<1> | key | value
         ////// to do make input egress
         std::vector<BankInputInterface*> _bankInterfaces;
 
@@ -25,11 +25,13 @@ namespace kathryn::cacheServer{
 
         IngressBase(
             SERVER_PARAM                     svParam,
-            std::vector<BankInputInterface*> bankInterfaces):
+            std::vector<BankInputInterface*> bankInterfaces,
+            const std::vector<std::string>&  queueMetaNames,
+            const std::vector<int>&          queueMetaSize):
         _svParam(svParam),
-        inputQueue(
-            1 + _svParam.kvParam.KEY_SIZE + _svParam.kvParam.VALUE_SIZE,
-            _svParam.ingrQueueSize),
+        qMem(_svParam.ingrQueueSize,
+        queueMetaNames,
+        queueMetaSize),
         _bankInterfaces(std::move(bankInterfaces)){}
 
         virtual int  getAvailableBank(){return (int)_bankInterfaces.size();}

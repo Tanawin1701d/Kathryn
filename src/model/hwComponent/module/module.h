@@ -22,12 +22,14 @@
 #include "model/hwComponent/memBlock/MemBlock.h"
 #include "model/hwComponent/expression/nest.h"
 #include "model/hwComponent/box/box.h"
+#include "model/interface/base/interface.h"
 
 #include "model/flowBlock/abstract/flowBlock_Base.h"
 #include "model/flowBlock/abstract/spReg/waitReg.h"
 #include "model/flowBlock/abstract/nodes/startNode.h"
 
 #include "model/debugger/modelDebugger.h"
+
 #include "sim/modelSimEngine/hwComponent/module/moduleSim.h"
 #include "util/logger/logger.h"
 
@@ -70,6 +72,7 @@ namespace kathryn{
         std::vector<nest*>       _userNests;
         std::vector<Module*>     _userSubModules;
         std::vector<Box*>        _userBoxs; //// it contain only head of box in module
+        std::vector<ModelInterface*> _userItfs;
 
         ModuleSimEngine*         _moduleSimEngine = nullptr;
         ModuleGen*               _moduleGenEngine = nullptr;
@@ -101,14 +104,15 @@ namespace kathryn{
         void addNode           (Node* node);
 
         /**explicit element that is buillt from user declaration*/
-        void addUserReg        (Reg* reg);
-        void addUserWires      (Wire* wire);
-        void addUserExpression (expression* expr);
-        void addUserVal        (Val* val);
-        void addUserMemBlk     (MemBlock* memBlock);
-        void addUserNest       (nest* nst);
-        void addUserSubModule  (Module* smd);
-        void addUserBox        (Box* box);
+        void addUserReg        (Reg*            reg);
+        void addUserWires      (Wire*           wire);
+        void addUserExpression (expression*     expr);
+        void addUserVal        (Val*            val);
+        void addUserMemBlk     (MemBlock*       memBlock);
+        void addUserNest       (nest*           nst);
+        void addUserSubModule  (Module*         smd);
+        void addUserBox        (Box*            box);
+        void addUserItf        (ModelInterface* itf);
 
 
         /**implicit element that is built from design flow*/
@@ -128,6 +132,7 @@ namespace kathryn{
         auto& getUserNests(){return _userNests;}
         auto& getUserSubModules(){return _userSubModules;}
         auto& getBoxs(){return _userBoxs;}
+        auto& getItfs(){return _userItfs;}
 
         /** is Top Module*/
         bool isTopModule();

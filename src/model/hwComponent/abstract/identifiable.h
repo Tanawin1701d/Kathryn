@@ -51,7 +51,8 @@ namespace kathryn {
         TYPE_MEM_BLOCK = 9,
         TYPE_MEM_BLOCK_INDEXER = 10,
         TYPE_BOX = 11,
-        TYPE_COUNT = 12
+        TYPE_INTF = 12,
+        TYPE_COUNT = 13
     };
 
     static const std::string GLOBAL_PREFIX[TYPE_COUNT] = {"REG",
@@ -65,7 +66,8 @@ namespace kathryn {
                                                           "VAL",
                                                           "MEM_BLOCK",
                                                           "MEM_BLOCK_INDEXER",
-                                                          "BOX"
+                                                          "BOX",
+                                                          "ITF"
                                                         };
 
     class Module;
