@@ -43,13 +43,9 @@
             mWire(globWriteIndexer, log2Ceil(AMT_WORD));
             mWire(globWriteValue , _kb_param.VALUE_SIZE + EXTEND_WORD_BIT);
 
-
             mVal(DUMMY_RESET_VALUE, _kb_param.VALUE_SIZE + EXTEND_WORD_BIT, 0);
 
-
             mWire(wa, 1);
-
-
 
             CacheBankBase(KV_PARAM kv_param, const int amount_word,
                 const int extendWordBit):
@@ -59,7 +55,6 @@
 
             virtual void                 decodePacket()           = 0; ////// retrieve packet from queue do it your own
             virtual void                 maintenanceBank()        = 0; ////// do  maintenance bank
-            virtual void                 initInterface()          = 0;
             virtual BankInputInterface*  getBankInputInterface()  = 0; ////// get the bank input interface
             virtual BankOutputInterface* getBankOutputInterface() = 0; ////// get the bank output interface
 
@@ -67,7 +62,6 @@
                 doTimer();
                 doSchedule();
                 doShardMem();
-                initInterface();
             }
 
             void doTimer(){
@@ -86,7 +80,7 @@
                 cwhile(true){
                     cif(timerCnt == LIMIT_TIME){
                         maintenanceBank();
-                    }celif(inItf->isValid() | inItf->isReqSuccess()){
+                    }celif(inItf->isNextCycleBusy()){
                         decodePacket();
                     }celse{
                         wa = 1;

@@ -7,86 +7,67 @@
 
 #include "kathryn.h"
 #include "parameter.h"
-#include "example/interface/handShake/singleHandShake.h"
 
 
 namespace kathryn::cacheServer{
 
-    struct INPUT_PARAM{
-        Operable& iKey;
-        Operable& iValue;
-        Operable& iIsLoad;
-    };
 
-    struct BankInputInterface: I_SHS{
-
+    struct BankInputInterface: SingleHandShakeBase{
         const KV_PARAM& _param;
-        INPUT_PARAM*    _inputParam = nullptr;
-
-        mReg(key   , _param.KEY_SIZE);   ////// pure key
-        mReg(value , _param.VALUE_SIZE); ////// pure value
-        mReg(isLoad, 1);                 ////// pure isLoad
-
         ull bankId = 0;
+        mReg(key   , _param.KEY_SIZE);   Operable* iKey    = nullptr; ////// pure key
+        mReg(value , _param.VALUE_SIZE); Operable* iValue  = nullptr; ////// pure value
+        mReg(isLoad, 1);                 Operable* iIsLoad = nullptr; ////// pure isLoad
 
         explicit BankInputInterface(KV_PARAM& param, int bId):
-        _param(param),
-        bankId(bId){}
+        _param(param),bankId(bId){}
 
-        ~BankInputInterface(){delete _inputParam;}
-
-        void transfer() override{
-            assert(_inputParam != nullptr);
-            key    <<= _inputParam->iKey;
-            value  <<= _inputParam->iValue;
-            isLoad <<= _inputParam->iIsLoad;
+        void transferPayLoad() override{
+            key    <<= *iKey;
+            value  <<= *iValue;
+            isLoad <<= *iIsLoad;
         }
 
-        void setInputParam(INPUT_PARAM inputParam){
-            _inputParam = new INPUT_PARAM(inputParam);
+        void setInputParam(Operable* k, Operable* v, Operable* l){
+            iKey = k; iValue = v; iIsLoad = l;
         }
 
         Operable& nextIsLoad(){
             //////// we need to make sure that decision is correct for next cycle
-            return (reqResult & _inputParam->iIsLoad) | (~reqResult & valid & isLoad);
+            return (reqResult & *iIsLoad) | (~reqResult & isCurCycleBusy() & isLoad);
         }
 
         ////// for get bank key
+        ull getBankId(){return bankId;}
 
 
     };
 
-    struct BankOutputInterface: I_SHS{
+    struct BankOutputInterface: SingleHandShakeBase{
         const KV_PARAM& _param;
-        mWire(resultKey  , _param.KEY_SIZE);
-        mWire(resultValue, _param.VALUE_SIZE);
+        BankInputInterface& _inputItf;
+        Operable* resultKey   = nullptr;
+        Operable* resultValue = nullptr;
+        Wire*     readEn      = nullptr;
 
         mWire(outTest, 1);
 
-        explicit BankOutputInterface(const KV_PARAM& param):
-            _param(param){}
+        explicit BankOutputInterface(
+            const KV_PARAM& param,
+            BankInputInterface& inputItf
+        ): SingleHandShakeBase(false)
+        ,_param(param), _inputItf(inputItf){}
 
-        //////// acknowledge Signal used to tell that output is finish sent
-        //////// this function should be used as parallel
-        void forceSend(BankInputInterface& inputItf,
-                       Operable& key,
-                       Operable& value,
-                       Wire&     readEn
-
-        ){
-            cdowhile(~isReqSuccess()){
-                requestToSend();
-                resultKey   = key;
-                resultValue = value;
-                readEn      = 1;
-                outTest     = 1;
-                zif(isReqSuccess()){
-                    inputItf.tellFinish();
-                }
-            }
+        void setPayLoad(Operable* k, Operable* v, Wire* e){
+            resultKey = k; resultValue = v; readEn = e;
         }
 
-        void transfer() override{}
+
+        void transferPayLoad() override{
+            (*readEn) = 1;
+            zif (isReqSuccess())
+                _inputItf.declareReadyToRcv();
+        }
 
     };
 

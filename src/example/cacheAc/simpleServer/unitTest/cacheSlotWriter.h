@@ -57,7 +57,7 @@ namespace kathryn::cacheServer{
 
             ////////////////////////////////////////////////////////////////////////////////
             SERVER_PARAM svParam = _simpleServer._svParam;
-            Queue& ingressQueue = _simpleServer._ingress->inputQueue;
+            Queue& ingressQueue = _simpleServer._ingress->qMem;
 
             addSlotVal(INGR_SLOT_IDX, "reqResBank0 " + std::to_string((ull)_simpleServer._ingress->_bankInterfaces[0]->reqResult));
             addSlotVal(INGR_SLOT_IDX, "reqResBank1 " + std::to_string((ull)_simpleServer._ingress->_bankInterfaces[1]->reqResult));
@@ -85,6 +85,9 @@ namespace kathryn::cacheServer{
         void recordOutgress(){
             SimpleOutgress& outgr = *((SimpleOutgress*)_simpleServer._outgress);
 
+            addSlotVal(OUTR_SLOT_IDX, "areThereFin " + std::to_string((ull)outgr.areThereFin));
+            addSlotVal(OUTR_SLOT_IDX, "curBankIdx " + std::to_string((ull)outgr.curBankItr));
+
             if ( ((ull)outgr.oValid) == 0 ){
                 addSlotVal(OUTR_SLOT_IDX, "nop");
                 return;
@@ -108,7 +111,7 @@ namespace kathryn::cacheServer{
 
                 addSlotVal(BANK_SLOT_START_IDX + bankIdx,
                            "valid " +
-                           std::to_string((ull)inputInterface.valid));
+                           std::to_string((ull)inputInterface.isBusy));
                 addSlotVal(BANK_SLOT_START_IDX + bankIdx,
                            "value " +
                            std::to_string((ull)inputInterface.value));
@@ -149,11 +152,11 @@ namespace kathryn::cacheServer{
 
                 addSlotVal(BANK_SLOT_START_IDX + bankIdx,
                            "isValid " +
-                           std::to_string((ull)inputInterface.valid));
+                           std::to_string((ull)inputInterface.isBusy));
 
                 addSlotVal(BANK_SLOT_START_IDX + bankIdx,
                            "lasatItemFin " +
-                           std::to_string((ull)inputInterface.lastItemFin));
+                           std::to_string((ull)inputInterface.readyToGetNew));
 
                 addSlotVal(BANK_SLOT_START_IDX + bankIdx,
                            "------- read Result");
@@ -173,11 +176,11 @@ namespace kathryn::cacheServer{
 
                 addSlotVal(BANK_SLOT_START_IDX + bankIdx,
                            "isValid " +
-                           std::to_string((ull)outputInterface.valid));
+                           std::to_string((ull)outputInterface.isBusy));
 
                 addSlotVal(BANK_SLOT_START_IDX + bankIdx,
                            "lasatItemFin " +
-                           std::to_string((ull)outputInterface.lastItemFin));
+                           std::to_string((ull)outputInterface.readyToGetNew));
 
                 addSlotVal(BANK_SLOT_START_IDX + bankIdx,
                            "globReadIdx " +

@@ -28,27 +28,22 @@ namespace kathryn::cacheServer{
         _suffixBit    (suffixBit),
         _bankId       (bankId),
         inputItf      (kv_param, _bankId),
-        outputItf     (kv_param),
+        outputItf     (kv_param, inputItf),
         inputInBankKey(inputItf.key(0, _suffixBit))
         {   ////// build size of
             assert(suffixBit > 0);
             assert(bankId < (1 << suffixBit));
+            ////// build Read Structure
+
         }
 
         //// Both decodePacket and maintenance bank are created in flow stage
         void decodePacket() override{
 
-            auto [enValue, readValue] = getValue(inputInBankKey);
-
-
-            std::cout << "packet is decoding" << std::endl;
-
             cif (inputItf.nextIsLoad()){ ////// is load /////try until outgress is recv
-                outputItf.forceSend(
-                    inputItf,
-                    inputItf.key,
-                    readValue,
-                    enValue);
+                auto [enValue, readValue] = getValue(inputInBankKey);
+                outputItf.setPayLoad(&inputItf.key, &readValue, &enValue);
+                outputItf.sendAndWaitUntillSuccess();
             }celse{ //// is write
                 ///// write to memory now
                 if (_kb_param.replacePol == OVER_WRITE){
@@ -56,12 +51,11 @@ namespace kathryn::cacheServer{
                 }else{ ////// avoid conflict policy
 //                    zif(getValidBit(inputInBankKey)){
 //                        writeMem(inputInBankKey, inputItf.value);
-//                    }
                     writeMem(inputInBankKey, inputItf.value);
                 }
 
                 isWriting = 1;
-                inputItf.tellFinish();
+                inputItf.declareReadyToRcv();
             }
 
         }
@@ -76,11 +70,6 @@ namespace kathryn::cacheServer{
                     }
                 }
             }
-        }
-
-        void initInterface() override{
-            inputItf .buildLogic();
-            outputItf.buildLogic();
         }
 
         BankInputInterface*  getBankInputInterface () override{return &inputItf;}

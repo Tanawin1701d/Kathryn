@@ -116,6 +116,11 @@ namespace kathryn{
         _userBoxs.push_back(box);
     }
 
+    void Module::addUserItf(ModelInterface* itf){
+        assert(itf != nullptr);
+        _userItfs.push_back(itf);
+    }
+
     bool Module::isTopModule(){
         return _isTopModule;
     }
@@ -143,6 +148,9 @@ namespace kathryn{
     void Module::buildAll(){
         /**declare to model controller that this module is initialize*/
         flow();
+        for (ModelInterface* itf: getItfs()){
+            itf->buildLogicBase();
+        }
         buildFlow();
         /**this ensure that submodule in init component and all is ready to build flow*/
         /** build sub module first*/

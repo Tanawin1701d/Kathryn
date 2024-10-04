@@ -44,5 +44,10 @@ add_executable(Kathryn
         ${SRC_PARAM}
         ${SRC_LIB}
         ${SRC_MODEL_COMPILE}
+        src/model/interface/base/interface.cpp
+        src/model/interface/base/interface.h
+        src/model/interface/singleHandShake/shs.cpp
+        src/model/interface/singleHandShake/shs.h
+        src/model/interface/singleHandShake/shs.cpp
 
 )
