@@ -13,8 +13,8 @@
 
         class CacheBankBase: public Module{
         public:
-            const KV_PARAM _kb_param;
-            const int EXTEND_WORD_BIT = 1;
+            KV_PARAM _kb_param;
+            DYNAMIC_FIELD fields;
             const int LIMIT_TIME = 60000;
             const int AMT_WORD   = 1;
 
@@ -29,29 +29,30 @@
             std::vector<Operable*>     writeValues;
 
             ///////////// <valid bit><value>
-            mMem(poolData, AMT_WORD, _kb_param.VALUE_SIZE + EXTEND_WORD_BIT);
+            mMem(poolData, AMT_WORD, fields.sumFieldSize());
             mReg(timerCnt, 16);
 
             /** global memory management*/
 
             /////// for read
             mWire(globReadIndexer, log2Ceil(AMT_WORD));
-            mWire(globReadOutput , _kb_param.VALUE_SIZE + EXTEND_WORD_BIT);
+            mWire(globReadOutput , fields.sumFieldSize());
 
             /////// for write
             mWire(globWriteEnable , 1);
             mWire(globWriteIndexer, log2Ceil(AMT_WORD));
-            mWire(globWriteValue , _kb_param.VALUE_SIZE + EXTEND_WORD_BIT);
+            mWire(globWriteValue , fields.sumFieldSize());
 
-            mVal(DUMMY_RESET_VALUE, _kb_param.VALUE_SIZE + EXTEND_WORD_BIT, 0);
+            mVal(DUMMY_RESET_VALUE, fields.sumFieldSize(), 0);
 
             mWire(wa, 1);
 
-            CacheBankBase(KV_PARAM kv_param, const int amount_word,
-                const int extendWordBit):
+            CacheBankBase(KV_PARAM kv_param, const int amount_word):
             _kb_param(kv_param),
-            EXTEND_WORD_BIT(extendWordBit),
-            AMT_WORD(amount_word){}
+            fields   (kv_param.valuefield + DYNAMIC_FIELD({"valid"}, {1})),
+            AMT_WORD(amount_word){
+                fields.reverse();
+            }
 
             virtual void                 decodePacket()           = 0; ////// retrieve packet from queue do it your own
             virtual void                 maintenanceBank()        = 0; ////// do  maintenance bank
@@ -114,12 +115,31 @@
                 }
             }
 
-            std::pair<Wire&, Operable&> readMem(Operable& idx){
+            std::vector<Operable*> getReadValue(){
+                std::vector<Operable*> result;
+                for (std::string valueName: _kb_param.valuefield._valueFieldNames){
+                    int idx      = fields.findIdx(valueName);
+                    int startBit = fields.findStartBit(idx);
+                    int stopBit  = startBit + fields.getSize(idx);
+                    result.push_back(&globReadOutput(startBit, stopBit));
+                }
+                assert(!result.empty());
+                return result;
+            }
+
+            std::pair<Wire&, std::vector<Operable*>> readMem(Operable& addr){
                 Wire& bit = makeOprWire("readEnSig" + std::to_string(readCountIdx++), 1);
-                assert(idx.getOperableSlice().getSize() == log2Ceil(AMT_WORD));
+                assert(addr.getOperableSlice().getSize() == log2Ceil(AMT_WORD));
                 readActivation.push_back(&bit);
-                readIndexers.push_back(&idx);
-                return {bit, globReadOutput};
+                readIndexers.push_back(&addr);
+                return {bit, getReadValue()};
+            }
+
+            ////// data [a3, a2, a1, a0]
+            Operable& composedDataToAssign(std::vector<Reg*> datas){
+                ////// because nest need reverse assumption
+                std::reverse(datas.begin(), datas.end());
+                return makeNestReadOnly(true, datas);
             }
 
             void writeMem(Operable& idx, Operable& value){
@@ -129,16 +149,6 @@
                 writeActivation.push_back(&activateWire);
                 writeIndexers  .push_back(&idx);
                 writeValues    .push_back(&value);
-            }
-
-            std::pair<Wire&, Operable&> getValidBit(Operable& idx){
-                auto [enSig, globOutput] = readMem(idx);
-                return {enSig, *globOutput.doSlice({_kb_param.VALUE_SIZE, _kb_param.VALUE_SIZE + 1})};
-            }
-
-            std::pair<Wire&, Operable&> getValue(Operable& idx){
-                auto [enSig, globOutput] = readMem(idx);
-                return {enSig, *globOutput.doSlice({0, _kb_param.VALUE_SIZE})};
             }
 
             void resetMem(Operable& idx){
@@ -154,11 +164,11 @@
                         ///// check the valid bit
                         ///////// this is set to < 64
                         ull  readData = poolData.at(row).getVal();
-                        bool valid    = (readData >> _kb_param.VALUE_SIZE);
+                        bool valid    = (readData >> _kb_param.valuefield.sumFieldSize());
 
                         if (valid){
                             std::string key   = std::to_string(row);
-                            std::string value = std::to_string(readData & (((ull)1 << _kb_param.VALUE_SIZE)-1) );
+                            std::string value = std::to_string(readData & (((ull)1 << _kb_param.valuefield.sumFieldSize())-1) );
                             result.push_back({key, value});
                         }
                 }

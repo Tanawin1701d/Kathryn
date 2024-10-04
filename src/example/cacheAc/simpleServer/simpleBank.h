@@ -24,7 +24,7 @@ namespace kathryn::cacheServer{
         //////////////////////////////////////////////////////////
 
         explicit SimpleBank(KV_PARAM kv_param, int suffixBit, int bankId):
-        CacheBankBase (kv_param, 1 << suffixBit, 1),
+        CacheBankBase (kv_param, 1 << suffixBit),
         _suffixBit    (suffixBit),
         _bankId       (bankId),
         inputItf      (kv_param, _bankId),
@@ -41,17 +41,18 @@ namespace kathryn::cacheServer{
         void decodePacket() override{
 
             cif (inputItf.nextIsLoad()){ ////// is load /////try until outgress is recv
-                auto [enValue, readValue] = getValue(inputInBankKey);
-                outputItf.setPayLoad(&inputItf.key, &readValue, &enValue);
+                auto [enValue, readValues] = readMem(inputInBankKey);
+                outputItf.setPayLoad(&inputItf.key, readValues, &enValue);
                 outputItf.sendAndWaitUntillSuccess();
             }celse{ //// is write
                 ///// write to memory now
                 if (_kb_param.replacePol == OVER_WRITE){
-                    writeMem(inputInBankKey, inputItf.value);
+                    writeMem(inputInBankKey,
+                             composedDataToAssign(inputItf.values));
                 }else{ ////// avoid conflict policy
 //                    zif(getValidBit(inputInBankKey)){
 //                        writeMem(inputInBankKey, inputItf.value);
-                    writeMem(inputInBankKey, inputItf.value);
+                    writeMem(inputInBankKey, composedDataToAssign(inputItf.values));
                 }
 
                 isWriting = 1;

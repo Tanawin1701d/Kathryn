@@ -7,12 +7,13 @@
 
 #include "kathryn.h"
 #include "interface.h"
+#include "example/dataStruct/field/dynamicField.h"
 
 namespace kathryn::cacheServer{
 
     class OutgressBase: public Module{
     public:
-        const SERVER_PARAM                _svParam;
+        SERVER_PARAM                _svParam;
         std::vector<BankOutputInterface*> _outputInterfaces;
 
         OutgressBase(SERVER_PARAM svParam,

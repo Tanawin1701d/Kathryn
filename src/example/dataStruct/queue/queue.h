@@ -7,6 +7,7 @@
 
 
 #include "kathryn.h"
+#include "../field/dynamicField.h"
 
 namespace kathryn{
 
@@ -17,8 +18,7 @@ namespace kathryn{
     };
 
     struct Queue{
-        std::vector<std::string> _names;
-        std::vector<int>         _sizes;
+        DYNAMIC_FIELD _fields;
         const int WORD_SZ = 0;
         const int WORD_AMT = 0;
         const int ADDR_WIDTH = 0;
@@ -32,28 +32,15 @@ namespace kathryn{
         mWire(enIntend , 1);
 
 
-        explicit Queue(int word_amt, std::vector<std::string> names, std::vector<int> sizes):
-        _names(names),
-        _sizes(sizes),
-        WORD_SZ(caculateWordSize(sizes)),
+        explicit Queue(int word_amt, DYNAMIC_FIELD fields):
+        _fields(fields),
+        WORD_SZ(_fields.sumFieldSize()),
         WORD_AMT(word_amt),
         ADDR_WIDTH(log2Ceil(word_amt)){
             assert(WORD_SZ > 0);
             assert(word_amt  > 0);
-            assert(_names.size() == sizes.size());
-            std::reverse(_names.begin(), _names.end());
-            std::reverse(_sizes.begin(), _sizes.end());
         }
 
-
-        static int caculateWordSize(std::vector<int> sizes){
-            int total = 0;
-            for (int i = 0; i < sizes.size(); i++){
-                assert(sizes[i] > 0);
-                total += sizes[i];
-            }
-            return total;
-        }
 
 
         Operable& isFull () { return curSize == WORD_AMT;}
@@ -62,25 +49,19 @@ namespace kathryn{
         Wire& getFront() {return headWord;}
 
         Operable& getFront(const std::string& name){
-            auto findIter = std::find(_names.begin(), _names.end(), name);
-            assert(findIter != _names.end());
-            size_t findIdx = std::distance(_names.begin(), findIter);
-
-            int startBit = findStartBitOfWrap(findIdx);
-            int stopBit  = startBit + _sizes[findIdx];
-
+            int idx = _fields.findIdx(name);
+            int startBit = _fields.findStartBit(idx);
+            int stopBit  = startBit + _fields.getSize(idx);
             return getFront()(startBit, stopBit);
         }
 
-        int findStartBitOfWrap(size_t idx){
-            assert(idx < _names.size());
-            int result = 0;
-            for (int curIdx = 0; curIdx < idx; curIdx++){
-                result += _sizes[curIdx];
+        std::vector<Operable*> getFront(const std::vector<std::string>& names){
+            std::vector<Operable*> result;
+            for (std::string name: names){
+                result.push_back(&getFront(name));
             }
             return result;
         }
-
 
         ////// no execption for overflow
         void enQueue(Operable& data){

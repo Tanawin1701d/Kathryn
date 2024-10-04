@@ -22,7 +22,9 @@ namespace kathryn::cacheServer{
             std::vector<BankInputInterface*>  _bankInputItfs;  //// bank input  interfaces
             std::vector<BankOutputInterface*> _bankOutputItfs; //// bank output interfaces
             ///////// constructor
-            explicit ServerBase(SERVER_PARAM svParam):_svParam(svParam){}
+            explicit ServerBase(SERVER_PARAM svParam):_svParam(svParam){
+                _svParam.kvParam.valuefield.reverse();
+            }
             ///////// start build the element
             void initServer(){
                 int amtBank = 1 << _svParam.prefixBit;

@@ -8,7 +8,7 @@ namespace kathryn::cacheServer{
 
     void startSimpleCacheAcSim(PARAM& params){
         SERVER_PARAM serverParam = {
-                {8, 32, OVER_WRITE},
+                {8, OVER_WRITE, DYNAMIC_FIELD({"value"}, {32})},
                 64, 1
         };
 

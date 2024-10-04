@@ -7,6 +7,7 @@
 
 #include "kathryn.h"
 #include "parameter.h"
+#include "example/dataStruct/field/dynamicField.h"
 
 
 namespace kathryn::cacheServer{
@@ -15,21 +16,31 @@ namespace kathryn::cacheServer{
     struct BankInputInterface: SingleHandShakeBase{
         const KV_PARAM& _param;
         ull bankId = 0;
-        mReg(key   , _param.KEY_SIZE);   Operable* iKey    = nullptr; ////// pure key
-        mReg(value , _param.VALUE_SIZE); Operable* iValue  = nullptr; ////// pure value
         mReg(isLoad, 1);                 Operable* iIsLoad = nullptr; ////// pure isLoad
+        mReg(key   , _param.KEY_SIZE);   Operable* iKey    = nullptr; ////// pure key
+
+        std::vector<Reg*> values;        std::vector<Operable*> iValue; ////// pure value
 
         explicit BankInputInterface(KV_PARAM& param, int bId):
-        _param(param),bankId(bId){}
-
-        void transferPayLoad() override{
-            key    <<= *iKey;
-            value  <<= *iValue;
-            isLoad <<= *iIsLoad;
+        _param(param),bankId(bId){
+            for (int i = 0; i < _param.valuefield._valueFieldNames.size(); i++){
+                values.push_back(&mOprReg(_param.valuefield._valueFieldNames[i], 1));
+            }
         }
 
-        void setInputParam(Operable* k, Operable* v, Operable* l){
-            iKey = k; iValue = v; iIsLoad = l;
+        void transferPayLoad() override{
+            isLoad <<= *iIsLoad;
+            key    <<= *iKey;
+            /////// check transfer size
+            assert(_param.valuefield._valueFieldNames.size() == values.size());
+            assert(values.size() == iValue.size());
+            for (int i = 0; i < _param.valuefield._valueFieldNames.size(); i++){
+                *values[i] <<= *iValue[i];
+            }
+        }
+
+        void setInputParam(Operable* l, Operable* k, std::vector<Operable*> vs){
+            iIsLoad = l; iKey = k; iValue = vs;
         }
 
         Operable& nextIsLoad(){
@@ -40,14 +51,13 @@ namespace kathryn::cacheServer{
         ////// for get bank key
         ull getBankId(){return bankId;}
 
-
     };
 
     struct BankOutputInterface: SingleHandShakeBase{
         const KV_PARAM& _param;
         BankInputInterface& _inputItf;
         Operable* resultKey   = nullptr;
-        Operable* resultValue = nullptr;
+        std::vector<Operable*> iValues;
         Wire*     readEn      = nullptr;
 
         mWire(outTest, 1);
@@ -58,10 +68,9 @@ namespace kathryn::cacheServer{
         ): SingleHandShakeBase(false)
         ,_param(param), _inputItf(inputItf){}
 
-        void setPayLoad(Operable* k, Operable* v, Wire* e){
-            resultKey = k; resultValue = v; readEn = e;
+        void setPayLoad(Operable* k, std::vector<Operable*> vs, Wire* e){
+            resultKey = k; iValues = vs; readEn = e;
         }
-
 
         void transferPayLoad() override{
             (*readEn) = 1;

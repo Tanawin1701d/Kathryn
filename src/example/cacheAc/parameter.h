@@ -7,6 +7,7 @@
 
 
 #include<iostream>
+#include "example/dataStruct/field/dynamicField.h"
 
 namespace kathryn::cacheServer{
 
@@ -17,8 +18,8 @@ namespace kathryn::cacheServer{
 
     struct KV_PARAM{
         int KEY_SIZE = 8; ///// key size if the cache
-        int VALUE_SIZE = 32; //////// value bitwidth
         REPLACE_POL replacePol = OVER_WRITE;
+        DYNAMIC_FIELD valuefield;
     };
 
     struct SERVER_PARAM{

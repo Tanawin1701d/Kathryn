@@ -19,14 +19,15 @@ namespace kathryn::cacheServer{
             SERVER_PARAM                     svParam,
             std::vector<BankInputInterface*> bankInterfaces):
         IngressBase(svParam, std::move(bankInterfaces),
-        {"isLoad", "key", "value"},
-        {1, svParam.kvParam.KEY_SIZE, svParam.kvParam.VALUE_SIZE}
+        svParam.kvParam.valuefield +
+        DYNAMIC_FIELD({"key", "isLoad"}, {svParam.kvParam.KEY_SIZE, 1})
         ){
             for (int i = 0; i < _bankInterfaces.size(); i++){
                 BankInputInterface* bankInItf = _bankInterfaces[i];
-                bankInItf->setInputParam(&qMem.getFront("key"),
-                                         &qMem.getFront("value"),
-                                         &qMem.getFront("isLoad"));
+                bankInItf->setInputParam(&qMem.getFront("isLoad"),
+                                         &qMem.getFront("key"),
+                                         qMem.getFront(svParam.kvParam.valuefield._valueFieldNames)
+                                         );
             }
         }
 

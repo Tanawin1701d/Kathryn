@@ -11,6 +11,7 @@
 #include "example/cacheAc/outgress.h"
 
 
+
 namespace kathryn::cacheServer{
 
     class SimpleOutgress: public OutgressBase{
@@ -20,7 +21,7 @@ namespace kathryn::cacheServer{
 
         mReg(curBankItr, PREFIX_BIT);
         mReg(oKey      , _svParam.kvParam.KEY_SIZE);
-        mReg(oValue    , _svParam.kvParam.VALUE_SIZE);
+        std::vector<Reg*> oValues;
         mReg(curResBank, PREFIX_BIT);
         mReg(oValid, 1);
         mWire(areThereFin, _outputInterfaces.size());
@@ -30,6 +31,11 @@ namespace kathryn::cacheServer{
         OutgressBase(svParam, std::move(outputInterfaces)),
         PREFIX_BIT(svParam.prefixBit){
             assert(PREFIX_BIT > 0);
+            for (int idx = 0; idx < _svParam.kvParam.valuefield.amtField(); idx++){
+                oValues.push_back(
+                    &makeOprReg(_svParam.kvParam.valuefield._valueFieldNames[0],
+                                _svParam.kvParam.valuefield._valueFieldSizes[0]));
+            }
         }
 
         void flow() override{
@@ -43,9 +49,12 @@ namespace kathryn::cacheServer{
                 zif( (curBankItr == idx) & _outputInterfaces[idx]->isReqToSend()
                 ){  ////// tell that we are finish
                     _outputInterfaces[idx]->declareReadyToRcv();
-
-                    oKey       <<= *_outputInterfaces[idx]->resultKey;
-                    oValue     <<= *_outputInterfaces[idx]->resultValue;
+                    oKey  <<= *_outputInterfaces[idx]->resultKey;
+                    int fieldIdx = 0;
+                    for (Operable* valueOpr: _outputInterfaces[fieldIdx]->iValues){
+                        *oValues[fieldIdx] <<= *valueOpr;
+                        fieldIdx++;
+                    }
                     curResBank <<= curBankItr;
                     areThereFin(idx) = 1;
                 }

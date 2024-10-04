@@ -49,5 +49,6 @@ add_executable(Kathryn
         src/model/interface/singleHandShake/shs.cpp
         src/model/interface/singleHandShake/shs.h
         src/model/interface/singleHandShake/shs.cpp
+        src/example/dataStruct/field/dynamicField.h
 
 )
