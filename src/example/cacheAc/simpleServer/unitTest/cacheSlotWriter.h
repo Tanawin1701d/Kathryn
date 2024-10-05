@@ -57,7 +57,7 @@ namespace kathryn::cacheServer{
 
             ////////////////////////////////////////////////////////////////////////////////
             SERVER_PARAM svParam = _simpleServer._svParam;
-            Queue& ingressQueue = _simpleServer._ingress->qMem;
+            Queue& ingressQueue = _simpleServer._ingress->_qMem;
 
             addSlotVal(INGR_SLOT_IDX, "reqResBank0 " + std::to_string((ull)_simpleServer._ingress->_bankInterfaces[0]->reqResult));
             addSlotVal(INGR_SLOT_IDX, "reqResBank1 " + std::to_string((ull)_simpleServer._ingress->_bankInterfaces[1]->reqResult));
@@ -70,7 +70,7 @@ namespace kathryn::cacheServer{
 
             auto queueDebugValue=
                 ingressQueue.getSimDebug(
-                        {1, svParam.kvParam.KEY_SIZE, svParam.kvParam.VALUE_SIZE}
+                        {1, svParam.kvParam.KEY_SIZE, svParam.kvParam.valuefield.sumFieldSize()}
                 );
 
             for (auto&  queueEle: queueDebugValue){
@@ -94,7 +94,7 @@ namespace kathryn::cacheServer{
             }
 
             addSlotVal(OUTR_SLOT_IDX, "k " + std::to_string((ull)outgr.oKey));
-            addSlotVal(OUTR_SLOT_IDX, "v " + std::to_string((ull)outgr.oValue));
+            addSlotVal(OUTR_SLOT_IDX, "v " + std::to_string((ull)(*outgr.oValues[0])));
 
         }
 
@@ -114,7 +114,7 @@ namespace kathryn::cacheServer{
                            std::to_string((ull)inputInterface.isBusy));
                 addSlotVal(BANK_SLOT_START_IDX + bankIdx,
                            "value " +
-                           std::to_string((ull)inputInterface.value));
+                           std::to_string((ull)(*inputInterface.values[0])));
                 addSlotVal(BANK_SLOT_START_IDX + bankIdx,
                            "key " +
                            std::to_string((ull)inputInterface.key));
@@ -165,7 +165,7 @@ namespace kathryn::cacheServer{
                            "resultKey" + std::to_string((ull)outputInterface.resultKey));
 
                 addSlotVal(BANK_SLOT_START_IDX + bankIdx,
-                           "resultValue" + std::to_string((ull)outputInterface.resultValue));
+                           "resultValue" + std::to_string((ull)(*outputInterface.iValues[0])));
 
                 addSlotVal(BANK_SLOT_START_IDX + bankIdx,
                                 "ReqResult " + std::to_string((ull)outputInterface.reqResult));
@@ -189,6 +189,9 @@ namespace kathryn::cacheServer{
                 addSlotVal(BANK_SLOT_START_IDX + bankIdx,
                            "readActivation " +
                            std::to_string((ull)(*simpleBank.readActivation[0])));
+                addSlotVal(BANK_SLOT_START_IDX + bankIdx,
+                           "readValue " +
+                           std::to_string((ull)(*outputInterface.iValues[0])));
 
 
                 for (auto[key, val]: filledElement){

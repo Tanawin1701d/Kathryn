@@ -23,7 +23,7 @@ namespace kathryn::cacheServer{
         ///   | valid_bit | data_bit |
         //////////////////////////////////////////////////////////
 
-        explicit SimpleBank(KV_PARAM kv_param, int suffixBit, int bankId):
+        explicit SimpleBank(KV_PARAM& kv_param, int suffixBit, int bankId):
         CacheBankBase (kv_param, 1 << suffixBit),
         _suffixBit    (suffixBit),
         _bankId       (bankId),

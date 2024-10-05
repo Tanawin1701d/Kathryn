@@ -13,10 +13,10 @@
 
         class CacheBankBase: public Module{
         public:
-            KV_PARAM _kb_param;
-            DYNAMIC_FIELD fields;
-            const int LIMIT_TIME = 60000;
-            const int AMT_WORD   = 1;
+            KV_PARAM&      _kb_param;
+            DYNAMIC_FIELD fields; //// valid bit include
+            const int     LIMIT_TIME = 60000;
+            const int     AMT_WORD   = 1;
 
             int readCountIdx = 0;
             int writeCountIdx = 0;
@@ -41,18 +41,16 @@
             /////// for write
             mWire(globWriteEnable , 1);
             mWire(globWriteIndexer, log2Ceil(AMT_WORD));
-            mWire(globWriteValue , fields.sumFieldSize());
+            mWire(globWriteValue  , fields.sumFieldSize());
 
             mVal(DUMMY_RESET_VALUE, fields.sumFieldSize(), 0);
 
             mWire(wa, 1);
 
-            CacheBankBase(KV_PARAM kv_param, const int amount_word):
+            CacheBankBase(KV_PARAM& kv_param, const int amount_word):
             _kb_param(kv_param),
             fields   (kv_param.valuefield + DYNAMIC_FIELD({"valid"}, {1})),
-            AMT_WORD(amount_word){
-                fields.reverse();
-            }
+            AMT_WORD(amount_word){}
 
             virtual void                 decodePacket()           = 0; ////// retrieve packet from queue do it your own
             virtual void                 maintenanceBank()        = 0; ////// do  maintenance bank
@@ -139,7 +137,12 @@
             Operable& composedDataToAssign(std::vector<Reg*> datas){
                 ////// because nest need reverse assumption
                 std::reverse(datas.begin(), datas.end());
-                return makeNestReadOnly(true, datas);
+                std::vector<Operable*> oprs;
+                for (Reg* opr: datas){
+                    assert(opr != nullptr);
+                    oprs.push_back(opr);
+                }
+                return makeNestManReadOnly(true, oprs);
             }
 
             void writeMem(Operable& idx, Operable& value){
@@ -174,8 +177,6 @@
                 }
                 return result;
             }
-
-
         };
     }
 

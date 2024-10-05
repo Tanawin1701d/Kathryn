@@ -15,14 +15,14 @@ namespace kathryn::cacheServer{
 
         class ServerBase: public Module{
         public:
-            SERVER_PARAM                      _svParam;
+            SERVER_PARAM&                      _svParam;
             IngressBase*                      _ingress  = nullptr;
             OutgressBase*                     _outgress = nullptr;
             std::vector<CacheBankBase*>       _banks;
             std::vector<BankInputInterface*>  _bankInputItfs;  //// bank input  interfaces
             std::vector<BankOutputInterface*> _bankOutputItfs; //// bank output interfaces
             ///////// constructor
-            explicit ServerBase(SERVER_PARAM svParam):_svParam(svParam){
+            explicit ServerBase(SERVER_PARAM& svParam):_svParam(svParam){
                 _svParam.kvParam.valuefield.reverse();
             }
             ///////// start build the element

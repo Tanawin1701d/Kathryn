@@ -23,8 +23,8 @@ namespace kathryn::cacheServer{
 
         explicit BankInputInterface(KV_PARAM& param, int bId):
         _param(param),bankId(bId){
-            for (int i = 0; i < _param.valuefield._valueFieldNames.size(); i++){
-                values.push_back(&mOprReg(_param.valuefield._valueFieldNames[i], 1));
+            for (auto[keyName, sz]: param.valuefield.getAllKeySize()){
+                values.push_back(&mOprReg(keyName, sz));
             }
         }
 
@@ -34,7 +34,7 @@ namespace kathryn::cacheServer{
             /////// check transfer size
             assert(_param.valuefield._valueFieldNames.size() == values.size());
             assert(values.size() == iValue.size());
-            for (int i = 0; i < _param.valuefield._valueFieldNames.size(); i++){
+            for (int i = 0; i < values.size(); i++){
                 *values[i] <<= *iValue[i];
             }
         }
@@ -54,11 +54,11 @@ namespace kathryn::cacheServer{
     };
 
     struct BankOutputInterface: SingleHandShakeBase{
-        const KV_PARAM& _param;
-        BankInputInterface& _inputItf;
-        Operable* resultKey   = nullptr;
+        const KV_PARAM&        _param;
+        BankInputInterface&    _inputItf;
+        Operable*              resultKey   = nullptr;
         std::vector<Operable*> iValues;
-        Wire*     readEn      = nullptr;
+        Wire*                  readEn      = nullptr;
 
         mWire(outTest, 1);
 

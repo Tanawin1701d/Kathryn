@@ -15,7 +15,7 @@ namespace kathryn::cacheServer{
     public:
         const int SUFFIX_BIT = 0;
 
-        explicit SimpleServer(const SERVER_PARAM& svParam):
+        explicit SimpleServer(SERVER_PARAM& svParam):
         ServerBase(svParam),
         SUFFIX_BIT(_svParam.kvParam.KEY_SIZE - _svParam.prefixBit){
             assert(SUFFIX_BIT > 0);

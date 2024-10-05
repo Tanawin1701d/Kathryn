@@ -43,7 +43,7 @@ namespace kathryn::cacheServer{
 
             sim {
                 //// get queue
-                Queue &queue = _server.getIngress().qMem;
+                Queue &queue = _server.getIngress()._qMem;
                 //// create meta data
                 int BANK_AMT = 1 << _server._svParam.prefixBit;
                 int AMT_PER_BANK = 1 << (_server._svParam.kvParam.KEY_SIZE - _server._svParam.prefixBit);
@@ -63,7 +63,7 @@ namespace kathryn::cacheServer{
 
             sim {
 
-                Queue& queue = _server.getIngress().qMem;
+                Queue& queue = _server.getIngress()._qMem;
                 int BANK_AMT = 1 << _server._svParam.prefixBit;
                 int AMT_PER_BANK = 1 << (_server._svParam.kvParam.KEY_SIZE - _server._svParam.prefixBit);
 
@@ -96,7 +96,7 @@ namespace kathryn::cacheServer{
         ull genIncomePacket(int bankIdx, int idxInBank, int value, bool isLoad){
             ull baseElement = 0;
 
-            int valueSize   = _server._svParam.kvParam.VALUE_SIZE;
+            int valueSize   = _server._svParam.kvParam.valuefield.sumFieldSize();
             int keySize     = _server._svParam.kvParam.KEY_SIZE;
             int bankKeySize = _server._svParam.kvParam.KEY_SIZE - _server._svParam.prefixBit;
             assert(bankKeySize > 0);

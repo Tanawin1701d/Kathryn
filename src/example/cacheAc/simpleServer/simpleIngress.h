@@ -16,24 +16,23 @@ namespace kathryn::cacheServer{
     public:
 
         explicit SimpleIngress(
-            SERVER_PARAM                     svParam,
+            SERVER_PARAM&                    svParam,
             std::vector<BankInputInterface*> bankInterfaces):
         IngressBase(svParam, std::move(bankInterfaces),
         svParam.kvParam.valuefield +
         DYNAMIC_FIELD({"key", "isLoad"}, {svParam.kvParam.KEY_SIZE, 1})
         ){
-            for (int i = 0; i < _bankInterfaces.size(); i++){
-                BankInputInterface* bankInItf = _bankInterfaces[i];
-                bankInItf->setInputParam(&qMem.getFront("isLoad"),
-                                         &qMem.getFront("key"),
-                                         qMem.getFront(svParam.kvParam.valuefield._valueFieldNames)
+            for (auto bankInItf : _bankInterfaces){
+                bankInItf->setInputParam(&_qMem.getFront("isLoad"),
+                                         &_qMem.getFront("key"),
+                                         _qMem.getFront(svParam.kvParam.valuefield._valueFieldNames)
                                          );
             }
         }
 
         void flow() override{
             //////// initializing value and indexing
-            var queueAvail = ~qMem.isEmpty();
+            var queueAvail = ~_qMem.isEmpty();
             //////// deal with bank interface
             for (int i = 0; i < _bankInterfaces.size(); i++){
                 BankInputInterface* bankInItf = _bankInterfaces[i];
@@ -41,13 +40,13 @@ namespace kathryn::cacheServer{
                 reqToDequeue(i) = bankInItf->isReqSuccess();
                 ////// assign send the data
                 Slice bankSl = {_svParam.kvParam.KEY_SIZE - _svParam.prefixBit,_svParam.kvParam.KEY_SIZE};
-                bankInItf->sendOn(queueAvail & ((*qMem.getFront("key").doSlice(bankSl)) == bankInItf->bankId));
+                bankInItf->sendOn(queueAvail & ((*_qMem.getFront("key").doSlice(bankSl)) == bankInItf->bankId));
             }
             /////// deal with queue
-            qMem.initLogic();
+            _qMem.initLogic();
             cwhile(true){
                 zif (reqToDequeue){
-                    qMem.deQueue();
+                    _qMem.deQueue();
                 }
             }
         }

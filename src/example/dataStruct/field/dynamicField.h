@@ -35,17 +35,19 @@ namespace kathryn{
             return _valueFieldNames.size();
         }
 
-        DYNAMIC_FIELD& operator +(const DYNAMIC_FIELD& rhs){
+        DYNAMIC_FIELD operator +(const DYNAMIC_FIELD& rhs){
+            DYNAMIC_FIELD newD = *this;
             for (int i = 0; i < rhs._valueFieldNames.size(); i++){
-                _valueFieldNames.push_back(rhs._valueFieldNames[i]);
-                _valueFieldSizes.push_back(rhs._valueFieldSizes[i]);
+                newD._valueFieldNames.push_back(rhs._valueFieldNames[i]);
+                newD._valueFieldSizes.push_back(rhs._valueFieldSizes[i]);
             }
-            return *this;
+            return newD;
         }
 
         DYNAMIC_FIELD& reverse(){
             std::reverse(_valueFieldNames.begin(), _valueFieldNames.end());
             std::reverse(_valueFieldSizes.begin(), _valueFieldSizes.end());
+            return *this;
         }
 
         int findIdx(const std::string& name){
@@ -69,6 +71,19 @@ namespace kathryn{
             return _valueFieldSizes[idx];
         }
 
+        std::pair<std::string, int> getKeySize(int idx){
+            assert(idx < _valueFieldNames.size());
+            return {_valueFieldNames[idx], _valueFieldSizes[idx]};
+        }
+
+        std::vector<std::pair<std::string, int>> getAllKeySize(){
+            std::vector<std::pair<std::string, int>> result;
+            for (int i = 0; i < _valueFieldNames.size(); i++){
+                result.push_back(getKeySize(i));
+            }
+            return result;
+        }
+
     };
 
 
@@ -76,4 +91,4 @@ namespace kathryn{
 
 }
 
-#endif src_example_dataStruct_field_DYNAMICFIELD_H
+#endif //src_example_dataStruct_field_DYNAMICFIELD_H
