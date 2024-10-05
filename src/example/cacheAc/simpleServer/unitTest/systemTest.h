@@ -96,21 +96,28 @@ namespace kathryn::cacheServer{
         ull genIncomePacket(int bankIdx, int idxInBank, int value, bool isLoad){
             ull baseElement = 0;
 
-            int valueSize   = _server._svParam.kvParam.valuefield.sumFieldSize();
-            int keySize     = _server._svParam.kvParam.KEY_SIZE;
-            int bankKeySize = _server._svParam.kvParam.KEY_SIZE - _server._svParam.prefixBit;
+            auto& sp = _server._svParam;
+
+            int sumValueSz  = sp.kvParam.valuefield.sumFieldSize();
+            int keySize     = sp.kvParam.KEY_SIZE;
+            int bankKeySize = sp.kvParam.KEY_SIZE - _server._svParam.prefixBit;
             assert(bankKeySize > 0);
 
             /**** create mask value for each specific field*/
-            ull maskValue = value;
+            ull maskValue = 0;
             ull maskKey   = (((ull)(bankIdx)) << (bankKeySize)) |
                             ((ull)idxInBank);
             ull maskLoad  = isLoad;
 
             /**** bitwise all component to composed the packet*/
+            int amtField = sp.kvParam.valuefield.amtField();
+            for (int fid = amtField-1; fid >= 0; fid--){
+                maskValue  = maskValue << sp.kvParam.valuefield.getSize(fid);
+                maskValue  = maskValue | (value  + 2*fid);
+            }
             baseElement |= maskValue;
-            baseElement |= (maskKey << valueSize);
-            baseElement |= maskLoad << (valueSize + keySize);
+            baseElement |= (maskKey << sumValueSz);
+            baseElement |= maskLoad << (sumValueSz + keySize);
 
             std::cout << "value " << maskValue << " key " << maskKey << " mode " << maskLoad << std::endl;
 

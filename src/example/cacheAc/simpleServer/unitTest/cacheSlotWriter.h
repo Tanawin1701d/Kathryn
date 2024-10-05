@@ -94,7 +94,12 @@ namespace kathryn::cacheServer{
             }
 
             addSlotVal(OUTR_SLOT_IDX, "k " + std::to_string((ull)outgr.oKey));
-            addSlotVal(OUTR_SLOT_IDX, "v " + std::to_string((ull)(*outgr.oValues[0])));
+
+            int idx = 0;
+            for (Reg* reg: outgr.oValues){
+                addSlotVal(OUTR_SLOT_IDX,
+                    "v" + std::to_string(idx) + " " + std::to_string((ull)*reg));
+            }
 
         }
 
