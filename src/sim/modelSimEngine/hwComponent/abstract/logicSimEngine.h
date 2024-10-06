@@ -22,6 +22,7 @@ namespace kathryn{
 
         Assignable*   _asb                = nullptr;
         Identifiable* _ident              = nullptr;
+        Operable*     _opr                = nullptr;
         VCD_SIG_TYPE  _vcdSigType         = VST_DUMMY;
         bool          _setToWrite         = false;
         bool          _isTempReq          = false; ///// request temp request
@@ -42,7 +43,7 @@ namespace kathryn{
         virtual ValR genSlicedOprAndShift     (Slice desSlice, Slice srcSlice, SIM_VALREP_TYPE_ALL desField);
 
 
-        LogicSimEngine(Assignable* asb, Identifiable*   ident,
+        LogicSimEngine(Assignable* asb, Identifiable*   ident, Operable* opr,
                        VCD_SIG_TYPE sigType, bool isTempReq,
                         ull initVal
                        );

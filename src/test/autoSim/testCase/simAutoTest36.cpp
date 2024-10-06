@@ -55,7 +55,7 @@ namespace kathryn{
 
             OP_HW& opHw =  _md->repo.getOp("rType");
 
-            _md->instr.assignSimValue(0b0000000'01000'00010'010'00100'0110011);
+            _md->instr.s(0b0000000'01000'00010'010'00100'0110011);
             conNextCycle(1);
 
             std::cout << "------------ test slt rType" << std::endl;

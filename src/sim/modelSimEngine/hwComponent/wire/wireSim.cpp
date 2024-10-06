@@ -19,6 +19,7 @@ namespace kathryn{
     LogicSimEngine(
         (Assignable*  ) master,
         (Identifiable*) master,
+        (Operable*)     master,
         VST_WIRE,
         false,
         0),

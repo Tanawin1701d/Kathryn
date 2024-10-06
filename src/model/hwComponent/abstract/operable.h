@@ -30,6 +30,9 @@ namespace kathryn {
     struct AssignMeta;
 
     class Operable{
+    protected:
+        ValRepBase cachedRep;
+        bool isCacheRepInit = false;
 
     public:
         explicit Operable() = default;
@@ -103,6 +106,9 @@ namespace kathryn {
 
         explicit operator ull();
         explicit operator ValRepBase();
+        ValRepBase& v();
+        void initValRep(const ValRepBase& vrb);
+
 
         /**downcasting*/
         virtual Identifiable*   castToIdent() = 0;
@@ -115,6 +121,8 @@ namespace kathryn {
         /** constant value dec*/
         virtual bool            isConstOpr(){return false;}
         virtual ull             getConstOpr(){assert(false);}
+
+
 
     };
 

@@ -16,7 +16,7 @@ namespace kathryn{
 
     NestSimEngine::NestSimEngine(nest* master,
                              VCD_SIG_TYPE sigType):
-            LogicSimEngine(master, master, sigType, false, 0),
+            LogicSimEngine(master, master, master, sigType, false, 0),
             _master(master){
         assert(_master != nullptr);
     }

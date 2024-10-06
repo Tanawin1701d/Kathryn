@@ -41,9 +41,15 @@ namespace kathryn{
     public:
         ValRepBase(const int byteSize, void* val):
         _byteSize(byteSize),
-        _val(val){};
+        _val(val){}
 
         ValRepBase(){}
+
+        /**
+         *
+         *  set value
+         *
+         ***/
 
         void setVar(ull x) const{
             if (_byteSize == 1){
@@ -76,8 +82,16 @@ namespace kathryn{
             }
         }
 
-        bool isInUsed() const{
-            return _val != nullptr;
+        void setVar(const ValRepBase& rhs) const{
+            ////// we must make sure that current chunk is bigger
+            assert(_byteSize >= rhs._byteSize);
+            assert(checkBgOrEqWithRhs(rhs));
+            if (rhs._continLength == -1){
+                setVar(rhs.getVal());
+            }else{
+                setLargeVar(rhs.getLargeVal());
+            }
+
         }
 
         void setSize(int size){
@@ -90,6 +104,34 @@ namespace kathryn{
             _continLength = size;
         }
 
+        /***
+         *
+         * check value
+         *
+         */
+
+        bool checkBgOrEqWithRhs(const ValRepBase& rhs) const{
+            assert(isValid());
+            assert(rhs.isValid());
+            if (_byteSize     < rhs._byteSize)    {return false;}
+            if (_continLength < rhs._continLength){return false;}
+            if (_length       < rhs._length )     {return false;}
+            return true;
+
+        }
+
+        bool isValid() const{
+            return (_byteSize != -1) && (_length != -1);
+        }
+
+        bool isInUsed() const{
+            return _val != nullptr;
+        }
+
+        /**
+         *
+         * get value
+         */
         ull getVal()const{
 
             if (_byteSize == 1){

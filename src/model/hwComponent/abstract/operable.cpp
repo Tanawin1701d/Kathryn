@@ -252,16 +252,34 @@ namespace kathryn {
     }
 
     Operable::operator ull(){
-        LogicSimEngine* simEngine = getLogicSimEngineFromOpr();
-        mfAssert(getAssignMode() == AM_SIM, "can't retrieve data in model building mode");
-        mfAssert(simEngine != nullptr, "get value fail");
-        return simEngine->getProxyRep().getVal();
+        assert(isCacheRepInit);
+        return cachedRep.getVal();
+        // LogicSimEngine* simEngine = getLogicSimEngineFromOpr();
+        // mfAssert(getAssignMode() == AM_SIM, "can't retrieve data in model building mode");
+        // mfAssert(simEngine != nullptr, "get value fail");
+
     }
     Operable::operator ValRepBase(){
-        mfAssert(getAssignMode() == AM_SIM, "can't retrieve data in model building mode");
-        LogicSimEngine* simEngine = getLogicSimEngineFromOpr();
-        return simEngine->getProxyRep();
+        assert(isCacheRepInit);
+        return cachedRep;
+        // mfAssert(getAssignMode() == AM_SIM, "can't retrieve data in model building mode");
+        // LogicSimEngine* simEngine = getLogicSimEngineFromOpr();
+        // return simEngine->getProxyRep();
     }
+
+    ValRepBase& Operable::v(){
+        assert(isCacheRepInit);
+        return cachedRep;
+    }
+
+    void Operable::initValRep(const ValRepBase& vrb){
+        assert(!isCacheRepInit);
+        cachedRep = vrb;
+        isCacheRepInit = true;
+    }
+
+
+
 
 
 

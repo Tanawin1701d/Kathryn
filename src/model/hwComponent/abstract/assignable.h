@@ -79,7 +79,8 @@ namespace kathryn{
                                    ASM_TYPE asmType);
 
 
-        virtual void  assignSimValue(ull        b){assert(false);}
+        virtual void  assignSimValue(ull        b)    {assert(false);}
+        virtual void  assignSimValue(ValRepBase value){assert(false);}
 
         virtual Slice getAssignSlice() = 0;
 

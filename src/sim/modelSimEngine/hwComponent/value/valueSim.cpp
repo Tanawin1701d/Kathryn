@@ -17,7 +17,7 @@ namespace kathryn{
     ValSimEngine::ValSimEngine(Val* master,
                              VCD_SIG_TYPE sigType,
                              ull rawValue):
-    LogicSimEngine(master, master,
+    LogicSimEngine(master, master, master,
                    VST_INTEGER, false, rawValue),
     _master(master){ assert(master != nullptr);}
 

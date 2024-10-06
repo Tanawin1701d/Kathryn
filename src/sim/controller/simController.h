@@ -12,6 +12,8 @@
 #include "sim/event/eventQ.h"
 #include "abstract/mainControlable.h"
 #include "sim/modelSimEngine/base/traceEvent.h"
+#include "sim/logicRep/valRep.h"
+#include "sim/logicRep/valRepGen.h"
 
 namespace kathryn{
 

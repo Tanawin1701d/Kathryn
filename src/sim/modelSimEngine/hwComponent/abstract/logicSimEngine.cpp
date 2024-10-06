@@ -9,11 +9,12 @@
 
 
 namespace kathryn{
-    LogicSimEngine::LogicSimEngine(Assignable* asb, Identifiable* ident,
+    LogicSimEngine::LogicSimEngine(Assignable* asb, Identifiable* ident, Operable* opr,
                                    VCD_SIG_TYPE sigType, bool isTempReq,
                                    ull initVal):
         _asb(asb),
         _ident(ident),
+        _opr(opr),
         _vcdSigType(sigType),
         _isTempReq(isTempReq),
         _initVal(initVal){
@@ -241,7 +242,11 @@ namespace kathryn{
             assert(getValR_Type().subType > 0);
             proxyRep.setContinLength(getValR_Type().subType);
         }
+        ///// we cache it in operable
+        _opr->initValRep(proxyRep);
     }
+
+
 
     ValRepBase& LogicSimEngine::getProxyRep(){
         mfAssert(proxyRep.isInUsed(), "you might access the element that have not been tied with "

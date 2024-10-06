@@ -19,7 +19,7 @@ namespace kathryn{
      * */
 
     MemEleHolderSimEngine::MemEleHolderSimEngine(MemBlockEleHolder* master):
-    LogicSimEngine(master, master, VST_WIRE, false, 0),
+    LogicSimEngine(master, master, master, VST_WIRE, false, 0),
     _master(master){
         assert(master != nullptr);
     }

@@ -111,11 +111,31 @@ namespace kathryn{
          * override assignable
          *
          * */
-        void assignSimValue(ull b) override{
-            mfAssert(getAssignMode() == AM_SIM, "cannot assign in model mode");
-            assert(_simEngine != nullptr);
-            //////// TODO assign the value
-            getSimEngine()->getProxyRep().setVar(b);
+        // void assignSimValue(ull b) override{
+        //     mfAssert(getAssignMode() == AM_SIM, "cannot assign in model mode");
+        //     assert(_simEngine != nullptr);
+        //     //////// TODO assign the value
+        //     getSimEngine()->getProxyRep().setVar(b);
+        // }
+
+        LogicComp<TYPE_COMP>& s(ull value){
+            assert(isCacheRepInit); ///// check from operable
+            cachedRep.setVar(value);
+            return *this;
+        }
+
+        LogicComp<TYPE_COMP>& s(ValRepBase value){
+            assert(isCacheRepInit);
+            cachedRep.setVar(value);
+            return *this;
+        }
+
+        void assignSimValue(ull value) override{
+            s(value);
+        }
+
+        void assignSimValue(ValRepBase value) override{
+            s(value);
         }
 
         Slice getAssignSlice() override{

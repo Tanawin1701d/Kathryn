@@ -10,7 +10,7 @@ namespace kathryn{
 
     RegSimEngine::RegSimEngine(Reg* master,
                          VCD_SIG_TYPE sigType):
-        LogicSimEngine(master, master, sigType, true, 0),
+        LogicSimEngine(master, master, master, sigType, true, 0),
         _master(master){
         assert(master != nullptr);
     }
