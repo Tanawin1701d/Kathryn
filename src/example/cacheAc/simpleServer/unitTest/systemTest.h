@@ -28,7 +28,8 @@ namespace kathryn::cacheServer{
         SimInterface(600,
                      params[VCD_FILE_PARAM],
                      params[PROF_FILE_PARAM],
-                     "cacheModel"
+                     "cacheModel",
+                     getSPBM(params)
                      ),
         _server(server),
         _cacheSlotWriter(_server, params[CACHE_SLOT_FILE_PARAM])

@@ -7,6 +7,7 @@
 #include <string>
 #include <cstdlib>
 #include <utility>
+#include <frontEnd/cmd/paramReader.h>
 
 #include "proxyEventBase.h"
 #include "model/hwComponent/module/module.h"
@@ -21,6 +22,8 @@
 
 namespace kathryn{
 
+
+
     class ProxyBuildMng{
     protected:
         Module*          _startModule    = nullptr;
@@ -30,6 +33,7 @@ namespace kathryn{
 
         const std::string TEST_NAME;
 
+        //////// key of file and directory
         const std::string PROJECT_DIR    = "..";
         const std::string MD_COMPILE_FOLDER = "modelCompile";
 
@@ -38,7 +42,7 @@ namespace kathryn{
 
         const std::string builderName    = "startGen.sh";
 
-
+        //////// pathe of file and directory
         const std::string pathToModelFolder = PROJECT_DIR + "/" + MD_COMPILE_FOLDER;
 
         const std::string srcGenPath
@@ -48,6 +52,7 @@ namespace kathryn{
         const std::string srcDynLoadPath
         = pathToModelFolder + "/" + dynObjFolder + "/" + TEST_NAME +  ".so";
 
+        /** function name*/
         ///////// [functionName][?userIdent][?ske suffix]
         const std::string BASE_CLASS_NAME = "ProxySimEvent";
         const std::string SKE_SUFFIX           = "Ske";
@@ -62,8 +67,11 @@ namespace kathryn{
         const std::string VCD_DEC    = "startVcdDecVar"; //// must have User or Internal as a suffix
         const std::string VCD_COL    = "startVcdCol";
         const std::string PERF_COL   = "startPerfCol";
+        const std::string USER_DEF   = "userDef";
         const std::string MAIN_SIM   = "mainSim";
 
+
+        /** variable and value name*/
         const std::string CALLBACK_VAR_ARR_NAME    = "kathrynCallBackMeta";
         const std::string MAX_SIZE_CB_ARR          = "MAX_PROX_CALLBACK_FUNCTION";
         const std::string CALLBACK_VAR_AMT         = "kathrynCallBackAmt";
@@ -102,10 +110,12 @@ namespace kathryn{
         ////////// for start register function
         void startWriteRegisterCallback();
         ////////// call back function
+        void startWriteCallBackVarInit();
         void startWriteCallBackCheckAndRet();
         void startWriteCallBackGetAmt();
         void startWriteCallbackGetNo();
         ///////// for create vcd Decvar
+        void startWriteVcdDecWriter();
         void startWriteVcdDecVar(bool isUser); //// else if internal
         ///////// for create vcd Decvar
         void startWriteVcdCol(bool isUser);
@@ -120,10 +130,13 @@ namespace kathryn{
         ////////// for register
         void startFinalizeEleSimSke();
         void startFinalizeEleSim();
+        ////////// for user define
+        void startWriteUserDefinedFunction();
         //////// void start write for optimization
         void startWriteMainSimSke(bool userVcdCol,
                                   bool sysVcdCol,
                                   bool perfCol);
+
         void startWriteMainSim();
         //////// void start write creator
         void startWriteCreateFunc();
@@ -139,9 +152,43 @@ namespace kathryn{
         ///////// disload
         void unloadProxy();
 
-
-
     };
+
+
+    //////// run mode
+
+    enum class SimProxyBuildMode: uint8_t{
+        SPB_NON         = 0,
+        SPB_GEN         = 1 << 0,
+        SPB_COMPILE     = 1 << 1,
+        SPB_RUN         = 1 << 2
+    };
+
+    inline SimProxyBuildMode
+    operator | (SimProxyBuildMode a, SimProxyBuildMode b){
+        return static_cast<SimProxyBuildMode>(
+            static_cast<uint8_t>(a) | static_cast<uint8_t>(b)
+        );
+    }
+
+    inline SimProxyBuildMode
+    operator & (SimProxyBuildMode a, SimProxyBuildMode b){
+        return static_cast<SimProxyBuildMode>(
+            static_cast<uint8_t>(a) & static_cast<uint8_t>(b)
+        );
+    }
+    ////// has config b
+    inline bool hasConfig(SimProxyBuildMode a, SimProxyBuildMode b){
+        return (a & b) == b;
+    }
+
+
+    constexpr char param_spb_key[] = "buildMode";
+    constexpr char param_spb_g     = 'g';
+    constexpr char param_spb_c     = 'c';
+    constexpr char param_spb_r     = 'r';
+
+    SimProxyBuildMode getSPBM(const PARAM& param);
 
 }
 

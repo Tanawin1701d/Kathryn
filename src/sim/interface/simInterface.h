@@ -19,9 +19,13 @@
 
 namespace kathryn{
 
+
+
+
     class SimInterface{
         friend class ConcreteTriggerEvent;
     protected:
+        SimProxyBuildMode       _simProxyBuildMode;
         VcdWriter*              _vcdWriter      = nullptr;
         FlowWriter*             _flowWriter     = nullptr;
         ProxySimEventBase*      _modelSimEvent  = nullptr;
@@ -65,7 +69,11 @@ namespace kathryn{
         explicit SimInterface(CYCLE limitCycle,
                               std::string vcdFilePath,
                               std::string profileFilePath,
-                              std::string genFileName = "proxySimAutoGen.cpp"
+                              std::string genFileName = "proxySimAutoGen.cpp",
+                              SimProxyBuildMode simProxyBuildMode =
+                                    SimProxyBuildMode::SPB_GEN |
+                                    SimProxyBuildMode::SPB_COMPILE |
+                                    SimProxyBuildMode::SPB_RUN
                               );
 
         virtual ~SimInterface();

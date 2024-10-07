@@ -8,3 +8,5 @@ testType = testSimpleCacheAcc
 vcdFile = /media/tanawin/tanawin1701e/project2/Kathryn/KOut/cacheServer/out.vcd
 profFile = /media/tanawin/tanawin1701e/project2/Kathryn/KOut/cacheServer/out.prof
 slotFile = /media/tanawin/tanawin1701e/project2/Kathryn/KOut/cacheServer/out.slot
+
+buildMode = gcr

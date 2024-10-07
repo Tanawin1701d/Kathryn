@@ -23,8 +23,10 @@ namespace kathryn{
     SimInterface::SimInterface(CYCLE limitCycle,
                                std::string vcdFilePath,
                                std::string profileFilePath,
-                               std::string genFileName
+                               std::string genFileName,
+                               SimProxyBuildMode simProxyBuildMode
                                ):
+            _simProxyBuildMode(simProxyBuildMode),
             _vcdWriter (new VcdWriter(std::move(vcdFilePath))),
             _flowWriter(new FlowWriter(std::move(profileFilePath))),
             _limitCycle(limitCycle),
@@ -49,6 +51,12 @@ namespace kathryn{
         /***compile and link module sim Event */
         describeModelTriggerWrapper();
         createModelSimEvent();
+        if (!hasConfig(_simProxyBuildMode, SimProxyBuildMode::SPB_RUN)){
+            std::cout << TC_YELLOW
+            << "simInterface stop due to SPB_RUN is not set"
+            << TC_DEF << std::endl;
+            return;
+        }
         initPerfCol();
         /***con simulating*/
         describeDef();
@@ -218,8 +226,16 @@ namespace kathryn{
         /** generate c++ file**/
         _proxyBuildMng.setStartModule(getGlobalModulePtr()); /// todo , SIM_CLIENT_PATH);
         _proxyBuildMng.setTracer(&_traceEvents);
-        _proxyBuildMng.startWriteModelSim();
-        _proxyBuildMng.startCompile();
+
+        if (hasConfig(_simProxyBuildMode, SimProxyBuildMode::SPB_GEN)){
+            _proxyBuildMng.startWriteModelSim();
+        }
+        if (hasConfig(_simProxyBuildMode, SimProxyBuildMode::SPB_COMPILE)){
+            _proxyBuildMng.startCompile();
+        }
+        if (!hasConfig(_simProxyBuildMode, SimProxyBuildMode::SPB_RUN)){
+            return;
+        }
         _modelSimEvent = _proxyBuildMng.loadAndGetProxy();
 
         ///////// initialize both simevent and proxyBuildMng

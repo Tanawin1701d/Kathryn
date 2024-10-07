@@ -116,20 +116,16 @@ namespace kathryn{
 
 
         moduleSimEngine->proxyBuildInit();
-        //// create file
+        /** create file */
         proxyfileWriter = new FileWriterBase(srcGenPath);
-        //// create include
+        /** write include*/
         proxyfileWriter->addData("#include \"../proxyEvent.h\"\n");
-        /// create namespace
-        ///
+        /** create namespace*/
         proxyfileWriter->addData("namespace kathryn{\n\n\n\n\n\n");
 
         ///////// global variable
-        proxyfileWriter->addData("int " + CALLBACK_VAR_AMT +"=0;\n");
-        proxyfileWriter->addData("int " + CALLBACK_VAR_ARR_NAME +"["+
-            MAX_SIZE_CB_ARR + "];\n");
-        proxyfileWriter->addData(VCD_WRITER_TYPE + "* " +
-                                 VCD_WRITER_VAR_INT + "= nullptr;\n");
+        startWriteCallBackVarInit();
+        startWriteVcdDecWriter();
         startWriteCreateVariable();
         startWritePerfDec();
         //////////////////////////////
@@ -175,6 +171,8 @@ namespace kathryn{
         /// final op sim
         startFinalizeEleSimSke();
         startFinalizeEleSim();
+        // user sim op
+        startWriteUserDefinedFunction();
         /// main sim
         startWriteMainSimSke(userVcd, internalVcd, perfCol);
         startWriteMainSim();
@@ -265,6 +263,11 @@ namespace kathryn{
         proxyfileWriter->addData("}\n");
     }
 
+    void ProxyBuildMng::startWriteCallBackVarInit(){
+        proxyfileWriter->addData("int " + CALLBACK_VAR_AMT +"=0;\n");
+        proxyfileWriter->addData("int " + CALLBACK_VAR_ARR_NAME +"["+
+            MAX_SIZE_CB_ARR + "];\n");
+    }
 
     void ProxyBuildMng::startWriteCallBackCheckAndRet(){
 
@@ -301,8 +304,12 @@ namespace kathryn{
         proxyfileWriter->addData("}\n");
     }
 
+    void ProxyBuildMng::startWriteVcdDecWriter(){
+        proxyfileWriter->addData(VCD_WRITER_TYPE + "* " +
+                                 VCD_WRITER_VAR_INT + "= nullptr;\n");
+    }
 
-        void ProxyBuildMng::startWriteVcdDecVar(bool isUser){
+    void ProxyBuildMng::startWriteVcdDecVar(bool isUser){
         std::vector<LogicSimEngine*> dayta =
             moduleSimEngine->recruitForVcdVar();
 
@@ -516,15 +523,16 @@ namespace kathryn{
         proxyfileWriter->addData("}\n");
     }
 
-    void ProxyBuildMng::startWriteCreateFunc(){
-        proxyfileWriter->addData(
-            "extern \"C\" ProxySimEventBase* create() {\n"
-#ifdef MODELCOMPILEVB
-        "   std::cout << \"creating proxy simEvent in dynamic object\" << std::endl;\n"
-#endif
-            "   return new ProxySimEvent();\n}\n\n"
-        );
+    void ProxyBuildMng::startWriteUserDefinedFunction(){
+
+        proxyfileWriter->addData("__attribute__((always_inline)) inline "+
+                                 genFunctionDec(false, USER_DEF + USER_SUFFIX + SKE_SUFFIX)+
+                                 "{\n");
+        proxyfileWriter->addData("\n\n\n\n\n\n\n\n\n\n\n");
+        proxyfileWriter->addData("}\n");
+
     }
+
 
     void ProxyBuildMng::startWriteMainSimSke(bool userVcdCol,
                                              bool sysVcdCol,
@@ -533,6 +541,7 @@ namespace kathryn{
         proxyfileWriter->addData("CYCLE kathryn_longrangeCnt  = 0;\n");
         proxyfileWriter->addData("do{\n");
         /////// TODO add tricker Event
+        proxyfileWriter->addData(USER_DEF   + USER_SUFFIX + SKE_SUFFIX + "();\n");
         proxyfileWriter->addData(MAINOP_SIM + SKE_SUFFIX + "();\n");
         if (userVcdCol){ proxyfileWriter->addData(VCD_COL + USER_SUFFIX     + SKE_SUFFIX + "();\n");}
         if (sysVcdCol) { proxyfileWriter->addData(VCD_COL + INTERNAL_SUFFIX + SKE_SUFFIX + "();\n");}
@@ -552,6 +561,16 @@ namespace kathryn{
         proxyfileWriter->addData(CALLBACK_VAR_AMT + " = 0;\n");
         proxyfileWriter->addData( "return " + MAIN_SIM + SKE_SUFFIX + "(_amtLimitLongRangeCycle);\n");
         proxyfileWriter->addData("}\n");
+    }
+
+    void ProxyBuildMng::startWriteCreateFunc(){
+        proxyfileWriter->addData(
+            "extern \"C\" ProxySimEventBase* create() {\n"
+#ifdef MODELCOMPILEVB
+        "   std::cout << \"creating proxy simEvent in dynamic object\" << std::endl;\n"
+#endif
+            "   return new ProxySimEvent();\n}\n\n"
+        );
     }
 
 
@@ -606,5 +625,30 @@ namespace kathryn{
     void ProxyBuildMng::unloadProxy(){
         int closeStatus = dlclose(_handle);
         assert(closeStatus == 0);
+    }
+
+
+    SimProxyBuildMode getSPBM(const PARAM& param){
+
+        auto iter = param.find(param_spb_key);
+
+        if (iter == param.end()){
+            return SimProxyBuildMode::SPB_NON;
+        }
+
+        std::string value = iter->second;
+
+        SimProxyBuildMode mode = SimProxyBuildMode::SPB_NON;
+        if(value.find(param_spb_g) != std::string::npos){
+            mode = mode | SimProxyBuildMode::SPB_GEN;
+        }
+        if(value.find(param_spb_c) != std::string::npos){
+            mode = mode | SimProxyBuildMode::SPB_COMPILE;
+        }
+        if(value.find(param_spb_r) != std::string::npos){
+            mode = mode | SimProxyBuildMode::SPB_RUN;
+        }
+        return mode;
+
     }
 }
