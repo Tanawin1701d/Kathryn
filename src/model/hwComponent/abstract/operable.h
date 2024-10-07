@@ -106,7 +106,7 @@ namespace kathryn {
 
         explicit operator ull();
         explicit operator ValRepBase();
-        ValRepBase& v();
+        ValRepBase v();
         void initValRep(const ValRepBase& vrb);
 
 

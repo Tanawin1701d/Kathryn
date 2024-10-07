@@ -51,7 +51,15 @@ namespace kathryn{
     constexpr int CONFLOW_IDENT = 3;
     constexpr int SUBFLOW_IDENT = 6;
     constexpr int SUBMOD_IDENT  = 6;
+
+
     class FlowWriter : public FileWriterBase{
+    protected:
+        struct TrackData{
+            std::string name;
+            ull         values;
+        };
+        std::vector<TrackData> trackDatas;
     public:
         Module* _topRecMod = nullptr;
 
@@ -63,7 +71,11 @@ namespace kathryn{
 
         void startColModule(Module* moduleToRec, int ident);
 
+        void startWriteSummary();
+
         void startWriteData();
+
+
 
         void init(Module* topModule);
     };

@@ -8,7 +8,9 @@
 
 #define intrReset( expr  )   kathrynBlock->addIntSignal(INT_RESET, &expr);
 #define intrStart( expr  )   kathrynBlock->addIntSignal(INT_START, &expr);
-#define exposeBlk( exVar )  exVar = kathrynBlock;
+#define exposeBlk( exVar )   exVar = kathrynBlock;
+#define track( name  )       kathrynBlock->setZepTrackName(#name);
+#define strack( name )       kathrynBlock->setZepTrackName(name);
 
 #include<memory>
 #include<vector>

@@ -150,8 +150,6 @@ namespace kathryn{
                 return *static_cast<uint64_t*>(_val);
             }
             assert(false);
-
-
         }
 
         std::vector<ull> getLargeVal()const{
@@ -189,6 +187,105 @@ namespace kathryn{
                 }
             }
             assert(false);
+        }
+
+        ValRepBase copy(){
+            ValRepBase cpy = *this;
+            cpy._val = new uint8_t[_byteSize * std::max(1, _continLength)];
+            std::copy((uint8_t*)_val,
+                      (uint8_t*)_val + _byteSize *std::max(1, _continLength),
+                      (uint8_t*)cpy._val);
+            return cpy;
+        }
+
+        void fillZero(int startBit) const{
+
+            switch (_byteSize){
+            case 1 :{
+                uint8_t maxBit = (1 << startBit) - 1;
+                (*static_cast<uint8_t*> (_val)) &= maxBit; break;
+            }
+            case 2 :{
+                uint16_t maxBit = (1 << startBit) - 1;
+                (*static_cast<uint16_t*> (_val)) &= maxBit; break;
+            }
+            case 4 :{
+                uint32_t maxBit = (1 << startBit) - 1;
+                (*static_cast<uint32_t*> (_val)) &= maxBit; break;
+            }
+            case 8 :{
+                if (_continLength < 0){
+                    uint64_t maxBit = (((ull)1) << startBit) - 1;
+                    (*static_cast<uint64_t*> (_val)) &= maxBit;
+                    break;
+                }
+                assert(_continLength != 0);
+
+                int startFillZeroIdx        = startBit / bitSizeOfUll;
+                int startPartialFillZeroIdx = startBit % bitSizeOfUll;
+
+                uint64_t* dayta = static_cast<uint64_t*>(_val);
+                dayta[startFillZeroIdx] &= (((ull)1) << startPartialFillZeroIdx) - 1;
+
+                for (int i = startFillZeroIdx+1; i < _continLength; i++){
+                    dayta[i] = 0;
+                }
+                break;
+            }
+            default: break;
+            }
+
+        }
+
+
+        ValRepBase operator >> (int amt){
+
+            ValRepBase newValRep = this->copy();
+
+            switch (_byteSize){
+                case 1 : {*static_cast<uint8_t* >(newValRep._val) >> amt; break;}
+                case 2 : {*static_cast<uint16_t*>(newValRep._val) >> amt; break;}
+                case 4 : {*static_cast<uint32_t*>(newValRep._val) >> amt; break;}
+                case 8 :{
+                    if (_continLength < 0){
+                        *static_cast<uint64_t*>(newValRep._val) >> amt; break;
+                    }
+                    assert(_continLength != 0);
+
+                    int fullShift    = amt / bitSizeOfUll;
+                    int partialShift = amt % bitSizeOfUll;
+
+                    uint64_t* dayta = static_cast<uint64_t*>(newValRep._val);
+
+                    for (int i = 0; i < _continLength; i++){
+                        uint64_t newVal = 0;
+                        /**
+                         * fullShift = 1; partialShift = 3
+                         * |   d[2]   |     d[1]     |  d[0] = (d[2] << 3)(d[1]>>3)
+                         */
+                        //////// lower bit shift
+                        if ((i + fullShift) < _continLength)
+                            newVal =  dayta[i+fullShift] >> partialShift;
+                        //////// higher bit shift
+                        if ((partialShift != 0) && ((i + fullShift + 1) < _continLength))
+                            newVal |= dayta[i+fullShift+1] << partialShift;
+                        dayta[i] = newVal;
+                    }
+                    break;
+                }
+                default: break;
+            }
+            return newValRep;
+        }
+
+        ValRepBase slice(const int start,const int stop){
+
+            if (start == 0 && stop == _length){ return *this; }
+
+            assert(start >= 0  && start < stop && stop <= _length );
+            ValRepBase shifted = (*this) >> start;
+            shifted.fillZero(stop-start);
+            return shifted;
         }
 
     };

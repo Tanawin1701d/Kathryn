@@ -13,7 +13,6 @@ namespace kathryn::cacheServer{
     class SimpleBank: public CacheBankBase{
     public:
         const int           _suffixBit = -1; ///// size of suffix bit
-        const int           _bankId    = -1;
         BankInputInterface  inputItf;
         BankOutputInterface outputItf;
         Operable&           inputInBankKey; //// only key that used to indicate bank
@@ -24,9 +23,8 @@ namespace kathryn::cacheServer{
         //////////////////////////////////////////////////////////
 
         explicit SimpleBank(KV_PARAM& kv_param, int suffixBit, int bankId):
-        CacheBankBase (kv_param, 1 << suffixBit),
+        CacheBankBase (kv_param, 1 << suffixBit, bankId),
         _suffixBit    (suffixBit),
-        _bankId       (bankId),
         inputItf      (kv_param, _bankId),
         outputItf     (kv_param, inputItf),
         inputInBankKey(inputItf.key(0, _suffixBit))
@@ -40,11 +38,11 @@ namespace kathryn::cacheServer{
         //// Both decodePacket and maintenance bank are created in flow stage
         void decodePacket() override{
 
-            cif (inputItf.nextIsLoad()){ ////// is load /////try until outgress is recv
+            cif (inputItf.nextIsLoad()){ strack("loading" + std::to_string(_bankId)) ////// is load /////try until outgress is recv
                 auto [enValue, readValues] = readMem(inputInBankKey);
                 outputItf.setPayLoad(&inputItf.key, readValues, &enValue);
                 outputItf.sendAndWaitUntillSuccess();
-            }celse{ //// is write
+            }celse{ strack("writing" + std::to_string(_bankId)) //// is write
                 ///// write to memory now
                 if (_kb_param.replacePol == OVER_WRITE){
                     writeMem(inputInBankKey,

@@ -16,15 +16,22 @@ namespace kathryn{
     class FlowIdentifiable: public IdentBase{
         /** assign after parent is set*/
         FlowBlockBase* _parentFb    = nullptr;
-        Module*        _parentMod = nullptr;
+        Module*        _parentMod   = nullptr;
+
+        std::string    _zepTrackName; //// it is declared by user to track dep
+        bool           _isZepTrackName = false;
 
     public:
         explicit FlowIdentifiable(const std::string& localName);
 
         void setParent(FlowBlockBase* parentFlowBlock);
         void setParent(Module* parentModule);
+        void setZepTrackName(const std::string& zepTrackName);
+
         FlowBlockBase* getFlowBlockParrent();
-        Module* getModuleParent();
+        Module*        getModuleParent();
+        bool           isZepTrackNameSet();
+        std::string    getZepTrackName();
 
         void buildInheritName() override;
 

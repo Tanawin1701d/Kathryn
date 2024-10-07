@@ -17,6 +17,8 @@
             DYNAMIC_FIELD fields; //// valid bit include
             const int     LIMIT_TIME = 60000;
             const int     AMT_WORD   = 1;
+            const int     _bankId    = -1;
+
 
             int readCountIdx = 0;
             int writeCountIdx = 0;
@@ -47,10 +49,11 @@
 
             mWire(wa, 1);
 
-            CacheBankBase(KV_PARAM& kv_param, const int amount_word):
+            CacheBankBase(KV_PARAM& kv_param, const int amount_word, int bankId):
             _kb_param(kv_param),
             fields   (kv_param.valuefield + DYNAMIC_FIELD({"valid"}, {1})),
-            AMT_WORD(amount_word){}
+            AMT_WORD(amount_word),
+            _bankId(bankId){}
 
             virtual void                 decodePacket()           = 0; ////// retrieve packet from queue do it your own
             virtual void                 maintenanceBank()        = 0; ////// do  maintenance bank
@@ -77,9 +80,9 @@
                 BankInputInterface* inItf = getBankInputInterface();
 
                 cwhile(true){
-                    cif(timerCnt == LIMIT_TIME){
+                    cif(timerCnt == LIMIT_TIME){ strack("maintenance" + std::to_string(_bankId))
                         maintenanceBank();
-                    }celif(inItf->isNextCycleBusy()){
+                    }celif(inItf->isNextCycleBusy()){ strack("decode" + std::to_string(_bankId));
                         decodePacket();
                     }celse{
                         wa = 1;

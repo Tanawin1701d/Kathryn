@@ -24,6 +24,12 @@ namespace kathryn{
         _parentMod = parentModule;
     }
 
+    void FlowIdentifiable::setZepTrackName(const std::string& zepTrackName){
+        _isZepTrackName = true;
+        _zepTrackName   = zepTrackName;
+    }
+
+
 
 
     void FlowIdentifiable::buildInheritName() {
@@ -49,6 +55,19 @@ namespace kathryn{
         assert(_parentMod != nullptr);
         return _parentMod;
     }
+
+    bool FlowIdentifiable::isZepTrackNameSet(){
+        return _isZepTrackName;
+    }
+
+
+    std::string FlowIdentifiable::getZepTrackName(){
+        assert(_isZepTrackName);
+        return _zepTrackName;
+    }
+
+
+
 
 
 }

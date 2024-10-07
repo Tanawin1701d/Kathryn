@@ -70,12 +70,21 @@ namespace kathryn{
     void FlowWriter::startColFlowBlock(FlowBlockBase* fb, int ident){
 
         /////// this cycle ident
-        std::string indentStr = genConString(' ', ident);
-        std::string showName  = fb->getGlobalName();
-        FlowBaseSimEngine*     fbse = fb->getSimEngine();
-        ValRepBase&         repBase = fbse->getProxyRep();
-        ull                   cycle = repBase.getVal();
-        addData(indentStr + showName + "    " + std::to_string(cycle) + "\n");
+        std::string         indentStr = genConString(' ', ident);
+        std::string         showName  = fb->getGlobalName();
+        FlowBaseSimEngine*  fbse      = fb->getSimEngine();
+        ValRepBase&         repBase   = fbse->getProxyRep();
+        ull                 cycle     = repBase.getVal();
+
+        std::string         trackName; ///track name is user optional define trackerName
+        if (fb->isZepTrackNameSet()){
+            trackDatas.push_back({fb->getZepTrackName(), cycle});
+            trackName = " >>> " + fb->getZepTrackName();
+        }
+
+
+        addData(indentStr + showName + "    " +
+            std::to_string(cycle) + trackName + "\n");
         /////// sub block Ident
         for (FlowBlockBase* subBlock: fb->getSubBlocks()){
             assert(subBlock != nullptr);
@@ -107,9 +116,23 @@ namespace kathryn{
         }
     }
 
+    void FlowWriter::startWriteSummary(){
+        int maxLength = 0;
+        ////find max length to make the match column
+        for (const auto&[key, value]: trackDatas){
+            maxLength = std::max(static_cast<int>(key.size()), maxLength);
+        }
+
+        for (const auto&[key, value]: trackDatas){
+            addData(key + genConString(' ', maxLength+1-key.size())
+                        + " : " + std::to_string(value) + "\n");
+        }
+    }
 
     void FlowWriter::startWriteData(){
         startColModule(_topRecMod, 0);
+        addData("\n\n\n\n\n ------------- User Defined Summary -------------\n");
+        startWriteSummary();
     }
 
     void FlowWriter::init(Module* topModule){
