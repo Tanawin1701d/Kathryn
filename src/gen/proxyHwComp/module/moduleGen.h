@@ -49,8 +49,8 @@ namespace kathryn{
     public:
         LogicGenBaseVec   _regPool;
         LogicGenBaseVec   _wirePool;
-        LogicGenBaseVec   _wirePoolWithInputMarker; //// with marker that mark as input of the module
-        LogicGenBaseVec   _wirePoolWithOutputMarker; //// with marker that mark as output of the module
+        LogicGenBaseVec   _wirePoolWithInputMarker; //// with marker that mark as input of the module (only module)
+        LogicGenBaseVec   _wirePoolWithOutputMarker; //// with marker that mark as output of the module (only module)
         LogicGenBaseVec   _exprPool;
         LogicGenBaseVec   _nestPool;
         LogicGenBaseVec   _valPool;

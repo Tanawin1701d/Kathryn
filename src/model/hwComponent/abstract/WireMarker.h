@@ -22,21 +22,30 @@ namespace kathryn{
     class Operable;
     class Assignable;
 
+    /** this class is used to be the marker that
+     *  wire or reg is special for io input output or other special
+     */
+
     class WireMarker{
     protected:
         std::string ioValue = "";
         WIRE_MARKER_TYPE _marker = WMT_NONE;
     public:
         virtual ~WireMarker() = default;
+
+        /** generator must have global input for this signal*/
         void asInputGlob (std::string value = "");
+        /** mark that it is input io for the module*/
         void asInput     (std::string value = "defInputName");
+        /** generator must have global output for this signal*/
         void asOutputGlob(std::string value = "");
+        /** mark that it is output io for the module*/
         void asOutput    (std::string value = "defOutputName");
         void setIoName   (const std::string&);
         virtual std::string  getGlobIoName();
-        virtual bool checkIntegrity       ()                 = 0;
-        virtual Operable* getOprFromGlobIo()                 = 0;
-        virtual Assignable* getAsbFromWireMarker()           = 0;
+        virtual bool         checkIntegrity()       = 0;
+        virtual Operable*    getOprFromGlobIo()     = 0;
+        virtual Assignable*  getAsbFromWireMarker() = 0;
         WIRE_MARKER_TYPE getMarker        (){ return _marker;}
 
     };

@@ -58,6 +58,15 @@ namespace kathryn{
         WIRE_AUTO_GEN_TYPE autoGenInputGrps  [] = {WIRE_AUTO_GEN_INPUT , WIRE_AUTO_GEN_GLOB_INPUT};
         WIRE_AUTO_GEN_TYPE autoGenOutputGrps [] = {WIRE_AUTO_GEN_OUTPUT, WIRE_AUTO_GEN_GLOB_OUTPUT};
 
+
+        /***                               |   is Cerf Only   | Cerf Only means it will not check dependency of its logic
+         * ----------------------------------------------------
+         * output  wire               ---->          no       | because we are assigner it signal; thus, we must check
+         * input   wire               ---->          yes      | because we are not assignner
+         * submodule input wire       ---->          yes      | because we are assigner
+         * submodule output wire      ---->          no       | because we no  assigner
+         */
+
         /////// COMPARE OUTPUT IO
         for (auto wireTypeIdx: autoGenOutputGrps){
             prelimResult &= _genWirePools[wireTypeIdx].compare(rhsMdg->_genWirePools[wireTypeIdx]);
