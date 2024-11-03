@@ -9,7 +9,10 @@
 namespace kathryn{
 
 
-    void ModuleGen::startWriteFile(FileWriterBase* fileWriter, GenStructure* genStructure){
+    void ModuleGen::startWriteFile(FileWriterBase* fileWriter,
+                                   GenStructure* genStructure,
+                                   bool isExplicitMod,
+                                   const std::string& explicitModName){
         assert(genStructure != nullptr);
         LogicGenBaseVec subModuleOutputRepresent;
         LogicGenBaseVec subModuleInputRepresent;
@@ -44,8 +47,8 @@ namespace kathryn{
                             );
         fileWriter->addData("module ");
 
-        if (_master->isTopModule()){
-            fileWriter->addData(" top(\n");
+        if (isExplicitMod){
+            fileWriter->addData(explicitModName+"(\n");
         }else{
             fileWriter->addData(getOpr() + "(\n");
         }

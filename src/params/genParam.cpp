@@ -5,5 +5,7 @@
 #include "genParam.h"
 
 namespace kathryn{
-    std::string GEN_PATH_PREFIX = "genPath";
+    std::string GEN_FOLDER_PARAM_IDEN        = "genFolder";
+    std::string GEN_TOP_FILE_NAME_PARAM_IDEN = "topFileName";
+    std::string GEN_TOP_MOD_NAME_PARAM_IDEN  = "topModName";
 }

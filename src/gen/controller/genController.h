@@ -9,6 +9,7 @@
 #include "abstract/mainControlable.h"
 #include "util/fileWriter/fileWriterBase.h"
 #include "genStructure.h"
+#include "util/fileWriter/fileWriterGroup.h"
 
 namespace kathryn{
 
@@ -21,11 +22,20 @@ namespace kathryn{
         const std::string pathToSynthesisRunner = "../synthesisRunner";
         const std::string pathToVivadoLaunch    = pathToSynthesisRunner + "/launchVivado.sh";
 
-        const std::string _desPathParamPrefix = "genPath";
+        const std::string _desVerilogFolderParamPrefix      = "genFolder";
+        const std::string _desVerilogTopFileNameParamPrefix = "topFileName";
+        const std::string _desVerilogTopModNameParamPrefix  = "topModName";
+        const std::string _desVerilogExtractParamPrefix     = "extractMulFile";
         const std::string _desSynthesisPrefix = "synName";
-        std::string       _desVerilogPath;
+        ////// get from parameter file
+        const std::string _FILE_SUFFIX = ".v";
+        std::string       _desVerilogFolder;
+        std::string       _desVerilogTopFileName;
+        std::string       _desVerilogTopModName;
+        bool              _extractMulFile = false;
         std::string       _desSynName;
-        FileWriterBase*   _verilogWriter   = nullptr;
+        /////// working element
+        FileWriterGroup   _writerGroup;
         Module*           _masterModule    = nullptr;
         ModuleGen*        _masterModuleGen = nullptr;
         GenStructure      _genStructure;
@@ -41,6 +51,13 @@ namespace kathryn{
 
         virtual ~GenController() = default;
 
+        /** generation have 5 major steps
+         * 1. initEle() recruit model and create its necessary meta-data
+         * 2. routeIo() route the io that to the collect place
+         * 3. genCefAll() gen meta data for compare to reduce data redundancy
+         * 4. recruitModToGenSystem() start compare model to reduce redundancy
+         * 5. generateEveryModule() dump it to verilog
+         */
         void start() override;
 
         void initEnv(PARAM& param);

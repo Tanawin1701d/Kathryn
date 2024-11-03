@@ -81,7 +81,10 @@ namespace kathryn{
 
         bool startCmpModule(ModuleGen* rhsMdg, GenStructure* genStructure);
         void startPutToGenSystem(GenStructure* genStructure);
-        void startWriteFile(FileWriterBase* fileWriter, GenStructure* genStructure);
+        void startWriteFile(FileWriterBase* fileWriter,
+                            GenStructure* genStructure,
+                            bool isExplicitMod,
+                            const std::string& explicitModName);
 
         /*
          * routing operation

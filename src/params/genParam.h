@@ -8,8 +8,9 @@
 
 namespace kathryn{
 
-
-    extern std::string GEN_PATH_PREFIX;
+    extern std::string GEN_FOLDER_PARAM_IDEN;
+    extern std::string GEN_TOP_FILE_NAME_PARAM_IDEN;
+    extern std::string GEN_TOP_MOD_NAME_PARAM_IDEN;
 
 
 }

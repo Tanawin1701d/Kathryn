@@ -24,11 +24,11 @@ namespace kathryn{
 
     void startGenEle(PARAM& param){
         std::sort(genTestCase.begin(), genTestCase.end(), genEleCmp);
-        std::string originDesPrefix = param[GEN_PATH_PREFIX];
+        std::string originTopFileName = param[GEN_TOP_FILE_NAME_PARAM_IDEN];
 
         for (GenEle* genEle: genTestCase){
             std::cout << TC_BLUE << "gen test case " << genEle->getId() << TC_DEF << std::endl;
-            param[GEN_PATH_PREFIX] = originDesPrefix + std::to_string(genEle->getId()) + ".v";
+            param[GEN_TOP_FILE_NAME_PARAM_IDEN] = originTopFileName + std::to_string(genEle->getId());
             genEle->startGen(param);
             std::cout << TC_BLUE << "finish gen test case" << genEle->getId() << TC_DEF << std::endl;
         }

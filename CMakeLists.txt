@@ -52,5 +52,7 @@ add_executable(Kathryn
         src/example/dataStruct/field/dynamicField.h
         src/sim/logicRep/valRepGen.h
         src/sim/logicRep/valRepGen.cpp
+        src/util/fileWriter/fileWriterGroup.cpp
+        src/util/fileWriter/fileWriterGroup.h
 
 )

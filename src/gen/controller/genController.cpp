@@ -11,9 +11,14 @@
 namespace kathryn{
 
     void GenController::initEnv(PARAM& param){
-        _desVerilogPath = param[_desPathParamPrefix];
+        _desVerilogFolder      = param[_desVerilogFolderParamPrefix     ];
+        _desVerilogTopFileName = param[_desVerilogTopFileNameParamPrefix];
+        _desVerilogTopModName  = param[_desVerilogTopModNameParamPrefix ];
+        _extractMulFile =
+            (param[_desVerilogTopModNameParamPrefix ] == "true");
         _desSynName     = param[_desSynthesisPrefix];
-        _verilogWriter  = new FileWriterBase(_desVerilogPath);
+
+        _writerGroup.setPrefixFolder(_desVerilogFolder);
         _masterModule   = getGlobalModulePtr();
     }
 
@@ -56,34 +61,46 @@ namespace kathryn{
 
     void GenController::generateEveryModule(){
 
-        for (ModuleGen* masterModuleGen:
-        _genStructure.getAllMasterModuleGen()){
-            assert(masterModuleGen != nullptr);
-            masterModuleGen->
-            startWriteFile(_verilogWriter, &_genStructure);
+        FileWriterBase* topWriter = _writerGroup.createNewFile(_desVerilogTopFileName + _FILE_SUFFIX);
+
+
+        for (ModuleGen* moduleGen: _genStructure.getAllMasterModuleGen()){
+            assert(moduleGen != nullptr);
+            bool isTopModule = moduleGen->getMasterModule()->isTopModule();
+            FileWriterBase* curFileWriter = nullptr;
+            if (isTopModule || (!_extractMulFile)){
+                curFileWriter = topWriter;
+            }else{
+                curFileWriter = _writerGroup.createNewFile(moduleGen->getOpr() + _FILE_SUFFIX);
+            }
+
+            moduleGen->startWriteFile(
+                    curFileWriter, &_genStructure,
+                    isTopModule, _desVerilogTopModName); /** explicit name is */
+
         }
     }
 
     void GenController::startSynthesis(){
 
         assert(!_desSynName.empty());
-        _verilogWriter->flush();
+        _writerGroup.flushAll();
+        if (!_extractMulFile){
+            std::cout << "we did not afford synthesis runner for multiple file yet";
+            assert(false);
+        }
         std::string compileComand =
-            pathToVivadoLaunch + " " + _desSynName + " " + _desVerilogPath;
+            pathToVivadoLaunch + " " + _desSynName + " " +
+                _desVerilogFolder + "/" + _desVerilogTopFileName;
         system(compileComand.c_str());
     }
 
     void GenController::reset(){
-        if (_verilogWriter != nullptr){
-            _verilogWriter->flush();
-        }
-        delete _verilogWriter;
-        _verilogWriter = nullptr;
+        _writerGroup.clean();
         _genStructure.reset();
     }
 
     void GenController::clean(){
-
         reset();
     }
 
