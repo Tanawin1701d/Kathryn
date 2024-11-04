@@ -45,7 +45,7 @@ namespace kathryn{
         int testCase = 1;
         for (auto sif: *testPool){
             std::cout << TC_BLUE << "[kathryn auto test] " << "start sim testcase "<< testCase << " id: " << sif->getSimId()<< TC_DEF <<"\n";
-            sif->start(prefixPath);
+            sif->start(prefixPath, getSPBM(params));
             resetKathryn();
             std::cout << TC_BLUE << "[kathryn auto test] " << "finnish sim testcase "<< testCase << " id: " << sif->getSimId()  << TC_DEF <<"\n";
             testCase++;

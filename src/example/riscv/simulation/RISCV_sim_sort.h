@@ -23,9 +23,10 @@ namespace kathryn{
                                   const std::string& prefix,
                                   std::vector<std::string> testTypes,
                                   Riscv& core,
-                                  int amtTestCase
+                                  int amtTestCase,
+                                  SimProxyBuildMode buildMode
                                   ):
-            RiscvSim(limitCycle,prefix,testTypes,core),
+            RiscvSim(limitCycle,prefix,testTypes,core, buildMode),
             AMT_TEST_CASE(amtTestCase){
                 assert(AMT_TEST_CASE > 0);
                 requireConSim = false;
@@ -58,7 +59,8 @@ namespace kathryn{
                                    params["prefix"],
                                    testTypes,
                                    (Riscv &) riscCore,
-                                   std::stoi(params["amt"])
+                                   std::stoi(params["amt"]),
+                                   getSPBM(params)
                 );
                 ////// start simulate
                 simulator.simStart();

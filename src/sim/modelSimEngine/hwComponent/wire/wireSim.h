@@ -13,6 +13,7 @@ namespace kathryn{
         Wire* _master;
     public:
         WireSimEngine(Wire* master, VCD_SIG_TYPE sigType);
+        void markSV(const std::string& str) override {markSV_base(str);}
     };
 
 }

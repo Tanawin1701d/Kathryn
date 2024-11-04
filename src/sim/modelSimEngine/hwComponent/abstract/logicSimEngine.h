@@ -33,10 +33,10 @@ namespace kathryn{
     public:
         //////////////////////// gen main operation
 
-        void createOpWithSoleCondition               (CbBaseCxx& cb, const std::string& auxAssStr = "");
-        void genOpWithChainCondition                 (CbBaseCxx& cb, const std::string& auxAssStr = "");
-        std::string genAssignAEqB                    (Slice     desSlice, bool isDesTemp,
-                                                      Operable* srcOpr);
+        void createOpWithSoleCondition        (CbBaseCxx& cb, const std::string& auxAssStr = "");
+        void genOpWithChainCondition          (CbBaseCxx& cb, const std::string& auxAssStr = "");
+        std::string genAssignAEqB             (Slice     desSlice, bool isDesTemp,
+                                               Operable* srcOpr);
         ///////////////////////// sliced opr
         virtual ValR genSrcOpr                ();
         virtual ValR genSlicedOprTo           (Slice srcSlice, SIM_VALREP_TYPE_ALL desField);
@@ -55,7 +55,7 @@ namespace kathryn{
         std::vector<std::string> getRegisVarName() override;
         ValR                     getTempValRep();
         ull                      getVarId()        override{return _ident->getGlobalId();}
-        SIM_VALREP_TYPE_ALL      getValR_Type()    override;
+        SIM_VALREP_TYPE_ALL      getValR_Type() override;
         void                     setVCDWriteStatus(bool status){ _setToWrite = status;}
 
         [[nodiscard]]
@@ -71,6 +71,7 @@ namespace kathryn{
         void createOp            (CbBaseCxx& cb) override;
         void createOpEndCycle    (CbBaseCxx& cb) override{}
         void createOpEndCycle2   (CbBaseCxx& cb) override;
+        void createUserMarkValue (CbBaseCxx& cb) override; //// create designer defined name visable to manual overide
 
 
         bool        isUserDeclare()       override{return _ident->isUserVar();}
@@ -87,6 +88,9 @@ namespace kathryn{
 
     class LogicSimEngineInterface{
     public:
+        //////// it is used to mask the signal which designer can make modify it
+        /// in cpp generated simulation model easier
+        virtual void markSV(const std::string& key) = 0;
         virtual ~LogicSimEngineInterface() = default;
         virtual LogicSimEngine* getSimEngine() = 0;
     };

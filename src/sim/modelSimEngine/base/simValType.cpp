@@ -22,6 +22,14 @@ namespace kathryn{
         return mapper[idx];
     }
 
+    std::string SVT_toUnitRefType(SIM_VALREP_TYPE_ALL svt){
+        return SVT_toUnitType(svt) + "&";
+    }
+
+    std::string SVT_toUnitPtrType(SIM_VALREP_TYPE_ALL svt){
+        return SVT_toUnitType(svt) + "*";
+    }
+
     SIM_VALREP_TYPE_ALL getMatchSVT_ALL(Operable* opr){
         assert(opr != nullptr);
         int size = opr->getOperableSlice().getSize();

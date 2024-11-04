@@ -197,8 +197,6 @@ namespace kathryn{
 
 
     void LogicSimEngine::createGlobalVariable(CbBaseCxx& cb){
-        std::string valSize = std::to_string(_asb->getAssignSlice().getSize());
-
         ////////"; will be auto add"
 
         cb.addSt( getValRep().buildVar(_initVal), !_isTempReq);
@@ -230,6 +228,12 @@ namespace kathryn{
             cb.addSt(
                 getValRep().eq(getTempValRep()).toString()
             );
+        }
+    }
+
+    void LogicSimEngine::createUserMarkValue(CbBaseCxx& cb){
+        if (isMarkSV){
+            cb.addSt( getValRep().buildVarRef(markSV_key));
         }
     }
 

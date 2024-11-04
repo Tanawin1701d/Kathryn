@@ -43,9 +43,9 @@ namespace kathryn{
 
         testSimMod36* _md = nullptr;
 
-        sim36(testSimMod36* md, int idx, const std::string& prefix):SimAutoInterface(idx,100,
+        sim36(testSimMod36* md, int idx, const std::string& prefix, SimProxyBuildMode simProxyBuildMode):SimAutoInterface(idx,100,
                                                                                   prefix + "simAutoResult"+std::to_string(idx)+".vcd",
-                                                                                  prefix + "simAutoResult"+std::to_string(idx)+".prof"),
+                                                                                  prefix + "simAutoResult"+std::to_string(idx)+".prof", simProxyBuildMode),
         _md(md)
         {}
         void simAssert() override{}
@@ -134,10 +134,10 @@ namespace kathryn{
     class Sim36TestEle: public AutoTestEle{
     public:
         explicit Sim36TestEle(int id): AutoTestEle(id){}
-        void start(std::string prefix) override{
+        void start(std::string prefix, SimProxyBuildMode simProxyBuildMode) override{
             mMod(d, testSimMod36, 1);
             startModelKathryn();
-            sim36 simulator((testSimMod36*) &d, _simId, prefix);
+            sim36 simulator((testSimMod36*) &d, _simId, prefix, simProxyBuildMode);
             //std::cout << getGlobalModulePtr()->getUserWires()[0]->getVarName() << std::endl;
             //std::cout << getGlobalModulePtr()->getUserWires()[0]->getSimEngine()->getVarName() << std::endl;
             simulator.simStart();

@@ -35,7 +35,8 @@ namespace kathryn{
             explicit RiscvSim(CYCLE limitCycle,
                               const std::string& prefix,
                               std::vector<std::string> testTypes,
-                              Riscv& core
+                              Riscv& core,
+                              SimProxyBuildMode buildMode
                                        );
 
             void describeCon() override;
@@ -61,7 +62,8 @@ namespace kathryn{
                 RiscvSim simulator(1200,
                                    params["prefix"],
                                    testTypes,
-                                   (Riscv &) riscCore
+                                   (Riscv &) riscCore,
+                                   getSPBM(params)
                 );
                 ////// start simulate
                 simulator.simStart();

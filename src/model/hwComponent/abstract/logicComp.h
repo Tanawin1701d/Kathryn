@@ -63,11 +63,21 @@ namespace kathryn{
         virtual ~LogicComp() {
             delete _simEngine;
             delete _genEngine;
-        };
+        }
+
+
+        /** simulation engine override*/
 
         LogicSimEngine* getSimEngine() override{
             return _simEngine;
         }
+
+        void markSV(const std::string& key) override{
+            _simEngine->markSV(key);
+        }
+
+
+        ///////////////////////////////////////////
 
         LogicGenBase* getLogicGen() override{
             return _genEngine;

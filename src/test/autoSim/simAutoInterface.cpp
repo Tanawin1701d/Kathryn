@@ -14,7 +14,8 @@ namespace kathryn{
     SimAutoInterface::SimAutoInterface(int simId,
                                        CYCLE limitCycle,
                                        std::string vcdFilePath,
-                                       std::string profileFilePath
+                                       std::string profileFilePath,
+                                       SimProxyBuildMode simProxyBuildMode
                                        ) :
     SimInterface(limitCycle,
                  std::move(vcdFilePath),

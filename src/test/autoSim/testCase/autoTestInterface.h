@@ -5,6 +5,8 @@
 #ifndef KATHRYN_AUTOTESTINTERFACE_H
 #define KATHRYN_AUTOTESTINTERFACE_H
 
+#include <sim/modelSimEngine/base/proxyBuildMng.h>
+
 #include "string"
 
 
@@ -16,7 +18,7 @@ namespace kathryn{
         int _simId = -1;
     public:
         explicit AutoTestEle(int simId);
-        virtual void start(std::string prefix) = 0;
+        virtual void start(std::string prefix, SimProxyBuildMode simProxyBuildMode) = 0;
         int getSimId() const {return _simId;}
 
     };

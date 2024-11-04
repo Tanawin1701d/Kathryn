@@ -13,6 +13,7 @@ namespace kathryn{
         Reg* _master = nullptr;
     public:
         RegSimEngine(Reg* master,VCD_SIG_TYPE sigType);
+        void markSV(const std::string& str) override {markSV_base(str);}
     };
 
 }

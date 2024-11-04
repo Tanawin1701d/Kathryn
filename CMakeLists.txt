@@ -54,5 +54,9 @@ add_executable(Kathryn
         src/sim/logicRep/valRepGen.cpp
         src/util/fileWriter/fileWriterGroup.cpp
         src/util/fileWriter/fileWriterGroup.h
+        src/sim/modelSimEngine/base/userDefRepo.cpp
+        src/sim/modelSimEngine/base/userDefRepo.h
+        src/sim/modelSimEngine/base/proxyBuildMode.cpp
+        src/sim/modelSimEngine/base/proxyBuildMode.h
 
 )

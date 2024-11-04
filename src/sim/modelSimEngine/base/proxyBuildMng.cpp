@@ -104,6 +104,23 @@ namespace kathryn{
         callBackEvents = tracers;
     }
 
+    void ProxyBuildMng::startReadOldModelSim(){
+
+        for (const std::string& trackKey : trackKeys){
+            _codeRepo.addTrackKey(trackKey);
+        }
+
+        if (!std::filesystem::exists(srcGenPath)){
+            return;
+        }
+
+        proxyfileReader = new FileReaderBase(srcGenPath);
+        _codeRepo.fetchCode(proxyfileReader);
+        delete proxyfileReader;
+
+    }
+
+
     void ProxyBuildMng::startWriteModelSim(){
 
         bool userVcd = (PARAM_VCD_REC_POL == MDE_REC_BOTH) ||
@@ -120,23 +137,26 @@ namespace kathryn{
         proxyfileWriter = new FileWriterBase(srcGenPath);
         /** write include*/
         proxyfileWriter->addData("#include \"../proxyEvent.h\"\n");
+        /** write designer manual include*/
+        proxyfileWriter->addData(_codeRepo.genCode(trackKeys[CMT_INCLUDE])+"\n"); //// include
         /** create namespace*/
         proxyfileWriter->addData("namespace kathryn{\n\n\n\n\n\n");
 
         ///////// global variable
-        startWriteCallBackVarInit();
-        startWriteVcdDecWriter();
-        startWriteCreateVariable();
-        startWritePerfDec();
+        startWriteCallBackVarInit(); /// write variable for callback variable
+        startWriteVcdDecWriter();    /// write vcd writer variable
+        startWriteCreateVariable();  /// create variable for simulation model
+        startWritePerfDec();         /// create variable for performance
+        proxyfileWriter->addData(_codeRepo.genCode(trackKeys[CMT_GLOBVAR])+"\n"); /// globalvar
         //////////////////////////////
         ///////// start  Writefunction
         //////////////////////////////
         /// register callback
-        startWriteInitInternalWarmUp();
-        startWriteRegisterCallback();
+        startWriteInitInternalWarmUp(); //// warm-up vcd writer to bring from proxysim event
+        startWriteRegisterCallback();   //// register the performance and simvalue to make userland simulatable
         //// callbackMng
-        startWriteCallBackCheckAndRet();
-        startWriteCallBackGetAmt();
+        startWriteCallBackCheckAndRet(); //// callback checker
+        startWriteCallBackGetAmt();      //// get amount of call back
         startWriteCallbackGetNo();
         /// vcd DecVar collect
         if (userVcd){
@@ -529,6 +549,18 @@ namespace kathryn{
                                  genFunctionDec(false, USER_DEF + USER_SUFFIX + SKE_SUFFIX)+
                                  "{\n");
         proxyfileWriter->addData("\n\n\n\n\n\n\n\n\n\n\n");
+        assert(moduleSimEngine != nullptr);
+        /////// recruit modelBuilder for create user mark value
+        std::vector<ModelProxyBuild*> dayta =
+            moduleSimEngine->recruitForCreateVar();
+        /////// generate the data
+        CbBaseCxx cb;
+        for (ModelProxyBuild* mpb : dayta){
+            mpb->createUserMarkValue(cb);
+        }
+        ////////// write the designer
+        proxyfileWriter->addData(cb.toString(0));
+        proxyfileWriter->addData(_codeRepo.genCode(trackKeys[CMT_MANUALDES])+"\n"); /// manualDesigner
         proxyfileWriter->addData("}\n");
 
     }
@@ -627,28 +659,4 @@ namespace kathryn{
         assert(closeStatus == 0);
     }
 
-
-    SimProxyBuildMode getSPBM(const PARAM& param){
-
-        auto iter = param.find(param_spb_key);
-
-        if (iter == param.end()){
-            return SimProxyBuildMode::SPB_NON;
-        }
-
-        std::string value = iter->second;
-
-        SimProxyBuildMode mode = SimProxyBuildMode::SPB_NON;
-        if(value.find(param_spb_g) != std::string::npos){
-            mode = mode | SimProxyBuildMode::SPB_GEN;
-        }
-        if(value.find(param_spb_c) != std::string::npos){
-            mode = mode | SimProxyBuildMode::SPB_COMPILE;
-        }
-        if(value.find(param_spb_r) != std::string::npos){
-            mode = mode | SimProxyBuildMode::SPB_RUN;
-        }
-        return mode;
-
-    }
 }

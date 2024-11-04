@@ -20,7 +20,8 @@ namespace kathryn{
         explicit SimAutoInterface(int simId,
                                   CYCLE limitCycle,
                                   std::string vcdFilePath,
-                                  std::string profileFilePath
+                                  std::string profileFilePath,
+                                  SimProxyBuildMode simProxyBuildMode
                                   );
 
         int getSimId() const {return _simId;}

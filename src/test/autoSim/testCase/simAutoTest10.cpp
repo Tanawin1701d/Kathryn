@@ -65,10 +65,11 @@ namespace kathryn{
 
         testSimMod10* _md;
 
-        sim10(testSimMod10* md, int idx, const std::string& prefix):SimAutoInterface(idx,
+        sim10(testSimMod10* md, int idx, const std::string& prefix, SimProxyBuildMode simProxyBuildMode):SimAutoInterface(idx,
                                               200,
                                               prefix + "simAutoResult"+std::to_string(idx)+".vcd",
-                                              prefix + "simAutoResult"+std::to_string(idx)+".prof"),
+                                              prefix + "simAutoResult"+std::to_string(idx)+".prof",
+                                              simProxyBuildMode),
                              _md(md)
         {}
 
@@ -99,10 +100,10 @@ namespace kathryn{
     class Sim10TestEle: public AutoTestEle{
     public:
         explicit Sim10TestEle(int id): AutoTestEle(id){}
-        void start(std::string prefix) override{
+        void start(std::string prefix, SimProxyBuildMode simProxyBuildMode) override{
             mMod(d, testSimMod10, 1);
             startModelKathryn();
-            sim10 simulator((testSimMod10*) &d, _simId, prefix);
+            sim10 simulator((testSimMod10*) &d, _simId, prefix, simProxyBuildMode);
             simulator.simStart();
         }
 

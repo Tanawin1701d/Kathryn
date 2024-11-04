@@ -8,3 +8,5 @@ testType = testRiscvSort
 prefix = /media/tanawin/tanawin1701e/project2/Kathryn/KOut/riscv/
 
 amt = 9
+
+buildSimMode = gcr

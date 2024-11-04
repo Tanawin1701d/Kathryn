@@ -228,6 +228,7 @@ namespace kathryn{
         _proxyBuildMng.setTracer(&_traceEvents);
 
         if (hasConfig(_simProxyBuildMode, SimProxyBuildMode::SPB_GEN)){
+            _proxyBuildMng.startReadOldModelSim();
             _proxyBuildMng.startWriteModelSim();
         }
         if (hasConfig(_simProxyBuildMode, SimProxyBuildMode::SPB_COMPILE)){

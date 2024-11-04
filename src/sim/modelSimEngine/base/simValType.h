@@ -28,11 +28,13 @@ namespace kathryn{
     };
 
     struct SIM_VALREP_TYPE_ALL;
-    SIM_VALREP_TYPE_ALL getMatchSVT_ALL(Operable* opr);
-    SIM_VALREP_TYPE     getMatchSVT(int size);
-    std::string         SVT_toUnitType(SIM_VALREP_TYPE_ALL svt);
-    int                 getSvtMaxBitSize(SIM_VALREP_TYPE_ALL svt);
-    int                 getArrSize(int size);
+    SIM_VALREP_TYPE_ALL getMatchSVT_ALL  (Operable* opr);
+    SIM_VALREP_TYPE     getMatchSVT      (int size);
+    std::string         SVT_toUnitType   (SIM_VALREP_TYPE_ALL svt);
+    std::string         SVT_toUnitRefType(SIM_VALREP_TYPE_ALL svt);
+    std::string         SVT_toUnitPtrType(SIM_VALREP_TYPE_ALL svt);
+    int                 getSvtMaxBitSize (SIM_VALREP_TYPE_ALL svt);
+    int                 getArrSize       (int size);
 
     struct SIM_VALREP_TYPE_ALL{
         SIM_VALREP_TYPE type;
@@ -209,6 +211,10 @@ namespace kathryn{
             return _data;
         }
 
+        std::string getRefData() const{
+            return "&" + _data;
+        }
+
         [[nodiscard]]
         std::string buildVar(ull initVal) const{
             return SVT_toUnitType(_valType) + " " + _data + " = " + std::to_string(initVal);
@@ -221,8 +227,20 @@ namespace kathryn{
             return buffer;
         }
 
+        [[nodiscard]] /// used for build linking variable
+        std::string buildVarRef(const std::string& newName ) const{
+            return SVT_toUnitRefType(_valType) + " " + newName + " = " + getData();
+        }
+
+        [[nodiscard]]
         std::string buildMemVar(ull depthSize) const{
             return SVT_toUnitType(_valType) + " " + _data + "["+ std::to_string(depthSize) + "]";
+        }
+
+        [[nodiscard]] /// used for build linking variable
+        std::string buildMemVarPtr(const std::string& newName) const{
+            /////// getdata() should return pointer
+            return SVT_toUnitPtrType(_valType) + " " + newName + " = " + getData();
         }
 
         ValR index(ValR idx){

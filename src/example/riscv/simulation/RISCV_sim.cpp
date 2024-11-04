@@ -15,11 +15,13 @@ namespace kathryn{
         RiscvSim::RiscvSim(CYCLE       limitCycle,
                            const std::string& prefix,
                            std::vector<std::string> testTypes,
-                           Riscv& core): ///// init first test case here
+                           Riscv& core,
+                           SimProxyBuildMode buildMode): ///// init first test case here
                 SimInterface(limitCycle,
                              "/tmp/vcdDummy",
                              "/tmp/profdummy",
-                             "simpleRiscV"
+                             "simpleRiscV",
+                             buildMode
                              ),
                 _core(core),
                 slotWriter({"fetch", "decode", "execute", "wb", "mem"},
@@ -88,9 +90,16 @@ namespace kathryn{
             ///////////// fill it with zero
 
 
-            for (;writeAddr < _core.memBlk._myMem.getDepthSize(); writeAddr++){
-                _core.memBlk._myMem.at(writeAddr).setVar(0);
-            }
+            // for (;writeAddr < _core.memBlk._myMem.getDepthSize(); writeAddr++){
+            //     _core.memBlk._myMem.at(writeAddr).setVar(0);
+            // }
+
+            size_t setZeroAmt = _core.memBlk._myMem.getDepthSize() - writeAddr;
+            _core.memBlk._myMem.at(writeAddr).setVarArr(0, setZeroAmt);
+
+
+
+
 
             std::cout << TC_GREEN << "initialize mem finish" << TC_DEF << std::endl;
 

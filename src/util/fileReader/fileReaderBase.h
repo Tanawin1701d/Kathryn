@@ -21,6 +21,11 @@ namespace kathryn{
         explicit FileReaderBase(std::string filePath);
         virtual ~FileReaderBase() = default;
         std::vector<std::string> readLines();
+        /////// for next line
+        bool        isNext();
+        std::string readline();
+
+
     };
 
 

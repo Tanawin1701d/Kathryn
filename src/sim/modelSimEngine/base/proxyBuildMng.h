@@ -4,6 +4,8 @@
 
 #ifndef PROXYBUILDMNG_H
 #define PROXYBUILDMNG_H
+
+#include <filesystem>
 #include <string>
 #include <cstdlib>
 #include <utility>
@@ -18,6 +20,8 @@
 #include "util/fileWriter/fileWriterBase.h"
 #include "modelProxy.h"
 #include "traceEvent.h"
+#include "userDefRepo.h"
+#include "proxyBuildMode.h"
 
 
 namespace kathryn{
@@ -29,7 +33,9 @@ namespace kathryn{
         Module*          _startModule    = nullptr;
         ModuleSimEngine* moduleSimEngine = nullptr;
         FileWriterBase* proxyfileWriter  = nullptr;
+        FileReaderBase* proxyfileReader  = nullptr;
         void*           _handle          = nullptr;
+        UserDefRepo     _codeRepo; /// used to store old code
 
         const std::string TEST_NAME;
 
@@ -41,6 +47,13 @@ namespace kathryn{
         const std::string dynObjFolder   = "build";
 
         const std::string builderName    = "startGen.sh";
+
+        ////// CODE_MAKER_TYPE match with trackKeys
+        enum CODE_MAKER_TYPE{CMT_INCLUDE = 0, CMT_GLOBVAR = 1, CMT_MANUALDES = 2};
+        const std::string trackKeys[3] = {"include", "globalVar", "manualDesigner"};
+
+
+
 
         //////// pathe of file and directory
         const std::string pathToModelFolder = PROJECT_DIR + "/" + MD_COMPILE_FOLDER;
@@ -97,6 +110,8 @@ namespace kathryn{
         void setStartModule(Module* startModule);
         void setTracer(std::vector<TraceEvent>* tracers);
 
+        ////////// start recruit old system
+        void startReadOldModelSim();
         ////////// generate path
         void startWriteModelSim();
         ///////// for wrate call back meta
@@ -155,40 +170,7 @@ namespace kathryn{
     };
 
 
-    //////// run mode
 
-    enum class SimProxyBuildMode: uint8_t{
-        SPB_NON         = 0,
-        SPB_GEN         = 1 << 0,
-        SPB_COMPILE     = 1 << 1,
-        SPB_RUN         = 1 << 2
-    };
-
-    inline SimProxyBuildMode
-    operator | (SimProxyBuildMode a, SimProxyBuildMode b){
-        return static_cast<SimProxyBuildMode>(
-            static_cast<uint8_t>(a) | static_cast<uint8_t>(b)
-        );
-    }
-
-    inline SimProxyBuildMode
-    operator & (SimProxyBuildMode a, SimProxyBuildMode b){
-        return static_cast<SimProxyBuildMode>(
-            static_cast<uint8_t>(a) & static_cast<uint8_t>(b)
-        );
-    }
-    ////// has config b
-    inline bool hasConfig(SimProxyBuildMode a, SimProxyBuildMode b){
-        return (a & b) == b;
-    }
-
-
-    constexpr char param_spb_key[] = "buildMode";
-    constexpr char param_spb_g     = 'g';
-    constexpr char param_spb_c     = 'c';
-    constexpr char param_spb_r     = 'r';
-
-    SimProxyBuildMode getSPBM(const PARAM& param);
 
 }
 

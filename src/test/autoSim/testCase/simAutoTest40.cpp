@@ -8,7 +8,7 @@
 
 namespace kathryn{
 
-    class testSimMod24: public Module{
+    class testSimMod40: public Module{
     public:
 
         mReg (i, 6);
@@ -18,9 +18,13 @@ namespace kathryn{
         mMem(storage, 48, 8);
 
 
-        explicit testSimMod24(int x): Module(){}
+        explicit testSimMod40(int x): Module(){}
 
         void flow() override{
+
+            i.markSV("my_i");
+            b.markSV("my_b");
+            storage.markSV("my_mem");
 
             seq{
                 i = 0;
@@ -43,16 +47,16 @@ namespace kathryn{
         }
     };
 
-    ///static std::string vcdPath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/simAutoTest24.vcd";
-    ////static std::string profilePath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/profAutoTest24.vcd";
+    ///static std::string vcdPath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/simAutoTest40.vcd";
+    ////static std::string profilePath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/profAutoTest40.vcd";
 
 
-    class sim24 :public SimAutoInterface{
+    class sim40 :public SimAutoInterface{
     public:
 
-        testSimMod24* _md;
+        testSimMod40* _md;
 
-        sim24(testSimMod24* md, int idx, const std::string& prefix, SimProxyBuildMode simProxyBuildMode):SimAutoInterface(idx,
+        sim40(testSimMod40* md, int idx, const std::string& prefix, SimProxyBuildMode simProxyBuildMode):SimAutoInterface(idx,
                                               200,
                                               prefix + "simAutoResult"+std::to_string(idx)+".vcd",
                                               prefix + "simAutoResult"+std::to_string(idx)+".prof", simProxyBuildMode),
@@ -78,17 +82,17 @@ namespace kathryn{
     };
 
 
-    class Sim24TestEle: public AutoTestEle{
+    class Sim40TestEle: public AutoTestEle{
     public:
-        explicit Sim24TestEle(int id): AutoTestEle(id){}
+        explicit Sim40TestEle(int id): AutoTestEle(id){}
         void start(std::string prefix, SimProxyBuildMode simProxyBuildMode) override{
-            mMod(d, testSimMod24, 1);
+            mMod(d, testSimMod40, 1);
             startModelKathryn();
-            sim24 simulator((testSimMod24*) &d, _simId, prefix, simProxyBuildMode);
+            sim40 simulator((testSimMod40*) &d, _simId, prefix, simProxyBuildMode);
             simulator.simStart();
         }
 
     };
 
-    Sim24TestEle ele24(24);
+    Sim40TestEle ele40(-1);
 }

@@ -47,6 +47,7 @@ namespace kathryn{
         void createOp             (CbBaseCxx& cb) override; ///// we use op to do all operation
         void createOpEndCycle     (CbBaseCxx& cb) override{}
         void createOpEndCycle2    (CbBaseCxx& cb) override{}
+        void createUserMarkValue  (CbBaseCxx& cb) override{}
         bool        isUserDeclare()          override{return false;}
 
         ////////

@@ -56,7 +56,8 @@ namespace kathryn{
             return getIdentDebugValue();
         }
 
-        MemSimEngine* getSimEngine() override{return memSimEngine;}
+        MemSimEngine* getSimEngine()                 override{return memSimEngine;}
+        void          markSV(const std::string& str) override{memSimEngine->markSV(str);}
 
         void          createLogicGen() override;
         LogicGenBase* getLogicGen() override{return _genEngine;}

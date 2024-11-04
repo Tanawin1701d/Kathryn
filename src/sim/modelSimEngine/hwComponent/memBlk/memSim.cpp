@@ -30,11 +30,23 @@ namespace kathryn{
         return SIM_VALREP_TYPE_ALL(_master->getWidthSize());
     }
 
+    void MemSimEngine::markSV(const std::string& str){
+        markSV_base(str);
+    }
 
     void MemSimEngine::createGlobalVariable(CbBaseCxx& cb){
         ull depth = _master->getDepthSize();
         cb.addSt(getValRep().buildMemVar(depth));
     }
+
+    void MemSimEngine::createUserMarkValue(CbBaseCxx& cb){
+        if (isMarkSV){
+            cb.addSt(getValRep().buildMemVarPtr(markSV_key));
+        }
+    }
+
+
+    ///////   return value
 
     void MemSimEngine::proxyRetInit(ProxySimEventBase* modelSimEvent){
         proxyRep = modelSimEvent->getVal(getValRep().getData());

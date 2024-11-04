@@ -21,17 +21,19 @@ namespace kathryn{
         explicit MemSimEngine(MemBlock* master);
 
         ///////// create c++
-        void                     proxyBuildInit()  override{};
-        ValR                     getValRep()      override;
-        std::vector<std::string> getRegisVarName() override;
-        ull                      getVarId()        override;
-        SIM_VALREP_TYPE_ALL      getValR_Type()    override;
+        void                     proxyBuildInit()               override{};
+        ValR                     getValRep()                    override;
+        std::vector<std::string> getRegisVarName()              override;
+        ull                      getVarId()                     override;
+        SIM_VALREP_TYPE_ALL      getValR_Type()                 override;
+        void                     markSV(const std::string& str) override;
         
         void createGlobalVariable(CbBaseCxx& cb) override;
         void createLocalVariable (CbBaseCxx& cb) override{}
         void createOp            (CbBaseCxx& cb) override{}
         void createOpEndCycle    (CbBaseCxx& cb) override{}
         void createOpEndCycle2   (CbBaseCxx& cb) override{}
+        void createUserMarkValue (CbBaseCxx& cb) override;
 
         bool        isUserDeclare()        override{return false;}
         void        proxyRetInit(ProxySimEventBase* modelSimEvent)override;
@@ -41,6 +43,7 @@ namespace kathryn{
 
     class MemSimEngineInterface{
     public:
+        virtual void markSV(const std::string& key) = 0;
         virtual ~MemSimEngineInterface() = default;
         virtual MemSimEngine* getSimEngine() = 0;
     };

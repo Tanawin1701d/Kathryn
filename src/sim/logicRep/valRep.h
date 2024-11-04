@@ -72,6 +72,39 @@ namespace kathryn{
             }
         }
 
+        void setVarArr(const ull input_value, ull size){
+
+            if (_continLength > 0){
+                for (int writeIter = 0; writeIter < size; writeIter++){
+                    setVar(input_value);
+                }
+            }else{
+                if (_byteSize == 1){
+                    std::fill(
+                        static_cast<uint8_t*>(_val),
+                        static_cast<uint8_t*>(_val) + size,
+                        static_cast<uint8_t>(input_value));
+                }else if (_byteSize == 2){
+                    std::fill(
+                        static_cast<uint16_t*>(_val),
+                        static_cast<uint16_t*>(_val) + size,
+                        static_cast<uint16_t>(input_value));
+                }else if (_byteSize == 4){
+                    std::fill(
+                        static_cast<uint32_t*>(_val),
+                        static_cast<uint32_t*>(_val) + size,
+                        static_cast<uint32_t>(input_value));
+
+                }else if (_byteSize == 8){
+                    std::fill(
+                        static_cast<uint64_t*>(_val),
+                        static_cast<uint64_t*>(_val) + size,
+                        static_cast<uint64_t>(input_value));
+
+                }
+            }
+        }
+
         void setLargeVar(std::vector<ull> x) const{
             assert(_continLength  > 0);
             assert(_byteSize     == 8);

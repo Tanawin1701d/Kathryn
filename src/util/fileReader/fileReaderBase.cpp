@@ -29,4 +29,18 @@ namespace kathryn{
 
         return results;
     }
+
+    bool FileReaderBase::isNext(){
+        return _inputFile.peek() != EOF;
+    }
+
+    std::string FileReaderBase::readline(){
+        std::string line;
+        std::getline(_inputFile, line);
+        return line;
+    }
+
+
+
+
 }

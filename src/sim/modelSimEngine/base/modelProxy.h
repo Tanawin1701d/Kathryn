@@ -27,15 +27,22 @@ namespace kathryn{
     protected:
         std::vector<ModelProxyBuild*> dep;
         std::string TEMP_VAR_SUFFIX = "_TEMP";
+
+        ///// marksv is used to explicit var name to make designer modify the
+        ///// model file like verilator
+        std::string markSV_key          = "undefined";
+        bool        isMarkSV        = false;
     public:
         virtual             ~ModelProxyBuild()= default;
         virtual void        proxyBuildInit()   = 0;
         //// pre initialize section fill dependency
-        virtual ValR                     getValRep()       = 0; //// prefix is not include
+        virtual ValR                     getValRep      () = 0; //// prefix is not include
         virtual std::vector<std::string> getRegisVarName() = 0;
-        virtual ull                      getVarId()        = 0; //// it is global id
-        std::vector<ModelProxyBuild*>&   getDep() {return dep;}
-        virtual SIM_VALREP_TYPE_ALL      getValR_Type()    = 0;
+        virtual ull                      getVarId       () = 0; //// it is global id
+        std::vector<ModelProxyBuild*>&   getDep         () {return dep;}
+        virtual SIM_VALREP_TYPE_ALL      getValR_Type   () = 0;
+        void                             markSV_base    (const std::string& str){isMarkSV = true; markSV_key = str;}
+        virtual void                     markSV         (const std::string& str){assert(false);}
 
         //// c++ create section
         virtual void createGlobalVariable (CbBaseCxx& cb) = 0;
@@ -43,6 +50,7 @@ namespace kathryn{
         virtual void createOp             (CbBaseCxx& cb) = 0; //// compute the data but
         virtual void createOpEndCycle     (CbBaseCxx& cb) = 0; //// have more priority
         virtual void createOpEndCycle2    (CbBaseCxx& cb) = 0; //// have less priority
+        virtual void createUserMarkValue  (CbBaseCxx& cb) = 0; //// create designer defined name visable to manual overide
         virtual bool isUserDeclare()        = 0;
 
 
