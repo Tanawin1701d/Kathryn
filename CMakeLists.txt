@@ -44,19 +44,4 @@ add_executable(Kathryn
         ${SRC_PARAM}
         ${SRC_LIB}
         ${SRC_MODEL_COMPILE}
-        src/model/interface/base/interface.cpp
-        src/model/interface/base/interface.h
-        src/model/interface/singleHandShake/shs.cpp
-        src/model/interface/singleHandShake/shs.h
-        src/model/interface/singleHandShake/shs.cpp
-        src/example/dataStruct/field/dynamicField.h
-        src/sim/logicRep/valRepGen.h
-        src/sim/logicRep/valRepGen.cpp
-        src/util/fileWriter/fileWriterGroup.cpp
-        src/util/fileWriter/fileWriterGroup.h
-        src/sim/modelSimEngine/base/userDefRepo.cpp
-        src/sim/modelSimEngine/base/userDefRepo.h
-        src/sim/modelSimEngine/base/proxyBuildMode.cpp
-        src/sim/modelSimEngine/base/proxyBuildMode.h
-
 )
