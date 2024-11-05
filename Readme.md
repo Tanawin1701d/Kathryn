@@ -71,5 +71,5 @@ import Image from 'next/image from website'
   }
   ```
   
-## setup, teststart your first Model!
+## setup, test, and start your first Model!
 - link to our webpage
