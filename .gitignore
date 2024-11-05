@@ -9,10 +9,12 @@
 /KOut/**/*.prof
 /KOut/**/*.sl
 /KOut/**/*.dumpVar
-###### model output and program is system generated
-/KOut/genTest/model
-/KOut/genTest/output
-/KOut/genTest/program
+
+# verilog generation  test
+/KOut/genTest/model/*.v
+/KOut/genTest/output/*.vcd
+/KOut/genTest/program/*.vvp
+# gen example
 /KOut/genExample
 /KOut/riscv/gen/*.v
 /KOut/riscv/gen/obj_dir
@@ -21,8 +23,11 @@
 #### model compile
 modelCompile/cmake-build-debug
 modelCompile/.idea
-modelCompile/build/*
-modelCompile/generated/*
+modelCompile/build/*.so
+modelCompile/generated/*.cpp
+modelCompile/optec.txt
+modelCompile/CMakeLists.txt
+modelCompile/main.cpp
 
 #### synthesisRunner
 synthesisRunner/generatedTcl/*
