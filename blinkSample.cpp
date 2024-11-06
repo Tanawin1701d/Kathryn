@@ -1,7 +1,6 @@
 #include "kathryn.h"
 using namespace kathryn;
 
-
 ////// MODEL
 struct BlinkAB: public Module{
     //////// swap blink A and B
@@ -33,42 +32,18 @@ struct BlinkAB_sim: public SimInterface{
 };
 
 
-
-
-
-
-
-void genVerilog(PARAM& params){
-    /// (#name, #class, #parameter ...)
-    mMod(ex, BlinkAB, 0); /// build module
-    startModelKathryn(); /// start modeling
-    startGenKathryn(params); /// start generate
-    resetKathryn(); /// reset system
-
-}
-
-void simulate(PARAM& params){
-    mMod(ex, BlinkAB, 0); ///  build module
-    startModelKathryn(); /// start modeling
-    BlinkAB_sim simulator(params); /// build simulator
-    simulator.simStart();
-    resetKathryn();
-}
-
-
-
 int main(int argc, char* argv[]){
-
     auto params = readParamKathryn(argv[1]);
-
     int mode;
     std::cout << "simulate press 0 <-> generate press 1" << std::endl;
     std::cin >> mode;
+    mMod(ex, BlinkAB, 0); /// build module
+    startModelKathryn(); /// start modeling
     if (mode == 1){
-        genVerilog(params);
+        startGenKathryn(params); /// start generate
     }else if (mode == 0){
-        simulate(params);
+        BlinkAB_sim simulator(params); /// build simulator
+        simulator.simStart();
     }
-
-
+    resetKathryn();
 }
