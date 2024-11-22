@@ -54,7 +54,7 @@ namespace kathryn{
                    public ModuleGenInterface
                    {
 
-    private:
+    protected:
         MODEL_STAGE              _mdStage = MODEL_UNINIT;
         bool                     _isTopModule = false;
         /**all slave object that belong to this elements*/
@@ -144,7 +144,9 @@ namespace kathryn{
         void         setStage(MODEL_STAGE md_stage){_mdStage = md_stage;}
         void         buildAll();
         virtual void flow(){}; //// user must inherit this function to build thier flow
+        virtual void auxFlow(){}; ////// it is used for implicit flow declaration if needed
         virtual void buildFlow();
+        virtual void augmentModule(){};
         /** model debug*/
         [[maybe_unused]]
         std::string getMdDescribe() override;

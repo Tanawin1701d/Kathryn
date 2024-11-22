@@ -147,6 +147,7 @@ namespace kathryn{
 
     void Module::buildAll(){
         /**declare to model controller that this module is initialize*/
+        auxFlow();
         flow();
         for (ModelInterface* itf: getItfs()){
             itf->buildLogicBase();
@@ -163,6 +164,7 @@ namespace kathryn{
          *
          * please note that you cant change order of flow and sub model init design flow
          * */
+        augmentModule();
 
     }
 
