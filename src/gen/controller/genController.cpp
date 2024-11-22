@@ -10,6 +10,10 @@
 
 namespace kathryn{
 
+
+    GenController::GenController():
+    PROJECT_PATH(KATHRYN_PROJECT_DIR){}
+
     void GenController::initEnv(PARAM& param){
         _desVerilogFolder      = param[_desVerilogFolderParamPrefix     ];
         _desVerilogTopFileName = param[_desVerilogTopFileNameParamPrefix];
@@ -61,7 +65,7 @@ namespace kathryn{
 
     void GenController::generateEveryModule(){
 
-        FileWriterBase* topWriter = _writerGroup.createNewFile(_desVerilogTopFileName + _FILE_SUFFIX);
+        FileWriterBase* topWriter = _writerGroup.createNewFile(_desVerilogTopFileName + _file_suffix);
 
 
         for (ModuleGen* moduleGen: _genStructure.getAllMasterModuleGen()){
@@ -71,7 +75,7 @@ namespace kathryn{
             if (isTopModule || (!_extractMulFile)){
                 curFileWriter = topWriter;
             }else{
-                curFileWriter = _writerGroup.createNewFile(moduleGen->getOpr() + _FILE_SUFFIX);
+                curFileWriter = _writerGroup.createNewFile(moduleGen->getOpr() + _file_suffix);
             }
 
             moduleGen->startWriteFile(

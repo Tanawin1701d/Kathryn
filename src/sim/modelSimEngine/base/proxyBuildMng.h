@@ -9,7 +9,8 @@
 #include <string>
 #include <cstdlib>
 #include <utility>
-#include <frontEnd/cmd/paramReader.h>
+#include "params/prjParam.h"
+#include "frontEnd/cmd/paramReader.h"
 
 #include "proxyEventBase.h"
 #include "model/hwComponent/module/module.h"
@@ -99,7 +100,8 @@ namespace kathryn{
 
     public:
         explicit ProxyBuildMng(std::string testName):
-        TEST_NAME(std::move(testName)){};
+        TEST_NAME(std::move(testName)),
+        PROJECT_DIR(KATHRYN_PROJECT_DIR){};
         ~ProxyBuildMng();
         std::vector<ModelProxyBuild*>
         doTopologySort(std::vector<ModelProxyBuild*>& graph);

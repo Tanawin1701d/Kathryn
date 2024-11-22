@@ -3,11 +3,17 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-SRC_PROXYEVENT_NAME=$1
+if [ -z "$2" ]; then
+    echo "no project path file was provided. usage $2 <path <folderPath>>"
+fi
 
-cd ../modelCompile
+SRC_PROXYEVENT_NAME=$1
+SRC_PRJ_PATH=$2
+
+cd $SRC_PRJ_PATH/modelCompile
 
 echo "[COMPILE SCRIPT] sim file is: $SRC_PROXYEVENT_NAME @ dir: $(pwd)"
+echo "[COMPILE SCRIPT] project path is: $SRC_PRJ_PATH"
 
 #if [ -z "$(ls -A build)" ]; then
 #  echo "no need to delete old file"

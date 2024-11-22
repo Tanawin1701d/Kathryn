@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 #add_definitions(-DMODELCOMPILEVB) ### model compile verbose
 add_definitions(-DNOTEXCEED64)
+add_compile_definitions(KATHRYN_PROJ_FOLD_PATH=${CMAKE_SOURCE_DIR})
 
 INCLUDE_DIRECTORIES( ./src )
 
@@ -44,5 +45,6 @@ add_executable(Kathryn
         ${SRC_PARAM}
         ${SRC_LIB}
         ${SRC_MODEL_COMPILE}
-        blinkSample.cpp
+        #blinkSample.cpp
+        #src/params/prjParam.h
 )

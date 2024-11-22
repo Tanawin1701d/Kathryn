@@ -608,7 +608,7 @@ namespace kathryn{
 
     void ProxyBuildMng::startCompile(){
         std::string compileComand =
-            srcBuilderPath + " " + TEST_NAME;
+            srcBuilderPath + " " + TEST_NAME + " " + PROJECT_DIR;
 
 #ifdef MODELCOMPILEVB
             std::cout << "compile command is " << compileComand << std::endl;

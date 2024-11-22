@@ -4,6 +4,7 @@
 
 #ifndef GENCONTROLLER_H
 #define GENCONTROLLER_H
+#include "params/prjParam.h"
 #include "frontEnd/cmd/paramReader.h"
 #include "model/hwComponent/module/module.h"
 #include "abstract/mainControlable.h"
@@ -19,7 +20,8 @@ namespace kathryn{
     struct ModuleChecker;
     class GenController: public MainControlable{
     protected:
-        const std::string pathToSynthesisRunner = "../synthesisRunner";
+        const std::string PROJECT_PATH          = "..";
+        const std::string pathToSynthesisRunner = PROJECT_PATH + "/synthesisRunner";
         const std::string pathToVivadoLaunch    = pathToSynthesisRunner + "/launchVivado.sh";
 
         const std::string _desVerilogFolderParamPrefix      = "genFolder";
@@ -28,7 +30,7 @@ namespace kathryn{
         const std::string _desVerilogExtractParamPrefix     = "extractMulFile";
         const std::string _desSynthesisPrefix = "synName";
         ////// get from parameter file
-        const std::string _FILE_SUFFIX = ".v";
+        const std::string _file_suffix = ".v";
         std::string       _desVerilogFolder;
         std::string       _desVerilogTopFileName;
         std::string       _desVerilogTopModName;
@@ -47,7 +49,7 @@ namespace kathryn{
 
     public:
 
-        explicit GenController() = default;
+        explicit GenController();
 
         virtual ~GenController() = default;
 
