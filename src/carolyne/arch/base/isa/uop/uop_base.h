@@ -10,43 +10,8 @@
 #include"opr_base.h"
 #include "carolyne/util/checker/checker.h"
 
-namespace kathryn{
-    namespace carolyne{
 
-        /**
-         * UopMatcherBase
-         *  aim to match the raw instuction in each opr
-         * **/
-        struct UopTypeBase;
-        struct UopMatcherBase{
-            int _instrWidth = -1;
-            std::vector<OprMatcherBase*> _srcOprMatcher;
-            std::vector<OprMatcherBase*> _desOprMatcher;
-            std::vector<Slice>           _matchedSlices; //// the slice in raw fetch instruction that match with these
-            UopTypeBase* _uopType = nullptr;
-
-            UopMatcherBase(
-               int                 instrWidth,
-               const std::vector<Slice>&  matchedSlices,
-               UopTypeBase*        uopType):
-            _instrWidth(instrWidth),
-            _matchedSlices(matchedSlices),
-            _uopType(uopType){
-                crlAss(_instrWidth > 0, "uopMatcher got instruction width < 0");
-                crlAss(_uopType != nullptr, "uopType of the matcher must not be nullptr");
-
-                for (Slice sl: _matchedSlices){
-                    crlAss(sl.checkValidSlice(),
-                           "invalid uop match slice " + std::to_string(sl.start) +
-                           " " + std::to_string(sl.stop));
-                    crlAss(sl.stop < _instrWidth,
-                           "uop matching sl.stop = " + std::to_string(sl.stop) +
-                           "exceed instrwidth " + std::to_string(_instrWidth));
-                }
-            }
-        };
-
-
+    namespace kathryn::carolyne{
 
         struct UopTypeBase{
             std::string _uopName;
@@ -109,8 +74,47 @@ namespace kathryn{
             }
         };
 
+        /**
+         * UopMatcherBase
+         *  aim to match the raw instuction in each opr
+         * **/
+        struct UopMatcherBase: SliceMatcher{
+            int _instrWidth = -1;
+            std::vector<OprMatcherBase*> _srcOprMatcher;
+            std::vector<OprMatcherBase*> _desOprMatcher;
+            UopTypeBase* _uopType = nullptr;
+
+            UopMatcherBase(
+               int                        instrWidth,
+               UopTypeBase*               uopType):
+            SliceMatcher(instrWidth),
+            _instrWidth(instrWidth),
+            _uopType(uopType){
+                crlAss(_instrWidth > 0, "uopMatcher got instruction width < 0");
+                crlAss(_uopType != nullptr, "uopType of the matcher must not be nullptr");
+            }
+
+            virtual ~UopMatcherBase(){
+                for (OprMatcherBase* oprMatcherBase: _srcOprMatcher){ delete oprMatcherBase;}
+                for (OprMatcherBase* oprMatcherBase: _desOprMatcher){ delete oprMatcherBase;}
+            }
+
+            void addOprMatcher(OprMatcherBase* oprMatcher, bool isSrc){
+                crlAss(oprMatcher != nullptr, "add opr matcher to uop cannot be null");
+                if (isSrc){
+                    _srcOprMatcher.push_back(oprMatcher);
+                }else{
+                    _desOprMatcher.push_back(oprMatcher);
+                }
+            }
+
+            std::vector<OprMatcherBase*> getOprMatcher(bool isSrc){
+                return isSrc ? _srcOprMatcher : _desOprMatcher;
+            }
+        };
+
 
     }
-}
+
 
 #endif //KATHRYN_SRC_CAROLYNE_ARCH_BASE_ISA_BACKEND_UOP_UOP_BASE_H
