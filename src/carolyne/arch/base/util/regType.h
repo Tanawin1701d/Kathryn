@@ -73,6 +73,29 @@ namespace kathryn{
                 return _hardwireValue[index];
             }
 
+            bool operator == (const RegTypeMeta& rhs)const{
+
+                bool prelimCheck =
+                (INDEX_SIZE     == rhs.INDEX_SIZE) &&
+                (AMT_REG        == rhs.AMT_REG) &&
+                (REG_WIDTH      == rhs.REG_WIDTH);
+
+                if (!prelimCheck){return false;}
+
+                for (int i = 0; i < AMT_REG; i++){
+                    if (_hardwireStatus[i] != rhs._hardwireStatus[i]){
+                        return false;
+                    }
+                    ////// new status for this index is equal
+                    if (_hardwireValue[i] != rhs._hardwireValue[i]){
+                        return false;
+                    }
+                }
+
+                return true;
+
+            }
+
 
         };
 

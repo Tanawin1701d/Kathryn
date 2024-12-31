@@ -7,27 +7,39 @@
 
 #include<vector>
 
-#include "carolyne/arch/base/util/sliceMatcher.h"
 #include "model/hwComponent/abstract/Slice.h"
+#include "carolyne/arch/base/util/rowMeta.h"
+#include "carolyne/arch/base/util/sliceMatcher.h"
 #include "carolyne/util/checker/checker.h"
 
 namespace kathryn{
 
     namespace carolyne{
 
+        constexpr char OPR_FD_LOAD_REG_FD_valid   [] = "valid";
+        constexpr char OPR_FD_LOAD_REG_FD_archIdx [] = "archIdx";
+        constexpr char OPR_FD_LOAD_REG_FD_phyIdx  [] = "phyIdx";
+        constexpr char OPR_FD_LOAD_REG_FD_value   [] = "value";
+
+        /**opr type will associate with allocation */
         enum CRL_OPR_TYPE{
-            COT_REG_FILE = 0,
-            COT_IMM      = 1,
-            COT_OTHER    = 2,
-            COT_CNT      = 3
+            COT_LOAD_REG_FILE = 0,
+            COT_STORE_REG_FILE = 1,
+            COT_IMM      = 2,
+            COT_OTHER    = 3,
+            COT_CNT      = 4
         };
 
-        struct OprTypeBase{
+        struct OprTypeBase: GenRowMetaable{
             int oprWidth = -1;
             CRL_OPR_TYPE oprType = COT_CNT;
             int subType = -1; /// it will be used when oprType == COT_OTHER
 
             virtual ~OprTypeBase(){}
+
+            std::string genTypeWithGrpName(const std::string& typeName, const std::string& groupName){
+                return typeName + "_" + groupName;
+            }
 
             virtual bool isEqualTypeDeep(const OprTypeBase& rhs)  = 0;
 
@@ -39,6 +51,11 @@ namespace kathryn{
                     return false;
                 }
                 return isEqualTypeDeep(rhs);
+            }
+
+            RowMeta genRowMeta(const std::string& genMode) override{
+                crlAss(false, "OprTypeLoadRegFile not gen row meta from string");
+                return {};
             }
         };
 

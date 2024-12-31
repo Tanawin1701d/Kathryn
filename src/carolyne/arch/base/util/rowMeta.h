@@ -5,6 +5,7 @@
 #ifndef src_carolyne_arch_base_march_abstract_FIELDS_H
 #define src_carolyne_arch_base_march_abstract_FIELDS_H
 
+#include <algorithm>
 #include<vector>
 #include<map>
 #include<string>
@@ -66,6 +67,25 @@ namespace kathryn{
                 return {0, totalSize};
             }
 
+            void reverse(){
+                std::reverse(_fields.begin(), _fields.end());
+            }
+
+        };
+
+        enum CRL_GEN_MODE{
+            CGM_FETCH,
+            CGM_DECODE,
+            CGM_ALLOC,
+            CGM_RSV,
+            CGM_EXEC,
+            CGM_ROB
+        };
+
+        struct GenRowMetaable{
+            virtual ~GenRowMetaable() = default;
+            virtual RowMeta genRowMeta(CRL_GEN_MODE genMode, int subMode) = 0;
+            virtual RowMeta genRowMeta(const std::string& genMode) = 0;
         };
 
     }

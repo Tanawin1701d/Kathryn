@@ -13,7 +13,7 @@
 
     namespace kathryn::carolyne{
 
-        struct UopTypeBase{
+        struct UopTypeBase: GenRowMetaable{
             std::string _uopName;
             std::vector<OprTypeBase*> _srcOprTypes;
             std::vector<OprTypeBase*> _desOprTypes;
