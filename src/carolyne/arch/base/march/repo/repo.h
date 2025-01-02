@@ -46,11 +46,6 @@ namespace kathryn::carolyne{
             void addRobTypes   (RobUnitTypeMeta*     robType)    { _robTypes.push_back(robType);    }
             void setPhyFileBase(PhysicalRegFileBase* phyFileBase){ _phyFileBase = phyFileBase;      }
 
-
-
-
-        public:
-
         };
 
     }

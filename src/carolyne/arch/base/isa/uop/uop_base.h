@@ -15,11 +15,13 @@
 
         constexpr char OPR_FD_FOP_IDENT_fop[] = "fop";
 
+        struct ExecUnitTypeMeta;
         struct UopTypeBase: GenRowMetaable{
             std::string _uopName;
             std::vector<OprTypeBase*> _srcOprTypes;
             std::vector<OprTypeBase*> _desOprTypes;
             int                       _fopIdentWidth = -1; ///// the bit size that uop used to ident its functional
+            ExecUnitTypeMeta*         _execUnitTypeMeta = nullptr; //// which type of exec that this uop love to go
             /**
              * todo next check execute engine
              ***/
@@ -32,6 +34,11 @@
             void setFopIdentWidth(int sz){
                 crlAss(sz > 0, "fop bit with in uop: " + _uopName + " must have size > 0");
                 _fopIdentWidth = sz;
+            }
+
+            void setExecUnitType(ExecUnitTypeMeta* execUnitType){
+                crlAss(execUnitType != nullptr, "set exec unit to exec unit type should not be nullptr");
+                _execUnitTypeMeta = execUnitType;
             }
 
 
