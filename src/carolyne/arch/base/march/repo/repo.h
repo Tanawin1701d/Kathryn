@@ -4,38 +4,52 @@
 
 #ifndef src_carolyne_arch_base_march_repo_REPO_H
 #define src_carolyne_arch_base_march_repo_REPO_H
-#include "carolyne/arch/base/march/execUnit/execMetaBase.h"
 #include "carolyne/arch/base/march/fetchUnit/fetchMetaBase.h"
+#include "carolyne/arch/base/march/alloc/allocMetaBase.h"
+#include "carolyne/arch/base/march/execUnit/execMetaBase.h"
 #include "carolyne/arch/base/march/pRegFile/physicalRegFile_base.h"
 #include "carolyne/arch/base/march/robUnit/robMetaBase.h"
 
+#include<vector>
 
 namespace kathryn::carolyne{
 
+
+
         /***
-         * This class is the main storage for micro-architecture meta-data that designer specify
+         * This class is the main storage for micro-architecture meta-data TYPE specification
+         * that designer specify
          */
 
         class MarchRepo{
 
-            FetchMeta*                  _fetchMeta     = nullptr;
-            RobMeta*                    _robMeta       = nullptr;
-            PhysicalRegFileBase*        _phyRegFiles   = nullptr;
-            std::vector<ExecUnitMeta*>  _execUnitMetas;
+            std::vector<FetchTypeMeta*>     _fetchTypes;
+            std::vector<AllocUnitTypeMeta*> _allocTypes;
+            std::vector<RsvUnitTypeMeta*>   _rsvTypes  ;
+            std::vector<ExecUnitTypeMeta*>  _execTypes ;
+            std::vector<RobUnitTypeMeta*>   _robTypes  ;
+            PhysicalRegFileBase*            _phyFileBase = nullptr;
 
         public:
 
-            /**setter*/
-            void setFetchMeta    (FetchMeta*           fetchMeta   ) { _fetchMeta = fetchMeta; }
-            void setRobMeta      (RobMeta*             robMeta     ) { _robMeta = robMeta; }
-            void setPhyRegFiles  (PhysicalRegFileBase* phyRegFiles ) { _phyRegFiles = phyRegFiles; }
-            void addExecUnitMeta (ExecUnitMeta*        execUnit    ) { _execUnitMetas.push_back(execUnit); }
+            [[nodiscard]] std::vector<FetchTypeMeta*>     getFetchTypes () const{return _fetchTypes;}
+            [[nodiscard]]std::vector<AllocUnitTypeMeta*>  getAllocTypes () const{return _allocTypes;}
+            [[nodiscard]] std::vector<RsvUnitTypeMeta*>   getRsvTypes   () const{return _rsvTypes;  }
+            [[nodiscard]] std::vector<ExecUnitTypeMeta*>  getExecTypes  () const{return _execTypes; }
+            [[nodiscard]] std::vector<RobUnitTypeMeta*>   getRobTypes   () const{return _robTypes;  }
+            [[nodiscard]] PhysicalRegFileBase*            getPhyFileBase() const{return _phyFileBase; }
 
-            /** getter function*/
-            FetchMeta*                 getFetchMeta    () {return _fetchMeta;}
-            RobMeta*                   getRobMeta      () {return _robMeta;}
-            PhysicalRegFileBase*       getPhyRegFiles  () {return _phyRegFiles;}
-            std::vector<ExecUnitMeta*> getExecUnitMetas() {return _execUnitMetas;}
+            void addFetchTypes (FetchTypeMeta*       fetchType)  { _fetchTypes.push_back(fetchType);}
+            void addAllocTypes (AllocUnitTypeMeta*   allocType)  { _allocTypes.push_back(allocType);}
+            void addRsvTypes   (RsvUnitTypeMeta*     rsvType)    { _rsvTypes.push_back(rsvType);    }
+            void addExecTypes  (ExecUnitTypeMeta*    execType)   { _execTypes.push_back(execType);  }
+            void addRobTypes   (RobUnitTypeMeta*     robType)    { _robTypes.push_back(robType);    }
+            void setPhyFileBase(PhysicalRegFileBase* phyFileBase){ _phyFileBase = phyFileBase;      }
+
+
+
+
+        public:
 
         };
 

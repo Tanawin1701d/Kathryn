@@ -57,13 +57,14 @@ add_executable(Kathryn
         src/carolyne/arch/base/march/pRegFile/physicalRegFile_base.h
         src/carolyne/arch/base/march/pRegFile/physicalRegFile_base.h
         src/carolyne/arch/base/march/fetchUnit/fetchMetaBase.h
-        src/carolyne/arch/base/march/alloc/allocUnit.h
+        src/carolyne/arch/base/march/alloc/allocMetaBase.h
         src/carolyne/arch/base/march/robUnit/robMetaBase.h
         src/carolyne/arch/base/march/execUnit/execMetaBase.h
         src/carolyne/arch/base/march/repo/repo.h
         src/carolyne/arch/base/isa/uop/opr_lrf.h
         src/carolyne/arch/base/isa/uop/opr_li.h
         src/carolyne/arch/base/isa/uop/opr_srf.h
+        src/carolyne/arch/base/march/rsvUnit/rsvMetaBase.h
         #blinkSample.cpp
         #src/params/prjParam.h
 )

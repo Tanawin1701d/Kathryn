@@ -20,7 +20,7 @@ namespace kathryn{
         };
 
 
-        struct FetchMeta{
+        struct FetchTypeMeta{
 
             int _pcWidth = -1; ///// size in byte
 
@@ -28,7 +28,7 @@ namespace kathryn{
             /// it is used to identify the size of the instruction and match to next size to fetch if the fetching is vary size
             /// it must sorted from low width to high width
 
-            explicit FetchMeta(int pcWidth): _pcWidth(pcWidth){}
+            explicit FetchTypeMeta(int pcWidth): _pcWidth(pcWidth){}
 
             void addFetchExtendMatcher(const FetchExtendMatcher& fem){
                 _instrLengthIdents.push_back(fem);

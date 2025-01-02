@@ -11,8 +11,8 @@
 #include "carolyne/arch/base/util/regFileBase.h"
 #include "carolyne/arch/base/util/regType.h"
 
-namespace kathryn{
-    namespace carolyne{
+
+    namespace kathryn::carolyne{
 
         constexpr char ARF_FD_LAST_PRF_INDEX  [] = "lastInfer"; ///// index in prf that is latest rename
         constexpr char ARF_FD_COMMIT_PRF_INDEX[] = "commitedInfer"; //// index in prf that is commited
@@ -20,22 +20,26 @@ namespace kathryn{
 
         struct ArchRegFileBase: RegFileBase{
 
-            int _phyIndexSize = -1;
 
-            void setPhyIndexSize(int phyIndexSize){
-                crlAss(phyIndexSize > 0, "physical index size cannot <= 0");
-                _phyIndexSize = phyIndexSize;
+            ///// false is phyRegFile
+            static std::string getInferFieldName(bool isCommitInfer){
+                    return isCommitInfer ? (std::string(ARF_FD_LAST_PRF_INDEX) + "_" + RTM_FD_idx)
+                                         : (std::string(ARF_FD_COMMIT_PRF_INDEX ) + "_" + RTM_FD_idx);
+
             }
 
-            RowMeta buildPhyRegRowMeta(RegTypeMeta& regTypeMeta) override{
-                RowMeta meta;
-                ////// |commitedInfer|lastInfer|
-                meta.addField(ARF_FD_LAST_PRF_INDEX  , _phyIndexSize);
-                meta.addField(ARF_FD_COMMIT_PRF_INDEX, _phyIndexSize);
-                return meta;
+            virtual RowMeta genRowMeta(const std::string& regGrpName,
+                                       const RegTypeMeta& linkedPhyFile){
+
+                /////// |lastInfer_idx|commitedInfer_idx|
+
+                crlAss(isThereGroup(regGrpName),
+                    "can't find archRegfile group name: " + regGrpName + "<=" );
+                RowMeta row;
+                row.addField(getInferFieldName(false), linkedPhyFile.getIndexWidth());
+                row.addField(getInferFieldName(true) , linkedPhyFile.getIndexWidth());
+                return row;
             }
-
-
 
         };
 
@@ -43,6 +47,6 @@ namespace kathryn{
 
 
 
-}
+
 
 #endif //KATHRYN_SRC_CAROLYNE_ARCH_BASE_ISA_FRONTEND_REGFILE_REGFILE_BASE_H

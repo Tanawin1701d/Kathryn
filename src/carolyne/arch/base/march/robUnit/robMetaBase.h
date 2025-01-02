@@ -20,7 +20,7 @@ namespace kathryn{
         constexpr char ROB_META_FD_valid        [] = "valid";
 
 
-        struct RobMeta: GenRowMetaable{
+        struct RobUnitTypeMeta: GenRowMetaable{
 
             std::vector<RegTypeMeta> _archRegTransfers; //// it may be the same RegTypeMeta
             std::vector<std::string> _archRegTransferNames;
@@ -41,7 +41,7 @@ namespace kathryn{
 
             ///// archreg that mapped from archRegTransfer to phyRegTransfer index by index
 
-            virtual ~RobMeta() = default;
+            virtual ~RobUnitTypeMeta() = default;
 
             void addTransferType(const RegTypeMeta& arcRegType, const std::string& archRegGroupName,
                                  const RegTypeMeta& phyRegType, const std::string& phyRegGroupName){

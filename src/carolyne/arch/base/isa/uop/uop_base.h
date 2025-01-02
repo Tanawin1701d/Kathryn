@@ -13,10 +13,13 @@
 
     namespace kathryn::carolyne{
 
+        constexpr char OPR_FD_FOP_IDENT_fop[] = "fop";
+
         struct UopTypeBase: GenRowMetaable{
             std::string _uopName;
             std::vector<OprTypeBase*> _srcOprTypes;
             std::vector<OprTypeBase*> _desOprTypes;
+            int                       _fopIdentWidth = -1; ///// the bit size that uop used to ident its functional
             /**
              * todo next check execute engine
              ***/
@@ -26,15 +29,33 @@
                 for(auto oprType:  _desOprTypes){delete oprType;}
             }
 
+            void setFopIdentWidth(int sz){
+                crlAss(sz > 0, "fop bit with in uop: " + _uopName + " must have size > 0");
+                _fopIdentWidth = sz;
+            }
+
+
+            /***
+             *
+             * internal management
+             *
+             */
+
             void addOprType(OprTypeBase* rhs, bool isSrc){ //// else or will be destination
                 crlAss(rhs != nullptr, "add opr to uop but opr is null");
                 auto oprTypeRepo = isSrc ? _srcOprTypes: _desOprTypes;
                 oprTypeRepo.push_back(rhs);
             }
 
+
             std::vector<OprTypeBase*> getOprTypes(bool isSrc){
                 return isSrc ? _srcOprTypes: _desOprTypes;
             }
+
+            /**
+             * equal identification
+             *
+             */
 
             bool checkOprs(const std::vector<OprTypeBase*>& leftOprTypes,
                            const std::vector<OprTypeBase*>& rightOprTypes
@@ -72,6 +93,24 @@
                 ///// deep check
                 return isEqualTypeDeep(rhs);
             }
+
+            /**
+             *  gen row meta data
+             */
+
+            RowMeta genRowMeta(CRL_GEN_MODE genMode, int subMode) override{
+                //////// this generate only the field for uop (exclude the operand)
+                //////// for now we accept all
+                crlAss(_fopIdentWidth > 0, "fop bit with in uop: " + _uopName + " must have size > 0 while row generating");
+                RowMeta row;
+                row.addField(OPR_FD_FOP_IDENT_fop, _fopIdentWidth);
+                return row;
+            }
+
+            RowMeta genRowMeta(const std::string& genMode){
+                crlAss(false, "can't use genRowMeta(const std::string& genMode) to gen row for uop");
+            }
+
         };
 
         /**

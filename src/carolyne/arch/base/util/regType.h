@@ -10,8 +10,12 @@
 
 namespace kathryn{
     namespace carolyne{
+
+        constexpr char RTM_FD_idx  [] = "idx";
+        constexpr char RTM_FD_value[] = "value";
+
         //// the struct store architecture register type meta data
-        constexpr int MAX_AMT_REG = 64;
+        constexpr int MAX_AMT_REG   = 64;
         constexpr int MAX_REG_WIDTH = 64;
 
         struct RegTypeMeta{
@@ -52,9 +56,9 @@ namespace kathryn{
             /**
              * normal getter
              * */
-            int getIndexWidth(){return INDEX_SIZE;}
-            int getAmtReg    (){return AMT_REG;}
-            int getRegWidth  (){return REG_WIDTH;}
+            int getIndexWidth() const{return INDEX_SIZE;}
+            int getAmtReg    () const{return AMT_REG;}
+            int getRegWidth  () const{return REG_WIDTH;}
 
             /**
              * hardwire management
@@ -72,6 +76,11 @@ namespace kathryn{
                 crlAss(index < AMT_REG, "getHardware Value out of range");
                 return _hardwireValue[index];
             }
+
+
+            /***
+             * check equal
+             */
 
             bool operator == (const RegTypeMeta& rhs)const{
 
@@ -95,7 +104,6 @@ namespace kathryn{
                 return true;
 
             }
-
 
         };
 

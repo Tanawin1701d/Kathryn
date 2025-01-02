@@ -11,18 +11,24 @@
 namespace kathryn{
     namespace carolyne{
 
+        struct ExecUnitTypeMeta{
+            std::string _execType;
 
-        struct ExecUnitMeta{
-            int _execUnitType  = -1;
-            int _execUnitIdx   = -1;
-            int _belongToRsvId = -1;
+            virtual ~ExecUnitTypeMeta() = default;
+            virtual void createOp()     = 0;
 
+        };
 
-            ExecUnit(int execUnitType, int execUnitIdx, int belongToRobId):
-            _execUnitType (execUnitType),
-            _execUnitIdx  (execUnitIdx),
-            _belongToRobId(belongToRobId){}
+        struct ExecRsvUnitMatch{
+            ExecUnitTypeMeta* _execType = nullptr;
+            int               _amt      = -1;
 
+            ExecRsvUnitMatch(ExecUnitTypeMeta* execType,int amt):
+            _execType(execType),
+            _amt(amt){
+                crlAss(_execType != nullptr, "execMatch cannot be null");
+                crlAss(_amt > 0, "amt unit must > 0");
+            }
         };
 
     }
