@@ -78,6 +78,15 @@ namespace kathryn{
                 crlAss(_oprType != nullptr, "match oprType must not be null");
             }
 
+            OprMatcherBase(int instrWidth, OprTypeBase* oprType, const Slice& matchSl):
+            SliceMatcher(instrWidth),
+            _instrWidth(instrWidth),
+            _oprType(oprType){
+                crlAss(_instrWidth > 0, "instruction width must > 0");
+                crlAss(_oprType != nullptr, "match oprType must not be null");
+                addMatchedSlice(matchSl);
+            }
+
         };
 
     }

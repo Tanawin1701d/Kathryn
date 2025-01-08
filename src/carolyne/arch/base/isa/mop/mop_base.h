@@ -5,26 +5,40 @@
 #ifndef KATHRYN_SRC_CAROLYNE_ARCH_BASE_ISA_BACKEND_MOP_MOP_BASE_H
 #define KATHRYN_SRC_CAROLYNE_ARCH_BASE_ISA_BACKEND_MOP_MOP_BASE_H
 
+#include <utility>
+
 #include"carolyne/arch/base/isa/uop/uop_base.h"
 
 namespace kathryn{
     namespace carolyne{
 
-        struct MopTypeBase{
-            std::string _mopName;
-            std::vector<UopTypeBase*> _uopTypes;
+        struct MopTypeBase: SliceMatcher{
+            int                          _mopBitWidth = -1;
+            std::string                  _mopName;
+            std::vector<UopTypeBase*>    _uopTypes;
+            std::vector<UopMatcherBase*> _uopMatchers;
 
-            explicit MopTypeBase(const std::string& mopName):
-            _mopName(mopName){}
+            explicit MopTypeBase(std::string  mopName, int mopBitWidth):
+            SliceMatcher(mopBitWidth),
+            _mopBitWidth(mopBitWidth),
+            _mopName(std::move(mopName))
+            {}
 
             virtual ~MopTypeBase(){
-                for(auto uopType: _uopTypes){delete uopType;}
+                for(auto uopMatcher: _uopMatchers){delete uopMatcher;}
             }
 
             void addUop(UopTypeBase* uopType){
                 crlAss(uopType != nullptr, "add uop to mop: uop cannot be nullptr");
                 _uopTypes.push_back(uopType);
             }
+
+            void addUopMatcher(UopMatcherBase* uopMatcher){
+                crlAss(uopMatcher != nullptr, "add uopMatcher to mopMatcher cannot be null");
+                _uopMatchers.push_back(uopMatcher);
+            }
+
+            int getMopBitWidth() const{return _mopBitWidth;}
 
             bool checkEqualUopTypes(const std::vector<UopTypeBase*>& lhsUopTypes,
                                     const std::vector<UopTypeBase*>& rhsUopTypes){
@@ -51,38 +65,43 @@ namespace kathryn{
                 ////// check deep
                 return isEqualTypeDeep(rhs);
             }
+
+            /** matcher management*/
+
+            virtual void generateMatchers() = 0;
+
         };
 
         /**
          * MopMatcherBase
          * aim to match the req instruction in each opr
          */
-        struct MopMatcherBase: SliceMatcher{
-            int _instrWidth = -1;
-            ///////// the index of the uopMatcher is related to mopType
-            std::vector<UopMatcherBase*> _uopMatchers;
-            MopTypeBase* _mopType = nullptr;
-
-            virtual ~MopMatcherBase(){
-                for (UopMatcherBase* umb: _uopMatchers){
-                    delete umb;
-                }
-            }
-
-            MopMatcherBase(int instrWidth, MopTypeBase* mopType):
-            SliceMatcher(instrWidth),
-            _instrWidth(instrWidth),
-            _mopType(mopType){
-                crlAss(mopType != nullptr, "add mopType to Mop Matcher cannot be null");
-            }
-
-            void addUopMatcher(UopMatcherBase* uopMatcher){
-                crlAss(uopMatcher != nullptr, "add uopMatcher to mopMatcher cannot be null");
-                _uopMatchers.push_back(uopMatcher);
-            }
-
-
-        };
+//        struct MopMatcherBase: SliceMatcher{
+//            int _instrWidth = -1;
+//            ///////// the index of the uopMatcher is related to mopType
+//            std::vector<UopMatcherBase*> _uopMatchers;
+//            MopTypeBase* _mopType = nullptr;
+//
+//            virtual ~MopMatcherBase(){
+//                for (UopMatcherBase* umb: _uopMatchers){
+//                    delete umb;
+//                }
+//            }
+//
+//            MopMatcherBase(int instrWidth, MopTypeBase* mopType):
+//            SliceMatcher(instrWidth),
+//            _instrWidth(instrWidth),
+//            _mopType(mopType){
+//                crlAss(mopType != nullptr, "add mopType to Mop Matcher cannot be null");
+//            }
+//
+//            void addUopMatcher(UopMatcherBase* uopMatcher){
+//                crlAss(uopMatcher != nullptr, "add uopMatcher to mopMatcher cannot be null");
+//                _uopMatchers.push_back(uopMatcher);
+//            }
+//
+//
+//        };
     }
 }
 

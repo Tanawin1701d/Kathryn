@@ -21,8 +21,8 @@
             bool reqIsFreeStatus  = false; //// is current system require free bit?
             bool reqValidStatus   = false; //// is current system require valid bit?
 
-            void setReqFreeBit (bool reqFreeBit )const {reqIsFreeStatus = reqFreeBit;}
-            void setReqValidBit(bool reqValidBit)const {reqValidStatus = reqValidBit;}
+            void setReqFreeBit (bool reqFreeBit ) {reqIsFreeStatus = reqFreeBit;}
+            void setReqValidBit(bool reqValidBit) {reqValidStatus = reqValidBit;}
 
             bool isReqFreeBit  () const{return reqIsFreeStatus;}
             bool istReqValidBit() const{return reqValidStatus;}

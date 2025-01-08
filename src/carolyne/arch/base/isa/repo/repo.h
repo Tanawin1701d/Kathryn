@@ -25,28 +25,24 @@ namespace kathryn{
             /// a single instuction (macro-op) can be decoded and it can produce
             /// multiple micro-operation (uop)
             /// each uop require one or more operand to do an operation
-            std::vector<MopTypeBase*   > _mopTypes; //// macro operation
-            std::vector<UopMatcherBase*> _uopTypes; //// micro operation
-            std::vector<OprTypeBase*   > _oprTypes; //// operand meta data
+            std::vector<MopTypeBase*> _mopTypes; //// macro operation
+            std::vector<UopTypeBase*> _uopTypes; //// micro operation
+            std::vector<OprTypeBase*> _oprTypes; //// operand meta data
             ///// REGISTER SECTION
             /// archRegfile stands for architecture register file
-            std::vector<ArchRegFileBase*> _archRegfiles;
-            //// DECODER SECTION
-            /// it contain how each instruction should be decoded
-            std::vector<MopMatcherBase*> _mopMatchers;
+            ArchRegFileBase* _archRegfiles = nullptr;
 
         public:
-            [[nodiscard]] std::vector<MopTypeBase*>     mops()         const {return _mopTypes;       }
-            [[nodiscard]] std::vector<UopMatcherBase*>  uops()         const {return _uopTypes;       }
-            [[nodiscard]] std::vector<OprTypeBase*>     oprs()         const {return _oprTypes;       }
-            [[nodiscard]] std::vector<ArchRegFileBase*> arch_regfiles() const {return _archRegfiles;}
-            [[nodiscard]] std::vector<MopMatcherBase*>  mop_matchers() const {return _mopMatchers;}
+            [[nodiscard]] std::vector<MopTypeBase*>     getMopTypes()     const {return _mopTypes;    }
+            [[nodiscard]] std::vector<UopTypeBase*>     getUopTypes()     const {return _uopTypes;    }
+            [[nodiscard]] std::vector<OprTypeBase*>     getOprTypes()     const {return _oprTypes;    }
+            [[nodiscard]] ArchRegFileBase*              getArchRegFiles() const {return _archRegfiles;}
 
-            void addMop         (MopTypeBase*     mop )          {_mopTypes    .push_back(mop);         }
-            void addUop         (UopMatcherBase*  uop )          {_uopTypes    .push_back(uop);         }
-            void addOpr         (OprTypeBase*     opr )          {_oprTypes    .push_back(opr);         }
-            void addArchRegFile (ArchRegFileBase* arch_regfile)  {_archRegfiles.push_back(arch_regfile);}
-            void addMopMatcher  (MopMatcherBase*   mop_matcher ) {_mopMatchers .push_back(mop_matcher); }
+            void addMopType         (MopTypeBase*     mopType     ) {_mopTypes.push_back(mopType);}
+            void addUopType         (UopTypeBase*     uopType     ) {_uopTypes.push_back(uopType);}
+            void addOprType         (OprTypeBase*     oprType     ) {_oprTypes.push_back(oprType);}
+            void setArchRegFiles    (ArchRegFileBase* archRegfiles) {_archRegfiles = archRegfiles;}
+
         };
 
 

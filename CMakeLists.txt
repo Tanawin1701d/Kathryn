@@ -65,6 +65,19 @@ add_executable(Kathryn
         src/carolyne/arch/base/isa/uop/opr_li.h
         src/carolyne/arch/base/isa/uop/opr_srf.h
         src/carolyne/arch/base/march/rsvUnit/rsvMetaBase.h
+        src/carolyne/arch/caro/isa/regFile/caro_archRegFile.h
+        src/carolyne/arch/caro/isa/uop/caro_uop.h
+        src/carolyne/arch/caro/isa/uop/caro_opr.h
+        src/carolyne/arch/caro/isa/uop/caro_op_param.h
+        src/carolyne/arch/caro/isa/mop/caro_mop.h
+        src/carolyne/arch/caro/isa/mop/caro_mop_param.h
+        src/carolyne/arch/caro/isa/repo/caro_repo.h
+        src/carolyne/arch/caro/march/alloc/caro_allocMeta.h
+        src/carolyne/arch/caro/march/pRegFile/caro_preg.h
+        src/carolyne/arch/caro/march/fetchUnit/caro_fetchMeta.h
+        src/carolyne/arch/caro/march/param/param.h
+        src/carolyne/arch/caro/march/rsvUnit/caro_rsvMeta.h
+        src/carolyne/arch/caro/march/robUnit/caro_robMeta.h
         #blinkSample.cpp
         #src/params/prjParam.h
 )

@@ -9,7 +9,7 @@
 
 namespace kathryn::carolyne{
 
-    struct RsvUnitTypeMeta{
+    struct RsvUTM_Base{
 
         std::vector<ExecRsvUnitMatch> execUnits;
 

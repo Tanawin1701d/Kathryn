@@ -22,6 +22,16 @@ namespace kathryn{
                 oprType   = COT_IMM;
             }
 
+            bool isEqualTypeDeep(const OprTypeBase& rhs) override{
+
+                crlAss(rhs.oprType == COT_LOAD_REG_FILE,
+                       "check opr deep load from regfile error because type mismatch");
+                /////// we can assume that it is safely cast to this Type
+                auto* castedRhs = (OprTypeLoadImm*)(&rhs);
+
+                return (_archRegType == castedRhs->_archRegType);
+            }
+
             RowMeta genRowMeta(CRL_GEN_MODE genMode, int subMode) override{
 
                 RowMeta rowMeta;

@@ -23,25 +23,25 @@ namespace kathryn::carolyne{
 
         class MarchRepo{
 
-            std::vector<FetchTypeMeta*>     _fetchTypes;
-            std::vector<AllocUnitTypeMeta*> _allocTypes;
-            std::vector<RsvUnitTypeMeta*>   _rsvTypes  ;
+            std::vector<FetchUTM_Base*>     _fetchTypes;
+            std::vector<AllocUTM_Base*> _allocTypes;
+            std::vector<RsvUTM_Base*>   _rsvTypes  ;
             std::vector<ExecUnitTypeMeta*>  _execTypes ;
             std::vector<RobUnitTypeMeta*>   _robTypes  ;
             PhysicalRegFileBase*            _phyFileBase = nullptr;
 
         public:
 
-            [[nodiscard]] std::vector<FetchTypeMeta*>     getFetchTypes () const{return _fetchTypes;}
-            [[nodiscard]]std::vector<AllocUnitTypeMeta*>  getAllocTypes () const{return _allocTypes;}
-            [[nodiscard]] std::vector<RsvUnitTypeMeta*>   getRsvTypes   () const{return _rsvTypes;  }
+            [[nodiscard]] std::vector<FetchUTM_Base*>     getFetchTypes () const{return _fetchTypes;}
+            [[nodiscard]]std::vector<AllocUTM_Base*>  getAllocTypes () const{return _allocTypes;}
+            [[nodiscard]] std::vector<RsvUTM_Base*>   getRsvTypes   () const{return _rsvTypes;  }
             [[nodiscard]] std::vector<ExecUnitTypeMeta*>  getExecTypes  () const{return _execTypes; }
             [[nodiscard]] std::vector<RobUnitTypeMeta*>   getRobTypes   () const{return _robTypes;  }
             [[nodiscard]] PhysicalRegFileBase*            getPhyFileBase() const{return _phyFileBase; }
 
-            void addFetchTypes (FetchTypeMeta*       fetchType)  { _fetchTypes.push_back(fetchType);}
-            void addAllocTypes (AllocUnitTypeMeta*   allocType)  { _allocTypes.push_back(allocType);}
-            void addRsvTypes   (RsvUnitTypeMeta*     rsvType)    { _rsvTypes.push_back(rsvType);    }
+            void addFetchTypes (FetchUTM_Base*       fetchType)  { _fetchTypes.push_back(fetchType);}
+            void addAllocTypes (AllocUTM_Base*   allocType)  { _allocTypes.push_back(allocType);}
+            void addRsvTypes   (RsvUTM_Base*     rsvType)    { _rsvTypes.push_back(rsvType);    }
             void addExecTypes  (ExecUnitTypeMeta*    execType)   { _execTypes.push_back(execType);  }
             void addRobTypes   (RobUnitTypeMeta*     robType)    { _robTypes.push_back(robType);    }
             void setPhyFileBase(PhysicalRegFileBase* phyFileBase){ _phyFileBase = phyFileBase;      }

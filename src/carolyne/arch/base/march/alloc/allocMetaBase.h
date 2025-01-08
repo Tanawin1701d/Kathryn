@@ -19,31 +19,31 @@ namespace kathryn::carolyne{
             std::string _phyRegGrpName;
         };
 
-
-        struct AllocUnitTypeMeta{
+        ///// UTM  = unit type meta
+        struct AllocUTM_Base{
 
             std::vector<ArchPhyRegTypeMatcher> _regMatchers;
-            std::vector<RsvUnitTypeMeta*>      _rsvTypePtrs;
-            RobTypeMeta*                       _targetRob = nullptr; //// it is ok to make rob be nullptr
+            std::vector<RsvUTM_Base*>      _rsvTypePtrs;
+            RobUnitTypeMeta*                   _targetRob = nullptr; //// it is ok to make rob be nullptr
 
             void addRegFileMatcher(const std::string& archRegGrpName,
                                    const std::string& phyRegGrpName){
                 _regMatchers.push_back({archRegGrpName, phyRegGrpName});
             }
-            void addRsvType(RsvUnitTypeMeta* rsv){
+            void addRsvType(RsvUTM_Base* rsv){
                 crlAss(rsv != nullptr, "why add rsv to to nullptr");
                 _rsvTypePtrs.push_back(rsv);
             }
-            void setTargetRob(RobTypeMeta* rob){
+            void setTargetRob(RobUnitTypeMeta* rob){
                 crlAss(rob != nullptr, "why set rob to nullptr? to alloc unit");
                 _targetRob = rob;
             }
             [[nodiscard]]
             std::vector<ArchPhyRegTypeMatcher> getRegMatchers() const{return _regMatchers;}
             [[nodiscard]]
-            std::vector<RsvUnitTypeMeta*>      getRsvTypePtr () const{return _rsvTypePtrs;}
+            std::vector<RsvUTM_Base*>      getRsvTypePtr () const{return _rsvTypePtrs;}
             [[nodiscard]]
-            RobTypeMeta*                       getRobTypeMeta() const{return _targetRob;}
+            RobUnitTypeMeta*                   getRobTypeMeta() const{return _targetRob;}
 
         };
 

@@ -17,7 +17,7 @@
 
         struct ExecUnitTypeMeta;
         struct UopTypeBase: GenRowMetaable{
-            std::string _uopName;
+            std::string _uopName = "unname_Uop";
             std::vector<OprTypeBase*> _srcOprTypes;
             std::vector<OprTypeBase*> _desOprTypes;
             int                       _fopIdentWidth = -1; ///// the bit size that uop used to ident its functional
@@ -151,6 +151,12 @@
                     _srcOprMatcher.push_back(oprMatcher);
                 }else{
                     _desOprMatcher.push_back(oprMatcher);
+                }
+            }
+
+            void setOprMatcher(const std::vector<OprMatcherBase*>& oprMatchers, bool isSrc){
+                for (OprMatcherBase* oprMatcher : oprMatchers){
+                    addOprMatcher(oprMatcher, isSrc);
                 }
             }
 
