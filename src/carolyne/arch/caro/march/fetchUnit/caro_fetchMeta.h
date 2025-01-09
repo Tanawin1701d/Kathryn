@@ -10,14 +10,11 @@
 
 namespace kathryn::carolyne::caro{
 
-
-
     struct FetchUTM: FetchUTM_Base{
 
         explicit FetchUTM(): FetchUTM_Base(PC_BIT_WIDTH, INSTR_BIT_WIDTH){}
 
     };
-
 }
 
 #endif //src_carolyne_arch_caro_march_fetchUnit_CARO_FETCHMETA_H

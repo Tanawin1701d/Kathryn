@@ -6,6 +6,8 @@
 #define src_carolyne_arch_caro_march_rsvUnit_CARO_RSVMETA_H
 
 #include "carolyne/arch/base/march/rsvUnit/rsvMetaBase.h"
+#include "carolyne/arch/caro/march/param/param.h"
+
 
 namespace kathryn::carolyne::caro{
 

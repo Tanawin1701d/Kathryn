@@ -7,7 +7,7 @@
 
 #include "carolyne/arch/base/isa/mop/mop_base.h"
 #include "carolyne/arch/caro/isa/uop/caro_uop.h"
-#include "caro_mop_param.h"
+#include "carolyne/arch/caro/isa/param/param.h"
 
 namespace kathryn::carolyne::caro{
 

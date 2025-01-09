@@ -7,6 +7,7 @@
 #include <util/numberic/pmath.h>
 
 #include "carolyne/arch/base/util/rowMeta.h"
+#include "carolyne/arch/base/util/regType.h"
 
 namespace kathryn{
     namespace carolyne{
@@ -20,7 +21,7 @@ namespace kathryn{
         constexpr char ROB_META_FD_valid        [] = "valid";
 
 
-        struct RobUnitTypeMeta: GenRowMetaable{
+        struct RobUTM_Base: GenRowMetaable{
 
             std::vector<RegTypeMeta> _archRegTransfers; //// it may be the same RegTypeMeta
             std::vector<std::string> _archRegTransferNames;
@@ -41,7 +42,7 @@ namespace kathryn{
 
             ///// archreg that mapped from archRegTransfer to phyRegTransfer index by index
 
-            virtual ~RobUnitTypeMeta() = default;
+            virtual ~RobUTM_Base() = default;
 
             void addTransferType(const RegTypeMeta& arcRegType, const std::string& archRegGroupName,
                                  const RegTypeMeta& phyRegType, const std::string& phyRegGroupName){
@@ -92,6 +93,11 @@ namespace kathryn{
                 row.reverse(); //// because we want the idx like the comment above
                 return row;
 
+            }
+
+            RowMeta genRowMeta(const std::string& genMode) override{
+                crlAss(false, "cannot gen row meta for string of genrow");
+                return {};
             }
 
         };

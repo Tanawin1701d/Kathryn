@@ -24,7 +24,7 @@ namespace kathryn::carolyne{
 
             std::vector<ArchPhyRegTypeMatcher> _regMatchers;
             std::vector<RsvUTM_Base*>      _rsvTypePtrs;
-            RobUnitTypeMeta*                   _targetRob = nullptr; //// it is ok to make rob be nullptr
+            RobUTM_Base*                   _targetRob = nullptr; //// it is ok to make rob be nullptr
 
             void addRegFileMatcher(const std::string& archRegGrpName,
                                    const std::string& phyRegGrpName){
@@ -34,7 +34,7 @@ namespace kathryn::carolyne{
                 crlAss(rsv != nullptr, "why add rsv to to nullptr");
                 _rsvTypePtrs.push_back(rsv);
             }
-            void setTargetRob(RobUnitTypeMeta* rob){
+            void setTargetRob(RobUTM_Base* rob){
                 crlAss(rob != nullptr, "why set rob to nullptr? to alloc unit");
                 _targetRob = rob;
             }
@@ -43,7 +43,7 @@ namespace kathryn::carolyne{
             [[nodiscard]]
             std::vector<RsvUTM_Base*>      getRsvTypePtr () const{return _rsvTypePtrs;}
             [[nodiscard]]
-            RobUnitTypeMeta*                   getRobTypeMeta() const{return _targetRob;}
+            RobUTM_Base*                   getRobTypeMeta() const{return _targetRob;}
 
         };
 

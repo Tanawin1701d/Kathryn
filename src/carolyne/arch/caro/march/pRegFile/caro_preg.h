@@ -5,12 +5,10 @@
 #ifndef src_carolyne_arch_caro_march_pRegFile_CARO_PREG_H
 #define src_carolyne_arch_caro_march_pRegFile_CARO_PREG_H
 #include "carolyne/arch/base/march/pRegFile/physicalRegFile_base.h"
+#include "carolyne/arch/caro/march/param/param.h"
+
 
 namespace kathryn::carolyne::caro{
-
-    constexpr int  PREGFILE_IDX_SIZE  = 8;
-    constexpr int  PREG_WIDTH         = 32;
-    constexpr char PHY_REGFILE_NAME[] = "int_preg";
 
     struct PRegFile: PhysicalRegFileBase{
 

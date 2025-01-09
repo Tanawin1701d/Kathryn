@@ -6,7 +6,7 @@
 #define KATHRYN_SRC_CAROLYNE_ARCH_CARO_ISA_UOP_CARO_OPR_H
 
 #include "carolyne/arch/base/isa/uop/opr_lrf.h"
-#include "caro_op_param.h"
+#include "carolyne/arch/caro/isa/param/param.h"
 
 namespace kathryn::carolyne::caro{
 

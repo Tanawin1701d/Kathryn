@@ -9,7 +9,7 @@
 #include "carolyne/arch/base/isa/uop/opr_lrf.h"
 #include "carolyne/arch/base/isa/uop/opr_srf.h"
 #include "carolyne/arch/base/isa/uop/opr_li.h"
-#include "caro_op_param.h"
+#include "carolyne/arch/caro/isa/param/param.h"
 
 namespace kathryn::carolyne::caro{
 
@@ -23,7 +23,7 @@ namespace kathryn::carolyne::caro{
             addOprType(r2, true);
             addOprType(rd, false);
         }
-        bool isEqualTypeDeep(const UopTypeBase& rhs){
+        bool isEqualTypeDeep(const UopTypeBase& rhs) override{
             return true;
         }
 
@@ -37,7 +37,7 @@ namespace kathryn::carolyne::caro{
             addOprType(r1, true);
             addOprType(rd, false);
         }
-        bool isEqualTypeDeep(const UopTypeBase& rhs){
+        bool isEqualTypeDeep(const UopTypeBase& rhs) override{
             return true;
         }
     };
@@ -50,7 +50,7 @@ namespace kathryn::carolyne::caro{
             addOprType(r1, true);
             addOprType(r2, true);
         }
-        bool isEqualTypeDeep(const UopTypeBase& rhs){
+        bool isEqualTypeDeep(const UopTypeBase& rhs) override{
             return true;
         }
     };
@@ -63,7 +63,7 @@ namespace kathryn::carolyne::caro{
             addOprType(ri, true);
             addOprType(rd, false);
         }
-        bool isEqualTypeDeep(const UopTypeBase& rhs){
+        bool isEqualTypeDeep(const UopTypeBase& rhs) override{
             return true;
         }
     };

@@ -6,13 +6,13 @@
 #define KATHRYN_SRC_CAROLYNE_ARCH_CARO_ISA_REGFILE_CARO_ARCHREGFILE_H
 
 #include "carolyne/arch/base/isa/regFile/archRegFile.h"
+#include "carolyne/arch/caro/isa/param/param.h"
+
 
 
 namespace kathryn::carolyne::caro{
 
-    constexpr int REGFILE_IDX_SIZE = 5; /// size is eq 32
-    constexpr int REG_WIDTH        = 32;
-    constexpr char ARCH_REGFILE_NAME[] = "int_reg";
+
 
     struct ArchRegFile: ArchRegFileBase{
 
