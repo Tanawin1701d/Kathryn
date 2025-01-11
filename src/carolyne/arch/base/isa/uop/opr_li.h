@@ -33,11 +33,12 @@ namespace kathryn{
             }
 
             RowMeta genRowMeta(CRL_GEN_MODE genMode, int subMode) override{
-
                 RowMeta rowMeta;
                 switch (genMode){
 
-                    case CGM_DECODE :{
+                    case CGM_DECODE :
+                    case CGM_ALLOC :
+                    case CGM_RSV :{
                         //// valid is model responsibility
                         ///rowMeta.addField(OPR_FD_LOAD_REG_FD_valid  , 1);
                         rowMeta.addField(
@@ -45,28 +46,9 @@ namespace kathryn{
                             _archRegType.getRegWidth());
                         break;
                     }
-                    case CGM_ALLOC :{
-                        ///rowMeta.addField(OPR_FD_LOAD_REG_FD_valid  , 1);
-                        rowMeta.addField(
-                            genTypeWithGrpName(OPR_FD_LOAD_REG_FD_value, "imm"),
-                            _archRegType.getRegWidth());
-                        break;
-                    }
-                    case CGM_RSV :{
-                        ///rowMeta.addField(OPR_FD_LOAD_REG_FD_valid  , 1);
-                        rowMeta.addField(
-                            genTypeWithGrpName(OPR_FD_LOAD_REG_FD_value, "imm"),
-                            _archRegType.getRegWidth());
-                        break;
-                    }
-                    default:{
-                        crlAss(false, "OprTypeLoadRegFile out of row meta generation");
-                    }
+                    default:{crlAss(false, "OprTypeLoadRegFile out of row meta generation");}
                 }
-                    return rowMeta;
-
-
-
+                return rowMeta;
             }
 
         };

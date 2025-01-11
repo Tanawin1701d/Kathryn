@@ -9,7 +9,7 @@
 
 namespace kathryn::carolyne{
 
-    struct RsvUTM_Base{
+    struct RsvUTM_Base: VizCsvGenable{
 
         std::vector<ExecRsvUnitMatch> execUnits;
 
@@ -20,6 +20,25 @@ namespace kathryn::carolyne{
 
         [[nodiscard]]
         std::vector<ExecRsvUnitMatch> getExecUnitMeta()const{return execUnits;}
+
+        void visual(CsvGenFile& genFile) override{
+            constexpr char RN_EXECTYPE[] = "ExecTypeName";
+            constexpr char RN_AMT     [] = "amt";
+            crlAss(!execUnits.empty(), "in rsv rsv visual should not have empty execunit");
+
+            CsvTable execTable(static_cast<int>(execUnits.size()), 2);
+            execTable.setsHeadNameIterative(true, "execId");
+            execTable.setHeadNames(false, {RN_EXECTYPE, RN_AMT});
+            int idx = 0;
+            for(ExecRsvUnitMatch execUnit: execUnits){
+                execTable.setData(idx, 0, execUnit._execType->_execType);
+                execTable.setData(idx, 1, std::to_string(execUnit._amt));
+                idx++;
+            }
+            execTable.setTableName("robUnit exec MetaData");
+            genFile.addData(execTable);
+
+        }
 
 
     };

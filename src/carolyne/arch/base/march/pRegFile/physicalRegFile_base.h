@@ -16,7 +16,7 @@
         constexpr char PRF_FD_ISVALID[] = "isValid";
         constexpr char PRF_FD_ISFREE [] = "isFree";
 
-        struct PhysicalRegFileBase: RegFileBase{
+        struct PhysicalRegFileBase: RegFileBase, VizCsvGenable{
 
             bool reqIsFreeStatus  = false; //// is current system require free bit?
             bool reqValidStatus   = false; //// is current system require valid bit?
@@ -41,6 +41,18 @@
                 if (istReqValidBit()){row.addField(PRF_FD_ISVALID, 1);}
 
                 return row;
+            }
+
+            void visual(CsvGenFile& genFile) override{
+
+                ////// gen All table in each register file
+                for (auto&[regGrpName, regTypeMeta]: _regMetas){
+                    RowMeta rowMeta = genRowMeta(regGrpName);
+                    CsvTable table = rowMeta.genTable();
+                    table.setTableName(regGrpName);
+                    genFile.addData(table);
+                }
+
             }
 
         };

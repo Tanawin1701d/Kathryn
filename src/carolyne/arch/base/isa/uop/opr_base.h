@@ -30,7 +30,7 @@ namespace kathryn{
             COT_CNT      = 4
         };
 
-        struct OprTypeBase: GenRowMetaable{
+        struct OprTypeBase: public GenRowMetaable{
             int oprWidth = -1;
             CRL_OPR_TYPE oprType = COT_CNT;
             int subType = -1; /// it will be used when oprType == COT_OTHER
@@ -51,6 +51,11 @@ namespace kathryn{
                     return false;
                 }
                 return isEqualTypeDeep(rhs);
+            }
+
+            RowMeta genRowMeta(CRL_GEN_MODE genMode, int subMode) override{
+                crlAss(false, "OprTypeLoadRegFile not gen row meta from genMode");
+                return {};
             }
 
             RowMeta genRowMeta(const std::string& genMode) override{

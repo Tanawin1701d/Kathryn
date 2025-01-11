@@ -11,10 +11,10 @@
 #include<string>
 #include "model/hwComponent/abstract/Slice.h"
 #include "carolyne/util/checker/checker.h"
+#include "carolyne/util/viz/csvVizable.h"
 
 
-namespace kathryn{
-    namespace carolyne{
+namespace kathryn::carolyne{
         /**
          * RowMeta is abstract structure representing
          * the data slot and its meaning
@@ -29,7 +29,7 @@ namespace kathryn{
             }
         };
 
-        struct RowMeta{
+        struct RowMeta : VizCsvGenTable{
             std::vector<FieldMeta> _fields;
             int totalSize = 0;
 
@@ -47,6 +47,15 @@ namespace kathryn{
                 }
                 crlAss(false, "can't find field By name: " + fieldName);
                 return {"error", 20};
+            }
+
+            std::vector<std::string> getAllFieldNames(){
+                std::vector<std::string> names;
+                names.reserve(_fields.size());
+                for (auto& field: _fields){
+                    names.push_back(field._fieldName);
+                }
+                return names;
             }
 
             [[nodiscard]]
@@ -71,6 +80,28 @@ namespace kathryn{
                 std::reverse(_fields.begin(), _fields.end());
             }
 
+            RowMeta& operator += (const RowMeta& rhs){
+                for (const FieldMeta& cpyField: rhs._fields){ _fields.push_back(cpyField);}
+                return *this;
+            }
+
+            CsvTable genTable() override{
+
+                constexpr char RN_BITWIDTH[] = "bitWidth";
+                CsvTable table(1, static_cast<int>(_fields.size()));
+                std::vector<std::string> colNames = getAllFieldNames();
+                table.setHeadNames(true, {RN_BITWIDTH});
+                table.setHeadNames(false, colNames);
+                ////// set value
+                for (FieldMeta& field: _fields){
+                    table.setData(RN_BITWIDTH,
+                        field._fieldName,
+                        std::to_string(field._fieldSize));
+                }
+                return table;
+
+            }
+
         };
 
         enum CRL_GEN_MODE{
@@ -89,6 +120,6 @@ namespace kathryn{
         };
 
     }
-}
+
 
 #endif //src_carolyne_arch_base_march_abstract_FIELDS_H

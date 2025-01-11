@@ -25,5 +25,18 @@ namespace kathryn{
         return tokens;
     }
 
+    std::string joinStr(const std::vector<std::string>& strs, char dilem){
+
+        if (strs.empty()){return "";}
+
+        std::string result;
+        for (const auto& data: strs){
+                    result += data + dilem;
+        }
+        ///// remove last dilema
+        result.erase(strs.size()-1);
+        return result;
+    }
+
 
 }

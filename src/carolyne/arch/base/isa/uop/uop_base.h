@@ -8,6 +8,7 @@
 #include<vector>
 #include<string>
 #include"opr_base.h"
+
 #include "carolyne/util/checker/checker.h"
 
 
@@ -116,6 +117,20 @@
 
             RowMeta genRowMeta(const std::string& genMode){
                 crlAss(false, "can't use genRowMeta(const std::string& genMode) to gen row for uop");
+            }
+
+            ////// pool it with operand and send them back with pooled rowmeta type
+            RowMeta genRowMetaDbg(){
+                RowMeta resultRow(genRowMeta(CGM_DECODE, 0));
+                for (OprTypeBase* srcOprType: _srcOprTypes){
+                    RowMeta oprRow = srcOprType->genRowMeta(CGM_DECODE, 0);
+                    resultRow += oprRow;
+                }
+                for (OprTypeBase* desOprType: _desOprTypes){
+                    RowMeta oprRow = desOprType->genRowMeta(CGM_DECODE, 0);
+                    resultRow += oprRow;
+                }
+                return resultRow;
             }
 
         };

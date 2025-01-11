@@ -21,7 +21,7 @@ namespace kathryn{
         constexpr char ROB_META_FD_valid        [] = "valid";
 
 
-        struct RobUTM_Base: GenRowMetaable{
+        struct RobUTM_Base: GenRowMetaable, VizCsvGenable{
 
             std::vector<RegTypeMeta> _archRegTransfers; //// it may be the same RegTypeMeta
             std::vector<std::string> _archRegTransferNames;
@@ -98,6 +98,14 @@ namespace kathryn{
             RowMeta genRowMeta(const std::string& genMode) override{
                 crlAss(false, "cannot gen row meta for string of genrow");
                 return {};
+            }
+
+            void visual(CsvGenFile& genFile) override{
+                RowMeta row    = genRowMeta(CGM_ROB, 0);
+                CsvTable table = row.genTable();
+                table.setTableName("reorderBufferMeta");
+                genFile.addData(table);
+
             }
 
         };

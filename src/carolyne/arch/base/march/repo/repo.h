@@ -21,7 +21,7 @@ namespace kathryn::carolyne{
          * that designer specify
          */
 
-        class MarchRepo_Base{
+        class MarchRepo_Base: VizCsvGenable{
 
             std::vector<FetchUTM_Base*>     _fetchTypes;
             std::vector<AllocUTM_Base*>     _allocTypes;
@@ -40,11 +40,28 @@ namespace kathryn::carolyne{
             [[nodiscard]] PhysicalRegFileBase*            getPhyFileBase() const{return _phyFileBase; }
 
             void addFetchTypes (FetchUTM_Base*       fetchType)  { _fetchTypes.push_back(fetchType);}
-            void addAllocTypes (AllocUTM_Base*   allocType)  { _allocTypes.push_back(allocType);}
-            void addRsvTypes   (RsvUTM_Base*     rsvType)    { _rsvTypes.push_back(rsvType);    }
+            void addAllocTypes (AllocUTM_Base*       allocType)  { _allocTypes.push_back(allocType);}
+            void addRsvTypes   (RsvUTM_Base*         rsvType)    { _rsvTypes.push_back(rsvType);    }
             void addExecTypes  (ExecUnitTypeMeta*    execType)   { _execTypes.push_back(execType);  }
-            void addRobTypes   (RobUTM_Base*     robType)    { _robTypes.push_back(robType);    }
+            void addRobTypes   (RobUTM_Base*         robType)    { _robTypes.push_back(robType);    }
             void setPhyFileBase(PhysicalRegFileBase* phyFileBase){ _phyFileBase = phyFileBase;      }
+
+            void visual(CsvGenFile& genFile) override{
+
+                genFile.addRowData("fetchUnit");
+                genFile.addDummyRowData(3);
+                for (auto fetchType: _fetchTypes){fetchType->visual(genFile);}
+                genFile.addRowData("allocUnit");
+                genFile.addDummyRowData(3);
+                for (auto allocType: _allocTypes){allocType->visual(genFile);}
+                genFile.addRowData("rsvUnit");
+                genFile.addDummyRowData(3);
+                for (auto rsvType: _rsvTypes){rsvType->visual(genFile);}
+                genFile.addRowData("robUnit");
+                genFile.addDummyRowData(3);
+                for (auto robType: _rsvTypes){robType->visual(genFile);}
+
+            }
 
         };
 

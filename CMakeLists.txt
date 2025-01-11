@@ -80,7 +80,9 @@ add_executable(Kathryn
         src/carolyne/arch/caro/march/robUnit/caro_robMeta.h
         src/carolyne/arch/caro/isa/param/param.h
         src/carolyne/arch/caro/march/repo/caro_repo.h
-        src/carolyne/arch/base/util/formable.h
+        src/util/viz/csv/csvTable.h
+        src/util/viz/csv/csvFIleWriter.h
+        src/carolyne/util/viz/csvVizable.h
         #blinkSample.cpp
         #src/params/prjParam.h
 )

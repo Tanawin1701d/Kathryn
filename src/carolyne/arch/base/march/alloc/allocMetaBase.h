@@ -20,7 +20,7 @@ namespace kathryn::carolyne{
         };
 
         ///// UTM  = unit type meta
-        struct AllocUTM_Base{
+        struct AllocUTM_Base: VizCsvGenable{
 
             std::vector<ArchPhyRegTypeMatcher> _regMatchers;
             std::vector<RsvUTM_Base*>      _rsvTypePtrs;
@@ -44,6 +44,25 @@ namespace kathryn::carolyne{
             std::vector<RsvUTM_Base*>      getRsvTypePtr () const{return _rsvTypePtrs;}
             [[nodiscard]]
             RobUTM_Base*                   getRobTypeMeta() const{return _targetRob;}
+
+            void visual(CsvGenFile& genFile) override{
+
+                constexpr char RN_ARCH[] = "archRegFileName";
+                constexpr char RN_PHY[]  = "phyRegFileName";
+                crlAss(!_regMatchers.empty(), "in visualization regMatcher cannot empty()");
+                CsvTable table(static_cast<int>(_regMatchers.size()), 2);
+                table.setsHeadNameIterative(true, "archId");
+                table.setHeadNames(false, {RN_ARCH, RN_PHY});
+                int idx = 0;
+                for (auto& matcher: _regMatchers){
+                    table.setData(idx, 0, matcher._archRegGrpName);
+                    table.setData(idx, 1, matcher._phyRegGrpName);
+                    idx++;
+                }
+                table.setTableName("AllocUnitMeta");
+                genFile.addData(table);
+
+            }
 
         };
 
