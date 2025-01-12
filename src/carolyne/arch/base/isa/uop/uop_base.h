@@ -17,7 +17,7 @@
         constexpr char OPR_FD_FOP_IDENT_fop[] = "fop";
 
         struct ExecUnitTypeMeta;
-        struct UopTypeBase: GenRowMetaable{
+        struct UopTypeBase: GenRowMetaable, VizCsvGenTable{
             std::string _uopName = "unname_Uop";
             std::vector<OprTypeBase*> _srcOprTypes;
             std::vector<OprTypeBase*> _desOprTypes;
@@ -115,12 +115,13 @@
                 return row;
             }
 
-            RowMeta genRowMeta(const std::string& genMode){
+            RowMeta genRowMeta(const std::string& genMode) override{
                 crlAss(false, "can't use genRowMeta(const std::string& genMode) to gen row for uop");
+                return {};
             }
 
             ////// pool it with operand and send them back with pooled rowmeta type
-            RowMeta genRowMetaDbg(){
+            CsvTable genTable() override{
                 RowMeta resultRow(genRowMeta(CGM_DECODE, 0));
                 for (OprTypeBase* srcOprType: _srcOprTypes){
                     RowMeta oprRow = srcOprType->genRowMeta(CGM_DECODE, 0);
@@ -130,7 +131,10 @@
                     RowMeta oprRow = desOprType->genRowMeta(CGM_DECODE, 0);
                     resultRow += oprRow;
                 }
-                return resultRow;
+
+                CsvTable uopTable(resultRow.genTable());
+                uopTable.setTableName(_uopName);
+                return uopTable;
             }
 
         };

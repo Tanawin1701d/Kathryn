@@ -18,7 +18,7 @@
         constexpr char ARF_FD_COMMIT_PRF_INDEX[] = "commitedInfer"; //// index in prf that is commited
 
 
-        struct ArchRegFileBase: RegFileBase{
+        struct ArchRegFileBase: RegFileBase, VizCsvGenable{
 
 
             ///// false is phyRegFile
@@ -39,6 +39,16 @@
                 row.addField(getInferFieldName(false), linkedPhyFile.getIndexWidth());
                 row.addField(getInferFieldName(true) , linkedPhyFile.getIndexWidth());
                 return row;
+            }
+
+            void visual(CsvGenFile& genFile) override{
+
+                for (auto&[regGrpName, regTypeMeta]: _regMetas){
+                    CsvTable archFileTable = regTypeMeta.genTable();
+                    archFileTable.setTableName(regGrpName);
+                    genFile.addData(archFileTable);
+                }
+
             }
 
         };

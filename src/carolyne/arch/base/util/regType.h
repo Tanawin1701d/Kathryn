@@ -18,7 +18,7 @@ namespace kathryn{
         constexpr int MAX_AMT_REG   = 64;
         constexpr int MAX_REG_WIDTH = 64;
 
-        struct RegTypeMeta{
+        struct RegTypeMeta: VizCsvGenTable{
             const int INDEX_SIZE = -1;
             const int AMT_REG    = -1;
             const int REG_WIDTH  = -1;
@@ -103,6 +103,25 @@ namespace kathryn{
 
                 return true;
 
+            }
+
+
+            ///// visualization
+
+            CsvTable genTable() override{
+
+                char RN_INDEX_SIZE[] = "INDEX_SIZE";
+                char RN_AMT_REG[]    = "AMT_REG";
+                char RN_REG_WIDTH[]  = "REG_WIDTH";
+
+                CsvTable regMetaTable(1, 3);
+                regMetaTable.setHeadNames(false, {RN_INDEX_SIZE,RN_AMT_REG,RN_REG_WIDTH});
+                regMetaTable.setHeadNames(true, {SRN_BITWIDTH});
+                regMetaTable.setData(SRN_BITWIDTH, RN_INDEX_SIZE, std::to_string(INDEX_SIZE));
+                regMetaTable.setData(SRN_BITWIDTH, RN_AMT_REG   , std::to_string(AMT_REG));
+                regMetaTable.setData(SRN_BITWIDTH, RN_REG_WIDTH , std::to_string(REG_WIDTH));
+
+                return regMetaTable;
             }
 
         };

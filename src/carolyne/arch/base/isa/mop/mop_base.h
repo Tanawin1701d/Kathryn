@@ -12,7 +12,7 @@
 namespace kathryn{
     namespace carolyne{
 
-        struct MopTypeBase: SliceMatcher{
+        struct MopTypeBase: SliceMatcher, VizCsvGenable{
             int                          _mopBitWidth = -1;
             std::string                  _mopName;
             std::vector<UopTypeBase*>    _uopTypes;
@@ -67,41 +67,19 @@ namespace kathryn{
             }
 
             /** matcher management*/
-
             virtual void generateMatchers() = 0;
+
+            /**gen visualization*/
+            void visual(CsvGenFile& genFile) override{
+
+                genFile.addRowData(_mopName + "sz<" + std::to_string(_mopBitWidth) + ">");
+                for (UopTypeBase* uopType: _uopTypes){
+                    genFile.addData(uopType->genTable());
+                }
+            }
 
         };
 
-        /**
-         * MopMatcherBase
-         * aim to match the req instruction in each opr
-         */
-//        struct MopMatcherBase: SliceMatcher{
-//            int _instrWidth = -1;
-//            ///////// the index of the uopMatcher is related to mopType
-//            std::vector<UopMatcherBase*> _uopMatchers;
-//            MopTypeBase* _mopType = nullptr;
-//
-//            virtual ~MopMatcherBase(){
-//                for (UopMatcherBase* umb: _uopMatchers){
-//                    delete umb;
-//                }
-//            }
-//
-//            MopMatcherBase(int instrWidth, MopTypeBase* mopType):
-//            SliceMatcher(instrWidth),
-//            _instrWidth(instrWidth),
-//            _mopType(mopType){
-//                crlAss(mopType != nullptr, "add mopType to Mop Matcher cannot be null");
-//            }
-//
-//            void addUopMatcher(UopMatcherBase* uopMatcher){
-//                crlAss(uopMatcher != nullptr, "add uopMatcher to mopMatcher cannot be null");
-//                _uopMatchers.push_back(uopMatcher);
-//            }
-//
-//
-//        };
     }
 }
 
