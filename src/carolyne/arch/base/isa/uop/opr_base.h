@@ -5,11 +5,15 @@
 #ifndef KATHRYN_SRC_CAROLYNE_ARCH_BASE_ISA_BACKEND_UOP_OPR_BASE_H
 #define KATHRYN_SRC_CAROLYNE_ARCH_BASE_ISA_BACKEND_UOP_OPR_BASE_H
 
+#include <utility>
 #include<vector>
 
+#include "carolyne/arch/base/march/alloc/archPhyRegMatcher.h"
+#include "carolyne/arch/base/march/pRegFile/physicalRegFile_base.h"
 #include "model/hwComponent/abstract/Slice.h"
 #include "carolyne/arch/base/util/rowMeta.h"
 #include "carolyne/arch/base/util/sliceMatcher.h"
+#include "carolyne/arch/caro/isa/regFile/caro_archRegFile.h"
 #include "carolyne/util/checker/checker.h"
 
 namespace kathryn{
@@ -30,12 +34,29 @@ namespace kathryn{
             COT_CNT      = 4
         };
 
-        struct OprTypeBase: public GenRowMetaable{
-            int oprWidth = -1;
-            CRL_OPR_TYPE oprType = COT_CNT;
-            int subType = -1; /// it will be used when oprType == COT_OTHER
+        struct OprTypeBase: GenRowMetaable{
+            /** archReg phyReg*/
+            APRegTypeMatch        _srcAPRegTypeMatch;
+            APRegTypeMatch        _desAPRegTypeMatch;
+            ArchRegFileBase*      _archRegFiles = nullptr;
+            PhysicalRegFileBase*  _phyRegFiles  = nullptr;
+            /** opr width*/
+            int                   _oprWidth = -1;
+            CRL_OPR_TYPE          _oprType = COT_CNT;
+            int                   _subType = -1; /// it will be used when oprType == COT_OTHER
 
-            virtual ~OprTypeBase(){}
+            explicit OprTypeBase(
+                const APRegTypeMatch&  srcAPRegTypeMatch,
+                const APRegTypeMatch&  desAPRegTypeMatch,
+                ArchRegFileBase*     archRegFiles,
+                PhysicalRegFileBase* phyRegFiles
+            ):
+            _srcAPRegTypeMatch(srcAPRegTypeMatch),
+            _desAPRegTypeMatch(desAPRegTypeMatch),
+            _archRegFiles     (archRegFiles),
+            _phyRegFiles      (phyRegFiles){}
+
+            ~OprTypeBase() override= default;
 
             std::string genTypeWithGrpName(const std::string& typeName, const std::string& groupName){
                 return typeName + "_" + groupName;
@@ -44,9 +65,13 @@ namespace kathryn{
             virtual bool isEqualTypeDeep(const OprTypeBase& rhs)  = 0;
 
             bool isEqualType(const OprTypeBase& rhs){
-                bool prelimCheck = (oprWidth == rhs.oprWidth) &&
-                                   (oprType  == rhs.oprType)  &&
-                                   (subType  == rhs.subType);
+                bool prelimCheck = (_oprWidth == rhs._oprWidth) &&
+                                   (_oprType  == rhs._oprType)  &&
+                                   (_subType  == rhs._subType)  &&
+                                   (_srcAPRegTypeMatch == rhs._srcAPRegTypeMatch)&&
+                                   (_desAPRegTypeMatch == rhs._desAPRegTypeMatch)&&
+                                   (_archRegFiles      == rhs._archRegFiles)&&
+                                   (_phyRegFiles       == rhs._phyRegFiles);
                 if (!prelimCheck) {
                     return false;
                 }

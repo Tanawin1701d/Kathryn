@@ -13,7 +13,7 @@ namespace kathryn::carolyne{
 
         std::vector<ExecRsvUnitMatch> execUnits;
 
-        void addExecUnit(ExecUnitTypeMeta* execUnitType, int amt){
+        void addExecUnit(ExecUTM* execUnitType, int amt){
             crlAss(execUnitType != nullptr, "add add execunitType as nullptr too execUnits");
             execUnits.emplace_back(execUnitType, amt);
         }

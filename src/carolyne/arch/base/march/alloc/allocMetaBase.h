@@ -12,19 +12,14 @@
 namespace kathryn::carolyne{
 
 
-        //////////// it map between architecture register group and
-        //////////// physical register group
-        struct ArchPhyRegTypeMatcher{
-            std::string _archRegGrpName;
-            std::string _phyRegGrpName;
-        };
+
 
         ///// UTM  = unit type meta
         struct AllocUTM_Base: VizCsvGenable{
 
-            std::vector<ArchPhyRegTypeMatcher> _regMatchers;
-            std::vector<RsvUTM_Base*>      _rsvTypePtrs;
-            RobUTM_Base*                   _targetRob = nullptr; //// it is ok to make rob be nullptr
+            std::vector<APRegTypeMatch> _regMatchers;
+            std::vector<RsvUTM_Base*>   _rsvTypePtrs;
+            RobUTM_Base*                _targetRob = nullptr; //// it is ok to make rob be nullptr
 
             void addRegFileMatcher(const std::string& archRegGrpName,
                                    const std::string& phyRegGrpName){
@@ -39,11 +34,11 @@ namespace kathryn::carolyne{
                 _targetRob = rob;
             }
             [[nodiscard]]
-            std::vector<ArchPhyRegTypeMatcher> getRegMatchers() const{return _regMatchers;}
+            std::vector<APRegTypeMatch> getRegMatchers() const{return _regMatchers;}
             [[nodiscard]]
-            std::vector<RsvUTM_Base*>      getRsvTypePtr () const{return _rsvTypePtrs;}
+            std::vector<RsvUTM_Base*>   getRsvTypePtr () const{return _rsvTypePtrs;}
             [[nodiscard]]
-            RobUTM_Base*                   getRobTypeMeta() const{return _targetRob;}
+            RobUTM_Base*                getRobTypeMeta() const{return _targetRob;}
 
             void visual(CsvGenFile& genFile) override{
 

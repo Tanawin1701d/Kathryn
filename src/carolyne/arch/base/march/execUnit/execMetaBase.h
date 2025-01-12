@@ -11,24 +11,30 @@
 namespace kathryn{
     namespace carolyne{
 
-        struct ExecUnitTypeMeta{
+        /** Unit type meta*/
+        struct ExecUTM{
             std::string _execType;
 
-            virtual ~ExecUnitTypeMeta() = default;
+            virtual ~ExecUTM() = default;
             virtual void createOp()     = 0;
 
         };
 
         struct ExecRsvUnitMatch{
-            ExecUnitTypeMeta* _execType = nullptr;
+            ExecUTM* _execType = nullptr;
             int               _amt      = -1;
 
-            ExecRsvUnitMatch(ExecUnitTypeMeta* execType,int amt):
+            ExecRsvUnitMatch(ExecUTM* execType,int amt):
             _execType(execType),
             _amt(amt){
                 crlAss(_execType != nullptr, "execMatch cannot be null");
                 crlAss(_amt > 0, "amt unit must > 0");
             }
+
+            [[nodiscard]]
+            int      getAmtUnit() const {return _amt;}
+            [[nodiscard]]
+            ExecUTM* getUTM()     const {return _execType;}
         };
 
     }

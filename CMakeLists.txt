@@ -83,6 +83,7 @@ add_executable(Kathryn
         src/util/viz/csv/csvTable.h
         src/util/viz/csv/csvFIleWriter.h
         src/carolyne/util/viz/csvVizable.h
+        src/carolyne/arch/base/march/alloc/archPhyRegMatcher.h
         #blinkSample.cpp
         #src/params/prjParam.h
 )

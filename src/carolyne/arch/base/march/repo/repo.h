@@ -26,7 +26,7 @@ namespace kathryn::carolyne{
             std::vector<FetchUTM_Base*>     _fetchTypes;
             std::vector<AllocUTM_Base*>     _allocTypes;
             std::vector<RsvUTM_Base*>       _rsvTypes  ;
-            std::vector<ExecUnitTypeMeta*>  _execTypes ;
+            std::vector<ExecUTM*>  _execTypes ;
             std::vector<RobUTM_Base*>       _robTypes  ;
             PhysicalRegFileBase*            _phyFileBase = nullptr;
 
@@ -35,14 +35,14 @@ namespace kathryn::carolyne{
             [[nodiscard]] std::vector<FetchUTM_Base*>     getFetchTypes () const{return _fetchTypes;}
             [[nodiscard]]std::vector<AllocUTM_Base*>      getAllocTypes () const{return _allocTypes;}
             [[nodiscard]] std::vector<RsvUTM_Base*>       getRsvTypes   () const{return _rsvTypes;  }
-            [[nodiscard]] std::vector<ExecUnitTypeMeta*>  getExecTypes  () const{return _execTypes; }
+            [[nodiscard]] std::vector<ExecUTM*>  getExecTypes  () const{return _execTypes; }
             [[nodiscard]] std::vector<RobUTM_Base*>       getRobTypes   () const{return _robTypes;  }
             [[nodiscard]] PhysicalRegFileBase*            getPhyFileBase() const{return _phyFileBase; }
 
             void addFetchTypes (FetchUTM_Base*       fetchType)  { _fetchTypes.push_back(fetchType);}
             void addAllocTypes (AllocUTM_Base*       allocType)  { _allocTypes.push_back(allocType);}
             void addRsvTypes   (RsvUTM_Base*         rsvType)    { _rsvTypes.push_back(rsvType);    }
-            void addExecTypes  (ExecUnitTypeMeta*    execType)   { _execTypes.push_back(execType);  }
+            void addExecTypes  (ExecUTM*    execType)   { _execTypes.push_back(execType);  }
             void addRobTypes   (RobUTM_Base*         robType)    { _robTypes.push_back(robType);    }
             void setPhyFileBase(PhysicalRegFileBase* phyFileBase){ _phyFileBase = phyFileBase;      }
 

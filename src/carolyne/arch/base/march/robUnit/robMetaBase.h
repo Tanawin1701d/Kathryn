@@ -4,13 +4,13 @@
 
 #ifndef src_carolyne_arch_base_march_robUnit_ROBMETABASE_H
 #define src_carolyne_arch_base_march_robUnit_ROBMETABASE_H
-#include <util/numberic/pmath.h>
 
+#include "carolyne/arch/base/march/alloc/archPhyRegMatcher.h"
+#include "util/numberic/pmath.h"
 #include "carolyne/arch/base/util/rowMeta.h"
 #include "carolyne/arch/base/util/regType.h"
 
-namespace kathryn{
-    namespace carolyne{
+namespace kathryn::carolyne{
 
         constexpr char ROB_META_FD_archRegIdx   [] = "archRegIdx";
         constexpr char ROB_META_FD_phyRegIdx    [] = "phyRegIdx";
@@ -23,10 +23,9 @@ namespace kathryn{
 
         struct RobUTM_Base: GenRowMetaable, VizCsvGenable{
 
-            std::vector<RegTypeMeta> _archRegTransfers; //// it may be the same RegTypeMeta
-            std::vector<std::string> _archRegTransferNames;
-            std::vector<RegTypeMeta> _phyRegTransfers;
-            std::vector<std::string> _phyRegTransferNames;
+            std::vector<APRegTypeMatch> _transferMeta;
+            ArchRegFileBase*            _archRegFileBase = nullptr;
+            PhysicalRegFileBase*        _phyRegFileBase  = nullptr;
 
             int _idxInPhyTrans_MemAddr   = -1; /////// which field that used to be addr coressponding to archRegTransfer vector
             int _idxInPhyTrans_MemValue  = -1;
@@ -42,20 +41,26 @@ namespace kathryn{
 
             ///// archreg that mapped from archRegTransfer to phyRegTransfer index by index
 
-            virtual ~RobUTM_Base() = default;
 
-            void addTransferType(const RegTypeMeta& arcRegType, const std::string& archRegGroupName,
-                                 const RegTypeMeta& phyRegType, const std::string& phyRegGroupName){
-
-                _archRegTransfers.    push_back(arcRegType);
-                _archRegTransferNames.push_back(archRegGroupName);
-                _phyRegTransfers.     push_back(phyRegType);
-                _phyRegTransferNames. push_back(phyRegGroupName);
-
+            explicit RobUTM_Base(ArchRegFileBase*     archRegFileBase,
+                                 PhysicalRegFileBase* phyRegFileBase):
+            _archRegFileBase(archRegFileBase),
+            _phyRegFileBase (phyRegFileBase){
+                crlAss(_archRegFileBase != nullptr, "archRegister cannot be nullptr");
+                crlAss(_phyRegFileBase != nullptr, "phyRegister cannot nullptr");
             }
 
+            ~RobUTM_Base() override = default;
+
+            void addTransferType(const APRegTypeMatch& matcher){
+                _transferMeta.push_back(matcher);
+            }
+
+            /***
+             *   set which register used to be memory address or memory data value
+             */
             void setIdxInRobFor(bool isAddr, int value){
-                crlAss(value < _phyRegTransferNames.size(), "setIdx From rob for mem operation is outofRange");
+                crlAss(value < _transferMeta.size(), "setIdx From rob for mem operation is outofRange");
                 if (isAddr){_idxInPhyTrans_MemAddr  = value;}
                 else       {_idxInPhyTrans_MemValue = value;}
             }
@@ -65,8 +70,8 @@ namespace kathryn{
             std::string getFieldName(int idx, const std::string& fieldName, bool isArch){
                 ////// build the name for eachfield
                 std::string result;
-                result = fieldName + "_" + std::to_string(idx) + "_";
-                result += isArch ? _archRegTransferNames[idx]: _phyRegTransferNames[idx];
+                result  = fieldName + "_" + std::to_string(idx) + "_";
+                result += isArch ? _transferMeta[idx]._archRegGrpName: _transferMeta[idx]._phyRegGrpName;
                 return result;
             }
 
@@ -83,11 +88,13 @@ namespace kathryn{
                 row.addField(ROB_META_FD_fetchPc, _pc_width);
                 row.addField(ROB_META_FD_transferType, log2Ceil(_amt_transferType));
 
-                for (int idx = 0; idx < _archRegTransfers.size(); idx++){
+                for (int idx = 0; idx < _transferMeta.size(); idx++){
+                    RegTypeMeta archRegTypeMeta = _archRegFileBase->getRegTypeMetaGroup(_transferMeta[idx]._archRegGrpName);
+                    RegTypeMeta phyRegTypeMeta  = _archRegFileBase->getRegTypeMetaGroup(_transferMeta[idx]._phyRegGrpName);
                     row.addField(getFieldName(idx, ROB_META_FD_updateArc , true), 1);
                     row.addField(getFieldName(idx, ROB_META_FD_executed  , true), 1);
-                    row.addField(getFieldName(idx, ROB_META_FD_archRegIdx, true), _archRegTransfers[idx].getIndexWidth());
-                    row.addField(getFieldName(idx, ROB_META_FD_phyRegIdx , false), _phyRegTransfers[idx].getIndexWidth());
+                    row.addField(getFieldName(idx, ROB_META_FD_archRegIdx, true), archRegTypeMeta.getIndexWidth());
+                    row.addField(getFieldName(idx, ROB_META_FD_phyRegIdx , false), phyRegTypeMeta.getIndexWidth());
                 }
 
                 row.reverse(); //// because we want the idx like the comment above
@@ -111,6 +118,6 @@ namespace kathryn{
         };
 
     }
-}
+
 
 #endif //src_carolyne_arch_base_march_robUnit_ROBMETABASE_H

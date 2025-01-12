@@ -10,74 +10,69 @@
 
 
 
-namespace kathryn{
-    namespace carolyne{
+
+    namespace kathryn::carolyne{
+
         struct OprTypeStoreRegFile: OprTypeBase{
 
-            RegTypeMeta _archRegType;
-            std::string _archRegGroupName;
-            RegTypeMeta _phyRegType;
-            std::string _phyRegGroupName;
-
-
             explicit OprTypeStoreRegFile(
-                const RegTypeMeta& archRegType,
-                const std::string& archRegGroupName,
-                const RegTypeMeta& phyRegType,
-                const std::string& phyRegGroupName):
-            _archRegType      (archRegType),
-            _archRegGroupName (archRegGroupName),
-            _phyRegType       (phyRegType),
-            _phyRegGroupName  (phyRegGroupName)
+            const APRegTypeMatch&  desAPRegTypeMatch,
+           ArchRegFileBase*       archRegFiles,
+           PhysicalRegFileBase*   phyRegFiles):
+            OprTypeBase(APRegTypeMatch(),
+                            desAPRegTypeMatch,
+                            archRegFiles,
+                            phyRegFiles)
             {
                 ///// for now we assume archRegType and phyRegType is correct
-                oprWidth = archRegType.REG_WIDTH;
-                oprType  = COT_LOAD_REG_FILE;
+                RegTypeMeta desArcRegtypeMeta = _archRegFiles->getRegTypeMetaGroup(_desAPRegTypeMatch._archRegGrpName);
+                _oprWidth = desArcRegtypeMeta.REG_WIDTH;
+                _oprType  = COT_LOAD_REG_FILE;
             }
 
             bool isEqualTypeDeep(const OprTypeBase& rhs) override{
 
-                crlAss(rhs.oprType == COT_LOAD_REG_FILE,
+                crlAss(rhs._oprType == COT_LOAD_REG_FILE,
                     "check opr deep load from regfile error because type mismatch");
                 /////// we can assume that it is safely cast to this Type
-                auto* castedRhs = (OprTypeStoreRegFile*)(&rhs);
-
-                return
-                (_archRegType        ==    castedRhs->_archRegType      ) &&
-                (_archRegGroupName   ==    castedRhs->_archRegGroupName ) &&
-                (_phyRegType         ==    castedRhs->_phyRegType       ) &&
-                (_phyRegGroupName    ==    castedRhs->_phyRegGroupName  );
+                return true;
 
             }
 
 
             RowMeta genRowMeta(CRL_GEN_MODE genMode, int subMode) override{
                 RowMeta rowMeta;
+
+                std::string desArchGrpName    = _desAPRegTypeMatch._archRegGrpName;
+                std::string desPhyGrpName     = _desAPRegTypeMatch._phyRegGrpName;
+                RegTypeMeta desArcRegtypeMeta = _archRegFiles->getRegTypeMetaGroup(desArchGrpName);
+                RegTypeMeta desPhyRegtypeMeta = _phyRegFiles->getRegTypeMetaGroup (desPhyGrpName);
+
                 switch (genMode){
 
                     case CGM_DECODE :{
                         //// valid is model responsibility
                         ///rowMeta.addField(OPR_FD_LOAD_REG_FD_valid  , 1);
                         rowMeta.addField(
-                            genTypeWithGrpName(OPR_FD_LOAD_REG_FD_archIdx, _archRegGroupName),
-                            _archRegType.getIndexWidth());
+                            genTypeWithGrpName(OPR_FD_LOAD_REG_FD_archIdx, desArchGrpName),
+                            desArcRegtypeMeta.getIndexWidth());
                         break;
                     }
                     case CGM_ALLOC :{
                         ///rowMeta.addField(OPR_FD_LOAD_REG_FD_valid  , 1);
                         rowMeta.addField(
-                            genTypeWithGrpName(OPR_FD_LOAD_REG_FD_archIdx, _archRegGroupName),
-                            _archRegType.getIndexWidth());
+                            genTypeWithGrpName(OPR_FD_LOAD_REG_FD_archIdx, desArchGrpName),
+                            desArcRegtypeMeta.getIndexWidth());
                         rowMeta.addField(
-                            genTypeWithGrpName(OPR_FD_LOAD_REG_FD_phyIdx, _phyRegGroupName),
-                            _phyRegType.getIndexWidth());
+                            genTypeWithGrpName(OPR_FD_LOAD_REG_FD_phyIdx, desPhyGrpName),
+                            desPhyRegtypeMeta.getIndexWidth());
                         break;
                     }
                     case CGM_RSV :{
                             ///rowMeta.addField(OPR_FD_LOAD_REG_FD_valid  , 1);
                             rowMeta.addField(
-                                genTypeWithGrpName(OPR_FD_LOAD_REG_FD_phyIdx, _phyRegGroupName),
-                                _phyRegType.getIndexWidth());
+                                genTypeWithGrpName(OPR_FD_LOAD_REG_FD_phyIdx, desPhyGrpName),
+                                desPhyRegtypeMeta.getIndexWidth());
                             break;
                     }
 
@@ -90,6 +85,6 @@ namespace kathryn{
 
         };
     }
-}
+
 
 #endif //src_carolyne_arch_base_isa_uop_OPR_SRF_H

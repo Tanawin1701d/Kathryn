@@ -16,13 +16,13 @@
 
         constexpr char OPR_FD_FOP_IDENT_fop[] = "fop";
 
-        struct ExecUnitTypeMeta;
+        struct ExecUTM;
         struct UopTypeBase: GenRowMetaable, VizCsvGenTable{
             std::string _uopName = "unname_Uop";
             std::vector<OprTypeBase*> _srcOprTypes;
             std::vector<OprTypeBase*> _desOprTypes;
-            int                       _fopIdentWidth = -1; ///// the bit size that uop used to ident its functional
-            ExecUnitTypeMeta*         _execUnitTypeMeta = nullptr; //// which type of exec that this uop love to go
+            int                       _fopIdentWidth    = -1; ///// the bit size that uop used to ident its functional
+            ExecUTM*         _execUnitTypeMeta = nullptr; //// which type of exec that this uop love to go
             /**
              * todo next check execute engine
              ***/
@@ -37,7 +37,7 @@
                 _fopIdentWidth = sz;
             }
 
-            void setExecUnitType(ExecUnitTypeMeta* execUnitType){
+            void setExecUnitType(ExecUTM* execUnitType){
                 crlAss(execUnitType != nullptr, "set exec unit to exec unit type should not be nullptr");
                 _execUnitTypeMeta = execUnitType;
             }
