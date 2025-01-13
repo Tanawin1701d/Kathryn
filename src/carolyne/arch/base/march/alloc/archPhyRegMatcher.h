@@ -24,7 +24,7 @@ namespace kathryn::carolyne{
 
     ////////// the slot in each rob
     struct APRegRobFieldMatch: APRegTypeMatch{
-        int  idxInRob = -1;    /////// -1 means kathryn can schedule where they match
+        int  idxInRob = -1; /////// -1 means kathryn can schedule where they match
         bool isMAC    = false; ///// is memory access capability
         bool isAddr   = false; ///// else is data;
     };

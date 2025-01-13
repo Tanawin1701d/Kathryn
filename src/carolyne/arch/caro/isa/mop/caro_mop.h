@@ -31,8 +31,8 @@ namespace kathryn::carolyne::caro{
             crlAss(srcOprs.size() == 1, "a_mop des opr must equal to 1");
 
             auto r1Matcher  = new OprMatcherBase(getMopBitWidth(), srcOprs[0], R1_POS);
-            auto r2Matcher  = new OprMatcherBase(getMopBitWidth(), srcOprs[0], R2_POS);
-            auto rdMatcher  = new OprMatcherBase(getMopBitWidth(), desOprs[0], R1_POS);
+            auto r2Matcher  = new OprMatcherBase(getMopBitWidth(), srcOprs[1], R2_POS);
+            auto rdMatcher  = new OprMatcherBase(getMopBitWidth(), desOprs[0], RD_POS);
             /** put opr matcher to uop matcher */
             uopMatcher->setOprMatcher({r1Matcher, r2Matcher}, true);
             uopMatcher->setOprMatcher({rdMatcher}           , false);
@@ -55,14 +55,16 @@ namespace kathryn::carolyne::caro{
             /** build src opr matcher**/
             std::vector<OprTypeBase*> srcOprs = _uopTypes[0]->getOprTypes(true);
             std::vector<OprTypeBase*> desOprs = _uopTypes[0]->getOprTypes(false);
-            crlAss(srcOprs.size() == 1, "a_mop opr must equal to 1");
-            crlAss(srcOprs.size() == 1, "a_mop des opr must equal to 1");
+            crlAss(srcOprs.size() == 1, "l_mop src opr count must equal to 1");
+            crlAss(srcOprs.size() == 2, "l_mop des opr count must equal to 2");
 
             auto r1Matcher  = new OprMatcherBase(getMopBitWidth(), srcOprs[0], R1_POS);
-            auto rdMatcher  = new OprMatcherBase(getMopBitWidth(), desOprs[0], R1_POS);
+
+            auto rtaMatcher = new OprMatcherBase(getMopBitWidth(), desOprs[0], RT_POS);
+            auto rdMatcher  = new OprMatcherBase(getMopBitWidth(), desOprs[1], RD_POS);
             /** put opr matcher to uop matcher */
-            uopMatcher->setOprMatcher({r1Matcher}, true);
-            uopMatcher->setOprMatcher({rdMatcher}, false);
+            uopMatcher->setOprMatcher({r1Matcher}            , true);
+            uopMatcher->setOprMatcher({rtaMatcher, rdMatcher}, false);
             /** put uop matcher to mop matcher*/
             addUopMatcher(uopMatcher);
         }
@@ -82,11 +84,19 @@ namespace kathryn::carolyne::caro{
             auto uopMatcher = new UopMatcherBase(getMopBitWidth(), _uopTypes[0]);
             /** build src opr matcher**/
             std::vector<OprTypeBase*> srcOprs = _uopTypes[0]->getOprTypes(true);
-            crlAss(srcOprs.size() == 2, "a_mop opr must equal to 2");
+            std::vector<OprTypeBase*> desOprs = _uopTypes[0]->getOprTypes(false);
+
+            crlAss(srcOprs.size() == 2, "s_mop src count must equal to 2");
+            crlAss(desOprs.size() == 2, "s_mop des count must equal to 2");
             auto r1Matcher  = new OprMatcherBase(getMopBitWidth(), srcOprs[0], R1_POS_SOP);
-            auto r2Matcher  = new OprMatcherBase(getMopBitWidth(), srcOprs[0], R2_POS_SOP);
+            auto r2Matcher  = new OprMatcherBase(getMopBitWidth(), srcOprs[1], R2_POS_SOP);
+
+            auto rtaMatcher = new OprMatcherBase(getMopBitWidth(), desOprs[0], RT_POS);
+            auto rdMatcher  = new OprMatcherBase(getMopBitWidth(), desOprs[1], RT_POS);
+            /////////// rd doesn't require arch reg inference
             /** put opr matcher to uop matcher */
-            uopMatcher->setOprMatcher({r1Matcher, r2Matcher}, true);
+            uopMatcher->setOprMatcher({r1Matcher , r2Matcher}, true);
+            uopMatcher->setOprMatcher({rtaMatcher, rdMatcher}, false);
             /** put uop matcher to mop matcher*/
             addUopMatcher(uopMatcher);
         }
@@ -107,10 +117,10 @@ namespace kathryn::carolyne::caro{
             /** build src opr matcher**/
             std::vector<OprTypeBase*> srcOprs = _uopTypes[0]->getOprTypes(true);
             std::vector<OprTypeBase*> desOprs = _uopTypes[0]->getOprTypes(false);
-            crlAss(srcOprs.size() == 1, "a_mop opr must equal to 2");
-            crlAss(srcOprs.size() == 1, "a_mop des opr must equal to 1");
+            crlAss(srcOprs.size() == 1, "i_mop src opr must equal to 1");
+            crlAss(srcOprs.size() == 1, "i_mop des opr must equal to 1");
 
-            auto rImmMatcher  = new OprMatcherBase(getMopBitWidth(), srcOprs[0], RI_POS);
+            auto rImmMatcher = new OprMatcherBase(getMopBitWidth(), srcOprs[0], RI_POS);
             auto rdMatcher   = new OprMatcherBase(getMopBitWidth(), desOprs[0], R1_POS);
             /** put opr matcher to uop matcher */
             uopMatcher->setOprMatcher({rImmMatcher}, true);

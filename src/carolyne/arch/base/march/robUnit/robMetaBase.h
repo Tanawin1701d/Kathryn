@@ -52,16 +52,12 @@ namespace kathryn::carolyne{
 
             ~RobUTM_Base() override = default;
 
-            APRegRobFieldMatch addTransferType(const APRegTypeMatch& matcher, bool isMemRef, bool isAddr){
-                APRegRobFieldMatch robFieldMatch;
-                robFieldMatch._phyRegGrpName  = matcher._phyRegGrpName;
-                robFieldMatch._archRegGrpName = matcher._archRegGrpName;
-                robFieldMatch.isMAC           = isMemRef;
-                robFieldMatch.isAddr          = isAddr;
-                robFieldMatch.idxInRob        = static_cast<int>(_transferMeta.size());
+            int addTransferType(APRegRobFieldMatch matcher){
+                APRegRobFieldMatch robFieldMatch = matcher;
+                robFieldMatch.idxInRob = _transferMeta.size();
                 _transferMeta.push_back(robFieldMatch);
                 ////// return by value
-                return robFieldMatch;
+                return robFieldMatch.idxInRob;
             }
 
             std::string getFieldName(int idx, const std::string& fieldName, bool isArch){

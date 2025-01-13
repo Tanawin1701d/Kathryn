@@ -17,6 +17,7 @@ namespace kathryn::carolyne::caro{
     constexpr Slice R1_POS      = {16, 16+5};
     constexpr Slice R2_POS      = {21, 21+5};
     constexpr Slice RI_POS      = {16, 16+16};
+    constexpr Slice RT_POS      = {-1, -1};
 
     constexpr Slice R1_POS_SOP  = {11, 11+5};
     constexpr Slice R2_POS_SOP  = {16, 16+5};

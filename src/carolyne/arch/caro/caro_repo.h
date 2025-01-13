@@ -34,23 +34,31 @@ namespace kathryn::carolyne::caro{
             setArchRegFiles(caroArchRegfile);
             setPhyFileBase(caroPhyRegFile);
             APRegTypeMatch aprMatchAll = {ARCH_REGFILE_NAME, PHY_REGFILE_NAME};
+            ////reqRobField is redundant with store operand sometime
+            APRegRobFieldMatch aprobMatch_NO_ROB_REQ              {ARCH_REGFILE_NAME, PHY_REGFILE_NAME, -1, false, false};
+            APRegRobFieldMatch aprobMatch_ROB_STORE_MEM_OR_PREG   {ARCH_REGFILE_NAME, PHY_REGFILE_NAME, -1, true , false};
+            APRegRobFieldMatch aprobMatch_ROB_STORE_ADDR          {ARCH_REGFILE_NAME, PHY_REGFILE_NAME, -1, true , true};
             /**
              * ISA
              */
             /*
              * build opr Type
              * */
-            auto* r1 = new OprTypeLoadRegFile(aprMatchAll, _archRegfiles, _phyFileBase);
-            auto* r2 = new OprTypeLoadRegFile (aprMatchAll, _archRegfiles, _phyFileBase);
-            auto* rd = new OprTypeStoreRegFile(aprMatchAll, _archRegfiles, _phyFileBase);
-            auto* ri = new OprTypeLoadImm     (aprMatchAll, _archRegfiles, _phyFileBase);
+
+            auto* r1  = new OprTypeLoadRegFile (aprobMatch_NO_ROB_REQ           , _archRegfiles, _phyFileBase);
+            auto* r2  = new OprTypeLoadRegFile (aprobMatch_NO_ROB_REQ           , _archRegfiles, _phyFileBase);
+            auto* rd  = new OprTypeStoreRegFile(aprobMatch_ROB_STORE_MEM_OR_PREG, _archRegfiles, _phyFileBase);
+            auto* ri  = new OprTypeLoadImm     (aprobMatch_NO_ROB_REQ           , _archRegfiles, _phyFileBase);
+
+            auto* rta = new OprTypeStoreRegFile(aprobMatch_ROB_STORE_ADDR       , _archRegfiles, _phyFileBase);
+
             addOprTypes({r1,r2,rd,ri});
             /*
              * build uop
              * */
             auto* a_uop = new A_UOP(r1, r2, rd);
-            auto* l_uop = new L_UOP(r1, rd);
-            auto* s_uop = new S_UOP(r1, r2);
+            auto* l_uop = new L_UOP(r1, rta, rd);
+            auto* s_uop = new S_UOP(r1, r2, rta, rd);
             auto* i_uop = new I_UOP(ri, rd);
             addUopTypes({a_uop,l_uop,s_uop,i_uop});
             /**
@@ -75,6 +83,7 @@ namespace kathryn::carolyne::caro{
              * alloc unit
              */
             auto* allocUnit = new AllocUTM();
+            allocUnit->addSpUopTypes({a_uop,l_uop,s_uop,i_uop});
             addAllocTypes(allocUnit);
             /**
              * rsvUnit
@@ -85,7 +94,9 @@ namespace kathryn::carolyne::caro{
              * robUnit
              */
             auto* robUnit   = new RobUTM(caroArchRegfile, caroPhyRegFile);
-            robUnit->addTransferType(aprMatchAll);
+            robUnit->addTransferType(aprobMatch_ROB_STORE_ADDR);
+            robUnit->addTransferType(aprobMatch_ROB_STORE_MEM_OR_PREG);
+
             addRobTypes(robUnit);
         }
 

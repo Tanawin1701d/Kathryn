@@ -31,11 +31,14 @@ namespace kathryn::carolyne::caro{
 
     struct L_UOP: UopTypeBase{
         explicit L_UOP(OprTypeLoadRegFile*  r1,
+                       OprTypeStoreRegFile* rta,
                        OprTypeStoreRegFile* rd){
             _uopName = LOP_NAME;
             setFopIdentWidth(XOP_IDENT_WIDTH);
             addOprType(r1, true);
-            addOprType(rd, false);
+
+            addOprType(rta, false);
+            addOprType(rd , false);
         }
         bool isEqualTypeDeep(const UopTypeBase& rhs) override{
             return true;
@@ -44,11 +47,16 @@ namespace kathryn::carolyne::caro{
 
     struct S_UOP: UopTypeBase{
         explicit S_UOP(OprTypeLoadRegFile*  r1,
-                       OprTypeLoadRegFile*  r2){
+                       OprTypeLoadRegFile*  r2,
+                       OprTypeStoreRegFile* rta,
+                       OprTypeStoreRegFile* rd  ){
             _uopName = SOP_NAME;
             setFopIdentWidth(XOP_IDENT_WIDTH);
             addOprType(r1, true);
             addOprType(r2, true);
+
+            addOprType(rta, false);
+            addOprType(rd , false);
         }
         bool isEqualTypeDeep(const UopTypeBase& rhs) override{
             return true;
