@@ -36,8 +36,8 @@ namespace kathryn{
 
         struct OprTypeBase: GenRowMetaable{
             /** archReg phyReg*/
-            APRegTypeMatch        _srcAPRegTypeMatch;
-            APRegTypeMatch        _desAPRegTypeMatch;
+            APRegRobFieldMatch    _srcAPRegTypeMatch;
+            APRegRobFieldMatch    _desAPRegTypeMatch;
             ArchRegFileBase*      _archRegFiles = nullptr;
             PhysicalRegFileBase*  _phyRegFiles  = nullptr;
             /** opr width*/
@@ -46,13 +46,13 @@ namespace kathryn{
             int                   _subType = -1; /// it will be used when oprType == COT_OTHER
 
             explicit OprTypeBase(
-                const APRegTypeMatch&  srcAPRegTypeMatch,
-                const APRegTypeMatch&  desAPRegTypeMatch,
+                APRegRobFieldMatch   srcAPRegTypeMatch,
+                APRegRobFieldMatch   desAPRegTypeMatch,
                 ArchRegFileBase*     archRegFiles,
                 PhysicalRegFileBase* phyRegFiles
             ):
-            _srcAPRegTypeMatch(srcAPRegTypeMatch),
-            _desAPRegTypeMatch(desAPRegTypeMatch),
+            _srcAPRegTypeMatch(std::move(srcAPRegTypeMatch)),
+            _desAPRegTypeMatch(std::move(desAPRegTypeMatch)),
             _archRegFiles     (archRegFiles),
             _phyRegFiles      (phyRegFiles){}
 

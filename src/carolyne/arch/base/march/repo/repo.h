@@ -21,7 +21,9 @@ namespace kathryn::carolyne{
          * that designer specify
          */
 
-        class MarchRepo_Base: VizCsvGenable{
+        class MarchBaseRepo: VizCsvGenable{
+
+        protected:
 
             std::vector<FetchUTM_Base*>     _fetchTypes;
             std::vector<AllocUTM_Base*>     _allocTypes;

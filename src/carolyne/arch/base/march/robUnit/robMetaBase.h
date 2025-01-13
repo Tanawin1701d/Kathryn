@@ -9,6 +9,8 @@
 #include "util/numberic/pmath.h"
 #include "carolyne/arch/base/util/rowMeta.h"
 #include "carolyne/arch/base/util/regType.h"
+#include "carolyne/arch/base/isa/regFile/archRegFile.h"
+#include "carolyne/arch/base/march/pRegFile/physicalRegFile_base.h"
 
 namespace kathryn::carolyne{
 
@@ -23,12 +25,10 @@ namespace kathryn::carolyne{
 
         struct RobUTM_Base: GenRowMetaable, VizCsvGenable{
 
-            std::vector<APRegTypeMatch> _transferMeta;
-            ArchRegFileBase*            _archRegFileBase = nullptr;
-            PhysicalRegFileBase*        _phyRegFileBase  = nullptr;
+            std::vector<APRegRobFieldMatch> _transferMeta;
+            ArchRegFileBase*                _archRegFileBase = nullptr;
+            PhysicalRegFileBase*            _phyRegFileBase  = nullptr;
 
-            int _idxInPhyTrans_MemAddr   = -1; /////// which field that used to be addr coressponding to archRegTransfer vector
-            int _idxInPhyTrans_MemValue  = -1;
             int _pc_width                = -1;
             int _amt_transferType        =  4;
 
@@ -52,20 +52,17 @@ namespace kathryn::carolyne{
 
             ~RobUTM_Base() override = default;
 
-            void addTransferType(const APRegTypeMatch& matcher){
-                _transferMeta.push_back(matcher);
+            APRegRobFieldMatch addTransferType(const APRegTypeMatch& matcher, bool isMemRef, bool isAddr){
+                APRegRobFieldMatch robFieldMatch;
+                robFieldMatch._phyRegGrpName  = matcher._phyRegGrpName;
+                robFieldMatch._archRegGrpName = matcher._archRegGrpName;
+                robFieldMatch.isMAC           = isMemRef;
+                robFieldMatch.isAddr          = isAddr;
+                robFieldMatch.idxInRob        = static_cast<int>(_transferMeta.size());
+                _transferMeta.push_back(robFieldMatch);
+                ////// return by value
+                return robFieldMatch;
             }
-
-            /***
-             *   set which register used to be memory address or memory data value
-             */
-            void setIdxInRobFor(bool isAddr, int value){
-                crlAss(value < _transferMeta.size(), "setIdx From rob for mem operation is outofRange");
-                if (isAddr){_idxInPhyTrans_MemAddr  = value;}
-                else       {_idxInPhyTrans_MemValue = value;}
-            }
-
-            void setPcWidth(int width){_pc_width = width;}
 
             std::string getFieldName(int idx, const std::string& fieldName, bool isArch){
                 ////// build the name for eachfield

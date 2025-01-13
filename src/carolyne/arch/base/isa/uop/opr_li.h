@@ -16,10 +16,10 @@ namespace kathryn{
 
 
             explicit OprTypeLoadImm(
-                const APRegTypeMatch&  desAPRegTypeMatch,
+                const APRegRobFieldMatch&  desAPRegTypeMatch,
                 ArchRegFileBase*       archRegFiles,
                 PhysicalRegFileBase*   phyRegFiles):
-                OprTypeBase(APRegTypeMatch(),
+                OprTypeBase(APRegRobFieldMatch(),
                             desAPRegTypeMatch,
                             archRegFiles,
                             phyRegFiles){

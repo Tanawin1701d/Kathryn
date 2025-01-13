@@ -16,13 +16,13 @@
         struct OprTypeStoreRegFile: OprTypeBase{
 
             explicit OprTypeStoreRegFile(
-            const APRegTypeMatch&  desAPRegTypeMatch,
-           ArchRegFileBase*       archRegFiles,
-           PhysicalRegFileBase*   phyRegFiles):
-            OprTypeBase(APRegTypeMatch(),
-                            desAPRegTypeMatch,
-                            archRegFiles,
-                            phyRegFiles)
+            const APRegRobFieldMatch&    desAPRegTypeMatch,
+                  ArchRegFileBase*       archRegFiles,
+                  PhysicalRegFileBase*   phyRegFiles):
+            OprTypeBase(APRegRobFieldMatch(),
+                        desAPRegTypeMatch,
+                        archRegFiles,
+                        phyRegFiles)
             {
                 ///// for now we assume archRegType and phyRegType is correct
                 RegTypeMeta desArcRegtypeMeta = _archRegFiles->getRegTypeMetaGroup(_desAPRegTypeMatch._archRegGrpName);

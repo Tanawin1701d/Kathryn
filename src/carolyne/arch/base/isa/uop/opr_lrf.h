@@ -15,11 +15,11 @@ namespace kathryn{
         struct OprTypeLoadRegFile: OprTypeBase{
 
             explicit OprTypeLoadRegFile(
-                const APRegTypeMatch&  srcAPRegTypeMatch,
+                const APRegRobFieldMatch&  srcAPRegTypeMatch,
                 ArchRegFileBase*       archRegFiles,
                 PhysicalRegFileBase*   phyRegFiles):
             OprTypeBase(srcAPRegTypeMatch,
-                        APRegTypeMatch(),
+                        APRegRobFieldMatch(),
                         archRegFiles,
                         phyRegFiles)
             {

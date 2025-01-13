@@ -20,7 +20,8 @@ namespace kathryn{
          * This class is the main storage for isa that designer input the instruction
          */
 
-        class IsaRepo: VizCsvGenable{
+        class IsaBaseRepo: VizCsvGenable{
+        protected:
             ///// INSTRUCTION SECTION
             /// a single instuction (macro-op) can be decoded and it can produce
             /// multiple micro-operation (uop)
@@ -42,6 +43,22 @@ namespace kathryn{
             void addUopType         (UopTypeBase*     uopType     ) {_uopTypes.push_back(uopType);}
             void addOprType         (OprTypeBase*     oprType     ) {_oprTypes.push_back(oprType);}
             void setArchRegFiles    (ArchRegFileBase* archRegfiles) {_archRegfiles = archRegfiles;}
+
+            void addMopTypes         (std::vector<MopTypeBase*> mopTypes) {
+                for (auto mopType: mopTypes){
+                    _mopTypes.push_back(mopType);
+                }
+            }
+            void addUopTypes         (std::vector<UopTypeBase*> uopTypes) {
+                for (auto uopType: uopTypes){
+                    _uopTypes.push_back(uopType);
+                }
+            }
+            void addOprTypes         (std::vector<OprTypeBase*> oprTypes) {
+                for (auto oprType: oprTypes){
+                    _oprTypes.push_back(oprType);
+                }
+            }
 
             void visual(CsvGenFile& genFile) override{
                 crlAss(_archRegfiles != nullptr, "in vis archRegFiles Should be nullptr");

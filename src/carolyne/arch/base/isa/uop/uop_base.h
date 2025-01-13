@@ -15,14 +15,15 @@
     namespace kathryn::carolyne{
 
         constexpr char OPR_FD_FOP_IDENT_fop[] = "fop";
+        constexpr char UOP_UNNAMED[]          = "unname_Uop";
 
         struct ExecUTM;
         struct UopTypeBase: GenRowMetaable, VizCsvGenTable{
-            std::string _uopName = "unname_Uop";
+            std::string               _uopName = UOP_UNNAMED;
             std::vector<OprTypeBase*> _srcOprTypes;
             std::vector<OprTypeBase*> _desOprTypes;
             int                       _fopIdentWidth    = -1; ///// the bit size that uop used to ident its functional
-            ExecUTM*         _execUnitTypeMeta = nullptr; //// which type of exec that this uop love to go
+            ExecUTM*                  _execUnitTypeMeta = nullptr; //// which type of exec that this uop love to go
             /**
              * todo next check execute engine
              ***/

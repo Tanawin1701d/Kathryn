@@ -15,7 +15,7 @@
 
 namespace kathryn::carolyne::caro{
 
-    class MarchRepo_Caro: public MarchRepo_Base{
+    class MarchRepo_Caro: public MarchBaseRepo{
 
 
     public:
