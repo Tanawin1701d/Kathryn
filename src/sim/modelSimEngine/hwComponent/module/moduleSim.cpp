@@ -123,6 +123,7 @@ namespace kathryn{
         recruitFromVector(result, _module->getUserWires());
         recruitFromVector(result, _module->getUserExpressions());
         recruitFromVector(result, _module->getUserVals());
+        recruitFromVector(result, _module->getUserPmVals());
         recruitFromVector(result, _module->getUserNests());
     }
 

@@ -17,6 +17,7 @@
 #include "march/param/param.h"
 #include "march/pRegFile/caro_preg.h"
 #include "march/alloc/caro_allocMeta.h"
+#include "march/execUnit/caro_execMeta.h"
 #include "march/robUnit/caro_robMeta.h"
 #include "march/rsvUnit/caro_rsvMeta.h"
 
@@ -37,7 +38,7 @@ namespace kathryn::carolyne::caro{
             ////reqRobField is redundant with store operand sometime
             APRegRobFieldMatch aprobMatch_NO_ROB_REQ              {ARCH_REGFILE_NAME, PHY_REGFILE_NAME, -1, false, false};
             APRegRobFieldMatch aprobMatch_ROB_STORE_MEM_OR_PREG   {ARCH_REGFILE_NAME, PHY_REGFILE_NAME, -1, true , false};
-            APRegRobFieldMatch aprobMatch_ROB_STORE_ADDR          {ARCH_REGFILE_NAME, PHY_REGFILE_NAME, -1, true , true};
+            APRegRobFieldMatch aprobMatch_ROB_STORE_ADDR          {ARCH_REGFILE_NAME, PHY_REGFILE_NAME, -1, true , true };
             /**
              * ISA
              */
@@ -52,7 +53,7 @@ namespace kathryn::carolyne::caro{
 
             auto* rta = new OprTypeStoreRegFile(aprobMatch_ROB_STORE_ADDR       , _archRegfiles, _phyFileBase);
 
-            addOprTypes({r1,r2,rd,ri});
+            addOprTypes({r1,r2,rd,ri, rta});
             /*
              * build uop
              * */
@@ -77,27 +78,41 @@ namespace kathryn::carolyne::caro{
            /**
             * fetch Unit
             */
-            auto* fetchUnit = new FetchUTM();
-            addFetchTypes(fetchUnit);
+            auto* fetchUnitType = new FetchUTM();
+            addFetchType(fetchUnitType);
             /**
              * alloc unit
              */
-            auto* allocUnit = new AllocUTM();
-            allocUnit->addSpUopTypes({a_uop,l_uop,s_uop,i_uop});
-            addAllocTypes(allocUnit);
+            auto* allocUnitType = new AllocUTM();
+            allocUnitType->addSpUopTypes({a_uop,l_uop,s_uop,i_uop});
+            addAllocType(allocUnitType);
+            /**
+             * exec unit
+             *
+             */
+            auto* arithExecType  = new ArithExecUTM();
+            auto* lsExecUnitType = new LSExecUTM();
+            auto* bExecUnitType  = new BExecUTM();
+            addExecTypes({arithExecType,lsExecUnitType,bExecUnitType});
+
+
             /**
              * rsvUnit
              */
-            auto* rsvUnit   = new RsvUTM();
-            addRsvTypes(rsvUnit);
+            auto* rsvUnitType   = new RsvUTM();
+            rsvUnitType->addExecUnit(arithExecType, AMT_EXEC_PER_RSV_PER_TYPE);
+            rsvUnitType->addExecUnit(lsExecUnitType, AMT_EXEC_PER_RSV_PER_TYPE);
+            rsvUnitType->addExecUnit(bExecUnitType, AMT_EXEC_PER_RSV_PER_TYPE);
+            addRsvType(rsvUnitType);
+
             /**
              * robUnit
              */
-            auto* robUnit   = new RobUTM(caroArchRegfile, caroPhyRegFile);
-            robUnit->addTransferType(aprobMatch_ROB_STORE_ADDR);
-            robUnit->addTransferType(aprobMatch_ROB_STORE_MEM_OR_PREG);
+            auto* robUnitType   = new RobUTM(caroArchRegfile, caroPhyRegFile);
+            robUnitType->addTransferType(aprobMatch_ROB_STORE_ADDR);
+            robUnitType->addTransferType(aprobMatch_ROB_STORE_MEM_OR_PREG);
 
-            addRobTypes(robUnit);
+            addRobType(robUnitType);
         }
 
 

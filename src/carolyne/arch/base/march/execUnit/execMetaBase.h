@@ -16,13 +16,15 @@ namespace kathryn{
             std::string _execType;
 
             virtual ~ExecUTM() = default;
-            virtual void createOp()     = 0;
+            virtual void createOp(){
+                crlAss(false, "i don't know what i have done.");
+            }
 
         };
 
         struct ExecRsvUnitMatch{
             ExecUTM* _execType = nullptr;
-            int               _amt      = -1;
+            int      _amt      = -1;
 
             ExecRsvUnitMatch(ExecUTM* execType,int amt):
             _execType(execType),

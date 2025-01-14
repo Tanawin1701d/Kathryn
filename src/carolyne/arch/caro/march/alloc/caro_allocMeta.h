@@ -14,9 +14,7 @@ namespace kathryn::carolyne::caro{
 
     struct AllocUTM: AllocUTM_Base{
 
-        explicit AllocUTM(){
-            addRegFileMatcher(ARCH_REGFILE_NAME, PHY_REGFILE_NAME);
-        }
+        explicit AllocUTM()= default;
 
     };
 

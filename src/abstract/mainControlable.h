@@ -11,6 +11,7 @@ namespace kathryn{
 
     class MainControlable{
     public:
+        virtual ~MainControlable() = default;
         /**to start do somthing*/
         virtual void start() = 0;
         /** to reset old value and tempolary data*/

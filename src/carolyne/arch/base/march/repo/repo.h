@@ -41,12 +41,15 @@ namespace kathryn::carolyne{
             [[nodiscard]] std::vector<RobUTM_Base*>       getRobTypes   () const{return _robTypes;  }
             [[nodiscard]] PhysicalRegFileBase*            getPhyFileBase() const{return _phyFileBase; }
 
-            void addFetchTypes (FetchUTM_Base*       fetchType)  { _fetchTypes.push_back(fetchType);}
-            void addAllocTypes (AllocUTM_Base*       allocType)  { _allocTypes.push_back(allocType);}
-            void addRsvTypes   (RsvUTM_Base*         rsvType)    { _rsvTypes.push_back(rsvType);    }
-            void addExecTypes  (ExecUTM*    execType)   { _execTypes.push_back(execType);  }
-            void addRobTypes   (RobUTM_Base*         robType)    { _robTypes.push_back(robType);    }
+            void addFetchType  (FetchUTM_Base*        fetchType)  { _fetchTypes.push_back(fetchType);}
+            void addAllocType  (AllocUTM_Base*        allocType)  { _allocTypes.push_back(allocType);}
+            void addRsvType    (RsvUTM_Base*          rsvType)    { _rsvTypes.push_back(rsvType);    }
+            void addExecType   (ExecUTM*              execType)   { _execTypes.push_back(execType);  }
+            void addRobType    (RobUTM_Base*          robType)    { _robTypes.push_back(robType);    }
             void setPhyFileBase(PhysicalRegFileBase* phyFileBase){ _phyFileBase = phyFileBase;      }
+            void addExecTypes  (const std::vector<ExecUTM*>& execTypes){
+                for (ExecUTM* execUtm: execTypes){addExecType(execUtm);}
+            }
 
             void visual(CsvGenFile& genFile) override{
 

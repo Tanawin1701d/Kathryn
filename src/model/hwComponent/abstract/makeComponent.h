@@ -19,6 +19,7 @@
 #define mOut( name, argument)     Wire&     name = _makeIo<Wire>  (false,"uncatagorizedYet", #name, true,argument, false)
 #define mReg( name, argument)     Reg&      name = _make<Reg>     ("uncatagorizedYet", #name, true, argument)
 #define mVal(name, ...)           Val&      name = _make<Val>     ("uncatagorizedYet", #name, true, __VA_ARGS__)
+#define mPmVal(name, defaultVal)  PmVal&    name = _make<PmVal>   ("uncatagorizedYet", #name, true, defaultVal)
 #define mMem(name, depth, width)  MemBlock& name = _make<MemBlock>("uncatagorizedYet", #name, true, depth, width)
 #define g(...) makeNest(true,__VA_ARGS__)
 #define gr(...) makeNestReadOnly(true, __VA_ARGS__)

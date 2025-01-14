@@ -32,6 +32,7 @@ namespace kathryn{
         deleteSubElement(_userWires);
         deleteSubElement(_userExpressions);
         deleteSubElement(_userVals);
+        deleteSubElement(_userPmVals);
         deleteSubElement(_userMemBlks);
         deleteSubElement(_userNests);
         deleteSubElement(_userSubModules);
@@ -93,6 +94,12 @@ namespace kathryn{
         assert(val != nullptr);
         _userVals.push_back(val);
     }
+
+    void Module::addUserPmVal(PmVal* pmVal){
+        assert(pmVal != nullptr);
+        _userPmVals.push_back(pmVal);
+    }
+
 
     void Module::addUserMemBlk(MemBlock* memBlock) {
         assert(memBlock != nullptr);

@@ -111,8 +111,9 @@ namespace kathryn {
         /** on nest init*/
         void on_nest_init(nest* ptr);
         void on_nest_update(AsmNode* asmNode, nest* srcNest);
-        /** value handling*/
+        /** value and pm value handling*/
         void on_value_init(Val* ptr);
+        void on_pmValue_init(PmVal* ptr);
         /** box handling*/
         void on_box_init(Box* ptr);
         void on_box_end_init(Box* ptr);

@@ -13,6 +13,9 @@ namespace kathryn::carolyne::caro{
 
     //////// ALLOC UNIT PARAMETER
 
+    //////// EXEC UNIT PARAMETER
+    constexpr int AMT_EXEC_PER_RSV_PER_TYPE = 1;
+
     //////// PHYSICAL REG UNIT PARAMETER
     constexpr int  PREGFILE_IDX_SIZE  = 8;
     constexpr int  PREG_WIDTH         = 32;

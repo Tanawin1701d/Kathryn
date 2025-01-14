@@ -237,6 +237,19 @@ namespace kathryn{
               "val is initializing and set parent to " + targetModulePtr->getIdentDebugValue());
     }
 
+    /** pmValue*/
+    void ModelController::on_pmValue_init(PmVal* ptr) {
+        assert(ptr != nullptr);
+        assert(boxStack.empty());
+        Module* targetModulePtr = getTopModulePtr();
+        /** localize necessary destination*/
+        targetModulePtr->addUserPmVal(ptr);
+        ptr->setParent(targetModulePtr);
+        ptr->buildInheritName();
+        logMF(ptr, "pmval is initializing and set parent to " + targetModulePtr->getIdentDebugValue());
+
+    }
+
     /** box*/
     void ModelController::on_box_init(Box* ptr) {
         assert(ptr != nullptr);

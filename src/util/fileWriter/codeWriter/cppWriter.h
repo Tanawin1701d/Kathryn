@@ -16,6 +16,8 @@ namespace kathryn{
 struct CbIfCxx;
 struct CbFuncDec;
 
+constexpr char CXX_ULL_SUFFIX [] = "ULL";
+
 struct CbBaseCxx: CbBase{
 
     CbBaseCxx(): CbBase(){}

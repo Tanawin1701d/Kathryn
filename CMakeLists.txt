@@ -83,6 +83,11 @@ add_executable(Kathryn
         src/carolyne/util/viz/csvVizable.h
         src/carolyne/arch/base/march/alloc/archPhyRegMatcher.h
         src/carolyne/arch/caro/caro_repo.h
+        src/carolyne/arch/caro/march/execUnit/caro_execMeta.h
+        src/model/hwComponent/value/PmVal.cpp
+        src/model/hwComponent/value/PmVal.h
+        src/sim/modelSimEngine/hwComponent/value/pmValueSim.cpp
+        src/sim/modelSimEngine/hwComponent/value/pmValueSim.h
         #blinkSample.cpp
         #src/params/prjParam.h
 )

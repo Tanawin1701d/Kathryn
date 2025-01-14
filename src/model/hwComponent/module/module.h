@@ -19,6 +19,7 @@
 #include "model/hwComponent/wire/wire.h"
 #include "model/hwComponent/expression/expression.h"
 #include "model/hwComponent/value/value.h"
+#include "model/hwComponent/value/PmVal.h"
 #include "model/hwComponent/memBlock/MemBlock.h"
 #include "model/hwComponent/expression/nest.h"
 #include "model/hwComponent/box/box.h"
@@ -68,6 +69,7 @@ namespace kathryn{
         std::vector<Wire*>       _userWires;
         std::vector<expression*> _userExpressions;
         std::vector<Val*>        _userVals;
+        std::vector<PmVal*>      _userPmVals;
         std::vector<MemBlock*>   _userMemBlks;
         std::vector<nest*>       _userNests;
         std::vector<Module*>     _userSubModules;
@@ -108,6 +110,7 @@ namespace kathryn{
         void addUserWires      (Wire*           wire);
         void addUserExpression (expression*     expr);
         void addUserVal        (Val*            val);
+        void addUserPmVal      (PmVal*          pmVal); //// parameter value
         void addUserMemBlk     (MemBlock*       memBlock);
         void addUserNest       (nest*           nst);
         void addUserSubModule  (Module*         smd);
@@ -128,6 +131,7 @@ namespace kathryn{
         std::vector<Wire*> getUserWiresByMarker(WIRE_MARKER_TYPE wmt);
         auto& getUserExpressions(){return _userExpressions; }
         auto& getUserVals(){return _userVals; }
+        auto& getUserPmVals(){return _userPmVals;}
         auto& getUserMemBlks(){return _userMemBlks;}
         auto& getUserNests(){return _userNests;}
         auto& getUserSubModules(){return _userSubModules;}

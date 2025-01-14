@@ -7,6 +7,8 @@
 
 #include "carolyne/arch/base/march/robUnit/robMetaBase.h"
 #include "carolyne/arch/caro/march/param/param.h"
+#include "carolyne/arch/caro/isa/regFile/caro_archRegFile.h"
+#include "carolyne/arch/caro/march/pRegFile/caro_preg.h"
 
 
 namespace kathryn::carolyne::caro{
