@@ -88,6 +88,8 @@ add_executable(Kathryn
         src/model/hwComponent/value/PmVal.h
         src/sim/modelSimEngine/hwComponent/value/pmValueSim.cpp
         src/sim/modelSimEngine/hwComponent/value/pmValueSim.h
+        src/gen/proxyHwComp/value/paramValueGen.cpp
+        src/gen/proxyHwComp/value/paramValueGen.h
         #blinkSample.cpp
         #src/params/prjParam.h
 )

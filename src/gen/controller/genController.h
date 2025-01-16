@@ -11,6 +11,7 @@
 #include "util/fileWriter/fileWriterBase.h"
 #include "genStructure.h"
 #include "util/fileWriter/fileWriterGroup.h"
+#include "util/str/strUtil.h"
 
 namespace kathryn{
 

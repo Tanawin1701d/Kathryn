@@ -50,6 +50,7 @@ namespace kathryn{
         //////// gen zone
         virtual std::string  decGlobIo()   {assert(false);}
         virtual std::string  decGlobIoAsm(){assert(false);}
+        virtual std::string  decParamVal() {assert(false);}
         virtual std::string  decIo()       {assert(false);}
         virtual std::string  decVariable() {assert(false);}
         virtual std::string  decOp()       {assert(false);}

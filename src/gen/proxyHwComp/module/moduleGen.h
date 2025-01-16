@@ -54,6 +54,7 @@ namespace kathryn{
         LogicGenBaseVec   _exprPool;
         LogicGenBaseVec   _nestPool;
         LogicGenBaseVec   _valPool;
+        LogicGenBaseVec   _pmValPool;
         LogicGenBaseVec   _memBlockPool;
         LogicGenBaseVec   _memBlockElePool;
         ///// genWirePool it can be use after finalize Route Ele is used
@@ -107,8 +108,11 @@ namespace kathryn{
          * file generator
          */
         std::vector<std::string> getIoDec();
+        std::vector<std::string> getParamDec();
         std::string getSubModuleDec(ModuleGen* mdGen, GenStructure* genStructure);
         std::string getOpr();
+
+        ////// ^------ it should be called from getSubModuleDec
         /**
          *  cmp function
          */

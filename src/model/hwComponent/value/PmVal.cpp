@@ -6,6 +6,7 @@
 #include <utility>
 #include "model/controller/controller.h"
 #include "sim/modelSimEngine/hwComponent/value/pmValueSim.h"
+#include "gen/proxyHwComp/value/paramValueGen.h"
 
 
 namespace kathryn{
@@ -56,6 +57,7 @@ namespace kathryn{
 
     void PmVal::createLogicGen(){
         ////// todo create logic gen
+        _genEngine = new ParamValGen(_parent->getModuleGen(), this);
 
     }
 

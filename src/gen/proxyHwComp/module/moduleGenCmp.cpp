@@ -63,10 +63,15 @@ namespace kathryn{
          * ----------------------------------------------------
          * output  wire               ---->          no       | because we are assigner it signal; thus, we must check
          * input   wire               ---->          yes      | because we are not assignner
+         * parameter                  ---->          yes      | because let the master module assign the parameter
+         * -------------------- SUB MODULE ------------------------------
          * submodule input wire       ---->          yes      | because we are assigner
          * submodule output wire      ---->          no       | because we no  assigner
+         * submodule parameter        ---->          yes      | because we are assigner
          */
 
+        /////// COMPARE PARAMETER
+        prelimResult &= _pmValPool.compareCefOnly(rhsMdg->_pmValPool);
         /////// COMPARE OUTPUT IO
         for (auto wireTypeIdx: autoGenOutputGrps){
             prelimResult &= _genWirePools[wireTypeIdx].compare(rhsMdg->_genWirePools[wireTypeIdx]);
@@ -96,6 +101,9 @@ namespace kathryn{
             ModuleGen* rhsSubModuleGen  = rhsMdg->_subModulePool[idx];
             /////// COMPARE SUB MODULE
             subResult &= genStructure->isTheSameModule(lhsSubModuleGen, rhsSubModuleGen);
+            /////// COMPARE PARAMETER
+            subResult &= lhsSubModuleGen->_pmValPool
+                    .compare(rhsSubModuleGen->_pmValPool);
             /////// COMPARE SUB MODULE INPUT IO
             for (auto wireTypeIdx: autoGenInputGrps){
                 subResult &= lhsSubModuleGen->_genWirePools[wireTypeIdx]
@@ -128,11 +136,12 @@ namespace kathryn{
         _exprPool               .genCerf(GEN_EXPRE_GRP,     4);
         _nestPool               .genCerf(GEN_NEST_GRP,      5);
         _valPool                .genCerf(GEN_VAL_GRP,       6);
-        _memBlockPool           .genCerf(GEN_MEMBLK_GRP,    7);
-        _memBlockElePool        .genCerf(GEN_MEMBLK_ELE_GRP,8);
+        _pmValPool              .genCerf(GEN_PM_VAL_GRP,    7);
+        _memBlockPool           .genCerf(GEN_MEMBLK_GRP,    8);
+        _memBlockElePool        .genCerf(GEN_MEMBLK_ELE_GRP,9);
         //////// io wire
         for (int genWireIdx = 0; genWireIdx < WIRE_AUTO_GEN_CNT; genWireIdx++){
-            _genWirePools[genWireIdx].genCerf(GEN_WIRE_AUTO_GRP, 9 + genWireIdx);
+            _genWirePools[genWireIdx].genCerf(GEN_WIRE_AUTO_GRP, 10 + genWireIdx);
         }
     }
 

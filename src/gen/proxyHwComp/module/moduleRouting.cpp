@@ -30,7 +30,7 @@ namespace kathryn{
         _wirePoolWithOutputMarker.routeDepAll();
         _exprPool                .routeDepAll();
         _nestPool                .routeDepAll();
-        _valPool                 .routeDepAll();
+        _valPool                 .routeDepAll(); //// pm doesn't require
         _memBlockPool            .routeDepAll();
         _memBlockElePool         .routeDepAll();
     }

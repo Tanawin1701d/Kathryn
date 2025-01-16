@@ -16,6 +16,7 @@ namespace kathryn{
         GEN_EXPRE_GRP,
         GEN_NEST_GRP,
         GEN_VAL_GRP,
+        GEN_PM_VAL_GRP,
         GEN_MEMBLK_GRP,
         GEN_MEMBLK_ELE_GRP,
     	GEN_WIRE_AUTO_GRP,

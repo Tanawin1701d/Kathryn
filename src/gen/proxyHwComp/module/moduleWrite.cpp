@@ -131,6 +131,14 @@ namespace kathryn{
         return result;
     }
 
+    std::vector<std::string> ModuleGen::getParamDec(){
+
+        std::vector<std::string> result;
+        for (LogicGenBase* lgb: _pmValPool){result.push_back(lgb->decParamVal());}
+        return result;
+
+    }
+
     //////////////////////////// get module dec as sub
     ///
     std::string ModuleGen::getSubModuleDec(ModuleGen* subMdGen, GenStructure* genStructure){
@@ -145,7 +153,15 @@ namespace kathryn{
 
         ////// declare submodule
         result += hostModuleGen->getOpr() + "  ";
-        result += subMdGen->getOpr();
+        result += subMdGen->getOpr() + " #( ";
+
+        std::vector<std::string> ioParamVals;
+        for (LogicGenBase* lgb: subMdGen->_pmValPool){
+            ioParamVals.push_back(lgb->decOp());
+        }
+        result += joinStr(ioParamVals, ',');
+
+        result += ") ";
         result += "(\n";
 
         ////////////////// declare input and output

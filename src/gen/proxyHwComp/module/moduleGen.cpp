@@ -19,6 +19,7 @@ namespace kathryn{
     void ModuleGen::startInitEle(){
 
         if (_master->getParent() == nullptr){
+            /// current module is top module
             depthFromGlobalModule = 0;
         }else{
             depthFromGlobalModule = _master->getParent()
@@ -58,9 +59,10 @@ namespace kathryn{
                 }
             }
         }
-        createAndRecruitLogicGenBase(_exprPool,_master->getUserExpressions());
-        createAndRecruitLogicGenBase(_nestPool,_master->getUserNests());
-        createAndRecruitLogicGenBase(_valPool, _master->getUserVals());
+        createAndRecruitLogicGenBase(_exprPool    ,_master->getUserExpressions());
+        createAndRecruitLogicGenBase(_nestPool    ,_master->getUserNests());
+        createAndRecruitLogicGenBase(_valPool     ,_master->getUserVals());
+        createAndRecruitLogicGenBase(_pmValPool   , _master->getUserPmVals());
         createAndRecruitLogicGenBase(_memBlockPool, _master->getUserMemBlks());
         for (MemBlock* memBlock: _master->getUserMemBlks()){
             createAndRecruitLogicGenBase(_memBlockElePool, memBlock->getMemBlockAgents());

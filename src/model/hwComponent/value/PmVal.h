@@ -20,6 +20,7 @@ namespace kathryn{
 
     class PmVal: public LogicComp<PmVal>{
         friend class PmValSimEngine;
+        friend class ParamValGen;
 
         /** in current version value is supported for 64bit-maximum*/
     protected:
