@@ -7,7 +7,7 @@
 #include "util/viz/csv/csvFIleWriter.h"
 #include "util/viz/csv/csvTable.h"
 
-namespace kathryn::carolyne{
+namespace kathryn{
 
     ////// sample row name
     constexpr char SRN_BITWIDTH[] = "bit width";

@@ -45,51 +45,6 @@ add_executable(Kathryn
         ${SRC_PARAM}
         ${SRC_LIB}
         ${SRC_MODEL_COMPILE}
-        src/carolyne/arch/base/util/sliceMatcher.h
-        src/carolyne/arch/base/isa/uop/opr_base.h
-        src/carolyne/arch/base/isa/uop/uop_base.h
-        src/carolyne/arch/base/isa/mop/mop_base.h
-        src/carolyne/arch/base/isa/repo/repo.h
-        src/carolyne/arch/base/isa/regFile/archRegFile.h
-        src/carolyne/arch/base/util/regFileBase.h
-        src/carolyne/arch/base/util/rowMeta.h
-        src/carolyne/arch/base/util/tableMeta.h
-        src/carolyne/arch/base/march/pRegFile/physicalRegFile_base.h
-        src/carolyne/arch/base/march/pRegFile/physicalRegFile_base.h
-        src/carolyne/arch/base/march/fetchUnit/fetchMetaBase.h
-        src/carolyne/arch/base/march/alloc/allocMetaBase.h
-        src/carolyne/arch/base/march/robUnit/robMetaBase.h
-        src/carolyne/arch/base/march/execUnit/execMetaBase.h
-        src/carolyne/arch/base/march/repo/repo.h
-        src/carolyne/arch/base/isa/uop/opr_lrf.h
-        src/carolyne/arch/base/isa/uop/opr_li.h
-        src/carolyne/arch/base/isa/uop/opr_srf.h
-        src/carolyne/arch/base/march/rsvUnit/rsvMetaBase.h
-        src/carolyne/arch/caro/isa/regFile/caro_archRegFile.h
-        src/carolyne/arch/caro/isa/uop/caro_uop.h
-        src/carolyne/arch/caro/isa/uop/caro_opr.h
-        #src/carolyne/arch/caro/isa/uop/caro_op_param.h
-        src/carolyne/arch/caro/isa/mop/caro_mop.h
-        #src/carolyne/arch/caro/isa/mop/caro_mop_param.h
-        src/carolyne/arch/caro/march/alloc/caro_allocMeta.h
-        src/carolyne/arch/caro/march/pRegFile/caro_preg.h
-        src/carolyne/arch/caro/march/fetchUnit/caro_fetchMeta.h
-        src/carolyne/arch/caro/march/param/param.h
-        src/carolyne/arch/caro/march/rsvUnit/caro_rsvMeta.h
-        src/carolyne/arch/caro/march/robUnit/caro_robMeta.h
-        src/carolyne/arch/caro/isa/param/param.h
-        src/util/viz/csv/csvTable.h
-        src/util/viz/csv/csvFIleWriter.h
-        src/carolyne/util/viz/csvVizable.h
-        src/carolyne/arch/base/march/alloc/archPhyRegMatcher.h
-        src/carolyne/arch/caro/caro_repo.h
-        src/carolyne/arch/caro/march/execUnit/caro_execMeta.h
-        src/model/hwComponent/value/PmVal.cpp
-        src/model/hwComponent/value/PmVal.h
-        src/sim/modelSimEngine/hwComponent/value/pmValueSim.cpp
-        src/sim/modelSimEngine/hwComponent/value/pmValueSim.h
-        src/gen/proxyHwComp/value/paramValueGen.cpp
-        src/gen/proxyHwComp/value/paramValueGen.h
         #blinkSample.cpp
         #src/params/prjParam.h
 )
