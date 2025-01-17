@@ -1,0 +1,45 @@
+//
+// Created by tanawin on 17/1/2025.
+//
+
+#ifndef src_lib_hw_slot_SLOTPROXY_H
+#define src_lib_hw_slot_SLOTPROXY_H
+#include "rowMeta.h"
+#include "model/controller/controller.h"
+
+
+
+namespace kathryn{
+
+
+    ////// it is used to represent Slot but not make any new register
+    class SlotOpr{
+    public:
+        RowMeta _meta;
+        std::vector<Operable*> _repFields;
+
+        explicit SlotOpr(const RowMeta& meta,
+                         const std::vector<Operable*>& repFields):
+        _meta(meta),
+        _repFields(repFields){}
+
+        Operable*& getFieldRef(int idx){
+            mfAssert(idx >= 0 && idx < _repFields.size(),
+                "getFieldRef with idx is out of range " + std::to_string(idx));
+            return _repFields[idx];
+        }
+
+        Operable*& getFieldRef(const std::string& fieldName){
+            int idx = _meta.getFieldIdx(fieldName);
+            return getFieldRef(idx);
+        }
+
+        int getAmtField()const{ return static_cast<int>(_repFields.size());}
+
+    };
+
+}
+
+
+
+#endif //src_lib_hw_slot_SLOTPROXY_H

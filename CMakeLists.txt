@@ -45,6 +45,10 @@ add_executable(Kathryn
         ${SRC_PARAM}
         ${SRC_LIB}
         ${SRC_MODEL_COMPILE}
+        src/lib/hw/slot/table.cpp
+        src/lib/hw/slot/table.h
+        src/lib/hw/slot/slotProxy.cpp
+        src/lib/hw/slot/slotProxy.h
         #blinkSample.cpp
         #src/params/prjParam.h
 )

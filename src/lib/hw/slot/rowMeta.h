@@ -45,15 +45,21 @@ namespace kathryn{
 
         int getSize() const{return static_cast<int>(_fields.size());}
 
+        FieldMeta getField(int idx) const{
+            mfAssert(isThereIdx(idx), "cannot get field idx " + std::to_string(idx));
+            return _fields[idx];
+        }
+
         [[nodiscard]]
         FieldMeta getField(const std::string& fieldName)const{
+            int idx = 0;
             for (const FieldMeta& fm: _fields){
+                idx++;
                 if (fm._fieldName == fieldName){
-                    return fm;
+                    break;
                 }
             }
-            mfAssert(false, "can't find field By name: " + fieldName);
-            return {"error", 20};
+            return getField(idx);
         }
 
         [[nodiscard]]
@@ -67,6 +73,20 @@ namespace kathryn{
 
         bool isThereIdx(int idx) const{
             return (idx >= 0) && (idx < _fields.size());
+        }
+
+        RowMeta operator() (int startIdx, int stopIdx)const{
+            std::vector<std::string> newNms;
+            std::vector<int>         newSzs;
+            mfAssert(isThereIdx(startIdx) && isThereIdx(stopIdx-1),
+                "cannot slice rowMeta "+
+                std::to_string(startIdx) + " : " + std::to_string(stopIdx));
+            for (int i = startIdx; i < stopIdx; i++){
+                newNms.push_back(_fields[i]._fieldName);
+                newSzs.push_back(_fields[i]._fieldSize);
+            }
+            RowMeta newRowMeta(newNms, newSzs);
+            return newRowMeta;
         }
 
 

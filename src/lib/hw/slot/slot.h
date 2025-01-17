@@ -7,6 +7,7 @@
 
 #include "model/controller/controller.h"
 #include "rowMeta.h"
+#include "slotProxy.h"
 
 namespace kathryn{
 
@@ -20,7 +21,7 @@ namespace kathryn{
         std::vector<Reg*> hwFields;
         mPmVal(identParam, 0);
 
-        Slot(const RowMeta& meta, int identVal):
+        explicit Slot(const RowMeta& meta, int identVal):
         _meta(meta),
         _ident(identVal){
 
@@ -35,58 +36,69 @@ namespace kathryn{
             return stopIdx <= hwFields.size();
         }
 
-        Slot& assignCore(const Slot& rhsSlot,
-                         int startIdx,
-                         int stopIdx,
-                         int rhsStartIdx,
-                         bool isNextCycle){
+        SlotOpr operator() (int startIdx, int stopIdx)const{
 
-            mfAssert(isContainIdx(startIdx, stopIdx), "assignCore:: error assign idx missmatch");
-            mfAssert(isContainIdx(rhsStartIdx, rhsStartIdx + (stopIdx-startIdx)),
-                     "assignCore:: error assign idx missmatch");
+            mfAssert(_meta.isThereIdx(startIdx) && _meta.isThereIdx(stopIdx-1),
+                "slice slot opr index out of range");
 
-            for (int i = 0; i < (stopIdx-startIdx); i++){
-                if (isNextCycle){(*hwFields[startIdx + i]) <<= (*rhsSlot.hwFields[rhsStartIdx + i]);}
-                else            {(*hwFields[startIdx + i])   = (*rhsSlot.hwFields[rhsStartIdx + i]);}
+            std::vector<Operable*> repFields;
+            for (int i = startIdx; i < stopIdx; i++){
+                repFields.push_back(hwFields[i]);
+            }
+            SlotOpr slicedOpr(_meta(startIdx, stopIdx), repFields);
+            return slicedOpr;
+
+        }
+
+        int getAmtField()const{return _meta.getSize();}
+
+        void assignCore(const SlotOpr& rhsSlotOpr, int startIdx, int stopIdx, bool isNextCycle, Operable& condition){
+
+            int size = stopIdx - startIdx;
+            mfAssert(size == rhsSlotOpr.getAmtField(), "size is not equal");
+            mfAssert(startIdx >= 0 && stopIdx <= hwFields.size(), "statIdx error");
+
+            zif (condition){
+                for(int i = 0; i < (stopIdx-startIdx); i++){
+                    FieldMeta lhsField = _meta.getField(startIdx+i);
+                    FieldMeta rhsField = rhsSlotOpr._meta.getField(i);
+                    mfAssert(lhsField.checkEqualField(rhsField), "assign fieldNot equal fieldName lhs " + lhsField._fieldName + " rhs " + rhsField._fieldName);
+                    if (isNextCycle){(*hwFields[startIdx + i]) <<= (*rhsSlotOpr._repFields[i]);}
+                    else            {(*hwFields[startIdx + i])   = (*rhsSlotOpr._repFields[i]);}
+                }
             }
 
-            return *this;
+        }
+
+        void assignCore(const Slot& rhsSlot,
+                         int startIdx, int stopIdx, int rhsStartIdx,
+                         bool isNextCycle, Operable& condition){
+            assignCore(rhsSlot(rhsStartIdx, getAmtField()), startIdx, stopIdx, isNextCycle, condition);
         }
 
         Slot& assign(const Slot& rhsSlot,
                      const std::string& startFieldName,
                      const std::string& endFieldName,
-                     bool  isNextCycle){ ///[startFieldName, endFieldName]
-                 /////// isEndCycle  = <<= else is =
-
-            /////// check the equality first
-            mfAssert(_meta.checkEqualRowMeta(rhsSlot._meta, startFieldName, endFieldName), "assign slot error");
-
+                     bool  isNextCycle, Operable& condition){ ///[startFieldName, endFieldName]
             ///// get the index and assign it
             int startIdx = _meta.getFieldIdx(startFieldName);
             int stopIdx  = _meta.getFieldIdx(endFieldName);
             stopIdx++;
             int rhsStartIdx = rhsSlot._meta.getFieldIdx(startFieldName);
-            assignCore(rhsSlot, startIdx, stopIdx, rhsStartIdx, isNextCycle);
+            assignCore(rhsSlot, startIdx, stopIdx, rhsStartIdx, isNextCycle, condition);
 
-            return *this;
-        }
-
-        Slot& assign(const Slot& rhsSlot, const std::string& startFieldName, bool isNextCycle){
-            int startIdx    = _meta.getFieldIdx(startFieldName);
-            int rhsStartIdx = rhsSlot._meta.getFieldIdx(startFieldName);
-            assignCore(rhsSlot, startIdx, startIdx + 1, rhsStartIdx, isNextCycle);
             return *this;
         }
 
         Reg& get(const std::string& fieldName){
             int idx = _meta.getFieldIdx(fieldName);
-            mfAssert(idx >= 0, "cannot find fieldName " + fieldName);
-            return *hwFields[idx];
+            return get(idx);
         }
 
-        
-
+        Reg& get(int idx){
+            mfAssert(idx >= 0 && idx < hwFields.size(), "cannot find fieldIdx " + std::to_string(idx));
+            return *hwFields[idx];
+        }
 
     };
 
