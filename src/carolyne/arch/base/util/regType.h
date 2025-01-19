@@ -8,8 +8,7 @@
 #include <cstdint>
 #include "carolyne/util/checker/checker.h"
 
-namespace kathryn{
-    namespace carolyne{
+    namespace kathryn::carolyne{
 
         constexpr char RTM_FD_idx  [] = "idx";
         constexpr char RTM_FD_value[] = "value";
@@ -127,6 +126,6 @@ namespace kathryn{
         };
 
     }
-}
+
 
 #endif //KATHRYN_SRC_CAROLYNE_ARCH_BASE_UTIL_REGTYPE_H

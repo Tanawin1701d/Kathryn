@@ -11,7 +11,9 @@
 
 
     namespace kathryn::carolyne{
-
+        /**
+         * slice matcher is a collection of slice that used to match the region of interest on A hardware component
+         */
         struct SliceMatcher{
             int                _limitSize = -1;
             std::vector<Slice> _matchedSlices; //// the slice in raw fetch instruction
@@ -26,7 +28,7 @@
                 crlAss(sl.checkValidSlice(),
                            "invalid opr match slice " + std::to_string(sl.start) +
                            " " + std::to_string(sl.stop));
-                crlAss(sl.stop < _limitSize,
+                crlAss(sl.stop <= _limitSize,
                        "sl.stop = " + std::to_string(sl.stop) +
                        "exceed instrwidth " + std::to_string(_limitSize));
                 _matchedSlices.push_back(sl);

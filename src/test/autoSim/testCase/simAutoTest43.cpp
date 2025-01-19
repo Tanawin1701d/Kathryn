@@ -6,6 +6,7 @@
 #include "lib/hw/slot/table.h"
 #include "test/autoSim/simAutoInterface.h"
 #include "autoTestInterface.h"
+#include "carolyne/arch/caro/caro_repo.h"
 
 namespace kathryn{
 

@@ -18,7 +18,7 @@ namespace kathryn{
             std::vector<UopTypeBase*>    _uopTypes;
             std::vector<UopMatcherBase*> _uopMatchers;
 
-            explicit MopTypeBase(std::string  mopName, int mopBitWidth):
+            explicit MopTypeBase(std::string mopName, int mopBitWidth):
             SliceMatcher(mopBitWidth),
             _mopBitWidth(mopBitWidth),
             _mopName(std::move(mopName))

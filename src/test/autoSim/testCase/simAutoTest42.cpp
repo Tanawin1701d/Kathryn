@@ -112,5 +112,5 @@ namespace kathryn{
 
     };
 
-    Sim42TestEle ele42(-1);
+    Sim42TestEle ele42(42);
 }

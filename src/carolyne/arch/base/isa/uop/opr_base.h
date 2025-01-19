@@ -16,9 +16,7 @@
 #include "carolyne/arch/caro/isa/regFile/caro_archRegFile.h"
 #include "carolyne/util/checker/checker.h"
 
-namespace kathryn{
-
-    namespace carolyne{
+    namespace kathryn::carolyne{
 
         constexpr char OPR_FD_LOAD_REG_FD_valid   [] = "valid";
         constexpr char OPR_FD_LOAD_REG_FD_archIdx [] = "archIdx";
@@ -72,9 +70,7 @@ namespace kathryn{
                                    (_desAPRegTypeMatch == rhs._desAPRegTypeMatch)&&
                                    (_archRegFiles      == rhs._archRegFiles)&&
                                    (_phyRegFiles       == rhs._phyRegFiles);
-                if (!prelimCheck) {
-                    return false;
-                }
+                if (!prelimCheck) {return false;}
                 return isEqualTypeDeep(rhs);
             }
 
@@ -120,6 +116,6 @@ namespace kathryn{
         };
 
     }
-}
+
 
 #endif //KATHRYN_SRC_CAROLYNE_ARCH_BASE_ISA_BACKEND_UOP_OPR_BASE_H

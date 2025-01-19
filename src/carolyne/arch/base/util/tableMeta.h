@@ -7,8 +7,7 @@
 
 #include "rowMeta.h"
 
-namespace kathryn{
-    namespace carolyne{
+    namespace kathryn::carolyne{
 
         struct TableMeta{
             int     _idxSize; //// index size
@@ -28,6 +27,6 @@ namespace kathryn{
         };
 
     }
-}
+
 
 #endif //src_carolyne_arch_base_march_abstract_TABLEMETA_H

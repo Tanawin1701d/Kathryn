@@ -8,7 +8,6 @@
 #include<unordered_map>
 #include<string>
 
-#include "carolyne/arch/base/util/regFileBase.h"
 #include "carolyne/arch/base/util/regType.h"
 
 
@@ -18,13 +17,13 @@
         constexpr char ARF_FD_COMMIT_PRF_INDEX[] = "commitedInfer"; //// index in prf that is commited
 
 
-        struct ArchRegFileBase: RegFileBase, VizCsvGenable{
+        struct ArchRegFileBase: RegTypeMeta, GenRowMetaable{
 
 
             ///// false is phyRegFile
             static std::string getInferFieldName(bool isCommitInfer){
-                    return isCommitInfer ? (std::string(ARF_FD_LAST_PRF_INDEX) + "_" + RTM_FD_idx)
-                                         : (std::string(ARF_FD_COMMIT_PRF_INDEX ) + "_" + RTM_FD_idx);
+                    return isCommitInfer ? (std::string(ARF_FD_LAST_PRF_INDEX  ) + "_" + RTM_FD_idx)
+                                         : (std::string(ARF_FD_COMMIT_PRF_INDEX) + "_" + RTM_FD_idx);
 
             }
 
@@ -37,7 +36,7 @@
                     "can't find archRegfile group name: " + regGrpName + "<=" );
                 RowMeta row;
                 row.addField(getInferFieldName(false), linkedPhyFile.getIndexWidth());
-                row.addField(getInferFieldName(true) , linkedPhyFile.getIndexWidth());
+                row.addField(getInferFieldName(true ), linkedPhyFile.getIndexWidth());
                 return row;
             }
 

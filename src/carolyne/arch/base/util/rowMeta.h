@@ -21,8 +21,6 @@ namespace kathryn::carolyne{
          * RowMeta is abstract structure representing
          * the data slot and its meaning
          */
-
-
         enum CRL_GEN_MODE{
             CGM_FETCH,
             CGM_DECODE,
@@ -35,7 +33,6 @@ namespace kathryn::carolyne{
         struct GenRowMetaable{
             virtual ~GenRowMetaable() = default;
             virtual RowMeta genRowMeta(CRL_GEN_MODE genMode, int subMode) = 0;
-            virtual RowMeta genRowMeta(const std::string& genMode) = 0;
         };
 
     }
