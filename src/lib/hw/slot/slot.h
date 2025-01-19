@@ -54,6 +54,16 @@ namespace kathryn{
             return operator()(0, getAmtField());
         }
 
+        [[nodiscard]]
+        SlotOpr getSlotOpr(const RowMeta& rowMeta) const{
+            std::vector<Operable*> oprs;
+            for (const auto& field: rowMeta.getAllFields()){
+                int idx = _meta.getFieldIdx(field._fieldName);
+                oprs.push_back(hwFields[idx]);
+            }
+            return SlotOpr(rowMeta, oprs);
+        }
+
         int getAmtField()const{return _meta.getSize();}
 
         RowMeta getMeta()const{return _meta;}

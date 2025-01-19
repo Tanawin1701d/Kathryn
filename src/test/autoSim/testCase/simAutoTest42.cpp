@@ -34,9 +34,9 @@ namespace kathryn{
             setEnable = &testTable.buildSetLogic(inputOpr, setIdx(0, testTable._identWidth));
 
             /**build min logic */
-            auto[maxValOpr, maxIdxOpr] = testTable.buildMinMaxLogic("x", false, true); ////// find max
+            auto[maxSlotOpr, maxIdxOpr] = testTable.buildMinMaxLogic("x", true, false); ////// find max
             maxIdx   = *maxIdxOpr;
-            maxValue = *maxValOpr;
+            maxValue = maxSlotOpr.getOpr("x");
 
 
             /**set value*/
@@ -112,5 +112,5 @@ namespace kathryn{
 
     };
 
-    Sim42TestEle ele42(42);
+    Sim42TestEle ele42(-1);
 }

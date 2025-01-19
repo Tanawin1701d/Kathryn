@@ -44,6 +44,10 @@ namespace kathryn{
             return getOpr(idx);
         }
 
+        RowMeta getRowMeta() const{
+            return _meta;
+        }
+
         FieldMeta getFieldMeta(int idx) const{
             return _meta.getField(idx);
         }

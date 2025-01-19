@@ -89,5 +89,5 @@ namespace kathryn{
 
     };
 
-    Sim43TestEle ele43(-1);
+    Sim43TestEle ele43(43);
 }

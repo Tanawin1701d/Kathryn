@@ -16,7 +16,7 @@
 namespace kathryn{
 
     struct Candidate{
-        Operable* detVal = nullptr; //// determine value
+        SlotOpr   detLogic; //// determine logic
         Operable* detIdx = nullptr;
     };
 
@@ -59,45 +59,81 @@ namespace kathryn{
         }
     }
 
-    ///// reqIdx used that Output require the index of table or not
 
-    Candidate buildMinMaxLogic(int fieldIdx, bool isMin, bool reqIdx){
+    SlotOpr buildSelectLogic(Operable& selectLhs,
+                             SlotOpr lhsSlotOpr,
+                             SlotOpr rhsSlotOpr,
+                             const std::string& prefixName){ //// for debug purpose only
 
-        ////// we will build binary tree
-        FieldMeta field = _meta.getField(fieldIdx);
-        int gatherSize = _amtSize; /// amount size is power of 2
-        std::queue<Candidate> candidates;
-        //// gather all input candidate to queue
-        int idx = 0;
-        for (Slot* slot: _hwSlots){
-            Candidate cdd;
-            cdd.detVal = &slot->get(fieldIdx);
-            if (reqIdx){
-                cdd.detIdx = &makeOprVal("detIdx", _identWidth, idx);
-                idx++;
-            }
-            candidates.push(cdd);
+        std::vector<Operable*> selectedOperable;
+        for(const FieldMeta& fieldMeta: lhsSlotOpr.getRowMeta().getAllFields()){
+            ///// build new selected wire for each wire in each field
+            Wire& joinWire = mOprWire(prefixName + "_"+ "selected" + fieldMeta._fieldName, fieldMeta._fieldSize);
+            joinWire.addUpdateMeta(
+                new UpdateEvent{
+                    &selectLhs ,
+                    nullptr,
+                    &lhsSlotOpr.getOpr(fieldMeta._fieldName),
+                    lhsSlotOpr.getOpr(fieldMeta._fieldName).getOperableSlice(),
+                    DEFAULT_UE_PRI_USER});
+            joinWire.addUpdateMeta(
+                new UpdateEvent{
+                    &(~selectLhs),
+                    nullptr,
+                    &rhsSlotOpr.getOpr(fieldMeta._fieldName),
+                    rhsSlotOpr.getOpr(fieldMeta._fieldName).getOperableSlice(),
+                    DEFAULT_UE_PRI_USER});
+            selectedOperable.push_back(&joinWire);
         }
-        //// build compare tree
-        int level = 0;
-        while (gatherSize != 1){
-            for (int i = 0; i < gatherSize; i+=2){
-                /////// pop two operable
-                auto a = candidates.front(); candidates.pop();
-                auto b = candidates.front(); candidates.pop();
-                ////// select candidate value to cmp
-                expression& selectA = isMin ? ((*a.detVal) <= (*b.detVal)): ((*a.detVal) >= (*b.detVal));
-                makeWire(cmp, field._fieldSize);
-                cmp.addUpdateMeta(new UpdateEvent{&  selectA ,nullptr, a.detVal, cmp.getOperableSlice(),DEFAULT_UE_PRI_USER});
-                cmp.addUpdateMeta(new UpdateEvent{&(~selectA),nullptr, b.detVal, cmp.getOperableSlice(),DEFAULT_UE_PRI_USER});
-                ////// select index coresponding to the cmpResult
+        return SlotOpr(lhsSlotOpr.getRowMeta(), selectedOperable);
+    }
+
+
+
+    ///// reqIdx used that Output require the index of table or not
+    ///  matchCondition must return single bit whether select lhs (true) or rhs (false)
+
+    Candidate buildCmpSearchLogic(const RowMeta& rowMeta,        //////// the field that designer concern
+                                  bool  reqSlotIdx,              //////// request build idx for each comparison
+                                  const std::function<Operable&(Operable* lhsIdx,
+                                                                SlotOpr   lhsSlotOpr,
+                                                                Operable* rhsIdx,
+                                                                SlotOpr   rhsSlotOpr)>& cmpCon){
+
+        //////// build representa for each slot row and insert to queue
+        std::queue<Candidate> candidates;
+        int idx = 0;
+        for(Slot* slot: _hwSlots){
+            Val* val = nullptr;
+            if (reqSlotIdx){
+                val = &makeOprVal(_tableName + "_detIdx_"+std::to_string(idx), _identWidth, idx);
+            }
+            Candidate x = {slot->getSlotOpr(rowMeta), val};
+            candidates.push(x);
+            idx++;
+        }
+
+        //////// build logic tree
+
+        int gatherSize = _amtSize; /// amount size is power of 2
+        int level      = 0;
+
+        while(gatherSize != 1){
+            for(int i = 0; i < gatherSize; i+=2){
+                auto lhs = candidates.front(); candidates.pop();
+                auto rhs = candidates.front(); candidates.pop();
+                Operable& selectLhs = cmpCon(lhs.detIdx, lhs.detLogic, rhs.detIdx, rhs.detLogic);
+                SlotOpr selected = buildSelectLogic(
+                    selectLhs,
+                    lhs.detLogic, rhs.detLogic,
+                    _tableName + "_logic_" + std::to_string(level));
                 Wire* ident = nullptr;
-                if (reqIdx){
+                if (reqSlotIdx){
                     ident = &makeOprWire(_tableName + "_identLevel" + std::to_string(level) + "_" + std::to_string(i), _identWidth);
-                    ident->addUpdateMeta(new UpdateEvent{&  selectA ,nullptr, a.detIdx, ident->getOperableSlice(),DEFAULT_UE_PRI_USER});
-                    ident->addUpdateMeta(new UpdateEvent{&(~selectA),nullptr, b.detIdx, ident->getOperableSlice(),DEFAULT_UE_PRI_USER});
+                    ident->addUpdateMeta(new UpdateEvent{&  selectLhs ,nullptr, lhs.detIdx, ident->getOperableSlice(),DEFAULT_UE_PRI_USER});
+                    ident->addUpdateMeta(new UpdateEvent{&(~selectLhs),nullptr, rhs.detIdx, ident->getOperableSlice(),DEFAULT_UE_PRI_USER});
                 }
-                candidates.push({&cmp, ident});
+                candidates.push({selected, ident});
             }
             level++;
             gatherSize/=2;
@@ -106,11 +142,29 @@ namespace kathryn{
         return candidates.front();
     }
 
+    Candidate buildMinMaxLogic(int fieldIdx, bool reqIdx, bool isMin){
+
+        ////// we will build binary tree
+        FieldMeta field = _meta.getField(fieldIdx);
+        std::vector<FieldMeta> rowMeta({field});
+        return buildCmpSearchLogic(rowMeta, reqIdx, [&](Operable* lhsIdx,
+                                                               SlotOpr   lhsSlotOpr,
+                                                               Operable* rhsIdx,
+                                                               SlotOpr   rhsSlotOpr) -> Operable&{
+
+            ///std::cout << lhsSlotOpr.getFieldMeta(0)._fieldName << std::endl;
+
+            if (isMin){ return lhsSlotOpr.getOpr(0) <= rhsSlotOpr.getOpr(0);}
+            return lhsSlotOpr.getOpr(0) >= rhsSlotOpr.getOpr(0);
+
+        });
+    }
 
 
-    Candidate buildMinMaxLogic(const std::string& fieldName, bool isMin, bool reqIdx){
+
+    Candidate buildMinMaxLogic(const std::string& fieldName, bool reqIdx, bool isMin){
         int idx =  _meta.getFieldIdx(fieldName);
-        return buildMinMaxLogic(idx, isMin, reqIdx);
+        return buildMinMaxLogic(idx, reqIdx, isMin);
     }
 
     /////// designer put the `matchCon` function variable to get slot that match designers' requirement
