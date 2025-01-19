@@ -18,11 +18,12 @@ namespace kathryn{
         std::string _fieldName = "unname";
         int         _fieldSize = -1;
         FieldMeta(const std::string& fieldName, int fieldSize):
-                _fieldName(fieldName), _fieldSize(fieldSize){
+          _fieldName(fieldName),
+          _fieldSize(fieldSize){
             mfAssert(fieldSize > 0 && fieldSize <= MAX_FIELD_SIZE, "field "  + fieldName + " size error ");
         }
 
-        bool checkEqualField(const FieldMeta& rhs){
+        bool checkEqualField(const FieldMeta& rhs) const{
             return (_fieldName == rhs._fieldName) &&
                    (_fieldSize == rhs._fieldSize);
         }
@@ -30,7 +31,9 @@ namespace kathryn{
 
     struct RowMeta : VizCsvGenTable{
         std::vector<FieldMeta> _fields;
-        int totalSize = 0;
+        int                    totalSize = 0;
+
+        RowMeta()=default;
 
         RowMeta(const std::vector<std::string>& nms,
                 const std::vector<int>&         szs){
@@ -38,13 +41,23 @@ namespace kathryn{
             for(int i = 0; i < nms.size(); i++){addField(nms[i], szs[i]);}
         }
 
+        RowMeta(const std::vector<FieldMeta>& fields){
+            for(const FieldMeta& fieldMeta: fields){addField(fieldMeta);}
+        }
+
         void addField(const std::string& nm, int sz){
             _fields.emplace_back(nm, sz);
             totalSize += sz;
         }
 
+        void addField(const FieldMeta& fieldMeta){
+            _fields.emplace_back(fieldMeta);
+            totalSize += fieldMeta._fieldSize;
+        }
+
         int getSize() const{return static_cast<int>(_fields.size());}
 
+        [[nodiscard]]
         FieldMeta getField(int idx) const{
             mfAssert(isThereIdx(idx), "cannot get field idx " + std::to_string(idx));
             return _fields[idx];
@@ -54,10 +67,10 @@ namespace kathryn{
         FieldMeta getField(const std::string& fieldName)const{
             int idx = 0;
             for (const FieldMeta& fm: _fields){
-                idx++;
                 if (fm._fieldName == fieldName){
                     break;
                 }
+                idx++;
             }
             return getField(idx);
         }
@@ -67,29 +80,24 @@ namespace kathryn{
             int idx = 0;
             for (const FieldMeta& fm: _fields){
                 if (fm._fieldName == fieldName){return idx;}
+                idx++;
             }
             return -1;
         }
 
+        [[nodiscard]]
         bool isThereIdx(int idx) const{
             return (idx >= 0) && (idx < _fields.size());
         }
 
         RowMeta operator() (int startIdx, int stopIdx)const{
-            std::vector<std::string> newNms;
-            std::vector<int>         newSzs;
             mfAssert(isThereIdx(startIdx) && isThereIdx(stopIdx-1),
                 "cannot slice rowMeta "+
                 std::to_string(startIdx) + " : " + std::to_string(stopIdx));
-            for (int i = startIdx; i < stopIdx; i++){
-                newNms.push_back(_fields[i]._fieldName);
-                newSzs.push_back(_fields[i]._fieldSize);
-            }
-            RowMeta newRowMeta(newNms, newSzs);
+            RowMeta newRowMeta;
+            for (int i = startIdx; i < stopIdx; i++){ newRowMeta.addField(getField(i));}
             return newRowMeta;
         }
-
-
 
         [[nodiscard]]
         std::vector<FieldMeta> getAllFields() const{
@@ -114,28 +122,6 @@ namespace kathryn{
             return sizes;
         }
 
-        [[nodiscard]]
-        Slice getFieldSlice(const std::string& fieldName)const{
-            int preSize = 0;
-            for (const FieldMeta& fm: _fields){
-                if (fm._fieldName == fieldName){
-                    return {preSize, preSize + fm._fieldSize};
-                }
-                preSize += fm._fieldSize;
-            }
-            mfAssert(false, "can't find field By name: " + fieldName);
-            return {};
-        }
-
-        [[nodiscard]]
-        Slice getSliceAll() const{
-            return {0, totalSize};
-        }
-
-        void reverse(){
-            std::reverse(_fields.begin(), _fields.end());
-        }
-
         RowMeta& operator += (const RowMeta& rhs){
             for (const FieldMeta& cpyField: rhs._fields){ _fields.push_back(cpyField);}
             return *this;
@@ -158,37 +144,32 @@ namespace kathryn{
 
         }
 
-        bool checkEqualRowMeta(const RowMeta& rhs, int startIdx, int stopIdx, int rhsStartIdx){
-            mfAssert((startIdx < stopIdx) &&
-                     (startIdx >= 0) &&
-                     (stopIdx <= _fields.size()), "ill form of rowMeta checking");
-
-            if (!(    isThereIdx(startIdx)    &&     isThereIdx(stopIdx) &&
-                  rhs.isThereIdx(rhsStartIdx) && rhs.isThereIdx(rhsStartIdx + (stopIdx - startIdx)))
-            ){return false;}
-
-            for (int i = 0; i < (stopIdx-startIdx); i++){
-                if (!_fields[startIdx + i].checkEqualField(rhs._fields[rhsStartIdx + i])){
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        bool checkEqualRowMeta(const RowMeta& rhs,
-                               const std::string& startFieldName,
-                               const std::string& stopFieldName){
-
-            int startIdx    = getFieldIdx    (startFieldName);
-            int stopIdx     = getFieldIdx    (stopFieldName);
-            int rhsStartIdx = rhs.getFieldIdx(startFieldName);
-            if (stopIdx == -1){return false;}
-            stopIdx++; /// we require excluded index
-
-            return checkEqualRowMeta(rhs, startIdx, stopIdx, rhsStartIdx);
-        }
-
     };
 }
+
+
+
+
+// [[nodiscard]]
+//         Slice getFieldSlice(const std::string& fieldName)const{
+//     int preSize = 0;
+//     for (const FieldMeta& fm: _fields){
+//         if (fm._fieldName == fieldName){
+//             return {preSize, preSize + fm._fieldSize};
+//         }
+//         preSize += fm._fieldSize;
+//     }
+//     mfAssert(false, "can't find field By name: " + fieldName);
+//     return {};
+// }
+//
+// [[nodiscard]]
+// Slice getSliceAll() const{
+//     return {0, totalSize};
+// }
+//
+// void reverse(){
+//     std::reverse(_fields.begin(), _fields.end());
+// }
 
 #endif //LIB_HW_SLOT_ROWMETA_H

@@ -18,6 +18,10 @@ namespace kathryn{
         return "parameter " + getOpr() + " = " + std::to_string(_master->_rawValue);
     }
 
+    std::string ParamValGen::decOp(){
+        return std::to_string(_master->getConstOpr());
+    }
+
     bool ParamValGen::compare(LogicGenBase* lgb){
         assert(lgb->getLogicCef().comptype == TYPE_PMVAL);
         auto* rhs = dynamic_cast<ParamValGen*>(lgb);

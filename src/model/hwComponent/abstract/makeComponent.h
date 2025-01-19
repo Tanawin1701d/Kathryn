@@ -27,7 +27,9 @@
 #define mBox(name, TypeName) TypeName& name = _make<TypeName>("uncatagorizedYet",#name, true)
 
 #define mOprReg(varyName, argument)        _make<Reg>       ("uncatagorizedYet" ,  varyName, true, argument)
+#define mOprWire(varyName, argument)       _make<Wire>       ("uncatagorizedYet" ,  varyName, true,argument)
 #define mOprMod(varyName, TypeName, ...)   _make<TypeName>  (#TypeName, varyName, true, __VA_ARGS__)
+
 /** this is for internal use nest is not allow here (only useNest man)*/
 #define makeMod(name, TypeName, ...) Module&   name = _make<TypeName>(#TypeName, #name, false, __VA_ARGS__)
 #define makeWire( name, argument)    Wire&     name = _make<Wire>    ("uncatagorizedYet" , #name, false,argument)

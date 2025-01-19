@@ -20,7 +20,7 @@ namespace kathryn{
 
         explicit SlotOpr(const RowMeta& meta,
                          const std::vector<Operable*>& repFields):
-        _meta(meta),
+        _meta     (meta),
         _repFields(repFields){}
 
         Operable*& getFieldRef(int idx){
@@ -34,7 +34,29 @@ namespace kathryn{
             return getFieldRef(idx);
         }
 
-        int getAmtField()const{ return static_cast<int>(_repFields.size());}
+        Operable& getOpr(int idx){
+            mfAssert(_meta.isThereIdx(idx), "cannot get opr from index " + std::to_string(idx));
+            return *_repFields[idx];
+        }
+
+        Operable& getOpr(const std::string& fieldName){
+            int idx = _meta.getFieldIdx(fieldName);
+            return getOpr(idx);
+        }
+
+        FieldMeta getFieldMeta(int idx) const{
+            return _meta.getField(idx);
+        }
+
+        [[nodiscard]]
+        RowMeta getMeta() const{
+            return _meta;
+        }
+
+        [[nodiscard]]
+        int getAmtField()const{
+            return static_cast<int>(_repFields.size());
+        }
 
     };
 
