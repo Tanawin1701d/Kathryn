@@ -6,7 +6,7 @@
 #define src_carolyne_arch_base_march_execUnit_EXECMETABASE_H
 #include <vector>
 #include "carolyne/arch/base/isa/uop/opr_base.h"
-#include "carolyne/arch/base/util/rowMeta.h"
+#include "carolyne/arch/base/util/genRowMeta.h"
 
 namespace kathryn{
     namespace carolyne{

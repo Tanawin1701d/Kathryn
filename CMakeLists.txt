@@ -45,6 +45,15 @@ add_executable(Kathryn
         ${SRC_PARAM}
         ${SRC_LIB}
         ${SRC_MODEL_COMPILE}
+        src/carolyne/arch/base/isa/regFile/archRegFile.h
+        src/carolyne/arch/base/util/regFileType.h
+        src/carolyne/arch/base/march/prfUnit/prfMetaBase.h
+        src/carolyne/arch/base/util/metaIdent.h
+        src/carolyne/arch/base/util/metaIdent.cpp
+        src/carolyne/arch/base/isa/regFile/archRegFile.cpp
+        src/carolyne/arch/base/isa/uop/opr_base.h
+        src/carolyne/arch/base/isa/uop/opr_li.h
+        src/carolyne/arch/base/march/alloc/archPhyRegMatcher.h
 
         #blinkSample.cpp
         #src/params/prjParam.h

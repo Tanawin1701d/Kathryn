@@ -7,7 +7,7 @@
 #include "carolyne/arch/base/march/fetchUnit/fetchMetaBase.h"
 #include "carolyne/arch/base/march/alloc/allocMetaBase.h"
 #include "carolyne/arch/base/march/execUnit/execMetaBase.h"
-#include "carolyne/arch/base/march/pRegFile/physicalRegFile_base.h"
+#include "carolyne/arch/base/march/pRegFile/prfMetaBase.h"
 #include "carolyne/arch/base/march/robUnit/robMetaBase.h"
 
 #include<vector>

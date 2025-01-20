@@ -7,7 +7,7 @@
 
 #include<unordered_map>
 #include<string>
-#include "regType.h"
+#include "regFileType.h"
 #include "tableMeta.h"
 
 

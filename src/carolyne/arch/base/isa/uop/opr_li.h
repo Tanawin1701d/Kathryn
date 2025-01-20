@@ -4,13 +4,12 @@
 
 #ifndef src_carolyne_arch_base_isa_uop_OPR_LI_H
 #define src_carolyne_arch_base_isa_uop_OPR_LI_H
-#include "carolyne/arch/base/util/regType.h"
-
+#include "carolyne/arch/base/util/regFileType.h"
 #include "opr_base.h"
 
-namespace kathryn{
 
-    namespace carolyne{
+
+    namespace kathryn::carolyne{
 
         struct OprTypeLoadImm: OprTypeBase{
 
@@ -61,6 +60,6 @@ namespace kathryn{
 
     }
 
-}
+
 
 #endif //src_carolyne_arch_base_isa_uop_OPR_LI_H

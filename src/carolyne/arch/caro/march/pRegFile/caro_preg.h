@@ -4,7 +4,7 @@
 
 #ifndef src_carolyne_arch_caro_march_pRegFile_CARO_PREG_H
 #define src_carolyne_arch_caro_march_pRegFile_CARO_PREG_H
-#include "carolyne/arch/base/march/pRegFile/physicalRegFile_base.h"
+#include "carolyne/arch/base/march/pRegFile/prfMetaBase.h"
 #include "carolyne/arch/caro/march/param/param.h"
 
 

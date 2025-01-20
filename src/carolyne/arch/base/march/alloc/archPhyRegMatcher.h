@@ -5,6 +5,8 @@
 #ifndef src_carolyne_arch_base_march_alloc_ARCHPHYREGMATCHER_H
 #define src_carolyne_arch_base_march_alloc_ARCHPHYREGMATCHER_H
 #include <string>
+#include "carolyne/arch/base/isa/regFile/archRegFile.h"
+#include "carolyne/arch/base/march/prfUnit/prfMetaBase.h"
 
 namespace kathryn::carolyne{
 

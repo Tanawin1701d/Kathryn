@@ -8,12 +8,11 @@
 #include <utility>
 #include<vector>
 
-#include "carolyne/arch/base/march/alloc/archPhyRegMatcher.h"
-#include "carolyne/arch/base/march/pRegFile/physicalRegFile_base.h"
 #include "model/hwComponent/abstract/Slice.h"
-#include "carolyne/arch/base/util/rowMeta.h"
+#include "carolyne/arch/base/march/alloc/archPhyRegMatcher.h"
+#include "carolyne/arch/base/march/prfUnit/prfMetaBase.h"
+#include "carolyne/arch/base/util/genRowMeta.h"
 #include "carolyne/arch/base/util/sliceMatcher.h"
-#include "carolyne/arch/caro/isa/regFile/caro_archRegFile.h"
 #include "carolyne/util/checker/checker.h"
 
     namespace kathryn::carolyne{
@@ -34,20 +33,20 @@
 
         struct OprTypeBase: GenRowMetaable{
             /** archReg phyReg*/
-            APRegRobFieldMatch    _srcAPRegTypeMatch;
-            APRegRobFieldMatch    _desAPRegTypeMatch;
-            ArchRegFileBase*      _archRegFiles = nullptr;
-            PhysicalRegFileBase*  _phyRegFiles  = nullptr;
+            APRegRobFieldMatch _srcAPRegTypeMatch;
+            APRegRobFieldMatch _desAPRegTypeMatch;
+            ArchRegFileUTM*    _archRegFiles = nullptr;
+            PhyRegFileUTM*     _phyRegFiles  = nullptr;
             /** opr width*/
-            int                   _oprWidth = -1;
-            CRL_OPR_TYPE          _oprType = COT_CNT;
-            int                   _subType = -1; /// it will be used when oprType == COT_OTHER
+            int                _oprWidth = -1;
+            CRL_OPR_TYPE       _oprType = COT_CNT;
+            int                _subType = -1; /// it will be used when oprType == COT_OTHER
 
             explicit OprTypeBase(
                 APRegRobFieldMatch   srcAPRegTypeMatch,
                 APRegRobFieldMatch   desAPRegTypeMatch,
-                ArchRegFileBase*     archRegFiles,
-                PhysicalRegFileBase* phyRegFiles
+                ArchRegFileUTM*      archRegFiles,
+                PhyRegFileUTM*       phyRegFiles
             ):
             _srcAPRegTypeMatch(std::move(srcAPRegTypeMatch)),
             _desAPRegTypeMatch(std::move(desAPRegTypeMatch)),
@@ -55,10 +54,6 @@
             _phyRegFiles      (phyRegFiles){}
 
             ~OprTypeBase() override= default;
-
-            std::string genTypeWithGrpName(const std::string& typeName, const std::string& groupName){
-                return typeName + "_" + groupName;
-            }
 
             virtual bool isEqualTypeDeep(const OprTypeBase& rhs)  = 0;
 
@@ -76,11 +71,6 @@
 
             RowMeta genRowMeta(CRL_GEN_MODE genMode, int subMode) override{
                 crlAss(false, "OprTypeLoadRegFile not gen row meta from genMode");
-                return {};
-            }
-
-            RowMeta genRowMeta(const std::string& genMode) override{
-                crlAss(false, "OprTypeLoadRegFile not gen row meta from string");
                 return {};
             }
         };

@@ -7,10 +7,10 @@
 
 #include "carolyne/arch/base/march/alloc/archPhyRegMatcher.h"
 #include "util/numberic/pmath.h"
-#include "carolyne/arch/base/util/rowMeta.h"
-#include "carolyne/arch/base/util/regType.h"
+#include "carolyne/arch/base/util/genRowMeta.h"
+#include "carolyne/arch/base/util/regFileType.h"
 #include "carolyne/arch/base/isa/regFile/archRegFile.h"
-#include "carolyne/arch/base/march/pRegFile/physicalRegFile_base.h"
+#include "carolyne/arch/base/march/pRegFile/prfMetaBase.h"
 
 namespace kathryn::carolyne{
 

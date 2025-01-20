@@ -6,7 +6,7 @@
 #define src_carolyne_arch_base_isa_uop_OPR_SRF_H
 
 #include "opr_base.h"
-#include "carolyne/arch/base/util/regType.h"
+#include "carolyne/arch/base/util/regFileType.h"
 
 
 

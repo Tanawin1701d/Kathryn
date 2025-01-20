@@ -7,8 +7,9 @@
 
 #include <cstdint>
 #include "carolyne/util/checker/checker.h"
+#include "lib/hw/slot/csvVizable.h"
 
-    namespace kathryn::carolyne{
+namespace kathryn::carolyne{
 
         constexpr char RTM_FD_idx  [] = "idx";
         constexpr char RTM_FD_value[] = "value";
@@ -25,8 +26,8 @@
             ///// hardwireValue
             ///// the index is register id start from 0;
             /// the value is hardware value if the hardwire status is false the value is not gurantee
-            uint64_t _hardwireValue [MAX_AMT_REG];
-            bool     _hardwireStatus[MAX_AMT_REG]; ///// the index is register id
+            uint64_t _hardwireValue [MAX_AMT_REG]{};
+            bool     _hardwireStatus[MAX_AMT_REG]{}; ///// the index is register id
 
             explicit RegTypeMeta(int index_size, int reg_width):
             AMT_REG(1 << index_size),

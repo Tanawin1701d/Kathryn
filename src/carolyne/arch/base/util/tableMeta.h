@@ -5,7 +5,7 @@
 #ifndef src_carolyne_arch_base_march_abstract_TABLEMETA_H
 #define src_carolyne_arch_base_march_abstract_TABLEMETA_H
 
-#include "rowMeta.h"
+#include "genRowMeta.h"
 
     namespace kathryn::carolyne{
 

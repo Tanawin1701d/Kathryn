@@ -27,7 +27,8 @@ namespace kathryn::carolyne{
             CGM_ALLOC,
             CGM_RSV,
             CGM_EXEC,
-            CGM_ROB
+            CGM_ROB,
+            CGM_INDEPENDENT
         };
 
         struct GenRowMetaable{

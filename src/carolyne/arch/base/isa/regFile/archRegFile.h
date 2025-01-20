@@ -8,46 +8,43 @@
 #include<unordered_map>
 #include<string>
 
-#include "carolyne/arch/base/util/regType.h"
+#include "carolyne/arch/base/util/regFileType.h"
+#include "carolyne/arch/base/util/genRowMeta.h"
+#include "carolyne/arch/base/util/metaIdent.h"
 
 
-    namespace kathryn::carolyne{
+namespace kathryn::carolyne{
 
         constexpr char ARF_FD_LAST_PRF_INDEX  [] = "lastInfer"; ///// index in prf that is latest rename
         constexpr char ARF_FD_COMMIT_PRF_INDEX[] = "commitedInfer"; //// index in prf that is commited
 
 
-        struct ArchRegFileBase: RegTypeMeta, GenRowMetaable{
+        struct PhyRegFileUTM;
+        struct ArchRegFileUTM: RegTypeMeta  , GenRowMetaable,
+                               VizCsvGenable, MetaIdentifiable{
 
+            PhyRegFileUTM* _linkedPhyRegFile = nullptr;
+
+            explicit ArchRegFileUTM(int indexSize, int regWidth,
+                                    const std::string &typeName) :
+            RegTypeMeta(indexSize,regWidth),
+            MetaIdentifiable(typeName){}
 
             ///// false is phyRegFile
             static std::string getInferFieldName(bool isCommitInfer){
                     return isCommitInfer ? (std::string(ARF_FD_LAST_PRF_INDEX  ) + "_" + RTM_FD_idx)
                                          : (std::string(ARF_FD_COMMIT_PRF_INDEX) + "_" + RTM_FD_idx);
-
             }
 
-            virtual RowMeta genRowMeta(const std::string& regGrpName,
-                                       const RegTypeMeta& linkedPhyFile){
-
-                /////// |lastInfer_idx|commitedInfer_idx|
-
-                crlAss(isThereGroup(regGrpName),
-                    "can't find archRegfile group name: " + regGrpName + "<=" );
-                RowMeta row;
-                row.addField(getInferFieldName(false), linkedPhyFile.getIndexWidth());
-                row.addField(getInferFieldName(true ), linkedPhyFile.getIndexWidth());
-                return row;
+            void linkPhyRegFileUTM(PhyRegFileUTM* phyRegFile){
+                crlAss(phyRegFile != nullptr, "cannot link archRegFile with nullptr");
+                _linkedPhyRegFile = phyRegFile;
             }
+
+            virtual RowMeta genRowMeta(CRL_GEN_MODE genMode, int subMode) override;
 
             void visual(CsvGenFile& genFile) override{
-
-                for (auto&[regGrpName, regTypeMeta]: _regMetas){
-                    CsvTable archFileTable = regTypeMeta.genTable();
-                    archFileTable.setTableName(regGrpName);
-                    genFile.addData(archFileTable);
-                }
-
+                genFile.addData(RegTypeMeta::genTable());
             }
 
         };
