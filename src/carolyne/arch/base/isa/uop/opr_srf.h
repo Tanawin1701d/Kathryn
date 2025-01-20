@@ -16,17 +16,12 @@
         struct OprTypeStoreRegFile: OprTypeBase{
 
             explicit OprTypeStoreRegFile(
-            const APRegRobFieldMatch&    desAPRegTypeMatch,
-                  ArchRegFileBase*       archRegFiles,
-                  PhysicalRegFileBase*   phyRegFiles):
+            const APRegRobFieldMatch&    desAPRegTypeMatch):
             OprTypeBase(APRegRobFieldMatch(),
-                        desAPRegTypeMatch,
-                        archRegFiles,
-                        phyRegFiles)
+                        desAPRegTypeMatch)
             {
                 ///// for now we assume archRegType and phyRegType is correct
-                RegTypeMeta desArcRegtypeMeta = _archRegFiles->getRegTypeMetaGroup(_desAPRegTypeMatch._archRegGrpName);
-                _oprWidth = desArcRegtypeMeta.REG_WIDTH;
+                _oprWidth = desAPRegTypeMatch.relatedArchRegFile->getIndexWidth();
                 _oprType  = COT_LOAD_REG_FILE;
             }
 
@@ -43,10 +38,10 @@
             RowMeta genRowMeta(CRL_GEN_MODE genMode, int subMode) override{
                 RowMeta rowMeta;
 
-                std::string desArchGrpName    = _desAPRegTypeMatch._archRegGrpName;
-                std::string desPhyGrpName     = _desAPRegTypeMatch._phyRegGrpName;
-                RegTypeMeta desArcRegtypeMeta = _archRegFiles->getRegTypeMetaGroup(desArchGrpName);
-                RegTypeMeta desPhyRegtypeMeta = _phyRegFiles->getRegTypeMetaGroup (desPhyGrpName);
+                std::string desArchGrpName    =  _desAPRegTypeMatch.relatedArchRegFile->getUtmName();
+                std::string desPhyGrpName     =  _desAPRegTypeMatch.relatedArchRegFile->getLinkedPhyRegFileUTM()->getUtmName();
+                RegTypeMeta desArcRegtypeMeta = *_desAPRegTypeMatch.relatedArchRegFile;
+                RegTypeMeta desPhyRegtypeMeta = *_desAPRegTypeMatch.relatedArchRegFile->getLinkedPhyRegFileUTM();
 
                 switch (genMode){
 
@@ -54,24 +49,24 @@
                         //// valid is model responsibility
                         ///rowMeta.addField(OPR_FD_LOAD_REG_FD_valid  , 1);
                         rowMeta.addField(
-                            genTypeWithGrpName(OPR_FD_LOAD_REG_FD_archIdx, desArchGrpName),
+                            genOprFieldName(OPR_FD_LOAD_REG_FD_archIdx, desArchGrpName),
                             desArcRegtypeMeta.getIndexWidth());
                         break;
                     }
                     case CGM_ALLOC :{
                         ///rowMeta.addField(OPR_FD_LOAD_REG_FD_valid  , 1);
                         rowMeta.addField(
-                            genTypeWithGrpName(OPR_FD_LOAD_REG_FD_archIdx, desArchGrpName),
+                            genOprFieldName(OPR_FD_LOAD_REG_FD_archIdx, desArchGrpName),
                             desArcRegtypeMeta.getIndexWidth());
                         rowMeta.addField(
-                            genTypeWithGrpName(OPR_FD_LOAD_REG_FD_phyIdx, desPhyGrpName),
+                            genOprFieldName(OPR_FD_LOAD_REG_FD_phyIdx, desPhyGrpName),
                             desPhyRegtypeMeta.getIndexWidth());
                         break;
                     }
                     case CGM_RSV :{
                             ///rowMeta.addField(OPR_FD_LOAD_REG_FD_valid  , 1);
                             rowMeta.addField(
-                                genTypeWithGrpName(OPR_FD_LOAD_REG_FD_phyIdx, desPhyGrpName),
+                                genOprFieldName(OPR_FD_LOAD_REG_FD_phyIdx, desPhyGrpName),
                                 desPhyRegtypeMeta.getIndexWidth());
                             break;
                     }

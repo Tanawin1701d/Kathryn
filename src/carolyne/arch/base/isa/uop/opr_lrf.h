@@ -8,24 +8,17 @@
 
 #include "opr_base.h"
 
-namespace kathryn{
-    namespace carolyne{
+
+    namespace kathryn::carolyne{
 
         //// this operand load the value from regfile
         struct OprTypeLoadRegFile: OprTypeBase{
 
-            explicit OprTypeLoadRegFile(
-                const APRegRobFieldMatch&  srcAPRegTypeMatch,
-                ArchRegFileBase*       archRegFiles,
-                PhysicalRegFileBase*   phyRegFiles):
+            explicit OprTypeLoadRegFile(const APRegRobFieldMatch&  srcAPRegTypeMatch):
             OprTypeBase(srcAPRegTypeMatch,
-                        APRegRobFieldMatch(),
-                        archRegFiles,
-                        phyRegFiles)
-            {
+                        APRegRobFieldMatch()){
                 ///// for now we assume archRegType and phyRegType is correct
-                RegTypeMeta srcArcRegtypeMeta = _archRegFiles->getRegTypeMetaGroup(_srcAPRegTypeMatch._archRegGrpName);
-                _oprWidth = srcArcRegtypeMeta.REG_WIDTH;
+                _oprWidth = srcAPRegTypeMatch.relatedArchRegFile->REG_WIDTH;
                 _oprType  = COT_LOAD_REG_FILE;
             }
 
@@ -40,10 +33,10 @@ namespace kathryn{
 
             RowMeta genRowMeta(CRL_GEN_MODE genMode, int subMode) override{
                 RowMeta rowMeta;
-                std::string srcArchGrpName    = _srcAPRegTypeMatch._archRegGrpName;
-                std::string srcPhyGrpName     = _srcAPRegTypeMatch._phyRegGrpName;
-                RegTypeMeta srcArcRegtypeMeta = _archRegFiles->getRegTypeMetaGroup(srcArchGrpName);
-                RegTypeMeta srcPhyRegtypeMeta = _phyRegFiles->getRegTypeMetaGroup(srcPhyGrpName);
+                std::string  srcArchGrpName    =  _srcAPRegTypeMatch.relatedArchRegFile->getUtmName();
+                std::string  srcPhyGrpName     =  _srcAPRegTypeMatch.relatedArchRegFile->getLinkedPhyRegFileUTM()->getUtmName();
+                RegTypeMeta& srcArcRegtypeMeta = *_srcAPRegTypeMatch.relatedArchRegFile;
+                RegTypeMeta& srcPhyRegtypeMeta = *_srcAPRegTypeMatch.relatedArchRegFile->getLinkedPhyRegFileUTM();
 
                 switch (genMode){
 
@@ -51,28 +44,28 @@ namespace kathryn{
                         //// valid is model responsibility
                         ///rowMeta.addField(OPR_FD_LOAD_REG_FD_valid  , 1);
                         rowMeta.addField(
-                            genTypeWithGrpName(OPR_FD_LOAD_REG_FD_archIdx, srcArchGrpName),
-                            srcArcRegtypeMeta.getIndexWidth());
+                        genOprFieldName(OPR_FD_LOAD_REG_FD_archIdx, srcArchGrpName),
+                        srcArcRegtypeMeta.getIndexWidth());
                         break;
                     }
                     case CGM_ALLOC :{
                         ///rowMeta.addField(OPR_FD_LOAD_REG_FD_valid  , 1);
                         rowMeta.addField(
-                            genTypeWithGrpName(OPR_FD_LOAD_REG_FD_archIdx, srcArchGrpName),
-                            srcArcRegtypeMeta.getIndexWidth());
+                        genOprFieldName(OPR_FD_LOAD_REG_FD_archIdx, srcArchGrpName),
+                        srcArcRegtypeMeta.getIndexWidth());
                         rowMeta.addField(
-                            genTypeWithGrpName(OPR_FD_LOAD_REG_FD_phyIdx, srcPhyGrpName),
-                            srcPhyRegtypeMeta.getIndexWidth());
+                        genOprFieldName(OPR_FD_LOAD_REG_FD_phyIdx, srcPhyGrpName),
+                        srcPhyRegtypeMeta.getIndexWidth());
                         break;
                     }
                     case CGM_RSV :{
                             ///rowMeta.addField(OPR_FD_LOAD_REG_FD_valid  , 1);
                             rowMeta.addField(
-                                genTypeWithGrpName(OPR_FD_LOAD_REG_FD_phyIdx, srcPhyGrpName),
-                                srcPhyRegtypeMeta.getIndexWidth());
+                        genOprFieldName(OPR_FD_LOAD_REG_FD_phyIdx, srcPhyGrpName),
+                        srcPhyRegtypeMeta.getIndexWidth());
                             rowMeta.addField(
-                                genTypeWithGrpName(OPR_FD_LOAD_REG_FD_value, srcPhyGrpName),
-                                srcPhyRegtypeMeta.getRegWidth());
+                        genOprFieldName(OPR_FD_LOAD_REG_FD_value, srcPhyGrpName),
+                        srcPhyRegtypeMeta.getRegWidth());
                             break;
                     }
 
@@ -85,6 +78,6 @@ namespace kathryn{
         };
 
     }
-}
+
 
 #endif //src_carolyne_arch_base_isa_uop_OPR_SAMPLE_H

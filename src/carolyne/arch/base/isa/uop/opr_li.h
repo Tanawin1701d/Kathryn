@@ -14,18 +14,12 @@
         struct OprTypeLoadImm: OprTypeBase{
 
 
-            explicit OprTypeLoadImm(
-                const APRegRobFieldMatch&  desAPRegTypeMatch,
-                ArchRegFileBase*       archRegFiles,
-                PhysicalRegFileBase*   phyRegFiles):
+            explicit OprTypeLoadImm(int srcWidthBit):
                 OprTypeBase(APRegRobFieldMatch(),
-                            desAPRegTypeMatch,
-                            archRegFiles,
-                            phyRegFiles){
-
-                RegTypeMeta desArcRegtypeMeta = _archRegFiles->getRegTypeMetaGroup(_desAPRegTypeMatch._archRegGrpName);
-                _oprWidth  = desArcRegtypeMeta.REG_WIDTH;
+                            APRegRobFieldMatch()){
+                _oprWidth  = srcWidthBit;
                 _oprType   = COT_IMM;
+                crlAss(srcWidthBit > 0, "imm width bit must greater than 0");
             }
 
             bool isEqualTypeDeep(const OprTypeBase& rhs) override{
@@ -45,10 +39,9 @@
                     case CGM_RSV :{
                         //// valid is model responsibility
                         ///rowMeta.addField(OPR_FD_LOAD_REG_FD_valid  , 1);
-                        RegTypeMeta desArcRegtypeMeta = _archRegFiles->getRegTypeMetaGroup(_desAPRegTypeMatch._archRegGrpName);
                         rowMeta.addField(
-                            genTypeWithGrpName(OPR_FD_LOAD_REG_FD_value, "imm"),
-                            desArcRegtypeMeta.getRegWidth());
+                                genOprFieldName(OPR_FD_LOAD_REG_FD_value, "imm"),
+                                _oprWidth);
                         break;
                     }
                     default:{crlAss(false, "OprTypeLoadRegFile out of row meta generation");}

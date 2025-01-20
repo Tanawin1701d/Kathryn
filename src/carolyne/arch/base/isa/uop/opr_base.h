@@ -24,19 +24,17 @@
 
         /**opr type will associate with allocation */
         enum CRL_OPR_TYPE{
-            COT_LOAD_REG_FILE = 0,
+            COT_LOAD_REG_FILE  = 0,
             COT_STORE_REG_FILE = 1,
-            COT_IMM      = 2,
-            COT_OTHER    = 3,
-            COT_CNT      = 4
+            COT_IMM            = 2,
+            COT_OTHER          = 3,
+            COT_CNT            = 4
         };
 
         struct OprTypeBase: GenRowMetaable{
             /** archReg phyReg*/
             APRegRobFieldMatch _srcAPRegTypeMatch;
             APRegRobFieldMatch _desAPRegTypeMatch;
-            ArchRegFileUTM*    _archRegFiles = nullptr;
-            PhyRegFileUTM*     _phyRegFiles  = nullptr;
             /** opr width*/
             int                _oprWidth = -1;
             CRL_OPR_TYPE       _oprType = COT_CNT;
@@ -44,16 +42,12 @@
 
             explicit OprTypeBase(
                 APRegRobFieldMatch   srcAPRegTypeMatch,
-                APRegRobFieldMatch   desAPRegTypeMatch,
-                ArchRegFileUTM*      archRegFiles,
-                PhyRegFileUTM*       phyRegFiles
+                APRegRobFieldMatch   desAPRegTypeMatch
             ):
             _srcAPRegTypeMatch(std::move(srcAPRegTypeMatch)),
-            _desAPRegTypeMatch(std::move(desAPRegTypeMatch)),
-            _archRegFiles     (archRegFiles),
-            _phyRegFiles      (phyRegFiles){}
+            _desAPRegTypeMatch(std::move(desAPRegTypeMatch)){}
 
-            ~OprTypeBase() override= default;
+            ~OprTypeBase() override = default;
 
             virtual bool isEqualTypeDeep(const OprTypeBase& rhs)  = 0;
 
@@ -62,9 +56,7 @@
                                    (_oprType  == rhs._oprType)  &&
                                    (_subType  == rhs._subType)  &&
                                    (_srcAPRegTypeMatch == rhs._srcAPRegTypeMatch)&&
-                                   (_desAPRegTypeMatch == rhs._desAPRegTypeMatch)&&
-                                   (_archRegFiles      == rhs._archRegFiles)&&
-                                   (_phyRegFiles       == rhs._phyRegFiles);
+                                   (_desAPRegTypeMatch == rhs._desAPRegTypeMatch);
                 if (!prelimCheck) {return false;}
                 return isEqualTypeDeep(rhs);
             }
@@ -73,6 +65,12 @@
                 crlAss(false, "OprTypeLoadRegFile not gen row meta from genMode");
                 return {};
             }
+
+            std::string genOprFieldName(const std::string& fieldName,
+                                        const std::string& description){
+                return fieldName + "_" + description;
+            }
+
         };
 
 

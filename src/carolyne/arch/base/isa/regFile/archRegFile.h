@@ -41,6 +41,8 @@ namespace kathryn::carolyne{
                 _linkedPhyRegFile = phyRegFile;
             }
 
+            PhyRegFileUTM* getLinkedPhyRegFileUTM(){return _linkedPhyRegFile;}
+
             virtual RowMeta genRowMeta(CRL_GEN_MODE genMode, int subMode) override;
 
             void visual(CsvGenFile& genFile) override{

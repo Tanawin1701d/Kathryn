@@ -28,7 +28,7 @@
              * todo next check execute engine
              ***/
 
-            virtual ~UopTypeBase(){
+            ~UopTypeBase() override{
                 for(auto oprType : _srcOprTypes){delete oprType;}
                 for(auto oprType:  _desOprTypes){delete oprType;}
             }
@@ -114,11 +114,6 @@
                 RowMeta row;
                 row.addField(OPR_FD_FOP_IDENT_fop, _fopIdentWidth);
                 return row;
-            }
-
-            RowMeta genRowMeta(const std::string& genMode) override{
-                crlAss(false, "can't use genRowMeta(const std::string& genMode) to gen row for uop");
-                return {};
             }
 
             ////// pool it with operand and send them back with pooled rowmeta type
