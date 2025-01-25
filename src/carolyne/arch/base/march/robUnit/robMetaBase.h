@@ -10,7 +10,7 @@
 #include "carolyne/arch/base/util/genRowMeta.h"
 #include "carolyne/arch/base/util/regFileType.h"
 #include "carolyne/arch/base/isa/regFile/archRegFile.h"
-#include "carolyne/arch/base/march/pRegFile/prfMetaBase.h"
+#include "carolyne/arch/base/march/prfUnit/prfMetaBase.h"
 
 namespace kathryn::carolyne{
 
@@ -25,12 +25,10 @@ namespace kathryn::carolyne{
 
         struct RobUTM_Base: GenRowMetaable, VizCsvGenable{
 
-            std::vector<APRegRobFieldMatch> _transferMeta;
-            ArchRegFileBase*                _archRegFileBase = nullptr;
-            PhysicalRegFileBase*            _phyRegFileBase  = nullptr;
+            std::vector<RAP_Link> _transferFields;
 
-            int _pc_width                = -1;
-            int _amt_transferType        =  4;
+            int _pcWidth          = -1;
+            int _amtTransferType  =  4;
 
             /// transferType //////////////////////////////////////////
             /// [0 update phyReg to archReg] link only
@@ -42,29 +40,34 @@ namespace kathryn::carolyne{
             ///// archreg that mapped from archRegTransfer to phyRegTransfer index by index
 
 
-            explicit RobUTM_Base(ArchRegFileBase*     archRegFileBase,
-                                 PhysicalRegFileBase* phyRegFileBase):
-            _archRegFileBase(archRegFileBase),
-            _phyRegFileBase (phyRegFileBase){
-                crlAss(_archRegFileBase != nullptr, "archRegister cannot be nullptr");
-                crlAss(_phyRegFileBase != nullptr, "phyRegister cannot nullptr");
-            }
+            explicit RobUTM_Base(int pcWidth, int amtTr = 4):
+            _pcWidth(pcWidth),
+            _amtTransferType(amtTr){}
 
             ~RobUTM_Base() override = default;
 
-            int addTransferType(APRegRobFieldMatch matcher){
-                APRegRobFieldMatch robFieldMatch = matcher;
-                robFieldMatch.idxInRob = _transferMeta.size();
-                _transferMeta.push_back(robFieldMatch);
+            int addTransferType(RAP_Link matcher){
+                RAP_Link robFieldMatch = matcher;
+                robFieldMatch.fieldInRob = _transferFields.size();
+                _transferFields.push_back(robFieldMatch);
                 ////// return by value
-                return robFieldMatch.idxInRob;
+                return robFieldMatch.fieldInRob;
             }
 
             std::string getFieldName(int idx, const std::string& fieldName, bool isArch){
                 ////// build the name for eachfield
                 std::string result;
                 result  = fieldName + "_" + std::to_string(idx) + "_";
-                result += isArch ? _transferMeta[idx]._archRegGrpName: _transferMeta[idx]._phyRegGrpName;
+                ArchRegFileUTM_Base* arf = _transferFields[idx].relatedArchRegFile;
+                PhyRegFileUTM_Base*  prf = _transferFields[idx].relatedArchRegFile->getLinkedPhyRegFileUTM();
+
+                crlAss(arf != nullptr, "transferField idx: " +
+                                            std::to_string(idx) + " arch cannot be nullptr");
+                crlAss(prf != nullptr, "transferField idx: " +
+                                       std::to_string(idx) + " phy cannot be nullptr");
+
+
+                result += isArch ? arf->getUtmName(): prf->getUtmName();
                 return result;
             }
 
@@ -73,31 +76,25 @@ namespace kathryn::carolyne{
                 crlAss(genMode == CGM_ROB, "cannot gen row meta for this genMode");
 
                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                ///    0   1        2                      3x
                 /// |valid|Pc|transferType|*[updateArchReg| executed| archIdx| phyIdx]|
                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                /// valid the system will handle it self
                 RowMeta row;
-
                 ///row.addField(ROB_META_FD_valid, 1); model must be handle these thing
-                row.addField(ROB_META_FD_fetchPc, _pc_width);
-                row.addField(ROB_META_FD_transferType, log2Ceil(_amt_transferType));
+                row.addField(ROB_META_FD_fetchPc, _pcWidth);
+                row.addField(ROB_META_FD_transferType, log2Ceil(_amtTransferType));
 
-                for (int idx = 0; idx < _transferMeta.size(); idx++){
-                    RegTypeMeta archRegTypeMeta = _archRegFileBase->getRegTypeMetaGroup(_transferMeta[idx]._archRegGrpName);
-                    RegTypeMeta phyRegTypeMeta  = _archRegFileBase->getRegTypeMetaGroup(_transferMeta[idx]._phyRegGrpName);
+                for (int idx = 0; idx < _transferFields.size(); idx++){
+                    ArchRegFileUTM_Base* arf = _transferFields[idx].relatedArchRegFile;
+                    PhyRegFileUTM_Base*  prf = _transferFields[idx].relatedArchRegFile->getLinkedPhyRegFileUTM();
                     row.addField(getFieldName(idx, ROB_META_FD_updateArc , true), 1);
                     row.addField(getFieldName(idx, ROB_META_FD_executed  , true), 1);
-                    row.addField(getFieldName(idx, ROB_META_FD_archRegIdx, true), archRegTypeMeta.getIndexWidth());
-                    row.addField(getFieldName(idx, ROB_META_FD_phyRegIdx , false), phyRegTypeMeta.getIndexWidth());
+                    row.addField(getFieldName(idx, ROB_META_FD_archRegIdx, true), arf->getIndexWidth());
+                    row.addField(getFieldName(idx, ROB_META_FD_phyRegIdx , false),prf->getIndexWidth());
                 }
-
-                row.reverse(); //// because we want the idx like the comment above
                 return row;
 
-            }
-
-            RowMeta genRowMeta(const std::string& genMode) override{
-                crlAss(false, "cannot gen row meta for string of genrow");
-                return {};
             }
 
             void visual(CsvGenFile& genFile) override{

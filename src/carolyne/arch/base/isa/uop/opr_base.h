@@ -9,7 +9,7 @@
 #include<vector>
 
 #include "model/hwComponent/abstract/Slice.h"
-#include "carolyne/arch/base/march/alloc/archPhyRegMatcher.h"
+#include "carolyne/arch/base/march/alloc/allocInfo.h"
 #include "carolyne/arch/base/march/prfUnit/prfMetaBase.h"
 #include "carolyne/arch/base/util/genRowMeta.h"
 #include "carolyne/arch/base/util/sliceMatcher.h"
@@ -33,30 +33,24 @@
 
         struct OprTypeBase: GenRowMetaable{
             /** archReg phyReg*/
-            APRegRobFieldMatch _srcAPRegTypeMatch;
-            APRegRobFieldMatch _desAPRegTypeMatch;
+            ALLOC_INFO         _allocInfo;
             /** opr width*/
             int                _oprWidth = -1;
             CRL_OPR_TYPE       _oprType = COT_CNT;
             int                _subType = -1; /// it will be used when oprType == COT_OTHER
 
-            explicit OprTypeBase(
-                APRegRobFieldMatch   srcAPRegTypeMatch,
-                APRegRobFieldMatch   desAPRegTypeMatch
-            ):
-            _srcAPRegTypeMatch(std::move(srcAPRegTypeMatch)),
-            _desAPRegTypeMatch(std::move(desAPRegTypeMatch)){}
+            explicit OprTypeBase(ALLOC_INFO allocInfo):
+            _allocInfo(allocInfo){}
 
             ~OprTypeBase() override = default;
 
             virtual bool isEqualTypeDeep(const OprTypeBase& rhs)  = 0;
 
             bool isEqualType(const OprTypeBase& rhs){
-                bool prelimCheck = (_oprWidth == rhs._oprWidth) &&
-                                   (_oprType  == rhs._oprType)  &&
-                                   (_subType  == rhs._subType)  &&
-                                   (_srcAPRegTypeMatch == rhs._srcAPRegTypeMatch)&&
-                                   (_desAPRegTypeMatch == rhs._desAPRegTypeMatch);
+                bool prelimCheck = (_oprWidth  == rhs._oprWidth) &&
+                                   (_oprType   == rhs._oprType)  &&
+                                   (_subType   == rhs._subType)  &&
+                                   (_allocInfo == rhs._allocInfo);
                 if (!prelimCheck) {return false;}
                 return isEqualTypeDeep(rhs);
             }

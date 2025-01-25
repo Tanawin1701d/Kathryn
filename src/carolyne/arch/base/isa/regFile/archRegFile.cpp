@@ -7,7 +7,7 @@
 
 namespace kathryn::carolyne{
 
-    RowMeta ArchRegFileUTM::genRowMeta(CRL_GEN_MODE genMode, int subMode){
+    RowMeta ArchRegFileUTM_Base::genRowMeta(CRL_GEN_MODE genMode, int subMode){
 
         /////// |lastInfer_idx|commitedInfer_idx|
         crlAss(genMode == CGM_INDEPENDENT, "arch regFile must be generate in independent Mode");

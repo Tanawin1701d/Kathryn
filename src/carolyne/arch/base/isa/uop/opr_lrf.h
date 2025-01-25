@@ -14,11 +14,10 @@
         //// this operand load the value from regfile
         struct OprTypeLoadRegFile: OprTypeBase{
 
-            explicit OprTypeLoadRegFile(const APRegRobFieldMatch&  srcAPRegTypeMatch):
-            OprTypeBase(srcAPRegTypeMatch,
-                        APRegRobFieldMatch()){
+            explicit OprTypeLoadRegFile(const ALLOC_INFO&  srcAllocInfo):
+            OprTypeBase(srcAllocInfo){
                 ///// for now we assume archRegType and phyRegType is correct
-                _oprWidth = srcAPRegTypeMatch.relatedArchRegFile->REG_WIDTH;
+                _oprWidth = srcAllocInfo.relatedArchRegFile->REG_WIDTH;
                 _oprType  = COT_LOAD_REG_FILE;
             }
 
@@ -33,10 +32,16 @@
 
             RowMeta genRowMeta(CRL_GEN_MODE genMode, int subMode) override{
                 RowMeta rowMeta;
-                std::string  srcArchGrpName    =  _srcAPRegTypeMatch.relatedArchRegFile->getUtmName();
-                std::string  srcPhyGrpName     =  _srcAPRegTypeMatch.relatedArchRegFile->getLinkedPhyRegFileUTM()->getUtmName();
-                RegTypeMeta& srcArcRegtypeMeta = *_srcAPRegTypeMatch.relatedArchRegFile;
-                RegTypeMeta& srcPhyRegtypeMeta = *_srcAPRegTypeMatch.relatedArchRegFile->getLinkedPhyRegFileUTM();
+
+                mfAssert(_allocInfo.regAllocOption == REG_OPT::REG_REQ_ARCH_READ,
+                    "must be read only not phy alloc or rename");
+                mfAssert(_allocInfo.robUpdateOption == ROB_OPT::ROB_NO_REQ,
+                    "must no interaction with rob");
+
+                std::string  srcArchGrpName    =  _allocInfo.relatedArchRegFile->getUtmName();
+                std::string  srcPhyGrpName     =  _allocInfo.relatedArchRegFile->getLinkedPhyRegFileUTM()->getUtmName();
+                RegTypeMeta& srcArcRegtypeMeta = *_allocInfo.relatedArchRegFile;
+                RegTypeMeta& srcPhyRegtypeMeta = *_allocInfo.relatedArchRegFile->getLinkedPhyRegFileUTM();
 
                 switch (genMode){
 

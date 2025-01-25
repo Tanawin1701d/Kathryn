@@ -18,19 +18,19 @@ namespace kathryn::carolyne{
         constexpr char PRF_FD_ISVALID[] = "isValid";
         constexpr char PRF_FD_ISFREE [] = "isFree";
 
-        struct PhyRegFileUTM: RegTypeMeta  , GenRowMetaable,
-                              VizCsvGenable, MetaIdentifiable{
+        struct PhyRegFileUTM_Base: RegTypeMeta  , GenRowMetaable,
+                                   VizCsvGenable, MetaIdentifiable{
 
-            explicit PhyRegFileUTM(int indexSize, int regWidth,
-                                   const std::string &typeName) :
+            explicit PhyRegFileUTM_Base(int indexSize, int regWidth,
+                                        const std::string &typeName) :
                     RegTypeMeta(indexSize,regWidth),
                     MetaIdentifiable(typeName){}
 
-            ArchRegFileUTM* _linkedArchRegFileUtm = nullptr;
+            ArchRegFileUTM_Base* _linkedArchRegFileUtm = nullptr;
             bool _reqIsFreeStatus  = false; //// is current system require free bit?
             bool _reqValidStatus   = false; //// is current system require valid bit?
 
-            void setLinkArchRegFile(ArchRegFileUTM* archRegFile){
+            void setLinkArchRegFile(ArchRegFileUTM_Base* archRegFile){
                 crlAss(archRegFile != nullptr, "cannot set phyRegUTM with nullptr");
                 _linkedArchRegFileUtm = archRegFile;
             }

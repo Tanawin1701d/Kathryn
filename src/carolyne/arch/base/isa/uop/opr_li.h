@@ -14,9 +14,8 @@
         struct OprTypeLoadImm: OprTypeBase{
 
 
-            explicit OprTypeLoadImm(int srcWidthBit):
-                OprTypeBase(APRegRobFieldMatch(),
-                            APRegRobFieldMatch()){
+            explicit OprTypeLoadImm(ALLOC_INFO srcAllocInfo, int srcWidthBit):
+                OprTypeBase(srcAllocInfo){
                 _oprWidth  = srcWidthBit;
                 _oprType   = COT_IMM;
                 crlAss(srcWidthBit > 0, "imm width bit must greater than 0");

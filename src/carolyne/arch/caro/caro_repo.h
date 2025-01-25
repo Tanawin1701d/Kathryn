@@ -11,7 +11,6 @@
 #include "carolyne/arch/base/march/repo/repo.h"
 #include "isa/mop/caro_mop.h"
 #include "isa/param/param.h"
-#include "isa/regFile/caro_archRegFile.h"
 #include "isa/uop/caro_uop.h"
 #include "march/fetchUnit/caro_fetchMeta.h"
 #include "march/param/param.h"
@@ -30,15 +29,21 @@ namespace kathryn::carolyne::caro{
     public:
 
         explicit CaroRepo(){
-            auto* caroArchRegfile = new ArchRegFile();
+            auto* caroArchRegFile = new ArchRegFileUTM();
             auto* caroPhyRegFile  = new PRegFile();
-            setArchRegFiles(caroArchRegfile);
-            setPhyFileBase(caroPhyRegFile);
-            APRegTypeMatch aprMatchAll = {ARCH_REGFILE_NAME, PHY_REGFILE_NAME};
+            caroArchRegFile->linkPhyRegFileUTM(caroPhyRegFile);
+            caroPhyRegFile->setLinkArchRegFile(caroArchRegFile);
+            /**link Arch Phy regfile*/
+            addArchRegFiles(caroArchRegFile);
+            addPhyFileBase(caroPhyRegFile);
             ////reqRobField is redundant with store operand sometime
-            APRegRobFieldMatch aprobMatch_NO_ROB_REQ              {ARCH_REGFILE_NAME, PHY_REGFILE_NAME, -1, false, false};
-            APRegRobFieldMatch aprobMatch_ROB_STORE_MEM_OR_PREG   {ARCH_REGFILE_NAME, PHY_REGFILE_NAME, -1, true , false};
-            APRegRobFieldMatch aprobMatch_ROB_STORE_ADDR          {ARCH_REGFILE_NAME, PHY_REGFILE_NAME, -1, true , true };
+            /// ROB_PRF_INFERENCE call rpi   ////// if it is required, physical register and arf will be involve with this system
+            /// UPA   stand for please update arch register file
+            ALLOC_INFO srcArch_AllocInfo {caroArchRegFile, caroPhyRegFile, ROB_OPT::ROB_NO_REQ, REG_OPT::REG_REQ_ARCH_READ};
+            ALLOC_INFO srcImm_AllocInfo  {nullptr, caroPhyRegFile, ROB_OPT::ROB_NO_REQ, REG_OPT::REG_NO_REQ};
+            ALLOC_INFO desU2A_AllocInfo  {caroArchRegFile, caroPhyRegFile, ROB_OPT::ROB_REQ_PHY_ID | ROB_OPT::ROB_REQ_ARCH_ID | ROB_OPT::ROB_REQ_UPT_ARCH,
+                                                                           REG_OPT::REG_REQ_PHY_ALLOC | REG_OPT::REG_REQ_ARCH_RENAME}; ///// update phyReg to archReg
+            ALLOC_INFO desTemp_AllocInfo {nullptr, caroPhyRegFile, ROB_OPT::ROB_REQ_PHY_ID, REG_OPT::REG_REQ_PHY_ALLOC};
             /**
              * ISA
              */
@@ -46,12 +51,12 @@ namespace kathryn::carolyne::caro{
              * build opr Type
              * */
 
-            auto* r1  = new OprTypeLoadRegFile (aprobMatch_NO_ROB_REQ           , _archRegfiles, _phyFileBase);
-            auto* r2  = new OprTypeLoadRegFile (aprobMatch_NO_ROB_REQ           , _archRegfiles, _phyFileBase);
-            auto* rd  = new OprTypeStoreRegFile(aprobMatch_ROB_STORE_MEM_OR_PREG, _archRegfiles, _phyFileBase);
-            auto* ri  = new OprTypeLoadImm     (aprobMatch_NO_ROB_REQ           , _archRegfiles, _phyFileBase);
+            auto* r1  = new OprTypeLoadRegFile  (srcArch_AllocInfo);
+            auto* r2  = new OprTypeLoadRegFile  (srcArch_AllocInfo);
+            auto* rd  = new OprTypeStoreRegFile (desU2A_AllocInfo);
+            auto* ri  = new OprTypeLoadImm      (srcImm_AllocInfo, RI_POS.getSize());
 
-            auto* rta = new OprTypeStoreRegFile(aprobMatch_ROB_STORE_ADDR       , _archRegfiles, _phyFileBase);
+            auto* rta = new OprTypeStoreRegFile(desTemp_AllocInfo);
 
             addOprTypes({r1,r2,rd,ri, rta});
             /*

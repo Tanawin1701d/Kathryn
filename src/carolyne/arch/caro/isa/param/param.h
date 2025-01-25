@@ -30,8 +30,8 @@ namespace kathryn::carolyne::caro{
     constexpr char B_MOP_NAME[] = "b_mop";
 
     ////////// ARCH REG FILE
-    constexpr int REGFILE_IDX_SIZE     =  5; /// size is eq 32
-    constexpr int REG_WIDTH            = 32;
+    constexpr int CARO_REGFILE_IDX_SIZE =  5; /// size is eq 32
+    constexpr int CARO_REG_WIDTH            = 32;
     constexpr char ARCH_REGFILE_NAME[] = "int_reg";
 
     ////////// UOP PARAM

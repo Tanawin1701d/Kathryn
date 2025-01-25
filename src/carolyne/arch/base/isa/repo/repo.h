@@ -12,8 +12,8 @@
 #include "carolyne/arch/base/isa/regFile/archRegFile.h"
 
 
-namespace kathryn{
-    namespace carolyne{
+
+    namespace kathryn::carolyne{
 
 
         /***
@@ -29,51 +29,46 @@ namespace kathryn{
             std::vector<MopTypeBase*> _mopTypes; //// macro operation
             std::vector<UopTypeBase*> _uopTypes; //// micro operation
             std::vector<OprTypeBase*> _oprTypes; //// operand meta data
+
+            std::vector<ArchRegFileUTM_Base*> _archRegTypes;
             ///// REGISTER SECTION
             /// archRegfile stands for architecture register file
-            ArchRegFileBase* _archRegfiles = nullptr;
 
         public:
             [[nodiscard]] std::vector<MopTypeBase*>     getMopTypes()     const {return _mopTypes;    }
             [[nodiscard]] std::vector<UopTypeBase*>     getUopTypes()     const {return _uopTypes;    }
             [[nodiscard]] std::vector<OprTypeBase*>     getOprTypes()     const {return _oprTypes;    }
-            [[nodiscard]] ArchRegFileBase*              getArchRegFiles() const {return _archRegfiles;}
+            [[nodiscard]] std::vector<ArchRegFileUTM_Base*>  getArchRegFiles() const {return _archRegTypes;}
 
-            void addMopType         (MopTypeBase*     mopType     ) {_mopTypes.push_back(mopType);}
-            void addUopType         (UopTypeBase*     uopType     ) {_uopTypes.push_back(uopType);}
-            void addOprType         (OprTypeBase*     oprType     ) {_oprTypes.push_back(oprType);}
-            void setArchRegFiles    (ArchRegFileBase* archRegfiles) {_archRegfiles = archRegfiles;}
+            void addMopType     (MopTypeBase*     mopType    ) {_mopTypes    .push_back(mopType);    }
+            void addUopType     (UopTypeBase*     uopType    ) {_uopTypes    .push_back(uopType);    }
+            void addOprType     (OprTypeBase*     oprType    ) {_oprTypes    .push_back(oprType);    }
+            void addArchRegFiles(ArchRegFileUTM_Base*  archRegfile) {_archRegTypes.push_back(archRegfile);}
 
-            void addMopTypes         (std::vector<MopTypeBase*> mopTypes) {
+            void addMopTypes         (const std::vector<MopTypeBase*>& mopTypes) {
                 for (auto mopType: mopTypes){
                     _mopTypes.push_back(mopType);
                 }
             }
-            void addUopTypes         (std::vector<UopTypeBase*> uopTypes) {
+            void addUopTypes         (const std::vector<UopTypeBase*>& uopTypes) {
                 for (auto uopType: uopTypes){
                     _uopTypes.push_back(uopType);
                 }
             }
-            void addOprTypes         (std::vector<OprTypeBase*> oprTypes) {
+            void addOprTypes         (const std::vector<OprTypeBase*>& oprTypes) {
                 for (auto oprType: oprTypes){
                     _oprTypes.push_back(oprType);
                 }
             }
 
             void visual(CsvGenFile& genFile) override{
-                crlAss(_archRegfiles != nullptr, "in vis archRegFiles Should be nullptr");
-                genFile.addRowData("mopVis");
-                for (MopTypeBase* mtb: _mopTypes){
-                    mtb->visual(genFile);
-                }
-                genFile.addRowData("archRegVis");
-                _archRegfiles->visual(genFile);
+                /**  */
             }
 
         };
 
 
     }
-}
+
 
 #endif //src_carolyne_arch_base_isa_repo_REPO_H

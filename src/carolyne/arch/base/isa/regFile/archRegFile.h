@@ -19,14 +19,14 @@ namespace kathryn::carolyne{
         constexpr char ARF_FD_COMMIT_PRF_INDEX[] = "commitedInfer"; //// index in prf that is commited
 
 
-        struct PhyRegFileUTM;
-        struct ArchRegFileUTM: RegTypeMeta  , GenRowMetaable,
-                               VizCsvGenable, MetaIdentifiable{
+        struct PhyRegFileUTM_Base;
+        struct ArchRegFileUTM_Base: RegTypeMeta  , GenRowMetaable,
+                                    VizCsvGenable, MetaIdentifiable{
 
-            PhyRegFileUTM* _linkedPhyRegFile = nullptr;
+            PhyRegFileUTM_Base* _linkedPhyRegFile = nullptr;
 
-            explicit ArchRegFileUTM(int indexSize, int regWidth,
-                                    const std::string &typeName) :
+            explicit ArchRegFileUTM_Base(int indexSize, int regWidth,
+                                         const std::string &typeName) :
             RegTypeMeta(indexSize,regWidth),
             MetaIdentifiable(typeName){}
 
@@ -36,12 +36,12 @@ namespace kathryn::carolyne{
                                          : (std::string(ARF_FD_COMMIT_PRF_INDEX) + "_" + RTM_FD_idx);
             }
 
-            void linkPhyRegFileUTM(PhyRegFileUTM* phyRegFile){
+            void linkPhyRegFileUTM(PhyRegFileUTM_Base* phyRegFile){
                 crlAss(phyRegFile != nullptr, "cannot link archRegFile with nullptr");
                 _linkedPhyRegFile = phyRegFile;
             }
 
-            PhyRegFileUTM* getLinkedPhyRegFileUTM(){return _linkedPhyRegFile;}
+            PhyRegFileUTM_Base* getLinkedPhyRegFileUTM(){return _linkedPhyRegFile;}
 
             virtual RowMeta genRowMeta(CRL_GEN_MODE genMode, int subMode) override;
 

@@ -15,13 +15,11 @@
 
         struct OprTypeStoreRegFile: OprTypeBase{
 
-            explicit OprTypeStoreRegFile(
-            const APRegRobFieldMatch&    desAPRegTypeMatch):
-            OprTypeBase(APRegRobFieldMatch(),
-                        desAPRegTypeMatch)
+            explicit OprTypeStoreRegFile(const ALLOC_INFO&    desAllocInfo):
+            OprTypeBase(desAllocInfo)
             {
                 ///// for now we assume archRegType and phyRegType is correct
-                _oprWidth = desAPRegTypeMatch.relatedArchRegFile->getIndexWidth();
+                _oprWidth = desAllocInfo.relatedArchRegFile->getIndexWidth();
                 _oprType  = COT_LOAD_REG_FILE;
             }
 
@@ -38,37 +36,42 @@
             RowMeta genRowMeta(CRL_GEN_MODE genMode, int subMode) override{
                 RowMeta rowMeta;
 
-                std::string desArchGrpName    =  _desAPRegTypeMatch.relatedArchRegFile->getUtmName();
-                std::string desPhyGrpName     =  _desAPRegTypeMatch.relatedArchRegFile->getLinkedPhyRegFileUTM()->getUtmName();
-                RegTypeMeta desArcRegtypeMeta = *_desAPRegTypeMatch.relatedArchRegFile;
-                RegTypeMeta desPhyRegtypeMeta = *_desAPRegTypeMatch.relatedArchRegFile->getLinkedPhyRegFileUTM();
+                std::string  desArchGrpName    =  _allocInfo.relatedArchRegFile->getUtmName();
+                std::string  desPhyGrpName     =  _allocInfo.relatedArchRegFile->getLinkedPhyRegFileUTM()->getUtmName();
+                RegTypeMeta& desArcRegtypeMeta = *_allocInfo.relatedArchRegFile;
+                RegTypeMeta& desPhyRegtypeMeta = *_allocInfo.relatedArchRegFile->getLinkedPhyRegFileUTM();
 
                 switch (genMode){
 
                     case CGM_DECODE :{
-                        //// valid is model responsibility
-                        ///rowMeta.addField(OPR_FD_LOAD_REG_FD_valid  , 1);
-                        rowMeta.addField(
-                            genOprFieldName(OPR_FD_LOAD_REG_FD_archIdx, desArchGrpName),
-                            desArcRegtypeMeta.getIndexWidth());
+                        if (isThere(_allocInfo.regAllocOption, REG_OPT::REG_REQ_ARCH_RENAME)){
+                            rowMeta.addField(
+                                genOprFieldName(OPR_FD_LOAD_REG_FD_archIdx, desArchGrpName),
+                                desArcRegtypeMeta.getIndexWidth());
+                        }
                         break;
                     }
                     case CGM_ALLOC :{
-                        ///rowMeta.addField(OPR_FD_LOAD_REG_FD_valid  , 1);
-                        rowMeta.addField(
-                            genOprFieldName(OPR_FD_LOAD_REG_FD_archIdx, desArchGrpName),
-                            desArcRegtypeMeta.getIndexWidth());
-                        rowMeta.addField(
-                            genOprFieldName(OPR_FD_LOAD_REG_FD_phyIdx, desPhyGrpName),
-                            desPhyRegtypeMeta.getIndexWidth());
-                        break;
-                    }
-                    case CGM_RSV :{
-                            ///rowMeta.addField(OPR_FD_LOAD_REG_FD_valid  , 1);
+
+                        if (isThere(_allocInfo.regAllocOption, REG_OPT::REG_REQ_ARCH_RENAME)){
+                            rowMeta.addField(
+                                genOprFieldName(OPR_FD_LOAD_REG_FD_archIdx, desArchGrpName),
+                                desArcRegtypeMeta.getIndexWidth());
+                        }
+                        if (isThere(_allocInfo.regAllocOption, REG_OPT::REG_REQ_PHY_ALLOC)){
                             rowMeta.addField(
                                 genOprFieldName(OPR_FD_LOAD_REG_FD_phyIdx, desPhyGrpName),
                                 desPhyRegtypeMeta.getIndexWidth());
-                            break;
+                        }
+                        break;
+                    }
+                    case CGM_RSV :{
+                        if(isThere(_allocInfo.regAllocOption, REG_OPT::REG_REQ_PHY_ALLOC)){
+                            rowMeta.addField(
+                                genOprFieldName(OPR_FD_LOAD_REG_FD_phyIdx, desPhyGrpName),
+                                desPhyRegtypeMeta.getIndexWidth());
+                        }
+                        break;
                     }
 
                     default:{

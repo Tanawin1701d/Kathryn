@@ -6,7 +6,7 @@
 #define src_carolyne_arch_base_march_fetchUnit_FETCHMETABASE_H
 #include <bitset>
 #include "carolyne/arch/base/util/sliceMatcher.h"
-#include "carolyne/util/viz/csvVizable.h"
+#include "lib/hw/slot/csvVizable.h"
 
 
     namespace kathryn::carolyne{

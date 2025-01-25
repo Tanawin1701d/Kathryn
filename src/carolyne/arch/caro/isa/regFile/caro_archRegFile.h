@@ -14,14 +14,12 @@ namespace kathryn::carolyne::caro{
 
 
 
-    struct ArchRegFile: ArchRegFileBase{
+    struct ArchRegFileUTM: ArchRegFileUTM_Base{
 
-        explicit ArchRegFile(){
-            addRegGroup(ARCH_REGFILE_NAME,
-                        REGFILE_IDX_SIZE,
-                        REG_WIDTH);
-        }
-
+        explicit ArchRegFileUTM():
+            ArchRegFileUTM_Base(CARO_REGFILE_IDX_SIZE,
+                                CARO_REG_WIDTH,
+                                ARCH_REGFILE_NAME){};
     };
 
 }

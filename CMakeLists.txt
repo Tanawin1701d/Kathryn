@@ -57,6 +57,8 @@ add_executable(Kathryn
         src/carolyne/arch/base/isa/uop/opr_lrf.h
         src/carolyne/arch/base/isa/uop/opr_srf.h
         src/carolyne/arch/base/isa/uop/uop_base.h
+        src/carolyne/arch/base/march/fetchUnit/fetchMetaBase.h
+        src/carolyne/arch/caro/isa/uop/caro_opr.h
 
         #blinkSample.cpp
         #src/params/prjParam.h
