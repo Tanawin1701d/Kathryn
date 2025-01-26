@@ -3,7 +3,7 @@
 //
 
 #include "archRegFile.h"
-#include "carolyne/arch/base/march/pRegFile/prfMetaBase.h"
+#include "carolyne/arch/base/march/prfUnit/prfMetaBase.h"
 
 namespace kathryn::carolyne{
 

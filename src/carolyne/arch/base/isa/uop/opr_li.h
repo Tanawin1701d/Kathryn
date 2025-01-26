@@ -29,25 +29,6 @@
                 return true;
             }
 
-            RowMeta genRowMeta(CRL_GEN_MODE genMode, int subMode) override{
-                RowMeta rowMeta;
-                switch (genMode){
-
-                    case CGM_DECODE :
-                    case CGM_ALLOC :
-                    case CGM_RSV :{
-                        //// valid is model responsibility
-                        ///rowMeta.addField(OPR_FD_LOAD_REG_FD_valid  , 1);
-                        rowMeta.addField(
-                                genOprFieldName(OPR_FD_LOAD_REG_FD_value, "imm"),
-                                _oprWidth);
-                        break;
-                    }
-                    default:{crlAss(false, "OprTypeLoadRegFile out of row meta generation");}
-                }
-                return rowMeta;
-            }
-
         };
 
     }

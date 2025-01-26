@@ -6,7 +6,6 @@
 #define src_carolyne_arch_base_march_pRegFile_PHYSICALREGFILE_H
 
 #include "carolyne/arch/base/util/genRowMeta.h"
-#include "carolyne/arch/base/util/tableMeta.h"
 #include "carolyne/arch/base/util/regFileType.h"
 #include "carolyne/arch/base/util/metaIdent.h"
 #include "carolyne/arch/base/isa/regFile/archRegFile.h"

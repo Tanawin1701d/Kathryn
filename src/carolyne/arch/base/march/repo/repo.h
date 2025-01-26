@@ -21,7 +21,7 @@ namespace kathryn::carolyne{
          * that designer specify
          */
 
-        class MarchBaseRepo: VizCsvGenable{
+        class MarchBaseRepo{
 
         protected:
 
@@ -49,23 +49,6 @@ namespace kathryn::carolyne{
             void addPhyFileBase(PhyRegFileUTM_Base* phyFileBase) { _phyFileBases.push_back(phyFileBase);}
             void addExecTypes  (const std::vector<ExecUTM*>& execTypes){
                 for (ExecUTM* execUtm: execTypes){addExecType(execUtm);}
-            }
-
-            void visual(CsvGenFile& genFile) override{
-
-                genFile.addRowData("fetchUnit");
-                genFile.addDummyRowData(3);
-                for (auto fetchType: _fetchTypes){fetchType->visual(genFile);}
-                genFile.addRowData("allocUnit");
-                genFile.addDummyRowData(3);
-                for (auto allocType: _allocTypes){allocType->visual(genFile);}
-                genFile.addRowData("rsvUnit");
-                genFile.addDummyRowData(3);
-                for (auto rsvType: _rsvTypes){rsvType->visual(genFile);}
-                genFile.addRowData("robUnit");
-                genFile.addDummyRowData(3);
-                for (auto robType: _rsvTypes){robType->visual(genFile);}
-
             }
 
         };

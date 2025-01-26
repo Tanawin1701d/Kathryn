@@ -53,12 +53,17 @@ add_executable(Kathryn
         src/carolyne/arch/base/isa/regFile/archRegFile.cpp
         src/carolyne/arch/base/isa/uop/opr_base.h
         src/carolyne/arch/base/isa/uop/opr_li.h
-        src/carolyne/arch/base/march/alloc/archPhyRegMatcher.h
+        src/carolyne/arch/base/march/alloc/allocInfo.h
         src/carolyne/arch/base/isa/uop/opr_lrf.h
         src/carolyne/arch/base/isa/uop/opr_srf.h
         src/carolyne/arch/base/isa/uop/uop_base.h
         src/carolyne/arch/base/march/fetchUnit/fetchMetaBase.h
         src/carolyne/arch/caro/isa/uop/caro_opr.h
+        src/lib/hw/popper/popInterrupt.h
+        src/lib/hw/popper/popInterrupt.h
+        src/lib/hw/popper/popTunnel.h
+        src/lib/hw/popper/popTunnelMng.h
+        src/lib/hw/popper/popMod.h
 
         #blinkSample.cpp
         #src/params/prjParam.h

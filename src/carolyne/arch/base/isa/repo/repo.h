@@ -20,7 +20,7 @@
          * This class is the main storage for isa that designer input the instruction
          */
 
-        class IsaBaseRepo: VizCsvGenable{
+        class IsaBaseRepo{
         protected:
             ///// INSTRUCTION SECTION
             /// a single instuction (macro-op) can be decoded and it can produce
@@ -60,11 +60,6 @@
                     _oprTypes.push_back(oprType);
                 }
             }
-
-            void visual(CsvGenFile& genFile) override{
-                /**  */
-            }
-
         };
 
 

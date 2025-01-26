@@ -18,7 +18,7 @@
         constexpr char UOP_UNNAMED[]          = "unname_Uop";
 
         struct ExecUTM;
-        struct UopTypeBase: GenRowMetaable, VizCsvGenTable{
+        struct UopTypeBase{
             std::string               _uopName = UOP_UNNAMED;
             std::vector<OprTypeBase*> _srcOprTypes;
             std::vector<OprTypeBase*> _desOprTypes;
@@ -28,7 +28,7 @@
              * todo next check execute engine
              ***/
 
-            ~UopTypeBase() override{
+            virtual ~UopTypeBase() {
                 for(auto oprType : _srcOprTypes){delete oprType;}
                 for(auto oprType:  _desOprTypes){delete oprType;}
             }
@@ -106,32 +106,6 @@
             /**
              *  gen row meta data
              */
-
-            RowMeta genRowMeta(CRL_GEN_MODE genMode, int subMode) override{
-                //////// this generate only the field for uop (exclude the operand)
-                //////// for now we accept all
-                crlAss(_fopIdentWidth > 0, "fop bit with in uop: " + _uopName + " must have size > 0 while row generating");
-                RowMeta row;
-                row.addField(OPR_FD_FOP_IDENT_fop, _fopIdentWidth);
-                return row;
-            }
-
-            ////// pool it with operand and send them back with pooled rowmeta type
-            CsvTable genTable() override{
-                RowMeta resultRow(genRowMeta(CGM_DECODE, 0));
-                for (OprTypeBase* srcOprType: _srcOprTypes){
-                    RowMeta oprRow = srcOprType->genRowMeta(CGM_DECODE, 0);
-                    resultRow += oprRow;
-                }
-                for (OprTypeBase* desOprType: _desOprTypes){
-                    RowMeta oprRow = desOprType->genRowMeta(CGM_DECODE, 0);
-                    resultRow += oprRow;
-                }
-
-                CsvTable uopTable(resultRow.genTable());
-                uopTable.setTableName(_uopName);
-                return uopTable;
-            }
 
         };
 

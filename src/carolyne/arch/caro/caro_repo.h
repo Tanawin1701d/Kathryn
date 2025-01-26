@@ -13,7 +13,6 @@
 #include "isa/param/param.h"
 #include "isa/uop/caro_uop.h"
 #include "march/fetchUnit/caro_fetchMeta.h"
-#include "march/param/param.h"
 #include "march/pRegFile/caro_preg.h"
 #include "march/alloc/caro_allocMeta.h"
 #include "march/execUnit/caro_execMeta.h"
@@ -56,7 +55,9 @@ namespace kathryn::carolyne::caro{
             auto* rd  = new OprTypeStoreRegFile (desU2A_AllocInfo);
             auto* ri  = new OprTypeLoadImm      (srcImm_AllocInfo, RI_POS.getSize());
 
+            ////// for storer (a) address / (d) data
             auto* rta = new OprTypeStoreRegFile(desTemp_AllocInfo);
+            auto* rtd = new OprTypeStoreRegFile(desTemp_AllocInfo);
 
             addOprTypes({r1,r2,rd,ri, rta});
             /*
@@ -64,7 +65,7 @@ namespace kathryn::carolyne::caro{
              * */
             auto* a_uop = new A_UOP(r1, r2, rd);
             auto* l_uop = new L_UOP(r1, rta, rd);
-            auto* s_uop = new S_UOP(r1, r2, rta, rd);
+            auto* s_uop = new S_UOP(r1, r2, rta, rtd);
             auto* i_uop = new I_UOP(ri, rd);
             addUopTypes({a_uop,l_uop,s_uop,i_uop});
             /**
@@ -105,18 +106,15 @@ namespace kathryn::carolyne::caro{
              * rsvUnit
              */
             auto* rsvUnitType   = new RsvUTM();
-            rsvUnitType->addExecUnit(arithExecType, AMT_EXEC_PER_RSV_PER_TYPE);
-            rsvUnitType->addExecUnit(lsExecUnitType, AMT_EXEC_PER_RSV_PER_TYPE);
-            rsvUnitType->addExecUnit(bExecUnitType, AMT_EXEC_PER_RSV_PER_TYPE);
             addRsvType(rsvUnitType);
 
             /**
              * robUnit
              */
-            auto* robUnitType   = new RobUTM(caroArchRegfile, caroPhyRegFile);
-            robUnitType->addTransferType(aprobMatch_ROB_STORE_ADDR);
-            robUnitType->addTransferType(aprobMatch_ROB_STORE_MEM_OR_PREG);
-
+            auto* robUnitType   = new RobUTM();
+            robUnitType->addAllocType(desU2A_AllocInfo);
+            robUnitType->addAllocType(desTemp_AllocInfo);
+            robUnitType->addAllocType(desTemp_AllocInfo);
             addRobType(robUnitType);
         }
 

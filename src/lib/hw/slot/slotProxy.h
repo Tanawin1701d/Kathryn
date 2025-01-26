@@ -4,6 +4,8 @@
 
 #ifndef src_lib_hw_slot_SLOTPROXY_H
 #define src_lib_hw_slot_SLOTPROXY_H
+#include <utility>
+
 #include "rowMeta.h"
 #include "model/controller/controller.h"
 
@@ -15,13 +17,18 @@ namespace kathryn{
     ////// it is used to represent Slot but not make any new register
     class SlotOpr{
     public:
+        /**metadata zone*/
         RowMeta _meta;
+        /**hardware zone*/
         std::vector<Operable*> _repFields;
 
-        explicit SlotOpr(const RowMeta& meta,
+        explicit SlotOpr(RowMeta  meta,
                          const std::vector<Operable*>& repFields):
-        _meta     (meta),
+        _meta     (std::move(meta)),
         _repFields(repFields){}
+
+
+        /** hardware getter **/
 
         Operable*& getFieldRef(int idx){
             mfAssert(idx >= 0 && idx < _repFields.size(),
@@ -43,6 +50,8 @@ namespace kathryn{
             int idx = _meta.getFieldIdx(fieldName);
             return getOpr(idx);
         }
+
+        /** meta-data getter**/
 
         RowMeta getRowMeta() const{
             return _meta;

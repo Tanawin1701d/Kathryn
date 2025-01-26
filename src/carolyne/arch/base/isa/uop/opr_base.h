@@ -31,7 +31,7 @@
             COT_CNT            = 4
         };
 
-        struct OprTypeBase: GenRowMetaable{
+        struct OprTypeBase{
             /** archReg phyReg*/
             ALLOC_INFO         _allocInfo;
             /** opr width*/
@@ -42,7 +42,7 @@
             explicit OprTypeBase(ALLOC_INFO allocInfo):
             _allocInfo(allocInfo){}
 
-            ~OprTypeBase() override = default;
+            ~OprTypeBase() = default;
 
             virtual bool isEqualTypeDeep(const OprTypeBase& rhs)  = 0;
 
@@ -53,11 +53,6 @@
                                    (_allocInfo == rhs._allocInfo);
                 if (!prelimCheck) {return false;}
                 return isEqualTypeDeep(rhs);
-            }
-
-            RowMeta genRowMeta(CRL_GEN_MODE genMode, int subMode) override{
-                crlAss(false, "OprTypeLoadRegFile not gen row meta from genMode");
-                return {};
             }
 
             std::string genOprFieldName(const std::string& fieldName,
