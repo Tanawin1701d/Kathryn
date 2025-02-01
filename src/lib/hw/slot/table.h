@@ -16,7 +16,7 @@
 namespace kathryn{
 
     struct Candidate{
-        SlotOpr   detLogic; //// determine logic
+        Slot      detLogic; //// determine logic
         Operable* detIdx = nullptr;
     };
 
@@ -59,33 +59,33 @@ namespace kathryn{
         }
     }
 
-
-    SlotOpr buildSelectLogic(Operable& selectLhs,
-                             SlotOpr lhsSlotOpr,
-                             SlotOpr rhsSlotOpr,
+    /** it build the multiplexer to select one of two slot by using selectLhs signal*/
+    Slot buildSelectLogic(Operable& selectLhs,
+                             Slot lhsSlot,
+                             Slot rhsSlot,
                              const std::string& prefixName){ //// for debug purpose only
 
-        std::vector<Operable*> selectedOperable;
-        for(const FieldMeta& fieldMeta: lhsSlotOpr.getRowMeta().getAllFields()){
+        std::vector<SlotMeta> selectedSlotMeta;
+        for(const FieldMeta& fieldMeta: lhsSlot.getMeta().getAllFields()){
             ///// build new selected wire for each wire in each field
             Wire& joinWire = mOprWire(prefixName + "_"+ "selected" + fieldMeta._fieldName, fieldMeta._fieldSize);
             joinWire.addUpdateMeta(
                 new UpdateEvent{
                     &selectLhs ,
                     nullptr,
-                    &lhsSlotOpr.getOpr(fieldMeta._fieldName),
-                    lhsSlotOpr.getOpr(fieldMeta._fieldName).getOperableSlice(),
+                    lhsSlot.getHwSlotMeta(fieldMeta._fieldName).opr,
+                    lhsSlot.getHwSlotMeta(fieldMeta._fieldName).opr->getOperableSlice(),
                     DEFAULT_UE_PRI_USER});
             joinWire.addUpdateMeta(
                 new UpdateEvent{
                     &(~selectLhs),
                     nullptr,
-                    &rhsSlotOpr.getOpr(fieldMeta._fieldName),
-                    rhsSlotOpr.getOpr(fieldMeta._fieldName).getOperableSlice(),
+                    rhsSlot.getHwSlotMeta(fieldMeta._fieldName).opr,
+                    rhsSlot.getHwSlotMeta(fieldMeta._fieldName).opr->getOperableSlice(),
                     DEFAULT_UE_PRI_USER});
-            selectedOperable.push_back(&joinWire);
+            selectedSlotMeta.push_back({&joinWire, &joinWire});
         }
-        return SlotOpr(lhsSlotOpr.getRowMeta(), selectedOperable);
+        return Slot(lhsSlot.getMeta(), -1, selectedSlotMeta);
     }
 
 
@@ -96,9 +96,9 @@ namespace kathryn{
     Candidate buildCmpSearchLogic(const RowMeta& rowMeta,        //////// the field that designer concern
                                   bool  reqSlotIdx,              //////// request build idx for each comparison
                                   const std::function<Operable&(Operable* lhsIdx,
-                                                                SlotOpr   lhsSlotOpr,
+                                                                Slot      lhsSlot,
                                                                 Operable* rhsIdx,
-                                                                SlotOpr   rhsSlotOpr)>& cmpCon){
+                                                                Slot      rhsSlot)>& cmpCon){
 
         //////// build representa for each slot row and insert to queue
         std::queue<Candidate> candidates;
@@ -108,7 +108,7 @@ namespace kathryn{
             if (reqSlotIdx){
                 val = &makeOprVal(_tableName + "_detIdx_"+std::to_string(idx), _identWidth, idx);
             }
-            Candidate x = {slot->getSlotOpr(rowMeta), val};
+            Candidate x = {*slot, val};
             candidates.push(x);
             idx++;
         }
@@ -123,7 +123,7 @@ namespace kathryn{
                 auto lhs = candidates.front(); candidates.pop();
                 auto rhs = candidates.front(); candidates.pop();
                 Operable& selectLhs = cmpCon(lhs.detIdx, lhs.detLogic, rhs.detIdx, rhs.detLogic);
-                SlotOpr selected = buildSelectLogic(
+                Slot selected = buildSelectLogic(
                     selectLhs,
                     lhs.detLogic, rhs.detLogic,
                     _tableName + "_logic_" + std::to_string(level));
@@ -148,15 +148,12 @@ namespace kathryn{
         FieldMeta field = _meta.getField(fieldIdx);
         std::vector<FieldMeta> rowMeta({field});
         return buildCmpSearchLogic(rowMeta, reqIdx, [&](Operable* lhsIdx,
-                                                               SlotOpr   lhsSlotOpr,
+                                                               Slot      lhsSlot,
                                                                Operable* rhsIdx,
-                                                               SlotOpr   rhsSlotOpr) -> Operable&{
+                                                               Slot      rhsSlot) -> Operable&{
 
-            ///std::cout << lhsSlotOpr.getFieldMeta(0)._fieldName << std::endl;
-
-            if (isMin){ return lhsSlotOpr.getOpr(0) <= rhsSlotOpr.getOpr(0);}
-            return lhsSlotOpr.getOpr(0) >= rhsSlotOpr.getOpr(0);
-
+            if (isMin){ return (*lhsSlot.getHwSlotMeta(0).opr) <= (*rhsSlot.getHwSlotMeta(0).opr);}
+            return (*lhsSlot.getHwSlotMeta(0).opr) >= (*rhsSlot.getHwSlotMeta(0).opr);
         });
     }
 
@@ -168,7 +165,7 @@ namespace kathryn{
     }
 
     /////// designer put the `matchCon` function variable to get slot that match designers' requirement
-    SlotOpr buildGetLogic(const std::function<Operable&(int idx, SlotOpr examSlotOpr)>& matchCon){
+    Slot buildGetLogic(const std::function<Operable&(int idx, Slot examSlot)>& matchCon){
         std::vector<Wire*> slotReps;
         ///// build representation wire
         for (const FieldMeta& fieldMeta: _meta.getAllFields()){
@@ -177,28 +174,28 @@ namespace kathryn{
         }
         ///// build representation wire
         for (int slotIdx = 0; slotIdx < _amtSize; slotIdx++){
-            Operable& matchCond = matchCon(slotIdx, _hwSlots[slotIdx]->getSlotOpr());
+            Operable& matchCond = matchCon(slotIdx, *_hwSlots[slotIdx]);
             /////// build assign for each field
             for (int fieldIdx = 0; fieldIdx < _meta.getSize(); fieldIdx++){
                 slotReps[fieldIdx]->addUpdateMeta(new UpdateEvent{
                     &matchCond,
                     nullptr,
-                    &_hwSlots[slotIdx]->get(fieldIdx),
+                    _hwSlots[slotIdx]->getHwSlotMeta(fieldIdx).opr,
                     slotReps[fieldIdx]->getOperableSlice(),
                     DEFAULT_UE_PRI_USER
                 });
             }
         }
 
-        std::vector<Operable*> cvtSlotReps;
-        cvtSlotReps.reserve(slotReps.size());
-        for (Wire* slotRep: slotReps){cvtSlotReps.push_back(slotRep);}
-        return SlotOpr(_meta, cvtSlotReps);
+        std::vector<SlotMeta> slotMetas;
+        slotMetas.reserve(slotReps.size());
+        for (Wire* slotRep: slotReps){slotMetas.push_back({slotRep, slotRep});}
+        return Slot(_meta, -1, slotMetas);
     }
 
-    SlotOpr buildGetLogic(Operable& searchIdx){
+    Slot buildGetLogic(Operable& searchIdx){
         return buildGetLogic(
-            [&](int idx, const SlotOpr& examSlotOpr) -> Operable&{
+            [&](int idx, const Slot& examSlotOpr) -> Operable&{
                 return searchIdx == idx;
             });
     }
@@ -206,30 +203,29 @@ namespace kathryn{
     /////// return single wire that used to store signal
     /// system to store
 
-    Wire& buildSetLogic(SlotOpr& slotOpr, Operable& reqIdx){
+    Wire& buildSetLogic(Slot& slot, Operable& reqIdx){
 
         int idxSize = reqIdx.getOperableSlice().getSize();
 
         mfAssert(idxSize == _identWidth, "setLogic bitwidth is mismatch");
 
-        ///// enable signal will trigger that should be establish
+        ///// enable signal will trigger that should be assigned
+        /// it will return to user
         Wire& enable = mOprWire( _tableName + "_setEnableSignal", 1);
 
         ///// plug all slot to listen
         for (int idx = 0; idx < _hwSlots.size(); idx++){
             expression& checkIdMatch  = reqIdx == idx;
-            FieldMeta   oprStartField = slotOpr.getFieldMeta(0);
-            FieldMeta   oprEndField   = slotOpr.getFieldMeta(slotOpr.getAmtField()-1);
+            FieldMeta   oprStartField = slot.getMeta().getField(0);
+            FieldMeta   oprEndField   = slot.getMeta().getField(slot.getAmtField()-1);
 
-            _hwSlots[idx]->assignCore(slotOpr,
+            _hwSlots[idx]->assignCore(slot,
                 oprStartField._fieldName, oprEndField._fieldName,
                 checkIdMatch & enable);
         }
         return enable;
     }
-
     };
-
 }
 
 

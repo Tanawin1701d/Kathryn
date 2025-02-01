@@ -61,9 +61,12 @@ add_executable(Kathryn
         src/carolyne/arch/caro/isa/uop/caro_opr.h
         src/lib/hw/popper/popInterrupt.h
         src/lib/hw/popper/popInterrupt.h
-        src/lib/hw/popper/popTunnel.h
-        src/lib/hw/popper/popTunnelMng.h
         src/lib/hw/popper/popMod.h
+        src/lib/hw/popper/popTunnel/popTunnelBase.h
+        src/lib/hw/popper/popTunnel/popTunnelMng.h
+        src/lib/hw/popper/popTunnel/popBCT.h
+        src/lib/hw/popper/popTunnel/popBCT.h
+        src/lib/hw/popper/popTunnel/popHST.h
 
         #blinkSample.cpp
         #src/params/prjParam.h

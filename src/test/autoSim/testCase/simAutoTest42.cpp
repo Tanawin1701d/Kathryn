@@ -30,13 +30,13 @@ namespace kathryn{
         void flow() override{
 
             /**build set logic first*/
-            SlotOpr inputOpr(testTable._meta, {&validInput, &xInput});
-            setEnable = &testTable.buildSetLogic(inputOpr, setIdx(0, testTable._identWidth));
+            Slot inputSlot(testTable._meta, -1, {&validInput, &xInput});
+            setEnable = &testTable.buildSetLogic(inputSlot, setIdx(0, testTable._identWidth));
 
             /**build min logic */
-            auto[maxSlotOpr, maxIdxOpr] = testTable.buildMinMaxLogic("x", true, false); ////// find max
+            auto[maxSlot, maxIdxOpr] = testTable.buildMinMaxLogic("x", true, false); ////// find max
             maxIdx   = *maxIdxOpr;
-            maxValue = maxSlotOpr.getOpr("x");
+            maxValue = maxSlot.getField("x");
 
 
             /**set value*/

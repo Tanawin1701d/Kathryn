@@ -9,7 +9,6 @@
 
 #include "model/controller/controller.h"
 #include "rowMeta.h"
-#include "slotProxy.h"
 
 namespace kathryn{
 
@@ -23,6 +22,7 @@ namespace kathryn{
     class Slot: public Module{
     public:
         /**metadata zone*/
+        bool    _readOnly = false; ///// in case there is no assigable in hwMetaas
         RowMeta _meta;
         int     _ident;
         /**hardware zone*/
@@ -32,42 +32,74 @@ namespace kathryn{
         _meta(std::move(meta)),
         _ident(identVal){}
 
+        explicit Slot(RowMeta meta, int identVal, const std::vector<SlotMeta>& slotMetas):
+        _meta(std::move(meta)),
+        _ident(identVal),
+        hwMetas(slotMetas){
+            mfAssert(!slotMetas.empty(), "cannot create slot with empt slot Metas");
+            if (slotMetas[0].asb == nullptr){_readOnly = true;}
+            integrityCheck();
+        }
+
+        // explicit Slot(RowMeta meta, int identVal, const std::vector<Operable*>& oprMetas):
+        // _meta(std::move(meta)),
+        // _ident(identVal){
+        //     for (Operable* opr: oprMetas){
+        //         mfAssert(opr != nullptr, "buildReadOnly slot cannot have opr as nullptr");
+        //         hwMetas.push_back({opr, nullptr});
+        //     }
+        //     integrityCheck();
+        // }
+
+        /** checking idx*/
         [[nodiscard]]
         bool isContainIdx(int startIdx, int stopIdx)const{
             mfAssert(startIdx < stopIdx, "isContainIdx have invalid input");
             return _meta.isThereIdx(startIdx) && _meta.isThereIdx(stopIdx-1);
         }
+        bool integrityCheck(){
+            if (hwMetas.size() != _meta.getSize()){return false;}
+            for (int idx = 0; idx < _meta.getSize(); idx++){
+                if (_meta.getField(idx)._fieldSize != hwMetas[idx].opr->getOperableSlice().getSize()){
+                    return false;
+                }
+            }
+            return true;
+        }
 
-        SlotOpr operator() (int startIdx, int stopIdx)const{
+        Slot operator() (int startIdx, int stopIdx)const{
 
             mfAssert(isContainIdx(startIdx, stopIdx),
                 "slice slot opr index out of range");
 
-            std::vector<Operable*> repFields;
+            std::vector<SlotMeta> slotMetas;
             for (int i = startIdx; i < stopIdx; i++){
-                repFields.push_back(hwMetas[i].opr);
+                slotMetas.push_back(hwMetas[i]);
             }
-            SlotOpr slicedOpr(_meta(startIdx, stopIdx), repFields);
-            return slicedOpr;
+            Slot slicedSlot(_meta(startIdx, stopIdx), _ident, slotMetas);
+            return slicedSlot;
 
         }
 
-
-        /**meta-data getter system*/
-
-        [[nodiscard]]
-        SlotOpr getSlotOpr() const{
-            return operator()(0, getAmtField());
+        Slot operator() (const std::string& startName, const std::string& stopName) const{
+            int startIdx = _meta.getFieldIdx(startName);
+            int stopIdx  = _meta.getFieldIdx(stopName) + 1;
+            return operator()(startIdx, stopIdx);
         }
 
-        [[nodiscard]]
-        SlotOpr getSlotOpr(const RowMeta& rowMeta) const{
-            std::vector<Operable*> oprs;
-            for (const auto& field: rowMeta.getAllFields()){
-                int idx = _meta.getFieldIdx(field._fieldName);
-                oprs.push_back(hwMetas[idx].opr);
+        Slot operator() (const std::vector<std::string>& fieldNames){
+            std::vector<FieldMeta> fms;
+            std::vector<SlotMeta> slotMetas;
+            for (auto& fieldName: fieldNames){
+                int idxInCurSlot = _meta.getFieldIdx(fieldName);
+                fms.push_back(_meta.getField(fieldName));
+                slotMetas.push_back(hwMetas[idxInCurSlot]);
             }
-            return SlotOpr(rowMeta, oprs);
+            return Slot(RowMeta(fms), _ident, slotMetas);
+        }
+
+        Slot operator() (const RowMeta& rowMeta){
+            return operator() (rowMeta.getAllFieldNames());
         }
 
         [[nodiscard]]
@@ -79,56 +111,58 @@ namespace kathryn{
         /**  assigning system*/
 
         /////////// main assigning
-        void assignCore(const SlotOpr& rhsSlotOpr, int startIdx, int stopIdx, Operable& condition){
+        void assignCore(const Slot& rhsSlot, int startIdx, int stopIdx, Operable& condition){
 
             int size = stopIdx - startIdx;
-            mfAssert(size == rhsSlotOpr.getAmtField(), "size is not equal");
-            mfAssert(startIdx >= 0 && stopIdx <= hwMetas.size(), "statIdx error");
+            mfAssert(size == rhsSlot.getAmtField(), "size is not equal");
+            mfAssert(isContainIdx(startIdx, stopIdx), "statIdx error");
 
             for(int i = 0; i < (stopIdx-startIdx); i++){
                 FieldMeta lhsField = _meta.getField(startIdx+i);
-                FieldMeta rhsField = rhsSlotOpr.getMeta().getField(i);
+                FieldMeta rhsField = rhsSlot.getMeta().getField(i);
                 mfAssert(lhsField.checkEqualField(rhsField),
                     "assign fieldNot equal fieldName lhs " + lhsField._fieldName + " rhs " + rhsField._fieldName);
 
                 hwMetas[startIdx + i].asb->addUpdateMeta(new UpdateEvent({
                     &condition,
                     nullptr,
-                    rhsSlotOpr._repFields[i],
+                    rhsSlot.hwMetas[i].opr,
                     hwMetas[startIdx + i].opr->getOperableSlice(),
                     DEFAULT_UE_PRI_USER
                 }));
             }
         }
 
-        void assignCore(const SlotOpr& rhsSlotOpr,
+        void assignCore(const Slot& rhsSlot,
                         const std::string& startFieldName, const std::string& endFieldName,
                         Operable& condition){
             int startIdx = _meta.getFieldIdx(startFieldName);
             int stopIdx  = _meta.getFieldIdx(endFieldName);
             stopIdx++;
-            assignCore(rhsSlotOpr, startIdx, stopIdx, condition);
+            assignCore(rhsSlot, startIdx, stopIdx, condition);
 
         }
 
-        void assignCore(const Slot& rhsSlot,
-                         int startIdx, int stopIdx, int rhsStartIdx,
-                         Operable& condition){
-            assignCore(rhsSlot.getSlotOpr(), startIdx, stopIdx, condition);
+        void assignCore(const Slot& rhsSlot, Operable& condition){
+            mfAssert(getAmtField() == rhsSlot.getAmtField(), "rhsSlot and current slot is not match to assign");
+            assignCore(rhsSlot, 0, getAmtField(), condition);
         }
 
-        Slot& assignCore(const Slot& rhsSlot,
-                     const std::string& startFieldName, const std::string& endFieldName,
-                     Operable& condition){ ///[startFieldName, endFieldName]
-            ///// get the index and assign it
-            int startIdx = _meta.getFieldIdx(startFieldName);
-            int stopIdx  = _meta.getFieldIdx(endFieldName);
-            stopIdx++;
-            int rhsStartIdx = rhsSlot._meta.getFieldIdx(startFieldName);
-            assignCore(rhsSlot, startIdx, stopIdx, rhsStartIdx, condition);
-
-            return *this;
+        /** hardware getter system*/
+        SlotMeta getHwSlotMeta(const std::string& fieldName){
+            int idx = _meta.getFieldIdx(fieldName);
+            return getHwSlotMeta(idx);
         }
+        SlotMeta getHwSlotMeta(int idx){
+            mfAssert(isContainIdx(idx, idx+1), "cannot find fieldIdx " + std::to_string(idx));
+            return hwMetas[idx];
+        }
+
+        Operable& getField(const std::string& fieldName){
+            return *getHwSlotMeta(fieldName).opr;
+        }
+
+
 
     };
 
@@ -144,19 +178,15 @@ namespace kathryn{
                 hwMetas .push_back({*hwFields.rbegin(),*hwFields.rbegin()});
             }
         }
-
         /** hardware getter system*/
-
         Reg& get(const std::string& fieldName){
             int idx = _meta.getFieldIdx(fieldName);
             return get(idx);
         }
-
         Reg& get(int idx){
             mfAssert(idx >= 0 && idx < hwFields.size(), "cannot find fieldIdx " + std::to_string(idx));
             return *hwFields[idx];
         }
-
     };
 
     class WireSlot: public Slot{
@@ -183,11 +213,6 @@ namespace kathryn{
             return *hwFields[idx];
         }
     };
-
-
-
-
-
 
 }
 

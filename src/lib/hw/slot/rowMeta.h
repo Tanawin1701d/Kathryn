@@ -104,7 +104,7 @@ namespace kathryn{
             return _fields;
         }
 
-        std::vector<std::string> getAllFieldNames(){
+        std::vector<std::string> getAllFieldNames() const{
             std::vector<std::string> names;
             names.reserve(_fields.size());
             for (auto& field: _fields){
