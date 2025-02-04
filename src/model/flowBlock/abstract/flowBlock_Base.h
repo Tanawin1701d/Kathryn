@@ -11,6 +11,7 @@
 #define exposeBlk( exVar )   exVar = kathrynBlock;
 #define track( name  )       kathrynBlock->setZepTrackName(#name);
 #define strack( name )       kathrynBlock->setZepTrackName(name);
+#define markJoinMaster       kathrynBlock->setJoinMaster();
 
 #include<memory>
 #include<vector>
@@ -140,6 +141,7 @@ namespace kathryn {
         bool           isThereIntStart();
         bool           isThereIntRst();
         Operable*      purifyCondition(Operable* rawOpr);
+        FlowBlockBase* scanMasterJoinSubBlock();
     public:
         explicit       FlowBlockBase(FLOW_BLOCK_TYPE  type,
                                      FB_CTRL_COM_META fbCtrlComMeta);

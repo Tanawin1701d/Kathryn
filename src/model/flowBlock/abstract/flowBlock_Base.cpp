@@ -153,6 +153,19 @@ namespace kathryn{
 
     }
 
+    FlowBlockBase* FlowBlockBase::scanMasterJoinSubBlock(){
+        //////// the master join block must have only 1 sub block
+        FlowBlockBase* resultFb = nullptr;
+        for (FlowBlockBase* subFb: _subBlocks){
+            mfAssert(subFb != nullptr, "subBlock cannot be nullptr");
+            if (subFb->isJoinMaster()){
+                mfAssert(resultFb == nullptr, "duplicated master join block");
+                resultFb = subFb;
+            }
+        }
+        return resultFb;
+    }
+
     void FlowBlockBase::genSumForceExitNode(std::vector<NodeWrap *> &nws) {
         /** check that there is force exit node*/
         for (auto nw : nws){

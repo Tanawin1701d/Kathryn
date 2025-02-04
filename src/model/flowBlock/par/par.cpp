@@ -114,7 +114,11 @@ namespace kathryn{
                 nw->addDependNodeToAllNode(intNodes[INT_START]);
             }
         }
-
+        /** scan for master join block**/
+        masterJoinFlowBlock = scanMasterJoinSubBlock();
+        /**
+         * assemble the result node wrap focused on synchronization and exit parameter
+         * **/
         buildSyncNode();
         assignExitToRnw();
         assignCycleUsedToRnw();
@@ -215,7 +219,9 @@ namespace kathryn{
         int amt_block = ((basicStNode != nullptr) ? 1 : 0) +
                         (int)(nodeWrapOfSubBlock.size());
         /** build syn node if need*/
-        if ( (cycleUsed == IN_CONSIST_CYCLE_USED) &&
+        if (
+            (masterJoinFlowBlock == nullptr) && //// no user defined exit
+            (cycleUsed == IN_CONSIST_CYCLE_USED) && ///// can't know the longest subblock
              (amt_block > 1) /** incase amt_block == 1 we don't have to sync*/
                 ){
             /////// syn reg needed
@@ -252,15 +258,20 @@ namespace kathryn{
 
         if (synNode != nullptr){
             resultNodeWrap->addExitNode(synNode);
+        }else if (masterJoinFlowBlock != nullptr){
+            NodeWrap* joinnerNodeWrap = masterJoinFlowBlock->sumarizeBlock();
+            Node* exitNode = joinnerNodeWrap->getExitNode();
+            assert(exitNode != nullptr);
+            resultNodeWrap->addExitNode(exitNode);
         }else{
             /** get Match allow nullptr*/
             Node* exitNode = nullptr;
-            if (cycleUsed >= 0){
+            if (cycleUsed >= 0){    /////// can determine cycle
                 exitNode = getMatchNodeFromNdsOrNws({basicStNode},
                                                     nodeWrapOfSubBlock,
                                                     cycleUsed);
-            }else{
-                assert(amt_block == 1);
+            }else{ /////// cannot determine but have only one
+                assert(amt_block == 1); //// in > 1
                 exitNode = getAnyNodeFromNdsOrNws({basicStNode},
                                                   nodeWrapOfSubBlock);
             }

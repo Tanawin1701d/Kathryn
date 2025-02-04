@@ -15,8 +15,10 @@ namespace kathryn{
 
     class FlowIdentifiable: public IdentBase{
         /** assign after parent is set*/
-        FlowBlockBase* _parentFb    = nullptr;
-        Module*        _parentMod   = nullptr;
+        FlowBlockBase* _parentFb     = nullptr;
+        Module*        _parentMod    = nullptr;
+        bool           _isJoinMaster = false; /////// this hints par block or other block that have multiple sublocks
+                                                ///// to only listen the exit event of this block
 
         std::string    _zepTrackName; //// it is declared by user to track dep
         bool           _isZepTrackName = false;
@@ -24,14 +26,17 @@ namespace kathryn{
     public:
         explicit FlowIdentifiable(const std::string& localName);
 
+        /* seeter*/
         void setParent(FlowBlockBase* parentFlowBlock);
         void setParent(Module* parentModule);
         void setZepTrackName(const std::string& zepTrackName);
+        void setJoinMaster(){ _isJoinMaster = true; }
 
         FlowBlockBase* getFlowBlockParrent();
         Module*        getModuleParent();
         bool           isZepTrackNameSet();
         std::string    getZepTrackName();
+        bool           isJoinMaster() { return _isJoinMaster; }
 
         void buildInheritName() override;
 

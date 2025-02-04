@@ -29,6 +29,8 @@ namespace kathryn {
         /** check that subblock or basic node contain control flow operation*/
         std::vector<NodeWrap*> nodeWrapOfSubBlock;
         int cycleUsed = -1;
+        /** masterJoinerBlock*/
+        FlowBlockBase* masterJoinFlowBlock = nullptr;
 
         StateNode*  basicStNode    = nullptr;
         SynNode*    synNode        = nullptr;
