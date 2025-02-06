@@ -106,6 +106,23 @@ namespace kathryn{
                 );
             }
         }
+    }
+
+    Operable* FlowBlockBase::genIntSumSignal(bool isAndCond, INT_TYPE intrType){
+
+        std::vector<Operable*>& targetSignals = intSignals[intrType];
+
+        if (targetSignals.empty()){
+            return nullptr;
+        }
+        Operable* resultSignal = targetSignals[0];
+        for (int idx = 1; idx < static_cast<int>(targetSignals.size()); idx++){
+            mfAssert(targetSignals[idx]->getOperableSlice().getSize() == 1, "interrupt signal size cannot more than one");
+
+            resultSignal = isAndCond ? &((*resultSignal) & (*targetSignals[idx]))
+                                     : &((*resultSignal) | (*targetSignals[idx]));
+        }
+        return resultSignal;
 
     }
 

@@ -9,7 +9,6 @@
 #include <utility>
 
 #include "lib/hw/slot/slot.h"
-#include "lib/hw/slot/slotProxy.h"
 #include "util/termColor/termColor.h"
 
 
@@ -41,6 +40,7 @@ namespace kathryn{
         ///// buildLogic used to  build communication
         ///// infrastructure logic
         virtual void buildLogic(){}
+
         ////// src/des tracker
         void incMasterSendSrc() {_amtMasterSendSrc++;}
         void incSlaveRecvSrc () {_amtSlaveRecvSrc++ ;}
@@ -54,6 +54,8 @@ namespace kathryn{
 
         [[nodiscard]] int getMasterRecvSrc() const {return _amtMasterRecvSrc;}
         [[nodiscard]] int getSlaveSendSrc()  const {return _amtSlaveSendSrc ;}
+
+        [[nodiscard]] POP_TUNNEL_TYPE getTunnelType() const {return _tunnelType;}
 
         void transferBase(Slot&     sendData,    ///// the data needed to send
                           WireSlot& transferIt,  ///// destination intermediate transfer

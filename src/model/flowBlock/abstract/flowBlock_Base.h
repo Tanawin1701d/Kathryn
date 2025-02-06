@@ -147,6 +147,8 @@ namespace kathryn {
                                      FB_CTRL_COM_META fbCtrlComMeta);
         virtual        ~FlowBlockBase();
 
+        Operable*      genIntSumSignal(bool isAndCond, INT_TYPE intrType); //// it pool all condition to single signal
+
         FlowBaseSimEngine* getSimEngine() override{
                 return _flowSimEngine;
         }

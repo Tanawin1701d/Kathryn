@@ -8,54 +8,56 @@
 #include "popTunnel/popHST.h"
 #include "popTunnel/popBCT.h"
 #include "popTunnel/popTunnelMng.h"
-#include "model/hwComponent/module/module.h"
+#include "model/controller/controller.h"
+#include "lib/hw/observe/observe.h"
 
 namespace kathryn{
 
 
     struct PopMod: Module, PopIntrable, PopTunnelable{
 
+        std::vector<Operable*> trackedRstSignal;
+        std::vector<Operable*> trackedIntrSignal;
+        FlowBlockBase* popLoopParBlock = nullptr;
+
         explicit PopMod(PopIntrMng* intrMng, PopTunnelMng* tunnelMng):
             PopIntrable(intrMng), PopTunnelable(tunnelMng){}
 
+        /** main control flow*/
 
-        /**req and wait4Ret ///// return {the return data slot, enable signal}*/
-        std::pair<Slot&, Operable&> hstReqAndWaitRet(PopHST& hstTunnel, Slot& sendData){
-            par{
-                cdowhile(~hstTunnel.isAckSend()){
-                    hstTunnel.reqSend(sendData);
-                }
-                cdowhile(~hstTunnel.isReqRet()){ markJoinMaster
-                    hstTunnel.ackRet();
-                }
-            }
-            return {hstTunnel.getReqRet(), hstTunnel.isAckRet()};
+        void flow() override{
+            cwhile(true){ par{
+                popLoopParBlock = kathrynBlock;
+                blk_popLoop();
+            }}
+            blk_userFlow();
         }
 
-        std::pair<Slot&, Operable&> hstReqAndWaitRet(const std::string& tunnelName,
-                                                     Slot& sendData){
-            return hstReqAndWaitRet(getHST(tunnelName),sendData);
+        virtual void blk_popLoop () {}
+        virtual void blk_userFlow() {}
+
+        /** if all signal is one (unnecessary at the same cycle)
+         * then the blk_popLoop will do the reloop
+         * all sig in sigs size must be one
+         * */
+        void blk_trackAndReLoop(const std::vector<Operable*>& sigs) const{
+            mfAssert(popLoopParBlock != nullptr, "cannot dectect poploop block for track and reloop operation it caused from trackAndReLoop mis placed");
+            Operable& obsResult = observe(sigs, popLoopParBlock->genIntSumSignal(true, INT_RESET));
+            /** we will use scWait but we must use markJoinMaster*/
+            for(auto kathrynBlock = new FlowBlockCondWait(obsResult);
+                     kathrynBlock->doPrePostFunction();
+                     kathrynBlock->step()){
+                markJoinMaster
+            };
         }
 
-        /** wait4req and ret ///// return {the return data slot, enable signal}*/
-
-        std::pair<Slot&, Operable&> hstWaitReqAndRet(PopHST& hstTunnel, Slot& retData){
-            par{
-                cdowhile(~hstTunnel.isReqSend()){
-                    hstTunnel.ackSend();
-                }
-                cdowhile(~hstTunnel.isAckRet()){ markJoinMaster
-                    hstTunnel.reqRet(retData);
-                }
-            }
-            return {hstTunnel.getReqSend(), hstTunnel.isAckRet()};
+        void blk_reLoopAt(Operable& cond) const{
+            for(auto kathrynBlock = new FlowBlockCondWait(cond);
+                kathrynBlock->doPrePostFunction();
+                kathrynBlock->step()){
+                markJoinMaster
+            };
         }
-
-        std::pair<Slot&, Operable&> hstWaitReqAndRet(const std::string& tunnelName,
-                                                     Slot& retDataData){
-            return hstWaitReqAndRet(getHST(tunnelName), retDataData);
-        }
-
 
     };
 

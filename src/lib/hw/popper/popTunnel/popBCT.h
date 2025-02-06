@@ -9,7 +9,7 @@
 
 namespace kathryn{
 
-    //////// POP_BROADCAST_TUNNEL
+    //////// POP_BROADCAST_TUNNEL ////// it will broadcast only one cycle
     struct PopBCT: PopTunnelBase{
 
         WireSlot bcInterSlot;
@@ -31,7 +31,7 @@ namespace kathryn{
         WireSlot& getBc(){ return bcInterSlot;}
 
         bool integrityCheck() override{
-            if (getMasterRecvSrc() != 0 || getSlaveSendSrc != 0){
+            if (getMasterRecvSrc() != 0 || getSlaveSendSrc() != 0){
                 std::cout << TC_RED << "[ERROR] " << _intfName << "  : must have no slave data transfer" << TC_DEF << std::endl;
                 return false;
             }
@@ -46,6 +46,12 @@ namespace kathryn{
                 return false;
             }
             return true;
+        }
+
+        void blk_bcUntil(Slot& bcData, Operable& cond){
+            cdowhile(!cond){
+                reqBc(bcData);
+            }
         }
 
     };

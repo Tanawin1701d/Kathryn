@@ -97,6 +97,37 @@ namespace kathryn{
 
         }
 
+        /** behavior block recruitment */
+        ///// for MASTER
+        ///// it will send data and retrieve back data
+        ///// typically it will use at least ONE CYCLE
+        void blk_reqAndWait4Ret(Slot& sendData){
+            par{
+                cdowhile(~isAckSend()){
+                    reqSend(sendData);
+                }
+                cdowhile(~isReqRet()){ markJoinMaster
+                    ackRet();
+                }
+            }
+        }
+
+        //// for SLAVE
+        ///// it will wait for req data and return back data
+        ///// typically it will use at least ONE CYCLE
+
+        void blk_wait4ReqAndRet(Slot& retData){
+            par{
+                cdowhile(~isReqSend()){
+                    ackSend();
+                }
+                cdowhile(~isAckRet()){ markJoinMaster
+                    reqRet(retData);
+                }
+            }
+        }
+
+
 
     };
 }
