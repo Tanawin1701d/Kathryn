@@ -28,12 +28,12 @@ namespace kathryn{
         void flow() override{
             cwhile(true){ par{
                 popLoopParBlock = kathrynBlock;
-                blk_popLoop();
+                blk_popLoop(kathrynBlock);
             }}
             blk_userFlow();
         }
 
-        virtual void blk_popLoop () {}
+        virtual void blk_popLoop (FlowBlockBase* kathrynBlock) {}
         virtual void blk_userFlow() {}
 
         /** if all signal is one (unnecessary at the same cycle)

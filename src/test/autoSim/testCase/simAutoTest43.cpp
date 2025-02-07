@@ -31,7 +31,7 @@ namespace kathryn{
         void flow() override{
 
             /**build set logic first*/
-            Slot input(testTable._meta, -1,{&validInput, &xInput});
+            Slot input(testTable._meta, -1,{{&validInput}, {&xInput}});
             setEnable = &testTable.buildSetLogic(input, setIdx(0, testTable._identWidth));
 
             /**build min logic */

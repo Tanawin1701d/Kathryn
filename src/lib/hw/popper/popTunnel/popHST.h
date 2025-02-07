@@ -98,6 +98,25 @@ namespace kathryn{
         }
 
         /** behavior block recruitment */
+
+        ////// one way handshake
+        void blk_reqAndWait4Ack(Slot& sendData){
+            par{
+                cdowhile(~isAckSend()){
+                    reqSend(sendData);
+                }
+            }
+        }
+
+        void blk_wait4Ack(){
+            par{
+                cdowhile(~isReqSend()){
+                    ackSend();
+                }
+            }
+        }
+
+
         ///// for MASTER
         ///// it will send data and retrieve back data
         ///// typically it will use at least ONE CYCLE

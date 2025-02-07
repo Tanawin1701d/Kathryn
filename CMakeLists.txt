@@ -68,6 +68,8 @@ add_executable(Kathryn
         src/lib/hw/popper/popTunnel/popBCT.h
         src/lib/hw/popper/popTunnel/popHST.h
         src/lib/hw/observe/observe.h
+        src/carolyne/model/base/fetch/fetchStageBase.h
+        src/carolyne/model/base/coreArgs.h
 
         #blinkSample.cpp
         #src/params/prjParam.h
