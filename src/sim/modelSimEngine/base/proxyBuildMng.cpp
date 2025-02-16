@@ -291,7 +291,7 @@ namespace kathryn{
 
     void ProxyBuildMng::startWriteCallBackCheckAndRet(){
 
-        proxyfileWriter->addData("__attribute__((always_inline)) inline bool " +
+        proxyfileWriter->addData(INLINE_ATTR + " bool " +
             CALLBACK_CHECK_FUNC_NAME + "(){\n");
         proxyfileWriter->addData("bool shouldRet = false;\n");
 
@@ -376,7 +376,7 @@ namespace kathryn{
             moduleSimEngine->recruitForVcdVar();
 
         std::string fSuffix = isUser ? USER_SUFFIX: INTERNAL_SUFFIX;
-        proxyfileWriter->addData("__attribute__((always_inline)) inline " +
+        proxyfileWriter->addData(INLINE_ATTR + " " +
             genFunctionDec(false, VCD_COL + fSuffix + SKE_SUFFIX));
         proxyfileWriter->addData("{\n");
         //proxyfileWriter->addData("}\n");
@@ -418,7 +418,7 @@ namespace kathryn{
     void ProxyBuildMng::startWritePerfColSke(){
         std::vector<FlowBaseSimEngine*> dayta = moduleSimEngine->recruitPerf();
 
-        proxyfileWriter->addData("__attribute__((always_inline)) inline " +
+        proxyfileWriter->addData(INLINE_ATTR + " " +
             genFunctionDec(false, PERF_COL+  SKE_SUFFIX));
         proxyfileWriter->addData("{\n");
 
@@ -456,7 +456,7 @@ namespace kathryn{
         std::vector<ModelProxyBuild*> volatileEle    = moduleSimEngine->recruitForMainOpVolatile();
         std::vector<ModelProxyBuild*> nonVolatileEle = moduleSimEngine->recruitForMainOpNonVolatile();
 
-        proxyfileWriter->addData("__attribute__((always_inline)) inline " +
+        proxyfileWriter->addData(INLINE_ATTR + " " +
                                  genFunctionDec(false, MAINOP_SIM + SKE_SUFFIX) +
                                  "{\n");
 
@@ -510,7 +510,7 @@ namespace kathryn{
         ///data from memory if there is update from memory to register because
         /// memEleHolder will provide temporary data to register simulation
 
-        proxyfileWriter->addData("__attribute__((always_inline)) inline "+
+        proxyfileWriter->addData(INLINE_ATTR + " "+
                                  genFunctionDec(false, FIZOP_SIM + SKE_SUFFIX)+
                                  "{\n");
 
@@ -545,7 +545,7 @@ namespace kathryn{
 
     void ProxyBuildMng::startWriteUserDefinedFunction(){
 
-        proxyfileWriter->addData("__attribute__((always_inline)) inline "+
+        proxyfileWriter->addData(INLINE_ATTR + " "+
                                  genFunctionDec(false, USER_DEF + USER_SUFFIX + SKE_SUFFIX)+
                                  "{\n");
         proxyfileWriter->addData("\n\n\n\n\n\n\n\n\n\n\n");

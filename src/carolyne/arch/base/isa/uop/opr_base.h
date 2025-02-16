@@ -7,7 +7,7 @@
 
 #include <utility>
 #include<vector>
-
+#include "lib/hw/slot/slot.h"
 #include "model/hwComponent/abstract/Slice.h"
 #include "carolyne/arch/base/march/alloc/allocInfo.h"
 #include "carolyne/arch/base/march/prfUnit/prfMetaBase.h"
@@ -42,7 +42,7 @@
             explicit OprTypeBase(ALLOC_INFO allocInfo):
             _allocInfo(allocInfo){}
 
-            ~OprTypeBase() = default;
+            virtual ~OprTypeBase() = default;
 
             virtual bool isEqualTypeDeep(const OprTypeBase& rhs)  = 0;
 
@@ -59,6 +59,12 @@
                                         const std::string& description){
                 return fieldName + "_" + description;
             }
+
+            ////// generate the rowMeta used in operand
+            virtual SlotMeta genDecodeSlotMeta(std::string prefix) = 0;
+
+            [[nodiscard]]
+            int getOprWidth(){return _oprWidth;}
 
         };
 

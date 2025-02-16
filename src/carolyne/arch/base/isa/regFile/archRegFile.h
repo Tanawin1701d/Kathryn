@@ -11,6 +11,7 @@
 #include "carolyne/arch/base/util/regFileType.h"
 #include "carolyne/arch/base/util/genRowMeta.h"
 #include "carolyne/arch/base/util/metaIdent.h"
+#include "carolyne/util/checker/checker.h"
 
 
 namespace kathryn::carolyne{

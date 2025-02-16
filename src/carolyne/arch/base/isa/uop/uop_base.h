@@ -22,6 +22,7 @@
             std::string               _uopName = UOP_UNNAMED;
             std::vector<OprTypeBase*> _srcOprTypes;
             std::vector<OprTypeBase*> _desOprTypes;
+            int                       _fopIdentValue    = -1;
             int                       _fopIdentWidth    = -1; ///// the bit size that uop used to ident its functional
             ExecUTM*                  _execUnitTypeMeta = nullptr; //// which type of exec that this uop love to go
             /**
@@ -50,6 +51,23 @@
              *
              */
 
+            int findUopRecurTime(int targetOprIdx, bool isSrc){ //// 0 mean it is first time
+
+                std::vector<OprTypeBase*>& relatedOprs = isSrc ? _srcOprTypes: _desOprTypes;
+                crlAss(targetOprIdx < relatedOprs.size(), "fundUopRecur idx out of range");
+
+                int recurTime = 0;
+
+                for (int iterIdx = 0; iterIdx < targetOprIdx; iterIdx++){
+                    if (relatedOprs[iterIdx] == relatedOprs[targetOprIdx]){
+                        recurTime++;
+                    }
+                }
+                recurTime++;
+
+                return recurTime;
+            }
+
             void addOprType(OprTypeBase* rhs, bool isSrc){ //// else or will be destination
                 crlAss(rhs != nullptr, "add opr to uop but opr is null");
                 auto oprTypeRepo = isSrc ? _srcOprTypes: _desOprTypes;
@@ -60,6 +78,8 @@
             std::vector<OprTypeBase*> getOprTypes(bool isSrc){
                 return isSrc ? _srcOprTypes: _desOprTypes;
             }
+
+            int getIdentVal() const{ return _fopIdentValue; }
 
             /**
              * equal identification

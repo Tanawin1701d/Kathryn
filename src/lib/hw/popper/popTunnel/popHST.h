@@ -50,7 +50,7 @@ namespace kathryn{
         /**
          * sending
          */
-        void reqSend(Slot& sendData){
+        void reqSend(const Slot& sendData){
             transferBase(sendData, sendInterSlot, reqSendSig, sendStates, &VALID);
             incMasterSendSrc();
         }

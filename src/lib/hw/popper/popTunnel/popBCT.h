@@ -22,7 +22,7 @@ namespace kathryn{
             PopTunnelBase(PTT_BROAD_CAST,std::move(itfName)),
             bcInterSlot(sendRowMeta, 0){}
 
-        void reqBc(Slot& bcData){
+        void reqBc(const Slot& bcData){
             transferBase(bcData, bcInterSlot, active, sendStates, &VALID);
             incMasterSendSrc();
         }

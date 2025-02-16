@@ -26,6 +26,7 @@ FILE(GLOB_RECURSE SRC_EXAMPLE         RELATIVE ${CMAKE_SOURCE_DIR} "src/example/
 FILE(GLOB_RECURSE SRC_PARAM           RELATIVE ${CMAKE_SOURCE_DIR} "src/params/*.cpp")
 FILE(GLOB_RECURSE SRC_LIB             RELATIVE ${CMAKE_SOURCE_DIR} "src/lib/*.cpp")
 FILE(GLOB_RECURSE SRC_MODEL_COMPILE   RELATIVE ${CMAKE_SOURCE_DIR} "src/modelCompile/proxyEventBase.cpp")
+FILE(GLOB_RECURSE SRC_CAROLYNE        RELATIVE ${CMAKE_SOURCE_DIR} "src/carolyne/*.cpp")
 
 
 add_executable(Kathryn
@@ -45,31 +46,12 @@ add_executable(Kathryn
         ${SRC_PARAM}
         ${SRC_LIB}
         ${SRC_MODEL_COMPILE}
-        src/carolyne/arch/base/isa/regFile/archRegFile.h
-        src/carolyne/arch/base/util/regFileType.h
-        src/carolyne/arch/base/march/prfUnit/prfMetaBase.h
-        src/carolyne/arch/base/util/metaIdent.h
-        src/carolyne/arch/base/util/metaIdent.cpp
-        src/carolyne/arch/base/isa/regFile/archRegFile.cpp
-        src/carolyne/arch/base/isa/uop/opr_base.h
-        src/carolyne/arch/base/isa/uop/opr_li.h
-        src/carolyne/arch/base/march/alloc/allocInfo.h
-        src/carolyne/arch/base/isa/uop/opr_lrf.h
-        src/carolyne/arch/base/isa/uop/opr_srf.h
-        src/carolyne/arch/base/isa/uop/uop_base.h
-        src/carolyne/arch/base/march/fetchUnit/fetchMetaBase.h
-        src/carolyne/arch/caro/isa/uop/caro_opr.h
-        src/lib/hw/popper/popInterrupt.h
-        src/lib/hw/popper/popInterrupt.h
-        src/lib/hw/popper/popMod.h
-        src/lib/hw/popper/popTunnel/popTunnelBase.h
-        src/lib/hw/popper/popTunnel/popTunnelMng.h
-        src/lib/hw/popper/popTunnel/popBCT.h
-        src/lib/hw/popper/popTunnel/popBCT.h
-        src/lib/hw/popper/popTunnel/popHST.h
-        src/lib/hw/observe/observe.h
+        ${SRC_CAROLYNE}
         src/carolyne/model/base/fetch/fetchStageBase.h
-        src/carolyne/model/base/coreArgs.h
+        src/carolyne/model/base/decode/decodeStageBase.h
+        src/carolyne/model/base/decode/decodeSlotAnal.cpp
+        src/carolyne/model/base/decode/decodeSlotAnal.h
+        src/lib/hw/observe/observe.cpp
 
         #blinkSample.cpp
         #src/params/prjParam.h

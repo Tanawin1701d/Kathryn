@@ -39,6 +39,7 @@ namespace kathryn{
         UserDefRepo     _codeRepo; /// used to store old code
 
         const std::string TEST_NAME;
+        const std::string INLINE_ATTR = "__attribute__((always_inline)) inline";
 
         //////// key of file and directory
         const std::string PROJECT_DIR    = "..";
@@ -101,7 +102,9 @@ namespace kathryn{
     public:
         explicit ProxyBuildMng(std::string testName):
         TEST_NAME(std::move(testName)),
-        PROJECT_DIR(KATHRYN_PROJECT_DIR){};
+        PROJECT_DIR(KATHRYN_PROJECT_DIR){
+
+        };
         ~ProxyBuildMng();
         std::vector<ModelProxyBuild*>
         doTopologySort(std::vector<ModelProxyBuild*>& graph);

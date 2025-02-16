@@ -24,14 +24,15 @@ namespace kathryn{
                                std::string vcdFilePath,
                                std::string profileFilePath,
                                std::string genFileName,
-                               SimProxyBuildMode simProxyBuildMode
+                               SimProxyBuildMode simProxyBuildMode,
+                               bool requireLRC
                                ):
             _simProxyBuildMode(simProxyBuildMode),
             _vcdWriter (new VcdWriter(std::move(vcdFilePath))),
             _flowWriter(new FlowWriter(std::move(profileFilePath))),
             _limitCycle(limitCycle),
             _proxyBuildMng(std::move(genFileName)),
-            requireConSim(true)
+            _requireLRC(requireLRC)
     {
         SimController* simCtrl = getSimController();
         assert(simCtrl != nullptr);
@@ -240,6 +241,7 @@ namespace kathryn{
         _modelSimEvent = _proxyBuildMng.loadAndGetProxy();
 
         ///////// initialize both simevent and proxyBuildMng
+        _modelSimEvent->setLongRunType(_requireLRC);
         _modelSimEvent->setVcdWriter(_vcdWriter);
         _modelSimEvent->setVcdWritePol(PARAM_VCD_REC_POL);
         _modelSimEvent->eventWarmUp();

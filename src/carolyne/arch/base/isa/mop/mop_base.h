@@ -15,6 +15,7 @@ namespace kathryn{
         struct MopTypeBase: SliceMatcher, VizCsvGenable{
             int                          _mopBitWidth = -1;
             std::string                  _mopName;
+            int                          _mopIdentValue;
             std::vector<UopTypeBase*>    _uopTypes;
             std::vector<UopMatcherBase*> _uopMatchers;
 
@@ -38,7 +39,10 @@ namespace kathryn{
                 _uopMatchers.push_back(uopMatcher);
             }
 
-            int getMopBitWidth() const{return _mopBitWidth;}
+            int                          getMopBitWidth()   const {return _mopBitWidth;}
+            std::vector<UopTypeBase*>    getUopTypes()      const {return _uopTypes;}
+            std::vector<UopMatcherBase*> getUopMatcher()    const {return _uopMatchers;}
+            int                          getMopIdentValue() const {return _mopIdentValue;}
 
             bool checkEqualUopTypes(const std::vector<UopTypeBase*>& lhsUopTypes,
                                     const std::vector<UopTypeBase*>& rhsUopTypes){
@@ -73,9 +77,9 @@ namespace kathryn{
             void visual(CsvGenFile& genFile) override{
 
                 genFile.addRowData(_mopName + "sz<" + std::to_string(_mopBitWidth) + ">");
-                for (UopTypeBase* uopType: _uopTypes){
-                    genFile.addData(uopType->genTable());
-                }
+                // for (UopTypeBase* uopType: _uopTypes){
+                //     genFile.addData(uopType->genTable());
+                // }
             }
 
         };

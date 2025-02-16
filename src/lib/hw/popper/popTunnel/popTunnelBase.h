@@ -57,11 +57,11 @@ namespace kathryn{
 
         [[nodiscard]] POP_TUNNEL_TYPE getTunnelType() const {return _tunnelType;}
 
-        void transferBase(Slot&     sendData,    ///// the data needed to send
-                          WireSlot& transferIt,  ///// destination intermediate transfer
-                          Wire&     transferSig, ///// the signal indicated to send
+        void transferBase(const Slot&         sendData,    ///// the data needed to send
+                          WireSlot&           transferIt,  ///// destination intermediate transfer
+                          Wire&               transferSig, ///// the signal indicated to send
                           std::vector<Wire*>& triggerStorage, ////// the storage of trigger signal(s)
-                          Operable* activeSignal){ ////// the active value if the trigger
+                          Operable*           activeSignal){ ////// the active value if the trigger
             /** build trigger state*/
             Wire& trigger = mOprWire("dataTrigger", 1);
             triggerStorage.push_back(&trigger);

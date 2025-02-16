@@ -16,6 +16,7 @@ namespace kathryn::carolyne{
     struct FetchUM_Base: BlkPop{
 
         FetchUTM_Base& _fetchMeta;
+        mReg(markColdStart, 1);
 
         explicit FetchUM_Base(FunArgs funArgs, FetchUTM_Base& fetchMeta):
         BlkPop(funArgs, FETCH_BLOCK_NAME),
@@ -26,8 +27,7 @@ namespace kathryn::carolyne{
         void blk_popLoop(FlowBlockBase* kathrynBlock) override{
             /////// interrupt signal
             Operable& mispred = getIntrSignal(INTR_MISPRED);
-            intrReset(mispred);
-            intrStart(mispred);
+            intrRstAndStart(mispred);
             /////// collect all related tunnel
             PopHST& ctrlTun   = getHST(TN_PC); ///// slave
             PopHST& memTun    = getHST(TN_FETMEM); ///// master
@@ -45,9 +45,12 @@ namespace kathryn::carolyne{
                 }
             }
             //////// interrupt signal will reset it
-            Operable& decodeAcked      = observe({&decodeTun.isAckSend()}, nullptr);
-            Operable& readyToFetchNext = (ctrlTun.isReqSend() && decodeAcked);
-            ////// decoder trigger and req new pc
+            Operable& decodeAcked      = observe({&decodeTun.isAckSend()}, {&mispred, &memTun.isAckSend()});
+            Operable& readyToFetchNext = ctrlTun.isReqSend() & (decodeAcked | markColdStart);
+            ////// when  (new req pc arrive) and (decoder is accept old fetch data)
+            ////// do memReq    and ack request pc
+
+
             cdowhile( (!readyToFetchNext) || (!memTun.isAckSend()) ){ markJoinMaster
                 zif(readyToFetchNext){
                     memTun.reqSend(ctrlTun.getReqSend()({SLOT_F_PC}));

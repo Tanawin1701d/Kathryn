@@ -34,8 +34,11 @@ namespace kathryn{
         UserEvent               simAgent;/** sim agent base can't change name*/
         ProxyBuildMng           _proxyBuildMng;
 
-
+        //////////////////////////
+        /**long range simulation*/
+        //////////////////////////
         std::vector<TraceEvent> _traceEvents;
+        bool                    _requireLRC       = false;
         CYCLE                   _nextLimitAmtLRC  = INT64_MAX; //// next limit amount long run cyclc
         ///////////////////
         /**concrete sim*/
@@ -73,7 +76,8 @@ namespace kathryn{
                               SimProxyBuildMode simProxyBuildMode =
                                     SimProxyBuildMode::SPB_GEN |
                                     SimProxyBuildMode::SPB_COMPILE |
-                                    SimProxyBuildMode::SPB_RUN
+                                    SimProxyBuildMode::SPB_RUN,
+                              bool requireLRC = false ///// this will enable model sim event start with long range simulator
                               );
 
         virtual ~SimInterface();
@@ -95,6 +99,10 @@ namespace kathryn{
         void createModelSimEvent();
         void initPerfCol();
         void finalPerfCol();
+        /** require con sim*/
+        void disableConSim(){requireConSim = false;} ///// it will not lunch con thead simulator
+        /** require LRC (this can be invoked before simulation is start only)*/
+        void enableLRC(){_requireLRC = true;}
 
         ProxySimEventBase* getProxySimEvent(){return _modelSimEvent;}
 

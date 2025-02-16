@@ -29,8 +29,8 @@ namespace kathryn{
         void flow() override{
 
             /**build set logic first*/
-            SlotOpr inputOpr(testTable._meta,
-                {&validInput, &xInput, &yInput});
+            Slot inputOpr(testTable._meta, -1,
+                {{&validInput}, {&xInput}, {&yInput}});
             setEnable = &testTable.buildSetLogic(inputOpr, setIdx);
 
             /**set value*/
@@ -67,20 +67,20 @@ namespace kathryn{
         {}
 
         void describeCon() override{
-            testAndPrint("checkTable[0] init valid: ", (ull)(*_md->testTable._hwSlots[0]->hwFields[0]), 0);
-            testAndPrint("checkTable[0] init x: "    , (ull)(*_md->testTable._hwSlots[0]->hwFields[1]), 0);
-            testAndPrint("checkTable[0] init y: "    , (ull)(*_md->testTable._hwSlots[0]->hwFields[2]), 0);
-            testAndPrint("checkTable[1] init valid: ", (ull)(*_md->testTable._hwSlots[1]->hwFields[0]), 0);
-            testAndPrint("checkTable[1] init x: "    , (ull)(*_md->testTable._hwSlots[1]->hwFields[1]), 0);
-            testAndPrint("checkTable[1] init y: "    , (ull)(*_md->testTable._hwSlots[1]->hwFields[2]), 0);
+            testAndPrint("checkTable[0] init valid: ", (ull)(*_md->testTable._hwSlots[0]->hwMetas[0].opr), 0);
+            testAndPrint("checkTable[0] init x: "    , (ull)(*_md->testTable._hwSlots[0]->hwMetas[1].opr), 0);
+            testAndPrint("checkTable[0] init y: "    , (ull)(*_md->testTable._hwSlots[0]->hwMetas[2].opr), 0);
+            testAndPrint("checkTable[1] init valid: ", (ull)(*_md->testTable._hwSlots[1]->hwMetas[0].opr), 0);
+            testAndPrint("checkTable[1] init x: "    , (ull)(*_md->testTable._hwSlots[1]->hwMetas[1].opr), 0);
+            testAndPrint("checkTable[1] init y: "    , (ull)(*_md->testTable._hwSlots[1]->hwMetas[2].opr), 0);
             conNextCycle(2);
-            testAndPrint("checkTable[0] proc valid: ", (ull)(*_md->testTable._hwSlots[0]->hwFields[0]), 1);
-            testAndPrint("checkTable[0] proc x: "    , (ull)(*_md->testTable._hwSlots[0]->hwFields[1]), 1);
-            testAndPrint("checkTable[0] proc y: "    , (ull)(*_md->testTable._hwSlots[0]->hwFields[2]), 1);
+            testAndPrint("checkTable[0] proc valid: ", (ull)(*_md->testTable._hwSlots[0]->hwMetas[0].opr), 1);
+            testAndPrint("checkTable[0] proc x: "    , (ull)(*_md->testTable._hwSlots[0]->hwMetas[1].opr), 1);
+            testAndPrint("checkTable[0] proc y: "    , (ull)(*_md->testTable._hwSlots[0]->hwMetas[2].opr), 1);
             conNextCycle(1);
-            testAndPrint("checkTable[1] proc valid: ", (ull)(*_md->testTable._hwSlots[1]->hwFields[0]), 1);
-            testAndPrint("checkTable[1] proc x: "    , (ull)(*_md->testTable._hwSlots[1]->hwFields[1]), 2);
-            testAndPrint("checkTable[1] proc y: "    , (ull)(*_md->testTable._hwSlots[1]->hwFields[2]), 2);
+            testAndPrint("checkTable[1] proc valid: ", (ull)(*_md->testTable._hwSlots[1]->hwMetas[0].opr), 1);
+            testAndPrint("checkTable[1] proc x: "    , (ull)(*_md->testTable._hwSlots[1]->hwMetas[1].opr), 2);
+            testAndPrint("checkTable[1] proc y: "    , (ull)(*_md->testTable._hwSlots[1]->hwMetas[2].opr), 2);
 //            for(int i = 0; i < 48; i++){
 //                ValRep testVal = NumConverter::createValRep(6, i);
 //
