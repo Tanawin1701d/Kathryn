@@ -60,9 +60,6 @@
                 return fieldName + "_" + description;
             }
 
-            ////// generate the rowMeta used in operand
-            virtual SlotMeta genDecodeSlotMeta(std::string prefix) = 0;
-
             [[nodiscard]]
             int getOprWidth(){return _oprWidth;}
 

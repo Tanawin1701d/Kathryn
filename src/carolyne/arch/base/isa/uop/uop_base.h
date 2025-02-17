@@ -29,14 +29,18 @@
              * todo next check execute engine
              ***/
 
+            explicit UopTypeBase(std::string uopName, int fopIdentValue, int fopIdentWidth):
+            _uopName(uopName),
+            _fopIdentValue(fopIdentValue),
+            _fopIdentWidth(fopIdentWidth){
+
+                crlAss(_fopIdentWidth > 0, "fop bit with in uop: " + _uopName + " must have size > 0");
+
+            }
+
             virtual ~UopTypeBase() {
                 for(auto oprType : _srcOprTypes){delete oprType;}
                 for(auto oprType:  _desOprTypes){delete oprType;}
-            }
-
-            void setFopIdentWidth(int sz){
-                crlAss(sz > 0, "fop bit with in uop: " + _uopName + " must have size > 0");
-                _fopIdentWidth = sz;
             }
 
             void setExecUnitType(ExecUTM* execUnitType){
@@ -78,8 +82,8 @@
             std::vector<OprTypeBase*> getOprTypes(bool isSrc){
                 return isSrc ? _srcOprTypes: _desOprTypes;
             }
-
-            int getIdentVal() const{ return _fopIdentValue; }
+            int                       getIdentVal() const{ return _fopIdentValue; }
+            std::string               getUopName() const { return _uopName; }
 
             /**
              * equal identification

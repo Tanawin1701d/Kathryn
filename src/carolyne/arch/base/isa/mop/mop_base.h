@@ -13,17 +13,19 @@ namespace kathryn{
     namespace carolyne{
 
         struct MopTypeBase: SliceMatcher, VizCsvGenable{
-            int                          _mopBitWidth = -1;
             std::string                  _mopName;
+            int                          _mopBitWidth = -1;
             int                          _mopIdentValue;
             std::vector<UopTypeBase*>    _uopTypes;
             std::vector<UopMatcherBase*> _uopMatchers;
 
-            explicit MopTypeBase(std::string mopName, int mopBitWidth):
+            explicit MopTypeBase(std::string mopName, int mopBitWidth, int mopIdentValue):
             SliceMatcher(mopBitWidth),
+            _mopName(std::move(mopName)),
             _mopBitWidth(mopBitWidth),
-            _mopName(std::move(mopName))
-            {}
+            _mopIdentValue(mopIdentValue){
+                crlAss(_mopBitWidth > 0, "mopIdentWidth must greater than 0");
+            }
 
             virtual ~MopTypeBase(){
                 for(auto uopMatcher: _uopMatchers){delete uopMatcher;}

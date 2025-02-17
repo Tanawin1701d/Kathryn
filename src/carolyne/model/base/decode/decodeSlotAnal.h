@@ -25,7 +25,7 @@ namespace kathryn::carolyne{
         /////// in currently version we assume the equal of identification width
         /// for convinient
 
-        int _maxIdentWidth;
+        int _maxIdentWidth = -1;
         IsaBaseRepo& _isaBaseRepo;
         std::vector<OprTypeBase*> pooledSrcOprs;
         std::vector<OprTypeBase*> pooledDesOprs;
@@ -49,8 +49,8 @@ namespace kathryn::carolyne{
         void         addOprsTORowMeta(RowMeta& desRowMeta, bool isSrc);
         RegSlot&     getDecoderSlot     () const;
         virtual void blk_decode(Slot& rawSlot);
-        virtual void decodeOprs (Slot& rawSlot, UopTypeBase* uopType, UopMatcherBase* uopMatcher, bool isSrc);
-        virtual void decodeUop  (Slot& rawSlot, UopTypeBase* uopType, UopMatcherBase* uopMatcher);
+        virtual void decodeOprs (Wire& stateWire, Slot& rawSlot, UopTypeBase* uopType, UopMatcherBase* uopMatcher, bool isSrc);
+        virtual void decodeUop  (Wire& stateWire, Slot& rawSlot, UopTypeBase* uopType, UopMatcherBase* uopMatcher);
 
 
         ////////// decoder slot

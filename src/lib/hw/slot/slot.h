@@ -111,41 +111,29 @@ namespace kathryn{
         /**  assigning system*/
 
         /////////// main assigning
-        void assignCore(const Slot& rhsSlot, int startIdx, int stopIdx, Operable& condition){
+        void assignCore(const Slot& rhsSlot, Operable& condition){
 
-            int size = stopIdx - startIdx;
-            mfAssert(size == rhsSlot.getAmtField(), "size is not equal");
-            mfAssert(isContainIdx(startIdx, stopIdx), "statIdx error");
-
-            for(int i = 0; i < (stopIdx-startIdx); i++){
-                FieldMeta lhsField = _meta.getField(startIdx+i);
-                FieldMeta rhsField = rhsSlot.getMeta().getField(i);
-                mfAssert(lhsField.checkEqualField(rhsField),
-                    "assign fieldNot equal fieldName lhs " + lhsField._fieldName + " rhs " + rhsField._fieldName);
-
-                hwMetas[startIdx + i].asb->addUpdateMeta(new UpdateEvent({
+            int srcIdx = 0;
+            for (const FieldMeta& fm: rhsSlot.getMeta().getAllFields()){
+                int desIdx = _meta.getFieldIdx(fm._fieldName);
+                mfAssert(isContainIdx(desIdx, desIdx+1), "cannot assign fieldName: " + fm._fieldName);
+                hwMetas[desIdx].asb->addUpdateMeta(new UpdateEvent({
                     &condition,
                     nullptr,
-                    rhsSlot.hwMetas[i].opr,
-                    hwMetas[startIdx + i].opr->getOperableSlice(),
+                    rhsSlot.hwMetas[srcIdx].opr,
+                    hwMetas[srcIdx].opr->getOperableSlice(),
                     DEFAULT_UE_PRI_USER
                 }));
+                srcIdx += 1;
             }
         }
 
-        void assignCore(const Slot& rhsSlot,
-                        const std::string& startFieldName, const std::string& endFieldName,
+        void assignCore(const std::string& startFieldName,
+                        Operable& dayta,
                         Operable& condition){
-            int startIdx = _meta.getFieldIdx(startFieldName);
-            int stopIdx  = _meta.getFieldIdx(endFieldName);
-            stopIdx++;
-            assignCore(rhsSlot, startIdx, stopIdx, condition);
-
-        }
-
-        void assignCore(const Slot& rhsSlot, Operable& condition){
-            mfAssert(getAmtField() == rhsSlot.getAmtField(), "rhsSlot and current slot is not match to assign");
-            assignCore(rhsSlot, 0, getAmtField(), condition);
+            RowMeta rm({startFieldName}, {dayta.getOperableSlice().getSize()});
+            Slot rhsSlot(rm, -1, {{&dayta, nullptr}});
+            assignCore(rhsSlot, condition);
         }
 
         /** hardware getter system*/

@@ -16,9 +16,8 @@ namespace kathryn::carolyne::caro{
     struct A_UOP: UopTypeBase{
         explicit A_UOP(OprTypeLoadRegFile*  r1,
                        OprTypeLoadRegFile*  r2,
-                       OprTypeStoreRegFile* rd){
-            _uopName = AOP_NAME;
-            setFopIdentWidth(XOP_IDENT_WIDTH);
+                       OprTypeStoreRegFile* rd)
+           :UopTypeBase(AOP_NAME, 1, XOP_IDENT_WIDTH){
             addOprType(r1, true);
             addOprType(r2, true);
             addOprType(rd, false);
@@ -32,9 +31,8 @@ namespace kathryn::carolyne::caro{
     struct L_UOP: UopTypeBase{
         explicit L_UOP(OprTypeLoadRegFile*  r1,
                        OprTypeStoreRegFile* rta,
-                       OprTypeStoreRegFile* rd){
-            _uopName = LOP_NAME;
-            setFopIdentWidth(XOP_IDENT_WIDTH);
+                       OprTypeStoreRegFile* rd)
+                :UopTypeBase(LOP_NAME, 2, XOP_IDENT_WIDTH){
             addOprType(r1, true);
 
             addOprType(rta, false);
@@ -49,9 +47,8 @@ namespace kathryn::carolyne::caro{
         explicit S_UOP(OprTypeLoadRegFile*  r1,
                        OprTypeLoadRegFile*  r2,
                        OprTypeStoreRegFile* rta,
-                       OprTypeStoreRegFile* rd  ){
-            _uopName = SOP_NAME;
-            setFopIdentWidth(XOP_IDENT_WIDTH);
+                       OprTypeStoreRegFile* rd  )
+                :UopTypeBase(SOP_NAME, 3, XOP_IDENT_WIDTH){
             addOprType(r1, true);
             addOprType(r2, true);
 
@@ -65,9 +62,9 @@ namespace kathryn::carolyne::caro{
 
     struct I_UOP: UopTypeBase{
         explicit I_UOP(OprTypeLoadImm* ri,
-                       OprTypeStoreRegFile* rd){
-            _uopName = IOP_NAME;
-            setFopIdentWidth(XOP_IDENT_WIDTH);
+                       OprTypeStoreRegFile* rd)
+               :UopTypeBase(IOP_NAME, 4, XOP_IDENT_WIDTH)
+           {
             addOprType(ri, true);
             addOprType(rd, false);
         }

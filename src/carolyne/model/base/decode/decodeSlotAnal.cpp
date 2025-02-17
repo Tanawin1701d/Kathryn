@@ -65,7 +65,7 @@ namespace kathryn::carolyne{
 
     void DecodeSlotAnalyzer::analIsa(){
         _maxIdentWidth = _isaBaseRepo.getUopTypes()[0]->_fopIdentWidth;
-        for (UopTypeBase* uopType: _isaBaseRepo){
+        for (UopTypeBase* uopType: _isaBaseRepo.getUopTypes()){
             addUopInConcern(uopType);
         }
     }
@@ -111,7 +111,10 @@ namespace kathryn::carolyne{
             Operable& checkMopMatch = (*slicedMopIdent) == mopType->getMopIdentValue();
 
             //////// decode !
-            zif(checkMopMatch){ decodeUop(rawSlot, mopType->getUopTypes()[0], mopType->getUopMatcher()[0]); }
+            zif(checkMopMatch){
+                Wire& stateWire = makeOprWire("state_"+ mopType->getUopTypes()[0]->getUopName(), 1);
+                decodeUop(stateWire, rawSlot, mopType->getUopTypes()[0], mopType->getUopMatcher()[0]);
+            }
 
                 /////// TODO for now we have only 1 uop
 
@@ -119,7 +122,7 @@ namespace kathryn::carolyne{
 
     }
 
-    void DecodeSlotAnalyzer::decodeOprs (Slot& rawSlot, UopTypeBase* uopType, UopMatcherBase* uopMatcher, bool isSrc){
+    void DecodeSlotAnalyzer::decodeOprs (Wire& stateWire, Slot& rawSlot, UopTypeBase* uopType, UopMatcherBase* uopMatcher, bool isSrc){
         auto relatedOprMatchers = uopMatcher->getOprMatcher(isSrc);
         auto relatedOprs = uopType->getOprTypes(isSrc);
         crlAss(relatedOprs.size() == relatedOprMatchers.size(), "cannot decode opr with mismatch size");
@@ -140,8 +143,8 @@ namespace kathryn::carolyne{
             std::string validFieldName = getValidFieldName(idx, isSrc);
             std::string oprFieldName   = getDecOprFieldName(idx, isSrc);
 
-            decodedSlot.assignCore(validFieldName, validSetter);
-            decodedSlot.assignCore(oprFieldName, *slicedRaw);
+            decodedSlot->assignCore(validFieldName, validSet  , stateWire);
+            decodedSlot->assignCore(oprFieldName  , *slicedRaw, stateWire);
             decodedOprs[idxInpooled] = true;
         }
 
@@ -153,21 +156,22 @@ namespace kathryn::carolyne{
             }
             RegSlot* decodedSlot = _regSlot;
             std::string validFieldName = getValidFieldName(idx, isSrc);
-            decodedSlot.assignCore(validFieldName, validUnset);
+            decodedSlot->assignCore(validFieldName, validUnset, stateWire);
         }
 
     }
 
     ////////// aim to map rawSlot to slot decoder
-    void DecodeSlotAnalyzer::decodeUop(Slot& rawSlot,
+    void DecodeSlotAnalyzer::decodeUop(Wire& stateWire,
+                                       Slot& rawSlot,
                                        UopTypeBase* uopType,
                                        UopMatcherBase* uopMatcher){
         ///////// uop ident Assign
         Val& UOP_IDENT = makeOprVal("UOP_IDENT_" + uopType->_uopName, _maxIdentWidth, uopType->getIdentVal());
-        _regSlot->assignCore(SLOT_F_DEC_UOP, UOP_IDENT);
+        _regSlot->assignCore(SLOT_F_DEC_UOP, UOP_IDENT, stateWire);
         ///////// decode operand
-        decodeOprs(rawSlot, uopType, uopMatcher, true);
-        decodeOprs(rawSlot, uopType, uopMatcher, false);
+        decodeOprs(stateWire, rawSlot, uopType, uopMatcher, true);
+        decodeOprs(stateWire, rawSlot, uopType, uopMatcher, false);
     }
 
 

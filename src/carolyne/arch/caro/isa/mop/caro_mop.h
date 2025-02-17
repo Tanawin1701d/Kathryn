@@ -13,7 +13,7 @@ namespace kathryn::carolyne::caro{
 
     struct A_MOP: MopTypeBase{
         explicit A_MOP(A_UOP* a_uop):
-            MopTypeBase(A_MOP_NAME, MOP_WIDTH){
+            MopTypeBase(A_MOP_NAME, MOP_WIDTH, 1){
             addUop(a_uop);
         }
 
@@ -43,7 +43,7 @@ namespace kathryn::carolyne::caro{
 
     struct L_MOP: MopTypeBase{
         explicit L_MOP(L_UOP* l_uop):
-            MopTypeBase(L_MOP_NAME, MOP_WIDTH){
+            MopTypeBase(L_MOP_NAME, MOP_WIDTH, 2){
             addUop(l_uop);
         }
         bool isEqualTypeDeep(const MopTypeBase& rhs) override{return true;}
@@ -72,7 +72,7 @@ namespace kathryn::carolyne::caro{
 
     struct S_MOP: MopTypeBase{
         explicit S_MOP(S_UOP* s_uop):
-            MopTypeBase(S_MOP_NAME, MOP_WIDTH){
+            MopTypeBase(S_MOP_NAME, MOP_WIDTH, 3){
             addUop(s_uop);
         }
         bool isEqualTypeDeep(const MopTypeBase& rhs) override{return true;}
@@ -104,7 +104,7 @@ namespace kathryn::carolyne::caro{
 
     struct I_MOP: MopTypeBase{
         explicit I_MOP(I_UOP* i_uop):
-            MopTypeBase(I_MOP_NAME, MOP_WIDTH){
+            MopTypeBase(I_MOP_NAME, MOP_WIDTH, 4){
             addUop(i_uop);
         }
         bool isEqualTypeDeep(const MopTypeBase& rhs) override{return true;}
@@ -132,7 +132,7 @@ namespace kathryn::carolyne::caro{
 
     struct B_MOP: MopTypeBase{
         explicit B_MOP(A_UOP* a_uop):
-        MopTypeBase(B_MOP_NAME, MOP_WIDTH){
+        MopTypeBase(B_MOP_NAME, MOP_WIDTH, 5){
             addUop(a_uop);
         }
         bool isEqualTypeDeep(const MopTypeBase& rhs) override{return true;}
