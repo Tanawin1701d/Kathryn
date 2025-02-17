@@ -43,6 +43,8 @@ namespace kathryn::carolyne{
                                     int oprIdxInUop,
                                     bool isSrc); ///// it occurr repeatly at times
 
+        ///////// get opr type base
+        OprTypeBase* getOprType(int idx, bool isSrc);
         ///////// command function
         void         analIsa            ();
         void         buildDecoderSlot   ();

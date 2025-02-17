@@ -1,0 +1,8 @@
+//
+// Created by tanawin on 17/2/2025.
+//
+
+#ifndef KATHRYN_ALLOCSTAGEBASE_H
+#define KATHRYN_ALLOCSTAGEBASE_H
+
+#endif //KATHRYN_ALLOCSTAGEBASE_H

@@ -63,7 +63,11 @@ namespace kathryn::carolyne{
     /////////  fetch     <-> decoder
     constexpr char TN_FETDEC[]        = "tun_fet_dec"; ////master -> |rawdata|
     /////////  decoder   <-> allc
-    constexpr char TN_DECALLOC[]      = "tun_dec_alloc";
+    constexpr char TN_DECALLOC[]      = "tun_dec_alloc"; //// master -> |uopId|[]
+    /////////  alloc <-> reg allc ////(master) -> |oprData|  (slave) -> |renamed|
+    constexpr char TNF_ALLOCREG_SRC[]     = "tun_alloc_regMgmt_src";
+    constexpr char TNF_ALLOCREG_DES[]     = "tun_alloc_regMgmt_des";
+
 
 
 

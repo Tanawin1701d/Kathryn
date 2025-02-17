@@ -52,6 +52,13 @@ add_executable(Kathryn
         src/carolyne/model/base/decode/decodeSlotAnal.cpp
         src/carolyne/model/base/decode/decodeSlotAnal.h
         src/lib/hw/observe/observe.cpp
+        src/carolyne/model/base/alloc/regAlloc.cpp
+        src/carolyne/model/base/alloc/regAlloc.h
+        src/carolyne/model/base/alloc/allocStageBase.h
+        src/carolyne/model/base/alloc/rsvAlloc.cpp
+        src/carolyne/model/base/alloc/rsvAlloc.h
+        src/carolyne/model/base/alloc/robAlloc.cpp
+        src/carolyne/model/base/alloc/robAlloc.h
 
         #blinkSample.cpp
         #src/params/prjParam.h

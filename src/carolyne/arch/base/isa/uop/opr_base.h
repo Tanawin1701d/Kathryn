@@ -62,6 +62,8 @@
 
             [[nodiscard]]
             int getOprWidth(){return _oprWidth;}
+            [[nodiscard]]
+            ALLOC_INFO getAllocInfo(){return _allocInfo;}
 
         };
 
