@@ -60,13 +60,30 @@ namespace kathryn::carolyne{
         return UNDEF_OPR_IN_POOL; ///// can't find
     }
 
+    std::vector<OprTypeBase*>& DecodeSlotAnalyzer::getOprTypeRefs(bool isSrc){
+        return isSrc ? pooledSrcOprs: pooledDesOprs;
+    }
+
     OprTypeBase* DecodeSlotAnalyzer::getOprType(int idx, bool isSrc){
-        std::vector<OprTypeBase*>& relatedPooledOprs
-                = isSrc ? pooledSrcOprs: pooledDesOprs;
-        crlAss(idx < relatedPooledOprs.size(), "cannot get Opr with idx " + std::to_string(idx));
+        auto& relatedPooledOprs = getOprTypeRefs(isSrc);
+        crlAss(isThereOpr(idx, isSrc), "cannot get Opr with idx " + std::to_string(idx));
         return relatedPooledOprs[idx];
     }
 
+    Slot DecodeSlotAnalyzer::getOprRawData(int idx, bool isSrc){
+        Slot rawDataSlot = _regSlot({getDecOprFieldName(idx, isSrc)});
+        return rawDataSlot;
+    }
+
+    Operable& DecodeSlotAnalyzer::getOprValidData(int idx, bool isSrc){
+        Reg& validReg = _regSlot->get(getValidFieldName(idx, isSrc));
+        return validReg;
+    }
+
+    bool DecodeSlotAnalyzer::isThereOpr(int idx, bool isSrc){
+        auto& relatedPooledOprs = getOprTypeRefs(isSrc);
+        return idx < relatedPooledOprs.size();
+    }
 
     /////////////////// command function
 

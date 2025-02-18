@@ -23,11 +23,10 @@ namespace kathryn::carolyne{
         PopTunnelable(tunnelMng),
         _prefixName(std::move(prefixName)){}
                                           ///// oprRaw is only opr_raw_src or opr_raw_des
-        PopHST& createRegAllocTunnel(Slot oprRaw,
-                                     DecodeSlotAnalyzer& dec,
+        PopHST& createRegAllocTunnel(DecodeSlotAnalyzer& dec,
                                      int idx, bool isSrc);
 
-        std::string getTunnelName(int idx, bool isSrc);
+        static std::string getTunnelName(int idx, bool isSrc);
 
 
 

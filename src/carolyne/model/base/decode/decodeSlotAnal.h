@@ -44,7 +44,11 @@ namespace kathryn::carolyne{
                                     bool isSrc); ///// it occurr repeatly at times
 
         ///////// get opr type base
-        OprTypeBase* getOprType(int idx, bool isSrc);
+        std::vector<OprTypeBase*>& getOprTypeRefs (bool isSrc);
+        OprTypeBase*               getOprType     (int idx, bool isSrc);
+        Slot                       getOprRawData  (int idx, bool isSrc);
+        Operable&                  getOprValidData(int idx, bool isSrc);
+        bool                       isThereOpr     (int idx, bool isSrc);
         ///////// command function
         void         analIsa            ();
         void         buildDecoderSlot   ();

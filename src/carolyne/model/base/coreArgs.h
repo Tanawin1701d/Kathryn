@@ -52,6 +52,10 @@ namespace kathryn::carolyne{
     constexpr char SLOT_F_DEC_OPR_RAW_SRC[] = "opr_raw_src";
     constexpr char SLOT_F_DEC_OPR_RAW_DES[] = "opr_raw_des";
 
+    constexpr char SLOT_F_ALLOC_PHYID[]      = "phyId";
+    constexpr char SLOT_F_ALLOC_DATA[]       = "data";
+    constexpr char SLOT_F_ALLOC_DATA_VALID[] = "dataValid"; //// typically size is 1
+
 
     //////////////////////////////////////
     /////// tunnel signal          ///////
@@ -64,7 +68,7 @@ namespace kathryn::carolyne{
     constexpr char TN_FETDEC[]        = "tun_fet_dec"; ////master -> |rawdata|
     /////////  decoder   <-> allc
     constexpr char TN_DECALLOC[]      = "tun_dec_alloc"; //// master -> |uopId|[]
-    /////////  alloc <-> reg allc ////(master) -> |oprData|  (slave) -> |renamed|
+    /////////  alloc <-> reg allc ////(master) -> |opr_raw_[src/des]|  (slave) -> |phyId|[dataValid|data]|
     constexpr char TNF_ALLOCREG_SRC[]     = "tun_alloc_regMgmt_src";
     constexpr char TNF_ALLOCREG_DES[]     = "tun_alloc_regMgmt_des";
 
