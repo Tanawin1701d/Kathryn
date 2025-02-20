@@ -29,6 +29,7 @@ namespace kathryn::carolyne{
 
             int _pcWidth          = -1;
 
+
             explicit RobUTM_Base(int pcWidth, int amtTr = 4):
             _pcWidth(pcWidth){}
 
@@ -36,8 +37,13 @@ namespace kathryn::carolyne{
 
             void addAllocType(ALLOC_INFO matcher){
                 ALLOC_INFO robFieldMatch = matcher;
+                //////// we have redundant copy because we migh modify it
+
                 _transferFields.push_back(robFieldMatch);
             }
+
+            int getIndexWidth() const;
+            int getRobCommitModeWidth() const;
         };
 
     }

@@ -71,13 +71,13 @@ namespace kathryn::carolyne{
     }
 
     Slot DecodeSlotAnalyzer::getOprRawData(int idx, bool isSrc){
-        Slot rawDataSlot = _regSlot({getDecOprFieldName(idx, isSrc)});
-        return rawDataSlot;
+        Slot oprRawDataSlot = (*_regSlot)({getDecOprFieldName(idx, isSrc)});
+        return oprRawDataSlot;
     }
 
-    Operable& DecodeSlotAnalyzer::getOprValidData(int idx, bool isSrc){
-        Reg& validReg = _regSlot->get(getValidFieldName(idx, isSrc));
-        return validReg;
+    Slot DecodeSlotAnalyzer::getOprValidData(int idx, bool isSrc){
+        Slot vaidOprSlot = (*_regSlot)({getValidFieldName(idx, isSrc)});
+        return vaidOprSlot;
     }
 
     bool DecodeSlotAnalyzer::isThereOpr(int idx, bool isSrc){

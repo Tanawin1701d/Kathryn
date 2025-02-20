@@ -47,7 +47,7 @@ namespace kathryn::carolyne{
         std::vector<OprTypeBase*>& getOprTypeRefs (bool isSrc);
         OprTypeBase*               getOprType     (int idx, bool isSrc);
         Slot                       getOprRawData  (int idx, bool isSrc);
-        Operable&                  getOprValidData(int idx, bool isSrc);
+        Slot                       getOprValidData(int idx, bool isSrc);
         bool                       isThereOpr     (int idx, bool isSrc);
         ///////// command function
         void         analIsa            ();

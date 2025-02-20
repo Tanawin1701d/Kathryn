@@ -16,7 +16,6 @@
 namespace kathryn::carolyne{
 
     struct RegAllocCtrl: PopTunnelable{
-        int numberRegAllocTunnel = 0;
         std::string _prefixName = "unname";
 
         explicit RegAllocCtrl(std::string  prefixName, PopTunnelMng* tunnelMng):
@@ -26,10 +25,7 @@ namespace kathryn::carolyne{
         PopHST& createRegAllocTunnel(DecodeSlotAnalyzer& dec,
                                      int idx, bool isSrc);
 
-        static std::string getTunnelName(int idx, bool isSrc);
-
-
-
+        std::string getTunnelName(int idx, bool isSrc);
 
     };
 

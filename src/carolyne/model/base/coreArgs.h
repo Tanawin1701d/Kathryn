@@ -52,26 +52,33 @@ namespace kathryn::carolyne{
     constexpr char SLOT_F_DEC_OPR_RAW_SRC[] = "opr_raw_src";
     constexpr char SLOT_F_DEC_OPR_RAW_DES[] = "opr_raw_des";
 
-    constexpr char SLOT_F_ALLOC_PHYID[]      = "phyId";
-    constexpr char SLOT_F_ALLOC_DATA[]       = "data";
-    constexpr char SLOT_F_ALLOC_DATA_VALID[] = "dataValid"; //// typically size is 1
+
+    constexpr char SLOT_F_ALLOC_ROB_COMMIT_MODE[] = "commitMode";
+    constexpr char SLOT_F_ALLOC_VALID[]           = "valid";
+    constexpr char SLOT_F_ALLOC_PHYID[]           = "phyId";
+    constexpr char SLOT_F_ALLOC_ARCHID[]          = "archId";
+    constexpr char SLOT_F_ALLOC_DATA[]            = "data";
+    constexpr char SLOT_F_ALLOC_DATA_VALID[]      = "dataValid"; //// typically size is 1
+
+    constexpr char SLOT_F_ROB_IDX[]               = "robIdx";
 
 
     //////////////////////////////////////
     /////// tunnel signal          ///////
     //////////////////////////////////////
     ///////// Controller <-> fetch
-    constexpr char TN_PC         [] = "tun_pc_req"; //// master -> |status|pc|
+    constexpr char TN_PC[]                = "tun_pc_req"; //// master -> |status|pc|
     /////////  fetch     <-> memport
-    constexpr char TN_FETMEM[]      = "tun_ins_mem"; //// (master) -> |reqPc|  (slave) -> |rawdata|
+    constexpr char TN_FETMEM[]            = "tun_ins_mem"; //// (master) -> |reqPc|  (slave) -> |rawdata|
     /////////  fetch     <-> decoder
-    constexpr char TN_FETDEC[]        = "tun_fet_dec"; ////master -> |rawdata|
+    constexpr char TN_FETDEC[]            = "tun_fet_dec"; ////master -> |rawdata|
     /////////  decoder   <-> allc
-    constexpr char TN_DECALLOC[]      = "tun_dec_alloc"; //// master -> |uopId|[]
+    constexpr char TN_DECALLOC[]          = "tun_dec_alloc"; //// master -> |uopId|[]
     /////////  alloc <-> reg allc ////(master) -> |opr_raw_[src/des]|  (slave) -> |phyId|[dataValid|data]|
     constexpr char TNF_ALLOCREG_SRC[]     = "tun_alloc_regMgmt_src";
     constexpr char TNF_ALLOCREG_DES[]     = "tun_alloc_regMgmt_des";
-
+    /////////  alloc <-> rob allc ////(master) -> |pc|archId_0|phyId_0|archId_1|phyId_1|  (slave) -> |robIdx|       ////// the arch phy id is refered to the vector of decoder
+    constexpr char TN_ALLOCROB[]          = "tun_alloc_rob";
 
 
 

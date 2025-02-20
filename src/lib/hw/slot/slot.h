@@ -102,6 +102,14 @@ namespace kathryn{
             return operator() (rowMeta.getAllFieldNames());
         }
 
+        Slot operator+ (const Slot& rhs){
+            ////// todo pool slot
+        }
+
+        void setNewRowMeta(const RowMeta& newRowMeta){
+            ///// todo new rowMeta
+        }
+
         [[nodiscard]]
         int getAmtField()const{return _meta.getSize();}
 

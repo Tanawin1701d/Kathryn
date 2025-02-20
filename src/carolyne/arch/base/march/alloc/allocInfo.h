@@ -37,6 +37,15 @@ namespace kathryn::carolyne{
     inline bool isThere(ROB_OPT opt, ROB_OPT checkOpt){
         return static_cast<bool>(static_cast<int>(opt) & static_cast<int>(checkOpt));
     }
+
+    inline void verifyRobOpt (ROB_OPT rob_opt){
+
+        crlAss(isThere(rob_opt, ROB_OPT::ROB_REQ_UPT_ARCH) ^
+            isThere(rob_opt, ROB_OPT::ROB_REQ_UPT_ARCH_FROM_EXT),
+            " rob alloc option cannot have both UPT_ARCH AND UPT_ARCH_FROM_EXT"
+        );
+    }
+
     inline REG_OPT operator | (REG_OPT lhs, REG_OPT rhs){
         return static_cast<REG_OPT>(static_cast<int>(lhs) | static_cast<int>(rhs));
     }
