@@ -77,8 +77,9 @@ namespace kathryn::carolyne{
     /////////  alloc <-> reg allc ////(master) -> |opr_raw_[src/des]|  (slave) -> |phyId|[dataValid|data]|
     constexpr char TNF_ALLOCREG_SRC[]     = "tun_alloc_regMgmt_src";
     constexpr char TNF_ALLOCREG_DES[]     = "tun_alloc_regMgmt_des";
-    /////////  alloc <-> rob allc ////(master) -> |pc|archId_0|phyId_0|archId_1|phyId_1|  (slave) -> |robIdx|       ////// the arch phy id is refered to the vector of decoder
+    /////////  alloc <-> rob allc ////(master) -> |pc|commitMode|valid|archId_0|phyId_0|archId_1|phyId_1|  (slave) -> |robIdx|       ////// the arch phy id is refered to the vector of decoder
     constexpr char TN_ALLOCROB[]          = "tun_alloc_rob";
+    /////////  alloc <-> rsv      ////(master) -> |uopIdx|dataValid_{idx}|phyId|data|
 
 
 

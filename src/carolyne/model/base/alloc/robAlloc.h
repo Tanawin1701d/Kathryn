@@ -46,7 +46,6 @@ namespace kathryn::carolyne{
                                                                //////////    the renamed physical register slot that regmgmt
                                                                //////////    valid is determine that this opr is inused in this uop
         Slot        createOprAllocSlot(DecodeSlotAnalyzer& dec, int idx, const Slot& renamedphyReg);
-&
     };
 
 }
