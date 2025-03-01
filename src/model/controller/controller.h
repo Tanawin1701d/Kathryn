@@ -27,7 +27,7 @@
 #include "model/flowBlock/abstract/spReg/syncReg.h"
 #include "model/flowBlock/time/wait.h"
 #include "model/hwComponent/memBlock/MemBlock.h"
-#include "model/flowBlock/pipeline/pipeWrapper.h"
+// #include "model/flowBlock/pipeline/pipeWrapper.h"
 #include "model/interface/singleHandShake/shs.h"
 
 

@@ -47,6 +47,8 @@ add_executable(Kathryn
         ${SRC_LIB}
         ${SRC_MODEL_COMPILE}
         ${SRC_CAROLYNE}
+        src/model/flowBlock/pipeline/pipe.cpp
+        src/model/flowBlock/pipeline/pipe.h
         #blinkSample.cpp
         #src/params/prjParam.h
 )
