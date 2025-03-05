@@ -27,6 +27,8 @@
 #include "model/flowBlock/abstract/spReg/syncReg.h"
 #include "model/flowBlock/time/wait.h"
 #include "model/hwComponent/memBlock/MemBlock.h"
+#include "model/flowBlock/pipeline/pipePooler.h"
+
 // #include "model/flowBlock/pipeline/pipeWrapper.h"
 #include "model/interface/singleHandShake/shs.h"
 
@@ -70,8 +72,6 @@ namespace kathryn {
         std::stack<FlowBlockBase*> flowBlockStacks[FLOW_ST_CNT];
         /////// pattern flow block is subset of flowBlockStack
         Module* globalModulePtr = nullptr;
-
-        PipeController pipeCtrl;
 
     protected:
         /** get module that response we now consider*/
@@ -157,7 +157,7 @@ namespace kathryn {
         void on_attach_flowBlock(FlowBlockBase* fb);
         void on_detach_flowBlock(FlowBlockBase* fb);
         void on_attachAndDetach_intrSignal(INT_TYPE intType, Operable* sig);
-        Operable& on_get_check_next_pipblk_ready_signal();
+        //Operable& on_get_check_next_pipblk_ready_signal();
         FLOW_BLOCK_TYPE get_top_pattern_flow_block_type();
 
         /** lock allocation*/
@@ -174,8 +174,6 @@ namespace kathryn {
          * pipeline controller
          *
          * */
-
-        PipeController* getPipeCtrl(){return &pipeCtrl;}
 
     };
 

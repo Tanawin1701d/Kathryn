@@ -11,8 +11,6 @@
 
 #include "util/termColor/termColor.h"
 
-#include "example/riscv/simulation/RISCV_sim.h"
-#include "example/riscv/simulation/RISCV_sim_sort.h"
 
 #include "paramReader.h"
 
@@ -25,11 +23,11 @@ namespace kathryn {
 
     void start(PARAM& params);
 
-    void test_riscv(PARAM& params);
-
-    void test_riscv_sort(PARAM& params);
-
-    void test_riscv_gen(PARAM& params);
+    // void test_riscv(PARAM& params);
+    //
+    // void test_riscv_sort(PARAM& params);
+    //
+    // void test_riscv_gen(PARAM& params);
 
 }
 

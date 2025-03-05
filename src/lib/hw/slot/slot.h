@@ -104,6 +104,7 @@ namespace kathryn{
 
         Slot operator+ (const Slot& rhs){
             ////// todo pool slot
+            return Slot();
         }
 
         void setNewRowMeta(const RowMeta& newRowMeta){

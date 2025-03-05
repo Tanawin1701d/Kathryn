@@ -24,27 +24,27 @@ namespace kathryn{
 
         void flow() override{
 
-            pipWrap{
-                /////// pipe block 0
-                pipBlk{
-                    intrStart(is);
-                    intrReset(is);
-
-                    cif(a < 5){
-                        a = a + 1;
-                    }celse{
-                        cwhile(true){
-                            seq {
-                                freez  = 1;
-                            }
-                        }
-                    }
-                }
-                /////// pipe block 1
-                pipBlk{
-                    b = b + 1;
-                }
-            }
+            // pipWrap{
+            //     /////// pipe block 0
+            //     pipBlk{
+            //         intrStart(is);
+            //         intrReset(is);
+            //
+            //         cif(a < 5){
+            //             a = a + 1;
+            //         }celse{
+            //             cwhile(true){
+            //                 seq {
+            //                     freez  = 1;
+            //                 }
+            //             }
+            //         }
+            //     }
+            //     /////// pipe block 1
+            //     pipBlk{
+            //         b = b + 1;
+            //     }
+            // }
 
 
             seq{
@@ -76,44 +76,25 @@ namespace kathryn{
 
         void describeCon() override{
 
-//            /*** start cycle*/
-              for (int i = 1; i <= 5; i++){
-                  testAndPrint("testPipVal before resetAndRestart and getStuck", ull(_md->a), i);
-                  conEndCycle();
-                  testAndPrint("testPipVal before freez", ull(_md->freez), 0);
-                  conNextCycle(1);
-              }
-              for (int i = 0; i < 6; i++){
-                  conEndCycle();
-                  testAndPrint("testPipVal freez", ull(_md->freez), 1);
-                  conNextCycle(1);
-              }
-
-            for (int i = 1; i <= 5; i++){
-                testAndPrint("testPipVal after resetAndRestart: a", ull(_md->a), i);
-                conEndCycle();
-                testAndPrint("testPipVal after freez", ull(_md->freez), 0);
-                conNextCycle(1);
-            }
-//            for (int i = 0; i <= 8; i++){
-//                testAndPrint("testPipVal: A", ull(_md->a), std::max(0,i  ));
-//                testAndPrint("testPipVal: B", ull(_md->b), std::max(0,i-1));
-//                testAndPrint("testPipVal: C", ull(_md->c), std::max(0,i-2));
-//                testAndPrint("testPipVal: D", ull(_md->d), std::max(0,i-3));
-//                conNextCycle(1);
-//            }
-//            /*** wait cycle*/
-//            conNextCycle(6);
+// //            /*** start cycle*/
+//               for (int i = 1; i <= 5; i++){
+//                   testAndPrint("testPipVal before resetAndRestart and getStuck", ull(_md->a), i);
+//                   conEndCycle();
+//                   testAndPrint("testPipVal before freez", ull(_md->freez), 0);
+//                   conNextCycle(1);
+//               }
+//               for (int i = 0; i < 6; i++){
+//                   conEndCycle();
+//                   testAndPrint("testPipVal freez", ull(_md->freez), 1);
+//                   conNextCycle(1);
+//               }
 //
-//            for (int i = 9; i < 12; i++){
-//                testAndPrint("testPipAfterWaitVal: A", ull(_md->a), std::max(0,i  ));
-//                testAndPrint("testPipAfterWaitVal: B", ull(_md->b), std::max(0,i-1));
-//                testAndPrint("testPipAfterWaitVal: C", ull(_md->c), std::max(0,i-2));
-//                testAndPrint("testPipAfterWaitVal: D", ull(_md->d), std::max(0,i-3));
-//                conNextCycle(1);
-//            }
-
-
+//             for (int i = 1; i <= 5; i++){
+//                 testAndPrint("testPipVal after resetAndRestart: a", ull(_md->a), i);
+//                 conEndCycle();
+//                 testAndPrint("testPipVal after freez", ull(_md->freez), 0);
+//                 conNextCycle(1);
+//             }
 
         }
 

@@ -14,6 +14,7 @@ namespace kathryn{
         mReg(b, 8);
         mReg(c, 8);
         mReg(d, 8);
+        mReg(e, 8);
         explicit testGenMod18(int x): Module(){
             a.asOutputGlob("a");
             b.asOutputGlob("b");
@@ -25,23 +26,42 @@ namespace kathryn{
 
             seq{
                 par{
-                    a = 0;
-                    b = 0;
-                    c = 0;
-                    d = 0;
+                    a = 0; b = 0;
+                    c = 0; d = 0;
                 }
 
-                pipWrap{
+                par{
 
-                    pipBlk{ a <<= a + 1;}
-                    pipBlk{ b <<= a;}
-                    pipBlk{
-                        c <<= b;
-                        cif(c == 5){
-                            syWait(6)
+                    ///// fetch pipe
+                    pip("fetch"){ autoStart
+                        pipTran("decode"){
+                            a = a + 1;
                         }
                     }
-                    pipBlk{ d <<= c;}
+                    ///// decode pipe
+                    pip("decode"){
+                        cif(a == 5){
+                            pipTran("exec0"){
+                                b = b + 1;
+                            }
+                        }celse{
+                            seq{
+                                syWait(5);
+                                pipTran("exec1"){
+                                    c = c + 1;
+                                }
+                            }
+                        }
+                    }
+
+                    ///// exec0 pipe
+                    pip("exec0"){
+                        d = d + 1;
+                    }
+                    ///// exec1 pipe
+                    pip("exec1"){
+                        e = e + 1;
+                    }
 
                 }
 

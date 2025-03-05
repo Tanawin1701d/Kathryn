@@ -5,6 +5,7 @@
 
 #include "kathryn.h"
 
+
 namespace kathryn{
 
 
@@ -29,10 +30,12 @@ namespace kathryn{
         cleanGlobPool();
         /** reset model layer*/
         getControllerPtr()->reset();
+        getPipePooler()->reset();
         /** reset simulation layer*/
         getSimController()->reset();
         /** reset generator*/
         getGenController()->reset();
+
 
 
     }

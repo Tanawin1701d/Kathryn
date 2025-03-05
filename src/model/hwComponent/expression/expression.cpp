@@ -81,6 +81,7 @@ namespace kathryn{
 
     Operable* expression::checkShortCircuit(){
         if (isInCheckPath){
+            std::cout << "path end " << std::to_string(castToIdent()->getGlobalId()) << std::endl;
             return this;
         }
         isInCheckPath = true;
@@ -89,12 +90,14 @@ namespace kathryn{
         if (_a != nullptr){
             result = _a->checkShortCircuit();
             if (result != nullptr){
+                std::cout << "path a " << std::to_string(castToIdent()->getGlobalId()) << std::endl;
                 return result;
             }
         }
         if (_b != nullptr){
             result = _b->checkShortCircuit();
             if (result != nullptr){
+                std::cout << "path b " << std::to_string(castToIdent()->getGlobalId()) << std::endl;
                 return result;
             }
         }

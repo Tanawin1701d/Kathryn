@@ -19,7 +19,6 @@ namespace kathryn{
 
     void ModelController::start(){
         assert(globalModulePtr != nullptr);
-        pipeCtrl.start();
         /***
          * global Module must be auto initiated when controller is initialize or it is reset
          * */
@@ -30,14 +29,12 @@ namespace kathryn{
 
 
     void ModelController::reset(){
-        pipeCtrl.reset();
         clean();
         on_globalModule_init_component();
     }
 
     void ModelController::clean(){
         /** delete old global module**/
-        pipeCtrl.clean();
         assert(isAllFlowStackEmpty());
         assert(moduleStack.empty());
         delete globalModulePtr;

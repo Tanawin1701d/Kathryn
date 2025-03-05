@@ -32,27 +32,27 @@ namespace kathryn{
                     d = 0;
                 }
 
-                pipWrap{
-                    /////// pipe block 0
-                    pipBlk{
-                        intrStart(d);
-                        intrReset(d);
-
-                        cif(a < 5){
-                            a = a + 1;
-                        }celse{
-                            cwhile(true){
-                                seq {
-                                    b  = 1;
-                                }
-                            }
-                        }
-                    }
-                    /////// pipe block 1
-                    pipBlk{
-                        c = c + 1;
-                    }
-                }
+                // pipWrap{
+                //     /////// pipe block 0
+                //     pipBlk{
+                //         intrStart(d);
+                //         intrReset(d);
+                //
+                //         cif(a < 5){
+                //             a = a + 1;
+                //         }celse{
+                //             cwhile(true){
+                //                 seq {
+                //                     b  = 1;
+                //                 }
+                //             }
+                //         }
+                //     }
+                //     /////// pipe block 1
+                //     pipBlk{
+                //         c = c + 1;
+                //     }
+                // }
 
             }
 

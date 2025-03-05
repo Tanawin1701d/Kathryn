@@ -49,10 +49,8 @@ namespace kathryn {
         EXITWHILE,
         CONDWAIT,
         CLKWAIT,
-        PIPE_SENDER,
-        PIPE_RECIEVER,
         PIPE_BLOCK,
-        PIPE_WRAPPER,
+        PIPE_TRAN,
         PICK,
         PICK_WHEN,
         DUMMY_BLOCK,
@@ -63,8 +61,8 @@ namespace kathryn {
         FLOW_ST_BASE_STACK      = 0,
         FLOW_ST_PATTERN_STACK   = 1,    /**for seq par*/
         FLOW_ST_HEAD_COND_STACK = 2, /**for if only**/
-        FLOW_ST_PIP_WRAP        = 3,
-        FLOW_ST_CNT             = 4
+        //FLOW_ST_PIP_WRAP        = 3,
+        FLOW_ST_CNT             = 3
     };
 
     enum FLOW_BLOCK_JOIN_POLICY{

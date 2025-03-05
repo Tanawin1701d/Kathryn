@@ -219,9 +219,9 @@ namespace kathryn{
             FieldMeta   oprStartField = slot.getMeta().getField(0);
             FieldMeta   oprEndField   = slot.getMeta().getField(slot.getAmtField()-1);
 
-            _hwSlots[idx]->assignCore(slot,
-                oprStartField._fieldName, oprEndField._fieldName,
-                checkIdMatch & enable);
+            // _hwSlots[idx]->assignCore(slot,
+            //     oprStartField._fieldName, oprEndField._fieldName,
+            //     checkIdMatch & enable);
         }
         return enable;
     }

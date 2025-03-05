@@ -13,24 +13,27 @@
 #include "model/flowBlock/abstract/nodes/stateNode.h"
 
 
+#define pip(pipeName)       for(auto kathrynBlock = new FlowBlockPipeBase (pipeName); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define autoStart kathrynBlock->setAutoActivatePipe();
+
+
 namespace kathryn{
 
 
     const char PIPE_UNNAME[] = "PIPE_UNNAMED";
 
 
-    class FlowBlockPipe: public FlowBlockBase, public LoopStMacro{
+    class FlowBlockPipeBase: public FlowBlockBase, public LoopStMacro{
     protected:
-        ///////////// meta Data
         const std::string _pipeName = PIPE_UNNAME;
-        bool isGetFlowBlockYet = false;
-        ///////////// activate Condition
-        bool isAutoActivate    = false;
-        Operable* pipeActivateCond = nullptr; /////// get from pipe pooler
+        ///////////// expression
+        expression* readySignal = nullptr;
+        ///////////// meta Data
+        bool autoActivatePipe      = true;
+        bool isGetFlowBlockYet     = false;
         ///////////// node
-        PseudoNode* entNode  = nullptr; //// entrance node
-        StateNode*  waitNode = nullptr;
-        PseudoNode* pipeStartNode = nullptr;
+        PseudoNode* entNode       = nullptr; //// entrance node
+        StateNode*  waitNode      = nullptr;
         DummyNode*  exitDummy     = nullptr; //// pipeline is perpeptual engine
 
 
@@ -40,8 +43,8 @@ namespace kathryn{
         NodeWrap*      resultNodeWrap    = nullptr;
 
     public:
-        explicit FlowBlockPipe(const std::string& pipName);
-        ~FlowBlockPipe() override;
+        explicit FlowBlockPipeBase(const std::string& pipeName); ///// perpeptual loop indicate that it will loop when subblock is finish
+        ~FlowBlockPipeBase() override;
         /** for controller add the local element to this sub block*/
         void addElementInFlowBlock(Node* node) override;
         void addSubFlowBlock(FlowBlockBase* subBlock) override;
@@ -49,9 +52,14 @@ namespace kathryn{
         void addAbandonFlowBlock(FlowBlockBase* abandonBlock) override;
         NodeWrap* sumarizeBlock() override;
         /**set activate bias usually used in init Pipe */
-        void createActivateCond();
-        void setAutoActivatePipe()      {isAutoActivate = true;}
-        bool isAutoActivatePipe ()const {return isAutoActivate;}
+        Operable* createActivateCond();
+        void      buildReadySignal();
+        Operable* getBlkReadySignal(){return readySignal;}
+
+        std::string getPipeName() const{return _pipeName;}
+        /** auto activate pipe*/
+        void      setAutoActivatePipe(){autoActivatePipe = true;}
+        bool      isAutoActivatePipe() const{return autoActivatePipe;}
         /** on this block is start interact to controller*/
         void onAttachBlock() override;
         /** on leave this block*/
@@ -59,15 +67,12 @@ namespace kathryn{
         /** for module to build hardware component*/
         void buildHwComponent() override;
         /** get describe*/
-        std::string getMdDescribe() override;
         void addMdLog(MdLogVal* mdLogVal) override;
         /** Loop macro to notice position of system*/
         void doPreFunction() override;
         void doPostFunction() override;
 
     };
-
-
 
 }
 

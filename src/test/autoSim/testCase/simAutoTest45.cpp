@@ -3,10 +3,10 @@
 //
 
 #include "kathryn.h"
-#include "lib/hw/slot/table.h"
+//#include "lib/hw/slot/table.h"
 #include "test/autoSim/simAutoInterface.h"
 #include "autoTestInterface.h"
-#include "carolyne/arch/caro/caro_repo.h"
+//#include "carolyne/arch/caro/caro_repo.h"
 
 namespace kathryn{
 
@@ -94,5 +94,5 @@ namespace kathryn{
 
     };
 
-    Sim45TestEle ele45(-1);
+    Sim45TestEle ele45(45);
 }

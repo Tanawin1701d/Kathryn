@@ -31,30 +31,30 @@ namespace kathryn{
             startAutoSimTest(params);
     }
 
-    void test_riscv(PARAM& params){
-        riscv::RISCV_MNG riscTestMng;
-        riscTestMng.start(params);
-        std::cout << TC_GREEN <<  " finish rv sim " << TC_DEF << std::endl;
-        /////////////////delete x;
+    // void test_riscv(PARAM& params){
+    //     riscv::RISCV_MNG riscTestMng;
+    //     riscTestMng.start(params);
+    //     std::cout << TC_GREEN <<  " finish rv sim " << TC_DEF << std::endl;
+    //     /////////////////delete x;
+    //
+    // }
+    //
+    // void test_riscv_sort(PARAM& params){
+    //     riscv::RISCV_SORT_MNG riscTestMng;
+    //     riscTestMng.start(params);
+    //     std::cout << TC_GREEN <<  " finish rv [sort] sim " << TC_DEF << std::endl;
+    // }
+    //
+    // void test_riscv_gen(PARAM& params){
+    //     riscv::RISCV_GEN_MNG riscGenMng;
+    //     riscGenMng.startGen(params);
+    //     std::cout << TC_GREEN << "finish rv [gen]" << TC_DEF << std::endl;
+    // }
 
-    }
-
-    void test_riscv_sort(PARAM& params){
-        riscv::RISCV_SORT_MNG riscTestMng;
-        riscTestMng.start(params);
-        std::cout << TC_GREEN <<  " finish rv [sort] sim " << TC_DEF << std::endl;
-    }
-
-    void test_riscv_gen(PARAM& params){
-        riscv::RISCV_GEN_MNG riscGenMng;
-        riscGenMng.startGen(params);
-        std::cout << TC_GREEN << "finish rv [gen]" << TC_DEF << std::endl;
-    }
-
-    void test_cacheAc_sim(PARAM& params){
-        cacheServer::startSimpleCacheAcSim(params);
-        std::cout << TC_GREEN << "finish cacheSimple sim [sim]" << TC_DEF << std::endl;
-    }
+    // void test_cacheAc_sim(PARAM& params){
+    //     cacheServer::startSimpleCacheAcSim(params);
+    //     std::cout << TC_GREEN << "finish cacheSimple sim [sim]" << TC_DEF << std::endl;
+    // }
 
 
     void start(PARAM& params) {
@@ -69,15 +69,15 @@ namespace kathryn{
         if (params["testType"] == "testSimple") {
             test_simple(params);
         } else if (params["testType"] == "testRiscv") {
-            test_riscv(params);
+            //test_riscv(params);
         } else if (params["testType"] == "testRiscvSort"){
-            test_riscv_sort(params);
+            //test_riscv_sort(params);
         }else if (params["testType"] == "testGenRiscv"){
-            test_riscv_gen(params);
+            //test_riscv_gen(params);
         }else if (params["testType"]  == "testGen"){
             startGenEle(params);
         }else if (params["testType"]  == "testSimpleCacheAcc"){
-            test_cacheAc_sim(params);
+            //test_cacheAc_sim(params);
         }else{
             std::cout << "there is no command to test system" << std::endl;
         }

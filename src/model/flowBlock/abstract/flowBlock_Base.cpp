@@ -235,10 +235,8 @@ namespace kathryn{
                 "EXITWHILE",
                 "CONDWAIT",
                 "CLKWAIT",
-                "PIPE_SENDER",
-                "PIPE_RECIEVER",
                 "PIPE_BLOCK",
-                "PIPE_WRAPPER",
+                "PIPE_TRAN",
                 "PICK",
                 "PICK_WHEN",
                 "DUMMY_BLOCK"
