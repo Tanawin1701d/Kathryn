@@ -54,6 +54,8 @@ namespace kathryn {
         PICK,
         PICK_WHEN,
         DUMMY_BLOCK,
+        OFFER,
+        OFFER_CHOICE,
         FLOW_BLOCK_COUNT
     };
 

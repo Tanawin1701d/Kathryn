@@ -239,7 +239,9 @@ namespace kathryn{
                 "PIPE_TRAN",
                 "PICK",
                 "PICK_WHEN",
-                "DUMMY_BLOCK"
+                "DUMMY_BLOCK",
+                "OFFER",
+                "OFFER_CHOICE"
         };
         assert(fbt < FLOW_BLOCK_COUNT);
         return mapper[fbt];

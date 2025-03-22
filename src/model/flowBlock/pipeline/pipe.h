@@ -27,10 +27,10 @@ namespace kathryn{
     protected:
         const std::string _pipeName = PIPE_UNNAME;
         ///////////// expression
-        expression* readySignal = nullptr;
+        expression* readySignal   = nullptr;
         ///////////// meta Data
-        bool autoActivatePipe      = true;
-        bool isGetFlowBlockYet     = false;
+        bool autoActivatePipe     = false;
+        bool isGetFlowBlockYet    = false;
         ///////////// node
         PseudoNode* entNode       = nullptr; //// entrance node
         StateNode*  waitNode      = nullptr;

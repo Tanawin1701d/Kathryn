@@ -46,6 +46,15 @@ add_executable(Kathryn
         ${SRC_PARAM}
         ${SRC_LIB}
         ${SRC_MODEL_COMPILE}
+        src/model/flowBlock/offer/offer.cpp
+        src/model/flowBlock/offer/offer.h
+        src/model/flowBlock/offer/offer.h
+        src/model/flowBlock/offer/offerChoice.h
+        src/model/flowBlock/offer/offerChoice.cpp
+        src/model/flowBlock/offer/offerPooler.cpp
+        src/model/flowBlock/offer/offerPooler.h
+        src/model/flowBlock/offer/offerMeta.cpp
+        src/model/flowBlock/offer/offerMeta.h
         #${SRC_CAROLYNE}
 
         #blinkSample.cpp
