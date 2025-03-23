@@ -28,6 +28,8 @@
 #include "model/flowBlock/time/wait.h"
 #include "model/hwComponent/memBlock/MemBlock.h"
 #include "model/flowBlock/pipeline/pipePooler.h"
+#include "model/flowBlock/offer/offer.h"
+#include "model/flowBlock/offer/offerPooler.h"
 
 // #include "model/flowBlock/pipeline/pipeWrapper.h"
 #include "model/interface/singleHandShake/shs.h"

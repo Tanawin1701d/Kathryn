@@ -12,7 +12,7 @@
 #include "offerMeta.h"
 #include "abstract/mainControlable.h"
 
-#define getOffer(offerName, offerChoice) getOfferPooler()->getOfferSig(offerName, offerChoice);
+#define getOffer(offerName, offerChoice) getOfferPooler()->getOfferSig(offerName, offerChoice)
 #define ackOffer(offerName, offerChoice, cond) getOfferPooler()->setAcceptSig(offerName, offerChoice, cond);
 
 namespace kathryn{
