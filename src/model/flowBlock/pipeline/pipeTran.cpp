@@ -11,23 +11,48 @@
 
 namespace kathryn{
 
-    FlowBlockPipeTran::FlowBlockPipeTran(std::string  targetPipeName):
+    ////////// PIPE TRANMETA
+
+    void PipeTranMeta::createActivateSignal(){
+        _activateSignal = new expression(1);
+    }
+
+    void PipeTranMeta::assignActivateSignal() const{
+
+        PipePooler* pipePooler = getPipePooler();
+        assert(pipePooler   != nullptr);
+        assert(_activateSignal != nullptr);
+        Operable* pipeReady = pipePooler->getPipeReadySignal(_targetPipeName);
+        if (_userAddCond != nullptr){
+            (*_activateSignal) = (*pipeReady) & (*_userAddCond);
+        }else{
+            (*_activateSignal) = (*pipeReady);
+        }
+
+    }
+
+
+    ///////// TRAN BLOCK
+
+    FlowBlockPipeTran::FlowBlockPipeTran():
     FlowBlockBase(PIPE_TRAN,
     {
             {FLOW_ST_BASE_STACK},
             FLOW_JO_SUB_FLOW,
             true
         }),
-    _targetPipe(std::move(targetPipeName)){
-         PipePooler* pipePooler = getPipePooler();
-         pipePooler->addTranBlk(this);
-        readySignal = new expression(1);
-    }
+    basicStNodeExitExpr(new expression(1)){}
+
 
     FlowBlockPipeTran::FlowBlockPipeTran(const std::string& targetPipeName,
-                                         Operable& customCond):
-    FlowBlockPipeTran(targetPipeName){
-        _customCond = &customCond;
+                                         Operable* customCond):
+    FlowBlockPipeTran(){
+        addTranMeta(targetPipeName, customCond);
+    }
+
+    FlowBlockPipeTran::FlowBlockPipeTran(std::string  targetPipeName):
+    FlowBlockPipeTran(){
+
     }
 
 
@@ -58,23 +83,57 @@ namespace kathryn{
         return resultNodeWrap;
     }
 
-    Operable* FlowBlockPipeTran::createActivateCond() const{
-        PipePooler* pipePooler = getPipePooler();
-        assert(pipePooler != nullptr);
-        Operable* pipeReadySignal = pipePooler->getPipeReadySignal(getTargetName());
-        /////// in case pipeTranWhen  addtional condition is required
-        Operable* readyToGo = nullptr;
-        if (_customCond == nullptr){
-            readyToGo = pipeReadySignal;
-        }else{
-            readyToGo = &((*pipeReadySignal) & (*_customCond));
+    void FlowBlockPipeTran::addTranMeta(const std::string& targetPipeName,
+                                        Operable* userCond){
+
+        _pipeTranMetas.push_back({targetPipeName, userCond, nullptr});
+        _pipeTranMetas.back().createActivateSignal();
+
+    }
+
+    void FlowBlockPipeTran::assignActivateCond(){
+        for (PipeTranMeta& tranMeta: _pipeTranMetas){
+            tranMeta.assignActivateSignal();
         }
-        return readyToGo;
     }
-    /**build ready signal */
-    void FlowBlockPipeTran::buildReadySignal(){
-        (*readySignal) = *exitNode->getExitOpr();
+
+    Operable* FlowBlockPipeTran::joinActivateCond() const{
+        mfAssert(!_pipeTranMetas.empty(), "tran cannot have empty target");
+
+        Operable* tranAck = _pipeTranMetas[0]._activateSignal;
+        for (int i = 1; i < _pipeTranMetas.size(); i++){
+            assert(_pipeTranMetas[i]._activateSignal != nullptr);
+            switch (_tranPolicy){
+            case BITWISE_OR : {tranAck = &((*tranAck) | (*_pipeTranMetas[i]._activateSignal));break;}
+            case BITWISE_AND: {tranAck = &((*tranAck) & (*_pipeTranMetas[i]._activateSignal));break;}
+            default         : {mfAssert(false, "tran pol does not support tranPol = " + _tranPolicy);}
+            }
+        }
+
+        return tranAck;
     }
+
+    Operable* FlowBlockPipeTran::getReadySignal(const std::string& pipeTarget) const{
+
+        for (const PipeTranMeta& tranMeta: _pipeTranMetas){
+            if (tranMeta._targetPipeName == pipeTarget){
+                return &((*basicStNodeExitExpr) & (*tranMeta._activateSignal));
+            }
+        }
+        mfAssert(false, "can't find tran's ready signal for pipeTarget -> " + pipeTarget);
+        return nullptr; //// prevent clion warning
+    }
+
+    std::vector<std::string> FlowBlockPipeTran::getTranTargetNames() const{
+        std::vector<std::string> resultNames;
+        resultNames.reserve(_pipeTranMetas.size());
+        for (const PipeTranMeta& tranMeta: _pipeTranMetas){
+            resultNames.push_back(tranMeta._targetPipeName);
+        }
+        return resultNames;
+    }
+
+
 
     /// FLOW BLOCK
     void FlowBlockPipeTran::onAttachBlock(){
@@ -82,6 +141,9 @@ namespace kathryn{
     }
 
     void FlowBlockPipeTran::onDetachBlock(){
+        ////// register the pipe pooler
+        PipePooler* pipePooler = getPipePooler();
+        pipePooler->addTranBlk(this);
         ctrl->on_detach_flowBlock(this);
     }
 
@@ -90,7 +152,8 @@ namespace kathryn{
         assert(_subBlocks.empty());
         assert(_conBlocks.empty());
 
-        Operable* readyToGo = createActivateCond();
+        assignActivateCond();
+        _activateSignal = joinActivateCond();
 
         /////// create node
         condNode       = new PseudoNode(1, BITWISE_OR);
@@ -105,12 +168,12 @@ namespace kathryn{
         for (auto nd: _basicNodes){
             assert(nd->getNodeType() == ASM_NODE);
             auto* asmNode = (AsmNode*)nd;
-            asmNode->addPreCondition(readyToGo, BITWISE_AND);
+            asmNode->addPreCondition(_activateSignal, BITWISE_AND);
             basicStNode->addSlaveAsmNode(asmNode);
         }
         condNode   ->addDependNode(basicStNode, nullptr);
-        exitNode   ->addDependNode(condNode   , readyToGo);
-        basicStNode->addDependNode(condNode, &(~(*readyToGo)));
+        exitNode   ->addDependNode(condNode   , _activateSignal);
+        basicStNode->addDependNode(condNode   , &(~(*_activateSignal)));
 
 
         /////// systemNode
@@ -118,6 +181,8 @@ namespace kathryn{
         addSysNode(exitNode);
         addSysNode(basicStNode);
 
+        ////// proxy signal
+        (*basicStNodeExitExpr) = (*basicStNode->getExitOpr());
         /////// assign node
         condNode   ->assign();
         exitNode   ->assign();
@@ -128,9 +193,6 @@ namespace kathryn{
         resultNodeWrap = new NodeWrap();
         resultNodeWrap->addEntraceNode(basicStNode);
         resultNodeWrap->addExitNode(exitNode);
-
-        buildReadySignal();
-
     }
 
     void FlowBlockPipeTran::addMdLog(MdLogVal* mdLogVal){

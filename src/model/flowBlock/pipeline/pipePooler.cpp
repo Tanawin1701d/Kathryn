@@ -28,10 +28,12 @@ namespace kathryn{
     void PipePooler::addTranBlk(FlowBlockPipeTran* tranBlk){
         /////// integrity check
         assert(tranBlk != nullptr);
-        std::string targetName = tranBlk->getTargetName();
-        mfAssert(!isThereTran(targetName), "duplicated pipe name: " + targetName);
-        ////// push to system
-        _tranBlks.insert({targetName, tranBlk});
+        std::vector<std::string> targetNames = tranBlk->getTranTargetNames();
+        for (const std::string& targetName: targetNames){
+            mfAssert(!isThereTran(targetName), "duplicated pipe name: " + targetName);
+            ////// push to system
+            _tranBlks.insert({targetName, tranBlk});
+        }
     }
 
     Operable* PipePooler::getPipeReadySignal(const std::string& pipeName){
@@ -45,7 +47,7 @@ namespace kathryn{
         ////// integrity check
         mfAssert(isThereTran(targetPipeName), "system can't find tran name: " + targetPipeName);
         FlowBlockPipeTran* tranBlk = _tranBlks.find(targetPipeName)->second;
-        return tranBlk->getBlkReadySignal();
+        return tranBlk->getReadySignal(targetPipeName);
     }
 
     void PipePooler::start(){

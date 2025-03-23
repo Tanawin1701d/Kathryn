@@ -18,26 +18,51 @@
 #define pipTran(pipeName)           for(auto kathrynBlock = new FlowBlockPipeTran (pipeName); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 #define pipTranWhen(pipeName, cond) for(auto kathrynBlock = new FlowBlockPipeTran (pipeName, cond); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 
+
+
 namespace kathryn{
 
     const char PIPE_TARGET_UNNAME[] = "PIPE_TARGET_UNNAMED";
 
 
+    //////////// ACTIVATE SIGNAL --- is a signal that declares for transaction ready to transfer but
+    //////////// however, the transaction must co operate with transaction stateMatchine state machine;
+    ///
+    //////////// READY SIGNAL ---- is the signal that determine both tran's state machine and activation signal is
+    //////////// ready to change their state.
+
+
+    struct PipeTranMeta{
+        ///// src signal
+        std::string _targetPipeName;
+        Operable*   _userAddCond    = nullptr;
+        ///// post signal
+        expression* _activateSignal    = nullptr;
+
+        void createActivateSignal(); ///// just create for predefine the signal
+        void assignActivateSignal() const;
+    };
+
+
     class FlowBlockPipeTran: public FlowBlockBase, public LoopStMacro{
 
     protected:
-        const std::string _targetPipe = PIPE_TARGET_UNNAME;
-        expression*       readySignal    = nullptr;
-        Operable*         _customCond    = nullptr;
+        std::vector<PipeTranMeta> _pipeTranMetas;
+        LOGIC_OP                  _tranPolicy = BITWISE_AND;
+        Operable*                 _activateSignal = nullptr;
+        /////// POST MODEL // MF PROCESS
         //////////// node
-        PseudoNode*       condNode       = nullptr;
-        PseudoNode*       exitNode       = nullptr;
-        StateNode*        basicStNode    = nullptr;
-        NodeWrap*         resultNodeWrap = nullptr;
+        PseudoNode*               condNode       = nullptr;
+        PseudoNode*               exitNode       = nullptr;
+        StateNode*                basicStNode    = nullptr;
+        NodeWrap*                 resultNodeWrap = nullptr;
+        ///////// proxy signal
+        expression*               basicStNodeExitExpr = nullptr;
 
     public:
+        explicit FlowBlockPipeTran();
         explicit FlowBlockPipeTran(std::string  targetPipeName);
-                 FlowBlockPipeTran(const std::string& targetPipeName, Operable& customCond);
+                 FlowBlockPipeTran(const std::string& targetPipeName, Operable* customCond);
         ~FlowBlockPipeTran() override;
         /** for controller add the local element to this sub block*/
         void addElementInFlowBlock(Node* node) override;
@@ -46,10 +71,12 @@ namespace kathryn{
         void addAbandonFlowBlock(FlowBlockBase* abandonBlock) override;
         NodeWrap* sumarizeBlock() override;
         /**set activate bias usually used in init Pipe */
-        Operable* createActivateCond() const;
-        void buildReadySignal();
-        Operable* getBlkReadySignal(){return readySignal;}
-        std::string getTargetName()const{return _targetPipe;}
+        void addTranMeta(const std::string& targetPipeName,
+                         Operable* userCond = nullptr);
+        void      assignActivateCond();
+        [[nodiscard]] Operable*  joinActivateCond  () const;
+        [[nodiscard]] Operable*  getReadySignal    (const std::string& pipeTarget) const;
+        [[nodiscard]] std::vector<std::string> getTranTargetNames() const;
         /** on this block is start interact to controller*/
         void onAttachBlock() override;
         /** on leave this block*/
