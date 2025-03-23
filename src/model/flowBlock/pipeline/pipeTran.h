@@ -16,7 +16,10 @@
 
 
 #define pipTran(pipeName)           for(auto kathrynBlock = new FlowBlockPipeTran (pipeName); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
-#define pipTranWhen(pipeName, cond) for(auto kathrynBlock = new FlowBlockPipeTran (pipeName, cond); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define pipTranWhen(pipeName, cond) for(auto kathrynBlock = new FlowBlockPipeTran (pipeName, &cond); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define pipMTran                    for(auto kathrynBlock = new FlowBlockPipeTran(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define tranTo  (pipeName)          kathrynBlock->addTranMeta(pipeName, nullptr);
+#define tranToWC(pipeName, cond)    kathrynBlock->addTranMeta(pipeName, &(cond));
 
 
 
@@ -39,8 +42,9 @@ namespace kathryn{
         ///// post signal
         expression* _activateSignal    = nullptr;
 
-        void createActivateSignal(); ///// just create for predefine the signal
-        void assignActivateSignal() const;
+        void        createActivateSignal(); ///// just create for predefine the signal
+        void        assignActivateSignal(Operable* rstSignal) const;
+        Operable* addLogic(Operable* src0, Operable* src1, LOGIC_OP lop) const;
     };
 
 
@@ -48,7 +52,7 @@ namespace kathryn{
 
     protected:
         std::vector<PipeTranMeta> _pipeTranMetas;
-        LOGIC_OP                  _tranPolicy = BITWISE_AND;
+        LOGIC_OP                  _tranPolicy = BITWISE_OR;
         Operable*                 _activateSignal = nullptr;
         /////// POST MODEL // MF PROCESS
         //////////// node

@@ -31,11 +31,9 @@ namespace kathryn{
                 par{
                     ///// fetch pipe
                     pip("fetch"){ autoStart
-
                         pipTran("decode"){
                             ////arbReq("specTagGen");
-                        a <<= a + 1;
-
+                            a <<= a + 1;
                         }
                     }
                     ///// decode pipe
@@ -111,5 +109,5 @@ namespace kathryn{
 
     };
 
-    Sim23TestEle ele23(-1);
+    Sim23TestEle ele23(-3);
 }

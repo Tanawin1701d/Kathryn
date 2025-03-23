@@ -55,6 +55,7 @@ add_executable(Kathryn
         src/model/flowBlock/offer/offerPooler.h
         src/model/flowBlock/offer/offerMeta.cpp
         src/model/flowBlock/offer/offerMeta.h
+        src/test/autoSim/testCase/simAutoTest47.cpp
         #${SRC_CAROLYNE}
 
         #blinkSample.cpp

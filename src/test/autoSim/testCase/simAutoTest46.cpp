@@ -69,8 +69,8 @@ namespace kathryn{
                                                  300,
                                                  prefix + "simAutoResult"+std::to_string(idx)+".vcd",
                                                  prefix + "simAutoResult"+std::to_string(idx)+".prof", simProxyBuildMode),
-                                _md(md)
-        {}
+                                _md(md){
+        }
 
         void describeCon() override{
 
@@ -103,5 +103,5 @@ namespace kathryn{
 
     };
 
-    Sim46TestEle ele46(46);
+    Sim46TestEle ele46(-2);
 }

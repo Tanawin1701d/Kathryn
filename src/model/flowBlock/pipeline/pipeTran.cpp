@@ -17,18 +17,30 @@ namespace kathryn{
         _activateSignal = new expression(1);
     }
 
-    void PipeTranMeta::assignActivateSignal() const{
+    void PipeTranMeta::assignActivateSignal(Operable* notRstSignal) const{
 
         PipePooler* pipePooler = getPipePooler();
         assert(pipePooler   != nullptr);
         assert(_activateSignal != nullptr);
         Operable* pipeReady = pipePooler->getPipeReadySignal(_targetPipeName);
-        if (_userAddCond != nullptr){
-            (*_activateSignal) = (*pipeReady) & (*_userAddCond);
-        }else{
-            (*_activateSignal) = (*pipeReady);
-        }
+        pipeReady  = addLogic(pipeReady, _userAddCond, BITWISE_AND);
+        pipeReady  = addLogic(pipeReady, notRstSignal, BITWISE_AND);
 
+        (*_activateSignal) = (*pipeReady);
+
+    }
+
+    Operable* PipeTranMeta::addLogic(Operable* src0, Operable* src1, LOGIC_OP lop) const{
+        assert(src0 != nullptr);
+
+        if (src1 == nullptr){
+            return src0;
+        }
+        switch (lop){
+        case BITWISE_AND : {return &((*src0)&(*src1));}
+        case BITWISE_OR  : {return &((*src0)|(*src1));}
+        default          : {assert(false);}
+        }
     }
 
 
@@ -50,10 +62,8 @@ namespace kathryn{
         addTranMeta(targetPipeName, customCond);
     }
 
-    FlowBlockPipeTran::FlowBlockPipeTran(std::string  targetPipeName):
-    FlowBlockPipeTran(){
-
-    }
+    FlowBlockPipeTran::FlowBlockPipeTran(std::string  assignActivateCond):
+    FlowBlockPipeTran(assignActivateCond, nullptr){}
 
 
     FlowBlockPipeTran::~FlowBlockPipeTran(){
@@ -92,8 +102,9 @@ namespace kathryn{
     }
 
     void FlowBlockPipeTran::assignActivateCond(){
+        Operable* notRstSig = isThereIntRst() ? &(~(*intNodes[INT_RESET]->getExitOpr())): nullptr;
         for (PipeTranMeta& tranMeta: _pipeTranMetas){
-            tranMeta.assignActivateSignal();
+            tranMeta.assignActivateSignal(notRstSig);
         }
     }
 
