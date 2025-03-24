@@ -46,16 +46,13 @@ add_executable(Kathryn
         ${SRC_PARAM}
         ${SRC_LIB}
         ${SRC_MODEL_COMPILE}
-        src/model/flowBlock/offer/offer.cpp
-        src/model/flowBlock/offer/offer.h
-        src/model/flowBlock/offer/offer.h
-        src/model/flowBlock/offer/offerChoice.h
-        src/model/flowBlock/offer/offerChoice.cpp
-        src/model/flowBlock/offer/offerPooler.cpp
-        src/model/flowBlock/offer/offerPooler.h
-        src/model/flowBlock/offer/offerMeta.cpp
-        src/model/flowBlock/offer/offerMeta.h
-        src/test/autoSim/testCase/simAutoTest47.cpp
+        src/lib/hw/slot/rowMeta.h
+        src/lib/hw/slot/slot.h
+        src/lib/hw/slot/table.h
+        src/lib/hw/slot/slotUtil.h
+        src/lib/hw/slot/table.cpp
+        src/lib/hw/slot/slotUtil.cpp
+
         #${SRC_CAROLYNE}
 
         #blinkSample.cpp

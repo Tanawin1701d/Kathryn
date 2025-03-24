@@ -4920,7 +4920,7 @@ Inlined 87 calls, eliminated 0 functions
 ../src/sim/simResWriter/simResWriter.cpp:33:31: note: Considering inline candidate std::string std::__cxx11::to_string(int)/455.
 ../src/sim/simResWriter/simResWriter.cpp:33:31: missed:   will not early inline: void kathryn::VcdWriter::addNewVar(kathryn::VCD_SIG_TYPE, std::string, kathryn::Slice)/864->std::string std::__cxx11::to_string(int)/455, call is cold and code would grow at least by 12
 ../src/sim/simResWriter/simResWriter.cpp:33:31: note: Considering inline candidate int kathryn::Slice::getSize() const/830.
-../src/sim/simResWriter/simResWriter.cpp:33:31: optimized:  Inlining int kathryn::Slice::getSize() const/830 into void kathryn::VcdWriter::addNewVar(kathryn::VCD_SIG_TYPE, std::string, kathryn::Slice)/864.
+../src/sim/simResWriter/simResWriter.cpp:33:31: optimized:  Inlining int kathryn::Slice::getAmtField() const/830 into void kathryn::VcdWriter::addNewVar(kathryn::VCD_SIG_TYPE, std::string, kathryn::Slice)/864.
 ../src/sim/simResWriter/simResWriter.cpp:51:37: note: Considering inline candidate std::__cxx11::basic_string<_CharT, _Traits, _Alloc>::~basic_string() [with _CharT = char; _Traits = std::char_traits<char>; _Alloc = std::allocator<char>]/997.
 ../src/sim/simResWriter/simResWriter.cpp:51:37: optimized:  Inlining std::__cxx11::basic_string<_CharT, _Traits, _Alloc>::~basic_string() [with _CharT = char; _Traits = std::char_traits<char>; _Alloc = std::allocator<char>]/997 into void kathryn::VcdWriter::addNewTimeStamp(kathryn::ull)/870.
 ../src/sim/simResWriter/simResWriter.cpp:51:21: note: Considering inline candidate std::__cxx11::basic_string<_CharT, _Traits, _Alloc>::~basic_string() [with _CharT = char; _Traits = std::char_traits<char>; _Alloc = std::allocator<char>]/997.
