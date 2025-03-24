@@ -70,6 +70,8 @@ namespace kathryn{
 
     Slot buildGetLogic(Operable& searchIdx);
 
+    RegSlot& get(int constIdx);
+
     /////// return single wire that used to store signal
     /// system to store
 

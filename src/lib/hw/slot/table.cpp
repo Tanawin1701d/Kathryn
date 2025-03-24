@@ -167,6 +167,13 @@ namespace kathryn{
         return *this;
     }
 
+    RegSlot& Table::get(int constIdx){
+        mfAssert(constIdx < _amtSize, "retrieve data from table: " + _tableName +
+                                      " with idx: " + std::to_string(constIdx) +
+                                      " is out of range");
+        return *_hwSlots[constIdx];
+    }
+
 
 
 }

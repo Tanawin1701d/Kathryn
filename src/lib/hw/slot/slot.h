@@ -33,7 +33,7 @@ namespace kathryn{
         _meta    (std::move(meta)),
         _ident   (identVal){}
 
-        explicit Slot(RowMeta meta, int identVal, const std::vector<SlotMeta>& slotMetas):
+        explicit Slot(RowMeta meta, const std::vector<SlotMeta>& slotMetas, int identVal = -1):
         _readOnly(false),
         _meta    (std::move(meta)),
         _ident   (identVal),
@@ -41,6 +41,26 @@ namespace kathryn{
             mfAssert(!slotMetas.empty(), "cannot create slot with empt slot Metas");
             if (slotMetas[0].asb == nullptr){_readOnly = true;}
             integrityCheck();
+        }
+
+        explicit Slot(const std::vector<std::string>& fieldName,
+                      const std::vector<Operable*>& oprs, int identVal = -1):
+        _readOnly(true),
+        _ident(identVal){
+
+            ///// collect size for each filed
+            std::vector<int> sizes;
+            for (Operable* opr: oprs){
+                mfAssert(opr != nullptr, "cannot construct slot from nullptr");
+                int sz = opr->getOperableSlice().getSize();
+                sizes.push_back(sz);
+            }
+            _meta = RowMeta(fieldName, sizes);
+            ///// build _hwMetas
+            for (Operable* opr: oprs){
+                _hwMetas.push_back({opr, nullptr});
+            }
+
         }
 
         /** checking idx*/
@@ -69,7 +89,7 @@ namespace kathryn{
             for (int i = startIdx; i < stopIdx; i++){
                 slotMetas.push_back(_hwMetas[i]);
             }
-            Slot slicedSlot(_meta(startIdx, stopIdx), _ident, slotMetas);
+            Slot slicedSlot(_meta(startIdx, stopIdx), slotMetas, _ident);
             return slicedSlot;
 
         }
@@ -90,7 +110,7 @@ namespace kathryn{
                 fms      .push_back(_meta.getField(idxInCurSlot));
                 slotMetas.push_back(_hwMetas[idxInCurSlot]);
             }
-            return Slot(RowMeta(fms), _ident, slotMetas);
+            return Slot(RowMeta(fms), slotMetas, _ident);
         }
 
         Slot operator() (const RowMeta& rowMeta){
@@ -105,7 +125,7 @@ namespace kathryn{
             for (const SlotMeta& rSlotMeta: rhs._hwMetas){
                 newHwMetas.push_back(rSlotMeta);
             }
-            return Slot(newRM, newIdent, newHwMetas);
+            return Slot(newRM, newHwMetas, newIdent);
         }
 
         void setNewRowMeta(const RowMeta& newRowMeta){
@@ -143,7 +163,7 @@ namespace kathryn{
                         Operable& dayta,
                         bool      isBlockAsm){
             RowMeta rm({startFieldName}, {dayta.getOperableSlice().getSize()});
-            Slot rhsSlot(rm, -1, {{&dayta, nullptr}});
+            Slot rhsSlot(rm, {{&dayta, nullptr}}, -1);
             assignCore(rhsSlot, isBlockAsm);
         }
 
