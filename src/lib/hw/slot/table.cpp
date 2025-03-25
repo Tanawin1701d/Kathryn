@@ -74,8 +74,8 @@ namespace kathryn{
                                                         Operable* rhsIdx,
                                                         Slot      rhsSlot) -> Operable&{
 
-            if (isMin){ return (*lhsSlot.getHwSlotMeta(0).opr) <= (*rhsSlot.getHwSlotMeta(0).opr);}
-            return (*lhsSlot.getHwSlotMeta(0).opr) >= (*rhsSlot.getHwSlotMeta(0).opr);
+            if (isMin){ return (*lhsSlot.getHwSlotMeta(fieldIdx).opr) <= (*rhsSlot.getHwSlotMeta(fieldIdx).opr);}
+            return (*lhsSlot.getHwSlotMeta(fieldIdx).opr) >= (*rhsSlot.getHwSlotMeta(fieldIdx).opr);
         });
     }
 
@@ -116,7 +116,7 @@ namespace kathryn{
         std::vector<SlotMeta> slotMetas;
         slotMetas.reserve(slotReps.size());
         for (Wire* slotRep: slotReps){slotMetas.push_back({slotRep, slotRep});}
-        return Slot(_meta, -1, slotMetas);
+        return Slot(_meta, slotMetas, -1);
     }
 
     Slot Table::buildGetLogic(Operable& searchIdx){

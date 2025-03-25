@@ -41,11 +41,11 @@
              /**set value*/
              seq{
                  setIdx = 0;
-                 cdowhile(setIdx <= 3){par{ //// we last idx is 3
+                 cdowhile(setIdx < 3){par{ //// we last idx is 3
                      validInput =   1;
                      xInput     =   setIdx + 5;
-                     setIdx     <<= setIdx + 5;
-                     testTable.assign(inputSlot, setIdx, true);
+                     setIdx     <<= setIdx + 1;
+                     testTable.assign(inputSlot, setIdx(0,2), true);
                  }}
              }
          }
@@ -68,32 +68,20 @@
          {}
 
          void describeCon() override{
-             conNextCycle(3);  //// 2+1 we check wire we must advance to end of the cycle
-             for (int result = 0; result < 4; result++){
-                 testAndPrint("checkMaxId    x: add step: " + std::to_string(result), (ull)(_md->maxIdx)  , result  );
-                 testAndPrint("checkMaxValue x: add step: " + std::to_string(result), (ull)(_md->maxValue), result+1);
-                 conNextCycle(1);
-             }
-             // testAndPrint("checkTable[0] init valid: ", (ull)(*_md->testTable._hwSlots[0]->hwFields[0]), 0);
-             // testAndPrint("checkTable[0] init x: "    , (ull)(*_md->testTable._hwSlots[0]->hwFields[1]), 0);
-             // testAndPrint("checkTable[0] init y: "    , (ull)(*_md->testTable._hwSlots[0]->hwFields[2]), 0);
-             // testAndPrint("checkTable[1] init valid: ", (ull)(*_md->testTable._hwSlots[1]->hwFields[0]), 0);
-             // testAndPrint("checkTable[1] init x: "    , (ull)(*_md->testTable._hwSlots[1]->hwFields[1]), 0);
-             // testAndPrint("checkTable[1] init y: "    , (ull)(*_md->testTable._hwSlots[1]->hwFields[2]), 0);
-             // conNextCycle(2);
-             // testAndPrint("checkTable[0] proc valid: ", (ull)(*_md->testTable._hwSlots[0]->hwFields[0]), 1);
-             // testAndPrint("checkTable[0] proc x: "    , (ull)(*_md->testTable._hwSlots[0]->hwFields[1]), 1);
-             // testAndPrint("checkTable[0] proc y: "    , (ull)(*_md->testTable._hwSlots[0]->hwFields[2]), 1);
-             // conNextCycle(1);
-             // testAndPrint("checkTable[1] proc valid: ", (ull)(*_md->testTable._hwSlots[1]->hwFields[0]), 1);
-             // testAndPrint("checkTable[1] proc x: "    , (ull)(*_md->testTable._hwSlots[1]->hwFields[1]), 2);
-             // testAndPrint("checkTable[1] proc y: "    , (ull)(*_md->testTable._hwSlots[1]->hwFields[2]), 2);
- //            for(int i = 0; i < 48; i++){
- //                ValRep testVal = NumConverter::createValRep(6, i);
- //
- //                testAndPrint("checkMem : " + std::to_string(i), _md->b.sv(), testVal);
- //                conNextCycle(1);
- //            }
+             conNextCycle(2+1);  //// 2+1 we check wire we must advance to end of the cycle
+
+             testAndPrint("maxIdx "  , (ull)(_md->maxIdx  ), 0);
+             testAndPrint("maxvalue ", (ull)(_md->maxValue), 5);
+             conNextCycle(1);
+             testAndPrint("maxIdx "  , (ull)(_md->maxIdx  ), 1);
+             testAndPrint("maxvalue ", (ull)(_md->maxValue), 6);
+             conNextCycle(1);
+             testAndPrint("maxIdx "  , (ull)(_md->maxIdx  ), 2);
+             testAndPrint("maxvalue ", (ull)(_md->maxValue), 7);
+             conNextCycle(1);
+             testAndPrint("maxIdx "  , (ull)(_md->maxIdx  ), 3);
+             testAndPrint("maxvalue ", (ull)(_md->maxValue), 8);
+
          }
 
      };

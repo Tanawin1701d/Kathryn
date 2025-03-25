@@ -33,8 +33,8 @@
 
              /**set value*/
              seq{
-                 setIdx = 0;
-                 cdowhile(setIdx <= 1){
+                 setIdx <<= 0;
+                 cdowhile(setIdx < 1){
                      par{
                          validInput    = 1;
                          xInput        = g(z1, setIdx) + 5;
@@ -64,26 +64,20 @@
          {}
 
          void describeCon() override{
-//             testAndPrint("checkTable[0] init valid: ", (ull)(*_md->testTable._hwSlots[0]->hwMetas[0].opr), 0);
-//             testAndPrint("checkTable[0] init x: "    , (ull)(*_md->testTable._hwSlots[0]->hwMetas[1].opr), 0);
-//             testAndPrint("checkTable[0] init y: "    , (ull)(*_md->testTable._hwSlots[0]->hwMetas[2].opr), 0);
-//             testAndPrint("checkTable[1] init valid: ", (ull)(*_md->testTable._hwSlots[1]->hwMetas[0].opr), 0);
-//             testAndPrint("checkTable[1] init x: "    , (ull)(*_md->testTable._hwSlots[1]->hwMetas[1].opr), 0);
-//             testAndPrint("checkTable[1] init y: "    , (ull)(*_md->testTable._hwSlots[1]->hwMetas[2].opr), 0);
-//             conNextCycle(2);
-//             testAndPrint("checkTable[0] proc valid: ", (ull)(*_md->testTable._hwSlots[0]->hwMetas[0].opr), 1);
-//             testAndPrint("checkTable[0] proc x: "    , (ull)(*_md->testTable._hwSlots[0]->hwMetas[1].opr), 1);
-//             testAndPrint("checkTable[0] proc y: "    , (ull)(*_md->testTable._hwSlots[0]->hwMetas[2].opr), 1);
-//             conNextCycle(1);
-//             testAndPrint("checkTable[1] proc valid: ", (ull)(*_md->testTable._hwSlots[1]->hwMetas[0].opr), 1);
-//             testAndPrint("checkTable[1] proc x: "    , (ull)(*_md->testTable._hwSlots[1]->hwMetas[1].opr), 2);
-//             testAndPrint("checkTable[1] proc y: "    , (ull)(*_md->testTable._hwSlots[1]->hwMetas[2].opr), 2);
-// //            for(int i = 0; i < 48; i++){
-// //                ValRep testVal = NumConverter::createValRep(6, i);
-// //
-// //                testAndPrint("checkMem : " + std::to_string(i), _md->b.sv(), testVal);
-// //                conNextCycle(1);
-// //            }
+             conNextCycle(2);
+             testAndPrint("checkTable[0] init valid: ", (ull)(_md->testTable._hwSlots[0]->get("valid")), 1);
+             testAndPrint("checkTable[0] init x: "    , (ull)(_md->testTable._hwSlots[0]->get("x"))    , 5);
+             testAndPrint("checkTable[0] init y: "    , (ull)(_md->testTable._hwSlots[0]->get("y"))    , 5);
+             testAndPrint("checkTable[1] init valid: ", (ull)(_md->testTable._hwSlots[1]->get("valid")), 0);
+             testAndPrint("checkTable[1] init x: "    , (ull)(_md->testTable._hwSlots[1]->get("x"))    , 0);
+             testAndPrint("checkTable[1] init y: "    , (ull)(_md->testTable._hwSlots[1]->get("y"))    , 0);
+             conNextCycle(1);
+             testAndPrint("checkTable[0] init valid: ", (ull)(_md->testTable._hwSlots[0]->get("valid")), 1);
+             testAndPrint("checkTable[0] init x: "    , (ull)(_md->testTable._hwSlots[0]->get("x"))    , 5);
+             testAndPrint("checkTable[0] init y: "    , (ull)(_md->testTable._hwSlots[0]->get("y"))    , 5);
+             testAndPrint("checkTable[1] init valid: ", (ull)(_md->testTable._hwSlots[1]->get("valid")), 1);
+             testAndPrint("checkTable[1] init x: "    , (ull)(_md->testTable._hwSlots[1]->get("x"))    , 6);
+             testAndPrint("checkTable[1] init y: "    , (ull)(_md->testTable._hwSlots[1]->get("y"))    , 6);
          }
 
      };

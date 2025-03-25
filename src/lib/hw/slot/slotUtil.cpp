@@ -34,7 +34,7 @@ namespace kathryn{
             selectedSlotMeta.push_back({&joinWire, &joinWire});
         }
         //////// build new slot
-        return Slot(lhsSlot.getMeta(), -1, selectedSlotMeta);
+        return Slot(lhsSlot.getMeta(), selectedSlotMeta, -1);
     }
 
 }

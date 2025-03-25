@@ -130,6 +130,7 @@ namespace kathryn{
 
         }
 
+        ////////// loop to all offer choice and give it to basic node
         for (int i = 0; i < _generatedofcStruct.size(); i++){
             OfferCSt*        curChoice  = &_generatedofcStruct[i];
             OfferSignalMeta* curSignal  = &curChoice->_offerSignals;

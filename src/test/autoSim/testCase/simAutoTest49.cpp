@@ -20,6 +20,7 @@ namespace kathryn{
         mWire(x  , 1);
         mWire(st0, 1);
         mWire(st1, 1);
+        mWire(st2, 1);
 
 
         explicit testSimMod49(int x): Module(){}
@@ -28,8 +29,9 @@ namespace kathryn{
 
             cwhile(true){
                 offer("test"){
-                    ofc("a"){ a <<= a + 1; }
-                    ofcc("b", x){ b <<=  b + 1; }
+                    ofc("a")    { a <<=  a + 1;}
+                    ofcc("b", x){ b <<=  b + 1;}
+                    ofc("c")    { c <<=  c + 1;}
                 }
             }
 
@@ -44,9 +46,23 @@ namespace kathryn{
                 }
                 syWait(5);
                 par{
+                    x = 1;
                     zif(getOffer("test", "b")){
                         st1 = 1;
                         ackOffer("test", "b", st1);
+                    }
+
+                }
+                syWait(5);
+                par{
+                    x = 1;
+                    zif(getOffer("test", "b")){
+                        st1 = 1;
+                        ackOffer("test", "b", st1);
+                    }
+                    zif(getOffer("test", "c")){
+                        st2 = 1;
+                        ackOffer("test", "c", st2);
                     }
                 }
 
@@ -72,32 +88,21 @@ namespace kathryn{
         {}
 
         void describeCon() override{
-            std::cout << TC_BLUE << "test pipe multipath" << TC_DEF << std::endl;
-            conNextCycle(2);
-            testAndPrint("testPipVal: B", ull(_md->b), 5);
-            testAndPrint("testPipVal: B", ull(_md->c), 0);
-            testAndPrint("testPipVal: B", ull(_md->d), 0);
-            conNextCycle(1);
-            testAndPrint("testPipVal: B", ull(_md->b), 6);
-            testAndPrint("testPipVal: B", ull(_md->c), 0);
-            testAndPrint("testPipVal: B", ull(_md->d), 5);
-            conNextCycle(1);
-            testAndPrint("testPipVal: B", ull(_md->b), 7);
-            testAndPrint("testPipVal: B", ull(_md->c), 6);
-            testAndPrint("testPipVal: B", ull(_md->d), 5);
-            conNextCycle(1);
-            testAndPrint("testPipVal: B", ull(_md->b), 8);
-            testAndPrint("testPipVal: B", ull(_md->c), 6);
-            testAndPrint("testPipVal: B", ull(_md->d), 7);
-            conNextCycle(1);
-            testAndPrint("testPipVal: B", ull(_md->b), 9);
-            testAndPrint("testPipVal: B", ull(_md->c), 8);
-            testAndPrint("testPipVal: B", ull(_md->d), 7);
-            conNextCycle(1);
-            testAndPrint("testPipVal: B", ull(_md->b), 10);
-            testAndPrint("testPipVal: B", ull(_md->c), 8);
-            testAndPrint("testPipVal: B", ull(_md->d), 9);
-
+            std::cout << TC_BLUE << "test offer" << TC_DEF << std::endl;
+            conNextCycle(6);
+            testAndPrint("offer Res: a", ull(_md->a), 1);
+            testAndPrint("offer Res: b", ull(_md->b), 0);
+            testAndPrint("offer Res: c", ull(_md->c), 0);
+            conNextCycle(6);
+            testAndPrint("offer Res: a", ull(_md->a), 1);
+            testAndPrint("offer Res: b", ull(_md->b), 1);
+            testAndPrint("offer Res: c", ull(_md->c), 0);
+            conNextCycle(6);
+            std::cout << TC_BLUE << "case b is accept offer c must not get the offer" << TC_DEF << std::endl;
+            testAndPrint("offer Res: st2", ull(_md->st2), 0); //// because it is wire
+            testAndPrint("offer Res: a", ull(_md->a), 1);
+            testAndPrint("offer Res: b", ull(_md->b), 2);
+            testAndPrint("offer Res: c", ull(_md->c), 0);
         }
 
 
@@ -117,5 +122,5 @@ namespace kathryn{
 
     };
 
-    Sim49TestEle ele49(-5);
+    Sim49TestEle ele49(49);
 }

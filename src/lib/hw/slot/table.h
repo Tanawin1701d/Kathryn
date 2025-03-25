@@ -49,6 +49,11 @@ namespace kathryn{
           int identWidth = 0):
     Table(std::move(tableName), RowMeta(fieldNames, fieldSizes), identWidth){}
 
+
+    virtual ~Table(){
+        for (const RegSlot* regSlot: _hwSlots){ delete regSlot;}
+    }
+
     ///// reqIdx used that Output require the index of table or not
     ///  matchCondition must return single bit whether select lhs (true) or rhs (false)
 

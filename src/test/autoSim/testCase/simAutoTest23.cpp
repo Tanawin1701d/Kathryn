@@ -109,5 +109,5 @@ namespace kathryn{
 
     };
 
-    Sim23TestEle ele23(-3);
+    Sim23TestEle ele23(23);
 }
