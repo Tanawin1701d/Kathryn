@@ -193,7 +193,7 @@ namespace kathryn{
         std::vector<Reg*> hwFields;
 
         ///////// constructor
-        explicit RegSlot(const RowMeta& meta, int identVal, const std::string& suffix = ""):
+        explicit RegSlot(const RowMeta& meta, int identVal = -1, const std::string& suffix = ""):
         Slot(meta,identVal){
 
             for (const auto& field: meta.getAllFields()){
@@ -202,6 +202,11 @@ namespace kathryn{
                 _hwMetas .push_back({*hwFields.rbegin(), *hwFields.rbegin()});
             }
         }
+
+        explicit RegSlot(const std::vector<std::string> &nms,
+                         const std::vector<int> &szs):
+        RegSlot(RowMeta(nms, szs)){}
+
         /** hardware getter system*/
         Reg& get(const std::string& fieldName){
             int idx = _meta.getFieldIdx(fieldName);

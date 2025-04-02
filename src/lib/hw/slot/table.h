@@ -82,7 +82,25 @@ namespace kathryn{
 
     ///Wire& buildSetLogic(Slot& slot, Operable& reqIdx);
 
-    Table& assign(Slot& slot, Operable& reqIdx, bool isBlockAsm);
+    Table& assign(const Slot& slot, Operable& reqIdx, bool isBlockAsm);
+    Table& assign(const std::vector<std::string>& fieldName,
+                  const std::vector<Operable*>& oprs,
+                  Operable& reqIdx, bool isBlockAsm);
+    Table& assign(const std::string& fieldName,
+                  Operable*   opr,
+                  Operable& reqIdx, bool isBlockAsm);
+
+    Table& assign(const Slot& slot,
+                  const std::function<Operable&(int idx, Slot examSlot)>& matchCon,
+                  bool isBlockAsm);
+    Table& assign(const std::vector<std::string>& fieldName,
+                  const std::vector<Operable*>& oprs,
+                  const std::function<Operable&(int idx, Slot examSlot)>& matchCon,
+                  bool isBlockAsm);
+    Table& assign(const std::string& fieldName,
+                  Operable* opr,
+                  const std::function<Operable&(int idx, Slot examSlot)>& matchCon,
+                  bool isBlockAsm);
 
 
     };

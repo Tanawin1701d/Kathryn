@@ -151,21 +151,6 @@ namespace kathryn{
 //        return enable;
 //    }
 
-    /////// set logic
-    Table& Table::assign(Slot& slot, Operable& reqIdx, bool isBlockAsm){
-
-        int idxSize = reqIdx.getOperableSlice().getSize();
-        mfAssert(idxSize == _identWidth, "setLogic bitwidth is mismatch");
-
-        /////// loop to all slot
-        for(int idx = 0; idx < _hwSlots.size(); idx++){
-            zif(reqIdx == _hwSlots[idx]->getIdent()){
-                _hwSlots[idx]->assignCore(slot, isBlockAsm);
-            }
-        }
-
-        return *this;
-    }
 
     RegSlot& Table::get(int constIdx){
         mfAssert(constIdx < _amtSize, "retrieve data from table: " + _tableName +
@@ -173,6 +158,92 @@ namespace kathryn{
                                       " is out of range");
         return *_hwSlots[constIdx];
     }
+
+
+    /////// SET LOGIC
+    Table& Table::assign(const Slot& slot, Operable& reqIdx, bool isBlockAsm){
+
+        int idxSize = reqIdx.getOperableSlice().getSize();
+        mfAssert(idxSize == _identWidth, "setLogic bitwidth is mismatch");
+
+        /////// loop to all slot
+        // for(int idx = 0; idx < _hwSlots.size(); idx++){
+        //     zif(reqIdx == _hwSlots[idx]->getIdent()){
+        //         _hwSlots[idx]->assignCore(slot, isBlockAsm);
+        //     }
+        // }
+
+        assign(slot,
+              [&](int idx, const Slot& examSlotOpr) -> Operable&{
+                    return reqIdx == idx;
+              },
+              isBlockAsm);
+
+        return *this;
+    }
+
+    Table& Table::assign(const std::vector<std::string>& fieldName,
+                  const std::vector<Operable*>& oprs,
+                  Operable& reqIdx, bool isBlockAsm){
+
+        assign(Slot(fieldName, oprs,-1),
+              reqIdx,
+              isBlockAsm);
+
+        return *this;
+    }
+
+    Table& Table::assign(const std::string& fieldName,
+                  Operable*   opr,
+                  Operable& reqIdx, bool isBlockAsm){
+        assign(Slot({fieldName}, {opr}, -1),
+              reqIdx,
+              isBlockAsm);
+        return *this;
+
+    }
+
+
+
+    ////// SET LOGIC WITH MATCH COND
+
+
+
+    Table& Table::assign(const Slot& slot,
+                         const std::function<Operable&(int idx, Slot examSlot)>& matchCon,
+                         bool isBlockAsm){
+
+        /////// loop to all slot
+        for(int idx = 0; idx < _hwSlots.size(); idx++){
+            zif(matchCon(idx, *static_cast<Slot*>(_hwSlots[idx]))){
+                _hwSlots[idx]->assignCore(slot, isBlockAsm);
+            }
+        }
+
+        return *this;
+    }
+
+    Table& Table::assign(const std::string& fieldName,
+              Operable* opr,
+              const std::function<Operable&(int idx, Slot examSlot)>& matchCon,
+              bool isBlockAsm){
+        Slot x = Slot({fieldName}, {opr}, -1);
+        assign(x, matchCon, isBlockAsm);
+
+        return *this;
+    }
+
+    Table& Table::assign(const std::vector<std::string>& fieldName,
+                  const std::vector<Operable*>& oprs,
+                  const std::function<Operable&(int idx, Slot examSlot)>& matchCon,
+                  bool isBlockAsm){
+        assign(Slot(fieldName, oprs,-1),
+               matchCon, isBlockAsm);
+
+        return *this;
+    }
+
+
 
 
 

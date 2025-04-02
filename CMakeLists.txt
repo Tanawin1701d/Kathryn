@@ -54,6 +54,13 @@ add_executable(Kathryn
         src/lib/hw/slot/slotUtil.cpp
         src/kride/reg/rrf.h
         src/kride/krideParam.h
+        src/kride/dataType.h
+        src/kride/reg/arf.h
+        src/kride/incl.h
+        src/kride/reg/rrfFinder.h
+        src/kride/mpft/mpft.h
+        src/kride/decoder/decoder.h
+        src/kride/dataType.cpp
 
         #${SRC_CAROLYNE}
 

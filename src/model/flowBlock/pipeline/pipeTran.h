@@ -20,6 +20,9 @@
 #define pipMTran                    for(auto kathrynBlock = new FlowBlockPipeTran(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 #define tranTo  (pipeName)          kathrynBlock->addTranMeta(pipeName, nullptr);
 #define tranToWC(pipeName, cond)    kathrynBlock->addTranMeta(pipeName, &(cond));
+#define pipSyncs(offerVec)          kathrynBlock->addSyncMeta(offerVec);
+#define pipSync(offer)              kathrynBlock->addSyncMeta({offer});
+
 
 
 
@@ -77,6 +80,7 @@ namespace kathryn{
         /**set activate bias usually used in init Pipe */
         void addTranMeta(const std::string& targetPipeName,
                          Operable* userCond = nullptr);
+        void addSyncMeta(const std::vector<std::string>& tranMetas);
         void      assignActivateCond();
         [[nodiscard]] Operable*  joinActivateCond  () const;
         [[nodiscard]] Operable*  getReadySignal    (const std::string& pipeTarget) const;
