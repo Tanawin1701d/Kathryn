@@ -167,6 +167,8 @@ namespace kathryn{
             assignCore(rhsSlot, isBlockAsm);
         }
 
+        Slot& operator <<= (const std::vector<uint64_t>& rhsInts); //// TODO make it be int assign for easi
+        Slot& operator =   (const std::vector<uint64_t>& rhsInts);
         Slot& operator <<= (const Slot& rhsSlot){ assignCore(rhsSlot, true ); return *this;}
         Slot& operator =   (const Slot& rhsSlot){ assignCore(rhsSlot, false); return *this;}
 

@@ -41,23 +41,35 @@ namespace kathryn{
         mReg(instr1, INSTR_LEN);
     };
 
-    struct D_DECODE{
+    constexpr RowMeta intDecMeta = RowMeta(
+    {"illInstr", "aluOp"   , "rsEntry",          ////// microop
+         "immType" , "srcASel" , "srcBSel",  ////// operand meta data
+         "regWr"   , "useRs1"  , "useRs2"          ////// operand enabler
+    },
+    {1            , ALU_OP_WIDTH   , RS_ENT_SEL,
+        IMM_TYPE_WIDTH, SRC_A_SEL_WIDTH, SRC_A_SEL_WIDTH,
+        1             , 1              , 1,
+    });
 
+    constexpr RowMeta rrfMeta = RowMeta(
+            {"rs1Idx", "rs2Idx" , "rdIdx"},
+            {  ARF_SEL,   ARF_SEL, ARF_SEL});
+
+    constexpr RowMeta memMeta = RowMeta(
+            {"dmemSize" , "dmemType"},
+            {MEM_TYPE_WIDTH, MEM_TYPE_WIDTH}
+        );
+
+    constexpr RowMeta mdMeta = RowMeta(
+        {"mdOp", "isMd1Sig", "isMd2Sig", "mdOutSel"},
+        {MD_OP_WIDTH, 1, 1, MD_OUT_SEL_WIDTH }
+
+    );
+
+    struct D_DECODE{
         RegSlot dec;
 
-        D_DECODE(): dec({"immType"     , "rs1Idx"        , "rs2Idx" , "rdIdx",  ///// operand section
-                                         "srcASel"       , "srcBSel", "regWr",
-                                         "useRs1"        , "useRs2",
-                         "illInstr"    , "aluOp"         , "rsEntry",            ////// operation section
-                         "dmemSize"    , "dmemType"      ,
-                         "mdOp"        , "isMd1Sig"      , "isMd2Sig", "mdOutSel"},
-                        {IMM_TYPE_WIDTH, ARF_SEL, ARF_SEL, ARF_SEL,
-                                         SRC_A_SEL_WIDTH, SRC_A_SEL_WIDTH, 1,
-                                         1              , 1,
-                         1             , ALU_OP_WIDTH   , RS_ENT_SEL,
-                         MEM_TYPE_WIDTH, MEM_TYPE_WIDTH ,
-                         MD_OP_WIDTH   , MD_OUT_SEL_WIDTH
-                        }){}
+        D_DECODE(): dec(intDecMeta + rrfMeta + memMeta + mdMeta){}
 
         void decode(Reg& instr); //// TODO decode the fucking instruction
     };

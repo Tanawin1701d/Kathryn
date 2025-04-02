@@ -34,15 +34,15 @@ namespace kathryn {
         std::vector<FieldMeta> _fields; ///// the order of the field is from LSB to MSB
         int _totalSize = 0; ////// cache the total bit size
 
-        RowMeta() = default;
+        constexpr RowMeta() = default;
 
-        RowMeta(const std::vector<std::string> &nms,
+        constexpr RowMeta(const std::vector<std::string> &nms,
                 const std::vector<int> &szs) {
             mfAssert(nms.size() == szs.size(), "field and size not match");
             for (int i = 0; i < nms.size(); i++) { addField(nms[i], szs[i]); }
         }
 
-        RowMeta(const std::vector<FieldMeta> &fields) {
+        constexpr RowMeta(const std::vector<FieldMeta> &fields) {
             for (const FieldMeta &fieldMeta: fields) { addField(fieldMeta); }
         }
 
@@ -120,6 +120,12 @@ namespace kathryn {
         RowMeta &operator+=(const RowMeta &rhs) {
             for (const FieldMeta &cpyField: rhs._fields) { _fields.push_back(cpyField); }
             return *this;
+        }
+
+        RowMeta operator+(const RowMeta& rhs) const{
+            std::vector<FieldMeta> newFiledMetas = _fields;
+            for (const FieldMeta &cpyField: rhs._fields){ newFiledMetas.push_back(cpyField);}
+            return RowMeta(newFiledMetas);
         }
 
         CsvTable genTable() override {

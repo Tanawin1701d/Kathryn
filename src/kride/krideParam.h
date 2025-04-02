@@ -38,9 +38,15 @@ namespace kathryn{
     constexpr int SRC_A_RS1       = 0;
     constexpr int SRC_A_PC        = 1;
     constexpr int SRC_A_ZERO      = 2;
+
+    //src_b
+    constexpr  int SRC_B_SEL_WIDTH   = 2;
+    constexpr  int SRC_B_RS2         = 0;
+    constexpr  int SRC_B_IMM         = 1;
+    constexpr  int SRC_B_FOUR        = 2;
+    constexpr  int SRC_B_ZERO        = 3;
     ////// alu
     constexpr int ALU_OP_WIDTH    = 4;
-    constexpr int RS_ENT_SEL      = 3;
     constexpr int ALU_OP_ADD      = 0;
     constexpr int ALU_OP_SLL      = 1;
     constexpr int ALU_OP_XOR      = 4;
@@ -113,36 +119,36 @@ namespace kathryn{
     constexpr int RV32_FUNCT3_BGEU  = 7;
 
 // MISC-MEM FUNCT3 encodings
-    `define RV32_FUNCT3_FENCE   0
-    `define RV32_FUNCT3_FENCE_I 1
+    constexpr int RV32_FUNCT3_FENCE   = 0;
+    constexpr int RV32_FUNCT3_FENCE_I = 1;
 
 // SYSTEM FUNCT3 encodings
 
-    `define RV32_FUNCT3_PRIV   0
-    `define RV32_FUNCT3_CSRRW  1
-    `define RV32_FUNCT3_CSRRS  2
-    `define RV32_FUNCT3_CSRRC  3
-    `define RV32_FUNCT3_CSRRWI 5
-    `define RV32_FUNCT3_CSRRSI 6
-    `define RV32_FUNCT3_CSRRCI 7
+    constexpr int RV32_FUNCT3_PRIV   = 0;
+    constexpr int RV32_FUNCT3_CSRRW  = 1;
+    constexpr int RV32_FUNCT3_CSRRS  = 2;
+    constexpr int RV32_FUNCT3_CSRRC  = 3;
+    constexpr int RV32_FUNCT3_CSRRWI = 5;
+    constexpr int RV32_FUNCT3_CSRRSI = 6;
+    constexpr int RV32_FUNCT3_CSRRCI = 7;
 
 // PRIV FUNCT12 encodings
 
-    `define RV32_FUNCT12_ECALL  12'b000000000000
-    `define RV32_FUNCT12_EBREAK 12'b000000000001
-    `define RV32_FUNCT12_ERET   12'b000100000000
+    constexpr int RV32_FUNCT12_ECALL  = 0b000000000000;
+    constexpr int RV32_FUNCT12_EBREAK = 0b000000000001;
+    constexpr int RV32_FUNCT12_ERET   = 0b000100000000;
 
 // RV32M encodings
-    `define RV32_FUNCT7_MUL_DIV 7'd1
+    constexpr int RV32_FUNCT7_MUL_DIV = 1;
 
-    `define RV32_FUNCT3_MUL    3'd0
-    `define RV32_FUNCT3_MULH   3'd1
-    `define RV32_FUNCT3_MULHSU 3'd2
-    `define RV32_FUNCT3_MULHU  3'd3
-    `define RV32_FUNCT3_DIV    3'd4
-    `define RV32_FUNCT3_DIVU   3'd5
-    `define RV32_FUNCT3_REM    3'd6
-    `define RV32_FUNCT3_REMU   3'd7
+    constexpr int RV32_FUNCT3_MUL    = 0;
+    constexpr int RV32_FUNCT3_MULH   = 1;
+    constexpr int RV32_FUNCT3_MULHSU = 2;
+    constexpr int RV32_FUNCT3_MULHU  = 3;
+    constexpr int RV32_FUNCT3_DIV    = 4;
+    constexpr int RV32_FUNCT3_DIVU   = 5;
+    constexpr int RV32_FUNCT3_REM    = 6;
+    constexpr int RV32_FUNCT3_REMU   = 7;
 
     ////// dmem
     constexpr int MEM_TYPE_WIDTH  = 3;
@@ -168,6 +174,15 @@ namespace kathryn{
     constexpr int MD_OUT_LO         = 0;
     constexpr int MD_OUT_HI         = 1;
     constexpr int MD_OUT_REM        = 2;
+
+    constexpr int RS_ENT_SEL       = 3;
+    constexpr int RS_ENT_ALU       = 1;
+    constexpr int RS_ENT_BRANCH    = 2;
+    constexpr int RS_ENT_JAL       = RS_ENT_BRANCH;
+    constexpr int RS_ENT_JALR      = RS_ENT_BRANCH;
+    constexpr int RS_ENT_MUL       = 3;
+    constexpr int RS_ENT_DIV       = 3;
+    constexpr int RS_ENT_LDST      = 4;
 
 
 
