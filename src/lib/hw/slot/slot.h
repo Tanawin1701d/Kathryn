@@ -117,6 +117,9 @@ namespace kathryn{
             return operator() (rowMeta.getAllFieldNames());
         }
 
+        Slot at(const std::string& fieldName); /// TODO make this
+
+
         Slot operator+ (const Slot& rhs) const{
             ////// todo pool slot
             RowMeta               newRM      = _meta; newRM += rhs._meta;
@@ -169,6 +172,12 @@ namespace kathryn{
 
         Slot& operator <<= (const std::vector<uint64_t>& rhsInts); //// TODO make it be int assign for easi
         Slot& operator =   (const std::vector<uint64_t>& rhsInts);
+        Slot& operator <<= (uint64_t rhsVal);
+        Slot& operator =   (uint64_t rhsVal);
+        Slot& operator <<= (Operable& rhsOpr);
+        Slot& operator =   (Operable& rhsOpr);
+        Slot& operator <<= (const std::vector<Operable*> rhsOprs);
+        Slot& operator =   (const std::vector<Operable*> rhsOprs);
         Slot& operator <<= (const Slot& rhsSlot){ assignCore(rhsSlot, true ); return *this;}
         Slot& operator =   (const Slot& rhsSlot){ assignCore(rhsSlot, false); return *this;}
 

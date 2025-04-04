@@ -34,15 +34,15 @@ namespace kathryn {
         std::vector<FieldMeta> _fields; ///// the order of the field is from LSB to MSB
         int _totalSize = 0; ////// cache the total bit size
 
-        constexpr RowMeta() = default;
+        RowMeta() = default;
 
-        constexpr RowMeta(const std::vector<std::string> &nms,
+        RowMeta(const std::vector<std::string> &nms,
                 const std::vector<int> &szs) {
             mfAssert(nms.size() == szs.size(), "field and size not match");
             for (int i = 0; i < nms.size(); i++) { addField(nms[i], szs[i]); }
         }
 
-        constexpr RowMeta(const std::vector<FieldMeta> &fields) {
+        RowMeta(const std::vector<FieldMeta> &fields) {
             for (const FieldMeta &fieldMeta: fields) { addField(fieldMeta); }
         }
 

@@ -8,7 +8,7 @@
 namespace kathryn{
 
     constexpr int DATA_LEN   =    32;
-    constexpr int INSTR_LEN   =    32;
+    constexpr int INSTR_LEN  =    32;
     constexpr int ADDR_LEN   =    32;
     constexpr int ISSUE_NUM  =     2;
 
@@ -23,8 +23,16 @@ namespace kathryn{
     constexpr int RRF_SEL = 6;
     constexpr int ARF_SEL = 5;
 
+    //Gshare
+    constexpr int GSH_BHR_LEN =  10;
+    constexpr int GSH_PHT_SEL =  10;
+    constexpr int GSH_PHT_NUM =  1024;
+
 
     /////// decoder section
+
+    constexpr int BRANCH_ENT_NUM = 4;
+
 
     constexpr int DEC_AMT        = 2;
     /////// imm
