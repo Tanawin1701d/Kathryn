@@ -61,6 +61,7 @@ add_executable(Kathryn
         src/kride/mpft/mpft.h
         src/kride/decoder/decoder.h
         src/kride/dataType.cpp
+        src/kride/specGen/specGen.h
 
         #${SRC_CAROLYNE}
 
