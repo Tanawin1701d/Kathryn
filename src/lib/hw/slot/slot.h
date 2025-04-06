@@ -176,10 +176,13 @@ namespace kathryn{
         Slot& operator =   (uint64_t rhsVal);
         Slot& operator <<= (Operable& rhsOpr);
         Slot& operator =   (Operable& rhsOpr);
-        Slot& operator <<= (const std::vector<Operable*> rhsOprs);
-        Slot& operator =   (const std::vector<Operable*> rhsOprs);
+        Slot&          bls (const std::vector<Operable*>& rhsOprs);
+        Slot&          nbls(const std::vector<Operable*>& rhsOprs);
+        Slot& operator <<= (const std::vector<Operable*>& rhsOprs);
+        Slot& operator =   (const std::vector<Operable*>& rhsOprs);
         Slot& operator <<= (const Slot& rhsSlot){ assignCore(rhsSlot, true ); return *this;}
         Slot& operator =   (const Slot& rhsSlot){ assignCore(rhsSlot, false); return *this;}
+
 
         /** hardware getter system*/
         SlotMeta getHwSlotMeta(const std::string& fieldName){

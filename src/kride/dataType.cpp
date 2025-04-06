@@ -41,6 +41,23 @@ namespace kathryn{
             {"invl", "instr"  , "isBranch", "prCond", "pAddr"  , "specTag"   }, ///// prCond if branch is predict (taken or not taken)
             {1     , INSTR_LEN, 1         , 1       , INSTR_LEN, SPEC_TAG_LEN});
 
+    RowMeta specGenMeta(
+        {"res1", "res2"},
+        {SPEC_TAG_LEN, SPEC_TAG_LEN});
+
+    //// the base class of out of order reservation station entry
+    RowMeta OORsvEntry({"busy"}, {1});
+    //////// the occupy and ready signal will be assigned in the base table
+    RowMeta intRsvEntry(
+        {"specTag", "pc", "imm", "rrfTag", "aluOp",
+            "srcASel",  "valid1", "src1",
+            "srcBSel",  "valid2", "src2"},
+        {SPEC_TAG_LEN, 1, INSTR_LEN, DATA_LEN, RRF_SEL, ALU_OP_WIDTH,
+            SRC_A_SEL_WIDTH, 1, DATA_LEN,
+            SRC_A_SEL_WIDTH, 1, DATA_LEN ////// the address is embbed in src1 and src2
+        }
+    );
+
 
     RowMeta joinDecMeta(decMeta + intDecMeta + rrfMeta + memMeta + mdMeta);
 
@@ -66,13 +83,9 @@ namespace kathryn{
 
         ////// mem decoder zone
         memDec <<= {&funct3(0,2).extB(3), &funct3};
-
         ////// register decoder zone
         rrfDec <<= {&instr(15, 20), &instr(20, 25), &instr(7, 12)};
-        ////// integer decoder zone
-        intDec <<= {0    , ALU_OP_ADD, RS_ENT_ALU,
-                    IMM_I, SRC_A_RS1 , SRC_B_IMM,
-                    0    , 1         , 0};
+
         ////// decode mete decoder zone
         if (!decIdx) { ////// id is 0
             metaDec({"invl", "instr", "isBranch", "prCond", "pAddr"}) <<=
@@ -96,7 +109,7 @@ namespace kathryn{
                  &fetchMeta.get("npc")};
 
 
-
+        ////// INT DEC
         zif(op == RV32_LOAD)
             intDec({"rsEntry", "regWr"}) <<= {RS_ENT_LDST, 1};
         zif(op == RV32_STORE)
@@ -153,11 +166,13 @@ namespace kathryn{
             zif(funct3 == RV32_FUNCT3_AND    ) intDec({"aluOp"}) <<= ALU_OP_AND;
 
         }
+        intDec <<= {0    , ALU_OP_ADD, RS_ENT_ALU,
+                    IMM_I, SRC_A_RS1 , SRC_B_IMM,
+                    0    , 1         , 0};
 
 
         //////////// mul and div decoder zone
 
-        mdDec <<= {MD_OP_MUL, 0, 0, MD_OUT_LO};
         ////// mul no need to be asisgn any Further
         zif(funct3 == RV32_FUNCT3_MULH   ) mdDec <<= {MD_OP_MUL,1,1,MD_OUT_HI};
         zif(funct3 == RV32_FUNCT3_MULHSU ) mdDec <<= {MD_OP_MUL,1,0,MD_OUT_HI};
@@ -167,6 +182,10 @@ namespace kathryn{
         zif(funct3 == RV32_FUNCT3_DIVU ) mdDec({"mdOp"}) <<= MD_OP_DIV;
         zif(funct3 == RV32_FUNCT3_REM  ) mdDec <<= {MD_OP_REM, 1, 1, MD_OUT_REM};
         zif(funct3 == RV32_FUNCT3_REMU ) mdDec <<= {MD_OP_REM, 0, 0, MD_OUT_REM};
+
+        std::vector<uint64_t> defMulVals = {MD_OP_MUL, 0, 0, MD_OUT_LO};
+        mdDec <<= defMulVals;
+
 
     }
 

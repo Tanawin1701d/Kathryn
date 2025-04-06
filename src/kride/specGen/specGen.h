@@ -9,14 +9,12 @@
 
 namespace kathryn{
 
-    struct SpecGen: public Module{
+    struct SpecGen: Module{
 
         D_ALL d;
         mReg(curSpec, SPEC_TAG_LEN);
         mReg(brDepth, SPEC_TAG_SEL);
         expression newSpec[2];
-        mWire(specRes1, SPEC_TAG_LEN);
-        mWire(specRes2, SPEC_TAG_LEN);
 
         explicit SpecGen(D_ALL& din):
         d(din), newSpec{expression(1), expression(1)}{}
@@ -25,6 +23,7 @@ namespace kathryn{
 
             newSpec[0] = g(curSpec(0, SPEC_TAG_LEN-1), curSpec(SPEC_TAG_LEN-1));
             newSpec[1] = g(newSpec[0](0, SPEC_TAG_LEN-1), newSpec[0](SPEC_TAG_LEN-1));
+            auto& spRes = d.dcd.spGen;
 
             offer(SPEC_GEN){
                 ofcc(EXEC, d.exb.misPred){
@@ -36,22 +35,17 @@ namespace kathryn{
                                           d.dcd.isBranches[1].extB(SPEC_TAG_SEL);
                         ////////// make it as array or table
                         zif(d.dcd.isBranches[0] & d.dcd.isBranches[1]){
-                            specRes1 = newSpec[0];
-                            specRes2 = newSpec[1];
-
+                            spRes.bls({newSpec, newSpec+1});
                         }zelif(d.dcd.isBranches[0]){
-                            specRes1 = newSpec[0];
-                            specRes2 = curSpec;
+                            spRes.bls({newSpec, newSpec});
                         }zelif(d.dcd.isBranches[1]){
-                            specRes1 = curSpec;
-                            specRes2 = newSpec[0];
+                            spRes.bls({&curSpec, newSpec});
                         }
                         zelse{
-                            specRes1 = curSpec;
-                            specRes2 = curSpec;
+                            spRes.bls({&curSpec, &curSpec});
                         };
 
-                        curSpec <<= specRes2;
+                        curSpec <<= spRes.get("res2");
                 }
 
             }

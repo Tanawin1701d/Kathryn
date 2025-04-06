@@ -11,10 +11,14 @@
 
 namespace kathryn{
 
+    template <typename T>
+    using Ref = std::reference_wrapper<T>;
+
 
     extern RowMeta instrMeta;
     extern RowMeta intDecMeta, rrfMeta, memMeta, mdMeta;
-    extern RowMeta joinDecMeta;
+    extern RowMeta joinDecMeta, specGenMeta;
+    extern RowMeta OORsvEntry, intRsvEntry;
 
     struct D_EXEC_BRANCH{
         mWire(sucPred      , 1);
@@ -50,9 +54,11 @@ namespace kathryn{
     struct D_DECODE{
         RegSlot decs[2];
         expression isBranches[2];
+        RegSlot spGen;
 
         D_DECODE(): decs{RegSlot(joinDecMeta),RegSlot(joinDecMeta)},
-                    isBranches{expression(1), expression(1)}{}
+                    isBranches{expression(1), expression(1)},
+                    spGen(specGenMeta){}
 
         void decode(D_INSTR& fetchMeta, int decIdx); //// TODO decode the fucking instruction
     };

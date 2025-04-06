@@ -29,6 +29,9 @@ namespace kathryn {
     class LogicGenBase;
     struct AssignMeta;
 
+    class Operable;
+    typedef std::vector<std::reference_wrapper<Operable>> Oprs;
+
     class Operable{
     protected:
         ValRepBase cachedRep;

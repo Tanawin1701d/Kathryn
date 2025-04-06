@@ -65,10 +65,11 @@ namespace kathryn{
                                                                 Slot      rhsSlot)>& cmpCon);
 
     Candidate buildMinMaxLogic(int fieldIdx, bool reqIdx, bool isMin);
-
-
-
     Candidate buildMinMaxLogic(const std::string& fieldName, bool reqIdx, bool isMin);
+    std::vector<Candidate>
+              buildFindMultiLogic(const std::string& fieldName, bool reqIdx, bool freeIsHigh, int amt);
+
+
 
     /////// designer put the `matchCon` function variable to get slot that match designers' requirement
     Slot buildGetLogic(const std::function<Operable&(int idx, Slot examSlot)>& matchCon);
