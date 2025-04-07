@@ -46,16 +46,27 @@ namespace kathryn{
         {SPEC_TAG_LEN, SPEC_TAG_LEN});
 
     //// the base class of out of order reservation station entry
-    RowMeta OORsvEntry({"busy"}, {1});
+    RowMeta OORsvEntry({"busy", "specTag"}, {1});
+
+    RowMeta IORsvEntry({"busy", "specTag"}, {1});
+
     //////// the occupy and ready signal will be assigned in the base table
     RowMeta intRsvEntry(
-        {"specTag", "pc", "imm", "rrfTag", "aluOp",
+        {"pc", "imm", "rrfTag", "aluOp",
             "srcASel",  "valid1", "src1",
             "srcBSel",  "valid2", "src2"},
         {SPEC_TAG_LEN, 1, INSTR_LEN, DATA_LEN, RRF_SEL, ALU_OP_WIDTH,
             SRC_A_SEL_WIDTH, 1, DATA_LEN,
             SRC_A_SEL_WIDTH, 1, DATA_LEN ////// the address is embbed in src1 and src2
         }
+    );
+
+    RowMeta mulRsvEntry(
+        {
+        },
+        {
+        }
+
     );
 
 

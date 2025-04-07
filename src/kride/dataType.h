@@ -8,6 +8,7 @@
 #include "kathryn.h"
 #include "lib/hw/slot/slot.h"
 #include "krideParam.h"
+#include "lib/hw/slot/table.h"
 
 namespace kathryn{
 
@@ -18,14 +19,22 @@ namespace kathryn{
     extern RowMeta instrMeta;
     extern RowMeta intDecMeta, rrfMeta, memMeta, mdMeta;
     extern RowMeta joinDecMeta, specGenMeta;
-    extern RowMeta OORsvEntry, intRsvEntry;
+    extern RowMeta OORsvEntry, IORsvEntry, intRsvEntry;
 
     struct D_EXEC_BRANCH{
         mWire(sucPred      , 1);
         mWire(misPred      , 1);
         mWire(rrfIdxRcv    , RRF_SEL);
         mWire(specTagRcvIdx, SPEC_TAG_SEL);
-        mWire(specTagRcv   , SPEC_TAG_LEN); //// RCV means recovery
+        mWire(specTagRcv   , SPEC_TAG_LEN); //// RCV means recovery ///// it may be more than one tag to rcv in each data
+
+        //////// should i invalidate
+        Operable& shouldInv(Operable& listenerSpecTag){
+            assert(specTagRcv.getOperableSlice().getSize() == listenerSpecTag.getOperableSlice().getSize());
+            return (listenerSpecTag & specTagRcv) == 1;
+
+        }
+
     };
 
 
@@ -64,14 +73,24 @@ namespace kathryn{
     };
 
 
+    struct D_IO_RSV{
+        mWire(req, 2);
+        mWire(allocatable, 1);
+        Candidate issueCand;
+    };
+
+
     struct D_ALL{
         D_INSTR       fet;
         D_DECODE      dcd;
         D_DISPATCH    dis;
         D_EXEC_BRANCH exb;
         D_COMMIT      com;
+        D_IO_RSV      rsvBranch;
+        D_IO_RSV      rsvLST;
 
     };
+
 
 
 

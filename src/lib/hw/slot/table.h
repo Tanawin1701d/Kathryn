@@ -13,11 +13,15 @@
 #define src_lib_hw_slot_TABLE_H
 
 
+#define scmp [&](Operable* lhsIdx, Slot lhsSlot, Operable* rhsIdx, Slot rhsSlot)->Operable&
+
+
 namespace kathryn{
 
     struct Candidate{
         Slot      detLogic; //// determine logic
-        Operable* detIdx = nullptr;
+        Operable* detIdx = nullptr; //// it is optional
+        Operable* valid  = nullptr; //// it is optional
     };
 
     class Table{
@@ -67,7 +71,20 @@ namespace kathryn{
     Candidate buildMinMaxLogic(int fieldIdx, bool reqIdx, bool isMin);
     Candidate buildMinMaxLogic(const std::string& fieldName, bool reqIdx, bool isMin);
     std::vector<Candidate>
-              buildFindMultiLogic(const std::string& fieldName, bool reqIdx, bool freeIsHigh, int amt);
+              buildFindMultiLogic(const std::string& fieldName, bool reqIdx, bool freeIsHigh,
+                                  int amt, bool startFromHead = true);
+
+    ///// buildCirSearchLogic int will search circularily start from
+    ///// [startIdx, startIdx+1] to [(startIdx-1)%size, startIdx]
+    Candidate buildCirSearchLogic(const RowMeta& rowMeta,
+                                  bool  reqSlotIdx,
+                                  int   startIdx,
+                                  bool  selectLeft,
+                                  Operable* defIdx,
+                                  const std::function<Operable&(Operable* lhsIdx,
+                                                                Slot      lhsSlot,
+                                                                Operable* rhsIdx,
+                                                                Slot      rhsSlot)>& cmpCon);
 
 
 

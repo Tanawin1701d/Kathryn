@@ -204,6 +204,7 @@ namespace kathryn{
     constexpr char EXEC[]  = "EXEC";
     constexpr char DP[]    = "DISPATCH";
     constexpr char ALLOC[] = "ALLOC"; /// TODO we won't use this
+    constexpr char RSV_CEN[] = "RSV_CEN";
 
     constexpr char SPEC_GEN[]  = "SPECGEN";
     constexpr char RT[]        = "RT";

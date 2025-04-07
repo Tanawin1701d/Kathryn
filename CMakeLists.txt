@@ -62,7 +62,7 @@ add_executable(Kathryn
         src/kride/decoder/decoder.h
         src/kride/dataType.cpp
         src/kride/specGen/specGen.h
-        src/kride/rsv/rsvBase.h
+        src/kride/rsv/iRsvBase.h
 
         #${SRC_CAROLYNE}
 

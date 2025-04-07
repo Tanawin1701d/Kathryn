@@ -117,7 +117,7 @@ namespace kathryn{
             return operator() (rowMeta.getAllFieldNames());
         }
 
-        Slot at(const std::string& fieldName); /// TODO make this
+        Operable& at(const std::string& fieldName); /// TODO make this
 
 
         Slot operator+ (const Slot& rhs) const{

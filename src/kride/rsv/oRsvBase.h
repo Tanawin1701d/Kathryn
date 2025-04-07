@@ -19,10 +19,6 @@ namespace kathryn{
             assert(addrLength >= 1); /////// if have only one row, why don't use slot
         }
 
-        void flow() override{
-
-        }
-
         Oprs findFreeList(int amt){
 
             /////// integrity check if it exceed, there must be something went wrong
@@ -36,8 +32,8 @@ namespace kathryn{
             return indexResults;
         }
 
-        void setEntry(Operable& addr, Slot dataSlot){
-
+        void setEntry(Operable& addr, const Slot& dataSlot){
+            entries.assign(dataSlot, addr, true);
         }
 
     };
