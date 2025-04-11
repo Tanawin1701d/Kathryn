@@ -58,6 +58,8 @@ namespace kathryn {
         virtual expression& operator <= ( Operable& b);
         virtual expression& operator >  ( Operable& b);
         virtual expression& operator >= ( Operable& b);
+        virtual expression& slt         ( Operable& b); /// sign less than
+        virtual expression& sgt         ( Operable& b); /// sign greater than
         /** arithmetic operators*/
         virtual expression& operator +  ( Operable& b);
         virtual expression& operator -  ( Operable& b);
@@ -66,6 +68,8 @@ namespace kathryn {
         virtual expression& operator %  ( Operable& b);
         /** extend bit*/
         virtual expression& extB(int desSize);
+        virtual expression& uext(int desSize);
+        virtual expression& sext(int desSize);
         /** todo for now self assign operation such as += is not permit */
 
         /**
@@ -88,6 +92,8 @@ namespace kathryn {
         virtual expression& operator <= (ull b);
         virtual expression& operator >  (ull b);
         virtual expression& operator >= (ull b);
+        virtual expression& slt         (ull b);
+        virtual expression& sgt         (ull b);
         /** arithmetic operators*/
         virtual expression& operator +  (ull b);
         virtual expression& operator -  (ull b);

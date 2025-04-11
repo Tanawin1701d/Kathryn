@@ -6,37 +6,35 @@
 #define KATHRYN_SRC_KRIDE_RSV_I_RSVBASE_H
 
 #include"kride/incl.h"
+#include"rsvBase.h"
 
 namespace kathryn{
 
-    struct IRSV_BASE: Module{
-        D_IO_RSV dc;
-        D_ALL& d;
-        RowMeta& userMeta;
+    struct IRSV_BASE: RsvBase{
         Table entries;
         mWire(allocPtr, entries._identWidth);
 
-        IRSV_BASE(D_ALL& din,
-                  const std::string& tableName,
-                  RowMeta& userMeta, int addrLength):
-        d(din), userMeta(userMeta),
-        entries(tableName, IORsvEntry + userMeta, addrLength){}
+        IRSV_BASE(int rsvId, const std::string& rm,
+                  RowMeta& userMeta, int addrLength,
+                  D_ALL& din, D_IO_RSV& dcIn):
+        RsvBase(rsvId, rm, din, dcIn),
+        entries(rm, RsvEntryMeta + userMeta, addrLength){}
 
 
         void buildIssPtr(){
             /////// we don't care the mispredict deletation
             /// because this station will stall the system
             /// the valid will be set from buildCirSearchLogic
-            dc.issueCand = entries.buildCirSearchLogic(IORsvEntry + userMeta, false, 0, false, &allocPtr,
+            dc.issueCand = entries.buildCirSearchLogic(entries._meta, false, 0, false, &allocPtr,
             scmp{return (lhsSlot.at("busy") == 0) && (rhsSlot.at("busy") == 1);}
             );
         }
 
         void updateAllocPtrMisP(){
-            Candidate allocCan = entries.buildCirSearchLogic(IORsvEntry + userMeta, true, 0, false, &allocPtr,
+            Candidate allocCan = entries.buildCirSearchLogic(entries._meta, true, 0, false, &allocPtr,
                 scmp{
-                    return ((lhsSlot.at("busy") == 1) & (~d.exb.shouldInv(lhsSlot.at("specTag"))))
-                    &&     ((lhsSlot.at("busy") == 0) & (~d.exb.shouldInv(lhsSlot.at("specTag"))));
+                    return ((lhsSlot.at("busy") == 1) & (~d.shouldInv(lhsSlot.at("specTag"))))
+                    &&     ((rhsSlot.at("busy") == 0) & (~d.shouldInv(rhsSlot.at("specTag"))));
                 });
          }
 
@@ -51,18 +49,20 @@ namespace kathryn{
 
         void flowBase(){
             ////// do update alloc pointer
-            offer(RSV_CEN){
+            offer(rsvName){
                 ofcc(EXEC, d.exb.misPred ){updateAllocPtrMisP();}
                 ofcc(DP  , dc.allocatable){ allocPtr <<= allocPtr + dc.req;}
             }
         }
 
+        void flow() override{
+            buildIssPtr();
+        }
 
+        Operable& buildAkb() override{ //// do something with it
 
-
+        }
     };
-
-
 }
 
 

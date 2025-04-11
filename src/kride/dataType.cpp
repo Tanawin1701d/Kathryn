@@ -38,35 +38,46 @@ namespace kathryn{
             {MD_OP_WIDTH, 1, 1, MD_OUT_SEL_WIDTH });
 
     RowMeta decMeta(
-            {"invl", "instr"  , "isBranch", "prCond", "pAddr"  , "specTag"   }, ///// prCond if branch is predict (taken or not taken)
-            {1     , INSTR_LEN, 1         , 1       , INSTR_LEN, SPEC_TAG_LEN});
+            {"invl", "instr"  , "isBranch", "prCond", "pAddr"  , "specTag"   , "bhr"      , "opcode"}, ///// prCond if branch is predict (taken or not taken)
+            {1     , INSTR_LEN, 1         , 1       , INSTR_LEN, SPEC_TAG_LEN, GSH_BHR_LEN, OPCODE_WIDTH});    ///// TODO do the opcode
 
     RowMeta specGenMeta(
         {"res1", "res2"},
         {SPEC_TAG_LEN, SPEC_TAG_LEN});
 
     //// the base class of out of order reservation station entry
-    RowMeta OORsvEntry({"busy", "specTag"}, {1});
-
-    RowMeta IORsvEntry({"busy", "specTag"}, {1});
+    RowMeta RsvEntryMeta({"busy", "specTag", "rrfTag", "regWr",
+                        "valid1", "src1",
+                        "valid2", "src2"},
+                       {1, SPEC_TAG_LEN, RRF_SEL, 1,
+                        1, DATA_LEN,
+                        1, DATA_LEN});
 
     //////// the occupy and ready signal will be assigned in the base table
-    RowMeta intRsvEntry(
-        {"pc", "imm", "rrfTag", "aluOp",
-            "srcASel",  "valid1", "src1",
-            "srcBSel",  "valid2", "src2"},
-        {SPEC_TAG_LEN, 1, INSTR_LEN, DATA_LEN, RRF_SEL, ALU_OP_WIDTH,
-            SRC_A_SEL_WIDTH, 1, DATA_LEN,
-            SRC_A_SEL_WIDTH, 1, DATA_LEN ////// the address is embbed in src1 and src2
-        }
+    RowMeta intREM(
+        {"pc", "imm", "aluOp",
+         "srcASel", "srcBSel"},
+        {ADDR_LEN, DATA_LEN, ALU_OP_WIDTH,
+         SRC_A_SEL_WIDTH, SRC_A_SEL_WIDTH}
+         ////// the address is embbed in src1 and src2
+    );
+    RowMeta mulREM(
+        { "mdOutSel"      , "isMd1Sig", "isMd2Sig"},
+        { MD_OUT_SEL_WIDTH, 1         , 1         }
     );
 
-    RowMeta mulRsvEntry(
-        {
-        },
-        {
-        }
+    RowMeta brREM(
+        {"pc" , "imm"    , "aluOp"  ,
+         "bhr"    , "prCond" , "prAddr",
+         "srcASel", "srcBSel", "opcode"}, //// beware prAddr
+        {ADDR_LEN       , DATA_LEN, ALU_OP_WIDTH,
+         GSH_BHR_LEN    , 1       ,  ADDR_LEN   ,
+         SRC_A_SEL_WIDTH, SRC_A_SEL_WIDTH, OPCODE_WIDTH}
+    );
 
+    RowMeta ldstREM(
+        {"pc"    , "imm"   },
+        {ADDR_LEN, DATA_LEN}
     );
 
 

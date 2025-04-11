@@ -63,6 +63,15 @@ add_executable(Kathryn
         src/kride/dataType.cpp
         src/kride/specGen/specGen.h
         src/kride/rsv/iRsvBase.h
+        src/kride/rsv/oRsvBase.h
+        src/kride/rsv/rsv.h
+        src/kride/rsv/rsvBase.h
+        src/kride/exec/intUnit.h
+        src/kride/exec/EUBase.h
+        src/kride/exec/alu.h
+        src/kride/exec/mulUnit.h
+        src/kride/exec/mul.h
+        src/kride/exec/brUnit.h
 
         #${SRC_CAROLYNE}
 

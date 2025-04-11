@@ -19,7 +19,8 @@ namespace kathryn{
     extern RowMeta instrMeta;
     extern RowMeta intDecMeta, rrfMeta, memMeta, mdMeta;
     extern RowMeta joinDecMeta, specGenMeta;
-    extern RowMeta OORsvEntry, IORsvEntry, intRsvEntry;
+    extern RowMeta RsvEntryMeta;
+    extern RowMeta intREM, mulREM, brREM, ldstREM;
 
     struct D_EXEC_BRANCH{
         mWire(sucPred      , 1);
@@ -27,13 +28,6 @@ namespace kathryn{
         mWire(rrfIdxRcv    , RRF_SEL);
         mWire(specTagRcvIdx, SPEC_TAG_SEL);
         mWire(specTagRcv   , SPEC_TAG_LEN); //// RCV means recovery ///// it may be more than one tag to rcv in each data
-
-        //////// should i invalidate
-        Operable& shouldInv(Operable& listenerSpecTag){
-            assert(specTagRcv.getOperableSlice().getSize() == listenerSpecTag.getOperableSlice().getSize());
-            return (listenerSpecTag & specTagRcv) == 1;
-
-        }
 
     };
 
@@ -47,6 +41,7 @@ namespace kathryn{
 
 
     };
+
 
     struct D_DISPATCH{
         mWire(rmAmt, RRF_SEL+1);
@@ -74,20 +69,32 @@ namespace kathryn{
 
 
     struct D_IO_RSV{
-        mWire(req, 2);
         mWire(allocatable, 1);
         Candidate issueCand;
     };
 
-
+    struct Rrf;
     struct D_ALL{
         D_INSTR       fet;
         D_DECODE      dcd;
         D_DISPATCH    dis;
         D_EXEC_BRANCH exb;
         D_COMMIT      com;
+        D_IO_RSV      rsvInt[2];
+        D_IO_RSV      rsvMul;
         D_IO_RSV      rsvBranch;
-        D_IO_RSV      rsvLST;
+        D_IO_RSV      rsvLstd;
+        Rrf*          rrf = nullptr;
+
+        //////// should i invalidate
+        Operable& shouldInv(Operable& listenerSpecTag){
+            assert(exb.specTagRcv.getOperableSlice().getSize() == listenerSpecTag.getOperableSlice().getSize());
+            return (listenerSpecTag & exb.specTagRcv) == 1;
+        }
+
+        Operable& shouldInv(Slot& sl){
+            return shouldInv(sl.at("specTag"));
+        }
 
     };
 

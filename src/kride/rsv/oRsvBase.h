@@ -6,18 +6,27 @@
 #define SRC_KRIDE_RSV_RSVBASE_H
 
 #include"kride/incl.h"
+#include"rsvBase.h"
 
 namespace kathryn{
 
     /////// out of order reservation station
-    struct ORSV_BASE: Module{
+    struct ORSV_BASE: RsvBase{
+
         Table entries;
 
-        ORSV_BASE(const std::string& tableName,
-                  RowMeta& userMeta, int addrLength):
-        entries(tableName, OORsvEntry + userMeta, addrLength){
+        ORSV_BASE(int rsvId, const std::string& rm,
+                  RowMeta& userMeta, int addrLength,
+                  D_ALL& din, D_IO_RSV& dcIn):
+        RsvBase(rsvId, rm, din, dcIn),
+        rsvName(rm),
+        entries(rm, RsvEntryMeta + userMeta, addrLength){
             assert(addrLength >= 1); /////// if have only one row, why don't use slot
         }
+
+        void buildIssuePtr{
+            /////// TODO we must use the sort system
+        };
 
         Oprs findFreeList(int amt){
 
@@ -33,7 +42,16 @@ namespace kathryn{
         }
 
         void setEntry(Operable& addr, const Slot& dataSlot){
+            ////// augment slot to support the busy value
             entries.assign(dataSlot, addr, true);
+        }
+
+        void flow() override{
+            buildIssuePtr();
+        }
+
+        Operable& buildAkb() override{   ///// do something with it
+
         }
 
     };
