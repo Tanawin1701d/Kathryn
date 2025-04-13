@@ -19,8 +19,7 @@ namespace kathryn{
         EUBase(din, dcIn){}
 
         void flow() override{
-            Candidate& cd = d.rsvBranch.issueCand;
-            Slot&      sl = cd.detLogic;
+            Slot&      sl = d.rsvBranch.issueBuf;
 
             //////// no src to select due to src of operation is the from
             /// register only

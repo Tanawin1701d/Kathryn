@@ -75,10 +75,40 @@ namespace kathryn{
          SRC_A_SEL_WIDTH, SRC_A_SEL_WIDTH, OPCODE_WIDTH}
     );
 
+    ///////// ldst stage1
     RowMeta ldstREM(
         {"pc"    , "imm"   },
         {ADDR_LEN, DATA_LEN}
     );
+
+    RowMeta iMem(
+        {"iAddr" , "iData0" , "iData1" , "iData2" , "iData3" },
+        {ADDR_LEN, INSTR_LEN, INSTR_LEN, INSTR_LEN, INSTR_LEN}
+    );
+
+    RowMeta dReadMem(
+        {"drAddr" , "drData" },
+        {ADDR_LEN, DATA_LEN}
+    );
+
+    RowMeta dWriteMem(
+        {"dwAddr", "dwData" },
+        {ADDR_LEN, DATA_LEN}
+    );
+
+
+    ///////// ldst stage2
+    RowMeta stBufByPass(
+        {"hit", "sbpData"},
+        {1    , DATA_LEN }
+        );
+
+    RowMeta ldstSC_base( //////// SC = start commit
+        {"rrfTag", "regWr"},
+        {RRF_SEL , 1      }
+    );
+
+    RowMeta ldstSC(ldstSC_base + dReadMem + stBufByPass);
 
 
     RowMeta joinDecMeta(decMeta + intDecMeta + rrfMeta + memMeta + mdMeta);

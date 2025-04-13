@@ -22,8 +22,7 @@ namespace kathryn{
         EUBase(din, dcIn), idx(idxIn){}
 
         void flow() override{
-            Candidate& cd = d.rsvInt[idx].issueCand;
-            Slot& sl = cd.detLogic;
+            Slot& sl = d.rsvInt[idx].issueBuf;
             srcASel(opr1, sl);
             srcBSel(opr2, sl);
 

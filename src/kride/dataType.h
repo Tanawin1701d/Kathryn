@@ -16,11 +16,15 @@ namespace kathryn{
     using Ref = std::reference_wrapper<T>;
 
 
-    extern RowMeta instrMeta;
-    extern RowMeta intDecMeta, rrfMeta, memMeta, mdMeta;
-    extern RowMeta joinDecMeta, specGenMeta;
-    extern RowMeta RsvEntryMeta;
-    extern RowMeta intREM, mulREM, brREM, ldstREM;
+    extern RowMeta instrMeta;   //// instruction meta data
+    extern RowMeta intDecMeta, rrfMeta, memMeta, mdMeta; ///////// decoder for each aspect
+    extern RowMeta joinDecMeta, specGenMeta; /////// ^---pooled decoder and speculative tag generator
+    extern RowMeta RsvEntryMeta; ////// REM base
+    extern RowMeta intREM, mulREM, brREM, ldstREM; ////// REM reservation element meta data
+    extern RowMeta iMem, dReadMem, dWriteMem; ///// memory acccess
+    extern RowMeta stBufByPass;         ////// store buffer
+    extern RowMeta ldstSC_base, ldstSC; ////// SC = start commiting
+
 
     struct D_EXEC_BRANCH{
         mWire(sucPred      , 1);
@@ -70,7 +74,30 @@ namespace kathryn{
 
     struct D_IO_RSV{
         mWire(allocatable, 1);
-        Candidate issueCand;
+        Candidate issueCd; ///// issue candidate
+        Slot      issueBuf;
+    };
+
+    struct D_MEM{
+
+        WireSlot ins, dataR, dataW; ///// intruction Read mem
+
+        D_MEM():ins(iMem),
+                dataR(dReadMem),
+                dataW(dWriteMem){}
+
+    };
+
+    struct D_STB{
+        mWire(full, 1);
+        WireSlot ldBp; ////// load bypass
+        D_STB(): ldBp(stBufByPass){}
+
+    };
+
+    struct D_LDST{
+        RegSlot cmSlot; ///// commit slot
+        D_LDST(): cmSlot(ldstSC){}
     };
 
     struct Rrf;
@@ -84,6 +111,9 @@ namespace kathryn{
         D_IO_RSV      rsvMul;
         D_IO_RSV      rsvBranch;
         D_IO_RSV      rsvLstd;
+        D_MEM         mem;
+        D_STB         stb;
+        D_LDST        ldst;
         Rrf*          rrf = nullptr;
 
         //////// should i invalidate

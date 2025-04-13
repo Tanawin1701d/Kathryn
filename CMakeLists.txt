@@ -72,6 +72,7 @@ add_executable(Kathryn
         src/kride/exec/mulUnit.h
         src/kride/exec/mul.h
         src/kride/exec/brUnit.h
+        src/kride/exec/ldstUnit.h
 
         #${SRC_CAROLYNE}
 

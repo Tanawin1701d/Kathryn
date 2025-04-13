@@ -25,7 +25,7 @@ namespace kathryn{
             /////// we don't care the mispredict deletation
             /// because this station will stall the system
             /// the valid will be set from buildCirSearchLogic
-            dc.issueCand = entries.buildCirSearchLogic(entries._meta, false, 0, false, &allocPtr,
+            dc.issueBuf = entries.buildCirSearchLogic(entries._meta, false, 0, false, &allocPtr,
             scmp{return (lhsSlot.at("busy") == 0) && (rhsSlot.at("busy") == 1);}
             );
         }

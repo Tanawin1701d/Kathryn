@@ -236,7 +236,7 @@ namespace kathryn{
     public:
         std::vector<Wire*> hwFields;
 
-        explicit WireSlot(const RowMeta& meta, int identVal):
+        explicit WireSlot(const RowMeta& meta, int identVal = -1):
         Slot(meta,identVal){
             for (const auto& field: meta.getAllFields()){
                 hwFields.push_back(&mOprWire(field._fieldName + "_ident_" + std::to_string(_ident), field._fieldSize));

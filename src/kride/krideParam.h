@@ -220,6 +220,8 @@ namespace kathryn{
     constexpr char EX_INTP  [] = "EX_INT_"; //// the prefix only we have EX_INT_1
     constexpr char EX_MUL   [] = "EX_MUL";
     constexpr char EX_BR    [] = "EX_BR";
+    constexpr char EX_LDST  [] = "EX_LDST";
+    constexpr char EX_LDSTC [] = "EX_LDSTCOMMIT";
 
 
     constexpr int  RSV_INT_SEL  = 3; //// 8 entry per each

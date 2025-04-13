@@ -17,8 +17,7 @@ namespace kathryn{
         EUBase(din, dcIn){}
 
         void flow() override{
-            Candidate& cd =  d.rsvMul.issueCand;
-            Slot&      sl =  cd.detLogic;
+            Slot&      sl =  d.rsvMul.issueBuf;
 
             pip(EX_MUL){
                 intrRstAndStart(d.shouldInv(sl));
