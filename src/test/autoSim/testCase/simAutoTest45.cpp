@@ -42,10 +42,14 @@ namespace kathryn{
 
         testSimMod45* _md;
 
-        sim45(testSimMod45* md, int idx, const std::string& prefix, SimProxyBuildMode simProxyBuildMode):SimAutoInterface(idx,
+        sim45(testSimMod45* md, int idx, const std::string& prefix, SimProxyBuildMode simProxyBuildMode, bool reqInline, int opLevel, const std::string& pref):SimAutoInterface(idx,
                                               20000000,
                                               prefix + "simAutoResult"+std::to_string(idx)+".vcd",
-                                              prefix + "simAutoResult"+std::to_string(idx)+".prof", simProxyBuildMode),
+                                              prefix + "simAutoResult"+std::to_string(idx)+".prof", simProxyBuildMode,
+                                              reqInline,
+                                              opLevel,
+                                              pref),
+
                              _md(md){
             enableLRC();
             disableConSim();
@@ -59,7 +63,7 @@ namespace kathryn{
         }
 
         void describeModelTrigger() override{
-            trig( (*_md->counters[0]) == 1000000, [&](){
+            trig( (*_md->counters[0]) == 10000000, [&](){
                 stopTime = std::chrono::steady_clock::now();
                 std::chrono::duration<double> elapsed_seconds = stopTime - startTime;
                 std::cout << "process time: " << elapsed_seconds.count() << "s\n";
@@ -84,15 +88,51 @@ namespace kathryn{
     public:
         explicit Sim45TestEle(int id): AutoTestEle(id){}
         void start(std::string prefix, SimProxyBuildMode simProxyBuildMode) override{
-            mMod(d, testSimMod45, 4000);
-            startModelKathryn();
-            sim45 simulator((testSimMod45*) &d, _simId, prefix, simProxyBuildMode);
-            simulator.simStart();
+
+            std::cout << TC_YELLOW << "THIS IS INLINE VERSUS NOT INLINE" << TC_DEF << std::endl;
+            /** inline vs not inline*/
+            for (int i = 1000; i <= 4000; i = i + 1000){
+                std::cout << TC_BLUE << "set counter to" << std::to_string(i) << "with inline" << TC_DEF << std::endl;
+                mMod(d, testSimMod45, i);
+                startModelKathryn();
+                sim45 simulator((testSimMod45*) &d, _simId, prefix, simProxyBuildMode,
+                    true, 3, "inTest_inline_C" + std::to_string(i) );
+                simulator.simStart();
+                resetKathryn();
+                std::cout << TC_BLUE << "set counter to " << std::to_string(i) << " WITHOUT inline" << TC_DEF << std::endl;
+                mMod(d2, testSimMod45, i);
+                startModelKathryn();
+                sim45 simulator2((testSimMod45*) &d2, _simId, prefix, simProxyBuildMode,
+                    false, 3, "inTest_notinline_C" + std::to_string(i) );
+                simulator2.simStart();
+                resetKathryn();
+            }
+
+            std::cout << TC_YELLOW << "THIS IS OPTMIZATION LEVEL" << TC_DEF << std::endl;
+            /** compile time -O3 -O0  ---- runtime time ---- file size  */
+            for (int i = 1000; i <= 4000; i = i + 1000){
+                std::cout << TC_BLUE << "set counter to" << std::to_string(i) << "with O3" << TC_DEF << std::endl;
+                mMod(d, testSimMod45, i);
+                startModelKathryn();
+                sim45 simulator((testSimMod45*) &d, _simId, prefix, simProxyBuildMode,
+                    true, 3, "opTest_level_3_C" + std::to_string(i));
+                simulator.simStart();
+                resetKathryn();
+                std::cout << TC_BLUE << "set counter to "<< std::to_string(i) << " WITHOUT inline" << TC_DEF << std::endl;
+                mMod(d2, testSimMod45, i);
+                startModelKathryn();
+                sim45 simulator2((testSimMod45*) &d2, _simId, prefix, simProxyBuildMode,
+                    true, 0, "opTest_level_0_C" + std::to_string(i));
+                simulator2.simStart();
+                resetKathryn();
+            }
+
+            /** */
 
 
         }
 
     };
 
-    Sim45TestEle ele45(45);
+    Sim45TestEle ele45(-1);
 }

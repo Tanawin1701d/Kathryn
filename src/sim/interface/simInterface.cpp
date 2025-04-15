@@ -25,13 +25,15 @@ namespace kathryn{
                                std::string profileFilePath,
                                std::string genFileName,
                                SimProxyBuildMode simProxyBuildMode,
-                               bool requireLRC
+                               bool requireLRC,
+                               bool reqInline,
+                               int  opLevel
                                ):
             _simProxyBuildMode(simProxyBuildMode),
             _vcdWriter (new VcdWriter(std::move(vcdFilePath))),
             _flowWriter(new FlowWriter(std::move(profileFilePath))),
             _limitCycle(limitCycle),
-            _proxyBuildMng(std::move(genFileName)),
+            _proxyBuildMng(std::move(genFileName), reqInline, opLevel),
             _requireLRC(requireLRC)
     {
         SimController* simCtrl = getSimController();

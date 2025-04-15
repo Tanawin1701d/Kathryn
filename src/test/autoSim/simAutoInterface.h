@@ -21,7 +21,10 @@ namespace kathryn{
                                   CYCLE limitCycle,
                                   std::string vcdFilePath,
                                   std::string profileFilePath,
-                                  SimProxyBuildMode simProxyBuildMode
+                                  SimProxyBuildMode simProxyBuildMode,
+                                  bool reqInline = true,
+                                  int  opLevel = 3,
+                                  const std::string& genPref = "" ////// (optional)
                                   );
 
         int getSimId() const {return _simId;}
