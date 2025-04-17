@@ -255,6 +255,8 @@ namespace kathryn{
             mfAssert(idx >= 0 && idx < hwFields.size(), "cannot find fieldIdx " + std::to_string(idx));
             return *hwFields[idx];
         }
+
+        Slot& operator =   (const Slot& rhsSlot){ assignCore(rhsSlot, false); return *this;}
     };
 
 }

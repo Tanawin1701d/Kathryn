@@ -22,8 +22,10 @@ namespace kathryn{
 
         void flow() override{
 
+
+            cwhile(true)
             offer(MPFT_exec){
-                ofc(EXEC){
+                ofc(EX_BR){
                     for (int specIdx = 1; specIdx <= SPEC_TAG_LEN; specIdx++){
                         zif(d.exb.misPred | (d.exb.specTagRcv == specIdx)){
                             mpftt.get(specIdx).get(C_VALID) <<= 0;

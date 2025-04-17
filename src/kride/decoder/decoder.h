@@ -9,7 +9,7 @@
 
 namespace kathryn{
 
-    struct Decoder: public Module{
+    struct Decoder: Module{
 
         D_INSTR  instrs;
         D_DECODE decs[DEC_AMT];

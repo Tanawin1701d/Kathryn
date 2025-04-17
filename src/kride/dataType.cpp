@@ -5,8 +5,6 @@
 #include "dataType.h"
 
 namespace kathryn{
-
-
     RowMeta instrMeta(
             {"instr1" , "instr2", "prCond", "invl1", "invl2",
              "bhr", "pc", "npc"},
@@ -44,6 +42,11 @@ namespace kathryn{
     RowMeta specGenMeta(
         {"res1", "res2"},
         {SPEC_TAG_LEN, SPEC_TAG_LEN});
+
+    RowMeta dpRobAllocMeta(
+        {"pc", "storeBit", "dstValid", "rdIdx", "bhr", "isbranch"},
+        {ADDR_LEN, 1, 1, GSH_BHR_LEN, ARF_SEL, 1}
+    );
 
     //// the base class of out of order reservation station entry
     RowMeta RsvEntryMeta({"busy", "specTag", "rrfTag", "regWr",
@@ -107,6 +110,13 @@ namespace kathryn{
         {"rrfTag", "regWr"},
         {RRF_SEL , 1      }
     );
+
+    RowMeta execRobMeta(
+            {"brcond", "jmpAddr"},
+            {1, ADDR_LEN}
+    );
+
+    RowMeta robEM = RowMeta({"finish"}, {1}) + execRobMeta + dpRobAllocMeta ; //// reorder buffer entry meta-data ;
 
     RowMeta ldstSC(ldstSC_base + dReadMem + stBufByPass);
 

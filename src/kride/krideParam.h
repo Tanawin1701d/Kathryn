@@ -208,7 +208,6 @@ namespace kathryn{
 
 
     constexpr char DEC      [] = "DEC";
-    constexpr char EXEC     [] = "EXEC";
     constexpr char DP       [] = "DISPATCH";
     constexpr char ALLOC    [] = "ALLOC"; /// TODO we won't use this
     constexpr char RSV_CEN  [] = "RSV_CEN"; /// TODO we won't use this
@@ -216,6 +215,7 @@ namespace kathryn{
     constexpr char RSV_MUL  [] = "RSV_MUL";
     constexpr char RSV_BR   [] = "RSV_BR";
     constexpr char RSV_LDST [] = "RSV_LDST";
+    constexpr char ROB      [] = "ROB";
 
     constexpr char EX_INTP  [] = "EX_INT_"; //// the prefix only we have EX_INT_1
     constexpr char EX_MUL   [] = "EX_MUL";

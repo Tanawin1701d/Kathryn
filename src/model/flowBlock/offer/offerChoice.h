@@ -12,7 +12,8 @@
 ///// ofc is from offer choice
 #define ofc(offerChoiceName) for(auto kathrynBlock = new FlowBlockOfferChoice(offerChoiceName); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 #define ofcc(offerChoiceName, cond) for(auto kathrynBlock = new FlowBlockOfferChoice(offerChoiceName, cond); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
-
+#define ofdef for(auto kathrynBlock = new FlowBlockOfferChoice(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+ ////// todo make the offer default
 namespace kathryn{
 
 

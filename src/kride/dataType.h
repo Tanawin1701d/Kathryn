@@ -24,6 +24,8 @@ namespace kathryn{
     extern RowMeta iMem, dReadMem, dWriteMem; ///// memory acccess
     extern RowMeta stBufByPass;         ////// store buffer
     extern RowMeta ldstSC_base, ldstSC; ////// SC = start commiting
+    extern RowMeta execRobMeta, dpRobAllocMeta;
+    extern RowMeta robEM; //// reorder buffer entry metaData
 
 
     struct D_EXEC_BRANCH{
@@ -35,21 +37,14 @@ namespace kathryn{
 
     };
 
-
-    struct D_COMMIT{
-        mWire(comAmt        , RRF_SEL+1);
-        mWire(nxtCommitIdx  , RRF_SEL+1);
-
-        mWire(commitAddr0   , ARF_SEL);
-        mWire(commitAddr1   , ARF_SEL);
-
-
-    };
-
-
     struct D_DISPATCH{
         mWire(rmAmt, RRF_SEL+1);
         mWire(specTagPoolReq, SPEC_TAG_LEN);
+
+        ///////// TODO assign this signal
+        mWire(amtRrfFree, RRF_SEL);
+
+        Operable& isRrfFull() {return amtRrfFree == 0;}
 
     };
 
@@ -100,13 +95,32 @@ namespace kathryn{
         D_LDST(): cmSlot(ldstSC){}
     };
 
+    struct Rob;
+    struct D_ROB{
+        mWire(dpPtr, RRF_SEL); //// TODO assign this from somewhere
+        WireSlot bcCommit1;
+        WireSlot bcCommit2;
+
+        mWire(commit1, 1);
+        mWire(commit2, 1);
+        mWire(commitAmt, 2);
+
+        Rob* rob;
+
+        D_ROB():
+        bcCommit1(robEM, -1),
+        bcCommit2(robEM, -1){}
+
+    };
+
     struct Rrf;
+
     struct D_ALL{
         D_INSTR       fet;
         D_DECODE      dcd;
         D_DISPATCH    dis;
         D_EXEC_BRANCH exb;
-        D_COMMIT      com;
+       /// D_COMMIT      com;
         D_IO_RSV      rsvInt[2];
         D_IO_RSV      rsvMul;
         D_IO_RSV      rsvBranch;
@@ -114,6 +128,7 @@ namespace kathryn{
         D_MEM         mem;
         D_STB         stb;
         D_LDST        ldst;
+        D_ROB         rob;
         Rrf*          rrf = nullptr;
 
         //////// should i invalidate

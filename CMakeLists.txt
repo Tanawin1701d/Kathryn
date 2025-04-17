@@ -73,6 +73,9 @@ add_executable(Kathryn
         src/kride/exec/mul.h
         src/kride/exec/brUnit.h
         src/kride/exec/ldstUnit.h
+        src/kride/rob/rob.h
+        src/lib/numberic/indexing.cpp
+        src/lib/numberic/indexing.h
 
         #${SRC_CAROLYNE}
 
