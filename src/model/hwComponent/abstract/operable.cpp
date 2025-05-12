@@ -3,6 +3,10 @@
 //
 
 #include"operable.h"
+
+#include <regex>
+#include <model/hwComponent/expression/nest.h>
+
 #include "model/hwComponent/expression/expression.h"
 #include "model/hwComponent/value/value.h"
 
@@ -173,15 +177,36 @@ namespace kathryn {
         return *ret;
     }
 
+    expression& Operable::slt(Operable& b){
+        auto ret = new expression(RELATION_SLT,
+                                    this,
+                                    &b,
+                                    LOGICAL_SIZE);
+        return *ret;
+    }
+
+    expression& Operable::sgt(Operable& b){
+        auto ret = new expression(RELATION_SGT,
+                                    this,
+                                    &b,
+                                    LOGICAL_SIZE);
+        return *ret;
+    }
+
+
+
     /** arithmetic operators*/
 
     expression& Operable::operator+( Operable &b) {
         mfAssert(getOperableSlice().getSize() >= b.getOperableSlice().getSize(),
                  "operable<+> get mismatch bit size"
         );
+
+        Operable* actualB = b.uextIfSizeNotEq(getOperableSlice().getSize());
+
         auto ret =  new expression(ARITH_PLUS,
                                      this,
-                                     &b,
+                                     actualB,
                                      getOperableSlice().getSize());
         /** size + 1 because we provide carry for exprMetas*/
 
@@ -192,9 +217,10 @@ namespace kathryn {
         mfAssert(getOperableSlice().getSize() >= b.getOperableSlice().getSize(),
                  "operable<-> get mismatch bit size"
         );
+        Operable* actualB = b.uextIfSizeNotEq(getOperableSlice().getSize());
         auto ret =  new expression(ARITH_MINUS,
                                      this,
-                                     &b,
+                                     actualB,
                                      getOperableSlice().getSize());
 
         return *ret;
@@ -204,9 +230,10 @@ namespace kathryn {
         mfAssert(getOperableSlice().getSize() >= b.getOperableSlice().getSize(),
                  "operable<*> get mismatch bit size"
         );
+        Operable* actualB = b.uextIfSizeNotEq(getOperableSlice().getSize());
         auto ret =  new expression(ARITH_MUL,
                                      this,
-                                     &b,
+                                     actualB,
                                      getOperableSlice().getSize());
 
         return *ret;
@@ -216,9 +243,10 @@ namespace kathryn {
         mfAssert(getOperableSlice().getSize() >= b.getOperableSlice().getSize(),
                  "operable</> get mismatch bit size"
         );
+        Operable* actualB = b.uextIfSizeNotEq(getOperableSlice().getSize());
         auto ret =  new expression(ARITH_DIV,
                                      this,
-                                     &b,
+                                     actualB,
                                      getOperableSlice().getSize());
 
         return *ret;
@@ -228,9 +256,11 @@ namespace kathryn {
         mfAssert(getOperableSlice().getSize() >= b.getOperableSlice().getSize(),
                  "operable<%> get mismatch bit size"
         );
+        Operable* actualB = b.uextIfSizeNotEq(getOperableSlice().getSize());
+
         auto ret =  new expression(ARITH_DIVR,
                                      this,
-                                     &b,
+                                     actualB,
                                      getOperableSlice().getSize());
 
         return *ret;
@@ -242,6 +272,43 @@ namespace kathryn {
         auto ret = new expression(EXTEND_BIT,this, nullptr, desSize);
         return *ret;
     }
+
+    ///// do unsign extend
+    Operable& Operable::uext(int desSize){
+        mfAssert(desSize > 0, "dessize must greater than 0");
+        mfAssert(desSize > getOperableSlice().getSize(), "desSize must greathan original size");
+        int oriSize = getOperableSlice().getSize();
+        int remainSize = desSize - oriSize;
+
+        auto extendVal = makeOprVal("reSizeTo" +
+                               std::to_string(desSize) +
+                               "from" + std::to_string(oriSize),
+                               remainSize, 0);
+        ///// it still work with the system stack
+        nest& nextNest = makeNestManReadOnly(true, {this, &extendVal});
+        return nextNest;
+    }
+
+    Operable* Operable::uextIfSizeNotEq(int desSize){
+        if (desSize == getOperableSlice().getSize()){
+            return this;
+        }
+        return &uext(desSize);
+    }
+
+
+    Operable& Operable::sext(int desSize){
+        mfAssert(desSize > 0, "dessize must greater than 0");
+        mfAssert(desSize > getOperableSlice().getSize(), "desSize must greathan original size");
+        int oriSize = getOperableSlice().getSize();
+        assert(oriSize >= 1);
+        int remainSize = desSize - oriSize;
+
+        auto extendVal = new expression(EXTEND_BIT, this->doSlice({oriSize-1, oriSize}), nullptr, remainSize);
+        nest& nextNest = makeNestManReadOnly(true, {this, extendVal});
+        return nextNest;
+    }
+
 
 
 

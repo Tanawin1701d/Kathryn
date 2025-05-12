@@ -28,6 +28,8 @@ namespace kathryn {
         RELATION_LEQ, // <=
         RELATION_GE,  // >
         RELATION_GEQ, // >=
+        RELATION_SLT, // sign less than
+        RELATION_SGT, // sign greater than
         /** arithmaktic operators*/
         ARITH_PLUS,   // +
         ARITH_MINUS,  // -
@@ -46,6 +48,8 @@ namespace kathryn {
     std::string lop_to_string(LOGIC_OP op);
     bool isSingleOpr(LOGIC_OP op);
     bool isDoubleOpr(LOGIC_OP op);
+
+
 
     const int LOGICAL_SIZE = 1;
 

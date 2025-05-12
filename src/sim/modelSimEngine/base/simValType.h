@@ -27,18 +27,40 @@ namespace kathryn{
         SVT_CNT  = 6
     };
 
+    enum SIM_VALREP_TYPE_INT{
+        SVTI_8   = 0,
+        SVTI_16  = 1,
+        SVTI_32  = 2,
+        SVTI_64  = 3,
+        SVTI_64M = 4,
+        SVTI_ERR  = 5,
+        SVTI_CNT  = 6
+    };
+
     struct SIM_VALREP_TYPE_ALL;
+    struct SIM_VALREP_TYPE_I_ALL;
     SIM_VALREP_TYPE_ALL getMatchSVT_ALL  (Operable* opr);
     SIM_VALREP_TYPE     getMatchSVT      (int size);
+    SIM_VALREP_TYPE_INT getMatchSVTI     (int size);
+
     std::string         SVT_toUnitType   (SIM_VALREP_TYPE_ALL svt);
+    std::string         SVTI_toUnitType  (SIM_VALREP_TYPE_I_ALL svti);
+
     std::string         SVT_toUnitRefType(SIM_VALREP_TYPE_ALL svt);
     std::string         SVT_toUnitPtrType(SIM_VALREP_TYPE_ALL svt);
+    std::string         SVTI_toUnitRefType(SIM_VALREP_TYPE_I_ALL svti);
+    std::string         SVTI_toUnitPtrType(SIM_VALREP_TYPE_I_ALL svti);
+
     int                 getSvtMaxBitSize (SIM_VALREP_TYPE_ALL svt);
     int                 getArrSize       (int size);
 
+    SIM_VALREP_TYPE_I_ALL cvtValRepType(SIM_VALREP_TYPE_ALL svt);
+
+
+
     struct SIM_VALREP_TYPE_ALL{
         SIM_VALREP_TYPE type;
-        int             subType;
+        int             subType; //// it is used when type is exceed 64 bit, it will store the size of array
 
         explicit SIM_VALREP_TYPE_ALL(int bitSize):
         type(getMatchSVT(bitSize)),
@@ -55,6 +77,37 @@ namespace kathryn{
         bool operator == (const SIM_VALREP_TYPE_ALL& rhs) const{
             return (type == rhs.type) && (subType == rhs.subType);
         }
+
+
+
+    };
+
+    struct SIM_VALREP_TYPE_I_ALL{
+        SIM_VALREP_TYPE_INT type;
+        int                 subType; //// it is used when type is exceed 64 bit, it will store the size of array
+
+        explicit SIM_VALREP_TYPE_I_ALL(int bitSize):
+        type(getMatchSVTI(bitSize)),
+        subType(-1){
+            if (type == SVT_U64M){
+                subType = getArrSize(bitSize);
+            }
+        }
+
+        explicit SIM_VALREP_TYPE_I_ALL():
+        type(SVTI_ERR),
+        subType(-1){}
+
+        explicit SIM_VALREP_TYPE_I_ALL(SIM_VALREP_TYPE_INT t, int st):
+        type(t),
+        subType(st){
+            assert((t != SVTI_64M) && (st == -1));
+        }
+
+        bool operator == (const SIM_VALREP_TYPE_I_ALL& rhs) const{
+            return (type == rhs.type) && (subType == rhs.subType);
+        }
+
 
     };
 
@@ -97,13 +150,16 @@ namespace kathryn{
         ValR operator <= (const ValR& rhs) const{ assert(_size == rhs._size); return {SIM_VALREP_TYPE_ALL(1), 1, "(" + _data + "<=" +  rhs._data + ")"};}
         ValR operator >  (const ValR& rhs) const{ assert(_size == rhs._size); return {SIM_VALREP_TYPE_ALL(1), 1, "(" + _data + "> " +  rhs._data + ")"};}
         ValR operator >= (const ValR& rhs) const{ assert(_size == rhs._size); return {SIM_VALREP_TYPE_ALL(1), 1, "(" + _data + ">=" +  rhs._data + ")"};}
+        ////////// relational with sign
+        ValR slt (const ValR& rhs) const{ assert(_size == rhs._size); return {SIM_VALREP_TYPE_ALL(1), 1, "(" + castToSignStr() + "<" +  rhs.castToSignStr() + ")"};}
+        ValR sgt (const ValR& rhs) const{ assert(_size == rhs._size); return {SIM_VALREP_TYPE_ALL(1), 1, "(" + castToSignStr() + ">" +  rhs.castToSignStr() + ")"};}
 
-        ////////// relational
+        ////////// operation
         ValR operator +  (const ValR& rhs) const{ assert(_size == rhs._size); return {_valType, _size, "(" + _data + "+" + rhs._data + ")"};}
         ValR operator -  (const ValR& rhs) const{ assert(_size == rhs._size); return {_valType, _size, "(" + _data + "-" + rhs._data + ")"};}
-        ValR operator *  (const ValR& rhs) const{ assert(false);}
-        ValR operator /  (const ValR& rhs) const{ assert(false);}
-        ValR operator %  (const ValR& rhs) const{ assert(false);}
+        ValR operator *  (const ValR& rhs) const{ assert(_size == rhs._size); return {_valType, _size, "(" + _data + "*" + rhs._data + ")"};}
+        ValR operator /  (const ValR& rhs) const{ assert(_size == rhs._size); return {_valType, _size, "(" + _data + "/" + rhs._data + ")"};}
+        ValR operator %  (const ValR& rhs) const{ assert(_size == rhs._size); return {_valType, _size, "(" + _data + "%" + rhs._data + ")"};}
 
 
         [[nodiscard]]
@@ -196,6 +252,17 @@ namespace kathryn{
                 return {desVt, size, _data};
             }
             return castBase(desVt, size);
+        }
+
+        ////// This is supposed to use with the internal only
+        std::string castToSignStr() const{
+
+            SIM_VALREP_TYPE_I_ALL svti = cvtValRepType(_valType);
+            mfAssert(svti.type <= SVTI_64M, "for now sign value conversion is not available");
+
+            return "static_cast<" + SVTI_toUnitType(svti) + ">(" + _data + ")";
+
+
         }
 
         void setData(std::string dayta){

@@ -94,19 +94,33 @@ namespace kathryn{
             case RELATION_LEQ: {assert(aSize == bSize);   operatedVar = _aSliced <= _bSliced;              break;}
             case RELATION_GE : {assert(aSize == bSize);   operatedVar = _aSliced >  _bSliced;              break;}
             case RELATION_GEQ: {assert(aSize == bSize);   operatedVar = _aSliced >= _bSliced;              break;}
+            case RELATION_SLT: {assert(aSize == bSize);   operatedVar = _aSliced.slt(_bSliced);            break;}
+            case RELATION_SGT: {assert(aSize == bSize);   operatedVar = _aSliced.sgt(_bSliced);            break;}
             case ARITH_PLUS  :{
                 assert(aSize == bSize);
-                operatedVar = (_aSliced+_bSliced).enforceSize();
+                operatedVar = (_aSliced + _bSliced).enforceSize();
                 break;
             }
             case ARITH_MINUS :{
                 assert(aSize == bSize);
-                operatedVar = (_aSliced-_bSliced).enforceSize();
+                operatedVar = (_aSliced - _bSliced).enforceSize();
                 break;
             }
-            case ARITH_MUL   :{assert(false);}
-            case ARITH_DIV   :{assert(false);}
-            case ARITH_DIVR  :{assert(false);}
+            case ARITH_MUL   :{
+                assert(aSize == bSize);
+                operatedVar = (_aSliced * _bSliced).enforceSize();
+                break;
+            }
+            case ARITH_DIV   :{
+                assert(aSize == bSize);
+                operatedVar = (_aSliced / _bSliced).enforceSize();
+                break;
+            }
+            case ARITH_DIVR  :{
+                assert(aSize == bSize);
+                operatedVar = (_aSliced % _bSliced).enforceSize();
+                break;
+            }
             case EXTEND_BIT  :{
                 assert(aSize == 1);
                 operatedVar = _aSliced.ext(desSize);

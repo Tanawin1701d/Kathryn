@@ -68,8 +68,9 @@ namespace kathryn {
         virtual expression& operator %  ( Operable& b);
         /** extend bit*/
         virtual expression& extB(int desSize);
-        virtual expression& uext(int desSize);
-        virtual expression& sext(int desSize);
+        virtual Operable& uext(int desSize);
+                Operable* uextIfSizeNotEq(int desSize);
+        virtual Operable& sext(int desSize);
         /** todo for now self assign operation such as += is not permit */
 
         /**
@@ -108,7 +109,7 @@ namespace kathryn {
         [[nodiscard]]
         virtual Operable&       getExactOperable () const = 0;
 
-        virtual Operable*       doSlice(Slice sl) = 0; //// sl is abs value
+        virtual Operable*       doSlice(Slice sl) = 0; //// sl is relative
         /** please remind this is a copy not reference value*/
         virtual LogicSimEngine* getLogicSimEngineFromOpr() = 0;
         virtual LogicGenBase*   getLogicGenBase() = 0;
