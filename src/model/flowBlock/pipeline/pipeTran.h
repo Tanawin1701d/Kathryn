@@ -20,8 +20,15 @@
 #define pipMTran                    for(auto kathrynBlock = new FlowBlockPipeTran(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 #define tranTo  (pipeName)          kathrynBlock->addTranMeta(pipeName, nullptr);
 #define tranToWC(pipeName, cond)    kathrynBlock->addTranMeta(pipeName, &(cond));
-#define pipSyncs(offerVec)          kathrynBlock->addSyncMeta(offerVec);
-#define pipSync(offer)              kathrynBlock->addSyncMeta({offer});
+
+/////// sync will use with the offer
+/// offer su
+#define pipSyncs(offerVec)          kathrynBlock->addSyncMeta(offerVecs);
+#define pipSync(offer)              kathrynBlock->addSyncMeta(offer, nullptr);
+#define pipSyncWhen(offer, cond)    kathrynBlock->addSyncMeta(offer, &cond);
+//////// pipe sync with custom choice
+#define pipSyncWCC(offer, choice)       kathrynBlock->addSyncMeta(offer, choice, nullptr);
+#define pipSyncMan(offer, choice, cond) kathrynBlock->addSyncMeta(offer, choice, &cond);
 
 
 
@@ -49,13 +56,34 @@ namespace kathryn{
         void        assignActivateSignal(Operable* rstSignal) const;
         Operable* addLogic(Operable* src0, Operable* src1, LOGIC_OP lop) const;
     };
+    struct PipeSyncMeta{
+        ///// src signal
+        const std::string& _masterOffer;
+        const std::string& _choiceName; /// typically we use pipe name
+        Operable*          _userReqOfferIf    = nullptr; /// if not it is automatically activate
+        ////// post signal
+        expression*        _intendOfferSignal = nullptr;
+        Operable*          _acceptSignal      = nullptr;
+        void        createPredefSignal(); //// create predefine signal
+        void        assignOfferSignal();  ///// offer from the offerBase
+        void        assignAcceptSignal(Operable* acceptSig);    ///// ack   return to the offer base
+        void        notifyOfferPoolerAcceptSig(); //// connect to the pooler to notify the system
+        Operable*   addLogic(Operable* src0, Operable* src1, LOGIC_OP lop) const;
 
+    };
 
+    class FlowBlockPipeBase;
     class FlowBlockPipeTran: public FlowBlockBase, public LoopStMacro{
 
     protected:
+        FlowBlockPipeBase*        _hostPipe = nullptr; ///// hostPipe will be retrieved when the block is attack
         std::vector<PipeTranMeta> _pipeTranMetas;
+        std::vector<PipeSyncMeta> _pipeSyncMetas;
         LOGIC_OP                  _tranPolicy = BITWISE_OR;
+
+        Operable*                 _offerReadySignal      = nullptr;
+        Operable*                 _targetPipeReadySignal = nullptr;
+        ////// the signal that indicate that the pipeTranblock is ready to go
         Operable*                 _activateSignal = nullptr;
         /////// POST MODEL // MF PROCESS
         //////////// node
@@ -80,11 +108,21 @@ namespace kathryn{
         /**set activate bias usually used in init Pipe */
         void addTranMeta(const std::string& targetPipeName,
                          Operable* userCond = nullptr);
-        void addSyncMeta(const std::vector<std::string>& tranMetas);
-        void      assignActivateCond();
-        [[nodiscard]] Operable*  joinActivateCond  () const;
+        /** sync component*/
+        void addSyncMeta(const std::string& offerName, const std::string& choiceName, Operable* activateIf);
+        void addSyncMeta(const std::string& offerName, Operable* activateIf);
+
+        void addSyncMetas(const std::vector<std::string>& tranMetas);
+        void assignTargetPipeActivateCond(); ///////// connect to pooler to get each signal target pipe is ready to transfer
+        void assignOfferActivateCond();
+
+        [[nodiscard]] Operable*  joinTargetPipeActivateCond() const;
+        [[nodiscard]] Operable*  joinTargetOfferActivateCond() const;
         [[nodiscard]] Operable*  getReadySignal    (const std::string& pipeTarget) const;
         [[nodiscard]] std::vector<std::string> getTranTargetNames() const;
+        /** get host pipe from controller*/
+        FlowBlockPipeBase* getHostPipeFromCtrl();
+
         /** on this block is start interact to controller*/
         void onAttachBlock() override;
         /** on leave this block*/

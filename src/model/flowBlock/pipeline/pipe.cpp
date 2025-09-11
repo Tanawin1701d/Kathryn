@@ -14,7 +14,7 @@ namespace kathryn{
     FlowBlockPipeBase::FlowBlockPipeBase(const std::string& pipeName):
     FlowBlockBase(PIPE_BLOCK,
         {
-            {FLOW_ST_BASE_STACK},
+            {FLOW_ST_BASE_STACK, FLOW_ST_PIP_BLK},
             FLOW_JO_SUB_FLOW,
             true
         }),

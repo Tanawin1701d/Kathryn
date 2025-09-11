@@ -76,6 +76,7 @@ add_executable(Kathryn
         src/kride/rob/rob.h
         src/lib/numberic/indexing.cpp
         src/lib/numberic/indexing.h
+        src/model/flowBlock/pipeline/pipeTranMeta.cpp
 
         #${SRC_CAROLYNE}
 

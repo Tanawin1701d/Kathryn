@@ -80,10 +80,13 @@ namespace kathryn {
         Module* getTopModulePtr();
         Module_Stack_Element& getTargetModuleEle();
 
-       FlowBlockBase* getTopFlowBlockBase();
        void           popFlowBlock(FlowBlockBase* fb);
        void           pushFlowBlock(FlowBlockBase* fb);
        void           detachTopFlowBlock();
+    public:
+        FlowBlockBase* getTopFlowBlockBase();
+        FlowBlockBase* getTopFlowBlockBase(FLOW_STACK_TYPE stackEnum);
+
 
     public:
 
@@ -154,6 +157,7 @@ namespace kathryn {
 
         void assignFlowBlockParent(FlowBlockBase* fb);
         bool isAllFlowStackEmpty();
+        bool isFlowStackEmpty(FLOW_STACK_TYPE flowStackType);
         bool isTopFbBelongToTopModule();
         void tryPurifyFlowStack();
         void on_attach_flowBlock(FlowBlockBase* fb);
@@ -161,6 +165,8 @@ namespace kathryn {
         void on_attachAndDetach_intrSignal(INT_TYPE intType, Operable* sig);
         //Operable& on_get_check_next_pipblk_ready_signal();
         FLOW_BLOCK_TYPE get_top_pattern_flow_block_type();
+
+        bool isTopOfStackBelongToTheSameModule(FLOW_STACK_TYPE a, FLOW_STACK_TYPE b);
 
         /** lock allocation*/
         void lockAllocation() {hwCompAllocLock = true;};

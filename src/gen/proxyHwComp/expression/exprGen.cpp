@@ -59,21 +59,27 @@ namespace kathryn{
         retStr += "assign " + getOpr() + " = ";
 
         switch (_master->getOp()) {
+            /** bitwise operators*/
             case BITWISE_AND : {assert(aSize == bSize); retStr += _aSliced + " &    "    + _bSliced; break;}
             case BITWISE_OR  : {assert(aSize == bSize); retStr += _aSliced + " |    "    + _bSliced; break;}
             case BITWISE_XOR : {assert(aSize == bSize); retStr += _aSliced + " ^    "    + _bSliced; break;}
             case BITWISE_INVR: {                        retStr += "~"      + _aSliced;               break;}
             case BITWISE_SHL : {                        retStr += _aSliced + " <<   "    + _bSliced; break;}
             case BITWISE_SHR : {                        retStr += _aSliced + " >>   "    + _bSliced; break;}
+            /** logical operator*/
             case LOGICAL_AND : {assert(aSize == bSize); retStr += _aSliced + " &&   "    + _bSliced; break;}
             case LOGICAL_OR  : {assert(aSize == bSize); retStr += _aSliced + " ||   "    + _bSliced; break;}
             case LOGICAL_NOT : {                      ; retStr += " !    " + _aSliced;               break;}
+            /** relational operator*/
             case RELATION_EQ : {assert(aSize == bSize); retStr += _aSliced + " ==   "    + _bSliced; break;}
             case RELATION_NEQ: {assert(aSize == bSize); retStr += _aSliced + " !=   "    + _bSliced; break;}
             case RELATION_LE : {assert(aSize == bSize); retStr += _aSliced + " <    "    + _bSliced; break;}
             case RELATION_LEQ: {assert(aSize == bSize); retStr += _aSliced + " <=   "    + _bSliced; break;}
             case RELATION_GE : {assert(aSize == bSize); retStr += _aSliced + " >    "    + _bSliced; break;}
             case RELATION_GEQ: {assert(aSize == bSize); retStr += _aSliced + " >=   "    + _bSliced; break;}
+            case RELATION_SLT: {assert(aSize == bSize); retStr += _aSliced + " <=   "    + _bSliced; break;} /// change to signed integer
+            case RELATION_SGT: {assert(aSize == bSize); retStr += _aSliced + " >=   "    + _bSliced; break;} /// change to signed integer
+            /** arithmetic operator*/
             case ARITH_PLUS  : {assert(aSize == bSize); retStr += _aSliced + "   +  "    + _bSliced; break;}
             case ARITH_MINUS : {assert(aSize == bSize); retStr += _aSliced + "   -  "    + _bSliced; break;}
             case ARITH_MUL   : {assert(aSize == bSize); retStr += _aSliced + "   *  "    + _bSliced; break;}

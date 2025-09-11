@@ -104,6 +104,15 @@ namespace kathryn{
         return emptyStatus;
     }
 
+    bool ModelController::isFlowStackEmpty(FLOW_STACK_TYPE flowStackType){
+
+        assert(flowStackType >= 0);
+        assert(flowStackType < FLOW_ST_CNT);
+
+        return flowBlockStacks[flowStackType].empty();
+    }
+
+
     bool ModelController::isTopFbBelongToTopModule(){
         assert(getTopModulePtr() != nullptr);
         return (!flowBlockStacks[FLOW_ST_BASE_STACK].empty()) &&
@@ -203,6 +212,26 @@ namespace kathryn{
         }
 
     }
+
+    bool ModelController::isTopOfStackBelongToTheSameModule(FLOW_STACK_TYPE a,
+                                                            FLOW_STACK_TYPE b){
+
+        if (isFlowStackEmpty(a) ||
+            isFlowStackEmpty(b)){return false;}
+
+
+        FlowBlockBase* flowBlockA = getTopFlowBlockBase(a);
+        FlowBlockBase* flowBlockB = getTopFlowBlockBase(b);
+        assert(flowBlockA != nullptr && flowBlockB != nullptr);
+
+        Module* parentA = flowBlockA->getModuleParent();
+        Module* parentB = flowBlockB->getModuleParent();
+
+        assert(parentA != nullptr &&  parentB != nullptr);
+        return parentA == parentB;
+
+    }
+
 
 
 

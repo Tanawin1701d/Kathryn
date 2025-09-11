@@ -11,37 +11,7 @@
 
 namespace kathryn{
 
-    ////////// PIPE TRANMETA
 
-    void PipeTranMeta::createActivateSignal(){
-        _activateSignal = new expression(1);
-    }
-
-    void PipeTranMeta::assignActivateSignal(Operable* notRstSignal) const{
-
-        PipePooler* pipePooler = getPipePooler();
-        assert(pipePooler   != nullptr);
-        assert(_activateSignal != nullptr);
-        Operable* pipeReady = pipePooler->getPipeReadySignal(_targetPipeName);
-        pipeReady  = addLogic(pipeReady, _userAddCond, BITWISE_AND);
-        pipeReady  = addLogic(pipeReady, notRstSignal, BITWISE_AND);
-
-        (*_activateSignal) = (*pipeReady);
-
-    }
-
-    Operable* PipeTranMeta::addLogic(Operable* src0, Operable* src1, LOGIC_OP lop) const{
-        assert(src0 != nullptr);
-
-        if (src1 == nullptr){
-            return src0;
-        }
-        switch (lop){
-        case BITWISE_AND : {return &((*src0)&(*src1));}
-        case BITWISE_OR  : {return &((*src0)|(*src1));}
-        default          : {assert(false);}
-        }
-    }
 
 
     ///////// TRAN BLOCK
@@ -101,15 +71,41 @@ namespace kathryn{
 
     }
 
-    void FlowBlockPipeTran::assignActivateCond(){
+
+    /** add sync component*/
+
+    void FlowBlockPipeTran::addSyncMeta(const std::string& offerName, const std::string& choiceName, Operable* activateIf){
+        _pipeSyncMetas.push_back(PipeSyncMeta{offerName, choiceName,activateIf});
+        _pipeSyncMetas.back().createPredefSignal();
+    }
+
+    void FlowBlockPipeTran::addSyncMeta(const std::string& offerName, Operable* activateIf){
+        addSyncMeta(offerName, _hostPipe->getPipeName(), _activateSignal);
+    }
+
+
+    void FlowBlockPipeTran::addSyncMetas(const std::vector<std::string>& tranMetas){
+        for (const std::string& offerName: tranMetas){
+            addSyncMeta(offerName, nullptr);
+        }
+    }
+
+    void FlowBlockPipeTran::assignTargetPipeActivateCond(){
         Operable* notRstSig = isThereIntRst() ? &(~(*intNodes[INT_RESET]->getExitOpr())): nullptr;
         for (PipeTranMeta& tranMeta: _pipeTranMetas){
             tranMeta.assignActivateSignal(notRstSig);
         }
     }
 
-    Operable* FlowBlockPipeTran::joinActivateCond() const{
-        mfAssert(!_pipeTranMetas.empty(), "tran cannot have empty target");
+    void FlowBlockPipeTran::assignOfferActivateCond(){
+        for (PipeSyncMeta& _pipeSyncMetas: _pipeSyncMetas){
+            _pipeSyncMetas.assignOfferSignal();
+        }
+    }
+
+
+    Operable* FlowBlockPipeTran::joinTargetPipeActivateCond() const{
+        mfAssert(!_pipeTranMetas.empty(), "tran cannot have empty");
 
         Operable* tranAck = _pipeTranMetas[0]._activateSignal;
         for (int i = 1; i < _pipeTranMetas.size(); i++){
@@ -123,6 +119,21 @@ namespace kathryn{
 
         return tranAck;
     }
+
+    Operable* FlowBlockPipeTran::joinTargetOfferActivateCond() const{
+        if (_pipeSyncMetas.empty()){
+            return nullptr;    ///// incase there is no offer need,
+            ///// it must return nullptr
+        }
+
+        Operable* tranAck = _pipeSyncMetas[0]._intendOfferSignal;
+        for (int i = 1; i < _pipeSyncMetas.size(); i++){
+            assert(_pipeSyncMetas[i]._intendOfferSignal != nullptr);
+            tranAck = &((*tranAck) & (*_pipeSyncMetas[i]._intendOfferSignal));
+        }
+        return tranAck;
+    }
+
 
     Operable* FlowBlockPipeTran::getReadySignal(const std::string& pipeTarget) const{
 
@@ -144,10 +155,25 @@ namespace kathryn{
         return resultNames;
     }
 
+    FlowBlockPipeBase* FlowBlockPipeTran::getHostPipeFromCtrl(){
+
+        bool isTopFlowBlockCorrect = ctrl->isTopOfStackBelongToTheSameModule(FLOW_ST_PIP_BLK, FLOW_ST_BASE_STACK);
+
+        if (!isTopFlowBlockCorrect){
+            return nullptr;
+        }
+
+        FlowBlockBase* fbBase = ctrl->getTopFlowBlockBase(FLOW_ST_PIP_BLK);;
+        assert(fbBase->getFlowType() == PIPE_BLOCK);
+
+        return static_cast<FlowBlockPipeBase*>(fbBase);
+    }
+
 
 
     /// FLOW BLOCK
     void FlowBlockPipeTran::onAttachBlock(){
+        _hostPipe = getHostPipeFromCtrl();
         ctrl->on_attach_flowBlock(this);
     }
 
@@ -162,9 +188,23 @@ namespace kathryn{
     void FlowBlockPipeTran::buildHwComponent(){
         assert(_subBlocks.empty());
         assert(_conBlocks.empty());
+        assert(_hostPipe != nullptr);
+        mfAssert(!_pipeTranMetas.empty(), "tranBlock: " + _hostPipe->getPipeName() + " have empty target pipe");
+        ///// connect to pooler to get each signal target pipe is ready to transfer
+        assignTargetPipeActivateCond();
+        assignOfferActivateCond();
+        ///// the signal that tell it is ready to go
+        _offerReadySignal      = joinTargetOfferActivateCond();
+        _targetPipeReadySignal = joinTargetPipeActivateCond();
 
-        assignActivateCond();
-        _activateSignal = joinActivateCond();
+        if (_offerReadySignal == nullptr){
+            ////// it can be no offer
+            _activateSignal = _targetPipeReadySignal;
+        }else{
+            _activateSignal = &((*_targetPipeReadySignal ) & (*_offerReadySignal));
+        }
+
+
 
         /////// create node
         condNode       = new PseudoNode(1, BITWISE_OR);

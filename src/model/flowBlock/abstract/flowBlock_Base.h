@@ -64,7 +64,8 @@ namespace kathryn {
         FLOW_ST_PATTERN_STACK   = 1,    /**for seq par*/
         FLOW_ST_HEAD_COND_STACK = 2, /**for if only**/
         //FLOW_ST_PIP_WRAP        = 3,
-        FLOW_ST_CNT             = 3
+        FLOW_ST_PIP_BLK         = 3,
+        FLOW_ST_CNT             = 4
     };
 
     enum FLOW_BLOCK_JOIN_POLICY{
