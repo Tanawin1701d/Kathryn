@@ -25,45 +25,21 @@
 #include "model/flowBlock/abstract/nodeWrap.h"
 #include "model/flowBlock/abstract/nodes/stateNode.h"
 #include "model/flowBlock/abstract/nodes/logicNode.h"
-#include "flowIdentifiable.h"
 #include "sim/modelSimEngine/flowBlock/flowBaseSim.h"
+
+#include "flowIdentifiable.h"
+#include "flowBlockRegister.h"
+
 
 
 namespace kathryn {
     /** it is basic node that only have one event at a node */
     class ModelController;
-    enum FLOW_BLOCK_TYPE{
-        SEQUENTIAL, /** seq to par_no_syn do not reorder it due to controller pattern checking*/
-        PARALLEL_AUTO_SYNC,
-        PARALLEL_NO_SYN,
-        CIF,
-        SIF,
-        CSELIF,
-        CSELSE,
-        ZIF,
-        ZELIF,
-        ZELSE,
-        CWHILE,
-        SWHILE,
-        DOWHILE,
-        EXITWHILE,
-        CONDWAIT,
-        CLKWAIT,
-        PIPE_BLOCK,
-        PIPE_TRAN,
-        PICK,
-        PICK_WHEN,
-        DUMMY_BLOCK,
-        OFFER,
-        OFFER_CHOICE,
-        FLOW_BLOCK_COUNT
-    };
 
     enum FLOW_STACK_TYPE{
         FLOW_ST_BASE_STACK      = 0,
         FLOW_ST_PATTERN_STACK   = 1,    /**for seq par*/
         FLOW_ST_HEAD_COND_STACK = 2, /**for if only**/
-        //FLOW_ST_PIP_WRAP        = 3,
         FLOW_ST_PIP_BLK         = 3,
         FLOW_ST_CNT             = 4
     };
@@ -80,15 +56,11 @@ namespace kathryn {
         INT_CNT = 2,
     };
 
-
     struct FB_CTRL_COM_META{
         std::vector<FLOW_STACK_TYPE> _selFlowStack; //////// which stack for push/pop
         FLOW_BLOCK_JOIN_POLICY       _joinPolicy; ////// how to join with other block
         bool                         reqPurify = false;
     };
-
-
-    std::string FBT_to_string(FLOW_BLOCK_TYPE fbt);
 
     extern int nextFbIdx;
 

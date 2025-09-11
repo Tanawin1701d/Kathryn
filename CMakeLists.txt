@@ -46,39 +46,6 @@ add_executable(Kathryn
         ${SRC_PARAM}
         ${SRC_LIB}
         ${SRC_MODEL_COMPILE}
-        src/lib/hw/slot/rowMeta.h
-        src/lib/hw/slot/slot.h
-        src/lib/hw/slot/table.h
-        src/lib/hw/slot/slotUtil.h
-        src/lib/hw/slot/table.cpp
-        src/lib/hw/slot/slotUtil.cpp
-        src/kride/reg/rrf.h
-        src/kride/krideParam.h
-        src/kride/dataType.h
-        src/kride/reg/arf.h
-        src/kride/incl.h
-        src/kride/reg/rrfFinder.h
-        src/kride/mpft/mpft.h
-        src/kride/decoder/decoder.h
-        src/kride/dataType.cpp
-        src/kride/specGen/specGen.h
-        src/kride/rsv/iRsvBase.h
-        src/kride/rsv/oRsvBase.h
-        src/kride/rsv/rsv.h
-        src/kride/rsv/rsvBase.h
-        src/kride/exec/intUnit.h
-        src/kride/exec/EUBase.h
-        src/kride/exec/alu.h
-        src/kride/exec/mulUnit.h
-        src/kride/exec/mul.h
-        src/kride/exec/brUnit.h
-        src/kride/exec/ldstUnit.h
-        src/kride/rob/rob.h
-        src/lib/numberic/indexing.cpp
-        src/lib/numberic/indexing.h
-        src/model/flowBlock/pipeline/pipeTranMeta.cpp
-
-        #${SRC_CAROLYNE}
 
         #blinkSample.cpp
         #src/params/prjParam.h
