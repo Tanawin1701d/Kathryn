@@ -95,7 +95,6 @@ namespace kathryn{
 
         /** TO FIX*/
         com_init();
-        makeIncStateEvent();
         assert(_cntBitSz > 0);
      }
 
@@ -113,15 +112,20 @@ namespace kathryn{
             _endCnt    (endCnt)
     {
         com_init();
-        makeIncStateEvent();
         assert(_cntBitSz > 0);
         /** generate update event for reset register*/
     }
 
 
-    void CycleWaitStateReg::makeIncStateEvent() {
+    void CycleWaitStateReg::makeIncStateEvent(Operable* holdSignal) {
+
+        Operable* incCond = &((*this)(1, _totalBitSize) != (*_endCnt));
+        if (holdSignal != nullptr){
+            incCond = &((*holdSignal) & (*incCond));
+        }
+
         auto* event = new UpdateEvent({
-            &((*this)(1, _totalBitSize) != (*_endCnt)),
+            incCond,
             &((*this)(0)),
             &((*this)(1, _totalBitSize) + 1),
             Slice({1, _totalBitSize}),

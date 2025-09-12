@@ -77,7 +77,6 @@ namespace kathryn{
     protected:
 
         void com_init() override;
-        void makeIncStateEvent();
 
     public:
         /** constructor*/
@@ -86,6 +85,8 @@ namespace kathryn{
 
         /** add prior state that trigger this state*/
         UpdateEvent* addDependState(Operable* dependState, Operable* activateCond) override;
+        /** add Inc to count*/
+        void makeIncStateEvent(Operable* holdSignal);
         /** reset event*/
         void makeUnSetStateEvent() override;
         /** make user reset event*/

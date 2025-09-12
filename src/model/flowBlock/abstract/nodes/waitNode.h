@@ -98,7 +98,11 @@ namespace kathryn{
 
         Operable* getExitOpr() override{
             assert(_cycleWaitStateReg != nullptr);
-            return bindWithRstOutPutIfReset(_cycleWaitStateReg->generateEndExpr());
+            Operable* binedWithResetSignal =
+                bindWithRstOutPutIfReset(_cycleWaitStateReg->generateEndExpr());
+            Operable* binedWithHoldSignal =
+                bindWithHoldIfHold(binedWithResetSignal);
+            return binedWithHoldSignal;
         }
 
         void assign() override{
@@ -107,13 +111,20 @@ namespace kathryn{
             for(auto nodeSrc: nodeSrcs){
                 _cycleWaitStateReg->addDependState(nodeSrc.dependNode->getExitOpr(), nodeSrc.condition);
             }
+            /** inc event*/
+            _cycleWaitStateReg->makeIncStateEvent(holdNode->getExitOpr());
             /** unset event*/
             makeUnsetStateEvent();
             makeUserResetEvent();
             _cycleWaitStateReg->setVarName(identName);
         }
 
-        int getCycleUsed() override {return _cycle;}
+        int getCycleUsed() override{
+            if (isThereHold()){
+                return IN_CONSIST_CYCLE_USED;
+            }
+            return _cycle;
+        }
 
     };
 
