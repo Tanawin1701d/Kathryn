@@ -20,6 +20,8 @@ namespace kathryn {
     public:
         /**node and flow block*/
         OprNode*          _intRstNode = nullptr;
+        OprNode*          _holdNode   = nullptr;
+        Node*             _simpleNode = nullptr;
         AsmNode*          _asmNode    = nullptr;
         FlowBlockBase*    _subBlock   = nullptr;
 
@@ -34,6 +36,7 @@ namespace kathryn {
         void               genNode             ();
         void               setIdentStateId     (ull masterIdx, int subIdx) const;
         void               setIntReset         (OprNode* intResetNode);
+        void               setHoldNode          (OprNode* holdNode);
         void               addToCycleDet       (NodeWrapCycleDet& deter) const;
         void               assignDependDent    (SequenceEle* predecessor) const;
         void               assignIntStart      (OprNode* intStartNode);

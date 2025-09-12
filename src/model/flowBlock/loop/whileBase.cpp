@@ -57,6 +57,7 @@ namespace kathryn{
             conditionNode = new StateNode();
             conditionNode->setInternalIdent("sConNode" + std::to_string(getGlobalId()));
             fillIntResetToNodeIfThere(conditionNode);
+            fillHoldToNodeIfThere(conditionNode);
         }
         addSysNode(conditionNode);
 

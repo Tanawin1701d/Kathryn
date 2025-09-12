@@ -63,6 +63,7 @@ namespace kathryn{
             basicStNode->setInternalIdent("parStateReg_" + std::to_string(getGlobalId()));
             addSysNode(basicStNode);
             fillIntResetToNodeIfThere(basicStNode);
+            fillHoldToNodeIfThere(basicStNode);
             /** add basic assignment to depend on stateNode*/
             for (auto nd : _basicNodes){
                 assert(nd->getNodeType() == ASM_NODE);
@@ -258,7 +259,7 @@ namespace kathryn{
 
         if (synNode != nullptr){
             resultNodeWrap->addExitNode(synNode);
-        }else if (masterJoinFlowBlock != nullptr){
+        }else if (masterJoinFlowBlock != nullptr){ //// masterJoin is come from user declaration
             NodeWrap* joinnerNodeWrap = masterJoinFlowBlock->sumarizeBlock();
             Node* exitNode = joinnerNodeWrap->getExitNode();
             assert(exitNode != nullptr);

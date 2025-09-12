@@ -102,6 +102,7 @@ namespace kathryn{
             condNode = new StateNode();
             condNode->setInternalIdent("sifNode" + std::to_string(getGlobalId()));
             fillIntResetToNodeIfThere(condNode);
+            fillHoldToNodeIfThere(condNode);
         }else{assert(false);}
         addSysNode(condNode);
 

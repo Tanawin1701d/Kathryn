@@ -43,6 +43,9 @@ namespace kathryn{
             if (_intRstNode != nullptr) {
                 _stateNode->setInterruptReset(_intRstNode);
             }
+            if (_holdNode != nullptr) {
+                _stateNode->setHold(_holdNode);
+            }
         }else if (_subBlock != nullptr){
             _complexNode = _subBlock->sumarizeBlock();
         }else{
@@ -64,6 +67,11 @@ namespace kathryn{
     void SequenceEle::setIntReset(OprNode* intResetNode){
         _intRstNode = intResetNode;
     }
+
+    void SequenceEle::setHoldNode(OprNode* holdNode){
+        _holdNode = holdNode;
+    }
+
 
     void SequenceEle::addToCycleDet(NodeWrapCycleDet &deter) const {
         if (_asmNode != nullptr){
@@ -226,6 +234,7 @@ namespace kathryn{
         int idx = 0;
         for (auto& seqMeta: _subSeqMetas) {
             seqMeta->setIntReset(intNodes[INT_RESET]); //// set interrupt reset must be set before gennode
+            seqMeta->setHoldNode(holdNode);
             seqMeta->genNode();
             seqMeta->setIdentStateId(getGlobalId(),idx++);
             seqMeta->addToCycleDet(cycleDet);
