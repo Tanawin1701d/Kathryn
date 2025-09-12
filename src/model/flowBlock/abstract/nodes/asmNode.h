@@ -37,7 +37,7 @@ namespace kathryn {
             assert(false);
         }
 
-        void assignFromStateNode(){
+        void assignFromStateNode(Operable* holdSignal){
             assert(nodeSrcs.size() == 1);
             assert(nodeSrcs[0].condition == nullptr);
             assert(nodeSrcs[0].dependNode != nullptr);
@@ -48,9 +48,14 @@ namespace kathryn {
                 /*** for reg <<= operator*/
                 if (assignMeta->asmType == ASM_DIRECT){
 
+                    ////// bind node condition with pre_condition first\
+
+                    Operable* condEvent = addLogicWithOutput(nodeSrcs[0].condition, _preCondition, BITWISE_AND);
+                    condEvent = addLogicWithOutput(condEvent, &(~(*holdSignal)), BITWISE_AND);
+
                     ///////////// assign from current dependency
                     auto resultUpEvent = new UpdateEvent({
-                        addLogicWithOutput(nodeSrcs[0].condition, _preCondition, BITWISE_AND),
+                        condEvent,
                         nodeSrcs[0].dependNode->getStateOperating(), /////// you can not simply use genExitOpr because it is used to colab with reset
                         &assignMeta->valueToAssign,
                         assignMeta->desSlice,
@@ -63,6 +68,7 @@ namespace kathryn {
 
                     /**
                      * TODO state reg is not support user reset operable directly
+                     * TODO the ASM_EQ_DEPNODE is not support Hold signal
                      * Therefore if we have further condition this asm node must be fixed.
                      * */
 

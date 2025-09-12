@@ -34,9 +34,18 @@ namespace kathryn{
 
         Operable* getExitOpr() override{
             assert(_stateReg != nullptr);
-            return bindWithRstOutPutIfReset(_stateReg->generateEndExpr());
+
+            Operable* binedWithResetSignal =
+                bindWithRstOutPutIfReset(_stateReg->generateEndExpr());
+            ///// hold mean the system is freeze it should not activate the system
+            ////////// the systerm should still not unset
+            Operable* binedWithHoldSignal =
+                bindWithHoldIfHold(binedWithResetSignal);
+
+            return binedWithHoldSignal;
         }
 
+        ///// generate the end expression
         Operable* getStateOperating() override{
             assert(_stateReg != nullptr);
             return _stateReg->generateEndExpr();
@@ -54,15 +63,23 @@ namespace kathryn{
             for (auto nodeSrc: nodeSrcs){
                 _stateReg->addDependState(nodeSrc.dependNode->getExitOpr(), nodeSrc.condition);
             }
+            if (isThereHold()){
+                _stateReg->addDependState(getStateOperating(), holdNode->getExitOpr());
+            }
+
             /** unset event*/
             makeUnsetStateEvent();
             /** slave event*/
             for (AsmNode* asmNode: _dependSlaveAsmNode){
-                asmNode->assignFromStateNode();
+                Operable* holdSignal = isThereHold() ? holdNode->getExitOpr(): nullptr;
+                asmNode->assignFromStateNode(holdSignal);
             }
         }
 
-        int getCycleUsed() override {return 1;}
+        int getCycleUsed() override{
+            ////// incase holding signal the system cannot know when it is finish
+            return isThereHold() ? NODE_CYCLE_USED_UNKNOWN : 1;
+        }
     };
 
     /**
@@ -73,6 +90,8 @@ namespace kathryn{
     struct SynNode : Node{
         SyncReg* _synReg;
         PseudoNode* _forceExitNode = nullptr;
+        ////// sync node not require the holdsignal
+        ////// we realize that if the state is not activate SynNode the synNode will remain the same state
 
         /**in SynNode condition and dependState is disengage*/
         explicit SynNode(int synSize) :

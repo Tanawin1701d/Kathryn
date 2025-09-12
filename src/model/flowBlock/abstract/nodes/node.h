@@ -38,6 +38,8 @@ namespace kathryn {
         NODE_TYPE_CNT
     };
 
+    constexpr int NODE_CYCLE_USED_UNKNOWN = -1;
+
 
     /***
      * NODE operation requirement
@@ -63,6 +65,7 @@ namespace kathryn {
         std::string              identName = "NODE_UNNAME";
 
         Node*                    intReset  = nullptr;
+        Node*                    holdNode  = nullptr;
 
         /** simulate support register*/
         std::vector<CtrlFlowRegBase*> relatedCycleConsumeReg;
@@ -129,29 +132,49 @@ namespace kathryn {
 
         std::vector<NodeSrcEdge>& getDependNodes() {return nodeSrcs;}
 
-        /** interrupt handler*/
+        /**
+         * interrupt handler
+         */
+        ///// interrupt reset
         void setInterruptReset(Node* rst){
             assert(rst != nullptr);
             intReset = rst;
         }
 
-        bool isThrereIntReset(){
-            return intReset != nullptr;
-        }
+        bool isThrereIntReset  () const{ return intReset != nullptr; }
 
-        Node* getInterruptReset() const{
-            return intReset;
-        }
+        Node* getInterruptReset() const{ return intReset; }
 
         Operable* bindWithRstOutPutIfReset(Operable* rawExit){
             assert(rawExit != nullptr);
             assert(rawExit->getOperableSlice().getSize() == 1);
             if (isThrereIntReset()){
                 return &( (*rawExit) & (~(*getInterruptReset()->getExitOpr())) );
-            }else{
-                return rawExit;
             }
+            return rawExit;
         }
+        ///// hold signal
+        void setHold(Node* hn){ /// hold node
+            assert(hn != nullptr);
+            assert(holdNode == nullptr); /// we do not allow override the dsame node
+            holdNode = hn;
+        }
+
+        bool  isThereHold()  const { return holdNode != nullptr; }
+
+        Node* getHoldNode() const { return holdNode; }
+
+        Operable* bindWithHoldIfHold(Operable* rawExit){
+            assert(rawExit != nullptr);
+            assert(rawExit->getOperableSlice().getSize() == 1);
+
+            if (isThereHold()){
+                return &((*rawExit) & (~(*getHoldNode()->getExitOpr())));
+            }
+            return rawExit;
+        }
+
+
 
         /**
          * function that allow sp node custom their behavior

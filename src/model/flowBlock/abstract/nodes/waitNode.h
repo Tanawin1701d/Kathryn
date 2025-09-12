@@ -33,9 +33,18 @@ namespace kathryn{
 
         }
 
+        Operable* getStateOperating() override{
+            assert(_condWaitStateReg != nullptr);
+            return _condWaitStateReg->generateEndExpr();
+        }
+
         Operable* getExitOpr() override{
             assert(_condWaitStateReg != nullptr);
-            return bindWithRstOutPutIfReset(_condWaitStateReg->generateEndExpr());
+            Operable* binedWithResetSig =
+                bindWithRstOutPutIfReset(_condWaitStateReg->generateEndExpr());
+            Operable* binedWithHoldSig =
+                bindWithHoldIfHold(binedWithResetSig);
+            return binedWithHoldSig;
         }
 
         void assign() override{
@@ -43,13 +52,16 @@ namespace kathryn{
             for(auto nodeSrc: nodeSrcs){
                 _condWaitStateReg->addDependState(nodeSrc.dependNode->getExitOpr(), nodeSrc.condition);
             }
+            if (isThereHold()){
+                _condWaitStateReg->addDependState(getStateOperating(), holdNode->getExitOpr());
+            }
 
             makeUnsetStateEvent();
             makeUserResetEvent();
             _condWaitStateReg->setVarName(identName);
         }
 
-        int getCycleUsed() override {return -1;}
+        int getCycleUsed() override {return NODE_CYCLE_USED_UNKNOWN;}
 
     };
 

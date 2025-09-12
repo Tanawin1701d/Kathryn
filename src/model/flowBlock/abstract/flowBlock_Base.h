@@ -91,8 +91,17 @@ namespace kathryn {
 
         std::vector<FlowBlockBase*> _abandonedBlocks;  /// the flow block that have been extracted and push to this block
 
+        /**  basic interrupt signals*/
         std::vector<Operable*>        intSignals[INT_CNT];
-        OprNode*                      intNodes  [INT_CNT];
+        OprNode*                      intNodes  [INT_CNT]; //// the sum of allnode
+        /** basic  hold signals*/
+        /** the hold signal supposed to hold the state without execute it*/
+        std::vector<Operable*>        holdSignals;
+        OprNode*                      holdNode = nullptr;
+
+
+
+
 
         /** status of node*/
         FLOW_BLOCK_TYPE             _type;
@@ -105,15 +114,23 @@ namespace kathryn {
         bool                        _areThereForceExit = false;
         PseudoNode*                 _forceExitNode     = nullptr;
         /*** flow block sim engine*/
-        FlowBaseSimEngine*              _flowSimEngine     = nullptr;
+        FlowBaseSimEngine*          _flowSimEngine     = nullptr;
 
         /** generate implicit subblock typically used with if and while block*/
         FlowBlockBase* genImplicitSubBlk(FLOW_BLOCK_TYPE defaultType);
+        /** generate sum of force exit note (the global variable)*/
         void           genSumForceExitNode(std::vector<NodeWrap*>& nws);
-        void           fillIntRstSignalToChild();
+        /** interrupt node*/
+        void           fillIntRstSignalToChild(); //// use for pass the data when build
         void           genIntNode();
         bool           isThereIntStart();
         bool           isThereIntRst();
+        /** holding system*/
+        void           fillHoldSignalToChild();
+        void           genHoldNode();
+        bool           isThereHold();
+
+        ///////////////////////////////////////
         Operable*      purifyCondition(Operable* rawOpr);
         FlowBlockBase* scanMasterJoinSubBlock();
     public:
@@ -135,7 +152,7 @@ namespace kathryn {
             _basicNodes.push_back(node);
             _basicNodesOrder.push_back(nextInputOrder++);
         };
-
+        /** system node is the node used to monitor by hybrid profiler*/
         virtual void addSysNode(Node* node){
             assert(node != nullptr);
             _sysNodes.push_back(node);
@@ -167,6 +184,20 @@ namespace kathryn {
                 nd->setInterruptReset(intNodes[INT_RESET]);
             }
         }
+
+        /** hold entrance*/
+        virtual void addHoldSignal(Operable* signal){
+            assert(signal != nullptr);
+            holdSignals.push_back(signal);
+        }
+
+        void fillHoldToNodeIfThere(Node* nd){
+            if (holdNode != nullptr){
+                nd->setHold(holdNode);
+            }
+        }
+
+        std::vector<sortEle> sortSubAndConFbInOrder();
         /**
          * For custom block
          * */
@@ -228,9 +259,6 @@ namespace kathryn {
         [[nodiscard]]std::string getMdIdentVal() override{
             return FBT_to_string(getFlowType()) + "_blockId_" + std::to_string(_fbId);
         }
-
-        std::vector<sortEle> sortSubAndConFbInOrder();
-
     };
 
 }

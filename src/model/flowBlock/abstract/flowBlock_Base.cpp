@@ -50,6 +50,7 @@ namespace kathryn{
         for (auto intNode: intNodes){
             delete intNode;
         }
+        delete holdNode;
 
         delete _forceExitNode;
         delete _flowSimEngine;
@@ -69,6 +70,24 @@ namespace kathryn{
             return new FlowBlockSeq();
         }else{
             assert(false); /** can't determine flow type*/
+        }
+    }
+
+    void FlowBlockBase::genSumForceExitNode(std::vector<NodeWrap *> &nws) {
+        /** check that there is force exit node*/
+        for (auto nw : nws){
+            _areThereForceExit |= (nw->getForceExitNode() != nullptr);
+        }
+
+        /** build pseudo node*/
+        if (_areThereForceExit){
+            _forceExitNode = new PseudoNode(1, BITWISE_OR);
+            for (auto nw : nws){
+                if (nw->getForceExitNode() != nullptr){
+                    _forceExitNode->addDependNode(nw->getForceExitNode(), nullptr);
+                }
+            }
+            _forceExitNode->assign();
         }
     }
 
@@ -134,12 +153,57 @@ namespace kathryn{
         return intNodes[INT_RESET] != nullptr;
     }
 
+    void FlowBlockBase::fillHoldSignalToChild(){
+        for (auto subBlockPtr: _subBlocks){
+            assert(subBlockPtr != nullptr);
+            for (auto signal: holdSignals){
+                subBlockPtr->addHoldSignal(signal);
+            }
+        }
+
+        for (auto conBlockPtr: _conBlocks){
+            assert(conBlockPtr != nullptr);
+            for (auto signal: holdSignals){
+                conBlockPtr->addHoldSignal(signal);
+            }
+        }
+    }
+
+    void FlowBlockBase::genHoldNode(){
+
+        if (holdSignals.empty()){
+            return;
+        }
+        holdNode = new OprNode(holdSignals[0]);
+
+        for (int sigId = 1; sigId < static_cast<int>(holdSignals.size()); sigId++){
+            holdNode->addLogic(
+                holdNode->_value,
+                holdSignals[sigId],
+                BITWISE_OR
+            );
+        }
+
+    }
+
+    bool FlowBlockBase::isThereHold(){
+        return holdNode  != nullptr;
+    }
+
     void FlowBlockBase::buildHwMaster(){
-        /** build lower deck*/
+        /** pass the Int reset signal and holding signal to child block*/
+        /** dont fill interrupt start signal because this block will start it*/
         fillIntRstSignalToChild();
+        fillHoldSignalToChild();
+
+        /** build the sub block first*/
         buildSubHwComponent();
+
         /** we so sure now that all sub  Block is ready*/
+        /** start build the node for int reset start and hold signal*/
         genIntNode();
+        genHoldNode();
+
         buildHwComponent();
     }
 
@@ -187,24 +251,6 @@ namespace kathryn{
             }
         }
         return resultFb;
-    }
-
-    void FlowBlockBase::genSumForceExitNode(std::vector<NodeWrap *> &nws) {
-        /** check that there is force exit node*/
-        for (auto nw : nws){
-            _areThereForceExit |= (nw->getForceExitNode() != nullptr);
-        }
-
-        /** build pseudo node*/
-        if (_areThereForceExit){
-            _forceExitNode = new PseudoNode(1, BITWISE_OR);
-            for (auto nw : nws){
-                if (nw->getForceExitNode() != nullptr){
-                    _forceExitNode->addDependNode(nw->getForceExitNode(), nullptr);
-                }
-            }
-            _forceExitNode->assign();
-        }
     }
 
     std::vector<FlowBlockBase::sortEle> FlowBlockBase::sortSubAndConFbInOrder() {
