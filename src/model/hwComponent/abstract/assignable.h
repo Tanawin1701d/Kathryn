@@ -117,9 +117,6 @@ namespace kathryn{
         bool checkDesIsFullyAssignAndEqual();
 
 
-
-
-
     };
 
     template<typename RET_TYPE>

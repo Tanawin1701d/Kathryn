@@ -14,16 +14,23 @@ namespace kathryn {
     struct AsmNode : Node {
         std::vector<AssignMeta*> _assignMetas; //// AssignMeta is must not use the same assign metas
         Operable*                _preCondition = nullptr;
+        //// TODO add per element metadata
+        std::vector<Operable*>   _preCondPerMeta;
 
         explicit AsmNode(AssignMeta *assignMeta) :
                 Node(ASM_NODE),
-                _assignMetas({assignMeta}){
+                _assignMetas({assignMeta}),
+                _preCondPerMeta(1, nullptr)
+
+        {
             assert(assignMeta != nullptr);
+
         }
 
         explicit AsmNode(std::vector<AssignMeta*> assignMetas):
                 Node(ASM_NODE),
-                _assignMetas(std::move(assignMetas)){
+                _assignMetas(std::move(assignMetas)),
+                _preCondPerMeta(_assignMetas.size(), nullptr){
 
             for (auto* asmMeta: _assignMetas){
                 assert(asmMeta != nullptr);
@@ -110,6 +117,12 @@ namespace kathryn {
         void addPreCondition(Operable* cond, LOGIC_OP op){
             assert(cond != nullptr);
             addLogic(_preCondition, cond, op);
+        }
+
+        void addSpecificPreCondition(Operable* cond, LOGIC_OP op, int idx){
+            assert(cond != nullptr);
+            assert(idx >= 0 && idx < _preCondPerMeta.size());
+            addLogic(_preCondPerMeta[idx], cond, op);
         }
 
 

@@ -46,6 +46,7 @@ add_executable(Kathryn
         ${SRC_PARAM}
         ${SRC_LIB}
         ${SRC_MODEL_COMPILE}
+        src/model/hwCollection/dataStructure/slot/slot.h
 
         #blinkSample.cpp
         #src/params/prjParam.h
