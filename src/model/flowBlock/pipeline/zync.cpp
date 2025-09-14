@@ -20,6 +20,7 @@ namespace kathryn{
     FlowBlockZyncBase::~FlowBlockZyncBase(){
         delete prepSendNode;
         delete exitNode;
+        delete resultNodeWrap;
     }
 
     void FlowBlockZyncBase::createReadySignal(){
