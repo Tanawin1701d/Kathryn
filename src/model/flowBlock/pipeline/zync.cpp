@@ -8,13 +8,17 @@
 
 namespace kathryn{
 
-    FlowBlockZyncBase::FlowBlockZyncBase(SyncMeta& syncMeta):
+    FlowBlockZyncBase::FlowBlockZyncBase(
+        SyncMeta& syncMeta, Operable* acceptCond):
     FlowBlockBase(PIPE_BLOCK,
         {
-
+            {FLOW_ST_BASE_STACK, FLOW_ST_PIP_BLK},
+            FLOW_JO_SUB_FLOW,
+            true
 
         }),
-    _syncMeta(syncMeta){}
+    _syncMeta(syncMeta),
+    _acceptCond(acceptCond){ createReadySignal();}
 
 
     FlowBlockZyncBase::~FlowBlockZyncBase(){
@@ -70,8 +74,8 @@ namespace kathryn{
         fillHoldToNodeIfThere    (prepSendNode);
             /** assign assignment node*/
         Operable* waitCond = _syncMeta._syncMatched; ///// we should wait further
-        if (_aceeptCond != nullptr){
-            waitCond = &((*waitCond)&(*_aceeptCond));
+        if (_acceptCond != nullptr){
+            waitCond = &((*waitCond)&(*_acceptCond));
         }
         prepSendNode->addDependNode(prepSendNode, waitCond);
             /** add slave assignment node*/
@@ -82,8 +86,8 @@ namespace kathryn{
 
         /** exit Node*/
         Operable* exitCond = _syncMeta._syncMatched;
-        if (_aceeptCond != nullptr){
-            exitCond = &((*exitCond)&(*_aceeptCond));
+        if (_acceptCond != nullptr){
+            exitCond = &((*exitCond)&(*_acceptCond));
         }
         exitNode->addDependNode(prepSendNode, exitCond);
 
