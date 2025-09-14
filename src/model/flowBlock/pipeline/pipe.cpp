@@ -5,23 +5,20 @@
 #include "pipe.h"
 
 #include "model/controller/controller.h"
-#include "pipePooler.h"
-
 
 namespace kathryn{
 
 
-    FlowBlockPipeBase::FlowBlockPipeBase(const std::string& pipeName):
+    FlowBlockPipeBase::FlowBlockPipeBase(SyncMeta& syncMeta):
     FlowBlockBase(PIPE_BLOCK,
         {
             {FLOW_ST_BASE_STACK, FLOW_ST_PIP_BLK},
             FLOW_JO_SUB_FLOW,
             true
         }),
-    _pipeName(pipeName){
-        PipePooler* pipePooler = getPipePooler();
-        pipePooler->addPipeBlk(this);
-        readySignal = new expression(1);
+    _syncMata(syncMeta),
+    _pipeName("Pipe_"+ syncMeta.getName()){
+        createReadySignal();
     }
 
 
@@ -61,22 +58,28 @@ namespace kathryn{
         return resultNodeWrap;
     }
 
-    Operable* FlowBlockPipeBase::createActivateCond(){
+    void FlowBlockPipeBase::createReadySignal(){
+        _syncMata._syncSlaveReady = new expression(1);
+    }
 
-        if (isAutoActivatePipe()){
-            return &makeOprVal("autoStartPipe_" + _pipeName, 1,1);
-        }
-        ////// get tran signaling
-        PipePooler* pipePooler = getPipePooler();
-        assert(pipePooler != nullptr);
-        Operable* tranReadySignal = pipePooler->getTranReadySignal(getPipeName());
-
-        return tranReadySignal;
+    void FlowBlockPipeBase::assignReadySignal(){
+        //////// wait signal and last stage means that it is ready
+        (*_syncMata._syncSlaveReady) = (*entNode->getExitOpr());
     }
 
     void FlowBlockPipeBase::buildHwComponent(){
+        ////// try to find the activate signal
+        Operable* activateSignal = nullptr;
+        if (isAutoActivatePipe()){
+            activateSignal = &makeOprVal("pipe_auto_act_" + _pipeName, 1, 1);
+        }else{
+            _syncMata.tryBuildmatchSignal();
+            activateSignal = _syncMata._syncMatched;
+            mfAssert(activateSignal != nullptr, "there is no one trigger the pipeline, " + _pipeName +
+                                                "if you want it to auto restart, please use autoActivate autoStart");
+        }
 
-        Operable* activateSignal = createActivateCond();
+
         ////////////// do integritry check
         assert(_conBlocks.empty());
         assert(_subBlocks.size() == 1);
@@ -93,6 +96,7 @@ namespace kathryn{
         entNode->addDependNode(subBlockNodeWrap->getExitNode(), nullptr);
         entNode->addDependNode(waitNode, nullptr);
         fillIntResetToNodeIfThere(waitNode);
+        fillHoldToNodeIfThere(waitNode);
         if(isThereIntStart()){
             entNode->addDependNode(intNodes[INT_START], nullptr);
         }
@@ -116,8 +120,8 @@ namespace kathryn{
         resultNodeWrap->addExitNode(exitDummy);
 
 
-        //////////// build ready signal
-        buildReadySignal();
+        //////////// build ready signal to tell that pipe line is ready
+        assignReadySignal();
 
     }
 
@@ -157,12 +161,6 @@ namespace kathryn{
 
     void FlowBlockPipeBase::doPostFunction(){
         onDetachBlock();
-    }
-
-    void FlowBlockPipeBase::buildReadySignal(){
-        //////// wait signal and last stage means that it is ready
-        (*readySignal) = (*entNode->getExitOpr());
-
     }
 
 }
