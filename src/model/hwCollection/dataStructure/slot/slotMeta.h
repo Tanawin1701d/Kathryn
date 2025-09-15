@@ -71,6 +71,14 @@ namespace kathryn{
             return _fieldMetas.size();
         }
 
+        int getMaxBitWidth() const{
+            int result = _fieldMetas[0]._size;
+            for (const FieldMeta& fieldMeta: _fieldMetas){
+                result = std::max(result, fieldMeta._size);
+            }
+            return result;
+        }
+
         int getIdx(std::string fieldName) const{
             for (int idx = 0; idx < static_cast<int>(_fieldMetas.size()); idx++){
                 if (_fieldMetas[idx]._name == fieldName){

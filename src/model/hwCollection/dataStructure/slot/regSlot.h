@@ -56,7 +56,9 @@ namespace kathryn{
         }
 
 
-
+        /***
+         *  static slicing
+         */
 
         /** single slicing*/
         Reg& operator () (int idx){
@@ -105,8 +107,16 @@ namespace kathryn{
             return (*this)(fieldIdxs);
         }
 
-        /** */
+        /**
+         *  dynamic indexing
+         */
+        SlotDynIdxAssAgent operator[](Operable& requiredIdx){
+            return SlotDynIdxAssAgent(*this, requiredIdx);
+        }
 
+        /**
+         * The main function to overwrite the assignment
+         */
         void doGlobAsm(
             Slot& rhs,
             const std::vector<int>& srcMatchIdxs,
@@ -140,9 +150,6 @@ namespace kathryn{
                 nullptr
             );
         }
-
-
-
 
         /** it will match by name*/
         RegSlot& operator <<= (Slot& rhs){

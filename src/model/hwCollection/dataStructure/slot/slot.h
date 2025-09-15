@@ -26,11 +26,6 @@ namespace kathryn{
         SlotMeta _meta;
         std::vector<HwFieldMeta> _hwFieldMetas;
 
-        HwFieldMeta& hwFieldAt(int idx){
-            mfAssert(isValidIdx(idx), "get hw Field at " + std::to_string(idx) + " out of range");
-            return _hwFieldMetas[idx];
-        }
-
     public:
         Slot(const std::vector<std::string>& fieldNames,
              const std::vector<int>&         fieldSizes
@@ -40,7 +35,20 @@ namespace kathryn{
         explicit Slot(SlotMeta  meta):
         _meta(std::move(meta)){};
 
-        ~Slot();
+        virtual ~Slot() = default;
+
+        FieldMeta& fieldAt(int idx){
+            return _meta(idx);
+        }
+
+        HwFieldMeta& hwFieldAt(int idx){
+            mfAssert(isValidIdx(idx), "get hw Field at " + std::to_string(idx) + " out of range");
+            return _hwFieldMetas[idx];
+        }
+
+        int getMaxBitWidth(){
+            return _meta.getMaxBitWidth();
+        }
 
         int getIdx(std::string fieldName) const{
             return _meta.getIdx(std::move(fieldName));
@@ -196,6 +204,69 @@ namespace kathryn{
             doGlobAsm(srcOpr, requiredIdx, ASM_EQ_DEPNODE);
         }
 
+    };
+
+    class SlotDynIdxAssAgent{
+        Slot&     _masterSlot;
+        Operable& _requiredIdx;
+
+
+    public:
+
+        explicit SlotDynIdxAssAgent(Slot& master, Operable& requiredIdx):
+        _masterSlot(master),
+        _requiredIdx(requiredIdx)
+        {}
+
+        SlotDynIdxAssAgent& operator <<= (Operable& rhsOpr){
+            _masterSlot.doBlockAsm(rhsOpr, _requiredIdx);
+            return *this;
+        }
+
+        SlotDynIdxAssAgent& operator = (Operable& rhsOpr){
+            _masterSlot.doNonBlockAsm(rhsOpr, _requiredIdx);
+            return *this;
+        }
+
+        Operable* v(){
+
+            int targetWidth = _masterSlot.getMaxBitWidth();
+
+            Wire* resultWire = &makeOprWire("slotSlice", targetWidth);
+
+            bool isUsedAsDef = false;
+            //// the target structure to update
+            std::vector<UpdateEvent*>& updateEvents = resultWire->getUpdateMeta();
+
+            for (int idx = 0; idx < _masterSlot.getNumField(); idx++){
+                FieldMeta fieldMeta = _masterSlot.fieldAt(idx);
+                ///// we do only the target port
+                if (fieldMeta._size != targetWidth ){
+                    continue;
+                }
+                ////// we require the first val as the default value
+                Operable* activateCond = nullptr;
+                int       assignPri    = DEFAULT_UE_PRI_MIN;
+                if (!isUsedAsDef){
+                    activateCond = &(_requiredIdx == fieldMeta._size);
+                    assignPri    = DEFAULT_UE_PRI_USER;
+                }
+                ////// create update event
+                auto resultUpEvent = new UpdateEvent({
+                activateCond,
+                nullptr,
+                _masterSlot.hwFieldAt(idx)._opr,
+                resultWire->getOperableSlice(),
+                assignPri
+                });
+                updateEvents.push_back(resultUpEvent);
+                isUsedAsDef = true;
+            }
+
+            /////// set default value
+
+            return resultWire;
+        }
 
 
     };
