@@ -205,6 +205,14 @@ namespace kathryn{
 
         }
 
+        void doCusLogic(std::function<void(RegSlot&, int rowIdx)>  cusLogic){
+            for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
+                cusLogic(*_rows[rowIdx], rowIdx);
+            }
+
+
+        }
+
         /**
          * static slicing
          */
