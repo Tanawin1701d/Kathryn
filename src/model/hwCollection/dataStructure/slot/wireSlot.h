@@ -73,6 +73,12 @@ namespace kathryn{
             }
         }
 
+        ~WireSlot() override{
+            for(Wire* wire: _wires){
+                delete wire;
+            }
+        }
+
 
         /***
          *  static slicing
@@ -123,6 +129,14 @@ namespace kathryn{
         WireSlot operator() (const std::vector<std::string>& fieldNames){
             std::vector<int> fieldIdxs = getIdxs(fieldNames);
             return (*this)(fieldIdxs);
+        }
+
+        WireSlot operator + (WireSlot& rhs){
+            SlotMeta newSlotMeta = _meta + rhs._meta;
+            std::vector<Wire*> newWires;
+            newWires.insert(newWires.end(), _wires.begin(), _wires.end());
+            newWires.insert(newWires.end(), rhs._wires.begin(), rhs._wires.end());
+            return WireSlot(newSlotMeta, newWires);
         }
 
         /**

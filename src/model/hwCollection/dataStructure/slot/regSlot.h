@@ -73,6 +73,12 @@ namespace kathryn{
             }
         }
 
+        ~RegSlot() override{
+            for(Reg* reg: _regs){
+                delete reg;
+            }
+        };
+
         /***
          *  static slicing
          */
@@ -122,6 +128,13 @@ namespace kathryn{
         RegSlot operator() (const std::vector<std::string>& fieldNames){
             std::vector<int> fieldIdxs = getIdxs(fieldNames);
             return (*this)(fieldIdxs);
+        }
+
+        RegSlot operator + (const RegSlot& rhs){
+            SlotMeta newSlotMeta = getMeta() + rhs.getMeta();
+            std::vector<Reg*> newRegs = _regs;
+            _regs.insert(_regs.end(), rhs._regs.begin(), rhs._regs.end());
+            return RegSlot(newSlotMeta, newRegs);
         }
 
         /**

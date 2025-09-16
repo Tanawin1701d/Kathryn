@@ -52,7 +52,7 @@ namespace kathryn{
 
 
 
-        SlotMeta getMeta(){
+        SlotMeta getMeta() const{
             return _meta;
         }
 

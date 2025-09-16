@@ -44,11 +44,24 @@ namespace kathryn{
             buildRows(_meta, amtRow);
         }
 
+        ~Table(){
+            for (RegSlot* row: _rows){
+                delete row;
+            }
+        }
+
+
+
         SlotMeta getMeta() const{
             return _meta;
         }
 
-        RegSlot& getRow(int idx){
+        RegSlot& getRefRow(int idx){
+            assert(isValidIdx(idx));
+            return *_rows[idx];
+        }
+
+        RegSlot getClonedRow(int idx) const{
             assert(isValidIdx(idx));
             return *_rows[idx];
         }
@@ -122,7 +135,7 @@ namespace kathryn{
                 /////// get related meta data
                 std::vector<AssignMeta*> eachRowCollector;
                 std::vector<Operable*>   eachRowPreCond;
-                RegSlot& desSlot = getRow(desIdx);
+                RegSlot& desSlot = getRefRow(desIdx);
                 SlotMeta srcMeta = srcSlot.getMeta();
                 ////// seach for match assign column and generate assign Metadata
                 auto  [srcMatchidxs, desMatchIdxs] = getMeta().matchByName(srcMeta);
@@ -164,7 +177,7 @@ namespace kathryn{
                 /////// get related meta data
                 std::vector<AssignMeta*> eachRowCollector;
                 std::vector<Operable*>   eachRowPreCond;
-                RegSlot& rowSlot = getRow(desRowIdx);
+                RegSlot& rowSlot = getRefRow(desRowIdx);
 
                 ///// gen row assign
                 eachRowCollector = rowSlot.genAssignMetaForAll(srcOpr, asmType);
@@ -218,6 +231,55 @@ namespace kathryn{
         TableSliceAgent operator[] (Operable& requiredIdx){
             isSufficientIdx(requiredIdx);
             return TableSliceAgent(this, requiredIdx);
+        }
+
+        /**
+         *  table join
+         *
+         */
+
+        Table joinTableByRow(const Table& rhs){
+            SlotMeta rhsMeta = rhs.getMeta();
+            SlotMeta newMeta = getMeta();
+            mfAssert(newMeta == rhsMeta, "slot meta is not match");
+
+            ////// new row
+            std::vector<RegSlot*> newRows = _rows;
+            newRows.insert(newRows.end(), rhs._rows.begin(), rhs._rows.end());
+
+            return Table(newMeta, newRows);
+
+        }
+
+        Table joinTableByCol(const Table& rhs){
+            mfAssert(getNumRow() == rhs.getNumRow(), "row size is not match");
+
+            std::vector<RegSlot*> newRows;
+
+            for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
+                RegSlot  newRegSlot = getRefRow(rowIdx) + rhs.getClonedRow(rowIdx);
+                RegSlot* clonedSlot = new RegSlot(newRegSlot);
+                newRows.push_back(clonedSlot);
+            }
+
+            return Table(getMeta(), newRows);
+
+        }
+
+
+        Table join(const Table& rhs,  int axis){
+            mfAssert(axis >= 0 && axis <= 1, "axis must be 0 or 1");
+            mfAssert(false, "not implemented yet");
+
+            switch (axis){
+                case 0:
+                    return joinTableByRow(rhs);
+                case 1:
+                    return joinTableByCol(rhs);
+                default:
+                    return assert(false);
+            }
+
         }
 
 

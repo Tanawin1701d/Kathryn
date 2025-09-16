@@ -16,6 +16,14 @@ namespace kathryn{
         int         _size;
 
         bool checkIntegrity() const{ return _size > 0;}
+
+        bool operator == (const FieldMeta& rhs) const{
+            return _name == rhs._name && _size == rhs._size;
+        }
+
+        bool operator != (const FieldMeta& rhs) const{
+            return !(*this == rhs);
+        }
     };
 
     struct SlotMeta{
@@ -140,6 +148,24 @@ namespace kathryn{
             }
             return SlotMeta(newFieldMetas);
         }
+
+        bool operator == (const SlotMeta& rhs){
+
+            bool isEqual = true;
+            if (getNumField() != rhs.getNumField()){
+                return false;
+            }
+
+            for (int idx = 0; idx < getNumField(); idx++){
+                if (_fieldMetas[idx] != rhs._fieldMetas[idx]){
+                    isEqual = false;
+                    break;
+                }
+            }
+
+            return isEqual;
+        }
+
 
         SlotMeta operator + (const SlotMeta& rhs) const{
             SlotMeta result(*this);
