@@ -264,6 +264,7 @@ namespace kathryn{
     };
 
     class SlotDynSliceAgent{
+    protected:
         Slot&     _masterSlot;
         Operable& _requiredIdx;
 
@@ -274,16 +275,6 @@ namespace kathryn{
         _masterSlot(master),
         _requiredIdx(requiredIdx)
         {}
-
-        SlotDynSliceAgent& operator <<= (Operable& rhsOpr){
-            _masterSlot.doBlockAsm(rhsOpr, _requiredIdx);
-            return *this;
-        }
-
-        SlotDynSliceAgent& operator = (Operable& rhsOpr){
-            _masterSlot.doNonBlockAsm(rhsOpr, _requiredIdx);
-            return *this;
-        }
 
         Operable& v(){
 

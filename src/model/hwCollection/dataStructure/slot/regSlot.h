@@ -11,6 +11,23 @@
 
 namespace kathryn{
 
+    class RegSlotDynSliceAgent : public SlotDynSliceAgent{
+    public:
+        RegSlotDynSliceAgent(
+            Slot& slot,
+            Operable& requiredIdx
+        ) : SlotDynSliceAgent(slot, requiredIdx){}
+
+        RegSlotDynSliceAgent& operator <<=(Operable& rhsOpr){
+            _masterSlot.doBlockAsm(rhsOpr, _requiredIdx, ASM_DIRECT);
+            return *this;
+        }
+
+        RegSlotDynSliceAgent& operator =(Operable& rhsOpr){
+            _masterSlot.doNonBlockAsm(rhsOpr, _requiredIdx, ASM_EQ_DEPNODE);
+            return *this;
+        }
+    };
 
     class RegSlot: public Slot{
 
@@ -110,8 +127,8 @@ namespace kathryn{
         /**
          *  dynamic indexing
          */
-        SlotDynSliceAgent operator[](Operable& requiredIdx){
-            return SlotDynSliceAgent(*this, requiredIdx);
+        RegSlotDynSliceAgent operator[](Operable& requiredIdx){
+            return RegSlotDynSliceAgent(*this, requiredIdx);
         }
 
         /**
@@ -164,7 +181,6 @@ namespace kathryn{
         }
 
     };
-
 }
 
 #endif //SRC_MODEL_HWCOLLECTION_DATASTRUCTURE_SLOT_REGSLOT_H

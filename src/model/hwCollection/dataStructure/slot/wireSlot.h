@@ -10,7 +10,25 @@
 #include "model/hwComponent/wire/wire.h"
 
 namespace kathryn{
+    class WireSlotDynSliceAgent : public SlotDynSliceAgent{
+    public:
+        WireSlotDynSliceAgent(
+            Slot& slot,
+            Operable& requiredIdx
+        ) : SlotDynSliceAgent(slot, requiredIdx){}
 
+        WireSlotDynSliceAgent& operator <<=(Operable& rhsOpr){
+            mfAssert(false, "wire slot not support <<= operator");
+            return *this;
+        }
+
+        WireSlotDynSliceAgent& operator =(Operable& rhsOpr){
+            _masterSlot.doNonBlockAsm(rhsOpr, _requiredIdx, ASM_DIRECT);
+            return *this;
+        }
+
+
+    };
 
     class WireSlot: public Slot{
 
@@ -110,8 +128,9 @@ namespace kathryn{
         /**
          *  dynamic indexing
          */
-        SlotDynSliceAgent operator[](Operable& requiredIdx){
-            return SlotDynSliceAgent(*this, requiredIdx);
+         WireSlotDynSliceAgent operator[](Operable& requiredIdx){
+            
+            return WireSlotDynSliceAgent(*this, requiredIdx);
         }
 
         /**
@@ -163,7 +182,6 @@ namespace kathryn{
         }
 
     };
-
 }
 
 #endif //SRC_MODEL_HWCOLLECTION_DATASTRUCTURE_SLOT_WIRESLOT_H
