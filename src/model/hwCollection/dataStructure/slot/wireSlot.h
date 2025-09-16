@@ -110,8 +110,8 @@ namespace kathryn{
         /**
          *  dynamic indexing
          */
-        SlotDynIdxAssAgent operator[](Operable& requiredIdx){
-            return SlotDynIdxAssAgent(*this, requiredIdx);
+        SlotDynSliceAgent operator[](Operable& requiredIdx){
+            return SlotDynSliceAgent(*this, requiredIdx);
         }
 
         /**
@@ -131,18 +131,18 @@ namespace kathryn{
                                exceptIdxs,
                                asmType
                                );
-            ModelController* ctrl = getControllerPtr();
-            assert(ctrl != nullptr);
-            ctrl->on_wire_update(
-                asmNode,
-                nullptr
-            );
+            doGlobAsm(asmNode);
         }
 
         void doGlobAsm(Operable& srcOpr,
                        Operable& requiredIdx,
                        ASM_TYPE asmType) override{
             AsmNode* asmNode = genGrpAsmNode(srcOpr, requiredIdx, asmType);
+            doGlobAsm(asmNode);
+        }
+
+        void doGlobAsm(AsmNode* asmNode) override{
+            assert(asmNode != nullptr);
             ModelController* ctrl = getControllerPtr();
             assert(ctrl != nullptr);
             ctrl->on_wire_update(
@@ -153,13 +153,12 @@ namespace kathryn{
 
         /** it will match by name*/
         WireSlot& operator <<= (Slot& rhs){
-            doBlockAsm(rhs);
+            mfAssert(false, "wire slot not support <<= operator");
             return *this;
         }
 
         WireSlot& operator = (Slot& rhs){
-            auto [srcMatchIdxs, desMatchIdxs] = matchByName(rhs);
-            doGlobAsm(rhs, srcMatchIdxs, desMatchIdxs, {}, ASM_DIRECT);
+            doNonBlockAsm(rhs, std::vector<int>{}, ASM_DIRECT);
             return *this;
         }
 

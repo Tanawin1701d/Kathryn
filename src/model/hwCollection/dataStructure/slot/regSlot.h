@@ -18,11 +18,12 @@ namespace kathryn{
         std::vector<Reg*> _regs;
 
     public:
+
         RegSlot(const SlotMeta& slotMeta,
                 const std::vector<Reg*>& regs
         ):
         Slot(slotMeta){
-            /** this is used to initialize from slice*/
+            /** this is used to initialize from RegSlot slice*/
             mfAssert(slotMeta.getNumField() == regs.size(), "field_metas size not match with regs size");
             _regs = regs;
             for(Reg* reg: _regs){
@@ -54,7 +55,6 @@ namespace kathryn{
                 _hwFieldMetas.push_back({newReg, newReg});
             }
         }
-
 
         /***
          *  static slicing
@@ -110,8 +110,8 @@ namespace kathryn{
         /**
          *  dynamic indexing
          */
-        SlotDynIdxAssAgent operator[](Operable& requiredIdx){
-            return SlotDynIdxAssAgent(*this, requiredIdx);
+        SlotDynSliceAgent operator[](Operable& requiredIdx){
+            return SlotDynSliceAgent(*this, requiredIdx);
         }
 
         /**
@@ -131,21 +131,21 @@ namespace kathryn{
                                exceptIdxs,
                                asmType
                                );
-            ModelController* ctrl = getControllerPtr();
-            assert(ctrl != nullptr);
-            ctrl->on_reg_update(
-                asmNode,
-                nullptr
-            );
+            doGlobAsm(asmNode);
         }
 
         void doGlobAsm(Operable& srcOpr,
                        Operable& requiredIdx,
                        ASM_TYPE asmType) override{
             AsmNode* asmNode = genGrpAsmNode(srcOpr, requiredIdx, asmType);
+            doGlobAsm(asmNode);
+        }
+
+        void doGlobAsm(AsmNode* asmNode) override{
+            assert(asmNode != nullptr);
             ModelController* ctrl = getControllerPtr();
             assert(ctrl != nullptr);
-            ctrl->on_reg_update(
+            ctrl->on_wire_update(
                 asmNode,
                 nullptr
             );
@@ -153,13 +153,13 @@ namespace kathryn{
 
         /** it will match by name*/
         RegSlot& operator <<= (Slot& rhs){
-            doBlockAsm(rhs);
+            doBlockAsm(rhs, ASM_DIRECT);
             return *this;
         }
 
         RegSlot& operator = (Slot& rhs){
             auto [srcMatchIdxs, desMatchIdxs] = matchByName(rhs);
-            doGlobAsm(rhs, srcMatchIdxs, desMatchIdxs, {}, ASM_DIRECT);
+            doNonBlockAsm(rhs, std::vector<int>{}, ASM_EQ_DEPNODE);
             return *this;
         }
 

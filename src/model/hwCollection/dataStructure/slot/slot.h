@@ -46,6 +46,16 @@ namespace kathryn{
             return _hwFieldMetas[idx];
         }
 
+        void addHwFieldMeta(HwFieldMeta hwFieldMeta){
+            _hwFieldMetas.push_back(std::move(hwFieldMeta));
+        }
+
+
+
+        SlotMeta getMeta(){
+            return _meta;
+        }
+
         int getMaxBitWidth(){
             return _meta.getMaxBitWidth();
         }
@@ -60,6 +70,10 @@ namespace kathryn{
 
         int getNumField() const{
             return _meta.getNumField();
+        }
+
+        bool isSufficientIdx(int idxSize){
+            return _meta.isSufficientIdx(idxSize);
         }
 
         bool isValidIdx(int idx){
@@ -90,6 +104,53 @@ namespace kathryn{
             return assMeta;
         }
 
+        std::vector<AssignMeta*> genAssignMetaForAll(Slot& srcSlot, ASM_TYPE asmType){
+
+            std::vector<AssignMeta*> resultCollector;
+            for (int desIdx = 0; desIdx < srcSlot.getNumField(); desIdx++){
+                auto [desOpr, desAsb] = hwFieldAt(desIdx);
+                auto [srcOpr, srcAsb] = srcSlot.hwFieldAt(desIdx);
+
+                AssignMeta* assMeta = genAssignMeta(*srcOpr, *desAsb, asmType);
+                resultCollector.push_back(assMeta);
+            }
+
+            return resultCollector;
+        }
+
+        std::vector<AssignMeta*> genAssignMetaForAll(
+            Slot& srcSlot,
+            const std::vector<int>& srcMatchIdxs,
+            const std::vector<int>& desMatchIdxs,
+            const std::vector<int>& exceptIdxs,
+            ASM_TYPE asmType){
+
+            std::vector<AssignMeta*> resultCollector;
+
+            mfAssert(srcMatchIdxs.size() == desMatchIdxs.size(),
+                "size of srcMatchIdxs and desMatchIdxs must be equal");
+
+            for (int idx = 0; idx < srcMatchIdxs.size(); idx++){
+
+                int srcIdx    = srcMatchIdxs[idx];
+                int desIdx    = desMatchIdxs[idx];
+
+
+                if (std::find(exceptIdxs.begin(),exceptIdxs.end(),srcIdx) != exceptIdxs.end()){
+                    ///// encounter except list
+                    continue;
+                }
+
+                auto [desOpr, desAsb] = hwFieldAt(desIdx);
+                auto [srcOpr, srcAsb] = srcSlot.hwFieldAt(srcIdx);
+
+                AssignMeta* assMeta = genAssignMeta(*srcOpr, *desAsb, asmType);
+                resultCollector.push_back(assMeta);
+            }
+
+            return resultCollector;
+        }
+
         std::vector<AssignMeta*> genAssignMetaForAll(Operable& srcOpr, ASM_TYPE asmType){
             std::vector<AssignMeta*> resultCollector;
 
@@ -109,29 +170,8 @@ namespace kathryn{
             const std::vector<int>& desMatchIdxs,
             const std::vector<int>& exceptIdxs,
             ASM_TYPE asmType){
-            std::vector<AssignMeta*> resultCollector;
-
-            mfAssert(srcMatchIdxs.size() == desMatchIdxs.size(),
-                "size of srcMatchIdxs and desMatchIdxs must be equal");
-
-            for (int idx = 0; idx < srcMatchIdxs.size(); idx++){
-
-                int srcIdx    = srcMatchIdxs[idx];
-                int desIdx    = desMatchIdxs[idx];
-                int exceptIdx = exceptIdxs[idx];
-
-
-                if (std::find(exceptIdxs.begin(),exceptIdxs.end(),srcIdx) != exceptIdxs.end()){
-                    ///// encounter except list
-                    continue;
-                }
-
-                auto [desOpr, desAsb] = hwFieldAt(desIdx);
-                auto [srcOpr, srcAsb] = srcSlot.hwFieldAt(srcIdx);
-
-                AssignMeta* assMeta = genAssignMeta(*srcOpr, *desAsb, asmType);
-                resultCollector.push_back(assMeta);
-            }
+            std::vector<AssignMeta*> resultCollector
+            = genAssignMetaForAll(srcSlot, srcMatchIdxs, desMatchIdxs, exceptIdxs, asmType);
 
             auto* asmNode = new AsmNode(resultCollector);
 
@@ -156,6 +196,19 @@ namespace kathryn{
             return asmNode;
         }
 
+        AsmNode* genGrpAsmNode(
+        const std::vector<AssignMeta*> & assignMetas,
+        const std::vector<Operable*>   & preConditions,
+        LOGIC_OP preConOp
+        ){
+            assert(assignMetas.size() == preConditions.size());
+            auto* asmNode = new AsmNode(assignMetas);
+            for (int idx = 0; idx < preConditions.size(); idx++){
+                asmNode->addSpecificPreCondition(preConditions[idx], preConOp, idx);
+            }
+            return asmNode;
+        }
+
 
 
         virtual void doGlobAsm(
@@ -163,72 +216,76 @@ namespace kathryn{
             const std::vector<int>& srcMatchIdxs,
             const std::vector<int>& desMatchIdxs,
             const std::vector<int>& exceptIdxs,
-            ASM_TYPE asmType) = 0;
+            ASM_TYPE asmType){assert(false);};
 
         virtual void doGlobAsm(
             Operable& srcOpr,
             Operable& requiredIdx,
             ASM_TYPE  asmType
-        ) = 0;
+        ){assert(false);}
+
+        virtual void doGlobAsm(
+            AsmNode* asmNode
+        ){assert(false);};
 
 
         /** block assignment */
-        virtual void doBlockAsm(Slot& rhs, const std::vector<int>& exceptIdxs){
+        virtual void doBlockAsm(Slot& rhs, const std::vector<int>& exceptIdxs, ASM_TYPE asmType){
             auto [srcMatchIdxs, desMatchIdxs] = matchByName(rhs);
-            doGlobAsm(rhs, srcMatchIdxs, desMatchIdxs, {}, ASM_DIRECT);
+            doGlobAsm(rhs, srcMatchIdxs, desMatchIdxs, {}, asmType);
         }
-        virtual void doBlockAsm(Slot& rhs, const std::vector<std::string>& exceptNames){
+        virtual void doBlockAsm(Slot& rhs, const std::vector<std::string>& exceptNames, ASM_TYPE asmType){
             std::vector<int> excpetIdxs = getIdxs(exceptNames);
-            doBlockAsm(rhs, excpetIdxs);
+            doBlockAsm(rhs, excpetIdxs, asmType);
         }
-        virtual void doBlockAsm(Slot& rhs){
-            doBlockAsm(rhs, std::vector<int>{});
+        virtual void doBlockAsm(Slot& rhs, ASM_TYPE asmType){
+            doBlockAsm(rhs, std::vector<int>{}, asmType);
         }
-        virtual void doBlockAsm(Operable& srcOpr, Operable& requiredIdx){
-            doGlobAsm(srcOpr, requiredIdx, ASM_DIRECT);
+        virtual void doBlockAsm(Operable& srcOpr, Operable& requiredIdx, ASM_TYPE asmType){
+            doGlobAsm(srcOpr, requiredIdx, asmType);
         }
 
-        virtual void doNonBlockAsm(Slot& rhs, const std::vector<int>& exceptIdxs){
+        virtual void doNonBlockAsm(Slot& rhs, const std::vector<int>& exceptIdxs, ASM_TYPE asmType){
             auto [srcMatchIdxs, desMatchIdxs] = matchByName(rhs);
-            doGlobAsm(rhs, srcMatchIdxs, desMatchIdxs, {}, ASM_EQ_DEPNODE);
+            doGlobAsm(rhs, srcMatchIdxs, desMatchIdxs, {}, asmType);
         }
-        virtual void doNonBlockAsm(Slot& rhs, const std::vector<std::string>& exceptNames){
+        virtual void doNonBlockAsm(Slot& rhs, const std::vector<std::string>& exceptNames, ASM_TYPE asmType){
             std::vector<int> excpetIdxs = getIdxs(exceptNames);
-            doNonBlockAsm(rhs, excpetIdxs);
+            doNonBlockAsm(rhs, excpetIdxs, asmType);
         }
-        virtual void doNonBlockAsm(Slot& rhs){
-            doNonBlockAsm(rhs, std::vector<int>{});
+        virtual void doNonBlockAsm(Slot& rhs, ASM_TYPE asmType){
+            doNonBlockAsm(rhs, std::vector<int>{}, asmType);
         }
 
-        virtual void doNonBlockAsm(Operable& srcOpr, Operable& requiredIdx){
-            doGlobAsm(srcOpr, requiredIdx, ASM_EQ_DEPNODE);
+        virtual void doNonBlockAsm(Operable& srcOpr, Operable& requiredIdx, ASM_TYPE asmType){
+            doGlobAsm(srcOpr, requiredIdx, asmType);
         }
 
     };
 
-    class SlotDynIdxAssAgent{
+    class SlotDynSliceAgent{
         Slot&     _masterSlot;
         Operable& _requiredIdx;
 
 
     public:
 
-        explicit SlotDynIdxAssAgent(Slot& master, Operable& requiredIdx):
+        explicit SlotDynSliceAgent(Slot& master, Operable& requiredIdx):
         _masterSlot(master),
         _requiredIdx(requiredIdx)
         {}
 
-        SlotDynIdxAssAgent& operator <<= (Operable& rhsOpr){
+        SlotDynSliceAgent& operator <<= (Operable& rhsOpr){
             _masterSlot.doBlockAsm(rhsOpr, _requiredIdx);
             return *this;
         }
 
-        SlotDynIdxAssAgent& operator = (Operable& rhsOpr){
+        SlotDynSliceAgent& operator = (Operable& rhsOpr){
             _masterSlot.doNonBlockAsm(rhsOpr, _requiredIdx);
             return *this;
         }
 
-        Operable* v(){
+        Operable& v(){
 
             int targetWidth = _masterSlot.getMaxBitWidth();
 
@@ -265,7 +322,7 @@ namespace kathryn{
 
             /////// set default value
 
-            return resultWire;
+            return *resultWire;
         }
 
 

@@ -67,6 +67,10 @@ namespace kathryn{
                    ( (end   >  start) && (end   <= static_cast<int>(_fieldMetas.size())) )   ;
         }
 
+        bool isSufficientIdx(int amt) const{
+            return (1 << amt) >= _fieldMetas.size();
+        }
+
         int getNumField() const{
             return _fieldMetas.size();
         }
