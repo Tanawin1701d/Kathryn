@@ -58,7 +58,9 @@ namespace kathryn {
                     ////// bind node condition with pre_condition first\
 
                     Operable* condEvent = addLogicWithOutput(nodeSrcs[0].condition, _preCondition, BITWISE_AND);
-                    condEvent = addLogicWithOutput(condEvent, &(~(*holdSignal)), BITWISE_AND);
+                    if (holdSignal != nullptr){
+                        condEvent = addLogicWithOutput(condEvent, &(~(*holdSignal)), BITWISE_AND);
+                    }
 
                     ///////////// assign from current dependency
                     auto resultUpEvent = new UpdateEvent({

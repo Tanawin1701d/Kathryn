@@ -112,7 +112,9 @@ namespace kathryn{
                 _cycleWaitStateReg->addDependState(nodeSrc.dependNode->getExitOpr(), nodeSrc.condition);
             }
             /** inc event*/
-            _cycleWaitStateReg->makeIncStateEvent(holdNode->getExitOpr());
+            if (isThereHold()){
+                _cycleWaitStateReg->makeIncStateEvent(holdNode->getExitOpr());
+            }
             /** unset event*/
             makeUnsetStateEvent();
             makeUserResetEvent();
