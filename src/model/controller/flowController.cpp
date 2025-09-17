@@ -21,6 +21,15 @@ namespace kathryn{
         return flowBlockStacks[FLOW_ST_BASE_STACK].top();
     }
 
+    FlowBlockBase* ModelController::getTopFlowBlockBase(FLOW_STACK_TYPE flowStackType){
+        assert(flowStackType >= 0);
+        assert(flowStackType < FLOW_ST_CNT);
+        if (flowBlockStacks[flowStackType].empty()){
+            return nullptr;
+        }
+        return flowBlockStacks[flowStackType].top();
+    }
+
     void ModelController::popFlowBlock(FlowBlockBase* fb){
         assert(!flowBlockStacks[FLOW_ST_BASE_STACK].empty());
         assert( flowBlockStacks[FLOW_ST_BASE_STACK].top() == fb);

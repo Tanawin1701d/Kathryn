@@ -89,7 +89,7 @@ namespace kathryn{
         explicit SIM_VALREP_TYPE_I_ALL(int bitSize):
         type(getMatchSVTI(bitSize)),
         subType(-1){
-            if (type == SVT_U64M){
+            if (static_cast<int>(type) == static_cast<int>(SVT_U64M)){
                 subType = getArrSize(bitSize);
             }
         }

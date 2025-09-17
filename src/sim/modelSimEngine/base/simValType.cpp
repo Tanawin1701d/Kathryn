@@ -46,8 +46,8 @@ namespace kathryn{
         return mapper[idx];
     }
 
-    std::string SVTI_toUnitType(SIM_VALREP_TYPE_ALL svt){
-        if (svt.type == SVT_U64M){
+    std::string SVTI_toUnitType(SIM_VALREP_TYPE_I_ALL svt){
+        if (static_cast<int>(svt.type) == static_cast<int>(SVT_U64M)){
             mfAssert(false, "for now > 64 bit value can't support sign input");
         }
         int idx = static_cast<int>(svt.type);
