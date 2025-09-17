@@ -22,9 +22,13 @@ namespace kathryn{
         SyncMeta& _syncMeta;
         Operable* _acceptCond    = nullptr; ///// this condition must be true when the system is in prepSendNode,
                                             ///// if the preSend will not wait and not activate further layer
+
+
         ////// node
         StateNode*  prepSendNode = nullptr;
         PseudoNode* exitNode     = nullptr;
+        /////// expresion
+        expression* synReadySignal = nullptr;
         ////// node wrap for summarize
         NodeWrap*      resultNodeWrap    = nullptr;
 
@@ -43,6 +47,7 @@ namespace kathryn{
         /** on leave this block*/
         void onDetachBlock() override;
         /** for module to build hardware component*/
+        void buildHwMaster() override;
         void buildHwComponent() override;
         /** get describe*/
         void addMdLog(MdLogVal* mdLogVal) override;

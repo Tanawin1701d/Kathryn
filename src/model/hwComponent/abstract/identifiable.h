@@ -96,7 +96,7 @@ namespace kathryn {
             if (!_varMeta.isUser){ _varMeta.varName += "_SYS";}
             _globalName = GLOBAL_PREFIX[type] + std::to_string(_globalId);
 
-            if (_globalId ==57){
+            if (_globalId ==22){
                 //mfAssert(false, "dddddd");
                 int x = 0;
             }

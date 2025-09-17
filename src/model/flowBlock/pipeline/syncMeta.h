@@ -13,6 +13,8 @@
 #include "model/flowBlock/abstract/nodes/stateNode.h"
 
 
+
+
 namespace kathryn{
 
     ///// sync is used to sync transfer data between
@@ -27,12 +29,14 @@ namespace kathryn{
         ///// typically the slave should be pipeline block
         Operable* _syncMatched     = nullptr;
 
+        ///// hold system signal representator
+        std::vector<Operable*> masterHoldSignals;
+        std::vector<Operable*> slaveHoldSignals;
 
-        SyncMeta(const std::string& name): _name(name){}
 
-        ~SyncMeta(){
-            delete _syncMatched;
-        }
+        explicit SyncMeta(const std::string& name): _name(name){  }
+
+        ~SyncMeta()= default;
 
         std::string getName() const{
             return _name;
@@ -56,6 +60,16 @@ namespace kathryn{
                 buildMatchSignal();
             }
         }
+
+        static void baseHolder(std::vector<Operable*>& desVector){
+            mWire(slaveHolder, 1);
+            slaveHolder = 1;
+            desVector.push_back(&slaveHolder);
+        }
+
+        void holdSlave(){ baseHolder(slaveHoldSignals); }
+
+        void holdMaster(){  baseHolder(masterHoldSignals); }
 
 
 

@@ -35,6 +35,8 @@ namespace kathryn{
         PseudoNode* entNode       = nullptr; //// entrance node
         StateNode*  waitNode      = nullptr;
         DummyNode*  exitDummy     = nullptr; //// pipeline is perpeptual engine
+        ///////////// expression
+        expression* pipeReadySig  = nullptr;
 
 
         //////////// block implicit flow block
@@ -65,6 +67,7 @@ namespace kathryn{
         /** on leave this block*/
         void onDetachBlock() override;
         /** for module to build hardware component*/
+        void buildHwMaster() override;
         void buildHwComponent() override;
         /** get describe*/
         void addMdLog(MdLogVal* mdLogVal) override;

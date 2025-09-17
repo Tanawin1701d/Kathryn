@@ -59,13 +59,26 @@ namespace kathryn{
     }
 
     void FlowBlockPipeBase::createReadySignal(){
-        _syncMata._syncSlaveReady = new expression(1);
+        pipeReadySig = new expression(1);
+        ////// we can't directly set data to the _syncSlaveReady because it is operable
+        _syncMata._syncSlaveReady = pipeReadySig;
     }
 
     void FlowBlockPipeBase::assignReadySignal(){
         //////// wait signal and last stage means that it is ready
-        (*_syncMata._syncSlaveReady) = (*entNode->getExitOpr());
+        (*pipeReadySig) = (*entNode->getExitOpr());
     }
+
+    void FlowBlockPipeBase::buildHwMaster(){
+        ////// fill retrieve slave sync signal
+        for (Operable* holdOpr: _syncMata.slaveHoldSignals){
+            assert(holdOpr != nullptr);
+            addHoldSignal(holdOpr);
+        }
+        ////// use the base  build function
+        FlowBlockBase::buildHwMaster();
+    }
+
 
     void FlowBlockPipeBase::buildHwComponent(){
         ////// try to find the activate signal

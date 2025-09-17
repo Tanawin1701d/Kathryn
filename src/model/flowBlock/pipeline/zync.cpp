@@ -28,12 +28,13 @@ namespace kathryn{
     }
 
     void FlowBlockZyncBase::createReadySignal(){
-        _syncMeta._syncMasterReady = new expression(1);
+        synReadySignal = new expression(1);
+        _syncMeta._syncMasterReady = synReadySignal;
     }
 
     void FlowBlockZyncBase::assignReadySignal(){
         assert(prepSendNode != nullptr);
-        (*_syncMeta._syncMasterReady) = (*prepSendNode->getExitOpr());
+        (*synReadySignal) = (*prepSendNode->getExitOpr());
     }
 
     void FlowBlockZyncBase::addSubFlowBlock    (FlowBlockBase* subBlock){
@@ -56,6 +57,16 @@ namespace kathryn{
         ctrl->on_detach_flowBlock(this);
     }
 
+    void FlowBlockZyncBase::buildHwMaster(){
+
+        for (Operable* holdOpr: _syncMeta.masterHoldSignals){
+            assert(holdOpr != nullptr);
+            addHoldSignal(holdOpr);
+        }
+        FlowBlockBase::buildHwMaster();
+    }
+
+
     void FlowBlockZyncBase::buildHwComponent(){
         assert(_conBlocks.empty());
         assert(_subBlocks.empty());
@@ -74,7 +85,7 @@ namespace kathryn{
         fillHoldToNodeIfThere    (prepSendNode);
             /** assign assignment node*/
         Operable* waitCond = _syncMeta._syncMatched; ///// we should wait further
-        if (_acceptCond != nullptr){
+        if (_acceptCond != nullptr){ //// accept is condition from user to skip this session
             waitCond = &((*waitCond)&(*_acceptCond));
         }
         prepSendNode->addDependNode(prepSendNode, waitCond);
