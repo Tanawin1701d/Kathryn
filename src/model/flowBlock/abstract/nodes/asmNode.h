@@ -15,12 +15,12 @@ namespace kathryn {
         std::vector<AssignMeta*> _assignMetas; //// AssignMeta is must not use the same assign metas
         Operable*                _preCondition = nullptr;
         //// TODO add per element metadata
-        std::vector<Operable*>   _preCondPerMeta;
+        std::vector<Operable*>   _preCondPerMetas;
 
         explicit AsmNode(AssignMeta *assignMeta) :
                 Node(ASM_NODE),
                 _assignMetas({assignMeta}),
-                _preCondPerMeta(1, nullptr)
+                _preCondPerMetas(_assignMetas.size(), nullptr)
 
         {
             assert(assignMeta != nullptr);
@@ -30,7 +30,7 @@ namespace kathryn {
         explicit AsmNode(std::vector<AssignMeta*> assignMetas):
                 Node(ASM_NODE),
                 _assignMetas(std::move(assignMetas)),
-                _preCondPerMeta(_assignMetas.size(), nullptr){
+                _preCondPerMetas(_assignMetas.size(), nullptr){
 
             for (auto* asmMeta: _assignMetas){
                 assert(asmMeta != nullptr);
@@ -50,8 +50,9 @@ namespace kathryn {
             assert(nodeSrcs[0].dependNode != nullptr);
             assert(!_assignMetas.empty());
 
-            for (auto* assignMeta: _assignMetas) {
-
+            for (int assignIdx = 0; assignIdx < _assignMetas.size(); assignIdx++) {
+                AssignMeta* assignMeta     = _assignMetas[assignIdx];
+                Operable*   preCondPerMeta = _preCondPerMetas[assignIdx];
                 /*** for reg <<= operator*/
                 if (assignMeta->asmType == ASM_DIRECT){
 
@@ -61,6 +62,7 @@ namespace kathryn {
                     if (holdSignal != nullptr){
                         condEvent = addLogicWithOutput(condEvent, &(~(*holdSignal)), BITWISE_AND);
                     }
+                    condEvent = addLogicWithOutput(condEvent, preCondPerMeta, BITWISE_AND);
 
                     ///////////// assign from current dependency
                     auto resultUpEvent = new UpdateEvent({
@@ -74,17 +76,18 @@ namespace kathryn {
                     ////////////////////////////////////////////////////////////////////////////////////////
                 /** for reg = operator*/
                 }else if (assignMeta->asmType == ASM_EQ_DEPNODE){
-
-                    /**
-                     * TODO state reg is not support user reset operable directly
-                     * TODO the ASM_EQ_DEPNODE is not support Hold signal
-                     * Therefore if we have further condition this asm node must be fixed.
-                     * */
-
                     //////////////// assign as same as node that have been assign
                     for (auto nodeSrc: nodeSrcs[0].dependNode->nodeSrcs) {
+
+                        Operable* condEvent = addLogicWithOutput(nodeSrc.condition, _preCondition, BITWISE_AND);
+                        if (holdSignal != nullptr){
+                            condEvent = addLogicWithOutput(condEvent, &(~(*holdSignal)), BITWISE_AND);
+                        }
+                        condEvent = addLogicWithOutput(condEvent, preCondPerMeta, BITWISE_AND);
+
+
                         auto resultUpEvent = new UpdateEvent({
-                             addLogicWithOutput(nodeSrc.condition, _preCondition, BITWISE_AND),
+                             condEvent,
                              nodeSrc.dependNode->getExitOpr(),
                              &assignMeta->valueToAssign,
                              assignMeta->desSlice,
@@ -102,9 +105,14 @@ namespace kathryn {
         void dryAssign() override{
             assert(!_assignMetas.empty());
             assert(nodeSrcs.empty());
-            for (auto* assignMeta: _assignMetas) {
+
+
+            for (int assignIdx = 0; assignIdx < _assignMetas.size(); assignIdx++) {
+                AssignMeta* assignMeta = _assignMetas[assignIdx];
+                Operable* preCondPerMeta = _preCondPerMetas[assignIdx];
+                Operable* condEvent = addLogicWithOutput(_preCondition, preCondPerMeta, BITWISE_AND);
                 auto resultUpEvent = new UpdateEvent({
-                                                             _preCondition,
+                                                             condEvent,
                                                              nullptr,
                                                              &assignMeta->valueToAssign,
                                                              assignMeta->desSlice,
@@ -123,8 +131,8 @@ namespace kathryn {
 
         void addSpecificPreCondition(Operable* cond, LOGIC_OP op, int idx){
             assert(cond != nullptr);
-            assert(idx >= 0 && idx < _preCondPerMeta.size());
-            addLogic(_preCondPerMeta[idx], cond, op);
+            assert(idx >= 0 && idx < _preCondPerMetas.size());
+            addLogic(_preCondPerMetas[idx], cond, op);
         }
 
 
