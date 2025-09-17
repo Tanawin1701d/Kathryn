@@ -26,7 +26,6 @@ FILE(GLOB_RECURSE SRC_EXAMPLE         RELATIVE ${CMAKE_SOURCE_DIR} "src/example/
 FILE(GLOB_RECURSE SRC_PARAM           RELATIVE ${CMAKE_SOURCE_DIR} "src/params/*.cpp")
 FILE(GLOB_RECURSE SRC_LIB             RELATIVE ${CMAKE_SOURCE_DIR} "src/lib/*.cpp")
 FILE(GLOB_RECURSE SRC_MODEL_COMPILE   RELATIVE ${CMAKE_SOURCE_DIR} "src/modelCompile/proxyEventBase.cpp")
-FILE(GLOB_RECURSE SRC_CAROLYNE        RELATIVE ${CMAKE_SOURCE_DIR} "src/carolyne/*.cpp")
 
 
 add_executable(Kathryn
@@ -46,7 +45,6 @@ add_executable(Kathryn
         ${SRC_PARAM}
         ${SRC_LIB}
         ${SRC_MODEL_COMPILE}
-        src/model/hwCollection/dataStructure/slot/slot.h
 
         #blinkSample.cpp
         #src/params/prjParam.h

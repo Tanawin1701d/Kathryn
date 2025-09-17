@@ -6,37 +6,37 @@
 #define MODEL_FLOWBLOCK_ABSTRACT_FLOWBLOCKREGISTER_H
 
 #include <cassert>
+#include <string>
 
 namespace kathryn{
 
 
     enum FLOW_BLOCK_TYPE{
-        SEQUENTIAL, /** seq to par_no_syn do not reorder it due to controller pattern checking*/
-        PARALLEL_AUTO_SYNC,
-        PARALLEL_NO_SYN,
-        CIF,
-        SIF,
-        CSELIF,
-        CSELSE,
-        ZIF,
-        ZELIF,
-        ZELSE,
-        CWHILE,
-        SWHILE,
-        DOWHILE,
-        EXITWHILE,
-        CONDWAIT,
-        CLKWAIT,
-        PIPE_BLOCK,
-        PIPE_TRAN,
-        PICK,
-        PICK_WHEN,
+        SEQUENTIAL          = 0, /** seq to par_no_syn do not reorder it due to controller pattern checking*/
+        PARALLEL_AUTO_SYNC  = 1,
+        PARALLEL_NO_SYN     = 2,
+        CIF                 = 3,
+        SIF                 = 4,
+        CSELIF              = 5,
+        CSELSE              = 6,
+        ZIF                 = 7,
+        ZELIF               = 8,
+        ZELSE               = 9,
+        CWHILE              = 10,
+        SWHILE              = 11,
+        DOWHILE             = 12,
+        EXITWHILE           = 13,
+        CONDWAIT            = 14,
+        CLKWAIT             = 15,
+        PIPE_BLOCK          = 16,
+        PIPE_TRAN           = 17,
+        PICK                = 18,
+        PICK_WHEN           = 19,
         /** new flow block should be append here*/
 
         /************************************** **/
-        DUMMY_BLOCK,
-        FLOW_BLOCK_COUNT
-
+        DUMMY_BLOCK         = 20,
+        FLOW_BLOCK_COUNT    = 21
     };
 
     std::string FBT_to_string(FLOW_BLOCK_TYPE fbt);

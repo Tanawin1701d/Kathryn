@@ -8,30 +8,28 @@
 namespace kathryn{
     std::string FBT_to_string(FLOW_BLOCK_TYPE fbt){
         std::string mapper[FLOW_BLOCK_COUNT] = {
-            "SEQUENTIAL", /** seq to par_no_syn do not reorder it due to controller pattern checking*/
-            "PARALLEL_AUTO_SYNC",
-            "PARALLEL_NO_SYN",
-            "CIF",
-            "SIF",
-            "CSELIF",
-            "CSELSE",
-            "ZIF",
-            "ZELIF",
-            "ZELSE",
-            "CWHILE",
-            "SWHILE",
-            "DOWHILE",
-            "EXITWHILE",
-            "CONDWAIT",
-            "CLKWAIT",
-            "PIPE_BLOCK",
-            "PIPE_TRAN",
-            "PICK",
-            "PICK_WHEN",
-            "DUMMY_BLOCK",
-            "OFFER",
-            "OFFER_CHOICE"
-    };
+            "SEQUENTIAL"         ,
+            "PARALLEL_AUTO_SYNC" ,
+            "PARALLEL_NO_SYN"    ,
+            "CIF"                ,
+            "SIF"                ,
+            "CSELIF"             ,
+            "CSELSE"             ,
+            "ZIF"                ,
+            "ZELIF"              ,
+            "ZELSE"              ,
+            "CWHILE"             ,
+            "SWHILE"             ,
+            "DOWHILE"            ,
+            "EXITWHILE"          ,
+            "CONDWAIT"           ,
+            "CLKWAIT"            ,
+            "PIPE_BLOCK"         ,
+            "PIPE_TRAN"          ,
+            "PICK"               ,
+            "PICK_WHEN"          ,
+            "DUMMY_BLOCK"
+        };
         assert(fbt < FLOW_BLOCK_COUNT);
         return mapper[fbt];
     }

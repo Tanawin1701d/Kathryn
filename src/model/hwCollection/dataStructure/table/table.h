@@ -285,7 +285,7 @@ namespace kathryn{
                 case 1:
                     return joinTableByCol(rhs);
                 default:
-                    return assert(false);
+                    assert(false);
             }
 
         }
