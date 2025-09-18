@@ -33,12 +33,12 @@ namespace kathryn{
                 const std::vector<Reg*>& regs
         );
 
-        RegSlot(const SlotMeta& slotMeta);
+        explicit RegSlot(const SlotMeta& slotMeta);
 
         RegSlot(const std::vector<std::string>& fieldNames,
                 const std::vector<int>&         fieldSizes);
 
-        ~RegSlot();
+        ~RegSlot() override;
         /**
          * The main function to overwrite the assignment
          */

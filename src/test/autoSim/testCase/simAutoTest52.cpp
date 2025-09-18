@@ -9,7 +9,7 @@
 namespace kathryn{
 
     ////// simple pipeline
-    class testSimMod51: public Module{
+    class testSimMod52: public Module{
     public:
         SlotMeta meta{{"valid", "srcIdx0", "srcIdx1"},
             {1,32,32}
@@ -18,9 +18,10 @@ namespace kathryn{
         WireSlot ws{{"srcIdx0", "srcIdx1"},
             {32,32}};
         mWire(src0get, 32);
+        mReg(idx, 4);
 
 
-        explicit testSimMod51(int x){}
+        explicit testSimMod52(int x){}
 
         void flow() override{
 
@@ -32,10 +33,10 @@ namespace kathryn{
                         ws = rs;
                     }
                 }
-
-
-
-
+                idx <<= 0;
+                src0get  = rs(1, 3)[idx].v();
+                idx <<= idx + 1;
+                src0get = rs(1, 3)[idx].v();
 
             }
 
@@ -45,16 +46,16 @@ namespace kathryn{
         }
     };
 
-    ///static std::string vcdPath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/simAutoTest51.vcd";
-    ////static std::string profilePath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/profAutoTest51.vcd";
+    ///static std::string vcdPath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/simAutoTest52.vcd";
+    ////static std::string profilePath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/profAutoTest52.vcd";
 
 
-    class sim51 :public SimAutoInterface{
+    class sim52 :public SimAutoInterface{
     public:
 
-        testSimMod51* _md;
+        testSimMod52* _md;
 
-        sim51(testSimMod51* md, int idx, const std::string& prefix, SimProxyBuildMode simProxyBuildMode):SimAutoInterface(idx,
+        sim52(testSimMod52* md, int idx, const std::string& prefix, SimProxyBuildMode simProxyBuildMode):SimAutoInterface(idx,
                                               200,
                                               prefix + "simAutoResult"+std::to_string(idx)+".vcd",
                                               prefix + "simAutoResult"+std::to_string(idx)+".prof", simProxyBuildMode),
@@ -88,17 +89,17 @@ namespace kathryn{
     };
 
 
-    class Sim51TestEle: public AutoTestEle{
+    class Sim52TestEle: public AutoTestEle{
     public:
-        explicit Sim51TestEle(int id): AutoTestEle(id){}
+        explicit Sim52TestEle(int id): AutoTestEle(id){}
         void start(std::string prefix, SimProxyBuildMode simProxyBuildMode) override{
-            mMod(d, testSimMod51, 1);
+            mMod(d, testSimMod52, 1);
             startModelKathryn();
-            sim51 simulator((testSimMod51*) &d, _simId, prefix, simProxyBuildMode);
+            sim52 simulator((testSimMod52*) &d, _simId, prefix, simProxyBuildMode);
             simulator.simStart();
         }
 
     };
 
-    Sim51TestEle ele51(51);
+    Sim52TestEle ele52(-1);
 }

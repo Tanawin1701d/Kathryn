@@ -63,7 +63,7 @@ namespace kathryn{
             for(Reg* reg: _regs){
                 delete reg;
             }
-        };
+        }
 
         /***
          *  static slicing
@@ -120,14 +120,14 @@ namespace kathryn{
             SlotMeta newSlotMeta = getMeta() + rhs.getMeta();
             std::vector<Reg*> newRegs = _regs;
             _regs.insert(_regs.end(), rhs._regs.begin(), rhs._regs.end());
-            return RegSlot(newSlotMeta, newRegs);
+            return {newSlotMeta, newRegs};
         }
 
         /**
          *  dynamic indexing
          */
         RegSlotDynSliceAgent RegSlot::operator[](Operable& requiredIdx){
-            return RegSlotDynSliceAgent(*this, requiredIdx);
+            return {*this, requiredIdx};
         }
 
         /**
