@@ -14,6 +14,7 @@ namespace kathryn{
         mReg(a, 32);
         mReg(b, 32);
         mReg(c, 32);
+        mWire(purpose, 32);
         SyncMeta fetch{"fetch"};
         SyncMeta decode{"decode"};
 
@@ -26,6 +27,7 @@ namespace kathryn{
             pip(fetch){ autoStart
                 zync(decode){
                     a <<= a + 1;
+                    purpose = a + 1;
                 }
             }
 
@@ -34,11 +36,11 @@ namespace kathryn{
             }
 
             seq{
-                syWait(4)
+                c <<= c + 1;
+                c <<= c + 1;
+                c <<= c + 1;
+                c <<= c + 1;
                 fetch.holdSlave();
-
-
-
             }
 
         }
@@ -63,13 +65,24 @@ namespace kathryn{
         void describeCon() override{
 
             // ////// skip first zync State
-            // conNextCycle(1);
-            // for (int i = 1; i < 5; i++){
-            //     conEndCycle();
-            //     testAndPrint("check a equal to " + std::to_string(i), ull(_md->a), i);
-            //     testAndPrint("check b equal to " + std::to_string(i-1), ull(_md->b), i-1);
-            //     conNextCycle(1);
-            // }
+            conNextCycle(1);
+            for (int i = 1; i < 5; i++){
+                conEndCycle();
+                testAndPrint("check a equal to " + std::to_string(i), ull(_md->a), i);
+                testAndPrint("check b equal to " + std::to_string(i-1), ull(_md->b), i-1);
+                conNextCycle(1);
+            }
+            ///////////////////////////
+            conEndCycle();
+            testAndPrint(" holding part check a equal to " + std::to_string(4), ull(_md->a), 4);
+            testAndPrint(" holding part check b equal to " + std::to_string(4), ull(_md->b), 4);
+            conNextCycle(1);
+            for (int i = 5; i < 10; i++){
+                conEndCycle();
+                testAndPrint("check a equal to " + std::to_string(i), ull(_md->a), i);
+                testAndPrint("check b equal to " + std::to_string(i-1), ull(_md->b), i-1);
+                conNextCycle(1);
+            }
 
         }
 
@@ -88,5 +101,5 @@ namespace kathryn{
 
     };
 
-    Sim51TestEle ele51(-2);
+    Sim51TestEle ele51(51);
 }
