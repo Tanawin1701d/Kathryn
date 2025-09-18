@@ -13,6 +13,9 @@
 #include "model/hwComponent/module/module.h"
 #include "model/flowBlock/abstract/nodes/asmNode.h"
 #include "model/flowBlock/abstract/flowBlock_Base.h"
+
+/** flow block include */
+
 #include "model/flowBlock/seq/seq.h"
 #include "model/flowBlock/par/par.h"
 #include "model/flowBlock/loop/whileBase.h"
@@ -30,6 +33,12 @@
 #include "model/flowBlock/pipeline/pipe.h"
 #include "model/flowBlock/pipeline/syncMeta.h"
 #include "model/flowBlock/pipeline/zync.h"
+
+/** data Structure*/
+
+#include "model/hwCollection/dataStructure/slot/regSlot.h"
+#include "model/hwCollection/dataStructure/slot/wireSlot.h"
+#include "model/hwCollection/dataStructure/table/table.h"
 
 
 #include "model/interface/singleHandShake/shs.h"

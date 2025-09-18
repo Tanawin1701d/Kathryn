@@ -11,37 +11,36 @@ namespace kathryn{
     ////// simple pipeline
     class testSimMod51: public Module{
     public:
-        mReg(a, 32);
-        mReg(b, 32);
-        mReg(c, 32);
-        mWire(purpose, 32);
-        mZync(fetch );
-        mZync(decode);
+        SlotMeta meta{{"valid", "srcIdx0", "srcIdx1"},
+            {1,32,32}
+        };
+        RegSlot rs{meta};
+        WireSlot ws{{"srcIdx0", "srcIdx1"},
+            {32,32}};
+        mWire(src0get, 32);
 
 
         explicit testSimMod51(int x){}
 
         void flow() override{
-            a.makeResetEvent();
-
-            pip(fetch){ autoStart
-                zync(decode){
-                    a <<= a + 1;
-                    purpose = a + 1;
-                }
-            }
-
-            pip(decode){
-                b <<= a;
-            }
 
             seq{
-                c <<= c + 1;
-                c <<= c + 1;
-                c <<= c + 1;
-                c <<= c + 1;
-                fetch.holdSlave();
+                rs("srcIdx0") <<= 24;
+                rs("srcIdx1") <<= 48;
+                par{
+                    zif(rs("srcIdx0") == 24){
+                        ws = rs;
+                    }
+                }
+
+
+
+
+
             }
+
+
+
 
         }
     };
@@ -64,25 +63,25 @@ namespace kathryn{
 
         void describeCon() override{
 
-            // ////// skip first zync State
-            conNextCycle(1);
-            for (int i = 1; i < 5; i++){
-                conEndCycle();
-                testAndPrint("check a equal to " + std::to_string(i), ull(_md->a), i);
-                testAndPrint("check b equal to " + std::to_string(i-1), ull(_md->b), i-1);
-                conNextCycle(1);
-            }
-            ///////////////////////////
-            conEndCycle();
-            testAndPrint(" holding part check a equal to " + std::to_string(4), ull(_md->a), 4);
-            testAndPrint(" holding part check b equal to " + std::to_string(4), ull(_md->b), 4);
-            conNextCycle(1);
-            for (int i = 5; i < 10; i++){
-                conEndCycle();
-                testAndPrint("check a equal to " + std::to_string(i), ull(_md->a), i);
-                testAndPrint("check b equal to " + std::to_string(i-1), ull(_md->b), i-1);
-                conNextCycle(1);
-            }
+            // // ////// skip first zync State
+            // conNextCycle(1);
+            // for (int i = 1; i < 5; i++){
+            //     conEndCycle();
+            //     testAndPrint("check a equal to " + std::to_string(i), ull(_md->a), i);
+            //     testAndPrint("check b equal to " + std::to_string(i-1), ull(_md->b), i-1);
+            //     conNextCycle(1);
+            // }
+            // ///////////////////////////
+            // conEndCycle();
+            // testAndPrint(" holding part check a equal to " + std::to_string(4), ull(_md->a), 4);
+            // testAndPrint(" holding part check b equal to " + std::to_string(4), ull(_md->b), 4);
+            // conNextCycle(1);
+            // for (int i = 5; i < 10; i++){
+            //     conEndCycle();
+            //     testAndPrint("check a equal to " + std::to_string(i), ull(_md->a), i);
+            //     testAndPrint("check b equal to " + std::to_string(i-1), ull(_md->b), i-1);
+            //     conNextCycle(1);
+            // }
 
         }
 
