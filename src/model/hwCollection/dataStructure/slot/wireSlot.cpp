@@ -155,7 +155,7 @@ namespace kathryn{
             return WireSlotDynSliceAgent(*this, requiredIdx);
         }
 
-        void doGlobAsm(AsmNode* asmNode) {
+        void WireSlot::doGlobAsm(AsmNode* asmNode) {
             assert(asmNode != nullptr);
             ModelController* ctrl = getControllerPtr();
             assert(ctrl != nullptr);
