@@ -114,6 +114,8 @@ namespace kathryn{
             /** inc event*/
             if (isThereHold()){
                 _cycleWaitStateReg->makeIncStateEvent(holdNode->getExitOpr());
+            }else{
+                _cycleWaitStateReg->makeIncStateEvent(nullptr);
             }
             /** unset event*/
             makeUnsetStateEvent();
