@@ -12,7 +12,7 @@
 #include "model/flowBlock/abstract/nodes/node.h"
 #include "model/flowBlock/abstract/nodes/stateNode.h"
 
-
+#define mZync(name) SyncMeta name{#name}
 
 
 namespace kathryn{
