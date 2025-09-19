@@ -229,6 +229,8 @@ namespace kathryn{
 
 
         /** block assignment */
+
+        //////// static assign
         virtual void doBlockAsm(Slot& rhs, const std::vector<int>& exceptIdxs, ASM_TYPE asmType){
             auto [srcMatchIdxs, desMatchIdxs] = matchByName(rhs);
             doGlobAsm(rhs, srcMatchIdxs, desMatchIdxs, {}, asmType);
@@ -240,10 +242,18 @@ namespace kathryn{
         virtual void doBlockAsm(Slot& rhs, ASM_TYPE asmType){
             doBlockAsm(rhs, std::vector<int>{}, asmType);
         }
+        //////// dynamic assign
         virtual void doBlockAsm(Operable& srcOpr, Operable& requiredIdx, ASM_TYPE asmType){
             doGlobAsm(srcOpr, requiredIdx, asmType);
         }
 
+        virtual void doBlockAsm(ull srcVal, Operable& requiredIdx, ASM_TYPE asmType){
+            Operable& mySrcOpr = getMatchAssignOperable(srcVal, getMaxBitWidth());
+            doBlockAsm(mySrcOpr, requiredIdx, asmType);
+        }
+        /** non block assignment */
+
+        //////// static assign
         virtual void doNonBlockAsm(Slot& rhs, const std::vector<int>& exceptIdxs, ASM_TYPE asmType){
             auto [srcMatchIdxs, desMatchIdxs] = matchByName(rhs);
             doGlobAsm(rhs, srcMatchIdxs, desMatchIdxs, {}, asmType);
@@ -256,8 +266,15 @@ namespace kathryn{
             doNonBlockAsm(rhs, std::vector<int>{}, asmType);
         }
 
+        //////// dynamic assign
+
         virtual void doNonBlockAsm(Operable& srcOpr, Operable& requiredIdx, ASM_TYPE asmType){
             doGlobAsm(srcOpr, requiredIdx, asmType);
+        }
+
+        virtual void doNonBlockAsm(ull srcVal, Operable& requiredIdx, ASM_TYPE asmType){
+            Operable& mySrcOpr = getMatchAssignOperable(srcVal, getMaxBitWidth());
+            doNonBlockAsm(mySrcOpr, requiredIdx, asmType);
         }
 
     };
@@ -281,7 +298,7 @@ namespace kathryn{
 
             Wire* resultWire = &makeOprWire("slotSlice", targetWidth);
 
-            bool isUsedAsDef = false;
+            bool isUsedAsDef = true;
             //// the target structure to update
             std::vector<UpdateEvent*>& updateEvents = resultWire->getUpdateMeta();
 
@@ -295,7 +312,7 @@ namespace kathryn{
                 Operable* activateCond = nullptr;
                 int       assignPri    = DEFAULT_UE_PRI_MIN;
                 if (!isUsedAsDef){
-                    activateCond = &(_requiredIdx == fieldMeta._size);
+                    activateCond = &(_requiredIdx == idx);
                     assignPri    = DEFAULT_UE_PRI_USER;
                 }
                 ////// create update event
@@ -307,7 +324,7 @@ namespace kathryn{
                 assignPri
                 });
                 updateEvents.push_back(resultUpEvent);
-                isUsedAsDef = true;
+                isUsedAsDef = false;
             }
 
             /////// set default value

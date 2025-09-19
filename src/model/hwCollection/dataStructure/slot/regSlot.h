@@ -19,7 +19,10 @@ namespace kathryn{
         ) : SlotDynSliceAgent(slot, requiredIdx){}
 
         RegSlotDynSliceAgent& operator <<=(Operable& rhsOpr);
+        RegSlotDynSliceAgent& operator <<=(ull       rhsVal);
+
         RegSlotDynSliceAgent& operator =(Operable& rhsOpr);
+        RegSlotDynSliceAgent& operator =(ull       rhsOpr);
     };
 
     class RegSlot: public Slot{

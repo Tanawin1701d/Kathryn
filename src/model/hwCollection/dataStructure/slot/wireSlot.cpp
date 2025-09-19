@@ -12,8 +12,18 @@ namespace kathryn{
         return *this;
     }
 
+    WireSlotDynSliceAgent& WireSlotDynSliceAgent::operator <<=(ull rhsVal){
+        mfAssert(false, "wire slot not support <<= operator");
+        return *this;
+    }
+
     WireSlotDynSliceAgent& WireSlotDynSliceAgent::operator =(Operable& rhsOpr){
         _masterSlot.doNonBlockAsm(rhsOpr, _requiredIdx, ASM_DIRECT);
+        return *this;
+    }
+
+    WireSlotDynSliceAgent& WireSlotDynSliceAgent::operator =(ull rhsVal){
+        _masterSlot.doNonBlockAsm(rhsVal, _requiredIdx, ASM_DIRECT);
         return *this;
     }
 
@@ -35,7 +45,7 @@ namespace kathryn{
             for(int idx = 0; idx < slotMeta.getNumField(); idx++){
                 FieldMeta fieldMeta = slotMeta.getCopyField(idx);
                 mfAssert(fieldMeta._size > 0, "field " + fieldMeta._name + " is not pass integrity test");
-                Wire* newWire = &makeOprWire(fieldMeta._name, fieldMeta._size);
+                Wire* newWire = &mOprWire(fieldMeta._name, fieldMeta._size);
                 _wires.push_back(newWire);
                 _hwFieldMetas.push_back({newWire, newWire});
             }
@@ -48,17 +58,13 @@ namespace kathryn{
             /** create new wire*/
             int idx = 0;
             for(idx = 0; idx < fieldNames.size(); idx++){
-                Wire* newWire = &makeOprWire(fieldNames[idx], fieldSizes[idx]);
+                Wire* newWire = &mOprWire(fieldNames[idx], fieldSizes[idx]);
                 _wires.push_back(newWire);
                 _hwFieldMetas.push_back({newWire, newWire});
             }
         }
 
-    WireSlot::~WireSlot() {
-            for(Wire* wire: _wires){
-                delete wire;
-            }
-        }
+    WireSlot::~WireSlot(){}
 
         /**
              * The main function to overwrite the assignment

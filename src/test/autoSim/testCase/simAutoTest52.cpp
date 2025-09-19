@@ -65,24 +65,28 @@ namespace kathryn{
         void describeCon() override{
 
             // // ////// skip first zync State
-            // conNextCycle(1);
-            // for (int i = 1; i < 5; i++){
-            //     conEndCycle();
-            //     testAndPrint("check a equal to " + std::to_string(i), ull(_md->a), i);
-            //     testAndPrint("check b equal to " + std::to_string(i-1), ull(_md->b), i-1);
-            //     conNextCycle(1);
-            // }
-            // ///////////////////////////
-            // conEndCycle();
-            // testAndPrint(" holding part check a equal to " + std::to_string(4), ull(_md->a), 4);
-            // testAndPrint(" holding part check b equal to " + std::to_string(4), ull(_md->b), 4);
-            // conNextCycle(1);
-            // for (int i = 5; i < 10; i++){
-            //     conEndCycle();
-            //     testAndPrint("check a equal to " + std::to_string(i), ull(_md->a), i);
-            //     testAndPrint("check b equal to " + std::to_string(i-1), ull(_md->b), i-1);
-            //     conNextCycle(1);
-            // }
+            conNextCycle(1);
+            conEndCycle();
+            testAndPrint("check regSlot assign 24 ", ull(_md->rs("srcIdx0")), 24);
+            testAndPrint("check regSlot assign 0 ", ull(_md->rs("srcIdx1")), 0);
+            conNextCycle(1);
+            conEndCycle();
+            testAndPrint("check regSlot assign 24 ", ull(_md->rs("srcIdx0")), 24);
+            testAndPrint("check regSlot assign 48 ", ull(_md->rs("srcIdx1")), 48);
+            testAndPrint("check wireSlot assign 24 ", ull(_md->ws("srcIdx0")), 24);
+            testAndPrint("check wireSlot assign 48 ", ull(_md->ws("srcIdx1")), 48);
+            conNextCycle(2);
+            conEndCycle();
+
+            testAndPrint("check wireSlot Retrieve 24 ", ull(_md->src0get), 24);
+
+            conNextCycle(1);
+            conEndCycle();
+            testAndPrint("check wireSlot No retrieve ", ull(_md->src0get), 0);
+
+            conNextCycle(1);
+            conEndCycle();
+            testAndPrint("check wireSlot No 48 ", ull(_md->src0get), 48);
 
         }
 
@@ -101,5 +105,5 @@ namespace kathryn{
 
     };
 
-    Sim52TestEle ele52(-1);
+    Sim52TestEle ele52(52);
 }

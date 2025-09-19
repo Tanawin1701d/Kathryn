@@ -18,8 +18,10 @@ namespace kathryn{
         ) : SlotDynSliceAgent(slot, requiredIdx){}
 
         WireSlotDynSliceAgent& operator <<=(Operable& rhsOpr);
+        WireSlotDynSliceAgent& operator <<=(ull       rhsVal);
 
         WireSlotDynSliceAgent& operator =(Operable& rhsOpr);
+        WireSlotDynSliceAgent& operator =(ull       rhsVal);
 
 
     };

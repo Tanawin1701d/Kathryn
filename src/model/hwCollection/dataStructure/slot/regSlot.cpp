@@ -14,10 +14,21 @@ namespace kathryn{
         return *this;
     }
 
+    RegSlotDynSliceAgent& RegSlotDynSliceAgent::operator <<=(ull rhsVal){
+        _masterSlot.doBlockAsm(rhsVal, _requiredIdx, ASM_DIRECT);
+        return *this;
+    }
+
     RegSlotDynSliceAgent& RegSlotDynSliceAgent::operator =(Operable& rhsOpr){
         _masterSlot.doNonBlockAsm(rhsOpr, _requiredIdx, ASM_EQ_DEPNODE);
         return *this;
     }
+
+    RegSlotDynSliceAgent& RegSlotDynSliceAgent::operator =(ull rhsVal){
+        _masterSlot.doNonBlockAsm(rhsVal, _requiredIdx, ASM_EQ_DEPNODE);
+        return *this;
+    }
+
 
     /////// RegSlot
 
@@ -40,7 +51,7 @@ namespace kathryn{
             for(int idx = 0; idx < slotMeta.getNumField(); idx++){
                 FieldMeta fieldMeta = slotMeta.getCopyField(idx);
                 mfAssert(fieldMeta._size > 0, "field " + fieldMeta._name + " is not pass integrity test");
-                Reg* newReg = &makeOprReg(fieldMeta._name, fieldMeta._size);
+                Reg* newReg = &mOprReg(fieldMeta._name, fieldMeta._size);
                 _regs.push_back(newReg);
                 _hwFieldMetas.push_back({newReg, newReg});
             }
@@ -53,17 +64,13 @@ namespace kathryn{
             /** create new reg*/
             int idx = 0;
             for(idx = 0; idx < fieldNames.size(); idx++){
-                Reg* newReg = &makeOprReg(fieldNames[idx], fieldSizes[idx]);
+                Reg* newReg = &mOprReg(fieldNames[idx], fieldSizes[idx]);
                 _regs.push_back(newReg);
                 _hwFieldMetas.push_back({newReg, newReg});
             }
         }
 
-        RegSlot::~RegSlot(){
-            for(Reg* reg: _regs){
-                delete reg;
-            }
-        }
+        RegSlot::~RegSlot(){}
 
         /***
          *  static slicing
@@ -174,7 +181,7 @@ namespace kathryn{
         }
 
         RegSlot& RegSlot::operator = (Slot& rhs){
-            doNonBlockAsm(rhs, std::vector<int>{}, ASM_EQ_DEPNODE);
+            doNonBlockAsm(rhs, ASM_EQ_DEPNODE);
             return *this;
         }
 

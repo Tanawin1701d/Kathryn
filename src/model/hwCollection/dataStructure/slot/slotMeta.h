@@ -180,12 +180,12 @@ namespace kathryn{
             std::vector<int> srcMatchIdxs;
             std::vector<int> desMatchIdxs;
 
-            for (int idx = 0; idx < rhs.getNumField(); idx++){
-                std::string rhsFieldName = rhs(idx)._name;
-                int srcIdx = getIdx(rhsFieldName);
-                if (srcIdx != -1){
+            for (int srcIdx = 0; srcIdx < rhs.getNumField(); srcIdx++){
+                std::string rhsFieldName = rhs(srcIdx)._name;
+                int desIdx = getIdx(rhsFieldName);
+                if (desIdx != -1){
                     srcMatchIdxs.push_back(srcIdx);
-                    desMatchIdxs.push_back(idx);
+                    desMatchIdxs.push_back(desIdx);
                 }
             }
 
