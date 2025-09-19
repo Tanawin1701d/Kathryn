@@ -36,10 +36,11 @@ namespace kathryn{
                 const std::vector<Reg*>& regs
         );
 
-        explicit RegSlot(const SlotMeta& slotMeta);
+        explicit RegSlot(const SlotMeta& slotMeta, const std::string& prefixName = "RegSlot" );
 
         RegSlot(const std::vector<std::string>& fieldNames,
-                const std::vector<int>&         fieldSizes);
+                const std::vector<int>&         fieldSizes,
+                const std::string& prefixName = "RegSlot");
 
         ~RegSlot() override;
         /**

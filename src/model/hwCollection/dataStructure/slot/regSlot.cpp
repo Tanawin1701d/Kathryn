@@ -45,26 +45,27 @@ namespace kathryn{
             }
         }
 
-        RegSlot::RegSlot(const SlotMeta& slotMeta):
+        RegSlot::RegSlot(const SlotMeta& slotMeta, const std::string& prefixName):
         Slot(slotMeta){
             /** this is used to initialize from slice*/
             for(int idx = 0; idx < slotMeta.getNumField(); idx++){
                 FieldMeta fieldMeta = slotMeta.getCopyField(idx);
                 mfAssert(fieldMeta._size > 0, "field " + fieldMeta._name + " is not pass integrity test");
-                Reg* newReg = &mOprReg(fieldMeta._name, fieldMeta._size);
+                Reg* newReg = &mOprReg(prefixName + "_" + fieldMeta._name, fieldMeta._size);
                 _regs.push_back(newReg);
                 _hwFieldMetas.push_back({newReg, newReg});
             }
         }
 
         RegSlot::RegSlot(const std::vector<std::string>& fieldNames,
-                const std::vector<int>&         fieldSizes):
+                const std::vector<int>&                  fieldSizes,
+                const std::string&                       prefixName):
         Slot(fieldNames, fieldSizes){
             std::vector<HwFieldMeta> hwFieldMetas;
             /** create new reg*/
             int idx = 0;
             for(idx = 0; idx < fieldNames.size(); idx++){
-                Reg* newReg = &mOprReg(fieldNames[idx], fieldSizes[idx]);
+                Reg* newReg = &mOprReg(prefixName + "_" + fieldNames[idx], fieldSizes[idx]);
                 _regs.push_back(newReg);
                 _hwFieldMetas.push_back({newReg, newReg});
             }
