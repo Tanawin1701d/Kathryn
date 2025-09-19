@@ -25,7 +25,7 @@ namespace kathryn{
         explicit testSimMod53(int x){}
 
         void flow() override{
-
+            ///// dynamic assign and slot assign test
             seq{
                 rs("srcIdx0") <<= 24;
                 rs("srcIdx1") <<= 48;
@@ -63,14 +63,29 @@ namespace kathryn{
         void describeCon() override{
 
             // // ////// skip first zync State
-            // conNextCycle(1);
-            // conEndCycle();
-            // testAndPrint("check regSlot assign 24 ", ull(_md->rs("srcIdx0")), 24);
-            // testAndPrint("check regSlot assign 0 ", ull(_md->rs("srcIdx1")), 0);
-            // conNextCycle(1);
-            // conEndCycle();
-            // testAndPrint("check regSlot assign 24 ", ull(_md->rs("srcIdx0")), 24);
-            // testAndPrint("check regSlot assign 48 ", ull(_md->rs("srcIdx1")), 48);
+            conNextCycle(1);
+            conEndCycle();
+            testAndPrint("check regSlot assign 24 ", ull(_md->rs("srcIdx0")), 24);
+            testAndPrint("check regSlot assign 0 ", ull(_md->rs("srcIdx1")), 0);
+            conNextCycle(1);
+            conEndCycle();
+            testAndPrint("check regSlot assign 24 ", ull(_md->rs("srcIdx0")), 24);
+            testAndPrint("check regSlot assign 48 ", ull(_md->rs("srcIdx1")), 48);
+            conNextCycle(2);
+            conEndCycle();
+            testAndPrint("check regSlot assign 26 ", ull(_md->rs("srcIdx0")), 26);
+            testAndPrint("check regSlot assign 48 ", ull(_md->rs("srcIdx1")), 48);
+            conNextCycle(2);
+            conEndCycle();
+            testAndPrint("check regSlot assign 26 ", ull(_md->rs("srcIdx0")), 26);
+            testAndPrint("check regSlot assign 50 ", ull(_md->rs("srcIdx1")), 50);
+            conNextCycle(1);
+            conEndCycle();
+            testAndPrint("check whole regSlot assign 26 ", ull(_md->rs2("srcIdx0")), 26);
+            testAndPrint("check whole regSlot assign 50 ", ull(_md->rs2("srcIdx1")), 50);
+            testAndPrint("check whole regSlot other field (srcIdx3)", ull(_md->rs2("srcIdx3")), 0);
+            testAndPrint("check whole regSlot other field (srcIdx4)", ull(_md->rs2("srcIdx4")), 0);
+
             // testAndPrint("check wireSlot assign 24 ", ull(_md->ws("srcIdx0")), 24);
             // testAndPrint("check wireSlot assign 48 ", ull(_md->ws("srcIdx1")), 48);
             // conNextCycle(2);
@@ -103,5 +118,5 @@ namespace kathryn{
 
     };
 
-    Sim53TestEle ele53(53);
+    Sim53TestEle ele53(-1);
 }
