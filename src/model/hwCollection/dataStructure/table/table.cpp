@@ -3,30 +3,33 @@
 //
 
 #include "table.h"
+
+#include <utility>
 #include "model/controller/controller.h"
 
 namespace kathryn{
 
-    Table::Table(const SlotMeta& meta, const std::vector<RegSlot*>& rows):
-        _meta(meta), _rows(rows){
+    Table::Table(const SlotMeta&  meta, const std::vector<RegSlot*>& rows):
+        _meta(std::move(meta)), _rows(rows){
             mfAssert(!rows.empty(), "rows cannot be empty");
             for (RegSlot* row: rows){
                 mfAssert(row != nullptr, "row cannot be nullptr");
             }
         }
 
-    Table::Table(SlotMeta& slotMeta, int amtRow):
-        _meta(slotMeta){
+    Table::Table(const SlotMeta&  slotMeta, int amtRow, const std::string& prefixName):
+        _meta(std::move(slotMeta)){
             mfAssert(amtRow > 0, "amtRow must be greater than 0");
-            buildRows(_meta, amtRow);
+            buildRows(_meta, amtRow, prefixName);
         }
 
     Table::Table(const std::vector<std::string>& fieldNames,
               const std::vector<int>&         fieldSizes,
-              int amtRow):
+              int amtRow,
+              const std::string& prefixName):
         _meta(fieldNames, fieldSizes){
             mfAssert(amtRow > 0, "amtRow must be greater than 0");
-            buildRows(_meta, amtRow);
+            buildRows(_meta, amtRow, prefixName);
         }
 
     Table::~Table(){
@@ -51,9 +54,9 @@ namespace kathryn{
         return *_rows[idx];
     }
 
-    void Table::buildRows(SlotMeta& slotMeta, int amtRow){
+    void Table::buildRows(SlotMeta& slotMeta, int amtRow, std::string prefixName){
         for (int rowIdx = 0; rowIdx < amtRow; rowIdx++){
-            _rows.push_back(new RegSlot(slotMeta));
+            _rows.push_back(new RegSlot(slotMeta, prefixName + "_" + std::to_string(rowIdx)));
         }
     }
 
@@ -105,7 +108,10 @@ namespace kathryn{
         }
         ////// generate assignment Node
         AsmNode* asmNode = resultWireSlot.genGrpAsmNode(allRowCollector, allRowPreCond, BITWISE_AND);
-        resultWireSlot.doGlobAsm(asmNode);
+        //// we have to do dry assign
+        asmNode->dryAssign();
+
+        ///resultWireSlot.doGlobAsm(asmNode);
         return resultWireSlot;
 
     }
@@ -215,6 +221,37 @@ namespace kathryn{
         }
         return Table(_meta, newRows);
 
+    }
+
+    Table Table::sliceByCol(int start, int end){
+        SlotMeta newSlotMeta = _meta(start, end);
+        std::vector<RegSlot*> newRows;
+        for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
+            RegSlot newRegSlot = ((*_rows[rowIdx])(start, end));
+            newRows.push_back(new RegSlot(newRegSlot));
+        }
+        return {newSlotMeta, newRows};
+    }
+        //// treated as base col slice function
+    Table Table::sliceByCol(const std::string& startField, const std::string& endField){
+        int startIdx = getMeta().getIdx(startField);
+        int endIdx   = getMeta().getIdx(endField) + 1;
+        mfAssert(getMeta().isValidIdx(startIdx), "field name " + startField + " not found");
+        mfAssert(getMeta().isValidIdx(endIdx), "field name " + endField + " not found");
+        return sliceByCol(startIdx, endIdx);
+    }
+    Table Table::sliceByCol(const std::vector<int>& fieldIdxs){
+        SlotMeta newSlotMeta = _meta(fieldIdxs);
+        std::vector<RegSlot*> newRows;
+        for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
+            RegSlot newRegSlot = (*_rows[rowIdx])(fieldIdxs);
+            newRows.push_back(new RegSlot(newRegSlot));
+        }
+        return {newSlotMeta, newRows};
+    }
+    Table Table::sliceByCol(const std::vector<std::string>& fieldNames){
+        std::vector<int> fieldIdxs = getMeta().getIdxs(fieldNames);
+        return sliceByCol(fieldIdxs);
     }
 
     /**

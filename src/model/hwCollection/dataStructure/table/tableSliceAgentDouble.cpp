@@ -35,6 +35,7 @@ namespace kathryn{
         if (isStaticColRead()){
             return _masterAgent->v()(_requiredColIdxInt);
         }
+        ///// case dynamic get value both row and column
         return _masterAgent->v()[*_requiredColIdx].v();
     }
 

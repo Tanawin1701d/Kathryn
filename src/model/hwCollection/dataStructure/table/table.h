@@ -22,13 +22,14 @@ namespace kathryn{
         /**
          * this is used to initialize from slice
          */
-        Table(const SlotMeta& meta, const std::vector<RegSlot*>& rows);
+        Table(const SlotMeta&  meta, const std::vector<RegSlot*>& rows);
 
-        Table(SlotMeta& slotMeta, int amtRow);
+        Table(const SlotMeta&  slotMeta, int amtRow, const std::string& prefixName = "table");
 
         Table(const std::vector<std::string>& fieldNames,
               const std::vector<int>&         fieldSizes,
-              int amtRow);
+              int amtRow,
+              const std::string& prefixName);
 
         ~Table();
 
@@ -40,7 +41,7 @@ namespace kathryn{
 
         RegSlot getClonedRow(int idx) const;
 
-        void buildRows(SlotMeta& slotMeta, int amtRow);
+        void buildRows(SlotMeta& slotMeta, int amtRow, std::string prefixName);
 
         bool isSufficientIdx(Operable& requiredIdx) const;
 
@@ -69,6 +70,11 @@ namespace kathryn{
         RegSlot& operator () (int idx);
 
         Table operator() (int start, int end);
+
+        Table sliceByCol(int start, int end);  //// treated as base col slice function
+        Table sliceByCol(const std::string& startField, const std::string& endField);
+        Table sliceByCol(const std::vector<int>& fieldIdxs); //// treated as base col slice function
+        Table sliceByCol(const std::vector<std::string>& fieldNames);
 
         /**
          * dynamic

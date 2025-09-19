@@ -36,11 +36,20 @@ namespace kathryn{
 
         virtual ~Slot() = default;
 
-        FieldMeta& fieldAt(int idx){
+        FieldMeta& fieldRefAt(int idx){
             return _meta(idx);
         }
 
-        HwFieldMeta& hwFieldAt(int idx){
+        FieldMeta fieldAt(int idx) const{
+            return _meta.getCopyField(idx);
+        }
+
+        HwFieldMeta& hwFieldRefAt(int idx){
+            mfAssert(isValidIdx(idx), "get hw Field at " + std::to_string(idx) + " out of range");
+            return _hwFieldMetas[idx];
+        }
+
+        HwFieldMeta hwFieldAt(int idx) const{
             mfAssert(isValidIdx(idx), "get hw Field at " + std::to_string(idx) + " out of range");
             return _hwFieldMetas[idx];
         }
@@ -75,14 +84,14 @@ namespace kathryn{
             return _meta.isSufficientIdx(idxSize);
         }
 
-        bool isValidIdx(int idx){
+        bool isValidIdx(int idx) const{
             return _meta.isValidIdx(idx);
         }
         bool checkValidRange(int start, int stop){
             return _meta.isValidRange(start, stop);
         }
 
-        std::pair<std::vector<int>, std::vector<int>> matchByName(Slot& rhs){
+        std::pair<std::vector<int>, std::vector<int>> matchByName(const Slot& rhs){
             return _meta.matchByName(rhs._meta);
         }
 
@@ -107,8 +116,8 @@ namespace kathryn{
 
             std::vector<AssignMeta*> resultCollector;
             for (int desIdx = 0; desIdx < srcSlot.getNumField(); desIdx++){
-                auto [desOpr, desAsb] = hwFieldAt(desIdx);
-                auto [srcOpr, srcAsb] = srcSlot.hwFieldAt(desIdx);
+                auto [desOpr, desAsb] = hwFieldRefAt(desIdx);
+                auto [srcOpr, srcAsb] = srcSlot.hwFieldRefAt(desIdx);
 
                 AssignMeta* assMeta = genAssignMeta(*srcOpr, *desAsb, asmType);
                 resultCollector.push_back(assMeta);
@@ -118,7 +127,7 @@ namespace kathryn{
         }
 
         std::vector<AssignMeta*> genAssignMetaForAll(
-            Slot& srcSlot,
+            const Slot& srcSlot,
             const std::vector<int>& srcMatchIdxs,
             const std::vector<int>& desMatchIdxs,
             const std::vector<int>& exceptIdxs,
@@ -140,7 +149,7 @@ namespace kathryn{
                     continue;
                 }
 
-                auto [desOpr, desAsb] = hwFieldAt(desIdx);
+                auto [desOpr, desAsb] = hwFieldRefAt(desIdx);
                 auto [srcOpr, srcAsb] = srcSlot.hwFieldAt(srcIdx);
 
                 AssignMeta* assMeta = genAssignMeta(*srcOpr, *desAsb, asmType);
@@ -154,7 +163,7 @@ namespace kathryn{
             std::vector<AssignMeta*> resultCollector;
 
             for (int desIdx = 0; desIdx < getNumField(); desIdx++){
-                auto [desOpr, desAsb] = hwFieldAt(desIdx);
+                auto [desOpr, desAsb] = hwFieldRefAt(desIdx);
 
                 AssignMeta* assMeta = genAssignMeta(srcOpr, *desAsb, asmType);
                 resultCollector.push_back(assMeta);
@@ -164,7 +173,7 @@ namespace kathryn{
 
 
         AsmNode* genGrpAsmNode (
-            Slot& srcSlot,
+            const Slot& srcSlot,
             const std::vector<int>& srcMatchIdxs,
             const std::vector<int>& desMatchIdxs,
             const std::vector<int>& exceptIdxs,
@@ -211,7 +220,7 @@ namespace kathryn{
 
 
         virtual void doGlobAsm(
-            Slot& rhs,
+            const Slot& rhs,
             const std::vector<int>& srcMatchIdxs,
             const std::vector<int>& desMatchIdxs,
             const std::vector<int>& exceptIdxs,
@@ -231,15 +240,15 @@ namespace kathryn{
         /** block assignment */
 
         //////// static assign
-        virtual void doBlockAsm(Slot& rhs, const std::vector<int>& exceptIdxs, ASM_TYPE asmType){
+        virtual void doBlockAsm(const Slot& rhs, const std::vector<int>& exceptIdxs, ASM_TYPE asmType){
             auto [srcMatchIdxs, desMatchIdxs] = matchByName(rhs);
             doGlobAsm(rhs, srcMatchIdxs, desMatchIdxs, {}, asmType);
         }
-        virtual void doBlockAsm(Slot& rhs, const std::vector<std::string>& exceptNames, ASM_TYPE asmType){
+        virtual void doBlockAsm(const Slot& rhs, const std::vector<std::string>& exceptNames, ASM_TYPE asmType){
             std::vector<int> excpetIdxs = getIdxs(exceptNames);
             doBlockAsm(rhs, excpetIdxs, asmType);
         }
-        virtual void doBlockAsm(Slot& rhs, ASM_TYPE asmType){
+        virtual void doBlockAsm(const Slot& rhs, ASM_TYPE asmType){
             doBlockAsm(rhs, std::vector<int>{}, asmType);
         }
         //////// dynamic assign
@@ -254,15 +263,15 @@ namespace kathryn{
         /** non block assignment */
 
         //////// static assign
-        virtual void doNonBlockAsm(Slot& rhs, const std::vector<int>& exceptIdxs, ASM_TYPE asmType){
+        virtual void doNonBlockAsm(const Slot& rhs, const std::vector<int>& exceptIdxs, ASM_TYPE asmType){
             auto [srcMatchIdxs, desMatchIdxs] = matchByName(rhs);
             doGlobAsm(rhs, srcMatchIdxs, desMatchIdxs, {}, asmType);
         }
-        virtual void doNonBlockAsm(Slot& rhs, const std::vector<std::string>& exceptNames, ASM_TYPE asmType){
+        virtual void doNonBlockAsm(const Slot& rhs, const std::vector<std::string>& exceptNames, ASM_TYPE asmType){
             std::vector<int> excpetIdxs = getIdxs(exceptNames);
             doNonBlockAsm(rhs, excpetIdxs, asmType);
         }
-        virtual void doNonBlockAsm(Slot& rhs, ASM_TYPE asmType){
+        virtual void doNonBlockAsm(const Slot& rhs, ASM_TYPE asmType){
             doNonBlockAsm(rhs, std::vector<int>{}, asmType);
         }
 
@@ -303,7 +312,7 @@ namespace kathryn{
             std::vector<UpdateEvent*>& updateEvents = resultWire->getUpdateMeta();
 
             for (int idx = 0; idx < _masterSlot.getNumField(); idx++){
-                FieldMeta fieldMeta = _masterSlot.fieldAt(idx);
+                FieldMeta fieldMeta = _masterSlot.fieldRefAt(idx);
                 ///// we do only the target port
                 if (fieldMeta._size != targetWidth ){
                     continue;
@@ -319,7 +328,7 @@ namespace kathryn{
                 auto resultUpEvent = new UpdateEvent({
                 activateCond,
                 nullptr,
-                _masterSlot.hwFieldAt(idx)._opr,
+                _masterSlot.hwFieldRefAt(idx)._opr,
                 resultWire->getOperableSlice(),
                 assignPri
                 });

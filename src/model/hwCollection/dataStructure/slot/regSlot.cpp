@@ -51,7 +51,10 @@ namespace kathryn{
             for(int idx = 0; idx < slotMeta.getNumField(); idx++){
                 FieldMeta fieldMeta = slotMeta.getCopyField(idx);
                 mfAssert(fieldMeta._size > 0, "field " + fieldMeta._name + " is not pass integrity test");
-                Reg* newReg = &mOprReg(prefixName + "_" + fieldMeta._name, fieldMeta._size);
+                Reg* newReg = &mOprReg(prefixName +
+                    "colIdx_" + std::to_string(idx) +
+                    "_" + fieldMeta._name,
+                    fieldMeta._size);
                 _regs.push_back(newReg);
                 _hwFieldMetas.push_back({newReg, newReg});
             }
@@ -72,6 +75,43 @@ namespace kathryn{
         }
 
         RegSlot::~RegSlot(){}
+
+        /**
+         * The main function to overwrite the assignment
+         */
+        void RegSlot::doGlobAsm(
+            const Slot& rhs,
+            const std::vector<int>& srcMatchIdxs,
+            const std::vector<int>& desMatchIdxs,
+            const std::vector<int>& exceptIdxs,
+            ASM_TYPE asmType) {
+
+            AsmNode* asmNode = genGrpAsmNode(
+                rhs,
+                srcMatchIdxs,
+                desMatchIdxs,
+                exceptIdxs,
+                asmType
+            );
+            doGlobAsm(asmNode);
+        }
+
+        void RegSlot::doGlobAsm(Operable& srcOpr,
+                                Operable& requiredIdx,
+                                ASM_TYPE asmType) {
+            AsmNode* asmNode = genGrpAsmNode(srcOpr, requiredIdx, asmType);
+            doGlobAsm(asmNode);
+        }
+
+        void RegSlot::doGlobAsm(AsmNode* asmNode) {
+            assert(asmNode != nullptr);
+            ModelController* ctrl = getControllerPtr();
+            assert(ctrl != nullptr);
+            ctrl->on_wire_update(
+                asmNode,
+                nullptr
+            );
+        }
 
         /***
          *  static slicing
@@ -97,6 +137,7 @@ namespace kathryn{
             }
             return RegSlot(newSlotMeta, newRegs);
         }
+
         /** range slicing*/
         RegSlot RegSlot::operator() (const std::string& startField,
                             const std::string& endField){
@@ -131,6 +172,7 @@ namespace kathryn{
             return {newSlotMeta, newRegs};
         }
 
+
         /**
          *  dynamic indexing
          */
@@ -138,50 +180,13 @@ namespace kathryn{
             return {*this, requiredIdx};
         }
 
-        /**
-         * The main function to overwrite the assignment
-         */
-        void RegSlot::doGlobAsm(
-            Slot& rhs,
-            const std::vector<int>& srcMatchIdxs,
-            const std::vector<int>& desMatchIdxs,
-            const std::vector<int>& exceptIdxs,
-            ASM_TYPE asmType) {
-
-            AsmNode* asmNode = genGrpAsmNode(
-                               rhs,
-                               srcMatchIdxs,
-                               desMatchIdxs,
-                               exceptIdxs,
-                               asmType
-                               );
-            doGlobAsm(asmNode);
-        }
-
-        void RegSlot::doGlobAsm(Operable& srcOpr,
-                       Operable& requiredIdx,
-                       ASM_TYPE asmType) {
-            AsmNode* asmNode = genGrpAsmNode(srcOpr, requiredIdx, asmType);
-            doGlobAsm(asmNode);
-        }
-
-        void RegSlot::doGlobAsm(AsmNode* asmNode) {
-            assert(asmNode != nullptr);
-            ModelController* ctrl = getControllerPtr();
-            assert(ctrl != nullptr);
-            ctrl->on_wire_update(
-                asmNode,
-                nullptr
-            );
-        }
-
         /** it will match by name*/
-        RegSlot& RegSlot::operator <<= (Slot& rhs){
+        RegSlot& RegSlot::operator <<= (const Slot& rhs){
             doBlockAsm(rhs, ASM_DIRECT);
             return *this;
         }
 
-        RegSlot& RegSlot::operator = (Slot& rhs){
+        RegSlot& RegSlot::operator = (const Slot& rhs){
             doNonBlockAsm(rhs, ASM_EQ_DEPNODE);
             return *this;
         }

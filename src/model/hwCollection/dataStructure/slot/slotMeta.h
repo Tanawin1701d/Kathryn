@@ -111,6 +111,11 @@ namespace kathryn{
 
         /** field operator */
 
+        FieldMeta getField(int idx) const{
+            mfAssert(isValidIdx(idx), "index" + std::to_string(idx) +  " out of range");
+            return _fieldMetas[idx];
+        }
+
         FieldMeta& operator()(int idx){
             mfAssert(isValidIdx(idx), "index" + std::to_string(idx) +  " out of range");
             return _fieldMetas[idx];
@@ -176,12 +181,12 @@ namespace kathryn{
             return result;
         }
 
-        std::pair<std::vector<int>, std::vector<int>> matchByName(SlotMeta& rhs){
+        std::pair<std::vector<int>, std::vector<int>> matchByName(const SlotMeta& rhs){
             std::vector<int> srcMatchIdxs;
             std::vector<int> desMatchIdxs;
 
             for (int srcIdx = 0; srcIdx < rhs.getNumField(); srcIdx++){
-                std::string rhsFieldName = rhs(srcIdx)._name;
+                std::string rhsFieldName = rhs.getField(srcIdx)._name;
                 int desIdx = getIdx(rhsFieldName);
                 if (desIdx != -1){
                     srcMatchIdxs.push_back(srcIdx);

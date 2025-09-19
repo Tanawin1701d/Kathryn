@@ -47,7 +47,7 @@ namespace kathryn{
          * The main function to overwrite the assignment
          */
         void doGlobAsm(
-            Slot& rhs,
+            const Slot& rhs,
             const std::vector<int>& srcMatchIdxs,
             const std::vector<int>& desMatchIdxs,
             const std::vector<int>& exceptIdxs,
