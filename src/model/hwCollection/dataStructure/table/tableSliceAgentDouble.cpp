@@ -30,6 +30,13 @@ namespace kathryn{
 
     }
 
+    void TableSliceAgentDouble::doStaticGlobAsm(int idx, ull srcVal){
+        Operable& mySrcOpr = getMatchAssignOperable(srcVal, _table->getMaxCellWidth());
+        doStaticGlobAsm(idx, mySrcOpr);
+    }
+
+
+
     Operable& TableSliceAgentDouble::v(){
 
         if (isStaticColRead()){
@@ -51,6 +58,21 @@ namespace kathryn{
         }
 
         return *this;
+    }
+
+    TableSliceAgentDouble&
+        TableSliceAgentDouble::operator <<= (ull rhsVal){
+
+        if (isStaticColRead()){
+            ///// let the master agent do it for you
+            doStaticGlobAsm(_requiredColIdxInt, rhsVal);
+        }else{
+            _table->doGlobAsm(rhsVal, *_requiredColIdx,
+                              *_requiredColIdx, ASM_DIRECT);
+        }
+
+        return *this;
+
     }
 
 

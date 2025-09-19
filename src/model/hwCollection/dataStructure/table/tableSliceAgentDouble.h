@@ -28,11 +28,15 @@ namespace kathryn{
 
         void doStaticGlobAsm(int idx, Operable& opr);
 
+        void doStaticGlobAsm(int idx, ull val);
+
         bool isStaticColRead(){ return _requiredColIdx == nullptr; }
 
         Operable& v();
 
         TableSliceAgentDouble& operator <<= (Operable& rhsOpr);
+
+        TableSliceAgentDouble& operator <<= (ull rhsVal);
     };
 } // namespace kathryn
 

@@ -46,9 +46,12 @@ namespace kathryn{
         bool isSufficientIdx(Operable& requiredIdx) const;
 
         bool isValidIdx(int idx) const;
+
         bool checkValidRange(int start, int stop) const;
 
         int getNumRow() const;
+
+        int getMaxCellWidth() const;
 
         /**
          * gen assign meta
@@ -59,8 +62,8 @@ namespace kathryn{
 
         ////// this will asssign the slot
         void doGlobAsm(Slot& srcSlot, Operable& requiredIdx, ASM_TYPE asmType);
-
         void doGlobAsm(Operable& srcOpr, Operable& rowIdx, Operable& colIdx, ASM_TYPE asmType);
+        void doGlobAsm(ull       srcVal, Operable& rowIdx, Operable& colIdx, ASM_TYPE asmType);
 
         void doCusLogic(std::function<void(RegSlot&, int rowIdx)>  cusLogic);
 

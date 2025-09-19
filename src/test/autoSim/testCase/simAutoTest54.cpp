@@ -104,5 +104,5 @@ namespace kathryn{
 
     };
 
-    Sim54TestEle ele54(-1);
+    Sim54TestEle ele54(54);
 }

@@ -77,6 +77,11 @@ namespace kathryn{
         return static_cast<int>(_rows.size());
     }
 
+    int Table::getMaxCellWidth() const{
+        assert(!_rows.empty());
+        return _rows[0]->getMaxBitWidth();
+    }
+
     /**
      * gen assign meta
      *
@@ -194,6 +199,11 @@ namespace kathryn{
         assert(ctrl != nullptr);
         ctrl->on_reg_update(asmNode, nullptr);
 
+    }
+
+    void Table::doGlobAsm(ull rhsVal, Operable& rowIdx, Operable& colIdx, ASM_TYPE asmType){
+        Operable& mySrcOpr = getMatchAssignOperable(rhsVal, getMaxCellWidth());
+        doGlobAsm(mySrcOpr, rowIdx, colIdx, asmType);
     }
 
     void Table::doCusLogic(std::function<void(RegSlot&, int rowIdx)>  cusLogic){
