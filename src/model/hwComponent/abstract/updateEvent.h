@@ -26,15 +26,22 @@ namespace kathryn {
         Operable* srcUpdateState     = nullptr; /// which state that need to update.
         Operable* srcUpdateValue     = nullptr; /// value to update.
         Slice     desUpdateSlice; /// slice to update must smaller or equal to srcUpdateValue.slice
-        int priority = DEFAULT_UE_PRI_MIN;
+        int priority    = DEFAULT_UE_PRI_MIN;
         ///priority for circuit if there are attention to update same register at a time 0 is highest 9 is lowest
+        ull subPriority = DEFAULT_UE_PRI_MIN; /// the value represent time when it is declared
+                                              /// we the later assigment node should have higher priority to override older variable
 
         bool operator < (const UpdateEvent& rhs) const{
             if (priority < rhs.priority){
                 return true;
-            }else if (priority == rhs.priority){
-                if (srcUpdateValue->isConstOpr() && rhs.srcUpdateValue->isConstOpr()){
-                    return srcUpdateValue->getConstOpr() < rhs.srcUpdateValue->getConstOpr();
+            }if (priority == rhs.priority){
+                if (subPriority < rhs.subPriority){
+                    return true;
+                }
+                if (subPriority == rhs.subPriority){
+                    if (srcUpdateValue->isConstOpr() && rhs.srcUpdateValue->isConstOpr()){
+                        return srcUpdateValue->getConstOpr() < rhs.srcUpdateValue->getConstOpr();
+                    }
                 }
             }
             return false;

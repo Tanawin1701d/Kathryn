@@ -11,15 +11,21 @@
 
 namespace kathryn {
 
+
     struct AsmNode : Node {
+        static inline ull ASM_NODE_CNT = 0;
         std::vector<AssignMeta*> _assignMetas; //// AssignMeta is must not use the same assign metas
         Operable*                _preCondition = nullptr;
+        ull                      _asmId;
+        ////// it will used as order of the assignment node
+        ////// when there are multiple assigns in the system
         //// TODO add per element metadata
         std::vector<Operable*>   _preCondPerMetas;
 
         explicit AsmNode(AssignMeta *assignMeta) :
                 Node(ASM_NODE),
                 _assignMetas({assignMeta}),
+                _asmId(ASM_NODE_CNT++),
                 _preCondPerMetas(_assignMetas.size(), nullptr)
 
         {
@@ -30,6 +36,7 @@ namespace kathryn {
         explicit AsmNode(std::vector<AssignMeta*> assignMetas):
                 Node(ASM_NODE),
                 _assignMetas(std::move(assignMetas)),
+                _asmId(ASM_NODE_CNT++),
                 _preCondPerMetas(_assignMetas.size(), nullptr){
 
             for (auto* asmMeta: _assignMetas){
@@ -70,7 +77,9 @@ namespace kathryn {
                         nodeSrcs[0].dependNode->getStateOperating(), /////// you can not simply use genExitOpr because it is used to colab with reset
                         &assignMeta->valueToAssign,
                         assignMeta->desSlice,
-                        DEFAULT_UE_PRI_USER});
+                        DEFAULT_UE_PRI_USER,
+                        _asmId
+                    });
                     assignMeta->updateEventsPool.push_back(resultUpEvent);
 
                     ////////////////////////////////////////////////////////////////////////////////////////
@@ -91,7 +100,8 @@ namespace kathryn {
                              nodeSrc.dependNode->getExitOpr(),
                              &assignMeta->valueToAssign,
                              assignMeta->desSlice,
-                             DEFAULT_UE_PRI_USER});
+                             DEFAULT_UE_PRI_USER,
+                             _asmId});
                         assignMeta->updateEventsPool.push_back(resultUpEvent);
                     }
                 }else{
