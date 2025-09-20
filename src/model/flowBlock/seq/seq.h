@@ -33,7 +33,7 @@ namespace kathryn {
         explicit SequenceEle(FlowBlockBase* fbBase    );
         ~SequenceEle();
 
-        void               genNode             ();
+        void               genNode             (CLOCK_MODE cm); /// clock mode is used only when state node is used
         void               setIdentStateId     (ull masterIdx, int subIdx) const;
         void               setIntReset         (OprNode* intResetNode);
         void               setHoldNode          (OprNode* holdNode);

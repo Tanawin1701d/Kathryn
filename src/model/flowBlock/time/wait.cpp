@@ -56,7 +56,7 @@ namespace kathryn{
 
         /** build node*/
 
-        _waitNode = new WaitCondNode(_exitCond);
+        _waitNode = new WaitCondNode(_exitCond, getClockMode());
         addSysNode(_waitNode);
         fillIntResetToNodeIfThere(_waitNode);
         fillHoldToNodeIfThere(_waitNode);
@@ -156,7 +156,7 @@ namespace kathryn{
             _waitNode = new WaitCycleNode(cnt);
         }else {
             assert(cycle > 0);
-            _waitNode = new WaitCycleNode(cycle);
+            _waitNode = new WaitCycleNode(cycle, getClockMode());
         }
         addSysNode(_waitNode);
         fillIntResetToNodeIfThere(_waitNode);

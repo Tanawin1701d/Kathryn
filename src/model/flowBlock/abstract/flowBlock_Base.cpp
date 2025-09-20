@@ -32,6 +32,7 @@ namespace kathryn{
                 for (int intType = 0; intType < INT_CNT; intType++){
                     intNodes[intType] = nullptr;
                 }
+                setClockMode(GET_CLOCK_MODE()); ///// get clock mode from master0
     }
 
     FlowBlockBase::~FlowBlockBase(){
@@ -188,6 +189,13 @@ namespace kathryn{
 
     bool FlowBlockBase::isThereHold(){
         return holdNode  != nullptr;
+    }
+
+    void FlowBlockBase::setClockMode(CLOCK_MODE mode){
+        clkMode = mode;
+        mfAssert((getClockMode() == CM_POSEDGE) ||
+                      (getClockMode() == CM_NEGEDGE)
+        , "clock mode in flow must be only CM_POSEDGE or CM_NEGEDGE");
     }
 
     void FlowBlockBase::buildHwMaster(){

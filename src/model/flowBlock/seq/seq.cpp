@@ -32,13 +32,13 @@ namespace kathryn{
 
     }
 
-    void SequenceEle::genNode() {
+    void SequenceEle::genNode(CLOCK_MODE cm) {
 
         assert( (_asmNode != nullptr) ^ (_subBlock != nullptr));
 
         ///// it is the basic assignment
         if (_asmNode != nullptr){
-            _stateNode = new StateNode();
+            _stateNode = new StateNode(cm);
             _stateNode->addSlaveAsmNode(_asmNode);
             if (_intRstNode != nullptr) {
                 _stateNode->setInterruptReset(_intRstNode);
@@ -235,7 +235,7 @@ namespace kathryn{
         for (auto& seqMeta: _subSeqMetas) {
             seqMeta->setIntReset(intNodes[INT_RESET]); //// set interrupt reset must be set before gennode
             seqMeta->setHoldNode(holdNode);
-            seqMeta->genNode();
+            seqMeta->genNode(getClockMode());
             seqMeta->setIdentStateId(getGlobalId(),idx++);
             seqMeta->addToCycleDet(cycleDet);
             seqMeta->addToSystemNodes(_sysNodes);

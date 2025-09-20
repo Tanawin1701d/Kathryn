@@ -75,7 +75,7 @@ namespace kathryn{
         assert(_syncMeta._syncMatched != nullptr);
 
         /** init all nodes and condition*/
-        prepSendNode = new StateNode();
+        prepSendNode = new StateNode(getClockMode());
         exitNode     = new PseudoNode(1, BITWISE_AND);
 
         /** prepSendNode*/

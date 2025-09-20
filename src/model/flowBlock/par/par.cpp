@@ -59,7 +59,7 @@ namespace kathryn{
          *
          * */
         if (!_basicNodes.empty()){
-            basicStNode = new StateNode();
+            basicStNode = new StateNode(getClockMode());
             basicStNode->setInternalIdent("parStateReg_" + std::to_string(getGlobalId()));
             addSysNode(basicStNode);
             fillIntResetToNodeIfThere(basicStNode);
@@ -227,7 +227,7 @@ namespace kathryn{
                 ){
             /////// syn reg needed
             int synSize = amt_block;
-            synNode = new SynNode(synSize);
+            synNode = new SynNode(synSize, getClockMode());
             addSysNode(synNode);
             fillIntResetToNodeIfThere(synNode);
             ///////[warning] this time we ensure that gensumforceExit is declared

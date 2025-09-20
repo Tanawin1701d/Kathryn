@@ -102,7 +102,7 @@ namespace kathryn{
         //////////// init all nodes and condition
 
         entNode       = new PseudoNode(1, BITWISE_OR);
-        waitNode      = new StateNode();
+        waitNode      = new StateNode(getClockMode());
         exitDummy     = new DummyNode(&makeOprVal("exitDummy",1, 0));
 
         ///////// add node dependency

@@ -98,6 +98,8 @@ namespace kathryn {
         /** the hold signal supposed to hold the state without execute it*/
         std::vector<Operable*>        holdSignals;
         OprNode*                      holdNode = nullptr;
+        /** CLOCK MODE*/
+        CLOCK_MODE                    clkMode;
 
 
 
@@ -129,6 +131,9 @@ namespace kathryn {
         void           fillHoldSignalToChild();
         void           genHoldNode();
         bool           isThereHold();
+        /** clock mode*/
+        void           setClockMode(CLOCK_MODE mode);
+        CLOCK_MODE     getClockMode() const {return clkMode;}
 
         ///////////////////////////////////////
         Operable*      purifyCondition(Operable* rawOpr);

@@ -24,12 +24,12 @@ namespace kathryn{
 
         void makeUnsetStateEvent() override{
             assert(_condWaitStateReg != nullptr);
-            _condWaitStateReg->makeUnSetStateEvent();
+            _condWaitStateReg->makeUnSetStateEvent(getClockMode());
         }
 
         void makeUserResetEvent() override{
             if (isThrereIntReset()){
-                _condWaitStateReg->makeUserRstEvent(intReset->getExitOpr());
+                _condWaitStateReg->makeUserRstEvent(intReset->getExitOpr(), getClockMode());
             }
 
         }
@@ -51,10 +51,10 @@ namespace kathryn{
         void assign() override{
             assert(!nodeSrcs.empty());
             for(auto nodeSrc: nodeSrcs){
-                _condWaitStateReg->addDependState(nodeSrc.dependNode->getExitOpr(), nodeSrc.condition);
+                _condWaitStateReg->addDependState(nodeSrc.dependNode->getExitOpr(), nodeSrc.condition, getClockMode());
             }
             if (isThereHold()){
-                _condWaitStateReg->addDependState(getStateOperating(), holdNode->getExitOpr());
+                _condWaitStateReg->addDependState(getStateOperating(), holdNode->getExitOpr(), getClockMode());
             }
 
             makeUnsetStateEvent();
@@ -88,12 +88,12 @@ namespace kathryn{
 
         void makeUnsetStateEvent() override{
             assert(_cycleWaitStateReg != nullptr);
-            _cycleWaitStateReg->makeUnSetStateEvent();
+            _cycleWaitStateReg->makeUnSetStateEvent(getClockMode());
         }
 
         void makeUserResetEvent() override{
             if(isThrereIntReset()){
-                _cycleWaitStateReg->makeUserRstEvent(intReset->getExitOpr());
+                _cycleWaitStateReg->makeUserRstEvent(intReset->getExitOpr(), getClockMode());
             }
 
         }
@@ -111,7 +111,7 @@ namespace kathryn{
 
             /**normal start event*/
             for(auto nodeSrc: nodeSrcs){
-                _cycleWaitStateReg->addDependState(nodeSrc.dependNode->getExitOpr(), nodeSrc.condition);
+                _cycleWaitStateReg->addDependState(nodeSrc.dependNode->getExitOpr(), nodeSrc.condition, getClockMode());
             }
             /** inc event*/
             if (isThereHold()){

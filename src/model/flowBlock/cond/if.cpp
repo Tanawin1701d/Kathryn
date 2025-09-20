@@ -99,7 +99,7 @@ namespace kathryn{
             condNode = new PseudoNode(1, BITWISE_OR);
             condNode->setInternalIdent("cifNode" + std::to_string(getGlobalId()));
         }else if(getFlowType() == SIF){
-            condNode = new StateNode();
+            condNode = new StateNode(getClockMode());
             condNode->setInternalIdent("sifNode" + std::to_string(getGlobalId()));
             fillIntResetToNodeIfThere(condNode);
             fillHoldToNodeIfThere(condNode);

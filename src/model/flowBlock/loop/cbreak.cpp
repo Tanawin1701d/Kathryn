@@ -60,7 +60,7 @@ namespace kathryn{
 
         assert(_conBlocks.empty());
         /**build internal node*/
-        breakNode = new StateNode();
+        breakNode = new StateNode(getClockMode());
         addSysNode(breakNode);
         fillIntResetToNodeIfThere(breakNode);
 

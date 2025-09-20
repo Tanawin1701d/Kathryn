@@ -54,7 +54,7 @@ namespace kathryn{
             conditionNode = new PseudoNode(1, BITWISE_OR);
             conditionNode->setInternalIdent("cConNode" + std::to_string(getGlobalId()));
         }else{////// SWHILE
-            conditionNode = new StateNode();
+            conditionNode = new StateNode(getClockMode());
             conditionNode->setInternalIdent("sConNode" + std::to_string(getGlobalId()));
             fillIntResetToNodeIfThere(conditionNode);
             fillHoldToNodeIfThere(conditionNode);
