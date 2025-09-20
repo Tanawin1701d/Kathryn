@@ -30,7 +30,7 @@ namespace kathryn {
 
         {
             assert(assignMeta != nullptr);
-            SET_CLK_MODE(CM_CLK_UNUSED);
+            setClockMode(CM_CLK_UNUSED);
 
         }
 
@@ -43,7 +43,7 @@ namespace kathryn {
             for (auto* asmMeta: _assignMetas){
                 assert(asmMeta != nullptr);
             }
-            SET_CLK_MODE(CM_CLK_UNUSED);
+            setClockMode(CM_CLK_UNUSED);
 
         }
 

@@ -203,6 +203,7 @@ namespace kathryn {
         }
 
         std::vector<sortEle> sortSubAndConFbInOrder();
+        void                 overrideClockModeInAllAsmNodes();
         /**
          * For custom block
          * */

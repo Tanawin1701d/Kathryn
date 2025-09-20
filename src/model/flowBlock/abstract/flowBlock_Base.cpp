@@ -199,6 +199,10 @@ namespace kathryn{
     }
 
     void FlowBlockBase::buildHwMaster(){
+
+        /** override the asmNode     Please remind that it must be done before buildSubHwComponent
+         * because sub component such as zif zelse block can put more asmNode(sub block must think by their own)*/
+
         /** pass the Int reset signal and holding signal to child block*/
         /** dont fill interrupt start signal because this block will start it*/
         fillIntRstSignalToChild();
@@ -211,6 +215,7 @@ namespace kathryn{
         /** start build the node for int reset start and hold signal*/
         genIntNode();
         genHoldNode();
+
 
         buildHwComponent();
     }
@@ -275,6 +280,16 @@ namespace kathryn{
         std::sort(poolEle.begin(), poolEle.end());
 
         return poolEle;
+    }
+
+    void FlowBlockBase::overrideClockModeInAllAsmNodes(){
+
+        for (Node* node: _basicNodes){
+            assert(node != nullptr);
+            assert(node->getNodeType() == ASM_NODE);
+            ((AsmNode*)node)->overrideClockMode(getClockMode());
+        }
+
     }
 
 }
