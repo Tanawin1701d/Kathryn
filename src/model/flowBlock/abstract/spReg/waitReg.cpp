@@ -123,7 +123,7 @@ namespace kathryn{
     }
 
 
-    void CycleWaitStateReg::makeIncStateEvent(Operable* holdSignal) {
+    void CycleWaitStateReg::makeIncStateEvent(Operable* holdSignal, CLOCK_MODE cm) {
 
         Operable* incCond = &((*this)(1, _totalBitSize) != (*_endCnt));
         if (holdSignal != nullptr){
@@ -135,7 +135,9 @@ namespace kathryn{
             &((*this)(0)),
             &((*this)(1, _totalBitSize) + 1),
             Slice({1, _totalBitSize}),
-            DEFAULT_UE_PRI_INTERNAL_MAX-1
+            DEFAULT_UE_PRI_INTERNAL_MAX-1,
+            DEFAULT_UE_SUB_PRIORITY_USER,
+            cm
         });
         addUpdateMeta(event);
     }

@@ -86,7 +86,7 @@ namespace kathryn{
         /** add prior state that trigger this state*/
         UpdateEvent* addDependState(Operable* dependState, Operable* activateCond, CLOCK_MODE cm) override;
         /** add Inc to count*/
-        void makeIncStateEvent(Operable* holdSignal);
+        void makeIncStateEvent(Operable* holdSignal, CLOCK_MODE cm);
         /** reset event*/
         void makeUnSetStateEvent(CLOCK_MODE cm) override;
         /** make user reset event*/

@@ -331,7 +331,9 @@ namespace kathryn{
                 nullptr,
                 _masterSlot.hwFieldRefAt(idx)._opr,
                 resultWire->getOperableSlice(),
-                assignPri
+                assignPri,
+                    DEFAULT_UE_SUB_PRIORITY_USER,
+                    CM_CLK_FREE
                 });
                 updateEvents.push_back(resultUpEvent);
                 isUsedAsDef = false;

@@ -115,9 +115,9 @@ namespace kathryn{
             }
             /** inc event*/
             if (isThereHold()){
-                _cycleWaitStateReg->makeIncStateEvent(holdNode->getExitOpr());
+                _cycleWaitStateReg->makeIncStateEvent(holdNode->getExitOpr(), getClockMode());
             }else{
-                _cycleWaitStateReg->makeIncStateEvent(nullptr);
+                _cycleWaitStateReg->makeIncStateEvent(nullptr, getClockMode());
             }
             /** unset event*/
             makeUnsetStateEvent();

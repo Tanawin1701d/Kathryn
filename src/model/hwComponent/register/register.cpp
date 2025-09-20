@@ -84,14 +84,16 @@ namespace kathryn{
         return x.castToOperable();
     }
 
-    void Reg::makeResetEvent(){
+    void Reg::makeResetEvent(){ //// we lock it to the posedge clock
         makeVal(rstRegVal, getSlice().getSize(), 0);
         auto rstEvent = new UpdateEvent({
             nullptr,
             rstWire,
             &rstRegVal,
             {0, getSlice().getSize()},
-            DEFAULT_UE_PRI_RST
+            DEFAULT_UE_PRI_RST,
+            DEFAULT_UE_SUB_PRIORITY_USER,
+            CM_POSEDGE
         });
         addUpdateMeta(rstEvent);
     }
