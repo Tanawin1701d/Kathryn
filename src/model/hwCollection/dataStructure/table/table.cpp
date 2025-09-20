@@ -243,6 +243,61 @@ namespace kathryn{
         for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
             cusLogic(*_rows[rowIdx], rowIdx);
         }
+    }
+
+    WireSlot Table::doReduce(std::function<Operable&(RegSlot& lhs, Operable& lidx,
+                                                  RegSlot& rhs, Operable& ridx)> cusLogic){
+
+        struct ReducNode{
+            RegSlot* slot = nullptr; Operable* idx;
+        };
+
+        std::vector<AssignMeta*> allSelectAssMeta;
+        std::vector<Operable*>   allSelectAssCond;
+
+        std::vector<AssignMeta*> allIdxSelectAssMeta;
+        std::vector<Operable*>   allIdxSelectAssCond;
+
+        std::queue<ReducNode> reducQueueA;
+        std::queue<ReducNode> reducQueueB;
+
+        std::queue<ReducNode>* srcReducQueue = &reducQueueA;
+        std::queue<ReducNode>* desReducQueue = &reducQueueB;
+
+        while (srcReducQueue->size() != 1){
+
+            while(!srcReducQueue->empty()){
+                ////  if there is only one element by pass it
+                if (srcReducQueue->size() == 1){
+                    desReducQueue->push(srcReducQueue->front());
+                    srcReducQueue->pop();
+                }
+
+                //////get two node
+                ReducNode srcNodeLeft  = srcReducQueue->front();
+                srcReducQueue->pop();
+                ReducNode srcNodeRight = srcReducQueue->front();
+                srcReducQueue->pop();
+
+                //// get condition node
+                Operable& selectLeft = cusLogic(*srcNodeLeft.slot, *srcNodeLeft.idx,
+                                                *srcNodeRight.slot, *srcNodeRight.idx);
+                Operable& selectRight = ~selectRight;
+
+                WireSlot* desSlot = new WireSlot(getMeta());
+                std::vector<AssignMeta*> leftSelectAssMetas  = desSlot->genAssignMetaForAll(*srcNodeLeft.slot, ASM_DIRECT);
+                std::vector<AssignMeta*> rightSelectAssMetas = desSlot->genAssignMetaForAll(*srcNodeRight.slot, ASM_DIRECT);
+                std::vector<Operable*>
+
+
+
+
+
+            }
+            std::swap(srcReducQueue,desReducQueue);
+        }
+
+
 
 
     }

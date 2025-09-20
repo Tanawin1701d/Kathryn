@@ -72,6 +72,8 @@ namespace kathryn{
         void doGlobAsm(ull       srcVal, Operable& rowIdx, Operable& colIdx, ASM_TYPE asmType, bool isOneHotIdx);
 
         void doCusLogic(std::function<void(RegSlot&, int rowIdx)>  cusLogic);
+        WireSlot doReduce(std::function<Operable&(RegSlot& lhs, Operable& lidx,
+                                                  RegSlot& rhs, Operable& ridx)> cusLogic);
 
         /**
          * static slicing
