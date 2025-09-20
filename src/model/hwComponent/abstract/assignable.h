@@ -11,6 +11,7 @@
 #include "operable.h"
 #include "model/hwComponent/abstract/Slice.h"
 #include "updateEvent.h"
+#include "model/controller/clockMode.h"
 
 namespace kathryn{
 
@@ -27,11 +28,13 @@ namespace kathryn{
         Operable&                  valueToAssign;
         Slice                      desSlice;
         ASM_TYPE                   asmType;
-        AssignMeta(std::vector<UpdateEvent*>& u, Operable& v, Slice s, ASM_TYPE at):
+        CLOCK_MODE                 clockMode;
+        AssignMeta(std::vector<UpdateEvent*>& u, Operable& v, Slice s, ASM_TYPE at, CLOCK_MODE cm):
                                                                         updateEventsPool(u),
                                                                         valueToAssign(v),
                                                                         desSlice(s),
-                                                                        asmType(at){}
+                                                                        asmType(at),
+                                                                        clockMode(cm){}
     };
     /**
     * Assignable represent hardware component that can memorize logic value or
@@ -90,12 +93,14 @@ namespace kathryn{
         void addUpdateMeta(UpdateEvent* event){_updateMeta.push_back(event);}
 
         /** generate update metas*/
-        virtual AssignMeta* generateAssignMeta(Operable& srcValue, Slice desSlice, ASM_TYPE asmType){
-            return new AssignMeta(_updateMeta, srcValue, desSlice, asmType);
+        virtual AssignMeta* generateAssignMeta(Operable& srcValue, Slice desSlice, ASM_TYPE asmType, CLOCK_MODE clockMode){
+            return new AssignMeta(_updateMeta, srcValue, desSlice, asmType, clockMode);
         }
 
         /** generate the atomic node that is used to represent  state in the system*/
         AsmNode* generateBasicNode(Operable& srcOpr, Slice desSlice, ASM_TYPE asmType);
+
+        virtual CLOCK_MODE getCurAssignClkMode() = 0;
 
         /***
          *

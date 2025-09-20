@@ -107,6 +107,8 @@ namespace kathryn{
                                 Slice  absDesSlice,
                                 ASM_TYPE asmType) override {assert(false);/**disable this function*/}
 
+            CLOCK_MODE getCurAssignClkMode() {assert(false); return CM_CLK_UNUSED;}
+
             nest& operator = (Operable& b){ operatorEq(b);                                return *this;}
             nest& operator = (ull b)      { operatorEq(b);                                   return *this;}
             nest& operator = (nest& b)    { if (this == &b){return *this;} operatorEq(b); return *this;}

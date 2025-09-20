@@ -27,7 +27,7 @@ namespace kathryn {
         assert(size > 0);
     };
 
-    UpdateEvent* SyncReg::addDependState(Operable* dependState, Operable* activateCond){
+    UpdateEvent* SyncReg::addDependState(Operable* dependState, Operable* activateCond, CLOCK_MODE cm){
         ///assert(activateCond == nullptr);
         assert(dependState != nullptr);
         Operable* actualCondition = endExprInv;
@@ -39,7 +39,10 @@ namespace kathryn {
                                        dependState,
                                        &upState,
                                        Slice({nextFillActivateId, nextFillActivateId + 1}),
-                                       DEFAULT_UE_PRI_INTERNAL_MAX
+                                       DEFAULT_UE_PRI_INTERNAL_MAX,
+                                        DEFAULT_UE_SUB_PRIORITY_USER,
+                                        cm
+
         });
         addUpdateMeta(event);
         ////// assign observe wire
@@ -48,7 +51,9 @@ namespace kathryn {
             dependState,
             &upState,
             Slice({nextFillActivateId, nextFillActivateId + 1}),
-            DEFAULT_UE_PRI_INTERNAL_MAX
+            DEFAULT_UE_PRI_INTERNAL_MAX,
+            DEFAULT_UE_SUB_PRIORITY_USER,
+            cm
         });
         testWire.addUpdateMeta(testEvent);
 
@@ -58,7 +63,7 @@ namespace kathryn {
         return event;
     }
 
-    void SyncReg::makeUnSetStateEvent() {
+    void SyncReg::makeUnSetStateEvent(CLOCK_MODE cm) {
 
         ////// unset also testExpr
         auto* event = new UpdateEvent({
@@ -66,19 +71,23 @@ namespace kathryn {
             &(((*this) | testWire) == upFullState),
             &downFullState,
             Slice({0, getSlice().getSize()}),
-            DEFAULT_UE_PRI_INTERNAL_MIN
+            DEFAULT_UE_PRI_INTERNAL_MIN,
+            DEFAULT_UE_SUB_PRIORITY_USER,
+            cm
         });
         addUpdateMeta(event);
     }
 
-    void SyncReg::makeUserRstEvent(Operable* userRst) {
+    void SyncReg::makeUserRstEvent(Operable* userRst, CLOCK_MODE cm) {
         assert(userRst != nullptr);
         auto* event = new UpdateEvent({
           nullptr,
           userRst,
           &downFullState,
           Slice({0, getSlice().getSize()}),
-          DEFAULT_UE_PRI_INTERNAL_MIN////// we priority set event first rst must be lower
+          DEFAULT_UE_PRI_INTERNAL_MIN,////// we priority set event first rst must be lower
+            DEFAULT_UE_SUB_PRIORITY_USER,
+            cm
                                       });
         addUpdateMeta(event);
     }

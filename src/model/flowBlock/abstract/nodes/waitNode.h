@@ -14,11 +14,12 @@ namespace kathryn{
 
         CondWaitStateReg* _condWaitStateReg = nullptr;
 
-        explicit WaitCondNode(Operable* waitCond):
+        explicit WaitCondNode(Operable* waitCond, CLOCK_MODE clockMode):
                 Node(WAITCOND_NODE){
             assert(waitCond != nullptr);
             _condWaitStateReg = new CondWaitStateReg(waitCond);
             addCycleRelatedReg(_condWaitStateReg);
+            setClockMode(clockMode);
         }
 
         void makeUnsetStateEvent() override{
@@ -69,12 +70,13 @@ namespace kathryn{
         int _cycle = -1;
         CycleWaitStateReg* _cycleWaitStateReg = nullptr;
 
-        explicit WaitCycleNode(int cycle):
+        explicit WaitCycleNode(int cycle, CLOCK_MODE clockMode):
                 Node(WAITCYCLE_NODE),
                 _cycle(cycle){
 
             _cycleWaitStateReg = new CycleWaitStateReg(cycle);
             addCycleRelatedReg(_cycleWaitStateReg);
+            setClockMode(clockMode);
         }
 
         explicit WaitCycleNode(Operable* opr):

@@ -9,13 +9,15 @@ namespace kathryn{
 
 enum CLOCK_MODE{
     CM_POSEDGE,
-    CM_NEGEDGE
+    CM_NEGEDGE,
+    CM_CLK_FREE,
+    CM_CLK_UNUSED,
+    CM_AMT
 };
 
-extern CLOCK_MODE curClockMode;
 
-void setClockMode(CLOCK_MODE mode);
-CLOCK_MODE getClockMode();
+void SET_CLK_MODE(CLOCK_MODE mode);
+CLOCK_MODE GET_CLOCK_MODE();
 
 
 

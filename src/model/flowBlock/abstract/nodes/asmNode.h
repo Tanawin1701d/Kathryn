@@ -30,6 +30,7 @@ namespace kathryn {
 
         {
             assert(assignMeta != nullptr);
+            SET_CLK_MODE(CM_CLK_UNUSED);
 
         }
 
@@ -42,6 +43,7 @@ namespace kathryn {
             for (auto* asmMeta: _assignMetas){
                 assert(asmMeta != nullptr);
             }
+            SET_CLK_MODE(CM_CLK_UNUSED);
 
         }
 
@@ -49,6 +51,14 @@ namespace kathryn {
 
         void assign() override{
             assert(false);
+        }
+
+        void overrideClockMode(CLOCK_MODE mode){
+            /** for asmNode it is first assign with it was built however; the flowblock should override the system
+             * before the assignment is building*/
+            for (auto* assignMeta: _assignMetas){
+                assignMeta->clockMode = mode;
+            }
         }
 
         void assignFromStateNode(Operable* holdSignal){
@@ -78,7 +88,8 @@ namespace kathryn {
                         &assignMeta->valueToAssign,
                         assignMeta->desSlice,
                         DEFAULT_UE_PRI_USER,
-                        _asmId
+                        _asmId,
+                        assignMeta->clockMode
                     });
                     assignMeta->updateEventsPool.push_back(resultUpEvent);
 
@@ -101,7 +112,9 @@ namespace kathryn {
                              &assignMeta->valueToAssign,
                              assignMeta->desSlice,
                              DEFAULT_UE_PRI_USER,
-                             _asmId});
+                             _asmId,
+                            assignMeta->clockMode
+                        });
                         assignMeta->updateEventsPool.push_back(resultUpEvent);
                     }
                 }else{
@@ -126,7 +139,9 @@ namespace kathryn {
                                                              nullptr,
                                                              &assignMeta->valueToAssign,
                                                              assignMeta->desSlice,
-                                                             DEFAULT_UE_PRI_USER});
+                                                             DEFAULT_UE_PRI_USER,
+                    _asmId,
+                assignMeta->clockMode});
 
                 assignMeta->updateEventsPool.push_back(resultUpEvent);
             }

@@ -42,6 +42,8 @@ namespace kathryn{
             doGlobalAsm(srcOpr, resultMetaCollector, absSrcSlice, absDesSlice, ASM_DIRECT);
         }
 
+        CLOCK_MODE getCurAssignClkMode() override { return CM_CLK_FREE;};
+
         Wire& operator = (Operable& b){ operatorEq(b);                                 return *this;}
         Wire& operator = (ull b)      { operatorEq(b);                                    return *this;}
         Wire& operator = (Wire& b)    { if (this == &b){return *this;} operatorEq(b);  return *this;}

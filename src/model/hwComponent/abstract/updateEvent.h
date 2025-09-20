@@ -8,6 +8,7 @@
 #include "model/hwComponent/abstract/Slice.h"
 #include "model/hwComponent/abstract/operable.h"
 #include "operable.h"
+#include "model/controller/clockMode.h"
 #include <vector>
 
 #endif //KATHRYN_UPDATEEVENT_H
@@ -20,6 +21,8 @@ namespace kathryn {
     static int DEFAULT_UE_PRI_RST      = INT32_MAX;
     static int DEFAULT_UE_PRI_MIN      = 0;
 
+    static ull DEFAULT_UE_SUB_PRIORITY_USER = 0;
+
 /** reg/wire update metas data*/
     struct UpdateEvent{
         Operable* srcUpdateCondition = nullptr; /// which condition that allow this value to update.
@@ -30,6 +33,9 @@ namespace kathryn {
         ///priority for circuit if there are attention to update same register at a time 0 is highest 9 is lowest
         ull subPriority = DEFAULT_UE_PRI_MIN; /// the value represent time when it is declared
                                               /// we the later assigment node should have higher priority to override older variable
+        CLOCK_MODE clkMode = CM_CLK_FREE;
+
+        
 
         bool operator < (const UpdateEvent& rhs) const{
             if (priority < rhs.priority){

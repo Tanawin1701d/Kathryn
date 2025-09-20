@@ -39,11 +39,11 @@ namespace kathryn{
         }
 
         /** add depend State register return update event*/
-        virtual UpdateEvent* addDependState(Operable* dependState, Operable* activateCond) = 0;
+        virtual UpdateEvent* addDependState(Operable* dependState, Operable* activateCond, CLOCK_MODE cm) = 0;
         /** build register representation when leaving this state */
-        virtual void      makeUnSetStateEvent() = 0;
+        virtual void      makeUnSetStateEvent(CLOCK_MODE cm) = 0;
         /***make reset Event */
-        virtual void      makeUserRstEvent(Operable* rst) = 0;
+        virtual void      makeUserRstEvent(Operable* rst, CLOCK_MODE cm) = 0;
         /***generate expression that represent state is finish*/
         virtual Operable* generateEndExpr() = 0;
         /** to check that this register require reset event*/

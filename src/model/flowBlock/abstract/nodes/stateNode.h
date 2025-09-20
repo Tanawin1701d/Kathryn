@@ -21,15 +21,16 @@ namespace kathryn{
         StateReg* _stateReg;
         std::vector<AsmNode*> _dependSlaveAsmNode; /// the asignment node that depend on this stateNode
 
-        explicit StateNode() :
+        explicit StateNode(CLOCK_MODE clkMode) :
             Node(STATE_NODE),
             _stateReg(new StateReg()){
             addCycleRelatedReg(_stateReg);
+            setClockMode(clkMode);
         }
 
         void makeUnsetStateEvent() override{
             assert(_stateReg != nullptr);
-            _stateReg->makeUnSetStateEvent();
+            _stateReg->makeUnSetStateEvent(getClockMode());
         }
 
         Operable* getExitOpr() override{
@@ -61,10 +62,10 @@ namespace kathryn{
             _stateReg->setVarName(identName);
             /*** set event*/
             for (auto nodeSrc: nodeSrcs){
-                _stateReg->addDependState(nodeSrc.dependNode->getExitOpr(), nodeSrc.condition);
+                _stateReg->addDependState(nodeSrc.dependNode->getExitOpr(), nodeSrc.condition, getClockMode());
             }
             if (isThereHold()){
-                _stateReg->addDependState(getStateOperating(), holdNode->getExitOpr());
+                _stateReg->addDependState(getStateOperating(), holdNode->getExitOpr(), getClockMode());
             }
 
             /** unset event*/
@@ -94,24 +95,24 @@ namespace kathryn{
         ////// we realize that if the state is not activate SynNode the synNode will remain the same state
 
         /**in SynNode condition and dependState is disengage*/
-        explicit SynNode(int synSize) :
+        explicit SynNode(int synSize, CLOCK_MODE clkMode) :
             Node(SYN_NODE),
             _synReg(new SyncReg(synSize)){
-
             addCycleRelatedReg(_synReg);
+            setClockMode(clkMode);
         }
 
         void makeUnsetStateEvent() override{
             assert(_synReg != nullptr);
-            _synReg->makeUnSetStateEvent();
+            _synReg->makeUnSetStateEvent(getClockMode());
         }
 
         void makeUserResetEvent() override{
             if (isThrereIntReset()) {
-                _synReg->makeUserRstEvent(intReset->getExitOpr());
+                _synReg->makeUserRstEvent(intReset->getExitOpr(), getClockMode());
             }
             if (_forceExitNode != nullptr){
-                _synReg->makeUserRstEvent(_forceExitNode->getExitOpr());
+                _synReg->makeUserRstEvent(_forceExitNode->getExitOpr(), getClockMode());
             }
         }
 
@@ -131,7 +132,7 @@ namespace kathryn{
             }
             for (auto dependNode : nodeSrcs){
                 assert(dependNode.condition == nullptr);
-                _synReg->addDependState(dependNode.dependNode->getExitOpr(), notForceExit);
+                _synReg->addDependState(dependNode.dependNode->getExitOpr(), notForceExit, getClockMode());
             }
             /** make unset event*/
             makeUnsetStateEvent();

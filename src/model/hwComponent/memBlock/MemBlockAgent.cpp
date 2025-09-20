@@ -116,6 +116,8 @@ namespace kathryn{
                                    ASM_EQ_DEPNODE);
     }
 
+
+
     /*** override Operable*/
     Identifiable* MemBlockEleHolder::castToIdent() {return this;}
 

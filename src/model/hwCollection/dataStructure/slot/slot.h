@@ -107,7 +107,8 @@ namespace kathryn{
                 desAsb.getUpdateMeta(),
                 srcOpr,
                 desSlice.getMatchSizeSubSlice(srcSlice),
-                asmType
+                asmType,
+                desAsb.getCurAssignClkMode()
             );
             return assMeta;
         }

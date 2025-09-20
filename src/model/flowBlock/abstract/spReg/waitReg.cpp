@@ -35,35 +35,41 @@ namespace kathryn{
         ctrl->on_sp_reg_init(this, SP_COND_WAIT_REG);
     }
 
-    UpdateEvent* CondWaitStateReg::addDependState(Operable* dependState, Operable* activateCond){
+    UpdateEvent* CondWaitStateReg::addDependState(Operable* dependState, Operable* activateCond, CLOCK_MODE cm){
         assert(dependState != nullptr);
         auto* event = new UpdateEvent({activateCond,
                                        dependState,
                                        &_upState,
                                        Slice({0, 1}),
-                                       DEFAULT_UE_PRI_INTERNAL_MAX
+                                       DEFAULT_UE_PRI_INTERNAL_MAX,
+                                        DEFAULT_UE_SUB_PRIORITY_USER,
+                                        cm
         });
         addUpdateMeta(event);
         return event;
     }
 
-    void CondWaitStateReg::makeUnSetStateEvent() {
+    void CondWaitStateReg::makeUnSetStateEvent(CLOCK_MODE cm) {
         auto* resetEvent = new UpdateEvent({    _condOpr,
                                                 &((*this) == _upState),
                                                 &_downState,
                                                 Slice({0,1}),
-                                                DEFAULT_UE_PRI_INTERNAL_MIN
+                                                DEFAULT_UE_PRI_INTERNAL_MIN,
+                                                DEFAULT_UE_SUB_PRIORITY_USER,
+                                                cm
                                            });
         addUpdateMeta(resetEvent);
     }
 
-    void CondWaitStateReg::makeUserRstEvent(Operable* rst){
+    void CondWaitStateReg::makeUserRstEvent(Operable* rst, CLOCK_MODE cm){
         assert(rst != nullptr);
         auto* resetEvent = new UpdateEvent({    nullptr,
                                                 rst,
                                                 &_downState,
                                                 Slice({0,1}),
-                                                DEFAULT_UE_PRI_INTERNAL_MIN
+                                                DEFAULT_UE_PRI_INTERNAL_MIN,
+                                                DEFAULT_UE_SUB_PRIORITY_USER,
+                                                cm
                                            });
         addUpdateMeta(resetEvent);
     }
@@ -138,31 +144,36 @@ namespace kathryn{
         ctrl->on_sp_reg_init(this, SP_CYCLE_WAIT_REG);
     }
 
-    UpdateEvent* CycleWaitStateReg::addDependState(Operable* dependState, Operable* activateCond){
+    UpdateEvent* CycleWaitStateReg::addDependState(Operable* dependState, Operable* activateCond, CLOCK_MODE cm){
         assert(dependState != nullptr);
         auto* event = new UpdateEvent({activateCond,
                                        dependState,
                                        _startCnt,
                                        Slice({0, _totalBitSize}),
-                                       DEFAULT_UE_PRI_INTERNAL_MAX});
+                                       DEFAULT_UE_PRI_INTERNAL_MAX,
+                                        DEFAULT_UE_SUB_PRIORITY_USER,
+                                        cm
+        });
         addUpdateMeta(event);
         return event;
     }
 
-    void CycleWaitStateReg::makeUnSetStateEvent() {
+    void CycleWaitStateReg::makeUnSetStateEvent(CLOCK_MODE cm) {
         /**reset event*/
         auto* resetEvent = new UpdateEvent({
             &((*this)(1, _totalBitSize) == (*_endCnt)),
             &(*this)(0),
             IdleCnt,
             Slice({0, _totalBitSize}),
-            DEFAULT_UE_PRI_INTERNAL_MIN
+            DEFAULT_UE_PRI_INTERNAL_MIN,
+            DEFAULT_UE_SUB_PRIORITY_USER,
+            cm
                                            });
         addUpdateMeta(resetEvent);
 
     }
 
-    void CycleWaitStateReg::makeUserRstEvent(Operable* rst){
+    void CycleWaitStateReg::makeUserRstEvent(Operable* rst, CLOCK_MODE cm){
         /**reset event*/
         assert(rst != nullptr);
         auto* resetEvent = new UpdateEvent({
@@ -170,9 +181,12 @@ namespace kathryn{
            rst,
            IdleCnt,
            Slice({0, _totalBitSize}),
-           DEFAULT_UE_PRI_INTERNAL_MIN
+           DEFAULT_UE_PRI_INTERNAL_MIN,
+            DEFAULT_UE_SUB_PRIORITY_USER,
+            cm
                                            });
         addUpdateMeta(resetEvent);
+
     }
 
     Operable* CycleWaitStateReg::generateEndExpr() {

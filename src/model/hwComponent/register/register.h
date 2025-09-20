@@ -44,6 +44,8 @@ namespace kathryn{
             Assignable::doGlobalAsm(srcOpr, resultMetaCollector, absSrcSlice, absDesSlice, ASM_EQ_DEPNODE);
         };
 
+        CLOCK_MODE getCurAssignClkMode() override {return GET_CLOCK_MODE();}
+
         Reg& operator = (Operable& b){ operatorEq(b);                                return *this;}
         Reg& operator = (ull b)      { operatorEq(b);                                   return *this;}
         Reg& operator = (Reg& b)     { if (this == &b){return *this;} operatorEq(b); return *this;}

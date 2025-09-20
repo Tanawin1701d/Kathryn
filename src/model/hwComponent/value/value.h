@@ -55,6 +55,8 @@ namespace kathryn{
             mfAssert(false, "val don't support this doNonBlockAsm"); assert(false);
         }
 
+        CLOCK_MODE getCurAssignClkMode() {return CM_CLK_FREE;}
+
         Val& operator = (Operable& b){ operatorEq(b);                                return *this;}
         Val& operator = (ull b)      { operatorEq(b);                                   return *this;}
         Val& operator = (Val& b)     { if(this == &b){return *this;} operatorEq(b);  return *this;}

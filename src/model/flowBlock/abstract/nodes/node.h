@@ -11,6 +11,7 @@
 #include<queue>
 #include<map>
 
+#include "model/controller/clockMode.h"
 #include "model/hwComponent/abstract/operation.h"
 #include "model/hwComponent/expression/expression.h"
 #include "model/hwComponent/register/register.h"
@@ -66,6 +67,10 @@ namespace kathryn {
 
         Node*                    intReset  = nullptr;
         Node*                    holdNode  = nullptr;
+
+        CLOCK_MODE               clkMode = CM_CLK_FREE; //// indicate the clk sensitivity type
+        /// for asm node it should be assigned since the was built
+        /// for other flowblock should assign it
 
         /** simulate support register*/
         std::vector<CtrlFlowRegBase*> relatedCycleConsumeReg;
@@ -131,6 +136,13 @@ namespace kathryn {
         }
 
         std::vector<NodeSrcEdge>& getDependNodes() {return nodeSrcs;}
+
+        /**
+         * clock
+         *
+         */
+        void       setClockMode(CLOCK_MODE cm){ clkMode = cm;}
+        CLOCK_MODE getClockMode() const{ return clkMode;}
 
         /**
          * interrupt handler

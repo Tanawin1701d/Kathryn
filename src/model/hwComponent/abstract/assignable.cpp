@@ -37,7 +37,7 @@ namespace kathryn{
         Operable* slicedSrcOpr = exactSrcOpr->doSlice(desireSrcSlice);
 
         resultMetaCollector.push_back(
-                generateAssignMeta( *slicedSrcOpr, desireDesSlice, asmType)
+                generateAssignMeta( *slicedSrcOpr, desireDesSlice, asmType, getCurAssignClkMode())
         );
     }
 
@@ -46,10 +46,7 @@ namespace kathryn{
 
         assert(desSlice.getSize() <= srcOpr.getOperableSlice().getSize());
 
-        auto* assMeta = new AssignMeta(_updateMeta,
-                                       srcOpr,
-                                       desSlice,
-                                       asmType);
+        auto* assMeta = generateAssignMeta(srcOpr,desSlice,asmType, getCurAssignClkMode());
         auto* asmNode = new AsmNode(assMeta);
         return asmNode;
 

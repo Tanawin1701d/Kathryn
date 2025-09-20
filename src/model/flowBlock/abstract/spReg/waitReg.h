@@ -34,11 +34,11 @@ namespace kathryn{
         /** constructor*/
         explicit CondWaitStateReg(Operable* condOpr);
         /** add prior state that trigger this state*/
-        UpdateEvent* addDependState(Operable* dependState, Operable* activateCond) override;
+        UpdateEvent* addDependState(Operable* dependState, Operable* activateCond, CLOCK_MODE cm) override;
         /** generate reset event*/
-        void makeUnSetStateEvent() override;
+        void makeUnSetStateEvent(CLOCK_MODE cm) override;
         /** make user reset event*/
-        void  makeUserRstEvent(Operable* rst) override;
+        void  makeUserRstEvent(Operable* rst, CLOCK_MODE cm) override;
         /** generate out expression*/
         Operable* generateEndExpr() override;
         /** oevrride operator to prevent false input*/
@@ -84,13 +84,13 @@ namespace kathryn{
         explicit CycleWaitStateReg(Operable* endCnt);
 
         /** add prior state that trigger this state*/
-        UpdateEvent* addDependState(Operable* dependState, Operable* activateCond) override;
+        UpdateEvent* addDependState(Operable* dependState, Operable* activateCond, CLOCK_MODE cm) override;
         /** add Inc to count*/
         void makeIncStateEvent(Operable* holdSignal);
         /** reset event*/
-        void makeUnSetStateEvent() override;
+        void makeUnSetStateEvent(CLOCK_MODE cm) override;
         /** make user reset event*/
-        void  makeUserRstEvent(Operable* rst) override;
+        void  makeUserRstEvent(Operable* rst, CLOCK_MODE cm) override;
         /** generate out expression*/
         Operable* generateEndExpr() override;
         /** oevrride operator to prevent false input*/

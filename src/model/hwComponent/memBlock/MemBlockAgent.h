@@ -62,6 +62,8 @@ namespace kathryn{
                            Slice  absSrcSlice,
                            Slice  absDesSlice) override;
 
+        CLOCK_MODE getCurAssignClkMode() override {return GET_CLOCK_MODE();}
+
         MemBlockEleHolder& operator = (Operable& b)         { operatorEq(b);                                return *this;}
         MemBlockEleHolder& operator = (ull b)               { operatorEq(b);                                   return *this;}
         MemBlockEleHolder& operator = (MemBlockEleHolder& b){ if (this == &b){return *this;} operatorEq(b); return *this;}

@@ -17,8 +17,11 @@ namespace kathryn{
         explicit PseudoNode(int expr_size, LOGIC_OP joinOp) :
                 Node(PSEUDO_NODE),
                 _pseudoAssignMeta(new expression(expr_size)),
-                _joinOp(joinOp)
-        {}
+                _joinOp(joinOp){
+
+            setClockMode(CM_CLK_FREE);
+
+        }
 
         void assign() override{
             assert(!nodeSrcs.empty());
@@ -78,6 +81,7 @@ namespace kathryn{
                 Node(OPR_NODE),
                 _value(value){
             assert(_value != nullptr);
+            setClockMode(CM_CLK_FREE);
         }
 
         void assign() override{
