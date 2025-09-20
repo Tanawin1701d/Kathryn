@@ -8,11 +8,14 @@
 namespace kathryn{
 
     WireSlot TableSliceAgent::v(){
-        return _table->genDynWireSlot(_requiredIdx);
+        if (_oneHotEncMode){
+            return _table->genDynWireSlotOHIdx(_requiredIdx);
+        }
+        return _table->genDynWireSlotBiIdx(_requiredIdx);
     }
 
     void TableSliceAgent::doGlobAsm(Slot& srcSlot){
-        _table->doGlobAsm(srcSlot, _requiredIdx, ASM_DIRECT);
+        _table->doGlobAsm(srcSlot, _requiredIdx, ASM_DIRECT, _oneHotEncMode);
     }
 
     TableSliceAgent& TableSliceAgent::operator <<= (Slot& rhs){

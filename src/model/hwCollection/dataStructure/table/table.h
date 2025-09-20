@@ -8,6 +8,7 @@
 #include "model/hwCollection/dataStructure/slot/regSlot.h"
 #include "model/hwCollection/dataStructure/slot/slotMeta.h"
 #include "model/hwCollection/dataStructure/slot/wireSlot.h"
+#include "model/hwCollection/dataStructure/indexing/index.h"
 #include "tableSliceAgent.h"
 
 namespace kathryn{
@@ -43,7 +44,11 @@ namespace kathryn{
 
         void buildRows(SlotMeta& slotMeta, int amtRow, std::string prefixName);
 
-        bool isSufficientIdx(Operable& requiredIdx) const;
+        bool isSufficientBinIdx(Operable& requiredIdx) const;
+        bool isSufficientOHIdx(Operable& requiredIdx) const;
+        bool isSufficientIdx(Operable& requiredIdx, bool isOH) const;
+
+        Operable& createIdxMatchCond(Operable& requiredIdx, int rowIdx,bool isOH);
 
         bool isValidIdx(int idx) const;
 
@@ -57,13 +62,14 @@ namespace kathryn{
          * gen assign meta
          *
          */
-
-        WireSlot genDynWireSlot(Operable& requiredIdx);
+        WireSlot genDynWireSlotBase(Operable& requiredIdx, bool isOneHotIdx); //// oneHotIdx will determine the the rowId by bit Idx in the requiredIdx
+        WireSlot genDynWireSlotBiIdx(Operable& binIdx);
+        WireSlot genDynWireSlotOHIdx(Operable& ohIdx);
 
         ////// this will asssign the slot
-        void doGlobAsm(Slot& srcSlot, Operable& requiredIdx, ASM_TYPE asmType);
-        void doGlobAsm(Operable& srcOpr, Operable& rowIdx, Operable& colIdx, ASM_TYPE asmType);
-        void doGlobAsm(ull       srcVal, Operable& rowIdx, Operable& colIdx, ASM_TYPE asmType);
+        void doGlobAsm(Slot& srcSlot, Operable& requiredIdx, ASM_TYPE asmType, bool isOneHotIdx);
+        void doGlobAsm(Operable& srcOpr, Operable& rowIdx, Operable& colIdx, ASM_TYPE asmType, bool isOneHotIdx);
+        void doGlobAsm(ull       srcVal, Operable& rowIdx, Operable& colIdx, ASM_TYPE asmType, bool isOneHotIdx);
 
         void doCusLogic(std::function<void(RegSlot&, int rowIdx)>  cusLogic);
 
@@ -84,6 +90,7 @@ namespace kathryn{
          */
 
         TableSliceAgent operator[] (Operable& requiredIdx);
+        TableSliceAgent operator[] (OH ohIdx);
 
         /**
          *  table join

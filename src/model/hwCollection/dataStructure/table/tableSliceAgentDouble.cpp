@@ -54,7 +54,7 @@ namespace kathryn{
             doStaticGlobAsm(_requiredColIdxInt, rhsOpr);
         }else{
             _table->doGlobAsm(rhsOpr, *_requiredColIdx,
-                              *_requiredColIdx, ASM_DIRECT);
+                              *_requiredColIdx, ASM_DIRECT, _masterAgent->isOneHotEncMode());
         }
 
         return *this;
@@ -68,7 +68,7 @@ namespace kathryn{
             doStaticGlobAsm(_requiredColIdxInt, rhsVal);
         }else{
             _table->doGlobAsm(rhsVal, *_requiredColIdx,
-                              *_requiredColIdx, ASM_DIRECT);
+                              *_requiredColIdx, ASM_DIRECT, _masterAgent->isOneHotEncMode());
         }
 
         return *this;

@@ -16,16 +16,20 @@ namespace kathryn{
 
     class TableSliceAgent{
     protected:
+        bool _oneHotEncMode = false;
         Table* _table = nullptr;
         Operable& _requiredIdx;
 
     public:
-        TableSliceAgent(Table* table, Operable& requiredIdx) :
+        TableSliceAgent(Table* table, Operable& requiredIdx, bool oneHotEncMode) :
             _table(table),
-            _requiredIdx(requiredIdx){
+            _requiredIdx(requiredIdx),
+            _oneHotEncMode(oneHotEncMode){
         }
 
         WireSlot v();
+
+        bool isOneHotEncMode() const{ return _oneHotEncMode;}
 
         void doGlobAsm(Slot& srcSlot);
         TableSliceAgent& operator <<= (Slot& rhs);

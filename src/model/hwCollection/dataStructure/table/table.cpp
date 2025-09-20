@@ -60,10 +60,32 @@ namespace kathryn{
         }
     }
 
-    bool Table::isSufficientIdx(Operable& requiredIdx) const{
+    bool Table::isSufficientBinIdx(Operable& requiredIdx) const{
         int inputSize = requiredIdx.getOperableSlice().getSize();
         return (1 << inputSize) >= getNumRow();
     }
+
+    bool Table::isSufficientOHIdx(Operable& requiredIdx) const{
+        return requiredIdx.getOperableSlice().getSize() == getNumRow();
+    }
+
+    bool Table::isSufficientIdx(Operable& requiredIdx, bool isOH) const{
+        if (isOH){
+            return isSufficientOHIdx(requiredIdx);
+        }
+        return isSufficientBinIdx(requiredIdx);
+    }
+
+    Operable& Table::createIdxMatchCond(Operable& requiredIdx, int rowIdx, bool isOH){
+        if (isOH){
+            return *requiredIdx.doSlice({rowIdx, rowIdx+1});
+        }
+        return (requiredIdx == rowIdx);
+
+
+    }
+
+
 
     bool Table::isValidIdx(int idx) const{
         return idx >= 0 && idx < _rows.size();
@@ -87,9 +109,8 @@ namespace kathryn{
      *
      */
 
-    WireSlot Table::genDynWireSlot(Operable& requiredIdx){
+    WireSlot Table::genDynWireSlotBase(Operable& requiredIdx, bool isOneHotIdx){
 
-        mfAssert(isSufficientIdx(requiredIdx), "requiredIdx is not sufficient to get all system");
         ////// return node
         WireSlot resultWireSlot(getMeta());
         ////// all metadata
@@ -100,7 +121,8 @@ namespace kathryn{
             std::vector<AssignMeta*> eachRowCollector;
             std::vector<Operable*> eachRowPreCond;
             ////// generate the assign condition
-            Operable* rowIdxCheckCond = &(requiredIdx == rowIdx);
+            Operable* rowIdxCheckCond = &createIdxMatchCond(requiredIdx, rowIdx, isOneHotIdx);
+            //////// generate each row's assign meta
             eachRowCollector = resultWireSlot.genAssignMetaForAll(*_rows[rowIdx], ASM_DIRECT);
             for (int colIdx = 0; colIdx < resultWireSlot.getNumField(); colIdx++){
                 eachRowPreCond.push_back(rowIdxCheckCond);
@@ -121,9 +143,19 @@ namespace kathryn{
 
     }
 
+    WireSlot Table::genDynWireSlotBiIdx(Operable& requiredIdx){
+        mfAssert(isSufficientBinIdx(requiredIdx), "requiredIdx is not sufficient to get all system");
+        return genDynWireSlotBase(requiredIdx, false);
+    }
+
+    WireSlot Table::genDynWireSlotOHIdx(Operable& requiredIdx){
+        mfAssert(isSufficientOHIdx(requiredIdx), "requiredIdx is not sufficient to get all system");
+        return genDynWireSlotBase(requiredIdx, true);
+    }
+
     ////// this will asssign the slot
-    void Table::doGlobAsm(Slot& srcSlot, Operable& requiredIdx, ASM_TYPE asmType){
-        mfAssert(isSufficientIdx(requiredIdx), "requiredIdx is not sufficient to get all system");
+    void Table::doGlobAsm(Slot& srcSlot, Operable& requiredIdx, ASM_TYPE asmType, bool isOneHotIdx){
+        mfAssert(isSufficientIdx(requiredIdx, isOneHotIdx), "requiredIdx is not sufficient to get all system");
         std::vector<AssignMeta*> allRowCollector;
         std::vector<Operable*>   allRowPreCond;
 
@@ -136,7 +168,7 @@ namespace kathryn{
             ////// seach for match assign column and generate assign Metadata
             auto  [srcMatchidxs, desMatchIdxs] = getMeta().matchByName(srcMeta);
             eachRowCollector = desSlot.genAssignMetaForAll(srcSlot, srcMatchidxs, desMatchIdxs, {}, asmType);
-            Operable* rowIdxCheckCond = &(requiredIdx == desIdx);
+            Operable* rowIdxCheckCond = &(createIdxMatchCond(requiredIdx, desIdx, isOneHotIdx));
             for (int colIdx = 0; colIdx < eachRowCollector.size(); colIdx++){
                 eachRowPreCond.push_back(rowIdxCheckCond);
             }
@@ -162,8 +194,8 @@ namespace kathryn{
 
     }
 
-    void Table::doGlobAsm(Operable& srcOpr, Operable& rowIdx, Operable& colIdx, ASM_TYPE asmType){
-        mfAssert(isSufficientIdx(rowIdx), "requiredIdx is not sufficient to get all system");
+    void Table::doGlobAsm(Operable& srcOpr, Operable& rowIdx, Operable& colIdx, ASM_TYPE asmType, bool isOHRow){
+        mfAssert(isSufficientIdx(rowIdx, isOHRow), "requiredIdx is not sufficient to get all system");
         mfAssert(_rows[0]->isSufficientIdx(colIdx.getOperableSlice().getSize()), "column is not sufficient to get all column");
 
         std::vector<AssignMeta*> allRowCollector;
@@ -178,9 +210,10 @@ namespace kathryn{
             ///// gen row assign
             eachRowCollector = rowSlot.genAssignMetaForAll(srcOpr, asmType);
             ///// gen col assign
+            Operable* desRowIdxCheckCond = &(createIdxMatchCond(colIdx, desRowIdx, isOHRow));
             for (int desColIdx = 0; desColIdx < eachRowCollector.size(); desColIdx++){
                 eachRowPreCond.push_back(
-                    &( (rowIdx == desRowIdx) && (colIdx == desColIdx)));
+                    &( (*desRowIdxCheckCond) && (colIdx == desColIdx)));
             }
             ///// add to main pool
             allRowCollector.insert(allRowCollector.end(),
@@ -201,9 +234,9 @@ namespace kathryn{
 
     }
 
-    void Table::doGlobAsm(ull rhsVal, Operable& rowIdx, Operable& colIdx, ASM_TYPE asmType){
+    void Table::doGlobAsm(ull rhsVal, Operable& rowIdx, Operable& colIdx, ASM_TYPE asmType, bool isOHRow){
         Operable& mySrcOpr = getMatchAssignOperable(rhsVal, getMaxCellWidth());
-        doGlobAsm(mySrcOpr, rowIdx, colIdx, asmType);
+        doGlobAsm(mySrcOpr, rowIdx, colIdx, asmType, isOHRow);
     }
 
     void Table::doCusLogic(std::function<void(RegSlot&, int rowIdx)>  cusLogic){
@@ -269,8 +302,13 @@ namespace kathryn{
      */
 
     TableSliceAgent Table::operator[] (Operable& requiredIdx){
-        isSufficientIdx(requiredIdx);
-        return TableSliceAgent(this, requiredIdx);
+        isSufficientBinIdx(requiredIdx);
+        return TableSliceAgent(this, requiredIdx, false);
+    }
+
+    TableSliceAgent Table::operator[] (OH ohIdx){
+        isSufficientOHIdx(ohIdx.getIdx());
+        return TableSliceAgent(this, ohIdx.getIdx(), true);
     }
 
     /**
