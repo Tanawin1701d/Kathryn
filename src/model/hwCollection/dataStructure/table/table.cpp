@@ -303,8 +303,8 @@ namespace kathryn{
     }
 
     Table::ReducNode Table::doReduceBase(const std::vector<ReducNode>& initReducNodes,
-                                         std::function<Operable&(WireSlot& lhs, Operable* lidx,
-                                                                 WireSlot& rhs, Operable* ridx)> cusLogic,
+                                         const std::function<Operable&(WireSlot& lhs, Operable* lidx,
+                                                                 WireSlot& rhs, Operable* ridx)>& cusLogic,
                                          bool requiredIdx){
 
         int debugIdx = 0;
@@ -339,6 +339,7 @@ namespace kathryn{
                 //// get condition node
                 Operable& selectLeft = cusLogic(*srcNodeLeft.slot,  srcNodeLeft.idx,
                                                 *srcNodeRight.slot, srcNodeRight.idx);
+                mfAssert(selectLeft.getOperableSlice().getSize() == 1, "selectLeft is not a single bit");
                 ReducNode binedReducNode = createMux(srcNodeLeft, srcNodeRight, selectLeft, debugIdx++, requiredIdx);
                 desReducQueue->push(binedReducNode);
 
@@ -355,24 +356,25 @@ namespace kathryn{
 
     }
 
-    WireSlot Table::doReducNoIdx(std::function<Operable&(WireSlot& lhs, Operable* lidx,
-                                                         WireSlot& rhs, Operable* ridx)> cusLogic){
+    WireSlot Table::doReducNoIdx(const std::function<Operable&(WireSlot& lhs, Operable* lidx,
+                                                         WireSlot& rhs, Operable* ridx)>& cusLogic){
         std::vector<ReducNode> initReducNodes;
+        initReducNodes.reserve(getNumRow());
         for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
-            initReducNodes.push_back({new WireSlot(*_rows[rowIdx], "initReduc"), nullptr});
+            initReducNodes.push_back({new WireSlot(*static_cast<Slot*>(_rows[rowIdx]), "initReduc"), nullptr});
         }
-        ReducNode finalNode = doReduceBase(initReducNodes, std::move(cusLogic), false);
+        ReducNode finalNode = doReduceBase(initReducNodes, cusLogic, false);
         WireSlot result(*finalNode.slot);
         finalNode.destroy();
         return result;
     }
 
-    std::pair<WireSlot, Operable&> Table::doReducBinIdx(std::function<Operable&(WireSlot& lhs, Operable* lidx,
-        WireSlot& rhs, Operable* ridx)> cusLogic){
+    std::pair<WireSlot, Operable&> Table::doReducBinIdx(const std::function<Operable&(WireSlot& lhs, Operable* lidx,
+        WireSlot& rhs, Operable* ridx)>& cusLogic){
         std::vector<ReducNode> initReducNodes;
         for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
             Val* idxVal = &mOprVal("initBinIdxOpr" + std::to_string(rowIdx), getSufficientIdxSize(false), rowIdx);
-            initReducNodes.push_back({new WireSlot(*_rows[rowIdx], "initReducBin"), idxVal});
+            initReducNodes.push_back({new WireSlot(*static_cast<Slot*>(_rows[rowIdx]), "initReducBin"), idxVal});
         }
         ReducNode finalNode = doReduceBase(initReducNodes, cusLogic, true);
         WireSlot result(*finalNode.slot);
@@ -381,12 +383,12 @@ namespace kathryn{
         return {result, resultIdx};
     }
 
-    std::pair<WireSlot, OH> Table::doReducOHIdx(std::function<Operable&(WireSlot& lhs, Operable* lidx,
-    WireSlot& rhs, Operable* ridx)> cusLogic){
+    std::pair<WireSlot, OH> Table::doReducOHIdx(const std::function<Operable&(WireSlot& lhs, Operable* lidx,
+    WireSlot& rhs, Operable* ridx)>& cusLogic){
         std::vector<ReducNode> initReducNodes;
         for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
             Val* idxVal = &mOprVal("initOhIdxOpr" + std::to_string(rowIdx), getSufficientIdxSize(true), ((ull) 1) << rowIdx);
-            initReducNodes.push_back({new WireSlot(*_rows[rowIdx], "initReducOH"), idxVal});
+            initReducNodes.push_back({new WireSlot(*static_cast<Slot*>(_rows[rowIdx]), "initReducOH"), idxVal});
         }
         ReducNode finalNode = doReduceBase(initReducNodes, cusLogic, true);
         WireSlot result(*finalNode.slot);

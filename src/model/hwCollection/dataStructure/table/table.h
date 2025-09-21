@@ -88,15 +88,15 @@ namespace kathryn{
         void doCusLogic(std::function<void(RegSlot&, int rowIdx)>  cusLogic);
 
         ReducNode doReduceBase(const std::vector<ReducNode>& initReducNodes,
-                               std::function<Operable&(WireSlot& lhs, Operable* lidx,
-                                                       WireSlot& rhs, Operable* ridx)> cusLogic,
+                               const std::function<Operable&(WireSlot& lhs, Operable* lidx,
+                                                       WireSlot& rhs, Operable* ridx)>& cusLogic,
                                                        bool requiredIdx);
-        WireSlot doReducNoIdx(std::function<Operable&(WireSlot& lhs, Operable* lidx,
-                                                      WireSlot& rhs, Operable* ridx)> cusLogic);
-        std::pair<WireSlot, Operable&> doReducBinIdx(std::function<Operable&(WireSlot& lhs, Operable* lidx,
-                                                                             WireSlot& rhs, Operable* ridx)> cusLogic);
-        std::pair<WireSlot, OH> doReducOHIdx(std::function<Operable&(WireSlot& lhs, Operable* lidx,
-                                                                     WireSlot& rhs, Operable* ridx)> cusLogic);
+        WireSlot doReducNoIdx(const std::function<Operable&(WireSlot& lhs, Operable* lidx,
+                                                      WireSlot& rhs, Operable* ridx)>& cusLogic);
+        std::pair<WireSlot, Operable&> doReducBinIdx(const std::function<Operable&(WireSlot& lhs, Operable* lidx,
+                                                                             WireSlot& rhs, Operable* ridx)>& cusLogic);
+        std::pair<WireSlot, OH> doReducOHIdx(const std::function<Operable&(WireSlot& lhs, Operable* lidx,
+                                                                     WireSlot& rhs, Operable* ridx)>& cusLogic);
 
         /**
          * static slicing
