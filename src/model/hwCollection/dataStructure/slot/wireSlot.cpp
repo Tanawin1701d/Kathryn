@@ -65,7 +65,6 @@ namespace kathryn{
             }
         }
 
-    WireSlot::~WireSlot(){}
 
         /**
              * The main function to overwrite the assignment

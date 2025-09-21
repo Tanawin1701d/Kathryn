@@ -42,7 +42,7 @@ namespace kathryn{
                  const std::vector<int>&         fieldSizes,
                  const std::string&              prefixName = "WireSlot");
 
-        ~WireSlot() override;
+        ~WireSlot() override = default;
         /**
          * The main function to overwrite the assignment
          */

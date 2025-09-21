@@ -18,6 +18,19 @@ namespace kathryn{
     protected:
         SlotMeta _meta;
         std::vector<RegSlot*> _rows;
+
+        struct ReducNode{
+            WireSlot* slot = nullptr; Operable* idx;
+
+            void destroy(){
+                delete slot;
+                //// operable is managed by module
+            }
+        };
+
+        ReducNode createMux(ReducNode& lhs, ReducNode& rhs, Operable& selectLeft, int debugIdx, bool requiredIdx);
+
+
     public:
 
         /**
@@ -47,6 +60,7 @@ namespace kathryn{
         bool isSufficientBinIdx(Operable& requiredIdx) const;
         bool isSufficientOHIdx(Operable& requiredIdx) const;
         bool isSufficientIdx(Operable& requiredIdx, bool isOH) const;
+        int  getSufficientIdxSize(bool isOH) const;
 
         Operable& createIdxMatchCond(Operable& requiredIdx, int rowIdx,bool isOH);
 
@@ -72,8 +86,17 @@ namespace kathryn{
         void doGlobAsm(ull       srcVal, Operable& rowIdx, Operable& colIdx, ASM_TYPE asmType, bool isOneHotIdx);
 
         void doCusLogic(std::function<void(RegSlot&, int rowIdx)>  cusLogic);
-        WireSlot doReduce(std::function<Operable&(RegSlot& lhs, Operable& lidx,
-                                                  RegSlot& rhs, Operable& ridx)> cusLogic);
+
+        ReducNode doReduceBase(const std::vector<ReducNode>& initReducNodes,
+                               std::function<Operable&(WireSlot& lhs, Operable* lidx,
+                                                       WireSlot& rhs, Operable* ridx)> cusLogic,
+                                                       bool requiredIdx);
+        WireSlot doReducNoIdx(std::function<Operable&(WireSlot& lhs, Operable* lidx,
+                                                      WireSlot& rhs, Operable* ridx)> cusLogic);
+        std::pair<WireSlot, Operable&> doReducBinIdx(std::function<Operable&(WireSlot& lhs, Operable* lidx,
+                                                                             WireSlot& rhs, Operable* ridx)> cusLogic);
+        std::pair<WireSlot, OH> doReducOHIdx(std::function<Operable&(WireSlot& lhs, Operable* lidx,
+                                                                     WireSlot& rhs, Operable* ridx)> cusLogic);
 
         /**
          * static slicing

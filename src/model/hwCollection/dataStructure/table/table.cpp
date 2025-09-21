@@ -76,6 +76,14 @@ namespace kathryn{
         return isSufficientBinIdx(requiredIdx);
     }
 
+    int Table::getSufficientIdxSize(bool isOH) const{
+        if (isOH){
+            return getNumRow();
+        }
+        return log2Ceil(getNumRow());
+    }
+
+
     Operable& Table::createIdxMatchCond(Operable& requiredIdx, int rowIdx, bool isOH){
         if (isOH){
             return *requiredIdx.doSlice({rowIdx, rowIdx+1});
@@ -245,21 +253,70 @@ namespace kathryn{
         }
     }
 
-    WireSlot Table::doReduce(std::function<Operable&(RegSlot& lhs, Operable& lidx,
-                                                  RegSlot& rhs, Operable& ridx)> cusLogic){
+    Table::ReducNode Table::createMux(ReducNode& lhs, ReducNode& rhs, Operable& selectLeft, int debugIdx, bool requiredIdx){
 
-        struct ReducNode{
-            RegSlot* slot = nullptr; Operable* idx;
-        };
+        Operable& selectRight = ~selectLeft;
 
-        std::vector<AssignMeta*> allSelectAssMeta;
-        std::vector<Operable*>   allSelectAssCond;
 
-        std::vector<AssignMeta*> allIdxSelectAssMeta;
-        std::vector<Operable*>   allIdxSelectAssCond;
+        WireSlot* desSlot = new WireSlot(getMeta());
+
+        std::vector<AssignMeta*> leftSelectAssMetas  = desSlot->genAssignMetaForAll(*lhs.slot, ASM_DIRECT);
+        std::vector<AssignMeta*> rightSelectAssMetas = desSlot->genAssignMetaForAll(*rhs.slot, ASM_DIRECT);
+        std::vector<Operable*>   leftSelectCondPerAssMeta(desSlot->getNumField(), &selectLeft);
+        std::vector<Operable*>   rightSelectCondPerAssMeta(desSlot->getNumField(), &selectRight);
+
+        std::vector<AssignMeta*> poolSlotAsmMetas;
+        poolSlotAsmMetas.insert(poolSlotAsmMetas.end(), leftSelectAssMetas.begin(), leftSelectAssMetas.end());
+        poolSlotAsmMetas.insert(poolSlotAsmMetas.end(), rightSelectAssMetas.begin(), rightSelectAssMetas.end());
+        std::vector<Operable*> poolCondPerAssMeta;
+        poolCondPerAssMeta.insert(poolCondPerAssMeta.end(), leftSelectCondPerAssMeta.begin(), leftSelectCondPerAssMeta.end());
+        poolCondPerAssMeta.insert(poolCondPerAssMeta.end(), rightSelectCondPerAssMeta.begin(), rightSelectCondPerAssMeta.end());
+
+        assert(leftSelectCondPerAssMeta.size() == rightSelectAssMetas.size());
+        auto* slotAsmNode = new AsmNode(poolSlotAsmMetas);
+        for (int idx = 0; idx < poolCondPerAssMeta.size(); idx++){
+            slotAsmNode->addSpecificPreCondition(poolCondPerAssMeta[idx], BITWISE_AND, idx);
+        }
+        slotAsmNode->dryAssign();
+        delete slotAsmNode;
+
+        Wire* selectedIdx = nullptr;
+        if (requiredIdx){
+            assert(lhs.idx != nullptr);
+            assert(rhs.idx != nullptr);
+            int desSlice = lhs.idx->getOperableSlice().getSize();
+            selectedIdx = &mOprWire("reducOpr" + std::to_string(debugIdx), lhs.idx->getOperableSlice().getSize());
+            AssignMeta* leftAsmIdxMeta = selectedIdx->generateAssignMeta(*lhs.idx, {0,  desSlice}, ASM_DIRECT, CM_CLK_FREE);
+            AssignMeta* rightAsmIdxMeta = selectedIdx->generateAssignMeta(*rhs.idx, {0,  desSlice}, ASM_DIRECT, CM_CLK_FREE);
+
+            auto* idxAsmNode = new AsmNode({leftAsmIdxMeta, rightAsmIdxMeta});
+            slotAsmNode->addSpecificPreCondition(&selectLeft, BITWISE_AND, 0);
+            slotAsmNode->addSpecificPreCondition(&selectRight, BITWISE_AND, 1);
+            idxAsmNode->dryAssign();
+
+            delete idxAsmNode;
+
+        }
+
+        return {desSlot, selectedIdx};
+
+    }
+
+    Table::ReducNode Table::doReduceBase(const std::vector<ReducNode>& initReducNodes,
+                                         std::function<Operable&(WireSlot& lhs, Operable* lidx,
+                                                                 WireSlot& rhs, Operable* ridx)> cusLogic,
+                                         bool requiredIdx){
+
+        int debugIdx = 0;
+
+        
 
         std::queue<ReducNode> reducQueueA;
         std::queue<ReducNode> reducQueueB;
+
+        for (const ReducNode& node : initReducNodes){
+            reducQueueA.push(node);
+        }
 
         std::queue<ReducNode>* srcReducQueue = &reducQueueA;
         std::queue<ReducNode>* desReducQueue = &reducQueueB;
@@ -280,27 +337,64 @@ namespace kathryn{
                 srcReducQueue->pop();
 
                 //// get condition node
-                Operable& selectLeft = cusLogic(*srcNodeLeft.slot, *srcNodeLeft.idx,
-                                                *srcNodeRight.slot, *srcNodeRight.idx);
-                Operable& selectRight = ~selectRight;
+                Operable& selectLeft = cusLogic(*srcNodeLeft.slot,  srcNodeLeft.idx,
+                                                *srcNodeRight.slot, srcNodeRight.idx);
+                ReducNode binedReducNode = createMux(srcNodeLeft, srcNodeRight, selectLeft, debugIdx++, requiredIdx);
+                desReducQueue->push(binedReducNode);
 
-                WireSlot* desSlot = new WireSlot(getMeta());
-                std::vector<AssignMeta*> leftSelectAssMetas  = desSlot->genAssignMetaForAll(*srcNodeLeft.slot, ASM_DIRECT);
-                std::vector<AssignMeta*> rightSelectAssMetas = desSlot->genAssignMetaForAll(*srcNodeRight.slot, ASM_DIRECT);
-                std::vector<Operable*>
-
-
-
-
-
+                ///// free memory of the reducnode
+                srcNodeLeft.destroy();
+                srcNodeRight.destroy();
             }
             std::swap(srcReducQueue,desReducQueue);
         }
 
+        assert(!srcReducQueue->empty());
 
-
+        return srcReducQueue->front();
 
     }
+
+    WireSlot Table::doReducNoIdx(std::function<Operable&(WireSlot& lhs, Operable* lidx,
+                                                         WireSlot& rhs, Operable* ridx)> cusLogic){
+        std::vector<ReducNode> initReducNodes;
+        for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
+            initReducNodes.push_back({new WireSlot(*_rows[rowIdx]), nullptr});
+        }
+        ReducNode finalNode = doReduceBase(initReducNodes, std::move(cusLogic), false);
+        WireSlot result(*finalNode.slot);
+        finalNode.destroy();
+        return result;
+    }
+
+    std::pair<WireSlot, Operable&> Table::doReducBinIdx(std::function<Operable&(WireSlot& lhs, Operable* lidx,
+        WireSlot& rhs, Operable* ridx)> cusLogic){
+        std::vector<ReducNode> initReducNodes;
+        for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
+            Val* idxVal = &mOprVal("initIdxOpr" + std::to_string(rowIdx), getSufficientIdxSize(false), rowIdx);
+            initReducNodes.push_back({new WireSlot(*_rows[rowIdx]), idxVal});
+        }
+        ReducNode finalNode = doReduceBase(initReducNodes, cusLogic, true);
+        WireSlot result(*finalNode.slot);
+        Operable& resultIdx = *finalNode.idx;
+        finalNode.destroy();
+        return {result, resultIdx};
+    }
+
+    std::pair<WireSlot, OH> Table::doReducOHIdx(std::function<Operable&(WireSlot& lhs, Operable* lidx,
+    WireSlot& rhs, Operable* ridx)> cusLogic){
+        std::vector<ReducNode> initReducNodes;
+        for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
+            Val* idxVal = &mOprVal("initIdxOpr" + std::to_string(rowIdx), getSufficientIdxSize(true), ((ull) 1) << rowIdx);
+            initReducNodes.push_back({new WireSlot(*_rows[rowIdx]), idxVal});
+        }
+        ReducNode finalNode = doReduceBase(initReducNodes, cusLogic, true);
+        WireSlot result(*finalNode.slot);
+        Operable& resultIdx = *finalNode.idx;
+        finalNode.destroy();
+        return {result, resultIdx};
+    }
+
 
     /**
      * static slicing
@@ -351,6 +445,8 @@ namespace kathryn{
         std::vector<int> fieldIdxs = getMeta().getIdxs(fieldNames);
         return sliceByCol(fieldIdxs);
     }
+
+
 
     /**
      * dynamic

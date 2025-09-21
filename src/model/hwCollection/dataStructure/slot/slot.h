@@ -114,7 +114,7 @@ namespace kathryn{
         }
 
         std::vector<AssignMeta*> genAssignMetaForAll(Slot& srcSlot, ASM_TYPE asmType){
-
+            assert(getNumField() == srcSlot.getNumField());
             std::vector<AssignMeta*> resultCollector;
             for (int desIdx = 0; desIdx < srcSlot.getNumField(); desIdx++){
                 auto [desOpr, desAsb] = hwFieldRefAt(desIdx);

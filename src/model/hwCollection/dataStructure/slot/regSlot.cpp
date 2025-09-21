@@ -74,7 +74,6 @@ namespace kathryn{
             }
         }
 
-        RegSlot::~RegSlot(){}
 
         /**
          * The main function to overwrite the assignment

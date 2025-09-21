@@ -42,7 +42,7 @@ namespace kathryn{
                 const std::vector<int>&         fieldSizes,
                 const std::string& prefixName = "RegSlot");
 
-        ~RegSlot() override;
+        ~RegSlot() override = default;
         /**
          * The main function to overwrite the assignment
          */
