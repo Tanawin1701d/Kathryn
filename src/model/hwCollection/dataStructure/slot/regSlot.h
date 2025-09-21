@@ -89,8 +89,10 @@ namespace kathryn{
 
         /** it will match by name*/
         RegSlot& operator <<= (const Slot& rhs);
+        RegSlot& operator <<= (const RegSlot& rhs);
 
         RegSlot& operator = (const Slot& rhs);
+        RegSlot& operator = (const RegSlot& rhs);
 
     };
 }

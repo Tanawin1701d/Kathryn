@@ -286,7 +286,7 @@ namespace kathryn{
             assert(lhs.idx != nullptr);
             assert(rhs.idx != nullptr);
             int desSlice = lhs.idx->getOperableSlice().getSize();
-            selectedIdx = &mOprWire("reducOpr" + std::to_string(debugIdx), lhs.idx->getOperableSlice().getSize());
+            selectedIdx = &makeOprWire("reducOpr" + std::to_string(debugIdx), lhs.idx->getOperableSlice().getSize());
             AssignMeta* leftAsmIdxMeta = selectedIdx->generateAssignMeta(*lhs.idx, {0,  desSlice}, ASM_DIRECT, CM_CLK_FREE);
             AssignMeta* rightAsmIdxMeta = selectedIdx->generateAssignMeta(*rhs.idx, {0,  desSlice}, ASM_DIRECT, CM_CLK_FREE);
 
@@ -370,10 +370,10 @@ namespace kathryn{
     }
 
     std::pair<WireSlot, Operable&> Table::doReducBinIdx(const std::function<Operable&(WireSlot& lhs, Operable* lidx,
-        WireSlot& rhs, Operable* ridx)>& cusLogic){
+                                                                                      WireSlot& rhs, Operable* ridx)>& cusLogic){
         std::vector<ReducNode> initReducNodes;
         for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
-            Val* idxVal = &mOprVal("initBinIdxOpr" + std::to_string(rowIdx), getSufficientIdxSize(false), rowIdx);
+            Val* idxVal = &makeOprVal("initBinIdxOpr" + std::to_string(rowIdx), getSufficientIdxSize(false), rowIdx);
             initReducNodes.push_back({new WireSlot(*static_cast<Slot*>(_rows[rowIdx]), "initReducBin"), idxVal});
         }
         ReducNode finalNode = doReduceBase(initReducNodes, cusLogic, true);
@@ -384,10 +384,10 @@ namespace kathryn{
     }
 
     std::pair<WireSlot, OH> Table::doReducOHIdx(const std::function<Operable&(WireSlot& lhs, Operable* lidx,
-    WireSlot& rhs, Operable* ridx)>& cusLogic){
+                                                                              WireSlot& rhs, Operable* ridx)>& cusLogic){
         std::vector<ReducNode> initReducNodes;
         for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
-            Val* idxVal = &mOprVal("initOhIdxOpr" + std::to_string(rowIdx), getSufficientIdxSize(true), ((ull) 1) << rowIdx);
+            Val* idxVal = &makeOprVal("initOhIdxOpr" + std::to_string(rowIdx), getSufficientIdxSize(true), ((ull) 1) << rowIdx);
             initReducNodes.push_back({new WireSlot(*static_cast<Slot*>(_rows[rowIdx]), "initReducOH"), idxVal});
         }
         ReducNode finalNode = doReduceBase(initReducNodes, cusLogic, true);

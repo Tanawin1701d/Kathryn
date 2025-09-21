@@ -53,7 +53,7 @@ namespace kathryn{
     }
 
     WireSlot::WireSlot(const Slot& rhs, const std::string& prefixName):
-    Slot(rhs){
+    Slot(rhs.getMeta()){
         initHwStructure(prefixName);
         AsmNode* asmNode = genGrpAsmNode(rhs, ASM_DIRECT);
         asmNode->dryAssign();
@@ -178,12 +178,22 @@ namespace kathryn{
     }
 
     /** it will match by name*/
-    WireSlot& WireSlot::operator <<= (Slot& rhs){
+    WireSlot& WireSlot::operator <<= (const Slot& rhs){
         mfAssert(false, "wire slot not support <<= WireSlot::operator");
         return *this;
     }
 
-    WireSlot& WireSlot::operator = (Slot& rhs){
+    WireSlot& WireSlot::operator <<= (const WireSlot& rhs){
+        mfAssert(false, "wire slot not support <<= WireSlot::operator");
+        return *this;
+    }
+
+    WireSlot& WireSlot::operator = (const  Slot& rhs){
+        doNonBlockAsm(rhs, std::vector<int>{}, ASM_DIRECT);
+        return *this;
+    }
+
+    WireSlot& WireSlot::operator = (const WireSlot& rhs){
         doNonBlockAsm(rhs, std::vector<int>{}, ASM_DIRECT);
         return *this;
     }
