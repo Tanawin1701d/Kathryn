@@ -42,29 +42,35 @@ namespace kathryn{
     WireSlot::WireSlot(const SlotMeta& slotMeta, const std::string& prefixName):
         Slot(slotMeta){
             /** this is used to initialize from slice*/
-            for(int idx = 0; idx < slotMeta.getNumField(); idx++){
-                FieldMeta fieldMeta = slotMeta.getCopyField(idx);
-                mfAssert(fieldMeta._size > 0, "field " + fieldMeta._name + " is not pass integrity test");
-                Wire* newWire = &mOprWire(prefixName + "_" +fieldMeta._name, fieldMeta._size);
-                _wires.push_back(newWire);
-                _hwFieldMetas.push_back({newWire, newWire});
-            }
+            initHwStructure(prefixName);
         }
 
     WireSlot::WireSlot(const std::vector<std::string>& fieldNames,
                 const std::vector<int>&         fieldSizes,
                 const std::string&              prefixName):
         Slot(fieldNames, fieldSizes){
-            std::vector<HwFieldMeta> hwFieldMetas;
-            /** create new wire*/
-            int idx = 0;
-            for(idx = 0; idx < fieldNames.size(); idx++){
-                Wire* newWire = &mOprWire(prefixName + "_" +fieldNames[idx], fieldSizes[idx]);
-                _wires.push_back(newWire);
-                _hwFieldMetas.push_back({newWire, newWire});
-            }
+            initHwStructure(prefixName);
+    }
+
+    WireSlot::WireSlot(const Slot& rhs, const std::string& prefixName):
+    Slot(rhs){
+        initHwStructure(prefixName);
+        AsmNode* asmNode = genGrpAsmNode(rhs, ASM_DIRECT);
+        asmNode->dryAssign();
+        delete asmNode;
+    }
+
+    void WireSlot::initHwStructure(const std::string& prefixName){
+
+        for(int idx = 0; idx < _meta.getNumField(); idx++){
+            FieldMeta fieldMeta = _meta.getCopyField(idx);
+            mfAssert(fieldMeta._size > 0, "field " + fieldMeta._name + " is not pass integrity test");
+            Wire* newWire = &mOprWire(prefixName + "_" +fieldMeta._name, fieldMeta._size);
+            _wires.push_back(newWire);
+            _hwFieldMetas.push_back({newWire, newWire});
         }
 
+    }
 
         /**
              * The main function to overwrite the assignment

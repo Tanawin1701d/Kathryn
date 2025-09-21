@@ -42,7 +42,11 @@ namespace kathryn{
                  const std::vector<int>&         fieldSizes,
                  const std::string&              prefixName = "WireSlot");
 
+        WireSlot(const Slot& rhs, const std::string& prefixName = "WireSlot");
+
         ~WireSlot() override = default;
+
+        void initHwStructure(const std::string& prefixName);
         /**
          * The main function to overwrite the assignment
          */

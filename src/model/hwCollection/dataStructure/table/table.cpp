@@ -145,6 +145,7 @@ namespace kathryn{
         AsmNode* asmNode = resultWireSlot.genGrpAsmNode(allRowCollector, allRowPreCond, BITWISE_AND);
         //// we have to do dry assign
         asmNode->dryAssign();
+        delete asmNode;
 
         ///resultWireSlot.doGlobAsm(asmNode);
         return resultWireSlot;
@@ -293,7 +294,6 @@ namespace kathryn{
             slotAsmNode->addSpecificPreCondition(&selectLeft, BITWISE_AND, 0);
             slotAsmNode->addSpecificPreCondition(&selectRight, BITWISE_AND, 1);
             idxAsmNode->dryAssign();
-
             delete idxAsmNode;
 
         }
@@ -359,7 +359,7 @@ namespace kathryn{
                                                          WireSlot& rhs, Operable* ridx)> cusLogic){
         std::vector<ReducNode> initReducNodes;
         for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
-            initReducNodes.push_back({new WireSlot(*_rows[rowIdx]), nullptr});
+            initReducNodes.push_back({new WireSlot(*_rows[rowIdx], "initReduc"), nullptr});
         }
         ReducNode finalNode = doReduceBase(initReducNodes, std::move(cusLogic), false);
         WireSlot result(*finalNode.slot);
@@ -371,8 +371,8 @@ namespace kathryn{
         WireSlot& rhs, Operable* ridx)> cusLogic){
         std::vector<ReducNode> initReducNodes;
         for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
-            Val* idxVal = &mOprVal("initIdxOpr" + std::to_string(rowIdx), getSufficientIdxSize(false), rowIdx);
-            initReducNodes.push_back({new WireSlot(*_rows[rowIdx]), idxVal});
+            Val* idxVal = &mOprVal("initBinIdxOpr" + std::to_string(rowIdx), getSufficientIdxSize(false), rowIdx);
+            initReducNodes.push_back({new WireSlot(*_rows[rowIdx], "initReducBin"), idxVal});
         }
         ReducNode finalNode = doReduceBase(initReducNodes, cusLogic, true);
         WireSlot result(*finalNode.slot);
@@ -385,14 +385,14 @@ namespace kathryn{
     WireSlot& rhs, Operable* ridx)> cusLogic){
         std::vector<ReducNode> initReducNodes;
         for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
-            Val* idxVal = &mOprVal("initIdxOpr" + std::to_string(rowIdx), getSufficientIdxSize(true), ((ull) 1) << rowIdx);
-            initReducNodes.push_back({new WireSlot(*_rows[rowIdx]), idxVal});
+            Val* idxVal = &mOprVal("initOhIdxOpr" + std::to_string(rowIdx), getSufficientIdxSize(true), ((ull) 1) << rowIdx);
+            initReducNodes.push_back({new WireSlot(*_rows[rowIdx], "initReducOH"), idxVal});
         }
         ReducNode finalNode = doReduceBase(initReducNodes, cusLogic, true);
         WireSlot result(*finalNode.slot);
         Operable& resultIdx = *finalNode.idx;
         finalNode.destroy();
-        return {result, resultIdx};
+        return {result, OH(resultIdx)};
     }
 
 

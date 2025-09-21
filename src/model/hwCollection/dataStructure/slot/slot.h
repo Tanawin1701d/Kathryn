@@ -97,7 +97,7 @@ namespace kathryn{
 
         //////// assign system
         AssignMeta* genAssignMeta(Operable& srcOpr, Assignable& desAsb,
-                                 ASM_TYPE asmType){
+                                 ASM_TYPE asmType) const{
 
             mfAssert(desAsb.getAssignSlice().getSize() <= srcOpr.getOperableSlice().getSize(),
             "the size of srcOpr is too small to assign to desAsb");
@@ -113,12 +113,12 @@ namespace kathryn{
             return assMeta;
         }
 
-        std::vector<AssignMeta*> genAssignMetaForAll(Slot& srcSlot, ASM_TYPE asmType){
+        std::vector<AssignMeta*> genAssignMetaForAll(const Slot& srcSlot, ASM_TYPE asmType) const{
             assert(getNumField() == srcSlot.getNumField());
             std::vector<AssignMeta*> resultCollector;
             for (int desIdx = 0; desIdx < srcSlot.getNumField(); desIdx++){
-                auto [desOpr, desAsb] = hwFieldRefAt(desIdx);
-                auto [srcOpr, srcAsb] = srcSlot.hwFieldRefAt(desIdx);
+                auto [desOpr, desAsb] = hwFieldAt(desIdx);
+                auto [srcOpr, srcAsb] = srcSlot.hwFieldAt(desIdx);
 
                 AssignMeta* assMeta = genAssignMeta(*srcOpr, *desAsb, asmType);
                 resultCollector.push_back(assMeta);
@@ -181,9 +181,16 @@ namespace kathryn{
             ASM_TYPE asmType){
             std::vector<AssignMeta*> resultCollector
             = genAssignMetaForAll(srcSlot, srcMatchIdxs, desMatchIdxs, exceptIdxs, asmType);
-
             auto* asmNode = new AsmNode(resultCollector);
+            return asmNode;
 
+        }
+
+        /** gen the group the asm node for all matched*/
+        AsmNode* genGrpAsmNode(const Slot& srcSlot, ASM_TYPE asmType){
+
+            std::vector<AssignMeta*> resultCollector = genAssignMetaForAll(srcSlot, asmType);
+            auto* asmNode = new AsmNode(resultCollector);
             return asmNode;
 
         }
