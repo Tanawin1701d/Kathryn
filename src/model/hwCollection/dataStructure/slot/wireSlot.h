@@ -46,7 +46,7 @@ namespace kathryn{
 
         ~WireSlot() override = default;
 
-        void initHwStructure(const std::string& prefixName);
+        void initHwStructure(const std::string& prefixName) override;
         /**
          * The main function to overwrite the assignment
          */

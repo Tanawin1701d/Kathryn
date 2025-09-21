@@ -32,9 +32,11 @@ namespace kathryn{
         _meta(fieldNames, fieldSizes){};
 
         explicit Slot(SlotMeta  meta):
-        _meta(std::move(meta)){};
+        _meta(std::move(meta)){}
 
         virtual ~Slot() = default;
+
+        virtual void initHwStructure(const std::string& prefixName){ assert(false);}
 
         FieldMeta& fieldRefAt(int idx){
             return _meta(idx);

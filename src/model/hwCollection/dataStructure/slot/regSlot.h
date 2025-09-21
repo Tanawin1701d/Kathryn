@@ -43,6 +43,9 @@ namespace kathryn{
                 const std::string& prefixName = "RegSlot");
 
         ~RegSlot() override = default;
+
+        void initHwStructure(const std::string& prefixName) override;
+
         /**
          * The main function to overwrite the assignment
          */
