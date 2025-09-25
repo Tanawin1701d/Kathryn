@@ -75,6 +75,10 @@ namespace kathryn{
 
         void holdMaster(){  baseHolder(masterHoldSignals); }
 
+        Operable& getMatchStatus(){
+            return sendSuccess;
+        }
+
 
 
 
