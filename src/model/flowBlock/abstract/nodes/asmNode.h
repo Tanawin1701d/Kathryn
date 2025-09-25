@@ -8,6 +8,7 @@
 #include <utility>
 
 #include "node.h"
+#include "model/controller/asmMode.h"
 
 namespace kathryn {
 
@@ -16,7 +17,10 @@ namespace kathryn {
         static inline ull ASM_NODE_CNT = 0;
         std::vector<AssignMeta*> _assignMetas; //// AssignMeta is must not use the same assign metas
         Operable*                _preCondition = nullptr;
-        ull                      _asmId;
+        ASM_NODE_PRIORITY_MODE   _asmPriorityMode;
+        int                      _asmPriority;
+        ull                      _asmId; //// for subpriority
+
         ////// it will used as order of the assignment node
         ////// when there are multiple assigns in the system
         //// TODO add per element metadata
@@ -25,6 +29,8 @@ namespace kathryn {
         explicit AsmNode(AssignMeta *assignMeta) :
                 Node(ASM_NODE),
                 _assignMetas({assignMeta}),
+                _asmPriorityMode(GET_ASM_PRI_MODE()),
+                _asmPriority(GET_ASM_PRI_VAL()),
                 _asmId(ASM_NODE_CNT++),
                 _preCondPerMetas(_assignMetas.size(), nullptr)
 
@@ -37,6 +43,8 @@ namespace kathryn {
         explicit AsmNode(std::vector<AssignMeta*> assignMetas):
                 Node(ASM_NODE),
                 _assignMetas(std::move(assignMetas)),
+                _asmPriorityMode(GET_ASM_PRI_MODE()),
+                _asmPriority(GET_ASM_PRI_VAL()),
                 _asmId(ASM_NODE_CNT++),
                 _preCondPerMetas(_assignMetas.size(), nullptr){
 
@@ -87,7 +95,7 @@ namespace kathryn {
                         nodeSrcs[0].dependNode->getStateOperating(), /////// you can not simply use genExitOpr because it is used to colab with reset
                         &assignMeta->valueToAssign,
                         assignMeta->desSlice,
-                        DEFAULT_UE_PRI_USER,
+                        _asmPriority,
                         _asmId,
                         assignMeta->clockMode
                     });
@@ -111,7 +119,7 @@ namespace kathryn {
                              nodeSrc.dependNode->getExitOpr(),
                              &assignMeta->valueToAssign,
                              assignMeta->desSlice,
-                             DEFAULT_UE_PRI_USER,
+                             _asmPriority,
                              _asmId,
                             assignMeta->clockMode
                         });
@@ -139,7 +147,7 @@ namespace kathryn {
                                                              nullptr,
                                                              &assignMeta->valueToAssign,
                                                              assignMeta->desSlice,
-                                                             DEFAULT_UE_PRI_USER,
+                                                             _asmPriority,
                     _asmId,
                 assignMeta->clockMode});
 

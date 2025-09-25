@@ -33,8 +33,12 @@ namespace kathryn{
         std::vector<Operable*> masterHoldSignals;
         std::vector<Operable*> slaveHoldSignals;
 
+        expression& sendSuccess; //// TODO add this signal
 
-        explicit SyncMeta(const std::string& name): _name(name){  }
+
+        explicit SyncMeta(const std::string& name):
+        _name(name),
+        sendSuccess(*(new expression(1))){}
 
         ~SyncMeta()= default;
 
@@ -70,6 +74,8 @@ namespace kathryn{
         void holdSlave(){ baseHolder(slaveHoldSignals); }
 
         void holdMaster(){  baseHolder(masterHoldSignals); }
+
+
 
 
 
