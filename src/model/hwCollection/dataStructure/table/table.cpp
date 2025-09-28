@@ -254,6 +254,8 @@ namespace kathryn{
         }
     }
 
+
+
     Table::ReducNode Table::createMux(ReducNode& lhs, ReducNode& rhs, Operable& selectLeft, int debugIdx, bool requiredIdx){
 
         Operable& selectRight = ~selectLeft;

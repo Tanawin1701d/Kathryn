@@ -87,6 +87,8 @@ namespace kathryn{
 
         void doCusLogic(std::function<void(RegSlot&, int rowIdx)>  cusLogic);
 
+        Table& doReset(ull resetVal = 0);
+
         ReducNode doReduceBase(const std::vector<ReducNode>& initReducNodes,
                                const std::function<Operable&(WireSlot& lhs, Operable* lidx,
                                                        WireSlot& rhs, Operable* ridx)>& cusLogic,

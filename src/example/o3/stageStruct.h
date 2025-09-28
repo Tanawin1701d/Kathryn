@@ -6,28 +6,32 @@
 #define KATHRYN_SRC_EXAMPLE_O3_STAGEPARAM_H
 
 #include "kathryn.h"
+#include "mpft.h"
 #include "parameter.h"
 #include "slotParam.h"
+#include "tagGen.h"
 
 namespace kathryn::o3{
 
 
 
     struct FetchStage{
-        SlotMeta meta {smFetch};
-        RegSlot  dayta{smFetch};
+        SlotMeta meta{smFetch};
+        RegSlot  raw {smFetch};
+        SyncMeta fetchSync;
     };
 
     struct DecodeStage{
         SlotMeta sharedMeta  {smDecShard};
-        SlotMeta decodedMeta {smDecBase +
-            buildArchRegSlotMeta(1, SRC_A_SEL_WIDTH) +
-            buildArchRegSlotMeta(2, SRC_B_SEL_WIDTH)
-        };
+        SlotMeta decodedMeta {smDecBase };
 
-        RegSlot  ins1     {decodedMeta};
-        RegSlot  ins2     {decodedMeta};
-        RegSlot  sharddata{sharedMeta };
+        RegSlot   dcd1     {decodedMeta};
+        RegSlot   dcd2     {decodedMeta};
+        WireSlot  dcw1     {decodedMeta};
+        WireSlot  dcw2     {decodedMeta};
+        RegSlot  dcdShared{sharedMeta};
+
+        SyncMeta decodeSync {"decodeSync"};
     };
 
     struct ByPassPool{
@@ -69,8 +73,10 @@ namespace kathryn::o3{
 
     };
 
-
-
+    struct TagMgmt{
+        Mpft   mpft;
+        TagGen tagGen;
+    };
 
 }
 

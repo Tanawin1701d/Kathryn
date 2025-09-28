@@ -5,6 +5,8 @@
 #ifndef KATHRYN_OPERABLE_H
 #define KATHRYN_OPERABLE_H
 
+#define opr Operable
+
 #include<memory>
 #include "model/debugger/modelDebugger.h"
 
@@ -110,6 +112,8 @@ namespace kathryn {
         virtual Operable&       getExactOperable () const = 0;
 
         virtual Operable*       doSlice(Slice sl) = 0; //// sl is relative
+                Operable&       sl(int start, int stop);
+                Operable&       sl(int);
         /** please remind this is a copy not reference value*/
         virtual LogicSimEngine* getLogicSimEngineFromOpr() = 0;
         virtual LogicGenBase*   getLogicGenBase() = 0;

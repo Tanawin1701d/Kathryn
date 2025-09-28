@@ -11,30 +11,14 @@
 using namespace std;
 
 namespace kathryn::o3{
-    inline SlotMeta buildArchRegSlotMeta(int idx, int selWidth){
-            SlotMeta result = {
-                {str(rsIdx_) + toS(idx), str(rsUse_) + toS(idx), str(rsSel_) + toS(idx)},
-                {REG_SEL               ,                      1,               selWidth}
-            };
-            return result;
-        }
-
-    inline SlotMeta buildSrcPhyRegSlotMeta(int idx, int selWidth){
-            SlotMeta result = {
-                /// it is shared between phy idx and data
-                {str(phyIdx_) + toS(idx), str(rsValid_) + toS(idx), str(rsSel_) + toS(idx)},
-                {               DATA_LEN,                      1,               selWidth}
-            };
-            return result;
-        }
 
         /**
          *   FETCH STAGE
          */
 
         inline SlotMeta smFetch {
-            {inst1, invalid1, inst2, invalid2,    pc,   npc, prCond},
-            {INSN_LEN,           1, INSN_LEN,           1, ADDR_LEN, ADDR_LEN,         1}
+            {inst1, invalid1, inst2, invalid2,    pc,   npc, prCond, bhr     },
+            {INSN_LEN,           1, INSN_LEN,           1, ADDR_LEN, ADDR_LEN,         1, GSH_BHR_LEN}
         };
 
         /**
@@ -42,43 +26,71 @@ namespace kathryn::o3{
          */
 
         inline SlotMeta smDecBase {
-            {imm_type      , rdIdx      , rdUse  , aluOp  , rsEnt,
-                isBranch      , pred_addr  , spec   , specTag,
-                dmem_size     , dmem_type  ,
-                md_req_op     , str(md_req_in_signed_) + "1", str(md_req_in_signed_) + "2",
-                md_req_out_sel
+            {invalid       ,imm_type      , aluOp             , rsEnt,
+                isBranch      , pred_addr         , spec , specTag, illLegal,
+                rdIdx         , rdUse              ,
+                rsIdx_1       , rsSel_1           ,rsUse_1 ,
+                rsIdx_2       , rsSel_2           ,rsUse_2 ,
+                dmem_size     , dmem_type         ,
+                md_req_op     , md_req_in_signed_1, md_req_in_signed_2, md_req_out_sel
             },
 
-            {IMM_TYPE_WIDTH  , REG_SEL        , 1, ALU_OP_WIDTH, ALU_OP_WIDTH,
-                1               , ADDR_LEN       , 1, SPECTAG_LEN ,
+            {1               , IMM_TYPE_WIDTH  , ALU_OP_WIDTH   , ALU_OP_WIDTH,
+                1               , ADDR_LEN       , 1, SPECTAG_LEN , 1,
+                REG_SEL         , 1              ,
+                REG_SEL         , SRC_A_SEL_WIDTH, 1,
+                REG_SEL         , SRC_B_SEL_WIDTH, 1,
                 3               , MEM_TYPE_WIDTH ,
-                MD_OP_WIDTH     , 1              , 1,
-                MD_OUT_SEL_WIDTH
+                MD_OP_WIDTH     , 1              , 1, MD_OUT_SEL_WIDTH
             }
         };
 
         inline SlotMeta smDecShard {
-            {   pc,      bhr},
-            {ADDR_LEN, GSH_BHR_LEN}
+            {   pc,      bhr, desEqSrc1, desEqSrc2},
+            {ADDR_LEN, GSH_BHR_LEN,            1,            1}
         };
 
         /**
          * RSV
          */
         inline SlotMeta smRsvBase {
-            { pc, imm, rrftag, rdUse, aluOp, specTag,       opcode},
-            {ADDR_LEN, DATA_LEN, RRF_SEL, 1, ALU_OP_WIDTH, SPECTAG_LEN,    OPCODE_WIDTH}
+            {
+                pc      , imm           , rrftag    , rdUse,     aluOp,  specTag, opcode,
+                phyIdx_1, rsSel_1       , rsValid_1 ,
+                phyIdx_2, rsSel_2       , rsValid_2 ,
+            },
+            {ADDR_LEN   ,   DATA_LEN       , RRF_SEL      ,        1, ALU_OP_WIDTH, SPECTAG_LEN, OPCODE_WIDTH,
+                DATA_LEN   ,   SRC_A_SEL_WIDTH, 1            ,
+                DATA_LEN   ,   SRC_B_SEL_WIDTH, 1            ,
+            }
         };
 
         inline SlotMeta smRsvMul {
-            {str(md_req_in_signed_) + "1", str(md_req_in_signed_) + "2", md_req_out_sel},
-            {                           1,                            1, MD_OUT_SEL_WIDTH }
+            {md_req_in_signed_1, md_req_in_signed_2, md_req_out_sel},
+            {                    1,                     1, MD_OUT_SEL_WIDTH }
         };
 
         inline SlotMeta smRsvOI{ /// out of order
             {busy, sortBit},
             {1, 1}
         };
+
+    /**
+     * MPFT
+     */
+    inline SlotMeta smMPFT{
+        {mpft_valid, mpft_fixTag},
+        {            1,    SPECTAG_LEN}
+    };
+
+    /**
+     * RRF
+     */
+    inline SlotMeta smRRF{
+        {rrfValid, rrfData },
+        {       1, DATA_LEN}
+
+    }
 
 
 }

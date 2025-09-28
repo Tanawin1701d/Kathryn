@@ -28,11 +28,20 @@ namespace kathryn::o3{
     O3_PARAM_STR(imm_type);
 
     O3_PARAM_STR(rsIdx_);
+    O3_PARAM_STR(rsIdx_1);
+    O3_PARAM_STR(rsIdx_2);
     O3_PARAM_STR(rsUse_);
+    O3_PARAM_STR(rsUse_1);
+    O3_PARAM_STR(rsUse_2);
     O3_PARAM_STR(rsValid_);
     O3_PARAM_STR(rsValid_1);
     O3_PARAM_STR(rsValid_2);
     O3_PARAM_STR(rsSel_);
+    O3_PARAM_STR(rsSel_1);
+    O3_PARAM_STR(rsSel_2);
+
+    O3_PARAM_STR(invalid);
+
 
     O3_PARAM_STR(rdIdx);
     O3_PARAM_STR(rdUse);
@@ -53,18 +62,34 @@ namespace kathryn::o3{
 
     O3_PARAM_STR(rs_valid_);
 
+    O3_PARAM_STR(illLegal);
+
     O3_PARAM_STR(dmem_size);
     O3_PARAM_STR(dmem_type);
 
     O3_PARAM_STR(md_req_op);
     O3_PARAM_STR(md_req_in_signed_);
+    O3_PARAM_STR(md_req_in_signed_1);
+    O3_PARAM_STR(md_req_in_signed_2);
     O3_PARAM_STR(md_req_out_sel);
+
+    O3_PARAM_STR(desEqSrc1);
+    O3_PARAM_STR(desEqSrc2);
 
     ////// start from rsv
     O3_PARAM_STR(imm);
     O3_PARAM_STR(rrftag);
     O3_PARAM_STR(phyIdx_);
+    O3_PARAM_STR(phyIdx_1);
+    O3_PARAM_STR(phyIdx_2);
     O3_PARAM_STR(rs1);
+
+    ///// for mpft
+    O3_PARAM_STR(mpft_valid)
+    O3_PARAM_STR(mpft_fixTag)
+    //// for RRF
+    O3_PARAM_STR(rrfValid);
+    O3_PARAM_STR(rrfData);
 
 
         ////// rsIdx use with data in the system
@@ -204,6 +229,9 @@ constexpr int ALU_OP_SLT  = 12;
 constexpr int ALU_OP_SGE  = 13;
 constexpr int ALU_OP_SLTU = 14;
 constexpr int ALU_OP_SGEU = 15;
+
+
+
 
 
 #undef KATHRYN_SRC_EXAMPLE_O3_PARAMETER_H
