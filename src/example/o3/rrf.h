@@ -33,7 +33,10 @@ namespace kathryn::o3{
             }
         }
 
+        opr& isRecur(opr& req1, opr& req2){
 
+            return (reqPtr + req1 + req2) <= (reqPtr);
+        }
 
         opr& isRenamable(opr& req1, opr& req2,
                          opr& com1, opr& com2){
