@@ -66,10 +66,13 @@ namespace kathryn::o3{
     struct BroadCast{
         mWire(miss, 1);
         mWire(succ, 1);
-        Operable& isBrMissPred(){ return miss;}
-        Operable& isBrSuccPred(){ return succ;}
-        Operable& checkIsKill(Operable& specIdx){}
-        Operable& checkIsSuc(Operable& specIdx){}
+        opr& isBrMissPred(){ return miss;}
+        opr& isBrSuccPred(){ return succ;}
+        opr& checkIsKill(Operable& specIdx){}
+        opr& checkIsSuc(Operable& specIdx){}
+        opr& getSMtag(){ ///// get success or miss predict tag
+
+        }
 
     };
 

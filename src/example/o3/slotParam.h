@@ -89,8 +89,18 @@ namespace kathryn::o3{
     inline SlotMeta smRRF{
         {rrfValid, rrfData },
         {       1, DATA_LEN}
+    };
 
-    }
+    /**
+     *  ARF
+     */
+    ////////// | arfBusy_0 | arfBusy_1 | arfBusy_2 ..... | arfBusy_31
+    inline SlotMeta smARFBusy{arfBusy, 1, REG_NUM, 0};
+    ////////// | arfRenamed_0 | arfRenamed_1 | arfRenamed_2 ..... | arfRenamed_31
+    inline SlotMeta smARFRenamed{arfRenamed, RRF_SEL, REG_NUM, 0};
+    ////////// | rrfData_0 | rrfData_1 | rrfData_2 ..... | rrfData_31
+    inline SlotMeta smARFData{arfData, DATA_LEN, REG_NUM, 0};
+
 
 
 }

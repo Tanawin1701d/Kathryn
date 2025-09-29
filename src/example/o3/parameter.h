@@ -90,6 +90,10 @@ namespace kathryn::o3{
     //// for RRF
     O3_PARAM_STR(rrfValid);
     O3_PARAM_STR(rrfData);
+    //// for ARF
+    O3_PARAM_STR(arfBusy);
+    O3_PARAM_STR(arfRenamed);
+    O3_PARAM_STR(arfData);
 
 
         ////// rsIdx use with data in the system
