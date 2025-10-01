@@ -76,8 +76,8 @@ namespace kathryn::o3{
         }
 
         ////// write back and rename cannot disable the same valid register at the same time
-        void onWback(opr& wbPtr, opr& wbValid, opr& wbData){
-            table[wbPtr](rrfValid) <<= wbValid;
+        void onWback(opr& wbPtr, opr& wbData){
+            table[wbPtr](rrfValid) <<= 1;
             table[wbPtr](rrfData ) <<= wbData;
             ///// to do register the writeback data to the broadcast
 
