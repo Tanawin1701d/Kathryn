@@ -97,7 +97,7 @@ namespace kathryn::o3{
     O3_PARAM_STR(arfRenamed);
     O3_PARAM_STR(arfData);
     //// for ROB
-    O3_PARAM_STR(robValid);
+    O3_PARAM_STR(wbFin);
 
 
         ////// rsIdx use with data in the system

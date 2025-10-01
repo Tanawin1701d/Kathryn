@@ -42,9 +42,10 @@ namespace kathryn::o3{
                 WireSlot com1Entry = _table[comPtr].v();
                 WireSlot com2Entry = _table[comPtr+1].v();
                 ////// due to branch can do only one
-                opr& com2Cond = ~com1Entry(isBranch);
+                opr& com1Cond = com1Entry(wbFin);
+                opr& com2Cond = com2Entry(wbFin) & ~com1Entry(isBranch);
                 ////// rrf commit
-                std::tie(com1Status, com2Status) = rrf.onCommit(comPtr, com2Cond);
+                std::tie(com1Status, com2Status) = rrf.onCommit(comPtr, com1Cond, com2Cond);
                 ////// arf commit
                 arf.onCommit(
                 com1Status & com1Entry(rdUse), comPtr , com1Entry(rdIdx),
@@ -56,12 +57,11 @@ namespace kathryn::o3{
 
         void onDispatch(OH idx, WireSlot& dpValue){
             _table[idx] <<= dpValue;
-            _table[idx](robValid) <<= 0;
+            _table[idx](wbFin) <<= 0;
         }
 
         void onWriteBack(OH idx){
-            _table[idx](robValid) <<= 1;
-
+            _table[idx](wbFin) <<= 1;
         }
 
     };

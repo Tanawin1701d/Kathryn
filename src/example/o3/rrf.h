@@ -83,7 +83,7 @@ namespace kathryn::o3{
 
         }
 
-        std::pair<opr&, opr&> onCommit(opr& comPtr, opr& com2Cond){
+        std::pair<opr&, opr&> onCommit(opr& comPtr, opr& com1Cond, opr& com2Cond){
             commitReqSize = com1 + com2;
             doRenameOrCommit();
         }

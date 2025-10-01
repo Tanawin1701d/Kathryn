@@ -110,7 +110,7 @@ namespace kathryn::o3{
      * ROB
      */
     inline SlotMeta smROB{
-        {robValid, isBranch, rdUse, rdIdx},
+        {wbFin, isBranch, rdUse, rdIdx},
         {          1,           1,        1,  REG_SEL}
     };
 
