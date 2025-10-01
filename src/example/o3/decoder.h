@@ -9,8 +9,6 @@
 #include "parameter.h"
 #include "stageStruct.h"
 #include "isaParam.h"
-#include "mpft.h"
-#include "example/cacheAc/parameter.h"
 
 namespace kathryn::o3{
 

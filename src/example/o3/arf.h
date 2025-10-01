@@ -12,17 +12,19 @@
 namespace kathryn::o3{
 
     struct CommitCmd{
-        mWire(comEn, 1         );
-        mWire(comRrfPtr , RRF_SEL );
-        mWire(comArcIdx, REG_SEL );
-        mWire(data   , DATA_LEN);
+
+        expression comEn    { 1        };
+        expression comRrfPtr{ RRF_SEL  };
+        expression comArcIdx{ REG_SEL  };
+        expression data     { DATA_LEN };
     };
 
     struct RenameCmd{
-        mWire(renEn      , 1);
-        mWire(renRrfPtr  , RRF_SEL);
-        mWire(renArcIdx  , REG_SEL);
-        mWire(validvector, SPECTAG_LEN);
+        opr& renEn;       // 1
+        opr& renRrfPtr;   // RRF_SEL
+        opr& renArcIdx;   // REG_SEL
+        opr& isBranch;
+        opr& specTag;
     };
 
     struct RenamedData{
@@ -31,24 +33,28 @@ namespace kathryn::o3{
     };
 
     struct Arf{
+        Mpft&    mpft;
+        BroadCast& broadCast;
 
         Table busy, rename;
         RegSlot  busyMaster, renameMaster;
+
 
         RegSlot  archRegs; ////// register architecture register
 
         CommitCmd commitCmds[2];
 
 
-        BroadCast& broadCast;
 
-        Arf(BroadCast& bc):
+
+        Arf(Mpft& mpft, BroadCast& bc):
+            mpft(mpft),
+            broadCast(bc),
             busy(smARFBusy, SPECTAG_LEN),
             rename(smARFRenamed, SPECTAG_LEN),
             busyMaster(smARFBusy),
             renameMaster(smARFRenamed),
-            archRegs(smARFData),
-            broadCast(bc){
+            archRegs(smARFData){
             busy.doReset();
             rename.doReset();
             busyMaster.doReset();
@@ -75,7 +81,10 @@ namespace kathryn::o3{
         RenamedData getRenamedData(opr& archIdx){
             return {busyMaster[archIdx].v(),
                 renameMaster[archIdx].v()};
+        }
 
+        opr& getArfData(opr& archIdx){
+            return archRegs[archIdx].v();
         }
 
         void updateArfReg(int idx){
@@ -83,6 +92,19 @@ namespace kathryn::o3{
             zif(comCmd.comEn){
                 archRegs[comCmd.comArcIdx] <<= comCmd.data;
             }
+        }
+
+        void setCommitCmd(int idx,
+                          opr& comEn,
+                          opr& comRrfPtr,
+                          opr& comArcIdx,
+                          opr& data){
+
+            commitCmds[idx].comEn       = comEn;
+            commitCmds[idx].comRrfPtr   = comRrfPtr;
+            commitCmds[idx].comArcIdx   = comArcIdx;
+            commitCmds[idx].data        = data;
+
         }
 
         void updateArfRegs(){
@@ -154,7 +176,7 @@ namespace kathryn::o3{
             ////// the other spectag that going to commit will be done by onCommit
         }
 
-        void onRename(RenameCmd& renCmd1, RenameCmd& renCmd2){
+        void onRename(RenameCmd& renCmd1, RenameCmd& renCmd2, ){
             SET_ASM_PRI_TO_MANUAL(DEFAULT_UE_PRI_USER+1);
 
             for (int renIdx = 0; renIdx < 2; renIdx++){
@@ -180,7 +202,13 @@ namespace kathryn::o3{
             SET_ASM_PRI_TO_AUTO();
         }
 
-        void onCommit(){ ///// the free spectag should be update
+        void onCommit(opr& comEn1    , opr& comRrfPtr1,
+                      opr& comArcIdx1,
+                      opr& comEn2    , opr& comRrfPtr2,
+                      opr& comArcIdx2)
+
+
+        { ///// the free spectag should be update
             SET_ASM_PRI_TO_MANUAL(DEFAULT_UE_PRI_USER);
 
             ///// check every table
@@ -203,6 +231,8 @@ namespace kathryn::o3{
 
             SET_ASM_PRI_TO_AUTO();
         }
+
+
         ////// | rename <-> commit <-> success | missPredict
     };
 

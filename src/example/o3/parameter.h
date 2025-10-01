@@ -25,6 +25,8 @@ namespace kathryn::o3{
     O3_PARAM_STR(bhr);
     O3_PARAM_STR(prCond);
     ////// start from decoder
+
+    O3_PARAM_STR(inst);
     O3_PARAM_STR(imm_type);
 
     O3_PARAM_STR(rsIdx_);
@@ -94,6 +96,8 @@ namespace kathryn::o3{
     O3_PARAM_STR(arfBusy);
     O3_PARAM_STR(arfRenamed);
     O3_PARAM_STR(arfData);
+    //// for ROB
+    O3_PARAM_STR(robValid);
 
 
         ////// rsIdx use with data in the system

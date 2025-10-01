@@ -12,8 +12,9 @@
 #include "model/flowBlock/abstract/nodes/node.h"
 #include "model/flowBlock/abstract/nodes/stateNode.h"
 
-#define zync(zyncMeta)         for(auto kathrynBlock = new FlowBlockZyncBase(zyncMeta, nullptr); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
-#define zyncc(zyncMeta, cond)  for(auto kathrynBlock = new FlowBlockZyncBase(zyncMeta, &cond  ); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define zync(zyncMeta)                    for(auto kathrynBlock = new FlowBlockZyncBase(zyncMeta, nullptr); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define zyncc(zyncMeta, cond)             for(auto kathrynBlock = new FlowBlockZyncBase(zyncMeta, &cond  ); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define zynccsk(zyncMeta, cond, skipCond) for(auto kathrynBlock = new FlowBlockZyncBase(zyncMeta, &cond, &skipCond); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 
 namespace kathryn{
 
@@ -33,7 +34,7 @@ namespace kathryn{
         NodeWrap*      resultNodeWrap    = nullptr;
 
     public:
-        explicit FlowBlockZyncBase(SyncMeta& syncMeta, Operable* acceptCond = nullptr);
+        explicit FlowBlockZyncBase(SyncMeta& syncMeta, Operable* acceptCond = nullptr, Operable* exitCond = nullptr);
         ~FlowBlockZyncBase() override;
         /** manage the system */
         void createReadySignal();

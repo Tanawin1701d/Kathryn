@@ -8,6 +8,7 @@
 
 #define intrReset( expr  )   kathrynBlock->addIntSignal(INT_RESET, &expr);
 #define intrStart( expr  )   kathrynBlock->addIntSignal(INT_START, &expr);
+#define holdBlk( expr  )     kathrynBlock->addHoldSignal(&expr);
 #define intrRstAndStart( expr ) intrReset(expr) intrStart(expr)
 #define exposeBlk( exVar )   exVar = kathrynBlock;
 #define track( name  )       kathrynBlock->setZepTrackName(#name);

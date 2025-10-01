@@ -12,7 +12,7 @@ namespace kathryn::o3{
         struct ORsv: RsvBase{
 
         ORsv(SlotMeta meta, int amtRow):
-            RsvBase(smRsvOI + meta, amtRow){}
+            RsvBase(smRsvO + meta, amtRow){}
 
         /***
          * SLOT maintainance operation
@@ -53,16 +53,7 @@ namespace kathryn::o3{
             });
         }
 
-        //// valid index
-        pair<Operable&, OH> buildFreeIndex(){
-            auto [iw, ohIdx] = _table.doReducOHIdx([&](
-             WireSlot& lhs, Operable* lidx,
-             WireSlot& rhs, Operable* ridx) -> Operable&{
-                return ~lhs(busy); //// we don't care rhs
-            });
 
-            return {iw(busy), ohIdx};
-        }
 
         /**
          * ISSUE

@@ -32,6 +32,14 @@ namespace kathryn::o3{
         RegSlot  dcdShared{sharedMeta};
 
         SyncMeta decodeSync {"decodeSync"};
+
+        Operable& getIsAlocRsv(RegSlot& dcd){ return dcw1(rsIdx_1); }
+
+    };
+
+    struct RsvStage{
+        SyncMeta aluRsvSync {"aluRsvSync"};
+        SyncMeta branchRsvSync {"branchRsvSync"};
     };
 
     struct ByPassPool{
@@ -59,6 +67,14 @@ namespace kathryn::o3{
             for (int idx = 0; idx < _byPassRrfIdx.size(); idx++){
                 tryAssignByPass(idx, desIdent, desVal);
             }
+        }
+
+        opr& isByPassing(opr& rrfIdx){
+
+        }
+
+        opr& getByPassData(opr& rrfIdx){
+
         }
 
     };

@@ -10,6 +10,11 @@
 
 namespace kathryn::o3{
 
+    struct PhyEntry{
+        opr& valid;
+        opr& data;
+    };
+
     struct Rrf{
 
         Table table;
@@ -22,6 +27,12 @@ namespace kathryn::o3{
         Rrf():
         table(smRRF, RRF_NUM){}
 
+        Operable& getReqPtr(){ return reqPtr; }
+
+        PhyEntry getPhyEntry(opr& rrfIdx){
+            return {table[rrfIdx](rrfValid).v() ,
+                        table[rrfIdx](rrfData).v()};
+        }
 
         //// fixRrf is the idx who must walk away the size support to be rrf
         void onMissPred(opr& fixRrf, opr& curCommitPtr){ /// size supposed to be equal to rrf
@@ -59,6 +70,7 @@ namespace kathryn::o3{
             zif(req2){
                 table[reqPtr+1](rrfValid) <<= 0;
                 reqPtr <<= (reqPtr + 2);
+                ///// request 2 will not set if req1 is set
             }
 
         }
@@ -71,8 +83,8 @@ namespace kathryn::o3{
 
         }
 
-        void onCommit(opr& comPtr, opr& com1, opr& com2){
-            commitReqSize = commitReqSize + com1 + com2;
+        std::pair<opr&, opr&> onCommit(opr& comPtr, opr& com2Cond){
+            commitReqSize = com1 + com2;
             doRenameOrCommit();
         }
 

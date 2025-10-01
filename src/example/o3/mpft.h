@@ -41,20 +41,22 @@ namespace kathryn::o3{
                 opr& isTag2 = tag2.sl(rowIdx);
                 Reg& vl     = lhs(mpft_valid);
                 Reg& ft     = lhs(mpft_fixTag);
+                ////// set the new row
                 zif (isTag1 && setTag1){
                     vl <<= 1;
                     ft <<= tag1;
+                    zif (setTag2) ft <<= (tag1 | tag2);
                 }
                 zif (isTag2 && setTag2){
                     vl <<= 1;
                     ft <<= tag2;
                 }
                 ///// it is suppose to be other tag because vl for both is not set
+                Operable* newTag = &lhs(mpft_fixTag);
                 zif(vl){
-                    zif (setTag1)
-                        lhs(mpft_fixTag) <<= lhs(mpft_fixTag) | tag1;
-                    zif(setTag2)
-                        lhs(mpft_fixTag) <<= lhs(mpft_fixTag) | tag2;
+                    zif(setTag1 && setTag2) ft <<= (ft | tag1 | tag2);
+                    zif(setTag1) ft <<= (ft | tag1);
+                    zif(setTag2) ft <<= (ft | tag2);
                 }
             });
         }
