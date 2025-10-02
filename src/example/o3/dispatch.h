@@ -23,26 +23,19 @@ namespace kathryn::o3{
         DispStage    dis;
         ORsv&        aluRsv;
         IRsv&        branchRSV;
-        Mpft&        mpft;
-        Rrf&         rrf;
-        Arf&         arf;
-        BroadCast& bcast;
-        ByPassPool   bypass;
+        RegArch&     regArch;
+        ByPassPool&  bypassPool;
 
         mWire(aluRsvIdx2_final, ALU_ENT_SEL);
         mWire(branchRsvIdx2_final, BRANCH_ENT_SEL);
 
         DpMod(DecodeStage& dec, ORsv& aluRsv, IRsv& branchRSV,
-              Mpft& mpft, Rrf& rrf, Arf& arf, BroadCast& bcast,
-              ByPassPool& bp):
-            dec       (dec),
-            aluRsv    (aluRsv),
-            branchRSV (branchRSV),
-            mpft      (mpft),
-            rrf       (rrf),
-            arf       (arf),
-            bcast     (bcast),
-            bypass    (bp){}
+              RegArch& regArch, ByPassPool& bp):
+            dec        (dec),
+            aluRsv     (aluRsv),
+            branchRSV  (branchRSV),
+            regArch    (regArch),
+            bypassPool (bp){}
 
         Operable& isRsvRequired(RegSlot& dcd, int RS_ENT_IDX){
             return (dcd(rsEnt) == RS_ENT_IDX) & (~dcd(invalid));

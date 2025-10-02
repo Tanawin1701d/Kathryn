@@ -16,21 +16,18 @@ namespace kathryn::o3{
 
     struct BranchExec: Module{
 
-        RegSlot     src;
-        TagMgmt&    tagMgmt;
-        RegArch&    regArch;
-        PipStageRef pr;
+        TagMgmt&     tagMgmt;
+        RegArch&     regArch;
+        PipStage&    pm;
+        RegSlot      src;
 
 
-        explicit BranchExec(RegSlot srcData,
-                            TagMgmt& tagMgmt,
+        explicit BranchExec(TagMgmt& tagMgmt,
                             RegArch& regArch,
-                            PipStageRef& pipRef) :
-            src(srcData),
-            tagMgmt(tagMgmt),
-            regArch(regArch),
-            pr(pipRef)
-        {}
+                            PipStage& pm) :
+        tagMgmt(tagMgmt),
+        regArch(regArch),
+        pm(pm){}
 
         void flow() override{
 

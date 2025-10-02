@@ -32,6 +32,8 @@ namespace kathryn{
 
     public:
 
+        RegSlot() : Slot(){}
+
         RegSlot(const SlotMeta& slotMeta,
                 const std::vector<Reg*>& regs
         );
@@ -43,6 +45,8 @@ namespace kathryn{
                 const std::string& prefixName = "RegSlot");
 
         ~RegSlot() override = default;
+
+        void copyFrom(const RegSlot& rhs);
 
         void initHwStructure(const std::string& prefixName) override;
 

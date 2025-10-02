@@ -12,7 +12,7 @@ using namespace std;
 namespace kathryn::o3{
     typedef std::pair<Operable&, Operable&> SearchResult;
     ///////// valid / index binary
-    std::pair<Operable&,Operable&>
+    inline std::pair<Operable&,Operable&>
     searchIdx(Table& table,int value,
               bool isBegin, BroadCast& bc,
               bool checkNext){

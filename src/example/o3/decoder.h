@@ -12,21 +12,19 @@
 
 namespace kathryn::o3{
 
-    struct decMod: public Module{
+    struct DecMod: public Module{
         FetchStage& fetch;
         DecodeStage dec{};
-        RsvStage&   rsv;
+        DispStage&  disp;
         TagMgmt& tagMgmt;
-        BroadCast& bcast;
 
 
-        explicit decMod(FetchStage& fetchSt,
-        RsvStage& rsvSt,
+        explicit DecMod(FetchStage& fetchSt,
+        DispStage& disp,
         TagMgmt& tagMg, BroadCast& bc) :
             fetch(fetchSt),
-            rsv(rsvSt),
-            tagMgmt(tagMg),
-            bcast(bc){
+            disp(disp),
+            tagMgmt(tagMg){
         }
 
         ////// dcd = decoded

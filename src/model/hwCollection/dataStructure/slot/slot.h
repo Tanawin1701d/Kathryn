@@ -26,12 +26,15 @@ namespace kathryn{
         std::vector<HwFieldMeta> _hwFieldMetas;
 
     public:
+
+        Slot(){}
+
         Slot(const std::vector<std::string>& fieldNames,
              const std::vector<int>&         fieldSizes
         ):
         _meta(fieldNames, fieldSizes){};
 
-        explicit Slot(SlotMeta  meta):
+        Slot(SlotMeta  meta):
         _meta(std::move(meta)){}
 
         virtual ~Slot() = default;

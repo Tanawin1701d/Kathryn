@@ -34,6 +34,7 @@ namespace kathryn{
          * |valid|src|src1|
          *
          */
+        SlotMeta()= default;
 
         SlotMeta(const std::vector<std::string>& fieldNames, const std::vector<int>& fieldSizes){
             /** we have to convert it to start from 0 to N */

@@ -105,15 +105,14 @@ namespace kathryn::o3{
     struct RegArch{
         Arf arf;
         Rrf rrf;
-        Rob rob;
     };
 
-    struct PipStageRef{
-        FetchStage&  ft;
-        DecodeStage& dc;
-        DispStage&   ds;
-        ExecStage&   ex;
-        BranchStage& br;
+    struct PipStage{
+        FetchStage  ft;
+        DecodeStage dc;
+        DispStage   ds;
+        ExecStage   ex;
+        BranchStage br;
     };
 
 }
