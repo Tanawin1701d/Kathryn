@@ -5,37 +5,35 @@
 #ifndef KATHRYN_SRC_EXAMPLE_O3_DISPATCH_H
 #define KATHRYN_SRC_EXAMPLE_O3_DISPATCH_H
 
-#include "arf.h"
+#include "kathryn.h"
+
+#include "parameter.h"
 #include "immGen.h"
 #include "irsv.h"
-#include "kathryn.h"
 #include "orsv.h"
-#include "parameter.h"
-#include "rrf.h"
 #include "srcOpr.h"
 #include "stageStruct.h"
 
 
 namespace kathryn::o3{
 
-    struct DpMod: public Module{
-        DecodeStage& dec;
-        DispStage    dis;
+    struct DpMod: Module{
+        PipStage&    pm;
         ORsv&        aluRsv;
         IRsv&        branchRSV;
         RegArch&     regArch;
-        ByPassPool&  bypassPool;
+        ByPassPool&  bp;
 
         mWire(aluRsvIdx2_final, ALU_ENT_SEL);
         mWire(branchRsvIdx2_final, BRANCH_ENT_SEL);
 
-        DpMod(DecodeStage& dec, ORsv& aluRsv, IRsv& branchRSV,
+        DpMod(PipStage& pm, ORsv& aluRsv, IRsv& branchRSV,
               RegArch& regArch, ByPassPool& bp):
-            dec        (dec),
+            pm         (pm),
             aluRsv     (aluRsv),
             branchRSV  (branchRSV),
             regArch    (regArch),
-            bypassPool (bp){}
+            bp (bp){}
 
         Operable& isRsvRequired(RegSlot& dcd, int RS_ENT_IDX){
             return (dcd(rsEnt) == RS_ENT_IDX) & (~dcd(invalid));
@@ -43,9 +41,8 @@ namespace kathryn::o3{
 
         Operable& isAlocatableForRsv(opr& busy1, opr& busy2, int RS_ENT_IDX){
             return  (~busy1 + ~busy2) >=
-                (isRsvRequired(dec.dcd1, RS_ENT_IDX) +
-                 isRsvRequired(dec.dcd2, RS_ENT_IDX));
-
+                (isRsvRequired(pm.dc.dcd1, RS_ENT_IDX) +
+                 isRsvRequired(pm.dc.dcd2, RS_ENT_IDX));
         }
 
         WireSlot cvtdecInstrToRsv(RegSlot& dcd, RegSlot& dcdShard, int decLaneIdx,
@@ -62,25 +59,25 @@ namespace kathryn::o3{
             }
 
             immGen( dcd(inst), dcd(imm_type), des(imm));
-            des(rrftag)  = rrf.getReqPtr() + decLaneIdx;
+            des(rrftag)  = regArch.rrf.getReqPtr() + decLaneIdx;
             des(rdUse)   = dcd(rdUse);
             des(aluOp)   = dcd(aluOp);
             des(spec)    = dcd(spec);
             des(specTag) = dcd(specTag);
             des(opcode)  = dcd(inst)(0, 7);
             des(phyIdx_1, rsValid_1) = decodeSrcOpr(dcd, desPrevIdx, isDesPrevUse,
-                                1, arf, rrf, bypass);
+                                1, regArch.arf, regArch.rrf, bp);
             des(phyIdx_2, rsValid_2) = decodeSrcOpr(dcd, desPrevIdx, isDesPrevUse,
-                                1, arf, rrf, bypass);
+                                2, regArch.arf, regArch.rrf, bp);
 
             return des;
         }
 
         void flow() override{
 
-            auto& dcd1 = dec.dcd1;
-            auto& dcd2 = dec.dcd2;
-            auto& dcdShare     = dec.dcdShared;
+            auto& dcd1 = pm.dc.dcd1;
+            auto& dcd2 = pm.dc.dcd2;
+            auto& dcdShare     = pm.dc.dcdShared;
 
             auto[aluRsvBusy , aluRsvIdx ] = aluRsv.buildFreeIndex(nullptr);
             auto[aluRsvBusy2, aluRsvIdx2] = aluRsv.buildFreeIndex(&aluRsvIdx);
@@ -102,21 +99,24 @@ namespace kathryn::o3{
             zelse branchRsvIdx2_final = branchRsvIdx.getIdx();
 
 
-            RenameCmd renCmd1{dcd1(rdUse), rrf.getReqPtr(),
+            RenameCmd renCmd1{dcd1(rdUse), regArch.rrf.getReqPtr(),
                            dcd1(rdIdx),
                             dcd1(isBranch), dcd1(specTag)};
-            RenameCmd renCmd2{dcd2(rdUse), rrf.getReqPtr()+1,
+            RenameCmd renCmd2{dcd2(rdUse), regArch.rrf.getReqPtr()+1,
                            dcd2(rdIdx),
                             dcd2(isBranch), dcd2(specTag)};
 
+            opr& isdispatable = (~(isAluRsvAllocatable && isBranchRsvAllocatable)) &
+                                regArch.rrf.isRenamable(~dcd2(invalid));
 
-            pip(dis.sync){
 
-                cdowhile( ~(isAluRsvAllocatable && isBranchRsvAllocatable /** and rrf is free */)){
+            pip(pm.ds.sync){
+
+                cdowhile(isdispatable){
                     //////// update rrf
-                    rrf.onRename(~dcd1(invalid), ~dcd2(invalid));
+                    regArch.rrf.onRename(~dcd1(invalid), ~dcd2(invalid));
                     //////// update arf
-                    arf.onRename(renCmd1, renCmd2);
+                    regArch.arf.onRename(renCmd1, renCmd2);
                     //////// update reservation station
                     WireSlot entry1 = cvtdecInstrToRsv(dcd1, dcdShare, 0, nullptr, nullptr);
                     WireSlot entry2 = cvtdecInstrToRsv(dcd2, dcdShare, 1,
@@ -131,9 +131,9 @@ namespace kathryn::o3{
 
                     zif(~dcd2(invalid)){
                         zif(dcd2(rsEnt) == RS_ENT_ALU){
-                                aluRsv.writeEntry(aluRsvIdx2_final, entry1);
+                                aluRsv.writeEntry(aluRsvIdx2_final, entry2);
                         }zelse{
-                                branchRSV.writeEntry(branchRsvIdx2_final, entry1);
+                                branchRSV.writeEntry(branchRsvIdx2_final, entry2);
                         }
                     }
                     //////// update commit

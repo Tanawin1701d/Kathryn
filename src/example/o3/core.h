@@ -29,7 +29,7 @@ namespace kathryn::o3{
     /////// pipeline manager
     PipStage pm;
 
-    mMod(pDec , DecMod    , pm.ft  , pm.ds, tagMgmt); //// decoder
+    mMod(pDec , DecMod    , pm, tagMgmt, bc); //// decoder
     mMod(pDisp, DpMod     , pm.dc  , aluRsv, branchRsv, regArch, bp); //// dispathc
     mMod(pExec, ExecAlu   , pm.ex  , regArch); //// exec unit
     mMod(pbra , BranchExec, tagMgmt, regArch, pm); //// branch unit

@@ -49,9 +49,8 @@ namespace kathryn::o3{
             return (reqPtr + req1 + req2) <= (reqPtr);
         }
 
-        opr& isRenamable(opr& req1, opr& req2,
-                         opr& com1, opr& com2){
-            return (freenum + com1 + com2) >= (req1 + req2);
+        opr& isRenamable(opr& req2){
+            return (freenum + commitReqSize) >= (req2 + 1);
         }
 
         void doRenameOrCommit(){

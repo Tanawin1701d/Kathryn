@@ -10,30 +10,31 @@
 #include "stageStruct.h"
 #include "isaParam.h"
 
+
 namespace kathryn::o3{
 
-    struct DecMod: public Module{
-        FetchStage& fetch;
-        DecodeStage dec{};
-        DispStage&  disp;
+    struct DecMod: Module{
+        PipStage& pm;
         TagMgmt& tagMgmt;
+        BroadCast& bc;
 
 
-        explicit DecMod(FetchStage& fetchSt,
-        DispStage& disp,
-        TagMgmt& tagMg, BroadCast& bc) :
-            fetch(fetchSt),
-            disp(disp),
-            tagMgmt(tagMg){
-        }
+
+        explicit DecMod(
+        PipStage&  pm,
+        TagMgmt&   tagMg,
+        BroadCast& bc) :
+            pm(pm),
+            tagMgmt(tagMg),
+            bc(bc){}
 
         ////// dcd = decoded
         void  decode(int idx){
 
             bool isFirst = (idx == 1);
-            RegSlot& raw = fetch.raw;
-            Reg&      instr = isFirst? fetch.raw(inst1)   : fetch.raw(inst2);
-            WireSlot& dcw   = isFirst? dec.dcw1 : dec.dcw2;
+            RegSlot&  raw = pm.ft.raw;
+            Reg&      instr = isFirst? pm.ft.raw(inst1)   : pm.ft.raw(inst2);
+            WireSlot& dcw   = isFirst? pm.dc.dcw1 : pm.dc.dcw2;
 
 
             ///////////// src
@@ -80,12 +81,12 @@ namespace kathryn::o3{
                 dcw(rsEnt)    = RS_ENT_LDST;
                 dcw(rsUse_2)  = 1;
             } zelif(opc == RV32_BRANCH){
-                zif (funct3 == RV32_FUNCT3_BEQ){ dcw(aluOp) = ALU_OP_SEQ; }
-                zelif (funct3 == RV32_FUNCT3_BEQ){ dcw(aluOp) = ALU_OP_SNE; }
-                zelif (funct3 == RV32_FUNCT3_BEQ){ dcw(aluOp) = ALU_OP_SLT; }
-                zelif (funct3 == RV32_FUNCT3_BEQ){ dcw(aluOp) = ALU_OP_SLTU;}
-                zelif (funct3 == RV32_FUNCT3_BEQ){ dcw(aluOp) = ALU_OP_SGE; }
-                zelif (funct3 == RV32_FUNCT3_BEQ){ dcw(aluOp) = ALU_OP_SGEU;}
+                zif   (funct3 == RV32_FUNCT3_BEQ ){ dcw(aluOp) = ALU_OP_SEQ; }
+                zelif (funct3 == RV32_FUNCT3_BNE ){ dcw(aluOp) = ALU_OP_SNE; }
+                zelif (funct3 == RV32_FUNCT3_BLT ){ dcw(aluOp) = ALU_OP_SLT; }
+                zelif (funct3 == RV32_FUNCT3_BLTU){ dcw(aluOp) = ALU_OP_SLTU;}
+                zelif (funct3 == RV32_FUNCT3_BGE ){ dcw(aluOp) = ALU_OP_SGE; }
+                zelif (funct3 == RV32_FUNCT3_BGEU){ dcw(aluOp) = ALU_OP_SGEU;}
                 zelse{dcw(illLegal) = 1;}
                 dcw(rsEnt)   = RS_ENT_BRANCH;
                 dcw(rsUse_2) = 1;
@@ -101,16 +102,18 @@ namespace kathryn::o3{
                 }
 
             } zelif(opc == RV32_JAL){
-                dcw(rsEnt)   = RS_ENT_JAL;
-                dcw(rsUse_1) = 0;
-                dcw(rsSel_1) = SRC_A_PC;
-                dcw(rsSel_2) = SRC_B_FOUR;
-                dcw(rdUse)   = 1;
+                dcw(rsEnt)    = RS_ENT_JAL;
+                dcw(rsUse_1)  = 0;
+                dcw(rsSel_1)  = SRC_A_PC;
+                dcw(rsSel_2)  = SRC_B_FOUR;
+                dcw(rdUse)    = 1;
+                dcw(isBranch) = ~raw(invalid);
             } zelif(opc == RV32_JALR){
                 dcw(illLegal) = (funct3 != 0);
-                dcw(rsEnt)   = RS_ENT_JALR;
-                dcw(rsSel_1) = SRC_A_PC;
-                dcw(rsSel_2) = SRC_B_FOUR;
+                dcw(rsEnt)    = RS_ENT_JALR;
+                dcw(rsSel_1)  = SRC_A_PC;
+                dcw(rsSel_2)  = SRC_B_FOUR;
+                dcw(isBranch) = ~raw(invalid);
             } zelif(opc == RV32_OP_IMM){
                 dcw(aluOp) = aluOpArith;
                 dcw(rdUse) = 1;
@@ -131,8 +134,8 @@ namespace kathryn::o3{
                 }
 
             } zelif (opc == RV32_AUIPC){
-                dcw(imm_type) = IMM_U;
-                dcw(rdUse   ) = 1;
+                dcw(imm_type)  = IMM_U;
+                dcw(rdUse   )  = 1;
                 dcw(rsUse_1 )  = 0;
                 dcw(rsSel_1 )  = SRC_A_PC;
 
@@ -149,8 +152,8 @@ namespace kathryn::o3{
 
             ///////// alu op
             zif  (funct3 == RV32_FUNCT3_ADD_SUB){
-                    aluOpArith = ALU_OP_ADD;
-                zif (opc == RV32_OP && *funct7.doSlice({5, 6})){
+                aluOpArith = ALU_OP_ADD;
+                zif (opc == RV32_OP && funct7.sl(5)){
                     aluOpArith = ALU_OP_SUB;
                 }
             }
@@ -158,9 +161,9 @@ namespace kathryn::o3{
              zelif(funct3 == RV32_FUNCT3_SLT    ){aluOpArith = ALU_OP_SLT;}
              zelif(funct3 == RV32_FUNCT3_SLTU   ){aluOpArith = ALU_OP_SLTU;}
              zelif(funct3 == RV32_FUNCT3_XOR    ){aluOpArith = ALU_OP_XOR;}
-             zelif(funct3 == RV32_FUNCT3_SRA_SRL && ( *funct7.doSlice({5, 6}))){
+             zelif(funct3 == RV32_FUNCT3_SRA_SRL && funct7.sl(5)){
                 aluOpArith = ALU_OP_SRA;
-            }zelif(funct3 == RV32_FUNCT3_SRA_SRL && (~*funct7.doSlice({5, 6}))){
+            }zelif(funct3 == RV32_FUNCT3_SRA_SRL && (~funct7.sl(5))){
                 aluOpArith = ALU_OP_SRL;
             }zelif(funct3 == RV32_FUNCT3_OR     ){aluOpArith = ALU_OP_OR;}
              zelif(funct3 == RV32_FUNCT3_AND    ){aluOpArith = ALU_OP_AND;}
@@ -207,33 +210,34 @@ namespace kathryn::o3{
             ///// build the decode wire
             decode(1);
             decode(2);
-            RegSlot& dcd1 = dec.dcd1;
-            RegSlot& dcd2 = dec.dcd2;
-            WireSlot& dcw1 = dec.dcw1;
-            WireSlot& dcw2 = dec.dcw2;
+            RegSlot&  dcd1 = pm.dc.dcd1;
+            RegSlot&  dcd2 = pm.dc.dcd2;
+            RegSlot&  dcdShared = pm.dc.dcdShared;
+            WireSlot& dcw1 = pm.dc.dcw1;
+            WireSlot& dcw2 = pm.dc.dcw2;
 
             opr& isGenable = tagMgmt.tagGen.isAllGenble(
                 dcw1(isBranch),
                 dcw2(isBranch),
-                bcast);
+                bc);
 
-            pip(dec.sync){
-                zyncc(rsv.aluRsvSync, isGenable){
+            pip(pm.dc.sync){
+                zyncc(pm.ds.sync, isGenable){
                     ///// you can't change the order
-                    dcd1 <<= dec.dcw1;
-                    dcd2 <<= dec.dcw2;
-                    dec.dcdShared(pc)  <<= fetch.raw(pc);
-                    dec.dcdShared(bhr) <<= fetch.raw(bhr);
+                    dcd1 <<= dcw1;
+                    dcd2 <<= dcw2;
+                    dcdShared(pc)  <<= pm.ft.raw(pc);
+                    dcdShared(bhr) <<= pm.ft.raw(bhr);
                         ///// fill the equal idx
-                    dec.dcdShared(desEqSrc1) <<=
+                    dcdShared(desEqSrc1) <<=
                         (dcw2(rsIdx_1) == dcw2(rdIdx));
-                    dec.dcdShared(desEqSrc2) <<=
+                    dcdShared(desEqSrc2) <<=
                         (dcw2(rsIdx_2) == dcw2(rdIdx));
 
                     tagMgmt.tagGen.allocate( //// the tagGen and mpft are updated
                     dcw1(isBranch),dcd1(spec), dcd1(specTag),
                     dcw2(isBranch),dcd2(spec), dcd2(specTag),
-                    bcast
+                    bc
                     );
                 }
             }
