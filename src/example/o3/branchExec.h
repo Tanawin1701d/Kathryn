@@ -60,7 +60,8 @@ namespace kathryn::o3{
                     pr.ds.sync.holdSlave();
                     tagMgmt.mpft.onPredSuc(src(specTag));
                     tagMgmt.tagGen.onSucPred();
-                    regArch.arf.onSucPred();  /// no for
+                    regArch.arf.onSucPred();
+                    /// no for rob and arf
 
                 }
 

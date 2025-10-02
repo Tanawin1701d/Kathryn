@@ -17,8 +17,8 @@ namespace kathryn::o3{
          */
 
         inline SlotMeta smFetch {
-            {inst1, invalid1, inst2, invalid2,    pc,   npc, prCond, bhr     },
-            {INSN_LEN,           1, INSN_LEN,           1, ADDR_LEN, ADDR_LEN,         1, GSH_BHR_LEN}
+            {inst1   , invalid1, inst2   , invalid2,       pc,      npc, prCond, bhr        },
+            {INSN_LEN, 1       , INSN_LEN, 1       , ADDR_LEN, ADDR_LEN, 1     , GSH_BHR_LEN}
         };
 
         /**
@@ -26,53 +26,57 @@ namespace kathryn::o3{
          */
 
         inline SlotMeta smDecBase {
-            {inst             , invalid       ,imm_type      , aluOp             , rsEnt,
-                isBranch      , pred_addr         , spec , specTag, illLegal,
-                rdIdx         , rdUse              ,
-                rsIdx_1       , rsSel_1           ,rsUse_1 ,
-                rsIdx_2       , rsSel_2           ,rsUse_2 ,
-                dmem_size     , dmem_type         ,
-                md_req_op     , md_req_in_signed_1, md_req_in_signed_2, md_req_out_sel
+            {inst             , invalid           , imm_type    , aluOp          , rsEnt,
+             isBranch         , pred_addr         , spec        , specTag        , illLegal,
+             rdIdx            , rdUse             ,
+             rsIdx_1          , rsSel_1           , rsUse_1     ,
+             rsIdx_2          , rsSel_2           , rsUse_2     ,
+             dmem_size        , dmem_type         ,
+             md_req_op        , md_req_in_signed_1,
+            md_req_in_signed_2, md_req_out_sel
             },
 
-            {INSN_LEN        ,1               , IMM_TYPE_WIDTH  , ALU_OP_WIDTH   , ALU_OP_WIDTH,
-                1               , ADDR_LEN       , 1, SPECTAG_LEN , 1,
-                REG_SEL         , 1              ,
-                REG_SEL         , SRC_A_SEL_WIDTH, 1,
-                REG_SEL         , SRC_B_SEL_WIDTH, 1,
-                3               , MEM_TYPE_WIDTH ,
-                MD_OP_WIDTH     , 1              , 1, MD_OUT_SEL_WIDTH
+            {INSN_LEN         , 1                 , IMM_TYPE_WIDTH , ALU_OP_WIDTH   , RS_ENT_SEL,
+             1                , ADDR_LEN          , 1              , SPECTAG_LEN    , 1         ,
+             REG_SEL          , 1                 ,
+             REG_SEL          , SRC_A_SEL_WIDTH   , 1              ,
+             REG_SEL          , SRC_B_SEL_WIDTH   , 1              ,
+             3                , MEM_TYPE_WIDTH    ,
+             MD_OP_WIDTH      , 1                 ,
+             1                , MD_OUT_SEL_WIDTH
             }
         };
 
         inline SlotMeta smDecShard {
-            {   pc,      bhr, desEqSrc1, desEqSrc2},
-            {ADDR_LEN, GSH_BHR_LEN,            1,            1}
+            {      pc, bhr        , desEqSrc1, desEqSrc2},
+            {ADDR_LEN, GSH_BHR_LEN, 1        , 1        }
         };
 
         /**
          * RSV
          */
         inline SlotMeta smRsvBase {
-            {
-                pc      , imm           , rrftag    , rdUse,     aluOp,  spec, specTag, opcode,
-                phyIdx_1, rsSel_1       , rsValid_1 ,
-                phyIdx_2, rsSel_2       , rsValid_2 ,
+            {pc         , imm             , rrftag    , rdUse, aluOp       ,
+             spec       , specTag         , opcode    ,
+             phyIdx_1   , rsSel_1         , rsValid_1 ,
+             phyIdx_2   , rsSel_2         , rsValid_2 ,
             },
-            {ADDR_LEN   ,   DATA_LEN       , RRF_SEL      ,        1, ALU_OP_WIDTH, SPECTAG_LEN, OPCODE_WIDTH,
-                DATA_LEN   ,   SRC_A_SEL_WIDTH, 1            ,
-                DATA_LEN   ,   SRC_B_SEL_WIDTH, 1            ,
+            ////////////////////////////////////////////////////////////////////
+            {ADDR_LEN   , DATA_LEN        , RRF_SEL   , 1    , ALU_OP_WIDTH,
+             SPECTAG_LEN, OPCODE_WIDTH    ,
+             DATA_LEN   , SRC_A_SEL_WIDTH , 1         ,
+             DATA_LEN   , SRC_B_SEL_WIDTH , 1         ,
             }
         };
 
         inline SlotMeta smRsvMul {
-            {md_req_in_signed_1, md_req_in_signed_2, md_req_out_sel},
-            {                    1,                     1, MD_OUT_SEL_WIDTH }
+            {md_req_in_signed_1, md_req_in_signed_2, md_req_out_sel   },
+            {1                 , 1                 , MD_OUT_SEL_WIDTH }
         };
 
         inline SlotMeta smRsvO{ /// out of order
             {busy, sortBit},
-            {1, 1}
+            {1   , 1      }
         };
 
         inline SlotMeta smRsvI{
@@ -85,7 +89,7 @@ namespace kathryn::o3{
      */
     inline SlotMeta smMPFT{
         {mpft_valid, mpft_fixTag},
-        {            1,    SPECTAG_LEN}
+        {1         , SPECTAG_LEN}
     };
 
     /**
@@ -93,7 +97,7 @@ namespace kathryn::o3{
      */
     inline SlotMeta smRRF{
         {rrfValid, rrfData },
-        {       1, DATA_LEN}
+        {1       , DATA_LEN}
     };
 
     /**
@@ -110,8 +114,8 @@ namespace kathryn::o3{
      * ROB
      */
     inline SlotMeta smROB{
-        {wbFin, isBranch, rdUse, rdIdx},
-        {          1,           1,        1,  REG_SEL}
+        {wbFin, isBranch, rdUse, rdIdx  },
+        {1    , 1       , 1    , REG_SEL}
     };
 
 

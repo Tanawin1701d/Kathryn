@@ -5,14 +5,18 @@
 #ifndef KATHRYN_SRC_EXAMPLE_O3_STAGEPARAM_H
 #define KATHRYN_SRC_EXAMPLE_O3_STAGEPARAM_H
 
-#include "arf.h"
+
 #include "kathryn.h"
-#include "mpft.h"
+
 #include "parameter.h"
-#include "rob.h"
-#include "rrf.h"
 #include "slotParam.h"
+
 #include "tagGen.h"
+#include "mpft.h"
+
+#include "arf.h"
+#include "rrf.h"
+#include "rob.h"
 
 namespace kathryn::o3{
 
@@ -28,10 +32,10 @@ namespace kathryn::o3{
         SlotMeta sharedMeta  {smDecShard};
         SlotMeta decodedMeta {smDecBase };
 
-        RegSlot   dcd1     {decodedMeta};
-        RegSlot   dcd2     {decodedMeta};
-        WireSlot  dcw1     {decodedMeta};
-        WireSlot  dcw2     {decodedMeta};
+        RegSlot   dcd1    {decodedMeta};
+        RegSlot   dcd2    {decodedMeta};
+        WireSlot  dcw1    {decodedMeta};
+        WireSlot  dcw2    {decodedMeta};
         RegSlot  dcdShared{sharedMeta};
 
         SyncMeta sync {"decodeSync"};
@@ -52,39 +56,29 @@ namespace kathryn::o3{
         SyncMeta sync {"branchSync"};
     };
 
+    struct ByPass{
+        opr& valid,&rrfIdx, &val;
+
+        void tryAssignByPass(Operable& desIdent, Reg& desVal){
+            zif(valid && (desIdent == rrfIdx)){
+                desVal <<= val;
+            }
+        }
+
+    };
+
     struct ByPassPool{
 
-        std::vector<Operable*> _byPassRrfIdx;
-        std::vector<Operable*> _byPassVal;
-        std::vector<Operable*> _activeSignal;
+        std::vector<ByPass> _bps;
 
-        void addByPassValue(Operable* byPassRrfIdx, Operable* byPassVal, Operable* activeSignal){
-            if (!byPassRrfIdx || !byPassVal || !activeSignal){
-                throw std::invalid_argument("Null pointer passed to addByPassValue");
-            }
-            _byPassRrfIdx.push_back(byPassRrfIdx);
-            _byPassVal   .push_back(byPassVal   );
-            _activeSignal.push_back(activeSignal);
+        void addByPassValue(opr& valid,opr& rrfIdx, opr& val){
+            _bps.push_back({valid, rrfIdx, val});
         }
-
-        void tryAssignByPass(int idx, Operable& desIdent, Reg& desVal){
-            zif( (desIdent == *_byPassRrfIdx[idx]) && *_activeSignal[idx]){
-                desVal <<= *_byPassVal[idx];
-            }
-        }
-
+        
         void tryAssignByPassAll(Operable& desIdent, Reg& desVal){
-            for (int idx = 0; idx < _byPassRrfIdx.size(); idx++){
-                tryAssignByPass(idx, desIdent, desVal);
+            for (auto& bp : _bps){
+                bp.tryAssignByPass(desIdent, desVal);
             }
-        }
-
-        opr& isByPassing(opr& rrfIdx){
-
-        }
-
-        opr& getByPassData(opr& rrfIdx){
-
         }
 
     };
@@ -103,8 +97,9 @@ namespace kathryn::o3{
     };
 
     struct TagMgmt{
-        Mpft   mpft;
         TagGen tagGen;
+        Mpft   mpft;
+
     };
 
     struct RegArch{
