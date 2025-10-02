@@ -35,12 +35,12 @@ namespace kathryn::o3{
         }
 
         //// fixRrf is the idx who must walk away the size support to be rrf
-        void onMissPred(opr& fixRrf, opr& curCommitPtr){ /// size supposed to be equal to rrf
-            reqPtr <<= fixRrf;
-            zif(curCommitPtr <= fixRrf){
-                freenum <<= (fixRrf - curCommitPtr);
+        void onMisPred(opr& misRrf, opr& curCommitPtr){ /// size supposed to be equal to rrf
+            reqPtr <<= misRrf;
+            zif(curCommitPtr <= misRrf){
+                freenum <<= (misRrf - curCommitPtr);
             }zelse{
-                freenum <<= (RRF_ENTRIES - curCommitPtr) + fixRrf;
+                freenum <<= (RRF_ENTRIES - curCommitPtr) + misRrf;
             }
         }
 

@@ -22,6 +22,14 @@ namespace kathryn::o3{
             tagreg.makeResetEvent();
         }
 
+        void onMisPred(){
+            brdepth = 0;
+            tagreg  = 1;
+        }
+
+        void onSucPred(){
+            brdepth <<=  (brdepth - 1);
+        }
 
         opr& isAllGenble(opr& branchValid1, opr& branchValid2, BroadCast& bc){
             return (brdepth + branchValid1 + branchValid2) <=

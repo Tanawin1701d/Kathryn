@@ -19,10 +19,11 @@ namespace kathryn::o3{
     Rob&    rob;
     Rrf&    rrf;
 
-    explicit AluExec(RegSlot srcData, Rob& rob, Rrf& rrf):
-    src(srcData),
-    rob(rob),
-    rrf(rrf){}
+    explicit AluExec(const RegSlot& srcData, const SyncMeta& syncMeta, Rob& rob, Rrf& rrf) :
+        src(srcData),
+        syncMeta(syncMeta),
+        rob(rob),
+        rrf(rrf){}
 
     void flow() override{
 
@@ -32,8 +33,11 @@ namespace kathryn::o3{
 
         pip(syncMeta){
             rob.onWriteBack(src(rrftag));
-            rrf.onWback(src(rrftag), result);
-            /////// do the bypass
+            zif(src(rdUse)){
+                rrf.onWback(src(rrftag), result);
+            }
+
+            /////// do the bypass and misspredict handler
         }
         
     }

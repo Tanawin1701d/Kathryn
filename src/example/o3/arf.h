@@ -158,7 +158,7 @@ namespace kathryn::o3{
             SET_ASM_PRI_TO_AUTO();
         }
 
-        void onSucessPredict(){ ///// it must handle case the commit as well
+        void onSucPred(){ ///// it must handle case the commit as well
             SET_ASM_PRI_TO_MANUAL(DEFAULT_UE_PRI_USER+2);
 
             ////// eliminated the data

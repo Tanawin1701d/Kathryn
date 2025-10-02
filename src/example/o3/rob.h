@@ -31,7 +31,9 @@ namespace kathryn::o3{
             comPtr.makeResetEvent();
         }
 
-        void onMissPred(){ hold = 1;}
+        opr& getComPtr(){ return comPtr;}
+
+        void onMisPred(){ hold = 1;}
 
         void flow() override{
             comPtr2 = comPtr + 1;

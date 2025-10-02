@@ -20,7 +20,7 @@ namespace kathryn::o3{
 
     struct DpMod: public Module{
         DecodeStage& dec;
-        RsvStage     rsv;
+        DispStage    dis;
         ORsv&        aluRsv;
         IRsv&        branchRSV;
         Mpft&        mpft;
@@ -117,7 +117,7 @@ namespace kathryn::o3{
                             dcd2(isBranch), dcd2(specTag)};
 
 
-            pip(dec.decodeSync){
+            pip(dis.sync){
 
                 cdowhile( ~(isAluRsvAllocatable && isBranchRsvAllocatable /** and rrf is free */)){
                     //////// update rrf

@@ -15,12 +15,16 @@ namespace kathryn::o3{
     struct decMod: public Module{
         FetchStage& fetch;
         DecodeStage dec{};
+        RsvStage&   rsv;
         TagMgmt& tagMgmt;
         BroadCast& bcast;
 
 
-        explicit decMod(FetchStage& fetchSt, TagMgmt& tagMg, BroadCast& bc) :
+        explicit decMod(FetchStage& fetchSt,
+        RsvStage& rsvSt,
+        TagMgmt& tagMg, BroadCast& bc) :
             fetch(fetchSt),
+            rsv(rsvSt),
             tagMgmt(tagMg),
             bcast(bc){
         }
@@ -215,8 +219,8 @@ namespace kathryn::o3{
                 dcw2(isBranch),
                 bcast);
 
-            pip(fetch.fetchSync){
-                zyncc(dec.decodeSync, isGenable){
+            pip(dec.sync){
+                zyncc(rsv.aluRsvSync, isGenable){
                     ///// you can't change the order
                     dcd1 <<= dec.dcw1;
                     dcd2 <<= dec.dcw2;

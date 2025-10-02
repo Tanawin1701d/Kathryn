@@ -75,6 +75,9 @@ namespace kathryn{
 
         void holdMaster(){  baseHolder(masterHoldSignals); }
 
+        void killSlave(){/** TODO*/}
+        void killMaster(){/** TODO*/}
+
         Operable& getMatchStatus(){
             return sendSuccess;
         }

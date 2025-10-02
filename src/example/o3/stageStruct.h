@@ -5,9 +5,12 @@
 #ifndef KATHRYN_SRC_EXAMPLE_O3_STAGEPARAM_H
 #define KATHRYN_SRC_EXAMPLE_O3_STAGEPARAM_H
 
+#include "arf.h"
 #include "kathryn.h"
 #include "mpft.h"
 #include "parameter.h"
+#include "rob.h"
+#include "rrf.h"
 #include "slotParam.h"
 #include "tagGen.h"
 
@@ -18,7 +21,7 @@ namespace kathryn::o3{
     struct FetchStage{
         SlotMeta meta{smFetch};
         RegSlot  raw {smFetch};
-        SyncMeta fetchSync;
+        SyncMeta sync;
     };
 
     struct DecodeStage{
@@ -31,15 +34,22 @@ namespace kathryn::o3{
         WireSlot  dcw2     {decodedMeta};
         RegSlot  dcdShared{sharedMeta};
 
-        SyncMeta decodeSync {"decodeSync"};
+        SyncMeta sync {"decodeSync"};
 
         Operable& getIsAlocRsv(RegSlot& dcd){ return dcw1(rsIdx_1); }
 
     };
 
-    struct RsvStage{
-        SyncMeta aluRsvSync {"aluRsvSync"};
-        SyncMeta branchRsvSync {"branchRsvSync"};
+    struct DispStage{
+        SyncMeta sync {"dispSync"};
+    };
+
+    struct ExecStage{
+        SyncMeta sync {"execSync"};
+    };
+
+    struct BranchStage{
+        SyncMeta sync {"branchSync"};
     };
 
     struct ByPassPool{
@@ -95,6 +105,20 @@ namespace kathryn::o3{
     struct TagMgmt{
         Mpft   mpft;
         TagGen tagGen;
+    };
+
+    struct RegArch{
+        Arf arf;
+        Rrf rrf;
+        Rob rob;
+    };
+
+    struct PipStageRef{
+        FetchStage&  ft;
+        DecodeStage& dc;
+        DispStage&   ds;
+        ExecStage&   ex;
+        BranchStage& br;
     };
 
 }
