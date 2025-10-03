@@ -23,17 +23,19 @@ namespace kathryn::o3{
         IRsv&        branchRSV;
         RegArch&     regArch;
         ByPassPool&  bp;
+        Rob&         rob;
 
         mWire(aluRsvIdx2_final, ALU_ENT_SEL);
         mWire(branchRsvIdx2_final, BRANCH_ENT_SEL);
 
         DpMod(PipStage& pm, ORsv& aluRsv, IRsv& branchRSV,
-              RegArch& regArch, ByPassPool& bp):
+              RegArch& regArch, ByPassPool& bp, Rob& rob):
             pm         (pm),
             aluRsv     (aluRsv),
             branchRSV  (branchRSV),
             regArch    (regArch),
-            bp (bp){}
+            bp         (bp),
+            rob        (rob){}
 
         Operable& isRsvRequired(RegSlot& dcd, int RS_ENT_IDX){
             return (dcd(rsEnt) == RS_ENT_IDX) & (~dcd(invalid));
@@ -111,10 +113,10 @@ namespace kathryn::o3{
 
 
             pip(pm.ds.sync){
-
                 cdowhile(isdispatable){
-                    //////// update rrf
+                    ////////
                     regArch.rrf.onRename(~dcd1(invalid), ~dcd2(invalid));
+                    opr& reqPtr = regArch.rrf.getReqPtr();
                     //////// update arf
                     regArch.arf.onRename(renCmd1, renCmd2);
                     //////// update reservation station
@@ -122,12 +124,15 @@ namespace kathryn::o3{
                     WireSlot entry2 = cvtdecInstrToRsv(dcd2, dcdShare, 1,
                         &dcd1(rdUse), &dcd1(rdIdx));
 
+                    //////// put the instruction to rob and rsv
+
                     ////// dcd 1 supposed to be valid all the time
                     zif(dcd1(rsEnt) == RS_ENT_ALU){
                         aluRsv.writeEntry(aluRsvIdx, entry1);
                     }zelse{
                         branchRSV.writeEntry(branchRsvIdx, entry1);
                     }
+                    rob.onDispatch(reqPtr, entry1);
 
                     zif(~dcd2(invalid)){
                         zif(dcd2(rsEnt) == RS_ENT_ALU){
@@ -135,15 +140,10 @@ namespace kathryn::o3{
                         }zelse{
                                 branchRSV.writeEntry(branchRsvIdx2_final, entry2);
                         }
+                        rob.onDispatch(reqPtr+1, entry2);
                     }
-                    //////// update commit
-                    ///// TODO build the commit
-
-
                 }
-
             }
-
         }
 
 

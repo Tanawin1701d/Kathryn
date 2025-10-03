@@ -21,6 +21,7 @@ namespace kathryn::o3{
 
         virtual ~RsvBase() = default;
 
+        virtual pair<Operable&, OH> buildFreeIndex(OH* exceptIdx){assert(false);}
         virtual RegSlot buildIssue(SyncMeta& syncMeta, BroadCast& bc) = 0;
 
         Operable& slotReady(WireSlot& iw){
@@ -39,22 +40,6 @@ namespace kathryn::o3{
 
         }
 
-        //// valid index
-        pair<Operable&, OH> buildFreeIndex(OH* exceptIdx){
-            auto [iw, ohIdx] = _table.doReducOHIdx([&](
-             WireSlot& lhs, Operable* lidx,
-             WireSlot& rhs, Operable* ridx) -> Operable&{
-                if (exceptIdx == nullptr){
-                    return ~lhs(busy); //// we don't care rhs
-                }
-                return ~lhs(busy) && ((*lidx) != exceptIdx->getIdx());
-
-            });
-
-            return {iw(busy), ohIdx};
-        }
-
-        ///// write table
         void writeEntry(OH ohIdx, WireSlot& iw){
             _table[ohIdx] <<= iw;
         }

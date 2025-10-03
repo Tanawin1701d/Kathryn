@@ -26,14 +26,17 @@ namespace kathryn::o3{
     TagMgmt  tagMgmt;
     /////// register architecture
     RegArch  regArch;
+    /////// reorder buffer
+    mMod(prob, Rob, regArch);
     /////// pipeline manager
     PipStage pm;
 
-    mMod(pDec , DecMod    , pm, tagMgmt, bc); //// decoder
-    mMod(pDisp, DpMod     , pm.dc  , aluRsv, branchRsv, regArch, bp); //// dispathc
-    mMod(pExec, ExecAlu   , pm.ex  , regArch); //// exec unit
-    mMod(pbra , BranchExec, tagMgmt, regArch, pm); //// branch unit
-    mMod(prob , Rob       , regArch); ///// reorder buffer
+    mMod(pDec , DecMod    , pm     , tagMgmt, bc        ); //// decoder
+    mMod(pDisp, DpMod     , pm.dc  ,  aluRsv, branchRsv,
+                            regArch,      bp, prob      ); //// dispathc
+    mMod(pExec, ExecAlu   , pm.ex  , regArch            ); //// exec unit
+    mMod(pbra , BranchExec, tagMgmt, regArch, pm        ); //// branch unit
+
 
     explicit Core(){
 

@@ -57,7 +57,7 @@ namespace kathryn::o3{
 
         }
 
-        void onDispatch(opr& idx, WireSlot& dpValue){
+        void onDispatch(opr& idx, WireSlot dpValue){
             _table[idx] <<= dpValue;
             _table[idx](wbFin) <<= 0;
         }

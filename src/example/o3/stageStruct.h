@@ -84,15 +84,20 @@ namespace kathryn::o3{
     };
 
     struct BroadCast{
-        mWire(miss, 1);
-        mWire(succ, 1);
-        opr& isBrMissPred(){ return miss;}
-        opr& isBrSuccPred(){ return succ;}
-        opr& checkIsKill(Operable& specIdx){}
-        opr& checkIsSuc(Operable& specIdx){}
-        opr& getSMtag(){ ///// get success or miss predict tag
-
+        mWire(mis, 1);
+        mWire(suc, 1);
+        mWire(misTag, SPECTAG_LEN);
+        mWire(fixTag, SPECTAG_LEN);
+        mWire(sucTag, SPECTAG_LEN);
+        opr& isBrMissPred(){ return mis;}
+        opr& isBrSuccPred(){ return suc;}
+        opr& checkIsKill(opr& specIdx){
+            return mis & (misTag == specIdx);
         }
+        opr& checkIsSuc (opr& specIdx){
+            return suc & (sucTag == specIdx);
+        }
+        opr& getSMtag(){return fixTag;}
 
     };
 

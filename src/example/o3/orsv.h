@@ -21,9 +21,9 @@ namespace kathryn::o3{
         void buildSlotLogic(ByPassPool& bypassPool, BroadCast& bc){
             _table.doCusLogic([&](RegSlot& lhs, int rowIdx){
                 for (int i = 1; i <= 2; i++){
-                    auto& isBusy = lhs(busy);
-                    auto& useSig = lhs(str(rsUse_) + toS(i));
-                    auto& phyIdx = lhs(str(phyIdx_) + toS(i));
+                    auto& isBusy  = lhs(busy);
+                    auto& useSig  = lhs(str(rsUse_) + toS(i));
+                    auto& phyIdx  = lhs(str(phyIdx_) + toS(i));
                     auto& isSpec  = lhs(spec);
                     auto& specTagIdx= lhs(specTag);
                     //////// do bypass the system
@@ -33,7 +33,7 @@ namespace kathryn::o3{
                                 bypassPool.tryAssignByPassAll(
                                     phyIdx(0, RRF_SEL),phyIdx);
                             }
-                            zif(isSpec){
+                            zif(isSpec){ ////// kill checking
                                 zif(bc.checkIsKill(specTagIdx)){
                                     isBusy <<= 0; //// kill the system
                                 }
@@ -53,23 +53,31 @@ namespace kathryn::o3{
             });
         }
 
+        pair<Operable&, OH> buildFreeIndex(OH* exceptIdx) override{
+            auto [iw, ohIdx] = _table.doReducOHIdx([&](
+             WireSlot& lhs, Operable* lidx,
+             WireSlot& rhs, Operable* ridx) -> opr&{
+                if (exceptIdx == nullptr){
+                    return ~lhs(busy); //// we don't care rhs
+                }
+                return ~lhs(busy) && ((*lidx) != exceptIdx->getIdx());
 
+            });
 
-        /**
-         * ISSUE
-         */
+            return {iw(busy), ohIdx};
+        }
+
         RegSlot buildIssue(SyncMeta& syncMeta, BroadCast& bc) override{
-
             /*
             * find the free slot
             */
             auto [iw, ohIdx] = _table.doReducOHIdx(
                 [&](WireSlot& lhs, Operable* lidx,
-                            WireSlot& rhs, Operable* ridx)-> Operable&{
+                    WireSlot& rhs, Operable* ridx)-> Operable&{
 
-                    auto& busyEq = lhs(busy) == rhs(busy);
+                    auto& busyEq    = lhs(busy)    == rhs(busy);
                     auto& sortBitEq = lhs(sortBit) == rhs(sortBit);
-                    auto& rrftagEq = lhs(rrftag) == rhs(rrftag);
+                    auto& rrftagEq  = lhs(rrftag)  == rhs(rrftag);
 
                     return
                         (lhs(busy) && (~rhs(busy))) ||
@@ -92,7 +100,6 @@ namespace kathryn::o3{
                 }
             }
             return resultRegSlot;
-
         }
 
     };
