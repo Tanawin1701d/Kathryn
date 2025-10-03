@@ -28,14 +28,14 @@ namespace kathryn::o3{
             e0 (searchIdx(_table, 1, true , bc, false)),
             nb1(searchIdx(_table, 1, true , bc, true )),
             ne1(searchIdx(_table, 1, false, bc, true )),
-            nb0(searchIdx(_table, 1, true , bc, true )){}
-
-        void buildAllocLogic(BroadCast& bc){
-
+            nb0(searchIdx(_table, 1, true , bc, true )){
             allocPtr.makeResetEvent();
-            //// make it when prMiss
+        }
 
-            zif (bc.isBrMissPred() && nb0.sValid){ /// there is empty space for next update
+        void onMisPred(opr& fixTag) override{
+
+            RsvBase::onMisPred(fixTag);
+            zif (nb0.sValid){ /// there is empty space for next update
                 ////// case 0  is bubble there is 1 atstart and 1 at the end
                 zif((nb1.sIdx == 0) && (ne1.sIdx == (_table.getNumRow()-1))){
                     allocPtr <<= nb0.sIdx;
@@ -75,7 +75,8 @@ namespace kathryn::o3{
                     resultRegSlot <<= iw;
                     tryOwSpecBit(resultRegSlot, iw, bc);
                     //////// reset the table
-                    _table[checkIdx](busy) <<= 0;
+                    onIssue(checkIdx); //// reset busy
+
                 }
             }
             return resultRegSlot;

@@ -17,7 +17,9 @@ namespace kathryn::o3{
         Table    _table;
 
         RsvBase(SlotMeta meta, int amtRow):
-            _meta(meta), _table(meta, amtRow){}
+            _meta(meta), _table(meta, amtRow){
+            _table.doReset();
+        }
 
         virtual ~RsvBase() = default;
 
@@ -40,10 +42,59 @@ namespace kathryn::o3{
 
         }
 
-        void writeEntry(OH ohIdx, WireSlot& iw){
+        virtual void writeEntry(OH ohIdx, WireSlot& iw){
+            SET_ASM_PRI_TO_MANUAL(DEFAULT_UE_PRI_USER+1);
             _table[ohIdx] <<= iw;
+            SET_ASM_PRI_TO_AUTO();
         }
 
+        virtual void onIssue(opr& issueIdx){
+            _table[issueIdx](busy) <<= 0;
+        }
+
+        virtual void onMisPred(opr& fixTag){
+
+            SET_ASM_PRI_TO_MANUAL(DEFAULT_UE_PRI_USER+2);
+            _table.doCusLogic([&](RegSlot& lhs, int rowIdx){
+                auto& isBusy    = lhs(busy);
+                auto& isSpec    = lhs(spec);
+                auto& mySpecTag = lhs(specTag);
+                //////// do bypass the system
+                zif (isBusy & isSpec & ((mySpecTag&fixTag) != 0)){
+                    isBusy <<= 0;
+                }
+            });
+            SET_ASM_PRI_TO_AUTO();
+
+
+        }
+        virtual void onSucPred(opr& sucTag){
+            _table.doCusLogic([&](RegSlot& lhs, int rowIdx){
+                auto& isBusy  = lhs(busy);
+                auto& isSpec  = lhs(spec);
+                auto& mySpecTag= lhs(specTag);
+                //////// do bypass the system
+                zif (isBusy & isSpec & mySpecTag){
+                    isSpec <<= 0;
+                }
+            });
+        }
+        //// update the src register
+        virtual void onWriteBack(ByPass bp){
+            _table.doCusLogic([&](RegSlot& lhs, int rowIdx){
+                for (int i = 1; i <= 2; i++){
+                    auto& isBusy     = lhs(busy);
+                    auto& useSig     = lhs(str(rsUse_) + toS(i));
+                    auto& phyIdx     = lhs(str(phyIdx_) + toS(i));
+                    //////// do bypass the system
+                    zif (isBusy){
+                        zif (useSig & phyIdx(0, 5) == bp.rrfIdx){
+                            phyIdx <<= bp.val;
+                        }
+                    }
+                }
+            });
+        }
     };
 
 }

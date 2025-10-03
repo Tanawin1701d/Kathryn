@@ -48,6 +48,10 @@ namespace kathryn::o3{
         SyncMeta sync {"dispSync"};
     };
 
+    struct RsvStage{
+        SyncMeta sync {"rsvSync"};
+    };
+
     struct ExecStage{
         SyncMeta sync {"execSync"};
     };
@@ -116,6 +120,7 @@ namespace kathryn::o3{
         FetchStage  ft;
         DecodeStage dc;
         DispStage   ds;
+        RsvStage    rs;
         ExecStage   ex;
         BranchStage br;
     };

@@ -113,7 +113,7 @@ namespace kathryn::o3{
 
 
             pip(pm.ds.sync){
-                cdowhile(isdispatable){
+                zync_con(isdispatable){
                     ////////
                     regArch.rrf.onRename(~dcd1(invalid), ~dcd2(invalid));
                     opr& reqPtr = regArch.rrf.getReqPtr();
