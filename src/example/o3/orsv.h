@@ -48,9 +48,21 @@ namespace kathryn::o3{
         }
 
         void resetSortBit(){
+            SET_ASM_PRI_TO_MANUAL(RSV_SORTBIT_RST_PRED_PRIORITY);
             _table.doCusLogic([&](RegSlot& lhs, int rowIdx){
                 lhs(sortBit) <<= 0;
             });
+            SET_ASM_PRI_TO_AUTO();
+        }
+
+        virtual void writeEntry(OH ohIdx, WireSlot& iw){
+            resetSortBit();
+            RsvBase::writeEntry(ohIdx, iw);
+        }
+
+        virtual void writeEntry(opr& binIdx, WireSlot& iw){
+            resetSortBit();
+            RsvBase::writeEntry(binIdx, iw);
         }
 
         pair<Operable&, OH> buildFreeIndex(OH* exceptIdx) override{
@@ -96,7 +108,7 @@ namespace kathryn::o3{
                     resultRegSlot <<= iw;
                     tryOwSpecBit(resultRegSlot, iw, bc);
                     //////// reset the table
-                    _table[ohIdx](busy) <<= 0;
+                    onIssue(ohIdx);
                 }
             }
             return resultRegSlot;

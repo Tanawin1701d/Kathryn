@@ -25,7 +25,7 @@ namespace kathryn::o3{
         ByPassPool&  bp;
         Rob&         rob;
 
-        mWire(aluRsvIdx2_final, ALU_ENT_SEL);
+        mWire(aluRsvIdx2_final, ALU_ENT_NUM);
         mWire(branchRsvIdx2_final, BRANCH_ENT_SEL);
 
         DpMod(PipStage& pm, ORsv& aluRsv, IRsv& branchRSV,
@@ -90,7 +90,6 @@ namespace kathryn::o3{
             zelse aluRsvIdx2_final = aluRsvIdx.getIdx();
 
 
-
             //// TODO check the assign order
             auto[branchRsvBusy, branchRsvIdx] = branchRSV.buildFreeIndex(nullptr);
             auto[branchRsvBusy2, branchRsvIdx2] = branchRSV.buildFreeIndex(&branchRsvIdx);
@@ -136,7 +135,7 @@ namespace kathryn::o3{
 
                     zif(~dcd2(invalid)){
                         zif(dcd2(rsEnt) == RS_ENT_ALU){
-                                aluRsv.writeEntry(aluRsvIdx2_final, entry2);
+                                aluRsv.writeEntry(OH(aluRsvIdx2_final), entry2);
                         }zelse{
                                 branchRSV.writeEntry(branchRsvIdx2_final, entry2);
                         }

@@ -32,6 +32,8 @@ namespace kathryn::o3{
             allocPtr.makeResetEvent();
         }
 
+
+
         void onMisPred(opr& fixTag) override{
 
             RsvBase::onMisPred(fixTag);
@@ -76,7 +78,6 @@ namespace kathryn::o3{
                     tryOwSpecBit(resultRegSlot, iw, bc);
                     //////// reset the table
                     onIssue(checkIdx); //// reset busy
-
                 }
             }
             return resultRegSlot;

@@ -12,6 +12,17 @@
 
 namespace kathryn::o3{
 
+    ////////////////////////////////////////////////
+    ///  expected priority
+    ///  |    g1    |    g2                      |          g3
+    ///  |mispredict|writeEntry > update sort bit| sucPred/bypass/issue
+    ///  g1, g2, g3 cannot happend at the same time
+    ///  ////////////////////////////////////////////////
+
+    static int RSV_MIS_PRED_PRIORITY         = DEFAULT_UE_PRI_USER + 3;
+    static int RSV_WRITE_ENTRY_PRED_PRIORITY = DEFAULT_UE_PRI_USER + 2;
+    static int RSV_SORTBIT_RST_PRED_PRIORITY = DEFAULT_UE_PRI_USER + 1;
+
     struct RsvBase{
         SlotMeta _meta;
         Table    _table;
@@ -43,18 +54,27 @@ namespace kathryn::o3{
         }
 
         virtual void writeEntry(OH ohIdx, WireSlot& iw){
-            SET_ASM_PRI_TO_MANUAL(DEFAULT_UE_PRI_USER+1);
+            SET_ASM_PRI_TO_MANUAL(RSV_WRITE_ENTRY_PRED_PRIORITY);
             _table[ohIdx] <<= iw;
+            SET_ASM_PRI_TO_AUTO();
+        }
+
+        virtual void writeEntry(opr& binIdx, WireSlot& iw){
+            SET_ASM_PRI_TO_MANUAL(RSV_WRITE_ENTRY_PRED_PRIORITY);
+            _table[binIdx] <<= iw;
             SET_ASM_PRI_TO_AUTO();
         }
 
         virtual void onIssue(opr& issueIdx){
             _table[issueIdx](busy) <<= 0;
         }
+        virtual void onIssue(OH issueOHIdx){
+            _table[issueOHIdx](busy) <<= 0;
+        }
 
         virtual void onMisPred(opr& fixTag){
 
-            SET_ASM_PRI_TO_MANUAL(DEFAULT_UE_PRI_USER+2);
+            SET_ASM_PRI_TO_MANUAL(RSV_MIS_PRED_PRIORITY);
             _table.doCusLogic([&](RegSlot& lhs, int rowIdx){
                 auto& isBusy    = lhs(busy);
                 auto& isSpec    = lhs(spec);
