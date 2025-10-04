@@ -36,13 +36,13 @@ namespace kathryn{
                 const std::vector<Wire*>& wires
         );
 
-        WireSlot(const SlotMeta& slotMeta, const std::string& prefixName = "WireSlot");
+        explicit WireSlot(const SlotMeta& slotMeta, const std::string& prefixName = "WireSlot");
 
         WireSlot(const std::vector<std::string>& fieldNames,
                  const std::vector<int>&         fieldSizes,
                  const std::string&              prefixName = "WireSlot");
 
-        WireSlot(const Slot& rhs, const std::string& prefixName = "WireSlot");
+        explicit WireSlot(const Slot& rhs, const std::string& prefixName = "WireSlot");
 
         ~WireSlot() override = default;
 

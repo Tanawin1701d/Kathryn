@@ -16,24 +16,35 @@ namespace kathryn::o3{
 
     ExecStage& exSt;
     RegArch&   regArch;
-    RegSlot    src;
+    RegSlot&   src;
+    Rob&       rob;
+    ByPass&    bp;
 
-    explicit ExecAlu(ExecStage& exSt, RegArch& regArch) :
-        exSt(exSt), regArch(regArch){}
+
+    explicit ExecAlu(ExecStage& exSt,
+                     RegArch& regArch,
+                     RegSlot& src,
+                     Rob& rob) :
+        exSt(exSt),
+        regArch(regArch),
+        src(src),
+        rob(rob),
+        bp(regArch.bpp.addByPassEle()){}
 
     void flow() override{
 
-        opr& srcA   = getAluSrcA(*src);
-        opr& srcB   = getAluSrcB(*src);
-        opr& result = alu(*src(aluOp), srcA, srcB);
+        opr& srcA   = getAluSrcA(src);
+        opr& srcB   = getAluSrcB(src);
+        opr& result = alu(src(aluOp), srcA, srcB);
+        bp.addSrc(src(rrftag), result);
 
         pip(exSt.sync){
-            regArch.rob.onWriteBack(src(rrftag));
+            rob.onWriteBack(src(rrftag));
             zif(src(rdUse)){
                 regArch.rrf.onWback(src(rrftag), result);
-            }
+                regArch.bpp.doByPass(bp);
 
-            /////// do the bypass and misspredict handler
+            }
         }
         
     }

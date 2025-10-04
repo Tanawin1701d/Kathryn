@@ -100,7 +100,7 @@ namespace kathryn::o3{
             });
         }
         //// update the src register
-        virtual void onWriteBack(ByPass bp){
+        virtual void onBypass(ByPass bp){
             _table.doCusLogic([&](RegSlot& lhs, int rowIdx){
                 for (int i = 1; i <= 2; i++){
                     auto& isBusy     = lhs(busy);

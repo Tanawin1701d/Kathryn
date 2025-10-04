@@ -13,9 +13,10 @@
 namespace kathryn::o3{
 
 
-    inline WireSlot decodeSrcOpr(RegSlot& dcd, opr* desPrevIdx, opr* isDesPrevUse,
+    inline WireSlot decodeSrcOpr(RegSlot& dcd,
+        opr* desPrevIdx, opr* isDesPrevUse,
         int srcIdx,
-        Arf& arf, Rrf& rrf, ByPassPool& bp){
+        Arf& arf, Rrf& rrf, ByPassPool& bpp){
 
         //// src Idx start from 1
 
@@ -39,9 +40,9 @@ namespace kathryn::o3{
                 zif (phyEntry.valid){
                     result(rsValid_i) = 1;
                     result(phyIdx_i)  = phyEntry.data;
-                }zelif(bp.isByPassing(arfRen.rrfIdx)){
+                }zelif(bpp.isByPassing(arfRen.rrfIdx)){
                     result(rsValid_i) = 1;
-                    result(phyIdx_i)  = bp.getByPassData(arfRen.rrfIdx);
+                    result(phyIdx_i)  = bpp.getByPassData(arfRen.rrfIdx);
                 }zelse{
                     result(rsValid_i) = 0;
                     result(phyIdx_i)  = arfRen.rrfIdx.uext(DATA_LEN);

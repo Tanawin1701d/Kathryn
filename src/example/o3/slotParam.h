@@ -118,8 +118,6 @@ namespace kathryn::o3{
         {1    , 1       , 1    , REG_SEL}
     };
 
-
-
 }
 
 

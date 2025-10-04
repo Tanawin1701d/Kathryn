@@ -99,6 +99,9 @@ namespace kathryn::o3{
     //// for ROB
     O3_PARAM_STR(wbFin);
 
+    //// for Exec Unit
+    O3_PARAM_STR(bpValid);
+
 
         ////// rsIdx use with data in the system
 

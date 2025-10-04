@@ -61,7 +61,12 @@ namespace kathryn::o3{
     };
 
     struct ByPass{
-        opr& valid,&rrfIdx, &val;
+        int bpIdx = -1;
+        mWire(valid, 1);
+        mWire(rrfIdx, RRF_SEL);
+        mWire(val, DATA_LEN);
+
+        ByPass(int bpIdx):bpIdx(bpIdx){}
 
         void tryAssignByPass(Operable& desIdent, Reg& desVal){
             zif(valid && (desIdent == rrfIdx)){
@@ -69,14 +74,26 @@ namespace kathryn::o3{
             }
         }
 
+        void addSrc(opr& inRrfIdx, opr& inVal){
+            rrfIdx = inRrfIdx;
+            val    = inVal;
+        }
+
     };
 
+    struct RsvBase;
     struct ByPassPool{
 
         std::vector<ByPass> _bps;
+        std::vector<RsvBase*> _rsvs;
 
-        void addByPassValue(opr& valid,opr& rrfIdx, opr& val){
-            _bps.push_back({valid, rrfIdx, val});
+        ByPass& addByPassEle(){
+            _bps.push_back(ByPass(_bps.size()));
+            return *_bps.rbegin();
+        }
+
+        void addRsv(RsvBase* rsv){
+            _rsvs.push_back(rsv);
         }
         
         void tryAssignByPassAll(Operable& desIdent, Reg& desVal){
@@ -84,6 +101,26 @@ namespace kathryn::o3{
                 bp.tryAssignByPass(desIdent, desVal);
             }
         }
+
+        opr& isByPassing(opr& rrfIdx){
+            opr* result = &(_bps[0].valid & (rrfIdx == _bps[0].rrfIdx));
+            for (int i = 1; i < _bps.size(); i++){
+                result = &((*result) | (_bps[i].valid & (rrfIdx == _bps[i].rrfIdx)));
+            }
+            return *result;
+        }
+
+        opr& getByPassData(opr& rrfIdx){
+            mWire(getBpData, DATA_LEN);
+            for (ByPass& bp : _bps){
+                zif(bp.valid && (bp.rrfIdx == rrfIdx)){
+                    getBpData = bp.val;
+                }
+            }
+            return getBpData;
+        }
+
+        void doByPass(ByPass& bp);
 
     };
 
@@ -114,6 +151,7 @@ namespace kathryn::o3{
     struct RegArch{
         Arf arf;
         Rrf rrf;
+        ByPassPool bpp;
     };
 
     struct PipStage{
