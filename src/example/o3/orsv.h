@@ -14,39 +14,6 @@ namespace kathryn::o3{
         ORsv(SlotMeta meta, int amtRow):
             RsvBase(smRsvO + meta, amtRow){}
 
-        /***
-         * SLOT maintainance operation
-         * do Only In
-         */
-        void buildSlotLogic(ByPassPool& bypassPool, BroadCast& bc){
-            _table.doCusLogic([&](RegSlot& lhs, int rowIdx){
-                for (int i = 1; i <= 2; i++){
-                    auto& isBusy  = lhs(busy);
-                    auto& useSig  = lhs(str(rsUse_) + toS(i));
-                    auto& phyIdx  = lhs(str(phyIdx_) + toS(i));
-                    auto& isSpec  = lhs(spec);
-                    auto& specTagIdx= lhs(specTag);
-                    //////// do bypass the system
-                    isBusy.makeResetEvent();
-                    zif (isBusy){
-                            zif(useSig){
-                                bypassPool.tryAssignByPassAll(
-                                    phyIdx(0, RRF_SEL),phyIdx);
-                            }
-                            zif(isSpec){ ////// kill checking
-                                zif(bc.checkIsKill(specTagIdx)){
-                                    isBusy <<= 0; //// kill the system
-                                }
-                                zif(bc.checkIsSuc(specTagIdx)){
-                                    isSpec <<= 0; ///// verified
-                                }
-                            }
-                    }
-                    //////// do kill the slot i
-                }
-            });
-        }
-
         void resetSortBit(){
             SET_ASM_PRI_TO_MANUAL(RSV_SORTBIT_RST_PRED_PRIORITY);
             _table.doCusLogic([&](RegSlot& lhs, int rowIdx){
@@ -55,12 +22,12 @@ namespace kathryn::o3{
             SET_ASM_PRI_TO_AUTO();
         }
 
-        virtual void writeEntry(OH ohIdx, WireSlot& iw){
+        virtual void writeEntry(OH ohIdx, WireSlot& iw) override{
             resetSortBit();
             RsvBase::writeEntry(ohIdx, iw);
         }
 
-        virtual void writeEntry(opr& binIdx, WireSlot& iw){
+        virtual void writeEntry(opr& binIdx, WireSlot& iw) override{
             resetSortBit();
             RsvBase::writeEntry(binIdx, iw);
         }

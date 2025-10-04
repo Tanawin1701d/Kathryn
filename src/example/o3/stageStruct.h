@@ -17,6 +17,7 @@
 #include "arf.h"
 #include "rrf.h"
 #include "rob.h"
+#include "syncMetaPip.h"
 
 namespace kathryn::o3{
 
@@ -53,11 +54,11 @@ namespace kathryn::o3{
     };
 
     struct ExecStage{
-        SyncMeta sync {"execSync"};
+        SyncPip sync {"execSync"};
     };
 
     struct BranchStage{
-        SyncMeta sync {"branchSync"};
+        SyncPip sync {"branchSync"};
     };
 
     struct ByPass{
@@ -124,24 +125,6 @@ namespace kathryn::o3{
 
     };
 
-    struct BroadCast{
-        mWire(mis, 1);
-        mWire(suc, 1);
-        mWire(misTag, SPECTAG_LEN);
-        mWire(fixTag, SPECTAG_LEN);
-        mWire(sucTag, SPECTAG_LEN);
-        opr& isBrMissPred(){ return mis;}
-        opr& isBrSuccPred(){ return suc;}
-        opr& checkIsKill(opr& specIdx){
-            return mis & (misTag == specIdx);
-        }
-        opr& checkIsSuc (opr& specIdx){
-            return suc & (sucTag == specIdx);
-        }
-        opr& getSMtag(){return fixTag;}
-
-    };
-
     struct TagMgmt{
         TagGen tagGen;
         Mpft   mpft;
@@ -161,6 +144,24 @@ namespace kathryn::o3{
         RsvStage    rs;
         ExecStage   ex;
         BranchStage br;
+    };
+
+    struct BroadCast{
+        mWire(mis, 1);
+        mWire(suc, 1);
+        mWire(misTag, SPECTAG_LEN);
+        mWire(fixTag, SPECTAG_LEN);
+        mWire(sucTag, SPECTAG_LEN);
+        opr& isBrMissPred(){ return mis;}
+        opr& isBrSuccPred(){ return suc;}
+        opr& checkIsKill(opr& specIdx){
+            return mis & (misTag == specIdx);
+        }
+        opr& checkIsSuc (opr& specIdx){
+            return suc & (sucTag == specIdx);
+        }
+        opr& getSMtag(){return fixTag;}
+
     };
 
 }

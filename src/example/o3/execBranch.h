@@ -14,20 +14,27 @@
 
 namespace kathryn::o3{
 
+    struct RsvBase;
     struct BranchExec: Module{
 
         TagMgmt&     tagMgmt;
         RegArch&     regArch;
         PipStage&    pm;
-        RegSlot      src;
+        Rob&         rob;
+        RegSlot&      src;
+        std::vector<RsvBase*> rsvs;
 
 
         explicit BranchExec(TagMgmt& tagMgmt,
                             RegArch& regArch,
-                            PipStage& pm) :
+                            PipStage& pm,
+                            Rob& rob,
+                            RegSlot& src) :
         tagMgmt(tagMgmt),
         regArch(regArch),
-        pm(pm){}
+        pm(pm),
+        rob(rob),
+        src(src){}
 
         void flow() override{
 
@@ -39,18 +46,6 @@ namespace kathryn::o3{
                 }
 
                 zif (){ //// case miss predict
-                    ////// kill the pipeline stage
-                    pr.ft.sync.killSlave();
-                    pr.dc.sync.killSlave();
-                    pr.ds.sync.killSlave();
-                    pr.ex.sync.killSlave(tagMgmt.mpft.);
-                    ////// do recovery on the system
-                    tagMgmt.mpft.onMissPred();
-                    tagMgmt.tagGen.onMisPred();
-                    regArch.arf.onMisPred();
-                    regArch.rob.onMisPred();
-                    regArch.rrf.onMisPred(src(rrftag),
-                        regArch.rob.getComPtr());
 
                 }zelse{ //////// case success predict
                     pr.dc.sync.holdSlave(); //// because mpft and tag generator must be hold
@@ -64,9 +59,11 @@ namespace kathryn::o3{
 
 
             }
-
-
         }
+
+        void onMisPred();
+
+        void onSucPred();
 
     };
 

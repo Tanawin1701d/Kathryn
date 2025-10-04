@@ -8,6 +8,8 @@
 
 namespace kathryn::o3{
 
+    //////// bypass pool
+
     void ByPassPool::doByPass(ByPass& bp){
         bp.valid = 1;
         //////// do override all over rsv

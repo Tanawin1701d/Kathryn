@@ -54,11 +54,15 @@ namespace kathryn::o3{
                 ///// it is suppose to be other tag because vl for both is not set
                 Operable* newTag = &lhs(mpft_fixTag);
                 zif(vl){
-                    zif(setTag1 && setTag2) ft <<= (ft | tag1 | tag2);
                     zif(setTag1) ft <<= (ft | tag1);
                     zif(setTag2) ft <<= (ft | tag2);
+                    zif(setTag1 && setTag2) ft <<= (ft | tag1 | tag2);
                 }
             });
+        }
+
+        opr& getFixTag(OH searchTag){
+            return _table[OH(searchTag)](mpft_fixTag).v();
         }
 
 
