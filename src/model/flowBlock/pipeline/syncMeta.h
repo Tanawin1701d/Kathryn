@@ -36,7 +36,7 @@ namespace kathryn{
         expression& sendSuccess; //// TODO add this signal
 
 
-        explicit SyncMeta(const std::string& name):
+        SyncMeta(const std::string& name = "unnamedSyncMeta"):
         _name(name),
         sendSuccess(*(new expression(1))){}
 

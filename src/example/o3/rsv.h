@@ -26,29 +26,31 @@ namespace kathryn::o3{
     struct RsvBase{
         SlotMeta _meta;
         Table    _table;
+        RegSlot  execSrc;
 
         RsvBase(SlotMeta meta, int amtRow):
-            _meta(meta), _table(meta, amtRow){
+            _meta(meta), _table(meta, amtRow),
+        execSrc(meta){
             _table.doReset();
         }
 
         virtual ~RsvBase() = default;
 
         virtual pair<Operable&, OH> buildFreeIndex(OH* exceptIdx){assert(false);}
-        virtual RegSlot buildIssue(SyncMeta& syncMeta, BroadCast& bc) = 0;
+        virtual void buildIssue(SyncMeta& syncMeta, BroadCast& bc) = 0;
 
         Operable& slotReady(WireSlot& iw){
             return iw(busy) && iw(rsValid_1) && iw(rsValid_2);
         }
 
-        void tryOwSpecBit(RegSlot& resultRegSlot, WireSlot& iw, BroadCast& bc){
+        void tryOwSpecBit(WireSlot& iw, BroadCast& bc){
             ///////// we have to override the spec bit if it is on the fly
             auto& isSpec    = iw(spec);
             auto& specTagIdx= iw(specTag);
             //// send data
 
             zif ( isSpec && bc.checkIsSuc(specTagIdx)){
-                resultRegSlot(spec) <<= 0;
+                execSrc(spec) <<= 0;
             }
 
         }

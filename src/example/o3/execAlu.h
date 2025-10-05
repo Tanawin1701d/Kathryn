@@ -17,19 +17,19 @@ namespace kathryn::o3{
 
     ExecStage& exSt;
     RegArch&   regArch;
-    RegSlot&   src;
     Rob&       rob;
+    RegSlot&   src;
     ByPass&    bp;
 
 
     explicit ExecAlu(ExecStage& exSt,
                      RegArch& regArch,
-                     RegSlot& src,
-                     Rob& rob) :
+                     Rob& rob,
+                     RegSlot& src) :
         exSt(exSt),
         regArch(regArch),
-        src(src),
         rob(rob),
+        src(src),
         bp(regArch.bpp.addByPassEle()){}
 
     void flow() override{

@@ -46,7 +46,7 @@ namespace kathryn::o3{
             return {iw(busy), ohIdx};
         }
 
-        RegSlot buildIssue(SyncMeta& syncMeta, BroadCast& bc) override{
+        void buildIssue(SyncMeta& syncMeta, BroadCast& bc) override{
             /*
             * find the free slot
             */
@@ -69,16 +69,14 @@ namespace kathryn::o3{
              * issue sync
              */
 
-            RegSlot resultRegSlot(_meta);
             cwhile(true){
                 zyncc(syncMeta, slotReady(iw)){ //// do it with spectag
-                    resultRegSlot <<= iw;
-                    tryOwSpecBit(resultRegSlot, iw, bc);
+                    execSrc <<= iw;
+                    tryOwSpecBit(iw, bc);
                     //////// reset the table
                     onIssue(ohIdx);
                 }
             }
-            return resultRegSlot;
         }
 
     };

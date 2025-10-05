@@ -46,8 +46,6 @@ namespace kathryn{
 
         ~RegSlot() override = default;
 
-        void copyFrom(const RegSlot& rhs);
-
         void initHwStructure(const std::string& prefixName) override;
 
         /**

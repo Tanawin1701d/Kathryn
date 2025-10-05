@@ -12,6 +12,7 @@
 #include "irsv.h"
 #include "orsv.h"
 #include "srcOpr.h"
+#include "rob.h"
 #include "stageStruct.h"
 
 
@@ -22,19 +23,17 @@ namespace kathryn::o3{
         ORsv&        aluRsv;
         IRsv&        branchRSV;
         RegArch&     regArch;
-        ByPassPool&  bp;
         Rob&         rob;
 
         mWire(aluRsvIdx2_final, ALU_ENT_NUM);
         mWire(branchRsvIdx2_final, BRANCH_ENT_SEL);
 
         DpMod(PipStage& pm, ORsv& aluRsv, IRsv& branchRSV,
-              RegArch& regArch, ByPassPool& bp, Rob& rob):
+              RegArch& regArch, Rob& rob):
             pm         (pm),
             aluRsv     (aluRsv),
             branchRSV  (branchRSV),
             regArch    (regArch),
-            bp         (bp),
             rob        (rob){}
 
         Operable& isRsvRequired(RegSlot& dcd, int RS_ENT_IDX){

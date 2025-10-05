@@ -52,7 +52,7 @@ namespace kathryn::o3{
          * ISSUE
          */
 
-        RegSlot buildIssue(SyncMeta& syncMeta, BroadCast& bc) override{
+        void buildIssue(SyncMeta& syncMeta, BroadCast& bc) override{
 
             /*
              *  the required Idx
@@ -69,18 +69,16 @@ namespace kathryn::o3{
             /**
              * the issue block
              */
-            RegSlot resultRegSlot(_meta);
             WireSlot iw(_table[checkIdx].v());
 
             cwhile(true){
                 zyncc(syncMeta, slotReady(iw)){
-                    resultRegSlot <<= iw;
-                    tryOwSpecBit(resultRegSlot, iw, bc);
+                    execSrc <<= iw;
+                    tryOwSpecBit(iw, bc);
                     //////// reset the table
                     onIssue(checkIdx); //// reset busy
                 }
             }
-            return resultRegSlot;
         }
 
     };

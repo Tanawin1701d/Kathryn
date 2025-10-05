@@ -16,17 +16,12 @@ namespace kathryn::o3{
     struct DecMod: Module{
         PipStage& pm;
         TagMgmt& tagMgmt;
-        BroadCast& bc;
-
-
 
         explicit DecMod(
         PipStage&  pm,
-        TagMgmt&   tagMg,
-        BroadCast& bc) :
+        TagMgmt&   tagMg) :
             pm(pm),
-            tagMgmt(tagMg),
-            bc(bc){}
+            tagMgmt(tagMg){}
 
         ////// dcd = decoded
         void  decode(int idx){
@@ -206,7 +201,6 @@ namespace kathryn::o3{
 
 
         void flow() override{
-
             ///// build the decode wire
             decode(1);
             decode(2);

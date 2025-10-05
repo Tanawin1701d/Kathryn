@@ -16,7 +16,6 @@
 
 #include "arf.h"
 #include "rrf.h"
-#include "rob.h"
 #include "syncMetaPip.h"
 
 namespace kathryn::o3{
@@ -26,7 +25,7 @@ namespace kathryn::o3{
     struct FetchStage{
         SlotMeta meta{smFetch};
         RegSlot  raw {smFetch};
-        SyncMeta sync;
+        SyncMeta sync{"fetchSync"};
     };
 
     struct DecodeStage{

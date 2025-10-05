@@ -5,18 +5,16 @@
 #ifndef KATHRYN_SRC_EXAMPLE_O3_SRCOPR_H
 #define KATHRYN_SRC_EXAMPLE_O3_SRCOPR_H
 
-#include "arf.h"
 #include "kathryn.h"
 #include "parameter.h"
-#include "rrf.h"
+#include "stageStruct.h"
 
 namespace kathryn::o3{
 
 
     inline WireSlot decodeSrcOpr(RegSlot& dcd,
         opr* desPrevIdx, opr* isDesPrevUse,
-        int srcIdx,
-        Arf& arf, Rrf& rrf, ByPassPool& bpp){
+        int srcIdx, RegArch& ra){
 
         //// src Idx start from 1
 
@@ -34,22 +32,22 @@ namespace kathryn::o3{
         result(rsSel_i) = dcd(rsSel_i);
 
         zif(dcd(rsUse_i)){
-            RenamedData arfRen = arf.getRenamedData(dcd(rsIdx_i));
+            RenamedData arfRen = ra.arf.getRenamedData(dcd(rsIdx_i));
             zif(arfRen.busy){ ///// data should be in rrf/ may commit or not
-                PhyEntry phyEntry = rrf.getPhyEntry(arfRen.rrfIdx);
+                PhyEntry phyEntry = ra.rrf.getPhyEntry(arfRen.rrfIdx);
                 zif (phyEntry.valid){
                     result(rsValid_i) = 1;
                     result(phyIdx_i)  = phyEntry.data;
-                }zelif(bpp.isByPassing(arfRen.rrfIdx)){
+                }zelif(ra.bpp.isByPassing(arfRen.rrfIdx)){
                     result(rsValid_i) = 1;
-                    result(phyIdx_i)  = bpp.getByPassData(arfRen.rrfIdx);
+                    result(phyIdx_i)  = ra.bpp.getByPassData(arfRen.rrfIdx);
                 }zelse{
                     result(rsValid_i) = 0;
                     result(phyIdx_i)  = arfRen.rrfIdx.uext(DATA_LEN);
                 }
             }zelse{
                 result(rsValid_i) = 1;
-                result(phyIdx_i)  = arf.getArfData(dcd(rsIdx_i));
+                result(phyIdx_i)  = ra.arf.getArfData(dcd(rsIdx_i));
             }
             //////// everything will be override if it is prevUse
             if (isDesPrevUse != nullptr){

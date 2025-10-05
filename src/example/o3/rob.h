@@ -5,11 +5,10 @@
 #ifndef KATHRYN_SRC_EXAMPLE_O3_ROB_H
 #define KATHRYN_SRC_EXAMPLE_O3_ROB_H
 
-#include "arf.h"
 #include "kathryn.h"
 #include "parameter.h"
-#include "rrf.h"
 #include "slotParam.h"
+#include "stageStruct.h"
 
 namespace kathryn::o3{
 
@@ -21,12 +20,11 @@ namespace kathryn::o3{
         mWire(com2Status, 1);
         mReg(comPtr, RRF_SEL);
         mWire(comPtr2, RRF_SEL);
-        Arf& arf;
-        Rrf& rrf;
+        RegArch& regArch;
 
-        Rob(Arf& arf, Rrf& rrf):
+        Rob(RegArch& regArch):
             _table(smROB, RRF_NUM),
-            arf(arf), rrf(rrf){
+            regArch(regArch){
             _table.doReset();
             comPtr.makeResetEvent();
         }
@@ -47,9 +45,10 @@ namespace kathryn::o3{
                 opr& com1Cond = com1Entry(wbFin);
                 opr& com2Cond = com2Entry(wbFin) & ~com1Entry(isBranch);
                 ////// rrf commit
-                std::tie(com1Status, com2Status) = rrf.onCommit(comPtr, com1Cond, com2Cond);
+                std::tie(com1Status, com2Status) =
+                    regArch.rrf.onCommit(comPtr, com1Cond, com2Cond);
                 ////// arf commit
-                arf.onCommit(
+                regArch.arf.onCommit(
                 com1Status & com1Entry(rdUse), comPtr , com1Entry(rdIdx),
                 com2Status & com2Entry(rdUse), comPtr2, com2Entry(rdIdx)
                 );
