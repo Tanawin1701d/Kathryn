@@ -94,7 +94,7 @@ namespace kathryn::o3{
                 auto& isSpec  = lhs(spec);
                 auto& mySpecTag= lhs(specTag);
                 //////// do bypass the system
-                zif (isBusy & isSpec & mySpecTag){
+                zif (isBusy & isSpec & mySpecTag == sucTag){
                     isSpec <<= 0;
                 }
             });

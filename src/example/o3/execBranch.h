@@ -5,11 +5,14 @@
 #ifndef KATHRYN_SRC_EXAMPLE_O3_BRANCHEXEC_H
 #define KATHRYN_SRC_EXAMPLE_O3_BRANCHEXEC_H
 
+#include "alu.h"
 #include "kathryn.h"
 #include "parameter.h"
 #include "rob.h"
 #include "slotParam.h"
 #include "stageStruct.h"
+#include "isaParam.h"
+#include "srcSel.h"
 
 
 namespace kathryn::o3{
@@ -17,12 +20,16 @@ namespace kathryn::o3{
     struct RsvBase;
     struct BranchExec: Module{
 
-        TagMgmt&     tagMgmt;
-        RegArch&     regArch;
-        PipStage&    pm;
-        Rob&         rob;
+        TagMgmt&      tagMgmt;
+        RegArch&      regArch;
+        PipStage&     pm;
+        Rob&          rob;
         RegSlot&      src;
+        ByPass&       bp;
         std::vector<RsvBase*> rsvs;
+
+        mWire(calAddr, ADDR_LEN);
+        mWire(brTaken, 1);
 
 
         explicit BranchExec(TagMgmt& tagMgmt,
@@ -34,36 +41,48 @@ namespace kathryn::o3{
         regArch(regArch),
         pm(pm),
         rob(rob),
-        src(src){}
+        src(src),
+        bp(regArch.bpp.addByPassEle()){}
 
         void flow() override{
 
-            pip(pr.br.sync){
+            opr& opc    = src(opcode);
+            opr& srcPc  = src(pc);
+            opr& srcImm = src(imm);
+
+            opr& srcA   = getAluSrcA(src);
+            opr& srcB   = getAluSrcB(src);
+            brTaken     = alu(src(aluOp), srcA, srcB).sl(0);
+
+            //// calculate the address
+            opr& nextPc = srcPc + 4;
+            calAddr = nextPc;
+            zif  (opc == RV32_JALR)          calAddr = src(phyIdx_1) + srcImm;
+            zelif((opc==RV32_JAL) | brTaken) calAddr = srcPc + srcImm;
+            bp.addSrc(src(rrftag), nextPc);
+
+
+            pip(pm.br.sync){
+
+                /////// write back the data if it needed
                 rob.onWriteBack(src(rrftag));
-                /////// do about the decode
                 zif(src(rdUse)){
-                    rrf.onWback(src(rrftag), src(pc+4));
+                    regArch.rrf.onWback(src(rrftag), nextPc);
+                    regArch.bpp.doByPass(bp);
                 }
 
-                zif (){ //// case miss predict
-
-                }zelse{ //////// case success predict
-                    pr.dc.sync.holdSlave(); //// because mpft and tag generator must be hold
-                    pr.ds.sync.holdSlave();
-                    tagMgmt.mpft.onPredSuc(src(specTag));
-                    tagMgmt.tagGen.onSucPred();
-                    regArch.arf.onSucPred();
-                    /// no for rob and arf
-
+                /////// success predict
+                zif (src(pred_addr) == calAddr){ //// case sucPred
+                    onSucPred(src(specTag));
+                }zelse{ //////// case misPred
+                    onMisPred(src(specTag));
                 }
-
-
             }
         }
 
-        void onMisPred();
+        void onMisPred(opr& misTag);
 
-        void onSucPred();
+        void onSucPred(opr& sucTag);
 
     };
 

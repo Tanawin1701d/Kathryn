@@ -125,9 +125,26 @@ namespace kathryn::o3{
 
     };
 
+    struct BroadCast{
+        mWire(mis, 1);
+        mWire(suc, 1);
+        mWire(misTag, SPECTAG_LEN);
+        mWire(sucTag, SPECTAG_LEN);
+        opr& isBrMissPred(){ return mis;}
+        opr& isBrSuccPred(){ return suc;}
+        opr& checkIsKill(opr& specIdx){
+            return mis & (misTag == specIdx);
+        }
+        opr& checkIsSuc (opr& specIdx){
+            return suc & (sucTag == specIdx);
+        }
+
+    };
+
     struct TagMgmt{
-        TagGen tagGen;
-        Mpft   mpft;
+        TagGen    tagGen;
+        Mpft      mpft;
+        BroadCast bc;
 
     };
 
@@ -144,24 +161,6 @@ namespace kathryn::o3{
         RsvStage    rs;
         ExecStage   ex;
         BranchStage br;
-    };
-
-    struct BroadCast{
-        mWire(mis, 1);
-        mWire(suc, 1);
-        mWire(misTag, SPECTAG_LEN);
-        mWire(fixTag, SPECTAG_LEN);
-        mWire(sucTag, SPECTAG_LEN);
-        opr& isBrMissPred(){ return mis;}
-        opr& isBrSuccPred(){ return suc;}
-        opr& checkIsKill(opr& specIdx){
-            return mis & (misTag == specIdx);
-        }
-        opr& checkIsSuc (opr& specIdx){
-            return suc & (sucTag == specIdx);
-        }
-        opr& getSMtag(){return fixTag;}
-
     };
 
 }

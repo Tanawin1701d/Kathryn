@@ -9,6 +9,7 @@
 #include "kathryn.h"
 #include "rob.h"
 #include "srcSel.h"
+#include "stageStruct.h"
 
 namespace kathryn::o3{
 

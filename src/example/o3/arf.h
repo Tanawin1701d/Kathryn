@@ -7,7 +7,6 @@
 
 #include "kathryn.h"
 #include "slotParam.h"
-#include "stageStruct.h"
 
 namespace kathryn::o3{
 
@@ -33,8 +32,6 @@ namespace kathryn::o3{
     };
 
     struct Arf{
-        Mpft&    mpft;
-        BroadCast& broadCast;
 
         Table busy, rename;
         RegSlot  busyMaster, renameMaster;
@@ -44,12 +41,7 @@ namespace kathryn::o3{
 
         CommitCmd commitCmds[2];
 
-
-
-
-        Arf(Mpft& mpft, BroadCast& bc):
-            mpft(mpft),
-            broadCast(bc),
+        Arf():
             busy(smARFBusy, SPECTAG_LEN),
             rename(smARFRenamed, SPECTAG_LEN),
             busyMaster(smARFBusy),
@@ -61,22 +53,6 @@ namespace kathryn::o3{
             renameMaster.doReset();
             archRegs.doReset();
         }
-
-
-
-
-        /////// EXAMPLE
-        // void buildArfRenamingLogic(){
-        //
-        //     zif (){ ///// case miss predict
-        //
-        //     }zelif(){ ///// case sucess predict
-        //
-        //     }zelse{
-        //         ////// do normal commit
-        //
-        //     }
-        // }
 
         RenamedData getRenamedData(opr& archIdx){
             return {busyMaster[archIdx].v(),
@@ -138,12 +114,12 @@ namespace kathryn::o3{
         }
 
 
-        void onMissPredict(){
+        void onMisPred(opr& misTag){
             SET_ASM_PRI_TO_MANUAL(DEFAULT_UE_PRI_USER+3);
             ////// copy the recovery table and fill to all table
             ///
-            WireSlot rcvbusy  (busy  [OH(broadCast.getSMtag())].v());
-            WireSlot rcvRename(rename[OH(broadCast.getSMtag())].v());
+            WireSlot rcvbusy  (busy  [OH(misTag)].v());
+            WireSlot rcvRename(rename[OH(misTag)].v());
 
             for(int specIdx = 0; specIdx < SPECTAG_LEN; specIdx++){
                 //// busy copy
