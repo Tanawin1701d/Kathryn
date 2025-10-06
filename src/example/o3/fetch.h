@@ -22,7 +22,9 @@ namespace kathryn::o3{
 
         explicit FetchMod(PipStage&  pm) :
         pm(pm),
-        curPc(pm.ft.curPc){}
+        curPc(pm.ft.curPc){
+            curPc.makeResetEvent();
+        }
 
         void flow() override{
 

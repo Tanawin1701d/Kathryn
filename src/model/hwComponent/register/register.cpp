@@ -84,8 +84,8 @@ namespace kathryn{
         return x.castToOperable();
     }
 
-    void Reg::makeResetEvent(){ //// we lock it to the posedge clock
-        makeVal(rstRegVal, getSlice().getSize(), 0);
+    void Reg::makeResetEvent(ull value){ //// we lock it to the posedge clock
+        makeVal(rstRegVal, getSlice().getSize(), value);
         auto rstEvent = new UpdateEvent({
             nullptr,
             rstWire,

@@ -89,7 +89,6 @@ namespace kathryn::o3{
 
                 ///// calculate the next address
                 dcw(isBranch) = ~raw(invalid);
-
                 if (idx == 1){
                     zif (raw(prCond)){
                         dcw(pred_addr) = raw(npc);
@@ -103,12 +102,22 @@ namespace kathryn::o3{
                 dcw(rsSel_2)  = SRC_B_FOUR;
                 dcw(rdUse)    = 1;
                 dcw(isBranch) = ~raw(invalid);
+                if (idx == 1){
+                    zif (raw(prCond)){
+                        dcw(pred_addr) = raw(npc);
+                    }
+                }
             } zelif(opc == RV32_JALR){
                 dcw(illLegal) = (funct3 != 0);
                 dcw(rsEnt)    = RS_ENT_JALR;
                 dcw(rsSel_1)  = SRC_A_PC;
                 dcw(rsSel_2)  = SRC_B_FOUR;
                 dcw(isBranch) = ~raw(invalid);
+                if (idx == 1){
+                    zif (raw(prCond)){
+                        dcw(pred_addr) = raw(npc);
+                    }
+                }
             } zelif(opc == RV32_OP_IMM){
                 dcw(aluOp) = aluOpArith;
                 dcw(rdUse) = 1;
@@ -212,27 +221,34 @@ namespace kathryn::o3{
 
             opr& isGenable = tagMgmt.tagGen.isAllGenble(
                 dcw1(isBranch),
-                dcw2(isBranch),
-                bc);
+                dcw2(isBranch));
 
             pip(pm.dc.sync){
                 zyncc(pm.ds.sync, isGenable){
-                    ///// you can't change the order
+                    ///////// decoded value (except specTag and spec)
                     dcd1 <<= dcw1;
                     dcd2 <<= dcw2;
                     dcdShared(pc)  <<= pm.ft.raw(pc);
                     dcdShared(bhr) <<= pm.ft.raw(bhr);
-                        ///// fill the equal idx
+
                     dcdShared(desEqSrc1) <<=
                         (dcw2(rsIdx_1) == dcw2(rdIdx));
                     dcdShared(desEqSrc2) <<=
                         (dcw2(rsIdx_2) == dcw2(rdIdx));
 
+                    ///////// generate the tag
+                    auto[genTag1, genTag2] =
                     tagMgmt.tagGen.allocate( //// the tagGen and mpft are updated
-                    dcw1(isBranch),dcd1(spec), dcd1(specTag),
-                    dcw2(isBranch),dcd2(spec), dcd2(specTag),
-                    bc
+                    dcw1(isBranch),dcd1(spec),
+                    dcw2(isBranch),dcd2(spec)
                     );
+                    ///// assign decoded data
+                    dcd1(specTag) <<= genTag1;
+                    dcd2(specTag) <<= genTag2;
+                    ///// update the mpft
+                    tagMgmt.mpft.onAddNew(
+                       dcw1(isBranch), genTag1,
+                       dcw2(isBranch), genTag2);
                 }
             }
         }

@@ -15,6 +15,7 @@
 #include "mpft.h"
 
 #include "arf.h"
+#include "broadCast.h"
 #include "rrf.h"
 #include "syncMetaPip.h"
 
@@ -96,7 +97,7 @@ namespace kathryn::o3{
         void addRsv(RsvBase* rsv){
             _rsvs.push_back(rsv);
         }
-        
+
         void tryAssignByPassAll(Operable& desIdent, Reg& desVal){
             for (auto& bp : _bps){
                 bp.tryAssignByPass(desIdent, desVal);
@@ -125,26 +126,13 @@ namespace kathryn::o3{
 
     };
 
-    struct BroadCast{
-        mWire(mis, 1);
-        mWire(suc, 1);
-        mWire(misTag, SPECTAG_LEN);
-        mWire(sucTag, SPECTAG_LEN);
-        opr& isBrMissPred(){ return mis;}
-        opr& isBrSuccPred(){ return suc;}
-        opr& checkIsKill(opr& specIdx){
-            return mis & (misTag == specIdx);
-        }
-        opr& checkIsSuc (opr& specIdx){
-            return suc & (sucTag == specIdx);
-        }
 
-    };
 
     struct TagMgmt{
-        TagGen    tagGen;
-        Mpft      mpft;
         BroadCast bc;
+        TagGen    tagGen{bc};
+        Mpft      mpft;
+
 
     };
 

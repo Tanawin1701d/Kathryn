@@ -26,13 +26,13 @@ namespace kathryn::o3{
          */
 
         inline SlotMeta smDecBase {
-            {inst             , invalid           , imm_type    , aluOp          , rsEnt,
-             isBranch         , pred_addr         , spec        , specTag        , illLegal,
-             rdIdx            , rdUse             ,
-             rsIdx_1          , rsSel_1           , rsUse_1     ,
-             rsIdx_2          , rsSel_2           , rsUse_2     ,
-             dmem_size        , dmem_type         ,
-             md_req_op        , md_req_in_signed_1,
+            {inst             , invalid           , imm_type    , aluOp          , rsEnt, /////// operation
+             isBranch         , pred_addr         , spec        , specTag        , illLegal, ////// branch
+             rdIdx            , rdUse             ,    /////// destination
+             rsIdx_1          , rsSel_1           , rsUse_1     , /////// src1
+             rsIdx_2          , rsSel_2           , rsUse_2     , /////// src2
+             dmem_size        , dmem_type         , //////// memory
+             md_req_op        , md_req_in_signed_1, //////// multiplication
             md_req_in_signed_2, md_req_out_sel
             },
 
