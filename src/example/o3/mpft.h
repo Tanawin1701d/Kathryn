@@ -14,7 +14,9 @@ namespace kathryn::o3{
     struct Mpft{
         Table _table;
 
-        Mpft(): _table(smMPFT, SPECTAG_LEN){}
+        Mpft(): _table(smMPFT, SPECTAG_LEN){
+            _table.makeColResetEvent(mpft_valid, 0);
+        }
 
         void onPredSuc(opr& tag1){
 
@@ -31,7 +33,7 @@ namespace kathryn::o3{
             });
 
         }
-        void onMissPred(){ _table.doReset();}
+        void onMissPred(){ _table.doGlobColAsm({mpft_valid}, 0);}
         void onAddNew(opr& setTag1, opr& tag1,
                       opr& setTag2, opr& tag2){
 
@@ -52,7 +54,6 @@ namespace kathryn::o3{
                     ft <<= tag2;
                 }
                 ///// it is suppose to be other tag because vl for both is not set
-                Operable* newTag = &lhs(mpft_fixTag);
                 zif(vl){
                     zif(setTag1) ft <<= (ft | tag1);
                     zif(setTag2) ft <<= (ft | tag2);
