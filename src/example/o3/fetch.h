@@ -14,24 +14,58 @@ namespace kathryn::o3{
     struct FetchMod : Module{
         PipStage& pm;
 
-        mWire(pc, ADDR_LEN);
+        mWire(curPc, ADDR_LEN);
+        mMem(iMem0, IMEM_ROW, IMEM_WIDTH);
+        mMem(iMem1, IMEM_ROW, IMEM_WIDTH);
+        mMem(iMem2, IMEM_ROW, IMEM_WIDTH);
+        mMem(iMem3, IMEM_ROW, IMEM_WIDTH);
 
         explicit FetchMod(PipStage&  pm){}
 
         void flow() override{
 
-
             pip(pm.ft.sync){ autoStart
-
                 zync(pm.dc.sync){
-                    pc <<= pc + 8;
-
+                    selLog();
                 }
-
             }
 
         }
+
+        void selLog(){
+            opr& selIdx = curPc(2, 4);
+            RegSlot& raw = pm.ft.raw;
+
+            raw(invalid1) <<= 0;
+            raw(invalid2) <<= 0;
+            raw(pc)       <<= curPc;
+            raw(npc)      <<= curPc + 8;
+            raw(prCond)   <<= 0;
+            raw(bhr)      <<= 0;
+
+            auto& i0 = iMem0[curPc(4, INSN_LEN)];
+            auto& i1 = iMem1[curPc(4, INSN_LEN)];
+            auto& i2 = iMem2[curPc(4, INSN_LEN)];
+            auto& i3 = iMem3[curPc(4, INSN_LEN)];
+
+            zif(selIdx == 0){
+                raw(inst1)    <<=  i0;
+                raw(inst2)    <<=  i1;
+            }zelif(selIdx == 1){
+                raw(inst1)    <<=  i1;
+                raw(inst2)    <<=  i2;
+            }zelif(selIdx == 2){
+                raw(inst1)    <<=  i2;
+                raw(inst2)    <<=  i3;
+            }zelse{
+                raw(inst1)    <<= i3;
+                raw(inst2)    <<= i0;
+                raw(invalid2) <<= 1;
+                raw(npc)      <<= (curPc + 4);
+            }
+        }
     };
+
 }
 
 #endif //KATHRYN_FETCH_H

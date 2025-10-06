@@ -110,6 +110,9 @@ enum BrStat{
     BS_MISS
 };
 
+constexpr int IMEM_ROW   = 1024;
+constexpr int IMEM_WIDTH = 32;
+
 
 //Register File
 constexpr int REG_SEL =  5;

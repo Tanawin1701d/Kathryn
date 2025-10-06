@@ -7,6 +7,7 @@
 
 #include "kathryn.h"
 //////// include pipeline staage
+#include "fetch.h"
 #include "decoder.h"
 #include "dispatch.h"
 #include "execAlu.h"
@@ -35,16 +36,17 @@ namespace kathryn::o3{
     /////// pipeline manager
     PipStage pm;
 
+    mMod(pFetch, FetchMod  , pm);
     mMod(pDec  , DecMod    , pm     , tagMgmt); //// decoder
     mMod(pDisp , DpMod     , pm     ,  aluRsv
-               , branchRsv , regArch,  prob      ); //// dispathc
+               , branchRsv , regArch,  prob  ); //// dispathc
     mMod(pExAlu, ExecAlu   , pm.ex  , regArch,
-                 prob      , aluRsv.execSrc); //// exec unit
+                 prob      , aluRsv.execSrc  ); //// exec unit
     mMod(pExBra, BranchExec, tagMgmt, regArch,
                  pm        , prob   , branchRsv.execSrc); //// branch unit
 
 
-    explicit Core(){}
+    explicit Core(int x){}
 
     void flow() override{
 
@@ -54,8 +56,6 @@ namespace kathryn::o3{
         branchRsv.buildIssue(pm.br.sync, tagMgmt.bc);
 
     }
-
-
 
     };
 
