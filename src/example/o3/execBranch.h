@@ -75,12 +75,12 @@ namespace kathryn::o3{
                 zif (src(pred_addr) == calAddr){ //// case sucPred
                     onSucPred(src(specTag));
                 }zelse{ //////// case misPred
-                    onMisPred(src(specTag));
+                    onMisPred(src(specTag), calAddr);
                 }
             }
         }
 
-        void onMisPred(opr& misTag);
+        void onMisPred(opr& misTag, opr& fixPc);
 
         void onSucPred(opr& sucTag);
 

@@ -13,14 +13,16 @@ namespace kathryn::o3{
 
     struct FetchMod : Module{
         PipStage& pm;
+        Reg&      curPc;
 
-        mWire(curPc, ADDR_LEN);
-        mMem(iMem0, IMEM_ROW, IMEM_WIDTH);
-        mMem(iMem1, IMEM_ROW, IMEM_WIDTH);
-        mMem(iMem2, IMEM_ROW, IMEM_WIDTH);
-        mMem(iMem3, IMEM_ROW, IMEM_WIDTH);
+        mMem (iMem0, IMEM_ROW, IMEM_WIDTH);
+        mMem (iMem1, IMEM_ROW, IMEM_WIDTH);
+        mMem (iMem2, IMEM_ROW, IMEM_WIDTH);
+        mMem (iMem3, IMEM_ROW, IMEM_WIDTH);
 
-        explicit FetchMod(PipStage&  pm){}
+        explicit FetchMod(PipStage&  pm) :
+        pm(pm),
+        curPc(pm.ft.curPc){}
 
         void flow() override{
 
@@ -30,6 +32,10 @@ namespace kathryn::o3{
                 }
             }
 
+        }
+
+        void onMisPred(opr& RenewPc){
+            curPc <<= RenewPc;
         }
 
         void selLog(){

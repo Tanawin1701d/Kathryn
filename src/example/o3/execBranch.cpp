@@ -7,9 +7,11 @@
 
 namespace kathryn::o3{
 
-    void BranchExec::onMisPred(opr& misTag){
+    void BranchExec::onMisPred(opr& misTag, opr& fixPc){
+        ////// update the meta-data
         tagMgmt.bc.mis = 1;
         opr& fixTag = tagMgmt.mpft.getFixTag(OH(misTag));
+        pm.ft.curPc <<= fixPc;
         ////// kill the pipeline stage
         pm.ft.sync.killSlave();
         pm.dc.sync.killSlave();

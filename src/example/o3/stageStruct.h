@@ -23,6 +23,7 @@ namespace kathryn::o3{
 
 
     struct FetchStage{
+        mReg(curPc, ADDR_LEN);
         SlotMeta meta{smFetch};
         RegSlot  raw {smFetch};
         SyncMeta sync{"fetchSync"};
