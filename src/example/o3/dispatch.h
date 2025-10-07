@@ -25,7 +25,7 @@ namespace kathryn::o3{
         RegArch&     regArch;
         Rob&         rob;
 
-        mWire(aluRsvIdx2_final, ALU_ENT_NUM);
+        mWire(aluRsvIdx2_final   , ALU_ENT_NUM);
         mWire(branchRsvIdx2_final, BRANCH_ENT_SEL);
 
         DpMod(PipStage& pm, ORsv& aluRsv, IRsv& branchRSV,
@@ -41,9 +41,9 @@ namespace kathryn::o3{
         }
 
         Operable& isAlocatableForRsv(opr& busy1, opr& busy2, int RS_ENT_IDX){
-            return  (~busy1 + ~busy2) >=
-                (isRsvRequired(pm.dc.dcd1, RS_ENT_IDX) +
-                 isRsvRequired(pm.dc.dcd2, RS_ENT_IDX));
+            return  ((~busy1).uext(2) + (~busy2).uext(2)) >=
+                (isRsvRequired(pm.dc.dcd1, RS_ENT_IDX).uext(2) +
+                 isRsvRequired(pm.dc.dcd2, RS_ENT_IDX).uext(2));
         }
 
         WireSlot cvtdecInstrToRsv(RegSlot& dcd, RegSlot& dcdShard, int decLaneIdx,
