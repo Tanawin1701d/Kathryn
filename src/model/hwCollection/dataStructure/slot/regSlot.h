@@ -63,6 +63,9 @@ namespace kathryn{
                        ASM_TYPE asmType) override;
 
         void doGlobAsm(AsmNode* asmNode) override;
+
+        void makeResetEvent(ull resetValue = 0);
+
         /***
          *  static slicing
          */

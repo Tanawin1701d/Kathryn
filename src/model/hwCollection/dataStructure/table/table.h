@@ -90,8 +90,9 @@ namespace kathryn{
         ////// make resetEvent will do when glo
         Table& makeColResetEvent (const std::string& colName, ull resetVal = 0);
         Table& makeColResetEvent (int   colIdx              , ull resetVal = 0);
-        Table& doGlobColAsm (const std::string& colName, ull resetVal = 0);
-        Table& doGlobColAsm (int   colIdx              , ull resetVal = 0);
+        Table& makeResetEvent    (ull   resetVal);
+        Table& doGlobColAsm      (const std::string& colName, ull resetVal = 0);
+        Table& doGlobColAsm      (int   colIdx              , ull resetVal = 0);
 
         ReducNode doReduceBase(const std::vector<ReducNode>& initReducNodes,
                                const std::function<Operable&(WireSlot& lhs, Operable* lidx,

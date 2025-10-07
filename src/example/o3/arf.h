@@ -31,14 +31,22 @@ namespace kathryn::o3{
         opr& rrfIdx;
     };
 
+
+    ////// | rename <-> commit <-> success | missPredict
+    ////// mispredict copy the fix table to all table (master table include)
+    ////// rename on all table that is free and master table (have the most priorty)
+    ////// success copy the master to the success table (rename cannot occur at the same time with rename)
+    ////// commit update all table that each element is busy except success table must use with after fixed table
+
+
     struct Arf{
 
-        Table busy, rename;
+        ///////// recoverier
+        Table busy, rename; ////// row re recover tag col is reg
         RegSlot  busyMaster, renameMaster;
-
-
-        RegSlot  archRegs; ////// register architecture register
-
+        ///////// architecture register actual data
+        RegSlot  archRegs;  ////// register architecture register
+        ///////// unfortunately commit can happend at the same time with renaming
         CommitCmd commitCmds[2];
 
         Arf():
@@ -47,16 +55,14 @@ namespace kathryn::o3{
             busyMaster(smARFBusy),
             renameMaster(smARFRenamed),
             archRegs(smARFData){
-            busy.doReset();
-            rename.doReset();
-            busyMaster.doReset();
-            renameMaster.doReset();
-            archRegs.doReset();
+
+            busy.makeResetEvent(0);
+            busyMaster.makeResetEvent();
         }
 
         RenamedData getRenamedData(opr& archIdx){
-            return {busyMaster[archIdx].v(),
-                renameMaster[archIdx].v()};
+            return {busyMaster  [archIdx].v(),
+                    renameMaster[archIdx].v()};
         }
 
         opr& getArfData(opr& archIdx){
@@ -70,6 +76,11 @@ namespace kathryn::o3{
             }
         }
 
+        void updateArfRegs(){
+            updateArfReg(0);
+            updateArfReg(1);
+        }
+
         void setCommitCmd(int idx,
                           opr& comEn,
                           opr& comRrfPtr,
@@ -81,11 +92,6 @@ namespace kathryn::o3{
             commitCmds[idx].comArcIdx   = comArcIdx;
             commitCmds[idx].data        = data;
 
-        }
-
-        void updateArfRegs(){
-            updateArfReg(0);
-            updateArfReg(1);
         }
 
         void augmentTableInCommit(WireSlot& desBusy, WireSlot& desRename, int idx){
@@ -106,7 +112,7 @@ namespace kathryn::o3{
         void augmentTableInRename(WireSlot& desBusy, WireSlot& desRename, RenameCmd& renCmd){
             ///// it rename but rename to 0
             ///// it must set to 0
-            desBusy[renCmd.renArcIdx] = 0;
+            ////desBusy[renCmd.renArcIdx] = 0;
             zif(renCmd.renEn){
                 desBusy[renCmd.renArcIdx] = 1;
                 desRename[renCmd.renArcIdx] = renCmd.renRrfPtr;
@@ -134,57 +140,80 @@ namespace kathryn::o3{
             SET_ASM_PRI_TO_AUTO();
         }
 
-        void onSucPred(){ ///// it must handle case the commit as well
+        void onSucPred(opr& fixTag, opr& sucTag){ ///// it must handle case the commit as well
+
             SET_ASM_PRI_TO_MANUAL(DEFAULT_UE_PRI_USER+2);
+            ///// we have to specify the free tag
+            opr& fixTagWOCur = fixTag & ~sucTag; //// curtag is suctag (and we want it to be update)
+            OH freeTag(~fixTagWOCur);
 
             ////// eliminated the data
             WireSlot nextBusy(busyMaster);
             WireSlot nextRename(renameMaster);
             augmentTableInCommits(nextBusy, nextRename);
             ////// fill it reconfig the master
-            OH replacingIdx = broadCast.getSMtag();
-            busyMaster           <<= nextBusy;
-            renameMaster         <<= nextRename;
-            busy  [replacingIdx] <<= nextBusy;
-            rename[replacingIdx] <<= nextRename;
+            //OH replacingIdx = broadCast.getSMtag();
+            busyMaster      <<= nextBusy;
+            renameMaster    <<= nextRename;
+            busy  [freeTag] <<= nextBusy;
+            rename[freeTag] <<= nextRename;
 
             SET_ASM_PRI_TO_AUTO();
             ////// the other spectag that going to commit will be done by onCommit
         }
 
-        void onRename(RenameCmd& renCmd1, RenameCmd& renCmd2, ){
+        void onRename(RenameCmd& renCmd1, RenameCmd& renCmd2, opr& usedTag){
             SET_ASM_PRI_TO_MANUAL(DEFAULT_UE_PRI_USER+1);
 
-            for (int renIdx = 0; renIdx < 2; renIdx++){
-                RenameCmd& renCmd = renIdx == 0? renCmd1 : renCmd2;
-                /////////// augment in some table
-                for (int specIdx = 0; specIdx < SPECTAG_LEN; specIdx++){
-                    WireSlot nextBusy(busy(specIdx));
-                    WireSlot nextRename(rename(specIdx));
-                    zif(renCmd.validvector(specIdx)){
-                        augmentTableInRename(nextBusy, nextRename, renCmd);
-                        busy(specIdx) <<= nextBusy;
-                        rename(specIdx) <<= nextRename;
+            WireSlot nextmasterBusy  (busyMaster);
+            WireSlot nextmasterRename(renameMaster);
+
+            augmentTableInRename(nextmasterBusy, nextmasterRename, renCmd1);
+
+            WireSlot nextmasterBusy2  (nextmasterBusy);
+            WireSlot nextmasterRename2(nextmasterRename);
+            augmentTableInRename(nextmasterBusy2, nextmasterRename2, renCmd2);
+
+
+            for (int specIdx = 0; specIdx < SPECTAG_LEN; specIdx++){
+                opr& isUsed = usedTag.sl(specIdx);
+                zif(~isUsed){
+                    opr& isNewlyUsed1 = renCmd1.isBranch & renCmd1.specTag.sl(specIdx);
+                    opr& isNewlyUsed2 = renCmd2.isBranch & renCmd2.specTag.sl(specIdx);
+                    zif (isNewlyUsed1){
+                        busy  (specIdx) <<= nextmasterBusy;
+                        rename(specIdx) <<= nextmasterRename;
+                    }zelse{
+                        busy  (specIdx) <<= nextmasterBusy2;
+                        rename(specIdx) <<= nextmasterRename2;
                     }
                 }
-                ////// augment master
-                WireSlot nextmasterBusy  (busyMaster);
-                WireSlot nextmasterRename(renameMaster);
-                augmentTableInRename(nextmasterBusy, nextmasterRename, renCmd);
-                busyMaster   <<= nextmasterBusy;
-                renameMaster <<= nextmasterRename;
-
             }
+
+            busyMaster   <<= nextmasterBusy2;
+            renameMaster <<= nextmasterRename2;
             SET_ASM_PRI_TO_AUTO();
         }
 
         void onCommit(opr& comEn1    , opr& comRrfPtr1,
-                      opr& comArcIdx1,
+                      opr& comArcIdx1, opr& comData1  ,
                       opr& comEn2    , opr& comRrfPtr2,
-                      opr& comArcIdx2)
+                      opr& comArcIdx2, opr& comData2)
 
 
-        { ///// the free spectag should be update
+        {
+            ////// not cycle consider (just assign the static assignment)
+            commitCmds[0].comEn     = comEn1;
+            commitCmds[0].comRrfPtr = comRrfPtr1;
+            commitCmds[0].comArcIdx = comArcIdx1;
+            commitCmds[0].data      = comData1;
+
+            commitCmds[1].comEn     = comEn2;
+            commitCmds[1].comRrfPtr = comRrfPtr2;
+            commitCmds[1].comArcIdx = comArcIdx2;
+            commitCmds[1].data      = comData2;
+
+            ///// the free spectag should be update
             SET_ASM_PRI_TO_MANUAL(DEFAULT_UE_PRI_USER);
 
             ///// check every table
@@ -202,9 +231,8 @@ namespace kathryn::o3{
             augmentTableInCommits(nextmasterBusy, nextmasterRename);
             busyMaster   <<= nextmasterBusy;
             renameMaster <<= nextmasterRename;
-
             ///// update the data to the table
-
+            updateArfRegs();
             SET_ASM_PRI_TO_AUTO();
         }
 
