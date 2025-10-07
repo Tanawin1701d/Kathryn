@@ -31,12 +31,11 @@ namespace kathryn::o3{
         RsvBase(SlotMeta meta, int amtRow):
             _meta(meta), _table(meta, amtRow),
         execSrc(meta){
-            _table.doReset();
+            _table.makeColResetEvent(busy, 0);
         }
 
         virtual ~RsvBase() = default;
 
-        virtual pair<Operable&, OH> buildFreeIndex(OH* exceptIdx){assert(false);}
         virtual void buildIssue(SyncMeta& syncMeta, BroadCast& bc) = 0;
 
         Operable& slotReady(WireSlot& iw){
@@ -96,7 +95,7 @@ namespace kathryn::o3{
                 auto& isSpec  = lhs(spec);
                 auto& mySpecTag= lhs(specTag);
                 //////// do bypass the system
-                zif (isBusy & isSpec & mySpecTag == sucTag){
+                zif (isBusy & isSpec & (mySpecTag == sucTag)){
                     isSpec <<= 0;
                 }
             });
@@ -106,11 +105,11 @@ namespace kathryn::o3{
             _table.doCusLogic([&](RegSlot& lhs, int rowIdx){
                 for (int i = 1; i <= 2; i++){
                     auto& isBusy     = lhs(busy);
-                    auto& useSig     = lhs(str(rsUse_) + toS(i));
+                    auto& isRsValid  = lhs(str(rsValid_) + toS(i));
                     auto& phyIdx     = lhs(str(phyIdx_) + toS(i));
                     //////// do bypass the system
                     zif (isBusy){
-                        zif (useSig & phyIdx(0, 5) == bp.rrfIdx){
+                        zif ((~isRsValid) & (phyIdx(0, RRF_SEL) == bp.rrfIdx)){
                             phyIdx <<= bp.val;
                         }
                     }

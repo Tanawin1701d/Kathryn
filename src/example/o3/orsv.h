@@ -32,7 +32,7 @@ namespace kathryn::o3{
             RsvBase::writeEntry(binIdx, iw);
         }
 
-        pair<Operable&, OH> buildFreeIndex(OH* exceptIdx) override{
+        pair<opr&, OH> buildFreeOhIndex(OH* exceptIdx){
             auto [iw, ohIdx] = _table.doReducOHIdx([&](
              WireSlot& lhs, Operable* lidx,
              WireSlot& rhs, Operable* ridx) -> opr&{

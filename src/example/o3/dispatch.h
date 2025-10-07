@@ -80,8 +80,8 @@ namespace kathryn::o3{
             auto& dcd2 = pm.dc.dcd2;
             auto& dcdShare     = pm.dc.dcdShared;
 
-            auto[aluRsvBusy , aluRsvIdx ] = aluRsv.buildFreeIndex(nullptr);
-            auto[aluRsvBusy2, aluRsvIdx2] = aluRsv.buildFreeIndex(&aluRsvIdx);
+            auto[aluRsvBusy , aluRsvIdx ] = aluRsv.buildFreeOhIndex(nullptr);
+            auto[aluRsvBusy2, aluRsvIdx2] = aluRsv.buildFreeOhIndex(&aluRsvIdx);
             opr& isAluRsvAllocatable = isAlocatableForRsv(aluRsvBusy, aluRsvBusy2, RS_ENT_ALU);
 
             ///// dcd1 supposed to be correct
@@ -90,8 +90,8 @@ namespace kathryn::o3{
 
 
             //// TODO check the assign order
-            auto[branchRsvBusy, branchRsvIdx] = branchRSV.buildFreeIndex(nullptr);
-            auto[branchRsvBusy2, branchRsvIdx2] = branchRSV.buildFreeIndex(&branchRsvIdx);
+            auto[branchRsvBusy, branchRsvIdx] = branchRSV.buildFreeOhIndex(nullptr);
+            auto[branchRsvBusy2, branchRsvIdx2] = branchRSV.buildFreeOhIndex(&branchRsvIdx);
             opr& isBranchRsvAllocatable = isAlocatableForRsv(branchRsvBusy, branchRsvBusy2, RS_ENT_BRANCH);
 
             ///// dcd2 supposed to be correct no need to check the valid the exec sequence make ti

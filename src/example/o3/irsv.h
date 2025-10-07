@@ -38,9 +38,12 @@ namespace kathryn::o3{
 
             RsvBase::onMisPred(fixTag);
             zif (nb0.sValid){ /// there is empty space for next update
-                ////// case 0  is bubble there is 1 atstart and 1 at the end
-                zif((nb1.sIdx == 0) && (ne1.sIdx == (_table.getNumRow()-1))){
-                    allocPtr <<= nb0.sIdx;
+                /// if there is no 1 for next cycle  (the )
+                zif(~nb1.sValid){
+                    allocPtr <<= 0; ////// it is empty
+                }zelif((nb1.sIdx == 0) && (ne1.sIdx == (_table.getNumRow()-1))){
+                    ////// case 0  is bubble there is 1 atstart and 1 at the end
+                    allocPtr <<= nb0.sIdx; ///// nb0
                 }zelse{
                     allocPtr <<= (nb1.sIdx+1);
                 }
@@ -51,6 +54,14 @@ namespace kathryn::o3{
         /**
          * ISSUE
          */
+
+        pair<opr&, opr&> buildFreeBinIndex(opr* reqIdx){
+
+            opr* selIdx = (reqIdx == nullptr)? &allocPtr : reqIdx;
+
+            return {_table[*selIdx](busy).v(), *selIdx};
+
+        }
 
         void buildIssue(SyncMeta& syncMeta, BroadCast& bc) override{
 
