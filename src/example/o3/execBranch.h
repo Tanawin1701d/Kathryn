@@ -46,9 +46,13 @@ namespace kathryn::o3{
 
         void flow() override{
 
-            opr& opc    = src(opcode);
-            opr& srcPc  = src(pc);
-            opr& srcImm = src(imm);
+
+
+            opr& opc     = src(opcode);
+            opr& srcPc   = src(pc);
+            opr& srcImm  = src(imm);
+            opr& spTag   = src(specTag);
+            opr& fixTag  = tagMgmt.mpft.getFixTag(OH(spTag));
 
             opr& srcA   = getAluSrcA(src);
             opr& srcB   = getAluSrcB(src);
@@ -73,16 +77,16 @@ namespace kathryn::o3{
 
                 /////// success predict
                 zif (src(pred_addr) == calAddr){ //// case sucPred
-                    onSucPred(src(specTag));
+                    onSucPred(fixTag, src(specTag));
                 }zelse{ //////// case misPred
-                    onMisPred(src(specTag), calAddr);
+                    onMisPred(fixTag, src(specTag), calAddr);
                 }
             }
         }
 
-        void onMisPred(opr& misTag, opr& fixPc);
+        void onMisPred(opr& fixTag, opr& misTag, opr& fixPc);
 
-        void onSucPred(opr& sucTag);
+        void onSucPred(opr& fixTag, opr& sucTag);
 
     };
 

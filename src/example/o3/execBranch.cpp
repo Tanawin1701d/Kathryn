@@ -7,10 +7,10 @@
 
 namespace kathryn::o3{
 
-    void BranchExec::onMisPred(opr& misTag, opr& fixPc){
+    void BranchExec::onMisPred(opr& fixTag, opr& misTag, opr& fixPc){
         ////// update the meta-data
         tagMgmt.bc.mis = 1;
-        opr& fixTag = tagMgmt.mpft.getFixTag(OH(misTag));
+
         pm.ft.curPc <<= fixPc;
         ////// kill the pipeline stage
         pm.ft.sync.killSlave();
@@ -33,7 +33,7 @@ namespace kathryn::o3{
 
     }
 
-    void BranchExec::onSucPred(opr& sucTag){
+    void BranchExec::onSucPred(opr& fixTag, opr& sucTag){
         tagMgmt.bc.suc = 1;
         //// stall the pipeline
         pm.dc.sync.holdSlave(); //// because mpft and tag generator must be hold
@@ -49,7 +49,7 @@ namespace kathryn::o3{
         }
 
         //// do update the register architecture
-        regArch.arf.onSucPred();
+        regArch.arf.onSucPred(fixTag);
 
     }
 
