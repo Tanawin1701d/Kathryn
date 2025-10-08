@@ -66,6 +66,8 @@ namespace kathryn::o3{
             return _table[OH(searchTag)](mpft_fixTag).v();
         }
 
+        opr& isUsed(int specIdx){return _table(specIdx)(mpft_valid);}
+
 
     };
 

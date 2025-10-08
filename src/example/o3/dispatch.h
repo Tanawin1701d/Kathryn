@@ -23,17 +23,19 @@ namespace kathryn::o3{
         ORsv&        aluRsv;
         IRsv&        branchRSV;
         RegArch&     regArch;
+        TagMgmt&     tagMgmt;
         Rob&         rob;
 
         mWire(aluRsvIdx2_final   , ALU_ENT_NUM);
         mWire(branchRsvIdx2_final, BRANCH_ENT_SEL);
 
         DpMod(PipStage& pm, ORsv& aluRsv, IRsv& branchRSV,
-              RegArch& regArch, Rob& rob):
+              RegArch& regArch, TagMgmt& tagMgmt, Rob& rob):
             pm         (pm),
             aluRsv     (aluRsv),
             branchRSV  (branchRSV),
             regArch    (regArch),
+            tagMgmt    (tagMgmt),
             rob        (rob){}
 
         Operable& isRsvRequired(RegSlot& dcd, int RS_ENT_IDX){
@@ -49,10 +51,13 @@ namespace kathryn::o3{
         WireSlot cvtdecInstrToRsv(RegSlot& dcd, RegSlot& dcdShard, int decLaneIdx,
                             opr* desPrevIdx, opr* isDesPrevUse){
 
-            /////// create rsv
-            WireSlot des(smRsvBase + smRsvO + smRsvI); /// smRsvBase + smRsvOI
-                                              /// dcdShared
+            /////// create rsv smRsvI for inorder is redundant
+            WireSlot des(smRsvO + smRsvBranch + smRsvBase); /// smRsvBase + smRsvOI
+            /////// metadata
             des(busy)    = 1;
+            des(sortBit) = 1;
+
+            ////////////// base
             if (decLaneIdx == 0){
                 des(pc) = dcdShard(pc);
             }else{
@@ -65,11 +70,14 @@ namespace kathryn::o3{
             des(aluOp)   = dcd(aluOp);
             des(spec)    = dcd(spec);
             des(specTag) = dcd(specTag);
-            des(opcode)  = dcd(inst)(0, 7);
+
             des(phyIdx_1, rsValid_1) = decodeSrcOpr(dcd, desPrevIdx, isDesPrevUse,
-                                1, regArch.arf, regArch.rrf, bp);
+                                1, regArch);
             des(phyIdx_2, rsValid_2) = decodeSrcOpr(dcd, desPrevIdx, isDesPrevUse,
-                                2, regArch.arf, regArch.rrf, bp);
+                                2, regArch);
+            ////////////// branch
+            des(opcode)    = dcd(inst)(0, 7);
+            des(pred_addr) = dcd(pred_addr);
 
             return des;
         }
@@ -86,25 +94,25 @@ namespace kathryn::o3{
 
             ///// dcd1 supposed to be correct
             zif (dcd1(rsEnt) == RS_ENT_ALU) aluRsvIdx2_final = aluRsvIdx2.getIdx();
-            zelse aluRsvIdx2_final = aluRsvIdx.getIdx();
+            zelse                           aluRsvIdx2_final = aluRsvIdx.getIdx();
 
 
             //// TODO check the assign order
-            auto[branchRsvBusy, branchRsvIdx] = branchRSV.buildFreeOhIndex(nullptr);
-            auto[branchRsvBusy2, branchRsvIdx2] = branchRSV.buildFreeOhIndex(&branchRsvIdx);
+            auto[branchRsvBusy , branchRsvIdx ] = branchRSV.buildFreeBinIndex(nullptr);
+            auto[branchRsvBusy2, branchRsvIdx2] = branchRSV.buildFreeBinIndex(&(branchRsvIdx+1));
             opr& isBranchRsvAllocatable = isAlocatableForRsv(branchRsvBusy, branchRsvBusy2, RS_ENT_BRANCH);
 
             ///// dcd2 supposed to be correct no need to check the valid the exec sequence make ti
-            zif (dcd1(rsEnt) == RS_ENT_BRANCH) branchRsvIdx2_final = branchRsvIdx2.getIdx();
-            zelse branchRsvIdx2_final = branchRsvIdx.getIdx();
+            zif (dcd1(rsEnt) == RS_ENT_BRANCH) branchRsvIdx2_final = branchRsvIdx2;
+            zelse                              branchRsvIdx2_final = branchRsvIdx;
 
-
-            RenameCmd renCmd1{dcd1(rdUse), regArch.rrf.getReqPtr(),
-                           dcd1(rdIdx),
-                            dcd1(isBranch), dcd1(specTag)};
-            RenameCmd renCmd2{dcd2(rdUse), regArch.rrf.getReqPtr()+1,
-                           dcd2(rdIdx),
-                            dcd2(isBranch), dcd2(specTag)};
+            ///// rename command
+            RenameCmd renCmd1{dcd1(rdUse)   , regArch.rrf.getReqPtr(),
+                              dcd1(rdIdx)   ,
+                              dcd1(isBranch), dcd1(specTag)};
+            RenameCmd renCmd2{dcd2(rdUse)   , regArch.rrf.getReqPtr()+1,
+                              dcd2(rdIdx)   ,
+                              dcd2(isBranch), dcd2(specTag)};
 
             opr& isdispatable = (~(isAluRsvAllocatable && isBranchRsvAllocatable)) &
                                 regArch.rrf.isRenamable(~dcd2(invalid));
@@ -116,7 +124,7 @@ namespace kathryn::o3{
                     regArch.rrf.onRename(~dcd1(invalid), ~dcd2(invalid));
                     opr& reqPtr = regArch.rrf.getReqPtr();
                     //////// update arf
-                    regArch.arf.onRename(renCmd1, renCmd2);
+                    regArch.arf.onRename(renCmd1, renCmd2,tagMgmt.mpft);
                     //////// update reservation station
                     WireSlot entry1 = cvtdecInstrToRsv(dcd1, dcdShare, 0, nullptr, nullptr);
                     WireSlot entry2 = cvtdecInstrToRsv(dcd2, dcdShare, 1,

@@ -7,6 +7,7 @@
 
 #include "kathryn.h"
 #include "slotParam.h"
+#include "mpft.h"
 
 namespace kathryn::o3{
 
@@ -162,7 +163,7 @@ namespace kathryn::o3{
             ////// the other spectag that going to commit will be done by onCommit
         }
 
-        void onRename(RenameCmd& renCmd1, RenameCmd& renCmd2, opr& usedTag){
+        void onRename(RenameCmd& renCmd1, RenameCmd& renCmd2, Mpft& mpft){
             SET_ASM_PRI_TO_MANUAL(DEFAULT_UE_PRI_USER+1);
 
             WireSlot nextmasterBusy  (busyMaster);
@@ -176,7 +177,7 @@ namespace kathryn::o3{
 
 
             for (int specIdx = 0; specIdx < SPECTAG_LEN; specIdx++){
-                opr& isUsed = usedTag.sl(specIdx);
+                opr& isUsed = mpft.isUsed(specIdx);
                 zif(~isUsed){
                     opr& isNewlyUsed1 = renCmd1.isBranch & renCmd1.specTag.sl(specIdx);
                     opr& isNewlyUsed2 = renCmd2.isBranch & renCmd2.specTag.sl(specIdx);

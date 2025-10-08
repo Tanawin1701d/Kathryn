@@ -38,8 +38,8 @@ namespace kathryn::o3{
 
     mMod(pFetch, FetchMod  , pm);
     mMod(pDec  , DecMod    , pm     , tagMgmt); //// decoder
-    mMod(pDisp , DpMod     , pm     ,  aluRsv
-               , branchRsv , regArch,  prob  ); //// dispathc
+    mMod(pDisp , DpMod     , pm     , aluRsv
+               , branchRsv , regArch, tagMgmt,  prob  ); //// dispathc
     mMod(pExAlu, ExecAlu   , pm.ex  , regArch,
                  prob      , aluRsv.execSrc  ); //// exec unit
     mMod(pExBra, BranchExec, tagMgmt, regArch,

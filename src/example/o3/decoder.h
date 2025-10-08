@@ -39,6 +39,7 @@ namespace kathryn::o3{
             Operable& funct3  = instr(12, 15);
 
             ///////////// des
+            dcw(inst)      = instr;
             dcw(imm_type)  = IMM_I;
             dcw(aluOp)     = ALU_OP_ADD;
             dcw(rsEnt)     = RS_ENT_ALU;
