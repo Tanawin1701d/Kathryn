@@ -17,7 +17,7 @@ namespace kathryn{
             true
 
         }),
-    _syncMeta(syncMeta),
+    _syncMeta(&syncMeta),
     _acceptCond(acceptCond){ createReadySignal();}
 
 
@@ -70,21 +70,19 @@ namespace kathryn{
     void FlowBlockZyncBase::buildHwComponent(){
         assert(_conBlocks.empty());
         assert(_subBlocks.empty());
-        /**try build the match signal*/
-        _syncMeta.tryBuildmatchSignal();
-        assert(_syncMeta._syncMatched != nullptr);
+        assert(_syncMeta->_syncMatched != nullptr);
 
         /** init all nodes and condition*/
         prepSendNode = new StateNode(getClockMode());
         exitNode     = new PseudoNode(1, BITWISE_AND);
 
         /** prepSendNode*/
-
-        prepSendNode->setInternalIdent("zyncBlk_" + _syncMeta.getName());
+        std::string debugName = "zyncBlk_" + (_syncMeta == nullptr ? "manualCond" : _syncMeta->getName());
+        prepSendNode->setInternalIdent("zyncBlk_" + debugName);
         fillIntResetToNodeIfThere(prepSendNode);
         fillHoldToNodeIfThere    (prepSendNode);
             /** assign assignment node*/
-        Operable* waitCond = _syncMeta._syncMatched; ///// we should wait further
+        Operable* waitCond = _syncMeta->_syncMatched; ///// we should wait further
         if (_acceptCond != nullptr){ //// accept is condition from user to skip this session
             waitCond = &((*waitCond)&(*_acceptCond));
         }
@@ -92,11 +90,11 @@ namespace kathryn{
             /** add slave assignment node*/
         for (auto nd : _basicNodes){
             assert(nd->getNodeType() == ASM_NODE);
-            prepSendNode->addSlaveAsmNode((AsmNode*)nd);
+            prepSendNode->addSlaveAsmNode((AsmNode*)nd, waitCond);
         }
 
         /** exit Node*/
-        Operable* exitCond = _syncMeta._syncMatched;
+        Operable* exitCond = _syncMeta->_syncMatched;
         if (_acceptCond != nullptr){
             exitCond = &((*exitCond)&(*_acceptCond));
         }

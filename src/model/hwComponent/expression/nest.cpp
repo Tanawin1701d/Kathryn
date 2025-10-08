@@ -21,7 +21,7 @@ namespace kathryn{
     nest& makeNestMan(bool isUser, const std::vector<NestMeta>& groupedMeta){
         int nestSize = 0;
         for (NestMeta nestMeta: groupedMeta){
-            nestSize += nestMeta.opr->getOperableSlice().getSize();
+            nestSize += nestMeta.opr1->getOperableSlice().getSize();
         }
         return _make<nest>("uncatagorizedYet", "nest", isUser, nestSize, groupedMeta);
     }
@@ -29,9 +29,9 @@ namespace kathryn{
     nest& makeNestManReadOnly(bool isUser,
         const std::vector<Operable*>& nestListReadOnly){
         int nestSize = 0;
-        for(Operable* opr: nestListReadOnly){
-            assert(opr != nullptr);
-            nestSize += opr->getOperableSlice().getSize();
+        for(Operable* opr1: nestListReadOnly){
+            assert(opr1 != nullptr);
+            nestSize += opr1->getOperableSlice().getSize();
         }
         return _make<nest>("uncatagorizedYet", "nest", isUser, nestSize, nestListReadOnly);
     }
@@ -51,8 +51,8 @@ namespace kathryn{
     {
         int testSize = 0;
         for (NestMeta meta: _nestList){
-            assert(meta.opr != nullptr);
-            testSize += meta.opr->getOperableSlice().getSize();
+            assert(meta.opr1 != nullptr);
+            testSize += meta.opr1->getOperableSlice().getSize();
         }
         assert(testSize == size);
         com_init();
@@ -69,10 +69,10 @@ namespace kathryn{
     readOnly(true)
     {
         int testSize = 0;
-        for (Operable* opr: nestListReadOnly){
-            assert(opr != nullptr);
-            testSize += opr->getOperableSlice().getSize();
-            _nestList.push_back({opr, nullptr});
+        for (Operable* opr1: nestListReadOnly){
+            assert(opr1 != nullptr);
+            testSize += opr1->getOperableSlice().getSize();
+            _nestList.push_back({opr1, nullptr});
         }
         assert(testSize == size);
         com_init();
@@ -135,7 +135,7 @@ namespace kathryn{
         assert(bitIdx > 0);
         int   startAcc = 0;
         for (int i = 0; i < _nestList.size(); i++){
-            Operable* subOpr = _nestList[i].opr;
+            Operable* subOpr = _nestList[i].opr1;
             assert(subOpr != nullptr);
             /****/
             int subOprSize = subOpr->getOperableSlice().getSize();
@@ -165,7 +165,7 @@ namespace kathryn{
 
         for (auto desNest: _nestList){
             /** iterate to meet good point first*/
-            auto desOpr = desNest.opr;
+            auto desOpr = desNest.opr1;
             auto desAsb= desNest.asb;
             Slice curDesSlice     = desOpr->getOperableSlice();
             int   curDesSize      = curDesSlice.getSize();
@@ -233,7 +233,7 @@ namespace kathryn{
 
         for (NestMeta meta: _nestList){
 
-            Operable* result = meta.opr->checkShortCircuit();
+            Operable* result = meta.opr1->checkShortCircuit();
             if (result != nullptr){
                 return result;
             }

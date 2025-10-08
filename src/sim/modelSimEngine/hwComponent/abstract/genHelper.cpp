@@ -8,32 +8,32 @@
 
 namespace kathryn{
 
-    ValR getSrcOprFromOpr(Operable* opr){
-        assert(opr != nullptr);
-        return opr->getExactOperable().
+    ValR getSrcOprFromOpr(Operable* opr1){
+        assert(opr1 != nullptr);
+        return opr1->getExactOperable().
                 getLogicSimEngineFromOpr()->genSrcOpr();
     }
 
 
-    ValR getSlicedSrcOprFromOpr(Operable* opr){
-        assert(opr != nullptr);
-        LogicSimEngine* simEngine = opr->getLogicSimEngineFromOpr();
+    ValR getSlicedSrcOprFromOpr(Operable* opr1){
+        assert(opr1 != nullptr);
+        LogicSimEngine* simEngine = opr1->getLogicSimEngineFromOpr();
         ////// slice to operabe slice
-        return getSlicedSrcOprFromOpr(opr, simEngine->getValR_Type());
+        return getSlicedSrcOprFromOpr(opr1, simEngine->getValR_Type());
     }
 
-    ValR getSlicedSrcOprFromOpr(Operable* opr, SIM_VALREP_TYPE_ALL desField){
-        assert(opr != nullptr);
-        LogicSimEngine* simEngine = opr->getLogicSimEngineFromOpr();
-        Slice neededSlice = opr->getOperableSlice();
+    ValR getSlicedSrcOprFromOpr(Operable* opr1, SIM_VALREP_TYPE_ALL desField){
+        assert(opr1 != nullptr);
+        LogicSimEngine* simEngine = opr1->getLogicSimEngineFromOpr();
+        Slice neededSlice = opr1->getOperableSlice();
         ////// slice to operabe slice
         return simEngine->genSlicedOprTo(neededSlice, desField);
     }
 
-    ValR getSlicedAndShiftSrcOprFromOpr(Operable* opr, Slice desSlice, SIM_VALREP_TYPE_ALL desField){
-        assert(opr != nullptr);
-        LogicSimEngine* simEngine = opr->getLogicSimEngineFromOpr();
-        Slice neededSlice = opr->getOperableSlice();
+    ValR getSlicedAndShiftSrcOprFromOpr(Operable* opr1, Slice desSlice, SIM_VALREP_TYPE_ALL desField){
+        assert(opr1 != nullptr);
+        LogicSimEngine* simEngine = opr1->getLogicSimEngineFromOpr();
+        Slice neededSlice = opr1->getOperableSlice();
         ////// slice to operabe slice
         return simEngine->genSlicedOprAndShift(desSlice, neededSlice, desField);
     }

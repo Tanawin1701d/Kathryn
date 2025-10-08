@@ -43,7 +43,7 @@ namespace kathryn{
         virtual ValR genSlicedOprAndShift     (Slice desSlice, Slice srcSlice, SIM_VALREP_TYPE_ALL desField);
 
 
-        LogicSimEngine(Assignable* asb, Identifiable*   ident, Operable* opr,
+        LogicSimEngine(Assignable* asb, Identifiable*   ident, Operable* opr1,
                        VCD_SIG_TYPE sigType, bool isTempReq,
                         ull initVal
                        );

@@ -39,7 +39,7 @@ namespace kathryn{
 
     struct SIM_VALREP_TYPE_ALL;
     struct SIM_VALREP_TYPE_I_ALL;
-    SIM_VALREP_TYPE_ALL getMatchSVT_ALL  (Operable* opr);
+    SIM_VALREP_TYPE_ALL getMatchSVT_ALL  (Operable* opr1);
     SIM_VALREP_TYPE     getMatchSVT      (int size);
     SIM_VALREP_TYPE_INT getMatchSVTI     (int size);
 

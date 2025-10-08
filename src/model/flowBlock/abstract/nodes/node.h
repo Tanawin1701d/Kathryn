@@ -85,18 +85,18 @@ namespace kathryn {
             return nodeType;
         }
 
-        static void addLogic(Operable* &desLogic, Operable *opr, LOGIC_OP op) {
+        static void addLogic(Operable* &desLogic, Operable *opr1, LOGIC_OP op) {
             assert(op == BITWISE_AND || op == BITWISE_OR);
-            assert(opr != nullptr);
+            assert(opr1 != nullptr);
             if (desLogic == nullptr) {
-                desLogic = opr;
+                desLogic = opr1;
                 return;
             }
 
             if (op == BITWISE_AND) {
-                desLogic = &((*desLogic) & (*opr));
+                desLogic = &((*desLogic) & (*opr1));
             } else if (op == BITWISE_OR) {
-                desLogic = &((*desLogic) | (*opr));
+                desLogic = &((*desLogic) | (*opr1));
             }
         }
 

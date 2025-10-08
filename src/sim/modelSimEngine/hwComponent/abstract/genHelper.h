@@ -13,11 +13,11 @@
 
 
 namespace kathryn{
-    ValR getSrcOprFromOpr      (Operable* opr);
-    ValR getSlicedSrcOprFromOpr(Operable* opr);
-    ValR getSlicedSrcOprFromOpr(Operable* opr, SIM_VALREP_TYPE_ALL desField ); ///// the des field that the sliced should be placed
+    ValR getSrcOprFromOpr      (Operable* opr1);
+    ValR getSlicedSrcOprFromOpr(Operable* opr1);
+    ValR getSlicedSrcOprFromOpr(Operable* opr1, SIM_VALREP_TYPE_ALL desField ); ///// the des field that the sliced should be placed
     ValR getSlicedAndShiftSrcOprFromOpr
-                               (Operable* opr, Slice desSlice,
+                               (Operable* opr1, Slice desSlice,
                                 SIM_VALREP_TYPE_ALL desField);
 
     ull createMask(Slice maskSlice);

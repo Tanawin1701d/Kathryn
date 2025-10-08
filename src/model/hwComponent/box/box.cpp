@@ -59,7 +59,7 @@ namespace kathryn{
 
         for (size_t idx = 0; idx < _nestMetas.size(); idx++){
             Assignable* lhsAsb = _nestMetas[idx].asb;
-            Operable*   rhsOpr = rhsBox.getNestMetas()[idx].opr;
+            Operable*   rhsOpr = rhsBox.getNestMetas()[idx].opr1;
             if (isBlockAsm) {
                 _nestMetas[idx].asb->doBlockAsm(
                         *rhsOpr,
@@ -115,7 +115,7 @@ namespace kathryn{
         assert(mdLogVal != nullptr);
         /** add sub element into log*/
         for (auto nestMeta: _nestMetas){
-            std::string subIdent = nestMeta.opr->castToIdent()->getIdentDebugValue();
+            std::string subIdent = nestMeta.opr1->castToIdent()->getIdentDebugValue();
             mdLogVal->addVal(subIdent);
         }
         /**add recur box*/

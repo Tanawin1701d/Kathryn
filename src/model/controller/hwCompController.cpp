@@ -303,12 +303,12 @@ namespace kathryn{
         }
     }
 
-    void ModelController::on_box_tryAddToBox(Operable* opr, Assignable* asb){
-        assert(asb != nullptr);
-        assert(opr != nullptr);
+    void ModelController::on_box_tryAddToBox(Operable* opr1, Assignable* asb){
+        assert(asb  != nullptr);
+        assert(opr1 != nullptr);
         /**check that box is being fomation and make sure reg is from user */
-        if ( (!boxStack.empty()) && opr->castToIdent()->isUserVar()){
-            boxStack.top()->addNestMeta({opr, asb});
+        if ( (!boxStack.empty()) && opr1->castToIdent()->isUserVar()){
+            boxStack.top()->addNestMeta({opr1, asb});
         }
     }
 

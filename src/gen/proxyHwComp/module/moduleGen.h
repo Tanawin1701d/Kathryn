@@ -90,13 +90,13 @@ namespace kathryn{
         /*
          * routing operation
          */
-        WireAuto* genAutoWireBase(Operable* opr, Operable* realSrc,
+        WireAuto* genAutoWireBase(Operable* opr1, Operable* realSrc,
                                      const std::string& wireName,
                                      WIRE_AUTO_GEN_TYPE wireGenType,
                                      bool               connectTheWire = true);
         bool         isThereAutoGenWire(Operable* realSrc, WIRE_AUTO_GEN_TYPE wireGenType);
         WireAuto* getAutoGenWire    (Operable* realSrc, WIRE_AUTO_GEN_TYPE wireGenType);
-        //// route opr
+        //// route opr1
         Operable* routeSrcOprToThisModule (Operable* exactRealSrc);
         int       getDept() const{return depthFromGlobalModule;}
         //// global io

@@ -135,7 +135,7 @@ namespace kathryn {
         void on_box_init(Box* ptr);
         void on_box_end_init(Box* ptr);
         void on_box_update(AsmNode* asmNode, Box* box);
-        void on_box_tryAddToBox(Operable* opr, Assignable* asb);
+        void on_box_tryAddToBox(Operable* opr1, Assignable* asb);
         /** interface handling*/
         void on_itf_init(ModelInterface* ptr);
 

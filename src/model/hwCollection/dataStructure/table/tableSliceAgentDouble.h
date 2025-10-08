@@ -26,7 +26,7 @@ namespace kathryn{
                               Operable* requiredColIdx,
                               int requiredColIdxInt);
 
-        void doStaticGlobAsm(int idx, Operable& opr);
+        void doStaticGlobAsm(int idx, Operable& opr1);
 
         void doStaticGlobAsm(int idx, ull val);
 

@@ -20,8 +20,8 @@ namespace kathryn{
 
     class FlowBlockZyncBase: public FlowBlockBase, public LoopStMacro{
     protected:
-        SyncMeta& _syncMeta;
-        Operable* _acceptCond    = nullptr; ///// this condition must be true when the system is in prepSendNode,
+        SyncMeta* _syncMeta   = nullptr;
+        Operable* _acceptCond = nullptr; ///// this condition must be true when the system is in prepSendNode,
                                             ///// if the preSend will not wait and not activate further layer
 
 
@@ -34,7 +34,7 @@ namespace kathryn{
         NodeWrap*      resultNodeWrap    = nullptr;
 
     public:
-        FlowBlockZyncBase(Operable* condOnly); ///// perpeptual loop indicate that it will loop when subblock is finish
+        FlowBlockZyncBase(Operable* condOnly);
         FlowBlockZyncBase(SyncMeta& syncMeta, Operable* acceptCond = nullptr);
         ~FlowBlockZyncBase() override;
         /** manage the system */

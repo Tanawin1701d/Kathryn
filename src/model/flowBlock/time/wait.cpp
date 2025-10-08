@@ -114,7 +114,7 @@ namespace kathryn{
         assert(cycle > 0);
     }
 
-    FlowBlockCycleWait::FlowBlockCycleWait(Operable& opr)
+    FlowBlockCycleWait::FlowBlockCycleWait(Operable& opr1)
     : FlowBlockBase(CLKWAIT,
                     {
                             {FLOW_ST_BASE_STACK},
@@ -124,7 +124,7 @@ namespace kathryn{
     _resultNodeWrap(nullptr),
     _waitNode(nullptr),
     cycle(-1),
-    cnt(&opr)
+    cnt(&opr1)
     {
         ///////assert(opr != nullptr);
     }

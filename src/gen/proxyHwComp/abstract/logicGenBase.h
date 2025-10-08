@@ -37,7 +37,7 @@ namespace kathryn{
                               Identifiable* ident
         );
         virtual ~LogicGenBase() = default;
-        std::string getOprStrFromOpr(Operable* opr);
+        std::string getOprStrFromOpr(Operable* opr1);
         ///////// routing zone
         virtual void routeDep() {assert(false);} ///// do routing
         ///////// generate cerificate

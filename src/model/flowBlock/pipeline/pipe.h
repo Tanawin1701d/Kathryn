@@ -35,10 +35,6 @@ namespace kathryn{
         PseudoNode* entNode       = nullptr; //// entrance node
         StateNode*  waitNode      = nullptr;
         DummyNode*  exitDummy     = nullptr; //// pipeline is perpeptual engine
-        ///////////// expression
-        expression* pipeReadySig  = nullptr;
-
-
         //////////// block implicit flow block
         FlowBlockBase* implicitFlowBlock = nullptr;
         NodeWrap*      subBlockNodeWrap  = nullptr;
@@ -54,9 +50,8 @@ namespace kathryn{
         void addAbandonFlowBlock   (FlowBlockBase* abandonBlock) override;
         NodeWrap* sumarizeBlock    () override;
         /**set activate bias usually used in init Pipe */
-        void      createReadySignal ();
         void      assignReadySignal ();
-        Operable* getBlkReadySignal(){return _syncMata._syncMatched;}
+        Operable* getBlkReadySignal() const{return _syncMata._syncMatched;}
 
         std::string getPipeName() const{return _pipeName;}
         /** auto activate pipe*/

@@ -63,8 +63,8 @@ namespace kathryn{
             EXIT_SIM
         };
         void setNextLimitAmtLRC(CYCLE amtCycle);
-        void trig(Operable& opr, std::function<void()> callback);
-        void trig(Operable& opr, SIM_INTERFACE_EVENT event);
+        void trig(Operable& opr1, std::function<void()> callback);
+        void trig(Operable& opr1, SIM_INTERFACE_EVENT event);
         void describeModelTriggerWrapper();
 
 

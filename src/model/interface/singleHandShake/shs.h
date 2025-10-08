@@ -33,9 +33,9 @@ namespace kathryn{
 
         void buildLogicBase() override;
         void send(){ reqToSend = 1;}
-        void sendOn(Operable& opr){
-            assert(opr.getOperableSlice().getSize() == 1);
-            reqToSend = opr;
+        void sendOn(Operable& opr1){
+            assert(opr1.getOperableSlice().getSize() == 1);
+            reqToSend = opr1;
         }
         void sendAndWaitUntillSuccess();
 

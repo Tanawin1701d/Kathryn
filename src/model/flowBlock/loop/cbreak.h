@@ -29,7 +29,7 @@ namespace kathryn{
 
     public:
         explicit FlowBlockSCBreak();
-        explicit FlowBlockSCBreak(Operable& opr);
+        explicit FlowBlockSCBreak(Operable& opr1);
         ~FlowBlockSCBreak();
         /** for controller add the local element to this sub block*/
         void addElementInFlowBlock(Node* node) override;

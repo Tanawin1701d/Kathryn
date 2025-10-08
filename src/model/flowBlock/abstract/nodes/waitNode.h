@@ -79,10 +79,10 @@ namespace kathryn{
             setClockMode(clockMode);
         }
 
-        explicit WaitCycleNode(Operable* opr):
+        explicit WaitCycleNode(Operable* opr1):
                 Node(WAITCYCLE_NODE)
         {
-            _cycleWaitStateReg = new CycleWaitStateReg(opr);
+            _cycleWaitStateReg = new CycleWaitStateReg(opr1);
             addCycleRelatedReg(_cycleWaitStateReg);
         }
 

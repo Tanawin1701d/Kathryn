@@ -24,8 +24,8 @@ namespace kathryn{
     void NestGen::routeDep(){
         std::vector<NestMeta> nestList = _master->getNestList();
         for (NestMeta& ele: nestList){
-            assert(ele.opr != nullptr);
-            Operable* routedOpr = _mdGenMaster->routeSrcOprToThisModule(ele.opr);
+            assert(ele.opr1 != nullptr);
+            Operable* routedOpr = _mdGenMaster->routeSrcOprToThisModule(ele.opr1);
             _routedNestList.push_back(routedOpr);
         }
     }

@@ -9,12 +9,12 @@
 
 
 namespace kathryn{
-    LogicSimEngine::LogicSimEngine(Assignable* asb, Identifiable* ident, Operable* opr,
+    LogicSimEngine::LogicSimEngine(Assignable* asb, Identifiable* ident, Operable* opr1,
                                    VCD_SIG_TYPE sigType, bool isTempReq,
                                    ull initVal):
         _asb(asb),
         _ident(ident),
-        _opr(opr),
+        _opr(opr1),
         _vcdSigType(sigType),
         _isTempReq(isTempReq),
         _initVal(initVal){

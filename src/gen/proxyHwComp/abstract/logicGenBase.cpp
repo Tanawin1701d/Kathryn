@@ -20,10 +20,10 @@ _ident(ident){
     assert(mdGenMaster != nullptr);
 }
 
-std::string LogicGenBase::getOprStrFromOpr(Operable* opr){
-    assert(opr != nullptr);
-    return opr->getExactOperable().
-        getLogicGenBase()->getOpr(opr->getOperableSlice());
+std::string LogicGenBase::getOprStrFromOpr(Operable* opr1){
+    assert(opr1 != nullptr);
+    return opr1->getExactOperable().
+        getLogicGenBase()->getOpr(opr1->getOperableSlice());
 }
 
 void LogicGenBase::genCerf(MODULE_GEN_GRP mgg,int grpIdx, int idx){

@@ -22,10 +22,10 @@ namespace kathryn{
 
     }
 
-    void TableSliceAgentDouble::doStaticGlobAsm(int idx, Operable& opr){
+    void TableSliceAgentDouble::doStaticGlobAsm(int idx, Operable& opr1){
 
         Slot createdSlot(_table->getMeta()(idx, idx+1));
-        createdSlot.addHwFieldMeta({&opr, nullptr});
+        createdSlot.addHwFieldMeta({&opr1, nullptr});
         _masterAgent->doGlobAsm(createdSlot);
 
     }

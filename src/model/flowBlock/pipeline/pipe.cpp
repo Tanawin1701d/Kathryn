@@ -18,7 +18,6 @@ namespace kathryn{
         }),
     _syncMata(syncMeta),
     _pipeName("Pipe_"+ syncMeta.getName()){
-        createReadySignal();
     }
 
 
@@ -58,15 +57,9 @@ namespace kathryn{
         return resultNodeWrap;
     }
 
-    void FlowBlockPipeBase::createReadySignal(){
-        pipeReadySig = new expression(1);
-        ////// we can't directly set data to the _syncSlaveReady because it is operable
-        _syncMata._syncSlaveReady = pipeReadySig;
-    }
-
     void FlowBlockPipeBase::assignReadySignal(){
         //////// wait signal and last stage means that it is ready
-        (*pipeReadySig) = (*entNode->getExitOpr());
+        (*_syncMata._syncSlaveReady) = (*entNode->getExitOpr());
     }
 
     void FlowBlockPipeBase::buildHwMaster(){
@@ -83,15 +76,10 @@ namespace kathryn{
     void FlowBlockPipeBase::buildHwComponent(){
         ////// try to find the activate signal
         Operable* activateSignal = nullptr;
-        if (isAutoActivatePipe()){
-            activateSignal = &makeOprVal("pipe_auto_act_" + _pipeName, 1, 1);
-        }else{
-            _syncMata.tryBuildmatchSignal();
-            activateSignal = _syncMata._syncMatched;
-            mfAssert(activateSignal != nullptr, "there is no one trigger the pipeline, " + _pipeName +
-                                                "if you want it to auto restart, please use autoActivate autoStart");
+        if (isAutoActivatePipe()){ /////// no zync source
+            (*_syncMata._syncMasterReady) = makeOprVal("pipe_auto_act_" + _pipeName, 1, 1);
         }
-
+        activateSignal = _syncMata._syncMatched;
 
         ////////////// do integritry check
         assert(_conBlocks.empty());

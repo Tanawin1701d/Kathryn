@@ -18,7 +18,7 @@ namespace kathryn{
                   }),
     LoopStMacro() {}
 
-    FlowBlockSCBreak::FlowBlockSCBreak(Operable& opr):
+    FlowBlockSCBreak::FlowBlockSCBreak(Operable& opr1):
             FlowBlockBase(EXITWHILE,
                           {
                                   {FLOW_ST_BASE_STACK},
@@ -26,7 +26,7 @@ namespace kathryn{
                                   true
                           }),
             LoopStMacro(),
-            forceExitOpr(&opr){}
+            forceExitOpr(&opr1){}
 
     FlowBlockSCBreak::~FlowBlockSCBreak(){
         delete resultNodeWrap;

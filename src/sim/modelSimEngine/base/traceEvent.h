@@ -16,11 +16,11 @@ namespace kathryn{
         Operable* _condOpr = nullptr;
         std::function<void(void)> _callback;
 
-        TraceEvent(Operable& opr, std::function<void(void)> callback):
-        _condOpr(&opr),
+        TraceEvent(Operable& opr1, std::function<void(void)> callback):
+        _condOpr(&opr1),
         _callback(callback){
-            assert(opr.getOperableSlice().getSize() == 1);
-             LogicSimEngine* lse = opr.getLogicSimEngineFromOpr();
+            assert(opr1.getOperableSlice().getSize() == 1);
+             LogicSimEngine* lse = opr1.getLogicSimEngineFromOpr();
             assert(lse != nullptr);
             lse->reqGlobDec();
         }

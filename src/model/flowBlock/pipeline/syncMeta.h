@@ -23,22 +23,25 @@ namespace kathryn{
 
         const std::string _name;
 
-        Operable* _syncMasterReady = nullptr;
-        Operable* _syncSlaveReady  = nullptr;
+        expression* _syncMasterReady = nullptr;
+        expression* _syncSlaveReady  = nullptr;
         ///// typically the master should be zync block
         ///// typically the slave should be pipeline block
-        Operable* _syncMatched     = nullptr;
+        expression* _syncMatched     = nullptr;
 
         ///// hold system signal representator
         std::vector<Operable*> masterHoldSignals;
         std::vector<Operable*> slaveHoldSignals;
 
-        expression& sendSuccess; //// TODO add this signal
+        std::vector<Operable*> masterKillSignals;
+        std::vector<Operable*> slaveKillSignals;
 
 
-        SyncMeta(const std::string& name = "unnamedSyncMeta"):
+        explicit SyncMeta(const std::string& name = "unnamedSyncMeta"):
         _name(name),
-        sendSuccess(*(new expression(1))){}
+        _syncMasterReady(new expression(1)),
+        _syncSlaveReady (new expression(1)),
+        _syncMatched    (&((*_syncMasterReady) & (*_syncSlaveReady))){}
 
         ~SyncMeta()= default;
 
@@ -46,48 +49,48 @@ namespace kathryn{
             return _name;
         }
 
-        void buildMatchSignal(){
-            assert(_syncMasterReady != nullptr);
-            assert(_syncSlaveReady  != nullptr);
-            assert(_syncMatched     == nullptr);
-            assert(_syncMasterReady->getOperableSlice().getSize() == 1);
-            assert(_syncSlaveReady->getOperableSlice().getSize()  == 1);
-
-            _syncMatched = &((*_syncMasterReady) & (*_syncSlaveReady));
-        }
-
-        void tryBuildmatchSignal(){
-            if (
-            (_syncMasterReady != nullptr )&&
-            (_syncSlaveReady  != nullptr )&&
-            (_syncMatched     == nullptr )){
-                buildMatchSignal();
-            }
-        }
-
         static void baseHolder(std::vector<Operable*>& desVector){
-            mWire(slaveHolder, 1);
-            slaveHolder = 1;
-            desVector.push_back(&slaveHolder);
+            mWire(holder, 1);
+            holder = 1;
+            desVector.push_back(&holder);
         }
 
         void holdSlave(){ baseHolder(slaveHoldSignals); }
 
         void holdMaster(){  baseHolder(masterHoldSignals); }
 
-        void killSlave(){/** TODO*/}
-        void killMaster(){/** TODO*/}
-
-        Operable& getMatchStatus(){
-            return sendSuccess;
+        static void baseKiller(std::vector<Operable*>& desVector){
+            mWire(killer, 1);
+            killer = 1;
+            desVector.push_back(&killer);
         }
 
-
-
-
+        void killSlave(){ baseKiller(slaveKillSignals); }
+        void killMaster(){baseKiller(masterKillSignals);}
 
     };
 
 }
+
+
+
+// void buildMatchSignal(){
+//     assert(_syncMasterReady != nullptr);
+//     assert(_syncSlaveReady  != nullptr);
+//     assert(_syncMatched     == nullptr);
+//     assert(_syncMasterReady->getOperableSlice().getSize() == 1);
+//     assert(_syncSlaveReady->getOperableSlice().getSize()  == 1);
+//
+//     _syncMatched = &((*_syncMasterReady) & (*_syncSlaveReady));
+// }
+
+// void tryBuildmatchSignal(){
+//     if (
+//     (_syncMasterReady != nullptr )&&
+//     (_syncSlaveReady  != nullptr )&&
+//     (_syncMatched     == nullptr )){
+//         buildMatchSignal();
+//     }
+// }
 
 #endif //KATHRYN_MODEL_FLOWBLOCK_PIPELINE_PIPEMETA_H

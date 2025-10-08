@@ -23,7 +23,7 @@ namespace kathryn{
 
     void NestSimEngine::proxyBuildInit(){
         for (NestMeta& meta: _master->_nestList){
-            dep.push_back(meta.opr->getLogicSimEngineFromOpr());
+            dep.push_back(meta.opr1->getLogicSimEngineFromOpr());
         }
     }
 
@@ -37,14 +37,14 @@ namespace kathryn{
 
         for (NestMeta& meta: _master->_nestList){
             //////// data preparation
-            Operable* opr   = meta.opr;
+            Operable* opr1   = meta.opr1;
             Assignable* asb = meta.asb;
-            assert(opr != nullptr);
+            assert(opr1 != nullptr);
             if (!_master->readOnly){
                 assert(asb != nullptr);
             }
-            int curSize = opr->getOperableSlice().getSize();
-            cb.addSt(genAssignAEqB({startIdx, startIdx + curSize}, false, opr));
+            int curSize = opr1->getOperableSlice().getSize();
+            cb.addSt(genAssignAEqB({startIdx, startIdx + curSize}, false, opr1));
             startIdx += curSize;
         }
         assert(startIdx == _asb->getAssignSlice().getSize());

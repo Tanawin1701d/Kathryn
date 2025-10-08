@@ -27,11 +27,11 @@ namespace kathryn{
 
         void buildHierarchy(Module* masterModule);
 
-        void connectTo(Operable* opr, bool directAdded){
+        void connectTo(Operable* opr1, bool directAdded){
             ////// directAdded is add to translated event which no require routing any more
             ///// if it is false add to default updateEvent to normal vec it must be routing first
-            assert(opr != nullptr);
-            assert(opr->getOperableSlice().getSize() == getOperableSlice().getSize());
+            assert(opr1 != nullptr);
+            assert(opr1->getOperableSlice().getSize() == getOperableSlice().getSize());
             assert(_genEngine != nullptr);
             //////////////////////// directly to system
             if (directAdded){
@@ -39,7 +39,7 @@ namespace kathryn{
                     new UpdateEvent({
                         nullptr,
                         nullptr,
-                        opr,
+                        opr1,
                         getOperableSlice(),
                         DEFAULT_UE_PRI_MIN
                         }));
@@ -48,7 +48,7 @@ namespace kathryn{
                     new UpdateEvent({
                     nullptr,
                     nullptr,
-                    opr,
+                    opr1,
                     getOperableSlice(),
                     DEFAULT_UE_PRI_MIN
 

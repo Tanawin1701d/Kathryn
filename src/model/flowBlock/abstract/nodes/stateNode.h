@@ -52,9 +52,9 @@ namespace kathryn{
             return _stateReg->generateEndExpr();
         }
 
-        void addSlaveAsmNode(AsmNode* asmNode){
+        void addSlaveAsmNode(AsmNode* asmNode, Operable* cond = nullptr){
             assert(asmNode != nullptr);
-            asmNode->addDependNode(this, nullptr);
+            asmNode->addDependNode(this, cond);
             _dependSlaveAsmNode.push_back(asmNode);
         }
 

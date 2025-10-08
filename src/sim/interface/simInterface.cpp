@@ -162,14 +162,14 @@ namespace kathryn{
         _nextLimitAmtLRC = amtCycle;
     }
 
-    void SimInterface::trig(Operable& opr, std::function<void()> callback){
-        _traceEvents.emplace_back(opr, callback);
+    void SimInterface::trig(Operable& opr1, std::function<void()> callback){
+        _traceEvents.emplace_back(opr1, callback);
     }
 
-    void SimInterface::trig(Operable& opr, SIM_INTERFACE_EVENT event){
+    void SimInterface::trig(Operable& opr1, SIM_INTERFACE_EVENT event){
         switch (event){
             case EXIT_SIM:{
-                _traceEvents.emplace_back(opr, [](){
+                _traceEvents.emplace_back(opr1, [](){
                     getSimController()->stopSim();
                 });
             }

@@ -9,9 +9,9 @@
 
 namespace kathryn{
 
-    SIM_VALREP_TYPE_ALL getMatchSVT_ALL(Operable* opr){
-        assert(opr != nullptr);
-        int size = opr->getOperableSlice().getSize();
+    SIM_VALREP_TYPE_ALL getMatchSVT_ALL(Operable* opr1){
+        assert(opr1 != nullptr);
+        int size = opr1->getOperableSlice().getSize();
         assert(size > 0);
         return SIM_VALREP_TYPE_ALL(size);
     }

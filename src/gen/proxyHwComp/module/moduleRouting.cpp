@@ -46,13 +46,13 @@ namespace kathryn{
     }
 
     WireAuto* ModuleGen::genAutoWireBase(
-        Operable* opr,      ///////// opr is exact opr
+        Operable* opr1,      ///////// opr is exact opr
         Operable* realSrc,  ///////// realSrc is exact opr too
         const std::string& wireName,
         WIRE_AUTO_GEN_TYPE wireGenType,
         bool connectTheWire){
 
-        assert(opr     != nullptr);
+        assert(opr1     != nullptr);
         assert(realSrc != nullptr);
         assert(wireGenType < WIRE_AUTO_GEN_CNT);
 
@@ -60,14 +60,14 @@ namespace kathryn{
         std::vector<WireAuto*>&          genVec = _genWires[wireGenType];
 
         WireAuto& newAddedWire = makeOprIoWire("addAutoWireBase_uninit",
-                                              opr->getOperableSlice().getSize(),
+                                              opr1->getOperableSlice().getSize(),
                                               wireGenType);
 
             ///////// addd update Event for only connection
             newAddedWire.buildHierarchy(_master);
             newAddedWire.createLogicGen();
             if (connectTheWire){
-                newAddedWire.connectTo(opr, true);
+                newAddedWire.connectTo(opr1, true);
             }
 
             newAddedWire.setVarName(wireName +

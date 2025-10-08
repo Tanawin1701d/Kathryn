@@ -22,7 +22,7 @@ namespace kathryn{
 
 
     struct NestMeta{
-        Operable*   opr;
+        Operable*   opr1;
         Assignable* asb;
     };
 
@@ -44,8 +44,8 @@ namespace kathryn{
         auto nestList = getNestVec(oa, args...);
         int nestSize = 0;
         for (NestMeta nestMeta: nestList){
-            assert(nestMeta.opr != nullptr);
-            nestSize += nestMeta.opr->getOperableSlice().getSize();
+            assert(nestMeta.opr1 != nullptr);
+            nestSize += nestMeta.opr1->getOperableSlice().getSize();
         }
         return _make<nest>("uncatagorizedYet", "nest", isUserDec, nestSize, nestList);
     }
