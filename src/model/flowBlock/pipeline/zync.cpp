@@ -70,6 +70,10 @@ namespace kathryn{
                 assert(holdOpr != nullptr);
                 addHoldSignal(holdOpr);
             }
+            for (Operable* killOpr: _syncMeta->masterKillSignals){
+                assert(killOpr != nullptr);
+                addIntSignal(INT_RESET, killOpr);
+            }
         }
         FlowBlockBase::buildHwMaster();
     }

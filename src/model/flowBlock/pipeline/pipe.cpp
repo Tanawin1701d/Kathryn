@@ -63,10 +63,14 @@ namespace kathryn{
     }
 
     void FlowBlockPipeBase::buildHwMaster(){
-        ////// fill retrieve slave sync signal
+        ////// fill retrieve slave hold signal
         for (Operable* holdOpr: _syncMata.slaveHoldSignals){
             assert(holdOpr != nullptr);
             addHoldSignal(holdOpr);
+        }
+        for (Operable* killOpr: _syncMata.slaveKillSignals){
+            assert(killOpr != nullptr);
+            addIntSignal(INT_RESET, killOpr);
         }
         ////// use the base  build function
         FlowBlockBase::buildHwMaster();
@@ -79,7 +83,7 @@ namespace kathryn{
         if (isAutoActivatePipe()){ /////// no zync source
             (*_syncMata._syncMasterReady) = makeOprVal("pipe_auto_act_" + _pipeName, 1, 1);
         }
-        activateSignal = _syncMata._syncMatched;
+        activateSignal = _syncMata._syncMasterReady;
 
         ////////////// do integritry check
         assert(_conBlocks.empty());
@@ -119,7 +123,6 @@ namespace kathryn{
         resultNodeWrap = new NodeWrap();
         resultNodeWrap->addEntraceNode(entNode);
         resultNodeWrap->addExitNode(exitDummy);
-
 
         //////////// build ready signal to tell that pipe line is ready
         assignReadySignal();

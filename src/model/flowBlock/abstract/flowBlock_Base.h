@@ -183,7 +183,9 @@ namespace kathryn {
         }
 
         virtual void addIntSignal(INT_TYPE type, Operable* signal){
-            assert(signal != nullptr); assert(type < INT_CNT); assert(signal->getOperableSlice().getSize() == 1);
+            assert(signal != nullptr);
+            assert(type < INT_CNT);
+            assert(signal->getOperableSlice().getSize() == 1);
             intSignals[type].push_back(signal);
         }
 
