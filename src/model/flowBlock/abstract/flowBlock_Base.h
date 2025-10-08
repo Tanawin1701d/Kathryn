@@ -31,6 +31,8 @@
 #include "flowIdentifiable.h"
 #include "flowBlockRegister.h"
 
+#include "logicHelper.h"
+
 
 
 namespace kathryn {

@@ -8,6 +8,16 @@
 
 namespace kathryn{
 
+    FlowBlockZyncBase::FlowBlockZyncBase(Operable* condOnly):
+    FlowBlockBase(PIPE_BLOCK,
+        {
+            {FLOW_ST_BASE_STACK, FLOW_ST_PIP_BLK},
+            FLOW_JO_SUB_FLOW,
+            true
+        }
+    ),
+    _acceptCond(condOnly){}
+
     FlowBlockZyncBase::FlowBlockZyncBase(
         SyncMeta& syncMeta, Operable* acceptCond):
     FlowBlockBase(PIPE_BLOCK,
@@ -18,18 +28,12 @@ namespace kathryn{
 
         }),
     _syncMeta(&syncMeta),
-    _acceptCond(acceptCond){ createReadySignal();}
-
+    _acceptCond(acceptCond){}
 
     FlowBlockZyncBase::~FlowBlockZyncBase(){
         delete prepSendNode;
         delete exitNode;
         delete resultNodeWrap;
-    }
-
-    void FlowBlockZyncBase::createReadySignal(){
-        synReadySignal = new expression(1);
-        _syncMeta._syncMasterReady = synReadySignal;
     }
 
     void FlowBlockZyncBase::assignReadySignal(){
@@ -59,9 +63,11 @@ namespace kathryn{
 
     void FlowBlockZyncBase::buildHwMaster(){
 
-        for (Operable* holdOpr: _syncMeta.masterHoldSignals){
-            assert(holdOpr != nullptr);
-            addHoldSignal(holdOpr);
+        if(_syncMeta != nullptr){
+            for (Operable* holdOpr: _syncMeta->masterHoldSignals){
+                assert(holdOpr != nullptr);
+                addHoldSignal(holdOpr);
+            }
         }
         FlowBlockBase::buildHwMaster();
     }
@@ -70,7 +76,7 @@ namespace kathryn{
     void FlowBlockZyncBase::buildHwComponent(){
         assert(_conBlocks.empty());
         assert(_subBlocks.empty());
-        assert(_syncMeta->_syncMatched != nullptr);
+        //assert(_syncMeta->_syncMatched != nullptr);
 
         /** init all nodes and condition*/
         prepSendNode = new StateNode(getClockMode());
@@ -81,25 +87,24 @@ namespace kathryn{
         prepSendNode->setInternalIdent("zyncBlk_" + debugName);
         fillIntResetToNodeIfThere(prepSendNode);
         fillHoldToNodeIfThere    (prepSendNode);
-            /** assign assignment node*/
-        Operable* waitCond = _syncMeta->_syncMatched; ///// we should wait further
-        if (_acceptCond != nullptr){ //// accept is condition from user to skip this session
-            waitCond = &((*waitCond)&(*_acceptCond));
+        /** assign assignment node*/
+        Operable* readyFinal = nullptr;
+        readyFinal = _acceptCond;
+        if (_syncMeta != nullptr){
+            readyFinal = addLogicWithOutput(_syncMeta->_syncSlaveReady, readyFinal, BITWISE_AND);
         }
-        prepSendNode->addDependNode(prepSendNode, waitCond);
+        assert(readyFinal != nullptr);
+        Operable* notReadyFinal = &(~(*readyFinal));
+
+        prepSendNode->addDependNode(prepSendNode, notReadyFinal);
             /** add slave assignment node*/
         for (auto nd : _basicNodes){
             assert(nd->getNodeType() == ASM_NODE);
-            prepSendNode->addSlaveAsmNode((AsmNode*)nd, waitCond);
+            prepSendNode->addSlaveAsmNode((AsmNode*)nd, readyFinal);
         }
 
         /** exit Node*/
-        Operable* exitCond = _syncMeta->_syncMatched;
-        if (_acceptCond != nullptr){
-            exitCond = &((*exitCond)&(*_acceptCond));
-        }
-        exitNode->addDependNode(prepSendNode, exitCond);
-
+        exitNode->addDependNode(prepSendNode, readyFinal);
         /** assign node*/
         exitNode->assign();
         /** add system node*/

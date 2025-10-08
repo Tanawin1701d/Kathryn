@@ -38,7 +38,6 @@ namespace kathryn{
         FlowBlockZyncBase(SyncMeta& syncMeta, Operable* acceptCond = nullptr);
         ~FlowBlockZyncBase() override;
         /** manage the system */
-        void createReadySignal();
         void assignReadySignal();
         /** for controller add the local element to this sub block*/
         void addSubFlowBlock       (FlowBlockBase* subBlock) override;
