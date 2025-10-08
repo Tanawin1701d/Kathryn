@@ -128,7 +128,7 @@ namespace kathryn::o3{
                     //////// update reservation station
                     WireSlot entry1 = cvtdecInstrToRsv(dcd1, dcdShare, 0, nullptr, nullptr);
                     WireSlot entry2 = cvtdecInstrToRsv(dcd2, dcdShare, 1,
-                        &dcd1(rdUse), &dcd1(rdIdx));
+                        &dcd1(rdUse), &entry1(rrftag));
 
                     //////// put the instruction to rob and rsv
 

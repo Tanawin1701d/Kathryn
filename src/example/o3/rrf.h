@@ -8,6 +8,7 @@
 #include "kathryn.h"
 #include "slotParam.h"
 
+
 namespace kathryn::o3{
 
     static int RRF_RENAME_PRI = DEFAULT_UE_PRI_USER + 1;
@@ -47,6 +48,10 @@ namespace kathryn::o3{
             auto agent = table[rrfIdx];
             return {agent(rrfValid).v(),
                     agent(rrfData ).v()};
+        }
+
+        opr& getPhyData(opr& rrfIdx){
+            return table[rrfIdx](rrfData).v();
         }
 
         //// fixRrf is the idx who must walk away the size support to be rrf
