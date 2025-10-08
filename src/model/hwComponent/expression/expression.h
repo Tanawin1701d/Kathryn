@@ -58,6 +58,7 @@ namespace kathryn {
             assert(false);
         };
         void doNonBlockAsm(Operable& srcOpr, Slice desSlice) override;
+        void doNonBlockAsmMulAssCheck(Operable& srcOpr, Slice desSlice);
 
         void doBlockAsm(Operable& srcOpr,
                         std::vector<AssignMeta*>& resultMetaCollector,

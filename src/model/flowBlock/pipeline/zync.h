@@ -29,7 +29,6 @@ namespace kathryn{
         StateNode*  prepSendNode = nullptr;
         PseudoNode* exitNode     = nullptr;
         /////// expresion
-        expression* synReadySignal = nullptr;
         ////// node wrap for summarize
         NodeWrap*      resultNodeWrap    = nullptr;
 

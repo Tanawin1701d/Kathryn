@@ -49,10 +49,15 @@ namespace kathryn{
         ctrl->on_expression_init(this);
     }
 
-    void expression::doNonBlockAsm(Operable &b, Slice desSlice) {
+    void expression::doNonBlockAsm(Operable &srcOpr, Slice desSlice) {
+        assert(!_valueAssinged);
+        doNonBlockAsmMulAssCheck(srcOpr, desSlice);
+    }
+
+    void expression::doNonBlockAsmMulAssCheck(Operable& srcOpr, Slice desSlice){
         mfAssert(getAssignMode() == AM_MOD, "expression can use operator = only in MD mode");
-        _a = &b;
-        assert(b.getOperableSlice().getSize() == getOperableSlice().getSize());
+        _a = &srcOpr;
+        assert(srcOpr.getOperableSlice().getSize() == getOperableSlice().getSize());
         assert(desSlice.getSize() == getOperableSlice().getSize());
         mfAssert(!_valueAssinged, "multiple expression assign detect");
         _valueAssinged = true;

@@ -38,7 +38,9 @@ namespace kathryn{
 
     void FlowBlockZyncBase::assignReadySignal(){
         assert(prepSendNode != nullptr);
-        (*synReadySignal) = (*prepSendNode->getExitOpr());
+        if(_syncMeta != nullptr){
+            (*_syncMeta->_syncMasterReady) = (*prepSendNode->getExitOpr());
+        }
     }
 
     void FlowBlockZyncBase::addSubFlowBlock    (FlowBlockBase* subBlock){
