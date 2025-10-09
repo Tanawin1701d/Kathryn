@@ -13,10 +13,10 @@ namespace kathryn::o3{
 
         pm.ft.curPc <<= fixPc;
         ////// kill the pipeline stage
-        pm.ft.sync.killSlave();
-        pm.dc.sync.killSlave();
-        pm.ds.sync.killSlave();
-        pm.ex.sync.killSlave(fixTag);
+        pm.ft.sync.killSlave(true);
+        pm.dc.sync.killSlave(true);
+        pm.ds.sync.killSlave(true);
+        pm.ex.sync.killIfTagMet(true, fixTag);
         ////// do recovery on the tag system
         tagMgmt.mpft.onMissPred();
         tagMgmt.tagGen.onMisPred();
@@ -49,7 +49,7 @@ namespace kathryn::o3{
         }
 
         //// do update the register architecture
-        regArch.arf.onSucPred(fixTag);
+        regArch.arf.onSucPred(fixTag, sucTag);
 
     }
 

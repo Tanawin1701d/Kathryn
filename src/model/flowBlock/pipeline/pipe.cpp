@@ -72,6 +72,12 @@ namespace kathryn{
             assert(killOpr != nullptr);
             addIntSignal(INT_RESET, killOpr);
         }
+
+        for (Operable* startOpr: _syncMata.slaveStartSignals){
+            assert(startOpr != nullptr);
+            addIntSignal(INT_START, startOpr);
+        }
+
         ////// use the base  build function
         FlowBlockBase::buildHwMaster();
     }

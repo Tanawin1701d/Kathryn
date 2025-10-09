@@ -32,9 +32,11 @@ namespace kathryn{
         ///// hold system signal representator
         std::vector<Operable*> masterHoldSignals;
         std::vector<Operable*> slaveHoldSignals;
-
+        ///// reset system signal representator
         std::vector<Operable*> masterKillSignals;
         std::vector<Operable*> slaveKillSignals;
+        ///// auto start
+        std::vector<Operable*> slaveStartSignals;
 
 
         explicit SyncMeta(const std::string& name = "unnamedSyncMeta"):
@@ -59,14 +61,30 @@ namespace kathryn{
 
         void holdMaster(){  baseHolder(masterHoldSignals); }
 
-        static void baseKiller(std::vector<Operable*>& desVector){
+        static Operable& baseKiller(std::vector<Operable*>& desVector,
+                               Operable* cond = nullptr){
             mWire(killer, 1);
-            killer = 1;
+            if (cond != nullptr){
+                killer = *cond;
+            }else{
+                killer = 1;
+            }
             desVector.push_back(&killer);
         }
 
-        void killSlave(){ baseKiller(slaveKillSignals); }
-        void killMaster(){baseKiller(masterKillSignals);}
+        //////// restart is binded with basekiller typically it use the same signal with the base killer
+        static Operable& baseStart(std::vector<Operable*>& desVector,
+                                   Operable& signal){
+            desVector.push_back(&signal);
+        }
+        void killSlave(bool autoRestart = false, Operable* cond = nullptr){
+            Operable& killSignal = baseKiller(slaveKillSignals, cond);
+            if (autoRestart){
+                baseStart(slaveStartSignals, killSignal);
+            }
+
+        }
+        void killMaster(){ baseKiller(masterKillSignals, nullptr);}
 
     };
 
