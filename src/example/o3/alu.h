@@ -26,14 +26,8 @@ namespace kathryn::o3{
         zif(op == ALU_OP_SNE)  out = (srcA != srcB).uext(DATA_LEN);
         zif(op == ALU_OP_SUB)  out = srcA - srcB;
         zif(op == ALU_OP_SRA)  out = (~(fullBit >> shamt) | (srcA >> shamt));
-        zif(op == ALU_OP_SLT)  out =
-            ((srcA.sl(31) & ~srcB.sl(31)) |
-            ((srcA.sl(31) == srcB.sl(31)) &
-            (srcA.sl(0, 31) < srcB.sl(0, 31)))).uext(DATA_LEN);
-        zif(op == ALU_OP_SGE)  out =
-            ( (~srcA.sl(31) & srcB.sl(31)) |
-             ((srcA.sl(31) == srcB.sl(31)) &
-            (srcA.sl(0, 31) >= srcB.sl(0, 31)))).uext(DATA_LEN);;
+        zif(op == ALU_OP_SLT)  out = (srcA.slt(srcB)).uext(DATA_LEN);
+        zif(op == ALU_OP_SGE)  out = (srcA.sgt(srcB) | (srcA == srcB)).uext(DATA_LEN);;
         zif(op == ALU_OP_SLTU) out = srcA < srcB;
         zif(op == ALU_OP_SGEU) out = srcA >= srcB;
     }
