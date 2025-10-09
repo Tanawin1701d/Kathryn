@@ -18,39 +18,49 @@ namespace kathryn {
      *
      * */
 
+    /////// blA = balanced A
+    /////// blB = balanced B
+
 /** bitwise operators*/
     expression& Operable::operator&( Operable &b) {
-        mfAssert(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
-                 "operable<&> get mismatch bit size"
-                 );
+        mfWarn(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
+               "operable<&> get mismatch bit size");
+
+        auto [blA, blB] = uextToBalanceSize(*this, b);
+        int  desSize    = balanceSize(*this, b);
         auto ret =  new expression(BITWISE_AND,
-                                   this,
-                                   &b,
-                                   getOperableSlice().getSize());
-        
+                                   &blA,
+                                   &blB,
+                                   desSize);
         return *ret;
     }
 
     expression& Operable::operator|(Operable &b) {
-        mfAssert(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
-                 "operable<|> get mismatch bit size"
-        );
+        mfWarn(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
+               "operable<|> get mismatch bit size");
+
+        auto [blA, blB] = uextToBalanceSize(*this, b);
+        int  desSize    = balanceSize(*this, b);
         auto ret =  new expression(BITWISE_OR,
-                                     this,
-                                     &b,
-                                     getOperableSlice().getSize());
+                                   &blA,
+                                   &blB,
+                                   desSize);
 
         return *ret;
     }
 
     expression& Operable::operator^( Operable &b) {
-        mfAssert(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
-                 "operable<^> get mismatch bit size"
+        mfWarn(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
+               "operable<^> get mismatch bit size"
         );
+
+        auto [blA, blB] = uextToBalanceSize(*this, b);
+        int  desSize    = balanceSize(*this, b);
+
         auto ret =  new expression(BITWISE_XOR,
-                                    this,
-                                    &b,
-                                    getOperableSlice().getSize());
+                                    &blA,
+                                    &blB,
+                                    desSize);
 
         return *ret;
     }
@@ -95,6 +105,9 @@ namespace kathryn {
     /** logical operators*/
 
     expression& Operable::operator&&( Operable &b) {
+        mfWarn(getOperableSlice().getSize() == 1 &&
+               b.getOperableSlice().getSize() == 1,
+               "operable && got size expect to have size equal to 1");
         auto ret =  new expression(LOGICAL_AND,
                                      this,
                                      &b,
@@ -104,6 +117,9 @@ namespace kathryn {
     }
 
     expression& Operable::operator||( Operable &b) {
+        mfWarn(getOperableSlice().getSize() == 1 &&
+               b.getOperableSlice().getSize() == 1,
+               "operable || got size expect to have size equal to 1");
         auto ret =  new expression(LOGICAL_OR,
                                      this,
                                      &b,
@@ -113,6 +129,8 @@ namespace kathryn {
     }
 
     expression& Operable::operator!() {
+        mfWarn(getOperableSlice().getSize() == 1,
+               "operable ! got size expect to have size equal to 1");
         auto ret =  new expression(LOGICAL_NOT,
                                      this,
                                      nullptr,
@@ -124,71 +142,119 @@ namespace kathryn {
     /** relational operator*/
 
     expression& Operable::operator==( Operable &b) {
+
+        mfWarn(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
+               "operable<==> get mismatch bit size");
+
+        auto [blA, blB] = uextToBalanceSize(*this, b);
+
         auto ret =  new expression(RELATION_EQ,
-                                     this,
-                                     &b,
+                                     &blA,
+                                     &blB,
                                      LOGICAL_SIZE);
 
         return *ret;
     }
 
     expression& Operable::operator!=( Operable &b) {
+
+        mfWarn(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
+       "operable<!=> get mismatch bit size");
+
+        auto [blA, blB] = uextToBalanceSize(*this, b);
+
         auto ret =  new expression(RELATION_NEQ,
-                                     this,
-                                     &b,
+                                     &blA,
+                                     &blB,
                                      LOGICAL_SIZE);
 
         return *ret;
     }
 
     expression& Operable::operator<( Operable &b) {
+
+        mfWarn(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
+       "operable< < > get mismatch bit size");
+
+        auto [blA, blB] = uextToBalanceSize(*this, b);
+
         auto ret =  new expression(RELATION_LE,
-                                    this,
-                                    &b,
+                                    &blA,
+                                    &blB,
                                     LOGICAL_SIZE);
 
         return *ret;
     }
 
     expression& Operable::operator<=( Operable &b) {
+
+        mfWarn(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
+       "operable< <= > get mismatch bit size");
+
+        auto [blA, blB] = uextToBalanceSize(*this, b);
+
         auto ret =  new expression(RELATION_LEQ,
-                                     this,
-                                     &b,
+                                     &blA,
+                                     &blB,
                                      LOGICAL_SIZE);
 
         return *ret;
     }
 
     expression& Operable::operator>( Operable &b) {
+
+        mfWarn(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
+       "operable< > > get mismatch bit size");
+
+        auto [blA, blB] = uextToBalanceSize(*this, b);
+
         auto ret =  new expression(RELATION_GE,
-                                     this,
-                                     &b,
+                                     &blA,
+                                     &blB,
                                      LOGICAL_SIZE);
 
         return *ret;
     }
 
     expression& Operable::operator>=( Operable &b) {
+
+        mfWarn(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
+       "operable< >= > get mismatch bit size");
+
+        auto [blA, blB] = uextToBalanceSize(*this, b);
+
         auto ret =  new expression(RELATION_GEQ,
-                                     this,
-                                     &b,
+                                     &blA,
+                                     &blB,
                                      LOGICAL_SIZE);
 
         return *ret;
     }
 
     expression& Operable::slt(Operable& b){
+
+        mfWarn(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
+       "operable< slt(sign less than) > get mismatch bit size");
+
+        auto [blA, blB] = sextToBalanceSize(*this, b);
+
         auto ret = new expression(RELATION_SLT,
-                                    this,
-                                    &b,
+                                    &blA,
+                                    &blB,
                                     LOGICAL_SIZE);
         return *ret;
     }
 
     expression& Operable::sgt(Operable& b){
+
+        mfWarn(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
+       "operable< slt(sign greater than) > get mismatch bit size");
+
+        auto [blA, blB] = sextToBalanceSize(*this, b);
+
         auto ret = new expression(RELATION_SGT,
-                                    this,
-                                    &b,
+                                    &blA,
+                                    &blB,
                                     LOGICAL_SIZE);
         return *ret;
     }
@@ -198,15 +264,14 @@ namespace kathryn {
     /** arithmetic operators*/
 
     expression& Operable::operator+( Operable &b) {
-        mfAssert(getOperableSlice().getSize() >= b.getOperableSlice().getSize(),
+        mfWarn(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
                  "operable<+> get mismatch bit size"
         );
 
-        Operable* actualB = b.uextIfSizeNotEq(getOperableSlice().getSize());
-
+        auto [blA, blB] = sextToBalanceSize(*this, b);
         auto ret =  new expression(ARITH_PLUS,
-                                     this,
-                                     actualB,
+                                     &blA,
+                                     &blB,
                                      getOperableSlice().getSize());
         /** size + 1 because we provide carry for exprMetas*/
 
@@ -214,56 +279,67 @@ namespace kathryn {
     }
 
     expression& Operable::operator-( Operable &b) {
-        mfAssert(getOperableSlice().getSize() >= b.getOperableSlice().getSize(),
+        mfAssert(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
                  "operable<-> get mismatch bit size"
         );
-        Operable* actualB = b.uextIfSizeNotEq(getOperableSlice().getSize());
+        auto [blA, blB] = sextToBalanceSize(*this, b);
+
         auto ret =  new expression(ARITH_MINUS,
-                                     this,
-                                     actualB,
+                                     &blA,
+                                     &blB,
                                      getOperableSlice().getSize());
 
         return *ret;
     }
 
     expression& Operable::operator*( Operable &b) {
-        mfAssert(getOperableSlice().getSize() >= b.getOperableSlice().getSize(),
+        mfAssert(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
                  "operable<*> get mismatch bit size"
         );
-        Operable* actualB = b.uextIfSizeNotEq(getOperableSlice().getSize());
+
+        auto [blA, blB] = sextToBalanceSize(*this, b);
         auto ret =  new expression(ARITH_MUL,
-                                     this,
-                                     actualB,
+                                     &blA,
+                                     &blB,
                                      getOperableSlice().getSize());
 
         return *ret;
     }
 
     expression& Operable::operator/( Operable &b) {
-        mfAssert(getOperableSlice().getSize() >= b.getOperableSlice().getSize(),
+        mfAssert(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
                  "operable</> get mismatch bit size"
         );
-        Operable* actualB = b.uextIfSizeNotEq(getOperableSlice().getSize());
+
+        auto [blA, blB] = sextToBalanceSize(*this, b);
         auto ret =  new expression(ARITH_DIV,
-                                     this,
-                                     actualB,
+                                     &blA,
+                                     &blB,
                                      getOperableSlice().getSize());
 
         return *ret;
     }
 
     expression& Operable::operator%( Operable &b) {
-        mfAssert(getOperableSlice().getSize() >= b.getOperableSlice().getSize(),
+        mfAssert(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
                  "operable<%> get mismatch bit size"
         );
-        Operable* actualB = b.uextIfSizeNotEq(getOperableSlice().getSize());
 
+        auto [blA, blB] = sextToBalanceSize(*this, b);
         auto ret =  new expression(ARITH_DIVR,
-                                     this,
-                                     actualB,
+                                     &blA,
+                                     &blB,
                                      getOperableSlice().getSize());
 
         return *ret;
+    }
+
+
+    int Operable::balanceSize(Operable& a, Operable& b) {
+        int aSize = a.getOperableSlice().getSize();
+        int bSize = b.getOperableSlice().getSize();
+        assert((aSize > 0) && (bSize > 0));
+        return std::max(aSize, bSize);
     }
 
     expression& Operable::extB(int desSize){
@@ -272,8 +348,9 @@ namespace kathryn {
         auto ret = new expression(EXTEND_BIT,this, nullptr, desSize);
         return *ret;
     }
-
-    ///// do unsign extend
+    /////////////////////////////////
+    ///// do unsign extend //////////
+    /////////////////////////////////
     Operable& Operable::uext(int desSize){
         mfAssert(desSize > 0, "dessize must greater than 0");
         mfAssert(desSize > getOperableSlice().getSize(), "desSize must greathan original size");
@@ -296,6 +373,20 @@ namespace kathryn {
         return &uext(desSize);
     }
 
+    std::pair<Operable&, Operable&> Operable::uextToBalanceSize(Operable& a,
+                                                                Operable& b){
+        /////////// check size
+        int desSize = balanceSize(a, b);
+        /////////// upgrade size
+        Operable* upgradedA = uextIfSizeNotEq(desSize);
+        Operable* upgradedB = uextIfSizeNotEq(desSize);
+
+        return {*upgradedA, *upgradedB};
+    }
+
+    /////////////////////////////////
+    ///// do sign extend   //////////
+    /////////////////////////////////
 
     Operable& Operable::sext(int desSize){
         mfAssert(desSize > 0, "dessize must greater than 0");
@@ -309,8 +400,32 @@ namespace kathryn {
         return nextNest;
     }
 
+    Operable* Operable::sextIfSizeNotEq(int desSize){
+        if (desSize == getOperableSlice().getSize()){
+            return this;
+        }
+        return &sext(desSize);
+    }
+
+    std::pair<Operable&, Operable&>
+    Operable::sextToBalanceSize(Operable& a, Operable& b){
+        /////////// check size
+        int desSize = balanceSize(a, b);
+        /////////// upgrade size
+        Operable* upgradedA = sextIfSizeNotEq(desSize);
+        Operable* upgradedB = sextIfSizeNotEq(desSize);
+
+        return {*upgradedA, *upgradedB};
+    }
 
 
+    Operable& Operable::sl(int start, int stop){
+        return *doSlice({start, stop});
+    }
+
+    Operable& Operable::sl(int start){
+        return *doSlice({start, start+1});
+    }
 
     Operable& Operable::getMatchOperable( ull value) const {
             makeVal(optUserAutoVal, getOperableSlice().getSize(), value);

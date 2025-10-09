@@ -69,10 +69,22 @@ namespace kathryn {
         virtual expression& operator /  ( Operable& b);
         virtual expression& operator %  ( Operable& b);
         /** extend bit*/
+                static int  balanceSize(Operable& a, Operable& b);
         virtual expression& extB(int desSize);
-        virtual Operable& uext(int desSize);
-                Operable* uextIfSizeNotEq(int desSize);
-        virtual Operable& sext(int desSize);
+        virtual Operable&   uext(int desSize);
+                Operable*   uextIfSizeNotEq(int desSize);
+                std::pair<Operable&, Operable&>
+                            uextToBalanceSize(Operable& a, Operable& b);
+
+
+        virtual Operable&   sext(int desSize);
+                Operable*   sextIfSizeNotEq(int desSize);
+                std::pair<Operable&, Operable&>
+                            sextToBalanceSize(Operable& a, Operable& b);
+
+
+
+
         /** todo for now self assign operation such as += is not permit */
 
         /**
@@ -113,7 +125,7 @@ namespace kathryn {
 
         virtual Operable*       doSlice(Slice sl) = 0; //// sl is relative
                 Operable&       sl(int start, int stop);
-                Operable&       sl(int);
+                Operable&       sl(int start);
         /** please remind this is a copy not reference value*/
         virtual LogicSimEngine* getLogicSimEngineFromOpr() = 0;
         virtual LogicGenBase*   getLogicGenBase() = 0;

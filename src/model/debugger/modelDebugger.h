@@ -26,6 +26,7 @@ namespace kathryn{
 
 
     void mfAssert(bool valid, std::string msg);
+    void mfWarn  (bool valid, std::string msg);
 
 
 

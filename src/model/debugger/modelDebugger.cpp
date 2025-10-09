@@ -6,6 +6,7 @@
 #include "modelDebugger.h"
 #include "util/logger/logger.h"
 #include "model/controller/controller.h"
+#include "util/termColor/termColor.h"
 
 
 namespace kathryn{
@@ -26,6 +27,15 @@ namespace kathryn{
         std::cout << msg << std::endl;
         std::cout << getControllerPtr()->getCurModelStack();
         assert(false);
+    }
+
+
+    void mfWarn(bool valid, std::string msg){
+
+        if (valid){
+            return;
+        }
+        std::cout << TC_YELLOW << msg << TC_DEF <<  std::endl;
     }
 
 }
