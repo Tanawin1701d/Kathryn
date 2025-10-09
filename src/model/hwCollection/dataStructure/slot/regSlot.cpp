@@ -110,6 +110,12 @@ namespace kathryn{
         );
     }
 
+    void RegSlot::makeResetEvent(ull resetValue){
+        for (Reg* reg: _regs){
+            reg->makeResetEvent(resetValue);
+        }
+    }
+
     /***
      *  static slicing
      */
