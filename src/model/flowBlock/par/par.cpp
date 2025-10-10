@@ -13,7 +13,8 @@ namespace kathryn{
     FlowBlockBase(fbType,
       {
               {FLOW_ST_BASE_STACK,
-                             FLOW_ST_PATTERN_STACK},
+               FLOW_ST_PATTERN_STACK
+              },
               FLOW_JO_SUB_FLOW,
               true
       })

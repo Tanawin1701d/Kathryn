@@ -30,6 +30,7 @@ namespace kathryn {
         std::vector<NodeWrap*> nodeWrapOfSubBlock;
         int cycleUsed = -1;
         /** masterJoinerBlock*/
+        //////// incase there is manual specify to make it manual sync block
         FlowBlockBase* masterJoinFlowBlock = nullptr;
 
         StateNode*  basicStNode    = nullptr;
