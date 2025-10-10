@@ -21,7 +21,6 @@ namespace kathryn{
 
         struct ReducNode{
             WireSlot* slot = nullptr; Operable* idx;
-
             void destroy(){
                 delete slot;
                 //// operable is managed by module
@@ -48,29 +47,34 @@ namespace kathryn{
         ~Table();
 
 
-
+        /**
+         * get the static data
+         */
         SlotMeta getMeta() const;
-
         RegSlot& getRefRow(int idx);
+        RegSlot  getClonedRow(int idx) const;
+        int      getNumRow() const;
+        int      getMaxCellWidth() const;
 
-        RegSlot getClonedRow(int idx) const;
-
+        /**
+         *  build the reg slot for each row
+         */
         void buildRows(SlotMeta& slotMeta, int amtRow, std::string prefixName);
 
+        /**
+         * check indexing size
+         */
         bool isSufficientBinIdx(Operable& requiredIdx) const;
         bool isSufficientOHIdx(Operable& requiredIdx) const;
         bool isSufficientIdx(Operable& requiredIdx, bool isOH) const;
         int  getSufficientIdxSize(bool isOH) const;
 
-        Operable& createIdxMatchCond(Operable& requiredIdx, int rowIdx,bool isOH);
-
         bool isValidIdx(int idx) const;
-
         bool checkValidRange(int start, int stop) const;
 
-        int getNumRow() const;
+        Operable& createIdxMatchCond(Operable& requiredIdx, int rowIdx,bool isOH);
 
-        int getMaxCellWidth() const;
+
 
         /**
          * gen assign meta
@@ -81,18 +85,23 @@ namespace kathryn{
         WireSlot genDynWireSlotOHIdx(Operable& ohIdx);
 
         ////// this will asssign the slot
-        void doGlobAsm(Slot& srcSlot, Operable& requiredIdx, ASM_TYPE asmType, bool isOneHotIdx);
-        void doGlobAsm(Operable& srcOpr, Operable& rowIdx, Operable& colIdx, ASM_TYPE asmType, bool isOneHotIdx);
-        void doGlobAsm(ull       srcVal, Operable& rowIdx, Operable& colIdx, ASM_TYPE asmType, bool isOneHotIdx);
+        void   doGlobAsm   (Slot& srcSlot   , Operable& requiredIdx, ASM_TYPE asmType, bool isOneHotIdx);
+        void   doGlobAsm   (Operable& srcOpr, Operable& rowIdx, Operable& colIdx, ASM_TYPE asmType, bool isOneHotIdx);
+        void   doGlobAsm   (ull       srcVal, Operable& rowIdx, Operable& colIdx, ASM_TYPE asmType, bool isOneHotIdx);
+        ////// asmType is lock to
+        Table& doGlobColAsm(int   colIdx              , ull assignVal = 0);
+        Table& doGlobColAsm(const std::string& colName, ull assignVal = 0);
+
 
         void doCusLogic(std::function<void(RegSlot&, int rowIdx)>  cusLogic);
 
         ////// make resetEvent will do when glo
-        Table& makeColResetEvent (const std::string& colName, ull resetVal = 0);
-        Table& makeColResetEvent (int   colIdx              , ull resetVal = 0);
         Table& makeResetEvent    (ull   resetVal);
-        Table& doGlobColAsm      (const std::string& colName, ull resetVal = 0);
-        Table& doGlobColAsm      (int   colIdx              , ull resetVal = 0);
+        Table& makeColResetEvent (int   colIdx              , ull resetVal = 0);
+        Table& makeColResetEvent (const std::string& colName, ull resetVal = 0);
+
+
+        /////// reduction operation
 
         ReducNode doReduceBase(const std::vector<ReducNode>& initReducNodes,
                                const std::function<Operable&(WireSlot& lhs, Operable* lidx,

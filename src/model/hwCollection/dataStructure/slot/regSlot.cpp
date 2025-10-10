@@ -116,6 +116,17 @@ namespace kathryn{
         }
     }
 
+    void RegSlot::makeResetEvent(int colIdx, ull resetValue){
+        mfAssert(isValidIdx(colIdx), "index out of range to get " + std::to_string(colIdx));
+        _regs[colIdx]->makeResetEvent(resetValue);
+    }
+
+    void RegSlot::makeResetEvent(const std::string& colName, ull resetValue){
+        int colIdx = getIdx(colName);
+        makeResetEvent(colIdx, resetValue);
+    }
+
+
     /***
      *  static slicing
      */

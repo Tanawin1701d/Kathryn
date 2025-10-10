@@ -41,6 +41,8 @@ namespace kathryn{
 
         virtual void initHwStructure(const std::string& prefixName){ assert(false);}
 
+        ////////// get static data
+
         FieldMeta& fieldRefAt(int idx){
             return _meta(idx);
         }
@@ -62,8 +64,6 @@ namespace kathryn{
         void addHwFieldMeta(HwFieldMeta hwFieldMeta){
             _hwFieldMetas.push_back(std::move(hwFieldMeta));
         }
-
-
 
         SlotMeta getMeta() const{
             return _meta;
@@ -100,6 +100,7 @@ namespace kathryn{
             return _meta.matchByName(rhs._meta);
         }
 
+
         //////// assign system
         AssignMeta* genAssignMeta(Operable& srcOpr, Assignable& desAsb,
                                  ASM_TYPE asmType) const{
@@ -116,6 +117,12 @@ namespace kathryn{
                 desAsb.getCurAssignClkMode()
             );
             return assMeta;
+        }
+
+        AssignMeta* genAssignMeta(Operable& srcOpr, int fieldIdx,
+                                  ASM_TYPE asmType) const{
+            auto [desOpr, desAsb] = hwFieldAt(fieldIdx);
+            return genAssignMeta(srcOpr, *desAsb, asmType);
         }
 
         std::vector<AssignMeta*> genAssignMetaForAll(const Slot& srcSlot, ASM_TYPE asmType) const{

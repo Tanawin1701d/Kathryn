@@ -5,6 +5,8 @@
 #include "table.h"
 
 #include <utility>
+
+#include "gen/controller/genController.h"
 #include "model/controller/controller.h"
 
 namespace kathryn{
@@ -39,6 +41,53 @@ namespace kathryn{
         }
 
 
+    Table::ReducNode Table::createMux(ReducNode& lhs, ReducNode& rhs, Operable& selectLeft, int debugIdx, bool requiredIdx){
+
+        Operable& selectRight = ~selectLeft;
+
+
+        WireSlot* desSlot = new WireSlot(getMeta());
+
+        std::vector<AssignMeta*> leftSelectAssMetas  = desSlot->genAssignMetaForAll(*lhs.slot, ASM_DIRECT);
+        std::vector<AssignMeta*> rightSelectAssMetas = desSlot->genAssignMetaForAll(*rhs.slot, ASM_DIRECT);
+        std::vector<Operable*>   leftSelectCondPerAssMeta(desSlot->getNumField(), &selectLeft);
+        std::vector<Operable*>   rightSelectCondPerAssMeta(desSlot->getNumField(), &selectRight);
+
+        std::vector<AssignMeta*> poolSlotAsmMetas;
+        poolSlotAsmMetas.insert(poolSlotAsmMetas.end(), leftSelectAssMetas.begin(), leftSelectAssMetas.end());
+        poolSlotAsmMetas.insert(poolSlotAsmMetas.end(), rightSelectAssMetas.begin(), rightSelectAssMetas.end());
+        std::vector<Operable*> poolCondPerAssMeta;
+        poolCondPerAssMeta.insert(poolCondPerAssMeta.end(), leftSelectCondPerAssMeta.begin(), leftSelectCondPerAssMeta.end());
+        poolCondPerAssMeta.insert(poolCondPerAssMeta.end(), rightSelectCondPerAssMeta.begin(), rightSelectCondPerAssMeta.end());
+
+        assert(leftSelectCondPerAssMeta.size() == rightSelectAssMetas.size());
+        auto* slotAsmNode = new AsmNode(poolSlotAsmMetas);
+        for (int idx = 0; idx < poolCondPerAssMeta.size(); idx++){
+            slotAsmNode->addSpecificPreCondition(poolCondPerAssMeta[idx], BITWISE_AND, idx);
+        }
+        slotAsmNode->dryAssign();
+        delete slotAsmNode;
+
+        Wire* selectedIdx = nullptr;
+        if (requiredIdx){
+            assert(lhs.idx != nullptr);
+            assert(rhs.idx != nullptr);
+            int desSlice = lhs.idx->getOperableSlice().getSize();
+            selectedIdx = &makeOprWire("reducOpr" + std::to_string(debugIdx), lhs.idx->getOperableSlice().getSize());
+            AssignMeta* leftAsmIdxMeta = selectedIdx->generateAssignMeta(*lhs.idx, {0,  desSlice}, ASM_DIRECT, CM_CLK_FREE);
+            AssignMeta* rightAsmIdxMeta = selectedIdx->generateAssignMeta(*rhs.idx, {0,  desSlice}, ASM_DIRECT, CM_CLK_FREE);
+
+            auto* idxAsmNode = new AsmNode({leftAsmIdxMeta, rightAsmIdxMeta});
+            slotAsmNode->addSpecificPreCondition(&selectLeft, BITWISE_AND, 0);
+            slotAsmNode->addSpecificPreCondition(&selectRight, BITWISE_AND, 1);
+            idxAsmNode->dryAssign();
+            delete idxAsmNode;
+
+        }
+
+        return {desSlot, selectedIdx};
+
+    }
 
     SlotMeta Table::getMeta() const{
         return _meta;
@@ -52,6 +101,15 @@ namespace kathryn{
     RegSlot Table::getClonedRow(int idx) const{
         assert(isValidIdx(idx));
         return *_rows[idx];
+    }
+
+    int Table::getNumRow() const{
+        return static_cast<int>(_rows.size());
+    }
+
+    int Table::getMaxCellWidth() const{
+        assert(!_rows.empty());
+        return _rows[0]->getMaxBitWidth();
     }
 
     void Table::buildRows(SlotMeta& slotMeta, int amtRow, std::string prefixName){
@@ -83,33 +141,20 @@ namespace kathryn{
         return log2Ceil(getNumRow());
     }
 
+    bool Table::isValidIdx(int idx) const{
+        return idx >= 0 && idx < _rows.size();
+    }
+
+    bool Table::checkValidRange(int start, int stop) const{
+        return ( (start >= 0    ) && (start <  _rows.size()) ) &&
+               ( (stop   >  start) && (stop   <= _rows.size()) );
+    }
 
     Operable& Table::createIdxMatchCond(Operable& requiredIdx, int rowIdx, bool isOH){
         if (isOH){
             return *requiredIdx.doSlice({rowIdx, rowIdx+1});
         }
         return (requiredIdx == rowIdx);
-
-
-    }
-
-
-
-    bool Table::isValidIdx(int idx) const{
-        return idx >= 0 && idx < _rows.size();
-    }
-    bool Table::checkValidRange(int start, int stop) const{
-        return ( (start >= 0    ) && (start <  _rows.size()) ) &&
-               ( (stop   >  start) && (stop   <= _rows.size()) );
-    }
-
-    int Table::getNumRow() const{
-        return static_cast<int>(_rows.size());
-    }
-
-    int Table::getMaxCellWidth() const{
-        assert(!_rows.empty());
-        return _rows[0]->getMaxBitWidth();
     }
 
     /**
@@ -168,6 +213,7 @@ namespace kathryn{
         std::vector<AssignMeta*> allRowCollector;
         std::vector<Operable*>   allRowPreCond;
 
+        /////// generate assign meta by row
         for (int desIdx = 0; desIdx < getNumRow(); desIdx++){
             /////// get related meta data
             std::vector<AssignMeta*> eachRowCollector;
@@ -177,15 +223,16 @@ namespace kathryn{
             ////// seach for match assign column and generate assign Metadata
             auto  [srcMatchidxs, desMatchIdxs] = getMeta().matchByName(srcMeta);
             eachRowCollector = desSlot.genAssignMetaForAll(srcSlot, srcMatchidxs, desMatchIdxs, {}, asmType);
+            ////// generate condition for each row
             Operable* rowIdxCheckCond = &(createIdxMatchCond(requiredIdx, desIdx, isOneHotIdx));
             for (int colIdx = 0; colIdx < eachRowCollector.size(); colIdx++){
                 eachRowPreCond.push_back(rowIdxCheckCond);
             }
             /////// push it to pool system
             allRowCollector.insert(allRowCollector.end(),
-            eachRowCollector.begin(), eachRowCollector.end());
+                                   eachRowCollector.begin(), eachRowCollector.end());
             allRowPreCond.insert(allRowPreCond.end(),
-            eachRowPreCond.begin(), eachRowPreCond.end());
+                                 eachRowPreCond.begin(), eachRowPreCond.end());
         }
 
         /////// we have to create own asm node and push it directly to the system
@@ -196,10 +243,7 @@ namespace kathryn{
         /////// we have to add it to controller by ourself
         ModelController* ctrl = getControllerPtr();
         assert(ctrl != nullptr);
-        ctrl->on_reg_update(
-            asmNode,
-            nullptr
-        );
+        ctrl->on_reg_update(asmNode, nullptr);
 
     }
 
@@ -226,7 +270,7 @@ namespace kathryn{
             }
             ///// add to main pool
             allRowCollector.insert(allRowCollector.end(),
-            eachRowCollector.begin(), eachRowCollector.end());
+                                   eachRowCollector.begin(), eachRowCollector.end());
             allRowPreCond.insert(allRowPreCond.end(),
             eachRowPreCond.begin(), eachRowPreCond.end());
         }
@@ -248,65 +292,75 @@ namespace kathryn{
         doGlobAsm(mySrcOpr, rowIdx, colIdx, asmType, isOHRow);
     }
 
+    Table& Table::doGlobColAsm(int colIdx, ull assignVal){
+
+        mfAssert(colIdx < getMeta().getNumField(), "colIdx is out of range");
+        ////// gen the value
+        int requiredSize = getMeta().getCopyField(0)._size;
+        mVal(av, requiredSize, assignVal);
+        ////// asmNode meta
+        std::vector<AssignMeta*> allRowCollector;
+
+        ////// pool the node
+        for (int desRowIdx = 0; desRowIdx < getNumRow(); desRowIdx++){
+            RegSlot&    rowSlot = getRefRow(desRowIdx);
+            AssignMeta* asmMeta = rowSlot.genAssignMeta(av, colIdx, ASM_DIRECT);
+            allRowCollector.push_back(asmMeta);
+        }
+        ////// create asmNode
+        auto* asmNode = new AsmNode(allRowCollector);
+        ////// put it to the controller
+        ModelController* ctrl = getControllerPtr();
+        assert(ctrl != nullptr);
+        ctrl->on_reg_update(asmNode, nullptr);
+
+        return *this;
+    }
+
+    Table& Table::doGlobColAsm(const std::string& colName, ull assignVal){
+        int targetColIdx = _meta.getIdx(colName);
+        doGlobColAsm(targetColIdx, assignVal);
+        return *this;
+    }
+
+
     void Table::doCusLogic(std::function<void(RegSlot&, int rowIdx)>  cusLogic){
         for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
             cusLogic(*_rows[rowIdx], rowIdx);
         }
     }
 
+    /////// reset event
 
-
-    Table::ReducNode Table::createMux(ReducNode& lhs, ReducNode& rhs, Operable& selectLeft, int debugIdx, bool requiredIdx){
-
-        Operable& selectRight = ~selectLeft;
-
-
-        WireSlot* desSlot = new WireSlot(getMeta());
-
-        std::vector<AssignMeta*> leftSelectAssMetas  = desSlot->genAssignMetaForAll(*lhs.slot, ASM_DIRECT);
-        std::vector<AssignMeta*> rightSelectAssMetas = desSlot->genAssignMetaForAll(*rhs.slot, ASM_DIRECT);
-        std::vector<Operable*>   leftSelectCondPerAssMeta(desSlot->getNumField(), &selectLeft);
-        std::vector<Operable*>   rightSelectCondPerAssMeta(desSlot->getNumField(), &selectRight);
-
-        std::vector<AssignMeta*> poolSlotAsmMetas;
-        poolSlotAsmMetas.insert(poolSlotAsmMetas.end(), leftSelectAssMetas.begin(), leftSelectAssMetas.end());
-        poolSlotAsmMetas.insert(poolSlotAsmMetas.end(), rightSelectAssMetas.begin(), rightSelectAssMetas.end());
-        std::vector<Operable*> poolCondPerAssMeta;
-        poolCondPerAssMeta.insert(poolCondPerAssMeta.end(), leftSelectCondPerAssMeta.begin(), leftSelectCondPerAssMeta.end());
-        poolCondPerAssMeta.insert(poolCondPerAssMeta.end(), rightSelectCondPerAssMeta.begin(), rightSelectCondPerAssMeta.end());
-
-        assert(leftSelectCondPerAssMeta.size() == rightSelectAssMetas.size());
-        auto* slotAsmNode = new AsmNode(poolSlotAsmMetas);
-        for (int idx = 0; idx < poolCondPerAssMeta.size(); idx++){
-            slotAsmNode->addSpecificPreCondition(poolCondPerAssMeta[idx], BITWISE_AND, idx);
+    Table& Table::makeResetEvent(ull resetVal){
+        for (RegSlot* row : _rows){
+            assert(row != nullptr);
+            row->makeResetEvent(resetVal);
         }
-        slotAsmNode->dryAssign();
-        delete slotAsmNode;
+        return *this;
+    }
 
-        Wire* selectedIdx = nullptr;
-        if (requiredIdx){
-            assert(lhs.idx != nullptr);
-            assert(rhs.idx != nullptr);
-            int desSlice = lhs.idx->getOperableSlice().getSize();
-            selectedIdx = &makeOprWire("reducOpr" + std::to_string(debugIdx), lhs.idx->getOperableSlice().getSize());
-            AssignMeta* leftAsmIdxMeta = selectedIdx->generateAssignMeta(*lhs.idx, {0,  desSlice}, ASM_DIRECT, CM_CLK_FREE);
-            AssignMeta* rightAsmIdxMeta = selectedIdx->generateAssignMeta(*rhs.idx, {0,  desSlice}, ASM_DIRECT, CM_CLK_FREE);
+    Table& Table::makeColResetEvent(int colIdx, ull resetVal){
 
-            auto* idxAsmNode = new AsmNode({leftAsmIdxMeta, rightAsmIdxMeta});
-            slotAsmNode->addSpecificPreCondition(&selectLeft, BITWISE_AND, 0);
-            slotAsmNode->addSpecificPreCondition(&selectRight, BITWISE_AND, 1);
-            idxAsmNode->dryAssign();
-            delete idxAsmNode;
-
+        for (RegSlot* row : _rows){
+            assert(row != nullptr);
+            row->makeResetEvent(colIdx, resetVal);
         }
+        return *this;
+    }
 
-        return {desSlot, selectedIdx};
+    Table& Table::makeColResetEvent(const std::string& colName, ull resetVal){
 
+        for (RegSlot* row : _rows){
+            assert(row != nullptr);
+            row->makeResetEvent(colName, resetVal);
+        }
+        return *this;
     }
 
     Table::ReducNode Table::doReduceBase(const std::vector<ReducNode>& initReducNodes,
                                          const std::function<Operable&(WireSlot& lhs, Operable* lidx,
-                                                                 WireSlot& rhs, Operable* ridx)>& cusLogic,
+                                                                       WireSlot& rhs, Operable* ridx)>& cusLogic,
                                          bool requiredIdx){
 
         int debugIdx = 0;
