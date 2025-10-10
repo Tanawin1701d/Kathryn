@@ -77,7 +77,9 @@ namespace kathryn{
                                     SimProxyBuildMode::SPB_GEN |
                                     SimProxyBuildMode::SPB_COMPILE |
                                     SimProxyBuildMode::SPB_RUN,
-                              bool requireLRC = false ///// this will enable model sim event start with long range simulator
+                              bool requireLRC = false, ///// this will enable model sim event start with long range simulator
+                              bool reqInline  = true,
+                              int  opLevel = 3
                               );
 
         virtual ~SimInterface();

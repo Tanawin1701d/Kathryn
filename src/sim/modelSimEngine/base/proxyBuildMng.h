@@ -40,6 +40,8 @@ namespace kathryn{
 
         const std::string TEST_NAME;
         const std::string INLINE_ATTR = "__attribute__((always_inline)) inline";
+        const int         OP_LEVEL    = 3;
+        const std::string OP_FLAG     = "-O3";
 
         //////// key of file and directory
         const std::string PROJECT_DIR    = "..";
@@ -100,11 +102,20 @@ namespace kathryn{
         std::vector<TraceEvent>*  callBackEvents = nullptr;
 
     public:
-        explicit ProxyBuildMng(std::string testName):
+        explicit ProxyBuildMng(std::string testName,
+                               bool reqInline = true,   ///  request function to  be inline
+                               int  opLev = 3):      ///  optimization level
         TEST_NAME(std::move(testName)),
+        INLINE_ATTR(reqInline ? "__attribute__((always_inline)) inline"
+                              : ""),
+        OP_LEVEL(opLev),
+        OP_FLAG("-O" + std::to_string(opLev)),
         PROJECT_DIR(KATHRYN_PROJECT_DIR){
 
-        };
+            mfAssert(opLev >= 0 && opLev <= 3,
+                "invalid optimization level");
+
+        }
         ~ProxyBuildMng();
         std::vector<ModelProxyBuild*>
         doTopologySort(std::vector<ModelProxyBuild*>& graph);

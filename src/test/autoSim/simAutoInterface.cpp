@@ -15,12 +15,19 @@ namespace kathryn{
                                        CYCLE limitCycle,
                                        std::string vcdFilePath,
                                        std::string profileFilePath,
-                                       SimProxyBuildMode simProxyBuildMode
+                                       SimProxyBuildMode simProxyBuildMode,
+                                       bool reqInline,
+                                       int  opLevel,
+                                       const std::string& genPref
                                        ) :
     SimInterface(limitCycle,
                  std::move(vcdFilePath),
                  std::move(profileFilePath),
-                 "simple_gen_file_" + std::to_string(simId)),
+                 "simple_gen_file_" + genPref + "_" + std::to_string(simId),
+                 simProxyBuildMode,
+                 false,
+                 reqInline,
+                 opLevel),
     _simId(simId){
     }
 
