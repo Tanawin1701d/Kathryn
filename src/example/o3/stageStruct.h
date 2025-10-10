@@ -59,7 +59,7 @@ namespace kathryn::o3{
     };
 
     struct BranchStage{
-        SyncPip sync {"branchSync"};
+        SyncMeta sync {"branchSync"};
     };
 
     struct ByPass{

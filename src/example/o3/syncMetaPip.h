@@ -20,8 +20,12 @@ namespace kathryn::o3{
         void killIfTagMet(bool autoRestart, opr& killTag){ //// kill Tag is one hot for all system
             mWire(slaveKiller, 1);
             slaveKiller = (killTag & spectag) != 0;
-
         }
+
+        void setTrackSpecTag(opr& spt){
+            (*spectag) = spt;
+        }
+
     };
 
 }

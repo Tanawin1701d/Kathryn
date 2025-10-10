@@ -39,6 +39,8 @@ namespace kathryn::o3{
         opr& result = alu(src(aluOp), srcA, srcB);
         bp.addSrc(src(rrftag), result);
 
+        ///// init pip meta data
+        exSt.sync.setTrackSpecTag(src(specTag));
         pip(exSt.sync){
             rob.onWriteBack(src(rrftag));
             zif(src(rdUse)){
