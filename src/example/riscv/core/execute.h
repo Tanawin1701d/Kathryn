@@ -127,16 +127,16 @@ namespace kathryn::riscv{
                     cd.kill();
                     zif(jmop.isSet()){
                         zif(jmop.isUopSet("needpc")){
-                            reStartPc   = decData.pc + rs2.data;
+                            cd.changePc(decData.pc + rs2.data);
                             rdes.data   <<= decData.pc + 4;
                             rdes.valid  <<= 1;
                         }zelse{
-                            reStartPc  =  rs1.data + rs2.data;
+                            cd.changePc(rs1.data + rs2.data);
                             rdes.data  <<= decData.pc + 4;
                             rdes.valid <<= 1;
                         }
                     }zelse{
-                        reStartPc = decData.pc + rs3.data;
+                        cd.changePc(decData.pc + rs3.data);
                     }
                 }
                 auto ldMop = decData.repo.getOp("ldpc");
