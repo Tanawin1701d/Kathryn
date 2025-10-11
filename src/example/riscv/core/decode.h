@@ -15,12 +15,12 @@ namespace kathryn{
         class Decode {
 
         public:
-            DECODE_DATA& decData;
+            CORE_DATA& cd;
             FlowBlockBase* decodeBlk = nullptr;
 
-            explicit Decode(DECODE_DATA& decData): decData(decData){
+            explicit Decode(CORE_DATA& coreData): cd(coreData){
 
-                InstrRepo& repo = decData.repo;
+                InstrRepo& repo = cd.dc.repo;
                 repo.addFixPrefix("<11>");
                 repo.addMop({"ldst", {"lsb", "lsh", "lsw", "usign", "isload"}});
                 repo.addMop({"br", {"beq","bge","bne","bltu","blt","bgeu"}});
@@ -74,12 +74,12 @@ namespace kathryn{
 
             }
 
-            void flow(Operable& rst, FETCH_DATA& fetData, EXEC_DATA& execData) {
-                pip(decData.sync){
-                    zync(execData.sync){
-                        decData.pc     <<= fetData.fetch_pc;
-                        decData.nextPc <<= fetData.fetch_nextpc;
-                        decData.repo.genDecodeLogic();
+            void flow() {
+                pip(cd.dc.sync){
+                    zync(cd.ex.sync){
+                        cd.dc.pc     <<= cd.ft.fetch_pc;
+                        cd.dc.nextPc <<= cd.ft.fetch_nextpc;
+                        cd.dc.repo.genDecodeLogic();
                     }
                 }
             }

@@ -13,36 +13,36 @@
 namespace kathryn::riscv {
 
         class Fetch {
-
-
-        public:
-
-            mWire(readEn, 1);
-            mWire(parCheck, 1);
+            CORE_DATA& cd;
             StorageMgmt& storageMgmt;
             Reg&    _reqPc;
+
+        public:
+            mWire(readEn, 1);
+            mWire(parCheck, 1);
             Operable&    readFin;
             ////FlowBlockBase* fetchBlock = nullptr;
 
-            explicit Fetch(StorageMgmt& memMgmt, Reg& reqPc):
+            explicit Fetch(CORE_DATA& coreData, StorageMgmt& memMgmt, Reg& reqPc):
+            cd(coreData),
             storageMgmt(memMgmt),
             _reqPc(reqPc),
             readFin(storageMgmt.addReader(readEn,_reqPc(MEM_ADDR_SL)))
             {}
 
 
-            void flow(Operable& rst, FETCH_DATA& fetData, DECODE_DATA& decData){
+            void flow(){
 
-                readEn = *decData.sync._syncSlaveReady;
+                readEn = *cd.dc.sync._syncSlaveReady;
 
-                pip(fetData.sync){autoStart
-                    zyncc(decData.sync, readFin){
+                pip(cd.ft.sync){autoStart
+                    zyncc(cd.dc.sync, readFin){
                     /** fetch data is shared among fetch and decoder
                      ** we must m sure it is ready to recv
                      * */
-                    fetData.fetch_instr <<= storageMgmt.readOutput;
-                    fetData.fetch_pc     <<= _reqPc;
-                    fetData.fetch_nextpc <<= _reqPc + 4;
+                    cd.ft.fetch_instr  <<= storageMgmt.readOutput;
+                    cd.ft.fetch_pc     <<= _reqPc;
+                    cd.ft.fetch_nextpc <<= _reqPc + 4;
                 }
                 }
             }

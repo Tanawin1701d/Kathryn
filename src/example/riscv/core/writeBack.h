@@ -12,21 +12,24 @@
 namespace kathryn::riscv{
 
         class WriteBack{
+            CORE_DATA& cd;
         public:
 
-            void flow(OPR_HW& desReg     , MemBlock& regFile,
-                      EXEC_DATA& execData,BYPASS_DATA& bypassData){
+            WriteBack(CORE_DATA& coreData): cd(coreData){}
 
+            void flow(MemBlock& regFile){
+
+                OPR_HW& desReg = cd.ex.wbData;
                 desReg.idx  .asOutputGlob("writeIdx");
                 desReg.data .asOutputGlob("writeData");
                 desReg.valid.asOutputGlob("valid");
 
 
-                pip(execData.sync){
+                pip(cd.ex.sync){
                     zif((desReg.valid) && (desReg.idx != 0)) {
                         regFile[desReg.idx] <<= desReg.data;
-                        bypassData.idx = desReg.idx;
-                        bypassData.value = desReg.data;
+                        cd.bp.idx = desReg.idx;
+                        cd.bp.value = desReg.data;
                     }
                 }
             }

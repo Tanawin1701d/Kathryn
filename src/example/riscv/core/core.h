@@ -21,15 +21,11 @@ namespace kathryn{
         public:
 
             mReg (pc       , XLEN);
-            mWire(misPredic, 1);
-            mWire(restartPc, XLEN);
+            // mWire(misPredic, 1);
+            // mWire(restartPc, XLEN);
             /** ele*/
             /***bypass ele*/
-            FETCH_DATA  fetchData;
-            DECODE_DATA decData;
-            EXEC_DATA   execData;
-            WRITE_BACK_DATA wbData;
-            BYPASS_DATA bp;     ///// bypass data
+            CORE_DATA coreData{};
 
             /** storage*/
             mMem(regFile, AMT_REG, XLEN);
@@ -44,12 +40,11 @@ namespace kathryn{
 
             explicit Riscv(bool x):
             ///////////// transfer ele
-            decData(fetchData.fetch_instr),
             memBlk (MEM_ADDR_IDX_ACTUAL_AL32, XLEN), //// -2 due to it is 4 byte align
             ///////////// data path
-            fetch  (memBlk, pc),
-            decode(decData),
-            execute(decData, memBlk, execData){
+            fetch  (coreData, memBlk, pc),
+            decode (coreData),
+            execute(coreData, memBlk){
                 pc.makeResetEvent();
             }
 
@@ -57,23 +52,16 @@ namespace kathryn{
             void flow() override {
 
                 /** calulate next cycle*/
+                ///// if mispredict occure the execution will write it back
                 cwhile(true){
-                    zif(misPredic){
-                        pc <<= restartPc;
-                    }zelif(fetch.readFin){
-                        pc <<= pc + 4;
-                    }
+                    pc <<= pc + 4;
                 }
 
                 /** pipe line wrapper */
-                fetch    .flow(misPredic, fetchData, decData);
-                decode   .flow(misPredic, fetchData, execData);
-                execute  .flow(misPredic, restartPc, regFile,
-                               bp, execData, wbData);
-                writeBack.flow(execData.wbData, regFile,
-                               execData, bp);
-
-
+                fetch    .flow();
+                decode   .flow();
+                execute  .flow(regFile);
+                writeBack.flow(regFile);
 
                 memBlk.buildReadFlow();
             }

@@ -15,8 +15,8 @@ namespace kathryn::riscv{
 
         class Execute{
         public:
-            DECODE_DATA&    _decData;
-            EXEC_DATA&      _execData;
+            CORE_DATA& cd;
+            DECODE_DATA& decData;
             OPR_HW& rdes;
             OPR_HW& rs1;
             OPR_HW& rs2;
@@ -35,13 +35,13 @@ namespace kathryn::riscv{
             FlowBlockBase* aluBlock       = nullptr;
             FlowBlockBase* complexExe     = nullptr;
 
-            explicit Execute(DECODE_DATA& decData, StorageMgmt& memArb, EXEC_DATA& execData):
-            _decData(decData),
-            _execData(execData),
-            rdes(execData.wbData),
-            rs1(_decData.repo.getSrcReg(0)),
-            rs2(_decData.repo.getSrcReg(1)),
-            rs3(_decData.repo.getSrcReg(2)),
+            explicit Execute(CORE_DATA& coreData, StorageMgmt& memArb):
+            cd(coreData),
+            decData(cd.dc),
+            rdes(cd.ex.wbData),
+            rs1(cd.dc.repo.getSrcReg(0)),
+            rs2(cd.dc.repo.getSrcReg(1)),
+            rs3(cd.dc.repo.getSrcReg(2)),
             _memArb(memArb),
             readFn(_memArb.addReader(readEn, readAddr))
             {
@@ -70,16 +70,14 @@ namespace kathryn::riscv{
 
 
 
-            void flow(Wire& misPredic    , Wire& reStartPc,
-                      MemBlock& memBlock , BYPASS_DATA& bypassData,
-                      EXEC_DATA& execData, WRITE_BACK_DATA& wbData){
+            void flow(MemBlock& memBlock){
 
                 pip(execData.sync){
                     seq{
                         par{ //exposeBlk(regAccessBlock)
                             accessRegData(rs1, memBlock, bypassData); ////// access register 1
                             accessRegData(rs2,  memBlock, bypassData);
-                            rdes <<= _decData.repo.getDesReg(0);
+                            rdes <<= decData.repo.getDesReg(0);
                         }
                         par{ exposeBlk(aluBlock)
                             execAlu(misPredic, reStartPc);
@@ -101,7 +99,7 @@ namespace kathryn::riscv{
 
             void execAlu(Wire& misPredic,Wire& reStartPc){
                 /////////////////// do simple alu
-                auto mop = _decData.repo.getOp("op");
+                auto mop = decData.repo.getOp("op");
                 zif(mop.isSet()){
                     rdes.valid <<= 1;
                     zif(mop.isUopSet("add" )){ rdes.data <<= rs1.data + rs2.data;}
@@ -114,8 +112,8 @@ namespace kathryn::riscv{
                     zif(mop.isUopSet("sll") | mop.isUopSet("sr") | mop.isUopSet("sra")){ rdes.data <<= rs1.data;}
                 }
 
-                auto bmop = _decData.repo.getOp("br");
-                auto jmop = _decData.repo.getOp("jal");
+                auto bmop = decData.repo.getOp("br");
+                auto jmop = decData.repo.getOp("jal");
                 zif(bmop.isSet() | jmop.isSet()){
                     /** this work only if predic pc is eq to pc+4*/
                     misPredic = (jmop.isSet()) |
@@ -127,29 +125,29 @@ namespace kathryn::riscv{
                                 (bmop.isUopSet("bgeu")& (~cmpLtUnSign));
                     zif(jmop.isSet()){
                         zif(jmop.isUopSet("needpc")){
-                            reStartPc   = _decData.pc + rs2.data;
-                            rdes.data   <<= _decData.pc + 4;
+                            reStartPc   = decData.pc + rs2.data;
+                            rdes.data   <<= decData.pc + 4;
                             rdes.valid  <<= 1;
                         }zelse{
                             reStartPc  =  rs1.data + rs2.data;
-                            rdes.data  <<= _decData.pc + 4;
+                            rdes.data  <<= decData.pc + 4;
                             rdes.valid <<= 1;
                         }
                     }zelse{
-                        reStartPc = _decData.pc + rs3.data;
+                        reStartPc = decData.pc + rs3.data;
                     }
                 }
-                auto ldMop = _decData.repo.getOp("ldpc");
+                auto ldMop = decData.repo.getOp("ldpc");
                 zif(ldMop.isSet()){
                     rdes.valid <<= 1;
-                    zif(ldMop.isUopSet("needpc")){rdes.data <<= (_decData.pc + rs2.data);}
+                    zif(ldMop.isUopSet("needpc")){rdes.data <<= (decData.pc + rs2.data);}
                     zelse                        {rdes.data <<= rs2.data;}
                 }
 
             }
 
             void execComplexAlu(){
-                auto op = _decData.repo.getOp("op");
+                auto op = decData.repo.getOp("op");
                 pif(op.isSet() & (op.isUopSet("sll") | op.isUopSet("sra") |
                         op.isUopSet("sr"))) {
                     cdowhile(rs2.data(0, 5) > 1){
@@ -166,7 +164,7 @@ namespace kathryn::riscv{
             }
 
             void execLS(){
-                auto ldst = _decData.repo.getOp("ldst");
+                auto ldst = decData.repo.getOp("ldst");
                 Reg& usign      = ldst.isUopSet("usign");
                 mWire(poolWriteData, XLEN);
                 mWire(finReadData,   XLEN);

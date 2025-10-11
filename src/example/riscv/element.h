@@ -48,6 +48,15 @@ namespace kathryn{
             mWire(value, XLEN);
         };
 
+
+        struct CORE_DATA{
+            FETCH_DATA  ft;
+            DECODE_DATA dc{ft.fetch_instr};
+            EXEC_DATA   ex;
+            WRITE_BACK_DATA wb;
+            BYPASS_DATA bp;
+        };
+
     }
 
 }
