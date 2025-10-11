@@ -55,6 +55,20 @@ namespace kathryn{
             EXEC_DATA   ex;
             WRITE_BACK_DATA wb;
             BYPASS_DATA bp;
+
+            mReg (pc, MEM_ADDR_IDX); //// the fetching pc
+
+            void kill(){
+                ft.sync.killSlave();
+                dc.sync.killSlave();
+            }
+
+            void changePc(opr& newPc){
+                SET_ASM_PRI_TO_MANUAL(DEFAULT_UE_PRI_USER+1);
+                pc <<= newPc;
+                SET_ASM_PRI_TO_AUTO();
+            }
+
         };
 
     }

@@ -20,7 +20,6 @@ namespace kathryn{
         class Riscv : public Module {
         public:
 
-            mReg (pc       , XLEN);
             // mWire(misPredic, 1);
             // mWire(restartPc, XLEN);
             /** ele*/
@@ -42,10 +41,11 @@ namespace kathryn{
             ///////////// transfer ele
             memBlk (MEM_ADDR_IDX_ACTUAL_AL32, XLEN), //// -2 due to it is 4 byte align
             ///////////// data path
-            fetch  (coreData, memBlk, pc),
+            fetch  (coreData, memBlk),
             decode (coreData),
-            execute(coreData, memBlk){
-                pc.makeResetEvent();
+            execute(coreData, memBlk),
+            writeBack(coreData){
+                coreData.pc.makeResetEvent();
             }
 
 
@@ -54,7 +54,7 @@ namespace kathryn{
                 /** calulate next cycle*/
                 ///// if mispredict occure the execution will write it back
                 cwhile(true){
-                    pc <<= pc + 4;
+                    coreData.pc <<= coreData.pc + 4;
                 }
 
                 /** pipe line wrapper */

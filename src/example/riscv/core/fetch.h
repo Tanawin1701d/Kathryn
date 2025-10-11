@@ -15,7 +15,6 @@ namespace kathryn::riscv {
         class Fetch {
             CORE_DATA& cd;
             StorageMgmt& storageMgmt;
-            Reg&    _reqPc;
 
         public:
             mWire(readEn, 1);
@@ -23,11 +22,10 @@ namespace kathryn::riscv {
             Operable&    readFin;
             ////FlowBlockBase* fetchBlock = nullptr;
 
-            explicit Fetch(CORE_DATA& coreData, StorageMgmt& memMgmt, Reg& reqPc):
+            explicit Fetch(CORE_DATA& coreData, StorageMgmt& memMgmt):
             cd(coreData),
             storageMgmt(memMgmt),
-            _reqPc(reqPc),
-            readFin(storageMgmt.addReader(readEn,_reqPc(MEM_ADDR_SL)))
+            readFin(storageMgmt.addReader(readEn,coreData.pc(MEM_ADDR_SL)))
             {}
 
 
@@ -41,8 +39,8 @@ namespace kathryn::riscv {
                      ** we must m sure it is ready to recv
                      * */
                     cd.ft.fetch_instr  <<= storageMgmt.readOutput;
-                    cd.ft.fetch_pc     <<= _reqPc;
-                    cd.ft.fetch_nextpc <<= _reqPc + 4;
+                    cd.ft.fetch_pc     <<= cd.pc;
+                    cd.ft.fetch_nextpc <<= cd.pc + 4;
                 }
                 }
             }

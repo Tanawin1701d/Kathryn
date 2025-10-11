@@ -25,6 +25,7 @@ namespace kathryn::riscv{
             StorageMgmt& _memArb;
             mWire(readEn, 1);
             mWire(readAddr, MEM_ADDR_IDX_ACTUAL_AL32);
+            mWire(misPredic, 1);
             Operable& readFn;
             mReg(dummyReg, XLEN);
             /*** cmp val*/
@@ -55,14 +56,14 @@ namespace kathryn::riscv{
                 cmpLtUnSign = rs1.data < rs2.data;
             }
 
-            void accessRegData(OPR_HW& rsx, MemBlock& memBlock,BYPASS_DATA& bypassData){
+            void accessRegData(OPR_HW& rsx, MemBlock& memBlock){
 
                 zif(~rsx.valid){
                     rsx.valid <<= 1;
                     rsx.data  <<= 0;
                     ///// it is supposed to be writeback in this cycle
                     zif(rsx.idx != 0) {
-                        zif(bypassData.idx == rsx.idx) { rsx.data <<= bypassData.value; }     /////// bypass?
+                        zif(cd.bp.idx == rsx.idx) { rsx.data <<= cd.bp.value; }     /////// bypass?
                         zelse { rsx.data <<= memBlock[rsx.idx]; } ///////// fill data
                     }
                 }
@@ -72,15 +73,15 @@ namespace kathryn::riscv{
 
             void flow(MemBlock& memBlock){
 
-                pip(execData.sync){
+                pip(cd.ex.sync){
                     seq{
                         par{ //exposeBlk(regAccessBlock)
-                            accessRegData(rs1, memBlock, bypassData); ////// access register 1
-                            accessRegData(rs2,  memBlock, bypassData);
+                            accessRegData(rs1, memBlock); ////// access register 1
+                            accessRegData(rs2,  memBlock);
                             rdes <<= decData.repo.getDesReg(0);
                         }
                         par{ exposeBlk(aluBlock)
-                            execAlu(misPredic, reStartPc);
+                            execAlu();
                         }
                         par{
                             pick{ exposeBlk(complexExe)
@@ -92,12 +93,12 @@ namespace kathryn::riscv{
                 }
 
                 //////// sync manually without
-                wbData.sync.setMasterReady(execData.sync.isSlaveFin());
+                cd.wb.sync.setMasterReady(cd.ex.sync.isSlaveFin());
 
 
             }
 
-            void execAlu(Wire& misPredic,Wire& reStartPc){
+            void execAlu(){
                 /////////////////// do simple alu
                 auto mop = decData.repo.getOp("op");
                 zif(mop.isSet()){
@@ -123,6 +124,7 @@ namespace kathryn::riscv{
                                 (bmop.isUopSet("bltu")& cmpLtUnSign  )  |      //////// unsign
                                 (bmop.isUopSet("bge") & (~cmpLtSign  )) |
                                 (bmop.isUopSet("bgeu")& (~cmpLtUnSign));
+                    cd.kill();
                     zif(jmop.isSet()){
                         zif(jmop.isUopSet("needpc")){
                             reStartPc   = decData.pc + rs2.data;
