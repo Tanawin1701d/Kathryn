@@ -24,14 +24,14 @@ namespace kathryn{
         const std::string _name;
 
         ///// main synchronizer
-        expression* _syncMasterReady = nullptr;
-        expression* _syncSlaveReady  = nullptr;
+         mWire(_syncMasterReady, 1);
+         mWire(_syncSlaveReady , 1) ;
         ///// slave ready after execution
-        expression* _syncSlaveFin    = nullptr;
+        mWire(_syncSlaveFin, 1);
 
         ///// typically the master should be zync block
         ///// typically the slave should be pipeline block
-        expression* _syncMatched     = nullptr;
+        mWire(_syncMatched, 1);
 
         ///// hold system signal representator
         std::vector<Operable*> masterHoldSignals;
@@ -44,28 +44,46 @@ namespace kathryn{
 
 
         explicit SyncMeta(const std::string& name = "unnamedSyncMeta"):
-        _name(name),
-        _syncMasterReady(new expression(1)),
-        _syncSlaveReady (new expression(1)),
-        _syncSlaveFin   (new expression(1)),
-        _syncMatched    (&((*_syncMasterReady) & (*_syncSlaveReady))){}
+        _name(name){
+            setSyncWireBase(_syncMatched, _syncMasterReady & _syncSlaveReady);
+        }
 
         ~SyncMeta()= default;
 
         std::string getName() const{ return _name;}
 
         ////// to ask that is slave fin in this cycle
-        Operable& isSlaveFin(){return *_syncSlaveFin;}
+        Operable& isSlaveFin(){return _syncSlaveFin;}
 
-        ////// set start signal
-        void      setMasterReady(Operable& opr1){
-            mfAssert(opr1.getOperableSlice().getSize() == 1, "setMasterReady size must be 1");
-            *_syncMasterReady = opr1;
+        void setSyncWireBase(Wire& desWire, Operable& opr1){
+            UpdateEvent* newEvent = new UpdateEvent({
+                nullptr,
+                nullptr,
+                &opr1,
+                Slice({0, 1}),
+                DEFAULT_UE_PRI_INTERNAL_MIN,
+                DEFAULT_UE_SUB_PRIORITY_USER,
+                CM_CLK_FREE
+            });
+            desWire.getUpdateMeta().push_back(newEvent);
         }
 
-        void      setSlaveReady(Operable& opr1){
+
+
+        ////// set start signal
+        void setMasterReady(Operable& opr1){
+            mfAssert(opr1.getOperableSlice().getSize() == 1, "setMasterReady size must be 1");
+            setSyncWireBase(_syncMasterReady, opr1);
+        }
+
+        void setSlaveReady(Operable& opr1){
             mfAssert(opr1.getOperableSlice().getSize() == 1, "setSlaveReady size must be 1");
-            *_syncSlaveReady = opr1;
+            setSyncWireBase(_syncSlaveReady, opr1);
+        }
+
+        void setSlaveFinish(Operable& opr1){
+            mfAssert(opr1.getOperableSlice().getSize() == 1, "setSlaveReady size must be 1");
+            setSyncWireBase(_syncSlaveFin, opr1);
         }
 
         static void baseHolder(std::vector<Operable*>& desVector){

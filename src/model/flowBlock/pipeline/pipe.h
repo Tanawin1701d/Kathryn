@@ -51,9 +51,10 @@ namespace kathryn{
         NodeWrap* sumarizeBlock    () override;
         /**set activate bias usually used in init Pipe */
         void      assignReadySignal ();
-        Operable* getBlkReadySignal() const{return _syncMata._syncMatched;}
 
-        std::string getPipeName() const{return _pipeName;}
+        std::string    getPipeName()          const{return _pipeName;}
+        StateNode*     getWaitNode()          const{assert(waitNode != nullptr); return waitNode;}
+        FlowBlockBase* getImplicitFlowBlock() const{return implicitFlowBlock;}
         /** auto activate pipe*/
         void      setAutoActivatePipe(){autoActivatePipe = true;}
         bool      isAutoActivatePipe() const{return autoActivatePipe;}

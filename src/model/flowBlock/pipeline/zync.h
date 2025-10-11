@@ -20,9 +20,11 @@ namespace kathryn{
 
     class FlowBlockZyncBase: public FlowBlockBase, public LoopStMacro{
     protected:
+        bool autoGenSyncMeta  = false;    ///// incase zync_con we need to create own syncMeta
         SyncMeta* _syncMeta   = nullptr;
         Operable* _acceptCond = nullptr; ///// this condition must be true when the system is in prepSendNode,
                                             ///// if the preSend will not wait and not activate further layer
+
 
 
         ////// node
@@ -38,6 +40,9 @@ namespace kathryn{
         ~FlowBlockZyncBase() override;
         /** manage the system */
         void assignReadySignal();
+        StateNode* getPreSendNode() { assert(prepSendNode != nullptr); return prepSendNode;}
+        SyncMeta* getSyncMeta() const { return _syncMeta;}
+
         /** for controller add the local element to this sub block*/
         void addSubFlowBlock       (FlowBlockBase* subBlock) override;
         void addConFlowBlock       (FlowBlockBase* conBlock) override;

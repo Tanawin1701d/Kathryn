@@ -59,7 +59,8 @@ namespace kathryn{
 
     void FlowBlockPipeBase::assignReadySignal(){
         //////// wait signal and last stage means that it is ready
-        (*_syncMata._syncSlaveReady) = (*entNode->getExitOpr());
+        ////(*_syncMata._syncSlaveReady) = (*entNode->getExitOpr());
+        _syncMata.setSlaveReady(*entNode->getExitOpr());
     }
 
     void FlowBlockPipeBase::buildHwMaster(){
@@ -87,9 +88,10 @@ namespace kathryn{
         ////// try to find the activate signal
         Operable* activateSignal = nullptr;
         if (isAutoActivatePipe()){ /////// no zync source
-            (*_syncMata._syncMasterReady) = makeOprVal("pipe_auto_act_" + _pipeName, 1, 1);
+            _syncMata.setMasterReady(makeOprVal("pipe_auto_act_" + _pipeName, 1, 1));
+            //(*_syncMata._syncMasterReady) = makeOprVal("pipe_auto_act_" + _pipeName, 1, 1);
         }
-        activateSignal = _syncMata._syncMasterReady;
+        activateSignal = &_syncMata._syncMasterReady;
 
         ////////////// do integritry check
         assert(_conBlocks.empty());
