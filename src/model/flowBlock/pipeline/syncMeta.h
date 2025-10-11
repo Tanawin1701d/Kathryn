@@ -23,8 +23,12 @@ namespace kathryn{
 
         const std::string _name;
 
+        ///// main synchronizer
         expression* _syncMasterReady = nullptr;
         expression* _syncSlaveReady  = nullptr;
+        ///// slave ready after execution
+        expression* _syncSlaveFin    = nullptr;
+
         ///// typically the master should be zync block
         ///// typically the slave should be pipeline block
         expression* _syncMatched     = nullptr;
@@ -43,12 +47,25 @@ namespace kathryn{
         _name(name),
         _syncMasterReady(new expression(1)),
         _syncSlaveReady (new expression(1)),
+        _syncSlaveFin   (new expression(1)),
         _syncMatched    (&((*_syncMasterReady) & (*_syncSlaveReady))){}
 
         ~SyncMeta()= default;
 
-        std::string getName() const{
-            return _name;
+        std::string getName() const{ return _name;}
+
+        ////// to ask that is slave fin in this cycle
+        Operable& isSlaveFin(){return *_syncSlaveFin;}
+
+        ////// set start signal
+        void      setMasterReady(Operable& opr1){
+            mfAssert(opr1.getOperableSlice().getSize() == 1, "setMasterReady size must be 1");
+            *_syncMasterReady = opr1;
+        }
+
+        void      setSlaveReady(Operable& opr1){
+            mfAssert(opr1.getOperableSlice().getSize() == 1, "setSlaveReady size must be 1");
+            *_syncSlaveReady = opr1;
         }
 
         static void baseHolder(std::vector<Operable*>& desVector){

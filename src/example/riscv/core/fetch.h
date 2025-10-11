@@ -10,9 +10,7 @@
 #include "example/riscv/parameter.h"
 #include "example/riscv/element.h"
 
-namespace kathryn{
-
-    namespace riscv {
+namespace kathryn::riscv {
 
         class Fetch {
 
@@ -24,7 +22,7 @@ namespace kathryn{
             StorageMgmt& storageMgmt;
             Reg&    _reqPc;
             Operable&    readFin;
-            FlowBlockBase* fetchBlock = nullptr;
+            ////FlowBlockBase* fetchBlock = nullptr;
 
             explicit Fetch(StorageMgmt& memMgmt, Reg& reqPc):
             storageMgmt(memMgmt),
@@ -33,28 +31,22 @@ namespace kathryn{
             {}
 
 
-            void flow(Operable& rst, FETCH_DATA& fetchdata){
+            void flow(Operable& rst, FETCH_DATA& fetData, DECODE_DATA& decData){
 
-                pipBlk{ intrReset(rst); intrStart(rst); exposeBlk(fetchBlock)
-                    par {
-                        cdowhile(!readFin){
-                            readEn = nextPipReadySig;
-                            zif(readFin) {
-                                /** fetch data is shared among fetch and decoder
-                                 ** we must m sure it is ready to recv
-                                 * */
-                                fetchdata.fetch_instr <<= storageMgmt.readOutput;
-                                fetchdata.fetch_pc     <<= _reqPc;
-                                fetchdata.fetch_nextpc <<= _reqPc + 4;
-                            }
-                        }
-                    }
-                    ////parCheck = 1;
+                readEn = *decData.sync._syncSlaveReady;
 
+                pip(fetData.sync){autoStart
+                    zyncc(decData.sync, readFin){
+                    /** fetch data is shared among fetch and decoder
+                     ** we must m sure it is ready to recv
+                     * */
+                    fetData.fetch_instr <<= storageMgmt.readOutput;
+                    fetData.fetch_pc     <<= _reqPc;
+                    fetData.fetch_nextpc <<= _reqPc + 4;
+                }
                 }
             }
         };
-    }
 }
 
 #endif //KATHRYN_FETCH_H

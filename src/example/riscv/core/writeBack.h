@@ -9,32 +9,28 @@
 #include "example/riscv/element.h"
 #include "example/riscv/subSystem/storageMgm.h"
 
-namespace kathryn{
-
-    namespace riscv{
+namespace kathryn::riscv{
 
         class WriteBack{
         public:
 
-            void flow(OPR_HW& desReg, MemBlock& regFile, BYPASS_DATA& bypassData){
+            void flow(OPR_HW& desReg     , MemBlock& regFile,
+                      EXEC_DATA& execData,BYPASS_DATA& bypassData){
 
                 desReg.idx  .asOutputGlob("writeIdx");
                 desReg.data .asOutputGlob("writeData");
                 desReg.valid.asOutputGlob("valid");
 
 
-                pipBlk{
-                    par {
-                        zif((desReg.valid) && (desReg.idx != 0)) {
-                            regFile[desReg.idx] <<= desReg.data;
-                            bypassData.idx = desReg.idx;
-                            bypassData.value = desReg.data;
-                        }
+                pip(execData.sync){
+                    zif((desReg.valid) && (desReg.idx != 0)) {
+                        regFile[desReg.idx] <<= desReg.data;
+                        bypassData.idx = desReg.idx;
+                        bypassData.value = desReg.data;
                     }
                 }
             }
         };
-    }
 }
 
 #endif //KATHRYN_WRITEBACK_H

@@ -130,7 +130,7 @@ namespace kathryn::riscv{
 
             if (writeSlotIfStall(RISC_EXECUTE, pipblock)){return;}
 
-            UOp& decodedUop = _riscv->execute._decodedUop;
+            DECODE_DATA& decodedUop = _riscv->execute._decData;
             InstrRepo& instrRepo = decodedUop.repo;
             /** decode
              *

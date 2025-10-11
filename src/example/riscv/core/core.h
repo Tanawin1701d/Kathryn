@@ -26,8 +26,9 @@ namespace kathryn{
             /** ele*/
             /***bypass ele*/
             FETCH_DATA  fetchData;
-            UOp         decData;
-            OPR_HW      wbData; //// write back data
+            DECODE_DATA decData;
+            EXEC_DATA   execData;
+            WRITE_BACK_DATA wbData;
             BYPASS_DATA bp;     ///// bypass data
 
             /** storage*/
@@ -39,17 +40,16 @@ namespace kathryn{
             Execute     execute;
             WriteBack   writeBack;
 
-            FlowBlockPipeWrapper* pipProbe = nullptr;
+            ///FlowBlockPipeWrapper* pipProbe = nullptr;
 
             explicit Riscv(bool x):
             ///////////// transfer ele
             decData(fetchData.fetch_instr),
             memBlk (MEM_ADDR_IDX_ACTUAL_AL32, XLEN), //// -2 due to it is 4 byte align
-            wbData(XLEN, REG_IDX,0, false),
             ///////////// data path
             fetch  (memBlk, pc),
             decode(decData),
-            execute(decData, memBlk, wbData){
+            execute(decData, memBlk, execData){
                 pc.makeResetEvent();
             }
 
@@ -66,13 +66,14 @@ namespace kathryn{
                 }
 
                 /** pipe line wrapper */
-                pipWrap{ exposeBlk(pipProbe)
-                    fetch    .flow(misPredic, fetchData);
-                    decode   .flow(misPredic, fetchData);
-                    /**execute and write back can't be delete anymore*/
-                    execute  .flow(misPredic, restartPc, regFile, bp); ///////// mispredict writer
-                    writeBack.flow(wbData, regFile, bp);
-                }
+                fetch    .flow(misPredic, fetchData, decData);
+                decode   .flow(misPredic, fetchData, execData);
+                execute  .flow(misPredic, restartPc, regFile,
+                               bp, execData, wbData);
+                writeBack.flow(execData.wbData, regFile,
+                               execData, bp);
+
+
 
                 memBlk.buildReadFlow();
             }

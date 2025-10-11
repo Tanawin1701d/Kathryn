@@ -106,7 +106,10 @@ namespace kathryn{
                 nodeWrapOfPickCondBlock->getExitNode(),
                 nullptr);
         }
-        exitNode->addDependNode(autoExitNode, nullptr);
+        if (autoExitNode != nullptr){
+            exitNode->addDependNode(autoExitNode, nullptr);
+        }
+
         exitNode->assign();
 
         ///////
