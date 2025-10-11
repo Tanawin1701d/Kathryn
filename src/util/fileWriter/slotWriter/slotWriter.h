@@ -15,7 +15,7 @@ namespace kathryn{
         const int COLUMNWIDTH = 1;
 
         struct ROW{
-            /** each slot might have several line*/
+            /** each slot might have several lines*/
             typedef  std::vector<std::string> SLOTDATA;
             std::vector<SLOTDATA> col; /////// array of slot
 

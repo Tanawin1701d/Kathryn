@@ -59,8 +59,8 @@ namespace kathryn{
             mReg (pc, MEM_ADDR_IDX); //// the fetching pc
 
             void kill(){
-                ft.sync.killSlave();
-                dc.sync.killSlave();
+                ft.sync.killSlave(true);
+                dc.sync.killSlave(true);
             }
 
             void changePc(opr& newPc){
