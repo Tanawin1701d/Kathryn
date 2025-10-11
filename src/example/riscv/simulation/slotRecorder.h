@@ -36,14 +36,16 @@ namespace kathryn{
 
             void recordSlot();
 
-            bool writeSlotIfStall(PIPE_STAGE2 stageIdx,
-                                  FlowBlockPipeBase* pipfb);
+            bool writeSlotIfPipStall(PIPE_STAGE2 stageIdx,
+                                     PipSimProbe* pipfb) const;
+            bool writeSlotIfZyncStall(PIPE_STAGE2 stageIdx,
+                                      ZyncSimProb* zyncSimProbe);
 
 
-            void         writeFetchSlot  (FlowBlockPipeBase* pipblock);
-            void         writeDecodeSlot (FlowBlockPipeBase* pipblock);
-            void         writeExecuteSlot(FlowBlockPipeBase* pipblock);
-            void         writeWbSlot     (FlowBlockPipeBase* pipblock);
+            void         writeFetchSlot  (PipSimProbe* pipSimProbe);
+            void         writeDecodeSlot (PipSimProbe* pipSimProbe);
+            void         writeExecuteSlot(PipSimProbe* pipSimProbe);
+            void         writeWbSlot     (PipSimProbe* pipSimProbe);
             virtual void writeMem        (){}
             void         writeReg        (const std::string& prefix,
                                           PIPE_STAGE2 pipeStage,

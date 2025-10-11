@@ -16,6 +16,7 @@ namespace kathryn{
 
             CORE_DATA& cd;
             ZyncSimProb zyncSimProb;
+            PipSimProbe pipSimProbe;
 
             explicit Decode(CORE_DATA& coreData): cd(coreData){
 
@@ -74,7 +75,7 @@ namespace kathryn{
             }
 
             void flow() {
-                pip(cd.dc.sync){
+                pip(cd.dc.sync){      initProbe(pipSimProbe);
                     zync(cd.ex.sync){ initProbe(zyncSimProb);
                         cd.dc.pc     <<= cd.ft.fetch_pc;
                         cd.dc.nextPc <<= cd.ft.fetch_nextpc;

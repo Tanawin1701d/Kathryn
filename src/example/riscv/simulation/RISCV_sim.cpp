@@ -47,7 +47,7 @@ namespace kathryn{
                 ////////// value before cycle is running
                 conNextCycle(1);
                 *rstWire = 0;
-                _core.pc = 0;
+                _core.coreData.pc = 0;
                 resetRegister();
                 readAssembly(_prefixFolder +  _testTypes[_curTestCaseIdx] + "/asm.out");
                 readAssertVal(_prefixFolder + _testTypes[_curTestCaseIdx] + "/ast.out");

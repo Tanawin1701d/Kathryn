@@ -17,6 +17,7 @@ namespace kathryn::riscv {
             StorageMgmt& storageMgmt;
 
             ZyncSimProb zyncSimProb;
+            PipSimProbe pipSimProbe;
 
             mWire(readEn, 1);
             mWire(parCheck, 1);
@@ -35,7 +36,7 @@ namespace kathryn::riscv {
                 SyncMeta& syncDec = cd.dc.sync;
                 readEn = syncDec._syncSlaveReady;
 
-                pip(cd.ft.sync){autoStart
+                pip(cd.ft.sync){autoStart  initProbe(pipSimProbe);
                     zyncc(cd.dc.sync, readFin){ initProbe(zyncSimProb);
                     /** fetch data is shared among fetch and decoder
                      ** we must m sure it is ready to recv

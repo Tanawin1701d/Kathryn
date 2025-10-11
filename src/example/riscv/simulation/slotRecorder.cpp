@@ -12,19 +12,19 @@ namespace kathryn::riscv{
              *  it is the end of the cycle
              * */
             assert(_riscv != nullptr);
-             auto& pipStages = _riscv->pipProbe->getPipStage();
+             //auto& pipStages = _riscv->pipProbe->getPipStage();
 
             /*** record fetch */
-            FlowBlockPipeBase* fetch = pipStages[RISC_FETCH];
+            PipSimProbe* fetch = &_riscv->fetch.pipSimProbe;
             writeFetchSlot(fetch);
             /*** decode*/
-            FlowBlockPipeBase* decode = pipStages[RISC_DECODE];
+            PipSimProbe* decode = &_riscv->decode.pipSimProbe;
             writeDecodeSlot(decode);
             /*** execute*/
-            FlowBlockPipeBase* execute = pipStages[RISC_EXECUTE];
+            PipSimProbe* execute = &_riscv->execute.pipSimProbe;
             writeExecuteSlot(execute);
             /*** write back*/
-            FlowBlockPipeBase* writeBack = pipStages[RISC_WB];
+            PipSimProbe* writeBack = &_riscv->writeBack.pipSimProbe;
             writeWbSlot(writeBack);
 
             writeMem();
@@ -32,68 +32,70 @@ namespace kathryn::riscv{
             _slotWriter->iterateCycle();
         }
 
-    bool SlotRecorder::writeSlotIfStall(PIPE_STAGE2 stageIdx,
-                                                 FlowBlockPipeBase* pipfb) {
-
-        ///////// if it is running in con thread type it will be run after model sim but before exit event of all type
-        assert(pipfb != nullptr);
-        /** check recv block*/
-        FlowBlockPipeCom* recvPipCom = pipfb->getRecvFbPipCom();
-        bool recvRunning = recvPipCom->getSimEngine()->isBlockRunning();
-        if (recvRunning)
+    bool SlotRecorder::writeSlotIfPipStall(PIPE_STAGE2 stageIdx,
+                                        PipSimProbe* pipSimProbe) const{
+        if (pipSimProbe->isWaiting()){
             _slotWriter->addSlotVal(stageIdx, "WAIT_RECV");
-
-        /** check send block*/
-        FlowBlockPipeCom* sendPipCom = pipfb->getSendFbPipCom();
-        bool sendRunning =  sendPipCom->getSimEngine()->isBlockRunning();
-        if (sendRunning)
-            _slotWriter->addSlotVal(stageIdx, "WAIT_SEND");
-
-        return recvRunning | sendRunning;
+            return true;
+        }
+        return false;
     }
 
-        void SlotRecorder::writeFetchSlot(FlowBlockPipeBase* pipblock) {
-            assert(pipblock != nullptr);
-            if (writeSlotIfStall(RISC_FETCH, pipblock)){return;}
+    bool SlotRecorder::writeSlotIfZyncStall(PIPE_STAGE2 stageIdx,
+                                            ZyncSimProb* zyncSimProbe){
+        if (zyncSimProbe->isWaiting()){
+            _slotWriter->addSlotVal(stageIdx, "WAIT_SEND");
+            return true;
+        }
+        return false;
 
-            _slotWriter->addSlotVal(RISC_FETCH, std::to_string(ull(_riscv->fetch.parCheck)));
+    }
 
-            if (_riscv->fetch.fetchBlock->getSimEngine()->isBlockRunning()) {
+    void SlotRecorder::writeFetchSlot(PipSimProbe* pipSimProbe) {
+        assert(pipSimProbe != nullptr);
+        if (writeSlotIfPipStall(RISC_FETCH, pipSimProbe)){return;}
+        if (writeSlotIfZyncStall(RISC_FETCH, &_riscv->fetch.zyncSimProb)){return;}
 
-                if (ull(_riscv->fetch.readEn)) {
-                    if (ull(_riscv->fetch.readFin)) {
-                        _slotWriter->addSlotVal(RISC_FETCH, "READ ADDR");
-                        _slotWriter->addSlotVal(RISC_FETCH,
-                                              cvtNum2HexStr(ull(_riscv->fetch._reqPc)));
-                    } else {
-                        _slotWriter->addSlotVal(RISC_FETCH, "FETCHING WAIT4MEM");
-                    }
+        _slotWriter->addSlotVal(RISC_FETCH, std::to_string(ull(_riscv->fetch.parCheck)));
+
+        ///if (_riscv->fetch.fetchBlock->getSimEngine()->isBlockRunning()) {
+        if (_riscv->fetch.zyncSimProb.isExecuting()){
+
+            if (ull(_riscv->fetch.readEn)) {
+                if (ull(_riscv->fetch.readFin)) {
+                    _slotWriter->addSlotVal(RISC_FETCH, "READ ADDR");
+                    _slotWriter->addSlotVal(RISC_FETCH,
+                                          cvtNum2HexStr(ull(_riscv->coreData.pc)));
                 } else {
-                    _slotWriter->addSlotVal(RISC_FETCH, "FETCHING  WAIT4REQ");
+                    _slotWriter->addSlotVal(RISC_FETCH, "FETCHING WAIT4MEM");
                 }
-
-            }else{
-                _slotWriter->addSlotVal(RISC_FETCH, "Unknown State");
+            } else {
+                _slotWriter->addSlotVal(RISC_FETCH, "FETCHING  WAIT4REQ");
             }
 
-            _slotWriter->addSlotVal(RISC_FETCH, "isFin " + std::to_string(ull(_riscv->fetch.readFin)));
-            _slotWriter->addSlotVal(RISC_FETCH, "isEn " + std::to_string(ull(_riscv->fetch.readEn)));
-
-
+        }else{
+            _slotWriter->addSlotVal(RISC_FETCH, "Unknown State");
         }
 
-        void SlotRecorder::writeDecodeSlot(FlowBlockPipeBase* pipblock) {
-            assert(pipblock != nullptr);
+        _slotWriter->addSlotVal(RISC_FETCH, "isFin " + std::to_string(ull(_riscv->fetch.readFin)));
+        _slotWriter->addSlotVal(RISC_FETCH, "isEn " + std::to_string(ull(_riscv->fetch.readEn)));
+
+
+    }
+
+        void SlotRecorder::writeDecodeSlot(PipSimProbe* pipSimProbe) {
+            assert(pipSimProbe != nullptr);
 
             //_slotWriter->addSlotVal(RISC_FETCH, "parStart" + std::to_string(ull(_riscv->decode.parCheck)));
 
-            if (writeSlotIfStall(RISC_DECODE, pipblock)){return;}
+            if (writeSlotIfPipStall (RISC_DECODE, pipSimProbe)){return;}
+            if (writeSlotIfZyncStall(RISC_DECODE, &_riscv->decode.zyncSimProb)){return;}
 
             //////////// now decoding
 
-            ull rawIntr  = ull(_riscv->fetchData.fetch_instr);
-            ull pc       = ull(_riscv->fetchData.fetch_pc);
-            ull next_pc  = ull(_riscv->fetchData.fetch_nextpc);
+            ull rawIntr  = ull(_riscv->coreData.ft.fetch_instr);
+            ull pc       = ull(_riscv->coreData.ft.fetch_pc);
+            ull next_pc  = ull(_riscv->coreData.ft.fetch_nextpc);
 
 
             ull opMaskBit = (1 << 7) - 1;
@@ -113,8 +115,8 @@ namespace kathryn::riscv{
                 {0b11'100'11, "SYSTEM"},
             };
 
-            if (_riscv->decode.decodeBlk->getSimEngine()->isBlockRunning()) {
-
+            //if (_riscv->decode.decodeBlk->getSimEngine()->isBlockRunning()) {
+            if (_riscv->decode.zyncSimProb.isExecuting()){
                 std::string decStr = (decMap.find(op) != decMap.end()) ? decMap[op] : "UNKNOWN";
                 _slotWriter->addSlotVal(RISC_DECODE, decStr);
                 _slotWriter->addSlotVal(RISC_DECODE, cvtNum2HexStr(pc));
@@ -125,13 +127,13 @@ namespace kathryn::riscv{
 
         }
 
-        void SlotRecorder::writeExecuteSlot(FlowBlockPipeBase* pipblock) {
-            assert(pipblock != nullptr);
+        void SlotRecorder::writeExecuteSlot(PipSimProbe* pipSimProbe) {
+            assert(pipSimProbe != nullptr);
 
-            if (writeSlotIfStall(RISC_EXECUTE, pipblock)){return;}
+            if (writeSlotIfPipStall(RISC_EXECUTE, pipSimProbe)){return;}
 
-            DECODE_DATA& decodedUop = _riscv->execute._decData;
-            InstrRepo& instrRepo = decodedUop.repo;
+            DECODE_DATA& decodedUop = _riscv->coreData.dc;
+            InstrRepo& instrRepo    = decodedUop.repo;
             /** decode
              *
              * uop
@@ -150,14 +152,11 @@ namespace kathryn::riscv{
             }
 
 
-            if (_riscv->execute.regAccessBlock
-                ->getSimEngine()->isBlockRunning()){
+            if (_riscv->execute.acRegSimProb.isExecuting()){
                 _slotWriter->addSlotVal(RISC_EXECUTE, "REG_ACCESS");
-            }else if (_riscv->execute.aluBlock
-                    ->getSimEngine()->isBlockRunning()){
+            }else if (_riscv->execute.aluSimProb.isExecuting()){
                 _slotWriter->addSlotVal(RISC_EXECUTE, "SIMPLE_ALU");
-            }else if (_riscv->execute.aluBlock
-                    ->getSimEngine()->isBlockRunning()){
+            }else if (_riscv->execute.complexAluSimProb.isExecuting()){
                 _slotWriter->addSlotVal(RISC_EXECUTE, "COMPLEX_ALU");
             }else{
                 _slotWriter->addSlotVal(RISC_EXECUTE, "unknownState");
@@ -176,16 +175,16 @@ namespace kathryn::riscv{
             _slotWriter->addSlotVal(RISC_EXECUTE, "read1020 " + std::to_string(ull(_riscv->memBlk._myMem.at(1020 >> 2))));
             _slotWriter->addSlotVal(RISC_EXECUTE, "read1024 " + std::to_string(ull(_riscv->memBlk._myMem.at(1024 >> 2))));
             _slotWriter->addSlotVal(RISC_EXECUTE, "read1028 " + std::to_string(ull(_riscv->memBlk._myMem.at(1028 >> 2))));
-            _slotWriter->addSlotVal(RISC_EXECUTE, "resetSignal " + std::to_string(ull(_riscv->misPredic)));
+            _slotWriter->addSlotVal(RISC_EXECUTE, "resetSignal " + std::to_string(ull(_riscv->execute.misPredic)));
 
 
         }
 
-        void SlotRecorder::writeWbSlot(FlowBlockPipeBase* pipblock) {
-            assert(pipblock != nullptr);
-            if (writeSlotIfStall(RISC_WB, pipblock)){return;}
+        void SlotRecorder::writeWbSlot(PipSimProbe* pipSimProbe) {
+            assert(pipSimProbe != nullptr);
+            if (writeSlotIfPipStall(RISC_WB, pipSimProbe)){return;}
 
-            OPR_HW& wbReg = _riscv->wbData;
+            OPR_HW& wbReg = _riscv->coreData.ex.wbData;
 
             writeReg("rwb", RISC_WB, wbReg);
             _slotWriter->addSlotVal

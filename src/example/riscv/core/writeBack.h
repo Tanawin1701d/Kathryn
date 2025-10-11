@@ -11,7 +11,7 @@
 
 namespace kathryn::riscv{
 
-        class WriteBack{
+        struct WriteBack{
             CORE_DATA& cd;
             PipSimProbe pipSimProbe;
         public:

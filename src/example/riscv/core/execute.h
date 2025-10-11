@@ -13,8 +13,7 @@
 
 namespace kathryn::riscv{
 
-        class Execute{
-        public:
+        struct Execute{
             CORE_DATA& cd;
             DECODE_DATA& decData;
             OPR_HW& rdes;
@@ -32,9 +31,10 @@ namespace kathryn::riscv{
             mWire(cmpLtSign, 1);
             mWire(cmpLtUnSign, 1);
 
-            SimProbe acRegSimProb;
-            SimProbe aluSimProb;
-            SimProbe complexAluSimProb;
+            PipSimProbe pipSimProbe;
+            SimProbe    acRegSimProb;
+            SimProbe    aluSimProb;
+            SimProbe    complexAluSimProb;
 
 
 
@@ -75,7 +75,7 @@ namespace kathryn::riscv{
 
             void flow(MemBlock& memBlock){
 
-                pip(cd.ex.sync){
+                pip(cd.ex.sync){ initProbe(pipSimProbe);
                     seq{
                         par{ initProbe(acRegSimProb);
                             accessRegData(rs1, memBlock); ////// access register 1
@@ -126,7 +126,8 @@ namespace kathryn::riscv{
                                 (bmop.isUopSet("bltu")& cmpLtUnSign  )  |      //////// unsign
                                 (bmop.isUopSet("bge") & (~cmpLtSign  )) |
                                 (bmop.isUopSet("bgeu")& (~cmpLtUnSign));
-                    cd.kill();
+                    //////// kill the system
+                    zif(misPredic){cd.kill();}
                     zif(jmop.isSet()){
                         zif(jmop.isUopSet("needpc")){
                             cd.changePc(decData.pc + rs2.data);
