@@ -12,11 +12,10 @@ namespace kathryn{
 
     namespace riscv{
 
-        class Decode {
+        struct Decode {
 
-        public:
             CORE_DATA& cd;
-            FlowBlockBase* decodeBlk = nullptr;
+            ZyncSimProb zyncSimProb;
 
             explicit Decode(CORE_DATA& coreData): cd(coreData){
 
@@ -76,7 +75,7 @@ namespace kathryn{
 
             void flow() {
                 pip(cd.dc.sync){
-                    zync(cd.ex.sync){
+                    zync(cd.ex.sync){ initProbe(zyncSimProb);
                         cd.dc.pc     <<= cd.ft.fetch_pc;
                         cd.dc.nextPc <<= cd.ft.fetch_nextpc;
                         cd.dc.repo.genDecodeLogic();

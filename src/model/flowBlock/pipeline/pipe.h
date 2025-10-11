@@ -12,6 +12,7 @@
 #include "model/flowBlock/abstract/spReg/stateReg.h"
 #include "model/flowBlock/abstract/nodes/node.h"
 #include "model/flowBlock/abstract/nodes/stateNode.h"
+#include "sim/modelSimEngine/flowBlock/pipeline/flowBlockPipProber.h"
 
 
 #define pip(zyncMeta)       for(auto kathrynBlock = new FlowBlockPipeBase (zyncMeta); kathrynBlock->doPrePostFunction(); kathrynBlock->step())

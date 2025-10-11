@@ -32,9 +32,11 @@ namespace kathryn::riscv{
             mWire(cmpLtSign, 1);
             mWire(cmpLtUnSign, 1);
 
-            FlowBlockBase* regAccessBlock = nullptr;
-            FlowBlockBase* aluBlock       = nullptr;
-            FlowBlockBase* complexExe     = nullptr;
+            SimProbe acRegSimProb;
+            SimProbe aluSimProb;
+            SimProbe complexAluSimProb;
+
+
 
             explicit Execute(CORE_DATA& coreData, StorageMgmt& memArb):
             cd(coreData),
@@ -75,16 +77,16 @@ namespace kathryn::riscv{
 
                 pip(cd.ex.sync){
                     seq{
-                        par{ //exposeBlk(regAccessBlock)
+                        par{ initProbe(acRegSimProb);
                             accessRegData(rs1, memBlock); ////// access register 1
                             accessRegData(rs2,  memBlock);
                             rdes <<= decData.repo.getDesReg(0);
                         }
-                        par{ exposeBlk(aluBlock)
+                        par{ initProbe(aluSimProb);
                             execAlu();
                         }
-                        par{
-                            pick{ exposeBlk(complexExe)
+                        par{ initProbe(complexAluSimProb);
+                            pick{
                                 execComplexAlu(); execLS();
                                 pickDef
                             }

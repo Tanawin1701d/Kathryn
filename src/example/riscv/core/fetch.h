@@ -12,11 +12,12 @@
 
 namespace kathryn::riscv {
 
-        class Fetch {
+        struct Fetch {
             CORE_DATA& cd;
             StorageMgmt& storageMgmt;
 
-        public:
+            ZyncSimProb zyncSimProb;
+
             mWire(readEn, 1);
             mWire(parCheck, 1);
             Operable&    readFin;
@@ -31,10 +32,11 @@ namespace kathryn::riscv {
 
             void flow(){
 
-                readEn = *cd.dc.sync._syncSlaveReady;
+                SyncMeta& syncDec = cd.dc.sync;
+                readEn = syncDec._syncSlaveReady;
 
                 pip(cd.ft.sync){autoStart
-                    zyncc(cd.dc.sync, readFin){
+                    zyncc(cd.dc.sync, readFin){ initProbe(zyncSimProb);
                     /** fetch data is shared among fetch and decoder
                      ** we must m sure it is ready to recv
                      * */

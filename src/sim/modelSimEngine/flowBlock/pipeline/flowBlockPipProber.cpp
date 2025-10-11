@@ -57,7 +57,7 @@ namespace kathryn{
     bool ZyncSimProb::getZyncReadyStatus(){
         SyncMeta* syncMeta = flowBlockZyncBase->getSyncMeta();
         assert(syncMeta != nullptr);
-        return ((ull)syncMeta->_syncMasterReady);
+        return ((ull)syncMeta->_syncMatched);
     }
 
 

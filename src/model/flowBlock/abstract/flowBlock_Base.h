@@ -26,7 +26,10 @@
 #include "model/flowBlock/abstract/nodeWrap.h"
 #include "model/flowBlock/abstract/nodes/stateNode.h"
 #include "model/flowBlock/abstract/nodes/logicNode.h"
+
 #include "sim/modelSimEngine/flowBlock/flowBaseSim.h"
+#include "sim/modelSimEngine/flowBlock/flowBlockProber.h"
+
 
 #include "flowIdentifiable.h"
 #include "flowBlockRegister.h"

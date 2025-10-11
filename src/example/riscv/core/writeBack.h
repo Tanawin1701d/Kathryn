@@ -13,6 +13,7 @@ namespace kathryn::riscv{
 
         class WriteBack{
             CORE_DATA& cd;
+            PipSimProbe pipSimProbe;
         public:
 
             WriteBack(CORE_DATA& coreData): cd(coreData){}
@@ -25,7 +26,7 @@ namespace kathryn::riscv{
                 desReg.valid.asOutputGlob("valid");
 
 
-                pip(cd.ex.sync){
+                pip(cd.ex.sync){ initProbe(pipSimProbe);
                     zif((desReg.valid) && (desReg.idx != 0)) {
                         regFile[desReg.idx] <<= desReg.data;
                         cd.bp.idx = desReg.idx;
