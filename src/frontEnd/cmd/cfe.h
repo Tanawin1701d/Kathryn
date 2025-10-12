@@ -23,11 +23,11 @@ namespace kathryn {
 
     void start(PARAM& params);
 
-    // void test_riscv(PARAM& params);
-    //
-    // void test_riscv_sort(PARAM& params);
-    //
-    // void test_riscv_gen(PARAM& params);
+    void test_riscv(PARAM& params);
+
+    void test_riscv_sort(PARAM& params);
+
+    void test_riscv_gen(PARAM& params);
 
 }
 

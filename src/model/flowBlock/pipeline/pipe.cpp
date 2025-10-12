@@ -61,6 +61,10 @@ namespace kathryn{
         //////// wait signal and last stage means that it is ready
         ////(*_syncMata._syncSlaveReady) = (*entNode->getExitOpr());
         _syncMata.setSlaveReady(*entNode->getExitOpr());
+
+        //////// set when pipeline is success
+        Node* exitNode = subBlockNodeWrap->getExitNode();
+        _syncMata.setSlaveFinish(*exitNode->getExitOpr());
     }
 
     void FlowBlockPipeBase::buildHwMaster(){
