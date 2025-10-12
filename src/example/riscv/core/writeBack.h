@@ -26,7 +26,7 @@ namespace kathryn::riscv{
                 desReg.valid.asOutputGlob("valid");
 
 
-                pip(cd.ex.sync){ initProbe(pipSimProbe);
+                pip(cd.wb.sync){ initProbe(pipSimProbe);
                     zif((desReg.valid) && (desReg.idx != 0)) {
                         regFile[desReg.idx] <<= desReg.data;
                         cd.bp.idx = desReg.idx;

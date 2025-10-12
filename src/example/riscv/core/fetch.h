@@ -13,11 +13,13 @@
 namespace kathryn::riscv {
 
         struct Fetch {
-            CORE_DATA& cd;
-            StorageMgmt& storageMgmt;
 
+            /////// debugger
             ZyncSimProb zyncSimProb;
             PipSimProbe pipSimProbe;
+
+            CORE_DATA& cd;
+            StorageMgmt& storageMgmt;
 
             mWire(readEn, 1);
             mWire(parCheck, 1);
