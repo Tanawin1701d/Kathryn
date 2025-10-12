@@ -78,8 +78,8 @@ namespace kathryn{
             AssignMeta* rightAsmIdxMeta = selectedIdx->generateAssignMeta(*rhs.idx, {0,  desSlice}, ASM_DIRECT, CM_CLK_FREE);
 
             auto* idxAsmNode = new AsmNode({leftAsmIdxMeta, rightAsmIdxMeta});
-            slotAsmNode->addSpecificPreCondition(&selectLeft, BITWISE_AND, 0);
-            slotAsmNode->addSpecificPreCondition(&selectRight, BITWISE_AND, 1);
+            idxAsmNode->addSpecificPreCondition(&selectLeft, BITWISE_AND, 0);
+            idxAsmNode->addSpecificPreCondition(&selectRight, BITWISE_AND, 1);
             idxAsmNode->dryAssign();
             delete idxAsmNode;
 

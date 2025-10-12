@@ -379,7 +379,7 @@ namespace kathryn {
         int desSize = balanceSize(a, b);
         /////////// upgrade size
         Operable* upgradedA = uextIfSizeNotEq(desSize);
-        Operable* upgradedB = uextIfSizeNotEq(desSize);
+        Operable* upgradedB = b.uextIfSizeNotEq(desSize);
 
         return {*upgradedA, *upgradedB};
     }
@@ -413,7 +413,7 @@ namespace kathryn {
         int desSize = balanceSize(a, b);
         /////////// upgrade size
         Operable* upgradedA = sextIfSizeNotEq(desSize);
-        Operable* upgradedB = sextIfSizeNotEq(desSize);
+        Operable* upgradedB = b.sextIfSizeNotEq(desSize);
 
         return {*upgradedA, *upgradedB};
     }

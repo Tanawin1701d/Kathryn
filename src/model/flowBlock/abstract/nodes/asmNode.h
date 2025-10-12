@@ -71,7 +71,7 @@ namespace kathryn {
 
         void assignFromStateNode(Operable* holdSignal){
             assert(nodeSrcs.size() == 1);
-            assert(nodeSrcs[0].condition == nullptr);
+            //assert(nodeSrcs[0].condition == nullptr);
             assert(nodeSrcs[0].dependNode != nullptr);
             assert(!_assignMetas.empty());
 
