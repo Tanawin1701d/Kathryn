@@ -49,10 +49,6 @@ namespace kathryn{
         //_syncMeta->setMasterReady()
         Operable* ready2Sync = addLogicWithOutput(prepSendNode->getExitOpr(), _acceptCond, BITWISE_AND);
         _syncMeta->setMasterReady(*ready2Sync);
-        if(_syncMeta != nullptr){
-
-            /////(*_syncMeta->_syncMasterReady) = (*prepSendNode->getExitOpr());
-        }
     }
 
     void FlowBlockZyncBase::addSubFlowBlock    (FlowBlockBase* subBlock){

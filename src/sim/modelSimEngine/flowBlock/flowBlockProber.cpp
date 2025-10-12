@@ -26,6 +26,7 @@ namespace kathryn{
 
     bool SimProbe::isWaiting(){
         mfAssert(false, "standard simprobe not support isWaiting()");
+        return false;
     }
 
     bool SimProbe::isExecuting(){

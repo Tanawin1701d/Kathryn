@@ -5,9 +5,9 @@
 #ifndef KATHRYN_SRC_EXAMPLE_O3_TAGGEN_H
 #define KATHRYN_SRC_EXAMPLE_O3_TAGGEN_H
 
+#include "broadCast.h"
 #include "kathryn.h"
 #include "parameter.h"
-#include "stageStruct.h"
 
 namespace kathryn::o3{
 

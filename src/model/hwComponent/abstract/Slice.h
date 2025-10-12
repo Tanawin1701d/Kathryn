@@ -6,6 +6,7 @@
 #define KATHRYN_SLICE_H
 
 #include<cassert>
+#include<algorithm>
 
 namespace kathryn{
 
@@ -46,6 +47,7 @@ namespace kathryn{
             assert(b.checkValidSlice());
             return {start + b.start,
                     std::min(stop, start + b.stop)};
+
         }
 
         ////// indexer is relative value

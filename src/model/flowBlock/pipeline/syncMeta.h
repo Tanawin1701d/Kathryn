@@ -105,13 +105,15 @@ namespace kathryn{
                 killer = 1;
             }
             desVector.push_back(&killer);
+            return killer;
         }
 
         //////// restart is binded with basekiller typically it use the same signal with the base killer
-        static Operable& baseStart(std::vector<Operable*>& desVector,
+        static void baseStart(std::vector<Operable*>& desVector,
                                    Operable& signal){
             desVector.push_back(&signal);
         }
+
         void killSlave(bool autoRestart = false, Operable* cond = nullptr){
             Operable& killSignal = baseKiller(slaveKillSignals, cond);
             if (autoRestart){

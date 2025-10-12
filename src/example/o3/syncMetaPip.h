@@ -23,7 +23,7 @@ namespace kathryn::o3{
         }
 
         void setTrackSpecTag(opr& spt){
-            (*spectag) = spt;
+            spectag = spt;
         }
 
     };

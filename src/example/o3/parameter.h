@@ -244,12 +244,6 @@ constexpr int ALU_OP_SGE  = 13;
 constexpr int ALU_OP_SLTU = 14;
 constexpr int ALU_OP_SGEU = 15;
 
-
-
-
-
-#undef KATHRYN_SRC_EXAMPLE_O3_PARAMETER_H
-
 }
 
 #endif //KATHRYN_PARAMETER_H

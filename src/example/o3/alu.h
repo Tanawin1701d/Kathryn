@@ -30,6 +30,7 @@ namespace kathryn::o3{
         zif(op == ALU_OP_SGE)  out = (srcA.sgt(srcB) | (srcA == srcB)).uext(DATA_LEN);;
         zif(op == ALU_OP_SLTU) out = srcA < srcB;
         zif(op == ALU_OP_SGEU) out = srcA >= srcB;
+        return out;
     }
 
 }
