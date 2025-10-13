@@ -51,6 +51,8 @@ namespace kathryn::o3{
             raw(prCond)   <<= 0;
             raw(bhr)      <<= 0;
 
+            curPc         <<= curPc + 8;
+
             auto& i0 = iMem0[curPc(4, INSN_LEN)];
             auto& i1 = iMem1[curPc(4, INSN_LEN)];
             auto& i2 = iMem2[curPc(4, INSN_LEN)];
@@ -70,6 +72,7 @@ namespace kathryn::o3{
                 raw(inst2)    <<= i0;
                 raw(invalid2) <<= 1;
                 raw(npc)      <<= (curPc + 4);
+                curPc         <<= curPc + 4;
             }
         }
     };
