@@ -44,18 +44,16 @@ namespace kathryn{
             fetch  (coreData, memBlk),
             decode (coreData),
             execute(coreData, memBlk),
-            writeBack(coreData){
-                coreData.pc.makeResetEvent();
-            }
+            writeBack(coreData){}
 
 
             void flow() override {
 
                 /** calulate next cycle*/
                 ///// if mispredict occure the execution will write it back
-                cwhile(true){
-                    coreData.pc <<= coreData.pc + 4;
-                }
+                // cwhile(true){
+                //     coreData.pc <<= coreData.pc + 4;
+                // }
 
                 /** pipe line wrapper */
                 fetch    .flow();

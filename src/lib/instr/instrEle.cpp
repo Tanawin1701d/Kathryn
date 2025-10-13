@@ -46,9 +46,9 @@ namespace kathryn{
             assert(startBit >= 0);
             sl.start = startBit;
             if(splitedValue.size() == 1){
-                sl.stop = sl.start + ((int)value.size());
+                sl.stop = sl.start + ((int)value.size()); //// <0000011>
             }else{
-                sl.stop = sl.start  + std::stoi(splitedValue[0]);
+                sl.stop = sl.start  + std::stoi(splitedValue[0]); ///// <5-rd0> use 5
             }
             assert(sl.checkValidSlice());
             isSizeDet = true;
@@ -122,10 +122,10 @@ namespace kathryn{
 
     void RegIdxAsm::doAsm(){
         assert(_master != nullptr);
-        OPR_HW& opr = isRead ? _master->getSrcReg(_regCnt)
-                             : _master->getDesReg(_regCnt);
+        OPR_HW& opr1 = isRead ? _master->getSrcReg(_regCnt)
+                              : _master->getDesReg(_regCnt);
         auto slicedRegFileIdx = _master->getInstrOpr()->doSlice(_srcSlice);
-        opr.setOnlyIndex(slicedRegFileIdx);
+        opr1.setOnlyIndex(slicedRegFileIdx);
     }
 
 
@@ -294,7 +294,7 @@ namespace kathryn{
             /////case OP
             if (strVecTk.size() == 1){
                 /////// it is op
-                _opcodeTokens.push_back(tk);
+                _opcodeTokens.push_back(tk); ////// the main op decoder <0100011>
                 continue;
             }
             //// case REG
@@ -398,7 +398,7 @@ namespace kathryn{
                 continue;
             }
             //////////////// search all uop
-            std::vector<Operable*> activateCons;
+            std::vector<Operable*> activateCons; ///// the activation condition for
             for(auto slaveRule:  _slaveRules){
                 if (slaveRule._effUopName == uopName){
                     activateCons.push_back(

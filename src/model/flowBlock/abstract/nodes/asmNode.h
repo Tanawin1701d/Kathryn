@@ -69,7 +69,7 @@ namespace kathryn {
             }
         }
 
-        void assignFromStateNode(Operable* holdSignal){
+        void assignFromStateNode(Operable* holdSignal, Operable* resetSignal){
             assert(nodeSrcs.size() == 1);
             //assert(nodeSrcs[0].condition == nullptr);
             assert(nodeSrcs[0].dependNode != nullptr);
@@ -86,6 +86,9 @@ namespace kathryn {
                     Operable* condEvent = addLogicWithOutput(nodeSrcs[0].condition, _preCondition, BITWISE_AND);
                     if (holdSignal != nullptr){
                         condEvent = addLogicWithOutput(condEvent, &(~(*holdSignal)), BITWISE_AND);
+                    }
+                    if (resetSignal != nullptr){
+                        condEvent = addLogicWithOutput(condEvent, &(~(*resetSignal)), BITWISE_AND);
                     }
                     condEvent = addLogicWithOutput(condEvent, preCondPerMeta, BITWISE_AND);
 
@@ -116,7 +119,7 @@ namespace kathryn {
 
                         auto resultUpEvent = new UpdateEvent({
                              condEvent,
-                             nodeSrc.dependNode->getExitOpr(),
+                             nodeSrc.dependNode->getExitOpr(), ///// it is supposed to sensitive to reset already?
                              &assignMeta->valueToAssign,
                              assignMeta->desSlice,
                              _asmPriority,

@@ -130,15 +130,19 @@ namespace kathryn::riscv{
                     zif(misPredic){cd.kill();}
                     zif(jmop.isSet()){
                         zif(jmop.isUopSet("needpc")){
+                            //jdebugNeedPc = 1;
                             cd.changePc(decData.pc + rs2.data);
                             rdes.data   <<= decData.pc + 4;
                             rdes.valid  <<= 1;
                         }zelse{
+                            //jdebugNotNeedPc = 1;
                             cd.changePc(rs1.data + rs2.data);
                             rdes.data  <<= decData.pc + 4;
                             rdes.valid <<= 1;
                         }
-                    }zelse{
+                    }
+                    zif(bmop.isSet() && misPredic){
+                        //jdebugNormPc = 1;
                         cd.changePc(decData.pc + rs3.data);
                     }
                 }

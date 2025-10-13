@@ -42,7 +42,7 @@ namespace kathryn{
         bool  isSizeDet = false;
         Slice sl{};
         std::string value;
-        std::vector<std::string> splitedValue;
+        std::vector<std::string> splitedValue; ///// after split - such as <5-rd0> -> {5, rd0}
         explicit token() = default;
         void splitToken();
         void sizeDet(int startBit);

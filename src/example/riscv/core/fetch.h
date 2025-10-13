@@ -29,8 +29,9 @@ namespace kathryn::riscv {
             explicit Fetch(CORE_DATA& coreData, StorageMgmt& memMgmt):
             cd(coreData),
             storageMgmt(memMgmt),
-            readFin(storageMgmt.addReader(readEn,coreData.pc(MEM_ADDR_SL)))
-            {}
+            readFin(storageMgmt.addReader(readEn,coreData.pc(MEM_ADDR_SL))){
+                cd.pc.makeResetEvent();
+            }
 
 
             void flow(){
@@ -46,6 +47,7 @@ namespace kathryn::riscv {
                     cd.ft.fetch_instr  <<= storageMgmt.readOutput;
                     cd.ft.fetch_pc     <<= cd.pc;
                     cd.ft.fetch_nextpc <<= cd.pc + 4;
+                    cd.pc              <<= cd.pc + 4;
                 }
                 }
             }

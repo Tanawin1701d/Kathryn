@@ -72,8 +72,11 @@ namespace kathryn{
             makeUnsetStateEvent();
             /** slave event*/
             for (AsmNode* asmNode: _dependSlaveAsmNode){
-                Operable* holdSignal = isThereHold() ? holdNode->getExitOpr(): nullptr;
-                asmNode->assignFromStateNode(holdSignal);
+                Operable* holdSignal  = isThereHold()      ? holdNode->getExitOpr()
+                                                           : nullptr;
+                Operable* resetSignal = isThrereIntReset() ? getInterruptReset()->getExitOpr()
+                                                           : nullptr;
+                asmNode->assignFromStateNode(holdSignal, resetSignal);
             }
         }
 
