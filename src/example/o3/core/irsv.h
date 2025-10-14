@@ -16,6 +16,7 @@ namespace kathryn::o3{
 
     struct IRsv: RsvBase{
 
+        mWire(checkIdx, _table.getSufficientIdxSize(false));
         Reg& allocPtr;
         SearchResult b1 ,  e1,  e0;
         SearchResult nb1, ne1, nb0; /// search to fix alloc pointer
@@ -68,7 +69,6 @@ namespace kathryn::o3{
             /*
              *  the required Idx
              */
-            mWire(checkIdx, _table.getSufficientIdxSize(false));
             zif(e0.sValid){ ///  there is empty room
                 zif((b1.sIdx == 0) && (e1.sIdx == (_table.getNumRow()-1))){ ///// zero bubble
                     checkIdx = (e0.sIdx + 1);

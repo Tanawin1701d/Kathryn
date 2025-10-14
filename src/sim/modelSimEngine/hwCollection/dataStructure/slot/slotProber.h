@@ -17,6 +17,7 @@ namespace kathryn{
     };
 
     struct SlotSimInfo64{
+        int rowIdx = -1;
         std::vector<FieldSimInfo64> fieldSimInfos;
 
         void append(const FieldSimInfo64& info){
@@ -33,7 +34,7 @@ namespace kathryn{
         Slot* slot = nullptr;
         std::vector<ull> prevValues; ///// the index of vector is also the index of the slot
 
-        SlotSimProbe(Slot* slot);
+        void init(Slot* slot);
 
         FieldSimInfo64 getCurSimInfo(int col);
 

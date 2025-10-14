@@ -72,6 +72,7 @@ namespace kathryn{
     //     //// gen(0,6) => b000000
     ull genBiConValRep(bool val, int bitSize);
     std::string cvtNum2HexStr(ull x);
+    std::string cvtNum2BinStr(ull x);
 
 
 

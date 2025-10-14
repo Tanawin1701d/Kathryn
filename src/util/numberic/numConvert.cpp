@@ -21,4 +21,20 @@ namespace kathryn{
         return "0x" + oss.str();
     }
 
+    std::string cvtNum2BinStr(ull x){
+        std::bitset<64> b(x);
+        std::string binStr = b.to_string();
+
+        // Remove leading zeros
+        size_t firstOne = binStr.find('1');
+        if (firstOne != std::string::npos) {
+            binStr = binStr.substr(firstOne);
+        } else {
+            binStr = "0";  // Handle the case when x is 0
+        }
+
+        return "0b" + binStr;
+    }
+
+
 }

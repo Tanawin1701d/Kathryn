@@ -20,6 +20,8 @@ namespace kathryn::o3{
         mWire(com2Status, 1      );
         mReg (comPtr    , RRF_SEL);
         mWire(comPtr2   , RRF_SEL);
+        WireSlot com1Entry{_table[comPtr  ].v()};
+        WireSlot com2Entry{_table[comPtr+1].v()};
         RegArch& regArch;
 
         Rob(RegArch& regArch):
@@ -36,12 +38,11 @@ namespace kathryn::o3{
 
         void flow() override{
             comPtr2 = comPtr + 1;
+            comPtr <<= (comPtr + com1Status + com2Status);
             ////// we have to set commit commad
 
             cwhile(true){ holdBlk(hold)
                 /////// commit the instruction
-                WireSlot com1Entry = _table[comPtr  ].v();
-                WireSlot com2Entry = _table[comPtr+1].v();
                 ////// due to branch can do only one
                 opr& com1Cond = com1Entry(wbFin);
                 opr& com2Cond = com2Entry(wbFin) & ~com1Entry(isBranch);

@@ -11,6 +11,8 @@ namespace kathryn::o3{
 
         struct ORsv: RsvBase{
 
+        mWire(checkIdx, _table.getSufficientIdxSize(true));
+
         ORsv(SlotMeta meta, int amtRow):
             RsvBase(smRsvO + meta, amtRow){}
 
@@ -64,6 +66,8 @@ namespace kathryn::o3{
                         (busyEq &&  sortBitEq && (lhs(rrftag) < rhs(rrftag)));
                 }
             );
+
+            checkIdx = ohIdx.getIdx();
 
             /**
              * issue sync

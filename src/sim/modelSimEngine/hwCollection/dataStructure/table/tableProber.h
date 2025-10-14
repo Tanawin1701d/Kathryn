@@ -19,7 +19,8 @@ namespace kathryn{
         Table* table = nullptr;
         std::vector<SlotSimProbe> rowSimProbes;
 
-        TableSimProbe(Table* table);
+
+        void                       init(Table* table);
 
         SlotSimInfo64              getCurValues(int rowIdx);
         FieldSimInfo64             getCurValues(int rowIdx, std::string varName);

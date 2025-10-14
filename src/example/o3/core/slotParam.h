@@ -59,13 +59,13 @@ namespace kathryn::o3{
             {pc         , imm             , rrftag    , rdUse, aluOp       ,
              spec       , specTag         ,
              phyIdx_1   , rsSel_1         , rsValid_1 ,
-             phyIdx_2   , rsSel_2         , rsValid_2 ,
+             phyIdx_2   , rsSel_2         , rsValid_2
             },
             ////////////////////////////////////////////////////////////////////
             {ADDR_LEN   , DATA_LEN        , RRF_SEL     , 1    , ALU_OP_WIDTH,
              1          , SPECTAG_LEN     ,
              DATA_LEN   , SRC_A_SEL_WIDTH , 1           ,
-             DATA_LEN   , SRC_B_SEL_WIDTH , 1           ,
+             DATA_LEN   , SRC_B_SEL_WIDTH , 1
             }
         };
 

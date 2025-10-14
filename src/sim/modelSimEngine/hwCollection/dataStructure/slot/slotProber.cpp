@@ -7,9 +7,12 @@
 
 namespace kathryn{
 
-    SlotSimProbe::SlotSimProbe(Slot* slot):
-    slot(slot),
-    prevValues(slot->getNumField(),0){}
+    void SlotSimProbe::init(Slot* inputSlot){
+
+        this->slot = inputSlot;
+        mfAssert(slot != nullptr, "slot is null");
+        prevValues.resize(slot->getNumField(),0);
+    }
 
 
     FieldSimInfo64 SlotSimProbe::getCurSimInfo(int col){
