@@ -28,6 +28,12 @@ namespace kathryn::o3{
         SlotMeta meta{smFetch};
         RegSlot  raw {smFetch};
         SyncMeta sync{"fetchSync"};
+
+        void incPc(opr& nextPc, bool isMisPred = false){
+            SET_ASM_PRI_TO_MANUAL(DEFAULT_UE_PRI_USER + isMisPred);
+            curPc <<= nextPc;
+            SET_ASM_PRI_TO_AUTO();
+        }
     };
 
     struct DecodeStage{

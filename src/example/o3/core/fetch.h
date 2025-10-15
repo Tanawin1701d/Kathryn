@@ -16,6 +16,8 @@ namespace kathryn::o3{
         PipStage& pm;
         Reg&      curPc;
 
+        ///// the last instruction
+
         mMem (iMem0, IMEM_ROW, IMEM_WIDTH);
         mMem (iMem1, IMEM_ROW, IMEM_WIDTH);
         mMem (iMem2, IMEM_ROW, IMEM_WIDTH);
@@ -29,7 +31,7 @@ namespace kathryn::o3{
 
         void flow() override{
 
-            pip(pm.ft.sync){ autoStart     initProbe(pipProbGrp.fetch);
+            pip(pm.ft.sync){ autoStart     initProbe(pipProbGrp .fetch);
                 zync(pm.dc.sync){          initProbe(zyncProbGrp.fetch);
                     selLog();
                 }
@@ -37,14 +39,12 @@ namespace kathryn::o3{
 
         }
 
-        void onMisPred(opr& RenewPc){
-            curPc <<= RenewPc;
-        }
-
         void selLog(){
+            ///// ignore first 4 bytes, because instruction is 4 bytes long
             opr& selIdx = curPc(2, 4);
             RegSlot& raw = pm.ft.raw;
 
+            ////// initialization
             raw(invalid1) <<= 0;
             raw(invalid2) <<= 0;
             raw(pc)       <<= curPc;
@@ -52,12 +52,13 @@ namespace kathryn::o3{
             raw(prCond)   <<= 0;
             raw(bhr)      <<= 0;
 
-            curPc         <<= curPc + 8;
+            pm.ft.incPc(curPc + 8);
 
-            auto& i0 = iMem0[curPc(4, INSN_LEN)];
-            auto& i1 = iMem1[curPc(4, INSN_LEN)];
-            auto& i2 = iMem2[curPc(4, INSN_LEN)];
-            auto& i3 = iMem3[curPc(4, INSN_LEN)];
+            ////// read instruction from main memory
+            auto& i0 = iMem0[curPc(4, 4 + IMEM_IDX_WIDTH)];
+            auto& i1 = iMem1[curPc(4, 4 + IMEM_IDX_WIDTH)];
+            auto& i2 = iMem2[curPc(4, 4 + IMEM_IDX_WIDTH)];
+            auto& i3 = iMem3[curPc(4, 4 + IMEM_IDX_WIDTH)];
 
             zif(selIdx == 0){
                 raw(inst1)    <<=  i0;
@@ -68,12 +69,12 @@ namespace kathryn::o3{
             }zelif(selIdx == 2){
                 raw(inst1)    <<=  i2;
                 raw(inst2)    <<=  i3;
-            }zelse{
+            }zelse{ ///// the second instruction is invalid
                 raw(inst1)    <<= i3;
                 raw(inst2)    <<= i0;
                 raw(invalid2) <<= 1;
                 raw(npc)      <<= (curPc + 4);
-                curPc         <<= curPc + 4;
+                pm.ft.incPc(curPc + 4);
             }
         }
     };

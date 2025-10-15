@@ -25,7 +25,7 @@ namespace kathryn::o3{
             tagMgmt(tagMg){}
 
         ////// dcd = decoded
-        void  decode(int idx){
+        void  decode(int idx){ //// idx start at 1
 
             bool isFirst = (idx == 1);
             RegSlot&  raw = pm.ft.raw;
@@ -48,8 +48,8 @@ namespace kathryn::o3{
             dcw(illLegal)  = 0;
             ///////////// calculate address and validation
             if (idx == 1){
-                dcw(invalid)   = 0;
-                dcw(pred_addr) = (raw(pc) + 4);
+                dcw(invalid)   = 0; ///// we are sure about first instruction
+                dcw(pred_addr) = (raw(pc) + 4); //// if the decoded show it is branch or jump it will be overrided
             }else{
                 dcw(invalid)   = raw(invalid2);
                 dcw(pred_addr) = raw(npc);
@@ -215,14 +215,16 @@ namespace kathryn::o3{
             ///// build the decode wire
             decode(1);
             decode(2);
+            ///// reference the two lane of decoded register
             RegSlot&  dcd1 = pm.dc.dcd1;
             RegSlot&  dcd2 = pm.dc.dcd2;
             RegSlot&  dcdShared = pm.dc.dcdShared;
             WireSlot& dcw1 = pm.dc.dcw1;
             WireSlot& dcw2 = pm.dc.dcw2;
 
+            ///// check the tag generator is capable to gen the new address tag
             opr& isGenable = tagMgmt.tagGen.isAllGenble(
-                dcw1(isBranch),
+                dcw1(isBranch), //// isBranch will set when invalid is false and the instruction is jumping instruction
                 dcw2(isBranch));
 
             pip(pm.dc.sync){                    initProbe(pipProbGrp .decode);
@@ -234,23 +236,24 @@ namespace kathryn::o3{
                     dcdShared(bhr) <<= pm.ft.raw(bhr);
 
                     dcdShared(desEqSrc1) <<=
-                        (dcw2(rsIdx_1) == dcw2(rdIdx));
+                        ((dcw2(rsIdx_1) == dcw1(rdIdx)) & dcw1(rdIdx));
                     dcdShared(desEqSrc2) <<=
-                        (dcw2(rsIdx_2) == dcw2(rdIdx));
+                        ((dcw2(rsIdx_2) == dcw1(rdIdx)) & dcw1(rdIdx));
 
                     ///////// generate the tag
                     auto[genTag1, genTag2] =
-                    tagMgmt.tagGen.allocate( //// the tagGen and mpft are updated
-                    dcw1(isBranch),dcd1(spec),
-                    dcw2(isBranch),dcd2(spec)
+                    tagMgmt.tagGen.allocate(   //// the tagGen
+                    dcw1(isBranch),dcd1(spec), ///// (isBranch) is input
+                    dcw2(isBranch),dcd2(spec)  ///// (spec) taggen will update it
                     );
                     ///// assign decoded data
                     dcd1(specTag) <<= genTag1;
                     dcd2(specTag) <<= genTag2;
                     ///// update the mpft
                     tagMgmt.mpft.onAddNew(
-                       dcw1(isBranch), genTag1,
-                       dcw2(isBranch), genTag2);
+                        dcw1(isBranch), genTag1,
+                        dcw2(isBranch), genTag2
+                    );
                 }
             }
         }

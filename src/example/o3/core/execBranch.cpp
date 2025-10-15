@@ -19,7 +19,7 @@ namespace kathryn::o3{
         pm.ex.sync.killIfTagMet(true, fixTag);
         ////// do recovery on the tag system
         tagMgmt.mpft.onMissPred();
-        tagMgmt.tagGen.onMisPred();
+        tagMgmt.tagGen.onMisPred(misTag);
         ////// do recovery on the reservation station
         for (RsvBase* rsv: rsvs){
             rsv->onMisPred(fixTag);

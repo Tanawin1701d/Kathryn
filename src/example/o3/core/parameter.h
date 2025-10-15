@@ -110,7 +110,8 @@ enum BrStat{
     BS_MISS
 };
 
-constexpr int IMEM_ROW   = 1024;
+constexpr int IMEM_IDX_WIDTH = 10;
+constexpr int IMEM_ROW   = 1 << IMEM_IDX_WIDTH;
 constexpr int IMEM_WIDTH = 32;
 
 

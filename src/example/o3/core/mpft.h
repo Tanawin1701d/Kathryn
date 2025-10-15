@@ -17,7 +17,8 @@ namespace kathryn::o3{
 
         Mpft(): _table(smMPFT, SPECTAG_LEN){
             _table.makeColResetEvent(mpft_valid, 0);
-
+            _table.makeColResetEvent(mpft_fixTag, 0);
+            /////// debug probe
             dataStructProbGrp.mpft.init(&_table);
         }
 
@@ -28,15 +29,18 @@ namespace kathryn::o3{
                     ///// clean entire row
                     lhs(mpft_valid) <<= 0;
                     lhs(mpft_fixTag) <<= 0;
-                }zelif(lhs(mpft_valid)){
+                }zelse{
                     ///// fix other tag
                     lhs(mpft_fixTag) <<=
-                        (lhs(mpft_fixTag) | (~tag1));
+                        (lhs(mpft_fixTag) & (~tag1));
                 }
             });
 
         }
-        void onMissPred(){ _table.doGlobColAsm({mpft_valid}, 0);}
+        void onMissPred(){
+            _table.doGlobColAsm({mpft_valid}, 0);
+            _table.doGlobColAsm({mpft_fixTag}, 0);
+        }
         void onAddNew(opr& setTag1, opr& tag1,
                       opr& setTag2, opr& tag2){
 
