@@ -18,8 +18,6 @@ namespace kathryn{
             //PipSimProbe issue;
             PipSimProbe execAlu;
             PipSimProbe execBranch;
-            PipSimProbe wb;
-            PipSimProbe commit;
         };
 
         struct O3ZyncProbGrp{
@@ -28,10 +26,6 @@ namespace kathryn{
             ZyncSimProb dispatch;
             ZyncSimProb issueAlu;
             ZyncSimProb issueBranch;
-            ZyncSimProb execAlu;
-            ZyncSimProb execBranch;
-            ZyncSimProb wb;
-            ZyncSimProb commit;
         };
 
         struct O3DataStructProbGrp{
@@ -42,6 +36,16 @@ namespace kathryn{
             TableSimProbe rsvAlu;
             TableSimProbe rsvbranch;
             TableSimProbe commit;
+
+            void applyCycleChange(){
+                mpft     .applyChange();
+                arfBusy  .applyChange();
+                arfRename.applyChange();
+                rrf      .applyChange();
+                rsvAlu   .applyChange();
+                rsvbranch.applyChange();
+                commit   .applyChange();
+            }
         };
 
         inline O3PipProbGrp        pipProbGrp;

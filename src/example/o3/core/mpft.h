@@ -7,6 +7,7 @@
 
 #include "kathryn.h"
 #include "stageStruct.h"
+#include "example/o3/simulation/proberGrp.h"
 
 namespace kathryn::o3{
 
@@ -16,6 +17,8 @@ namespace kathryn::o3{
 
         Mpft(): _table(smMPFT, SPECTAG_LEN){
             _table.makeColResetEvent(mpft_valid, 0);
+
+            dataStructProbGrp.mpft.init(&_table);
         }
 
         void onPredSuc(opr& tag1){

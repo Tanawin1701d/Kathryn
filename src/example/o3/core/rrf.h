@@ -32,6 +32,10 @@ namespace kathryn::o3{
             table.makeColResetEvent(rrfValid, 0);
             freenum.makeResetEvent(RRF_NUM);
             reqPtr .makeResetEvent();
+
+            dataStructProbGrp.rrf.init(&table);
+
+
         }
 
         opr& isRecur(opr& req1, opr& req2){

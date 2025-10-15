@@ -48,6 +48,8 @@ namespace kathryn::o3{
             return {iw(busy), ohIdx};
         }
 
+        
+
         void buildIssue(SyncMeta& syncMeta, BroadCast& bc) override{
             /*
             * find the free slot
@@ -74,7 +76,7 @@ namespace kathryn::o3{
              */
 
             cwhile(true){
-                zyncc(syncMeta, slotReady(iw)){ //// do it with spectag
+                zyncc(syncMeta, slotReady(iw)){ tryInitProbe(issueProbe);
                     execSrc <<= iw;
                     tryOwSpecBit(iw, bc);
                     //////// reset the table

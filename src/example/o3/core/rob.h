@@ -30,6 +30,7 @@ namespace kathryn::o3{
             _table.makeColResetEvent(wbFin, 0);
             _table.makeColResetEvent(isBranch, 0);
             comPtr.makeResetEvent();
+            dataStructProbGrp.commit.init(&_table);
         }
 
         opr& getComPtr(){ return comPtr;}

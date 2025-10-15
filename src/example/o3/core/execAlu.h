@@ -20,7 +20,7 @@ namespace kathryn::o3{
     Rob&       rob;
     RegSlot&   src;
     ByPass&    bp;
-
+    PipSimProbe* psp = nullptr;
 
     explicit ExecAlu(ExecStage& exSt,
                      RegArch& regArch,
@@ -32,6 +32,8 @@ namespace kathryn::o3{
         src(src),
         bp(regArch.bpp.addByPassEle()){}
 
+    void setSimProbe(PipSimProbe* in_psp){psp = in_psp;}
+
     void flow() override{
 
         opr& srcA   = getAluSrcA(src);
@@ -41,7 +43,7 @@ namespace kathryn::o3{
 
         ///// init pip meta data
         exSt.sync.setTrackSpecTag(src(specTag));
-        pip(exSt.sync){
+        pip(exSt.sync){ tryInitProbe(psp);
             rob.onWriteBack(src(rrftag));
             zif(src(rdUse)){
                 regArch.rrf.onWback(src(rrftag), result);

@@ -14,6 +14,7 @@
 #include "srcOpr.h"
 #include "rob.h"
 #include "stageStruct.h"
+#include "example/o3/simulation/proberGrp.h"
 
 
 namespace kathryn::o3{
@@ -118,8 +119,8 @@ namespace kathryn::o3{
                                 regArch.rrf.isRenamable(~dcd2(invalid));
 
 
-            pip(pm.ds.sync){
-                zync_con(isdispatable){
+            pip(pm.ds.sync){             initProbe(pipProbGrp .dispatch);
+                zync_con(isdispatable){  initProbe(zyncProbGrp.dispatch);
                     ////////
                     regArch.rrf.onRename(~dcd1(invalid), ~dcd2(invalid));
                     opr& reqPtr = regArch.rrf.getReqPtr();

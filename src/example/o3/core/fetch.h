@@ -8,6 +8,7 @@
 #include "kathryn.h"
 #include "stageStruct.h"
 #include "parameter.h"
+#include "example/o3/simulation/proberGrp.h"
 
 namespace kathryn::o3{
 
@@ -28,8 +29,8 @@ namespace kathryn::o3{
 
         void flow() override{
 
-            pip(pm.ft.sync){ autoStart
-                zync(pm.dc.sync){
+            pip(pm.ft.sync){ autoStart     initProbe(pipProbGrp.fetch);
+                zync(pm.dc.sync){          initProbe(zyncProbGrp.fetch);
                     selLog();
                 }
             }

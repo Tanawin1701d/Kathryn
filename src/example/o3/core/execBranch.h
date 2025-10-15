@@ -27,7 +27,7 @@ namespace kathryn::o3{
         RegSlot&      src;
         ByPass&       bp;
         std::vector<RsvBase*> rsvs;
-
+        PipSimProbe* psp = nullptr;
         mWire(calAddr, ADDR_LEN);
         mWire(brTaken, 1);
 
@@ -43,6 +43,8 @@ namespace kathryn::o3{
         rob(rob),
         src(src),
         bp(regArch.bpp.addByPassEle()){}
+
+        void setSimProbe(PipSimProbe* in_psp){psp = in_psp;}
 
         void flow() override{
 
@@ -66,7 +68,7 @@ namespace kathryn::o3{
             bp.addSrc(src(rrftag), nextPc);
 
 
-            pip(pm.br.sync){
+            pip(pm.br.sync){  tryInitProbe(psp);
 
                 /////// write back the data if it needed
                 rob.onWriteBack(src(rrftag));

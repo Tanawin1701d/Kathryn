@@ -28,6 +28,16 @@ namespace kathryn::o3{
         Table    _table;
         RegSlot  execSrc;
 
+        ZyncSimProb*   issueProbe = nullptr;
+        TableSimProbe* stationProbe = nullptr;
+
+        void setSimProbe(ZyncSimProb* issueP, TableSimProbe* stationP){
+            issueProbe = issueP;
+            stationProbe = stationP;
+            assert(stationProbe != nullptr);
+            stationProbe->init(&_table);
+        }
+
         RsvBase(SlotMeta meta, int amtRow):
             _meta(meta), _table(meta, amtRow),
         execSrc(meta){

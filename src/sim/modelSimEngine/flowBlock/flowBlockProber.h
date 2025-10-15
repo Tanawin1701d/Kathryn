@@ -6,7 +6,8 @@
 #define SRC_SIM_MODELSIMENGINE_FLOWBLOCK_FLOWBLOCKPROBER_H
 
 
-#define initProbe(x) x.init(kathrynBlock)
+#define initProbe(x) (x).init(kathrynBlock)
+#define tryInitProbe(x) if (x != nullptr) {x->init(kathrynBlock);}
 
 namespace kathryn{
 

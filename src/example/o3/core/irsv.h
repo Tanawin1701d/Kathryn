@@ -83,8 +83,7 @@ namespace kathryn::o3{
             WireSlot iw(_table[checkIdx].v());
 
             cwhile(true){
-                zyncc(syncMeta, slotReady(iw)){
-                    execSrc <<= iw;
+                zyncc(syncMeta, slotReady(iw)){ tryInitProbe(issueProbe);
                     tryOwSpecBit(iw, bc);
                     //////// reset the table
                     onIssue(checkIdx); //// reset busy

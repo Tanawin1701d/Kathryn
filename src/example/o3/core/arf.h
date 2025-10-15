@@ -59,6 +59,10 @@ namespace kathryn::o3{
 
             busy.makeResetEvent(0);
             busyMaster.makeResetEvent();
+
+            dataStructProbGrp.arfBusy.init(&busy);
+            dataStructProbGrp.arfRename.init(&rename);
+
         }
 
         RenamedData getRenamedData(opr& archIdx){

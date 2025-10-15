@@ -55,6 +55,12 @@ namespace kathryn::o3{
         ///// build branch reservation station internal logic
         branchRsv.buildIssue(pm.br.sync, tagMgmt.bc);
 
+        ///// set sim probe for the exec unit and reservation station
+        pExAlu   .setSimProbe(&pipProbGrp.execAlu);
+        pExBra   .setSimProbe(&pipProbGrp.execBranch);
+        aluRsv   .setSimProbe(&zyncProbGrp.issueAlu, &dataStructProbGrp.rsvAlu);
+        branchRsv.setSimProbe(&zyncProbGrp.issueBranch, &dataStructProbGrp.rsvbranch);
+
     }
 
     };

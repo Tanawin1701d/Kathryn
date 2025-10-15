@@ -9,6 +9,7 @@
 #include "parameter.h"
 #include "stageStruct.h"
 #include "isaParam.h"
+#include "example/o3/simulation/proberGrp.h"
 
 
 namespace kathryn::o3{
@@ -224,8 +225,8 @@ namespace kathryn::o3{
                 dcw1(isBranch),
                 dcw2(isBranch));
 
-            pip(pm.dc.sync){
-                zyncc(pm.ds.sync, isGenable){
+            pip(pm.dc.sync){                    initProbe(pipProbGrp .decode);
+                zyncc(pm.ds.sync, isGenable){   initProbe(zyncProbGrp.decode);
                     ///////// decoded value (except specTag and spec)
                     dcd1 <<= dcw1;
                     dcd2 <<= dcw2;
