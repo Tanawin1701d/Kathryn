@@ -30,11 +30,10 @@ namespace kathryn::o3{
     ORsv aluRsv     {smRsvO + smRsvBase, ALU_ENT_NUM};
     IRsv branchRsv  {smRsvI + smRsvBase, BRANCH_ENT_SEL, "br", tagMgmt.bc};
 
-
-    /////// reorder buffer
-    mMod(prob, Rob, regArch);
     /////// pipeline manager
     PipStage pm;
+    /////// reorder buffer
+    mMod(prob, Rob, pm, regArch);
 
     mMod(pFetch, FetchMod  , pm);
     mMod(pDec  , DecMod    , pm     , tagMgmt); //// decoder

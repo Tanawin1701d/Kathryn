@@ -51,7 +51,7 @@ namespace kathryn::o3{
         }
 
         //// do update the register architecture
-        regArch.arf.onSucPred(fixTag, sucTag);
+        regArch.arf.onSucPred(sucTag);
 
     }
 

@@ -150,6 +150,8 @@ namespace kathryn::o3{
         Arf arf;
         Rrf rrf;
         ByPassPool bpp;
+
+        RegArch(Mpft& mpft): arf(mpft){}
     };
 
     struct PipStage{

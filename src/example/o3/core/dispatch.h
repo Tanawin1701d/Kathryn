@@ -123,7 +123,7 @@ namespace kathryn::o3{
                     regArch.rrf.onRename(~dcd1(invalid), ~dcd2(invalid));
                     opr& reqPtr = regArch.rrf.getReqPtr();
                     //////// update arf
-                    regArch.arf.onRename(renCmd1, renCmd2,tagMgmt.mpft);
+                    regArch.arf.onRename(renCmd1, renCmd2);
                     //////// update reservation station
                     WireSlot entry1(cvtdecInstrToRsv(dcd1, dcdShare, 0, nullptr, nullptr));
                     WireSlot entry2(cvtdecInstrToRsv(dcd2, dcdShare, 1, &dcd1(rdUse), &entry1(rrftag)));
