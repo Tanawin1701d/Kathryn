@@ -11,6 +11,11 @@
 
 namespace kathryn::o3{
 
+    static int ARF_MIS_PRIORITY = DEFAULT_UE_PRI_USER + 3;
+    static int ARF_SUC_PRIORITY = DEFAULT_UE_PRI_USER + 2;
+    static int ARF_REN_PRIORITY = DEFAULT_UE_PRI_USER + 1;
+    static int ARF_COM_PRIORITY = DEFAULT_UE_PRI_USER;
+
     struct CommitCmd{
 
         expression comEn    { 1        };
@@ -103,8 +108,14 @@ namespace kathryn::o3{
 
         }
 
-        void augmentTableInCommit(WireSlot& desBusy, WireSlot& desRename, int idx){
+        /**
+         *
+         * augment temporal data
+         *
+         */
 
+        /////// they commit all table even though it is branch table
+        void augmentTableInCommit(WireSlot& desBusy, WireSlot& desRename, int idx){
             CommitCmd& comCmd = commitCmds[idx];
             zif (comCmd.comEn){
                 zif(comCmd.comRrfPtr == desRename[comCmd.comArcIdx].v()){
@@ -118,19 +129,21 @@ namespace kathryn::o3{
             augmentTableInCommit(desBusy, desRename, 1);
         }
 
+        //////// it renames all table except for the branch occupied table
+
         void augmentTableInRename(WireSlot& desBusy, WireSlot& desRename, RenameCmd& renCmd){
             ///// it rename but rename to 0
             ///// it must set to 0
             ////desBusy[renCmd.renArcIdx] = 0;
             zif(renCmd.renEn){
-                desBusy[renCmd.renArcIdx] = 1;
-                desRename[renCmd.renArcIdx] = renCmd.renRrfPtr;
+                desBusy   [renCmd.renArcIdx] = 1;
+                desRename [renCmd.renArcIdx] = renCmd.renRrfPtr;
             }
         }
 
 
         void onMisPred(opr& misTag){
-            SET_ASM_PRI_TO_MANUAL(DEFAULT_UE_PRI_USER+3);
+            SET_ASM_PRI_TO_MANUAL(ARF_MIS_PRIORITY);
             //////
             ////// copy the recovery slot and fill to all table and master
             ////// rcv = recovery slot
@@ -146,19 +159,18 @@ namespace kathryn::o3{
             busyMaster   <<= rcvbusy;
             renameMaster <<= rcvRename;
 
-
             SET_ASM_PRI_TO_AUTO();
         }
 
         void onSucPred(opr& fixTag, opr& sucTag){
             ///// commit can occur at the same time
             ///// copy the
-            SET_ASM_PRI_TO_MANUAL(DEFAULT_UE_PRI_USER+2);
+            SET_ASM_PRI_TO_MANUAL(ARF_SUC_PRIORITY);
             ///// we have to specify the free tag
             opr& fixTagWOCur = fixTag & ~sucTag; //// curtag is suctag (and we want it to be update)
             OH freeTag(~fixTagWOCur);
 
-            ////// eliminated the data
+            ////// eliminate the data
             WireSlot nextBusy(busyMaster);
             WireSlot nextRename(renameMaster);
             augmentTableInCommits(nextBusy, nextRename);
