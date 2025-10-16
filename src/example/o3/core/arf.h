@@ -43,7 +43,7 @@ namespace kathryn::o3{
     struct Arf{
 
         ///////// recoverier
-        Table busy, rename; ////// row re recover tag col is reg
+        Table    busy, rename; ////// row re recover tag col is reg
         RegSlot  busyMaster, renameMaster;
         ///////// architecture register actual data
         RegSlot  archRegs;  ////// register architecture register
@@ -51,14 +51,18 @@ namespace kathryn::o3{
         CommitCmd commitCmds[2];
 
         Arf():
-            busy(smARFBusy, SPECTAG_LEN),
-            rename(smARFRenamed, SPECTAG_LEN),
-            busyMaster(smARFBusy),
+            busy        (smARFBusy, SPECTAG_LEN),
+            rename      (smARFRenamed, SPECTAG_LEN),
+            busyMaster  (smARFBusy),
             renameMaster(smARFRenamed),
-            archRegs(smARFData){
+            archRegs    (smARFData){
 
-            busy.makeResetEvent(0);
-            busyMaster.makeResetEvent();
+            ///////// reset busy field
+            busy      .makeResetEvent(0);
+            busyMaster.makeResetEvent(0);
+            ///////// reset rename field
+            renameMaster.makeResetEvent(0);
+            rename      .makeResetEvent(0);
 
             dataStructProbGrp.arfBusy.init(&busy);
             dataStructProbGrp.arfRename.init(&rename);
@@ -104,7 +108,7 @@ namespace kathryn::o3{
             CommitCmd& comCmd = commitCmds[idx];
             zif (comCmd.comEn){
                 zif(comCmd.comRrfPtr == desRename[comCmd.comArcIdx].v()){
-                    desBusy[comCmd.comArcIdx] = 1;
+                    desBusy[comCmd.comArcIdx] = 0;
                 }
             }
         }
@@ -127,14 +131,15 @@ namespace kathryn::o3{
 
         void onMisPred(opr& misTag){
             SET_ASM_PRI_TO_MANUAL(DEFAULT_UE_PRI_USER+3);
-            ////// copy the recovery table and fill to all table
-            ///
+            //////
+            ////// copy the recovery slot and fill to all table and master
+            ////// rcv = recovery slot
             WireSlot rcvbusy  (busy  [OH(misTag)].v());
             WireSlot rcvRename(rename[OH(misTag)].v());
 
             for(int specIdx = 0; specIdx < SPECTAG_LEN; specIdx++){
                 //// busy copy
-                busy(specIdx) <<= rcvbusy;
+                busy  (specIdx) <<= rcvbusy;
                 rename(specIdx) <<= rcvRename;
             }
             ////// copy to master
@@ -145,8 +150,9 @@ namespace kathryn::o3{
             SET_ASM_PRI_TO_AUTO();
         }
 
-        void onSucPred(opr& fixTag, opr& sucTag){ ///// it must handle case the commit as well
-
+        void onSucPred(opr& fixTag, opr& sucTag){
+            ///// commit can occur at the same time
+            ///// copy the
             SET_ASM_PRI_TO_MANUAL(DEFAULT_UE_PRI_USER+2);
             ///// we have to specify the free tag
             opr& fixTagWOCur = fixTag & ~sucTag; //// curtag is suctag (and we want it to be update)
@@ -208,15 +214,11 @@ namespace kathryn::o3{
 
         {
             ////// not cycle consider (just assign the static assignment)
-            commitCmds[0].comEn     = comEn1;
-            commitCmds[0].comRrfPtr = comRrfPtr1;
-            commitCmds[0].comArcIdx = comArcIdx1;
-            commitCmds[0].data      = comData1;
+            setCommitCmd(0, comEn1, comRrfPtr1,
+                         comArcIdx1, comData1);
 
-            commitCmds[1].comEn     = comEn2;
-            commitCmds[1].comRrfPtr = comRrfPtr2;
-            commitCmds[1].comArcIdx = comArcIdx2;
-            commitCmds[1].data      = comData2;
+            setCommitCmd(1, comEn2, comRrfPtr2,
+                        comArcIdx2, comData2);
 
             ///// the free spectag should be update
             SET_ASM_PRI_TO_MANUAL(DEFAULT_UE_PRI_USER);

@@ -49,7 +49,7 @@ namespace kathryn::o3{
         void flow() override{
 
 
-
+            //// initialize variable
             opr& opc     = src(opcode);
             opr& srcPc   = src(pc);
             opr& srcImm  = src(imm);
@@ -59,6 +59,10 @@ namespace kathryn::o3{
             opr& srcA   = getAluSrcA(src);
             opr& srcB   = getAluSrcB(src);
             brTaken     = alu(src(aluOp), srcA, srcB).sl(0);
+
+            //// assign static wire to bc
+            tagMgmt.bc.misTag = spTag;
+            tagMgmt.bc.sucTag = spTag;
 
             //// calculate the address
             opr& nextPc = srcPc + 4;

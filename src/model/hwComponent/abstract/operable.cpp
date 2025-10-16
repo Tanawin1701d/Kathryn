@@ -268,7 +268,7 @@ namespace kathryn {
                  "operable<+> get mismatch bit size"
         );
 
-        auto [blA, blB] = sextToBalanceSize(*this, b);
+        auto [blA, blB] = uextToBalanceSize(*this, b);
         auto ret =  new expression(ARITH_PLUS,
                                      &blA,
                                      &blB,
@@ -282,7 +282,7 @@ namespace kathryn {
         mfAssert(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
                  "operable<-> get mismatch bit size"
         );
-        auto [blA, blB] = sextToBalanceSize(*this, b);
+        auto [blA, blB] = uextToBalanceSize(*this, b);
 
         auto ret =  new expression(ARITH_MINUS,
                                      &blA,
@@ -297,7 +297,7 @@ namespace kathryn {
                  "operable<*> get mismatch bit size"
         );
 
-        auto [blA, blB] = sextToBalanceSize(*this, b);
+        auto [blA, blB] = uextToBalanceSize(*this, b);
         auto ret =  new expression(ARITH_MUL,
                                      &blA,
                                      &blB,
@@ -311,7 +311,7 @@ namespace kathryn {
                  "operable</> get mismatch bit size"
         );
 
-        auto [blA, blB] = sextToBalanceSize(*this, b);
+        auto [blA, blB] = uextToBalanceSize(*this, b);
         auto ret =  new expression(ARITH_DIV,
                                      &blA,
                                      &blB,
@@ -325,7 +325,7 @@ namespace kathryn {
                  "operable<%> get mismatch bit size"
         );
 
-        auto [blA, blB] = sextToBalanceSize(*this, b);
+        auto [blA, blB] = uextToBalanceSize(*this, b);
         auto ret =  new expression(ARITH_DIVR,
                                      &blA,
                                      &blB,

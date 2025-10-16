@@ -27,8 +27,8 @@ namespace kathryn::o3{
         TagMgmt&     tagMgmt;
         Rob&         rob;
 
-        mWire(aluRsvIdx2_final   , ALU_ENT_NUM);
-        mWire(branchRsvIdx2_final, BRANCH_ENT_SEL);
+        mWire(aluRsvIdx2_final   , ALU_ENT_NUM);  //// it is one hot index
+        mWire(branchRsvIdx2_final, BRANCH_ENT_SEL); //// it is binary index
 
         DpMod(PipStage& pm, ORsv& aluRsv, IRsv& branchRSV,
               RegArch& regArch, TagMgmt& tagMgmt, Rob& rob):
@@ -49,8 +49,8 @@ namespace kathryn::o3{
                  isRsvRequired(pm.dc.dcd2, RS_ENT_IDX).uext(2));
         }
 
-        WireSlot cvtdecInstrToRsv(RegSlot& dcd, RegSlot& dcdShard, int decLaneIdx,
-                            opr* desPrevIdx, opr* isDesPrevUse){
+        WireSlot cvtdecInstrToRsv(RegSlot& dcd, RegSlot& dcdShard, int decLaneIdx,  ///// lane start from 0
+                                  opr* desPrevIdx, opr* isDesPrevUse){
 
             /////// create rsv smRsvI for inorder is redundant
             WireSlot des(smRsvO + smRsvBranch + smRsvBase); /// smRsvBase + smRsvOI
@@ -85,9 +85,9 @@ namespace kathryn::o3{
 
         void flow() override{
 
-            auto& dcd1 = pm.dc.dcd1;
-            auto& dcd2 = pm.dc.dcd2;
-            auto& dcdShare     = pm.dc.dcdShared;
+            auto& dcd1     = pm.dc.dcd1;
+            auto& dcd2     = pm.dc.dcd2;
+            auto& dcdShare = pm.dc.dcdShared;
 
             auto[aluRsvBusy , aluRsvIdx ] = aluRsv.buildFreeOhIndex(nullptr);
             auto[aluRsvBusy2, aluRsvIdx2] = aluRsv.buildFreeOhIndex(&aluRsvIdx);
@@ -97,8 +97,6 @@ namespace kathryn::o3{
             zif (dcd1(rsEnt) == RS_ENT_ALU) aluRsvIdx2_final = aluRsvIdx2.getIdx();
             zelse                           aluRsvIdx2_final = aluRsvIdx.getIdx();
 
-
-            //// TODO check the assign order
             auto[branchRsvBusy , branchRsvIdx ] = branchRSV.buildFreeBinIndex(nullptr);
             auto[branchRsvBusy2, branchRsvIdx2] = branchRSV.buildFreeBinIndex(&(branchRsvIdx+1));
             opr& isBranchRsvAllocatable = isAlocatableForRsv(branchRsvBusy, branchRsvBusy2, RS_ENT_BRANCH);
@@ -127,18 +125,15 @@ namespace kathryn::o3{
                     //////// update arf
                     regArch.arf.onRename(renCmd1, renCmd2,tagMgmt.mpft);
                     //////// update reservation station
-                    WireSlot entry1 = cvtdecInstrToRsv(dcd1, dcdShare, 0, nullptr, nullptr);
-                    WireSlot entry2 = cvtdecInstrToRsv(dcd2, dcdShare, 1,
-                        &dcd1(rdUse), &entry1(rrftag));
-
-                    //////// put the instruction to rob and rsv
-
+                    WireSlot entry1(cvtdecInstrToRsv(dcd1, dcdShare, 0, nullptr, nullptr));
+                    WireSlot entry2(cvtdecInstrToRsv(dcd2, dcdShare, 1, &dcd1(rdUse), &entry1(rrftag)));
                     ////// dcd 1 supposed to be valid all the time
                     zif(dcd1(rsEnt) == RS_ENT_ALU){
                         aluRsv.writeEntry(aluRsvIdx, entry1);
                     }zelse{
                         branchRSV.writeEntry(branchRsvIdx, entry1);
                     }
+                    ////// update reorder buffer
                     rob.onDispatch(reqPtr, entry1);
 
                     zif(~dcd2(invalid)){

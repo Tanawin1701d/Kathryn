@@ -68,6 +68,10 @@ namespace kathryn::o3{
         SyncMeta sync {"branchSync"};
     };
 
+    struct CommitStage{
+        SyncMeta sync {"commitSync"};
+    };
+
     struct ByPass{
         int bpIdx = -1;
         mWire(valid, 1);
@@ -155,6 +159,7 @@ namespace kathryn::o3{
         RsvStage    rs;
         ExecStage   ex;
         BranchStage br;
+        CommitStage cm;
     };
 
 }

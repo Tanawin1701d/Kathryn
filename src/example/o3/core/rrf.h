@@ -43,7 +43,7 @@ namespace kathryn::o3{
         }
 
         opr& isRenamable(opr& req2){
-            return (freenum + commitReqSize) >= (req2 + 1);
+            return (freenum + commitReqSize) >= (req2.uext(2) + 1);
         }
 
         Operable& getReqPtr(){return reqPtr;}
@@ -73,7 +73,7 @@ namespace kathryn::o3{
             freenum <<= (freenum + commitReqSize - renameReqSize);
         }
 
-        ////// on rename might have conflicted
+        ////// on the table there should no conflict (rename<->wb<->commit)
         void onRename(opr& req1, opr& req2){
             ////// isRenamable must be use
             renameReqSize = req1.uext(2) + req2.uext(2);
@@ -98,8 +98,6 @@ namespace kathryn::o3{
             auto agent = table[wbPtr];
             agent(rrfValid) <<= 1;
             agent(rrfData ) <<= wbData;
-            ///// to do register the writeback data to the broadcast
-
         }
 
         ///// it
@@ -109,14 +107,14 @@ namespace kathryn::o3{
             mWire(com1Avail, 1);
             mWire(com2Avail, 1);
             opr& roundOver = (reqPtr < comPtr) | (freenum == 0); //// no free turn around
-            opr& rem = gr(roundOver, reqPtr) - comPtr;
+            opr& rem = gr(roundOver, reqPtr) - comPtr; //// rem means remain to commit
             com1Avail = rem > 0; //// unequal to 0
             com2Avail = rem > 1; //// unequal to 1 and 0
 
             opr& resCom1 = com1Avail&com1Cond;
             opr& resCom2 = com2Avail&com2Cond;
             commitReqSize = resCom1.uext(2) + resCom2.uext(2);
-            doRenameOrCommit();
+            doRenameOrCommit(); ////// rename and commit can occur at the same time
             return {resCom1, resCom2};
         }
 

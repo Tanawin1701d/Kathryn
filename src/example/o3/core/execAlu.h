@@ -48,7 +48,6 @@ namespace kathryn::o3{
             zif(src(rdUse)){
                 regArch.rrf.onWback(src(rrftag), result);
                 regArch.bpp.doByPass(bp);
-
             }
         }
         

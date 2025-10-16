@@ -11,12 +11,14 @@ namespace kathryn::o3{
         ////// update the meta-data
         tagMgmt.bc.mis = 1;
 
-        pm.ft.curPc <<= fixPc;
+        pm.ft.incPc(fixPc, true);
         ////// kill the pipeline stage
         pm.ft.sync.killSlave(true);
         pm.dc.sync.killSlave(true);
         pm.ds.sync.killSlave(true);
         pm.ex.sync.killIfTagMet(true, fixTag);
+        /////// hold the committ block
+        pm.cm.sync.holdSlave();
         ////// do recovery on the tag system
         tagMgmt.mpft.onMissPred();
         tagMgmt.tagGen.onMisPred(misTag);
@@ -52,8 +54,5 @@ namespace kathryn::o3{
         regArch.arf.onSucPred(fixTag, sucTag);
 
     }
-
-
-
 
 }

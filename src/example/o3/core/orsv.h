@@ -24,12 +24,12 @@ namespace kathryn::o3{
             SET_ASM_PRI_TO_AUTO();
         }
 
-        virtual void writeEntry(OH ohIdx, WireSlot& iw) override{
+        void writeEntry(OH ohIdx, WireSlot& iw) override{
             resetSortBit();
             RsvBase::writeEntry(ohIdx, iw);
         }
 
-        virtual void writeEntry(opr& binIdx, WireSlot& iw) override{
+        void writeEntry(opr& binIdx, WireSlot& iw) override{
             resetSortBit();
             RsvBase::writeEntry(binIdx, iw);
         }
@@ -60,7 +60,6 @@ namespace kathryn::o3{
 
                     auto& busyEq    = lhs(busy)    == rhs(busy);
                     auto& sortBitEq = lhs(sortBit) == rhs(sortBit);
-                    auto& rrftagEq  = lhs(rrftag)  == rhs(rrftag);
 
                     return
                         (lhs(busy) && (~rhs(busy))) ||

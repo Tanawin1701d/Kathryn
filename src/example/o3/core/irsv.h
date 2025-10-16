@@ -71,6 +71,7 @@ namespace kathryn::o3{
              */
             zif(e0.sValid){ ///  there is empty room
                 zif((b1.sIdx == 0) && (e1.sIdx == (_table.getNumRow()-1))){ ///// zero bubble
+                    //// it may be entirely zeros but we will check it at slotReady(iw)
                     checkIdx = (e0.sIdx + 1);
                 }zelse{ checkIdx = b1.sIdx; }
             }zelse{

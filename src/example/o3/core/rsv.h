@@ -38,8 +38,8 @@ namespace kathryn::o3{
             stationProbe->init(&_table);
         }
 
-        RsvBase(SlotMeta meta, int amtRow):
-            _meta(meta), _table(meta, amtRow),
+        RsvBase(const SlotMeta& meta, int amtRow):
+        _meta(meta),_table(meta, amtRow),
         execSrc(meta){
             _table.makeColResetEvent(busy, 0);
         }
