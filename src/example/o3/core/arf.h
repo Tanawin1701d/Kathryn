@@ -187,7 +187,7 @@ namespace kathryn::o3{
         }
 
         void updateArfReg(opr& comEn, opr& comArcIdx, opr& data){
-            zif(comEn){
+            zif(comEn & (comArcIdx != 0)){
                 archRegs[comArcIdx] <<= data;
             }
         }

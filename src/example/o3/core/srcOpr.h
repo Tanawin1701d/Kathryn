@@ -31,35 +31,38 @@ namespace kathryn::o3{
 
         result(rsSel_i) = dcd(rsSel_i);
 
-        zif(dcd(rsUse_i)){
-            RenamedData arfRen = ra.arf.getRenamedData(dcd(rsIdx_i));
-            zif(arfRen.busy){ ///// data should be in rrf/ may commit or not
-                PhyEntry phyEntry = ra.rrf.getPhyEntry(arfRen.rrfIdx);
-                zif (phyEntry.valid){
-                    result(rsValid_i) = 1;
-                    result(phyIdx_i)  = phyEntry.data;
-                }zelif(ra.bpp.isByPassing(arfRen.rrfIdx)){
-                    result(rsValid_i) = 1;
-                    result(phyIdx_i)  = ra.bpp.getByPassData(arfRen.rrfIdx);
-                }zelse{
-                    result(rsValid_i) = 0;
-                    result(phyIdx_i)  = arfRen.rrfIdx.uext(DATA_LEN);
-                }
-            }zelse{
+        ////// we doesn't care if the src opr did not use
+
+        ////// try to get data from the register architecture first
+        RenamedData arfRen = ra.arf.getRenamedData(dcd(rsIdx_i));
+        zif(arfRen.busy){ ///// data is in flight
+            PhyEntry phyEntry = ra.rrf.getPhyEntry(arfRen.rrfIdx);
+            zif (phyEntry.valid){ ///// it is finish can waiting to commit in rrf
                 result(rsValid_i) = 1;
-                result(phyIdx_i)  = ra.arf.getArfData(dcd(rsIdx_i));
+                result(phyIdx_i)  = phyEntry.data;
+            }zelif(ra.bpp.isByPassing(arfRen.rrfIdx)){ ////// it is bypassing in the system
+                result(rsValid_i) = 1;
+                ra.bpp.getByPassData(result(phyIdx_i), arfRen.rrfIdx);
+            }zelse{ ////// no idea it may be in reservation station
+                result(rsValid_i) = 0;
+                result(phyIdx_i)  = arfRen.rrfIdx.uext(DATA_LEN);
             }
-            //////// everything will be override if it is prevUse
-            if (isDesPrevUse != nullptr){
-                assert(desPrevIdx != nullptr);
-                zif(*isDesPrevUse){
-                    result(rsValid_i) = 0;
-                    result(phyIdx_i)  = desPrevIdx->uext(DATA_LEN);
-                }
-            }
-        }zelse{
+        }zelse{ ///// data is cold in architecture regiter file
             result(rsValid_i) = 1;
-            result(phyIdx_i) = 0;
+            result(phyIdx_i)  = ra.arf.getArfData(dcd(rsIdx_i));
+        }
+        //////// everything will be override if it is prevUse
+        if (isDesPrevUse != nullptr){
+            assert(desPrevIdx != nullptr);
+            zif(*isDesPrevUse){
+                result(rsValid_i) = 0;
+                result(phyIdx_i)  = desPrevIdx->uext(DATA_LEN);
+            }
+        }
+        ////// register index is 0
+        zif(dcd(rsIdx_i) == 0){
+            result(rsValid_i) = 1;
+            result(phyIdx_i)  = 0;
         }
         return result;
     }

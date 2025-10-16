@@ -49,9 +49,8 @@ namespace kathryn::o3{
                  isRsvRequired(pm.dc.dcd2, RS_ENT_IDX).uext(2));
         }
 
-        WireSlot cvtdecInstrToRsv(RegSlot& dcd, RegSlot& dcdShard, int decLaneIdx,  ///// lane start from 0
-                                  opr* desPrevIdx, opr* isDesPrevUse){
-
+        WireSlot cvtdecInstrToRsv(RegSlot& dcd, RegSlot& dcdShard, opr* desRrf , int decLaneIdx){
+            /////// decLaneIdx start from 0
             /////// create rsv smRsvI for inorder is redundant
             WireSlot des(smRsvO + smRsvBranch + smRsvBase); /// smRsvBase + smRsvOI
             /////// metadata
@@ -72,9 +71,18 @@ namespace kathryn::o3{
             des(spec)    = dcd(spec);
             des(specTag) = dcd(specTag);
 
-            des(phyIdx_1, rsValid_1) = decodeSrcOpr(dcd, desPrevIdx, isDesPrevUse,
+            opr* isDesPrevUse1 = nullptr;
+            opr* isDesPrevUse2 = nullptr;
+
+            if (desRrf != nullptr){  //// use desRrf as the trigger to check des of previous instr
+                isDesPrevUse1 = &dcdShard(desEqSrc1);
+                isDesPrevUse2 = &dcdShard(desEqSrc2);
+
+            }
+
+            des(phyIdx_1, rsValid_1) = decodeSrcOpr(dcd, desRrf, isDesPrevUse1,
                                 1, regArch);
-            des(phyIdx_2, rsValid_2) = decodeSrcOpr(dcd, desPrevIdx, isDesPrevUse,
+            des(phyIdx_2, rsValid_2) = decodeSrcOpr(dcd, desRrf, isDesPrevUse2,
                                 2, regArch);
             ////////////// branch
             des(opcode)    = dcd(inst)(0, 7);
@@ -115,6 +123,10 @@ namespace kathryn::o3{
 
             opr& isdispatable = (~(isAluRsvAllocatable && isBranchRsvAllocatable)) &
                                 regArch.rrf.isRenamable(~dcd2(invalid));
+            ////// pre assign the data
+            //////// update reservation station
+            WireSlot entry1(cvtdecInstrToRsv(dcd1, dcdShare, nullptr        , 0));
+            WireSlot entry2(cvtdecInstrToRsv(dcd2, dcdShare, &entry1(rrftag), 1));
 
 
             pip(pm.ds.sync){             initProbe(pipProbGrp .dispatch);
@@ -124,9 +136,6 @@ namespace kathryn::o3{
                     opr& reqPtr = regArch.rrf.getReqPtr();
                     //////// update arf
                     regArch.arf.onRename(renCmd1, renCmd2);
-                    //////// update reservation station
-                    WireSlot entry1(cvtdecInstrToRsv(dcd1, dcdShare, 0, nullptr, nullptr));
-                    WireSlot entry2(cvtdecInstrToRsv(dcd2, dcdShare, 1, &dcd1(rdUse), &entry1(rrftag)));
                     ////// dcd 1 supposed to be valid all the time
                     zif(dcd1(rsEnt) == RS_ENT_ALU){
                         aluRsv.writeEntry(aluRsvIdx, entry1);

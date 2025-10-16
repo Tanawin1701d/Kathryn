@@ -236,9 +236,9 @@ namespace kathryn::o3{
                     dcdShared(bhr) <<= pm.ft.raw(bhr);
 
                     dcdShared(desEqSrc1) <<=
-                        ((dcw2(rsIdx_1) == dcw1(rdIdx)) & dcw1(rdIdx));
+                        ((dcw2(rsIdx_1) == dcw1(rdIdx)) & dcw1(rdUse));
                     dcdShared(desEqSrc2) <<=
-                        ((dcw2(rsIdx_2) == dcw1(rdIdx)) & dcw1(rdIdx));
+                        ((dcw2(rsIdx_2) == dcw1(rdIdx)) & dcw1(rdUse));
 
                     ///////// generate the tag
                     auto[genTag1, genTag2] =
