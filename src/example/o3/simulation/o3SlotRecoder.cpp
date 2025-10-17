@@ -335,8 +335,6 @@ namespace kathryn::o3{
         _slotWriter->addSlotVal(RPS_EXECUTE, "ALU EXEC");
         bool aluIdle = writeSlotIfPipIdle(RPS_EXECUTE, &pipProbGrp.execAlu);
         if (aluIdle){return;}
-        bool aluStall = writeSlotIfZyncStall(RPS_EXECUTE, &zyncProbGrp.execAlu);
-        if (aluStall){return;}
 
         writeExecuteBasic(_core->aluRsv.execSrc);
 
@@ -346,8 +344,6 @@ namespace kathryn::o3{
         _slotWriter->addSlotVal(RPS_EXECUTE, "BRANCH EXEC");
         bool branchIdle = writeSlotIfPipIdle(RPS_EXECUTE, &pipProbGrp.execBranch);
         if (branchIdle){return;}
-        bool branchStall = writeSlotIfZyncStall(RPS_EXECUTE, &zyncProbGrp.execBranch);
-        if (branchStall){return;}
 
         _slotWriter->addSlotVal(RPS_EXECUTE, "OP: " + translateOpcode(ull(_core->branchRsv.execSrc(opcode))));
         _slotWriter->addSlotVal(RPS_EXECUTE, "---");

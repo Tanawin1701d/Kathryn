@@ -107,12 +107,6 @@ namespace kathryn{
 
         }
 
-        void RiscvSim::resetRegister(){
-            for (int i = 0; i < AMT_REG; i++){
-                _core.regFile.at(i).setVar(0);
-            }
-        }
-
         void RiscvSim::readAssertVal(const std::string& filePath){
 
             std::vector<std::string> rawVals;
@@ -125,6 +119,12 @@ namespace kathryn{
                 ///std::cout << regIdx << " reg val  "<< stoul(rawVals[regIdx]) << std::endl;
                 _regTestVal[regIdx] = stoul(rawVals[regIdx]);
                 ///std::cout << regIdx << " reg val  "<< _regTestVal[regIdx] << std::endl;
+            }
+        }
+
+        void RiscvSim::resetRegister(){
+            for (int i = 0; i < AMT_REG; i++){
+                _core.regFile.at(i).setVar(0);
             }
         }
 

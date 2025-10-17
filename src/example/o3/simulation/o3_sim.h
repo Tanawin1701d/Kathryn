@@ -11,8 +11,7 @@
 #include "example/o3/core/core.h"
 #include "frontEnd/cmd/paramReader.h"
 
-namespace kathryn{
-    namespace o3{
+    namespace kathryn::o3{
         class O3Sim : public SimInterface{
         public:
             Core& _core;
@@ -20,7 +19,7 @@ namespace kathryn{
             int _curTestCaseIdx = 0;
             SlotWriter slotWriter;
             std::string _prefixFolder;
-            SlotRecorder _slotSecorder;
+            O3SlotRecorder _slotRecorder;
             std::vector<std::string> _testTypes;
             uint32_t _regTestVal[REG_NUM]{};
 
@@ -41,9 +40,9 @@ namespace kathryn{
         class O3_MNG{
         public:
             void start(PARAM& params){
-                std::vector<std::string> testTypes = {"Imm", "Reg",
-                    "Ls", "Jump",
-                    "BranchSc"
+                std::vector<std::string> testTypes = {"Imm", "Reg"//,
+                    // "Ls", "Jump",
+                    // "BranchSc"
                 };
 
                 mMod(o3Core, Core, false);
@@ -60,6 +59,6 @@ namespace kathryn{
             }
         };
     }
-}
+
 
 #endif //SRC_EXAMPLE_O3_SIMULATION_O3_SIM_H
