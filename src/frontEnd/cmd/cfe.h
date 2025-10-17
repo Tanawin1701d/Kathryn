@@ -29,6 +29,8 @@ namespace kathryn {
 
     void test_riscv_gen(PARAM& params);
 
+    void test_o3_sim(PARAM& params);
+
 }
 
 #endif //KATHRYN_CFE_H

@@ -12,6 +12,7 @@
 #include "example/riscv/simulation/RISCV_sim_sort.h"
 #include "test/autoSim/simMng.h"
 #include "test/autoGen/genMng.h"
+#include "example/o3/simulation/o3_sim.h"
 
 
 namespace kathryn{
@@ -58,6 +59,12 @@ namespace kathryn{
     //     std::cout << TC_GREEN << "finish cacheSimple sim [sim]" << TC_DEF << std::endl;
     // }
 
+    void test_o3_sim(PARAM& params){
+        o3::O3_MNG o3SimMng;
+        o3SimMng.start(params);
+        std::cout << TC_GREEN << "finish o3 sim [sim]" << TC_DEF << std::endl;
+    }
+
 
     void start(PARAM& params) {
 
@@ -80,6 +87,8 @@ namespace kathryn{
             startGenEle(params);
         }else if (params["testType"]  == "testSimpleCacheAcc"){
             //test_cacheAc_sim(params);
+        }else if (params["testType"]  == "testO3Sim"){
+               test_o3_sim(params);
         }else{
             std::cout << "there is no command to test system" << std::endl;
         }
