@@ -29,10 +29,16 @@ namespace kathryn::o3{
         writeIssueBranchSlot();
 
         writeExecuteAluSlot();
+        auto [thisCycleMis, thisCycleSuc] =
         writeExecuteBranchSlot();
 
         writeCommitSlot();
 
+        ////// update MisPred Status
+        isLastCycleMisPred = thisCycleMis;
+        isLastCycleSucPred = thisCycleSuc;
+        ////// apply change on slot recorder
+        dataStructProbGrp.applyCycleChange();
     }
 
 
@@ -57,7 +63,7 @@ namespace kathryn::o3{
     void O3SlotRecorder::writeSlotIfTableChange(
         REC_PIP_STAGE stageIdx,
         std::vector<SlotSimInfo64> changeRows,
-        int rowLimToPrintEntireRow){ //// amount of row in changing if exceed, we will print only changing field
+        int rowLimToPrintEntireRow) const{ //// amount of row in changing if exceed, we will print only changing field
         bool notExceedRowLim = (changeRows.size() <= rowLimToPrintEntireRow);
 
         for (SlotSimInfo64& changeRow : changeRows){
@@ -84,12 +90,19 @@ namespace kathryn::o3{
     }
 
     void O3SlotRecorder::writeArfSlot(){
-        _slotWriter->addSlotVal(RPS_ARF, "----busy table---");
+        ////// TODO the data change may be cumbersome, we have to find the way to fix this situation
+        if (isLastCycleMisPred){
+            _slotWriter->addSlotVal(RPS_ARF, "CHANGE FROM MISPRED");
+        }else if (isLastCycleSucPred){
+            _slotWriter->addSlotVal(RPS_ARF, "CHANGE FROM SUCCPRED");
+        }
+
+        _slotWriter->addSlotVal(RPS_ARF, "----busy table change---");
         TableSimProbe& tbProbe = dataStructProbGrp.arfBusy;
         std::vector<SlotSimInfo64> rowChange = tbProbe.detectRowChange();
         writeSlotIfTableChange(RPS_ARF, rowChange, 0);
         _slotWriter->addSlotVal(RPS_ARF, "----------");
-        _slotWriter->addSlotVal(RPS_ARF, "----renamed table---");
+        _slotWriter->addSlotVal(RPS_ARF, "----renamed table change---");
         TableSimProbe& tbProbe2 = dataStructProbGrp.arfRename;
         std::vector<SlotSimInfo64> rowChange2 = tbProbe2.detectRowChange();
         writeSlotIfTableChange(RPS_ARF, rowChange2, 0);
@@ -156,26 +169,35 @@ namespace kathryn::o3{
         ////////// write pipe detail
         DecodeStage& decode_stage = _ps->dc;
 
+        RegSlot& decShared = _ps->dc.dcdShared;
+        ull sim_shared_pc = ull(decShared(pc));
+        ull sim_shared_desEqSrc1 = ull(decShared(desEqSrc1));
+        ull sim_shared_desEqSrc2 = ull(decShared(desEqSrc2));
+
+        _slotWriter->addSlotVal(RPS_DISPATCH, "PC: " + cvtNum2HexStr(sim_shared_pc));
+        _slotWriter->addSlotVal(RPS_DISPATCH, str("DES_EQ_SRC1: ") + (sim_shared_desEqSrc1? "true" : "false"));
+        _slotWriter->addSlotVal(RPS_DISPATCH, str("DES_EQ_SRC2: ") + (sim_shared_desEqSrc2? "true" : "false"));
+
         for (int i = 1; i <= 2; i++){
             RegSlot& targetRegSlot = (i == 1) ? decode_stage.dcd1: decode_stage.dcd2;
 
-            ull sim_invalid = ull(targetRegSlot(invalid));
-            ull sim_immType = ull(targetRegSlot(imm_type));
-            ull sim_aluOp   = ull(targetRegSlot(aluOp));
-            ull sim_rsEnt   = ull(targetRegSlot(rsEnt));
-            ull sim_isBranch = ull(targetRegSlot(isBranch));
+            ull sim_invalid   = ull(targetRegSlot(invalid));
+            ull sim_immType   = ull(targetRegSlot(imm_type));
+            ull sim_aluOp     = ull(targetRegSlot(aluOp));
+            ull sim_rsEnt     = ull(targetRegSlot(rsEnt));
+            ull sim_isBranch  = ull(targetRegSlot(isBranch));
             ull sim_pred_addr = ull(targetRegSlot(pred_addr));
-            ull sim_spec = ull(targetRegSlot(spec));
-            ull sim_specTag = ull(targetRegSlot(specTag));
-            ull sim_illLegal = ull(targetRegSlot(illLegal));
-            ull sim_rdIdx = ull(targetRegSlot(rdIdx));
-            ull sim_rdUse = ull(targetRegSlot(rdUse));
-            ull sim_rsIdx_1 = ull(targetRegSlot(rsIdx_1));
-            ull sim_rsSel_1 = ull(targetRegSlot(rsSel_1));
-            ull sim_rsUse_1 = ull(targetRegSlot(rsUse_1));
-            ull sim_rsIdx_2 = ull(targetRegSlot(rsIdx_2));
-            ull sim_rsSel_2 = ull(targetRegSlot(rsSel_2));
-            ull sim_rsUse_2 = ull(targetRegSlot(rsUse_2));
+            ull sim_spec      = ull(targetRegSlot(spec));
+            ull sim_specTag   = ull(targetRegSlot(specTag));
+            ull sim_illLegal  = ull(targetRegSlot(illLegal));
+            ull sim_rdIdx     = ull(targetRegSlot(rdIdx));
+            ull sim_rdUse     = ull(targetRegSlot(rdUse));
+            ull sim_rsIdx_1   = ull(targetRegSlot(rsIdx_1));
+            ull sim_rsSel_1   = ull(targetRegSlot(rsSel_1));
+            ull sim_rsUse_1   = ull(targetRegSlot(rsUse_1));
+            ull sim_rsIdx_2   = ull(targetRegSlot(rsIdx_2));
+            ull sim_rsSel_2   = ull(targetRegSlot(rsSel_2));
+            ull sim_rsUse_2   = ull(targetRegSlot(rsUse_2));
 
             if (sim_invalid){
                 _slotWriter->addSlotVal(RPS_DISPATCH, "notValid");
@@ -192,12 +214,11 @@ namespace kathryn::o3{
                 _slotWriter->addSlotVal(RPS_DISPATCH, "IMM_" + immTypeStr);
                 _slotWriter->addSlotVal(RPS_DISPATCH, "ALU" + std::to_string(sim_aluOp));
 
-                if (sim_isBranch){
-                    _slotWriter->addSlotVal(RPS_DISPATCH, "isBr: " + std::to_string(sim_isBranch) +
-                                                          "/isSp: " + std::to_string(sim_spec) +
-                                                          "/spTag: " + cvtNum2BinStr(sim_specTag));
-                    _slotWriter->addSlotVal(RPS_DISPATCH, "nextPc_" + cvtNum2HexStr(sim_pred_addr));
-                }
+
+                _slotWriter->addSlotVal(RPS_DISPATCH, "isBr: " + std::to_string(sim_isBranch) +
+                                                      "/isSp: " + std::to_string(sim_spec) +
+                                                      "/spTag: " + cvtNum2BinStr(sim_specTag));
+                _slotWriter->addSlotVal(RPS_DISPATCH, "nextPc_" + cvtNum2HexStr(sim_pred_addr));
 
                 std::string rdUsage = sim_rdUse ? "(USE)" : "(UNUSED)";
                 _slotWriter->addSlotVal(RPS_DISPATCH, "RD: "+ rdUsage + " /IDX: " +  std::to_string(sim_rdIdx));
@@ -274,18 +295,18 @@ namespace kathryn::o3{
 
 
     void O3SlotRecorder::writeExecuteBasic(RegSlot& src){
-        ull sim_pc = ull(src(pc));
-        ull sim_imm = ull(src(imm));
-        ull sim_rrftag = ull(src(rrftag));
-        ull sim_rdUse = ull(src(rdUse));
-        ull sim_aluOp = ull(src(aluOp));
-        ull sim_spec = ull(src(spec));
-        ull sim_specTag = ull(src(specTag));
-        ull sim_phyIdx_1 = ull(src(phyIdx_1));
-        ull sim_rsSel_1 = ull(src(rsSel_1));
+        ull sim_pc        = ull(src(pc));
+        ull sim_imm       = ull(src(imm));
+        ull sim_rrftag    = ull(src(rrftag));
+        ull sim_rdUse     = ull(src(rdUse));
+        ull sim_aluOp     = ull(src(aluOp));
+        ull sim_spec      = ull(src(spec));
+        ull sim_specTag   = ull(src(specTag));
+        ull sim_phyIdx_1  = ull(src(phyIdx_1));
+        ull sim_rsSel_1   = ull(src(rsSel_1));
         ull sim_rsValid_1 = ull(src(rsValid_1));
-        ull sim_phyIdx_2 = ull(src(phyIdx_2));
-        ull sim_rsSel_2 = ull(src(rsSel_2));
+        ull sim_phyIdx_2  = ull(src(phyIdx_2));
+        ull sim_rsSel_2   = ull(src(rsSel_2));
         ull sim_rsValid_2 = ull(src(rsValid_2));
         
         _slotWriter->addSlotVal(RPS_EXECUTE, "PC: " + cvtNum2HexStr(sim_pc));
@@ -337,17 +358,33 @@ namespace kathryn::o3{
         if (aluIdle){return;}
 
         writeExecuteBasic(_core->aluRsv.execSrc);
-
+        _slotWriter->addSlotVal(RPS_EXECUTE, "----------");
     }
 
-    void O3SlotRecorder::writeExecuteBranchSlot(){
+
+    std::pair<bool, bool> O3SlotRecorder::writeExecuteBranchSlot(){
         _slotWriter->addSlotVal(RPS_EXECUTE, "BRANCH EXEC");
         bool branchIdle = writeSlotIfPipIdle(RPS_EXECUTE, &pipProbGrp.execBranch);
-        if (branchIdle){return;}
+        if (branchIdle){return {false, false};}
 
+        bool isThisCycleMisPred = false;
+        bool isThisCycleSucc = false;
+
+        _slotWriter->addSlotVal(RPS_EXECUTE, "---BRANCH STATUS");
+        if (ull(_core->tagMgmt.bc.mis)){
+            _slotWriter->addSlotVal(RPS_EXECUTE, "MISPREDICTED");
+            isThisCycleMisPred = true;
+        }
+        if (ull(_core->tagMgmt.bc.suc)){
+            _slotWriter->addSlotVal(RPS_EXECUTE, "SUC PREDICTED");
+            isLastCycleMisPred = true;
+
+        }
         _slotWriter->addSlotVal(RPS_EXECUTE, "OP: " + translateOpcode(ull(_core->branchRsv.execSrc(opcode))));
         _slotWriter->addSlotVal(RPS_EXECUTE, "---");
         writeExecuteBasic(_core->branchRsv.execSrc);
+
+        return {isThisCycleMisPred, isThisCycleSucc};
     }
 
     void O3SlotRecorder::writeCommitSlot(){
