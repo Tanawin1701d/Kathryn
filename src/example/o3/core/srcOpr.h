@@ -42,7 +42,7 @@ namespace kathryn::o3{
                 result(phyIdx_i)  = phyEntry.data;
             }zelif(ra.bpp.isByPassing(arfRen.rrfIdx)){ ////// it is bypassing in the system
                 result(rsValid_i) = 1;
-                ra.bpp.getByPassData(result(phyIdx_i), arfRen.rrfIdx);
+                ra.bpp.assByPassData(result(phyIdx_i), arfRen.rrfIdx);
             }zelse{ ////// no idea it may be in reservation station
                 result(rsValid_i) = 0;
                 result(phyIdx_i)  = arfRen.rrfIdx.uext(DATA_LEN);

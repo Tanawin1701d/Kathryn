@@ -2,8 +2,8 @@
 // Created by tanawin on 5/10/25.
 //
 
-#ifndef KATHRYN_FETCH_H
-#define KATHRYN_FETCH_H
+#ifndef KATHRYN_SRC_EXAMPLE_O3_FETCH_H
+#define KATHRYN_SRC_EXAMPLE_O3_FETCH_H
 
 #include "kathryn.h"
 #include "stageStruct.h"

@@ -122,7 +122,7 @@ namespace kathryn::o3{
             return *result;
         }
 
-        opr& getByPassData(Wire& desWire, opr& rrfIdx){
+        void assByPassData(Wire& desWire, opr& rrfIdx){
             for (ByPass& bp : _bps){
                 zif(bp.valid && (bp.rrfIdx == rrfIdx)){
                     desWire = bp.val;

@@ -25,7 +25,7 @@ namespace kathryn::o3{
     /////// tagmgmt
     TagMgmt  tagMgmt;
     /////// register architecture
-    RegArch  regArch;
+    RegArch  regArch{tagMgmt.mpft};
     /////// reservation station
     ORsv aluRsv     {smRsvO + smRsvBase, ALU_ENT_NUM};
     IRsv branchRsv  {smRsvI + smRsvBase, BRANCH_ENT_SEL, "br", tagMgmt.bc};
