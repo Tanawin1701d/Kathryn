@@ -27,8 +27,8 @@ namespace kathryn::o3{
     /////// register architecture
     RegArch  regArch{tagMgmt.mpft};
     /////// reservation station
-    ORsv aluRsv     {smRsvO + smRsvBase, ALU_ENT_NUM};
-    IRsv branchRsv  {smRsvI + smRsvBase, BRANCH_ENT_SEL, "br", tagMgmt.bc};
+    ORsv aluRsv     {smRsvBase, ALU_ENT_NUM};
+    IRsv branchRsv  {smRsvBase + smRsvBranch, BRANCH_ENT_SEL, "br", tagMgmt.bc};
 
     /////// pipeline manager
     PipStage pm;
@@ -45,20 +45,23 @@ namespace kathryn::o3{
                  pm        , prob   , branchRsv.execSrc); //// branch unit
 
 
-    explicit Core(int x){}
+    explicit Core(int x){
+        regArch.bpp.addRsv(&aluRsv);
+        regArch.bpp.addRsv(&branchRsv);
+    }
 
     void flow() override{
-
-        ///// build alu reservation station issue logic
-        aluRsv.buildIssue(pm.ex.sync, tagMgmt.bc);
-        ///// build branch reservation station internal logic
-        branchRsv.buildIssue(pm.br.sync, tagMgmt.bc);
 
         ///// set sim probe for the exec unit and reservation station
         pExAlu   .setSimProbe(&pipProbGrp.execAlu);
         pExBra   .setSimProbe(&pipProbGrp.execBranch);
         aluRsv   .setSimProbe(&zyncProbGrp.issueAlu, &dataStructProbGrp.rsvAlu);
         branchRsv.setSimProbe(&zyncProbGrp.issueBranch, &dataStructProbGrp.rsvbranch);
+
+        ///// build alu reservation station issue logic
+        aluRsv.buildIssue(pm.ex.sync, tagMgmt.bc);
+        ///// build branch reservation station internal logic
+        branchRsv.buildIssue(pm.br.sync, tagMgmt.bc);
 
     }
 

@@ -121,6 +121,7 @@ namespace kathryn::o3{
                     zif (isBusy){
                         zif ((~isRsValid) & (phyIdx(0, RRF_SEL) == bp.rrfIdx)){
                             phyIdx <<= bp.val;
+                            isRsValid <<= 1;
                         }
                     }
                 }

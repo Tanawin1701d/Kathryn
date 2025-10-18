@@ -43,7 +43,8 @@ namespace kathryn::o3{
         O3SlotRecorder(SlotWriter*  slotWriter,
                        Core*        core):
         _slotWriter(slotWriter),
-        _core(core){
+        _core(core),
+        _ps(&_core->pm){
             assert(_slotWriter != nullptr);
         }
 

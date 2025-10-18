@@ -48,9 +48,17 @@ namespace kathryn{
             }
         };
 
+        // struct O3DbgWireGrp{
+        //     mWire(disp_isAluRsvAllocatable, 1);
+        //     mWire(disp_isBranchRsvAllocatable, 1);
+        //     mWire(disp_isRenamable, 1);
+        // };
+
         inline O3PipProbGrp        pipProbGrp;
         inline O3ZyncProbGrp       zyncProbGrp;
         inline O3DataStructProbGrp dataStructProbGrp;
+
+        //inline O3DbgWireGrp dbgWireGrp;
 
     }
 }

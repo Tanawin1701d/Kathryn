@@ -34,6 +34,9 @@ namespace kathryn::o3{
 
         writeCommitSlot();
 
+        //////// iterate the cycle
+        _slotWriter->iterateCycle();
+
         ////// update MisPred Status
         isLastCycleMisPred = thisCycleMis;
         isLastCycleSucPred = thisCycleSuc;
@@ -173,7 +176,9 @@ namespace kathryn::o3{
         ull sim_shared_pc = ull(decShared(pc));
         ull sim_shared_desEqSrc1 = ull(decShared(desEqSrc1));
         ull sim_shared_desEqSrc2 = ull(decShared(desEqSrc2));
-
+        _slotWriter->addSlotVal(RPS_DISPATCH, "aluRsvAble: " + std::to_string(ull(_core->pDisp.dbg_isAluRsvAllocatable)));
+        _slotWriter->addSlotVal(RPS_DISPATCH, "brRsvAble: " + std::to_string(ull(_core->pDisp.dbg_isBranchRsvAllocatable)));
+        _slotWriter->addSlotVal(RPS_DISPATCH, "isRenam: " + std::to_string(ull(_core->pDisp.dbg_isRenamable)));
         _slotWriter->addSlotVal(RPS_DISPATCH, "PC: " + cvtNum2HexStr(sim_shared_pc));
         _slotWriter->addSlotVal(RPS_DISPATCH, str("DES_EQ_SRC1: ") + (sim_shared_desEqSrc1? "true" : "false"));
         _slotWriter->addSlotVal(RPS_DISPATCH, str("DES_EQ_SRC2: ") + (sim_shared_desEqSrc2? "true" : "false"));
@@ -276,9 +281,10 @@ namespace kathryn::o3{
         /////// write for alu issue
         _slotWriter->addSlotVal(RPS_ISSUE, "ALU ISSUE");
         bool isStall = writeSlotIfZyncStall(RPS_ISSUE, &zyncProbGrp.issueAlu);
-        if (!isStall){
+        if (true /***!isStall*/){
             _slotWriter->addSlotVal(RPS_ISSUE, "issue Enty: " + cvtNum2BinStr(ull(_core->aluRsv.checkIdx)));
         }
+        _slotWriter->addSlotVal(RPS_ISSUE, "slotReady: " + std::to_string(ull(_core->aluRsv.dbg_isSlotReady)));
         _slotWriter->addSlotVal(RPS_ISSUE, "----------");
         
     }
@@ -389,7 +395,7 @@ namespace kathryn::o3{
 
     void O3SlotRecorder::writeCommitSlot(){
 
-        int amtCommit = static_cast<int>(ull(_core->prob.com1Status) && ull(_core->prob.com2Status));
+        int amtCommit = static_cast<int>(ull(_core->prob.com1Status) + ull(_core->prob.com2Status));
 
         _slotWriter->addSlotVal(RPS_COMMIT, "---- changing");
         TableSimProbe& tbProbe = dataStructProbGrp.commit;

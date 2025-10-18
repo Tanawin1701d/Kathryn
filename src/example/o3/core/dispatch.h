@@ -30,6 +30,10 @@ namespace kathryn::o3{
         mWire(aluRsvIdx2_final   , ALU_ENT_NUM);  //// it is one hot index
         mWire(branchRsvIdx2_final, BRANCH_ENT_SEL); //// it is binary index
 
+        mWire(dbg_isAluRsvAllocatable, 1);
+        mWire(dbg_isBranchRsvAllocatable, 1);
+        mWire(dbg_isRenamable, 1);
+
         DpMod(PipStage& pm, ORsv& aluRsv, IRsv& branchRSV,
               RegArch& regArch, TagMgmt& tagMgmt, Rob& rob):
             pm         (pm),
@@ -121,12 +125,18 @@ namespace kathryn::o3{
                               dcd2(rdIdx)   ,
                               dcd2(isBranch), dcd2(specTag)};
 
-            opr& isdispatable = (~(isAluRsvAllocatable && isBranchRsvAllocatable)) &
-                                regArch.rrf.isRenamable(~dcd2(invalid));
+            opr& isRenamable = regArch.rrf.isRenamable(~dcd2(invalid));
+
+            opr& isdispatable = isAluRsvAllocatable & isBranchRsvAllocatable & isRenamable;
             ////// pre assign the data
             //////// update reservation station
             WireSlot entry1(cvtdecInstrToRsv(dcd1, dcdShare, nullptr        , 0));
             WireSlot entry2(cvtdecInstrToRsv(dcd2, dcdShare, &entry1(rrftag), 1));
+
+            ////// dbg zone
+            dbg_isAluRsvAllocatable      = isAluRsvAllocatable;
+            dbg_isBranchRsvAllocatable   = isBranchRsvAllocatable;
+            dbg_isRenamable              = isRenamable;
 
 
             pip(pm.ds.sync){             initProbe(pipProbGrp .dispatch);
@@ -143,7 +153,7 @@ namespace kathryn::o3{
                         branchRSV.writeEntry(branchRsvIdx, entry1);
                     }
                     ////// update reorder buffer
-                    rob.onDispatch(reqPtr, entry1);
+                    rob.onDispatch(reqPtr, dcd1);
 
                     zif(~dcd2(invalid)){
                         zif(dcd2(rsEnt) == RS_ENT_ALU){
@@ -151,7 +161,7 @@ namespace kathryn::o3{
                         }zelse{
                                 branchRSV.writeEntry(branchRsvIdx2_final, entry2);
                         }
-                        rob.onDispatch(reqPtr+1, entry2);
+                        rob.onDispatch(reqPtr+1, dcd2);
                     }
                 }
             }

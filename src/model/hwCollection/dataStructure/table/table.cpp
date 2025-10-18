@@ -296,7 +296,7 @@ namespace kathryn{
 
         mfAssert(colIdx < getMeta().getNumField(), "colIdx is out of range");
         ////// gen the value
-        int requiredSize = getMeta().getCopyField(0)._size;
+        int requiredSize = getMeta().getCopyField(colIdx)._size;
         mVal(av, requiredSize, assignVal);
         ////// asmNode meta
         std::vector<AssignMeta*> allRowCollector;

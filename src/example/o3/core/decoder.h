@@ -31,6 +31,7 @@ namespace kathryn::o3{
             RegSlot&  raw = pm.ft.raw;
             Reg&      instr = isFirst? pm.ft.raw(inst1)   : pm.ft.raw(inst2);
             WireSlot& dcw   = isFirst? pm.dc.dcw1 : pm.dc.dcw2;
+            Reg&      inv   = isFirst? pm.ft.raw(invalid1) : pm.ft.raw(invalid2);
 
 
             ///////////// src
@@ -90,7 +91,7 @@ namespace kathryn::o3{
                 dcw(rsSel_2) = SRC_B_RS2;
 
                 ///// calculate the next address
-                dcw(isBranch) = ~raw(invalid);
+                dcw(isBranch) = ~inv;
                 if (idx == 1){
                     zif (raw(prCond)){
                         dcw(pred_addr) = raw(npc);
@@ -103,7 +104,7 @@ namespace kathryn::o3{
                 dcw(rsSel_1)  = SRC_A_PC;
                 dcw(rsSel_2)  = SRC_B_FOUR;
                 dcw(rdUse)    = 1;
-                dcw(isBranch) = ~raw(invalid);
+                dcw(isBranch) = ~inv;
                 if (idx == 1){
                     zif (raw(prCond)){
                         dcw(pred_addr) = raw(npc);
@@ -114,7 +115,7 @@ namespace kathryn::o3{
                 dcw(rsEnt)    = RS_ENT_JALR;
                 dcw(rsSel_1)  = SRC_A_PC;
                 dcw(rsSel_2)  = SRC_B_FOUR;
-                dcw(isBranch) = ~raw(invalid);
+                dcw(isBranch) = ~inv;
                 if (idx == 1){
                     zif (raw(prCond)){
                         dcw(pred_addr) = raw(npc);

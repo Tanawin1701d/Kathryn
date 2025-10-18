@@ -19,7 +19,9 @@ namespace kathryn{
     autoGenSyncMeta(true),
     _syncMeta(new SyncMeta("autoGenSyncMeta_pureCond")),
     _acceptCond(condOnly){
-        _syncMeta->setSlaveFinish(mOprVal("fallTrueZyncSlave", 1, 1));
+        Val& fallTrueSlave = mOprVal("fallTrueZyncSlave", 1, 1);
+        _syncMeta->setSlaveReady(fallTrueSlave);
+        _syncMeta->setSlaveFinish(fallTrueSlave);
     }
 
     FlowBlockZyncBase::FlowBlockZyncBase(

@@ -14,7 +14,17 @@ namespace kathryn::o3{
     inline opr& alu(opr& op, opr& srcA, opr& srcB){
         mWire(out, DATA_LEN);
         mWire(shamt, SHAMT_WIDTH);
-        mVal(fullBit, 32, (ull(-1)));
+
+        shamt = srcB.sl(0, SHAMT_WIDTH);
+        /////// for shift right arithmatic
+        opr& aMsb = srcA.sl(DATA_LEN-1);
+        opr& aMsbExt = aMsb.extB(DATA_LEN);
+        mVal(fullBit, DATA_LEN, (ull)(-1));
+        opr& signMask = ~(fullBit >> shamt);
+
+
+
+
 
         zif(op == ALU_OP_ADD)  out = srcA + srcB;
         zif(op == ALU_OP_SLL)  out = srcA << shamt;
@@ -25,7 +35,7 @@ namespace kathryn::o3{
         zif(op == ALU_OP_SEQ)  out = (srcA == srcB).uext(DATA_LEN);
         zif(op == ALU_OP_SNE)  out = (srcA != srcB).uext(DATA_LEN);
         zif(op == ALU_OP_SUB)  out = srcA - srcB;
-        zif(op == ALU_OP_SRA)  out = (~(fullBit >> shamt) | (srcA >> shamt));
+        zif(op == ALU_OP_SRA)  out = ((signMask & aMsbExt) | (srcA >> shamt));
         zif(op == ALU_OP_SLT)  out = (srcA.slt(srcB)).uext(DATA_LEN);
         zif(op == ALU_OP_SGE)  out = (srcA.sgt(srcB) | (srcA == srcB)).uext(DATA_LEN);;
         zif(op == ALU_OP_SLTU) out = srcA < srcB;

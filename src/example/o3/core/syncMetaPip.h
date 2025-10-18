@@ -12,7 +12,7 @@ namespace kathryn::o3{
 
     struct SyncPip: SyncMeta{
 
-        expression spectag {SPECTAG_LEN};
+        mExpr(spectag, SPECTAG_LEN);
 
         SyncPip(const std::string& name):
         SyncMeta(name){}

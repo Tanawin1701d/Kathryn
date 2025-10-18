@@ -76,10 +76,8 @@ namespace kathryn {
     }
 
     expression& Operable::operator<<( Operable &b) {
-        // mfAssert(b.getOperableSlice().getSize() <= bitSizeOfUll,
-        //          "operable<&> get mismatch bit size"
-        // );
-        std::cout << "warning there is shift bit that greater than 64" << std::endl;
+
+        mfWarn(b.getOperableSlice().getSize() <= 6,  "warning there is shift bit that greater than 64");
         auto ret =  new expression(BITWISE_SHL,
                                      this,
                                      &b,
@@ -89,10 +87,8 @@ namespace kathryn {
     }
 
     expression& Operable::operator>>( Operable &b) {
-        // mfAssert(b.getOperableSlice().getSize() <= bitSizeOfUll,
-        //          "operable<&> get mismatch bit size"
-        // );
-        std::cout << "warning there is shift bit that greater than 64" << std::endl;
+
+        mfWarn(b.getOperableSlice().getSize() <= 6,  "warning there is shift bit that greater than 64");
         auto ret =  new expression(BITWISE_SHR,
                                      this,
                                      &b,
@@ -279,7 +275,7 @@ namespace kathryn {
     }
 
     expression& Operable::operator-( Operable &b) {
-        mfAssert(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
+        mfWarn(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
                  "operable<-> get mismatch bit size"
         );
         auto [blA, blB] = uextToBalanceSize(*this, b);
@@ -293,7 +289,7 @@ namespace kathryn {
     }
 
     expression& Operable::operator*( Operable &b) {
-        mfAssert(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
+        mfWarn(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
                  "operable<*> get mismatch bit size"
         );
 
@@ -307,7 +303,7 @@ namespace kathryn {
     }
 
     expression& Operable::operator/( Operable &b) {
-        mfAssert(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
+        mfWarn(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
                  "operable</> get mismatch bit size"
         );
 
@@ -321,7 +317,7 @@ namespace kathryn {
     }
 
     expression& Operable::operator%( Operable &b) {
-        mfAssert(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
+        mfWarn(getOperableSlice().getSize() == b.getOperableSlice().getSize(),
                  "operable<%> get mismatch bit size"
         );
 
@@ -357,7 +353,7 @@ namespace kathryn {
         int oriSize = getOperableSlice().getSize();
         int remainSize = desSize - oriSize;
 
-        auto extendVal = makeOprVal("reSizeTo" +
+        auto& extendVal = makeOprVal("reSizeTo" +
                                std::to_string(desSize) +
                                "from" + std::to_string(oriSize),
                                remainSize, 0);

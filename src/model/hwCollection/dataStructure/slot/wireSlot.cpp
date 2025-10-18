@@ -131,7 +131,7 @@ namespace kathryn{
         int endIdx = getIdx(endField) + 1;
 
         mfAssert(isValidIdx(idx)   , "field name " + startField + " not found");
-        mfAssert(isValidIdx(endIdx), "field name " + endField + " not found");
+        mfAssert(isValidIdx(endIdx-1), "field name " + endField + " not found");
 
         return (*this)(idx, endIdx);
     }

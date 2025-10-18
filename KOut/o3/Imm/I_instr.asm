@@ -1,4 +1,4 @@
- ; this is a comment
+   ; this is a comment
 
 addi r1 r1 8
 slti r2 r1 9

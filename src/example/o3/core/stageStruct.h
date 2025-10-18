@@ -96,12 +96,16 @@ namespace kathryn::o3{
     struct RsvBase;
     struct ByPassPool{
 
-        std::vector<ByPass> _bps;
+        std::vector<ByPass*> _bps;
         std::vector<RsvBase*> _rsvs;
 
         ByPass& addByPassEle(){
-            _bps.push_back(ByPass(_bps.size()));
-            return *_bps.rbegin();
+            _bps.emplace_back(new ByPass(_bps.size()));
+            return **_bps.rbegin();
+        }
+
+        ~ByPassPool(){
+            for (ByPass* bp: _bps){delete bp;}
         }
 
         void addRsv(RsvBase* rsv){
@@ -110,22 +114,22 @@ namespace kathryn::o3{
 
         void tryAssignByPassAll(Operable& desIdent, Reg& desVal){
             for (auto& bp : _bps){
-                bp.tryAssignByPass(desIdent, desVal);
+                bp->tryAssignByPass(desIdent, desVal);
             }
         }
 
         opr& isByPassing(opr& rrfIdx){
-            opr* result = &(_bps[0].valid & (rrfIdx == _bps[0].rrfIdx));
+            opr* result = &(_bps[0]->valid & (rrfIdx == _bps[0]->rrfIdx));
             for (int i = 1; i < _bps.size(); i++){
-                result = &((*result) | (_bps[i].valid & (rrfIdx == _bps[i].rrfIdx)));
+                result = &((*result) | (_bps[i]->valid & (rrfIdx == _bps[i]->rrfIdx)));
             }
             return *result;
         }
 
         void assByPassData(Wire& desWire, opr& rrfIdx){
-            for (ByPass& bp : _bps){
-                zif(bp.valid && (bp.rrfIdx == rrfIdx)){
-                    desWire = bp.val;
+            for (ByPass* bp : _bps){
+                zif(bp->valid && (bp->rrfIdx == rrfIdx)){
+                    desWire = bp->val;
                 }
             }
         }

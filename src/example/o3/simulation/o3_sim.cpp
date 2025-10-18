@@ -17,7 +17,10 @@ namespace kathryn::o3{
                  "/tmp/vcdDummy",
                  "/tmp/prodummy",
                  "O3RiscV",
-                 buildMode),
+                 buildMode,
+                 false,
+                 false,
+                 1),
     _core(core),
     slotWriter({"MPFT","ARF","RRF","FETCH","DECODE",
                 "DISPATCH","RSV","ISSUE","EXECUTE","WB","COMMIT"},
@@ -43,7 +46,7 @@ namespace kathryn::o3{
             *rstWire = 0;
             resetRegister();
             readAssembly (_prefixFolder + _testTypes[_curTestCaseIdx] + "/asm.out");
-            readAssertVal(_prefixFolder + _testTypes[_curTestCaseIdx] + "/asm.out");
+            readAssertVal(_prefixFolder + _testTypes[_curTestCaseIdx] + "/ast.out");
             //////// iterate for 100 cycle
             for (int i = 0; i <= 100; i++){
                 conEndCycle();
@@ -92,7 +95,7 @@ namespace kathryn::o3{
                 //////// the address partition address has been written already
                 partitionedAddr++;
             }
-            size_t setZeroAmt = - iMems[i]->getDepthSize() - partitionedAddr;
+            size_t setZeroAmt = iMems[i]->getDepthSize() - partitionedAddr;
             iMems[i]->at(partitionedAddr).setVarArr(0, setZeroAmt);
         }
 

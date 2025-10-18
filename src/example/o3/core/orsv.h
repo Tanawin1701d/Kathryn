@@ -13,6 +13,8 @@ namespace kathryn::o3{
 
         mWire(checkIdx, _table.getSufficientIdxSize(true));
 
+        mWire(dbg_isSlotReady, 1);
+
         ORsv(SlotMeta meta, int amtRow):
             RsvBase(smRsvO + meta, amtRow){}
 
@@ -73,9 +75,10 @@ namespace kathryn::o3{
             /**
              * issue sync
              */
+            dbg_isSlotReady = slotReady(iw);
 
             cwhile(true){
-                zyncc(syncMeta, slotReady(iw)){ tryInitProbe(issueProbe);
+                zyncc(syncMeta, dbg_isSlotReady){ tryInitProbe(issueProbe);
                     execSrc <<= iw;
                     tryOwSpecBit(iw, bc);
                     //////// reset the table
