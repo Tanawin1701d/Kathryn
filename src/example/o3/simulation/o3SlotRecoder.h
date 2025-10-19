@@ -16,6 +16,7 @@
 
 namespace kathryn::o3{
 
+
     enum REC_PIP_STAGE{
         RPS_MPFT     = 0,
         RPS_ARF      = 1,
@@ -38,6 +39,10 @@ namespace kathryn::o3{
 
         bool isLastCycleMisPred = false;
         bool isLastCycleSucPred = false;
+
+        ull  lastDispatchPtr  = 0;
+        bool isLastCycleDisp1 = false;
+        bool isLastCycleDisp2 = false;
 
 
         O3SlotRecorder(SlotWriter*  slotWriter,
@@ -62,15 +67,18 @@ namespace kathryn::o3{
 
         ////// pipeline writer
         void writeMpftSlot();
+        std::vector<std::string> getArfSlotVal(RegSlot& busyEntry,
+                                               RegSlot& renameEntry);
         void writeArfSlot ();
-        void writeRrfSlot ();
+        void writeRrfSlot () const;
 
         void writeFetchSlot   ();
         void writeDecodeSlot  ();
         void writeDispatchSlot();
 
-
-
+        std::pair<bool, std::string>
+             writeRsvSlot        (RegSlot&   entry);
+        void writeRsvBasicSlot   (Table& table);
         void writeRsvAluSlot     ();
         void writeRsvBranchSlot  ();
 
@@ -82,6 +90,7 @@ namespace kathryn::o3{
         ////// {misPred, sucPred}
         std::pair<bool, bool> writeExecuteBranchSlot();
 
+        std::string writeRobSlot(ull robIdx);
         void writeCommitSlot();
 
         std::string translateOpcode(ull rawInstr);

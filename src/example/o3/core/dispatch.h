@@ -34,6 +34,9 @@ namespace kathryn::o3{
         mWire(dbg_isBranchRsvAllocatable, 1);
         mWire(dbg_isRenamable, 1);
 
+        mWire(dbg_isDisp1, 1);
+        mWire(dbg_isDisp2, 1);
+
         DpMod(PipStage& pm, ORsv& aluRsv, IRsv& branchRSV,
               RegArch& regArch, TagMgmt& tagMgmt, Rob& rob):
             pm         (pm),
@@ -153,6 +156,7 @@ namespace kathryn::o3{
                         branchRSV.writeEntry(branchRsvIdx, entry1);
                     }
                     ////// update reorder buffer
+                    dbg_isDisp1 = 1;
                     rob.onDispatch(reqPtr, dcd1);
 
                     zif(~dcd2(invalid)){
@@ -162,6 +166,7 @@ namespace kathryn::o3{
                                 branchRSV.writeEntry(branchRsvIdx2_final, entry2);
                         }
                         rob.onDispatch(reqPtr+1, dcd2);
+                        dbg_isDisp2 = 1;
                     }
                 }
             }

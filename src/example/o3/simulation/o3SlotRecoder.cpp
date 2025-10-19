@@ -40,6 +40,10 @@ namespace kathryn::o3{
         ////// update MisPred Status
         isLastCycleMisPred = thisCycleMis;
         isLastCycleSucPred = thisCycleSuc;
+        ////// update dispatch cycle
+        lastDispatchPtr  = ull(_core->regArch.rrf.getReqPtr());
+        isLastCycleDisp1 = ull(_core->pDisp.dbg_isDisp1);
+        isLastCycleDisp2 = ull(_core->pDisp.dbg_isDisp2);
         ////// apply change on slot recorder
         dataStructProbGrp.applyCycleChange();
     }
@@ -86,10 +90,39 @@ namespace kathryn::o3{
 
 
     void O3SlotRecorder::writeMpftSlot(){
-        TableSimProbe& tbProbe = dataStructProbGrp.mpft;
-        std::vector<SlotSimInfo64> rowChange = tbProbe.detectRowChange();
-        writeSlotIfTableChange(RPS_MPFT, rowChange, 256);
+
+        Table& mpftTable = _core->tagMgmt.mpft._table;
+        for (int rowIdx = 0; rowIdx < mpftTable.getNumRow(); rowIdx++){
+            RegSlot& entry = mpftTable(rowIdx);
+            ull sim_valid  = ull(entry(mpft_valid));
+            ull sim_fixTag = ull(entry(mpft_fixTag));
+            _slotWriter->addSlotVal(RPS_MPFT,
+                "vl: " + std::to_string(sim_valid) + " "
+                "-> " + cvtNum2HexStr(sim_fixTag)  + " "
+                "idx " + std::to_string(rowIdx));
+        }
         _slotWriter->addSlotVal(RPS_MPFT, "----------");
+    }
+
+    std::vector<std::string> O3SlotRecorder::getArfSlotVal(RegSlot& busyEntry, RegSlot& renameEntry){
+        std::vector<std::string> result;
+        const int rowNum = 4;
+        const int colNum = REG_NUM/rowNum;
+
+        for (int row = 0; row < rowNum; row++){
+            std::string rowStr;
+            for (int col = 0; col < colNum; col++){
+                int idx = row * colNum + col;
+                ull sim_busy = ull(busyEntry(idx));
+                ull sim_rename = ull(renameEntry(idx));
+                rowStr += sim_busy ? std::to_string(sim_rename) : "-";
+                if (col < colNum - 1){
+                    rowStr += "|";
+                }
+            }
+            result.push_back(rowStr);
+        }
+        return result;
     }
 
     void O3SlotRecorder::writeArfSlot(){
@@ -100,19 +133,39 @@ namespace kathryn::o3{
             _slotWriter->addSlotVal(RPS_ARF, "CHANGE FROM SUCCPRED");
         }
 
-        _slotWriter->addSlotVal(RPS_ARF, "----busy table change---");
-        TableSimProbe& tbProbe = dataStructProbGrp.arfBusy;
-        std::vector<SlotSimInfo64> rowChange = tbProbe.detectRowChange();
-        writeSlotIfTableChange(RPS_ARF, rowChange, 0);
-        _slotWriter->addSlotVal(RPS_ARF, "----------");
-        _slotWriter->addSlotVal(RPS_ARF, "----renamed table change---");
-        TableSimProbe& tbProbe2 = dataStructProbGrp.arfRename;
-        std::vector<SlotSimInfo64> rowChange2 = tbProbe2.detectRowChange();
-        writeSlotIfTableChange(RPS_ARF, rowChange2, 0);
-        _slotWriter->addSlotVal(RPS_ARF, "----------");
+        /////// for each spectag
+        for (int tableIdx = 0; tableIdx < SPECTAG_LEN; tableIdx++){
+            std::vector<std::string> arfTable =
+                getArfSlotVal(_core->regArch.arf.busy(tableIdx),
+                              _core->regArch.arf.rename(tableIdx));
+
+            _slotWriter->addSlotVal(RPS_ARF, "SPECTAG: " + std::to_string(tableIdx));
+            for (const auto & rowIdx : arfTable){
+                _slotWriter->addSlotVal(RPS_ARF, rowIdx);
+            }
+        }
+        /////// for master
+        std::vector<std::string> arfTableMaster =
+            getArfSlotVal(_core->regArch.arf.busyMaster,
+                          _core->regArch.arf.renameMaster);
+        _slotWriter->addSlotVal(RPS_ARF, "MASTER");
+        for (const auto & rowIdx : arfTableMaster){
+            _slotWriter->addSlotVal(RPS_ARF, rowIdx);
+        }
+
     }
 
-    void O3SlotRecorder::writeRrfSlot(){
+    void O3SlotRecorder::writeRrfSlot() const{
+
+        ull sim_reqPtr = ull(_core->regArch.rrf.reqPtr);
+        ull sim_comPtr = ull(_core->prob.comPtr);
+
+        std::string turnStr =  (sim_comPtr <= sim_reqPtr) ? "COM->REQ" : "REQ->COM (LB)";
+        _slotWriter->addSlotVal(RPS_RRF, turnStr);
+        _slotWriter->addSlotVal(RPS_RRF, "REQ PTR: " + std::to_string(sim_reqPtr));
+        _slotWriter->addSlotVal(RPS_RRF, "COM PTR: " + std::to_string(sim_comPtr));
+
+        _slotWriter->addSlotVal(RPS_RRF, "--------");
         TableSimProbe& tbProbe = dataStructProbGrp.rrf;
         std::vector<SlotSimInfo64> rowChange = tbProbe.detectRowChange();
         writeSlotIfTableChange(RPS_RRF, rowChange, 256);
@@ -258,22 +311,80 @@ namespace kathryn::o3{
         }
     }
 
+    std::pair<bool, std::string> O3SlotRecorder::writeRsvSlot(RegSlot& entry){
+
+        ///// entry identifier
+        ull sim_busy      = ull(entry(busy));
+
+        ull sim_pc        = ull(entry(pc));
+        ull sim_rrftag    = ull(entry(rrftag));
+        ull sim_rdUse     = ull(entry(rdUse));
+        ull sim_spec      = ull(entry(spec));
+        ull sim_specTag   = ull(entry(specTag));
+        ull sim_phyIdx_1  = ull(entry(phyIdx_1));
+        ull sim_rsSel_1   = ull(entry(rsSel_1));
+        ull sim_rsValid_1 = ull(entry(rsValid_1));
+        ull sim_phyIdx_2  = ull(entry(phyIdx_2));
+        ull sim_rsSel_2   = ull(entry(rsSel_2));
+        ull sim_rsValid_2 = ull(entry(rsValid_2));
+
+        if (!sim_busy){
+            return{false, ""};
+        }
+
+        std::string result;
+
+        if (entry.isThereField(sortBit)){
+            ull sim_sortBit = ull(entry(sortBit));
+            result += "sb:" + std::string(sim_sortBit ? "1" : "0") + " ";
+        }
+
+        result += "pc:" + cvtNum2HexStr(sim_pc) + " ";
+        result += "pd:" + std::to_string(sim_rrftag) + " ";
+
+
+        bool ready = sim_rsValid_1 && sim_rsValid_2;
+
+        if (ready){
+            result += "READY!";
+        }else{
+            if (sim_rsValid_1){
+                result += "W1: " + std::to_string(sim_phyIdx_1);
+            }
+            if (sim_rsValid_2){
+                result += "W2: " + std::to_string(sim_phyIdx_2);
+            }
+        }
+        return {true, result};
+    }
+
+
+    void O3SlotRecorder::writeRsvBasicSlot(Table& table){
+
+        for (int rowIdx = 0; rowIdx < table.getNumRow(); rowIdx++){
+            RegSlot& entry = table(rowIdx);
+            bool isUsed = false;
+            std::string result;
+            std::tie(isUsed, result) = writeRsvSlot(entry);
+            if (isUsed){
+                _slotWriter->addSlotVal(RPS_RSV, std::to_string(rowIdx) + "] " + result);
+            }
+        }
+
+    }
+
 
     void O3SlotRecorder::writeRsvAluSlot(){
         /////// write for alu rsv
         _slotWriter->addSlotVal(RPS_RSV, "ALU RSV");
-        TableSimProbe& tbProbe = dataStructProbGrp.rsvAlu;
-        std::vector<SlotSimInfo64> rowChange = tbProbe.detectRowChange();
-        writeSlotIfTableChange(RPS_RSV, rowChange, 2);
+        writeRsvBasicSlot(_core->aluRsv._table);
         _slotWriter->addSlotVal(RPS_RSV, "----------");
     }
 
     void O3SlotRecorder::writeRsvBranchSlot(){
         /////// write for branch rsv
         _slotWriter->addSlotVal(RPS_RSV, "BRANCH RSV");
-        TableSimProbe& tbProbe = dataStructProbGrp.rsvbranch;
-        std::vector<SlotSimInfo64> rowChange = tbProbe.detectRowChange();
-        writeSlotIfTableChange(RPS_RSV, rowChange, 2);
+        writeRsvBasicSlot(_core->branchRsv._table);
         _slotWriter->addSlotVal(RPS_RSV, "----------");
     }
 
@@ -393,39 +504,54 @@ namespace kathryn::o3{
         return {isThisCycleMisPred, isThisCycleSucc};
     }
 
+    std::string O3SlotRecorder::writeRobSlot(ull robIdx){
+
+        RegSlot&  targetRegSlot = _core->prob._table(static_cast<int>(robIdx));
+
+        ull sim_wbFin    = ull(targetRegSlot(wbFin));
+        ull sim_isBranch = ull(targetRegSlot(isBranch));
+        ull sim_rdUse    = ull(targetRegSlot(rdUse));
+        ull sim_rdIdx    = ull(targetRegSlot(rdIdx));
+
+        std::string entryStr = "E:" + std::to_string(robIdx);
+        entryStr += "/fin:" + std::to_string(sim_wbFin);
+        entryStr += "/br:" + std::to_string(sim_isBranch);
+        entryStr += "/rd:";
+        if (sim_rdUse){
+            entryStr += std::to_string(sim_rdIdx);
+        }else{
+            entryStr += "-";
+        }
+        return entryStr;
+
+    }
+
+
     void O3SlotRecorder::writeCommitSlot(){
 
-        int amtCommit = static_cast<int>(ull(_core->prob.com1Status) + ull(_core->prob.com2Status));
 
-        _slotWriter->addSlotVal(RPS_COMMIT, "---- changing");
-        TableSimProbe& tbProbe = dataStructProbGrp.commit;
-        std::vector<SlotSimInfo64> rowChange = tbProbe.detectRowChange();
-        writeSlotIfTableChange(RPS_COMMIT, rowChange, 256);
-        _slotWriter->addSlotVal(RPS_COMMIT, "----- committing");
-
-
-        _slotWriter->addSlotVal(RPS_COMMIT, "cmPtr: " + cvtNum2HexStr(ull(_core->prob.comPtr)));
-        _slotWriter->addSlotVal(RPS_COMMIT, "cmAmt: " + std::to_string(amtCommit));
-        if (amtCommit == 0){ return;}
-
-        for (int i = 1; i <= 2; i++){
-            WireSlot& targetRegSlot = (i == 1) ? _core->prob.com1Entry : _core->prob.com2Entry;
-
-            ull sim_wbFin    = ull(targetRegSlot(wbFin));
-            ull sim_isBranch = ull(targetRegSlot(isBranch));
-            ull sim_rdUse    = ull(targetRegSlot(rdUse));
-            ull sim_rdIdx    = ull(targetRegSlot(rdIdx));
-
-            std::string entryStr = "E" + std::to_string(i) + ": ";
-            entryStr += "fin=" + std::to_string(sim_wbFin);
-            entryStr += "/isBr:" + std::to_string(sim_isBranch);
-            entryStr += "/rdUse:" + std::to_string(sim_rdUse);
-            entryStr += "/rdIdx:" + std::to_string(sim_rdIdx);
-
-            _slotWriter->addSlotVal(RPS_COMMIT, entryStr);
-
-
+        _slotWriter->addSlotVal(RPS_COMMIT, "----- dispatched");
+        int amtDisp = static_cast<int>(ull(_core->pDisp.dbg_isDisp1) + ull(_core->pDisp.dbg_isDisp2));
+        _slotWriter->addSlotVal(RPS_COMMIT, "dispPtr: " + std::to_string(ull(_core->regArch.rrf.reqPtr)));
+        _slotWriter->addSlotVal(RPS_COMMIT, "dispAmt: " + std::to_string(ull(amtDisp)));
+        for (int i = 0; i < amtDisp; i++){
+            writeRobSlot(ull(_core->regArch.rrf.reqPtr) + i);
         }
+
+
+        _slotWriter->addSlotVal(RPS_COMMIT, "----- committing");
+        int amtCommit = static_cast<int>(ull(_core->prob.com1Status) + ull(_core->prob.com2Status));
+        _slotWriter->addSlotVal(RPS_COMMIT, "cmPtr: " + std::to_string(ull(_core->prob.comPtr)));
+        _slotWriter->addSlotVal(RPS_COMMIT, "cmAmt: " + std::to_string(amtCommit));
+
+        for (int i = 0; i < amtCommit; i++){
+            writeRobSlot(ull(_core->prob.comPtr) + i);
+        }
+
+        // _slotWriter->addSlotVal(RPS_COMMIT, "----- changing");
+        // TableSimProbe& tbProbe = dataStructProbGrp.commit;
+        // std::vector<SlotSimInfo64> rowChange = tbProbe.detectRowChange();
+        // writeSlotIfTableChange(RPS_COMMIT, rowChange, 256);
 
     }
 

@@ -43,6 +43,11 @@ namespace kathryn{
 
         ////////// get static data
 
+
+        bool isThereField(const std::string& fieldName) const{
+            return getIdx(fieldName) != -1;
+        }
+
         FieldMeta& fieldRefAt(int idx){
             return _meta(idx);
         }
