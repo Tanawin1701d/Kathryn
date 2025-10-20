@@ -30,13 +30,14 @@ namespace kathryn{
         col[slotIdx].push_back(value);
     }
 
-    std::string SlotWriter::ROW::getResultRow(int slotWidth) {
+    std::string SlotWriter::ROW::getResultRow(std::vector<int> slotWidths) {
         int amtLine = findMaxSlotDataLine();
 
         std::string result;
         for (int ln = 0; ln < amtLine; ln++){
             result += "|";
             for (int slIdx = 0; slIdx < col.size(); slIdx++){
+                int slotWidth = slotWidths[slIdx];
                 /**check there is no line for print just nothing*/
                 if (ln < col[slIdx].size()){
                     /** before padding*/
@@ -69,13 +70,28 @@ namespace kathryn{
     SlotWriter::SlotWriter(std::vector<std::string> slotNames, int columnWidth, std::string fileName):
         FileWriterBase(fileName),
         SLOTSIZE(slotNames.size()),
-        COLUMNWIDTH(columnWidth),
+        _slotWidth(slotNames.size(), columnWidth),
         _slotNames(slotNames)
         {
         /***initialize value and head of table*/
-        init();
+        SlotWriter::init();
+
 
     }
+
+    SlotWriter::SlotWriter(std::vector<std::string> slotNames, std::vector<int> colWidths, std::string fileName):
+        FileWriterBase(fileName),
+        SLOTSIZE(slotNames.size()),
+        _slotWidth(colWidths),
+        _slotNames(slotNames)
+    {
+        /***initialize value and head of table*/
+        assert(SLOTSIZE == colWidths.size());
+        SlotWriter::init();
+
+    }
+
+
 
     void SlotWriter::addSlotVal(int slotIdx, std::string value) {
         auto& curRow = *_rows.rbegin();
@@ -86,12 +102,16 @@ namespace kathryn{
 
         /***write the data*/
         auto& curRow = *_rows.rbegin();
-        std::string getData = curRow.getResultRow(COLUMNWIDTH);
+        std::string getData = curRow.getResultRow(_slotWidth);
         addData(getData);
         std::string breakVal;
-        for (int i = 0; i < (SLOTSIZE * (COLUMNWIDTH + 1)); i++){
-            breakVal += "-";
+        breakVal += "+";
+        for (int colWidth: _slotWidth){
+            for (int i = 0; i < (colWidth + 1); i++){
+                breakVal += "-";
+            }
         }
+
         breakVal += "\n";
         addData(breakVal);
 

@@ -64,6 +64,12 @@ namespace kathryn::o3{
             result(rsValid_i) = 1;
             result(phyIdx_i)  = 0;
         }
+
+        //////// everything will be override if it is prevUse
+        zif (~dcd(rsUse_i)){
+            result(rsValid_i) = 1;
+        }
+
         return result;
     }
 

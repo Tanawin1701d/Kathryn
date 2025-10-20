@@ -12,7 +12,6 @@ namespace kathryn{
 
     class SlotWriter: public FileWriterBase{
         const int SLOTSIZE    = 1;
-        const int COLUMNWIDTH = 1;
 
         struct ROW{
             /** each slot might have several lines*/
@@ -23,17 +22,20 @@ namespace kathryn{
 
             int         findMaxSlotDataLine(); //// find max line in all slot
             void        addSlotVal  (int slotIdx, const std::string& value);
-            std::string getResultRow(int slotWidth);
+            std::string getResultRow(std::vector<int> slotWidths);
 
 
         };
 
         std::vector<std::string> _slotNames;
-        std::vector<ROW> _rows;
+        std::vector<int>         _slotWidth;
+        std::vector<ROW>         _rows;
+
 
 
     public:
-        explicit SlotWriter(std::vector<std::string> slotNames, int columnWidth,std::string fileName);
+        SlotWriter(std::vector<std::string> slotNames, int columnWidth,std::string fileName);
+        SlotWriter(std::vector<std::string> slotNames, std::vector<int> colWidths, std::string fileName);
 
         void addSlotVal(int slotIdx, std::string value);
 

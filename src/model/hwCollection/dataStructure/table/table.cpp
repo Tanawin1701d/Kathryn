@@ -45,8 +45,8 @@ namespace kathryn{
 
         Operable& selectRight = ~selectLeft;
 
-
-        WireSlot* desSlot = new WireSlot(getMeta());
+        ////// the cusLogic may augment lhs we have to debug it
+        WireSlot* desSlot = new WireSlot(lhs.slot->getMeta());
 
         std::vector<AssignMeta*> leftSelectAssMetas  = desSlot->genAssignMetaForAll(*lhs.slot, ASM_DIRECT);
         std::vector<AssignMeta*> rightSelectAssMetas = desSlot->genAssignMetaForAll(*rhs.slot, ASM_DIRECT);

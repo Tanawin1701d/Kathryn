@@ -85,6 +85,7 @@ namespace kathryn::o3{
     O3_PARAM_STR(phyIdx_1);
     O3_PARAM_STR(phyIdx_2);
     O3_PARAM_STR(rs1);
+    O3_PARAM_STR(entry_ready);
 
     ///// for mpft
     O3_PARAM_STR(mpft_valid)

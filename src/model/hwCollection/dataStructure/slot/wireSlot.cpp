@@ -159,6 +159,37 @@ namespace kathryn{
         return WireSlot(newSlotMeta, newWires);
     }
 
+    void WireSlot::addWire(const std::string& fieldName, Wire& wire){
+        mfAssert(!isThereField(fieldName), "field name " + fieldName + "alreadyExist");
+        _meta        .addField({fieldName, wire.getOperableSlice().getSize()});
+        _wires       .push_back(&wire);
+        _hwFieldMetas.push_back({&wire, &wire});
+    }
+
+    void WireSlot::addWire(const std::string& fieldName, int size){
+        mfAssert(size > 0, "wire size must be positive");
+        Wire& newAddedWire = mOprWire(fieldName, size);
+        addWire(fieldName, newAddedWire);
+    }
+
+    void WireSlot::addWire(const std::string& fieldName, Operable& value){
+        addWireBase(fieldName, value);
+    }
+
+    void WireSlot::tryAddWire(const std::string& fieldName, Operable& value){
+        if(!isThereField(fieldName)){
+            addWireBase(fieldName, value);
+        }
+    }
+
+    void WireSlot::addWireBase(const std::string& fieldName, Operable& value){
+        Wire& newAddedWire = mOprWire(fieldName, value.getOperableSlice().getSize());
+        AsmNode* newAssignNode = newAddedWire.generateBasicNode(value, newAddedWire.getOperableSlice(), ASM_DIRECT);
+        newAssignNode->dryAssign();
+        delete newAssignNode;
+        addWire(fieldName, newAddedWire);
+    }
+
     /**
      *  dynamic indexing
      */

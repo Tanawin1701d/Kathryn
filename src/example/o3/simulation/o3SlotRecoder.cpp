@@ -311,7 +311,7 @@ namespace kathryn::o3{
         }
     }
 
-    std::pair<bool, std::string> O3SlotRecorder::writeRsvSlot(RegSlot& entry){
+    std::pair<bool, std::vector<std::string>> O3SlotRecorder::writeRsvSlot(RegSlot& entry){
 
         ///// entry identifier
         ull sim_busy      = ull(entry(busy));
@@ -329,33 +329,39 @@ namespace kathryn::o3{
         ull sim_rsValid_2 = ull(entry(rsValid_2));
 
         if (!sim_busy){
-            return{false, ""};
+            return{false, {}};
         }
 
-        std::string result;
+        std::string result0;
 
         if (entry.isThereField(sortBit)){
             ull sim_sortBit = ull(entry(sortBit));
-            result += "sb:" + std::string(sim_sortBit ? "1" : "0") + " ";
+            result0 += "sb:" + std::string(sim_sortBit ? "1" : "0") + " ";
         }
 
-        result += "pc:" + cvtNum2HexStr(sim_pc) + " ";
-        result += "pd:" + std::to_string(sim_rrftag) + " ";
+        result0 += "pc:" + cvtNum2HexStr(sim_pc) + " ";
+        result0 += "pd:" + std::to_string(sim_rrftag) + " ";
 
 
         bool ready = sim_rsValid_1 && sim_rsValid_2;
 
         if (ready){
-            result += "READY!";
+            result0 += "READY!";
         }else{
-            if (sim_rsValid_1){
-                result += "W1: " + std::to_string(sim_phyIdx_1);
+            result0 += "W:";
+            if (!sim_rsValid_1){
+                result0 += std::to_string(sim_phyIdx_1);
             }
-            if (sim_rsValid_2){
-                result += "W2: " + std::to_string(sim_phyIdx_2);
+            if (!sim_rsValid_2){
+                result0 += "-";
+                result0 += std::to_string(sim_phyIdx_2);
             }
         }
-        return {true, result};
+
+        std::string result1;
+        result1 += "spec: " + std::to_string(sim_spec) + " spt:" + cvtNum2BinStr(sim_specTag);
+
+        return {true, {result0, result1}};
     }
 
 
@@ -364,10 +370,16 @@ namespace kathryn::o3{
         for (int rowIdx = 0; rowIdx < table.getNumRow(); rowIdx++){
             RegSlot& entry = table(rowIdx);
             bool isUsed = false;
-            std::string result;
-            std::tie(isUsed, result) = writeRsvSlot(entry);
+            std::vector<std::string> results;
+            std::tie(isUsed, results) = writeRsvSlot(entry);
             if (isUsed){
-                _slotWriter->addSlotVal(RPS_RSV, std::to_string(rowIdx) + "] " + result);
+                bool isFirst = true;
+                for (std::string& result : results){
+                    std::string prefix = isFirst ? (std::to_string(rowIdx) + "] ") : "";
+                    _slotWriter->addSlotVal(RPS_RSV, prefix + result);
+                    isFirst = false;
+                }
+
             }
         }
 
@@ -530,12 +542,12 @@ namespace kathryn::o3{
     void O3SlotRecorder::writeCommitSlot(){
 
 
-        _slotWriter->addSlotVal(RPS_COMMIT, "----- dispatched");
-        int amtDisp = static_cast<int>(ull(_core->pDisp.dbg_isDisp1) + ull(_core->pDisp.dbg_isDisp2));
+        _slotWriter->addSlotVal(RPS_COMMIT, "----- dispatched (prevCycle)");
+        int amtDisp = static_cast<int>(isLastCycleDisp1 + isLastCycleDisp2);
         _slotWriter->addSlotVal(RPS_COMMIT, "dispPtr: " + std::to_string(ull(_core->regArch.rrf.reqPtr)));
         _slotWriter->addSlotVal(RPS_COMMIT, "dispAmt: " + std::to_string(ull(amtDisp)));
         for (int i = 0; i < amtDisp; i++){
-            writeRobSlot(ull(_core->regArch.rrf.reqPtr) + i);
+            _slotWriter->addSlotVal(RPS_COMMIT, writeRobSlot(lastDispatchPtr + i));
         }
 
 
@@ -545,7 +557,7 @@ namespace kathryn::o3{
         _slotWriter->addSlotVal(RPS_COMMIT, "cmAmt: " + std::to_string(amtCommit));
 
         for (int i = 0; i < amtCommit; i++){
-            writeRobSlot(ull(_core->prob.comPtr) + i);
+            _slotWriter->addSlotVal(RPS_COMMIT, writeRobSlot(ull(_core->prob.comPtr) + i));
         }
 
         // _slotWriter->addSlotVal(RPS_COMMIT, "----- changing");

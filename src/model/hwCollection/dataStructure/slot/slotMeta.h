@@ -4,6 +4,7 @@
 
 #ifndef SRC_MODEL_HWCOLLECTION_DATASTRUCTURE_SLOT_SLOTMETA_H
 #define SRC_MODEL_HWCOLLECTION_DATASTRUCTURE_SLOT_SLOTMETA_H
+#include <cassert>
 #include <string>
 #include <vector>
 
@@ -71,6 +72,11 @@ namespace kathryn{
         bool isValidIdx(int idx) const{
             return idx >= 0 && idx < static_cast<int>(_fieldMetas.size());
         }
+
+        bool isThereField(const std::string& fieldName) const{
+            return isValidIdx(getIdx(fieldName));
+        }
+
         bool isValidRange(int start, int end) const{
             return ( (start >= 0    ) && (start <  static_cast<int>(_fieldMetas.size())) )    &&
                    ( (end   >  start) && (end   <= static_cast<int>(_fieldMetas.size())) )   ;
@@ -180,6 +186,11 @@ namespace kathryn{
                 rhs._fieldMetas.begin(),
                 rhs._fieldMetas.end());
             return result;
+        }
+
+        void addField(const FieldMeta& fieldMeta){
+            assert(!isThereField(fieldMeta._name));
+            _fieldMetas.push_back(fieldMeta);
         }
 
         std::pair<std::vector<int>, std::vector<int>> matchByName(const SlotMeta& rhs){

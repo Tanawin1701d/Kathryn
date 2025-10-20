@@ -113,8 +113,9 @@ namespace kathryn::o3{
             com1Avail = rem > 0; //// unequal to 0
             com2Avail = rem > 1; //// unequal to 1 and 0
 
+            //////          resource in rrf(are there actually) & comCondition(finish)
             opr& resCom1 = com1Avail&com1Cond;
-            opr& resCom2 = com2Avail&com2Cond;
+            opr& resCom2 = resCom1&com2Avail&com2Cond;
             commitReqSize = resCom1.uext(2) + resCom2.uext(2);
             doRenameOrCommit(); ////// rename and commit can occur at the same time
             return {resCom1, resCom2};

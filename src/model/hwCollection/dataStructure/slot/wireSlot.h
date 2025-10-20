@@ -31,6 +31,8 @@ namespace kathryn{
     protected:
         std::vector<Wire*> _wires;
 
+        void addWireBase(const std::string& fieldName, Operable& value);
+
     public:
         WireSlot(const SlotMeta& slotMeta,
                 const std::vector<Wire*>& wires
@@ -85,6 +87,11 @@ namespace kathryn{
 
         WireSlot operator + (WireSlot& rhs);
 
+        void addWire(const std::string& fieldName, Wire& value);
+        void addWire(const std::string& fieldName, int size);
+        void addWire(const std::string& fieldName, Operable& value);
+        void tryAddWire(const std::string& fieldName, Operable& value); //// if there IS exist wire skip it
+
         /**
          *  dynamic indexing
          */
@@ -97,6 +104,8 @@ namespace kathryn{
 
         WireSlot& operator = (const Slot& rhs);
         WireSlot& operator = (const WireSlot& rhs);
+
+
 
     };
 }

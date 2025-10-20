@@ -27,9 +27,8 @@ namespace kathryn::o3{
         RPS_RSV      = 6,
         RPS_ISSUE    = 7,
         RPS_EXECUTE  = 8,
-        RPS_WB       = 9,
-        RPS_COMMIT   = 10,
-        RPS_NUM      = 11
+        RPS_COMMIT   = 9,
+        RPS_NUM      = 10
     };
     class O3SlotRecorder{
     public:
@@ -76,7 +75,7 @@ namespace kathryn::o3{
         void writeDecodeSlot  ();
         void writeDispatchSlot();
 
-        std::pair<bool, std::string>
+        std::pair<bool, std::vector<std::string>>
              writeRsvSlot        (RegSlot&   entry);
         void writeRsvBasicSlot   (Table& table);
         void writeRsvAluSlot     ();

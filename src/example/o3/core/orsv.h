@@ -60,14 +60,15 @@ namespace kathryn::o3{
             auto [iw, ohIdx] = _table.doReducOHIdx(
                 [&](WireSlot& lhs, Operable* lidx,
                     WireSlot& rhs, Operable* ridx)-> Operable&{
-
-                    auto& busyEq    = lhs(busy)    == rhs(busy);
+                    lhs.tryAddWire(entry_ready, slotReady(lhs));
+                    rhs.tryAddWire(entry_ready, slotReady(rhs));
+                    auto& readyEq    = lhs(entry_ready) == rhs(entry_ready);
                     auto& sortBitEq = lhs(sortBit) == rhs(sortBit);
 
                     return
-                        (lhs(busy) && (~rhs(busy))) ||
-                        (busyEq && (lhs(sortBit) < rhs(sortBit))) ||
-                        (busyEq &&  sortBitEq && (lhs(rrftag) < rhs(rrftag)));
+                        (lhs(entry_ready) && (~rhs(entry_ready))) ||
+                        (readyEq && (lhs(sortBit) < rhs(sortBit))) ||
+                        (readyEq &&  sortBitEq && (lhs(rrftag) < rhs(rrftag)));
                 }
             );
 
