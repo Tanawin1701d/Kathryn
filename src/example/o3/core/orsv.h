@@ -10,18 +10,19 @@
 namespace kathryn::o3{
 
         struct ORsv: RsvBase{
-
+        RegArch&   regArch;
         mWire(checkIdx, _table.getSufficientIdxSize(true));
 
         mWire(dbg_isSlotReady, 1);
 
-        ORsv(SlotMeta meta, int amtRow):
-            RsvBase(smRsvO + meta, amtRow){}
+        ORsv(SlotMeta meta, int amtRow, RegArch& regArch):
+            RsvBase(smRsvO + meta, amtRow),
+            regArch(regArch){}
 
         void resetSortBit(){
             SET_ASM_PRI_TO_MANUAL(RSV_SORTBIT_RST_PRED_PRIORITY);
             _table.doCusLogic([&](RegSlot& lhs, int rowIdx){
-                lhs(sortBit) <<= 0;
+                lhs(sortBit) <<= regArch.rrf.nextRrfCycle;
             });
             SET_ASM_PRI_TO_AUTO();
         }
