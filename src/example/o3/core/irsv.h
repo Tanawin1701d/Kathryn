@@ -17,6 +17,7 @@ namespace kathryn::o3{
     struct IRsv: RsvBase{
 
         mWire(checkIdx, _table.getSufficientIdxSize(false));
+
         Reg& allocPtr;
         SearchResult b1 ,  e1,  e0;
         SearchResult nb1, ne1, nb0; /// search to fix alloc pointer
@@ -33,7 +34,12 @@ namespace kathryn::o3{
             allocPtr.makeResetEvent();
         }
 
+        void writeEntry(OH ohIdx, WireSlot& iw) override{assert(false);}
 
+        void writeEntry(opr& binIdx, WireSlot& iw) override{
+            allocPtr <<= (binIdx + 1);
+            RsvBase::writeEntry(binIdx, iw);
+        }
 
         void onMisPred(opr& fixTag) override{
 
@@ -87,7 +93,7 @@ namespace kathryn::o3{
                 zyncc(syncMeta, slotReady(iw)){ tryInitProbe(issueProbe);
                     tryOwSpecBit(iw, bc);
                     //////// reset the table
-                    onIssue(checkIdx); //// reset busy
+                    onIssue(checkIdx, iw); //// reset busy
                 }
             }
         }

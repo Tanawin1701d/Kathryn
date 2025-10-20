@@ -56,13 +56,13 @@ namespace kathryn::o3{
          * RSV
          */
         inline SlotMeta smRsvBase {
-            {pc         , imm             , rrftag    , rdUse, aluOp       ,
+            {pc         , rrftag    , rdUse, aluOp       ,
              spec       , specTag         ,
              phyIdx_1   , rsSel_1         , rsValid_1 ,
              phyIdx_2   , rsSel_2         , rsValid_2
             },
             ////////////////////////////////////////////////////////////////////
-            {ADDR_LEN   , DATA_LEN        , RRF_SEL     , 1    , ALU_OP_WIDTH,
+            {ADDR_LEN   , RRF_SEL     , 1    , ALU_OP_WIDTH,
              1          , SPECTAG_LEN     ,
              DATA_LEN   , SRC_A_SEL_WIDTH , 1           ,
              DATA_LEN   , SRC_B_SEL_WIDTH , 1
@@ -70,8 +70,13 @@ namespace kathryn::o3{
         };
 
         inline SlotMeta smRsvBranch{
-            {opcode      , pred_addr},
-            {OPCODE_WIDTH, ADDR_LEN }
+            {opcode      , pred_addr, imm_br},
+            {OPCODE_WIDTH, ADDR_LEN , ADDR_LEN}
+        };
+
+        inline SlotMeta smRsvAlu{
+            {imm},
+            {DATA_LEN}
         };
 
         inline SlotMeta smRsvMul {

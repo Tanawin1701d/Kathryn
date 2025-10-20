@@ -27,7 +27,7 @@ namespace kathryn::o3{
     /////// register architecture
     RegArch  regArch{tagMgmt.mpft};
     /////// reservation station
-    ORsv aluRsv     {smRsvBase, ALU_ENT_NUM, regArch};
+    ORsv aluRsv     {smRsvBase + smRsvAlu, ALU_ENT_NUM, regArch};
     IRsv branchRsv  {smRsvBase + smRsvBranch, BRANCH_ENT_SEL, "br", tagMgmt.bc};
 
     /////// pipeline manager

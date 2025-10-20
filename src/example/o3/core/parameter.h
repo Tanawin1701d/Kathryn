@@ -80,6 +80,7 @@ namespace kathryn::o3{
 
     ////// start from rsv
     O3_PARAM_STR(imm);
+    O3_PARAM_STR(imm_br);
     O3_PARAM_STR(rrftag);
     O3_PARAM_STR(phyIdx_);
     O3_PARAM_STR(phyIdx_1);

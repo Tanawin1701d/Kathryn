@@ -32,10 +32,7 @@ namespace kathryn::o3{
             RsvBase::writeEntry(ohIdx, iw);
         }
 
-        void writeEntry(opr& binIdx, WireSlot& iw) override{
-            resetSortBit();
-            RsvBase::writeEntry(binIdx, iw);
-        }
+        void writeEntry(opr& binIdx, WireSlot& iw) override{assert(false);}
 
         pair<opr&, OH> buildFreeOhIndex(OH* exceptIdx){
             auto [iw, ohIdx] = _table.doReducOHIdx([&](
@@ -81,10 +78,9 @@ namespace kathryn::o3{
 
             cwhile(true){
                 zyncc(syncMeta, dbg_isSlotReady){ tryInitProbe(issueProbe);
-                    execSrc <<= iw;
                     tryOwSpecBit(iw, bc);
                     //////// reset the table
-                    onIssue(ohIdx);
+                    onIssue(ohIdx, iw);
                 }
             }
         }

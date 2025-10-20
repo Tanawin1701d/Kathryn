@@ -9,6 +9,8 @@
 
 #include "parameter.h"
 #include "immGen.h"
+#include "immBrGen.h"
+
 #include "irsv.h"
 #include "orsv.h"
 #include "srcOpr.h"
@@ -59,7 +61,7 @@ namespace kathryn::o3{
         WireSlot cvtdecInstrToRsv(RegSlot& dcd, RegSlot& dcdShard, opr* desRrf , int decLaneIdx){
             /////// decLaneIdx start from 0
             /////// create rsv smRsvI for inorder is redundant
-            WireSlot des(smRsvO + smRsvBranch + smRsvBase); /// smRsvBase + smRsvOI
+            WireSlot des(smRsvO + smRsvBranch + smRsvBase + smRsvBranch); /// smRsvBase + smRsvOI
             /////// metadata
             des(busy)    = 1;
             des(sortBit) = 1;
@@ -72,6 +74,8 @@ namespace kathryn::o3{
             }
 
             immGen( dcd(inst), dcd(imm_type), des(imm));
+            immBrGen(dcd(inst), des(imm_br));
+
             des(rrftag)  = regArch.rrf.getReqPtr() + decLaneIdx;
             des(rdUse)   = dcd(rdUse);
             des(aluOp)   = dcd(aluOp);
@@ -168,8 +172,11 @@ namespace kathryn::o3{
                         rob.onDispatch(reqPtr+1, dcd2);
                         dbg_isDisp2 = 1;
                     }
+
                 }
             }
+
+
         }
 
 

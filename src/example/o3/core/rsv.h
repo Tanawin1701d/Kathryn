@@ -76,10 +76,12 @@ namespace kathryn::o3{
             SET_ASM_PRI_TO_AUTO();
         }
 
-        virtual void onIssue(opr& issueIdx){
+        virtual void onIssue(opr& issueIdx, WireSlot& iw){
+            execSrc <<= iw;
             _table[issueIdx](busy) <<= 0;
         }
-        virtual void onIssue(OH issueOHIdx){
+        virtual void onIssue(OH issueOHIdx, WireSlot& iw){
+            execSrc <<= iw;
             _table[issueOHIdx](busy) <<= 0;
         }
 

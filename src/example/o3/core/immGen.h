@@ -19,7 +19,7 @@ namespace kathryn::o3{
             zif (immType == IMM_I)  {result = g(instr(25, 31), instr(21, 25), instr(20)).sext(DATA_LEN);}
             zelif(immType == IMM_S) {result = g(instr(25, 31), instr(8, 12) , instr(7) ).sext(DATA_LEN);}
             zelif(immType == IMM_U) {result = g(    instr(31), instr(20, 31), instr(12, 20), zero12);}
-            zelif(immType == IMM_J) {result = g(instr(12, 20), instr(20)    , instr(25, 31), instr(21, 25), zero1).sext(DATA_LEN);}
+            zelif(immType == IMM_J) {result = g(    instr(31), instr(12, 20), instr(20)    , instr(25, 31), instr(21, 25), zero1).sext(DATA_LEN);}
             zelse                   {result = g(instr(25, 31), instr(21, 25), instr(20)).sext(DATA_LEN);}
         }
 

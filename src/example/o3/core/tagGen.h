@@ -61,12 +61,14 @@ namespace kathryn::o3{
             opr& branchValid1,Reg& spec1,
             opr& branchValid2,Reg& spec2){
             ///// allocate branch 1
+            spTag1Result = tagreg;
             zif (branchValid1){
                 spec1        <<= (brdepth != 0);
                 spTag1Result   = roundShift1(tagreg);
                 tagreg       <<= spTag1Result;
             }
             ///// allocate branch 2
+            spTag2Result = spTag1Result;
             zif (branchValid2){
                 spec2 <<= (brdepth != 0) || (branchValid1);
                 zif (branchValid1){
@@ -78,9 +80,9 @@ namespace kathryn::o3{
                 tagreg <<= spTag2Result;
             }
             //// update internal structure
-            brdepth <<= (brdepth + branchValid1
-                                 + branchValid2
-                                 - bc.isBrSuccPred());
+            brdepth <<= ((((brdepth + branchValid1)
+                                    + branchValid2)
+                                    - bc.isBrSuccPred()));
             return {spTag1Result, spTag2Result};
         }
     };

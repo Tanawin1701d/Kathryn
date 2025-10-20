@@ -98,7 +98,7 @@ namespace kathryn::o3{
             ull sim_fixTag = ull(entry(mpft_fixTag));
             _slotWriter->addSlotVal(RPS_MPFT,
                 "vl: " + std::to_string(sim_valid) + " "
-                "-> " + cvtNum2HexStr(sim_fixTag)  + " "
+                "-> " + cvtNum2BinStr(sim_fixTag)  + " "
                 "idx " + std::to_string(rowIdx));
         }
         _slotWriter->addSlotVal(RPS_MPFT, "----------");
@@ -396,6 +396,7 @@ namespace kathryn::o3{
     void O3SlotRecorder::writeRsvBranchSlot(){
         /////// write for branch rsv
         _slotWriter->addSlotVal(RPS_RSV, "BRANCH RSV");
+        _slotWriter->addSlotVal(RPS_RSV, "allocPtr : " + std::to_string(ull(_core->branchRsv.allocPtr)));
         writeRsvBasicSlot(_core->branchRsv._table);
         _slotWriter->addSlotVal(RPS_RSV, "----------");
     }
@@ -437,14 +438,41 @@ namespace kathryn::o3{
         ull sim_phyIdx_2  = ull(src(phyIdx_2));
         ull sim_rsSel_2   = ull(src(rsSel_2));
         ull sim_rsValid_2 = ull(src(rsValid_2));
+
+        std::map<ull, std::string> aluOpMap = {
+            { 0, "ADD"},
+            { 1, "SLL"},
+            { 4, "XOR"},
+            { 6, "OR"},
+            { 7, "AND"},
+            { 5, "SRL"},
+            { 8, "SEQ"},
+            { 9, "SNE"},
+            {10, "SUB"},
+            {11, "SRA"},
+            {12, "SLT"},
+            {13, "SGE"},
+            {14, "SLTU"},
+            {15, "SGEU"}
+        };
         
         _slotWriter->addSlotVal(RPS_EXECUTE, "PC: " + cvtNum2HexStr(sim_pc));
         _slotWriter->addSlotVal(RPS_EXECUTE, "IMM: " + cvtNum2HexStr(sim_imm));
-        _slotWriter->addSlotVal(RPS_EXECUTE, "ALU Op: " + std::to_string(sim_aluOp) +
+        _slotWriter->addSlotVal(RPS_EXECUTE, "ALU Op: " + ((aluOpMap.find(sim_aluOp) != aluOpMap.end())
+                                                             ? aluOpMap[sim_aluOp]
+                                                             : "UNKNOWN") +
                                              "/Spec: " + std::to_string(sim_spec) +
                                              "/SpecTag: " + cvtNum2BinStr(sim_specTag));
         std::string sim_isRdUsed = sim_rdUse ? "(USE)" : "(UNUSED)";
-        _slotWriter->addSlotVal(RPS_EXECUTE, "RD" + sim_isRdUsed + " rd:" + std::to_string(sim_rrftag));
+        if (sim_rdUse){
+            RegSlot&  targetRegSlot = _core->prob._table(static_cast<int>(sim_rrftag));
+            ull sim_rdIdx    = ull(targetRegSlot(rdIdx));
+
+            _slotWriter->addSlotVal(RPS_EXECUTE, "RD phy: " + std::to_string(sim_rrftag) + " arch: " + std::to_string(sim_rdIdx));
+        }else{
+            _slotWriter->addSlotVal(RPS_EXECUTE, "RD(UNUSED)");
+        }
+
 
 
         std::map<ull, std::string> srcASelMap = {

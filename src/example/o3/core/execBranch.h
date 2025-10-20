@@ -52,7 +52,7 @@ namespace kathryn::o3{
             //// initialize variable
             opr& opc     = src(opcode);
             opr& srcPc   = src(pc);
-            opr& srcImm  = src(imm);
+            opr& srcImm  = src(imm_br);
             opr& spTag   = src(specTag);
             opr& fixTag  = tagMgmt.mpft.getFixTag(OH(spTag));
 
