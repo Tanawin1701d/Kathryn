@@ -158,13 +158,17 @@ namespace kathryn{
         for (ModelInterface* itf: getItfs()){
             itf->buildLogicBase();
         }
-        buildFlow();
+        /** clear everything left in flowblock stack*/
+        ctrl->tryPurifyFlowStack();
+        assert(ctrl->isAllFlowStackEmpty());
+
         /**this ensure that submodule in init component and all is ready to build flow*/
         /** build sub module first*/
         for (auto subMd: _userSubModules){
             ctrl->on_module_init_designFlow(subMd);
             ctrl->on_module_final(subMd);
         }
+        buildFlow();
 
         /**
          *
@@ -174,9 +178,6 @@ namespace kathryn{
     }
 
     void Module::buildFlow(){
-
-        ctrl->tryPurifyFlowStack();
-        assert(ctrl->isAllFlowStackEmpty());
 
         std::vector<NodeWrap*> frontNodeWrap;
 

@@ -18,8 +18,8 @@ namespace kathryn::o3{
         SyncMeta(name){}
 
         void killIfTagMet(bool autoRestart, opr& fixTag){ //// kill Tag is one hot for all system
-            mWire(pipKillCondition, 1);
-            pipKillCondition = ( (*src)(spec) & (((*src)(specTag) & fixTag) != 0));
+
+            opr& pipKillCondition = ( (*src)(spec) & (((*src)(specTag) & fixTag) != 0));
             killSlave(autoRestart, &pipKillCondition);
         }
 

@@ -29,9 +29,8 @@ namespace kathryn::o3{
 
         void onMisPred(opr& misTag){
             brdepth <<= 0;
-            tagreg  <<= g(tagreg(SPECTAG_LEN-1), tagreg(0, SPECTAG_LEN-2));
-            ///// the tag reg supposed to be the last tag that valid
-            ///// so we shift right
+            tagreg  <<= gr(misTag.sl(0), misTag.sl(1, SPECTAG_LEN));
+            ///// the tag reg supposed to be the last tag that valid and shift right 1
         }
 
         void onSucPred(){

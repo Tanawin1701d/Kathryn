@@ -40,7 +40,9 @@
         class O3_MNG{
         public:
             void start(PARAM& params){
-                std::vector<std::string> testTypes = {"Imm", "Reg", "Branch"
+                std::vector<std::string> testTypes = {
+                    "Imm", "Reg", "Branch", "BranchSuc",
+                    "BranchLong", "BranchMidRd"
                     //,
                     // "Ls", "Jump",
                     // "BranchSc"

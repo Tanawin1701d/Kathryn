@@ -22,7 +22,8 @@ namespace kathryn::o3{
         void resetSortBit(){
             SET_ASM_PRI_TO_MANUAL(RSV_SORTBIT_RST_PRED_PRIORITY);
             _table.doCusLogic([&](RegSlot& lhs, int rowIdx){
-                lhs(sortBit) <<= regArch.rrf.nextRrfCycle;
+                lhs(sortBit) <<= lhs(sortBit) & (~regArch.rrf.nextRrfCycle);
+
             });
             SET_ASM_PRI_TO_AUTO();
         }

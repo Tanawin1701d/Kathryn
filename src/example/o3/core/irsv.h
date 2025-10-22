@@ -24,7 +24,7 @@ namespace kathryn::o3{
 
         IRsv(SlotMeta meta, int indexSize, std::string debugName, BroadCast& bc):
             RsvBase(smRsvI + meta, 1 << indexSize),
-            allocPtr(mOprReg("allocPtr_" + debugName, 1 << indexSize)),
+            allocPtr(mOprReg("allocPtr_" + debugName, indexSize)),
             b1 (searchIdx(_table, 1, true , bc, false)),
             e1 (searchIdx(_table, 1, false, bc, false)),
             e0 (searchIdx(_table, 1, true , bc, false)),

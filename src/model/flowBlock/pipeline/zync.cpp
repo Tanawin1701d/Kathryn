@@ -75,16 +75,10 @@ namespace kathryn{
 
     void FlowBlockZyncBase::buildHwMaster(){
 
-        if(_syncMeta != nullptr){
-            for (Operable* holdOpr: _syncMeta->masterHoldSignals){
-                assert(holdOpr != nullptr);
-                addHoldSignal(holdOpr);
-            }
-            for (Operable* killOpr: _syncMeta->masterKillSignals){
-                assert(killOpr != nullptr);
-                addIntSignal(INT_RESET, killOpr);
-            }
-        }
+        assert(_syncMeta != nullptr);
+        addHoldSignal(&_syncMeta->holdMasterSignal);
+        addIntSignal(INT_RESET, &_syncMeta->killMasterSignal);
+
         FlowBlockBase::buildHwMaster();
     }
 

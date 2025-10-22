@@ -18,14 +18,14 @@
 namespace kathryn{
 
     ///// sync is used to sync transfer data between
-    ///   master and slave
+    ///   master (zync block) and slave (pip block)
     struct SyncMeta{
 
         const std::string _name;
 
         ///// main synchronizer
-         mWire(_syncMasterReady, 1);
-         mWire(_syncSlaveReady , 1) ;
+        mWire(_syncMasterReady, 1);
+        mWire(_syncSlaveReady , 1) ;
         ///// slave ready after execution
         mWire(_syncSlaveFin, 1);
 
@@ -33,14 +33,11 @@ namespace kathryn{
         ///// typically the slave should be pipeline block
         mWire(_syncMatched, 1);
 
-        ///// hold system signal representator
-        std::vector<Operable*> masterHoldSignals;
-        std::vector<Operable*> slaveHoldSignals;
-        ///// reset system signal representator
-        std::vector<Operable*> masterKillSignals;
-        std::vector<Operable*> slaveKillSignals;
-        ///// auto start
-        std::vector<Operable*> slaveStartSignals;
+        mWire(killSlaveSignal  , 1);
+        mWire(killMasterSignal , 1);
+        mWire(holdSlaveSignal   , 1);
+        mWire(holdMasterSignal , 1);
+        mWire(startSlaveSignal , 1);
 
 
         explicit SyncMeta(const std::string& name = "unnamedSyncMeta"):
@@ -68,7 +65,9 @@ namespace kathryn{
             desWire.getUpdateMeta().push_back(newEvent);
         }
 
-
+        /*
+         * INTERNAL SIGNAL USED BY internal node belonging PIPE ZYNC node
+         */
 
         ////// set start signal
         void setMasterReady(Operable& opr1){
@@ -86,66 +85,41 @@ namespace kathryn{
             setSyncWireBase(_syncSlaveFin, opr1);
         }
 
-        static void baseHolder(std::vector<Operable*>& desVector){
-            mWire(holder, 1);
-            holder = 1;
-            desVector.push_back(&holder);
-        }
+        /////// for use use signal
 
-        void holdSlave(){ baseHolder(slaveHoldSignals); }
+        void holdSlave(){ holdSlaveSignal = 1; }
 
-        void holdMaster(){  baseHolder(masterHoldSignals); }
+        void holdMaster(){ holdMasterSignal = 1; }
 
-        static Operable& baseKiller(std::vector<Operable*>& desVector,
-                               Operable* cond = nullptr){
-            mWire(killer, 1);
-            if (cond != nullptr){
-                killer = *cond;
+        void restartSlave(Operable* cond = nullptr){
+            if (cond == nullptr){
+                startSlaveSignal = 1;
             }else{
-                killer = 1;
+                assert(cond->getOperableSlice().getSize() == 1);
+                startSlaveSignal = *cond;
             }
-            desVector.push_back(&killer);
-            return killer;
-        }
-
-        //////// restart is binded with basekiller typically it use the same signal with the base killer
-        static void baseStart(std::vector<Operable*>& desVector,
-                                   Operable& signal){
-            desVector.push_back(&signal);
         }
 
         void killSlave(bool autoRestart = false, Operable* cond = nullptr){
-            Operable& killSignal = baseKiller(slaveKillSignals, cond);
+
+            if(cond == nullptr){
+                killSlaveSignal = 1;
+            }else{
+                assert(cond->getOperableSlice().getSize() == 1);
+                killSlaveSignal = *cond;
+            }
             if (autoRestart){
-                baseStart(slaveStartSignals, killSignal);
+                restartSlave(cond);
             }
 
         }
-        void killMaster(){ baseKiller(masterKillSignals, nullptr);}
+
+        void killMaster(){
+            killMasterSignal = 1;
+        }
 
     };
 
 }
-
-
-
-// void buildMatchSignal(){
-//     assert(_syncMasterReady != nullptr);
-//     assert(_syncSlaveReady  != nullptr);
-//     assert(_syncMatched     == nullptr);
-//     assert(_syncMasterReady->getOperableSlice().getSize() == 1);
-//     assert(_syncSlaveReady->getOperableSlice().getSize()  == 1);
-//
-//     _syncMatched = &((*_syncMasterReady) & (*_syncSlaveReady));
-// }
-
-// void tryBuildmatchSignal(){
-//     if (
-//     (_syncMasterReady != nullptr )&&
-//     (_syncSlaveReady  != nullptr )&&
-//     (_syncMatched     == nullptr )){
-//         buildMatchSignal();
-//     }
-// }
 
 #endif //KATHRYN_MODEL_FLOWBLOCK_PIPELINE_PIPEMETA_H

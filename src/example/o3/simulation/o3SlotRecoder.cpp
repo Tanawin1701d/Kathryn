@@ -91,6 +91,9 @@ namespace kathryn::o3{
 
     void O3SlotRecorder::writeMpftSlot(){
 
+        _slotWriter->addSlotVal(RPS_MPFT, "brdepth: " + std::to_string(ull(_core->tagMgmt.tagGen.brdepth)));
+        _slotWriter->addSlotVal(RPS_MPFT, "tagReg: " + cvtNum2BinStr(ull(_core->tagMgmt.tagGen.tagreg)));
+
         Table& mpftTable = _core->tagMgmt.mpft._table;
         for (int rowIdx = 0; rowIdx < mpftTable.getNumRow(); rowIdx++){
             RegSlot& entry = mpftTable(rowIdx);
@@ -157,13 +160,17 @@ namespace kathryn::o3{
 
     void O3SlotRecorder::writeRrfSlot() const{
 
-        ull sim_reqPtr = ull(_core->regArch.rrf.reqPtr);
-        ull sim_comPtr = ull(_core->prob.comPtr);
+        ull sim_reqPtr    = ull(_core->regArch.rrf.reqPtr);
+        ull sim_comPtr    = ull(_core->prob.comPtr);
+        ull sim_freeNum   = ull(_core->regArch.rrf.freenum);
+        ull sim_nextCycle = ull(_core->regArch.rrf.nextRrfCycle);
 
         std::string turnStr =  (sim_comPtr <= sim_reqPtr) ? "COM->REQ" : "REQ->COM (LB)";
         _slotWriter->addSlotVal(RPS_RRF, turnStr);
         _slotWriter->addSlotVal(RPS_RRF, "REQ PTR: " + std::to_string(sim_reqPtr));
         _slotWriter->addSlotVal(RPS_RRF, "COM PTR: " + std::to_string(sim_comPtr));
+        _slotWriter->addSlotVal(RPS_RRF, "FREE SIZE" + std::to_string(sim_freeNum));
+        _slotWriter->addSlotVal(RPS_RRF, "NEXT CY: " + std::to_string(sim_nextCycle));
 
         _slotWriter->addSlotVal(RPS_RRF, "--------");
         TableSimProbe& tbProbe = dataStructProbGrp.rrf;
@@ -486,7 +493,7 @@ namespace kathryn::o3{
 
             _slotWriter->addSlotVal(RPS_EXECUTE, "RD phy: " + std::to_string(sim_rrftag) + " arch: " + std::to_string(sim_rdIdx));
         }else{
-            _slotWriter->addSlotVal(RPS_EXECUTE, "RD(UNUSED)");
+            _slotWriter->addSlotVal(RPS_EXECUTE, "RD phy: " + std::to_string(sim_rrftag) + " arch(UNUSED)");
         }
 
 
@@ -588,10 +595,11 @@ namespace kathryn::o3{
 
         _slotWriter->addSlotVal(RPS_COMMIT, "----- dispatched (prevCycle)");
         int amtDisp = static_cast<int>(isLastCycleDisp1 + isLastCycleDisp2);
+        int robSize = 1 << _core->regArch.rrf.getReqPtr().getOperableSlice().getSize();
         _slotWriter->addSlotVal(RPS_COMMIT, "dispPtr: " + std::to_string(ull(_core->regArch.rrf.reqPtr)));
         _slotWriter->addSlotVal(RPS_COMMIT, "dispAmt: " + std::to_string(ull(amtDisp)));
         for (int i = 0; i < amtDisp; i++){
-            _slotWriter->addSlotVal(RPS_COMMIT, writeRobSlot(lastDispatchPtr + i));
+            _slotWriter->addSlotVal(RPS_COMMIT, writeRobSlot((lastDispatchPtr + i)%robSize));
         }
 
 
@@ -601,7 +609,7 @@ namespace kathryn::o3{
         _slotWriter->addSlotVal(RPS_COMMIT, "cmAmt: " + std::to_string(amtCommit));
 
         for (int i = 0; i < amtCommit; i++){
-            _slotWriter->addSlotVal(RPS_COMMIT, writeRobSlot(ull(_core->prob.comPtr) + i));
+            _slotWriter->addSlotVal(RPS_COMMIT, writeRobSlot((ull(_core->prob.comPtr) + i) % robSize));
         }
 
         // _slotWriter->addSlotVal(RPS_COMMIT, "----- changing");

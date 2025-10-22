@@ -17,8 +17,9 @@ namespace kathryn::o3{
         pm.dc.sync.killSlave(true);
         pm.ds.sync.killSlave(true);
         pm.ex.sync.killIfTagMet(true, fixTag);
-        /////// hold the committ block
-        pm.cm.sync.holdSlave();
+        /////// hold the committ block and rcv issueing
+        pm.br.sync.holdMaster();
+        pm.ex.sync.holdMaster();
         ////// do recovery on the tag system
         tagMgmt.mpft.onMissPred();
         tagMgmt.tagGen.onMisPred(misTag);
@@ -26,6 +27,8 @@ namespace kathryn::o3{
         for (RsvBase* rsv: rsvs){
             rsv->onMisPred(fixTag);
         }
+
+
         ////// do recovery on register architecture
         regArch.arf.onMisPred(misTag);
         regArch.rrf.onMisPred(src(rrftag),

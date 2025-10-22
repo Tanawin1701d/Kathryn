@@ -69,19 +69,9 @@ namespace kathryn{
 
     void FlowBlockPipeBase::buildHwMaster(){
         ////// fill retrieve slave hold signal
-        for (Operable* holdOpr: _syncMata.slaveHoldSignals){
-            assert(holdOpr != nullptr);
-            addHoldSignal(holdOpr);
-        }
-        for (Operable* killOpr: _syncMata.slaveKillSignals){
-            assert(killOpr != nullptr);
-            addIntSignal(INT_RESET, killOpr);
-        }
-
-        for (Operable* startOpr: _syncMata.slaveStartSignals){
-            assert(startOpr != nullptr);
-            addIntSignal(INT_START, startOpr);
-        }
+        addHoldSignal(&_syncMata.holdSlaveSignal);
+        addIntSignal(INT_RESET, &_syncMata.killSlaveSignal);
+        addIntSignal(INT_START, &_syncMata.startSlaveSignal);
 
         ////// use the base  build function
         FlowBlockBase::buildHwMaster();
