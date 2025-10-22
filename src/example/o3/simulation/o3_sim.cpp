@@ -49,7 +49,7 @@ namespace kathryn::o3{
             readAssembly (_prefixFolder + _testTypes[_curTestCaseIdx] + "/asm.out");
             readAssertVal(_prefixFolder + _testTypes[_curTestCaseIdx] + "/ast.out");
             //////// iterate for 100 cycle
-            for (int i = 0; i <= 100; i++){
+            for (int i = 0; i <= 150; i++){
                 conEndCycle();
                 _slotRecorder.recordSlot();
                 conNextCycle(1);
