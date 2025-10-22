@@ -61,7 +61,7 @@ namespace kathryn::o3{
         WireSlot cvtdecInstrToRsv(RegSlot& dcd, RegSlot& dcdShard, opr* desRrf , int decLaneIdx){
             /////// decLaneIdx start from 0
             /////// create rsv smRsvI for inorder is redundant
-            WireSlot des(smRsvO + smRsvBranch + smRsvBase + smRsvBranch); /// smRsvBase + smRsvOI
+            WireSlot des(smRsvO + smRsvBase + smRsvBranch + smRsvAlu); /// smRsvBase + smRsvOI
             /////// metadata
             des(busy)    = 1;
             des(sortBit) = 1;

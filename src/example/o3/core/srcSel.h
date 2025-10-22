@@ -19,11 +19,11 @@ namespace kathryn::o3{
         return out;
     }
 
-    inline opr& getAluSrcB(RegSlot& src){
+    inline opr& getAluSrcB(RegSlot& src, bool isBr = false){
         mWire(out, DATA_LEN);
         opr& srcSel = src(rsSel_2);
         zif  (srcSel == SRC_B_RS2 ) out = src(phyIdx_2);
-        zelif(srcSel == SRC_B_IMM ) out = src(imm);
+        zelif(srcSel == SRC_B_IMM ) out = (isBr? src(imm_br): src(imm));
         zelif(srcSel == SRC_B_FOUR) out = 4;
         zelse                       out = 0;
         return out;

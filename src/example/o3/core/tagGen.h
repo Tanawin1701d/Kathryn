@@ -24,7 +24,7 @@ namespace kathryn::o3{
             tagreg.makeResetEvent(1);
 
             spTag1Result = tagreg;
-            spTag2Result = tagreg;
+            spTag2Result = spTag1Result;
         }
 
         void onMisPred(opr& misTag){
@@ -49,7 +49,7 @@ namespace kathryn::o3{
         }
 
         opr& roundShift1(Reg& src){
-            return g(src(0, SPECTAG_LEN-2), src(SPECTAG_LEN-1));
+            return g(src(0, SPECTAG_LEN-1), src(SPECTAG_LEN-1));
         }
 
         opr& roundShift2(Reg& src){
@@ -61,16 +61,14 @@ namespace kathryn::o3{
             opr& branchValid1,Reg& spec1,
             opr& branchValid2,Reg& spec2){
             ///// allocate branch 1
-            spTag1Result = tagreg;
             zif (branchValid1){
                 spec1        <<= (brdepth != 0);
                 spTag1Result   = roundShift1(tagreg);
                 tagreg       <<= spTag1Result;
             }
             ///// allocate branch 2
-            spTag2Result = spTag1Result;
+            spec2 <<= (brdepth != 0) || (branchValid1);
             zif (branchValid2){
-                spec2 <<= (brdepth != 0) || (branchValid1);
                 zif (branchValid1){
                     spTag2Result = roundShift2(tagreg);
                 }

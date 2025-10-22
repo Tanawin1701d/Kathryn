@@ -12,18 +12,19 @@ namespace kathryn::o3{
 
     struct SyncPip: SyncMeta{
 
-        mExpr(spectag, SPECTAG_LEN);
+        RegSlot* src = nullptr;
 
         SyncPip(const std::string& name):
         SyncMeta(name){}
 
-        void killIfTagMet(bool autoRestart, opr& killTag){ //// kill Tag is one hot for all system
-            mWire(slaveKiller, 1);
-            slaveKiller = (killTag & spectag) != 0;
+        void killIfTagMet(bool autoRestart, opr& fixTag){ //// kill Tag is one hot for all system
+            mWire(pipKillCondition, 1);
+            pipKillCondition = ( (*src)(spec) & (((*src)(specTag) & fixTag) != 0));
+            killSlave(autoRestart, &pipKillCondition);
         }
 
-        void setTrackSpecTag(opr& spt){
-            spectag = spt;
+        void setTagTracker(RegSlot& refSrc){
+            src = &refSrc;
         }
 
     };

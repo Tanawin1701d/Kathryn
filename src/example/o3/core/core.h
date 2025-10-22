@@ -46,8 +46,10 @@ namespace kathryn::o3{
 
 
     explicit Core(int x){
+        ///// add reservation to bypass and prediction control
         regArch.bpp.addRsv(&aluRsv);
         regArch.bpp.addRsv(&branchRsv);
+        pExBra.rsvs = {&aluRsv, &branchRsv};
     }
 
     void flow() override{
@@ -62,6 +64,7 @@ namespace kathryn::o3{
         aluRsv.buildIssue(pm.ex.sync, tagMgmt.bc);
         ///// build branch reservation station internal logic
         branchRsv.buildIssue(pm.br.sync, tagMgmt.bc);
+
 
     }
 

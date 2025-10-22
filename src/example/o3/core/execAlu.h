@@ -30,7 +30,9 @@ namespace kathryn::o3{
         regArch(regArch),
         rob(rob),
         src(src),
-        bp(regArch.bpp.addByPassEle()){}
+        bp(regArch.bpp.addByPassEle()){
+        exSt.sync.setTagTracker(src);
+    }
 
     void setSimProbe(PipSimProbe* in_psp){psp = in_psp;}
 
@@ -42,7 +44,6 @@ namespace kathryn::o3{
         bp.addSrc(src(rrftag), result);
 
         ///// init pip meta data
-        exSt.sync.setTrackSpecTag(src(specTag));
         pip(exSt.sync){ tryInitProbe(psp);
             rob.onWriteBack(src(rrftag));
             zif(src(rdUse)){

@@ -93,6 +93,7 @@ namespace kathryn::o3{
         void writeCommitSlot();
 
         std::string translateOpcode(ull rawInstr);
+        std::string translateAluOp(ull aluOpIdx);
 
 
     };

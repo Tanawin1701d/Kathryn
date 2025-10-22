@@ -18,6 +18,8 @@ namespace kathryn::o3{
         PipStage& pm;
         TagMgmt& tagMgmt;
 
+        mWire(dbg_isGenable, 1);
+
         explicit DecMod(
         PipStage&  pm,
         TagMgmt&   tagMg) :
@@ -227,6 +229,8 @@ namespace kathryn::o3{
             opr& isGenable = tagMgmt.tagGen.isAllGenble(
                 dcw1(isBranch), //// isBranch will set when invalid is false and the instruction is jumping instruction
                 dcw2(isBranch));
+
+            dbg_isGenable = isGenable;
 
             pip(pm.dc.sync){                    initProbe(pipProbGrp .decode);
                 zyncc(pm.ds.sync, isGenable){   initProbe(zyncProbGrp.decode);

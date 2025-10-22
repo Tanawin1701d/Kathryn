@@ -189,6 +189,7 @@ namespace kathryn::o3{
         bool idle = writeSlotIfPipIdle(RPS_DECODE, &pipProbGrp.decode);
         if (idle) {return;}
         writeSlotIfZyncStall(RPS_DECODE, &zyncProbGrp.decode);
+        _slotWriter->addSlotVal(RPS_DECODE, "gennable "+ std::to_string(ull(_core->pDec.dbg_isGenable)));
         ////////// write pipe detail
         FetchStage&  fetch_stage = _ps->ft;
 
@@ -233,8 +234,10 @@ namespace kathryn::o3{
         _slotWriter->addSlotVal(RPS_DISPATCH, "brRsvAble: " + std::to_string(ull(_core->pDisp.dbg_isBranchRsvAllocatable)));
         _slotWriter->addSlotVal(RPS_DISPATCH, "isRenam: " + std::to_string(ull(_core->pDisp.dbg_isRenamable)));
         _slotWriter->addSlotVal(RPS_DISPATCH, "PC: " + cvtNum2HexStr(sim_shared_pc));
-        _slotWriter->addSlotVal(RPS_DISPATCH, str("DES_EQ_SRC1: ") + (sim_shared_desEqSrc1? "true" : "false"));
-        _slotWriter->addSlotVal(RPS_DISPATCH, str("DES_EQ_SRC2: ") + (sim_shared_desEqSrc2? "true" : "false"));
+        std::string internalDep = str("S1EqDes: ") + (sim_shared_desEqSrc1? "1 " : "0 ") +
+                                  str("S2EqDes: ") + (sim_shared_desEqSrc2? "1 " : "0 ");
+
+        _slotWriter->addSlotVal(RPS_DISPATCH, internalDep);
 
         for (int i = 1; i <= 2; i++){
             RegSlot& targetRegSlot = (i == 1) ? decode_stage.dcd1: decode_stage.dcd2;
@@ -267,10 +270,20 @@ namespace kathryn::o3{
                     {0b10, "IMM_U"},
                     {0b11, "IMM_J"}
                 };
+                std::map<ull, std::string> rsvTypeMap = {
+                    {RS_ENT_ALU    , "ALU"},
+                    {RS_ENT_BRANCH , "BRANCH"},
+                    {RS_ENT_JAL    , "JAL"},
+                    {RS_ENT_JALR   , "JALR"},
+                    {RS_ENT_MUL    , "MUL"},
+                    {RS_ENT_DIV    , "DIV"},
+                    {RS_ENT_LDST   , "LDST"}
+                };
                 std::string immTypeStr = (immTypeMap.find(sim_immType) != immTypeMap.end()) ? immTypeMap[sim_immType] : "UNKNOWN";
-                _slotWriter->addSlotVal(RPS_DISPATCH, "RS" + std::to_string(sim_rsEnt));
-                _slotWriter->addSlotVal(RPS_DISPATCH, "IMM_" + immTypeStr);
-                _slotWriter->addSlotVal(RPS_DISPATCH, "ALU" + std::to_string(sim_aluOp));
+                std::string rsTypeStr = (rsvTypeMap.find(sim_rsEnt) != rsvTypeMap.end()) ? rsvTypeMap[sim_rsEnt] : "UNKNOWN";
+                _slotWriter->addSlotVal(RPS_DISPATCH, "RS: " + rsTypeStr);
+                _slotWriter->addSlotVal(RPS_DISPATCH, immTypeStr);
+                _slotWriter->addSlotVal(RPS_DISPATCH, "ALU: " + translateAluOp(sim_aluOp));
 
 
                 _slotWriter->addSlotVal(RPS_DISPATCH, "isBr: " + std::to_string(sim_isBranch) +
@@ -279,7 +292,7 @@ namespace kathryn::o3{
                 _slotWriter->addSlotVal(RPS_DISPATCH, "nextPc_" + cvtNum2HexStr(sim_pred_addr));
 
                 std::string rdUsage = sim_rdUse ? "(USE)" : "(UNUSED)";
-                _slotWriter->addSlotVal(RPS_DISPATCH, "RD: "+ rdUsage + " /IDX: " +  std::to_string(sim_rdIdx));
+                _slotWriter->addSlotVal(RPS_DISPATCH, "RD: "+ rdUsage + " /ArchIdx: " +  std::to_string(sim_rdIdx));
 
                 std::map<ull, std::string> srcASelMap = {
                     {0, "RS1"},
@@ -426,7 +439,12 @@ namespace kathryn::o3{
 
     void O3SlotRecorder::writeExecuteBasic(RegSlot& src){
         ull sim_pc        = ull(src(pc));
-        ull sim_imm       = ull(src(imm));
+        ull sim_imm       = 777;
+        if (src.isThereField(imm)){
+            sim_imm = ull(src(imm));
+        }else{
+            sim_imm       = ull(src(imm_br));
+        }
         ull sim_rrftag    = ull(src(rrftag));
         ull sim_rdUse     = ull(src(rdUse));
         ull sim_aluOp     = ull(src(aluOp));
@@ -458,9 +476,7 @@ namespace kathryn::o3{
         
         _slotWriter->addSlotVal(RPS_EXECUTE, "PC: " + cvtNum2HexStr(sim_pc));
         _slotWriter->addSlotVal(RPS_EXECUTE, "IMM: " + cvtNum2HexStr(sim_imm));
-        _slotWriter->addSlotVal(RPS_EXECUTE, "ALU Op: " + ((aluOpMap.find(sim_aluOp) != aluOpMap.end())
-                                                             ? aluOpMap[sim_aluOp]
-                                                             : "UNKNOWN") +
+        _slotWriter->addSlotVal(RPS_EXECUTE, "ALU Op: " + translateAluOp(sim_aluOp) +
                                              "/Spec: " + std::to_string(sim_spec) +
                                              "/SpecTag: " + cvtNum2BinStr(sim_specTag));
         std::string sim_isRdUsed = sim_rdUse ? "(USE)" : "(UNUSED)";
@@ -614,4 +630,25 @@ namespace kathryn::o3{
         ull op = rawInstr & opMaskBit;
         return (decMap.find(op) != decMap.end()) ? decMap[op] : "UNKNOWN";
     }
+
+    std::string O3SlotRecorder::translateAluOp(ull aluOpIdx){
+        std::map<ull, std::string> aluOpMap = {
+            { 0, "ADD"},
+            { 1, "SLL"},
+            { 4, "XOR"},
+            { 6, "OR"},
+            { 7, "AND"},
+            { 5, "SRL"},
+            { 8, "SEQ"},
+            { 9, "SNE"},
+            {10, "SUB"},
+            {11, "SRA"},
+            {12, "SLT"},
+            {13, "SGE"},
+            {14, "SLTU"},
+            {15, "SGEU"}
+        };
+        return (aluOpMap.find(aluOpIdx) != aluOpMap.end()) ? aluOpMap[aluOpIdx] : "UNKNOWN";
+    }
+
 }
