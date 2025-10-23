@@ -42,15 +42,12 @@
             void start(PARAM& params){
                 std::vector<std::string> testTypes = {
                     "Imm", "Reg", "Branch", "BranchSuc",
-                    "BranchLong", "BranchMidRd", "OverRrf"
-                    //,
-                    // "Ls", "Jump",
-                    // "BranchSc"
+                    "BranchLong", "BranchMidRd", "OverRrf", "LoadImm"
                 };
 
                 mMod(o3Core, Core, false);
                 startModelKathryn();
-                O3Sim simulator(1200,
+                O3Sim simulator(2500,
                                 params["prefix"],
                                 testTypes,
                                 (Core&)o3Core,

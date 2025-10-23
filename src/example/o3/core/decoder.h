@@ -117,6 +117,7 @@ namespace kathryn::o3{
                 dcw(rsEnt)    = RS_ENT_JALR;
                 dcw(rsSel_1)  = SRC_A_PC;
                 dcw(rsSel_2)  = SRC_B_FOUR;
+                dcw(rdUse)    = 1;
                 dcw(isBranch) = ~inv;
                 if (idx == 1){
                     zif (raw(prCond)){
