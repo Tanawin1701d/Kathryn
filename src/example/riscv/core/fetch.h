@@ -39,7 +39,7 @@ namespace kathryn::riscv {
                 SyncMeta& syncDec = cd.dc.sync;
                 readEn = syncDec._syncSlaveReady;
 
-                pip(cd.ft.sync){autoStart  initProbe(pipSimProbe);
+                pip(cd.ft.sync){autoSync  initProbe(pipSimProbe);
                     zyncc(cd.dc.sync, readFin){ initProbe(zyncSimProb);
                     /** fetch data is shared among fetch and decoder
                      ** we must m sure it is ready to recv

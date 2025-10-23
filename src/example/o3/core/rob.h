@@ -16,7 +16,6 @@ namespace kathryn::o3{
     struct Rob: public Module{
         Table _table;
 
-        mWire(hold      , 1      );
         mWire(com1Status, 1      );
         mWire(com2Status, 1      );
         mReg (comPtr    , RRF_SEL);
@@ -38,14 +37,13 @@ namespace kathryn::o3{
 
         opr& getComPtr(){ return comPtr;}
 
-        void onMisPred(){ hold = 1;}
 
         void flow() override{
             comPtr2 = comPtr + 1;
             comPtr <<= (comPtr + com1Status + com2Status);
             ////// we have to set commit commad
 
-            pip(pm.cm.sync){autoStart
+            pip(pm.cm.sync){autoSync
                 /////// commit the instruction
                 ////// due to branch can do only one
                 opr& com1Cond = com1Entry(wbFin);

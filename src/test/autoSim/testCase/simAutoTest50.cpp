@@ -23,7 +23,7 @@ namespace kathryn{
         void flow() override{
             a.makeResetEvent();
 
-            pip(fetch){ autoStart
+            pip(fetch){ autoSync
                 zync(decode){
                     a <<= a + 1;
                 }

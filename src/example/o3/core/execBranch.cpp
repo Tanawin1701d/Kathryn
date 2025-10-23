@@ -18,6 +18,7 @@ namespace kathryn::o3{
         pm.ds.sync.killSlave(true);
         pm.ex.sync.killIfTagMet(true, fixTag);
         /////// hold the committ block and rcv issueing
+        pm.cm.sync.holdSlave();
         pm.br.sync.holdMaster();
         pm.ex.sync.holdMaster();
         ////// do recovery on the tag system
@@ -27,22 +28,18 @@ namespace kathryn::o3{
         for (RsvBase* rsv: rsvs){
             rsv->onMisPred(fixTag);
         }
-
-
         ////// do recovery on register architecture
         regArch.arf.onMisPred(misTag);
         regArch.rrf.onMisPred(src(rrftag),
         rob.getComPtr());
-        ////// do hold the commit
-        rob.onMisPred();
 
     }
 
     void BranchExec::onSucPred(opr& fixTag, opr& sucTag){
         tagMgmt.bc.suc = 1;
         //// stall the pipeline
-        pm.dc.sync.holdSlave(); //// because mpft and tag generator must be hold
-        pm.ds.sync.holdSlave();
+        //pm.dc.sync.holdSlave(); //// because mpft and tag generator must be hold
+        pm.ds.sync.holdMaster(); //// hold decode to generate tag, but allowing system to enter decode state
 
         //// do update the tag system
         tagMgmt.mpft.onPredSuc(src(specTag));

@@ -31,7 +31,7 @@ namespace kathryn::o3{
 
         void flow() override{
 
-            pip(pm.ft.sync){ autoStart     initProbe(pipProbGrp .fetch);
+            pip(pm.ft.sync){ autoSync     initProbe(pipProbGrp .fetch);
                 zync(pm.dc.sync){          initProbe(zyncProbGrp.fetch);
                     selLog();
                 }
