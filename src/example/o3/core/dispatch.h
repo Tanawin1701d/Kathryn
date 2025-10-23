@@ -146,8 +146,8 @@ namespace kathryn::o3{
             dbg_isRenamable              = isRenamable;
 
 
-            pip(pm.ds.sync){             initProbe(pipProbGrp .dispatch);
-                zync_con(isdispatable){  initProbe(zyncProbGrp.dispatch);
+            pip(pm.ds.sync){                               initProbe(pipProbGrp .dispatch);
+                zyncc(pm.rs.sync, isdispatable){ autoSync  initProbe(zyncProbGrp.dispatch);
                     ////////
                     regArch.rrf.onRename(~dcd1(invalid), ~dcd2(invalid));
                     opr& reqPtr = regArch.rrf.getReqPtr();
