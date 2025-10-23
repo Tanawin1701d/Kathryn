@@ -8,22 +8,6 @@
 
 namespace kathryn{
 
-    FlowBlockZyncBase::FlowBlockZyncBase(Operable* condOnly):
-    FlowBlockBase(PIPE_BLOCK,
-        {     /////// if there is change, please do not forget to fix the constructor below
-            {FLOW_ST_BASE_STACK, FLOW_ST_PIP_BLK},
-            FLOW_JO_SUB_FLOW,
-            true
-        }
-    ),
-    autoGenSyncMeta(true),
-    _syncMeta(new SyncMeta("autoGenSyncMeta_pureCond")),
-    _acceptCond(condOnly){
-        Val& fallTrueSlave = mOprVal("fallTrueZyncSlave", 1, 1);
-        _syncMeta->setSlaveReady(fallTrueSlave);
-        _syncMeta->setSlaveFinish(fallTrueSlave);
-    }
-
     FlowBlockZyncBase::FlowBlockZyncBase(
         SyncMeta& syncMeta, Operable* acceptCond):
     FlowBlockBase(PIPE_BLOCK,
@@ -33,13 +17,11 @@ namespace kathryn{
             true
 
         }),
-    _syncMeta(&syncMeta),
+    _syncMeta(syncMeta),
     _acceptCond(acceptCond){}
 
     FlowBlockZyncBase::~FlowBlockZyncBase(){
-        if (autoGenSyncMeta){
-            delete _syncMeta;
-        }
+
         delete prepSendNode;
         delete exitNode;
         delete resultNodeWrap;
@@ -47,10 +29,9 @@ namespace kathryn{
 
     void FlowBlockZyncBase::assignReadySignal(){
         assert(prepSendNode != nullptr);
-        assert(_syncMeta != nullptr);
         //_syncMeta->setMasterReady()
         Operable* ready2Sync = addLogicWithOutput(prepSendNode->getExitOpr(), _acceptCond, BITWISE_AND);
-        _syncMeta->setMasterReady(*ready2Sync);
+        _syncMeta.setMasterReady(*ready2Sync);
     }
 
     void FlowBlockZyncBase::addSubFlowBlock    (FlowBlockBase* subBlock){
@@ -75,9 +56,8 @@ namespace kathryn{
 
     void FlowBlockZyncBase::buildHwMaster(){
 
-        assert(_syncMeta != nullptr);
-        addHoldSignal(&_syncMeta->holdMasterSignal);
-        addIntSignal(INT_RESET, &_syncMeta->killMasterSignal);
+        addHoldSignal(&_syncMeta.holdMasterSignal);
+        addIntSignal(INT_RESET, &_syncMeta.killMasterSignal);
 
         FlowBlockBase::buildHwMaster();
     }
@@ -92,17 +72,22 @@ namespace kathryn{
         prepSendNode = new StateNode(getClockMode());
         exitNode     = new PseudoNode(1, BITWISE_AND);
 
+        ////// if it auto we have to build the auto trigger for
+        if (isAutoActivatePipe()){
+            Val& autoActivateSignal = makeOprVal("zync_auto_act_" + _zyncName, 1, 1);
+            _syncMeta.setSlaveReady(autoActivateSignal);
+            _syncMeta.setSlaveFinish(autoActivateSignal);
+        }
         /** prepSendNode*/
-        std::string debugName = "zyncBlk_" + (_syncMeta == nullptr ? "manualCond" : _syncMeta->getName());
+        std::string debugName = "zyncBlk_" + _syncMeta.getName();
         prepSendNode->setInternalIdent("zyncBlk_" + debugName);
         fillIntResetToNodeIfThere(prepSendNode);
         fillHoldToNodeIfThere    (prepSendNode);
         /** assign assignment node*/
         Operable* readyFinal = nullptr;
         readyFinal = _acceptCond;
-        if (_syncMeta != nullptr){
-            readyFinal = addLogicWithOutput(&_syncMeta->_syncSlaveReady, readyFinal, BITWISE_AND);
-        }
+        readyFinal = addLogicWithOutput(&_syncMeta._syncSlaveReady, readyFinal, BITWISE_AND);
+
         assert(readyFinal != nullptr);
         Operable* notReadyFinal = &(~(*readyFinal));
 

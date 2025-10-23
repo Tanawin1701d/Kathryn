@@ -16,7 +16,7 @@
 
 
 #define pip(zyncMeta)       for(auto kathrynBlock = new FlowBlockPipeBase (zyncMeta); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
-#define autoStart kathrynBlock->setAutoActivatePipe();
+#define autoSync kathrynBlock->setAutoActivatePipe();
 
 
 namespace kathryn{

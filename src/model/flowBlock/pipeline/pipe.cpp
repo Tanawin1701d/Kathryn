@@ -81,6 +81,7 @@ namespace kathryn{
     void FlowBlockPipeBase::buildHwComponent(){
         ////// try to find the activate signal
         Operable* activateSignal = nullptr;
+        ////// if it auto, we have to  build the auto trigger for the other side signal
         if (isAutoActivatePipe()){ /////// no zync source
             _syncMata.setMasterReady(makeOprVal("pipe_auto_act_" + _pipeName, 1, 1));
             //(*_syncMata._syncMasterReady) = makeOprVal("pipe_auto_act_" + _pipeName, 1, 1);

@@ -14,17 +14,19 @@
 
 #define zync(zyncMeta)        for(auto kathrynBlock = new FlowBlockZyncBase(zyncMeta, nullptr); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 #define zyncc(zyncMeta, cond) for(auto kathrynBlock = new FlowBlockZyncBase(zyncMeta, &cond  ); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
-#define zync_con(cond)        for(auto kathrynBlock = new FlowBlockZyncBase(&cond);             kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+
+//#define zync_con(cond)        for(auto kathrynBlock = new FlowBlockZyncBase(&cond);             kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 
 namespace kathryn{
 
     class FlowBlockZyncBase: public FlowBlockBase, public LoopStMacro{
     protected:
-        bool autoGenSyncMeta  = false;    ///// incase zync_con we need to create own syncMeta
-        SyncMeta* _syncMeta   = nullptr;
+        const std::string _zyncName = "ZYNC_UNNAMED";
+        SyncMeta& _syncMeta;
         Operable* _acceptCond = nullptr; ///// this condition must be true when the system is in prepSendNode,
                                             ///// if the preSend will not wait and not activate further layer
-
+        ////// meta data
+        bool autoActivatePipe = false;
 
 
         ////// node
@@ -35,18 +37,21 @@ namespace kathryn{
         NodeWrap*      resultNodeWrap    = nullptr;
 
     public:
-        FlowBlockZyncBase(Operable* condOnly);
         FlowBlockZyncBase(SyncMeta& syncMeta, Operable* acceptCond = nullptr);
         ~FlowBlockZyncBase() override;
         /** manage the system */
         void assignReadySignal();
         StateNode* getPreSendNode() { assert(prepSendNode != nullptr); return prepSendNode;}
-        SyncMeta* getSyncMeta() const { return _syncMeta;}
+        SyncMeta& getSyncMeta() const { return _syncMeta;}
 
         /** for controller add the local element to this sub block*/
         void addSubFlowBlock       (FlowBlockBase* subBlock) override;
         void addConFlowBlock       (FlowBlockBase* conBlock) override;
         NodeWrap* sumarizeBlock    () override;
+        /** auto activate pipe*/
+        void setAutoActivatePipe(){autoActivatePipe = true;}
+        bool isAutoActivatePipe() const {return autoActivatePipe;}
+
         /** on this block is start interact to controller*/
         void onAttachBlock() override;
         /** on leave this block*/
