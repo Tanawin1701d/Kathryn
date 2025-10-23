@@ -22,25 +22,39 @@ namespace kathryn{
         _asb->sortUpEventByPriority();
         for (UpdateEvent* realUde: _asb->getUpdateMeta()){
             auto* newEvent = new UpdateEvent();
+            /////////////////////////////////
             ////////// route update condition
+            /////////////////////////////////
             if (realUde->srcUpdateCondition != nullptr){
                 Operable* conRouted =
                     _mdGenMaster->routeSrcOprToThisModule(realUde->srcUpdateCondition);
                 newEvent->srcUpdateCondition = conRouted;
             }
+            /////////////////////////////
             ////////// route update state
+            /////////////////////////////
             if (realUde->srcUpdateState != nullptr){
                 Operable* stateRouted =
                     _mdGenMaster->routeSrcOprToThisModule(realUde->srcUpdateState);
                 newEvent->srcUpdateState = stateRouted;
             }
+            /////////////////////////////
             ////////// route update value
+            /////////////////////////////
             assert(realUde->srcUpdateValue != nullptr);
             Operable* updateValueRouted =
             _mdGenMaster->routeSrcOprToThisModule(realUde->srcUpdateValue);
             newEvent->srcUpdateValue = updateValueRouted;
+            /////////////////////////////////////////////////////////
+            ////////// fill static value that have not to be rerouted
+            /////////////////////////////////////////////////////////
             newEvent->desUpdateSlice = realUde->desUpdateSlice;
             newEvent->priority       = realUde->priority;
+            newEvent->subPriority    = realUde->subPriority;
+            newEvent->clkMode        = realUde->clkMode;
+            ///////////////////////////////////
+            /////////// push to the pool system
+            ///////////////////////////////////
             translatedUpdateEvent.push_back(newEvent);
         }
     }
@@ -52,6 +66,7 @@ namespace kathryn{
         retStr += ") begin\n";
 
         for (UpdateEvent* upd: translatedUpdateEvent){
+            ////// occ stands for occur yet!
             bool isStateConOcc = false;
             retStr += "     if ( ";
             if (upd->srcUpdateState != nullptr){
