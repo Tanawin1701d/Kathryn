@@ -162,7 +162,7 @@ namespace kathryn::riscv{
                     cdowhile(rs2.data(0, 5) > 1){
                         zif (op.isUopSet("sll")){ rdes.data <<= rdes.data << (rs2.data(0, 5) > 0);}
                         zif (op.isUopSet("sra")){
-                            rdes.data(0, XLEN - 1) <<= (rdes.data(0, XLEN - 1) >> (rs2.data(0, 5) > 0));
+                            rdes.data(0, XLEN - 1) <<= (rdes.data(0, XLEN) >> (rs2.data(0, 5) > 0));
                         }
                         zif (op.isUopSet("sr")){ rdes.data <<= rdes.data >> (rs2.data(0, 5) > 0);}
 
