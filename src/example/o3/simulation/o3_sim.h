@@ -42,7 +42,8 @@
             void start(PARAM& params){
                 std::vector<std::string> testTypes = {
                     "Imm", "Reg", "Branch", "BranchSuc",
-                    "BranchLong", "BranchMidRd", "OverRrf", "LoadImm"
+                    "BranchLong", "BranchMidRd", "OverRrf",
+                    "LoadImm", "BranchSc"
                 };
 
                 mMod(o3Core, Core, false);
