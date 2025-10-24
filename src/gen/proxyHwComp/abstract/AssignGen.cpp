@@ -100,7 +100,7 @@ namespace kathryn{
     std::string AssignGenBase::assignmentLine(Slice desSlice, Operable* srcUpdateValue, bool isDelayedAsm){
         assert(srcUpdateValue != nullptr);
         std::string asmOpr = isDelayedAsm ? " <= " : " = ";
-        return getOpr(desSlice) + asmOpr + getOprStrFromOpr(srcUpdateValue) + ";";
+        return getOpr(desSlice) + asmOpr + getOprStrFromOprAndShinkMsb(srcUpdateValue, desSlice.getSize()) + ";";
     }
 
     bool AssignGenBase::cmpAssignGenBase(AssignGenBase* asgb,

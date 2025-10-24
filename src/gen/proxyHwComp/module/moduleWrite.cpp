@@ -152,16 +152,18 @@ namespace kathryn{
         ModuleGen* hostModuleGen = genStructure->getMasterModuleGen(subMdGen);
 
         ////// declare submodule
-        result += hostModuleGen->getOpr() + "  ";
-        result += subMdGen->getOpr() + " #( ";
+        result += hostModuleGen->getOpr() + "  "  + subMdGen->getOpr();
+        if (!subMdGen->_pmValPool.empty()){
+            result += subMdGen->getOpr() + " #( ";
 
-        std::vector<std::string> ioParamVals;
-        for (LogicGenBase* lgb: subMdGen->_pmValPool){
-            ioParamVals.push_back(lgb->decOp());
+            std::vector<std::string> ioParamVals;
+            for (LogicGenBase* lgb: subMdGen->_pmValPool){
+                ioParamVals.push_back(lgb->decOp());
+            }
+            result += joinStr(ioParamVals, ',');
+
+            result += ") ";
         }
-        result += joinStr(ioParamVals, ',');
-
-        result += ") ";
         result += "(\n";
 
         ////////////////// declare input and output

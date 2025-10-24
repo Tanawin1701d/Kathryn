@@ -31,6 +31,11 @@ namespace kathryn::riscv{
                         regFile[desReg.idx] <<= desReg.data;
                         cd.bp.idx = desReg.idx;
                         cd.bp.value = desReg.data;
+
+                        mWire(dbg_st_wb, 1);
+                        dbg_st_wb = 1;
+                        dbg_st_wb.asOutputGlob("st_wb");
+
                     }
                 }
             }

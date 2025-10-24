@@ -80,6 +80,11 @@ namespace kathryn{
                         cd.dc.pc     <<= cd.ft.fetch_pc;
                         cd.dc.nextPc <<= cd.ft.fetch_nextpc;
                         cd.dc.repo.genDecodeLogic();
+
+                        mWire(dbg_st_decode, 1);
+                        dbg_st_decode = 1;
+                        dbg_st_decode.asOutputGlob("st_decode");
+
                     }
                 }
             }

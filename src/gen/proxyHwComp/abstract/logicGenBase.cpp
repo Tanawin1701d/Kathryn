@@ -26,6 +26,22 @@ std::string LogicGenBase::getOprStrFromOpr(Operable* opr1){
         getLogicGenBase()->getOpr(opr1->getOperableSlice());
 }
 
+std::string LogicGenBase::getOprStrFromOprAndShinkMsb(Operable* opr1, int targetSize){
+
+    int srcSize = opr1->getOperableSlice().getSize();
+    assert(targetSize <= srcSize);
+    assert(targetSize > 0);
+    std::string pureSrcStr = getOprStrFromOpr(opr1);
+
+    if (targetSize == srcSize){
+        return pureSrcStr;
+    }
+    return pureSrcStr + "[" + std::to_string(targetSize-1) + ": 0]";
+
+}
+
+
+
 void LogicGenBase::genCerf(MODULE_GEN_GRP mgg,int grpIdx, int idx){
         assert(grpIdx >= 0);
         assert(idx    >= 0);

@@ -28,6 +28,8 @@ namespace kathryn{
         std::string decVariable() override;
         std::string decOp() override;
 
+        static std::string cvtToSignSig(std::string srcStr);
+
         bool compare(LogicGenBase* lgb) override;
     };
 

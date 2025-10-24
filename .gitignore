@@ -18,6 +18,8 @@
 /KOut/genExample
 /KOut/riscv/gen/*.v
 /KOut/riscv/gen/obj_dir
+/KOut/riscv/genDbg/*.v
+/KOut/riscv/genDbg/obj_dir
 
 
 #### model compile

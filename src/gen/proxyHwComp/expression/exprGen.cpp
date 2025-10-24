@@ -77,8 +77,8 @@ namespace kathryn{
             case RELATION_LEQ: {assert(aSize == bSize); retStr += _aSliced + " <=   "    + _bSliced; break;}
             case RELATION_GE : {assert(aSize == bSize); retStr += _aSliced + " >    "    + _bSliced; break;}
             case RELATION_GEQ: {assert(aSize == bSize); retStr += _aSliced + " >=   "    + _bSliced; break;}
-            case RELATION_SLT: {assert(aSize == bSize); retStr += _aSliced + " <=   "    + _bSliced; break;} /// change to signed integer
-            case RELATION_SGT: {assert(aSize == bSize); retStr += _aSliced + " >=   "    + _bSliced; break;} /// change to signed integer
+            case RELATION_SLT: {assert(aSize == bSize); retStr += cvtToSignSig(_aSliced) + " <   " + cvtToSignSig(_bSliced); break;} /// change to signed integer
+            case RELATION_SGT: {assert(aSize == bSize); retStr += cvtToSignSig(_aSliced) + " >   " + cvtToSignSig(_bSliced); break;} /// change to signed integer
             /** arithmetic operator*/
             case ARITH_PLUS  : {assert(aSize == bSize); retStr += _aSliced + "   +  "    + _bSliced; break;}
             case ARITH_MINUS : {assert(aSize == bSize); retStr += _aSliced + "   -  "    + _bSliced; break;}
@@ -98,6 +98,10 @@ namespace kathryn{
 
         return retStr + ";";
 
+    }
+
+    std::string ExprGen::cvtToSignSig(std::string srcStr){
+        return "$signed(" + srcStr + ")";
     }
 
     bool ExprGen::compare(LogicGenBase* lgb){

@@ -17,7 +17,7 @@ namespace kathryn{
             assert(genCtrl != nullptr);
             genCtrl->initEnv(params);
             genCtrl->start();
-            genCtrl->startSynthesis();
+            //genCtrl->startSynthesis();
             resetKathryn();
         }
 

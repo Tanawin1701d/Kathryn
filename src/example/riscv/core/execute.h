@@ -81,9 +81,15 @@ namespace kathryn::riscv{
                             accessRegData(rs1, memBlock); ////// access register 1
                             accessRegData(rs2,  memBlock);
                             rdes <<= decData.repo.getDesReg(0);
+                            mWire(dbg_st_ex_reg, 1);
+                            dbg_st_ex_reg = 1;
+                            dbg_st_ex_reg.asOutputGlob("st_regAccess");
                         }
                         par{ initProbe(aluSimProb);
                             execAlu();
+                            mWire(dbg_st_ex_alu, 1);
+                            dbg_st_ex_alu = 1;
+                            dbg_st_ex_alu.asOutputGlob("st_alu");
                         }
                         par{ initProbe(complexAluSimProb);
                             pick{
@@ -96,6 +102,10 @@ namespace kathryn::riscv{
 
                 //////// sync manually without
                 cd.wb.sync.setMasterReady(cd.ex.sync.isSlaveFin());
+
+                mWire(dbg_slaveExecFin, 1);
+                dbg_slaveExecFin.asOutputGlob("dbg_slaveExecFin");
+                dbg_slaveExecFin = cd.ex.sync.isSlaveFin();
 
 
             }

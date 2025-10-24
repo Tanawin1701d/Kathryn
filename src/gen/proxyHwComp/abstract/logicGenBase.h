@@ -38,6 +38,7 @@ namespace kathryn{
         );
         virtual ~LogicGenBase() = default;
         std::string getOprStrFromOpr(Operable* opr1);
+        std::string getOprStrFromOprAndShinkMsb(Operable* opr1, int targetSize);
         ///////// routing zone
         virtual void routeDep() {assert(false);} ///// do routing
         ///////// generate cerificate

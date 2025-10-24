@@ -44,6 +44,11 @@ namespace kathryn::riscv {
                     /** fetch data is shared among fetch and decoder
                      ** we must m sure it is ready to recv
                      * */
+                    cd.pc.asOutputGlob("curPc");
+                    mWire(dbg_st_fetch, 1);
+                    dbg_st_fetch = 1;
+                    dbg_st_fetch.asOutputGlob("st_fetch");
+
                     cd.ft.fetch_instr  <<= storageMgmt.readOutput;
                     cd.ft.fetch_pc     <<= cd.pc;
                     cd.ft.fetch_nextpc <<= cd.pc + 4;
