@@ -16,12 +16,18 @@ namespace kathryn{
                            const std::string& prefix,
                            std::vector<std::string> testTypes,
                            Riscv& core,
-                           SimProxyBuildMode buildMode): ///// init first test case here
+                           SimProxyBuildMode buildMode,
+                           bool requireLRC,
+                           bool reqInline,
+                           int  opLevel): ///// init first test case here
                 SimInterface(limitCycle,
                              "/tmp/vcdDummy",
                              "/tmp/profdummy",
                              "simpleRiscV",
-                             buildMode
+                             buildMode,
+                             requireLRC,
+                             reqInline,
+                             opLevel
                              ),
                 _core(core),
                 slotWriter({"fetch", "decode", "execute", "wb", "mem"},

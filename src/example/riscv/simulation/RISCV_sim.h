@@ -30,15 +30,17 @@ namespace kathryn{
             uint32_t                 _regTestVal[AMT_REG]{};
 
 
-        public:
-
             explicit RiscvSim(CYCLE limitCycle,
                               const std::string& prefix,
                               std::vector<std::string> testTypes,
                               Riscv& core,
-                              SimProxyBuildMode buildMode
-                                       );
+                              SimProxyBuildMode buildMode,
+                              bool requireLRC = false,
+                              bool reqInline  = true,
+                              int  opLevel = 3
+            );
 
+        public:
             void describeCon() override;
 
 

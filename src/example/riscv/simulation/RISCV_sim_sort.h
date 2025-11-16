@@ -30,7 +30,7 @@ namespace kathryn{
             AMT_TEST_CASE(amtTestCase){
                 assert(AMT_TEST_CASE > 0);
                 requireConSim = false;
-                enableLRC();
+                enableLRC(); ///// sim sort we enable LRC to make it run through
             }
 
             void prepareNextTc();
