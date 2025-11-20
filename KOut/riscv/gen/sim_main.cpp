@@ -23,7 +23,7 @@ inline void doThisClock(Vtop* core){
 void resetRegFile(Vtop* core){
     assert(core != nullptr);
     for (int i = 0; i < AMT_REG; i++){
-        core->top__DOT__MODULE7_riscCore__DOT__MEM_BLOCK25_regFile[i] = 0;
+        core->top__DOT__MODULE7_riscCore__DOT__MEM_BLOCK97_regFile[i] = 0;
     }
 }
 
@@ -44,7 +44,7 @@ void readFileToMem(Vtop* core, int testCaseIdx){
 
     while(asmFile.read(reinterpret_cast<char*>(&instr), sizeof instr)){
             assert((instr & 0b11) == 0b11); ////// check instruction
-            core->top__DOT__MODULE7_riscCore__DOT__MEM_BLOCK26___05FmyMem_SYS[writeAddr]
+            core->top__DOT__MODULE7_riscCore__DOT__MEM_BLOCK98___05FmyMem_SYS[writeAddr]
             = instr;
             writeAddr++;
     }
@@ -55,7 +55,7 @@ void readFileToMem(Vtop* core, int testCaseIdx){
 
         ///////////////////////////////////////// populate data
     for (int i = 0; i < amountPopper; i++){
-        core->top__DOT__MODULE7_riscCore__DOT__MEM_BLOCK26___05FmyMem_SYS
+        core->top__DOT__MODULE7_riscCore__DOT__MEM_BLOCK98___05FmyMem_SYS
         [((1 << 20) + i*4)/4] = (amountPopper-i);
     }
 }

@@ -26,7 +26,7 @@ namespace kathryn{
                                   int amtTestCase,
                                   SimProxyBuildMode buildMode
                                   ):
-            RiscvSim(limitCycle,prefix,testTypes,core, buildMode, false, false, 3),
+            RiscvSim(limitCycle,prefix,testTypes,core, buildMode, false, true, 3),
             AMT_TEST_CASE(amtTestCase){
                 assert(AMT_TEST_CASE > 0);
                 requireConSim = false;

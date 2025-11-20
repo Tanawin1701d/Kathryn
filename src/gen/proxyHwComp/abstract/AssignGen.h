@@ -23,6 +23,9 @@ namespace kathryn{
 
         void routeDep() override;
 
+        std::string getUpdateEventTrigger(UpdateEvent* upd);
+        std::string assignOpWithChainCondition(bool isClockSen);
+        std::string assignOpWithSoleCondition(bool isClockSen);
         std::string assignOpBase(bool isClockSen);
 
         virtual std::string assignmentLine(Slice desSlice, Operable* srcUpdateValue, bool isDelayedAsm);

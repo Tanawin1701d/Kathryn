@@ -59,33 +59,49 @@ namespace kathryn{
         }
     }
 
-    std::string AssignGenBase::assignOpBase(bool isClockSen){
+    std::string AssignGenBase::getUpdateEventTrigger(UpdateEvent* upd){
+        assert(upd != nullptr);
+        std::string retStr;
+        bool isStateConOcc = false;
+
+        if (upd->srcUpdateState != nullptr){
+            isStateConOcc = true;
+            retStr += getOprStrFromOpr(upd->srcUpdateState);
+        }
+
+        if (upd->srcUpdateCondition != nullptr){
+            if (isStateConOcc){
+                retStr += " && ";
+            }
+            isStateConOcc = true;
+            retStr += getOprStrFromOpr(upd->srcUpdateCondition);
+        }
+
+        if (!isStateConOcc){
+            retStr += " 1 ";
+        }
+
+        return retStr;
+    }
+
+    std::string AssignGenBase::assignOpWithChainCondition(bool isClockSen){
+
         std::string retStr;
         retStr += "always @(" +
         retStr += isClockSen ? "posedge clk" : "*";
         retStr += ") begin\n";
 
-        for (UpdateEvent* upd: translatedUpdateEvent){
-            ////// occ stands for occur yet!
-            bool isStateConOcc = false;
-            retStr += "     if ( ";
-            if (upd->srcUpdateState != nullptr){
-                isStateConOcc = true;
-                retStr += getOprStrFromOpr(upd->srcUpdateState);
-            }
+        bool isFirst = true;
 
-            if (upd->srcUpdateCondition != nullptr){
-                if (isStateConOcc){
-                    retStr += " && ";
-                }
-                isStateConOcc = true;
-                retStr += getOprStrFromOpr(upd->srcUpdateCondition);
+        for (int idx = translatedUpdateEvent.size() - 1; idx >= 0; idx--){
+            UpdateEvent* upd = translatedUpdateEvent[idx];
+            if (isFirst){
+                retStr += "     if ( ";
+                isFirst = false;
+            }else{
+                retStr += "     else if ( ";
             }
-
-            if (!isStateConOcc){
-                retStr += " 1 ";
-            }
-
+            retStr += getUpdateEventTrigger(upd);
             retStr += ") begin\n";
             retStr += "         ";
             retStr += assignmentLine(upd->desUpdateSlice, upd->srcUpdateValue, isClockSen);
@@ -95,6 +111,40 @@ namespace kathryn{
         }
         retStr += "end\n";
         return retStr;
+
+    }
+
+    std::string AssignGenBase::assignOpWithSoleCondition(bool isClockSen){
+
+        std::string retStr;
+        retStr += "always @(" +
+        retStr += isClockSen ? "posedge clk" : "*";
+        retStr += ") begin\n";
+
+        for (UpdateEvent* upd: translatedUpdateEvent){
+
+            retStr += "     if ( ";
+            retStr += getUpdateEventTrigger(upd);
+            retStr += ") begin\n";
+            retStr += "         ";
+            retStr += assignmentLine(upd->desUpdateSlice, upd->srcUpdateValue, isClockSen);
+            retStr += "\n";
+            retStr += "     end\n";
+
+        }
+        retStr += "end\n";
+        return retStr;
+
+    }
+
+
+
+    std::string AssignGenBase::assignOpBase(bool isClockSen){
+        if (_asb->checkDesIsFullyAssignAndEqual()){
+            return assignOpWithChainCondition(isClockSen);
+        }else{
+            return assignOpWithSoleCondition(isClockSen);
+        }
     }
 
     std::string AssignGenBase::assignmentLine(Slice desSlice, Operable* srcUpdateValue, bool isDelayedAsm){
