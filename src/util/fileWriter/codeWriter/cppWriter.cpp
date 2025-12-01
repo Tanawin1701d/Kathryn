@@ -43,7 +43,6 @@ namespace kathryn{
 
             if (nextStCheckIdx < _codeSt.size() &&
                 _codeSt[nextStCheckIdx].order == mainOrder){
-                preRet += identVal;
                 if (_codeSt[nextStCheckIdx].isComment){preRet += "////";}
                 preRet += identVal + _codeSt[nextStCheckIdx].st + ";";
                 if (_codeSt[nextStCheckIdx].ln){preRet += "\n";}

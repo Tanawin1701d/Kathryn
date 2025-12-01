@@ -33,7 +33,9 @@ namespace kathryn{
 
         std::string assStr = lse.genAssignAEqB(master->_desSlice, lse.isTempReq(), master->_value);
         cb.addSt(assStr);
-        cb.addSt(auxAssStr);
+        if (!auxAssStr.empty()){
+            cb.addSt(auxAssStr); //// make it more beutiful
+        }
     }
 
     /**

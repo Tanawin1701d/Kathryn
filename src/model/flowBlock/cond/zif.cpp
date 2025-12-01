@@ -26,10 +26,7 @@ namespace kathryn{
         assert(purifiedCurCond != nullptr);
     }
 
-    FlowBlockZIF::~FlowBlockZIF() {
-        /**we will not delete basic nodes due to node ownership transfering*/
-        _basicNodes.clear();
-    }
+    FlowBlockZIF::~FlowBlockZIF() {}
 
 
     void FlowBlockZIF::addElementInFlowBlock(Node* node) {

@@ -26,7 +26,6 @@ namespace kathryn{
             deleteSubElement(_spReg);
         }
         deleteSubElement(_flowBlockBases);
-        deleteSubElement(_bareNodes);
         /** delete user element*/
         deleteSubElement(_userRegs);
         deleteSubElement(_userWires);
@@ -68,11 +67,6 @@ namespace kathryn{
     void Module::addFlowBlock(FlowBlockBase* fb) {
         assert(fb != nullptr);
         _flowBlockBases.push_back(fb);
-    }
-
-    void Module::addNode(Node* node) {
-        assert(node != nullptr);
-        _bareNodes.push_back(node);
     }
 
     void Module::addUserReg(Reg* reg) {
@@ -181,6 +175,10 @@ namespace kathryn{
 
         std::vector<NodeWrap*> frontNodeWrap;
 
+        if (getGlobalId() == 8){
+            std::cout << "start build flow of a" << std::endl;
+        }
+
         for (auto fb: _flowBlockBases){
             assert(fb != nullptr);
             switch (fb->getJoinFbPol()) {
@@ -193,9 +191,10 @@ namespace kathryn{
                 case FLOW_JO_CON_FLOW:
                     mfAssert(false, "detect con bare block iteration");
                     break;
-                case FLOW_JO_EXT_FLOW:
+            case FLOW_JO_EXT_FLOW:
                     /**in case it is extract need flow block*/
-                    for (auto node: fb->getBasicNode()){
+                    std::vector<AsmNode*> extractedAsmNode = fb->extract();
+                    for (auto node: extractedAsmNode){
                         node->dryAssign();
                     }
                     break;

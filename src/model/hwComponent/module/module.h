@@ -63,7 +63,6 @@ namespace kathryn{
         std::vector<Reg*>           _spRegs[SP_CNT_REG]; ////// state/ cond/cycle wait use same ctrlflowRegbase class
         std::vector<FlowBlockBase*> _flowBlockBases; //// it contain only head of flowblock in module
 
-        std::vector<Node*>       _bareNodes; ////// for the node that did not assign to flowblock and it has already dry assign
         /** user component*/
         std::vector<Reg*>        _userRegs;
         std::vector<Wire*>       _userWires;
@@ -103,7 +102,6 @@ namespace kathryn{
         /**implicit element that is built from design flow*/
         void addSpReg          (Reg* reg, SP_REG_TYPE spRegType);
         void addFlowBlock      (FlowBlockBase* fb);
-        void addNode           (Node* node);
 
         /**explicit element that is buillt from user declaration*/
         void addUserReg        (Reg*            reg);
@@ -124,7 +122,6 @@ namespace kathryn{
             return _spRegs[spRegType];
         }
         auto& getFlowBlocks(){return _flowBlockBases;}
-        auto& getAsmNodes(){return _bareNodes;} /**the return contain only dry assign node*/
        /**explicit element that is buillt from user declaration*/
         auto& getUserRegs(){return _userRegs; } /** the return contain only master flowblock*/
         auto& getUserWires(){return _userWires; }

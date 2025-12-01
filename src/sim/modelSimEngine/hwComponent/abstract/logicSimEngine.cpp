@@ -29,6 +29,7 @@ namespace kathryn{
 
         for (UpdateEventBase* updateEvent : _asb->getUpdateMeta().getUpdateEventRef()){
 
+            cb.addCm(getValRep().toString() + ": priority " + std::to_string(updateEvent->getPriority()));
             UpdateEventBaseSimEngine* ueSimEngine = updateEvent->createSimEvent();
             ueSimEngine->createSimOp(cb, *this, auxAssStr);
             delete ueSimEngine;

@@ -28,6 +28,7 @@ namespace kathryn{
             "PIPE_TRAN"          ,
             "PICK"               ,
             "PICK_WHEN"          ,
+            "PSUEDO_BLOCK"       ,
             "DUMMY_BLOCK"
         };
         assert(fbt < FLOW_BLOCK_COUNT);

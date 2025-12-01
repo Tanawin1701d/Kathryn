@@ -32,11 +32,12 @@ namespace kathryn{
         PIPE_TRAN           = 17,
         PICK                = 18,
         PICK_WHEN           = 19,
+        PSUEDO_BLOCK        = 20,
         /** new flow block should be append here*/
 
         /************************************** **/
-        DUMMY_BLOCK         = 20,
-        FLOW_BLOCK_COUNT    = 21
+        DUMMY_BLOCK         = 21,
+        FLOW_BLOCK_COUNT    = 22
     };
 
     std::string FBT_to_string(FLOW_BLOCK_TYPE fbt);

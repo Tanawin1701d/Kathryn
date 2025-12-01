@@ -74,11 +74,13 @@ namespace kathryn{
             logMF(srcReg,
                   "user Reg is updating value @ fb block " + fb->getMdIdentVal());
         }else{
-            asmNode->dryAssign();
-            logMF(srcReg,
-                  "user reg is updatting without flowblock");
-            Module* targetModulePtr = getTopModulePtr();
-            targetModulePtr->addNode(asmNode);
+            ///// no worry about memory leak here because flow stack acknowledge it
+            new FlowBlockPseudo(asmNode);
+            // asmNode->dryAssign();
+            // logMF(srcReg,
+            //       "user reg is updatting without flowblock");
+            // Module* targetModulePtr = getTopModulePtr();
+            // targetModulePtr->addNode(asmNode);
         }
 
     }
@@ -121,11 +123,13 @@ namespace kathryn{
             logMF(srcWire,
                   "user wire is updating @ fb " + fb->getMdIdentVal());
         }else{
-            asmNode->dryAssign();
-            logMF(srcWire,
-                  "user wire is updatting without flowblock");
-            Module* targetModulePtr = getTopModulePtr();
-            targetModulePtr->addNode(asmNode);
+            ///// no worry about memory leak here because flow stack acknowledge it
+            new FlowBlockPseudo(asmNode);
+            // asmNode->dryAssign();
+            // logMF(srcWire,
+            //       "user wire is updatting without flowblock");
+            // Module* targetModulePtr = getTopModulePtr();
+            // targetModulePtr->addNode(asmNode);
         }
     }
 
@@ -173,11 +177,13 @@ namespace kathryn{
             logMF(srcHolder,
                   "memBlk HOLDER is updating value @ fb block " + fb->getMdIdentVal());
         }else{
-            asmNode->dryAssign();
-            logMF(srcHolder,
-                  "user mem holder is updatting without flowblock");
-            Module* targetModulePtr = getTopModulePtr();
-            targetModulePtr->addNode(asmNode);
+            ///// no worry about memory leak here because flow stack acknowledge it
+            new FlowBlockPseudo(asmNode);
+            // asmNode->dryAssign();
+            // logMF(srcHolder,
+            //       "user mem holder is updatting without flowblock");
+            // Module* targetModulePtr = getTopModulePtr();
+            // targetModulePtr->addNode(asmNode);
         }
 
     }
@@ -214,11 +220,13 @@ namespace kathryn{
             logMF(srcNest,
                   "user nest is updating @ fb " + fb->getMdIdentVal());
         }else{
-            asmNode->dryAssign();
-            logMF(srcNest,
-                  "user nest is updating without flowblock");
-            Module* targetModulePtr = getTopModulePtr();
-            targetModulePtr->addNode(asmNode);
+            ///// no worry about memory leak here because flow stack acknowledge it
+            new FlowBlockPseudo(asmNode);
+            // asmNode->dryAssign();
+            // logMF(srcNest,
+            //       "user nest is updating without flowblock");
+            // Module* targetModulePtr = getTopModulePtr();
+            // targetModulePtr->addNode(asmNode);
         }
     }
 
@@ -295,11 +303,13 @@ namespace kathryn{
             logMF(srcBox,
                   "user nest is updating @ fb " + fb->getMdIdentVal());
         }else{
-            asmNode->dryAssign();
-            logMF(srcBox,
-                  "user nest is updating without flowblock");
-            Module* targetModulePtr = getTopModulePtr();
-            targetModulePtr->addNode(asmNode);
+            ///// no worry about memory leak here because flow stack acknowledge it
+            new FlowBlockPseudo(asmNode);
+            // asmNode->dryAssign();
+            // logMF(srcBox,
+            //       "user nest is updating without flowblock");
+            // Module* targetModulePtr = getTopModulePtr();
+            // targetModulePtr->addNode(asmNode);
         }
     }
 

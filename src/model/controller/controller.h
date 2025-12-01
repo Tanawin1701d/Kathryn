@@ -33,6 +33,7 @@
 #include "model/flowBlock/pipeline/pipe.h"
 #include "model/flowBlock/pipeline/syncMeta.h"
 #include "model/flowBlock/pipeline/zync.h"
+#include "model/flowBlock/pseudo/pseudo.h"
 
 /** data Structure*/
 

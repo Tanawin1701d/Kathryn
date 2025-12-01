@@ -87,7 +87,7 @@ namespace kathryn{
 
     };
 
-    Sim5TestEle ele5(-1);
+    Sim5TestEle ele5(5);
 
     ///sim2 testCase2;
 
