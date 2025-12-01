@@ -36,24 +36,20 @@ namespace kathryn{
             //////////////////////// directly to system
             if (directAdded){
                 _genEngine->addDirectUpdateEvent(
-                    new UpdateEvent({
-                        nullptr,
-                        nullptr,
-                        opr1,
-                        getOperableSlice(),
-                        DEFAULT_UE_PRI_MIN
-                        }));
+                    createUEHelper(opr1,
+                                   getOperableSlice(),
+                                   DEFAULT_UE_PRI_MIN,
+                                   CM_CLK_FREE,
+                                   false)
+                );
             }else{
                 addUpdateMeta(
-                    new UpdateEvent({
-                    nullptr,
-                    nullptr,
-                    opr1,
-                    getOperableSlice(),
-                    DEFAULT_UE_PRI_MIN
-
-
-                    }));
+                    createUEHelper(opr1,
+                        getOperableSlice(),
+                        DEFAULT_UE_PRI_MIN,
+                        CM_CLK_FREE,
+                        false)
+                );
             }
         }
 

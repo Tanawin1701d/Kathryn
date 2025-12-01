@@ -27,17 +27,7 @@ namespace kathryn{
     }
 
     std::string RegGen::decOp(){
-        return AssignGenBase::assignOpBase(true);
-    }
-
-    bool RegGen::compare(LogicGenBase* lgb){
-        assert( (lgb->getLogicCef().comptype == HW_COMPONENT_TYPE::TYPE_REG) ||
-                (lgb->getLogicCef().comptype == HW_COMPONENT_TYPE::TYPE_STATE_REG)  ||
-                (lgb->getLogicCef().comptype == HW_COMPONENT_TYPE::TYPE_COND_WAIT_STATE_REG) ||
-                (lgb->getLogicCef().comptype == HW_COMPONENT_TYPE::TYPE_CYCLE_WAIT_STATE_REG)
-        );
-        auto* rhs = dynamic_cast<RegGen*>(lgb);
-        return checkCerfEqLocally(*rhs) && cmpAssignGenBase(rhs, SUBMOD);
+        return AssignGenBase::assignOpBase();
     }
 
     WIRE_MARKER_TYPE RegGen::getGlobIoStatus(){

@@ -38,25 +38,19 @@ namespace kathryn{
     }
 
     std::string WireAutoGen::decOp(){
-        assert(!translatedUpdateEvent.empty());
-        UpdateEvent* singleUpdateEvent = translatedUpdateEvent[0];
+        assert(!translatedUpdatePool.isEmpty());
+        UpdateEventBase* singleUpdateEvent = translatedUpdatePool.getUpdateEventRef()[0];
         assert(singleUpdateEvent != nullptr);
-        return "assign " + getOpr() + " = " +
-            getOprStrFromOpr(singleUpdateEvent->srcUpdateValue) + ";";
-        ///// return assignOpBase(false);
-    }
+        assert(singleUpdateEvent->getType() == UET_BASIC);
 
-    bool WireAutoGen::compare(LogicGenBase* lgb){
-        assert(lgb->getLogicCef().comptype == HW_COMPONENT_TYPE::TYPE_WIRE);
-        auto* rhs = dynamic_cast<WireAutoGen*>(lgb);
-        if( (_autoWireGenType == WIRE_AUTO_GEN_OUTPUT) ||
-            (_autoWireGenType == WIRE_AUTO_GEN_GLOB_OUTPUT) ||
-            (_autoWireGenType == WIRE_AUTO_GEN_INTER)){
-            /////////////// when compare output dep is submodule
-            return checkCerfEqLocally(*rhs) && cmpAssignGenBase(rhs, SUBMOD);
-        }
-        ///////////// the dep of input wire is master module
-        return checkCerfEqLocally(*rhs) && cmpAssignGenBase(rhs, MASTERMOD);
+        CbBaseVerilog cb;
+        UEBaseGenEngine* ueGenEngine = singleUpdateEvent->createGenEngine();
+        ueGenEngine->genBasicConnect(cb, this);
+        delete ueGenEngine;
+
+        std::string result = cb.toString(4);
+
+        return result;
     }
 
 

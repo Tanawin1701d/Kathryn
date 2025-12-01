@@ -61,24 +61,4 @@ namespace kathryn{
         return preRetStr;
     }
 
-    bool NestGen::compare(LogicGenBase* lgb){
-        assert(lgb->getLogicCef().comptype == HW_COMPONENT_TYPE::TYPE_NEST);
-        auto* rhs      = dynamic_cast<NestGen*>(lgb);
-        bool cerfCheck = checkCerfEqLocally(*rhs);
-        ///////// check cerf and nest list size first
-        if ( !(cerfCheck &&
-               (_routedNestList.size() == rhs->_routedNestList.size())
-               )){ return false;}
-        //////// check src nest list is equal
-        bool isEqual = true;
-        for (int idx = 0; idx < _routedNestList.size(); idx++){
-            isEqual &=
-                cmpEachOpr(_routedNestList[idx], rhs->_routedNestList[idx],
-                getModuleGen(), rhs->getModuleGen(), SUBMOD
-                );
-        }
-        return isEqual;
-    }
-
-
 }

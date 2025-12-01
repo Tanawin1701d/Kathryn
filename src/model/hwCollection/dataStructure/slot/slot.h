@@ -27,14 +27,14 @@ namespace kathryn{
 
     public:
 
-        Slot(){}
+        Slot()= default;
 
         Slot(const std::vector<std::string>& fieldNames,
              const std::vector<int>&         fieldSizes
         ):
-        _meta(fieldNames, fieldSizes){};
+        _meta(fieldNames, fieldSizes){}
 
-        Slot(SlotMeta  meta):
+        explicit Slot(SlotMeta  meta):
         _meta(std::move(meta)){}
 
         virtual ~Slot() = default;
@@ -44,7 +44,7 @@ namespace kathryn{
         ////////// get static data
 
 
-        bool isThereField(const std::string& fieldName) const{
+        [[nodiscard]] bool isThereField(const std::string& fieldName) const{
             return getIdx(fieldName) != -1;
         }
 
@@ -52,6 +52,7 @@ namespace kathryn{
             return _meta(idx);
         }
 
+        [[nodiscard]]
         FieldMeta fieldAt(int idx) const{
             return _meta.getCopyField(idx);
         }
@@ -114,13 +115,18 @@ namespace kathryn{
             "the size of srcOpr is too small to assign to desAsb");
             Slice srcSlice = srcOpr.getOperableSlice();
             Slice desSlice = desAsb.getAssignSlice();
-            auto* assMeta = new AssignMeta(
-                desAsb.getUpdateMeta(),
-                srcOpr,
+
+            UpdateEventBasic* ueb = createUEHelper(
+                &srcOpr,
                 desSlice.getMatchSizeSubSlice(srcSlice),
-                asmType,
-                desAsb.getCurAssignClkMode()
+                -1,
+                desAsb.getCurAssignClkMode(),
+                true
             );
+
+            AssignMeta* assMeta = new AssignMeta(desAsb.getUpdateMeta(),
+                                                 ueb,
+                                                 asmType);
             return assMeta;
         }
 
@@ -224,20 +230,19 @@ namespace kathryn{
 
             for (int desIdx = 0; desIdx < getNumField(); desIdx++){
                 Operable* idxCheckCond = &(requiredIdx == desIdx);
-                asmNode->addSpecificPreCondition(idxCheckCond, BITWISE_AND, desIdx);
+                asmNode->addSpecificPreCondition(idxCheckCond, desIdx);
             }
             return asmNode;
         }
 
-        AsmNode* genGrpAsmNode(
+        static AsmNode* genGrpAsmNode(
         const std::vector<AssignMeta*> & assignMetas,
-        const std::vector<Operable*>   & preConditions,
-        LOGIC_OP preConOp
+        const std::vector<Operable*>   & preConditions
         ){
             assert(assignMetas.size() == preConditions.size());
             auto* asmNode = new AsmNode(assignMetas);
             for (int idx = 0; idx < preConditions.size(); idx++){
-                asmNode->addSpecificPreCondition(preConditions[idx], preConOp, idx);
+                asmNode->addSpecificPreCondition(preConditions[idx], idx);
             }
             return asmNode;
         }
@@ -249,7 +254,7 @@ namespace kathryn{
             const std::vector<int>& srcMatchIdxs,
             const std::vector<int>& desMatchIdxs,
             const std::vector<int>& exceptIdxs,
-            ASM_TYPE asmType){assert(false);};
+            ASM_TYPE asmType){assert(false);}
 
         virtual void doGlobAsm(
             Operable& srcOpr,
@@ -259,7 +264,7 @@ namespace kathryn{
 
         virtual void doGlobAsm(
             AsmNode* asmNode
-        ){assert(false);};
+        ){assert(false);}
 
 
         /** block assignment */
@@ -334,7 +339,7 @@ namespace kathryn{
 
             bool isUsedAsDef = true;
             //// the target structure to update
-            std::vector<UpdateEvent*>& updateEvents = resultWire->getUpdateMeta();
+            UpdatePool& updatePool = resultWire->getUpdateMeta();
 
             for (int idx = 0; idx < _masterSlot.getNumField(); idx++){
                 FieldMeta fieldMeta = _masterSlot.fieldRefAt(idx);
@@ -350,16 +355,16 @@ namespace kathryn{
                     assignPri    = DEFAULT_UE_PRI_USER;
                 }
                 ////// create update event
-                auto resultUpEvent = new UpdateEvent({
+                UpdateEventBase* resultUpEvent = createUEHelper(
                 activateCond,
                 nullptr,
                 _masterSlot.hwFieldRefAt(idx)._opr,
                 resultWire->getOperableSlice(),
                 assignPri,
-                    DEFAULT_UE_SUB_PRIORITY_USER,
-                    CM_CLK_FREE
-                });
-                updateEvents.push_back(resultUpEvent);
+                CM_CLK_FREE,
+                false
+                );
+                updatePool.addUpdateEvent(resultUpEvent);
                 isUsedAsDef = false;
             }
 

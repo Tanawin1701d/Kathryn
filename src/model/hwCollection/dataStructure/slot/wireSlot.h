@@ -99,7 +99,7 @@ namespace kathryn{
 
 
         /** it will match by name*/
-        WireSlot& operator <<= (const Slot& rhs);
+        WireSlot& operator <<= (const Slot& rhs) const;
         WireSlot& operator <<= (const WireSlot& rhs);
 
         WireSlot& operator = (const Slot& rhs);

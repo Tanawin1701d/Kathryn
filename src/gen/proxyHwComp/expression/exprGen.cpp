@@ -69,7 +69,7 @@ namespace kathryn{
             /** logical operator*/
             case LOGICAL_AND : {assert(aSize == bSize); retStr += _aSliced + " &&   "    + _bSliced; break;}
             case LOGICAL_OR  : {assert(aSize == bSize); retStr += _aSliced + " ||   "    + _bSliced; break;}
-            case LOGICAL_NOT : {                      ; retStr += " !    " + _aSliced;               break;}
+            case LOGICAL_NOT : {                        retStr += " !    " + _aSliced;               break;}
             /** relational operator*/
             case RELATION_EQ : {assert(aSize == bSize); retStr += _aSliced + " ==   "    + _bSliced; break;}
             case RELATION_NEQ: {assert(aSize == bSize); retStr += _aSliced + " !=   "    + _bSliced; break;}
@@ -102,20 +102,6 @@ namespace kathryn{
 
     std::string ExprGen::cvtToSignSig(std::string srcStr){
         return "$signed(" + srcStr + ")";
-    }
-
-    bool ExprGen::compare(LogicGenBase* lgb){
-        assert(lgb->getLogicCef().comptype == HW_COMPONENT_TYPE::TYPE_EXPRESSION);
-        auto* rhs = dynamic_cast<ExprGen*>(lgb);
-        bool cerfCheck = checkCerfEqLocally(*rhs);
-        bool opCheck   = _master->getOp() == rhs->_master->getOp();
-        bool oprACheck = cmpEachOpr(_routedOprA, rhs->_routedOprA,
-                            getModuleGen(), rhs->getModuleGen(), SUBMOD
-                        );
-        bool oprBCheck = cmpEachOpr(_routedOprB, rhs->_routedOprB,
-                            getModuleGen(), rhs->getModuleGen(), SUBMOD
-                        );
-        return cerfCheck & opCheck & oprACheck & oprBCheck;
     }
 
 }

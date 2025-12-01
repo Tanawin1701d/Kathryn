@@ -22,10 +22,10 @@ namespace kathryn{
     void WireGen::routeDep(){
 
         if (_master->getMarker() == WMT_INPUT_MD || _master->getMarker() == WMT_OUTPUT_MD){
-            assert(_master->getUpdateMeta().size() == 1);
-            auto* singleUpdateEvent = new UpdateEvent();
-            *singleUpdateEvent = *_master->getUpdateMeta()[0];
-            translatedUpdateEvent.push_back(singleUpdateEvent);
+            UpdatePool& masterUpdatePool = _master->getUpdateMeta();
+            assert(masterUpdatePool.size() == 1);
+
+            translatedUpdatePool = masterUpdatePool.clone();
             return;
         }
         /////// incase normal wire
@@ -61,27 +61,19 @@ namespace kathryn{
     std::string WireGen::decOp(){
 
         if(_master->getMarker() == WMT_INPUT_MD || _master->getMarker() == WMT_OUTPUT_MD){
-            assert(!translatedUpdateEvent.empty());
-            UpdateEvent* singleUpdateEvent = translatedUpdateEvent[0];
-            assert(singleUpdateEvent != nullptr);
-            return "assign " + getOpr() + " = " +
-                getOprStrFromOpr(singleUpdateEvent->srcUpdateValue) + ";";
+            assert(!translatedUpdatePool.isEmpty());
+            UpdateEventBase* singleUpdateEvent = translatedUpdatePool.getUpdateEventRef()[0];
+            assert(singleUpdateEvent->getType() == UET_BASIC);
+
+            CbBaseVerilog cb;
+            UEBaseGenEngine* ueGenEngine =  singleUpdateEvent->createGenEngine();
+            ueGenEngine->genBasicConnect(cb, this);
+            delete ueGenEngine;
+
+            return cb.toString(4);
         }
 
-        return assignOpBase(false);
+        return assignOpBase();
     }
 
-    bool WireGen::compare(LogicGenBase* lgb){
-
-        assert(lgb->getLogicCef().comptype == HW_COMPONENT_TYPE::TYPE_WIRE);
-        auto* rhs = dynamic_cast<WireGen*>(lgb);
-        if(_master->getMarker() == WMT_INPUT_MD){
-            ///////////// the dep of input wire is master module
-            return checkCerfEqLocally(*rhs) && cmpAssignGenBase(rhs, MASTERMOD);
-        }
-        /////////////// when compare output dep is submodule
-        return checkCerfEqLocally(*rhs) && cmpAssignGenBase(rhs, SUBMOD);
-
-
-    }
 }

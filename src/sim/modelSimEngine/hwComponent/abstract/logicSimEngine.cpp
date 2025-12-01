@@ -26,42 +26,13 @@ namespace kathryn{
 
     void LogicSimEngine::createOpWithSoleCondition(CbBaseCxx& cb,
                                                    const std::string& auxAssStr){
-        for (UpdateEvent* updateEvent : _asb->getUpdateMeta()){
-            ////
-            ///check integrity
-            ///
-            assert(updateEvent->srcUpdateValue->getOperableSlice().getSize() >=
-                updateEvent->desUpdateSlice.getSize());
-            std::string condStr;
-            std::string assStr;
-            bool isConOccur = false;
-            ////  gather activate condition
-            if (updateEvent->srcUpdateState != nullptr){
-                condStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateState).toString();
-                isConOccur = true;
-            }
-            if (updateEvent->srcUpdateCondition != nullptr){
-                if (isConOccur){
-                    condStr += " && ";
-                }
-                condStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateCondition).toString();
-                isConOccur = true;
-            }
-            assStr = genAssignAEqB(updateEvent->desUpdateSlice,
-                                                _isTempReq,
-                                                updateEvent->srcUpdateValue);
 
+        for (UpdateEventBase* updateEvent : _asb->getUpdateMeta().getUpdateEventRef()){
 
-            if (isConOccur){
-                CbIfCxx& ifBlock = cb.addIf(condStr);
-                ifBlock.addSt(assStr);
-                if (!auxAssStr.empty()){
-                    ifBlock.addSt(auxAssStr);
-                }
-            }else{
-                cb.addSt(assStr);
-                cb.addSt(auxAssStr);
-            }
+            UpdateEventBaseSimEngine* ueSimEngine = updateEvent->createSimEvent();
+            ueSimEngine->createSimOp(cb, *this, auxAssStr);
+            delete ueSimEngine;
+
         }
     }
 
@@ -154,20 +125,13 @@ namespace kathryn{
     void LogicSimEngine::proxyBuildInit(){
         //// std::cout << _ident->getVarName() << std::endl;
         _asb->sortUpEventByPriority();
-        for (UpdateEvent* updateEvent : _asb->getUpdateMeta()){
-            if (updateEvent->srcUpdateCondition != nullptr){
-                dep.push_back(
-                    updateEvent->srcUpdateCondition->getLogicSimEngineFromOpr());
-            }
 
-            if (updateEvent->srcUpdateState != nullptr){
-                dep.push_back(
-                    updateEvent->srcUpdateState->getLogicSimEngineFromOpr());
-            }
-
-            if (updateEvent->srcUpdateValue != nullptr){
-                dep.push_back(
-                    updateEvent->srcUpdateValue->getLogicSimEngineFromOpr());
+        for (UpdateEventBase* updateEvent : _asb->getUpdateMeta().getUpdateEventRef()){
+            std::vector<Operable*> depOpr;
+            updateEvent->getDep(depOpr);
+            for (Operable* opr1 : depOpr){
+                assert(opr1 != nullptr);
+                dep.push_back(opr1->getLogicSimEngineFromOpr());
             }
         }
     }
@@ -209,6 +173,7 @@ namespace kathryn{
     void LogicSimEngine::createOp(CbBaseCxx& cb){
         ///////// build string
         cb.addCm(_ident->getGlobalName());
+
         _asb->sortUpEventByPriority();
         if (_isTempReq){
             cb.addSt( //// build temp variable first
@@ -216,11 +181,14 @@ namespace kathryn{
             );
         }
 
-        if (_asb->checkDesIsFullyAssignAndEqual()){
-            genOpWithChainCondition(cb);
-        }else{
-            createOpWithSoleCondition(cb);
-        }
+
+        createOpWithSoleCondition(cb);
+
+        // if (_asb->checkDesIsFullyAssignAndEqual()){
+        //     genOpWithChainCondition(cb);
+        // }else{
+        //     createOpWithSoleCondition(cb);
+        // }
     }
 
     void LogicSimEngine::createOpEndCycle2(CbBaseCxx& cb){
@@ -261,86 +229,86 @@ namespace kathryn{
 
 
 
-    void LogicSimEngine::genOpWithChainCondition(CbBaseCxx& cb, const std::string& auxAssStr){
+   // void LogicSimEngine::genOpWithChainCondition(CbBaseCxx& cb, const std::string& auxAssStr){
 
-           CbIfCxx* firstIfStatement = nullptr;
+           // CbIfCxx* firstIfStatement = nullptr;
+           //
+           //  int idx = 0;
+           //  int maxUpdateEvent = static_cast<int>(_asb->getUpdateMeta().size());
+           //  std::vector<UpdateEvent*> reversedUpdateEvents = _asb->getUpdateMeta();
+           //  std::reverse(reversedUpdateEvents.begin(), reversedUpdateEvents.end());
+           //
+           //  while (idx < maxUpdateEvent){
+           //
+           //      std::vector<UpdateEvent*> updateEventGrp;
+           //      updateEventGrp.push_back(reversedUpdateEvents[idx]);
+           //      for (idx = idx + 1; idx < maxUpdateEvent; idx++){
+           //          UpdateEvent& curUpdateEvent = *reversedUpdateEvents[idx];
+           //          if (curUpdateEvent.priority == updateEventGrp[0]->priority){
+           //              if (curUpdateEvent.srcUpdateValue->isConstOpr() &&
+           //                  updateEventGrp[0]->srcUpdateValue->isConstOpr() &&
+           //                  (curUpdateEvent.srcUpdateValue->getConstOpr() ==
+           //                      updateEventGrp[0]->srcUpdateValue->getConstOpr())
+           //              ){
+           //                  updateEventGrp.push_back(reversedUpdateEvents[idx]);
+           //                  continue; ///// grp updateEvent for const value
+           //              }
+           //              if (curUpdateEvent.srcUpdateValue ==
+           //                  updateEventGrp[0]->srcUpdateValue){
+           //                  updateEventGrp.push_back(reversedUpdateEvents[idx]);
+           //                  continue; ///// grp updateEvent for other value
+           //              }
+           //          }
+           //          break;
+           //      }
+           //
+           //      assert(updateEventGrp[0]->srcUpdateValue->getOperableSlice().getSize() >=
+           //          updateEventGrp[0]->desUpdateSlice.getSize());
+           //
+           //
+           //      std::string conStr;
+           //
+           //      for (UpdateEvent* updateEvent : updateEventGrp){
+           //          bool isSubConOccur = false;
+           //          conStr += "(";
+           //          if (updateEvent->srcUpdateState != nullptr){
+           //              conStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateState).toString();
+           //              isSubConOccur = true;
+           //          }
+           //
+           //          if (updateEvent->srcUpdateCondition != nullptr){
+           //              if (isSubConOccur){
+           //                  conStr += " && ";
+           //              }
+           //              conStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateCondition).toString();
+           //              isSubConOccur = true;
+           //          }
+           //
+           //          if (!isSubConOccur){
+           //              conStr += "true";
+           //          }
+           //          conStr += ")";
+           //          if ((updateEvent) != (*updateEventGrp.rbegin())){
+           //              conStr += " || ";
+           //          }
+           //      }
+           //
+           //
+           //      CbIfCxx* curIfStatement = nullptr;
+           //      if (firstIfStatement == nullptr){
+           //          firstIfStatement = &cb.addIf(conStr);
+           //          curIfStatement   = firstIfStatement;
+           //      }else{
+           //          curIfStatement   = &firstIfStatement->addElif(conStr);
+           //      }
+           //
+           //
+           //      curIfStatement->addSt(genAssignAEqB(updateEventGrp[0]->desUpdateSlice, _isTempReq,
+           //                            updateEventGrp[0]->srcUpdateValue));
+           //      if (!auxAssStr.empty()){
+           //          curIfStatement->addSt(auxAssStr);
+           //      }
+           //  }
 
-            int idx = 0;
-            int maxUpdateEvent = static_cast<int>(_asb->getUpdateMeta().size());
-            std::vector<UpdateEvent*> reversedUpdateEvents = _asb->getUpdateMeta();
-            std::reverse(reversedUpdateEvents.begin(), reversedUpdateEvents.end());
-
-            while (idx < maxUpdateEvent){
-
-                std::vector<UpdateEvent*> updateEventGrp;
-                updateEventGrp.push_back(reversedUpdateEvents[idx]);
-                for (idx = idx + 1; idx < maxUpdateEvent; idx++){
-                    UpdateEvent& curUpdateEvent = *reversedUpdateEvents[idx];
-                    if (curUpdateEvent.priority == updateEventGrp[0]->priority){
-                        if (curUpdateEvent.srcUpdateValue->isConstOpr() &&
-                            updateEventGrp[0]->srcUpdateValue->isConstOpr() &&
-                            (curUpdateEvent.srcUpdateValue->getConstOpr() ==
-                                updateEventGrp[0]->srcUpdateValue->getConstOpr())
-                        ){
-                            updateEventGrp.push_back(reversedUpdateEvents[idx]);
-                            continue; ///// grp updateEvent for const value
-                        }
-                        if (curUpdateEvent.srcUpdateValue ==
-                            updateEventGrp[0]->srcUpdateValue){
-                            updateEventGrp.push_back(reversedUpdateEvents[idx]);
-                            continue; ///// grp updateEvent for other value
-                        }
-                    }
-                    break;
-                }
-
-                assert(updateEventGrp[0]->srcUpdateValue->getOperableSlice().getSize() >=
-                    updateEventGrp[0]->desUpdateSlice.getSize());
-
-
-                std::string conStr;
-
-                for (UpdateEvent* updateEvent : updateEventGrp){
-                    bool isSubConOccur = false;
-                    conStr += "(";
-                    if (updateEvent->srcUpdateState != nullptr){
-                        conStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateState).toString();
-                        isSubConOccur = true;
-                    }
-
-                    if (updateEvent->srcUpdateCondition != nullptr){
-                        if (isSubConOccur){
-                            conStr += " && ";
-                        }
-                        conStr += getSlicedSrcOprFromOpr(updateEvent->srcUpdateCondition).toString();
-                        isSubConOccur = true;
-                    }
-
-                    if (!isSubConOccur){
-                        conStr += "true";
-                    }
-                    conStr += ")";
-                    if ((updateEvent) != (*updateEventGrp.rbegin())){
-                        conStr += " || ";
-                    }
-                }
-
-
-                CbIfCxx* curIfStatement = nullptr;
-                if (firstIfStatement == nullptr){
-                    firstIfStatement = &cb.addIf(conStr);
-                    curIfStatement   = firstIfStatement;
-                }else{
-                    curIfStatement   = &firstIfStatement->addElif(conStr);
-                }
-
-
-                curIfStatement->addSt(genAssignAEqB(updateEventGrp[0]->desUpdateSlice, _isTempReq,
-                                      updateEventGrp[0]->srcUpdateValue));
-                if (!auxAssStr.empty()){
-                    curIfStatement->addSt(auxAssStr);
-                }
-            }
-
-        }
+    //    }
 }

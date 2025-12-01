@@ -86,16 +86,15 @@ namespace kathryn{
 
     void Reg::makeResetEvent(ull value){ //// we lock it to the posedge clock
         makeVal(rstRegVal, getSlice().getSize(), value);
-        auto rstEvent = new UpdateEvent({
-            nullptr,
-            rstWire,
-            &rstRegVal,
-            {0, getSlice().getSize()},
-            DEFAULT_UE_PRI_RST,
-            DEFAULT_UE_SUB_PRIORITY_USER,
-            CM_POSEDGE
-        });
-        addUpdateMeta(rstEvent);
+
+        UpdateEventBase* ueb = createUEHelper(nullptr,
+                                              rstWire,
+                                              &rstRegVal,
+                                              {0, getSlice().getSize()},
+                                              DEFAULT_UE_PRI_RST,
+                                              CM_POSEDGE,
+                                              false);
+        addUpdateMeta(ueb);
     }
 
     Operable* Reg::checkShortCircuit(){

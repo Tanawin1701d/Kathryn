@@ -48,7 +48,7 @@ namespace kathryn{
     RegSlot::RegSlot(const SlotMeta& slotMeta, const std::string& prefixName):
     Slot(slotMeta){
         /** this is used to initialize from slice*/
-        initHwStructure(prefixName);
+        RegSlot::initHwStructure(prefixName);
     }
 
     RegSlot::RegSlot(const std::vector<std::string>& fieldNames,
@@ -56,7 +56,7 @@ namespace kathryn{
             const std::string&                       prefixName):
     Slot(fieldNames, fieldSizes){
         /** create new reg*/
-        initHwStructure(prefixName);
+        RegSlot::initHwStructure(prefixName);
     }
 
     void RegSlot::initHwStructure(const std::string& prefixName){

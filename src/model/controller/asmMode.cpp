@@ -4,6 +4,7 @@
 
 
 #include "asmMode.h"
+
 #include "model/hwComponent/abstract/updateEvent.h"
 
 namespace kathryn{

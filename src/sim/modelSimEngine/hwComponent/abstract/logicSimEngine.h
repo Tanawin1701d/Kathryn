@@ -33,8 +33,9 @@ namespace kathryn{
     public:
         //////////////////////// gen main operation
 
+
         void createOpWithSoleCondition        (CbBaseCxx& cb, const std::string& auxAssStr = "");
-        void genOpWithChainCondition          (CbBaseCxx& cb, const std::string& auxAssStr = "");
+        //void genOpWithChainCondition          (CbBaseCxx& cb, const std::string& auxAssStr = "");
         std::string genAssignAEqB             (Slice     desSlice, bool isDesTemp,
                                                Operable* srcOpr);
         ///////////////////////// sliced opr
@@ -75,6 +76,7 @@ namespace kathryn{
 
 
         bool        isUserDeclare()       override{return _ident->isUserVar();}
+        bool        isTempReq()                   {return _isTempReq;}
 
         void        setFlowBlockIden(bool flowIden){_flowPerfBit = flowIden;}
         void        reqGlobDec(){ _reqGlobDec = true;}

@@ -23,7 +23,6 @@ namespace kathryn{
 
         std::string decOp() override;
 
-        bool compare(LogicGenBase* lgb) override;
     };
 
 }

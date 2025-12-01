@@ -78,9 +78,13 @@ namespace kathryn{
             frontFb->addSubFlowBlock(topFb);
         }else if (topFb->getJoinFbPol() == FLOW_JO_EXT_FLOW){
             logMF(topFb, "extract flowblock and give it to basic asm");
-            for (auto basicNode: topFb->getBasicNode()){
-                frontFb->addElementInFlowBlock(basicNode);
+            std::vector<AsmNode*> extractedAsmNode = topFb->extract();
+            for (auto asmNode: extractedAsmNode){
+                frontFb->addElementInFlowBlock(asmNode);
             }
+            // for (auto basicNode: topFb->getBasicNode()){
+            //     frontFb->addElementInFlowBlock(basicNode);
+            // }
             frontFb->addAbandonFlowBlock(topFb);
             /***we must delete this due to*/
             ///// delete topFb;

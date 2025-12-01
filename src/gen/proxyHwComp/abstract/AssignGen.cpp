@@ -10,9 +10,7 @@ namespace kathryn{
 
 
     AssignGenBase::~AssignGenBase(){
-        for (UpdateEvent* ude: translatedUpdateEvent){
-            delete ude;
-        }
+        translatedUpdatePool.clean();
     }
 
 
@@ -20,131 +18,54 @@ namespace kathryn{
 
         assert(_asb != nullptr);
         _asb->sortUpEventByPriority();
-        for (UpdateEvent* realUde: _asb->getUpdateMeta()){
-            auto* newEvent = new UpdateEvent();
-            /////////////////////////////////
-            ////////// route update condition
-            /////////////////////////////////
-            if (realUde->srcUpdateCondition != nullptr){
-                Operable* conRouted =
-                    _mdGenMaster->routeSrcOprToThisModule(realUde->srcUpdateCondition);
-                newEvent->srcUpdateCondition = conRouted;
-            }
-            /////////////////////////////
-            ////////// route update state
-            /////////////////////////////
-            if (realUde->srcUpdateState != nullptr){
-                Operable* stateRouted =
-                    _mdGenMaster->routeSrcOprToThisModule(realUde->srcUpdateState);
-                newEvent->srcUpdateState = stateRouted;
-            }
-            /////////////////////////////
-            ////////// route update value
-            /////////////////////////////
-            assert(realUde->srcUpdateValue != nullptr);
-            Operable* updateValueRouted =
-            _mdGenMaster->routeSrcOprToThisModule(realUde->srcUpdateValue);
-            newEvent->srcUpdateValue = updateValueRouted;
-            /////////////////////////////////////////////////////////
-            ////////// fill static value that have not to be rerouted
-            /////////////////////////////////////////////////////////
-            newEvent->desUpdateSlice = realUde->desUpdateSlice;
-            newEvent->priority       = realUde->priority;
-            newEvent->subPriority    = realUde->subPriority;
-            newEvent->clkMode        = realUde->clkMode;
-            ///////////////////////////////////
-            /////////// push to the pool system
-            ///////////////////////////////////
-            translatedUpdateEvent.push_back(newEvent);
+        /** copy the translatedUpdatePool*/
+        translatedUpdatePool = _asb->getUpdateMeta().clone();
+        /** try to reroute the update Event*/
+        for(UpdateEventBase* ueb: translatedUpdatePool.events){
+            UEBaseGenEngine* genEngine = ueb->createGenEngine();
+            genEngine->reroute(_mdGenMaster);
+            delete genEngine;
         }
     }
 
-    std::string AssignGenBase::getUpdateEventTrigger(UpdateEvent* upd){
-        assert(upd != nullptr);
-        std::string retStr;
-        bool isStateConOcc = false;
+    std::pair<Verilog_SEN_TYPE, std::string>
+    AssignGenBase::getClockSenInfo(UpdateEventBase* ueb){
 
-        if (upd->srcUpdateState != nullptr){
-            isStateConOcc = true;
-            retStr += getOprStrFromOpr(upd->srcUpdateState);
+        assert(ueb != nullptr);
+        switch (ueb->_clkMode){
+            case CM_POSEDGE: return std::make_pair(VLST_POSEDGE, "clk");
+            case CM_NEGEDGE: return std::make_pair(VLST_NEGEDGE, "clk");
+            default: return std::make_pair(VLST_ALWAYS, "*");
         }
-
-        if (upd->srcUpdateCondition != nullptr){
-            if (isStateConOcc){
-                retStr += " && ";
-            }
-            isStateConOcc = true;
-            retStr += getOprStrFromOpr(upd->srcUpdateCondition);
-        }
-
-        if (!isStateConOcc){
-            retStr += " 1 ";
-        }
-
-        return retStr;
-    }
-
-    std::string AssignGenBase::assignOpWithChainCondition(bool isClockSen){
-
-        std::string retStr;
-        retStr += "always @(" +
-        retStr += isClockSen ? "posedge clk" : "*";
-        retStr += ") begin\n";
-
-        bool isFirst = true;
-
-        for (int idx = translatedUpdateEvent.size() - 1; idx >= 0; idx--){
-            UpdateEvent* upd = translatedUpdateEvent[idx];
-            if (isFirst){
-                retStr += "     if ( ";
-                isFirst = false;
-            }else{
-                retStr += "     else if ( ";
-            }
-            retStr += getUpdateEventTrigger(upd);
-            retStr += ") begin\n";
-            retStr += "         ";
-            retStr += assignmentLine(upd->desUpdateSlice, upd->srcUpdateValue, isClockSen);
-            retStr += "\n";
-            retStr += "     end\n";
-
-        }
-        retStr += "end\n";
-        return retStr;
 
     }
 
-    std::string AssignGenBase::assignOpWithSoleCondition(bool isClockSen){
+
+
+    std::string AssignGenBase::assignOpWithSoleCondition(){
 
         std::string retStr;
-        retStr += "always @(" +
-        retStr += isClockSen ? "posedge clk" : "*";
-        retStr += ") begin\n";
+        CbBaseVerilog cb;
 
-        for (UpdateEvent* upd: translatedUpdateEvent){
+        for (UpdateEventBase* ueb: translatedUpdatePool.events){
+            auto [verSenType, senSig] = getClockSenInfo(ueb);
 
-            retStr += "     if ( ";
-            retStr += getUpdateEventTrigger(upd);
-            retStr += ") begin\n";
-            retStr += "         ";
-            retStr += assignmentLine(upd->desUpdateSlice, upd->srcUpdateValue, isClockSen);
-            retStr += "\n";
-            retStr += "     end\n";
-
+            CbAlwaysVerilog cbAw = cb.addAlways(verSenType, senSig);
+            UEBaseGenEngine* genEngine = ueb->createGenEngine();
+            genEngine->genAss(cbAw, this);
+            delete genEngine;
         }
-        retStr += "end\n";
+
+        retStr = cb.toString(4);
         return retStr;
 
     }
 
 
 
-    std::string AssignGenBase::assignOpBase(bool isClockSen){
-        if (_asb->checkDesIsFullyAssignAndEqual()){
-            return assignOpWithChainCondition(isClockSen);
-        }else{
-            return assignOpWithSoleCondition(isClockSen);
-        }
+    std::string AssignGenBase::assignOpBase(){
+        return assignOpWithSoleCondition();
+
     }
 
     std::string AssignGenBase::assignmentLine(Slice desSlice, Operable* srcUpdateValue, bool isDelayedAsm){
@@ -152,33 +73,4 @@ namespace kathryn{
         std::string asmOpr = isDelayedAsm ? " <= " : " = ";
         return getOpr(desSlice) + asmOpr + getOprStrFromOprAndShinkMsb(srcUpdateValue, desSlice.getSize()) + ";";
     }
-
-    bool AssignGenBase::cmpAssignGenBase(AssignGenBase* asgb,
-                                         OUT_SEARCH_POL searchPol){
-        assert(asgb != nullptr);
-        if ( translatedUpdateEvent.size() != asgb->translatedUpdateEvent.size()){
-            return false;
-        }
-
-        for (int idx = 0; idx < translatedUpdateEvent.size(); idx++){
-            UpdateEvent* a = translatedUpdateEvent[idx];
-            UpdateEvent* b = asgb->translatedUpdateEvent[idx];
-            ////// compare each element
-            if (
-                (!cmpEachOpr(a->srcUpdateCondition,b->srcUpdateCondition,
-                getModuleGen(), asgb->getModuleGen(), searchPol)) ||
-                (!cmpEachOpr(a->srcUpdateState, b->srcUpdateState,
-                getModuleGen(), asgb->getModuleGen(), searchPol)) ||
-                (!cmpEachOpr(a->srcUpdateValue, b->srcUpdateValue,
-                getModuleGen(), asgb->getModuleGen(), searchPol))
-            ){
-                return false;
-            }
-        }
-        return true;
-
-    }
-
-
-
 }

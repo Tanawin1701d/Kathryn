@@ -12,7 +12,9 @@ namespace kathryn{
     class AssignGenBase: public LogicGenBase{
     protected:
 
-        std::vector<UpdateEvent*> translatedUpdateEvent;
+        UpdatePool translatedUpdatePool;
+
+
     public:
         explicit AssignGenBase(ModuleGen*    mdGenMaster,
                               Assignable*   asb,
@@ -23,25 +25,24 @@ namespace kathryn{
 
         void routeDep() override;
 
-        std::string getUpdateEventTrigger(UpdateEvent* upd);
-        std::string assignOpWithChainCondition(bool isClockSen);
-        std::string assignOpWithSoleCondition(bool isClockSen);
-        std::string assignOpBase(bool isClockSen);
+        std::pair<Verilog_SEN_TYPE, std::string> getClockSenInfo(UpdateEventBase* ueb);
 
-        virtual std::string assignmentLine(Slice desSlice, Operable* srcUpdateValue, bool isDelayedAsm);
+        /**
+         *  assign system
+         */
+        //std::string assignOpWithChainCondition(bool isClockSen);
+        std::string assignOpWithSoleCondition();
+        std::string assignOpBase();
 
-        void addDirectUpdateEvent(UpdateEvent* updateEvent) override{
-            assert(updateEvent != nullptr);
-            translatedUpdateEvent.push_back(updateEvent);
+        virtual std::string assignmentLine(Slice desSlice,
+                                           Operable* srcUpdateValue,
+                                           bool isDelayedAsm);
+
+
+        void addDirectUpdateEvent(UpdateEventBase* ueb) override{
+            assert(ueb != nullptr);
+            translatedUpdatePool.addUpdateEvent(ueb);
         }
-
-        bool cmpAssignGenBase(AssignGenBase* asgb, OUT_SEARCH_POL searchPol);
-        //// vice vesa is master module
-        //// it mean implicitly outside is equal
-
-
-
-
 
     };
 

@@ -22,11 +22,4 @@ namespace kathryn{
         return std::to_string(_master->getConstOpr());
     }
 
-    bool ParamValGen::compare(LogicGenBase* lgb){
-        assert(lgb->getLogicCef().comptype == TYPE_PMVAL);
-        auto* rhs = dynamic_cast<ParamValGen*>(lgb);
-        return checkCerfEqLocally(*rhs) &&
-        (_master->getConstOpr() == rhs->_master->getConstOpr());
-    }
-
 }

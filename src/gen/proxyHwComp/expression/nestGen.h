@@ -29,10 +29,6 @@ namespace kathryn{
         std::string decVariable() override;
         std::string decOp()       override;
 
-        //////// compare zone
-        bool compare(LogicGenBase* lgb) override;
-
-
 
     };
 

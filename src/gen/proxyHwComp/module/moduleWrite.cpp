@@ -9,11 +9,36 @@
 namespace kathryn{
 
 
+    void ModuleGen::startWriteFileMaster(bool               requireNewFile,
+                                         FileWriterBase*    upperFileWriter,
+                                         FileWriterGroup*   writerGroup,
+                                         bool               isExplicitMod,
+                                         const std::string& explicitModName){
+
+        FileWriterBase* finalFileWriter = upperFileWriter;
+        if (requireNewFile && (!_master->isTopModule())){
+            finalFileWriter = writerGroup->createNewFile(getOpr() + ".v");
+        }
+        std::string finalModName = explicitModName;
+        if (isExplicitMod){
+            finalModName = explicitModName;
+        }
+        startWriteFile(finalFileWriter, finalModName);
+
+        ////////////// write submodule
+        for (ModuleGen* subMdGen: _subModulePool){
+            subMdGen->startWriteFileMaster(requireNewFile,
+                                           upperFileWriter,
+                                           writerGroup,
+                                           false,
+                                           "unknown");
+        }
+
+    }
+
+
     void ModuleGen::startWriteFile(FileWriterBase* fileWriter,
-                                   GenStructure* genStructure,
-                                   bool isExplicitMod,
                                    const std::string& explicitModName){
-        assert(genStructure != nullptr);
         LogicGenBaseVec subModuleOutputRepresent;
         LogicGenBaseVec subModuleInputRepresent;
 
@@ -46,12 +71,8 @@ namespace kathryn{
                             "////////////////////////////////////////////////////////////////////////////////\n"
                             );
         fileWriter->addData("module ");
+        fileWriter->addData(explicitModName+"(\n");
 
-        if (isExplicitMod){
-            fileWriter->addData(explicitModName+"(\n");
-        }else{
-            fileWriter->addData(getOpr() + "(\n");
-        }
 
         //////// declare input/output element
         std::vector<std::string> ioVec = getIoDec();
@@ -109,7 +130,7 @@ namespace kathryn{
         ////////// declare submodule connectivity
         fileWriter->addData("/// sub module declaration\n");
         for (ModuleGen* subMdGen: _subModulePool){
-            fileWriter->addData(subMdGen->getSubModuleDec(subMdGen, genStructure));
+            fileWriter->addData(subMdGen->getSubModuleDec(subMdGen));
         }
         //////// end module
         fileWriter->addData("\nendmodule\n\n");
@@ -141,18 +162,16 @@ namespace kathryn{
 
     //////////////////////////// get module dec as sub
     ///
-    std::string ModuleGen::getSubModuleDec(ModuleGen* subMdGen, GenStructure* genStructure){
-        assert(genStructure != nullptr);
+    std::string ModuleGen::getSubModuleDec(ModuleGen* subMdGen){
         assert(subMdGen != nullptr);
 
         std::vector<std::string> ioStrs;
         std::string result;
 
         /////// get the host module to generate
-        ModuleGen* hostModuleGen = genStructure->getMasterModuleGen(subMdGen);
 
         ////// declare submodule
-        result += hostModuleGen->getOpr() + "  "  + subMdGen->getOpr();
+        result += subMdGen->getOpr() + "  "  + subMdGen->getOpr();
         if (!subMdGen->_pmValPool.empty()){
             result += subMdGen->getOpr() + " #( ";
 
@@ -179,7 +198,7 @@ namespace kathryn{
         for (const std::string& outputStr: _genWirePools[WIRE_AUTO_GEN_OUTPUT].getOprs()){
             ioStrs.push_back(outputStr);
         }
-        ioStrs.push_back("clk");
+        ioStrs.emplace_back("clk");
         bool isFirst = true;
         for (const std::string& retStr: ioStrs){
             if (!isFirst){

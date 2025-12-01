@@ -20,8 +20,8 @@ namespace kathryn{
         std::vector<RegSlot*> _rows;
 
         struct ReducNode{
-            WireSlot* slot = nullptr; Operable* idx;
-            void destroy(){
+            WireSlot* slot = nullptr; Operable* idx{};
+            void destroy() const{
                 delete slot;
                 //// operable is managed by module
             }
@@ -50,11 +50,11 @@ namespace kathryn{
         /**
          * get the static data
          */
-        SlotMeta getMeta() const;
-        RegSlot& getRefRow(int idx);
-        RegSlot  getClonedRow(int idx) const;
-        int      getNumRow() const;
-        int      getMaxCellWidth() const;
+        [[nodiscard]] SlotMeta getMeta() const;
+                      RegSlot& getRefRow(int idx);
+        [[nodiscard]] RegSlot  getClonedRow(int idx) const;
+        [[nodiscard]] int      getNumRow() const;
+                      int      getMaxCellWidth() const;
 
         /**
          *  build the reg slot for each row

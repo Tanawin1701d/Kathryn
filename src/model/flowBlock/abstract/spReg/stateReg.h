@@ -31,7 +31,7 @@ namespace kathryn {
             return *this;
         }
         /** add prior state that trigger this state*/
-        UpdateEvent* addDependState(Operable* dependState, Operable* activateCond, CLOCK_MODE cm) override;
+        UpdateEventBase* addDependState(Operable* dependState, Operable* activateCond, CLOCK_MODE cm) override;
         /** reset event*/
         void makeUnSetStateEvent(CLOCK_MODE cm) override;
         /** user reset event*/

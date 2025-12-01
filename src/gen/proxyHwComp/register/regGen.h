@@ -24,8 +24,6 @@ public:
     std::string decVariable() override;
     std::string decOp()       override;
 
-    bool compare(LogicGenBase* lgb) override;
-
     WIRE_MARKER_TYPE getGlobIoStatus() override;
 };
 

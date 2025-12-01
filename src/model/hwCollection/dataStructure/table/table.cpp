@@ -48,23 +48,23 @@ namespace kathryn{
         ////// the cusLogic may augment lhs we have to debug it
         WireSlot* desSlot = new WireSlot(lhs.slot->getMeta());
 
-        std::vector<AssignMeta*> leftSelectAssMetas  = desSlot->genAssignMetaForAll(*lhs.slot, ASM_DIRECT);
-        std::vector<AssignMeta*> rightSelectAssMetas = desSlot->genAssignMetaForAll(*rhs.slot, ASM_DIRECT);
-        std::vector<Operable*>   leftSelectCondPerAssMeta(desSlot->getNumField(), &selectLeft);
-        std::vector<Operable*>   rightSelectCondPerAssMeta(desSlot->getNumField(), &selectRight);
+        std::vector<AssignMeta*> leftAssMetas  = desSlot->genAssignMetaForAll(*lhs.slot, ASM_DIRECT);
+        std::vector<AssignMeta*> rightAssMetas = desSlot->genAssignMetaForAll(*rhs.slot, ASM_DIRECT);
 
-        std::vector<AssignMeta*> poolSlotAsmMetas;
-        poolSlotAsmMetas.insert(poolSlotAsmMetas.end(), leftSelectAssMetas.begin(), leftSelectAssMetas.end());
-        poolSlotAsmMetas.insert(poolSlotAsmMetas.end(), rightSelectAssMetas.begin(), rightSelectAssMetas.end());
-        std::vector<Operable*> poolCondPerAssMeta;
-        poolCondPerAssMeta.insert(poolCondPerAssMeta.end(), leftSelectCondPerAssMeta.begin(), leftSelectCondPerAssMeta.end());
-        poolCondPerAssMeta.insert(poolCondPerAssMeta.end(), rightSelectCondPerAssMeta.begin(), rightSelectCondPerAssMeta.end());
-
-        assert(leftSelectCondPerAssMeta.size() == rightSelectAssMetas.size());
-        auto* slotAsmNode = new AsmNode(poolSlotAsmMetas);
-        for (int idx = 0; idx < poolCondPerAssMeta.size(); idx++){
-            slotAsmNode->addSpecificPreCondition(poolCondPerAssMeta[idx], BITWISE_AND, idx);
+        //////// generate muxed as Assign meta data
+        assert(leftAssMetas.size() == rightAssMetas.size());
+        std::vector<AssignMeta*> muxedAssignMeta;
+        for (int idx = 0; idx < leftAssMetas.size(); idx++){
+            AssignMeta* leftAssMeta  = leftAssMetas[idx];
+            AssignMeta* rightAssMeta = rightAssMetas[idx];
+            AssignMeta* newAssMeta = leftAssMeta->mux(rightAssMeta, &selectLeft);
+            delete leftAssMeta;
+            delete rightAssMeta;
+            muxedAssignMeta.push_back(newAssMeta);
         }
+
+
+        auto* slotAsmNode = new AsmNode(muxedAssignMeta);
         slotAsmNode->dryAssign();
         delete slotAsmNode;
 
@@ -74,12 +74,13 @@ namespace kathryn{
             assert(rhs.idx != nullptr);
             int desSlice = lhs.idx->getOperableSlice().getSize();
             selectedIdx = &makeOprWire("reducOpr" + std::to_string(debugIdx), lhs.idx->getOperableSlice().getSize());
-            AssignMeta* leftAsmIdxMeta = selectedIdx->generateAssignMeta(*lhs.idx, {0,  desSlice}, ASM_DIRECT, CM_CLK_FREE);
+            AssignMeta* leftAsmIdxMeta  = selectedIdx->generateAssignMeta(*lhs.idx, {0,  desSlice}, ASM_DIRECT, CM_CLK_FREE);
             AssignMeta* rightAsmIdxMeta = selectedIdx->generateAssignMeta(*rhs.idx, {0,  desSlice}, ASM_DIRECT, CM_CLK_FREE);
+            AssignMeta* newAssMeta      = leftAsmIdxMeta->mux(rightAsmIdxMeta, &selectLeft);
+            delete leftAsmIdxMeta;
+            delete rightAsmIdxMeta;
 
-            auto* idxAsmNode = new AsmNode({leftAsmIdxMeta, rightAsmIdxMeta});
-            idxAsmNode->addSpecificPreCondition(&selectLeft, BITWISE_AND, 0);
-            idxAsmNode->addSpecificPreCondition(&selectRight, BITWISE_AND, 1);
+            auto* idxAsmNode = new AsmNode(newAssMeta);
             idxAsmNode->dryAssign();
             delete idxAsmNode;
 
@@ -187,7 +188,7 @@ namespace kathryn{
             eachRowPreCond.begin(), eachRowPreCond.end());
         }
         ////// generate assignment Node
-        AsmNode* asmNode = resultWireSlot.genGrpAsmNode(allRowCollector, allRowPreCond, BITWISE_AND);
+        AsmNode* asmNode = WireSlot::genGrpAsmNode(allRowCollector, allRowPreCond);
         //// we have to do dry assign
         asmNode->dryAssign();
         delete asmNode;
@@ -238,7 +239,7 @@ namespace kathryn{
         /////// we have to create own asm node and push it directly to the system
         auto* asmNode = new AsmNode(allRowCollector);
         for (int idx = 0; idx < allRowPreCond.size(); idx++){
-            asmNode->addSpecificPreCondition(allRowPreCond[idx], BITWISE_AND, idx);
+            asmNode->addSpecificPreCondition(allRowPreCond[idx], idx);
         }
         /////// we have to add it to controller by ourself
         ModelController* ctrl = getControllerPtr();
@@ -278,7 +279,7 @@ namespace kathryn{
         ///// gen assign Node
         auto* asmNode = new AsmNode(allRowCollector);
         for (int idx = 0; idx < allRowPreCond.size(); idx++){
-            asmNode->addSpecificPreCondition(allRowPreCond[idx], BITWISE_AND, idx);
+            asmNode->addSpecificPreCondition(allRowPreCond[idx], idx);
         }
         ///// add it to the whole main controller
         ModelController* ctrl = getControllerPtr();

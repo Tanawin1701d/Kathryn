@@ -14,7 +14,6 @@ namespace kathryn{
                                Assignable*   asb,
                                Identifiable* ident):
 _mdGenMaster(mdGenMaster),
-_cerf({}),
 _asb(asb),
 _ident(ident){
     assert(mdGenMaster != nullptr);
@@ -40,21 +39,6 @@ std::string LogicGenBase::getOprStrFromOprAndShinkMsb(Operable* opr1, int target
 
 }
 
-
-
-void LogicGenBase::genCerf(MODULE_GEN_GRP mgg,int grpIdx, int idx){
-        assert(grpIdx >= 0);
-        assert(idx    >= 0);
-        assert(_asb   != nullptr);
-        assert(_ident != nullptr);
-        _cerf.comptype   = _ident->getType();
-        _cerf.md_gen_grp = mgg;
-        _cerf.varMeta    = _ident->getVarMeta();
-        _cerf.grpIdx     = grpIdx;
-        _cerf.idx        = idx;
-        _cerf.curSl      = _asb->getAssignSlice();
-}
-
 std::string LogicGenBase::getOpr(){
     assert(_ident != nullptr);
     // if (!_ident->isUserVar()){
@@ -72,59 +56,4 @@ std::string LogicGenBase::getOpr(Slice sl){
         return getOpr() + "[" + std::to_string(sl.stop-1) +
                ": " + std::to_string(sl.start) + "]";
 }
-
-
-bool LogicGenBase::checkCerfEqLocally(const LogicGenBase& rhsGenBase){
-        return _cerf.cmpLocal(rhsGenBase.getLogicCef());
-}
-
-bool LogicGenBase::cmpEachOpr(Operable*  srcA,  Operable*  srcB,
-                              ModuleGen* srcMdA,ModuleGen* srcMdB,
-                              OUT_SEARCH_POL searchPol){
-
-
-        bool isANull = srcA == nullptr;
-        bool isBNull = srcB == nullptr;
-
-        if (isANull | isBNull){
-            return isANull == isBNull; ///// if one is not null and one is null escape it
-        }
-
-        Operable* exactSrcA = &srcA->getExactOperable();
-        Operable* exactSrcB = &srcB->getExactOperable();
-
-        if (srcA->getOperableSlice() != srcB->getOperableSlice()){return false;}
-
-
-        bool isAStayInMd = exactSrcA->getLogicGenBase()->getModuleGen() == srcMdA;
-        bool isBStayInMd = exactSrcB->getLogicGenBase()->getModuleGen() == srcMdB;
-
-        ////// if one is stay and other one is not
-        if (isAStayInMd  ^ isBStayInMd){
-            return false; //// not stay in the same module but one is
-        }
-        /////////// searchPol is how to do operand when it out of its location
-        /////////// same logic
-        if (searchPol == MASTERMOD){
-            ///////// we don't work anything with work
-            return exactSrcA->getLogicGenBase()->
-                    checkCerfEqLocally(*exactSrcB->getLogicGenBase());
-        }
-
-        if (searchPol == SUBMOD){
-            ///////// check the sub commodule cerf
-            bool checkLogicCef =  exactSrcA->getLogicGenBase()->
-                                  checkCerfEqLocally(*exactSrcB->getLogicGenBase());
-            if (isAStayInMd){
-                return checkLogicCef;
-            }else{
-                bool checkMdCerf =
-                    exactSrcA->getLogicGenBase()->getModuleGen()->cmpCerfEqLocally(
-                        *exactSrcB->getLogicGenBase()->getModuleGen()
-                    );
-                return checkLogicCef & checkMdCerf;
-            }
-        }
-        return false;
-    }
 }

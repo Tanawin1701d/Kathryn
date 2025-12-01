@@ -5,6 +5,8 @@
 
 #include"ctrlFlowRegBase.h"
 
+#include "model/flowBlock/abstract/logicHelper.h"
+
 namespace kathryn{
 
     std::string sp_reg_type_to_str(SP_REG_TYPE spRegType){
@@ -17,5 +19,19 @@ namespace kathryn{
         assert(spRegType < SP_CNT_REG);
         return mapper[spRegType];
     }
+
+
+    UpdateEventBase* CtrlFlowRegBase::createUE(Operable* cond,
+                                               Operable* state,
+                                               Operable* value,
+                                               Slice sl,
+                                               int priority,
+                                               CLOCK_MODE cm){
+
+        UpdateEventBase* conEvent = createUEHelper(cond, state, value, sl, priority, cm, false);
+        return conEvent;
+
+    }
+
 
 }

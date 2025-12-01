@@ -16,19 +16,20 @@ namespace kathryn{
 
     std::vector<StResMeta> getStateInfo(StateReg* stRegPtr){
 
-        std::vector<StResMeta> preResult;
-        auto& updateMetas = stRegPtr->getUpdateMeta();
-
-        for (auto upEvent : updateMetas){
-            /////// get update event for that state register
-            StResMeta result;
-            result.condition = upEvent->srcUpdateCondition;
-            /** recursively get state as */
-            result.dependState = getDependState(upEvent->srcUpdateState);
-            preResult.push_back(result);
-        }
-
-        return preResult;
+        // std::vector<StResMeta> preResult;
+        // auto& updateMetas = stRegPtr->getUpdateMeta();
+        //
+        // for (auto upEvent : updateMetas){
+        //     /////// get update event for that state register
+        //     StResMeta result;
+        //     result.condition = upEvent->srcUpdateCondition;
+        //     /** recursively get state as */
+        //     result.dependState = getDependState(upEvent->srcUpdateState);
+        //     preResult.push_back(result);
+        // }
+        //
+        // return preResult;
+        return {};
     }
 
 

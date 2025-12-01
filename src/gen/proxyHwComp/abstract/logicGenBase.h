@@ -9,7 +9,6 @@
 #include <utility>
 #include "util/fileWriter/fileWriterBase.h"
 #include "model/hwComponent/abstract/assignable.h"
-#include "cerf.h"
 #include "model/hwComponent/abstract/WireMarker.h"
 
 namespace kathryn{
@@ -27,7 +26,6 @@ namespace kathryn{
     class LogicGenBase{
     protected:
         ModuleGen*     _mdGenMaster = nullptr;
-        logicLocalCef  _cerf{};
         Assignable*    _asb = nullptr;
         Identifiable*  _ident = nullptr;
 
@@ -42,9 +40,9 @@ namespace kathryn{
         ///////// routing zone
         virtual void routeDep() {assert(false);} ///// do routing
         ///////// generate cerificate
-        virtual void genCerf(MODULE_GEN_GRP mgg, int grpIdx, int idx);
+        //virtual void genCerf(MODULE_GEN_GRP mgg, int grpIdx, int idx);
         ///////// start compare
-        virtual bool compare(LogicGenBase* lgb) = 0;
+        //virtual bool compare(LogicGenBase* lgb) = 0;
         ///////// get zone
         virtual std::string getOpr();
         virtual std::string getOpr(Slice sl);
@@ -58,20 +56,14 @@ namespace kathryn{
         /////// glob io check
         virtual WIRE_MARKER_TYPE  getGlobIoStatus(){return WIRE_MARKER_TYPE::WMT_NONE;}
 
-        bool checkCerfEqLocally(const LogicGenBase& rhsGenBase);
-        bool cmpEachOpr(Operable*  exactSrcA, Operable*  exactSrcB,
-                        ModuleGen* srcMdA,    ModuleGen* srcMdB,
-                        OUT_SEARCH_POL searchPol);
-
         ///////// getter
         [[nodiscard]] ModuleGen* getModuleGen() const{
             assert(_mdGenMaster != nullptr);
             return _mdGenMaster;
         }
-        [[nodiscard]] logicLocalCef getLogicCef() const{return _cerf;}
         [[nodiscard]] Identifiable* getIdent()    const {return _ident;}
 
-        virtual void addDirectUpdateEvent(UpdateEvent* updateEvent){assert(false);}
+        virtual void addDirectUpdateEvent(UpdateEventBase* ueb){assert(false);}
 
     };
 
@@ -114,36 +106,6 @@ namespace kathryn{
                 result.push_back(x->decOp());
             }
             return result;
-        }
-
-        void genCerf(MODULE_GEN_GRP mgg, int grp){
-            int idx = 0;
-            for (auto& x: *this){
-                x->genCerf(mgg, grp, idx);
-                idx++;
-            }
-        }
-
-        bool compare(LogicGenBaseVec& lgbVec){
-            if (size() != lgbVec.size()){
-                return false;
-            }
-            bool cmpRes = true;
-            for (int idx = 0; idx < size(); idx++){
-                cmpRes &= (*this)[idx]->compare(lgbVec[idx]);
-            }
-            return cmpRes;
-        }
-
-        bool compareCefOnly(LogicGenBaseVec& lgbVec){
-            if (size() != lgbVec.size()){
-                return false;
-            }
-            bool cmpRes = true;
-            for (int idx = 0; idx < size(); idx++){
-                cmpRes &= (*this)[idx]->checkCerfEqLocally(*lgbVec[idx]);
-            }
-            return cmpRes;
         }
     };
 

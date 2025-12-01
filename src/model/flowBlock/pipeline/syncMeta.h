@@ -53,16 +53,13 @@ namespace kathryn{
         Operable& isSlaveFin(){return _syncSlaveFin;}
 
         void setSyncWireBase(Wire& desWire, Operable& opr1){
-            UpdateEvent* newEvent = new UpdateEvent({
-                nullptr,
-                nullptr,
-                &opr1,
-                Slice({0, 1}),
-                DEFAULT_UE_PRI_INTERNAL_MIN,
-                DEFAULT_UE_SUB_PRIORITY_USER,
-                CM_CLK_FREE
-            });
-            desWire.getUpdateMeta().push_back(newEvent);
+            UpdateEventBase* newEvent = createUEHelper(&opr1,
+                                                       Slice({0,1}),
+                                                       DEFAULT_UE_PRI_INTERNAL_MIN,
+                                                       CM_CLK_FREE,
+                                                       false);
+
+            desWire.addUpdateMeta(newEvent);
         }
 
         /*

@@ -22,6 +22,7 @@
 #include "model/hwComponent/value/value.h"
 #include "model/hwComponent/expression/nest.h"
 #include "model/flowBlock/abstract/spReg/waitReg.h"
+#include "util/fileWriter/fileWriterGroup.h"
 
 
 namespace kathryn{
@@ -42,8 +43,6 @@ namespace kathryn{
     protected:
         Module*        _master           = nullptr;
         int            depthFromGlobalModule = 0;
-        moduleLocalCef _cerf;
-        moduleGlobalCef _globCerf;
         MODULE_GEN_PROGRESS _mgp = MGP_UNINIT;
 
     public:
@@ -78,13 +77,15 @@ namespace kathryn{
         void startInitEle    ();
         void startRouteEle   ();
         void finalizeRouteEle();
-        void genCerfAll      (int idx); /// idx that it is submodule
 
-        bool startCmpModule(ModuleGen* rhsMdg, GenStructure* genStructure);
-        void startPutToGenSystem(GenStructure* genStructure);
+        void startWriteFileMaster(bool               requireNewFile,
+                                  FileWriterBase*    upperFileWriter,
+                                  FileWriterGroup*   writerGroup,
+                                  bool               isExplicitMod,
+                                  const std::string& explicitModName
+                                  );
+
         void startWriteFile(FileWriterBase* fileWriter,
-                            GenStructure* genStructure,
-                            bool isExplicitMod,
                             const std::string& explicitModName);
 
         /*
@@ -109,18 +110,13 @@ namespace kathryn{
          */
         std::vector<std::string> getIoDec();
         std::vector<std::string> getParamDec();
-        std::string getSubModuleDec(ModuleGen* mdGen, GenStructure* genStructure);
+        std::string getSubModuleDec(ModuleGen* mdGen);
         std::string getOpr();
 
         ////// ^------ it should be called from getSubModuleDec
         /**
          *  cmp function
          */
-        void genCerfToEachElement();
-        void genCerfToThisModule(int idx);
-        bool cmpCerfEqLocally(const ModuleGen& rhs) const;
-        moduleLocalCef getCerf() const{return _cerf;}
-        moduleGlobalCef getGlobCerf() const{return _globCerf;}
 
         /**
          * recruit function

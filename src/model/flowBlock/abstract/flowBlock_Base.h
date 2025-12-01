@@ -35,7 +35,7 @@
 #include "flowBlockRegister.h"
 
 #include "logicHelper.h"
-
+#include "model/flowBlock/cond/zifClassAsm.h"
 
 
 namespace kathryn {
@@ -70,7 +70,16 @@ namespace kathryn {
 
     extern int nextFbIdx;
 
-    class FlowBlockBase: public FlowIdentifiable,
+    ////// extract the block into node
+    struct NodeExtractable{
+        virtual ~NodeExtractable() = default;
+
+        virtual std::vector<AsmNode*> extract() { assert(false);};
+
+    };
+
+    class FlowBlockBase: public NodeExtractable,
+                         public FlowIdentifiable,
                          public ModelDebuggable,
                          public FlowSimEngineInterface
                          {
@@ -96,6 +105,7 @@ namespace kathryn {
         std::vector<Node*>          _sysNodes;
 
         std::vector<FlowBlockBase*> _abandonedBlocks;  /// the flow block that have been extracted and push to this block
+        std::vector<Node*>          _abandonedNodes;    /// the node that have been extracted and push to join collective node
 
         /**  basic interrupt signals*/
         std::vector<Operable*>        intSignals[INT_CNT];
@@ -162,7 +172,7 @@ namespace kathryn {
             assert(node != nullptr);
             _basicNodes.push_back(node);
             _basicNodesOrder.push_back(nextInputOrder++);
-        };
+        }
         /** system node is the node used to monitor by hybrid profiler*/
         virtual void addSysNode(Node* node){
             assert(node != nullptr);
@@ -183,6 +193,11 @@ namespace kathryn {
         virtual void addAbandonFlowBlock(FlowBlockBase* abandonBlock){
             assert(abandonBlock != nullptr);
             _abandonedBlocks.push_back(abandonBlock);
+        }
+
+        virtual void addAbandonNode(Node* abandonNode){
+            assert(abandonNode != nullptr);
+            _abandonedNodes.push_back(abandonNode);
         }
 
         virtual void addIntSignal(INT_TYPE type, Operable* signal){

@@ -40,8 +40,6 @@ namespace kathryn{
     void GenController::start(){
         initEle();
         routeIo();
-        genCefAll();
-        recruitModToGenSystem();
         generateEveryModule();
     }
 
@@ -51,38 +49,12 @@ namespace kathryn{
         _masterModuleGen->finalizeRouteEle();
     }
 
-    void GenController::genCefAll(){
-        _masterModuleGen->genCerfAll(0);
-    }
-
-
-
-
-    void GenController::recruitModToGenSystem() {
-        //////// buttom up only
-        _masterModuleGen->startPutToGenSystem(&_genStructure);
-    }
-
     void GenController::generateEveryModule(){
 
         FileWriterBase* topWriter = _writerGroup.createNewFile(_desVerilogTopFileName + _file_suffix);
 
+        _masterModuleGen->startWriteFileMaster(_extractMulFile, nullptr, &_writerGroup, true, _desVerilogTopModName);
 
-        for (ModuleGen* moduleGen: _genStructure.getAllMasterModuleGen()){
-            assert(moduleGen != nullptr);
-            bool isTopModule = moduleGen->getMasterModule()->isTopModule();
-            FileWriterBase* curFileWriter = nullptr;
-            if (isTopModule || (!_extractMulFile)){
-                curFileWriter = topWriter;
-            }else{
-                curFileWriter = _writerGroup.createNewFile(moduleGen->getOpr() + _file_suffix);
-            }
-
-            moduleGen->startWriteFile(
-                    curFileWriter, &_genStructure,
-                    isTopModule, _desVerilogTopModName); /** explicit name is */
-
-        }
     }
 
     void GenController::startSynthesis(){
@@ -96,12 +68,12 @@ namespace kathryn{
         std::string compileComand =
             pathToVivadoLaunch + " " + _desSynName + " " +
                 _desVerilogFolder + "/" + _desVerilogTopFileName;
-        system(compileComand.c_str());
+        int compileComd = system(compileComand.c_str());
+        std::cout << "synthesis result: " << compileComd << std::endl;
     }
 
     void GenController::reset(){
         _writerGroup.clean();
-        _genStructure.reset();
     }
 
     void GenController::clean(){
@@ -148,12 +120,15 @@ namespace kathryn{
             inputIo.createLogicGen();
             /////// connect
             if(isInput){
-                auto connectEvent = new UpdateEvent({nullptr,
-                                        nullptr,
-                                        &inputIo,
-                                        inputIo.getOperableSlice(),
-                                        DEFAULT_UE_PRI_MIN
-                                    });
+
+                UpdateEventBasic* connectEvent =
+                    createUEHelper(
+                        &inputIo,
+                        inputIo.getOperableSlice(),
+                        DEFAULT_UE_PRI_MIN,
+                        CM_CLK_FREE,
+                        false);
+
                 srcToBeGlobIo->getAsbFromWireMarker()->addUpdateMeta(connectEvent);
             }else{
                 inputIo.connectTo(originOpr, false); /////// it may needs to be route

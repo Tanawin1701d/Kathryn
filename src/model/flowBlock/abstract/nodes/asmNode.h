@@ -14,26 +14,15 @@ namespace kathryn {
 
 
     struct AsmNode : Node {
-        static inline ull ASM_NODE_CNT = 0;
         std::vector<AssignMeta*> _assignMetas; //// AssignMeta is must not use the same assign metas
-        Operable*                _preCondition = nullptr;
-        ASM_NODE_PRIORITY_MODE   _asmPriorityMode;
-        int                      _asmPriority;
-        ull                      _asmId; //// for subpriority
 
         ////// it will used as order of the assignment node
         ////// when there are multiple assigns in the system
         //// TODO add per element metadata
-        std::vector<Operable*>   _preCondPerMetas;
 
         explicit AsmNode(AssignMeta *assignMeta) :
                 Node(ASM_NODE),
-                _assignMetas({assignMeta}),
-                _asmPriorityMode(GET_ASM_PRI_MODE()),
-                _asmPriority(GET_ASM_PRI_VAL()),
-                _asmId(ASM_NODE_CNT++),
-                _preCondPerMetas(_assignMetas.size(), nullptr)
-
+                _assignMetas({assignMeta})
         {
             assert(assignMeta != nullptr);
             setClockMode(CM_CLK_UNUSED);
@@ -42,14 +31,11 @@ namespace kathryn {
 
         explicit AsmNode(std::vector<AssignMeta*> assignMetas):
                 Node(ASM_NODE),
-                _assignMetas(std::move(assignMetas)),
-                _asmPriorityMode(GET_ASM_PRI_MODE()),
-                _asmPriority(GET_ASM_PRI_VAL()),
-                _asmId(ASM_NODE_CNT++),
-                _preCondPerMetas(_assignMetas.size(), nullptr){
+                _assignMetas(std::move(assignMetas)){
 
             for (auto* asmMeta: _assignMetas){
                 assert(asmMeta != nullptr);
+
             }
             setClockMode(CM_CLK_UNUSED);
 
@@ -57,15 +43,27 @@ namespace kathryn {
 
         ~AsmNode()  = default;
 
+        std::vector<AssignMeta*>& getAssignMetas(){return _assignMetas;}
+
         void assign() override{
             assert(false);
+        }
+
+        void transferOutAssignMetaOwnership(){_assignMetas.clear();}
+
+        void addSpecificPreCondition(Operable* cond, int desIdx){
+
+            assert(cond != nullptr);
+            assert(desIdx >= 0 && desIdx < _assignMetas.size());
+            _assignMetas[desIdx]->addSpecificPreCondition(cond);
+
         }
 
         void overrideClockMode(CLOCK_MODE mode){
             /** for asmNode it is first assign with it was built however; the flowblock should override the system
              * before the assignment is building*/
             for (auto* assignMeta: _assignMetas){
-                assignMeta->clockMode = mode;
+                //assignMeta->clockMode = mode;
             }
         }
 
@@ -77,56 +75,63 @@ namespace kathryn {
 
             for (int assignIdx = 0; assignIdx < _assignMetas.size(); assignIdx++) {
                 AssignMeta* assignMeta     = _assignMetas[assignIdx];
-                Operable*   preCondPerMeta = _preCondPerMetas[assignIdx];
                 /*** for reg <<= operator*/
                 if (assignMeta->asmType == ASM_DIRECT){
 
                     ////// bind node condition with pre_condition first\
-
-                    Operable* condEvent = addLogicWithOutput(nodeSrcs[0].condition, _preCondition, BITWISE_AND);
+                    ////////// handle condition and reset signal
+                    Operable* condEvent = addLogicWithOutput(nodeSrcs[0].condition, nullptr, BITWISE_AND);
                     if (holdSignal != nullptr){
                         condEvent = addLogicWithOutput(condEvent, &(~(*holdSignal)), BITWISE_AND);
                     }
                     if (resetSignal != nullptr){
                         condEvent = addLogicWithOutput(condEvent, &(~(*resetSignal)), BITWISE_AND);
                     }
-                    condEvent = addLogicWithOutput(condEvent, preCondPerMeta, BITWISE_AND);
-
+                    ////////// handle condition with state
+                    condEvent = addLogicWithOutput(condEvent, nodeSrcs[0].dependNode->getStateOperating(), BITWISE_AND);
                     ///////////// assign from current dependency
-                    auto resultUpEvent = new UpdateEvent({
-                        condEvent,
-                        nodeSrcs[0].dependNode->getStateOperating(), /////// you can not simply use genExitOpr because it is used to colab with reset
-                        &assignMeta->valueToAssign,
-                        assignMeta->desSlice,
-                        _asmPriority,
-                        _asmId,
-                        assignMeta->clockMode
-                    });
-                    assignMeta->updateEventsPool.push_back(resultUpEvent);
+                    assert(assignMeta->preUpdateElement != nullptr);
 
+                    /////// update new Condition
+                    UpdateEventCond* updateWithState = new UpdateEventCond();
+                    updateWithState->addSubStmt(condEvent, assignMeta->getCurrentEvent());
+                    assignMeta->setNewEditingEvent(updateWithState);
+                    assignMeta->finalUpdate();
+                    // auto resultUpEvent = new UpdateEvent({
+                    //     condEvent,
+                    //     nodeSrcs[0].dependNode->getStateOperating(), /////// you can not simply use genExitOpr because it is used to colab with reset
+                    //     &assignMeta->valueToAssign,
+                    //     assignMeta->desSlice,
+                    //     _asmPriority,
+                    //     _asmId,
+                    //     assignMeta->clockMode
+                    // });
                     ////////////////////////////////////////////////////////////////////////////////////////
                 /** for reg = operator*/
                 }else if (assignMeta->asmType == ASM_EQ_DEPNODE){
                     //////////////// assign as same as node that have been assign
                     for (auto nodeSrc: nodeSrcs[0].dependNode->nodeSrcs) {
 
-                        Operable* condEvent = addLogicWithOutput(nodeSrc.condition, _preCondition, BITWISE_AND);
+                        Operable* condEvent = addLogicWithOutput(nodeSrc.condition, nullptr, BITWISE_AND);
                         if (holdSignal != nullptr){
                             condEvent = addLogicWithOutput(condEvent, &(~(*holdSignal)), BITWISE_AND);
                         }
-                        condEvent = addLogicWithOutput(condEvent, preCondPerMeta, BITWISE_AND);
+                        condEvent = addLogicWithOutput(condEvent, nodeSrc.dependNode->getExitOpr(), BITWISE_AND);
 
-
-                        auto resultUpEvent = new UpdateEvent({
-                             condEvent,
-                             nodeSrc.dependNode->getExitOpr(), ///// it is supposed to sensitive to reset already?
-                             &assignMeta->valueToAssign,
-                             assignMeta->desSlice,
-                             _asmPriority,
-                             _asmId,
-                            assignMeta->clockMode
-                        });
-                        assignMeta->updateEventsPool.push_back(resultUpEvent);
+                        UpdateEventCond* updateWithState = new UpdateEventCond();
+                        updateWithState->addSubStmt(condEvent, assignMeta->getCurrentEvent());
+                        assignMeta->setNewEditingEvent(updateWithState);
+                        assignMeta->finalUpdate();
+                        // auto resultUpEvent = new UpdateEvent({
+                        //      condEvent,
+                        //      nodeSrc.dependNode->getExitOpr(), ///// it is supposed to sensitive to reset already?
+                        //      &assignMeta->valueToAssign,
+                        //      assignMeta->desSlice,
+                        //      _asmPriority,
+                        //      _asmId,
+                        //      assignMeta->clockMode
+                        // });
+                        // assignMeta->updateEventsPool.push_back(resultUpEvent);
                     }
                 }else{
                     assert(false);
@@ -143,35 +148,25 @@ namespace kathryn {
 
             for (int assignIdx = 0; assignIdx < _assignMetas.size(); assignIdx++) {
                 AssignMeta* assignMeta = _assignMetas[assignIdx];
-                Operable* preCondPerMeta = _preCondPerMetas[assignIdx];
-                Operable* condEvent = addLogicWithOutput(_preCondition, preCondPerMeta, BITWISE_AND);
-                auto resultUpEvent = new UpdateEvent({
-                                                             condEvent,
-                                                             nullptr,
-                                                             &assignMeta->valueToAssign,
-                                                             assignMeta->desSlice,
-                                                             _asmPriority,
-                    _asmId,
-                assignMeta->clockMode});
-
-                assignMeta->updateEventsPool.push_back(resultUpEvent);
+                UpdateEventCond* updateWithPureCondState = new UpdateEventCond();
+                updateWithPureCondState->addSubStmt(nullptr, assignMeta->getCurrentEvent());
+                assignMeta->setNewEditingEvent(updateWithPureCondState);
+                assignMeta->finalUpdate();
+                //
+                // auto resultUpEvent = new UpdateEvent({
+                //                                              condEvent,
+                //                                              nullptr,
+                //                                              &assignMeta->valueToAssign,
+                //                                              assignMeta->desSlice,
+                //                                              _asmPriority,
+                //     _asmId,
+                // assignMeta->clockMode});
+                //
+                // assignMeta->updateEventsPool.push_back(resultUpEvent);
             }
         }
 
         int getCycleUsed() override { return 1; }
-
-        void addPreCondition(Operable* cond, LOGIC_OP op){
-            assert(cond != nullptr);
-            addLogic(_preCondition, cond, op);
-        }
-
-        void addSpecificPreCondition(Operable* cond, LOGIC_OP op, int idx){
-            assert(cond != nullptr);
-            assert(idx >= 0 && idx < _preCondPerMetas.size());
-            addLogic(_preCondPerMetas[idx], cond, op);
-        }
-
-
 
     };
 

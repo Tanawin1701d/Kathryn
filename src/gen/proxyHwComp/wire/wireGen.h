@@ -31,8 +31,6 @@ namespace kathryn{
         std::string decVariable() override; ///// in case output there is no need dec variable
         std::string decOp()       override;
 
-        bool compare(LogicGenBase* lgb) override;
-
     };
 
 }

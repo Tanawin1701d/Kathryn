@@ -9,6 +9,7 @@
 #include "model/flowBlock/abstract/loopStMacro.h"
 #include "model/flowBlock/abstract/nodes/node.h"
 #include "model/flowBlock/abstract/nodes/stateNode.h"
+#include "zifClassAsm.h"
 
 
 #define zelif(expr) for(auto kathrynBlock = new FlowBlockZELIF(expr); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
@@ -19,6 +20,7 @@ namespace kathryn{
     class FlowBlockZELIF: public FlowBlockBase, public LoopStMacro{
     private:
         Operable* curCond = nullptr;
+        std::vector<ZifClassAsm*> _assignMetas;
 
     public :
         Operable* getPurifiedCurCond();
@@ -46,6 +48,9 @@ namespace kathryn{
         /** Loop macro to notice position of system*/
         void doPreFunction() override;
         void doPostFunction() override;
+
+        std::vector<ZifClassAsm*> getClassAssMetas();
+
     };
 
 }

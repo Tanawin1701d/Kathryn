@@ -69,20 +69,18 @@ namespace kathryn{
     void Wire::makeDefEvent(){
         if (_requireDefVal){
             makeVal(defWireVal, getSlice().getSize(), 0);
-            auto defEvent = new UpdateEvent({
-                                                    nullptr,
-                                                    nullptr,
-                                                    &defWireVal,
-                                                    {0, getSlice().getSize()},
-                                                    DEFAULT_UE_PRI_MIN
-                                            });
 
+            UpdateEventBasic*  defEvent = createUEHelper(&defWireVal,
+                                                         {0, getSlice().getSize()},
+                                                         DEFAULT_UE_PRI_MIN,
+                                                         CM_CLK_FREE,
+                                                         false);
             addUpdateMeta(defEvent);
         }
     }
 
     /** override callback*/
-    Operable *Wire::checkShortCircuit() {
+    Operable* Wire::checkShortCircuit() {
 
         if (isInCheckPath){
             return this;
@@ -90,30 +88,7 @@ namespace kathryn{
 
         isInCheckPath = true;
 
-        Operable* result = nullptr;
-
-        for (auto upEvent: _updateMeta){
-            assert(upEvent != nullptr);
-            if (upEvent->srcUpdateValue != nullptr) {
-                result = upEvent->srcUpdateValue->checkShortCircuit();
-                if (result != nullptr) {
-                    return result;
-                }
-            }
-            if (upEvent->srcUpdateCondition != nullptr) {
-                result = upEvent->srcUpdateCondition->checkShortCircuit();
-                if (result != nullptr) {
-                    return result;
-                }
-            }
-            if(upEvent->srcUpdateState != nullptr){
-                result =  upEvent->srcUpdateState->checkShortCircuit();
-                if (result != nullptr){
-                    return result;
-                }
-            }
-
-        }
+        Operable* result = getUpdateMeta().checkShortCircuitProxy();
 
         isInCheckPath = false;
         return nullptr;

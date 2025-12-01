@@ -7,12 +7,12 @@
 
 namespace kathryn{
 
-    WireSlotDynSliceAgent& WireSlotDynSliceAgent::operator <<=(Operable& rhsOpr){
+    WireSlotDynSliceAgent& WireSlotDynSliceAgent::operator <<=(Operable&){
         mfAssert(false, "wire slot not support <<= operator");
         return *this;
     }
 
-    WireSlotDynSliceAgent& WireSlotDynSliceAgent::operator <<=(ull rhsVal){
+    WireSlotDynSliceAgent& WireSlotDynSliceAgent::operator <<=(ull){
         mfAssert(false, "wire slot not support <<= operator");
         return *this;
     }
@@ -42,19 +42,19 @@ namespace kathryn{
     WireSlot::WireSlot(const SlotMeta& slotMeta, const std::string& prefixName):
         Slot(slotMeta){
             /** this is used to initialize from slice*/
-            initHwStructure(prefixName);
+            WireSlot::initHwStructure(prefixName);
         }
 
     WireSlot::WireSlot(const std::vector<std::string>& fieldNames,
                 const std::vector<int>&         fieldSizes,
                 const std::string&              prefixName):
         Slot(fieldNames, fieldSizes){
-            initHwStructure(prefixName);
+        WireSlot::initHwStructure(prefixName);
     }
 
     WireSlot::WireSlot(const Slot& rhs, const std::string& prefixName):
     Slot(rhs.getMeta()){
-        initHwStructure(prefixName);
+        WireSlot::initHwStructure(prefixName);
         AsmNode* asmNode = genGrpAsmNode(rhs, ASM_DIRECT);
         asmNode->dryAssign();
         delete asmNode;
@@ -209,14 +209,16 @@ namespace kathryn{
     }
 
     /** it will match by name*/
-    WireSlot& WireSlot::operator <<= (const Slot& rhs){
+    WireSlot& WireSlot::operator <<= (const Slot& ) const{
         mfAssert(false, "wire slot not support <<= WireSlot::operator");
-        return *this;
+        assert(false);
+        // return *this;
     }
 
-    WireSlot& WireSlot::operator <<= (const WireSlot& rhs){
+    WireSlot& WireSlot::operator <<= (const WireSlot&){
         mfAssert(false, "wire slot not support <<= WireSlot::operator");
-        return *this;
+        assert(false);
+        //return *this;
     }
 
     WireSlot& WireSlot::operator = (const  Slot& rhs){

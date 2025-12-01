@@ -38,8 +38,16 @@ namespace kathryn{
             getSimEngine()->setFlowBlockIden(true);
         }
 
+
+        UpdateEventBase* createUE(Operable* cond,
+                                  Operable* state,
+                                  Operable* value,
+                                  Slice sl,
+                                  int priority,
+                                  CLOCK_MODE cm);
+
         /** add depend State register return update event*/
-        virtual UpdateEvent* addDependState(Operable* dependState, Operable* activateCond, CLOCK_MODE cm) = 0;
+        virtual UpdateEventBase* addDependState(Operable* dependState, Operable* activateCond, CLOCK_MODE cm) = 0;
         /** build register representation when leaving this state */
         virtual void      makeUnSetStateEvent(CLOCK_MODE cm) = 0;
         /***make reset Event */

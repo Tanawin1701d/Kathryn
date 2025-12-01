@@ -9,30 +9,30 @@
 #include "model/flowBlock/abstract/loopStMacro.h"
 #include "model/flowBlock/abstract/nodes/node.h"
 #include "model/flowBlock/abstract/nodes/stateNode.h"
+#include "zifClassAsm.h"
 
 #define zif(expr) for(auto kathrynBlock = new FlowBlockZIF(expr); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 
 namespace kathryn{
 
-    /***
-       *
-       * zelif-zelse will detach as conjucntion block and will be extract in zif
-       * zif will extract at controller
-       * */
 
 
-
-    class FlowBlockZIF: public FlowBlockBase, public LoopStMacro{
+    class FlowBlockZIF: public FlowBlockBase,
+                        public LoopStMacro{
     private:
         bool lastZelifDetected = false;
         Operable* purifiedCurCond  = nullptr;
         std::vector<Operable*> prevFalses;
 
+        //// node will  be delete in this stage
+        std::vector<ZifClassAsm*> _assignMetas;
+
+
+
     public:
 
         explicit FlowBlockZIF(Operable& cond);
         ~FlowBlockZIF() override;
-
 
         /** for controller add the local element to this sub block*/
         void addElementInFlowBlock(Node* node) override;
@@ -52,6 +52,8 @@ namespace kathryn{
         /** Loop macro to notice position of system*/
         void doPreFunction() override;
         void doPostFunction() override;
+        /** extracted system*/
+        std::vector<AsmNode*> extract() override;
     };
 
 

@@ -40,11 +40,15 @@ namespace kathryn{
 
     void FlowBlockZELIF::addElementInFlowBlock(Node* node) {
         assert(node != nullptr);
-        if (curCond != nullptr) {
-            assert(node->getNodeType() == ASM_NODE);
-            ((AsmNode*)node)->addPreCondition(curCond, BITWISE_AND);
-        }
-        FlowBlockBase::addElementInFlowBlock(node);
+        // if (curCond != nullptr) {
+        //     assert(node->getNodeType() == ASM_NODE);
+        //     ((AsmNode*)node)->addPreCondition(curCond, BITWISE_AND);
+        // }
+        // FlowBlockBase::addElementInFlowBlock(node);
+        assert(node->getNodeType() == ASM_NODE);
+        AsmNode* castedNode = (AsmNode*)node;
+        tryAddOrCreateAsmMeta(castedNode, _assignMetas, curCond);
+        addAbandonNode(node);
     }
 
     void FlowBlockZELIF::addSubFlowBlock(FlowBlockBase *subBlock) {
@@ -88,6 +92,10 @@ namespace kathryn{
 
     void FlowBlockZELIF::doPostFunction() {
         onDetachBlock();
+    }
+
+    std::vector<ZifClassAsm*> FlowBlockZELIF::getClassAssMetas(){
+        return _assignMetas;
     }
 
 }

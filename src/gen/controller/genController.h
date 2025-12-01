@@ -41,7 +41,6 @@ namespace kathryn{
         FileWriterGroup   _writerGroup;
         Module*           _masterModule    = nullptr;
         ModuleGen*        _masterModuleGen = nullptr;
-        GenStructure      _genStructure;
 
 
 
@@ -57,7 +56,7 @@ namespace kathryn{
         /** generation have 5 major steps
          * 1. initEle() recruit model and create its necessary meta-data
          * 2. routeIo() route the io that to the collect place
-         * 3. genCefAll() gen meta data for compare to reduce data redundancy
+         *  ///// abandon we do not maintain this anymore 3. genCefAll() gen meta data for compare to reduce data redundancy
          * 4. recruitModToGenSystem() start compare model to reduce redundancy
          * 5. generateEveryModule() dump it to verilog
          */
@@ -69,9 +68,6 @@ namespace kathryn{
 
         void routeIo();
 
-        void genCefAll();
-
-        void recruitModToGenSystem(); ////// it require bottom un generating
         ////// according to generation structure
 
         void generateEveryModule();

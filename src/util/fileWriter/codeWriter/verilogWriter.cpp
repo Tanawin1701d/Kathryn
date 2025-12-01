@@ -1,31 +1,36 @@
 //
-// Created by tanawin on 19/7/2024.
+// Created by tanawin on 27/11/25.
 //
 
-#include "cppWriter.h"
+#include "verilogWriter.h"
 
 #include <utility>
-
 #include "util/str/strUtil.h"
 
 namespace kathryn{
     /**
-     *  CbBaseCxx
+     *  CbBaseVerilog
      */
-    CbIfCxx& CbBaseCxx::addIf(std::string condition){
-        auto* ifBlock = new CbIfCxx(false,std::move(condition));
+    CbIfVerilog& CbBaseVerilog::addIf(std::string condition){
+        auto* ifBlock = new CbIfVerilog(false,std::move(condition));
         appendSubBlock(ifBlock);
         return *ifBlock;
     }
 
-    CbBaseCxx& CbBaseCxx::addSubBlock(){
-        auto* subBlock = new CbBaseCxx();
+    CbBaseVerilog& CbBaseVerilog::addSubBlock(){
+        auto* subBlock = new CbBaseVerilog();
         appendSubBlock(subBlock);
         return *subBlock;
     }
 
+    CbAlwaysVerilog& CbBaseVerilog::addAlways(Verilog_SEN_TYPE senType, std::string senName){
+        auto* alwaysBlock = new CbAlwaysVerilog(senType,std::move(senName));
+        appendSubBlock(alwaysBlock);
+        return *alwaysBlock;
+    }
 
-    std::string CbBaseCxx::toString(int ident){
+
+    std::string CbBaseVerilog::toString(int ident){
 
         //////// the local idx of eachtype
 
@@ -53,7 +58,7 @@ namespace kathryn{
 
             if (nextSbCheckIdx < _sbOrder.size() &&
                 _sbOrder[nextSbCheckIdx] == mainOrder){
-                preRet += _subBlocks[nextSbCheckIdx]->toString(ident + CXX_IDENT);
+                preRet += _subBlocks[nextSbCheckIdx]->toString(ident + Verilog_IDENT);
                 nextSbCheckIdx++;
                 continue;
             }
@@ -64,20 +69,20 @@ namespace kathryn{
 
     /**
      *
-     * CbIfCxx
+     * CbIfVerilog
      *
      */
 
-    CbIfCxx::CbIfCxx(bool isSubChain, std::string condtion):
+    CbIfVerilog::CbIfVerilog(bool isSubChain, std::string condtion):
     _markAsSubChain(isSubChain),
     _cond(std::move(condtion)){}
 
-    CbIfCxx& CbIfCxx::addElif(std::string condition){
+    CbIfVerilog& CbIfVerilog::addElif(std::string condition){
         _contBlock.emplace_back(true,std::move(condition));
         return _contBlock.back();
     }
 
-    std::string CbIfCxx::toString(int ident){
+    std::string CbIfVerilog::toString(int ident){
         std::string preRet;
         std::string indentVal = genConString(' ', ident);
 
@@ -89,13 +94,13 @@ namespace kathryn{
             preRet += "else";
         }
 
-        preRet += "{\n";
+        preRet += "begin\n";
 
-        preRet += CbBaseCxx::toString(ident + CXX_IDENT);
+        preRet += CbBaseVerilog::toString(ident + Verilog_IDENT);
 
-        preRet += indentVal + "}";
+        preRet += indentVal + "end ";
 
-        for(CbIfCxx& contBlock: _contBlock){
+        for(CbIfVerilog& contBlock: _contBlock){
             preRet += contBlock.toString(ident);
         }
         if (!_markAsSubChain){
@@ -106,9 +111,31 @@ namespace kathryn{
 
     /**
      *
-     * CbFuncDec
+     * CbAlwaysVerilog
      *
      */
+
+    CbAlwaysVerilog::CbAlwaysVerilog(Verilog_SEN_TYPE senType, std::string  senName):
+    _senType(senType),
+    _senName(std::move(senName)){}
+
+    std::string CbAlwaysVerilog::toString(int ident){
+
+        assert(_senType >= 0 && _senType < VLST_CNT);
+
+        std::string preRet;
+        std::string indentVal = genConString(' ', ident);
+
+        std::string senName = (_senType == VLST_ALWAYS) ? "*" : (Verilog_SEN_TYPE_STR[_senType] + _senName);
+
+        preRet += indentVal + "always @(" + senName + " ) begin\n";
+        preRet += CbBaseVerilog::toString(ident + Verilog_IDENT);
+        preRet += indentVal + "end";
+
+        return preRet;
+
+    }
+
 
 
 }

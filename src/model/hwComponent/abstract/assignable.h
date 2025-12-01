@@ -12,30 +12,14 @@
 #include "model/hwComponent/abstract/Slice.h"
 #include "updateEvent.h"
 #include "model/controller/clockMode.h"
+#include "assMetaMng.h"
 
 namespace kathryn{
 
 
 
 
-    /** This is used to describe what and where to update that send to controller and let flow block determine*/
-    enum ASM_TYPE{
-        ASM_DIRECT = 0,
-        ASM_EQ_DEPNODE = 1
-    };
-    struct AssignMeta{
-        std::vector<UpdateEvent*>& updateEventsPool;
-        Operable&                  valueToAssign;
-        Slice                      desSlice;
-        ASM_TYPE                   asmType;
-        CLOCK_MODE                 clockMode;
-        AssignMeta(std::vector<UpdateEvent*>& u, Operable& v, Slice s, ASM_TYPE at, CLOCK_MODE cm):
-                                                                        updateEventsPool(u),
-                                                                        valueToAssign(v),
-                                                                        desSlice(s),
-                                                                        asmType(at),
-                                                                        clockMode(cm){}
-    };
+
     /**
     * Assignable represent hardware component that can memorize logic value or
     *
@@ -46,14 +30,11 @@ namespace kathryn{
     struct AsmNode;
     class Assignable{
     protected:
-        std::vector<UpdateEvent*> _updateMeta;
+        UpdatePool _updatePool;
     public:
 
         explicit Assignable() = default;
         virtual ~Assignable(){
-            for (auto eventPtr: _updateMeta){
-                delete eventPtr;
-            }
         }
 
         /** base function assign other operable to this operable*/
@@ -88,13 +69,15 @@ namespace kathryn{
         virtual Slice getAssignSlice() = 0;
 
         /** update event management*/
-        std::vector<UpdateEvent*>& getUpdateMeta(){ return _updateMeta; }
+        UpdatePool& getUpdateMeta(){ return _updatePool;}
 
-        void addUpdateMeta(UpdateEvent* event){_updateMeta.push_back(event);}
+        void addUpdateMeta(UpdateEventBase* event){_updatePool.addUpdateEvent(event);}
 
         /** generate update metas*/
-        virtual AssignMeta* generateAssignMeta(Operable& srcValue, Slice desSlice, ASM_TYPE asmType, CLOCK_MODE clockMode){
-            return new AssignMeta(_updateMeta, srcValue, desSlice, asmType, clockMode);
+        virtual AssignMeta* generateAssignMeta(Operable& srcValue, Slice desSlice,
+                                               ASM_TYPE asmType, CLOCK_MODE clockMode){
+            UpdateEventBasic* ueb = createUEHelper(&srcValue, desSlice, -1, clockMode, true);
+            return new AssignMeta(_updatePool, ueb, asmType);
         }
 
         /** generate the atomic node that is used to represent  state in the system*/
@@ -108,18 +91,11 @@ namespace kathryn{
          *
          * */
 
-        static bool upEventCmp(const UpdateEvent* lhs, const UpdateEvent* rhs){
-            assert(lhs != nullptr);
-            assert(rhs != nullptr);
-            return (*lhs) < (*rhs);
-        }
-
         void sortUpEventByPriority(){
-            ////////std::cout << _updateMeta.size() << std::endl;
-            std::sort(_updateMeta.begin(), _updateMeta.end(), upEventCmp);
+            _updatePool.sortEvents();
         }
 
-        bool checkDesIsFullyAssignAndEqual();
+        // bool checkDesIsFullyAssignAndEqual();
 
 
     };

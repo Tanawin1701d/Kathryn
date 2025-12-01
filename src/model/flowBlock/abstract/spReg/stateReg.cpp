@@ -22,32 +22,55 @@ namespace kathryn {
         com_init();
     };
 
-    UpdateEvent* StateReg::addDependState(Operable* dependState, Operable* activateCond, CLOCK_MODE cm){
+    UpdateEventBase* StateReg::addDependState(Operable* dependState, Operable* activateCond, CLOCK_MODE cm){
         assert(dependState != nullptr);
 
-        auto* event = new UpdateEvent({activateCond,
-                                       dependState,
-                                       &stateRegUpFull,
-                                       Slice({0, 1}),
-                                       DEFAULT_UE_PRI_INTERNAL_MAX,
-                                        DEFAULT_UE_SUB_PRIORITY_USER,
-                                        cm
-                                       });
-        addUpdateMeta(event);
-        return event;
+        // if (_globalId == 18){
+        //     std::cout << "addDependState " << _globalId << std::endl;
+        // }
+
+
+        UpdateEventBase* conEvent = createUE(activateCond,
+                                             dependState,
+                                             &stateRegUpFull,
+                                             Slice({0, 1}),
+                                             DEFAULT_UE_PRI_INTERNAL_MAX,
+                                             cm);
+        addUpdateMeta(conEvent);
+        return conEvent;
+
+        // auto* event = new UpdateEvent({activateCond,
+        //                                dependState,
+        //                                &stateRegUpFull,
+        //                                Slice({0, 1}),
+        //                                DEFAULT_UE_PRI_INTERNAL_MAX,
+        //                                 DEFAULT_UE_SUB_PRIORITY_USER,
+        //                                 cm
+        //                                });
+
     }
 
     void StateReg::makeUnSetStateEvent(CLOCK_MODE cm) {
-        auto* event = new UpdateEvent({
-            nullptr,
-            this,
-            &stateRegDownFull,
-            Slice({0, getSlice().getSize()}),
-            DEFAULT_UE_PRI_INTERNAL_MIN,
-            DEFAULT_UE_SUB_PRIORITY_USER,
-            cm
-        });
+
+         auto* event =   createUE(nullptr,
+                         this,
+                         &stateRegDownFull,
+                         Slice({0, getSlice().getSize()}),
+                         DEFAULT_UE_PRI_INTERNAL_MIN,
+                         cm);
+        //////// add update Meta
         addUpdateMeta(event);
+
+        // auto* event = new UpdateEvent({
+        //     nullptr,
+        //     this,
+        //     &stateRegDownFull,
+        //     Slice({0, getSlice().getSize()}),
+        //     DEFAULT_UE_PRI_INTERNAL_MIN,
+        //     DEFAULT_UE_SUB_PRIORITY_USER,
+        //     cm
+        // });
+        // addUpdateMeta(event);
     }
 
     Operable* StateReg::generateEndExpr(){

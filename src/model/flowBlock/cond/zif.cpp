@@ -15,7 +15,7 @@ namespace kathryn{
             FlowBlockBase(ZIF,
                   {
                   { FLOW_ST_BASE_STACK,
-                                 FLOW_ST_HEAD_COND_STACK},
+                    FLOW_ST_HEAD_COND_STACK},
                   FLOW_JO_EXT_FLOW,
                   true
                   }),
@@ -31,18 +31,23 @@ namespace kathryn{
         _basicNodes.clear();
     }
 
+
     void FlowBlockZIF::addElementInFlowBlock(Node* node) {
         assert(node != nullptr);
         assert(node->getNodeType() == ASM_NODE);
-        FlowBlockBase::addElementInFlowBlock(node);
-        ((AsmNode *) node)->addPreCondition(purifiedCurCond, BITWISE_AND);
+
+        //////// cast meta data
+        AsmNode* castedNode = (AsmNode*)node;
+        FlowBlockBase::addAbandonNode(node);
+        //////// try to add to
+        tryAddOrCreateAsmMeta(castedNode, _assignMetas, purifiedCurCond);
     }
 
     void FlowBlockZIF::addSubFlowBlock(FlowBlockBase *subBlock) {
         assert(false);
     }
 
-    void FlowBlockZIF::addConFlowBlock(FlowBlockBase *fb) {
+    void FlowBlockZIF::addConFlowBlock(FlowBlockBase *fb){
         assert(!lastZelifDetected);
         assert(!prevFalses.empty());
         assert(fb != nullptr);
@@ -52,13 +57,27 @@ namespace kathryn{
         FlowBlockZELIF* castedZelif = (FlowBlockZELIF*)fb;
 
         Operable* prevFalse = *prevFalses.rbegin();
-        /**get next activate cond*/
-        /** assign activate cond and extract node*/
-        for (auto insideNode: fb->getBasicNode()){
-            assert(insideNode != nullptr);
-            assert(insideNode->getNodeType() == ASM_NODE);
-            ((AsmNode *) insideNode)->addPreCondition(*prevFalses.rbegin(), BITWISE_AND);
-            FlowBlockBase::addElementInFlowBlock(insideNode);
+
+        /**
+         *  try to merge with exist node because we need to minimize the internal generation
+         */
+
+        std::vector<ZifClassAsm*> subClassAsmMeta = castedZelif->getClassAssMetas();
+
+        ///// it is not possible that slave will hit the same zif because the slave will handle it
+        for (ZifClassAsm* slaveAsmMeta: subClassAsmMeta){
+            bool found = false;
+            for (ZifClassAsm* classAsm: _assignMetas){
+                if (classAsm->isJoinable(slaveAsmMeta)){
+                    classAsm->addZelifStage(slaveAsmMeta);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found){
+                slaveAsmMeta->condition = addLogicWithOutput(prevFalse, slaveAsmMeta->condition, BITWISE_AND);
+                _assignMetas.push_back(slaveAsmMeta);
+            }
         }
         /** generate next prev false*/
         if (castedZelif->getPurifiedCurCond() == nullptr){
@@ -107,5 +126,16 @@ namespace kathryn{
 
     void FlowBlockZIF::doPostFunction() {
         onDetachBlock();
+    }
+
+    std::vector<AsmNode*> FlowBlockZIF::extract(){
+
+        ///// generate the node
+        std::vector<AsmNode*> result;
+        for (ZifClassAsm* zifClassAsm: _assignMetas){
+            result.push_back(zifClassAsm->createAsmNode());
+        }
+        return result;
+
     }
 }

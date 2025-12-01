@@ -106,8 +106,8 @@ namespace kathryn{
 
         ///////// build string
         cb.addCm(_ident->getGlobalName());
-        assert(_asb->checkDesIsFullyAssignAndEqual());
-        genOpWithChainCondition(cb, auxAssVal);
+        //assert(_asb->checkDesIsFullyAssignAndEqual());
+        createOpWithSoleCondition(cb, auxAssVal);
     }
 
 
