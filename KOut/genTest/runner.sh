@@ -2,7 +2,7 @@
 
 
 START_TC_NUM=5
-STOP_TC_NUM=25
+STOP_TC_NUM=26
 
 for x in  $(seq $START_TC_NUM $STOP_TC_NUM)
 do

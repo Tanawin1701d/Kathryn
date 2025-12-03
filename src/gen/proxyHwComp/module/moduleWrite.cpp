@@ -19,7 +19,7 @@ namespace kathryn{
         if (requireNewFile && (!_master->isTopModule())){
             finalFileWriter = writerGroup->createNewFile(getOpr() + ".v");
         }
-        std::string finalModName = explicitModName;
+        std::string finalModName = getOpr();
         if (isExplicitMod){
             finalModName = explicitModName;
         }

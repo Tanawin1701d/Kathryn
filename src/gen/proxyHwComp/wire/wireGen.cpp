@@ -21,6 +21,10 @@ namespace kathryn{
 
     void WireGen::routeDep(){
 
+        // if (_master->getGlobalId() == 1701){
+        //     std::cout<< "test";
+        // }
+
         if (_master->getMarker() == WMT_INPUT_MD || _master->getMarker() == WMT_OUTPUT_MD){
             UpdatePool& masterUpdatePool = _master->getUpdateMeta();
             assert(masterUpdatePool.size() == 1);
@@ -63,7 +67,7 @@ namespace kathryn{
         if(_master->getMarker() == WMT_INPUT_MD || _master->getMarker() == WMT_OUTPUT_MD){
             assert(!translatedUpdatePool.isEmpty());
             UpdateEventBase* singleUpdateEvent = translatedUpdatePool.getUpdateEventRef()[0];
-            assert(singleUpdateEvent->getType() == UET_BASIC);
+            //assert(singleUpdateEvent->getType() == UET_BASIC);
 
             CbBaseVerilog cb;
             UEBaseGenEngine* ueGenEngine =  singleUpdateEvent->createGenEngine();

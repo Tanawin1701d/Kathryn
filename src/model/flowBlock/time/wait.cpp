@@ -153,7 +153,7 @@ namespace kathryn{
 
         /** build node*/
         if (cnt != nullptr) {
-            _waitNode = new WaitCycleNode(cnt);
+            _waitNode = new WaitCycleNode(cnt, getClockMode());
         }else {
             assert(cycle > 0);
             _waitNode = new WaitCycleNode(cycle, getClockMode());

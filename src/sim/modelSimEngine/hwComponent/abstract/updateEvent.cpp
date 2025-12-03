@@ -86,6 +86,7 @@ namespace kathryn{
 
             }
             simEngine->createSimOp(*curWriteBlock, logicSimEngine, auxAssStr);
+            //simEngine->createSimOp(*firstIfStmt, logicSimEngine, auxAssStr);
             subEngine.push_back(simEngine);
 
         }

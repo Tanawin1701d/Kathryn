@@ -35,7 +35,7 @@ namespace kathryn{
     bool UEBasicGenEngine::validateAssignSensivity() const{
         return ((master->_clkMode == CM_POSEDGE)  ||
                (master->_clkMode == CM_NEGEDGE)  ||
-               (master->_clkMode == CM_CLK_UNUSED)
+               (master->_clkMode == CM_CLK_FREE)
                );
     }
 
@@ -56,7 +56,7 @@ namespace kathryn{
     void UEBasicGenEngine::genBasicConnect(CbBaseVerilog& cbVer, AssignGenBase* assignGen){
 
         std::string assStr = "assign " + assignGen->getOpr() +
-                             " = "     +  assignGen->getOprStrFromOpr(master->_value) + ";";
+                             " = "     +  assignGen->getOprStrFromOpr(master->_value);
         cbVer.addSt(assStr);
     }
 
@@ -104,7 +104,7 @@ namespace kathryn{
         for (int i = 0; i < master->conditions.size(); ++i){
             Operable* condition = master->conditions[i];
             UpdateEventBase* ueb = master->subStmts[i];
-            std::string condStr = "true";
+            std::string condStr = "1'b1";
             if (condition != nullptr){
                 condStr = assignGen->getOprStrFromOpr(condition);
             }
@@ -123,6 +123,16 @@ namespace kathryn{
             subEngine.push_back(genEngine);
 
         }
+
+    }
+
+    void UECondGenEngine::genBasicConnect(CbBaseVerilog& cbVer, AssignGenBase* assignGen){
+        assert(master->conditions.size() == 1);
+        assert(master->subStmts.size() == 1);
+        assert(master->conditions[0] == nullptr);
+        auto* genEngine = master->subStmts[0]->createGenEngine();
+        genEngine->genBasicConnect(cbVer, assignGen);
+        subEngine.push_back(genEngine);
 
     }
 

@@ -167,10 +167,12 @@ namespace kathryn{
 
         ////// return node
         WireSlot resultWireSlot(getMeta());
+        //return resultWireSlot;
         ////// all metadata
         std::vector<AssignMeta*> allRowCollector;
         std::vector<Operable*> allRowPreCond;
         ////// generate all assign meta to all node
+        int amtRow = getNumRow();
         for(int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
             std::vector<AssignMeta*> eachRowCollector;
             std::vector<Operable*> eachRowPreCond;

@@ -64,11 +64,10 @@ namespace kathryn{
         //////// event pool for each hardware component
         std::vector<UpdateEventBase*> events;
 
-        void sortEvents(){ ///// sort it by priority
-            std::sort(events.begin(), events.end(), compareUE);
-        }
+        void sortEvents();
 
         void addUpdateEvent(UpdateEventBase* event){
+            //assert(event != nullptr);
             events.push_back(event);
         }
 
@@ -111,11 +110,11 @@ namespace kathryn{
         void setClkMode    (CLOCK_MODE clkMode){_clkMode     = clkMode;}
 
         bool operator < (const UpdateEventBase& rhs) const{
-            if (_priority <= rhs._priority){
+            if (_priority < rhs._priority){
                 return true;
             }
             if (_priority == rhs._priority){
-                return _subPriority <= rhs._subPriority;
+                return _subPriority < rhs._subPriority;
             }
             return false;
         }

@@ -32,7 +32,8 @@ namespace kathryn{
                 for (int intType = 0; intType < INT_CNT; intType++){
                     intNodes[intType] = nullptr;
                 }
-                setClockMode(GET_CLOCK_MODE()); ///// get clock mode from master0
+                ///setClockMode(GET_CLOCK_MODE()); ///// get clock mode from master0
+                setClockMode(CM_POSEDGE); ///// get clock mode from master0
     }
 
     FlowBlockBase::~FlowBlockBase(){

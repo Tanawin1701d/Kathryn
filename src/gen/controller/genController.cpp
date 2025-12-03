@@ -53,7 +53,7 @@ namespace kathryn{
 
         FileWriterBase* topWriter = _writerGroup.createNewFile(_desVerilogTopFileName + _file_suffix);
 
-        _masterModuleGen->startWriteFileMaster(_extractMulFile, nullptr, &_writerGroup, true, _desVerilogTopModName);
+        _masterModuleGen->startWriteFileMaster(_extractMulFile, topWriter, &_writerGroup, true, _desVerilogTopModName);
 
     }
 

@@ -7,6 +7,8 @@
 #include <vector>
 #include <string>
 #include <cassert>
+#include <iostream>
+#include <ostream>
 
 namespace kathryn{
     ////// code block statement
@@ -26,7 +28,7 @@ namespace kathryn{
         std::vector<CbBase*>     _subBlocks;  ////// the sublock
 
         ///// constructor
-        explicit CbBase() = default;
+        explicit CbBase(){};
         virtual ~CbBase();
         /////// add data + meta data section
         void addSt(std::string stm, bool ln = true);

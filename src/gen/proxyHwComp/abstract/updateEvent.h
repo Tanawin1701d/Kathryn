@@ -73,6 +73,7 @@ namespace kathryn{
 
         void reroute(ModuleGen* mdGen) override;
         void genAss(CbBaseVerilog& cbVer, AssignGenBase* assignGen) override;
+        void genBasicConnect(CbBaseVerilog& cbVer, AssignGenBase* assignGen) override;
 
     };
 

@@ -72,8 +72,9 @@ namespace kathryn{
     _cond(std::move(condtion)){}
 
     CbIfCxx& CbIfCxx::addElif(std::string condition){
-        _contBlock.emplace_back(true,std::move(condition));
-        return _contBlock.back();
+        CbIfCxx* elifBlock = new CbIfCxx(true,std::move(condition));
+        _contBlock.push_back(elifBlock);
+        return *elifBlock;
     }
 
     std::string CbIfCxx::toString(int ident){
@@ -94,8 +95,9 @@ namespace kathryn{
 
         preRet += indentVal + "}";
 
-        for(CbIfCxx& contBlock: _contBlock){
-            preRet += contBlock.toString(ident);
+        for(CbIfCxx* contBlock: _contBlock){
+            assert(contBlock != nullptr);
+            preRet += contBlock->toString(ident);
         }
         if (!_markAsSubChain){
             preRet += "\n";

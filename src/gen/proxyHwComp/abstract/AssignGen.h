@@ -41,6 +41,9 @@ namespace kathryn{
 
         void addDirectUpdateEvent(UpdateEventBase* ueb) override{
             assert(ueb != nullptr);
+            if (_ident->getGlobalId() == 1701){
+                std::cout<< "test";
+            }
             translatedUpdatePool.addUpdateEvent(ueb);
         }
 

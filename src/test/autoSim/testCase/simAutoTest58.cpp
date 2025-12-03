@@ -13,6 +13,7 @@ namespace kathryn{
     public:
 
         mReg(a, 32);
+        mReg(b, 32);
 
         explicit testSimMod58(int x){}
 
@@ -30,6 +31,7 @@ namespace kathryn{
                     a <<= 24;
                 }zelse{
                     a <<= 48;
+                    b <<= 48;
                 }
             }
 
@@ -59,18 +61,22 @@ namespace kathryn{
             // conEndCycle();
             for (int i = 2; i <= 8; i++){
                 testAndPrint("a value " + std::to_string(i)  , ull(_md->a), i);
+                testAndPrint("b value " + std::to_string(i)  , ull(_md->b), 0);
                 conNextCycle(1);
                 conEndCycle();
             }
             for (int i = 10; i <= 16; i+=2){
                 testAndPrint("a value " + std::to_string(i)  , ull(_md->a), i);
+                testAndPrint("b value " + std::to_string(i)  , ull(_md->b), 0);
                 conNextCycle(1);
                 conEndCycle();
             }
             testAndPrint("a value " + std::to_string(24)  , ull(_md->a), 24);
+            testAndPrint("b value " + std::to_string(0)  , ull(_md->b), 0);
             conNextCycle(1);
             conEndCycle();
             testAndPrint("a value " + std::to_string(48)  , ull(_md->a), 48);
+            testAndPrint("b value " + std::to_string(48)  , ull(_md->b), 48);
         }
 
     };

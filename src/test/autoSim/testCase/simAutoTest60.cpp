@@ -77,5 +77,5 @@ namespace kathryn{
 
     };
 
-    Sim60TestEle ele60(-1);
+    Sim60TestEle ele60(60);
 }

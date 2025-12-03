@@ -44,19 +44,22 @@ namespace kathryn{
 
     std::string AssignGenBase::assignOpWithSoleCondition(){
 
+        if (translatedUpdatePool.isEmpty()){
+            return "";
+        }
+
+        auto [senType, senName] = getClockSenInfo(translatedUpdatePool.getUpdateEventRef()[0]);
+
         std::string retStr;
-        CbBaseVerilog cb;
+        CbAlwaysVerilog cbAw(senType, senName);
 
         for (UpdateEventBase* ueb: translatedUpdatePool.events){
-            auto [verSenType, senSig] = getClockSenInfo(ueb);
-
-            CbAlwaysVerilog cbAw = cb.addAlways(verSenType, senSig);
             UEBaseGenEngine* genEngine = ueb->createGenEngine();
             genEngine->genAss(cbAw, this);
             delete genEngine;
         }
 
-        retStr = cb.toString(4);
+        retStr = cbAw.toString(4);
         return retStr;
 
     }
@@ -71,6 +74,6 @@ namespace kathryn{
     std::string AssignGenBase::assignmentLine(Slice desSlice, Operable* srcUpdateValue, bool isDelayedAsm){
         assert(srcUpdateValue != nullptr);
         std::string asmOpr = isDelayedAsm ? " <= " : " = ";
-        return getOpr(desSlice) + asmOpr + getOprStrFromOprAndShinkMsb(srcUpdateValue, desSlice.getSize()) + ";";
+        return getOpr(desSlice) + asmOpr + getOprStrFromOprAndShinkMsb(srcUpdateValue, desSlice.getSize());
     }
 }

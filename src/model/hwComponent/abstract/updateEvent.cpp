@@ -81,6 +81,21 @@ namespace kathryn{
         return (*lhs) < (*rhs);
     }
 
+    void UpdatePool::sortEvents(){
+        std::cout << events.size() << std::endl;
+        for (UpdateEventBase* ueb: events){
+            assert(ueb != nullptr);
+        }
+        std::sort(events.begin(), events.end(), [](const UpdateEventBase* lhs, const UpdateEventBase* rhs){
+        if (!lhs || !rhs) {
+            std::cerr << "NULL IN SORT lhs=" << lhs
+                      << " rhs=" << rhs << "\n";
+            std::abort();
+        }
+        return *lhs < *rhs;
+    });
+    }
+
     UpdatePool UpdatePool::clone(){
 
         std::vector<UpdateEventBase*> newEvents;

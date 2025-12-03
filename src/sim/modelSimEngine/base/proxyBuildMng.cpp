@@ -475,6 +475,8 @@ namespace kathryn{
         std::vector<ModelProxyBuild*> sortedVolatileEle = doTopologySort(volatileEle);
         for (ModelProxyBuild* mpb : sortedVolatileEle){
             mpb->createOp(cbVolatileSim);
+            //break;
+
         }
         proxyfileWriter->addData(cbVolatileSim.toString(0));
         //////////////////////// nonVolatile sim

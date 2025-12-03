@@ -13,6 +13,7 @@ namespace kathryn{
      *
      */
     CbBase::~CbBase(){
+        std::cout << "deleting cbBase " << this << std::endl;
         for (CbBase* cb: _subBlocks){
             delete cb;
         }

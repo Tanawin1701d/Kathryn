@@ -48,7 +48,6 @@ namespace kathryn{
 
             if (nextStCheckIdx < _codeSt.size() &&
                 _codeSt[nextStCheckIdx].order == mainOrder){
-                preRet += identVal;
                 if (_codeSt[nextStCheckIdx].isComment){preRet += "////";}
                 preRet += identVal + _codeSt[nextStCheckIdx].st + ";";
                 if (_codeSt[nextStCheckIdx].ln){preRet += "\n";}
@@ -126,7 +125,7 @@ namespace kathryn{
         std::string preRet;
         std::string indentVal = genConString(' ', ident);
 
-        std::string senName = (_senType == VLST_ALWAYS) ? "*" : (Verilog_SEN_TYPE_STR[_senType] + _senName);
+        std::string senName = (_senType == VLST_ALWAYS) ? "*" : (Verilog_SEN_TYPE_STR[_senType] + " " +_senName);
 
         preRet += indentVal + "always @(" + senName + " ) begin\n";
         preRet += CbBaseVerilog::toString(ident + Verilog_IDENT);

@@ -364,6 +364,14 @@ namespace kathryn{
                 CM_CLK_FREE,
                 false
                 );
+
+                // UpdateEventBasic* ueb = new
+                // UpdateEventBasic(_masterSlot.hwFieldRefAt(idx)._opr,
+                //     resultWire->getOperableSlice(), assignPri,CM_CLK_FREE);
+                //
+                // UpdateEventCond* uec = new UpdateEventCond();
+                // uec->addSubStmt(activateCond, ueb);
+
                 updatePool.addUpdateEvent(resultUpEvent);
                 isUsedAsDef = false;
             }

@@ -34,10 +34,14 @@ struct CbIfCxx: CbBaseCxx{
 
     bool               _markAsSubChain = false; //// for elif else
     std::string        _cond;
-    std::vector<CbIfCxx> _contBlock;
+    std::vector<CbIfCxx*> _contBlock;
 
     CbIfCxx(bool isSubChain, std::string condtion);
-    ~CbIfCxx() = default;
+    ~CbIfCxx(){
+        for(CbIfCxx* contBlock: _contBlock){
+            delete contBlock;
+        }
+    }
 
     CbIfCxx& addElif(std::string condition);
     std::string toString(int ident) override;
