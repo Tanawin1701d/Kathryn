@@ -10,7 +10,7 @@ typedef unsigned long long ull;
 
 
 
-inline void doThisClock(Vtop* core){
+__attribute__((always_inline)) inline void doThisClock(Vtop* core){
     assert(core != nullptr);
     core->clk = 1;
     core->eval();
