@@ -38,20 +38,33 @@ namespace kathryn{
         virtual ~EventBase() = default;
 
         virtual void simStartLongRunCycle() = 0;
+
+        /**
+         *
+         * |-negEdgeZone----|-posedgeZone-|
+         * ----------------              ----------
+         *                |              |
+         *                |              |
+         *                |--------------|
+         */
+
         /**
           * compute value that will be assigned in this cycle
           * */
-        virtual void simStartCurCycle() = 0;
+        virtual void simStartCurCycleNeg() = 0;
+        virtual void simStartCurCyclePos() = 0;
 
         /**
          * collect data from every compute unit
          * ex for reg wire unit will write data to cmd unit
          **/
-         virtual void curCycleCollectData() = 0;
+         virtual void curCycleCollectDataNeg() = 0;
+         virtual void curCycleCollectDataPos() = 0;
         /**
         * compute value for next cycle
         * */
-        virtual void simStartNextCycle() = 0;
+        virtual void simStartNextCycleNeg() = 0;
+        virtual void simStartNextCyclePos() = 0;
         /**
          * a function that used to specify compute unit whether
          * this cycle is finished

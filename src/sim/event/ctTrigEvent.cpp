@@ -21,14 +21,14 @@ namespace kathryn{
         getSimController()->addEvent(this);
     }
 
-    void ConcreteTriggerEvent::simStartCurCycle() {
-        startSimCurEvent.notify(getCurCycle());
-        finishSimCurEvent.wait(getCurCycle());
+    void ConcreteTriggerEvent::simStartCurCycleNeg() {
+        startSimCurEvent.notify(getCurCycle()); //// notify the run aside thread
+        finishSimCurEvent.wait(getCurCycle());  //// wait for the run aside thread to finish
     }
 
-    void ConcreteTriggerEvent::simStartNextCycle(){
-        startEndCycleEvent.notify(getCurCycle());
-        finishEndCycleEvent.wait(getCurCycle());
+    void ConcreteTriggerEvent::simStartNextCyclePos(){
+        startEndCycleEvent.notify(getCurCycle()); //// notify the run aside thread
+        finishEndCycleEvent.wait(getCurCycle());  //// wait for the run aside thread to finish
     }
 
 

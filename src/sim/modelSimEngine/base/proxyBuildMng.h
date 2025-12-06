@@ -79,6 +79,8 @@ namespace kathryn{
         const std::string REGIS_CALLBACK       = "startRegisterCallBack";
         const std::string REGIS_CALLBACK_LOGIC = "registerToCallBack";
         const std::string REGIS_CALLBACK_PERF  = "registerToCallBackPerf";
+        const std::string CLK_MODE_POSE        = "Pos";
+        const std::string CLK_MODE_NEG         = "Neg";
         const std::string MAINOP_SIM = "startMainOpEleSim";
         const std::string FIZOP_SIM  = "startFinalizeEleSim";
         const std::string VCD_DEC    = "startVcdDecVar"; //// must have User or Internal as a suffix
@@ -155,12 +157,19 @@ namespace kathryn{
         ///////// void start write perf col
         void startWritePerfColSke();
         void startWritePerfCol();
+        ///// old system
+        // void startMainOpEleSimSke();
+        // void startMainOpEleSim   ();
+
+        void startWriteAllLogicSim(CLOCK_MODE clkMode);
+
         ////////// for wire expression memElehodler*   etc....
-        void startMainOpEleSimSke();
-        void startMainOpEleSim();
-        ////////// for register
-        void startFinalizeEleSimSke();
-        void startFinalizeEleSim();
+        ///// volatile
+        void startWriteMainEleSimSke  (CLOCK_MODE clkMode);
+        void startWriteMainEleSim     (CLOCK_MODE clkMode);
+        ///// non-volatile
+        void startFinalizeEleSimSke(CLOCK_MODE clkMode);
+        void startFinalizeEleSim   (CLOCK_MODE clkMode);
         ////////// for user define
         void startWriteUserDefinedFunction();
         //////// void start write for optimization
@@ -172,7 +181,10 @@ namespace kathryn{
         //////// void start write creator
         void startWriteCreateFunc();
 
-
+        //////// for screening clock mode
+        std::vector<ModelProxyBuild*> screenClockMode(CLOCK_MODE clkMode,
+                                                      std::vector<ModelProxyBuild*> srcs);
+        std::string getClockModeStr(CLOCK_MODE clkMode);
 
         //////// compile file
         void startCompile();

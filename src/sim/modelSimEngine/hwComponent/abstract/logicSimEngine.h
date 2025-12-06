@@ -57,6 +57,7 @@ namespace kathryn{
         ValR                     getTempValRep();
         ull                      getVarId()        override{return _ident->getGlobalId();}
         SIM_VALREP_TYPE_ALL      getValR_Type() override;
+        CLOCK_MODE               getClockMode() override;
         void                     setVCDWriteStatus(bool status){ _setToWrite = status;}
 
         [[nodiscard]]

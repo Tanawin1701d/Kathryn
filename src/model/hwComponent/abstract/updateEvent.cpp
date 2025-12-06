@@ -82,7 +82,6 @@ namespace kathryn{
     }
 
     void UpdatePool::sortEvents(){
-        std::cout << events.size() << std::endl;
         for (UpdateEventBase* ueb: events){
             assert(ueb != nullptr);
         }
@@ -124,5 +123,31 @@ namespace kathryn{
         }
         return result;
     }
+
+    bool UpdatePool::isClockModeConsistent() const{
+
+        if (isEmpty()){ return true;}
+        UpdateEventBase* first = events.front();
+        assert(first != nullptr);
+
+        for (UpdateEventBase* basePtr: events){
+            assert(basePtr != nullptr);
+            if (first->getClkMode() != basePtr->getClkMode()){
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+    CLOCK_MODE UpdatePool::getClockMode() const{
+        assert(isClockModeConsistent());
+        if (isEmpty()){
+            return CLOCK_MODE::CM_CLK_UNUSED;
+        }
+        return events[0]->getClkMode();
+    }
+
+
 
 }

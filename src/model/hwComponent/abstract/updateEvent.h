@@ -78,6 +78,9 @@ namespace kathryn{
         void       clean  ();
         ///// check function
         Operable*  checkShortCircuitProxy() const;
+        bool       isClockModeConsistent() const;
+        ////// incase there is no updateEvent this item will return nullptr
+        CLOCK_MODE getClockMode() const;
         size_t     size   () const{return events.size();}
         bool       isEmpty() const{return events.empty();}
 
@@ -122,10 +125,10 @@ namespace kathryn{
         //// it used to tell update Event can be joined into single simulation or generation block
         bool isJoinable(UpdateEventBase& rhs) const{return (_priority == rhs._priority) && (_clkMode == rhs._clkMode);}
 
-        UE_TYPE getType       () const {return _type;}
-        int     getPriority   () const {return _priority;}
-        ull     getSubPriority() const {return _subPriority;}
-        int     getClkMode    () const {return _clkMode;}
+        UE_TYPE    getType       () const {return _type;}
+        int        getPriority   () const {return _priority;}
+        ull        getSubPriority() const {return _subPriority;}
+        CLOCK_MODE getClkMode    () const {return _clkMode;}
         //////// hardware checking
         virtual Operable* checkShortCircuitProxy() = 0;
 

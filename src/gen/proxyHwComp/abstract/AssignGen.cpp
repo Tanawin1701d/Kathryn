@@ -29,10 +29,11 @@ namespace kathryn{
     }
 
     std::pair<Verilog_SEN_TYPE, std::string>
-    AssignGenBase::getClockSenInfo(UpdateEventBase* ueb){
+    AssignGenBase::getClockSenInfo(){
 
-        assert(ueb != nullptr);
-        switch (ueb->_clkMode){
+        assert(_asb != nullptr);
+        CLOCK_MODE clkMode = _asb->getUpdateMeta().getClockMode();
+        switch (clkMode){
             case CM_POSEDGE: return std::make_pair(VLST_POSEDGE, "clk");
             case CM_NEGEDGE: return std::make_pair(VLST_NEGEDGE, "clk");
             default: return std::make_pair(VLST_ALWAYS, "*");
@@ -44,11 +45,13 @@ namespace kathryn{
 
     std::string AssignGenBase::assignOpWithSoleCondition(){
 
+        ////// if there is no update event skip it
         if (translatedUpdatePool.isEmpty()){
             return "";
         }
 
-        auto [senType, senName] = getClockSenInfo(translatedUpdatePool.getUpdateEventRef()[0]);
+        ////// sensitivity list have to be the same in the system
+        auto [senType, senName] = getClockSenInfo();
 
         std::string retStr;
         CbAlwaysVerilog cbAw(senType, senName);

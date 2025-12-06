@@ -16,6 +16,7 @@
 #include "sim/logicRep/valRep.h"
 #include "util/fileWriter/codeWriter/cppWriter.h"
 #include "simValType.h"
+#include "model/controller/clockMode.h"
 
 
 namespace kathryn{
@@ -43,6 +44,8 @@ namespace kathryn{
         virtual SIM_VALREP_TYPE_ALL      getValR_Type   () = 0;
         void                             markSV_base    (const std::string& str){isMarkSV = true; markSV_key = str;}
         virtual void                     markSV         (const std::string& str){assert(false);}
+
+        virtual CLOCK_MODE               getClockMode   () = 0;
 
         //// c++ create section
         virtual void createGlobalVariable (CbBaseCxx& cb) = 0;

@@ -160,6 +160,11 @@ namespace kathryn{
         return SIM_VALREP_TYPE_ALL(_asb->getAssignSlice().getSize());
     }
 
+    CLOCK_MODE LogicSimEngine::getClockMode(){
+        assert(_asb != nullptr);
+        return _asb->getUpdateMeta().getClockMode();
+    }
+
 
     void LogicSimEngine::createGlobalVariable(CbBaseCxx& cb){
         ////////"; will be auto add"

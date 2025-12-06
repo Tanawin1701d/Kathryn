@@ -15,8 +15,13 @@ namespace kathryn{
         void intCodeWarmUp()          override;
         ////// sim proxy
         void startRegisterCallBack()  override;
-        void startMainOpEleSim()      override;
-        void startFinalizeEleSim()    override;
+        // void startMainOpEleSim()      override;
+        ///// volatile and non volatile (paritial)
+        void startMainOpEleSimNeg()   override;
+        void startMainOpEleSimPos()   override;
+        ///// non-volatile
+        void startFinalizeEleSimPos()   override;
+        void startFinalizeEleSimNeg()   override;
         ///// vcd collector
         void startVcdDecVarUser()     override;
         void startVcdDecVarInternal() override;

@@ -45,17 +45,25 @@ namespace kathryn{
              * all event is simulated. For now, This cycle is stable.
              * */
             unlock();
+            //////// neg edge first
             for (auto* curEvent: _curCycleEvents){
-                curEvent->simStartCurCycle();
+                curEvent->simStartCurCycleNeg();
             }
             for (auto* curEvent: _curCycleEvents){
-                curEvent->curCycleCollectData();
+                curEvent->curCycleCollectDataNeg();
             }
             for (auto* curEvent: _curCycleEvents){
-                curEvent->simStartNextCycle();
+                curEvent->simStartNextCycleNeg();
+            }
+            //////// pos edge first
+            for (auto* curEvent: _curCycleEvents){
+                curEvent->simStartCurCyclePos();
             }
             for (auto* curEvent: _curCycleEvents){
-                curEvent->simExitCurCycle();
+                curEvent->curCycleCollectDataPos();
+            }
+            for (auto* curEvent: _curCycleEvents){
+                curEvent->simStartNextCyclePos();
             }
             //////// long run cycle
             for (auto* curEvent: _curCycleEvents){
@@ -76,6 +84,7 @@ namespace kathryn{
                 }
                 assert(lrc <= 1); ///// we must have only or non for long rage sim
             }
+            //////// populate next cycle
             for (auto curEvent: _curCycleEvents){
                 EventBase* afterEvent = curEvent->genNextEvent();
                 if (afterEvent != nullptr){

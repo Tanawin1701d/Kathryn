@@ -25,7 +25,7 @@ namespace kathryn{
 
         void routeDep() override;
 
-        std::pair<Verilog_SEN_TYPE, std::string> getClockSenInfo(UpdateEventBase* ueb);
+        std::pair<Verilog_SEN_TYPE, std::string> getClockSenInfo();
 
         /**
          *  assign system
@@ -41,9 +41,6 @@ namespace kathryn{
 
         void addDirectUpdateEvent(UpdateEventBase* ueb) override{
             assert(ueb != nullptr);
-            if (_ident->getGlobalId() == 1701){
-                std::cout<< "test";
-            }
             translatedUpdatePool.addUpdateEvent(ueb);
         }
 

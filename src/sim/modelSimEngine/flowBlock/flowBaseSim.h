@@ -39,6 +39,7 @@ namespace kathryn{
         ValR                     getVarNameCurStatus();
         ull                      getVarId()       override;
         SIM_VALREP_TYPE_ALL      getValR_Type()   override;
+        CLOCK_MODE               getClockMode()   override;
         void                     getRecurVarName(std::vector<std::string>& result);
         void                     getRecurVarNameCurStsatus(std::vector<std::string>& result);
 

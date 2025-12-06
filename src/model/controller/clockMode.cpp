@@ -12,6 +12,14 @@ namespace kathryn{
         curClockMode = cm;
     }
 
+    void SET_CLK_MODE2NEG_EDGE(){
+        curClockMode = CM_NEGEDGE;
+    }
+
+    void SET_CLK_MODE2DEF(){
+        curClockMode = CM_POSEDGE;
+    }
+
     CLOCK_MODE GET_CLOCK_MODE(){
         return curClockMode;
     }

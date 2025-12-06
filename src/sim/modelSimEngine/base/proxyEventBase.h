@@ -44,12 +44,20 @@ namespace kathryn{
         ////// sim base
         void eventWarmUp();
         virtual void intCodeWarmUp() = 0; ///// internal code warm up
+        ///// long cycle sim
         void simStartLongRunCycle() override;
-        void simStartCurCycle()     override;
-        void curCycleCollectData()  override;
-        void simStartNextCycle()    override;
+        ///// single cycle sim
+        void simStartCurCycleNeg   () override;
+        void simStartCurCyclePos   () override;
+        void curCycleCollectDataNeg() override;
+        void curCycleCollectDataPos() override;
+        void simStartNextCycleNeg  () override;
+        void simStartNextCyclePos  () override;
+
         void simExitCurCycle()      override{}
         EventBase* genNextEvent()   override;
+        ////// sim base
+        void writeVcdSignal();
 
         bool needToDelete()        override{return false;}
 
@@ -142,8 +150,12 @@ namespace kathryn{
         CYCLE getAmtLRsim() const{return amtLRSim;}
         ////// sim proxy
         virtual void startRegisterCallBack()  = 0;
-        virtual void startMainOpEleSim()      = 0;
-        virtual void startFinalizeEleSim()    = 0;
+        ///// volatile and non volatile (paritial)
+        virtual void startMainOpEleSimNeg()   = 0;
+        virtual void startMainOpEleSimPos()   = 0;
+        ///// non-volatile
+        virtual void startFinalizeEleSimNeg() = 0;
+        virtual void startFinalizeEleSimPos() = 0;
         ///// vcd collector
         virtual void startVcdDecVarUser()     = 0;
         virtual void startVcdDecVarInternal() = 0;

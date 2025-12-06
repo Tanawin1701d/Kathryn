@@ -73,13 +73,17 @@ namespace kathryn{
                                       int prority
                                       );
 
-        void simStartLongRunCycle() override{assert(false);};
+        void simStartLongRunCycle() override{assert(false);}
 
-        void simStartCurCycle() override;
+        void simStartCurCycleNeg()    override;
+        void simStartCurCyclePos()    override{}
 
-        void curCycleCollectData() override{};
+        void curCycleCollectDataNeg() override{}
+        void curCycleCollectDataPos() override{}
 
-        void simStartNextCycle() override;
+        void simStartNextCycleNeg()   override{}
+        void simStartNextCyclePos()   override;
+
 
         void simExitCurCycle() override{};
 

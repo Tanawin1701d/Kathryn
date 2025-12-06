@@ -9,9 +9,14 @@
 
 namespace kathryn{
 
-    void ProxySimEvent::startRegisterCallBack() {std::cout <<"startRegisterCallBack" << std::endl;}
-    void ProxySimEvent::startVolatileEleSim()   {std::cout <<"startVolatileEleSim"   << std::endl;}
-    void ProxySimEvent::startNonVolatileEleSim(){std::cout <<"startNonVolatileEleSim"<< std::endl;}
+    void ProxySimEvent::startRegisterCallBack() {std::cout <<"startRegisterCallBack"   << std::endl;}
+
+    void ProxySimEvent::startMainOpEleSimNeg  () {std::cout << "startMainOpEleSimNeg"    << std::endl;}
+    void ProxySimEvent::startMainOpEleSimPos  () {std::cout << "startMainOpEleSimPos"    << std::endl;}
+    void ProxySimEvent::startFinalizeEleSimPos() {std::cout << "startFinalizeEleSimPos"  << std::endl;}
+    void ProxySimEvent::startFinalizeEleSimNeg() {std::cout << "startFinalizeEleSimNeg"  << std::endl;}
+
+
     void ProxySimEvent::startVcdDecVarUser()    {std::cout <<"startVcdDecVarUser"    << std::endl;}
     void ProxySimEvent::startVcdDecVarInternal(){std::cout <<"startVcdDecVarInternal"<< std::endl;}
     void ProxySimEvent::startVcdColUser()       {std::cout <<"startVcdColUser"       << std::endl;}

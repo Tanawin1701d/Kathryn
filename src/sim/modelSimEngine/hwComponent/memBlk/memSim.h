@@ -35,6 +35,8 @@ namespace kathryn{
         void createOpEndCycle2   (CbBaseCxx& cb) override{}
         void createUserMarkValue (CbBaseCxx& cb) override;
 
+        CLOCK_MODE getClockMode() override {return CM_CLK_UNUSED;}
+
         bool        isUserDeclare()        override{return false;}
         void        proxyRetInit(ProxySimEventBase* modelSimEvent)override;
         ValRepBase& getProxyRep()          override;

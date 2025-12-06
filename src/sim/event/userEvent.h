@@ -47,14 +47,23 @@ namespace kathryn{
      UserEvent();
 
      void simStartLongRunCycle() override{assert(false);}
+     /**
+       * compute value that will be assigned in this cycle
+       **/
+     void simStartCurCycleNeg() override{_activeFunc(*this);}
+     void simStartCurCyclePos() override{}
 
-     void simStartCurCycle() override{
-         _activeFunc(*this);
-     }
-
-     void curCycleCollectData() override{}
-
-     void simStartNextCycle() override{}
+     /**
+      * collect data from every compute unit
+      * ex for reg wire unit will write data to cmd unit
+      **/
+     void curCycleCollectDataNeg()override{}
+     void curCycleCollectDataPos()override{}
+     /**
+     * compute value for next cycle
+     * */
+     void simStartNextCycleNeg()override{}
+     void simStartNextCyclePos()override{}
 
      void simExitCurCycle() override{}
 

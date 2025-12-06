@@ -8,6 +8,7 @@
 #include <dlfcn.h>
 #include <set>
 #include "params/simParam.h"
+#include "util/termColor/termColor.h"
 
 
 namespace kathryn{
@@ -131,6 +132,7 @@ namespace kathryn{
 
         bool perfCol      = PARAM_PERF_REC_POL == MFP_ON;
 
+        assert(moduleSimEngine != nullptr);
 
         moduleSimEngine->proxyBuildInit();
         /** create file */
@@ -185,12 +187,12 @@ namespace kathryn{
             proxyfileWriter->addData(genDummyFunctionFullDec(true, PERF_COL));
         }
 
-        /// main op sim
-        startMainOpEleSimSke();
-        startMainOpEleSim();
-        /// final op sim
-        startFinalizeEleSimSke();
-        startFinalizeEleSim();
+        ///// write the neg edge function
+        startWriteAllLogicSim(CM_NEGEDGE);
+        ///// write the pos edge function
+        startWriteAllLogicSim(CM_POSEDGE);
+
+
         // user sim op
         startWriteUserDefinedFunction();
         /// main sim
@@ -438,10 +440,18 @@ namespace kathryn{
 
     }
 
+    void ProxyBuildMng::startWriteAllLogicSim(CLOCK_MODE clkMode){
+        startWriteMainEleSimSke  (clkMode);
+        startWriteMainEleSim     (clkMode);
+        ///// non-volatile
+        startFinalizeEleSimSke(clkMode);
+        startFinalizeEleSim   (clkMode);
+    }
+
 
     //////// non volatile must do TOPOLOGY SORT FIRST
 
-    void ProxyBuildMng::startMainOpEleSimSke(){
+    void ProxyBuildMng::startWriteMainEleSimSke(CLOCK_MODE clkMode){
         /***
          *
          * 1.standard op
@@ -454,10 +464,11 @@ namespace kathryn{
         /// memEleHolder will provide temporary data to register simulation
 
         std::vector<ModelProxyBuild*> volatileEle    = moduleSimEngine->recruitForMainOpVolatile();
-        std::vector<ModelProxyBuild*> nonVolatileEle = moduleSimEngine->recruitForMainOpNonVolatile();
+        std::vector<ModelProxyBuild*> nonVolatileEle = screenClockMode(clkMode,
+                                                                       moduleSimEngine->recruitForMainOpNonVolatile());
 
         proxyfileWriter->addData(INLINE_ATTR + " " +
-                                 genFunctionDec(false, MAINOP_SIM + SKE_SUFFIX) +
+                                 genFunctionDec(false, MAINOP_SIM + getClockModeStr(clkMode)  + SKE_SUFFIX) +
                                  "{\n");
 
         //////////////////////// create local variable
@@ -489,17 +500,15 @@ namespace kathryn{
         proxyfileWriter->addData(cbNonVolatileSim.toString(0));
 
         proxyfileWriter->addData("}\n");
-
-
     }
 
-    void ProxyBuildMng::startMainOpEleSim(){
-        proxyfileWriter->addData(genFunctionDec(true, MAINOP_SIM) + "{\n");
-        proxyfileWriter->addData(MAINOP_SIM + SKE_SUFFIX + "();\n");
+    void ProxyBuildMng::startWriteMainEleSim(CLOCK_MODE clkMode){
+        proxyfileWriter->addData(genFunctionDec(true, MAINOP_SIM + getClockModeStr(clkMode)) + "{\n");
+        proxyfileWriter->addData(MAINOP_SIM + getClockModeStr(clkMode) + SKE_SUFFIX + "();\n");
         proxyfileWriter->addData("}\n");
     }
 
-    void ProxyBuildMng::startFinalizeEleSimSke(){
+    void ProxyBuildMng::startFinalizeEleSimSke(CLOCK_MODE clkMode){
         /***
          *
          * 1.standard op
@@ -513,10 +522,13 @@ namespace kathryn{
         /// memEleHolder will provide temporary data to register simulation
 
         proxyfileWriter->addData(INLINE_ATTR + " "+
-                                 genFunctionDec(false, FIZOP_SIM + SKE_SUFFIX)+
+                                 genFunctionDec(false, FIZOP_SIM +
+                                                       getClockModeStr(clkMode) +
+                                                       SKE_SUFFIX) +
                                  "{\n");
 
-        std::vector<ModelProxyBuild*> mpbs = moduleSimEngine->recruitForFinalizeOp();
+        std::vector<ModelProxyBuild*> mpbs = screenClockMode(clkMode,
+                                                             moduleSimEngine->recruitForFinalizeOp());
 
         //////////////////// priority 1 ///////////////////////////////////////////
         ///////////////////////////////////////////////////////////////////////////
@@ -539,9 +551,9 @@ namespace kathryn{
         proxyfileWriter->addData("}\n");
     }
 
-    void ProxyBuildMng::startFinalizeEleSim(){
-        proxyfileWriter->addData(genFunctionDec(true, FIZOP_SIM) + "{\n");
-        proxyfileWriter->addData(FIZOP_SIM + SKE_SUFFIX +"();\n");
+    void ProxyBuildMng::startFinalizeEleSim(CLOCK_MODE clkMode){
+        proxyfileWriter->addData(genFunctionDec(true, FIZOP_SIM + getClockModeStr(clkMode)) + "{\n");
+        proxyfileWriter->addData(FIZOP_SIM + getClockModeStr(clkMode) + SKE_SUFFIX +"();\n");
         proxyfileWriter->addData("}\n");
     }
 
@@ -576,10 +588,18 @@ namespace kathryn{
         proxyfileWriter->addData("do{\n");
         /////// TODO add tricker Event
         proxyfileWriter->addData(USER_DEF   + USER_SUFFIX + SKE_SUFFIX + "();\n");
-        proxyfileWriter->addData(MAINOP_SIM + SKE_SUFFIX + "();\n");
+        proxyfileWriter->addData("///// do negative edge\n");
+        proxyfileWriter->addData(MAINOP_SIM + getClockModeStr(CM_NEGEDGE)   + SKE_SUFFIX + "();\n");
         if (userVcdCol){ proxyfileWriter->addData(VCD_COL + USER_SUFFIX     + SKE_SUFFIX + "();\n");}
         if (sysVcdCol) { proxyfileWriter->addData(VCD_COL + INTERNAL_SUFFIX + SKE_SUFFIX + "();\n");}
-        proxyfileWriter->addData(FIZOP_SIM + SKE_SUFFIX + "();\n");
+        proxyfileWriter->addData(FIZOP_SIM + getClockModeStr(CM_NEGEDGE)    + SKE_SUFFIX + "();\n");
+
+        proxyfileWriter->addData("///// do positive edge\n");
+        proxyfileWriter->addData(MAINOP_SIM + getClockModeStr(CM_POSEDGE)   + SKE_SUFFIX + "();\n");
+        if (userVcdCol){ proxyfileWriter->addData(VCD_COL + USER_SUFFIX     + SKE_SUFFIX + "();\n");}
+        if (sysVcdCol) { proxyfileWriter->addData(VCD_COL + INTERNAL_SUFFIX + SKE_SUFFIX + "();\n");}
+        proxyfileWriter->addData(FIZOP_SIM + getClockModeStr(CM_POSEDGE)    + SKE_SUFFIX + "();\n");
+
         if (perfCol){ proxyfileWriter->addData(PERF_COL + SKE_SUFFIX + "();\n");}
         proxyfileWriter->addData("kathryn_longrangeCnt++;\n");
         proxyfileWriter->addData("}"); //// out of while loop
@@ -606,6 +626,35 @@ namespace kathryn{
             "   return new ProxySimEvent();\n}\n\n"
         );
     }
+
+    std::vector<ModelProxyBuild*> ProxyBuildMng::screenClockMode(
+        CLOCK_MODE clkMode,
+        std::vector<ModelProxyBuild*> srcs){
+
+        std::vector<ModelProxyBuild*> result;
+        for (ModelProxyBuild* src: srcs){
+            if (src->getClockMode() ==  CM_CLK_UNUSED ||
+                src->getClockMode() ==  CM_AMT){
+                std::cout << TC_YELLOW
+                          << src->getValRep().getData()
+                          << " has no CLOCK sensitivity list "
+                          << TC_DEF << std::endl;
+            }
+            if (src->getClockMode() == clkMode){
+                result.push_back(src);
+            }
+        }
+        return result;
+    }
+
+    std::string ProxyBuildMng::getClockModeStr(CLOCK_MODE clkMode){
+        switch (clkMode){
+            case CM_POSEDGE: return CLK_MODE_POSE;
+            case CM_NEGEDGE: return CLK_MODE_NEG;
+            default: assert(false); return "";
+        }
+    }
+
 
 
     void ProxyBuildMng::startCompile(){

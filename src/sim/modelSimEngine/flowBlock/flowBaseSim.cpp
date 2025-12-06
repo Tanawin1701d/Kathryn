@@ -40,6 +40,8 @@ namespace kathryn{
         return SIM_VALREP_TYPE_ALL(bitSizeOfUll);
     }
 
+    CLOCK_MODE FlowBaseSimEngine::getClockMode(){return CM_CLK_UNUSED;}
+
 
     void FlowBaseSimEngine::getRecurVarName(std::vector<std::string>& result){
         result.push_back(getValRep().getData());
