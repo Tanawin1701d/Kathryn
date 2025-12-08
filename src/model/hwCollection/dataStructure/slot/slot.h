@@ -150,6 +150,20 @@ namespace kathryn{
             return resultCollector;
         }
 
+        std::vector<AssignMeta*> genAssignMetaForAll(std::vector<Operable*> srcOperables, ASM_TYPE asmType) const{
+            assert(getNumField() == srcOperables.size());
+            std::vector<AssignMeta*> resultCollector;
+            for (int desIdx = 0; desIdx < getNumField(); desIdx++){
+                auto [desOpr, desAsb] = hwFieldAt(desIdx);
+                Operable* srcOpr = srcOperables[desIdx];
+                assert(srcOpr != nullptr);
+                AssignMeta* assMeta = genAssignMeta(*srcOpr, *desAsb, asmType);
+                resultCollector.push_back(assMeta);
+            }
+
+            return resultCollector;
+        }
+
         std::vector<AssignMeta*> genAssignMetaForAll(
             const Slot& srcSlot,
             const std::vector<int>& srcMatchIdxs,
@@ -246,6 +260,14 @@ namespace kathryn{
             }
             return asmNode;
         }
+
+        static AsmNode* genGrpAsmNode(
+        const std::vector<AssignMeta*> & assignMetas){
+            auto* asmNode = new AsmNode(assignMetas);
+            return asmNode;
+        }
+
+
 
 
 
