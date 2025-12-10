@@ -55,16 +55,35 @@ namespace kathryn::o3{
         /**
          * RSV
          */
+
+        inline SlotMeta smLdSt{  //// for second stage system
+            { rrftag   , rdUse   , spec, specTag,
+              stBufData, stBufHit
+            },
+            { RRF_SEL  , 1       , 1   , SPECTAG_LEN,
+              DATA_LEN , 1
+            }
+        };
+
+        inline SlotMeta smStoreBuf{ //// for store buffer entry
+            { busy    ,  complete, spec     , specTag    ,
+              mem_addr
+            },
+            { 1       , 1        , 1        , SPECTAG_LEN,
+              ADDR_LEN
+            }
+        };
+
         inline SlotMeta smRsvBase {
-            {pc         , rrftag    , rdUse, aluOp       ,
+            {pc         , rrftag          , rdUse     , aluOp,
              spec       , specTag         ,
              phyIdx_1   , rsSel_1         , rsValid_1 ,
              phyIdx_2   , rsSel_2         , rsValid_2
             },
             ////////////////////////////////////////////////////////////////////
-            {ADDR_LEN   , RRF_SEL     , 1    , ALU_OP_WIDTH,
+            {ADDR_LEN   , RRF_SEL         , 1          , ALU_OP_WIDTH,
              1          , SPECTAG_LEN     ,
-             DATA_LEN   , SRC_A_SEL_WIDTH , 1           ,
+             DATA_LEN   , SRC_A_SEL_WIDTH , 1          ,
              DATA_LEN   , SRC_B_SEL_WIDTH , 1
             }
         };

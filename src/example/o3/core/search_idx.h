@@ -9,6 +9,9 @@
 #include "stageStruct.h"
 using namespace std;
 
+#define sValid first
+#define sIdx   second
+
 namespace kathryn::o3{
     typedef std::pair<Operable&, Operable&> SearchResult;
     ///////// valid / index binary

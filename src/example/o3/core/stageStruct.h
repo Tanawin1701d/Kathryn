@@ -68,6 +68,26 @@ namespace kathryn::o3{
         SyncMeta sync {"branchSync"};
     };
 
+    struct LdStStage{
+        SyncPip sync  {"ldStSync"};
+        SyncPip sync2 {"ldStLastSync"};
+        mWire(dmem_rdata, DATA_LEN);
+        mWire(dmem_we , 1);
+        mWire(dmem_rwaddr, ADDR_LEN); //// must mux with reading
+        mWire(dmem_wdata, DATA_LEN);
+        RegSlot lsRes {smLdSt};
+
+        LdStStage(){
+            dmem_rdata  .asInputGlob ("dmem_rdata");
+            dmem_we     .asOutputGlob("dmem_we");
+            dmem_rwaddr .asOutputGlob("dmem_rwaddr");
+            dmem_wdata  .asOutputGlob("dmem_wdata");
+
+
+        }
+
+    };
+
     struct CommitStage{
         SyncMeta sync {"commitSync"};
     };
@@ -163,6 +183,7 @@ namespace kathryn::o3{
         RsvStage    rs;
         ExecStage   ex;
         BranchStage br;
+        LdStStage   ldSt;
         CommitStage cm;
     };
 

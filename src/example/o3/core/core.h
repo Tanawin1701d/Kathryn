@@ -11,12 +11,14 @@
 #include "decoder.h"
 #include "dispatch.h"
 #include "execAlu.h"
+#include "execLdSt.h"
 #include "execBranch.h"
 #include "rob.h"
 //////// parameter
 #include "slotParam.h"
 //////// regmgmt + tagmgmt
 #include "stageStruct.h"
+#include "storeBuf.h"
 
 namespace kathryn::o3{
 
@@ -27,29 +29,40 @@ namespace kathryn::o3{
     /////// register architecture
     RegArch  regArch{tagMgmt.mpft};
     /////// reservation station
-    ORsv aluRsv     {smRsvBase + smRsvAlu, ALU_ENT_NUM, regArch};
-    IRsv branchRsv  {smRsvBase + smRsvBranch, BRANCH_ENT_SEL, "br", tagMgmt.bc};
+    ORsv       aluRsv     {smRsvBase + smRsvAlu   , ALU_ENT_NUM   , regArch};
+    IRsv       branchRsv  {smRsvBase + smRsvBranch, BRANCH_ENT_SEL, "br", tagMgmt.bc}; ///// warning for IRsv use index width to
+    IRsv       ldRsv      {smRsvBase + smRsvAlu   , LDST_ENT_SEL  , "ld", tagMgmt.bc};
+
+
+
 
     /////// pipeline manager
     PipStage pm;
     /////// reorder buffer
     mMod(prob, Rob, pm, regArch);
+    /////// store buffer
+    StoreBuf   storeBuf{pm.ldSt, tagMgmt.bc};
 
-    mMod(pFetch, FetchMod  , pm);
-    mMod(pDec  , DecMod    , pm     , tagMgmt); //// decoder
-    mMod(pDisp , DpMod     , pm     , aluRsv
-               , branchRsv , regArch, tagMgmt,  prob  ); //// dispathc
-    mMod(pExAlu, ExecAlu   , pm.ex  , regArch,
-                 prob      , aluRsv.execSrc  ); //// exec unit
-    mMod(pExBra, BranchExec, tagMgmt, regArch,
-                 pm        , prob   , branchRsv.execSrc); //// branch unit
+    mMod(pFetch,  FetchMod  , pm);
+    mMod(pDec  ,  DecMod    , pm     , tagMgmt); //// decoder
+    mMod(pDisp ,  DpMod     , pm     , aluRsv
+               ,  branchRsv , regArch, tagMgmt,  prob  ); //// dispathc
+
+    mMod(pExAlu,  ExecAlu   , pm.ex  , regArch,
+                  prob      , aluRsv.execSrc  ); //// exec unit
+    mMod(pExBra,  BranchExec, tagMgmt, regArch,
+                  pm        , prob   , branchRsv.execSrc); //// branch unit
+    mMod(pExLdSt, ExecLdSt  , pm.ldSt, regArch,
+                  tagMgmt.bc, prob   , ldRsv.execSrc,
+                  storeBuf);
 
 
     explicit Core(int x){
         ///// add reservation to bypass and prediction control
         regArch.bpp.addRsv(&aluRsv);
         regArch.bpp.addRsv(&branchRsv);
-        pExBra.rsvs = {&aluRsv, &branchRsv};
+        regArch.bpp.addRsv(&ldRsv);
+        pExBra.rsvs = {&aluRsv, &branchRsv, &ldRsv};
     }
 
     void flow() override{
@@ -59,11 +72,15 @@ namespace kathryn::o3{
         pExBra   .setSimProbe(&pipProbGrp.execBranch);
         aluRsv   .setSimProbe(&zyncProbGrp.issueAlu, &dataStructProbGrp.rsvAlu);
         branchRsv.setSimProbe(&zyncProbGrp.issueBranch, &dataStructProbGrp.rsvbranch);
+        //// todo set simprobe for ldst
 
         ///// build alu reservation station issue logic
         aluRsv.buildIssue(pm.ex.sync, tagMgmt.bc);
         ///// build branch reservation station internal logic
         branchRsv.buildIssue(pm.br.sync, tagMgmt.bc);
+        ///// build load/store reservation station internal logic
+        ldRsv.buildIssue(pm.ex.sync, tagMgmt.bc);
+
 
 
     }

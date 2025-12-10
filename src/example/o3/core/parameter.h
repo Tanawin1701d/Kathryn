@@ -54,7 +54,11 @@ namespace kathryn::o3{
     O3_PARAM_STR(isBranch);
     O3_PARAM_STR(pred_addr);
     O3_PARAM_STR(spec);
-    O3_PARAM_STR(specTag)
+    O3_PARAM_STR(specTag);
+
+    /// load store buffer
+    O3_PARAM_STR(complete);
+    O3_PARAM_STR(mem_addr);
 
     O3_PARAM_STR(busy);
     O3_PARAM_STR(sortBit);
@@ -77,7 +81,9 @@ namespace kathryn::o3{
 
     O3_PARAM_STR(desEqSrc1);
     O3_PARAM_STR(desEqSrc2);
-
+    ////// start from ldsdt
+    O3_PARAM_STR(stBufData); //// the data from
+    O3_PARAM_STR(stBufHit);
     ////// start from rsv
     O3_PARAM_STR(imm);
     O3_PARAM_STR(imm_br);

@@ -62,9 +62,21 @@ namespace kathryn{
             return _hwFieldMetas[idx];
         }
 
+        HwFieldMeta& hwFieldRefAt(const std::string& fieldName){
+            int fieldId = getIdx(fieldName);
+            mfAssert(isValidIdx(fieldId), "field name " + fieldName + " not found");
+            return hwFieldRefAt(fieldId);
+        }
+
         HwFieldMeta hwFieldAt(int idx) const{
             mfAssert(isValidIdx(idx), "get hw Field at " + std::to_string(idx) + " out of range");
             return _hwFieldMetas[idx];
+        }
+
+        HwFieldMeta hwFieldAt(const std::string& fieldName) const{
+            int fieldId = getIdx(fieldName);
+            mfAssert(isValidIdx(fieldId), "field name " + fieldName + " not found");
+            return hwFieldAt(fieldId);
         }
 
         void addHwFieldMeta(HwFieldMeta hwFieldMeta){

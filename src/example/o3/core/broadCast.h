@@ -25,6 +25,13 @@ namespace kathryn::o3{
             return suc & (sucTag == specIdx);
         }
 
+        opr& checkIsSuc(Slot& src){
+
+            opr& specOpr = *src.hwFieldAt(spec)._opr;
+            opr& specIdx  = *src.hwFieldAt(specTag)._opr;
+            return suc & specOpr & (sucTag == specIdx);
+        }
+
     };
 
 }

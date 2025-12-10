@@ -8,8 +8,7 @@
 #include "rsv.h"
 #include "search_idx.h"
 
-#define sValid first
-#define sIdx   second
+
 namespace kathryn::o3{
 
 
@@ -27,10 +26,10 @@ namespace kathryn::o3{
             allocPtr(mOprReg("allocPtr_" + debugName, indexSize)),
             b1 (searchIdx(_table, 1, true , bc, false)),
             e1 (searchIdx(_table, 1, false, bc, false)),
-            e0 (searchIdx(_table, 1, true , bc, false)),
+            e0 (searchIdx(_table, 0, false, bc, false)),
             nb1(searchIdx(_table, 1, true , bc, true )),
             ne1(searchIdx(_table, 1, false, bc, true )),
-            nb0(searchIdx(_table, 1, true , bc, true )){
+            nb0(searchIdx(_table, 0, true , bc, true )){
             allocPtr.makeResetEvent();
         }
 
@@ -75,7 +74,7 @@ namespace kathryn::o3{
             /*
              *  the required Idx
              */
-            zif(e0.sValid){ ///  there is empty room
+            zif(e0.sValid){ ///  there is empty slot
                 zif((b1.sIdx == 0) && (e1.sIdx == (_table.getNumRow()-1))){ ///// zero bubble
                     //// it may be entirely zeros but we will check it at slotReady(iw)
                     checkIdx = (e0.sIdx + 1);
