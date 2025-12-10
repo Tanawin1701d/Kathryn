@@ -17,8 +17,8 @@ namespace kathryn{
 
     class Table{
 
-    static constexpr char OLDEST_USER_VALID_KW[] = "userValidCompare";
-    static constexpr char OLDEST_SYSTEM_SEQ_KW[] = "systemInOldestSec";
+    static constexpr char ORDERED_USER_VALID_KW[] = "userValidCompare";
+    static constexpr char ORDERED_SYSTEM_SEQ_OLD_KW[] = "systemInOldestSec";
 
 
     protected:
@@ -120,20 +120,25 @@ namespace kathryn{
         std::pair<WireSlot, OH> doReducOHIdx(const std::function<Operable&(WireSlot& lhs, Operable* lidx,
                                                                      WireSlot& rhs, Operable* ridx)>& cusLogic);
 
-        ReducNode findMatchedOldest(const std::vector<ReducNode>& initReducNodes,
+        ReducNode findMatchedOrdered(bool isNewest,
+                                    const std::vector<ReducNode>& initReducNodes,
                                     bool requiredIdx);
 
-        WireSlot* augmentForOldestSearch(int rowIdx,
+        WireSlot* augmentForOrderedSearch(int rowIdx,
                                          Operable& OldestStartIndex,
-                                         const std::function<Operable&(Slot& src)>& userValidFunc);
+                                         const std::function<Operable&(RegSlot& src)>& userValidFunc);
 
         std::pair<WireSlot, Operable&>
-        findMatchedOldestBinIdx(Operable& oldestStartIndex,
-                                const std::function<Operable&(Slot& src)>& userValidFunc);
+        findMBO_BIDX(
+            bool isNewest, ///// otherwise it is oldest
+            Operable& oldestStartIndex,
+            const std::function<Operable&(RegSlot& src)>& userValidFunc);
 
         std::pair<WireSlot, OH>
-                  findMatchedOldestOHIdx(Operable& oldestStartIndex,
-                                         const std::function<Operable&(Slot& src)>& userValidFunc);
+        findMBO_OHIDX(
+            bool isNewest,
+            Operable& oldestStartIndex,
+            const std::function<Operable&(RegSlot& src)>& userValidFunc);
 
         /**
          * static slicing

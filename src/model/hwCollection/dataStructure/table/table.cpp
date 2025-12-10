@@ -458,7 +458,8 @@ namespace kathryn{
 
 
 
-    Table::ReducNode Table::findMatchedOldest(
+    Table::ReducNode Table::findMatchedOrdered(
+        bool isNewest,
         const std::vector<ReducNode>& initReducNodes,
         bool requiredIdx){
 
@@ -466,41 +467,64 @@ namespace kathryn{
         ReducNode result =
             doReduceBase(initReducNodes,
                          [&](WireSlot& lhs, Operable* lidx, WireSlot& rhs, Operable* ridx)-> opr&{
-                              return (lhs(OLDEST_USER_VALID_KW) &  (~rhs(OLDEST_USER_VALID_KW)))    ||
-                                     (lhs(OLDEST_USER_VALID_KW) &  ( rhs(OLDEST_USER_VALID_KW)) & lhs(OLDEST_SYSTEM_SEQ_KW));
+
+                             /**
+                              *  |
+                              *  |------ newest
+                              *  |------ start Ptr
+                              *  |------ oldest
+                              *  |------
+                              */
+
+                             ////// newst
+                             if (isNewest){
+                                 return (lhs(ORDERED_USER_VALID_KW) &  (~rhs(ORDERED_USER_VALID_KW)))    || ///// ordinary case
+
+                                       (  lhs(ORDERED_USER_VALID_KW)      & rhs(ORDERED_USER_VALID_KW) & /// if both equal select left only right is in old region and we in newer region
+                                        (~lhs(ORDERED_SYSTEM_SEQ_OLD_KW)) & rhs(ORDERED_SYSTEM_SEQ_OLD_KW));
+                             }
+                             ////// oldest
+                             return (lhs(ORDERED_USER_VALID_KW) &  (~rhs(ORDERED_USER_VALID_KW)))    || ///// ordinary case
+                                    (
+                                     lhs(ORDERED_USER_VALID_KW) & rhs(ORDERED_USER_VALID_KW) & /// if both equal select left only right is in old region
+                                    (lhs(ORDERED_SYSTEM_SEQ_OLD_KW) == rhs(ORDERED_SYSTEM_SEQ_OLD_KW))
+                                    ); //// left only when it is in the same region
+
+
                          },
                         requiredIdx);
         return result;
 
     }
 
-    WireSlot* Table::augmentForOldestSearch(int rowIdx,
+    WireSlot* Table::augmentForOrderedSearch(int rowIdx,
                                             Operable& OldestStartIndex,
-                                            const std::function<Operable&(Slot& src)>& userValidFunc){
+                                            const std::function<Operable&(RegSlot& src)>& userValidFunc){
 
         assert(rowIdx < getNumRow());
         auto* result =
         new WireSlot(*static_cast<Slot*>(_rows[rowIdx]), "augOldest_" + std::to_string(rowIdx));
         ////// do augment wire
-        result->addWire(OLDEST_USER_VALID_KW, userValidFunc(*_rows[rowIdx]));
-        result->addWire(OLDEST_SYSTEM_SEQ_KW,  OldestStartIndex <= rowIdx);
+        result->addWire(ORDERED_USER_VALID_KW, userValidFunc(*_rows[rowIdx]));
+        result->addWire(ORDERED_SYSTEM_SEQ_OLD_KW,  OldestStartIndex <= rowIdx);
         return result;
 
     }
 
     std::pair<WireSlot, Operable&>
-        Table::findMatchedOldestBinIdx(Operable& oldestStartIndex,
-                                       const std::function<Operable&(Slot& src)>& userValidFunc){
+        Table::findMBO_BIDX(bool isNewest,
+                            Operable& oldestStartIndex,
+                            const std::function<Operable&(RegSlot& src)>& userValidFunc){
 
         assert(isSufficientBinIdx(oldestStartIndex));
 
         std::vector<ReducNode> initReducNodes;
         for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
             Val*      idxVal  = &makeOprVal("initBinIdxOpr" + std::to_string(rowIdx), getSufficientIdxSize(false), rowIdx);
-            WireSlot* augSlot = augmentForOldestSearch(rowIdx, oldestStartIndex, userValidFunc);
+            WireSlot* augSlot = augmentForOrderedSearch(rowIdx, oldestStartIndex, userValidFunc);
             initReducNodes.push_back({augSlot, idxVal});
         }
-        ReducNode finalNode = findMatchedOldest(initReducNodes, true);
+        ReducNode finalNode = findMatchedOrdered(isNewest, initReducNodes, true);
         WireSlot result(*finalNode.slot);
         Operable& resultIdx = *finalNode.idx;
         finalNode.destroy();
@@ -509,19 +533,21 @@ namespace kathryn{
 
     }
 
+
     std::pair<WireSlot, OH>
-        Table::findMatchedOldestOHIdx(Operable& oldestStartIndex,
-                                    const std::function<Operable&(Slot& src)>& userValidFunc){
+        Table::findMBO_OHIDX(bool isNewest,
+                                       Operable& oldestStartIndex,
+                                       const std::function<Operable&(RegSlot& src)>& userValidFunc){
 
         assert(isSufficientBinIdx(oldestStartIndex));
 
         std::vector<ReducNode> initReducNodes;
         for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
             Val*      idxVal  = &makeOprVal("initOhIdxOpr" + std::to_string(rowIdx), getSufficientIdxSize(true), ((ull) 1) << rowIdx);
-            WireSlot* augSlot = augmentForOldestSearch(rowIdx, oldestStartIndex, userValidFunc);
+            WireSlot* augSlot = augmentForOrderedSearch(rowIdx, oldestStartIndex, userValidFunc);
             initReducNodes.push_back({augSlot, idxVal});
         }
-        ReducNode finalNode = findMatchedOldest(initReducNodes, true);
+        ReducNode finalNode = findMatchedOrdered(isNewest, initReducNodes, true);
         WireSlot result(*finalNode.slot);
         Operable& resultIdx = *finalNode.idx;
         finalNode.destroy();
