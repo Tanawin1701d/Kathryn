@@ -13,7 +13,13 @@
 
 namespace kathryn{
 
+
+
     class Table{
+
+    static constexpr char OLDEST_USER_VALID_KW[] = "userValidCompare";
+    static constexpr char OLDEST_SYSTEM_SEQ_KW[] = "systemInOldestSec";
+
 
     protected:
         SlotMeta _meta;
@@ -106,13 +112,28 @@ namespace kathryn{
         ReducNode doReduceBase(const std::vector<ReducNode>& initReducNodes,
                                const std::function<Operable&(WireSlot& lhs, Operable* lidx,
                                                        WireSlot& rhs, Operable* ridx)>& cusLogic,
-                                                       bool requiredIdx);
+                               bool requiredIdx);
         WireSlot doReducNoIdx(const std::function<Operable&(WireSlot& lhs, Operable* lidx,
                                                       WireSlot& rhs, Operable* ridx)>& cusLogic);
         std::pair<WireSlot, Operable&> doReducBinIdx(const std::function<Operable&(WireSlot& lhs, Operable* lidx,
                                                                              WireSlot& rhs, Operable* ridx)>& cusLogic);
         std::pair<WireSlot, OH> doReducOHIdx(const std::function<Operable&(WireSlot& lhs, Operable* lidx,
                                                                      WireSlot& rhs, Operable* ridx)>& cusLogic);
+
+        ReducNode findMatchedOldest(const std::vector<ReducNode>& initReducNodes,
+                                    bool requiredIdx);
+
+        WireSlot* augmentForOldestSearch(int rowIdx,
+                                         Operable& OldestStartIndex,
+                                         const std::function<Operable&(Slot& src)>& userValidFunc);
+
+        std::pair<WireSlot, Operable&>
+        findMatchedOldestBinIdx(Operable& oldestStartIndex,
+                                const std::function<Operable&(Slot& src)>& userValidFunc);
+
+        std::pair<WireSlot, OH>
+                  findMatchedOldestOHIdx(Operable& oldestStartIndex,
+                                         const std::function<Operable&(Slot& src)>& userValidFunc);
 
         /**
          * static slicing

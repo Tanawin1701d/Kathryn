@@ -457,6 +457,81 @@ namespace kathryn{
     }
 
 
+
+    Table::ReducNode Table::findMatchedOldest(
+        const std::vector<ReducNode>& initReducNodes,
+        bool requiredIdx){
+
+        //// key words to compare   userValidCompare, systemInOldSeq
+        ReducNode result =
+            doReduceBase(initReducNodes,
+                         [&](WireSlot& lhs, Operable* lidx, WireSlot& rhs, Operable* ridx)-> opr&{
+                              return (lhs(OLDEST_USER_VALID_KW) &  (~rhs(OLDEST_USER_VALID_KW)))    ||
+                                     (lhs(OLDEST_USER_VALID_KW) &  ( rhs(OLDEST_USER_VALID_KW)) & lhs(OLDEST_SYSTEM_SEQ_KW));
+                         },
+                        requiredIdx);
+        return result;
+
+    }
+
+    WireSlot* Table::augmentForOldestSearch(int rowIdx,
+                                            Operable& OldestStartIndex,
+                                            const std::function<Operable&(Slot& src)>& userValidFunc){
+
+        assert(rowIdx < getNumRow());
+        auto* result =
+        new WireSlot(*static_cast<Slot*>(_rows[rowIdx]), "augOldest_" + std::to_string(rowIdx));
+        ////// do augment wire
+        result->addWire(OLDEST_USER_VALID_KW, userValidFunc(*_rows[rowIdx]));
+        result->addWire(OLDEST_SYSTEM_SEQ_KW,  OldestStartIndex <= rowIdx);
+        return result;
+
+    }
+
+    std::pair<WireSlot, Operable&>
+        Table::findMatchedOldestBinIdx(Operable& oldestStartIndex,
+                                       const std::function<Operable&(Slot& src)>& userValidFunc){
+
+        assert(isSufficientBinIdx(oldestStartIndex));
+
+        std::vector<ReducNode> initReducNodes;
+        for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
+            Val*      idxVal  = &makeOprVal("initBinIdxOpr" + std::to_string(rowIdx), getSufficientIdxSize(false), rowIdx);
+            WireSlot* augSlot = augmentForOldestSearch(rowIdx, oldestStartIndex, userValidFunc);
+            initReducNodes.push_back({augSlot, idxVal});
+        }
+        ReducNode finalNode = findMatchedOldest(initReducNodes, true);
+        WireSlot result(*finalNode.slot);
+        Operable& resultIdx = *finalNode.idx;
+        finalNode.destroy();
+        ///// we have to delete the augmented filed
+        return {result(0, getMeta().getNumField()-2), resultIdx};
+
+    }
+
+    std::pair<WireSlot, OH>
+        Table::findMatchedOldestOHIdx(Operable& oldestStartIndex,
+                                    const std::function<Operable&(Slot& src)>& userValidFunc){
+
+        assert(isSufficientBinIdx(oldestStartIndex));
+
+        std::vector<ReducNode> initReducNodes;
+        for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
+            Val*      idxVal  = &makeOprVal("initOhIdxOpr" + std::to_string(rowIdx), getSufficientIdxSize(true), ((ull) 1) << rowIdx);
+            WireSlot* augSlot = augmentForOldestSearch(rowIdx, oldestStartIndex, userValidFunc);
+            initReducNodes.push_back({augSlot, idxVal});
+        }
+        ReducNode finalNode = findMatchedOldest(initReducNodes, true);
+        WireSlot result(*finalNode.slot);
+        Operable& resultIdx = *finalNode.idx;
+        finalNode.destroy();
+        ///// we have to delete the augmented filed
+        return {result(0, getMeta().getNumField()-2), OH(resultIdx)};
+
+    }
+
+
+
     /**
      * static slicing
      */
