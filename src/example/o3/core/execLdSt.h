@@ -17,13 +17,14 @@ namespace kathryn::o3{
 
     struct ExecLdSt: Module{
 
-    LdStStage& lss;
-    RegArch&   regArch;
-    BroadCast& bc;
-    Rob&       rob;
-    RegSlot&   src;
-    ByPass&    bp;
-    StoreBuf&  stBuf;
+    LdStStage&   lss;
+    RegArch&     regArch;
+    BroadCast&   bc;
+    Rob&         rob;
+    RegSlot&     src;
+    RegSlot&     lsRes; /// load store result stage
+    ByPass&      bp;
+    StoreBuf&    stBuf;
     PipSimProbe* psp1 = nullptr;
     PipSimProbe* psp2 = nullptr;
 
@@ -39,9 +40,12 @@ namespace kathryn::o3{
         bc(bc),
         rob(rob),
         src(src),
+        lsRes(lss.lsRes),
         bp(regArch.bpp.addByPassEle()),
         stBuf(stBuf){
+
         lss.sync.setTagTracker(src);
+        lss.sync2.setTagTracker(lsRes);
         //// set tag tracker
     }
 
@@ -54,17 +58,14 @@ namespace kathryn::o3{
         opr& isLoad    = src(rdUse);
         opr& data      = src(phyIdx_2);
         opr& effAddr   = src(phyIdx_1) + src(imm);
-        RegSlot& lsRes = lss.lsRes; /// the second stage data
 
         pip(lss.sync){ tryInitProbe(psp1);
             zyncc(lss.sync2, (isLoad || (!stBuf.isFull()))){
-
                 //////assign ordinaty data to next stage rrftag. rdIse. spec. spectag
                 lsRes <<= src;
                 zif(bc.checkIsSuc(src)){
                     lsRes(spec) <<= 0; /// on flight clean data
                 }
-
                 ////// assign specific role
                 zif(isLoad){ /// try to read data from memory
                     auto[buf_found, buf_data] =  stBuf.searchNewest(effAddr);
@@ -78,7 +79,6 @@ namespace kathryn::o3{
                 }zelse{ /// store data into buffer
                     stBuf.onNewEntry(src, data, effAddr); /// store on buffer
                 }
-
             }
         }
         //////// second stage

@@ -11,13 +11,15 @@ namespace kathryn::o3{
 
         struct ORsv: RsvBase{
         RegArch&   regArch;
+        bool       sortReq = false;
         mWire(checkIdx, _table.getSufficientIdxSize(true));
-
         mWire(dbg_isSlotReady, 1);
 
-        ORsv(SlotMeta meta, int amtRow, RegArch& regArch):
-            RsvBase(smRsvO + meta, amtRow),
-            regArch(regArch){}
+        ORsv(SlotMeta meta, int amtRow,
+            RegArch& regArch, const SlotMeta& osm = smRsvO):
+            RsvBase(osm + meta, amtRow),
+            regArch(regArch),
+            sortReq(osm.isThereField(sortBit)){}
 
         void resetSortBit(){
             SET_ASM_PRI_TO_MANUAL(RSV_SORTBIT_RST_PRED_PRIORITY);
@@ -29,7 +31,9 @@ namespace kathryn::o3{
         }
 
         void writeEntry(OH ohIdx, WireSlot& iw) override{
-            resetSortBit();
+            if (sortReq){
+                resetSortBit();
+            }
             RsvBase::writeEntry(ohIdx, iw);
         }
 
@@ -60,18 +64,21 @@ namespace kathryn::o3{
                     WireSlot& rhs, Operable* ridx)-> Operable&{
                     lhs.tryAddWire(entry_ready, slotReady(lhs));
                     rhs.tryAddWire(entry_ready, slotReady(rhs));
-                    auto& readyEq    = lhs(entry_ready) == rhs(entry_ready);
-                    auto& sortBitEq = lhs(sortBit) == rhs(sortBit);
 
-                    return
-                        (lhs(entry_ready) && (~rhs(entry_ready))) ||
-                        (readyEq && (lhs(sortBit) < rhs(sortBit))) ||
-                        (readyEq &&  sortBitEq && (lhs(rrftag) < rhs(rrftag)));
+                    if (sortReq){
+                        auto& readyEq   = lhs(entry_ready) == rhs(entry_ready);
+                        auto& sortBitEq = lhs(sortBit) == rhs(sortBit);
+                        return
+                            (lhs(entry_ready) && (~rhs(entry_ready))) ||
+                            (readyEq && (lhs(sortBit) < rhs(sortBit))) ||
+                            (readyEq &&  sortBitEq && (lhs(rrftag) < rhs(rrftag)));
+                    }
+                    ////// no sort request
+                    return lhs(entry_ready);
                 }
             );
 
             checkIdx = ohIdx.getIdx();
-
             /**
              * issue sync
              */

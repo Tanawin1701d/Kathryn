@@ -40,6 +40,8 @@
 #include "model/hwCollection/dataStructure/slot/regSlot.h"
 #include "model/hwCollection/dataStructure/slot/wireSlot.h"
 #include "model/hwCollection/dataStructure/table/table.h"
+#include "model/hwCollection/dataStructure/mux/mux.h"
+
 
 /** clk mode*/
 #include "model/controller/clockMode.h"

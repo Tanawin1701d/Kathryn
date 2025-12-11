@@ -471,8 +471,8 @@ namespace kathryn{
                              /**
                               *  |
                               *  |------ newest
-                              *  |------ start Ptr
-                              *  |------ oldest
+                              *  |------ start Ptr oldest
+                              *  |------
                               *  |------
                               */
 

@@ -14,7 +14,6 @@
 namespace kathryn::o3{
 
     struct ExecAlu: Module{
-
     ExecStage& exSt;
     RegArch&   regArch;
     Rob&       rob;

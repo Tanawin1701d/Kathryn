@@ -68,6 +68,10 @@ namespace kathryn::o3{
         SyncMeta sync {"branchSync"};
     };
 
+    // struct MulStage{
+    //     SyncPip sync {"mulSync"};
+    // };
+
     struct LdStStage{
         SyncPip sync  {"ldStSync"};
         SyncPip sync2 {"ldStLastSync"};
@@ -182,6 +186,7 @@ namespace kathryn::o3{
         DispStage   ds;
         RsvStage    rs;
         ExecStage   ex;
+        ExecStage   mu;
         BranchStage br;
         LdStStage   ldSt;
         CommitStage cm;

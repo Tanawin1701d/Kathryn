@@ -11,8 +11,10 @@
 #include "decoder.h"
 #include "dispatch.h"
 #include "execAlu.h"
+#include "execMul.h"
 #include "execLdSt.h"
 #include "execBranch.h"
+
 #include "rob.h"
 //////// parameter
 #include "slotParam.h"
@@ -28,8 +30,10 @@ namespace kathryn::o3{
     TagMgmt  tagMgmt;
     /////// register architecture
     RegArch  regArch{tagMgmt.mpft};
-    /////// reservation station
+    /////// reservation station (out order)
     ORsv       aluRsv     {smRsvBase + smRsvAlu   , ALU_ENT_NUM   , regArch};
+    ORsv       mulRsv     {smRsvBase + smRsvMul   , MUL_ENT_NUM   , regArch, smRsvI};
+    /////// reservation station (in order)
     IRsv       branchRsv  {smRsvBase + smRsvBranch, BRANCH_ENT_SEL, "br", tagMgmt.bc}; ///// warning for IRsv use index width to
     IRsv       ldRsv      {smRsvBase + smRsvAlu   , LDST_ENT_SEL  , "ld", tagMgmt.bc};
 
@@ -50,6 +54,8 @@ namespace kathryn::o3{
 
     mMod(pExAlu,  ExecAlu   , pm.ex  , regArch,
                   prob      , aluRsv.execSrc  ); //// exec unit
+    mMod(pMulAlu, ExecMul   , pm.mu  , regArch,
+                  prob      , mulRsv.execSrc  ); //// multiplier unit
     mMod(pExBra,  BranchExec, tagMgmt, regArch,
                   pm        , prob   , branchRsv.execSrc); //// branch unit
     mMod(pExLdSt, ExecLdSt  , pm.ldSt, regArch,
@@ -62,7 +68,9 @@ namespace kathryn::o3{
         regArch.bpp.addRsv(&aluRsv);
         regArch.bpp.addRsv(&branchRsv);
         regArch.bpp.addRsv(&ldRsv);
-        pExBra.rsvs = {&aluRsv, &branchRsv, &ldRsv};
+        regArch.bpp.addRsv(&mulRsv);
+        pExBra.rsvs = {&aluRsv   , &mulRsv,
+                       &branchRsv, &ldRsv};
     }
 
     void flow() override{
@@ -72,10 +80,12 @@ namespace kathryn::o3{
         pExBra   .setSimProbe(&pipProbGrp.execBranch);
         aluRsv   .setSimProbe(&zyncProbGrp.issueAlu, &dataStructProbGrp.rsvAlu);
         branchRsv.setSimProbe(&zyncProbGrp.issueBranch, &dataStructProbGrp.rsvbranch);
-        //// todo set simprobe for ldst
+        //// todo set simprobe for ldst and mul
 
         ///// build alu reservation station issue logic
         aluRsv.buildIssue(pm.ex.sync, tagMgmt.bc);
+        ///// build alu reservation station issue logic
+        mulRsv.buildIssue(pm.mu.sync, tagMgmt.bc);
         ///// build branch reservation station internal logic
         branchRsv.buildIssue(pm.br.sync, tagMgmt.bc);
         ///// build load/store reservation station internal logic
