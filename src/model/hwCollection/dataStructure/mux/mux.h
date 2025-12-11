@@ -36,6 +36,39 @@ namespace kathryn{
 
     }
 
+    inline Operable& mux(Operable& sel, const std::vector<Operable*>& srcs){
+
+        int indexSize   = sel.getOperableSlice().getSize();
+        int capableSize = 1 << indexSize;
+        assert(indexSize >= 1);
+        mfAssert(capableSize == srcs.size(), "the input amount should be 2^(sel)");
+
+        //// initialize queue
+        std::queue<Operable*> muxQueue;
+        for (int idx = 0; idx < capableSize; idx++){
+            assert(srcs[idx] != nullptr);
+            muxQueue.push(srcs[idx]);
+        }
+
+        //// generate mux
+        int bitIdx = 0;
+        while (muxQueue.size() > 1){
+            int size = muxQueue.size();
+            for (int piece = 0; piece < size; piece+=2){
+                Operable* first   = muxQueue.front(); muxQueue.pop();
+                Operable* second  = muxQueue.front(); muxQueue.pop();
+                Operable& nextOpr = mux(*sel.doSlice({bitIdx, bitIdx+1}), *first, *second);
+                muxQueue.push(&nextOpr);
+            }
+            bitIdx +=1;
+        }
+
+        assert(muxQueue.size() == 1);
+        return *muxQueue.front();
+    }
+
+
+
 }
 
 #endif //MODEL_HWCOLLECTION_DATASTRUCTURE_MUX_MUX_H
