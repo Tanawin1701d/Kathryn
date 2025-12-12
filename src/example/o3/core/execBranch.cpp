@@ -4,6 +4,7 @@
 
 #include "execBranch.h"
 #include "rsv.h"
+#include "rsvs.h"
 
 namespace kathryn::o3{
 
@@ -25,7 +26,7 @@ namespace kathryn::o3{
         tagMgmt.mpft.onMissPred();
         tagMgmt.tagGen.onMisPred(misTag);
         ////// do recovery on the reservation station
-        for (RsvBase* rsv: rsvs){
+        for (RsvBase* rsv: rsvs.rsvs){
             rsv->onMisPred(fixTag);
         }
         ////// do recovery on register architecture
@@ -46,7 +47,7 @@ namespace kathryn::o3{
         tagMgmt.tagGen.onSucPred();
 
         //// do update the reservartion stationo
-        for (RsvBase* rsv: rsvs){
+        for (RsvBase* rsv: rsvs.rsvs){
             rsv->onSucPred(sucTag);
         }
 

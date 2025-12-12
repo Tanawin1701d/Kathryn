@@ -4,6 +4,7 @@
 #include "stageStruct.h"
 
 #include "rsv.h"
+#include "rsvs.h"
 
 
 namespace kathryn::o3{
@@ -13,7 +14,7 @@ namespace kathryn::o3{
     void ByPassPool::doByPass(ByPass& bp){
         bp.valid = 1;
         //////// do override all over rsv
-        for (RsvBase* rsv : _rsvs){
+        for (RsvBase* rsv : _rsvs->rsvs){
             rsv->onBypass(bp);
         }
     }

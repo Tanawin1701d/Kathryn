@@ -21,8 +21,6 @@
 
 namespace kathryn::o3{
 
-
-
     struct FetchStage{
         mReg(curPc, ADDR_LEN);
         SlotMeta meta{smFetch};
@@ -117,29 +115,21 @@ namespace kathryn::o3{
 
     };
 
-    struct RsvBase;
+    struct Rsvs;
     struct ByPassPool{
 
-        std::vector<ByPass*> _bps;
-        std::vector<RsvBase*> _rsvs;
+        std::vector<ByPass*>  _bps;
+        Rsvs*                 _rsvs;
 
         ByPass& addByPassEle(){
             _bps.emplace_back(new ByPass(_bps.size()));
             return **_bps.rbegin();
         }
 
-        ~ByPassPool(){
-            for (ByPass* bp: _bps){delete bp;}
-        }
+        ~ByPassPool(){ for (ByPass* bp: _bps){delete bp;}}
 
-        void addRsv(RsvBase* rsv){
-            _rsvs.push_back(rsv);
-        }
-
-        void tryAssignByPassAll(Operable& desIdent, Reg& desVal){
-            for (auto& bp : _bps){
-                bp->tryAssignByPass(desIdent, desVal);
-            }
+        void addRsvs(Rsvs* rsvs){
+            _rsvs = rsvs;
         }
 
         opr& isByPassing(opr& rrfIdx){
@@ -159,6 +149,12 @@ namespace kathryn::o3{
         }
 
         void doByPass(ByPass& bp);
+
+        // void tryAssignByPassAll(Operable& desIdent, Reg& desVal){
+        //     for (auto& bp : _bps){
+        //         bp->tryAssignByPass(desIdent, desVal);
+        //     }
+        // }
 
     };
 
@@ -185,7 +181,7 @@ namespace kathryn::o3{
         DecodeStage dc;
         DispStage   ds;
         RsvStage    rs;
-        ExecStage   ex;
+        ExecStage   ex[2];
         ExecStage   mu;
         BranchStage br;
         LdStStage   ldSt;

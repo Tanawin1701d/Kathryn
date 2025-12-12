@@ -13,6 +13,7 @@
 #include "stageStruct.h"
 #include "isaParam.h"
 #include "srcSel.h"
+#include "rsvs.h"
 
 
 namespace kathryn::o3{
@@ -24,9 +25,9 @@ namespace kathryn::o3{
         RegArch&      regArch;
         PipStage&     pm;
         Rob&          rob;
-        RegSlot&      src;
         ByPass&       bp;
-        std::vector<RsvBase*> rsvs;
+        Rsvs&         rsvs;
+        RegSlot&      src;
         PipSimProbe* psp = nullptr;
         mWire(calAddr, ADDR_LEN);
         mWire(brTaken, 1);
@@ -36,13 +37,14 @@ namespace kathryn::o3{
                             RegArch& regArch,
                             PipStage& pm,
                             Rob& rob,
-                            RegSlot& src) :
+                            Rsvs& rsvs) :
         tagMgmt(tagMgmt),
         regArch(regArch),
         pm(pm),
         rob(rob),
-        src(src),
-        bp(regArch.bpp.addByPassEle()){}
+        bp(regArch.bpp.addByPassEle()),
+        rsvs(rsvs),
+        src(rsvs.br.execSrc){}
 
         void setSimProbe(PipSimProbe* in_psp){psp = in_psp;}
 

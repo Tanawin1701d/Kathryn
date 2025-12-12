@@ -23,14 +23,15 @@ namespace kathryn::o3{
 
     struct DpMod: Module{
         PipStage&    pm;
-        ORsv&        aluRsv;
-        IRsv&        branchRSV;
+        Rsvs&         rsvs;
         RegArch&     regArch;
         TagMgmt&     tagMgmt;
         Rob&         rob;
-
-        mWire(aluRsvIdx2_final   , ALU_ENT_NUM);  //// it is one hot index
+                                    //// it join the two rsv together
+        mWire(aluRsvIdx2_final   , ALU_ENT_SEL + 1);  //// it is one hot index
+        mWire(mulRsvIdx2_final   , MUL_ENT_SEL);
         mWire(branchRsvIdx2_final, BRANCH_ENT_SEL); //// it is binary index
+        mWire(lsRsvIdx2_final    , LDST_ENT_SEL);
 
         mWire(dbg_isAluRsvAllocatable, 1);
         mWire(dbg_isBranchRsvAllocatable, 1);
@@ -39,14 +40,14 @@ namespace kathryn::o3{
         mWire(dbg_isDisp1, 1);
         mWire(dbg_isDisp2, 1);
 
-        DpMod(PipStage& pm, ORsv& aluRsv, IRsv& branchRSV,
-              RegArch& regArch, TagMgmt& tagMgmt, Rob& rob):
-            pm         (pm),
-            aluRsv     (aluRsv),
-            branchRSV  (branchRSV),
-            regArch    (regArch),
-            tagMgmt    (tagMgmt),
-            rob        (rob){}
+        DpMod(PipStage& pm    , Rsvs& rsvs,
+              RegArch& regArch, TagMgmt& tagMgmt,
+              Rob& rob):
+            pm     (pm),
+            rsvs   (rsvs),
+            regArch(regArch),
+            tagMgmt(tagMgmt),
+            rob    (rob){}
 
         Operable& isRsvRequired(RegSlot& dcd, int RS_ENT_IDX){
             return (dcd(rsEnt) == RS_ENT_IDX) & (~dcd(invalid));
@@ -108,21 +109,29 @@ namespace kathryn::o3{
             auto& dcd2     = pm.dc.dcd2;
             auto& dcdShare = pm.dc.dcdShared;
 
-            auto[aluRsvBusy , aluRsvIdx ] = aluRsv.buildFreeOhIndex(nullptr);
-            auto[aluRsvBusy2, aluRsvIdx2] = aluRsv.buildFreeOhIndex(&aluRsvIdx);
+            //////// alu index calculation
+            auto[aluRsvBusy , aluRsvIdx ] = rsvs.alu1.buildFreeIndex(nullptr   , &rsvs.alu2);
+            auto[aluRsvBusy2, aluRsvIdx2] = rsvs.alu1.buildFreeIndex(&aluRsvIdx, &rsvs.alu2);
             opr& isAluRsvAllocatable = isAlocatableForRsv(aluRsvBusy, aluRsvBusy2, RS_ENT_ALU);
+            aluRsvIdx2_final = mux(dcd1(rsEnt) == RS_ENT_ALU, aluRsvIdx, aluRsvIdx2);
 
-            ///// dcd1 supposed to be correct
-            zif (dcd1(rsEnt) == RS_ENT_ALU) aluRsvIdx2_final = aluRsvIdx2.getIdx();
-            zelse                           aluRsvIdx2_final = aluRsvIdx.getIdx();
+            //////// mul index calculation
+            auto[mulRsvBusy , mulRsvIdx ] = rsvs.mul.buildFreeIndex(nullptr   );
+            auto[mulRsvBusy2, mulRsvIdx2] = rsvs.mul.buildFreeIndex(&mulRsvIdx);
+            opr& isMulRsvAllocatable = isAlocatableForRsv(mulRsvBusy, mulRsvBusy2, RS_ENT_MUL);
+            mulRsvIdx2_final = mux(dcd1(rsEnt) == RS_ENT_MUL, mulRsvIdx, mulRsvIdx2);
 
-            auto[branchRsvBusy , branchRsvIdx ] = branchRSV.buildFreeBinIndex(nullptr);
-            auto[branchRsvBusy2, branchRsvIdx2] = branchRSV.buildFreeBinIndex(&(branchRsvIdx+1));
+            //////// branch index calculation
+            auto[branchRsvBusy , branchRsvIdx ] = rsvs.br.buildFreeIndex(nullptr);
+            auto[branchRsvBusy2, branchRsvIdx2] = rsvs.br.buildFreeIndex(&(branchRsvIdx+1));
             opr& isBranchRsvAllocatable = isAlocatableForRsv(branchRsvBusy, branchRsvBusy2, RS_ENT_BRANCH);
+            branchRsvIdx2_final = mux(dcd1(rsEnt) == RS_ENT_BRANCH, branchRsvIdx, branchRsvIdx2);
 
-            ///// dcd2 supposed to be correct no need to check the valid the exec sequence make ti
-            zif (dcd1(rsEnt) == RS_ENT_BRANCH) branchRsvIdx2_final = branchRsvIdx2;
-            zelse                              branchRsvIdx2_final = branchRsvIdx;
+            //////// ls index calculation
+            auto[lsRsvBusy , lsRsvIdx ] = rsvs.ls.buildFreeIndex(nullptr);
+            auto[lsRsvBusy2, lsRsvIdx2] = rsvs.ls.buildFreeIndex(&(lsRsvIdx+1));
+            opr& isLsRsvAllocatable = isAlocatableForRsv(lsRsvBusy, lsRsvBusy2, RS_ENT_LDST);
+            lsRsvIdx2_final = mux(dcd1(rsEnt) == RS_ENT_LDST, lsRsvIdx, lsRsvIdx2);
 
             ///// rename command
             RenameCmd renCmd1{dcd1(rdUse)   , regArch.rrf.getReqPtr(),
@@ -131,12 +140,12 @@ namespace kathryn::o3{
             RenameCmd renCmd2{dcd2(rdUse)   , regArch.rrf.getReqPtr()+1,
                               dcd2(rdIdx)   ,
                               dcd2(isBranch), dcd2(specTag)};
-
+            ///// dispatch signal
             opr& isRenamable = regArch.rrf.isRenamable(~dcd2(invalid));
-
-            opr& isdispatable = isAluRsvAllocatable & isBranchRsvAllocatable & isRenamable;
-            ////// pre assign the data
-            //////// update reservation station
+            opr& isdispatable = isAluRsvAllocatable    & isMulRsvAllocatable &
+                                isBranchRsvAllocatable & isLsRsvAllocatable &
+                                isRenamable;
+            ////// pre assign the data to update reservation station
             WireSlot entry1(cvtdecInstrToRsv(dcd1, dcdShare, nullptr        , 0));
             WireSlot entry2(cvtdecInstrToRsv(dcd2, dcdShare, &entry1(rrftag), 1));
 
@@ -154,21 +163,42 @@ namespace kathryn::o3{
                     //////// update arf
                     regArch.arf.onRename(renCmd1, renCmd2);
                     ////// dcd 1 supposed to be valid all the time
-                    zif(dcd1(rsEnt) == RS_ENT_ALU){
-                        aluRsv.writeEntry(aluRsvIdx, entry1);
-                    }zelse{
-                        branchRSV.writeEntry(branchRsvIdx, entry1);
-                    }
-                    ////// update reorder buffer
-                    dbg_isDisp1 = 1;
-                    rob.onDispatch(reqPtr, dcd1);
 
+
+                    /***
+                     * dispatch entry 1
+                     */
+                    zif (aluRsvIdx.sl(0)){
+                        rsvs.alu2.tryWriteEntry(dcd1(rsEnt),
+                                                aluRsvIdx.sl(1, RS_ENT_SEL+1),
+                                                entry1);
+                    }zelse{
+                        rsvs.alu1.tryWriteEntry(dcd1(rsEnt),
+                                                aluRsvIdx.sl(1, RS_ENT_SEL+1),
+                                                entry1);
+                    }
+                    rsvs.mul.tryWriteEntry(dcd1(rsEnt), mulRsvIdx   , entry1);
+                    rsvs.br .tryWriteEntry(dcd1(rsEnt), branchRsvIdx, entry1);
+                    rsvs.ls .tryWriteEntry(dcd1(rsEnt), lsRsvIdx    , entry1);
+                    rob.onDispatch(reqPtr, dcd1); //// acknowledge reroder buffer
+                    dbg_isDisp1 = 1;
+
+                    /***
+                     * dispatch entry 1
+                     */
                     zif(~dcd2(invalid)){
-                        zif(dcd2(rsEnt) == RS_ENT_ALU){
-                                aluRsv.writeEntry(OH(aluRsvIdx2_final), entry2);
+                        zif (aluRsvIdx2_final.sl(0)){
+                            rsvs.alu2.tryWriteEntry(dcd2(rsEnt),
+                                                    aluRsvIdx2_final(1, RS_ENT_SEL+1),
+                                                    entry2);
                         }zelse{
-                                branchRSV.writeEntry(branchRsvIdx2_final, entry2);
+                            rsvs.alu1.tryWriteEntry(dcd2(rsEnt),
+                                                    aluRsvIdx2_final.sl(1, RS_ENT_SEL+1),
+                                                    entry2);
                         }
+                        rsvs.mul.tryWriteEntry(dcd2(rsEnt), mulRsvIdx2_final   , entry2);
+                        rsvs.br .tryWriteEntry(dcd2(rsEnt), branchRsvIdx2_final, entry2);
+                        rsvs.ls .tryWriteEntry(dcd2(rsEnt), lsRsvIdx2_final    , entry2);
                         rob.onDispatch(reqPtr+1, dcd2);
                         dbg_isDisp2 = 1;
                     }

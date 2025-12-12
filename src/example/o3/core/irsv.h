@@ -16,13 +16,16 @@ namespace kathryn::o3{
     struct IRsv: RsvBase{
 
         mWire(checkIdx, _table.getSufficientIdxSize(false));
-
+        const int  RSV_IDX = 0;
         Reg& allocPtr;
         SearchResult b1 ,  e1,  e0;
         SearchResult nb1, ne1, nb0; /// search to fix alloc pointer
 
-        IRsv(SlotMeta meta, int indexSize, std::string debugName, BroadCast& bc):
+        IRsv(int rsv_idx  , SlotMeta meta,
+             int indexSize, std::string debugName,
+             BroadCast& bc):
             RsvBase(smRsvI + meta, 1 << indexSize),
+            RSV_IDX(rsv_idx),
             allocPtr(mOprReg("allocPtr_" + debugName, indexSize)),
             b1 (searchIdx(_table, 1, true , bc, false)),
             e1 (searchIdx(_table, 1, false, bc, false)),
@@ -33,11 +36,12 @@ namespace kathryn::o3{
             allocPtr.makeResetEvent();
         }
 
-        void writeEntry(OH ohIdx, WireSlot& iw) override{assert(false);}
 
-        void writeEntry(opr& binIdx, WireSlot& iw) override{
-            allocPtr <<= (binIdx + 1);
-            RsvBase::writeEntry(binIdx, iw);
+        void tryWriteEntry(opr& targetIdx, opr& binIdx, WireSlot& iw){
+            zif (targetIdx == RSV_IDX){
+                allocPtr <<= (binIdx + 1);
+                RsvBase::writeEntry(binIdx, iw);
+            }
         }
 
         void onMisPred(opr& fixTag) override{
@@ -61,7 +65,8 @@ namespace kathryn::o3{
          * ISSUE
          */
 
-        pair<opr&, opr&> buildFreeBinIndex(opr* reqIdx){
+        pair<opr&, opr&> buildFreeIndex(opr* reqIdx, RsvBase* friendRsv = nullptr){
+            assert(friendRsv == nullptr);
 
             opr* selIdx = (reqIdx == nullptr)? &allocPtr : reqIdx;
 

@@ -64,12 +64,6 @@ namespace kathryn::o3{
 
         }
 
-        virtual void writeEntry(OH ohIdx, WireSlot& iw){
-            SET_ASM_PRI_TO_MANUAL(RSV_WRITE_ENTRY_PRED_PRIORITY);
-            _table[ohIdx] <<= iw;
-            SET_ASM_PRI_TO_AUTO();
-        }
-
         virtual void writeEntry(opr& binIdx, WireSlot& iw){
             SET_ASM_PRI_TO_MANUAL(RSV_WRITE_ENTRY_PRED_PRIORITY);
             _table[binIdx] <<= iw;

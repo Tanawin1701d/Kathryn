@@ -10,14 +10,17 @@
 namespace kathryn::o3{
 
         struct ORsv: RsvBase{
+        const int  RSV_IDX = 0;
         RegArch&   regArch;
         bool       sortReq = false;
         mWire(checkIdx, _table.getSufficientIdxSize(true));
         mWire(dbg_isSlotReady, 1);
 
-        ORsv(SlotMeta meta, int amtRow,
-            RegArch& regArch, const SlotMeta& osm = smRsvO):
+        ORsv(int rsv_idx, SlotMeta meta,
+             int amtRow , RegArch& regArch,
+             const SlotMeta& osm = smRsvO):
             RsvBase(osm + meta, amtRow),
+            RSV_IDX(rsv_idx),
             regArch(regArch),
             sortReq(osm.isThereField(sortBit)){}
 
@@ -30,27 +33,34 @@ namespace kathryn::o3{
             SET_ASM_PRI_TO_AUTO();
         }
 
-        void writeEntry(OH ohIdx, WireSlot& iw) override{
-            if (sortReq){
-                resetSortBit();
+
+        void tryWriteEntry(opr& targetIdx, opr& binIdx, WireSlot& iw){
+            zif (targetIdx == RSV_IDX){
+                if (sortReq){
+                    resetSortBit();
+                }
+                RsvBase::writeEntry(binIdx, iw);
             }
-            RsvBase::writeEntry(ohIdx, iw);
         }
 
-        void writeEntry(opr& binIdx, WireSlot& iw) override{assert(false);}
+            ////// friend table is used incase of two table join the same index
+        pair<opr&, opr&> buildFreeIndex(opr* exceptIdx, RsvBase* friendRsv = nullptr){
 
-        pair<opr&, OH> buildFreeOhIndex(OH* exceptIdx){
-            auto [iw, ohIdx] = _table.doReducOHIdx([&](
+
+            Table effTable = _table; //// = will not build new hardware
+            if (friendRsv != nullptr){
+                effTable = (effTable.joinTableByRowInterleave(friendRsv->_table));
+            }
+
+            auto [iw, binIdx] = effTable.doReducBinIdx([&](
              WireSlot& lhs, Operable* lidx,
              WireSlot& rhs, Operable* ridx) -> opr&{
                 if (exceptIdx == nullptr){
                     return ~lhs(busy); //// we don't care rhs
                 }
-                return ~lhs(busy) && ((*lidx) != exceptIdx->getIdx());
-
+                return ~lhs(busy) && ((*lidx) != (*exceptIdx));
             });
-
-            return {iw(busy), ohIdx};
+            return {iw(busy), binIdx};
         }
 
         
