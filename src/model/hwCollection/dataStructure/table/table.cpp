@@ -642,6 +642,25 @@ namespace kathryn{
 
     }
 
+    Table Table::joinTableByRowInterleave(const Table& rhs){
+        //////// prequisite check
+        SlotMeta rhsMeta = rhs.getMeta();
+        SlotMeta newMeta = getMeta();
+        mfAssert(newMeta == rhsMeta, "slot meta is not match");
+        int curAmtRow = getNumRow();
+        int rhsAmtRow = rhs.getNumRow();
+        mfAssert(curAmtRow == rhsAmtRow, "row size is not match");
+
+        ////// new row
+        std::vector<RegSlot*> newRows;
+        for (int i = 0; i < getNumRow(); i++){
+            newRows.push_back(_rows[i]);
+            newRows.push_back(rhs._rows[i]);
+        }
+        return Table(newMeta, newRows);
+
+    }
+
     Table Table::joinTableByCol(const Table& rhs){
         mfAssert(getNumRow() == rhs.getNumRow(), "row size is not match");
 

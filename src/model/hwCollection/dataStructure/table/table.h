@@ -165,6 +165,7 @@ namespace kathryn{
          */
 
         Table joinTableByRow(const Table& rhs);
+        Table joinTableByRowInterleave(const Table& rhs);
 
         Table joinTableByCol(const Table& rhs);
 
