@@ -8,6 +8,8 @@
 #include <string>
 #include <string_view>
 
+#include "kathryn.h"
+
 namespace kathryn::o3{
 
 #define str(name) std::string(name)
@@ -169,12 +171,17 @@ constexpr int STBUF_ENT_NUM =  32;
 //BTB
 constexpr int BTB_IDX_SEL = 9;
 constexpr int BTB_IDX_NUM = 512;
+
+constexpr int BTB_IDX_SEL_START = 3;
+constexpr int BTB_IDX_SEL_STOP  = BTB_IDX_SEL_START + BTB_IDX_SEL;
 //constexpr int BTB_IDX_NUM 2**`BTB_IDX_SEL
 //constexpr int BTB_TAG_LEN `ADDR_LEN-3-`BTB_IDX_SEL
 constexpr int BTB_TAG_LEN = 20;
 
 //Gshare
 constexpr int GSH_BHR_LEN = 10;
+constexpr int GSH_BHR_ST_IDX = 2;
+constexpr int GSH_BHR_END_IDX = GSH_BHR_ST_IDX + GSH_BHR_LEN;
 constexpr int GSH_PHT_SEL = 10;
 constexpr int GSH_PHT_NUM = 1024;
 //constexpr int GSH_PHT_NUM 2**`GSH_PHT_SEL

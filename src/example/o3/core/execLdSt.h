@@ -82,7 +82,7 @@ namespace kathryn::o3{
             }
         }
         //////// second stage
-        opr& resolvedData = mux(lsRes(stBufHit), lss.dmem_rdata, lsRes(stBufData));
+        opr& resolvedData = mux(lsRes(stBufHit), lsRes(stBufData), lss.dmem_rdata);
         bp.addSrc(src(rrftag), resolvedData);
 
         pip(lss.sync2){ tryInitProbe(psp2)

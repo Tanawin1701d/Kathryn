@@ -21,6 +21,8 @@ namespace kathryn::o3{
             {INSN_LEN, 1       , INSN_LEN, 1       , ADDR_LEN, ADDR_LEN, 1     , GSH_BHR_LEN}
         };
 
+        inline SlotMeta smBhrs{bhr, GSH_BHR_LEN, SPECTAG_LEN, 0};
+
         /**
          * DECODE STAGE
          */
@@ -142,9 +144,9 @@ namespace kathryn::o3{
     /**
      * ROB
      */
-    inline SlotMeta smROB{
-        {wbFin, isBranch, rdUse, rdIdx  },
-        {1    , 1       , 1    , REG_SEL}
+    inline SlotMeta smROB{    ///// check it
+        {wbFin, isBranch, rdUse, rdIdx  , pc      , bhr        , pred_addr, prCond},
+        {1    , 1       , 1    , REG_SEL, ADDR_LEN, GSH_BHR_LEN, ADDR_LEN , 1     }
     };
 
 }

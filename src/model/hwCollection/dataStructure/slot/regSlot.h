@@ -92,6 +92,7 @@ namespace kathryn{
          *  dynamic indexing
          */
         RegSlotDynSliceAgent operator[](Operable& requiredIdx);
+        RegSlotDynSliceAgent operator[](const OH& requiredOhIdx);
 
 
         /** it will match by name*/

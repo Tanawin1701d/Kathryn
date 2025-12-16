@@ -113,25 +113,25 @@ namespace kathryn::o3{
             auto[aluRsvBusy , aluRsvIdx ] = rsvs.alu1.buildFreeIndex(nullptr   , &rsvs.alu2);
             auto[aluRsvBusy2, aluRsvIdx2] = rsvs.alu1.buildFreeIndex(&aluRsvIdx, &rsvs.alu2);
             opr& isAluRsvAllocatable = isAlocatableForRsv(aluRsvBusy, aluRsvBusy2, RS_ENT_ALU);
-            aluRsvIdx2_final = mux(dcd1(rsEnt) == RS_ENT_ALU, aluRsvIdx, aluRsvIdx2);
+            aluRsvIdx2_final = mux(dcd1(rsEnt) == RS_ENT_ALU, aluRsvIdx2, aluRsvIdx);
 
             //////// mul index calculation
             auto[mulRsvBusy , mulRsvIdx ] = rsvs.mul.buildFreeIndex(nullptr   );
             auto[mulRsvBusy2, mulRsvIdx2] = rsvs.mul.buildFreeIndex(&mulRsvIdx);
             opr& isMulRsvAllocatable = isAlocatableForRsv(mulRsvBusy, mulRsvBusy2, RS_ENT_MUL);
-            mulRsvIdx2_final = mux(dcd1(rsEnt) == RS_ENT_MUL, mulRsvIdx, mulRsvIdx2);
+            mulRsvIdx2_final = mux(dcd1(rsEnt) == RS_ENT_MUL, mulRsvIdx2, mulRsvIdx);
 
             //////// branch index calculation
             auto[branchRsvBusy , branchRsvIdx ] = rsvs.br.buildFreeIndex(nullptr);
             auto[branchRsvBusy2, branchRsvIdx2] = rsvs.br.buildFreeIndex(&(branchRsvIdx+1));
             opr& isBranchRsvAllocatable = isAlocatableForRsv(branchRsvBusy, branchRsvBusy2, RS_ENT_BRANCH);
-            branchRsvIdx2_final = mux(dcd1(rsEnt) == RS_ENT_BRANCH, branchRsvIdx, branchRsvIdx2);
+            branchRsvIdx2_final = mux(dcd1(rsEnt) == RS_ENT_BRANCH, branchRsvIdx2, branchRsvIdx);
 
             //////// ls index calculation
             auto[lsRsvBusy , lsRsvIdx ] = rsvs.ls.buildFreeIndex(nullptr);
             auto[lsRsvBusy2, lsRsvIdx2] = rsvs.ls.buildFreeIndex(&(lsRsvIdx+1));
             opr& isLsRsvAllocatable = isAlocatableForRsv(lsRsvBusy, lsRsvBusy2, RS_ENT_LDST);
-            lsRsvIdx2_final = mux(dcd1(rsEnt) == RS_ENT_LDST, lsRsvIdx, lsRsvIdx2);
+            lsRsvIdx2_final = mux(dcd1(rsEnt) == RS_ENT_LDST, lsRsvIdx2, lsRsvIdx);
 
             ///// rename command
             RenameCmd renCmd1{dcd1(rdUse)   , regArch.rrf.getReqPtr(),

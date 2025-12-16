@@ -26,8 +26,8 @@ namespace kathryn{
         result.generateAssignMeta(x1, result.getOperableSlice(), ASM_DIRECT, CM_CLK_FREE);
 
         AsmNode* assNode = new AsmNode({sel0, sel1});
-        assNode->addSpecificPreCondition(&(sel == 0), 0);
-        assNode->addSpecificPreCondition(&(sel == 1), 1);
+        assNode->addSpecificPreCondition(&(sel == 1), 0); ///// for x0
+        assNode->addSpecificPreCondition(&(sel == 0), 1); ///// for x1
         assNode->dryAssign();
         delete assNode;
 
@@ -57,7 +57,7 @@ namespace kathryn{
             for (int piece = 0; piece < size; piece+=2){
                 Operable* first   = muxQueue.front(); muxQueue.pop();
                 Operable* second  = muxQueue.front(); muxQueue.pop();
-                Operable& nextOpr = mux(*sel.doSlice({bitIdx, bitIdx+1}), *first, *second);
+                Operable& nextOpr = mux(*sel.doSlice({bitIdx, bitIdx+1}), *second, *first);
                 muxQueue.push(&nextOpr);
             }
             bitIdx +=1;

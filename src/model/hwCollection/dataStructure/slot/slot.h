@@ -11,6 +11,7 @@
 #include "model/flowBlock/abstract/nodes/asmNode.h"
 #include "model/hwComponent/abstract/logicComp.h"
 #include "model/hwComponent/register/register.h"
+#include "model/hwCollection/dataStructure/indexing/index.h"
 
 namespace kathryn{
 

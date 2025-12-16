@@ -22,10 +22,23 @@
 namespace kathryn::o3{
 
     struct FetchStage{
-        mReg(curPc, ADDR_LEN);
+        mReg (curPc, ADDR_LEN);
+        mWire(iMem0, DATA_LEN);
+        mWire(iMem1, DATA_LEN);
+        mWire(iMem2, DATA_LEN);
+        mWire(iMem3, DATA_LEN);
+
         SlotMeta meta{smFetch};
         RegSlot  raw {smFetch};
         SyncMeta sync{"fetchSync"};
+
+        FetchStage(){
+            iMem0.asInputGlob("iMem0");
+            iMem1.asInputGlob("iMem1");
+            iMem2.asInputGlob("iMem2");
+            iMem3.asInputGlob("iMem3");
+
+        }
 
         void incPc(opr& nextPc, bool isMisPred = false){
             SET_ASM_PRI_TO_MANUAL(DEFAULT_UE_PRI_USER + isMisPred);
@@ -119,7 +132,7 @@ namespace kathryn::o3{
     struct ByPassPool{
 
         std::vector<ByPass*>  _bps;
-        Rsvs*                 _rsvs;
+        Rsvs*                 _rsvs = nullptr;
 
         ByPass& addByPassEle(){
             _bps.emplace_back(new ByPass(_bps.size()));

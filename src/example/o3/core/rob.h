@@ -37,6 +37,8 @@ namespace kathryn::o3{
 
         opr& getComPtr(){ return comPtr;}
 
+        WireSlot& getCom1Entry(){ return com1Entry;}
+
 
         void flow() override{
             comPtr2 = comPtr + 1;
