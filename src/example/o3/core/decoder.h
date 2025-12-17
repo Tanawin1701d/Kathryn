@@ -27,13 +27,16 @@ namespace kathryn::o3{
             tagMgmt(tagMg){}
 
         ////// dcd = decoded
-        void  decode(int idx){ //// idx start at 1
+        void  decode(int idx){ //// idx start at 1 the second is 2
 
             bool isFirst = (idx == 1);
             RegSlot&  raw = pm.ft.raw;
             Reg&      instr = isFirst? pm.ft.raw(inst1)   : pm.ft.raw(inst2);
+            WireSlot& dcwFirst  = pm.dc.dcw1;
             WireSlot& dcw   = isFirst? pm.dc.dcw1 : pm.dc.dcw2;
-            Reg&      inv   = isFirst? pm.ft.raw(invalid1) : pm.ft.raw(invalid2);
+            mVal(invalid1_dummy, 1, 0);
+            opr&      inv   = isFirst? (opr&) invalid1_dummy :
+                                       (opr&) pm.ft.raw(invalid2);
 
 
             ///////////// src
@@ -52,9 +55,13 @@ namespace kathryn::o3{
             ///////////// calculate address and validation
             if (idx == 1){
                 dcw(invalid)   = 0; ///// we are sure about first instruction
-                dcw(pred_addr) = (raw(pc) + 4); //// if the decoded show it is branch or jump it will be overrided
+                dcw(pred_addr) = mux( raw(prCond) & dcw(isBranch),
+                                        raw(npc),
+                                        raw(pc) + 4); //// if the decoded show it is branch or jump it will be overrided
             }else{
-                dcw(invalid)   = raw(invalid2);
+                /// if the first one is the branch and predict taken we
+                dcw(invalid)   = raw(invalid2) |
+                                 (raw(prCond) & dcwFirst(isBranch));
                 dcw(pred_addr) = raw(npc);
             }
 
@@ -94,11 +101,6 @@ namespace kathryn::o3{
 
                 ///// calculate the next address
                 dcw(isBranch) = ~inv;
-                if (idx == 1){
-                    zif (raw(prCond)){
-                        dcw(pred_addr) = raw(npc);
-                    }
-                }
 
             } zelif(opc == RV32_JAL){
                 dcw(rsEnt)    = RS_ENT_JAL;
@@ -107,11 +109,6 @@ namespace kathryn::o3{
                 dcw(rsSel_2)  = SRC_B_FOUR;
                 dcw(rdUse)    = 1;
                 dcw(isBranch) = ~inv;
-                if (idx == 1){
-                    zif (raw(prCond)){
-                        dcw(pred_addr) = raw(npc);
-                    }
-                }
             } zelif(opc == RV32_JALR){
                 dcw(illLegal) = (funct3 != 0);
                 dcw(rsEnt)    = RS_ENT_JALR;
@@ -119,11 +116,6 @@ namespace kathryn::o3{
                 dcw(rsSel_2)  = SRC_B_FOUR;
                 dcw(rdUse)    = 1;
                 dcw(isBranch) = ~inv;
-                if (idx == 1){
-                    zif (raw(prCond)){
-                        dcw(pred_addr) = raw(npc);
-                    }
-                }
             } zelif(opc == RV32_OP_IMM){
                 dcw(aluOp) = aluOpArith;
                 dcw(rdUse) = 1;
@@ -142,24 +134,19 @@ namespace kathryn::o3{
                         dcw(rsEnt) = RS_ENT_DIV;
                     }
                 }
-
             } zelif (opc == RV32_AUIPC){
                 dcw(imm_type)  = IMM_U;
                 dcw(rdUse   )  = 1;
                 dcw(rsUse_1 )  = 0;
                 dcw(rsSel_1 )  = SRC_A_PC;
-
-
             } zelif (opc == RV32_LUI){
                 dcw(imm_type) = IMM_U;
                 dcw(rdUse   ) = 1;
                 dcw(rsUse_1 ) = 0;
                 dcw(rsSel_1 ) = SRC_A_ZERO;
-
             } zelse{
                 dcw(illLegal) = 1;
             }
-
             ///////// alu op
             zif  (funct3 == RV32_FUNCT3_ADD_SUB){
                 aluOpArith = ALU_OP_ADD;

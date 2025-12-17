@@ -18,6 +18,7 @@
 #include "broadCast.h"
 #include "rrf.h"
 #include "syncMetaPip.h"
+#include "isaParam.h"
 
 namespace kathryn::o3{
 
@@ -222,7 +223,9 @@ namespace kathryn::o3{
 
         }
         void onSucPred(){
-            ds.sync.holdMaster(); //// hold decode to generate tag, but allowing system to enter decode state
+            dc.sync.holdMaster(); //// hold fetch <-> decode
+            ds.sync.holdMaster(); //// hold decode <-> dispatch to generate tag, but allowing system to enter decode state
+            rs.sync.holdMaster(); //// hold dispatch <-> reservation station
         }
 
 

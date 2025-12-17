@@ -12,6 +12,8 @@
 
 namespace kathryn::o3{
 
+    struct FetchMod;
+    struct StoreBuf;
 
     struct Rob: Module{
         Table _table;
@@ -24,11 +26,16 @@ namespace kathryn::o3{
         WireSlot com1Entry{_table[comPtr  ].v()};
         WireSlot com2Entry{_table[comPtr+1].v()};
         RegArch& regArch;
+        FetchMod& fetchMod;
+        StoreBuf& storeBuf;
 
-        Rob(PipStage& pipStage, RegArch& regArch):
+        Rob(PipStage& pipStage, RegArch& regArch,
+            FetchMod& fetchMod, StoreBuf& storeBuf):
             _table(smROB, RRF_NUM),
             pm(pipStage),
-            regArch(regArch){
+            regArch(regArch),
+            fetchMod(fetchMod),
+            storeBuf(storeBuf){
             _table.makeColResetEvent(wbFin, 0);
             _table.makeColResetEvent(isBranch, 0);
             comPtr.makeResetEvent();
@@ -40,46 +47,28 @@ namespace kathryn::o3{
         WireSlot& getCom1Entry(){ return com1Entry;}
 
 
-        void flow() override{
-            comPtr2 = comPtr + 1;
-            comPtr <<= (comPtr + com1Status + com2Status);
-            ////// we have to set commit commad
+        void flow() override;
 
-            pip(pm.cm.sync){autoSync
-                /////// commit the instruction
-                ////// due to branch can do only one
-                opr& com1Cond = com1Entry(wbFin);
-                opr& com2Cond = com2Entry(wbFin) & ~com1Entry(isBranch);
-                ////// rrf commit
-                std::tie(com1Status, com2Status) =
-                    regArch.rrf.onCommit(comPtr, com1Cond, com2Cond);
-                ////// arf commit
-                regArch.arf.onCommit(
-                    //// com1
-                    com1Status & com1Entry(rdUse), comPtr ,
-                    com1Entry(rdIdx),
-                    regArch.rrf.getPhyData(comPtr),
-                    //// com2
-                    com2Status & com2Entry(rdUse), comPtr2,
-                    com2Entry(rdIdx),
-                    regArch.rrf.getPhyData(comPtr2)
-                );
-            }
+        void onDispatch(opr& idx, RegSlot& dpValue, RegSlot& dpShareVal){
 
-        }
-
-        void onDispatch(opr& idx, RegSlot& dpValue){
-            _table[idx] <<= dpValue;
+            opr& opc = dpValue(inst)(0, 7);
             _table[idx](wbFin) <<= 0;
+            _table[idx](storeBit) <<= (opc == RV32_STORE);
+            _table[idx] <<= dpValue;  //// sBranch, rdUse, rdIdx
+            _table[idx] <<= dpShareVal; ///  bhr, pc
         }
 
         void onWriteBack(opr& idx){
             _table[idx](wbFin) <<= 1;
         }
 
+        void onWriteBackBranch(opr& idx, opr& jaddr,
+                               opr& jCond){
+            _table[idx](wbFin)    <<= 1;
+            _table[idx](jumpAddr) <<= jaddr;
+            _table[idx](jumpCond) <<= jCond;
+        }
     };
 
-
 }
-
 #endif //KATHRYN_SRC_EXAMPLE_O3_ROB_H

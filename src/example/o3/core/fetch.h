@@ -78,10 +78,10 @@ namespace kathryn::o3{
 
         void onBranchCommit(){
             ////// update btb data
-            btb.onCommit(cmSlot(pc), cmSlot(pred_addr));
+            btb.onCommit(cmSlot(pc), cmSlot(jumpAddr));
             ////// update gshare predictor
             opr& phtAddr = convertPcToPhtIdx(cmSlot(pc), cmSlot(bhr));
-            gshare.onCommit_PhtUpdate(phtAddr, cmSlot(prCond));
+            gshare.onCommit_PhtUpdate(phtAddr, cmSlot(jumpCond));
             ////// the bhr update //// I dont know why they do something like this
             gshare.onCommit_bhrUpdate(fetchBtbHit, fetchPredCond);
         }
@@ -101,7 +101,6 @@ namespace kathryn::o3{
 
             ///// slot assign
             RegSlot& raw = pm.ft.raw;
-            raw(invalid1) <<= 0;
             raw(invalid2) <<= selIdx.sl(0);
             raw(pc)       <<= curPc;
 

@@ -17,8 +17,8 @@ namespace kathryn::o3{
          */
 
         inline SlotMeta smFetch {
-            {inst1   , invalid1, inst2   , invalid2,       pc,      npc, prCond, bhr        },
-            {INSN_LEN, 1       , INSN_LEN, 1       , ADDR_LEN, ADDR_LEN, 1     , GSH_BHR_LEN}
+            {inst1   , inst2   , invalid2,       pc,      npc, prCond, bhr        },
+            {INSN_LEN, INSN_LEN, 1       , ADDR_LEN, ADDR_LEN, 1     , GSH_BHR_LEN}
         };
 
         inline SlotMeta smBhrs{bhr, GSH_BHR_LEN, SPECTAG_LEN, 0};
@@ -57,6 +57,19 @@ namespace kathryn::o3{
         /**
          * RSV
          */
+        inline SlotMeta smRsvBase {
+            {pc         , rrftag          , rdUse     , aluOp,
+             spec       , specTag         ,
+             phyIdx_1   , rsSel_1         , rsValid_1 ,
+             phyIdx_2   , rsSel_2         , rsValid_2
+            },
+            ////////////////////////////////////////////////////////////////////
+            {ADDR_LEN   , RRF_SEL         , 1          , ALU_OP_WIDTH,
+             1          , SPECTAG_LEN     ,
+             DATA_LEN   , SRC_A_SEL_WIDTH , 1          ,
+             DATA_LEN   , SRC_B_SEL_WIDTH , 1
+            }
+        };
 
         inline SlotMeta smLdSt{  //// for second stage system
             { rrftag   , rdUse   , spec, specTag,
@@ -73,20 +86,6 @@ namespace kathryn::o3{
             },
             { 1       , 1        , 1        , SPECTAG_LEN,
               ADDR_LEN
-            }
-        };
-
-        inline SlotMeta smRsvBase {
-            {pc         , rrftag          , rdUse     , aluOp,
-             spec       , specTag         ,
-             phyIdx_1   , rsSel_1         , rsValid_1 ,
-             phyIdx_2   , rsSel_2         , rsValid_2
-            },
-            ////////////////////////////////////////////////////////////////////
-            {ADDR_LEN   , RRF_SEL         , 1          , ALU_OP_WIDTH,
-             1          , SPECTAG_LEN     ,
-             DATA_LEN   , SRC_A_SEL_WIDTH , 1          ,
-             DATA_LEN   , SRC_B_SEL_WIDTH , 1
             }
         };
 
@@ -145,8 +144,11 @@ namespace kathryn::o3{
      * ROB
      */
     inline SlotMeta smROB{    ///// check it
-        {wbFin, isBranch, rdUse, rdIdx  , pc      , bhr        , pred_addr, prCond},
-        {1    , 1       , 1    , REG_SEL, ADDR_LEN, GSH_BHR_LEN, ADDR_LEN , 1     }
+        {wbFin      , isBranch, storeBit, rdUse   , rdIdx  ,
+         bhr        , pc      , jumpAddr, jumpCond          },
+        /////////////////////////////////////////////////
+        {1          , 1       , 1       , 1       , REG_SEL,
+         GSH_BHR_LEN, ADDR_LEN, ADDR_LEN, 1       }
     };
 
 }

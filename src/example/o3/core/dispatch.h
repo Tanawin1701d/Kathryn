@@ -13,6 +13,7 @@
 
 #include "irsv.h"
 #include "orsv.h"
+#include "rsvs.h"
 #include "srcOpr.h"
 #include "rob.h"
 #include "stageStruct.h"
@@ -22,11 +23,11 @@
 namespace kathryn::o3{
 
     struct DpMod: Module{
-        PipStage&    pm;
-        Rsvs&         rsvs;
-        RegArch&     regArch;
-        TagMgmt&     tagMgmt;
-        Rob&         rob;
+        PipStage& pm;
+        Rsvs&     rsvs;
+        RegArch&  regArch;
+        TagMgmt&  tagMgmt;
+        Rob&      rob;
                                     //// it join the two rsv together
         mWire(aluRsvIdx2_final   , ALU_ENT_SEL + 1);  //// it is one hot index
         mWire(mulRsvIdx2_final   , MUL_ENT_SEL);
@@ -53,6 +54,7 @@ namespace kathryn::o3{
             return (dcd(rsEnt) == RS_ENT_IDX) & (~dcd(invalid));
         }
 
+        ///// check that target rsv is ready to handle them all
         Operable& isAlocatableForRsv(opr& busy1, opr& busy2, int RS_ENT_IDX){
             return  ((~busy1).uext(2) + (~busy2).uext(2)) >=
                 (isRsvRequired(pm.dc.dcd1, RS_ENT_IDX).uext(2) +
@@ -62,18 +64,18 @@ namespace kathryn::o3{
         WireSlot cvtdecInstrToRsv(RegSlot& dcd, RegSlot& dcdShard, opr* desRrf , int decLaneIdx){
             /////// decLaneIdx start from 0
             /////// create rsv smRsvI for inorder is redundant
-            WireSlot des(smRsvO + smRsvBase + smRsvBranch + smRsvAlu); /// smRsvBase + smRsvOI
+            WireSlot des(smRsvO      + smRsvBase +
+                         smRsvBranch + smRsvAlu  +
+                         smRsvMul); /// smRsvBase + smRsvOI
             /////// metadata
             des(busy)    = 1;
             des(sortBit) = 1;
-
             ////////////// base
             if (decLaneIdx == 0){
                 des(pc) = dcdShard(pc);
             }else{
                 des(pc) = dcdShard(pc) + 4;
             }
-
             immGen( dcd(inst), dcd(imm_type), des(imm));
             immBrGen(dcd(inst), des(imm_br));
 
@@ -108,6 +110,10 @@ namespace kathryn::o3{
             auto& dcd1     = pm.dc.dcd1;
             auto& dcd2     = pm.dc.dcd2;
             auto& dcdShare = pm.dc.dcdShared;
+
+            /**
+             * RSV CALCULATION
+             */
 
             //////// alu index calculation
             auto[aluRsvBusy , aluRsvIdx ] = rsvs.alu1.buildFreeIndex(nullptr   , &rsvs.alu2);
@@ -154,7 +160,6 @@ namespace kathryn::o3{
             dbg_isBranchRsvAllocatable   = isBranchRsvAllocatable;
             dbg_isRenamable              = isRenamable;
 
-
             pip(pm.ds.sync){                               initProbe(pipProbGrp .dispatch);
                 zyncc(pm.rs.sync, isdispatable){ autoSync  initProbe(zyncProbGrp.dispatch);
                     ////////
@@ -163,8 +168,6 @@ namespace kathryn::o3{
                     //////// update arf
                     regArch.arf.onRename(renCmd1, renCmd2);
                     ////// dcd 1 supposed to be valid all the time
-
-
                     /***
                      * dispatch entry 1
                      */
@@ -180,11 +183,10 @@ namespace kathryn::o3{
                     rsvs.mul.tryWriteEntry(dcd1(rsEnt), mulRsvIdx   , entry1);
                     rsvs.br .tryWriteEntry(dcd1(rsEnt), branchRsvIdx, entry1);
                     rsvs.ls .tryWriteEntry(dcd1(rsEnt), lsRsvIdx    , entry1);
-                    rob.onDispatch(reqPtr, dcd1); //// acknowledge reroder buffer
+                    rob.onDispatch(reqPtr, dcd1, dcdShare); //// acknowledge reroder buffer
                     dbg_isDisp1 = 1;
-
                     /***
-                     * dispatch entry 1
+                     * dispatch entry 2
                      */
                     zif(~dcd2(invalid)){
                         zif (aluRsvIdx2_final.sl(0)){
@@ -199,19 +201,12 @@ namespace kathryn::o3{
                         rsvs.mul.tryWriteEntry(dcd2(rsEnt), mulRsvIdx2_final   , entry2);
                         rsvs.br .tryWriteEntry(dcd2(rsEnt), branchRsvIdx2_final, entry2);
                         rsvs.ls .tryWriteEntry(dcd2(rsEnt), lsRsvIdx2_final    , entry2);
-                        rob.onDispatch(reqPtr+1, dcd2);
+                        rob.onDispatch(reqPtr+1, dcd2, dcdShare);
                         dbg_isDisp2 = 1;
                     }
-
                 }
             }
-
-
         }
-
-
     };
-
 }
-
 #endif //KATHRYN_SRC_EXAMPLE_O3_DISPATCH_H

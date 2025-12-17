@@ -111,7 +111,7 @@ namespace kathryn::o3{
         void onRename(RenameCmd& renCmd1, RenameCmd& renCmd2, bool override = false){
             SET_ASM_PRI_TO_MANUAL(ARF_REN_PRIORITY);
             if (override){
-                renameBase(renCmd1); //// order cannot be change
+                renameBase(renCmd1); //// order cannot be changed
                 renameBase(renCmd2);
             }else{
                 ////// the isAsRecvGrp is set from decode stage
@@ -120,8 +120,9 @@ namespace kathryn::o3{
                 opr& instr2WantThisSlotToRcv = (renCmd2.isBranch && renCmd2.specTag.sl(idx));
                 ////// undo both instruction 1 and instruction 2
                 opr& isAsRecvGrp_undo = (isAsRecvGrp &&
-                                         (!instr1WantThisSlotToRcv) &&
-                                         (!instr2WantThisSlotToRcv));
+                                         (!(instr1WantThisSlotToRcv |
+                                            instr2WantThisSlotToRcv))
+                                         );
                 ////// rename 1
                 zif(~isAsRecvGrp_undo){
                     renameBase(renCmd1);
@@ -216,8 +217,6 @@ namespace kathryn::o3{
                       opr& comArcIdx1, opr& comData1  ,
                       opr& comEn2    , opr& comRrfPtr2,
                       opr& comArcIdx2, opr& comData2)
-
-
         {
             for (int specIdx = 0; specIdx < SPECTAG_LEN; specIdx++){
                 preRenGrp[specIdx].onCommit(comEn1, comRrfPtr1, comArcIdx1,

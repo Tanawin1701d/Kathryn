@@ -14,22 +14,22 @@ namespace kathryn::o3{
 
 
     struct ExecMul: Module{
-        ExecStage&  mulSt;
+        MulStage&  mulSt;
         RegArch&   regArch;
         Rob&       rob;
         RegSlot&   src;
         ByPass&    bp;
         PipSimProbe* psp = nullptr;
 
-        explicit ExecMul(ExecStage& muSt,
-                         RegArch& regArch,
-                         Rob& rob,
-                         RegSlot& src):
-        mulSt(muSt),
+        explicit ExecMul(MulStage& muSt,
+                         RegArch&  regArch,
+                         Rob&      rob,
+                         RegSlot&  src):
+        mulSt  (muSt),
         regArch(regArch),
-        rob(rob),
-        src(src),
-        bp(regArch.bpp.addByPassEle()){
+        rob    (rob),
+        src    (src),
+        bp     (regArch.bpp.addByPassEle()){
             mulSt.sync.setTagTracker(src);
         }
 

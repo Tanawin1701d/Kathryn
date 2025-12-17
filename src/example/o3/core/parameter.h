@@ -108,6 +108,9 @@ namespace kathryn::o3{
     O3_PARAM_STR(arfData);
     //// for ROB
     O3_PARAM_STR(wbFin);
+    O3_PARAM_STR(storeBit);
+    O3_PARAM_STR(jumpAddr); //// result from branch
+    O3_PARAM_STR(jumpCond);
 
     //// for Exec Unit
     O3_PARAM_STR(bpValid);

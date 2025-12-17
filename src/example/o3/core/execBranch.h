@@ -72,16 +72,20 @@ namespace kathryn::o3{
 
             //// calculate the address
             opr& nextPc = srcPc + 4;
+            bp.addSrc(src(rrftag), nextPc); ///// add src for bypass but the bypass trigger is in zync block
+
             calAddr = nextPc;
             zif  (opc == RV32_JALR)          calAddr = src(phyIdx_1) + srcImm;
             zelif((opc==RV32_JAL) | brTaken) calAddr = srcPc + srcImm;
-            bp.addSrc(src(rrftag), nextPc);
+
+            opr& brCond = ((opc == RV32_JALR) | (opc==RV32_JAL) | brTaken);
+
 
 
             pip(pm.br.sync){  tryInitProbe(psp);
 
                 /////// write back the data if it needed
-                rob.onWriteBack(src(rrftag));
+                rob.onWriteBackBranch(src(rrftag), calAddr, brCond);
                 zif(src(rdUse)){
                     regArch.rrf.onWback(src(rrftag), nextPc);
                     regArch.bpp.doByPass(bp);
