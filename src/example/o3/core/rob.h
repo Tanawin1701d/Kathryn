@@ -13,7 +13,7 @@
 namespace kathryn::o3{
 
 
-    struct Rob: public Module{
+    struct Rob: Module{
         Table _table;
 
         mWire(com1Status, 1      );

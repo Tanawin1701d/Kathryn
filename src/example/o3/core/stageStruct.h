@@ -75,13 +75,13 @@ namespace kathryn::o3{
         SyncPip sync {"execSync"};
     };
 
+    struct MulStage{
+        SyncPip sync {"mulSync"};
+    };
+
     struct BranchStage{
         SyncMeta sync {"branchSync"};
     };
-
-    // struct MulStage{
-    //     SyncPip sync {"mulSync"};
-    // };
 
     struct LdStStage{
         SyncPip sync  {"ldStSync"};
@@ -195,10 +195,37 @@ namespace kathryn::o3{
         DispStage   ds;
         RsvStage    rs;
         ExecStage   ex[2];
-        ExecStage   mu;
+        MulStage   mu;
         BranchStage br;
         LdStStage   ldSt;
         CommitStage cm;
+
+        void onMisPred(opr& fixTag){
+            ////// kill the in-order stage
+            ft.sync.killSlave(true);
+            dc.sync.killSlave(true);
+            ds.sync.killSlave(true);
+            ////// kill the out-of-order exec Unit stage
+            ex[0].sync .killIfTagMet(true, fixTag);
+            ex[1].sync .killIfTagMet(true, fixTag);
+            mu   .sync .killIfTagMet(true, fixTag);
+            ldSt .sync .killIfTagMet(true, fixTag);
+            ldSt .sync2.killIfTagMet(true, fixTag);
+            ////// hold reservation station to exection unit
+            ex[0].sync .holdMaster();
+            ex[1].sync .holdMaster();
+            mu   .sync .holdMaster();
+            ldSt .sync .holdMaster();
+            ///ldSt .sync2.holdMaster(); //// because the master is not reservation station
+            ////// hold commit to not
+            cm.sync.holdSlave();
+
+        }
+        void onSucPred(){
+            ds.sync.holdMaster(); //// hold decode to generate tag, but allowing system to enter decode state
+        }
+
+
     };
 
 }

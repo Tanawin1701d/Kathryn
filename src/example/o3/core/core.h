@@ -41,7 +41,8 @@ namespace kathryn::o3{
     /////// store buffer
     StoreBuf   storeBuf{pm.ldSt, tagMgmt.bc};
     /////// front-end
-    mMod(pFetch,  FetchMod  , pm);
+    mMod(pFetch,  FetchMod  , pm     , tagMgmt,
+                  prob.getCom1Entry());
     mMod(pDec  ,  DecMod    , pm     , tagMgmt); //// decoder
     mMod(pDisp ,  DpMod     , pm     , rsvs ,
                   regArch   , tagMgmt, prob); //// dispathc
@@ -74,9 +75,6 @@ namespace kathryn::o3{
         ///// rsv operation
         rsvs.setDebugProbe();
         rsvs.buildIssues(pm, tagMgmt.bc);
-
-
-
 
 
     }

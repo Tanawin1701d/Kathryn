@@ -21,6 +21,18 @@ namespace kathryn::o3{
         br  (RS_ENT_BRANCH, smRsvBase + smRsvBranch, BRANCH_ENT_SEL, "br"   , bc    ),
         ls  (RS_ENT_LDST  , smRsvBase + smRsvAlu   , LDST_ENT_SEL  , "ld"   , bc    ){}
 
+        void onMisPred(opr& fixTag){
+            for (RsvBase* rsv: rsvs){
+                rsv->onMisPred(fixTag);
+            }
+        }
+
+        void onSucPred(opr& sucTag){
+            for (RsvBase* rsv: rsvs){
+                rsv->onSucPred(sucTag);
+            }
+        }
+
         void buildIssues(PipStage& pm, BroadCast& bc){
             ///// build alu reservation station issue logic
             alu1.buildIssue(pm.ex[0].sync, bc);

@@ -22,10 +22,10 @@ namespace kathryn::o3{
         Gshare    gshare;
         WireSlot& cmSlot;
 
-        mWire(fetchPredCond, 1); /// from
-        mWire(fetchBtbHit  , 1);
+        mWire(fetchPredCond   , 1); /// from
+        mWire(fetchBtbHit     , 1);
         mWire(fetchHitAndTaken, 1);
-        mWire(fetchBtbAddr , ADDR_LEN);
+        mWire(fetchBtbAddr    , ADDR_LEN);
 
         explicit FetchMod(PipStage&  pm,
                           TagMgmt& tagMgmt,
