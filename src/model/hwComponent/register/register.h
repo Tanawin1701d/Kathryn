@@ -56,7 +56,7 @@ namespace kathryn{
         SliceAgent<Reg>& operator() (Slice sl) override;
         Operable* doSlice(Slice sl) override;
         /**make rstEvent*/
-        void makeResetEvent(ull value = 0);
+        void makeResetEvent(ull value = 0, CLOCK_MODE cm = CM_POSEDGE);
         /** return type*/
         Operable* checkShortCircuit() override;
 

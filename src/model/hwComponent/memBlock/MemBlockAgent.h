@@ -76,6 +76,7 @@ namespace kathryn{
         SliceAgent<MemBlockEleHolder>& operator() (int idx) override;
         SliceAgent<MemBlockEleHolder>& operator() (Slice sl) override;
         Operable* doSlice(Slice sl) override;
+        /** check short circuit*/
         Operable* checkShortCircuit   () override{return nullptr;}
 
         /** debug method to do will will make debug string more delightful*/

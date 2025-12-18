@@ -84,7 +84,7 @@ namespace kathryn{
         return x.castToOperable();
     }
 
-    void Reg::makeResetEvent(ull value){ //// we lock it to the posedge clock
+    void Reg::makeResetEvent(ull value, CLOCK_MODE cm){ //// we lock it to the posedge clock
         makeVal(rstRegVal, getSlice().getSize(), value);
 
         UpdateEventBase* ueb = createUEHelper(nullptr,
@@ -92,7 +92,7 @@ namespace kathryn{
                                               &rstRegVal,
                                               {0, getSlice().getSize()},
                                               DEFAULT_UE_PRI_RST,
-                                              CM_POSEDGE,
+                                              cm,
                                               false);
         addUpdateMeta(ueb);
     }
