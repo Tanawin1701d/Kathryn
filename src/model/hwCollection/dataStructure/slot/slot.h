@@ -248,7 +248,8 @@ namespace kathryn{
         AsmNode* genGrpAsmNode(
             Operable& srcOpr,
             Operable& requiredIdx,
-            ASM_TYPE  asmType
+            ASM_TYPE  asmType,
+            bool      isOH
         ){
 
             std::vector<AssignMeta*> resultCollector = genAssignMetaForAll(srcOpr, asmType);
@@ -256,7 +257,13 @@ namespace kathryn{
             auto* asmNode = new AsmNode(resultCollector);
 
             for (int desIdx = 0; desIdx < getNumField(); desIdx++){
-                Operable* idxCheckCond = &(requiredIdx == desIdx);
+                Operable* idxCheckCond = nullptr;
+                if (isOH){
+                    idxCheckCond = &(requiredIdx.sl(desIdx));
+                }else{
+                    idxCheckCond = &(requiredIdx == desIdx);
+                }
+
                 asmNode->addSpecificPreCondition(idxCheckCond, desIdx);
             }
             return asmNode;
@@ -294,7 +301,8 @@ namespace kathryn{
         virtual void doGlobAsm(
             Operable& srcOpr,
             Operable& requiredIdx,
-            ASM_TYPE  asmType
+            ASM_TYPE  asmType,
+            bool      isOH
         ){assert(false);}
 
         virtual void doGlobAsm(
@@ -317,13 +325,13 @@ namespace kathryn{
             doBlockAsm(rhs, std::vector<int>{}, asmType);
         }
         //////// dynamic assign
-        virtual void doBlockAsm(Operable& srcOpr, Operable& requiredIdx, ASM_TYPE asmType){
-            doGlobAsm(srcOpr, requiredIdx, asmType);
+        virtual void doBlockAsm(Operable& srcOpr, Operable& requiredIdx, ASM_TYPE asmType, bool isOH){
+            doGlobAsm(srcOpr, requiredIdx, asmType, isOH);
         }
 
-        virtual void doBlockAsm(ull srcVal, Operable& requiredIdx, ASM_TYPE asmType){
+        virtual void doBlockAsm(ull srcVal, Operable& requiredIdx, ASM_TYPE asmType, bool isOH){
             Operable& mySrcOpr = getMatchAssignOperable(srcVal, getMaxBitWidth());
-            doBlockAsm(mySrcOpr, requiredIdx, asmType);
+            doBlockAsm(mySrcOpr, requiredIdx, asmType, isOH);
         }
         /** non block assignment */
 
@@ -342,13 +350,13 @@ namespace kathryn{
 
         //////// dynamic assign
 
-        virtual void doNonBlockAsm(Operable& srcOpr, Operable& requiredIdx, ASM_TYPE asmType){
-            doGlobAsm(srcOpr, requiredIdx, asmType);
+        virtual void doNonBlockAsm(Operable& srcOpr, Operable& requiredIdx, ASM_TYPE asmType, bool isOH){
+            doGlobAsm(srcOpr, requiredIdx, asmType, isOH);
         }
 
-        virtual void doNonBlockAsm(ull srcVal, Operable& requiredIdx, ASM_TYPE asmType){
+        virtual void doNonBlockAsm(ull srcVal, Operable& requiredIdx, ASM_TYPE asmType, bool isOH){
             Operable& mySrcOpr = getMatchAssignOperable(srcVal, getMaxBitWidth());
-            doNonBlockAsm(mySrcOpr, requiredIdx, asmType);
+            doNonBlockAsm(mySrcOpr, requiredIdx, asmType, isOH);
         }
 
     };
@@ -357,13 +365,15 @@ namespace kathryn{
     protected:
         Slot&     _masterSlot;
         Operable& _requiredIdx;
+        bool      _isOH =false;
 
 
     public:
 
-        explicit SlotDynSliceAgent(Slot& master, Operable& requiredIdx):
+        explicit SlotDynSliceAgent(Slot& master, Operable& requiredIdx, bool isOH):
         _masterSlot(master),
-        _requiredIdx(requiredIdx)
+        _requiredIdx(requiredIdx),
+        _isOH(isOH)
         {}
 
         Operable& v(){
@@ -386,7 +396,11 @@ namespace kathryn{
                 Operable* activateCond = nullptr;
                 int       assignPri    = DEFAULT_UE_PRI_MIN;
                 if (!isUsedAsDef){
-                    activateCond = &(_requiredIdx == idx);
+                    if(_isOH){
+                        activateCond = &_requiredIdx.sl(idx);
+                    }else{
+                        activateCond = &(_requiredIdx == idx);
+                    }
                     assignPri    = DEFAULT_UE_PRI_USER;
                 }
                 ////// create update event

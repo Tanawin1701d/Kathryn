@@ -15,8 +15,9 @@ namespace kathryn{
     public:
         RegSlotDynSliceAgent(
             Slot& slot,
-            Operable& requiredIdx
-        ) : SlotDynSliceAgent(slot, requiredIdx){}
+            Operable& requiredIdx,
+            bool isOH
+        ) : SlotDynSliceAgent(slot, requiredIdx, isOH){}
 
         RegSlotDynSliceAgent& operator <<=(Operable& rhsOpr);
         RegSlotDynSliceAgent& operator <<=(ull       rhsVal);
@@ -60,7 +61,8 @@ namespace kathryn{
 
         void doGlobAsm(Operable& srcOpr,
                        Operable& requiredIdx,
-                       ASM_TYPE asmType) override;
+                       ASM_TYPE  asmType,
+                       bool      isOH) override;
 
         void doGlobAsm(AsmNode* asmNode) override;
 
@@ -93,7 +95,6 @@ namespace kathryn{
          */
         RegSlotDynSliceAgent operator[](Operable& requiredIdx);
         RegSlotDynSliceAgent operator[](const OH& requiredOhIdx);
-
 
         /** it will match by name*/
         RegSlot& operator <<= (const Slot& rhs);

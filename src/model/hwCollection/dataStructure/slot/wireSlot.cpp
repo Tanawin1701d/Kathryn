@@ -18,12 +18,12 @@ namespace kathryn{
     }
 
     WireSlotDynSliceAgent& WireSlotDynSliceAgent::operator =(Operable& rhsOpr){
-        _masterSlot.doNonBlockAsm(rhsOpr, _requiredIdx, ASM_DIRECT);
+        _masterSlot.doNonBlockAsm(rhsOpr, _requiredIdx, ASM_DIRECT, _isOH);
         return *this;
     }
 
     WireSlotDynSliceAgent& WireSlotDynSliceAgent::operator =(ull rhsVal){
-        _masterSlot.doNonBlockAsm(rhsVal, _requiredIdx, ASM_DIRECT);
+        _masterSlot.doNonBlockAsm(rhsVal, _requiredIdx, ASM_DIRECT, _isOH);
         return *this;
     }
 
@@ -93,9 +93,10 @@ namespace kathryn{
     }
 
     void WireSlot::doGlobAsm(Operable& srcOpr,
-                   Operable& requiredIdx,
-                   ASM_TYPE asmType) {
-        AsmNode* asmNode = genGrpAsmNode(srcOpr, requiredIdx, asmType);
+                             Operable& requiredIdx,
+                             ASM_TYPE  asmType,
+                             bool      isOH) {
+        AsmNode* asmNode = genGrpAsmNode(srcOpr, requiredIdx, asmType, isOH);
         doGlobAsm(asmNode);
     }
 
@@ -194,8 +195,11 @@ namespace kathryn{
      *  dynamic indexing
      */
      WireSlotDynSliceAgent WireSlot::operator[](Operable& requiredIdx){
+        return WireSlotDynSliceAgent(*this, requiredIdx, false);
+    }
 
-        return WireSlotDynSliceAgent(*this, requiredIdx);
+    WireSlotDynSliceAgent WireSlot::operator[](const OH& requiredOhIdx){
+        return WireSlotDynSliceAgent(*this, requiredOhIdx._idx, true);
     }
 
     void WireSlot::doGlobAsm(AsmNode* asmNode) {

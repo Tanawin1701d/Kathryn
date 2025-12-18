@@ -10,22 +10,22 @@ namespace kathryn{
     //////// RegSlotDynSliceAgent
 
     RegSlotDynSliceAgent& RegSlotDynSliceAgent::operator <<=(Operable& rhsOpr){
-        _masterSlot.doBlockAsm(rhsOpr, _requiredIdx, ASM_DIRECT);
+        _masterSlot.doBlockAsm   (rhsOpr, _requiredIdx, ASM_DIRECT, _isOH);
         return *this;
     }
 
     RegSlotDynSliceAgent& RegSlotDynSliceAgent::operator <<=(ull rhsVal){
-        _masterSlot.doBlockAsm(rhsVal, _requiredIdx, ASM_DIRECT);
+        _masterSlot.doBlockAsm   (rhsVal, _requiredIdx, ASM_DIRECT, _isOH);
         return *this;
     }
 
     RegSlotDynSliceAgent& RegSlotDynSliceAgent::operator =(Operable& rhsOpr){
-        _masterSlot.doNonBlockAsm(rhsOpr, _requiredIdx, ASM_EQ_DEPNODE);
+        _masterSlot.doNonBlockAsm(rhsOpr, _requiredIdx, ASM_EQ_DEPNODE, _isOH);
         return *this;
     }
 
     RegSlotDynSliceAgent& RegSlotDynSliceAgent::operator =(ull rhsVal){
-        _masterSlot.doNonBlockAsm(rhsVal, _requiredIdx, ASM_EQ_DEPNODE);
+        _masterSlot.doNonBlockAsm(rhsVal, _requiredIdx, ASM_EQ_DEPNODE, _isOH);
         return *this;
     }
 
@@ -95,8 +95,9 @@ namespace kathryn{
 
     void RegSlot::doGlobAsm(Operable& srcOpr,
                             Operable& requiredIdx,
-                            ASM_TYPE asmType) {
-        AsmNode* asmNode = genGrpAsmNode(srcOpr, requiredIdx, asmType);
+                            ASM_TYPE asmType,
+                            bool isOH) {
+        AsmNode* asmNode = genGrpAsmNode(srcOpr, requiredIdx, asmType, isOH);
         doGlobAsm(asmNode);
     }
 
@@ -104,7 +105,7 @@ namespace kathryn{
         assert(asmNode != nullptr);
         ModelController* ctrl = getControllerPtr();
         assert(ctrl != nullptr);
-        ctrl->on_wire_update(
+        ctrl->on_reg_update(
             asmNode,
             nullptr
         );
@@ -191,7 +192,11 @@ namespace kathryn{
      *  dynamic indexing
      */
     RegSlotDynSliceAgent RegSlot::operator[](Operable& requiredIdx){
-        return {*this, requiredIdx};
+        return {*this, requiredIdx, false};
+    }
+
+    RegSlotDynSliceAgent RegSlot::operator[](const OH& requiredIdx){
+        return {*this, requiredIdx._idx, true};
     }
 
     /** it will match by name*/

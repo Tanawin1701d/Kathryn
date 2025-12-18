@@ -14,8 +14,9 @@ namespace kathryn{
     public:
         WireSlotDynSliceAgent(
             Slot& slot,
-            Operable& requiredIdx
-        ) : SlotDynSliceAgent(slot, requiredIdx){}
+            Operable& requiredIdx,
+            bool isOH
+        ) : SlotDynSliceAgent(slot, requiredIdx, isOH){}
 
         WireSlotDynSliceAgent& operator <<=(Operable& rhsOpr);
         WireSlotDynSliceAgent& operator <<=(ull       rhsVal);
@@ -61,7 +62,8 @@ namespace kathryn{
 
         void doGlobAsm(Operable& srcOpr,
                        Operable& requiredIdx,
-                       ASM_TYPE asmType) override;
+                       ASM_TYPE  asmType,
+                       bool      isOH) override;
 
         void doGlobAsm(AsmNode* asmNode) override;
 
@@ -95,7 +97,8 @@ namespace kathryn{
         /**
          *  dynamic indexing
          */
-         WireSlotDynSliceAgent operator[](Operable& requiredIdx);
+        WireSlotDynSliceAgent operator[](Operable& requiredIdx);
+        WireSlotDynSliceAgent operator[](const OH& requiredOhIdx);
 
 
         /** it will match by name*/
