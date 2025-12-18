@@ -26,6 +26,7 @@ namespace kathryn::o3{
     ByPass&      bp;
     StoreBuf&    stBuf;
     PipSimProbe* psp1 = nullptr;
+    ZyncSimProb* zsp  = nullptr;
     PipSimProbe* psp2 = nullptr;
 
 
@@ -51,6 +52,7 @@ namespace kathryn::o3{
 
     void setSimProbe (PipSimProbe* in_psp){psp1 = in_psp;}
     void setSimProbe2(PipSimProbe* in_psp){psp2 = in_psp;}
+    void setZyncProb (ZyncSimProb* in_zsp){zsp  = in_zsp;}
 
     void flow() override{
 
@@ -63,7 +65,7 @@ namespace kathryn::o3{
         stBuf.flow();
 
         pip(lss.sync){ tryInitProbe(psp1);
-            zyncc(lss.sync2, (isLoad || (!stBuf.isFull()))){
+            zyncc(lss.sync2, (isLoad || (!stBuf.isFull()))){ tryInitProbe(zsp)
                 //////assign ordinaty data to next stage rrftag. rdIse. spec. spectag
                 lsRes <<= src;
                 zif(bc.checkIsSuc(src)){

@@ -49,8 +49,11 @@ namespace kathryn::o3{
 
         void setDebugProbe(){
             ///// todo set simprobe for all
-            alu1.setSimProbe(&zyncProbGrp.issueAlu, &dataStructProbGrp.rsvAlu);
-            br.setSimProbe(&zyncProbGrp.issueBranch, &dataStructProbGrp.rsvbranch);
+            alu1.setSimProbe(&zyncProbGrp.issueAlu1   , &dataStructProbGrp.rsvAlu1  );
+            alu2.setSimProbe(&zyncProbGrp.issueAlu2   , &dataStructProbGrp.rsvAlu2  );
+            mul .setSimProbe(&zyncProbGrp.issueMul    , &dataStructProbGrp.rsvMul   );
+            br  .setSimProbe(&zyncProbGrp.issueBranch , &dataStructProbGrp.rsvbranch);
+            ls  .setSimProbe(&zyncProbGrp.issueLdSt   , &dataStructProbGrp.rsvLdSt  );
         }
 
         //////END DO NOT COUNT

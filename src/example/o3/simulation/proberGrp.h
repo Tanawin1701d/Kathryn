@@ -8,24 +8,35 @@
 #include "kathryn.h"
 #include "sim/modelSimEngine/hwCollection/dataStructure/table/tableProber.h"
 
-namespace kathryn{
-    namespace o3{
+namespace kathryn::o3{
 
         struct O3PipProbGrp{
             PipSimProbe fetch;
             PipSimProbe decode;
             PipSimProbe dispatch;
             //PipSimProbe issue;
-            PipSimProbe execAlu;
+            PipSimProbe execAlu1;
+            PipSimProbe execAlu2;
+            PipSimProbe execMul;
             PipSimProbe execBranch;
+            PipSimProbe execLdSt;
+            PipSimProbe execLdSt2;
+
         };
 
         struct O3ZyncProbGrp{
+            /////////// zync front end
             ZyncSimProb fetch; //// it means fetch zyncing to next pipeline stage
             ZyncSimProb decode;
             ZyncSimProb dispatch;
-            ZyncSimProb issueAlu;
+            //////////// zync reservation station
+            ZyncSimProb issueAlu1;
+            ZyncSimProb issueAlu2;
+            ZyncSimProb issueMul;
             ZyncSimProb issueBranch;
+            ZyncSimProb issueLdSt;  ///// issue from reservation station to ldst
+            ZyncSimProb loadStore2; ///// issue from first ldst to second ldst
+
         };
 
         struct O3DataStructProbGrp{
@@ -33,8 +44,11 @@ namespace kathryn{
             TableSimProbe arfBusy;
             TableSimProbe arfRename;
             TableSimProbe rrf;
-            TableSimProbe rsvAlu;
+            TableSimProbe rsvAlu1;
+            TableSimProbe rsvAlu2;
+            TableSimProbe rsvMul;
             TableSimProbe rsvbranch;
+            TableSimProbe rsvLdSt;
             TableSimProbe commit;
 
             void applyCycleChange(){
@@ -42,8 +56,13 @@ namespace kathryn{
                 arfBusy  .applyChange();
                 arfRename.applyChange();
                 rrf      .applyChange();
-                rsvAlu   .applyChange();
-                rsvbranch.applyChange();
+                /////// reservation station
+                rsvAlu1  . applyChange();
+                rsvAlu2  . applyChange();
+                rsvbranch. applyChange();
+                rsvMul   . applyChange();
+                rsvLdSt  . applyChange();
+                /////// reorder buffer
                 commit   .applyChange();
             }
         };
