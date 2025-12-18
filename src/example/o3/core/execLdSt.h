@@ -59,6 +59,9 @@ namespace kathryn::o3{
         opr& data      = src(phyIdx_2);
         opr& effAddr   = src(phyIdx_1) + src(imm);
 
+        //////// operate the store buffer
+        stBuf.flow();
+
         pip(lss.sync){ tryInitProbe(psp1);
             zyncc(lss.sync2, (isLoad || (!stBuf.isFull()))){
                 //////assign ordinaty data to next stage rrftag. rdIse. spec. spectag

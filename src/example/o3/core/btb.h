@@ -10,18 +10,19 @@
 namespace kathryn::o3{
 
     struct Btb{
-        mMem(valid, BTB_IDX_NUM, 1); ///// it is supposed to be register
+        Table validTable{ smRsvI, BTB_IDX_NUM};
+        //mMem(valid, BTB_IDX_NUM, 1); ///// it is supposed to be register
         mMem(bia  , BTB_IDX_NUM, ADDR_LEN);
         mMem(bta  , BTB_IDX_NUM, ADDR_LEN);
 
         Btb(){
-            ///// todo make resetEvent to valid
+            validTable.makeResetEvent(0, CM_NEGEDGE);
         }
 
         void onCommit(opr& srcAddr, opr& targetAddr){
             opr& btbAddr = srcAddr.sl(BTB_IDX_SEL_START, BTB_IDX_SEL_STOP);
             SET_CLK_MODE2NEG_EDGE();
-                valid[btbAddr] <<= 1;
+                validTable[btbAddr](0) <<= 1;
                 bia  [btbAddr] <<= srcAddr;
                 bta  [btbAddr] <<= targetAddr;
             SET_CLK_MODE2DEF();
@@ -31,7 +32,7 @@ namespace kathryn::o3{
         std::pair<opr&, opr&> onInquire(opr& cur_pc, opr& inv2){
             /////// pre declaration
             opr& btbAddr  = cur_pc.sl(BTB_IDX_SEL_START, BTB_IDX_SEL_STOP);
-            opr& rowValid = valid[btbAddr];
+            opr& rowValid = validTable[btbAddr](0).v();
             /////// retrieve the data from the memory
             mReg(tagData   , ADDR_LEN);
             mReg(targetAddr, ADDR_LEN);
@@ -44,7 +45,7 @@ namespace kathryn::o3{
             opr& hit2 = (tagData == cur_pc) && rowValid &&
                         (~inv2);
 
-            return {hit1 | hit2, bta[btbAddr]};
+            return {hit1 | hit2, targetAddr};
         }
     };
 
