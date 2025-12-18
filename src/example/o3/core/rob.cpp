@@ -11,11 +11,18 @@ namespace kathryn::o3{
     void Rob::flow(){
         comPtr2 = comPtr + 1;
         comPtr <<= (comPtr + com1Status + com2Status);
-        ////// we have to set commit commad
+
+
+        selectedEntry = com1Entry;
+        zif(com2Status & com2Entry(storeBit)){
+            ///// com2Status make sure that com1Status is not branch or store and current is ready to commit
+            selectedEntry = com2Entry;
+        }
 
         pip(pm.cm.sync){autoSync
             /////// commit the instruction
                 ////// due to branch can do only one
+            ////// we have to set commit commad
             opr& com1Cond = com1Entry(wbFin);
             opr& com2Cond = (com2Entry(wbFin)) & (~com1Entry(isBranch)) &
                             (~com1Entry(storeBit));
@@ -34,13 +41,15 @@ namespace kathryn::o3{
                 regArch.rrf.getPhyData(comPtr2)
             );
             ///// handle branch
-            zif(com1Status){
-                zif(com1Entry(isBranch)){
-                    fetchMod.onBranchCommit();
-                }
-                zif(com1Entry(storeBit)){
+            zif( (com1Status & com1Entry(isBranch)) |
+                 (com2Status & com2Entry(isBranch))
+            ){      assert(fetchMod != nullptr);
+                    fetchMod->onBranchCommit();
+            }
+
+            zif ((com1Status & com1Entry(storeBit)) |
+                 (com2Status & com2Entry(storeBit))){
                     storeBuf.onCommit();
-                }
             }
         }
 

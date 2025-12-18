@@ -22,19 +22,20 @@ namespace kathryn::o3{
         mWire(com2Status, 1      );
         mReg (comPtr    , RRF_SEL);
         mWire(comPtr2   , RRF_SEL);
-        PipStage& pm;
-        WireSlot com1Entry{_table[comPtr  ].v()};
-        WireSlot com2Entry{_table[comPtr+1].v()};
-        RegArch& regArch;
-        FetchMod& fetchMod;
-        StoreBuf& storeBuf;
+        PipStage&  pm;
+        WireSlot   com1Entry{_table[comPtr  ].v()};
+        WireSlot   com2Entry{_table[comPtr+1].v()};
+        WireSlot   selectedEntry{smROB};
+        RegArch&   regArch;
+        FetchMod*  fetchMod;
+        StoreBuf&  storeBuf;
 
         Rob(PipStage& pipStage, RegArch& regArch,
-            FetchMod& fetchMod, StoreBuf& storeBuf):
+            StoreBuf& storeBuf):
             _table(smROB, RRF_NUM),
             pm(pipStage),
             regArch(regArch),
-            fetchMod(fetchMod),
+            fetchMod(nullptr),
             storeBuf(storeBuf){
             _table.makeColResetEvent(wbFin, 0);
             _table.makeColResetEvent(isBranch, 0);
@@ -42,9 +43,11 @@ namespace kathryn::o3{
             dataStructProbGrp.commit.init(&_table);
         }
 
+
+
         opr& getComPtr(){ return comPtr;}
 
-        WireSlot& getCom1Entry(){ return com1Entry;}
+        WireSlot& getBranchUpdateEntry(){ return selectedEntry;}
 
 
         void flow() override;
@@ -68,7 +71,13 @@ namespace kathryn::o3{
             _table[idx](jumpAddr) <<= jaddr;
             _table[idx](jumpCond) <<= jCond;
         }
+
+        void setFetchMod(FetchMod* infetchMod){
+            fetchMod = infetchMod;
+        }
     };
+
+
 
 }
 #endif //KATHRYN_SRC_EXAMPLE_O3_ROB_H
