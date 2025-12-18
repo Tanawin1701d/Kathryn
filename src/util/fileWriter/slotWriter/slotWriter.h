@@ -37,7 +37,8 @@ namespace kathryn{
         SlotWriter(std::vector<std::string> slotNames, int columnWidth,std::string fileName);
         SlotWriter(std::vector<std::string> slotNames, std::vector<int> colWidths, std::string fileName);
 
-        void addSlotVal(int slotIdx, std::string value);
+        void addSlotVal (int slotIdx, std::string value);
+        void addSlotVals(int slotIdx, std::vector<std::string> values);
 
         void iterateCycle();
 

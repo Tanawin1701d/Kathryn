@@ -22,16 +22,30 @@ namespace kathryn::o3{
         writeDispatchSlot();
 
         /////// write backend
-        writeRsvAluSlot();
+        writeRsvAluSlot(1, _core->rsvs.alu1);
+        writeRsvAluSlot(2, _core->rsvs.alu2);
+        writeRsvMulSlot();
         writeRsvBranchSlot();
+        writeRsvLoadSlot();
 
-        writeIssueAluSlot();
+        /////// write backend
+
+        ///////// rsv issue
+        writeIssueAluSlot(1, _core->rsvs.alu1, zyncProbGrp.issueAlu1);
+        writeIssueAluSlot(2, _core->rsvs.alu2, zyncProbGrp.issueAlu2);
+        writeIssueMulSlot();
         writeIssueBranchSlot();
+        writeIssueLdStSlot();
 
-        writeExecuteAluSlot();
+        ///////// exec issue
+        writeExecuteAluSlot(1, _core->rsvs.alu1, pipProbGrp.execAlu1);
+        writeExecuteAluSlot(2, _core->rsvs.alu2, pipProbGrp.execAlu2);
+        writeExecuteMulSlot();
         auto [thisCycleMis, thisCycleSuc] =
         writeExecuteBranchSlot();
+        writeExecuteLdStSlot();
 
+        ///////// write commit stage
         writeCommitSlot();
 
         //////// iterate the cycle
@@ -331,6 +345,12 @@ namespace kathryn::o3{
         }
     }
 
+    /**
+     *
+     * RSV writing section
+     *
+     */
+
     std::pair<bool, std::vector<std::string>> O3SlotRecorder::writeRsvSlot(RegSlot& entry){
 
         ///// entry identifier
@@ -406,31 +426,64 @@ namespace kathryn::o3{
     }
 
 
-    void O3SlotRecorder::writeRsvAluSlot(){
+    void O3SlotRecorder::writeRsvAluSlot(int idx, ORsv& orsv){
         /////// write for alu rsv
-        _slotWriter->addSlotVal(RPS_RSV, "ALU RSV");
-        writeRsvBasicSlot(_core->aluRsv._table);
+        _slotWriter->addSlotVal(RPS_RSV, "ALU RSV " + std::to_string(idx));
+        writeRsvBasicSlot(orsv._table);
         _slotWriter->addSlotVal(RPS_RSV, "----------");
     }
+
+    void O3SlotRecorder::writeRsvMulSlot(){
+        ORsv& mulRsv = _core->rsvs.mul;
+        _slotWriter->addSlotVal(RPS_RSV, "MUL RSV ");
+        writeRsvBasicSlot(mulRsv._table);
+        _slotWriter->addSlotVal(RPS_RSV, "----------");
+    }
+
 
     void O3SlotRecorder::writeRsvBranchSlot(){
         /////// write for branch rsv
+        IRsv& branchIRsv = _core->rsvs.br;
         _slotWriter->addSlotVal(RPS_RSV, "BRANCH RSV");
-        _slotWriter->addSlotVal(RPS_RSV, "allocPtr : " + std::to_string(ull(_core->branchRsv.allocPtr)));
-        writeRsvBasicSlot(_core->branchRsv._table);
+        _slotWriter->addSlotVal(RPS_RSV, "allocPtr : " + std::to_string(ull(branchIRsv.allocPtr)));
+        writeRsvBasicSlot(branchIRsv._table);
         _slotWriter->addSlotVal(RPS_RSV, "----------");
     }
 
-    void O3SlotRecorder::writeIssueAluSlot(){
+    void O3SlotRecorder::writeRsvLoadSlot(){
+        IRsv& ldstIRsv = _core->rsvs.ls;
+        _slotWriter->addSlotVal(RPS_RSV, "LDST RSV");
+        _slotWriter->addSlotVal(RPS_RSV, "allocPtr : " + std::to_string(ull(ldstIRsv.allocPtr)));
+        writeRsvBasicSlot(ldstIRsv._table);
+        _slotWriter->addSlotVal(RPS_RSV, "----------");
+    }
+
+
+    /**
+     *
+     * RSV writing section
+     *
+     */
+
+    void O3SlotRecorder::writeIssueAluSlot(int idx, ORsv& orsv, ZyncSimProb& zIssueProbe){
         /////// write for alu issue
-        _slotWriter->addSlotVal(RPS_ISSUE, "ALU ISSUE");
-        bool isStall = writeSlotIfZyncStall(RPS_ISSUE, &zyncProbGrp.issueAlu);
-        if (true /***!isStall*/){
-            _slotWriter->addSlotVal(RPS_ISSUE, "issue Enty: " + cvtNum2BinStr(ull(_core->aluRsv.checkIdx)));
+        _slotWriter->addSlotVal(RPS_ISSUE, "ALU ISSUE " + std::to_string(idx));
+        bool isStall = writeSlotIfZyncStall(RPS_ISSUE, &zIssueProbe);
+        if (!isStall){
+            _slotWriter->addSlotVal(RPS_ISSUE, "issue Enty: " + cvtNum2BinStr(ull(orsv.checkIdx)));
         }
-        _slotWriter->addSlotVal(RPS_ISSUE, "slotReady: " + std::to_string(ull(_core->aluRsv.dbg_isSlotReady)));
+        _slotWriter->addSlotVal(RPS_ISSUE, "slotReady: " + std::to_string(ull(orsv.dbg_isSlotReady)));
         _slotWriter->addSlotVal(RPS_ISSUE, "----------");
         
+    }
+
+    void O3SlotRecorder::writeIssueMulSlot(){
+        ORsv& mulRsv = _core->rsvs.mul;
+        _slotWriter->addSlotVal(RPS_ISSUE, "MUL ISSUE");
+        bool isStall = writeSlotIfZyncStall(RPS_ISSUE, &zyncProbGrp.issueMul);
+        if (!isStall){
+            _slotWriter->addSlotVal(RPS_ISSUE, "issue Enty: " + std::to_string(ull(mulRsv.checkIdx)));
+        }
     }
 
     void O3SlotRecorder::writeIssueBranchSlot(){
@@ -438,7 +491,19 @@ namespace kathryn::o3{
         _slotWriter->addSlotVal(RPS_ISSUE, "BRANCH ISSUE");
         bool isStall = writeSlotIfZyncStall(RPS_ISSUE, &zyncProbGrp.issueBranch);
         if (!isStall){
-            _slotWriter->addSlotVal(RPS_ISSUE, "issue Enty: " + std::to_string(ull(_core->branchRsv.checkIdx)));
+            IRsv& branchIRsv = _core->rsvs.br;
+            _slotWriter->addSlotVal(RPS_ISSUE, "issue Enty: " + std::to_string(ull(branchIRsv.checkIdx)));
+        }
+        _slotWriter->addSlotVal(RPS_ISSUE, "----------");
+    }
+
+    void O3SlotRecorder::writeIssueLdStSlot(){
+        /////// write for branch issue
+        _slotWriter->addSlotVal(RPS_ISSUE, "LDST ISSUE");
+        bool isStall = writeSlotIfZyncStall(RPS_ISSUE, &zyncProbGrp.issueLdSt);
+        if (!isStall){
+            IRsv& ldStIRsv = _core->rsvs.ls;
+            _slotWriter->addSlotVal(RPS_ISSUE, "issue Enty: " + std::to_string(ull(ldStIRsv.checkIdx)));
         }
         _slotWriter->addSlotVal(RPS_ISSUE, "----------");
     }
@@ -531,16 +596,24 @@ namespace kathryn::o3{
 
 
 
-    void O3SlotRecorder::writeExecuteAluSlot(){
+    void O3SlotRecorder::writeExecuteAluSlot(int idx, ORsv& orsv, PipSimProbe& pExecProbe){
 
-        _slotWriter->addSlotVal(RPS_EXECUTE, "ALU EXEC");
-        bool aluIdle = writeSlotIfPipIdle(RPS_EXECUTE, &pipProbGrp.execAlu);
+        _slotWriter->addSlotVal(RPS_EXECUTE, "ALU EXEC " + std::to_string(idx));
+        bool aluIdle = writeSlotIfPipIdle(RPS_EXECUTE, &pExecProbe);
         if (aluIdle){return;}
 
-        writeExecuteBasic(_core->aluRsv.execSrc);
+        writeExecuteBasic(orsv.execSrc);
         _slotWriter->addSlotVal(RPS_EXECUTE, "----------");
     }
 
+    void O3SlotRecorder::writeExecuteMulSlot(){
+        ORsv& mulRsv = _core->rsvs.mul;
+        _slotWriter->addSlotVal(RPS_EXECUTE, "MUL EXEC");
+        bool mulIdle = writeSlotIfPipIdle(RPS_EXECUTE, &pipProbGrp.execMul);
+        if (mulIdle){return;}
+        writeExecuteBasic(mulRsv.execSrc);
+        _slotWriter->addSlotVal(RPS_EXECUTE, "----------");
+    }
 
     std::pair<bool, bool> O3SlotRecorder::writeExecuteBranchSlot(){
         _slotWriter->addSlotVal(RPS_EXECUTE, "BRANCH EXEC");
@@ -560,14 +633,34 @@ namespace kathryn::o3{
             isLastCycleMisPred = true;
 
         }
-        _slotWriter->addSlotVal(RPS_EXECUTE, "OP: " + translateOpcode(ull(_core->branchRsv.execSrc(opcode))));
+        IRsv& branchIRsv = _core->rsvs.br;
+        _slotWriter->addSlotVal(RPS_EXECUTE, "OP: " + translateOpcode(ull(branchIRsv.execSrc(opcode))));
         _slotWriter->addSlotVal(RPS_EXECUTE, "---");
-        writeExecuteBasic(_core->branchRsv.execSrc);
+        writeExecuteBasic(branchIRsv.execSrc);
 
         return {isThisCycleMisPred, isThisCycleSucc};
     }
 
-    std::string O3SlotRecorder::writeRobSlot(ull robIdx){
+    void O3SlotRecorder::writeExecuteLdStSlot(){
+        IRsv& ldstIRsv = _core->rsvs.ls;
+        ////////////////// load store 1
+        _slotWriter->addSlotVal(RPS_EXECUTE, "LDST EXEC 1");
+        bool ldStIdle = writeSlotIfPipIdle(RPS_EXECUTE, &pipProbGrp.execLdSt);
+        if (!ldStIdle){
+            writeExecuteBasic(ldstIRsv.execSrc);
+        }
+        _slotWriter->addSlotVal(RPS_EXECUTE, "----------");
+
+        ////////////////// load store 2
+        _slotWriter->addSlotVal(RPS_EXECUTE, "LDST EXEC 2");
+        bool ldStIdle2 = writeSlotIfPipIdle(RPS_EXECUTE, &pipProbGrp.execLdSt2);
+        if (ldStIdle2){return;}
+        writeExecuteBasic(_core->pm.ldSt.lsRes);
+    }
+
+    std::vector<std::string> O3SlotRecorder::writeRobSlot(ull robIdx){
+
+        std::vector<std::string> result;
 
         RegSlot&  targetRegSlot = _core->prob._table(static_cast<int>(robIdx));
 
@@ -576,16 +669,36 @@ namespace kathryn::o3{
         ull sim_rdUse    = ull(targetRegSlot(rdUse));
         ull sim_rdIdx    = ull(targetRegSlot(rdIdx));
 
+        ull sim_storeBit = ull(targetRegSlot(storeBit));
+
+        ull sim_pc       = ull(targetRegSlot(pc));
+        ull sim_jumpAddr = ull(targetRegSlot(jumpAddr));
+        ull sim_jumpCond = ull(targetRegSlot(jumpCond));
+
+
+        //////// basic string for rob entry
         std::string entryStr = "E:" + std::to_string(robIdx);
         entryStr += "/fin:" + std::to_string(sim_wbFin);
-        entryStr += "/br:" + std::to_string(sim_isBranch);
+
         entryStr += "/rd:";
         if (sim_rdUse){
             entryStr += std::to_string(sim_rdIdx);
         }else{
             entryStr += "-";
         }
-        return entryStr;
+
+        if (sim_storeBit){
+            entryStr += "/Store";
+        }
+        result.push_back(entryStr);
+
+        //////// branch info add in case it is branch
+        if (sim_isBranch){
+            result.push_back("/br: c  "    + std::to_string(sim_jumpCond));
+            result.push_back("/br: pc "  + cvtNum2HexStr(sim_pc));
+            result.push_back("/br: to "  + cvtNum2HexStr(sim_jumpAddr));
+        }
+        return result;
 
     }
 
@@ -599,7 +712,7 @@ namespace kathryn::o3{
         _slotWriter->addSlotVal(RPS_COMMIT, "dispPtr: " + std::to_string(ull(_core->regArch.rrf.reqPtr)));
         _slotWriter->addSlotVal(RPS_COMMIT, "dispAmt: " + std::to_string(ull(amtDisp)));
         for (int i = 0; i < amtDisp; i++){
-            _slotWriter->addSlotVal(RPS_COMMIT, writeRobSlot((lastDispatchPtr + i)%robSize));
+            _slotWriter->addSlotVals(RPS_COMMIT, writeRobSlot((lastDispatchPtr + i)%robSize));
         }
 
 
@@ -609,7 +722,7 @@ namespace kathryn::o3{
         _slotWriter->addSlotVal(RPS_COMMIT, "cmAmt: " + std::to_string(amtCommit));
 
         for (int i = 0; i < amtCommit; i++){
-            _slotWriter->addSlotVal(RPS_COMMIT, writeRobSlot((ull(_core->prob.comPtr) + i) % robSize));
+            _slotWriter->addSlotVals(RPS_COMMIT, writeRobSlot((ull(_core->prob.comPtr) + i) % robSize));
         }
 
         // _slotWriter->addSlotVal(RPS_COMMIT, "----- changing");

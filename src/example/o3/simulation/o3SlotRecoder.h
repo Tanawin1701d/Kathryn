@@ -76,20 +76,31 @@ namespace kathryn::o3{
         void writeDispatchSlot();
 
         std::pair<bool, std::vector<std::string>>
-             writeRsvSlot        (RegSlot&   entry);
-        void writeRsvBasicSlot   (Table& table);
-        void writeRsvAluSlot     ();
-        void writeRsvBranchSlot  ();
+             writeRsvSlot      (RegSlot&   entry);
+        void writeRsvBasicSlot (Table& table);
+        void writeRsvAluSlot   (int idx, ORsv& orsv);
+        void writeRsvMulSlot   ();
+        void writeRsvBranchSlot();
+        void writeRsvLoadSlot  ();
 
-        void writeIssueAluSlot   ();
+
+        void writeIssueAluSlot   (int idx, ORsv& orsv, ZyncSimProb& zIssueProbe);
+        void writeIssueMulSlot   ();
         void writeIssueBranchSlot();
+        void writeIssueLdStSlot  ();
 
         void writeExecuteBasic     (RegSlot& src);
-        void writeExecuteAluSlot   ();
-        ////// {misPred, sucPred}
-        std::pair<bool, bool> writeExecuteBranchSlot();
+        void writeExecuteAluSlot   (int idx, ORsv& orsv, PipSimProbe& pExecProbe);
+        void writeExecuteMulSlot   ();
+        std::pair<bool, bool>
+             writeExecuteBranchSlot();
+        void writeExecuteLdStSlot  ();
 
-        std::string writeRobSlot(ull robIdx);
+        ////// {misPred, sucPred}
+
+
+        std::vector<std::string>
+             writeRobSlot(ull robIdx);
         void writeCommitSlot();
 
         std::string translateOpcode(ull rawInstr);

@@ -98,6 +98,12 @@ namespace kathryn{
         curRow.addSlotVal(slotIdx, std::move(value));
     }
 
+    void SlotWriter::addSlotVals(int slotIdx, std::vector<std::string> values) {
+        for (auto& val: values){
+            addSlotVal(slotIdx, val);
+        }
+    }
+
     void SlotWriter::iterateCycle() {
 
         /***write the data*/
