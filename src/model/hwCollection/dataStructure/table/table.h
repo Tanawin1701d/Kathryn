@@ -102,9 +102,9 @@ namespace kathryn{
         void doCusLogic(std::function<void(RegSlot&, int rowIdx)>  cusLogic);
 
         ////// make resetEvent will do when glo
-        Table& makeResetEvent    (ull   resetVal);
-        Table& makeColResetEvent (int   colIdx              , ull resetVal = 0);
-        Table& makeColResetEvent (const std::string& colName, ull resetVal = 0);
+        Table& makeResetEvent    (ull   resetVal                              , CLOCK_MODE cm = CM_POSEDGE);
+        Table& makeColResetEvent (int   colIdx              , ull resetVal = 0, CLOCK_MODE cm = CM_POSEDGE);
+        Table& makeColResetEvent (const std::string& colName, ull resetVal = 0, CLOCK_MODE cm = CM_POSEDGE);
 
 
         /////// reduction operation

@@ -111,20 +111,20 @@ namespace kathryn{
         );
     }
 
-    void RegSlot::makeResetEvent(ull resetValue){
+    void RegSlot::makeResetEvent(ull resetValue, CLOCK_MODE cm){
         for (Reg* reg: _regs){
-            reg->makeResetEvent(resetValue);
+            reg->makeResetEvent(resetValue, cm);
         }
     }
 
-    void RegSlot::makeResetEvent(int colIdx, ull resetValue){
+    void RegSlot::makeResetEvent(int colIdx, ull resetValue, CLOCK_MODE cm){
         mfAssert(isValidIdx(colIdx), "index out of range to get " + std::to_string(colIdx));
-        _regs[colIdx]->makeResetEvent(resetValue);
+        _regs[colIdx]->makeResetEvent(resetValue, cm);
     }
 
-    void RegSlot::makeResetEvent(const std::string& colName, ull resetValue){
+    void RegSlot::makeResetEvent(const std::string& colName, ull resetValue, CLOCK_MODE cm){
         int colIdx = getIdx(colName);
-        makeResetEvent(colIdx, resetValue);
+        makeResetEvent(colIdx, resetValue, cm);
     }
 
 

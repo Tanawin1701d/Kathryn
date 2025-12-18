@@ -335,28 +335,27 @@ namespace kathryn{
 
     /////// reset event
 
-    Table& Table::makeResetEvent(ull resetVal){
+    Table& Table::makeResetEvent(ull resetVal, CLOCK_MODE cm){
         for (RegSlot* row : _rows){
             assert(row != nullptr);
-            row->makeResetEvent(resetVal);
+            row->makeResetEvent(resetVal, cm);
         }
         return *this;
     }
 
-    Table& Table::makeColResetEvent(int colIdx, ull resetVal){
-
+    Table& Table::makeColResetEvent(int colIdx, ull resetVal, CLOCK_MODE cm){
         for (RegSlot* row : _rows){
             assert(row != nullptr);
-            row->makeResetEvent(colIdx, resetVal);
+            row->makeResetEvent(colIdx, resetVal, cm);
         }
         return *this;
     }
 
-    Table& Table::makeColResetEvent(const std::string& colName, ull resetVal){
-
+    Table& Table::makeColResetEvent(const std::string& colName, ull resetVal,
+                                    CLOCK_MODE cm){
         for (RegSlot* row : _rows){
             assert(row != nullptr);
-            row->makeResetEvent(colName, resetVal);
+            row->makeResetEvent(colName, resetVal, cm);
         }
         return *this;
     }

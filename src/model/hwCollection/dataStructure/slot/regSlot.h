@@ -66,9 +66,9 @@ namespace kathryn{
 
         void doGlobAsm(AsmNode* asmNode) override;
 
-        void makeResetEvent(ull resetValue = 0);
-        void makeResetEvent(int colIdx, ull resetValue);
-        void makeResetEvent(const std::string& colName, ull resetValue);
+        void makeResetEvent(ull resetValue = 0, CLOCK_MODE cm = CM_POSEDGE);
+        void makeResetEvent(int colIdx, ull resetValue, CLOCK_MODE cm = CM_POSEDGE);
+        void makeResetEvent(const std::string& colName, ull resetValue, CLOCK_MODE cm = CM_POSEDGE);
 
         /***
          *  static slicing
