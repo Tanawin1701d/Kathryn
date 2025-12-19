@@ -11,8 +11,14 @@
 
 namespace kathryn{
 
+    Table::Table(const Table& rhs){
+        operator=(rhs);
+    }
+
     Table::Table(const SlotMeta&  meta, const std::vector<RegSlot*>& rows):
-        _meta(std::move(meta)), _rows(rows){
+        _meta(std::move(meta)),
+        _rows(rows),
+        _isMasterTable(false){
             mfAssert(!rows.empty(), "rows cannot be empty");
             for (RegSlot* row: rows){
                 mfAssert(row != nullptr, "row cannot be nullptr");
@@ -20,7 +26,8 @@ namespace kathryn{
         }
 
     Table::Table(const SlotMeta&  slotMeta, int amtRow, const std::string& prefixName):
-        _meta(std::move(slotMeta)){
+        _meta(std::move(slotMeta)),
+        _isMasterTable(true){
             mfAssert(amtRow > 0, "amtRow must be greater than 0");
             buildRows(_meta, amtRow, prefixName);
         }
@@ -29,14 +36,17 @@ namespace kathryn{
               const std::vector<int>&         fieldSizes,
               int amtRow,
               const std::string& prefixName):
-        _meta(fieldNames, fieldSizes){
+        _meta(fieldNames, fieldSizes),
+        _isMasterTable(true){
             mfAssert(amtRow > 0, "amtRow must be greater than 0");
             buildRows(_meta, amtRow, prefixName);
         }
 
     Table::~Table(){
-            for (RegSlot* row: _rows){
-                delete row;
+            if (_isMasterTable){
+                for (RegSlot* row: _rows){
+                    delete row;
+                }
             }
         }
 
@@ -576,6 +586,13 @@ namespace kathryn{
 
     }
 
+    Table& Table::operator = (const Table& rhs){
+        _meta = rhs._meta;
+        _rows = rhs._rows;
+        _isMasterTable = false;
+        return *this;
+    }
+
     Table Table::sliceByCol(int start, int end){
         SlotMeta newSlotMeta = _meta(start, end);
         std::vector<RegSlot*> newRows;
@@ -656,7 +673,7 @@ namespace kathryn{
             newRows.push_back(_rows[i]);
             newRows.push_back(rhs._rows[i]);
         }
-        return Table(newMeta, newRows);
+        return {newMeta, newRows};
 
     }
 

@@ -20,10 +20,10 @@ namespace kathryn{
     static constexpr char ORDERED_USER_VALID_KW[] = "userValidCompare";
     static constexpr char ORDERED_SYSTEM_SEQ_OLD_KW[] = "systemInOldestSec";
 
-
     protected:
         SlotMeta _meta;
         std::vector<RegSlot*> _rows;
+        bool     _isMasterTable = true; //// does it is the table that produce regSlot
 
         struct ReducNode{
             WireSlot* slot = nullptr; Operable* idx{};
@@ -41,6 +41,7 @@ namespace kathryn{
         /**
          * this is used to initialize from slice
          */
+        Table(const Table& rhs);
         Table(const SlotMeta&  meta, const std::vector<RegSlot*>& rows);
 
         Table(const SlotMeta&  slotMeta, int amtRow, const std::string& prefixName = "table");
@@ -146,6 +147,8 @@ namespace kathryn{
         RegSlot& operator () (int idx);
 
         Table operator() (int start, int end);
+
+        Table& operator = (const Table& rhs);
 
         Table sliceByCol(int start, int end);  //// treated as base col slice function
         Table sliceByCol(const std::string& startField, const std::string& endField);

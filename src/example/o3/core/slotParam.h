@@ -96,6 +96,11 @@ namespace kathryn::o3{
                 {1}
         };
 
+        inline SlotMeta smBtb{
+                {busy},
+                {64}
+        };
+
         inline SlotMeta smStoreBuf{ //// for store buffer entry
                     { busy    ,  complete, spec     , specTag    ,
                       mem_addr

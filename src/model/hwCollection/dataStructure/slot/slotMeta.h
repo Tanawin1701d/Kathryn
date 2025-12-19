@@ -142,7 +142,7 @@ namespace kathryn{
         SlotMeta operator() (int start, int end){
             mfAssert(isValidIdx(start), "start index" + std::to_string(start) + " out of range");
             int newAmt = end - start;
-            mfAssert(newAmt > 0 && newAmt < _fieldMetas.size(), "end index must be larger than start index");
+            mfAssert(newAmt > 0 && newAmt <= _fieldMetas.size(), "end index must be larger than start index");
 
             std::vector<FieldMeta> newFieldMetas;
             for (int idx = start; idx < end; idx++){

@@ -217,7 +217,7 @@ namespace kathryn::o3{
         FetchStage&  fetch_stage = _ps->ft;
 
 
-        ull sim_invalid1   = ull(fetch_stage.raw(invalid1));
+        ull sim_invalid1   = 0;
         ull sim_instr1     = ull(fetch_stage.raw(inst1));
         ull sim_invalid2   = ull(fetch_stage.raw(invalid2));
         ull sim_instr2     = ull(fetch_stage.raw(inst2));
@@ -604,7 +604,7 @@ namespace kathryn::o3{
         if (src.isThereField(imm)){
             ull sim_imm = ull(src(imm));
             _slotWriter->addSlotVal(RPS_EXECUTE, "IMM: " + cvtNum2HexStr(sim_imm));
-        }else{
+        }else if (src.isThereField(imm_br)){
             ull sim_imm = ull(src(imm_br));
             _slotWriter->addSlotVal(RPS_EXECUTE, "IMM_BR: " + cvtNum2HexStr(sim_imm));
         }
