@@ -28,7 +28,8 @@ namespace kathryn::o3{
         RPS_ISSUE    = 7,
         RPS_EXECUTE  = 8,
         RPS_COMMIT   = 9,
-        RPS_NUM      = 10
+        RPS_STBUF    = 10,
+        RPS_NUM      = 11
     };
     class O3SlotRecorder{
     public:
@@ -51,6 +52,8 @@ namespace kathryn::o3{
         _ps(&_core->pm){
             assert(_slotWriter != nullptr);
         }
+
+
 
         void recordSlot();
 
@@ -76,12 +79,16 @@ namespace kathryn::o3{
         void writeDispatchSlot();
 
         std::pair<bool, std::vector<std::string>>
-             writeRsvSlot      (RegSlot&   entry);
+             writeRsvSlot      (RegSlot& entry);
         void writeRsvBasicSlot (Table& table);
         void writeRsvAluSlot   (int idx, ORsv& orsv);
         void writeRsvMulSlot   ();
         void writeRsvBranchSlot();
         void writeRsvLoadSlot  ();
+
+        std::pair<bool, std::vector<std::string>>
+             writeStBufSlot  (RegSlot& entry);
+        void writeStBufTable ();
 
 
         void writeIssueAluSlot   (int idx, ORsv& orsv, ZyncSimProb& zIssueProbe);
@@ -90,6 +97,7 @@ namespace kathryn::o3{
         void writeIssueLdStSlot  ();
 
         void writeExecuteBasic     (RegSlot& src);
+        void writeExecuteLDSTBasic (RegSlot& src);
         void writeExecuteAluSlot   (int idx, ORsv& orsv, PipSimProbe& pExecProbe);
         void writeExecuteMulSlot   ();
         std::pair<bool, bool>

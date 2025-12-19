@@ -10,7 +10,7 @@ namespace kathryn::o3{
     O3Sim::O3Sim(CYCLE limitCycle,
                  const std::string& prefix,
                  std::vector<std::string> testTypes,
-                 Core& core,
+                 TopSim& top,
                  SimProxyBuildMode buildMode):
 
     SimInterface(limitCycle,
@@ -21,14 +21,18 @@ namespace kathryn::o3{
                  false,
                  false,
                  1),
-    _core(core),
+    _top(top),
+    _core(_top.myCore),
     slotWriter({"MPFT"    , "ARF","RRF"  , "FETCH"  ,"DECODE",
-                "DISPATCH", "RSV","ISSUE", "EXECUTE","COMMIT"},
+                "DISPATCH", "RSV","ISSUE", "EXECUTE","COMMIT",
+                "STBUF"
+                   },
                 {20       , 40   , 25    , 25       , 30,
-                 30       , 35   , 25    , 35       , 25},
+                 30       , 35   , 25    , 35       , 25,
+                 25},
                 std::move(prefix + testTypes[0] + "/oslot.sl")),
     _prefixFolder(prefix),
-    _slotRecorder(&slotWriter, &core),
+    _slotRecorder(&slotWriter, &_core),
     _testTypes(testTypes){}
 
     void O3Sim::describeCon(){
@@ -50,6 +54,9 @@ namespace kathryn::o3{
             readAssertVal(_prefixFolder + _testTypes[_curTestCaseIdx] + "/ast.out");
             //////// iterate for 100 cycle
             for (int i = 0; i <= 150; i++){
+                ///////// give the data to
+                readMem2Fetch();
+                ///////// record the system
                 conEndCycle();
                 _slotRecorder.recordSlot();
                 conNextCycle(1);
@@ -58,6 +65,23 @@ namespace kathryn::o3{
             testRegister();
             finalPerfCol();
         }
+
+    }
+
+    void O3Sim::readMem2Fetch(){
+
+        ///// get new instruction data
+        ull curPc     = ull(_core.pm.ft.curPc);
+            curPc     = curPc >> 2; ///// make 4bytes align
+        ull aligner   = (ull(1) << 2) - 1; ///// to align 4 instructions per read 111111...11100
+            aligner   = (~aligner);
+        ull alignedPc = curPc & aligner;
+
+        ///// get new instruction data
+        _top.ijImem0.s(_imem[alignedPc + 0]);
+        _top.ijImem0.s(_imem[alignedPc + 1]);
+        _top.ijImem0.s(_imem[alignedPc + 2]);
+        _top.ijImem0.s(_imem[alignedPc + 3]);
 
     }
 
@@ -73,32 +97,15 @@ namespace kathryn::o3{
         /** read instruction from file and write it to memory block*/
         uint32_t writeAddr = 0;
         uint32_t instr;
-        MemBlock*  iMems[4] = {
-            &_core.pFetch.iMem0,
-            &_core.pFetch.iMem1,
-            &_core.pFetch.iMem2,
-            &_core.pFetch.iMem3
-        };
         while(asmFile.read(reinterpret_cast<char*>(&instr), sizeof instr)){
             assert((instr & 0b11) == 0b11); ////// check instruction
-            uint32_t parititionedAddr = writeAddr >> 2;
-            uint32_t offset           = writeAddr & 0b11;
-            iMems[offset]->at(parititionedAddr).setVar(instr);
+            _imem[writeAddr] = instr;
             writeAddr++;
         }
         asmFile.close();
 
-        ///////////// fill it with zero
-        for (int i = 0; i < 4; i++){
-            /// i = 00/01/10/11
-            uint32_t partitionedAddr = writeAddr >> 2;
-            if (i < (writeAddr & 0b11)){
-                //////// the address partition address has been written already
-                partitionedAddr++;
-            }
-            size_t setZeroAmt = iMems[i]->getDepthSize() - partitionedAddr;
-            iMems[i]->at(partitionedAddr).setVarArr(0, setZeroAmt);
-        }
+        ///// fill all with zero
+        std::fill(_imem + writeAddr, _imem + IMEM_ROW, 0);
 
         std::cout << TC_GREEN << "initialize mem finish" << TC_DEF << std::endl;
     }

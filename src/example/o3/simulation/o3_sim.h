@@ -8,12 +8,13 @@
 #include <fstream>
 #include "kathryn.h"
 #include "o3SlotRecoder.h"
-#include "example/o3/core/core.h"
+#include "top.h"
 #include "frontEnd/cmd/paramReader.h"
 
     namespace kathryn::o3{
         class O3Sim : public SimInterface{
         public:
+            TopSim& _top;
             Core& _core;
             const int AMT_STAGE = 5;
             int _curTestCaseIdx = 0;
@@ -21,16 +22,18 @@
             std::string _prefixFolder;
             O3SlotRecorder _slotRecorder;
             std::vector<std::string> _testTypes;
-            uint32_t _regTestVal[REG_NUM]{};
+            uint32_t _imem      [IMEM_ROW]{};
+            uint32_t _regTestVal[REG_NUM] {};
 
         public:
             explicit O3Sim(CYCLE limitCycle,
                            const std::string& prefix,
                            std::vector<std::string> testTypes,
-                           Core& core,
+                           TopSim& top,
                            SimProxyBuildMode buildMode);
 
             void          describeCon  () override;
+            void          readMem2Fetch();
             virtual void  readAssembly (const std::string& filePath);
             virtual void  readAssertVal(const std::string& filePath);
             void          resetRegister();
@@ -46,12 +49,12 @@
                     "LoadImm", "BranchSc"
                 };
 
-                mMod(o3Core, Core, false);
+                mMod(o3Top, TopSim, false);
                 startModelKathryn();
                 O3Sim simulator(2500,
                                 params["prefix"],
                                 testTypes,
-                                (Core&)o3Core,
+                                (TopSim&)o3Top,
                                 getSPBM(params)
                 );
                 simulator.simStart();

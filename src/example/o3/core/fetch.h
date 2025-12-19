@@ -54,7 +54,12 @@ namespace kathryn::o3{
             gshare.buildPhtReader(convertPcToPhtIdx(curPc         , gshare.bhrMaster),
                                   convertPcToPhtIdx(cmSlot(pc), cmSlot(bhr) ));
             fetchPredCond    = (gshare.fetPhtVal > 1);
-            fetchHitAndTaken = fetchBtbHit & fetchPredCond;
+            if (pm.ft.isFallTruePred){
+                fetchHitAndTaken = 0;
+            }else{
+                fetchHitAndTaken = fetchBtbHit & fetchPredCond;
+            }
+
 
 
         }

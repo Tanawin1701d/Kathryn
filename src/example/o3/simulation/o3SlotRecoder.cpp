@@ -48,6 +48,9 @@ namespace kathryn::o3{
         ///////// write commit stage
         writeCommitSlot();
 
+        ///////// write commit stage
+        writeStBufTable();
+
         //////// iterate the cycle
         _slotWriter->iterateCycle();
 
@@ -61,7 +64,6 @@ namespace kathryn::o3{
         ////// apply change on slot recorder
         dataStructProbGrp.applyCycleChange();
     }
-
 
     bool O3SlotRecorder::writeSlotIfPipIdle(REC_PIP_STAGE stageIdx,
                                                   PipSimProbe* pipProbe){
@@ -358,20 +360,21 @@ namespace kathryn::o3{
 
         ull sim_pc        = ull(entry(pc));
         ull sim_rrftag    = ull(entry(rrftag));
-        ull sim_rdUse     = ull(entry(rdUse));
+        //ull sim_rdUse     = ull(entry(rdUse));
         ull sim_spec      = ull(entry(spec));
         ull sim_specTag   = ull(entry(specTag));
         ull sim_phyIdx_1  = ull(entry(phyIdx_1));
-        ull sim_rsSel_1   = ull(entry(rsSel_1));
+        ///ull sim_rsSel_1   = ull(entry(rsSel_1));
         ull sim_rsValid_1 = ull(entry(rsValid_1));
         ull sim_phyIdx_2  = ull(entry(phyIdx_2));
-        ull sim_rsSel_2   = ull(entry(rsSel_2));
+        ///ull sim_rsSel_2   = ull(entry(rsSel_2));
         ull sim_rsValid_2 = ull(entry(rsValid_2));
 
         if (!sim_busy){
             return{false, {}};
         }
-
+        std::vector<std::string> results;
+        //////// sort bit/ pc/ register
         std::string result0;
 
         if (entry.isThereField(sortBit)){
@@ -398,10 +401,30 @@ namespace kathryn::o3{
             }
         }
 
+        results.push_back(result0);
+
+        ////// result 2 speculative meta data
         std::string result1;
         result1 += "spec: " + std::to_string(sim_spec) + " spt:" + cvtNum2BinStr(sim_specTag);
 
-        return {true, {result0, result1}};
+        results.push_back(result1);
+
+        ////// result 3 multiplication
+
+        std::string result3;
+
+        if (entry.isThereField(md_req_in_signed_1)){
+            std::string r1s = ull(entry(md_req_in_signed_1)) ? "s" : "u";
+            std::string r2s = ull(entry(md_req_in_signed_2)) ? "s" : "u";
+            std::string hl  = ull(entry(md_req_out_sel))     ? "h" : "l";
+
+            result3 += "mulReq: 1:" + r1s + " "
+                             + "2:" + r2s + " "
+                             + "sl:";
+            results.push_back(result3);
+        }
+
+        return {true, results};
     }
 
 
@@ -458,10 +481,55 @@ namespace kathryn::o3{
         _slotWriter->addSlotVal(RPS_RSV, "----------");
     }
 
+    /**
+     * Load/Store Buffer
+     *
+     */
+    std::pair<bool, std::vector<std::string>>
+    O3SlotRecorder::writeStBufSlot(RegSlot& entry){
+
+        ull sim_busy     = ull(entry(busy));
+        ull sim_complete = ull(entry(complete));
+        ull sim_spec     = ull(entry(spec));
+        ull sim_specTag  = ull(entry(specTag));
+        ull sim_mem_addr = ull(entry(mem_addr));
+
+        std::vector<std::string> results;
+        std::string result = "cpt: " + std::to_string(sim_complete) +
+            " /sp:" + std::to_string(sim_spec) +
+            " /spt:" + cvtNum2BinStr(sim_specTag);
+        results.push_back(result);
+        results.push_back("addr: " + cvtNum2HexStr(sim_mem_addr));
+
+        return {static_cast<bool>(sim_busy), results};
+    }
+
+    void O3SlotRecorder::writeStBufTable(){
+        _slotWriter->addSlotVal(RPS_STBUF, "finPtr: " + std::to_string(ull(_core->storeBuf.finPtr)));
+        Table& table = _core->storeBuf._table;
+        for (int rowIdx = 0; rowIdx < table.getNumRow(); rowIdx++){
+            RegSlot& entry = table(rowIdx);
+            bool isUsed = false;
+            std::vector<std::string> results;
+            std::tie(isUsed, results) = writeStBufSlot(entry);
+            if (isUsed){
+                bool isFirst = true;
+                for (std::string& result : results){
+                    std::string prefix = isFirst ? (std::to_string(rowIdx) + "] ") : "";
+                    _slotWriter->addSlotVal(RPS_STBUF, prefix + result);
+                    isFirst = false;
+                }
+
+            }
+        }
+    }
+
+
+
 
     /**
      *
-     * RSV writing section
+     * ISSUE writing section
      *
      */
 
@@ -511,12 +579,6 @@ namespace kathryn::o3{
 
     void O3SlotRecorder::writeExecuteBasic(RegSlot& src){
         ull sim_pc        = ull(src(pc));
-        ull sim_imm       = 777;
-        if (src.isThereField(imm)){
-            sim_imm = ull(src(imm));
-        }else{
-            sim_imm       = ull(src(imm_br));
-        }
         ull sim_rrftag    = ull(src(rrftag));
         ull sim_rdUse     = ull(src(rdUse));
         ull sim_aluOp     = ull(src(aluOp));
@@ -530,24 +592,23 @@ namespace kathryn::o3{
         ull sim_rsValid_2 = ull(src(rsValid_2));
 
         std::map<ull, std::string> aluOpMap = {
-            { 0, "ADD"},
-            { 1, "SLL"},
-            { 4, "XOR"},
-            { 6, "OR"},
-            { 7, "AND"},
-            { 5, "SRL"},
-            { 8, "SEQ"},
-            { 9, "SNE"},
-            {10, "SUB"},
-            {11, "SRA"},
-            {12, "SLT"},
-            {13, "SGE"},
-            {14, "SLTU"},
-            {15, "SGEU"}
+            { 0, "ADD"} ,{ 1, "SLL"},{ 4, "XOR"},
+            { 6, "OR"}  ,{ 7, "AND"},{ 5, "SRL"},
+            { 8, "SEQ"} ,{ 9, "SNE"},{10, "SUB"},
+            {11, "SRA"} ,{12, "SLT"},{13, "SGE"},
+            {14, "SLTU"},{15, "SGEU"}
         };
         
         _slotWriter->addSlotVal(RPS_EXECUTE, "PC: " + cvtNum2HexStr(sim_pc));
-        _slotWriter->addSlotVal(RPS_EXECUTE, "IMM: " + cvtNum2HexStr(sim_imm));
+
+        if (src.isThereField(imm)){
+            ull sim_imm = ull(src(imm));
+            _slotWriter->addSlotVal(RPS_EXECUTE, "IMM: " + cvtNum2HexStr(sim_imm));
+        }else{
+            ull sim_imm = ull(src(imm_br));
+            _slotWriter->addSlotVal(RPS_EXECUTE, "IMM_BR: " + cvtNum2HexStr(sim_imm));
+        }
+
         _slotWriter->addSlotVal(RPS_EXECUTE, "ALU Op: " + translateAluOp(sim_aluOp) +
                                              "/Spec: " + std::to_string(sim_spec) +
                                              "/SpecTag: " + cvtNum2BinStr(sim_specTag));
@@ -563,18 +624,9 @@ namespace kathryn::o3{
 
 
 
-        std::map<ull, std::string> srcASelMap = {
-            {0, "RS1"},
-            {1, "PC"},
-            {2, "ZERO"}
-        };
+        std::map<ull, std::string> srcASelMap = {{0, "RS1"}, {1, "PC"}, {2, "ZERO"}};
 
-        std::map<ull, std::string> srcBSelMap = {
-            {0, "RS2"},
-            {1, "IMM"},
-            {2, "FOUR"},
-            {3, "ZERO"}
-        };
+        std::map<ull, std::string> srcBSelMap = {{0, "RS2"}, {1, "IMM"}, {2, "FOUR"}, {3, "ZERO"}};
         /////////// rs1
         std::string sim_rs1Valid = sim_rsValid_1 ? "(valid)" : "(false)";
         std::string selStr = (srcASelMap.find(sim_rsSel_1) != srcASelMap.end())
@@ -591,6 +643,42 @@ namespace kathryn::o3{
         _slotWriter->addSlotVal(RPS_EXECUTE, "RS2" + sim_rs2Valid +
                                 " /Data: " + std::to_string(sim_phyIdx_2) +
                                 " /Sel: " + selStr2);
+        /////////// mul
+        if (src.isThereField(md_req_in_signed_1)){
+            std::string r1s = ull(src(md_req_in_signed_1)) ? "s" : "u";
+            std::string r2s = ull(src(md_req_in_signed_2)) ? "s" : "u";
+            std::string hl  = ull(src(md_req_out_sel))     ? "h" : "l";
+
+            std::string result3 = "mulReq: 1:" + r1s + " "
+                                         + "2:" + r2s + " "
+                                         + "sl:";
+            _slotWriter->addSlotVal(RPS_EXECUTE, result3);
+        }
+    }
+
+    void O3SlotRecorder::writeExecuteLDSTBasic(RegSlot& src){
+
+        ull sim_rrftag    = ull(src(rrftag));
+        ull sim_rdUse     = ull(src(rdUse));
+        ull sim_spec      = ull(src(spec));
+        ull sim_specTag   = ull(src(specTag));
+        ull sim_stBufData = ull(src(stBufData));
+        ull sim_stBufHit  = ull(src(stBufHit));
+
+        _slotWriter->addSlotVal(RPS_EXECUTE, "/Spec: " + std::to_string(sim_spec) +
+                                             "/SpecTag: " + cvtNum2BinStr(sim_specTag));
+        std::string sim_isRdUsed = sim_rdUse ? "(USE)" : "(UNUSED)";
+        if (sim_rdUse){
+            RegSlot&  targetRegSlot = _core->prob._table(static_cast<int>(sim_rrftag));
+            ull sim_rdIdx    = ull(targetRegSlot(rdIdx));
+
+            _slotWriter->addSlotVal(RPS_EXECUTE, "RD phy: " + std::to_string(sim_rrftag) + " arch: " + std::to_string(sim_rdIdx));
+        }else{
+            _slotWriter->addSlotVal(RPS_EXECUTE, "RD phy: " + std::to_string(sim_rrftag) + " arch(UNUSED)");
+        }
+
+        _slotWriter->addSlotVal(RPS_EXECUTE, "stBufHit: " + std::to_string(sim_stBufHit) +
+                                             "/stBufData: " + std::to_string(sim_stBufData));
 
     }
 
@@ -655,7 +743,7 @@ namespace kathryn::o3{
         _slotWriter->addSlotVal(RPS_EXECUTE, "LDST EXEC 2");
         bool ldStIdle2 = writeSlotIfPipIdle(RPS_EXECUTE, &pipProbGrp.execLdSt2);
         if (ldStIdle2){return;}
-        writeExecuteBasic(_core->pm.ldSt.lsRes);
+        writeExecuteLDSTBasic(_core->pm.ldSt.lsRes);
     }
 
     std::vector<std::string> O3SlotRecorder::writeRobSlot(ull robIdx){

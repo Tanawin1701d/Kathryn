@@ -79,7 +79,7 @@ namespace kathryn::o3{
 
         //inline O3DbgWireGrp dbgWireGrp;
 
-    }
+
 }
 
 #endif //SRC_EXAMPLE_O3_SIMULATION_PROBERGRP_H

@@ -71,24 +71,6 @@ namespace kathryn::o3{
             }
         };
 
-        inline SlotMeta smLdSt{  //// for second stage system
-            { rrftag   , rdUse   , spec, specTag,
-              stBufData, stBufHit
-            },
-            { RRF_SEL  , 1       , 1   , SPECTAG_LEN,
-              DATA_LEN , 1
-            }
-        };
-
-        inline SlotMeta smStoreBuf{ //// for store buffer entry
-            { busy    ,  complete, spec     , specTag    ,
-              mem_addr
-            },
-            { 1       , 1        , 1        , SPECTAG_LEN,
-              ADDR_LEN
-            }
-        };
-
         inline SlotMeta smRsvBranch{
             {opcode      , pred_addr, imm_br},
             {OPCODE_WIDTH, ADDR_LEN , ADDR_LEN}
@@ -112,6 +94,24 @@ namespace kathryn::o3{
         inline SlotMeta smRsvI{
                 {busy},
                 {1}
+        };
+
+        inline SlotMeta smStoreBuf{ //// for store buffer entry
+                    { busy    ,  complete, spec     , specTag    ,
+                      mem_addr
+                    },
+                    { 1       , 1        , 1        , SPECTAG_LEN,
+                      ADDR_LEN
+                    }
+        };
+
+        inline SlotMeta smLdSt{  //// for second stage system
+                    { rrftag   , rdUse   , spec, specTag,
+                      stBufData, stBufHit
+                    },
+                    { RRF_SEL  , 1       , 1   , SPECTAG_LEN,
+                      DATA_LEN , 1
+                    }
         };
 
     /**
