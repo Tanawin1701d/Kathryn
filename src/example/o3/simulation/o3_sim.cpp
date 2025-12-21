@@ -79,9 +79,9 @@ namespace kathryn::o3{
 
         ///// get new instruction data
         _top.ijImem0.s(_imem[alignedPc + 0]);
-        _top.ijImem0.s(_imem[alignedPc + 1]);
-        _top.ijImem0.s(_imem[alignedPc + 2]);
-        _top.ijImem0.s(_imem[alignedPc + 3]);
+        _top.ijImem1.s(_imem[alignedPc + 1]);
+        _top.ijImem2.s(_imem[alignedPc + 2]);
+        _top.ijImem3.s(_imem[alignedPc + 3]);
 
     }
 

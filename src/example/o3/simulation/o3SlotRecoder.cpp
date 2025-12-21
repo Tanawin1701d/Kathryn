@@ -205,6 +205,11 @@ namespace kathryn::o3{
             ///// get the pc
             _slotWriter->addSlotVal(RPS_FETCH, "PC");
             _slotWriter->addSlotVal(RPS_FETCH, cvtNum2HexStr(ull(fetMod.curPc)));
+
+            _slotWriter->addSlotVal(RPS_FETCH, cvtNum2HexStr(ull(fetMod.pm.ft.iMem0)));
+            _slotWriter->addSlotVal(RPS_FETCH, cvtNum2HexStr(ull(fetMod.pm.ft.iMem1)));
+            _slotWriter->addSlotVal(RPS_FETCH, cvtNum2HexStr(ull(fetMod.pm.ft.iMem2)));
+            _slotWriter->addSlotVal(RPS_FETCH, cvtNum2HexStr(ull(fetMod.pm.ft.iMem3)));
     }
 
     void O3SlotRecorder::writeDecodeSlot(){
@@ -263,6 +268,7 @@ namespace kathryn::o3{
         _slotWriter->addSlotVal(RPS_DISPATCH, internalDep);
 
         for (int i = 1; i <= 2; i++){
+            _slotWriter->addSlotVal(RPS_DISPATCH, "------- DIP " + std::to_string(i) + "-------");
             RegSlot& targetRegSlot = (i == 1) ? decode_stage.dcd1: decode_stage.dcd2;
 
             ull sim_invalid   = ull(targetRegSlot(invalid));
@@ -285,29 +291,17 @@ namespace kathryn::o3{
 
             if (sim_invalid){
                 _slotWriter->addSlotVal(RPS_DISPATCH, "notValid");
-            }
-            else{
-                std::map<ull, std::string> immTypeMap = {
-                    {0b00, "IMM_I"},
-                    {0b01, "IMM_S"},
-                    {0b10, "IMM_U"},
-                    {0b11, "IMM_J"}
-                };
+            }else{
+                std::map<ull, std::string> immTypeMap = { {0b00, "IMM_I"}, {0b01, "IMM_S"}, {0b10, "IMM_U"}, {0b11, "IMM_J"}};
                 std::map<ull, std::string> rsvTypeMap = {
-                    {RS_ENT_ALU    , "ALU"},
-                    {RS_ENT_BRANCH , "BRANCH"},
-                    {RS_ENT_JAL    , "JAL"},
-                    {RS_ENT_JALR   , "JALR"},
-                    {RS_ENT_MUL    , "MUL"},
-                    {RS_ENT_DIV    , "DIV"},
-                    {RS_ENT_LDST   , "LDST"}
+                    {RS_ENT_ALU    , "ALU"}, {RS_ENT_BRANCH , "BRANCH"}, {RS_ENT_JAL    , "JAL"}, {RS_ENT_JALR   , "JALR"},
+                    {RS_ENT_MUL    , "MUL"}, {RS_ENT_DIV    , "DIV"}, {RS_ENT_LDST   , "LDST"}
                 };
                 std::string immTypeStr = (immTypeMap.find(sim_immType) != immTypeMap.end()) ? immTypeMap[sim_immType] : "UNKNOWN";
                 std::string rsTypeStr = (rsvTypeMap.find(sim_rsEnt) != rsvTypeMap.end()) ? rsvTypeMap[sim_rsEnt] : "UNKNOWN";
                 _slotWriter->addSlotVal(RPS_DISPATCH, "RS: " + rsTypeStr);
                 _slotWriter->addSlotVal(RPS_DISPATCH, immTypeStr);
                 _slotWriter->addSlotVal(RPS_DISPATCH, "ALU: " + translateAluOp(sim_aluOp));
-
 
                 _slotWriter->addSlotVal(RPS_DISPATCH, "isBr: " + std::to_string(sim_isBranch) +
                                                       "/isSp: " + std::to_string(sim_spec) +
@@ -317,19 +311,9 @@ namespace kathryn::o3{
                 std::string rdUsage = sim_rdUse ? "(USE)" : "(UNUSED)";
                 _slotWriter->addSlotVal(RPS_DISPATCH, "RD: "+ rdUsage + " /ArchIdx: " +  std::to_string(sim_rdIdx));
 
-                std::map<ull, std::string> srcASelMap = {
-                    {0, "RS1"},
-                    {1, "PC"},
-                    {2, "ZERO"}
-                };
+                std::map<ull, std::string> srcASelMap = { {0, "RS1"}, {1, "PC"}, {2, "ZERO"}};
 
-                std::map<ull, std::string> srcBSelMap = {
-                    {0, "RS2"},
-                    {1, "IMM"},
-                    {2, "FOUR"},
-                    {3, "ZERO"}
-                };
-                
+                std::map<ull, std::string> srcBSelMap = { {0, "RS2"}, {1, "IMM"}, {2, "FOUR"}, {3, "ZERO"}};
                 std::string r1Usage = sim_rsUse_1 ? "(USE)" : "(UNUSED)";
                 std::string selStr = (srcASelMap.find(sim_rsSel_1) != srcASelMap.end())
                                          ? srcASelMap[sim_rsSel_1]
@@ -506,6 +490,8 @@ namespace kathryn::o3{
 
     void O3SlotRecorder::writeStBufTable(){
         _slotWriter->addSlotVal(RPS_STBUF, "finPtr: " + std::to_string(ull(_core->storeBuf.finPtr)));
+        _slotWriter->addSlotVal(RPS_STBUF, "finPtr: " + std::to_string(ull(_core->storeBuf.comPtr)));
+        _slotWriter->addSlotVal(RPS_STBUF, "finPtr: " + std::to_string(ull(_core->storeBuf.retPtr)));
         Table& table = _core->storeBuf._table;
         for (int rowIdx = 0; rowIdx < table.getNumRow(); rowIdx++){
             RegSlot& entry = table(rowIdx);

@@ -218,6 +218,7 @@ namespace kathryn::o3{
             ex[0].sync .holdMaster();
             ex[1].sync .holdMaster();
             mu   .sync .holdMaster();
+            br   .sync .holdMaster();
             ldSt .sync .holdMaster();
             ///ldSt .sync2.holdMaster(); //// because the master is not reservation station
             ////// hold commit to not
