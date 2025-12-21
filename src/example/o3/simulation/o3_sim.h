@@ -23,7 +23,13 @@
             O3SlotRecorder _slotRecorder;
             std::vector<std::string> _testTypes;
             uint32_t _imem      [IMEM_ROW]{};
+            uint32_t _dmem      [DMEM_ROW]{};
             uint32_t _regTestVal[REG_NUM] {};
+
+            bool     lastDmemEnable = false; //// enabler
+            bool     lastDmemRead   = true;  //// used if enabler is true
+            uint32_t lastDmemAddr   = 0;
+            uint32_t lastDmemData   = 0;
 
         public:
             explicit O3Sim(CYCLE limitCycle,
@@ -33,8 +39,16 @@
                            SimProxyBuildMode buildMode);
 
             void          describeCon  () override;
-            void          readMem2Fetch();
+            ////// memory management for each cycle
+            void          readMem2Fetch(); //// it has to place at the begin of cycle
+            void          resetDmem();
+            void          readWriteDataMemGetCmd(); //// it has to place at the end of cycle
+            void          readWriteDataMemDoCmd();  //// it has to place at the bigin of cycle
+
+            ////// memory initialization
             virtual void  readAssembly (const std::string& filePath);
+
+
             virtual void  readAssertVal(const std::string& filePath);
             void          resetRegister();
             virtual void  testRegister ();
@@ -44,9 +58,9 @@
         public:
             void start(PARAM& params){
                 std::vector<std::string> testTypes = {
-                    "Imm", "Reg", "Branch", "BranchSuc",
+                    "Imm"       , "Reg"        , "Branch", "BranchSuc",
                     "BranchLong", "BranchMidRd", "OverRrf",
-                    "LoadImm", "BranchSc"
+                    "LoadImm"   , "BranchSc"   , "memOp"
                 };
 
                 mMod(o3Top, TopSim, false);

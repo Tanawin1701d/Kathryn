@@ -14,18 +14,25 @@ namespace kathryn::o3{
 
         mMod(myCore, Core, 0);
 
+        ///// imem
         mReg(ijImem0, INST_WIDTH);
         mReg(ijImem1, INST_WIDTH);
         mReg(ijImem2, INST_WIDTH);
         mReg(ijImem3, INST_WIDTH);
 
+        ///// dmem
+        mReg(ijDmem0, DATA_LEN);
+
         TopSim(int x){};
 
         void flow() override{
+            ///// imem
             myCore.pm.ft.iMem0 = ijImem0;
             myCore.pm.ft.iMem1 = ijImem1;
             myCore.pm.ft.iMem2 = ijImem2;
             myCore.pm.ft.iMem3 = ijImem3;
+            ///// dmem
+            myCore.pm.ldSt.dmem_rdata = ijDmem0;
         }
 
     };

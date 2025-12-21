@@ -21,7 +21,7 @@ namespace kathryn::o3{
     RegArch&     regArch;
     BroadCast&   bc;
     Rob&         rob;
-    RegSlot&     src;
+    RegSlot&     src;   /// load store inquiry stage
     RegSlot&     lsRes; /// load store result stage
     ByPass&      bp;
     StoreBuf&    stBuf;
@@ -36,14 +36,14 @@ namespace kathryn::o3{
                      Rob&        rob,
                      RegSlot&    src,
                      StoreBuf&   stBuf) :
-        lss(ldSt_stage),
+        lss    (ldSt_stage),
         regArch(regArch),
-        bc(bc),
-        rob(rob),
-        src(src),
-        lsRes(lss.lsRes),
-        bp(regArch.bpp.addByPassEle()),
-        stBuf(stBuf){
+        bc     (bc),
+        rob    (rob),
+        src    (src),
+        lsRes  (lss.lsRes),
+        bp     (regArch.bpp.addByPassEle()),
+        stBuf  (stBuf){
 
         lss.sync.setTagTracker(src);
         lss.sync2.setTagTracker(lsRes);

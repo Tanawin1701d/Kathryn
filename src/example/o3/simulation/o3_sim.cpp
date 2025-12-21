@@ -52,12 +52,15 @@ namespace kathryn::o3{
             resetRegister();
             readAssembly (_prefixFolder + _testTypes[_curTestCaseIdx] + "/asm.out");
             readAssertVal(_prefixFolder + _testTypes[_curTestCaseIdx] + "/ast.out");
+            resetDmem();
             //////// iterate for 100 cycle
             for (int i = 0; i <= 150; i++){
                 ///////// give the data to
                 readMem2Fetch();
+                readWriteDataMemDoCmd(); ///// do the dmem command command
                 ///////// record the system
                 conEndCycle();
+                readWriteDataMemGetCmd();
                 _slotRecorder.recordSlot();
                 conNextCycle(1);
             }
@@ -82,6 +85,46 @@ namespace kathryn::o3{
         _top.ijImem1.s(_imem[alignedPc + 1]);
         _top.ijImem2.s(_imem[alignedPc + 2]);
         _top.ijImem3.s(_imem[alignedPc + 3]);
+
+    }
+
+    void O3Sim::resetDmem(){
+        std::memset(_dmem, 0, sizeof(_dmem));
+        lastDmemEnable  = false;
+        lastDmemRead    = true;
+        lastDmemAddr    = 0;
+        lastDmemData    = 0;
+    }
+
+    void O3Sim::readWriteDataMemGetCmd(){
+
+        ///// make command enable
+        lastDmemEnable = true;
+        ///// read data from CPU
+        ull dmem_we     = ull(_core.pm.ldSt.dmem_we);
+        ull dmem_rwaddr = ull(_core.pm.ldSt.dmem_rwaddr);
+        ull dmem_wdata  = ull(_core.pm.ldSt.dmem_wdata);
+        assert((dmem_rwaddr & 0b11) == 0b00);
+
+        lastDmemRead = (dmem_we == 0);
+        lastDmemAddr = static_cast<uint32_t>(dmem_rwaddr);
+        lastDmemData = static_cast<uint32_t>(dmem_wdata);
+
+    }
+
+    void O3Sim::readWriteDataMemDoCmd(){
+
+        if (!lastDmemEnable){return;}
+
+        ///// At now, lastDmemAddr is quiet sure that there is not polute bit
+        uint32_t aligned_addr = lastDmemAddr >> 2;
+
+        if (lastDmemRead){
+            _top.ijDmem0.s(_dmem[aligned_addr]);
+        }else{
+            _dmem[aligned_addr] = lastDmemData;
+            std::cout << "write Detect at @ " << cvtNum2HexStr(lastDmemAddr) << " with data " << lastDmemData << std::endl;
+        }
 
     }
 

@@ -5,41 +5,22 @@
 #ifndef KATHRYN_SLOTWRITER_H
 #define KATHRYN_SLOTWRITER_H
 
-#include<vector>
-#include "util/fileWriter/fileWriterBase.h"
+#include "slotWriterBase.h"
 
 namespace kathryn{
 
-    class SlotWriter: public FileWriterBase{
-        const int SLOTSIZE    = 1;
+    class SlotWriter: public SlotWriterBase{
 
-        struct ROW{
-            /** each slot might have several lines*/
-            typedef  std::vector<std::string> SLOTDATA;
-            std::vector<SLOTDATA> col; /////// array of slot
+    protected:
 
-            explicit ROW(int slSize){ col.resize(slSize);}
-
-            int         findMaxSlotDataLine(); //// find max line in all slot
-            void        addSlotVal  (int slotIdx, const std::string& value);
-            std::string getResultRow(std::vector<int> slotWidths);
-
-
-        };
-
-        std::vector<std::string> _slotNames;
-        std::vector<int>         _slotWidth;
-        std::vector<ROW>         _rows;
-
-
+        std::vector<ROW> _rows;
 
     public:
-        SlotWriter(std::vector<std::string> slotNames, int columnWidth,std::string fileName);
-        SlotWriter(std::vector<std::string> slotNames, std::vector<int> colWidths, std::string fileName);
+        SlotWriter(const std::vector<std::string>& slotNames, int columnWidth,const std::string& fileName);
+        SlotWriter(std::vector<std::string> slotNames, const std::vector<int>& colWidths, std::string fileName);
 
-        void addSlotVal (int slotIdx, std::string value);
-        void addSlotVals(int slotIdx, std::vector<std::string> values);
-
+        void addSlotVal (int slotIdx, const std::string& value);
+        void addSlotVals(int slotIdx, const std::vector<std::string>& values);
         void iterateCycle();
 
         void init() override;

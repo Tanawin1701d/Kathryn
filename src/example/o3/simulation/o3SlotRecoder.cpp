@@ -490,8 +490,8 @@ namespace kathryn::o3{
 
     void O3SlotRecorder::writeStBufTable(){
         _slotWriter->addSlotVal(RPS_STBUF, "finPtr: " + std::to_string(ull(_core->storeBuf.finPtr)));
-        _slotWriter->addSlotVal(RPS_STBUF, "finPtr: " + std::to_string(ull(_core->storeBuf.comPtr)));
-        _slotWriter->addSlotVal(RPS_STBUF, "finPtr: " + std::to_string(ull(_core->storeBuf.retPtr)));
+        _slotWriter->addSlotVal(RPS_STBUF, "comPtr: " + std::to_string(ull(_core->storeBuf.comPtr)));
+        _slotWriter->addSlotVal(RPS_STBUF, "retPtr: " + std::to_string(ull(_core->storeBuf.retPtr)));
         Table& table = _core->storeBuf._table;
         for (int rowIdx = 0; rowIdx < table.getNumRow(); rowIdx++){
             RegSlot& entry = table(rowIdx);
