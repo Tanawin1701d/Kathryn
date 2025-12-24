@@ -194,6 +194,109 @@ namespace kathryn::o3{
     }
 
     /**
+     * exec unit
+     *
+     ***/
+
+    bool SimState::EXEC_ALU_STATE::compare(const EXEC_ALU_STATE& rhs) const{
+        if (st != rhs.st){
+            printStateMisMatch("exec ALU stage", st, rhs.st);
+            return false;
+        }
+        return entry.compare(rhs.entry);
+    }
+
+    bool SimState::EXEC_MUL_STATE::compare(const EXEC_MUL_STATE& rhs) const{
+        if (st != rhs.st){
+            printStateMisMatch("exec mul stage", st, rhs.st);
+            return false;
+        }
+        return entry.compare(rhs.entry);
+    }
+
+    bool SimState::EXEC_BRANCH_STATE::compare(const EXEC_BRANCH_STATE& rhs) const{
+        if (st != rhs.st){
+            printStateMisMatch("exec branch stage", st, rhs.st);
+            return false;
+        }
+        return entry.compare(rhs.entry);
+    }
+
+    bool SimState::EXEC_LDST_STATE::compare(const EXEC_LDST_STATE& rhs) const{
+        if (st != rhs.st){
+            printStateMisMatch("exec LDST stage", st, rhs.st);
+            return false;
+        }
+        bool compareResult =  entry.compare(rhs.entry);
+
+        compareResult &= checkAndPrintSimValueUll(rrftag, rhs.rrftag, "exec LDST", "rrftag");
+        compareResult &= checkAndPrintSimValueUll(rdUse, rhs.rdUse, "exec LDST", "rdUse");
+        compareResult &= checkAndPrintSimValueUll(spec, rhs.spec, "exec LDST", "spec");
+        compareResult &= checkAndPrintSimValueUll(specTag, rhs.specTag, "exec LDST", "specTag");
+        compareResult &= checkAndPrintSimValueUll(stBufData, rhs.stBufData, "exec LDST", "stBufData");
+        compareResult &= checkAndPrintSimValueUll(stBufHit, rhs.stBufHit, "exec LDST", "stBufHit");
+
+        return compareResult;
+    }
+
+
+    /**
+     *
+     *  commit stage
+     */
+    bool SimState::COMMIT_ENTRY::compare(const COMMIT_ENTRY& rhs) const{
+
+        bool compareResult = true;
+
+        compareResult &= checkAndPrintSimValueUll(wbFin   , rhs.wbFin   , "COMMIT entry " + std::to_string(idx), "wbFin");
+        if (wbFin == 0){
+            return compareResult;
+        }
+        compareResult &= checkAndPrintSimValueUll(isBranch, rhs.isBranch, "COMMIT entry " + std::to_string(idx), "isBranch");
+        compareResult &= checkAndPrintSimValueUll(storeBit, rhs.storeBit, "COMMIT entry " + std::to_string(idx), "storeBit");
+        compareResult &= checkAndPrintSimValueUll(rdUse   , rhs.rdUse   , "COMMIT entry " + std::to_string(idx), "rdUse");
+        compareResult &= checkAndPrintSimValueUll(rdIdx   , rhs.rdIdx   , "COMMIT entry " + std::to_string(idx), "rdIdx");
+
+        return compareResult;
+
+    }
+
+    bool SimState::COMMIT_STATE::compare(const COMMIT_STATE& rhs) const{
+        bool compareResult = true;
+        compareResult &= checkAndPrintSimValueUll(comPtr    , rhs.comPtr    , "COMMIT", "comPtr"    );
+        compareResult &= checkAndPrintSimValueBool(com1Status, rhs.com1Status, "COMMIT", "com1Status");
+        compareResult &= checkAndPrintSimValueBool(com2Status, rhs.com2Status, "COMMIT", "com2Status");
+        for (int rrfIdx = 0; rrfIdx < RRF_NUM; rrfIdx++){
+            compareResult &= comEntries[rrfIdx].compare(rhs.comEntries[rrfIdx]);
+        }
+
+        return compareResult;
+    }
+
+    /**
+     * store buffer state
+     */
+
+    bool SimState::STORE_BUF_ENTRY::compare(const STORE_BUF_ENTRY& rhs) const{
+        return checkAndPrintSimValueBool(busy    , rhs.busy,     "STORE_BUF", "busy") &&
+               checkAndPrintSimValueUll (complete, rhs.complete, "STORE_BUF", "complete") &&
+               checkAndPrintSimValueUll (spec    , rhs.spec,     "STORE_BUF", "spec") &&
+               checkAndPrintSimValueUll (specTag , rhs.specTag,  "STORE_BUF", "specTag") &&
+               checkAndPrintSimValueUll (mem_addr, rhs.mem_addr, "STORE_BUF", "mem_addr");
+    }
+
+    bool SimState::STORE_BUF_STATE::compare(const STORE_BUF_STATE& rhs) const{
+        bool compareResult = true;
+        compareResult &= checkAndPrintSimValueUll(finPtr, rhs.finPtr, "STORE_BUF", "finPtr");
+        compareResult &= checkAndPrintSimValueUll(comPtr, rhs.comPtr, "STORE_BUF", "comPtr");
+        compareResult &= checkAndPrintSimValueUll(retPtr, rhs.retPtr, "STORE_BUF", "retPtr");
+        for (int idx = 0; idx < STBUF_ENT_NUM; idx++){
+            compareResult &= entries[idx].compare(rhs.entries[idx]);
+        }
+        return compareResult;
+    }
+
+     /**
      *
      * REG architecture
      *
@@ -256,58 +359,47 @@ namespace kathryn::o3{
         return compareResult;
     }
 
-    /**
-     * exec unit
-     *
-     ***/
+    bool SimState::compare(SimState& rhs) const{
 
-    bool SimState::EXEC_ALU_STATE::compare(const EXEC_ALU_STATE& rhs) const{
-        if (st != rhs.st){
-            printStateMisMatch("exec ALU stage", st, rhs.st);
-            return false;
+        bool compareResult = true;
+
+        compareResult &= fetch.compare(rhs.fetch);
+        compareResult &= decode.compare(rhs.decode);
+        compareResult &= dispatch.compare(rhs.dispatch);
+
+        ////// rsv compare
+        for (int rsvIdx = 0; rsvIdx < ALU_ENT_NUM; rsvIdx++){
+            compareResult &= rsvAlu1[rsvIdx].compare(rhs.rsvAlu1[rsvIdx]);
         }
-        return entry.compare(rhs.entry);
-    }
-
-    bool SimState::EXEC_MUL_STATE::compare(const EXEC_MUL_STATE& rhs) const{
-        if (st != rhs.st){
-            printStateMisMatch("exec mul stage", st, rhs.st);
-            return false;
+        for (int rsvIdx = 0; rsvIdx < ALU_ENT_NUM; rsvIdx++){
+            compareResult &= rsvAlu2[rsvIdx].compare(rhs.rsvAlu2[rsvIdx]);
         }
-        return entry.compare(rhs.entry);
-    }
-
-    bool SimState::EXEC_BRANCH_STATE::compare(const EXEC_BRANCH_STATE& rhs) const{
-        if (st != rhs.st){
-            printStateMisMatch("exec branch stage", st, rhs.st);
-            return false;
+        for (int rsvIdx = 0; rsvIdx < MUL_ENT_NUM; rsvIdx++){
+            compareResult &= rsvMul[rsvIdx].compare(rhs.rsvMul[rsvIdx]);
         }
-        return entry.compare(rhs.entry);
-    }
-
-    bool SimState::EXEC_LDST_STATE::compare(const EXEC_LDST_STATE& rhs) const{
-        if (st != rhs.st){
-            printStateMisMatch("exec LDST stage", st, rhs.st);
-            return false;
+        for (int rsvIdx = 0; rsvIdx < BRANCH_ENT_NUM; rsvIdx++){
+            compareResult &= rsvBranch[rsvIdx].compare(rhs.rsvBranch[rsvIdx]);
         }
-        bool compareResult =  entry.compare(rhs.entry);
+        for (int rsvIdx = 0; rsvIdx < LDST_ENT_NUM; rsvIdx++){
+            compareResult &= rsvLdSt[rsvIdx].compare(rhs.rsvLdSt[rsvIdx]);
+        }
 
-        compareResult &= checkAndPrintSimValueUll(rrftag, rhs.rrftag, "exec LDST", "rrftag");
-        compareResult &= checkAndPrintSimValueUll(rdUse, rhs.rdUse, "exec LDST", "rdUse");
-        compareResult &= checkAndPrintSimValueUll(spec, rhs.spec, "exec LDST", "spec");
-        compareResult &= checkAndPrintSimValueUll(specTag, rhs.specTag, "exec LDST", "specTag");
-        compareResult &= checkAndPrintSimValueUll(stBufData, rhs.stBufData, "exec LDST", "stBufData");
-        compareResult &= checkAndPrintSimValueUll(stBufHit, rhs.stBufHit, "exec LDST", "stBufHit");
+        compareResult &= exec_alu0.compare(rhs.exec_alu0);
+        compareResult &= exec_alu1.compare(rhs.exec_alu1);
+        compareResult &= exec_mul.compare(rhs.exec_mul);
+        compareResult &= exec_branch.compare(rhs.exec_branch);
+        compareResult &= exec_ldst.compare(rhs.exec_ldst);
+
+        compareResult &= rob.compare(rhs.rob);
+        compareResult &= stbuf.compare(rhs.stbuf);
+
+        //// register architecture
+        compareResult &= mpft.compare(rhs.mpft);
+        compareResult &= tagGen.compare(rhs.tagGen);
+        compareResult &= arf.compare(rhs.arf);
+        compareResult &= rrf.compare(rhs.rrf);
 
         return compareResult;
     }
-
-
-
-
-
-
-
-
 
 }

@@ -27,6 +27,7 @@ namespace kathryn::o3{
 
 
     struct SimState{
+        virtual ~SimState() = default;
 
         struct Fetch{
             pipStat st = IDLE;
@@ -83,7 +84,7 @@ namespace kathryn::o3{
             DispInstr dp1 {1};
             bool compare(const Dispatch& rhs) const;
 
-        } dispatchShared;
+        } dispatch;
 
         struct RSV_BASE_ENTRY{
             std::string name;
@@ -128,41 +129,6 @@ namespace kathryn::o3{
         RSV_BRANCH_ENTRY rsvBranch[BRANCH_ENT_NUM]{};
         RSV_BASE_ENTRY   rsvLdSt[LDST_ENT_NUM]    {};
 
-
-        /**
-         * register architecture
-         ***/
-
-        struct MPFT_STATE{
-            bool valids  [SPECTAG_LEN]{};
-            bool fixTable[SPECTAG_LEN][SPECTAG_LEN]{};
-
-            bool compare(const MPFT_STATE& rhs) const;
-        } mpft;
-
-        struct TAGGEN_STATE{
-            ull brdepth = 0;
-            ull tagReg  = 0;
-
-            bool compare(const TAGGEN_STATE& rhs) const;
-        }tagGen;
-
-        struct ARF_STATE{
-            //// the last one is master
-            bool busy[SPECTAG_LEN+1][REG_NUM]{};
-            ull  rename[SPECTAG_LEN+1][REG_NUM]{};
-
-            bool compare(const ARF_STATE& rhs) const;
-
-        }arf;
-
-        struct RRF_STATE{
-            bool busy[RRF_NUM]{};
-            ull  data[RRF_NUM]{};
-
-            bool compare(const RRF_STATE& rhs) const;
-        }rrf;
-
         /**
          * execute unit
          */
@@ -202,8 +168,93 @@ namespace kathryn::o3{
 
         ////// commit stage
 
+        struct COMMIT_ENTRY{
+            int idx       = 0;
+            ull wbFin     = 0;
+            ull isBranch  = 0;
+            ull storeBit  = 0;
+            ull rdUse     = 0;
+            ull rdIdx     = 0;
+
+            bool compare(const COMMIT_ENTRY& rhs) const;
+        };
+
+        struct COMMIT_STATE{
+            ull  comPtr     = 0;
+            bool com1Status = false;
+            bool com2Status = false;
+            COMMIT_ENTRY comEntries[RRF_NUM]{};
+
+            COMMIT_STATE(){
+                for (int i = 0; i < RRF_NUM; i++){
+                    comEntries[i].idx = i;
+                }
+            }
+
+            bool compare(const COMMIT_STATE& rhs) const;
+        } rob;
 
         ////// store buffer stage
+
+        struct STORE_BUF_ENTRY{
+            int  idx        = 0;
+            bool busy       = false;
+            ull  complete   = 0;
+            ull  spec       = 0;
+            ull  specTag    = 0;
+            ull  mem_addr   = 0;
+
+            bool compare(const STORE_BUF_ENTRY& rhs) const;
+        };
+
+        struct STORE_BUF_STATE{
+            ull finPtr = 0;
+            ull comPtr = 0;
+            ull retPtr = 0;
+            ///// not compare
+            ull nb1    = 0;
+            ull ne1    = 0;
+            ull nb0    = 0;
+            bool fullNext = false;
+            bool emptyNext = false;
+            STORE_BUF_ENTRY entries[STBUF_ENT_NUM]{};
+
+            bool compare(const STORE_BUF_STATE& rhs) const;
+        } stbuf;
+
+        /**
+         * register architecture
+         ***/
+
+        struct MPFT_STATE{
+            bool valids  [SPECTAG_LEN]{};
+            bool fixTable[SPECTAG_LEN][SPECTAG_LEN]{};
+
+            bool compare(const MPFT_STATE& rhs) const;
+        } mpft;
+
+        struct TAGGEN_STATE{
+            ull brdepth = 0;
+            ull tagReg  = 0;
+
+            bool compare(const TAGGEN_STATE& rhs) const;
+        }tagGen;
+
+        struct ARF_STATE{
+            //// the last one is master
+            bool busy[SPECTAG_LEN+1][REG_NUM]{};
+            ull  rename[SPECTAG_LEN+1][REG_NUM]{};
+
+            bool compare(const ARF_STATE& rhs) const;
+
+        }arf;
+
+        struct RRF_STATE{
+            bool busy[RRF_NUM]{};
+            ull  data[RRF_NUM]{};
+
+            bool compare(const RRF_STATE& rhs) const;
+        }rrf;
 
 
         SimState(){
@@ -228,7 +279,7 @@ namespace kathryn::o3{
 
         void printSlotWindow();
 
-        void compare(SimState& rhs);
+        bool compare(SimState& rhs) const;
 
         bool isStateShouldCheckFurther(pipStat ps);
         
