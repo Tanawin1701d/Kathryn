@@ -471,6 +471,12 @@ namespace kathryn{
                                  genFunctionDec(false, MAINOP_SIM + getClockModeStr(clkMode)  + SKE_SUFFIX) +
                                  "{\n");
 
+        //////// optimize to zero out the negative edge workload
+        if ((clkMode == CM_NEGEDGE) && nonVolatileEle.empty()){ /////// there is no
+            proxyfileWriter->addData("}\n");
+            return;
+        }
+
         //////////////////////// create local variable
         CbBaseCxx cbInitVal;
         for (ModelProxyBuild* mpb : volatileEle){
@@ -529,6 +535,11 @@ namespace kathryn{
 
         std::vector<ModelProxyBuild*> mpbs = screenClockMode(clkMode,
                                                              moduleSimEngine->recruitForFinalizeOp());
+
+        if ((clkMode == CM_NEGEDGE) && mpbs.empty()){ /////// there is no
+            proxyfileWriter->addData("}\n");
+            return;
+        }
 
         //////////////////// priority 1 ///////////////////////////////////////////
         ///////////////////////////////////////////////////////////////////////////
