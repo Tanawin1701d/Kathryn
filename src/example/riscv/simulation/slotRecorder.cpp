@@ -29,7 +29,7 @@ namespace kathryn::riscv{
 
             writeMem();
 
-            _slotWriter->iterateCycle();
+            _slotWriter->concludeEachCycle();
         }
 
     bool SlotRecorder::writeSlotIfPipStall(PIPE_STAGE2 stageIdx,

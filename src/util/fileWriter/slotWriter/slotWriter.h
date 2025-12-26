@@ -21,7 +21,7 @@ namespace kathryn{
 
         void addSlotVal (int slotIdx, const std::string& value) override;
         void addSlotVals(int slotIdx, const std::vector<std::string>& values) override;
-        void iterateCycle();
+        void concludeEachCycle() override;
 
         void init() override;
     };

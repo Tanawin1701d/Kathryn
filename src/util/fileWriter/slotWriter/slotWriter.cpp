@@ -43,7 +43,7 @@ namespace kathryn{
         }
     }
 
-    void SlotWriter::iterateCycle() {
+    void SlotWriter::concludeEachCycle() {
 
         /***write the data*/
         auto& curRow = *_rows.rbegin();
@@ -64,7 +64,7 @@ namespace kathryn{
         for (int i = 0; i < SLOTSIZE; i++){
             addSlotVal(i, _slotNames[i]);
         }
-        iterateCycle();
+        concludeEachCycle();
     }
 
 

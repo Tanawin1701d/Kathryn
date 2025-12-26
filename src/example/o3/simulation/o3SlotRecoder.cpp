@@ -52,7 +52,7 @@ namespace kathryn::o3{
         writeStBufTable();
 
         //////// iterate the cycle
-        _slotWriter->iterateCycle();
+        _slotWriter->concludeEachCycle();
 
         ////// update MisPred Status
         isLastCycleMisPred = thisCycleMis;

@@ -34,7 +34,7 @@ namespace kathryn{
         //////// use when we want to save file with this current window situation
         void finalizeLastWindow();
 
-        void iterateCycle();
+        void concludeEachCycle() override;
 
         void init() override;
 

@@ -16,6 +16,8 @@ namespace kathryn::o3{
 #define toS(value) std::to_string(value)
 #define O3_PARAM_STR(name) constexpr char name[] = #name;
 
+///#define BTB_ENABLE
+
     ////// start from fetch
     O3_PARAM_STR(pc);
     O3_PARAM_STR(npc);

@@ -47,7 +47,7 @@ namespace kathryn::cacheServer{
             recordIngress();
             recordOutgress();
             recordBank();
-            iterateCycle();
+            concludeEachCycle();
 
         }
         /////////////////// generate ingress block

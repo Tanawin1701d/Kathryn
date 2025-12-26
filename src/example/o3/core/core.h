@@ -70,12 +70,13 @@ namespace kathryn::o3{
         void flow() override{
 
             ///// set sim probe for the exec unit and reservation station
-            pExAlu1   .setSimProbe(&pipProbGrp.execAlu1  );
-            pExAlu2   .setSimProbe(&pipProbGrp.execAlu2  );
-            pMulAlu   .setSimProbe(&pipProbGrp.execMul   );
-            pExBra    .setSimProbe(&pipProbGrp.execBranch);
-            pExLdSt   .setSimProbe(&pipProbGrp.execLdSt  );
-            pExLdSt   .setSimProbe2(&pipProbGrp.execLdSt2);
+            pExAlu1   .setSimProbe (&pipProbGrp.execAlu1   );
+            pExAlu2   .setSimProbe (&pipProbGrp.execAlu2   );
+            pMulAlu   .setSimProbe (&pipProbGrp.execMul    );
+            pExBra    .setSimProbe (&pipProbGrp.execBranch );
+            pExLdSt   .setSimProbe (&pipProbGrp.execLdSt   );
+            pExLdSt   .setZyncProb (&zyncProbGrp.loadStore2);
+            pExLdSt   .setSimProbe2(&pipProbGrp.execLdSt2  );
 
             ///// rsv operation
             rsvs.setDebugProbe();

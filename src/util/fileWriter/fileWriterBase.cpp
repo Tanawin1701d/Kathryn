@@ -14,6 +14,7 @@ namespace kathryn{
         openFile(fileName);
         _fileBuff = new char[FILE_WRITE_BUF_SIZE];
         if (!_outFile->is_open()){
+            int x = 0;
             throw std::runtime_error("file open fail @ des :" + fileName);
         }
     }

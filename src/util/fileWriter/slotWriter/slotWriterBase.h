@@ -44,6 +44,7 @@ namespace kathryn{
 
         virtual void  addSlotVal (int slotIdx, const std::string& value) = 0;
         virtual void  addSlotVals(int slotIdx, const std::vector<std::string>& values) = 0;
+        virtual void concludeEachCycle() = 0;
 
         std::string genSlotBreakVal();
 

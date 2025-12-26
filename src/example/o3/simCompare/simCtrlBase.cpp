@@ -56,6 +56,7 @@ namespace kathryn::o3{
                 ///////// record the system
                 _state.recruitValue();
                 _state.printSlotWindow(_slotWriter);
+                _slotWriter.concludeEachCycle();
                 //////////////////////////////////
                 conNextCycle(1);
             }

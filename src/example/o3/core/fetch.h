@@ -18,8 +18,10 @@ namespace kathryn::o3{
     struct FetchMod : Module{
         PipStage& pm;
         Reg&      curPc;
+#ifdef BTB_ENABLE
         Btb       btb;
         Gshare    gshare;
+#endif
         WireSlot& cmSlot;
 
         mWire(fetchPredCond   , 1); /// from
@@ -32,7 +34,9 @@ namespace kathryn::o3{
                           WireSlot& commitSlot) :
         pm        (pm),
         curPc     (pm.ft.curPc),
+#ifdef BTB_ENABLE
         gshare    (tagMgmt.mpft),
+#endif
         cmSlot    (commitSlot){
             curPc.makeResetEvent();
         }
@@ -46,6 +50,7 @@ namespace kathryn::o3{
                 }
             }
 
+#ifdef BTB_ENABLE
 
             ///// search data from btb for fetch
             std::tie(fetchBtbHit, fetchBtbAddr) =
@@ -54,11 +59,13 @@ namespace kathryn::o3{
             gshare.buildPhtReader(convertPcToPhtIdx(curPc         , gshare.bhrMaster),
                                   convertPcToPhtIdx(cmSlot(pc), cmSlot(bhr) ));
             fetchPredCond    = (gshare.fetPhtVal > 1);
-            if (pm.ft.isFallTruePred){
+            fetchHitAndTaken = fetchBtbHit & fetchPredCond;
+
+#endif
+
                 fetchHitAndTaken = 0;
-            }else{
-                fetchHitAndTaken = fetchBtbHit & fetchPredCond;
-            }
+
+
 
 
 
@@ -69,19 +76,26 @@ namespace kathryn::o3{
         }
 
         void onSucPred(opr& sucTag){
+#ifdef BTB_ENABLE
+
             gshare.onSucPred_bhrUpdate(sucTag,
                                        fetchHitAndTaken);
+#endif
+
         }
 
         void onMisPred(opr& misTag, opr& fixedPc){
             ///// fixed Pc
             pm.ft.incPc(fixedPc, true);
             ///// fix gshare predictor
+#ifdef BTB_ENABLE
             gshare.onMisPred_bhrUpdate(misTag);
+#endif
         }
 
 
         void onBranchCommit(){
+#ifdef BTB_ENABLE
             ////// update btb data
             btb.onCommit(cmSlot(pc), cmSlot(jumpAddr));
             ////// update gshare predictor
@@ -89,6 +103,7 @@ namespace kathryn::o3{
             gshare.onCommit_PhtUpdate(phtAddr, cmSlot(jumpCond));
             ////// the bhr update //// I dont know why they do something like this
             gshare.onCommit_bhrUpdate(fetchBtbHit, fetchPredCond);
+#endif
         }
 
         void selLog(){
@@ -111,8 +126,11 @@ namespace kathryn::o3{
 
             raw(npc)      <<= cal_npc;
             raw(prCond)   <<= fetchHitAndTaken;
+#ifdef BTB_ENABLE
             raw(bhr)      <<= gshare.bhrMaster;
-
+#else
+            raw(bhr)      <<= 0;
+#endif
 
 
             ////// read instruction from main memory

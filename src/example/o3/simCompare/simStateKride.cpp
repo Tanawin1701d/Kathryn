@@ -213,7 +213,7 @@ namespace kathryn::o3{
 
         Mpft& hw_mpft = _core.tagMgmt.mpft;
         for(int spRowIdx = 0; spRowIdx < SPECTAG_LEN; spRowIdx++){
-            mpft.valids[spRowIdx] = ull(hw_mpft.isUsed(spRowIdx) != 0);
+            mpft.valids[spRowIdx] = ull(hw_mpft.isUsed(spRowIdx)) != 0;
             for (int spColIdx = 0; spColIdx < SPECTAG_LEN; spColIdx++){
                 ull rowValue = ull(hw_mpft._table(spRowIdx)(mpft_fixTag));
                 ull colValue = ull(rowValue >> spColIdx);

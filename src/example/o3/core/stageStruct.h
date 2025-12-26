@@ -29,8 +29,6 @@ namespace kathryn::o3{
         mWire(iMem2, DATA_LEN);
         mWire(iMem3, DATA_LEN);
 
-        bool isFallTruePred = true;
-
         SlotMeta meta{smFetch};
         RegSlot  raw {smFetch};
         SyncMeta sync{"fetchSync"};

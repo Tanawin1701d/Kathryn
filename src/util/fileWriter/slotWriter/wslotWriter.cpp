@@ -45,7 +45,7 @@ namespace kathryn{
         }
     }
 
-    void WSlotWriter::iterateCycle(){
+    void WSlotWriter::concludeEachCycle(){
 
         if (_qRows.size() == WINDOW_SIZE){
             _qRows.pop();
