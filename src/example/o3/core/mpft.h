@@ -6,7 +6,8 @@
 #define KATHRYN_SRC_EXAMPLE_O3_MPFT_H
 
 #include "kathryn.h"
-#include "stageStruct.h"
+#include "parameter.h"
+#include "slotParam.h"
 #include "example/o3/simulation/proberGrp.h"
 
 namespace kathryn::o3{

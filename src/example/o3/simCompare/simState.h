@@ -5,23 +5,23 @@
 #ifndef SRC_EXAMPLE_O3_SIMCOMPARE_SIMSTATE_H
 #define SRC_EXAMPLE_O3_SIMCOMPARE_SIMSTATE_H
 
-#include "util/fileWriter/slotWriter/wslotWriter.h"
+#include "util/fileWriter/slotWriter/slotWriterBase.h"
 #include "kathryn.h"
 #include "example/o3/core/mpft.h"
 #include "example/o3/core/parameter.h"
+#include "example/o3/simShare/recPipStage.h"
 
 
 namespace kathryn::o3{
 
-    enum pipStat {IDLE, STALL, KILLED, RUNNING};
+    enum pipStat {PS_IDLE, PS_STALL, PS_RUNNING};
 
     inline const char* pipStatToString(pipStat st) {
         switch (st) {
-        case IDLE:    return "IDLE";
-        case STALL:   return "STALL";
-        case KILLED:  return "KILLED";
-        case RUNNING: return "RUNNING";
-        default:      return "UNKNOWN";
+        case PS_IDLE   : return "IDLE";
+        case PS_STALL  : return "STALL";
+        case PS_RUNNING: return "RUNNING";
+        default:         return "UNKNOWN";
         }
     }
 
@@ -30,23 +30,27 @@ namespace kathryn::o3{
         virtual ~SimState() = default;
 
         struct Fetch{
-            pipStat st = IDLE;
+            pipStat st = PS_IDLE;
             ull     pc = 0;
-            [[nodiscard]] bool compare(const Fetch& rhs) const;
+            bool compare(const Fetch& rhs) const;
+            void printSlot(SlotWriterBase& writer);
 
 
         } fetch;
 
         struct Decode{
-            pipStat st = IDLE;
-            ull inst1    = 0;
-            ull invalid2 = 0;
-            ull inst2    = 0;
-            ull pc       = 0;
-            ull npc      = 0;
-            ull bhr      = 0;
+            pipStat st       = PS_IDLE;
+            ull     inst1    = 0;
+            ull     invalid2 = 0;
+            ull     inst2    = 0;
+            ull     pc       = 0;
+            ull     npc      = 0;
+            /** not compare*/
+            bool isGenable = false;
 
-            [[nodiscard]] bool compare(const Decode& rhs) const;
+            bool compare(const Decode& rhs) const;
+            void printSlot(SlotWriterBase& writer);
+
         } decode;
 
         struct DispInstr{
@@ -71,18 +75,25 @@ namespace kathryn::o3{
             explicit DispInstr(int idx): idx(idx){}
 
             bool compare(const DispInstr& rhs) const;
+            void printSlot(SlotWriterBase& writer);
         };
 
         struct Dispatch{
-            pipStat st = IDLE;
+            pipStat st = PS_IDLE;
             ///// shared signal
             ull pc        = 0;
             ull desEqSrc1 = 0;
             ull desEqSrc2 = 0;
             ///// individual instruction
-            DispInstr dp0 {0};
-            DispInstr dp1 {1};
+            DispInstr dp1 {0};
+            DispInstr dp2 {1};
+            /** not compare*/
+            bool isAluRsvAllocatable = false;
+            bool isBranchRsvAllocatable = false;
+            bool isRenamable = false;
+
             bool compare(const Dispatch& rhs) const;
+            void printSlot(SlotWriterBase& writer);
 
         } dispatch;
 
@@ -95,6 +106,7 @@ namespace kathryn::o3{
             ull rrftag  = 0;
             ull dstval  = 0;
             ull alu_op  = 0; //////  mul and ldst discard it
+            ull specBit = 0;
             ull spectag = 0;
 
             ull src1     = 0, src2     = 0;
@@ -102,16 +114,17 @@ namespace kathryn::o3{
             ull valid1   = 0, valid2   = 0;
 
             bool compare(const RSV_BASE_ENTRY& rhs) const;
+            void printSlot(SlotWriterBase& writer);
         };
 
 
         struct RSV_BRANCH_ENTRY: RSV_BASE_ENTRY{
-            ull bhr    = 0;
-            ull prcond = 0;
+            ull imm_br = 0;
             ull praddr = 0;
             ull opcode = 0;
 
             bool compare(const RSV_BRANCH_ENTRY& rhs) const;
+            void printSlot(SlotWriterBase& writer);
         };
 
         struct RSV_MUL_ENTRY: RSV_BASE_ENTRY{
@@ -120,41 +133,53 @@ namespace kathryn::o3{
             ull sel_lohi    = 0;
 
             bool compare(const RSV_MUL_ENTRY& rhs) const;
+            void printSlot(SlotWriterBase& writer);
         };
 
         RSV_BASE_ENTRY rsvAlu1[ALU_ENT_NUM] {};
         RSV_BASE_ENTRY rsvAlu2[ALU_ENT_NUM] {};
-        RSV_MUL_ENTRY rsvMul[MUL_ENT_NUM]   {};
+        RSV_MUL_ENTRY  rsvMul[MUL_ENT_NUM]   {};
 
         RSV_BRANCH_ENTRY rsvBranch[BRANCH_ENT_NUM]{};
         RSV_BASE_ENTRY   rsvLdSt[LDST_ENT_NUM]    {};
+
+        ////////// do not compare
+        pipStat st_issue_alu1   = PS_IDLE; ull idx_issue_alu1   = 0;
+        pipStat st_issue_alu2   = PS_IDLE; ull idx_issue_alu2   = 0;
+        pipStat st_issue_mul    = PS_IDLE; ull idx_issue_mul    = 0;
+        pipStat st_issue_branch = PS_IDLE; ull idx_issue_branch = 0;
+        pipStat st_issue_ldst   = PS_IDLE; ull idx_issue_ldst   = 0;
 
         /**
          * execute unit
          */
         struct EXEC_ALU_STATE{
-            pipStat st = IDLE;
+            pipStat st = PS_IDLE;
             RSV_BASE_ENTRY entry{};
 
             bool compare(const EXEC_ALU_STATE& rhs) const;
-        } exec_alu0, exec_alu1;
+            void printSlot(SlotWriterBase& writer);
+        } exec_alu1, exec_alu2;
 
         struct EXEC_MUL_STATE{
-            pipStat st = IDLE;
+            pipStat st = PS_IDLE;
             RSV_MUL_ENTRY entry {};
 
             bool compare(const EXEC_MUL_STATE& rhs) const;
+            void printSlot(SlotWriterBase& writer);
         } exec_mul;
 
         struct EXEC_BRANCH_STATE{
-            pipStat st = IDLE;
+            pipStat st = PS_IDLE;
             RSV_BRANCH_ENTRY entry{};
 
             bool compare(const EXEC_BRANCH_STATE& rhs) const;
+            void printSlot(SlotWriterBase& writer);
         } exec_branch;
 
         struct EXEC_LDST_STATE{
-            pipStat st = IDLE;
+            pipStat st1 = PS_IDLE;
+            pipStat st2 = PS_IDLE;
             RSV_BASE_ENTRY entry{};
             ull rrftag    = 0;
             ull rdUse     = 0;
@@ -164,6 +189,7 @@ namespace kathryn::o3{
             ull stBufHit  = 0;
 
             bool compare(const EXEC_LDST_STATE& rhs) const;
+            void printSlot(SlotWriterBase& writer);
         }exec_ldst;
 
         ////// commit stage
@@ -171,12 +197,12 @@ namespace kathryn::o3{
         struct COMMIT_ENTRY{
             int idx       = 0;
             ull wbFin     = 0;
-            ull isBranch  = 0;
             ull storeBit  = 0;
             ull rdUse     = 0;
             ull rdIdx     = 0;
 
             bool compare(const COMMIT_ENTRY& rhs) const;
+            void printSlot(SlotWriterBase& writer);
         };
 
         struct COMMIT_STATE{
@@ -192,6 +218,7 @@ namespace kathryn::o3{
             }
 
             bool compare(const COMMIT_STATE& rhs) const;
+            void printSlot(SlotWriterBase& writer);
         } rob;
 
         ////// store buffer stage
@@ -203,23 +230,27 @@ namespace kathryn::o3{
             ull  spec       = 0;
             ull  specTag    = 0;
             ull  mem_addr   = 0;
+            ull  mem_data   = 0;
 
             bool compare(const STORE_BUF_ENTRY& rhs) const;
+            void printSlot(SlotWriterBase& writer);
         };
 
         struct STORE_BUF_STATE{
             ull finPtr = 0;
             ull comPtr = 0;
             ull retPtr = 0;
+            STORE_BUF_ENTRY entries[STBUF_ENT_NUM]{};
             ///// not compare
-            ull nb1    = 0;
-            ull ne1    = 0;
-            ull nb0    = 0;
+            ull  nb1    = 0;
+            ull  ne1    = 0;
+            ull  nb0    = 0;
             bool fullNext = false;
             bool emptyNext = false;
-            STORE_BUF_ENTRY entries[STBUF_ENT_NUM]{};
+
 
             bool compare(const STORE_BUF_STATE& rhs) const;
+            void printSlot(SlotWriterBase& writer);
         } stbuf;
 
         /**
@@ -231,6 +262,7 @@ namespace kathryn::o3{
             bool fixTable[SPECTAG_LEN][SPECTAG_LEN]{};
 
             bool compare(const MPFT_STATE& rhs) const;
+            void printSlot(SlotWriterBase& writer);
         } mpft;
 
         struct TAGGEN_STATE{
@@ -238,6 +270,7 @@ namespace kathryn::o3{
             ull tagReg  = 0;
 
             bool compare(const TAGGEN_STATE& rhs) const;
+            void printSlot(SlotWriterBase& writer);
         }tagGen;
 
         struct ARF_STATE{
@@ -246,6 +279,7 @@ namespace kathryn::o3{
             ull  rename[SPECTAG_LEN+1][REG_NUM]{};
 
             bool compare(const ARF_STATE& rhs) const;
+            void printSlot(SlotWriterBase& writer);
 
         }arf;
 
@@ -253,7 +287,12 @@ namespace kathryn::o3{
             bool busy[RRF_NUM]{};
             ull  data[RRF_NUM]{};
 
+            ull freenum      = 0;
+            ull reqPtr       = 0;
+            ull nextRrfCycle = 0;
+
             bool compare(const RRF_STATE& rhs) const;
+            void printSlot(SlotWriterBase& writer);
         }rrf;
 
 
@@ -277,9 +316,8 @@ namespace kathryn::o3{
 
         virtual void recruitValue() = 0;
 
-        void printSlotWindow();
-
         bool compare(SimState& rhs) const;
+        virtual void printSlotWindow(SlotWriterBase& writer);
 
         bool isStateShouldCheckFurther(pipStat ps);
         

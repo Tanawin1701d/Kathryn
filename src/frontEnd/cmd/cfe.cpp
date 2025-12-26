@@ -13,6 +13,7 @@
 #include "test/autoSim/simMng.h"
 #include "test/autoGen/genMng.h"
 #include "example/o3/simulation/o3_sim.h"
+#include "example/o3/simCompare/simCtrlKride.h"
 
 
 namespace kathryn{
@@ -65,6 +66,13 @@ namespace kathryn{
         std::cout << TC_GREEN << "finish o3 sim [sim]" << TC_DEF << std::endl;
     }
 
+    void test_kride_sim(PARAM& params){
+        o3::KRIDE_MNG krideSimMng;
+        krideSimMng.start(params);
+        std::cout << TC_GREEN << "finish kride sim [sim]" << TC_DEF << std::endl;
+
+    }
+
 
     void start(PARAM& params) {
 
@@ -89,6 +97,8 @@ namespace kathryn{
             //test_cacheAc_sim(params);
         }else if (params["testType"]  == "testO3Sim"){
                test_o3_sim(params);
+        }else if (params["testType"] == "testKrideSim"){
+                test_kride_sim(params);
         }else{
             std::cout << "there is no command to test system" << std::endl;
         }

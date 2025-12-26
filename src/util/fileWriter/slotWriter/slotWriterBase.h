@@ -41,6 +41,10 @@ namespace kathryn{
         SlotWriterBase(const std::vector<std::string>& slotNames, int columnWidth,const std::string& fileName);
         SlotWriterBase(const std::vector<std::string>& slotNames, std::vector<int> colWidths, const std::string& fileName);
 
+
+        virtual void  addSlotVal (int slotIdx, const std::string& value) = 0;
+        virtual void  addSlotVals(int slotIdx, const std::vector<std::string>& values) = 0;
+
         std::string genSlotBreakVal();
 
 

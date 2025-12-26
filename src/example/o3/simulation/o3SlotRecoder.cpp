@@ -66,7 +66,7 @@ namespace kathryn::o3{
     }
 
     bool O3SlotRecorder::writeSlotIfPipIdle(REC_PIP_STAGE stageIdx,
-                                                  PipSimProbe* pipProbe){
+                                            PipSimProbe* pipProbe){
         if (pipProbe->isWaiting()){
             _slotWriter->addSlotVal(stageIdx, "IDLE");
             return true;
@@ -75,7 +75,7 @@ namespace kathryn::o3{
     }
 
     bool O3SlotRecorder::writeSlotIfZyncStall(REC_PIP_STAGE stageIdx,
-                                                  ZyncSimProb* zyncSimProbe){
+                                              ZyncSimProb* zyncSimProbe){
         if (zyncSimProbe->isWaiting()){
             _slotWriter->addSlotVal(stageIdx, "STALL");
             return true;
@@ -255,7 +255,7 @@ namespace kathryn::o3{
         DecodeStage& decode_stage = _ps->dc;
 
         RegSlot& decShared = _ps->dc.dcdShared;
-        ull sim_shared_pc = ull(decShared(pc));
+        ull sim_shared_pc        = ull(decShared(pc));
         ull sim_shared_desEqSrc1 = ull(decShared(desEqSrc1));
         ull sim_shared_desEqSrc2 = ull(decShared(desEqSrc2));
         _slotWriter->addSlotVal(RPS_DISPATCH, "aluRsvAble: " + std::to_string(ull(_core->pDisp.dbg_isAluRsvAllocatable)));

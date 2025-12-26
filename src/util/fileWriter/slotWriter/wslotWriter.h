@@ -28,8 +28,8 @@ namespace kathryn{
                     const std::string& fileName,
                     int windowSize = 10);
 
-        void addSlotVal (int slotIdx, const std::string& value);
-        void addSlotVals(int slotIdx, const std::vector<std::string>& values);
+        void addSlotVal (int slotIdx, const std::string& value) override;
+        void addSlotVals(int slotIdx, const std::vector<std::string>& values) override;
 
         //////// use when we want to save file with this current window situation
         void finalizeLastWindow();

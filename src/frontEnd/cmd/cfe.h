@@ -31,6 +31,8 @@ namespace kathryn {
 
     void test_o3_sim(PARAM& params);
 
+    void test_kride_sim(PARAM& params);
+
 }
 
 #endif //KATHRYN_CFE_H

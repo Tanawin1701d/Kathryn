@@ -19,8 +19,8 @@ namespace kathryn{
         SlotWriter(const std::vector<std::string>& slotNames, int columnWidth,const std::string& fileName);
         SlotWriter(std::vector<std::string> slotNames, const std::vector<int>& colWidths, std::string fileName);
 
-        void addSlotVal (int slotIdx, const std::string& value);
-        void addSlotVals(int slotIdx, const std::vector<std::string>& values);
+        void addSlotVal (int slotIdx, const std::string& value) override;
+        void addSlotVals(int slotIdx, const std::vector<std::string>& values) override;
         void iterateCycle();
 
         void init() override;
