@@ -54,6 +54,7 @@ namespace kathryn::o3{
         virtual void  readWriteDataMemDoCmd (){assert(false);}  //// it has to place at the bigin of cycle
         virtual void  resetRegister         (){assert(false);}
         virtual void  testRegister          (){assert(false);}
+        virtual void  postCycleAction       (){assert(false);}
     };
 
 }

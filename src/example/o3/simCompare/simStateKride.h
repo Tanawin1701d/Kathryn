@@ -16,6 +16,13 @@ namespace kathryn::o3{
 
         Core& _core;
 
+        bool isLastCycleMisPred = false;
+        bool isLastCycleSucc    = false;
+
+        bool isLastCycleDisp1 = false;
+        bool isLastCycleDisp2 = false;
+        ull  lastDispatchPtr  = 0;
+
         SimStateKride(Core& core):
             SimState(),
             _core(core){}
@@ -32,9 +39,12 @@ namespace kathryn::o3{
 
         void recruitValue() override;
 
-        void printSlotWindow(SlotWriterBase& writer) override{
-            SimState::printSlotWindow(writer);
-        }
+        void printSlotWindow(SlotWriterBase& writer) override;
+
+        void writeSlotIfTableChange(SlotWriterBase& writer,
+                                    REC_PIP_STAGE stageIdx,
+                                    std::vector<SlotSimInfo64> changeRows,
+                                    int rowLimToPrintEntireRow) const;
 
 
     };

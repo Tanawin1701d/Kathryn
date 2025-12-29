@@ -48,19 +48,32 @@ namespace kathryn::o3{
         return (it != srcBSelMap.end()) ? it->second : "UNKNOWN";
     }
 
+    
+
     bool writeSlotIfRunning(REC_PIP_STAGE rps, pipStat st, SlotWriterBase& writer){
 
         writer.addSlotVal(rps, pipStatToString(st));
         return st == PS_RUNNING;
     }
 
-    void writeIssue(SlotWriterBase& writer, pipStat st, ull issueIdx){
+    void writeIssue(const std::string& stageName,
+                    SlotWriterBase& writer,
+                    pipStat st,
+                    ull issueIdx,
+                    bool isOhIdx){
 
-        writer.addSlotVal(RPS_ISSUE, "-----> ISSUE Stage");
-        if (writeSlotIfRunning(RPS_ISSUE, st, writer)){
+        writer.addSlotVal(RPS_ISSUE, "-----> "+ stageName + "ISSUE Stage");
+        if (!writeSlotIfRunning(RPS_ISSUE, st, writer)){
             return;
         }
-        writer.addSlotVal(RPS_ISSUE, "issue idx: " + std::to_string(issueIdx));
+
+        if (isOhIdx){
+            writer.addSlotVal(RPS_ISSUE, "issue idx: " + cvtNum2BinStr(issueIdx));
+        }else{
+            writer.addSlotVal(RPS_ISSUE, "issue idx: " + std::to_string(issueIdx));
+
+        }
+
 
     }
 
@@ -77,6 +90,7 @@ namespace kathryn::o3{
         ull op = rawInstr & opMaskBit;
         return (decMap.find(op) != decMap.end()) ? decMap[op] : "UNKNOWN";
     }
+
 
     std::string translateAluOpToOp(ull aluOpIdx){
         std::map<ull, std::string> aluOpMap = {
@@ -175,11 +189,12 @@ namespace kathryn::o3{
         dp2.printSlot(writer);
     }
 
-    void SimState::RSV_BASE_ENTRY::printSlot(SlotWriterBase& writer){
+    void SimState::RSV_BASE_ENTRY::printSlot(SlotWriterBase& writer, REC_PIP_STAGE rps){
 
         if (busy == 0){return;}
 
         std::string result0;
+        result0 += std::to_string(idx) + "] ";
 
         result0 += "sb:" + std::string(sortbit ? "1" : "0") + " ";
 
@@ -202,55 +217,120 @@ namespace kathryn::o3{
                 result0 += std::to_string(src2);
             }
         }
-
-        writer.addSlotVal(RPS_RSV, result0);
+        writer.addSlotVal(rps, result0);
 
         ////// result 2 speculative meta data
         std::string result1;
         result1 += "spec: " + std::to_string(specBit) + " spt:" + cvtNum2BinStr(spectag);
 
-        writer.addSlotVal(RPS_RSV, result1);
+        writer.addSlotVal(rps, result1);
 
 
     }
 
-    void SimState::RSV_BRANCH_ENTRY::printSlot(SlotWriterBase& writer){
-        RSV_BASE_ENTRY::printSlot(writer);
+    void SimState::RSV_BRANCH_ENTRY::printSlot(SlotWriterBase& writer, REC_PIP_STAGE rps){
+        RSV_BASE_ENTRY::printSlot(writer, rps);
     }
 
 
 
-    void SimState::RSV_MUL_ENTRY::printSlot(SlotWriterBase& writer){
+    void SimState::RSV_MUL_ENTRY::printSlot(SlotWriterBase& writer, REC_PIP_STAGE rps){
 
-        RSV_BASE_ENTRY::printSlot(writer);
+        RSV_BASE_ENTRY::printSlot(writer, rps);
         if (busy == 0){return;}
         std::string r1s = (src1_signed) ? "s" : "u";
         std::string r2s = (src2_signed) ? "s" : "u";
         std::string hl  = (sel_lohi)    ? "h" : "l";
-        writer.addSlotVal(RPS_RSV,"mulReq: 1:" + r1s + " "
+        writer.addSlotVal(rps,"mulReq: 1:" + r1s + " "
                          + "2:" + r2s + " "
                          + "sl:");
     }
 
-    void SimState::EXEC_ALU_STATE::printSlot(SlotWriterBase& writer){
-        if (!writeSlotIfRunning(RPS_EXECUTE, st, writer)){return;}
-        entry.printSlot(writer);
+    void SimState::RSV_BASE_ENTRY::printDetailedSlot(SlotWriterBase& writer,
+                                                     REC_PIP_STAGE rps,
+                                                     const COMMIT_STATE& commitState){
+        writer.addSlotVal(rps, "PC: " + cvtNum2HexStr(pc));
+        writer.addSlotVal(rps, "IMM: " + cvtNum2HexStr(imm));
+        writer.addSlotVal(rps, "ALU Op: " + translateAluOpToOp(alu_op) +
+                               "/Spec: " + std::to_string(specBit) +
+                               "/SpecTag: " + cvtNum2BinStr(spectag));
+        std::string sim_isRdUsed = dstval ? "(USE)" : "(UNUSED)";
+        if (dstval){
+            ull archIdx = commitState.comEntries[rrftag].rdIdx;
+            writer.addSlotVal(rps, "RD phy: " + std::to_string(rrftag) + " arch: " + std::to_string(archIdx));
+        }else{
+            writer.addSlotVal(rps, "RD phy: " + std::to_string(rrftag) + " arch(UNUSED)");
+        }
+
+        std::string sim_rs1Valid = valid1 ? "(valid)" : "(false)";
+        std::string sim_rs1Sel   = lookupSrcASel(src1_sel);
+        writer.addSlotVal(rps, "RS1" + sim_rs1Valid +
+                               " /Data: " + std::to_string(src1) +
+                               " /Sel: " + sim_rs1Sel);
+
+        std::string sim_rs2Valid = valid2 ? "(valid)" : "(false)";
+        std::string sim_rs2Sel   = lookupSrcBSel(src2_sel);
+        writer.addSlotVal(rps, "RS2" + sim_rs2Valid +
+                               " /Data: " + std::to_string(src2) +
+                               " /Sel: " + sim_rs2Sel);
     }
 
-    void SimState::EXEC_MUL_STATE::printSlot(SlotWriterBase& writer){
-        if (!writeSlotIfRunning(RPS_EXECUTE, st, writer)){return;}
-        entry.printSlot(writer);
+    void SimState::RSV_BRANCH_ENTRY::printDetailedSlot(SlotWriterBase& writer,
+                                                     REC_PIP_STAGE rps,
+                                                     const COMMIT_STATE& commitState){
+        ///// master call
+        RSV_BASE_ENTRY::printDetailedSlot(writer, rps, commitState);
+
+        std::string result0 = "IMMBR: " + cvtNum2HexStr(imm_br) + "/ PADDR: " + cvtNum2HexStr(praddr);
+        writer.addSlotVal(rps, result0);
+        writer.addSlotVal(rps, "opcode: " + cvtNum2HexStr(opcode));
     }
 
-    void SimState::EXEC_BRANCH_STATE::printSlot(SlotWriterBase& writer){
-        if (!writeSlotIfRunning(RPS_EXECUTE, st, writer)){return;}
-        entry.printSlot(writer);
+    void SimState::RSV_MUL_ENTRY::printDetailedSlot(SlotWriterBase& writer,
+                                                     REC_PIP_STAGE rps,
+                                                     const COMMIT_STATE& commitState){
+        ////// master call
+        RSV_BASE_ENTRY::printDetailedSlot(writer, rps, commitState);
+        std::string result0 = "sign1: " + std::to_string(src1_signed) +
+                              " /sign2: " + std::to_string(src2_signed) +
+                              " /selHi: " + std::to_string(sel_lohi);
+        writer.addSlotVal(rps, result0);
     }
 
-    void SimState::EXEC_LDST_STATE::printSlot(SlotWriterBase& writer){
+    /**
+     *  exec slot
+     *
+     */
+    void SimState::EXEC_ALU_STATE::printSlot(SlotWriterBase& writer, COMMIT_STATE& commitState){
+        writer.addSlotVal(RPS_EXECUTE, "----> ALU Stage ");
+        if (!writeSlotIfRunning(RPS_EXECUTE, st, writer)){return;}
+        entry.printDetailedSlot(writer, RPS_EXECUTE, commitState);
+    }
 
+    void SimState::EXEC_MUL_STATE::printSlot(SlotWriterBase& writer, COMMIT_STATE& commitState){
+        writer.addSlotVal(RPS_EXECUTE, "----> MUL Stage ");
+        if (!writeSlotIfRunning(RPS_EXECUTE, st, writer)){return;}
+        entry.printDetailedSlot(writer, RPS_EXECUTE, commitState);
+    }
+
+    void SimState::EXEC_BRANCH_STATE::printSlot(SlotWriterBase& writer, COMMIT_STATE& commitState, BC bcState){
+        writer.addSlotVal(RPS_EXECUTE, "----> BRANCH Stage ");
+        if (!writeSlotIfRunning(RPS_EXECUTE, st, writer)){return;}
+
+        if (bcState.misPred){
+            writer.addSlotVal(RPS_EXECUTE, "MISPRED");
+        }
+        if (bcState.succPred){
+            writer.addSlotVal(RPS_EXECUTE, "SUCCPRED");
+        }
+
+        entry.printDetailedSlot(writer, RPS_EXECUTE, commitState);
+    }
+
+    void SimState::EXEC_LDST_STATE::printSlot(SlotWriterBase& writer, COMMIT_STATE& commitState){
+        writer.addSlotVal(RPS_EXECUTE, "----> LDST Stage ");
         if (writeSlotIfRunning(RPS_EXECUTE, st1, writer)){
-            entry.printSlot(writer);
+            entry.printDetailedSlot(writer, RPS_EXECUTE, commitState);
         }
 
         writer.addSlotVal(RPS_EXECUTE, "-----> EXEC Stage 2");
@@ -293,6 +373,17 @@ namespace kathryn::o3{
         if (com2Status){
             comEntries[(comPtr + 1) % RRF_NUM].printSlot(writer);
         }
+
+        if (isPrevCycleDp1){
+            writer.addSlotVal(RPS_COMMIT, "-----------");
+            writer.addSlotVal(RPS_COMMIT, "dispatched");
+            comEntries[comPtr % RRF_NUM].printSlot(writer);
+            if (isPrevCycleDp2){
+                comEntries[(comPtr + 1) % RRF_NUM].printSlot(writer);
+            }
+
+        }
+
     }
 
     ////// store buffer stage
@@ -348,13 +439,24 @@ namespace kathryn::o3{
         writer.addSlotVal(RPS_DECODE, "tagReg " + cvtNum2BinStr(tagReg));
     }
 
-    void SimState::ARF_STATE::printSlot(SlotWriterBase& writer){
+    void SimState::ARF_STATE::printSlot(SlotWriterBase& writer, BC bcPrev){
+
+        if (bcPrev.misPred){
+            writer.addSlotVal(RPS_ARF, "CHANGE FROM MISPRED");
+        }else if (bcPrev.succPred){
+            writer.addSlotVal(RPS_ARF, "CHANGE FROM SUCCPRED");
+        }
 
         for (int tableIdx = 0; tableIdx < (SPECTAG_LEN+1); tableIdx++){
             writer.addSlotVal(RPS_ARF, "TABLEIDX " + std::to_string(tableIdx));
+            std::string reNameVal;
             for (int rrfIdx = 0; rrfIdx < REG_NUM; rrfIdx++){
-                std::string reNameVal;
-                reNameVal += std::to_string(rename[tableIdx][rrfIdx]) + "|";
+                if (busy[tableIdx][rrfIdx]){
+                    reNameVal += std::to_string(rename[tableIdx][rrfIdx]) + "|";
+                }else{
+                    reNameVal += "-|";
+                }
+
                 if ((rrfIdx % 8) == 7){
                     writer.addSlotVal(RPS_ARF, reNameVal);
                     reNameVal.clear();
@@ -365,11 +467,11 @@ namespace kathryn::o3{
     }
 
     void SimState::RRF_STATE::printSlot(SlotWriterBase& writer){
-        for (int rrfIdx = 0; rrfIdx < REG_NUM; rrfIdx++){
-            writer.addSlotVal(RPS_RRF, "RRFIDX " + std::to_string(rrfIdx) +
-                                        " /V: " + std::to_string(busy[rrfIdx]) +
-                                        " /DATA:" + cvtNum2HexStr(data[rrfIdx]));
-        }
+        // for (int rrfIdx = 0; rrfIdx < REG_NUM; rrfIdx++){
+        //     writer.addSlotVal(RPS_RRF, "RRFIDX " + std::to_string(rrfIdx) +
+        //                                 " /V: " + std::to_string(busy[rrfIdx]) +
+        //                                 " /DATA:" + cvtNum2HexStr(data[rrfIdx]));
+        // }
     }
 
     void SimState::printSlotWindow(SlotWriterBase& writer){
@@ -378,47 +480,52 @@ namespace kathryn::o3{
         dispatch.printSlot(writer);
 
         /////// alu 1
+        writer.addSlotVal(RPS_RSV, "---> ALU Stage 1");
         for (int i = 0; i < ALU_ENT_NUM; i++){
-            rsvAlu1[i].printSlot(writer);
+            rsvAlu1[i].printSlot(writer, RPS_RSV);
         }
         /////// alu 2
+        writer.addSlotVal(RPS_RSV, "---> ALU Stage 2");
         for (int i = 0; i < ALU_ENT_NUM; i++){
-            rsvAlu2[i].printSlot(writer);
+            rsvAlu2[i].printSlot(writer, RPS_RSV);
         }
+        writer.addSlotVal(RPS_RSV, "---> MUL Stage");
         for (int i = 0; i < MUL_ENT_NUM; i++){
-            rsvMul[i].printSlot(writer);
+            rsvMul[i].printSlot(writer, RPS_RSV);
         }
+        writer.addSlotVal(RPS_RSV, "---> BR Stage");
         for (int i = 0; i < BRANCH_ENT_NUM; i++){
-            rsvBranch[i].printSlot(writer);
+            rsvBranch[i].printSlot(writer, RPS_RSV);
         }
+        writer.addSlotVal(RPS_RSV, "---> LDST Stage");
         for (int i = 0; i < LDST_ENT_NUM; i++){
-            rsvLdSt[i].printSlot(writer);
+            rsvLdSt[i].printSlot(writer, RPS_RSV);
         }
 
-        writeIssue(writer, st_issue_alu1  , idx_issue_alu1  );
-        writeIssue(writer, st_issue_alu2  , idx_issue_alu2  );
-        writeIssue(writer, st_issue_mul   , idx_issue_mul   );
-        writeIssue(writer, st_issue_branch, idx_issue_branch);
-        writeIssue(writer, st_issue_ldst  , idx_issue_ldst  );
+        writeIssue("alu1", writer, st_issue_alu1  , idx_issue_alu1, true);
+        writeIssue("alu2", writer, st_issue_alu2  , idx_issue_alu2, true);
+        writeIssue("mul", writer, st_issue_mul   , idx_issue_mul  , true);
+        writeIssue("branch", writer, st_issue_branch, idx_issue_branch, false);
+        writeIssue("ldst", writer, st_issue_ldst  , idx_issue_ldst    , false);
 
 
         /////// execute unit
 
-        exec_alu1.printSlot(writer);
-        exec_alu2.printSlot(writer);
-        exec_mul.printSlot(writer);
-        exec_branch.printSlot(writer);
-        exec_ldst.printSlot(writer);
+        exec_alu1.printSlot(writer, rob);
+        exec_alu2.printSlot(writer, rob);
+        exec_mul.printSlot(writer, rob);
+        exec_branch.printSlot(writer, rob, bcState);
+        exec_ldst.printSlot(writer, rob);
 
         rob.printSlot(writer);
         stbuf.printSlot(writer);
 
         /////// register architecture
 
-        mpft.printSlot(writer);
+        mpft.printSlot  (writer);
         tagGen.printSlot(writer);
-        arf.printSlot(writer);
-        rrf.printSlot(writer);
+        arf.printSlot   (writer, bcPrev);
+        rrf.printSlot   (writer);
     }
 
 }

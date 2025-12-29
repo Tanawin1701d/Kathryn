@@ -34,3 +34,6 @@ modelCompile/main.cpp
 #### synthesisRunner
 synthesisRunner/generatedTcl/*
 synthesisRunner/project/*
+
+#### external simulation
+extSim/*

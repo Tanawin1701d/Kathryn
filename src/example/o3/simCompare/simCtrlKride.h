@@ -29,6 +29,8 @@ namespace kathryn::o3{
         void  readWriteDataMemDoCmd() override;
         void  resetRegister() override;
         void  testRegister() override;
+        void  postCycleAction() override;
+
     };
 
     class KRIDE_MNG{

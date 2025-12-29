@@ -7,6 +7,8 @@
 
 #include "util/fileWriter/slotWriter/slotWriterBase.h"
 #include "kathryn.h"
+#include "simState.h"
+#include "simState.h"
 #include "example/o3/core/mpft.h"
 #include "example/o3/core/parameter.h"
 #include "example/o3/simShare/recPipStage.h"
@@ -28,6 +30,13 @@ namespace kathryn::o3{
 
     struct SimState{
         virtual ~SimState() = default;
+
+        struct BC{
+            bool misPred  = false;
+            bool succPred = false;
+        } bcState, bcPrev;
+
+
 
         struct Fetch{
             pipStat st = PS_IDLE;
@@ -97,8 +106,10 @@ namespace kathryn::o3{
 
         } dispatch;
 
+        struct COMMIT_STATE;
         struct RSV_BASE_ENTRY{
             std::string name;
+            int idx     = 0;
             ull busy    = 0;
             ull sortbit = 0; //// incase inorder rsv this bit is discarded
             ull pc      = 0; //// mul and ldst discard it
@@ -114,7 +125,10 @@ namespace kathryn::o3{
             ull valid1   = 0, valid2   = 0;
 
             bool compare(const RSV_BASE_ENTRY& rhs) const;
-            void printSlot(SlotWriterBase& writer);
+            void printSlot(SlotWriterBase& writer, REC_PIP_STAGE rps);
+            void printDetailedSlot(SlotWriterBase& writer,
+                                   REC_PIP_STAGE rps,
+                                   const COMMIT_STATE& commitState);
         };
 
 
@@ -124,7 +138,10 @@ namespace kathryn::o3{
             ull opcode = 0;
 
             bool compare(const RSV_BRANCH_ENTRY& rhs) const;
-            void printSlot(SlotWriterBase& writer);
+            void printSlot(SlotWriterBase& writer, REC_PIP_STAGE rps);
+            void printDetailedSlot(SlotWriterBase& writer,
+                                   REC_PIP_STAGE rps,
+                                   const COMMIT_STATE& commitState);
         };
 
         struct RSV_MUL_ENTRY: RSV_BASE_ENTRY{
@@ -133,7 +150,10 @@ namespace kathryn::o3{
             ull sel_lohi    = 0;
 
             bool compare(const RSV_MUL_ENTRY& rhs) const;
-            void printSlot(SlotWriterBase& writer);
+            void printSlot(SlotWriterBase& writer, REC_PIP_STAGE rps);
+            void printDetailedSlot(SlotWriterBase& writer,
+                                   REC_PIP_STAGE rps,
+                                   const COMMIT_STATE& commitState);
         };
 
         RSV_BASE_ENTRY rsvAlu1[ALU_ENT_NUM] {};
@@ -158,7 +178,7 @@ namespace kathryn::o3{
             RSV_BASE_ENTRY entry{};
 
             bool compare(const EXEC_ALU_STATE& rhs) const;
-            void printSlot(SlotWriterBase& writer);
+            void printSlot(SlotWriterBase& writer, COMMIT_STATE& commitState);
         } exec_alu1, exec_alu2;
 
         struct EXEC_MUL_STATE{
@@ -166,15 +186,17 @@ namespace kathryn::o3{
             RSV_MUL_ENTRY entry {};
 
             bool compare(const EXEC_MUL_STATE& rhs) const;
-            void printSlot(SlotWriterBase& writer);
+            void printSlot(SlotWriterBase& writer, COMMIT_STATE& commitState);
         } exec_mul;
 
         struct EXEC_BRANCH_STATE{
             pipStat st = PS_IDLE;
             RSV_BRANCH_ENTRY entry{};
 
+            //// not compare
+
             bool compare(const EXEC_BRANCH_STATE& rhs) const;
-            void printSlot(SlotWriterBase& writer);
+            void printSlot(SlotWriterBase& writer, COMMIT_STATE& commitState, BC bc);
         } exec_branch;
 
         struct EXEC_LDST_STATE{
@@ -189,7 +211,7 @@ namespace kathryn::o3{
             ull stBufHit  = 0;
 
             bool compare(const EXEC_LDST_STATE& rhs) const;
-            void printSlot(SlotWriterBase& writer);
+            void printSlot(SlotWriterBase& writer, COMMIT_STATE& commitState);
         }exec_ldst;
 
         ////// commit stage
@@ -210,6 +232,10 @@ namespace kathryn::o3{
             bool com1Status = false;
             bool com2Status = false;
             COMMIT_ENTRY comEntries[RRF_NUM]{};
+
+            bool isPrevCycleDp1 = false;
+            bool isPrevCycleDp2 = false;
+            ull  dpPointer = 0;
 
             COMMIT_STATE(){
                 for (int i = 0; i < RRF_NUM; i++){
@@ -279,7 +305,7 @@ namespace kathryn::o3{
             ull  rename[SPECTAG_LEN+1][REG_NUM]{};
 
             bool compare(const ARF_STATE& rhs) const;
-            void printSlot(SlotWriterBase& writer);
+            void printSlot(SlotWriterBase& writer, BC bcPrev);
 
         }arf;
 
@@ -301,16 +327,21 @@ namespace kathryn::o3{
             /////// set name for all rsv
             for (int i = 0; i < ALU_ENT_NUM; i++){
                 rsvAlu1[i].name = "RSV_ALU1_" + std::to_string(i);
+                rsvAlu1[i].idx  = i;
                 rsvAlu2[i].name = "RSV_ALU2_" + std::to_string(i);
+                rsvAlu2[i].idx  = i;
             }
             for (int i = 0; i < MUL_ENT_NUM; i++){
                 rsvMul[i].name = "RSV_MUL_" + std::to_string(i);
+                rsvMul[i].idx  = i;
             }
             for (int i = 0; i < BRANCH_ENT_NUM; i++){
                 rsvBranch[i].name = "RSV_BRANCH_" + std::to_string(i);
+                rsvBranch[i].idx  = i;
             }
             for (int i = 0; i < LDST_ENT_NUM; i++){
                 rsvLdSt[i].name = "RSV_LDST_" + std::to_string(i);
+                rsvLdSt[i].idx  = i;
             }
         }
 

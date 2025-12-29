@@ -69,7 +69,7 @@ namespace kathryn::o3{
     void SimStateKride::assignARF_Table(int tableIdx,RegSlot& busySlot, RegSlot& renameSlot){
         for (int regIdx = 0; regIdx < REG_NUM; regIdx++){
             arf.busy  [tableIdx][regIdx] = (ull(busySlot  (regIdx)) != 0);
-            arf.rename[tableIdx][regIdx] = (ull(renameSlot(regIdx)) != 0);
+            arf.rename[tableIdx][regIdx] = ull(renameSlot(regIdx));
         }
     }
 
@@ -79,6 +79,12 @@ namespace kathryn::o3{
 
 
     void SimStateKride::recruitValue(){
+
+        //////////  bcState
+        bcState.misPred  = ull(_core.tagMgmt.bc.mis) != 0;
+        bcState.succPred = ull(_core.tagMgmt.bc.suc) != 0;
+        bcPrev.misPred  = isLastCycleMisPred;
+        bcPrev.succPred = isLastCycleSucc;
 
         //// fetch
         fetch.st = generatePipState(&pipProbGrp.fetch, &zyncProbGrp.fetch);
@@ -190,6 +196,10 @@ namespace kathryn::o3{
             rob.comEntries[rrfIdx].rdUse    = ull(_core.prob._table(rrfIdx)(rdUse).v()   );
             rob.comEntries[rrfIdx].rdIdx    = ull(_core.prob._table(rrfIdx)(rdIdx).v()   );
         }
+        rob.isPrevCycleDp1 = isLastCycleDisp1;
+        rob.isPrevCycleDp2 = isLastCycleDisp2;
+        rob.dpPointer      = ull(lastDispatchPtr);
+
 
         //// store buffer
         stbuf.finPtr        = ull(_core.storeBuf.finPtr);
@@ -242,6 +252,48 @@ namespace kathryn::o3{
         rrf.reqPtr        = ull(_core.regArch.rrf.reqPtr);
         rrf.nextRrfCycle  = ull(_core.regArch.rrf.nextRrfCycle);
 
+
+        isLastCycleMisPred = ull(_core.tagMgmt.bc.mis) != 0;
+        isLastCycleSucc    = ull(_core.tagMgmt.bc.suc) != 0;
+        ///////// state recorder for next cycle
+        isLastCycleDisp1   = ull(_core.pDisp.dbg_isDisp1);
+        isLastCycleDisp2   = ull(_core.pDisp.dbg_isDisp2);
+        lastDispatchPtr    = ull(_core.regArch.rrf.getReqPtr());
+
     }
+
+    void SimStateKride::printSlotWindow(SlotWriterBase& writer){
+        ////////// main printing
+        SimState::printSlotWindow(writer);
+        ///////// rrf change printing
+        TableSimProbe& tbProbe = dataStructProbGrp.rrf;
+        std::vector<SlotSimInfo64> rowChange = tbProbe.detectRowChange();
+        writeSlotIfTableChange(writer, RPS_RRF, rowChange, 256);
+        dataStructProbGrp.applyCycleChange();
+    }
+
+    void SimStateKride::writeSlotIfTableChange(
+        SlotWriterBase& writer,
+        REC_PIP_STAGE stageIdx,
+        std::vector<SlotSimInfo64> changeRows,
+        int rowLimToPrintEntireRow) const{ //// amount of row in changing if exceed, we will print only changing field
+        bool notExceedRowLim = (changeRows.size() <= rowLimToPrintEntireRow);
+
+        for (SlotSimInfo64& changeRow : changeRows){
+            writer.addSlotVal(stageIdx, "-----> row idx: " + std::to_string(changeRow.rowIdx));
+            for (int colIdx = 0; colIdx < changeRow.fieldSimInfos.size(); colIdx++){
+                FieldSimInfo64& fieldInfo = changeRow.fieldSimInfos[colIdx];
+                if (notExceedRowLim || fieldInfo.prevValue != fieldInfo.curValue){
+                    std::string fieldStr = fieldInfo.name + ": " +
+                                           std::to_string(fieldInfo.prevValue) + "->" +
+                                           std::to_string(fieldInfo.curValue);
+                    writer.addSlotVal(stageIdx, fieldStr);
+                }
+            }
+        }
+
+    }
+
+
 
 }

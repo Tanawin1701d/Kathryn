@@ -92,6 +92,13 @@ namespace kathryn::o3{
             std::cout << TC_RED << "register val test fail" << TC_DEF << std::endl;
         }
     }
+
+    void SimCtrlKride::postCycleAction(){
+
+
+
+    }
+
 }
 
 
