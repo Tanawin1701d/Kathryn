@@ -63,6 +63,7 @@ namespace kathryn::o3{
         } decode;
 
         struct DispInstr{
+            //// TODO check predict cond mul use case
             int idx       = 0;
             ull invalid   = 0;
             ull imm_type  = 0;
@@ -301,7 +302,7 @@ namespace kathryn::o3{
 
         struct ARF_STATE{
             //// the last one is master
-            bool busy[SPECTAG_LEN+1][REG_NUM]{};
+            bool busy  [SPECTAG_LEN+1][REG_NUM]{};
             ull  rename[SPECTAG_LEN+1][REG_NUM]{};
 
             bool compare(const ARF_STATE& rhs) const;

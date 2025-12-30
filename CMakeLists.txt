@@ -12,6 +12,9 @@ add_definitions(-DNOTEXCEED64)
 add_compile_definitions(KATHRYN_PROJ_FOLD_PATH=${CMAKE_SOURCE_DIR})
 
 INCLUDE_DIRECTORIES( ./src )
+INCLUDE_DIRECTORIES( ./extSim/ridecore/src/test/ridecoreVer)
+
+
 
 
 FILE(GLOB_RECURSE SRC_ABS             RELATIVE ${CMAKE_SOURCE_DIR} "src/abstract/*.cpp")
@@ -27,11 +30,16 @@ FILE(GLOB_RECURSE SRC_PARAM           RELATIVE ${CMAKE_SOURCE_DIR} "src/params/*
 FILE(GLOB_RECURSE SRC_LIB             RELATIVE ${CMAKE_SOURCE_DIR} "src/lib/*.cpp")
 FILE(GLOB_RECURSE SRC_MODEL_COMPILE   RELATIVE ${CMAKE_SOURCE_DIR} "src/modelCompile/proxyEventBase.cpp")
 
+add_subdirectory(extSim/ridecore/src/fpga)
+
+FILE(GLOB_RECURSE SRC_RIDE_SIM        RELATIVE ${CMAKE_SOURCE_DIR} "extSim/ridecore/src/test/ridecoreVer/*.cpp")
+
 
 add_executable(Kathryn
-        main.cpp
+        #main.cpp
         #main2.cpp
         #main3.cpp
+        mainVeriTest.cpp
         src/kathryn.cpp
         ${SRC_ABS}
         ${SRC_APP}
@@ -45,7 +53,10 @@ add_executable(Kathryn
         ${SRC_PARAM}
         ${SRC_LIB}
         ${SRC_MODEL_COMPILE}
+        ${SRC_RIDE_SIM}
 
         #blinkSample.cpp
         #src/params/prjParam.h
 )
+
+target_link_libraries(Kathryn PRIVATE verilator_ridecore)
