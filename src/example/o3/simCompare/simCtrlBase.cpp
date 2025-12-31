@@ -14,58 +14,13 @@ namespace kathryn::o3{
                                  SlotWriterBase&          slotWriter,
                                  SimState&                state):
 
-    SimInterface(limitCycle,
-                 "/tmp/vcdDummy",
-                 "/tmp/prodummy",
-                 "O3RiscV",
-                 buildMode,
-                 false,
-                 false,
-                 1),
+
     _prefixFolder(prefix),
     _testTypes   (testTypes),
     _slotWriter  (slotWriter),
     _state       (state){}
 
-    void O3SimCtrlBase::describeCon(){
 
-        for (; _curTestCaseIdx < _testTypes.size(); _curTestCaseIdx++){
-            std::cout << TC_BLUE << "[O3 RISC-V] test type is " << _testTypes[_curTestCaseIdx] << TC_DEF << std::endl;
-            //////////////  read assembly and assertVal
-
-            _vcdWriter-> renew(_prefixFolder + _testTypes[_curTestCaseIdx]+ "/owave.vcd");
-            _flowWriter->renew(_prefixFolder + _testTypes[_curTestCaseIdx]+ "/oprofile.prof");
-            _slotWriter. renew(_prefixFolder + _testTypes[_curTestCaseIdx]+ "/oslot.sl");
-            //////// set reset wire to 1
-            *rstWire = 1;
-            //////// cycle before cycle cycle is running
-            conNextCycle(1);
-            *rstWire = 0;
-            resetRegister();
-            readAssembly (_prefixFolder + _testTypes[_curTestCaseIdx] + "/asm.out");
-            readAssertVal(_prefixFolder + _testTypes[_curTestCaseIdx] + "/ast.out");
-            resetDmem();
-            //////// iterate for 100 cycle
-            for (int i = 0; i <= 150; i++){
-                ///////// give the data to
-                readMem2Fetch();
-                readWriteDataMemDoCmd(); ///// do the dmem command command
-
-                conEndCycle();
-                readWriteDataMemGetCmd();
-                ///////// record the system
-                _state.recruitValue();
-                _state.printSlotWindow(_slotWriter);
-                postCycleAction();
-                _slotWriter.concludeEachCycle();
-                //////////////////////////////////
-                conNextCycle(1);
-            }
-            /////////////////////////////////
-            testRegister();
-            finalPerfCol();
-        }
-    }
 
     void O3SimCtrlBase::resetDmem(){
         std::memset(_dmem, 0, sizeof(_dmem));

@@ -11,7 +11,8 @@
 
 namespace kathryn::o3{
 
-    class SimCtrlKride : public O3SimCtrlBase{
+    class SimCtrlKride : public O3SimCtrlBase,
+                         public SimInterface{
         TopSim& _topSim;
         Core&   _core;
 
@@ -24,6 +25,9 @@ namespace kathryn::o3{
                               SlotWriterBase&          slotWriter,
                               SimState&                state,
                               TopSim&                  topSim);
+
+        void  describeCon  () override;
+
         void  readMem2Fetch() override;
         void  readWriteDataMemGetCmd() override;
         void  readWriteDataMemDoCmd() override;

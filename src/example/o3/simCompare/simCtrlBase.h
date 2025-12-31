@@ -12,7 +12,7 @@
 
 namespace kathryn::o3{
 
-    class O3SimCtrlBase : public SimInterface{
+    class O3SimCtrlBase{
     public:
         const int AMT_STAGE = 5;
         int _curTestCaseIdx = 0;
@@ -38,7 +38,6 @@ namespace kathryn::o3{
                                SlotWriterBase&          slotWriter,
                                SimState&                state);
 
-        void          describeCon  () override;
         ////// memory management for each cycle
 
         void          resetDmem();
