@@ -22,9 +22,6 @@ namespace kathryn::o3{
         bc(bc){
             brdepth.makeResetEvent();
             tagreg.makeResetEvent(1);
-
-            spTag1Result = tagreg;
-            spTag2Result = spTag1Result;
         }
 
         void onMisPred(opr& misTag){
@@ -59,29 +56,42 @@ namespace kathryn::o3{
         std::pair<opr&, opr&> allocate(
             opr& branchValid1,Reg& spec1,
             opr& branchValid2,Reg& spec2){
-            ///// allocate branch 1
-            zif (branchValid1){
-                spec1        <<= (brdepth != 0);
-                spTag1Result   = roundShift1(tagreg);
-                tagreg       <<= spTag1Result;
-            }
-            ///// allocate branch 2
+            spec1 <<= (brdepth != 0);
+            spTag1Result = mux(branchValid1,
+                                    roundShift1(tagreg),
+                                    tagreg);
             spec2 <<= (brdepth != 0) || (branchValid1);
-            zif (branchValid2){
-                zif (branchValid1){
-                    spTag2Result = roundShift2(tagreg);
-                }
-                zelse{
-                    spTag2Result = roundShift1(tagreg);
-                }
-                tagreg <<= spTag2Result;
-            }
-            //// update internal structure
+            spTag2Result = mux(branchValid1 & branchValid2, roundShift2(tagreg),
+                            mux(branchValid2, roundShift1(tagreg), ///// branchValid1 is false
+                                spTag1Result
+                            ));
+            tagreg <<= spTag2Result;
             brdepth <<= ((((brdepth + branchValid1)
                                     + branchValid2)
                                     - bc.isBrSuccPred()));
             return {spTag1Result, spTag2Result};
         }
+
+            // ///// allocate branch 1
+            // zif (branchValid1){
+            //     spec1        <<= (brdepth != 0);
+            //     spTag1Result   = roundShift1(tagreg);
+            //     tagreg       <<= spTag1Result;
+            // }
+            // ///// allocate branch 2
+            // spec2 <<= (brdepth != 0) || (branchValid1);
+            // zif (branchValid2){
+            //     zif (branchValid1){
+            //         spTag2Result = roundShift2(tagreg);
+            //     }
+            //     zelse{
+            //         spTag2Result = roundShift1(tagreg);
+            //     }
+            //     tagreg <<= spTag2Result;
+            // }
+            //// update internal structure
+
+
     };
 
 }

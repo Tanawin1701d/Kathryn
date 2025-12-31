@@ -6,13 +6,18 @@ set(CMAKE_CXX_STANDARD 17)
 #add_compile_options(-O3)
 #set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 #set(CMAKE_BUILD_TYPE Debug)
-
 #add_definitions(-DMODELCOMPILEVB) ### model compile verbose
+
+#option( BUILD_EXT_SIM "buildExternalSimulator(VERILATOR)" ON)
+#if(BUILD_EXT_SIM)
+#    target_compile_definitions(Kathryn PRIVATE BUILD_EXT_SIM)
+#endif()
+
 add_definitions(-DNOTEXCEED64)
 add_compile_definitions(KATHRYN_PROJ_FOLD_PATH=${CMAKE_SOURCE_DIR})
 
 INCLUDE_DIRECTORIES( ./src )
-INCLUDE_DIRECTORIES( ./extSim/ridecore/src/test/ridecoreVer)
+
 
 
 
@@ -30,16 +35,25 @@ FILE(GLOB_RECURSE SRC_PARAM           RELATIVE ${CMAKE_SOURCE_DIR} "src/params/*
 FILE(GLOB_RECURSE SRC_LIB             RELATIVE ${CMAKE_SOURCE_DIR} "src/lib/*.cpp")
 FILE(GLOB_RECURSE SRC_MODEL_COMPILE   RELATIVE ${CMAKE_SOURCE_DIR} "src/modelCompile/proxyEventBase.cpp")
 
-add_subdirectory(extSim/ridecore/src/fpga)
 
+INCLUDE_DIRECTORIES( ./extSim/ridecore/src/test/ridecoreVer)
+add_subdirectory(extSim/ridecore/src/fpga)
 FILE(GLOB_RECURSE SRC_RIDE_SIM        RELATIVE ${CMAKE_SOURCE_DIR} "extSim/ridecore/src/test/ridecoreVer/*.cpp")
+###### BUILD SIM
+#if(BUILD_EXT_SIM)
+#
+#
+#else()
+#
+#    set(SRC_RIDE_SIM "")
+#
+#endif()
 
 
 add_executable(Kathryn
-        #main.cpp
+        main.cpp
         #main2.cpp
         #main3.cpp
-        mainVeriTest.cpp
         src/kathryn.cpp
         ${SRC_ABS}
         ${SRC_APP}
@@ -59,4 +73,8 @@ add_executable(Kathryn
         #src/params/prjParam.h
 )
 
-target_link_libraries(Kathryn PRIVATE verilator_ridecore)
+###if(BUILD_EXT_SIM)
+    target_link_libraries(Kathryn PRIVATE verilator_ridecore)
+###endif()
+
+

@@ -16,6 +16,11 @@
 #include "example/o3/simCompare/simCtrlKride.h"
 
 
+///#ifdef BUILD_EXT_SIM
+#include "simCtrlRide.h"
+///#endif
+
+
 namespace kathryn{
 
 
@@ -73,6 +78,19 @@ namespace kathryn{
 
     }
 
+    void test_ride_sim(PARAM& params){
+
+////#ifdef BUILD_EXT_SIM
+
+        o3::RIDE_MNG rideSimMng;
+        rideSimMng.start(params);
+        std::cout << TC_GREEN << "finish ride sim [sim]" << TC_DEF << std::endl;
+
+
+////#endif
+
+    }
+
 
     void start(PARAM& params) {
 
@@ -99,6 +117,8 @@ namespace kathryn{
                test_o3_sim(params);
         }else if (params["testType"] == "testKrideSim"){
                 test_kride_sim(params);
+        }else if (params["testType"] == "testRideSim"){
+                test_ride_sim(params);
         }else{
             std::cout << "there is no command to test system" << std::endl;
         }

@@ -32,7 +32,7 @@ echo "[COMPILE SCRIPT] project path is: $SRC_PRJ_PATH"
 
 echo -n "[COMPILE SCRIPT] compiling....."
 sleep 1
-time g++ -fno-exceptions -fno-rtti -fPIC  -shared -o build/$SRC_PROXYEVENT_NAME.so $SRC_OPT_LEVEL -I ../src \
+time g++ -fPIC  -shared -o build/$SRC_PROXYEVENT_NAME.so $SRC_OPT_LEVEL -I ../src \
 generated/$SRC_PROXYEVENT_NAME.cpp \
 ../src/sim/modelSimEngine/base/proxyEventBase.cpp \
 ../src/util/fileWriter/fileWriterBase.cpp \
