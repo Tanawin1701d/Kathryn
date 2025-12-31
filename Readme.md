@@ -5,25 +5,26 @@ Kathryn is a brand new Hardware Design Framework embedded in C++ and Python(next
 READER MIGHT THINK THAT WE ARE ALTERNATIVE SYSTEM-C OR PIPELINE-C. IN FACT, WE COMPLETELY DIFFERENT WITH THEM AT ALL.
 
 ## offered features
-##### Hybrid Design Flow (HDF)
--  the new way to abstract hardware control logic, manage hardware parallelism through Hybrid Design Block (HDB) such as (```seq```, ```par```, ```[c/cdo/s]while```, ```[c/s/z]if```, ```pip/zync```, ```ztate```, ```[sy/sc]Wait```)
-##### Decentralize Control
+##### 1. Hybrid Design Flow (HDF)
+-  the new way to abstract hardware control logic, manage hardware parallelism through Hybrid Design Block (HDB) such as (```seq```, ```par```, ```[c/cdo/s]while```, ```[c/s/z]if```, ```pip/zync```, ```ztate```, ```[sy/sc]Wait```) ***while maintaining cycle-accurate level at USERLAND.***
+##### 2. Decentralize Control
 - the new way to manage hardware resouce value update without centralizing the control logic
-##### Hardware Aggregator
+##### 3. Hardware Aggregator
 - our feature-rich approach to manage group of hardware resource such as (```SlotMeta```, ```[Reg/Wire]Slot```, ```Table```, ```MemTable```)
-##### 100% cycle determinism at userland.
-- Zero Effort Cycle Spent Profiler (ZEP)
--  the automatic tracker tracks how Hardware design spent time to each block
-##### Hybrid simulator (HS)
+##### 4. 100% cycle determinism at userland.
+
+##### 5. Zero Effort Cycle Spent Profiler (ZEP)
+- the automatic tracker tracks how Hardware design spent time to each block
+##### 6. Hybrid simulator (HS)
 - unify dynamically built designers' model and optimized simulation engine
 - Co-simulatable and high Performance simulator.
-##### Fully facilited by programming language(C++) as a generator/preprocess.
+##### 7. Fully facilited by programming language(C++) as a generator/preprocess.
 
-##### Kride (RISC-V Out-of-Order Superscalar CPU)
+##### 8. Kride (RISC-V Out-of-Order Superscalar CPU)
 - Kathryn provides Out-of-Order superscalar CPU based on [RIDE CORE](https://github.com/ridecore/ridecore)
 - Currently, I am testing similarity test with RIDE CORE!
 
-##### Unlike HLS, Kathryn is hardware generation framework at full cycle-accurate level like Chisel, Pymtl, Pyrtl
+##### 9. Unlike HLS, Kathryn is hardware generation framework at full cycle-accurate level like Chisel, Pymtl, Pyrtl
 
 ### example code 1 (HDF)
 - ```cpp showLineNumbers copy
