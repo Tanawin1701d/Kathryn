@@ -1,27 +1,32 @@
 # KATHRYN
 
-Kathryn is the Hardware Generation and Fast Simulation framework with 
-Hybrid design flow embedded in C++ and Python(next release)
-to reduce Hardware design workload, 
-enhance parallelization control, 
-boost design space exploration, 
-and increase simulation productivity.
+Kathryn is a brand new Hardware Design Framework embedded in C++ and Python(next release) to **abstract** control logic, **reduce** manual hardware routing, **automate** hardware resource management, **provide** effortless profiling, and **boost** design space exploration and increase simulation productivity.
 
+READER MIGHT THINK THAT WE ARE ALTERNATIVE SYSTEM-C OR PIPELINE-C. IN FACT, WE COMPLETELY DIFFERENT WITH THEM AT ALL.
 
 ## offered features
-- Hybrid Design Flow (HDF)
-    -  the new way to control and synchronize the Hardware Control Flow.
+##### Hybrid Design Flow (HDF)
+-  the new way to abstract hardware control logic, manage hardware parallelism through Hybrid Design Block (HDB) such as (```seq```, ```par```, ```[c/cdo/s]while```, ```[c/s/z]if```, ```pip/zync```, ```ztate```, ```[sy/sc]Wait```)
+##### Decentralize Control
+- the new way to manage hardware resouce value update without centralizing the control logic
+##### Hardware Aggregator
+- our feature-rich approach to manage group of hardware resource such as (```SlotMeta```, ```[Reg/Wire]Slot```, ```Table```, ```MemTable```)
+##### 100% cycle determinism at userland.
 - Zero Effort Cycle Spent Profiler (ZEP)
-    -  the automatic tracker tracks how Hardware design spent time to doing something
-- High Performance Simulation
+-  the automatic tracker tracks how Hardware design spent time to each block
+##### Hybrid simulator (HS)
+- unify dynamically built designers' model and optimized simulation engine
 - Co-simulatable and high Performance simulator.
-- Fully facilited by programming language(C++) as a generator/preprocess.
-- Relax Schematic model.
-- 100% cycle accurate at userland.
-- Unlike HLS, Kathryn is hardware generation framework at full cycle-accurate level like Chisel, Pymtl, Pyrtl
+##### Fully facilited by programming language(C++) as a generator/preprocess.
 
-## example code 1
-- ```cpp copy
+##### Kride (RISC-V Out-of-Order Superscalar CPU)
+- Kathryn provides Out-of-Order superscalar CPU based on [RIDE CORE](https://github.com/ridecore/ridecore)
+- Currently, I am testing similarity test with RIDE CORE!
+
+##### Unlike HLS, Kathryn is hardware generation framework at full cycle-accurate level like Chisel, Pymtl, Pyrtl
+
+### example code 1 (HDF)
+- ```cpp showLineNumbers copy
   class ExampleModule: public Module{
   public:
       mWire(i, 32);
@@ -48,28 +53,40 @@ and increase simulation productivity.
       }
   };
   ```
+- The update opertor ``` <<=``` will be treated as Cycle-Considered Element (CCE). Desigers can model the system at cycle-accurate level via these CCE and Hybrid design block (HDB). As a result, at line 11, the hardware takes 1 cycle and ```cdowhile``` (line 13-16, and 17-20) takes >1 cycles. The ```par``` block at line 37-46 enables both cdowhile blocks running parallelly.
 - the state machine look like This
 
-import Image from 'next/image from website'
 
-## example code 2 (pipeline example)
-- ```cpp filename="main.cpp"  {10} copy
-  void flow() override{
-        pipWrap{
-            pipBlk{ a <= a + 1;}
-            pipBlk{ b <= a;    }
-            pipBlk{
-                c <<= b;
-                cif(c == 5){
-                syWait(6) //// wait for 6 cycle
-                } ////- The block will be automatically 
-                  ////  SYNCHRONIZED with other block without 
-                  //// overhead cycle!!!!!
+### example code 2 (HDF complex pipeline management)
+- ```cpp showLineNumbers filename="main.cpp"  {10} copy
+    PipMeta fetchChan;
+    PipMeta decodeChan;
+    pip(fetchChan){
+        seq{
+            myFetch <<= do_somthing(src);     ///// takes 1 cycle
+            cwhile(x < 10){                   ///// takes at least 10 cycles
+                zyncc(decodeChan){            ///// takes at least 1 cycle
+                    fetchResult <<= myFetch;
+                    x <<= x + 1;
+                }
             }
-            pipBlk{ d <= c; }
         }
-  }
+    }
+
+    pip(decodeChan){
+       decodeResult <<= fetchResult;   /////// takes  1 cycle
+       syWait(10);                     /////// takes 10 cycles
+    }
+
+    seq{
+        syWait(10);
+        decodeChan.holdMaster();
+        decodeChan.killSlave();
+    }
   ```
-  
-## setup, test, and start your first Model!
-- link to our webpage
+
+- this example demonstrates complex cycle-accurate pipeline management in Kathryn, the system synchronize fetchChannel and decodeChannel together through ```pip``` and ```zync``` block
+- Additionally, we support  various type of ```zync``` block such as ```zyncc(channel, condition)```. The ```zyncc``` block will be conducted if only ```condition``` is valid.
+- The channel can be stalled or killed using command in line 22 - 23
+### Curious to dive deeper?
+- Visit the official [Kathryn website](https://www.kathryn-tools.org/) for more details.
