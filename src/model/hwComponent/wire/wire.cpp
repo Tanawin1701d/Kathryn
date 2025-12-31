@@ -3,58 +3,115 @@
 //
 
 #include "wire.h"
+#include "wireAuto.h"
 #include "model/hwComponent/expression/expression.h"
 #include "model/controller/controller.h"
+#include "sim/modelSimEngine/hwComponent/wire/wireSim.h"
 
 
 namespace kathryn{
 
 
-    Wire::Wire(int size) : Assignable(), Operable(),
-                           Slicable(Slice{0, size}),
-                           AssignCallbackFromAgent<Wire>(),
-                           Identifiable(TYPE_WIRE),
-                           HwCompControllerItf(){
-        com_init();
+    Wire::Wire(int size,
+        bool requireDefVal,
+        bool initCom) : LogicComp({0, size},
+                                     TYPE_WIRE,
+                                     new WireSimEngine(this, VST_WIRE),
+                                     true),
+                                     _requireDefVal(requireDefVal)
+    {
+        if (initCom){
+            com_init();
+        }
+        AssignOpr::setMaster(this);
+        AssignCallbackFromAgent::setMaster(this);
     }
 
 
     void Wire::com_init() {
-        ctrl->on_wire_init(std::shared_ptr<Wire>(this));
+        ctrl->on_wire_init(this);
     }
 
-    Wire& Wire::operator=(Operable &b) {
-        /** todo communicate with commustack to assign */
-        return *this;
+    void Wire::doBlockAsm(Operable &srcOpr, Slice desSlice) {
+        mfAssert(false, "wire doesn't support blocking asignment <<=");
+    }
+
+    void Wire::doNonBlockAsm(Operable &srcOpr, Slice desSlice) {
+        assert(getAssignMode() == AM_MOD);
+        assert(getSlice().isContain(desSlice));
+        Slice finalizeDesSlice = desSlice.getMatchSizeSubSlice(srcOpr.getOperableSlice());
+        ctrl->on_wire_update(
+                generateBasicNode(srcOpr, finalizeDesSlice, ASM_DIRECT),
+                this);
     }
 
     SliceAgent<Wire>& Wire::operator()(int start, int stop) {
-        auto ret = std::make_shared<SliceAgent<Wire>>(
-                            std::shared_ptr<Wire>(this),
-                            getNextSlice(start, stop, getSlice())
-                            );
+        auto ret = new SliceAgent<Wire>(
+                this,
+                getAbsSubSlice(start, stop, getSlice())
+                        );
         return *ret;
     }
 
-    SliceAgent<Wire> &Wire::operator()(int idx) {
+    SliceAgent<Wire>& Wire::operator()(int idx) {
         return operator()(idx, idx+1);
     }
 
+    SliceAgent<Wire>& Wire::operator()(Slice slc) {
+        return operator() (slc.start,slc.stop);
+    }
+
+    Operable* Wire::doSlice(Slice sl){
+        auto& x = operator() (sl.start, sl.stop);
+        return x.castToOperable();
+    }
+
+    void Wire::makeDefEvent(){
+        if (_requireDefVal){
+            makeVal(defWireVal, getSlice().getSize(), 0);
+
+            UpdateEventBasic*  defEvent = createUEHelper(&defWireVal,
+                                                         {0, getSlice().getSize()},
+                                                         DEFAULT_UE_PRI_MIN,
+                                                         CM_CLK_FREE,
+                                                         false);
+            addUpdateMeta(defEvent);
+        }
+    }
+
     /** override callback*/
+    Operable* Wire::checkShortCircuit() {
 
-    Wire &Wire::callBackBlockAssignFromAgent(Operable &b, Slice absSlice) {
-        /** todo this must call model control system to determine
-        * given information and condition of updating value
-        /* we will call model building to comunicate with it*/
-        //** todo return agent of this type*/
-        return *this;
+        if (isInCheckPath){
+            return this;
+        }
+
+        isInCheckPath = true;
+
+        Operable* result = getUpdateMeta().checkShortCircuitProxy();
+
+        isInCheckPath = false;
+        return nullptr;
     }
 
-    Wire &Wire::callBackNonBlockAssignFromAgent(Operable &b, Slice absSlice) {
-        return *this;
+    void Wire::createLogicGen(){
+        assert(_parent->getModuleGen() != nullptr);
+
+        _genEngine = new WireGen(
+            _parent->getModuleGen(),
+            this
+        );
     }
 
+    /** override global input*/
+    bool Wire::checkIntegrity(){
+        return true;
+    }
+    Operable*   Wire::getOprFromGlobIo(){ return this;}
+    Assignable* Wire::getAsbFromWireMarker(){ return this;}
 
+
+    /////// global input pool
 
 
 

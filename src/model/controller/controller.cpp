@@ -4,32 +4,104 @@
 
 #include "controller.h"
 
-
 namespace kathryn{
 
     /** central initializer*/
-    ControllerPtr    centralControllerPtr = nullptr;
-    ModulePtr        globalModulePtr = nullptr;
+    ModelController*    centralControllerPtr = nullptr;
+    ///Module*             globalModulePtr      = nullptr;
 
-    ControllerPtr getControllerPtr(){
+
+    ModelController::ModelController() {
+        /** to prevent loop allocation in global module constructor*/
+        centralControllerPtr = this;
+        on_globalModule_init_component();
+    }
+
+    void ModelController::start(){
+        assert(globalModulePtr != nullptr);
+        /***
+         * global Module must be auto initiated when controller is initialize or it is reset
+         * */
+        on_module_end_init_components(globalModulePtr);
+        on_globalModule_init_designFlow();
+        on_module_final(moduleStack.top().md);
+    }
+
+
+    void ModelController::reset(){
+        clean();
+        on_globalModule_init_component();
+    }
+
+    void ModelController::clean(){
+        /** delete old global module**/
+        assert(isAllFlowStackEmpty());
+        assert(moduleStack.empty());
+        delete globalModulePtr;
+        globalModulePtr = nullptr;
+    }
+
+    Module* ModelController::getGlobalModule(){
+        assert(globalModulePtr != nullptr);
+        return globalModulePtr;
+    }
+
+    ModelController* getControllerPtr(){
         /// initiate controller before return
         /***lazy initializer*/
         if (centralControllerPtr == nullptr){
-            centralControllerPtr = std::make_shared<Controller>();
-        }
-        /// if global module was not init, then init it
-        if (globalModulePtr == nullptr){
-            globalModulePtr = std::make_shared<Module>();
-            centralControllerPtr->on_module_init_components(globalModulePtr);
+            new ModelController();
+            /** the constructor of model controller will handle itself*/
         }
         return centralControllerPtr;
     }
 
-    void freeControllerPtr(){
-        ///// finalize global module if it have
-        if (centralControllerPtr != nullptr){
-            centralControllerPtr->on_module_final(globalModulePtr);
-        }
+    Module* getGlobalModulePtr(){
+        return getControllerPtr()->getGlobalModule();
     }
+
+
+
+    std::string ModelController::getCurModelStack() {
+
+        std::vector<Module_Stack_Element> mdVec = cvtStackToVec(moduleStack);
+        std::vector<FlowBlockBase*>       fbVec = cvtStackToVec(flowBlockStacks[FLOW_ST_BASE_STACK]);
+
+        int accumIdent = 0;
+        std::string result;
+
+        for (auto mod: mdVec){
+            result += (mod.md->getVarName() + "\n");
+            result += genConString(' ', accumIdent);
+            accumIdent += 4;
+        }
+
+        for (int i = 0; i < fbVec.size(); i++){
+            std::string position;
+            if (i > 0){
+                if (fbVec[i]->getFlowType() != CSELIF && fbVec[i]->getFlowType() != CSELSE) {
+                    position += " subBlockIdx " + std::to_string(fbVec[i - 1]->getSubBlocks().size()) + "    ";
+                }
+                position += " conBlockIdx " + std::to_string(fbVec[i-1]->getConBlocks().size());
+            }
+            result += (fbVec[i]->getGlobalName() + "@ " + position + "\n" );
+            result += genConString(' ', accumIdent);
+            accumIdent += 4;
+        }
+
+        return result;
+
+    }
+
+
+
+//    void freeControllerPtr(){
+//        ///// finalize global module if it have
+//        if (centralControllerPtr != nullptr){
+//            centralControllerPtr->on_module_final(globalModulePtr);
+//        }
+//    }
+
+
 
 }

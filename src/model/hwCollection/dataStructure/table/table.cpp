@@ -1,0 +1,711 @@
+//
+// Created by tanawin on 18/9/25.
+//
+
+#include "table.h"
+
+#include <utility>
+
+#include "gen/controller/genController.h"
+#include "model/controller/controller.h"
+
+namespace kathryn{
+
+    Table::Table(const Table& rhs){
+        operator=(rhs);
+    }
+
+    Table::Table(const SlotMeta&  meta, const std::vector<RegSlot*>& rows):
+        _meta(std::move(meta)),
+        _rows(rows),
+        _isMasterTable(false){
+            mfAssert(!rows.empty(), "rows cannot be empty");
+            for (RegSlot* row: rows){
+                mfAssert(row != nullptr, "row cannot be nullptr");
+            }
+        }
+
+    Table::Table(const SlotMeta&  slotMeta, int amtRow, const std::string& prefixName):
+        _meta(std::move(slotMeta)),
+        _isMasterTable(true){
+            mfAssert(amtRow > 0, "amtRow must be greater than 0");
+            buildRows(_meta, amtRow, prefixName);
+        }
+
+    Table::Table(const std::vector<std::string>& fieldNames,
+              const std::vector<int>&         fieldSizes,
+              int amtRow,
+              const std::string& prefixName):
+        _meta(fieldNames, fieldSizes),
+        _isMasterTable(true){
+            mfAssert(amtRow > 0, "amtRow must be greater than 0");
+            buildRows(_meta, amtRow, prefixName);
+        }
+
+    Table::~Table(){
+            if (_isMasterTable){
+                for (RegSlot* row: _rows){
+                    delete row;
+                }
+            }
+        }
+
+
+    Table::ReducNode Table::createMux(ReducNode& lhs, ReducNode& rhs, Operable& selectLeft, int debugIdx, bool requiredIdx){
+
+        Operable& selectRight = ~selectLeft;
+
+        ////// the cusLogic may augment lhs we have to debug it
+        WireSlot* desSlot = new WireSlot(lhs.slot->getMeta());
+
+        std::vector<AssignMeta*> leftAssMetas  = desSlot->genAssignMetaForAll(*lhs.slot, ASM_DIRECT);
+        std::vector<AssignMeta*> rightAssMetas = desSlot->genAssignMetaForAll(*rhs.slot, ASM_DIRECT);
+
+        //////// generate muxed as Assign meta data
+        assert(leftAssMetas.size() == rightAssMetas.size());
+        std::vector<AssignMeta*> muxedAssignMeta;
+        for (int idx = 0; idx < leftAssMetas.size(); idx++){
+            AssignMeta* leftAssMeta  = leftAssMetas[idx];
+            AssignMeta* rightAssMeta = rightAssMetas[idx];
+            AssignMeta* newAssMeta = leftAssMeta->mux(rightAssMeta, &selectLeft);
+            delete leftAssMeta;
+            delete rightAssMeta;
+            muxedAssignMeta.push_back(newAssMeta);
+        }
+
+
+        auto* slotAsmNode = new AsmNode(muxedAssignMeta);
+        slotAsmNode->dryAssign();
+        delete slotAsmNode;
+
+        Wire* selectedIdx = nullptr;
+        if (requiredIdx){
+            assert(lhs.idx != nullptr);
+            assert(rhs.idx != nullptr);
+            int desSlice = lhs.idx->getOperableSlice().getSize();
+            selectedIdx = &makeOprWire("reducOpr" + std::to_string(debugIdx), lhs.idx->getOperableSlice().getSize());
+            AssignMeta* leftAsmIdxMeta  = selectedIdx->generateAssignMeta(*lhs.idx, {0,  desSlice}, ASM_DIRECT, CM_CLK_FREE);
+            AssignMeta* rightAsmIdxMeta = selectedIdx->generateAssignMeta(*rhs.idx, {0,  desSlice}, ASM_DIRECT, CM_CLK_FREE);
+            AssignMeta* newAssMeta      = leftAsmIdxMeta->mux(rightAsmIdxMeta, &selectLeft);
+            delete leftAsmIdxMeta;
+            delete rightAsmIdxMeta;
+
+            auto* idxAsmNode = new AsmNode(newAssMeta);
+            idxAsmNode->dryAssign();
+            delete idxAsmNode;
+
+        }
+
+        return {desSlot, selectedIdx};
+
+    }
+
+    SlotMeta Table::getMeta() const{
+        return _meta;
+    }
+
+    RegSlot& Table::getRefRow(int idx){
+        assert(isValidIdx(idx));
+        return *_rows[idx];
+    }
+
+    RegSlot Table::getClonedRow(int idx) const{
+        assert(isValidIdx(idx));
+        return *_rows[idx];
+    }
+
+    int Table::getNumRow() const{
+        return static_cast<int>(_rows.size());
+    }
+
+    int Table::getMaxCellWidth() const{
+        assert(!_rows.empty());
+        return _rows[0]->getMaxBitWidth();
+    }
+
+    void Table::buildRows(SlotMeta& slotMeta, int amtRow, std::string prefixName){
+        for (int rowIdx = 0; rowIdx < amtRow; rowIdx++){
+            _rows.push_back(new RegSlot(slotMeta, prefixName + "_" + std::to_string(rowIdx)));
+        }
+    }
+
+    bool Table::isSufficientBinIdx(Operable& requiredIdx) const{
+        int inputSize = requiredIdx.getOperableSlice().getSize();
+        return (1 << inputSize) >= getNumRow();
+    }
+
+    bool Table::isSufficientOHIdx(Operable& requiredIdx) const{
+        return requiredIdx.getOperableSlice().getSize() == getNumRow();
+    }
+
+    bool Table::isSufficientIdx(Operable& requiredIdx, bool isOH) const{
+        if (isOH){
+            return isSufficientOHIdx(requiredIdx);
+        }
+        return isSufficientBinIdx(requiredIdx);
+    }
+
+    int Table::getSufficientIdxSize(bool isOH) const{
+        if (isOH){
+            return getNumRow();
+        }
+        return log2Ceil(getNumRow());
+    }
+
+    bool Table::isValidIdx(int idx) const{
+        return idx >= 0 && idx < _rows.size();
+    }
+
+    bool Table::checkValidRange(int start, int stop) const{
+        return ( (start >= 0    ) && (start <  _rows.size()) ) &&
+               ( (stop   >  start) && (stop   <= _rows.size()) );
+    }
+
+    Operable& Table::createIdxMatchCond(Operable& requiredIdx, int rowIdx, bool isOH){
+        if (isOH){
+            return *requiredIdx.doSlice({rowIdx, rowIdx+1});
+        }
+        return (requiredIdx == rowIdx);
+    }
+
+    /**
+     * gen assign meta
+     *
+     */
+
+    WireSlot Table::genDynWireSlotBase(Operable& requiredIdx, bool isOneHotIdx){
+
+        ////// return node
+        WireSlot resultWireSlot(getMeta());
+        //return resultWireSlot;
+        ////// all metadata
+        std::vector<AssignMeta*> allRowCollector;
+        std::vector<Operable*> allRowPreCond;
+        ////// generate all assign meta to all node
+        int amtRow = getNumRow();
+        for(int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
+            std::vector<AssignMeta*> eachRowCollector;
+            std::vector<Operable*> eachRowPreCond;
+            ////// generate the assign condition
+            Operable* rowIdxCheckCond = &createIdxMatchCond(requiredIdx, rowIdx, isOneHotIdx);
+            //////// generate each row's assign meta
+            eachRowCollector = resultWireSlot.genAssignMetaForAll(*_rows[rowIdx], ASM_DIRECT);
+            for (int colIdx = 0; colIdx < resultWireSlot.getNumField(); colIdx++){
+                eachRowPreCond.push_back(rowIdxCheckCond);
+            }
+            /////// push it to pool system
+            allRowCollector.insert(allRowCollector.end(),
+            eachRowCollector.begin(), eachRowCollector.end());
+            allRowPreCond.insert(allRowPreCond.end(),
+            eachRowPreCond.begin(), eachRowPreCond.end());
+        }
+        ////// generate assignment Node
+        AsmNode* asmNode = WireSlot::genGrpAsmNode(allRowCollector, allRowPreCond);
+        //// we have to do dry assign
+        asmNode->dryAssign();
+        delete asmNode;
+
+        ///resultWireSlot.doGlobAsm(asmNode);
+        return resultWireSlot;
+
+    }
+
+    WireSlot Table::genDynWireSlotBiIdx(Operable& requiredIdx){
+        mfAssert(isSufficientBinIdx(requiredIdx), "requiredIdx is not sufficient to get all system");
+        return genDynWireSlotBase(requiredIdx, false);
+    }
+
+    WireSlot Table::genDynWireSlotOHIdx(Operable& requiredIdx){
+        mfAssert(isSufficientOHIdx(requiredIdx), "requiredIdx is not sufficient to get all system");
+        return genDynWireSlotBase(requiredIdx, true);
+    }
+
+    ////// this will asssign the slot
+    void Table::doGlobAsm(Slot& srcSlot, Operable& requiredIdx, ASM_TYPE asmType, bool isOneHotIdx){
+        mfAssert(isSufficientIdx(requiredIdx, isOneHotIdx), "requiredIdx is not sufficient to get all system");
+        std::vector<AssignMeta*> allRowCollector;
+        std::vector<Operable*>   allRowPreCond;
+
+        /////// generate assign meta by row
+        for (int desIdx = 0; desIdx < getNumRow(); desIdx++){
+            /////// get related meta data
+            std::vector<AssignMeta*> eachRowCollector;
+            std::vector<Operable*>   eachRowPreCond;
+            RegSlot& desSlot = getRefRow(desIdx);
+            SlotMeta srcMeta = srcSlot.getMeta();
+            ////// seach for match assign column and generate assign Metadata
+            auto  [srcMatchidxs, desMatchIdxs] = getMeta().matchByName(srcMeta);
+            eachRowCollector = desSlot.genAssignMetaForAll(srcSlot, srcMatchidxs, desMatchIdxs, {}, asmType);
+            ////// generate condition for each row
+            Operable* rowIdxCheckCond = &(createIdxMatchCond(requiredIdx, desIdx, isOneHotIdx));
+            for (int colIdx = 0; colIdx < eachRowCollector.size(); colIdx++){
+                eachRowPreCond.push_back(rowIdxCheckCond);
+            }
+            /////// push it to pool system
+            allRowCollector.insert(allRowCollector.end(),
+                                   eachRowCollector.begin(), eachRowCollector.end());
+            allRowPreCond.insert(allRowPreCond.end(),
+                                 eachRowPreCond.begin(), eachRowPreCond.end());
+        }
+
+        /////// we have to create own asm node and push it directly to the system
+        auto* asmNode = new AsmNode(allRowCollector);
+        for (int idx = 0; idx < allRowPreCond.size(); idx++){
+            asmNode->addSpecificPreCondition(allRowPreCond[idx], idx);
+        }
+        /////// we have to add it to controller by ourself
+        ModelController* ctrl = getControllerPtr();
+        assert(ctrl != nullptr);
+        ctrl->on_reg_update(asmNode, nullptr);
+
+    }
+
+    void Table::doGlobAsm(Operable& srcOpr, Operable& rowIdx, Operable& colIdx, ASM_TYPE asmType, bool isOHRow){
+        mfAssert(isSufficientIdx(rowIdx, isOHRow), "requiredIdx is not sufficient to get all system");
+        mfAssert(_rows[0]->isSufficientIdx(colIdx.getOperableSlice().getSize()), "column is not sufficient to get all column");
+
+        std::vector<AssignMeta*> allRowCollector;
+        std::vector<Operable*>   allRowPreCond;
+
+        for (int desRowIdx = 0; desRowIdx < getNumRow(); desRowIdx++){
+            /////// get related meta data
+            std::vector<AssignMeta*> eachRowCollector;
+            std::vector<Operable*>   eachRowPreCond;
+            RegSlot& rowSlot = getRefRow(desRowIdx);
+
+            ///// gen row assign
+            eachRowCollector = rowSlot.genAssignMetaForAll(srcOpr, asmType);
+            ///// gen col assign
+            Operable* desRowIdxCheckCond = &(createIdxMatchCond(colIdx, desRowIdx, isOHRow));
+            for (int desColIdx = 0; desColIdx < eachRowCollector.size(); desColIdx++){
+                eachRowPreCond.push_back(
+                    &( (*desRowIdxCheckCond) && (colIdx == desColIdx)));
+            }
+            ///// add to main pool
+            allRowCollector.insert(allRowCollector.end(),
+                                   eachRowCollector.begin(), eachRowCollector.end());
+            allRowPreCond.insert(allRowPreCond.end(),
+            eachRowPreCond.begin(), eachRowPreCond.end());
+        }
+
+        ///// gen assign Node
+        auto* asmNode = new AsmNode(allRowCollector);
+        for (int idx = 0; idx < allRowPreCond.size(); idx++){
+            asmNode->addSpecificPreCondition(allRowPreCond[idx], idx);
+        }
+        ///// add it to the whole main controller
+        ModelController* ctrl = getControllerPtr();
+        assert(ctrl != nullptr);
+        ctrl->on_reg_update(asmNode, nullptr);
+
+    }
+
+    void Table::doGlobAsm(ull rhsVal, Operable& rowIdx, Operable& colIdx, ASM_TYPE asmType, bool isOHRow){
+        Operable& mySrcOpr = getMatchAssignOperable(rhsVal, getMaxCellWidth());
+        doGlobAsm(mySrcOpr, rowIdx, colIdx, asmType, isOHRow);
+    }
+
+    Table& Table::doGlobColAsm(int colIdx, ull assignVal){
+
+        mfAssert(colIdx < getMeta().getNumField(), "colIdx is out of range");
+        ////// gen the value
+        int requiredSize = getMeta().getCopyField(colIdx)._size;
+        mVal(av, requiredSize, assignVal);
+        ////// asmNode meta
+        std::vector<AssignMeta*> allRowCollector;
+
+        ////// pool the node
+        for (int desRowIdx = 0; desRowIdx < getNumRow(); desRowIdx++){
+            RegSlot&    rowSlot = getRefRow(desRowIdx);
+            AssignMeta* asmMeta = rowSlot.genAssignMeta(av, colIdx, ASM_DIRECT);
+            allRowCollector.push_back(asmMeta);
+        }
+        ////// create asmNode
+        auto* asmNode = new AsmNode(allRowCollector);
+        ////// put it to the controller
+        ModelController* ctrl = getControllerPtr();
+        assert(ctrl != nullptr);
+        ctrl->on_reg_update(asmNode, nullptr);
+
+        return *this;
+    }
+
+    Table& Table::doGlobColAsm(const std::string& colName, ull assignVal){
+        int targetColIdx = _meta.getIdx(colName);
+        doGlobColAsm(targetColIdx, assignVal);
+        return *this;
+    }
+
+
+    void Table::doCusLogic(std::function<void(RegSlot&, int rowIdx)>  cusLogic){
+        for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
+            cusLogic(*_rows[rowIdx], rowIdx);
+        }
+    }
+
+    /////// reset event
+
+    Table& Table::makeResetEvent(ull resetVal, CLOCK_MODE cm){
+        for (RegSlot* row : _rows){
+            assert(row != nullptr);
+            row->makeResetEvent(resetVal, cm);
+        }
+        return *this;
+    }
+
+    Table& Table::makeColResetEvent(int colIdx, ull resetVal, CLOCK_MODE cm){
+        for (RegSlot* row : _rows){
+            assert(row != nullptr);
+            row->makeResetEvent(colIdx, resetVal, cm);
+        }
+        return *this;
+    }
+
+    Table& Table::makeColResetEvent(const std::string& colName, ull resetVal,
+                                    CLOCK_MODE cm){
+        for (RegSlot* row : _rows){
+            assert(row != nullptr);
+            row->makeResetEvent(colName, resetVal, cm);
+        }
+        return *this;
+    }
+
+    Table::ReducNode Table::doReduceBase(const std::vector<ReducNode>& initReducNodes,
+                                         const std::function<Operable&(WireSlot& lhs, Operable* lidx,
+                                                                       WireSlot& rhs, Operable* ridx)>& cusLogic,
+                                         bool requiredIdx){
+
+        int debugIdx = 0;
+
+        
+
+        std::queue<ReducNode> reducQueueA;
+        std::queue<ReducNode> reducQueueB;
+
+        for (const ReducNode& node : initReducNodes){
+            reducQueueA.push(node);
+        }
+
+        std::queue<ReducNode>* srcReducQueue = &reducQueueA;
+        std::queue<ReducNode>* desReducQueue = &reducQueueB;
+
+        while (srcReducQueue->size() != 1){
+
+            while(!srcReducQueue->empty()){
+                ////  if there is only one element by pass it
+                if (srcReducQueue->size() == 1){
+                    desReducQueue->push(srcReducQueue->front());
+                    srcReducQueue->pop();
+                }
+
+                //////get two node
+                ReducNode srcNodeLeft  = srcReducQueue->front();
+                srcReducQueue->pop();
+                ReducNode srcNodeRight = srcReducQueue->front();
+                srcReducQueue->pop();
+
+                //// get condition node
+                Operable& selectLeft = cusLogic(*srcNodeLeft.slot,  srcNodeLeft.idx,
+                                                *srcNodeRight.slot, srcNodeRight.idx);
+                mfAssert(selectLeft.getOperableSlice().getSize() == 1, "selectLeft is not a single bit");
+                ReducNode binedReducNode = createMux(srcNodeLeft, srcNodeRight, selectLeft, debugIdx++, requiredIdx);
+                desReducQueue->push(binedReducNode);
+
+                ///// free memory of the reducnode
+                srcNodeLeft.destroy();
+                srcNodeRight.destroy();
+            }
+            std::swap(srcReducQueue,desReducQueue);
+        }
+
+        assert(!srcReducQueue->empty());
+
+        return srcReducQueue->front();
+
+    }
+
+    WireSlot Table::doReducNoIdx(const std::function<Operable&(WireSlot& lhs, Operable* lidx,
+                                                         WireSlot& rhs, Operable* ridx)>& cusLogic){
+        std::vector<ReducNode> initReducNodes;
+        initReducNodes.reserve(getNumRow());
+        for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
+            initReducNodes.push_back({new WireSlot(*static_cast<Slot*>(_rows[rowIdx]), "initReduc"), nullptr});
+        }
+        ReducNode finalNode = doReduceBase(initReducNodes, cusLogic, false);
+        WireSlot result(*finalNode.slot);
+        finalNode.destroy();
+        return result;
+    }
+
+    std::pair<WireSlot, Operable&> Table::doReducBinIdx(const std::function<Operable&(WireSlot& lhs, Operable* lidx,
+                                                                                      WireSlot& rhs, Operable* ridx)>& cusLogic){
+        std::vector<ReducNode> initReducNodes;
+        for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
+            Val* idxVal = &makeOprVal("initBinIdxOpr" + std::to_string(rowIdx), getSufficientIdxSize(false), rowIdx);
+            initReducNodes.push_back({new WireSlot(*static_cast<Slot*>(_rows[rowIdx]), "initReducBin"), idxVal});
+        }
+        ReducNode finalNode = doReduceBase(initReducNodes, cusLogic, true);
+        WireSlot result(*finalNode.slot);
+        Operable& resultIdx = *finalNode.idx;
+        finalNode.destroy();
+        return {result, resultIdx};
+    }
+
+    std::pair<WireSlot, OH> Table::doReducOHIdx(const std::function<Operable&(WireSlot& lhs, Operable* lidx,
+                                                                              WireSlot& rhs, Operable* ridx)>& cusLogic){
+        std::vector<ReducNode> initReducNodes;
+        for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
+            Val* idxVal = &makeOprVal("initOhIdxOpr" + std::to_string(rowIdx), getSufficientIdxSize(true), ((ull) 1) << rowIdx);
+            initReducNodes.push_back({new WireSlot(*static_cast<Slot*>(_rows[rowIdx]), "initReducOH"), idxVal});
+        }
+        ReducNode finalNode = doReduceBase(initReducNodes, cusLogic, true);
+        WireSlot result(*finalNode.slot);
+        Operable& resultIdx = *finalNode.idx;
+        finalNode.destroy();
+        return {result, OH(resultIdx)};
+    }
+
+
+
+    Table::ReducNode Table::findMatchedOrdered(
+        bool isNewest,
+        const std::vector<ReducNode>& initReducNodes,
+        bool requiredIdx){
+
+        //// key words to compare   userValidCompare, systemInOldSeq
+        ReducNode result =
+            doReduceBase(initReducNodes,
+                         [&](WireSlot& lhs, Operable* lidx, WireSlot& rhs, Operable* ridx)-> opr&{
+
+                             /**
+                              *  |
+                              *  |------ newest
+                              *  |------ start Ptr oldest
+                              *  |------
+                              *  |------
+                              */
+
+                             ////// newst
+                             if (isNewest){
+                                 return (lhs(ORDERED_USER_VALID_KW) &  (~rhs(ORDERED_USER_VALID_KW)))    || ///// ordinary case
+
+                                       (  lhs(ORDERED_USER_VALID_KW)      & rhs(ORDERED_USER_VALID_KW) & /// if both equal select left only right is in old region and we in newer region
+                                        (~lhs(ORDERED_SYSTEM_SEQ_OLD_KW)) & rhs(ORDERED_SYSTEM_SEQ_OLD_KW));
+                             }
+                             ////// oldest
+                             return (lhs(ORDERED_USER_VALID_KW) &  (~rhs(ORDERED_USER_VALID_KW)))    || ///// ordinary case
+                                    (
+                                     lhs(ORDERED_USER_VALID_KW) & rhs(ORDERED_USER_VALID_KW) & /// if both equal select left only right is in old region
+                                    (lhs(ORDERED_SYSTEM_SEQ_OLD_KW) == rhs(ORDERED_SYSTEM_SEQ_OLD_KW))
+                                    ); //// left only when it is in the same region
+
+
+                         },
+                        requiredIdx);
+        return result;
+
+    }
+
+    WireSlot* Table::augmentForOrderedSearch(int rowIdx,
+                                            Operable& OldestStartIndex,
+                                            const std::function<Operable&(RegSlot& src)>& userValidFunc){
+
+        assert(rowIdx < getNumRow());
+        auto* result =
+        new WireSlot(*static_cast<Slot*>(_rows[rowIdx]), "augOldest_" + std::to_string(rowIdx));
+        ////// do augment wire
+        result->addWire(ORDERED_USER_VALID_KW, userValidFunc(*_rows[rowIdx]));
+        result->addWire(ORDERED_SYSTEM_SEQ_OLD_KW,  OldestStartIndex <= rowIdx);
+        return result;
+
+    }
+
+    std::pair<WireSlot, Operable&>
+        Table::findMBO_BIDX(bool isNewest,
+                            Operable& oldestStartIndex,
+                            const std::function<Operable&(RegSlot& src)>& userValidFunc){
+
+        assert(isSufficientBinIdx(oldestStartIndex));
+
+        std::vector<ReducNode> initReducNodes;
+        for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
+            Val*      idxVal  = &makeOprVal("initBinIdxOpr" + std::to_string(rowIdx), getSufficientIdxSize(false), rowIdx);
+            WireSlot* augSlot = augmentForOrderedSearch(rowIdx, oldestStartIndex, userValidFunc);
+            initReducNodes.push_back({augSlot, idxVal});
+        }
+        ReducNode finalNode = findMatchedOrdered(isNewest, initReducNodes, true);
+        WireSlot result(*finalNode.slot);
+        Operable& resultIdx = *finalNode.idx;
+        finalNode.destroy();
+        ///// we have to delete the augmented filed
+        return {result(0, getMeta().getNumField()-2), resultIdx};
+
+    }
+
+
+    std::pair<WireSlot, OH>
+        Table::findMBO_OHIDX(bool isNewest,
+                                       Operable& oldestStartIndex,
+                                       const std::function<Operable&(RegSlot& src)>& userValidFunc){
+
+        assert(isSufficientBinIdx(oldestStartIndex));
+
+        std::vector<ReducNode> initReducNodes;
+        for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
+            Val*      idxVal  = &makeOprVal("initOhIdxOpr" + std::to_string(rowIdx), getSufficientIdxSize(true), ((ull) 1) << rowIdx);
+            WireSlot* augSlot = augmentForOrderedSearch(rowIdx, oldestStartIndex, userValidFunc);
+            initReducNodes.push_back({augSlot, idxVal});
+        }
+        ReducNode finalNode = findMatchedOrdered(isNewest, initReducNodes, true);
+        WireSlot result(*finalNode.slot);
+        Operable& resultIdx = *finalNode.idx;
+        finalNode.destroy();
+        ///// we have to delete the augmented filed
+        return {result(0, getMeta().getNumField()-2), OH(resultIdx)};
+
+    }
+
+
+
+    /**
+     * static slicing
+     */
+    RegSlot& Table::operator () (int idx){
+        mfAssert(isValidIdx(idx), "index out of range to get " + std::to_string(idx));
+        return *_rows[idx];
+    }
+
+    Table Table::operator() (int start, int end){
+
+        mfAssert(checkValidRange(start, end), "invalid range to get");
+        std::vector<RegSlot*> newRows;
+        for (int idx = start; idx < end; idx++){
+            newRows.push_back(_rows[idx]);
+        }
+        return Table(_meta, newRows);
+
+    }
+
+    Table& Table::operator = (const Table& rhs){
+        _meta = rhs._meta;
+        _rows = rhs._rows;
+        _isMasterTable = false;
+        return *this;
+    }
+
+    Table Table::sliceByCol(int start, int end){
+        SlotMeta newSlotMeta = _meta(start, end);
+        std::vector<RegSlot*> newRows;
+        for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
+            RegSlot newRegSlot = ((*_rows[rowIdx])(start, end));
+            newRows.push_back(new RegSlot(newRegSlot));
+        }
+        return {newSlotMeta, newRows};
+    }
+        //// treated as base col slice function
+    Table Table::sliceByCol(const std::string& startField, const std::string& endField){
+        int startIdx = getMeta().getIdx(startField);
+        int endIdx   = getMeta().getIdx(endField) + 1;
+        mfAssert(getMeta().isValidIdx(startIdx), "field name " + startField + " not found");
+        mfAssert(getMeta().isValidIdx(endIdx), "field name " + endField + " not found");
+        return sliceByCol(startIdx, endIdx);
+    }
+    Table Table::sliceByCol(const std::vector<int>& fieldIdxs){
+        SlotMeta newSlotMeta = _meta(fieldIdxs);
+        std::vector<RegSlot*> newRows;
+        for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
+            RegSlot newRegSlot = (*_rows[rowIdx])(fieldIdxs);
+            newRows.push_back(new RegSlot(newRegSlot));
+        }
+        return {newSlotMeta, newRows};
+    }
+    Table Table::sliceByCol(const std::vector<std::string>& fieldNames){
+        std::vector<int> fieldIdxs = getMeta().getIdxs(fieldNames);
+        return sliceByCol(fieldIdxs);
+    }
+
+
+
+    /**
+     * dynamic
+     */
+
+    TableSliceAgent Table::operator[] (Operable& requiredIdx){
+        isSufficientBinIdx(requiredIdx);
+        return TableSliceAgent(this, requiredIdx, false);
+    }
+
+    TableSliceAgent Table::operator[] (OH ohIdx){
+        isSufficientOHIdx(ohIdx.getIdx());
+        return TableSliceAgent(this, ohIdx.getIdx(), true);
+    }
+
+    /**
+     *  table join
+     *
+     */
+
+    Table Table::joinTableByRow(const Table& rhs){
+        SlotMeta rhsMeta = rhs.getMeta();
+        SlotMeta newMeta = getMeta();
+        mfAssert(newMeta == rhsMeta, "slot meta is not match");
+
+        ////// new row
+        std::vector<RegSlot*> newRows = _rows;
+        newRows.insert(newRows.end(), rhs._rows.begin(), rhs._rows.end());
+
+        return Table(newMeta, newRows);
+
+    }
+
+    Table Table::joinTableByRowInterleave(const Table& rhs){
+        //////// prequisite check
+        SlotMeta rhsMeta = rhs.getMeta();
+        SlotMeta newMeta = getMeta();
+        mfAssert(newMeta == rhsMeta, "slot meta is not match");
+        int curAmtRow = getNumRow();
+        int rhsAmtRow = rhs.getNumRow();
+        mfAssert(curAmtRow == rhsAmtRow, "row size is not match");
+
+        ////// new row
+        std::vector<RegSlot*> newRows;
+        for (int i = 0; i < getNumRow(); i++){
+            newRows.push_back(_rows[i]);
+            newRows.push_back(rhs._rows[i]);
+        }
+        return {newMeta, newRows};
+
+    }
+
+    Table Table::joinTableByCol(const Table& rhs){
+        mfAssert(getNumRow() == rhs.getNumRow(), "row size is not match");
+
+        std::vector<RegSlot*> newRows;
+
+        for (int rowIdx = 0; rowIdx < getNumRow(); rowIdx++){
+            RegSlot  newRegSlot = getRefRow(rowIdx) + rhs.getClonedRow(rowIdx);
+            RegSlot* clonedSlot = new RegSlot(newRegSlot);
+            newRows.push_back(clonedSlot);
+        }
+
+        return Table(getMeta(), newRows);
+
+    }
+
+
+    Table Table::join(const Table& rhs,  int axis){
+        mfAssert(axis >= 0 && axis <= 1, "axis must be 0 or 1");
+        mfAssert(false, "not implemented yet");
+
+        switch (axis){
+            case 0:
+                return joinTableByRow(rhs);
+            case 1:
+                return joinTableByCol(rhs);
+            default:
+                assert(false);
+        }
+
+    }
+
+}

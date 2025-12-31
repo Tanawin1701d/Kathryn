@@ -1,38 +1,80 @@
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.22)
 project(Kathryn)
 
 set(CMAKE_CXX_STANDARD 17)
 
+#add_compile_options(-O3)
+#set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+#set(CMAKE_BUILD_TYPE Debug)
+#add_definitions(-DMODELCOMPILEVB) ### model compile verbose
+
+#option( BUILD_EXT_SIM "buildExternalSimulator(VERILATOR)" ON)
+#if(BUILD_EXT_SIM)
+#    target_compile_definitions(Kathryn PRIVATE BUILD_EXT_SIM)
+#endif()
+
+add_definitions(-DNOTEXCEED64)
+add_compile_definitions(KATHRYN_PROJ_FOLD_PATH=${CMAKE_SOURCE_DIR})
 
 INCLUDE_DIRECTORIES( ./src )
 
 
-add_executable(Kathryn main.cpp
-        src/model/hwComponent/expression/expression.cpp
-        src/model/hwComponent/expression/expression.h
-        src/model/hwComponent/abstract/operation.h
-        src/model/hwComponent/abstract/operable.h
-        src/model/hwComponent/abstract/assignable.h
-        src/model/hwComponent/abstract/identifiable.cpp
-        src/model/hwComponent/abstract/identifiable.h
-        src/model/hwComponent/abstract/operable.cpp
-        src/model/hwComponent/register/register.cpp
-        src/model/hwComponent/register/register.h
-        src/model/hwComponent/wire/wire.cpp
-        src/model/hwComponent/wire/wire.h
-        src/model/hwComponent/value/value.cpp
-        src/model/hwComponent/value/value.h
-        src/model/hwComponent/module/module.cpp
-        src/model/hwComponent/module/module.h
-        src/model/controller/controller.cpp
-        src/model/controller/controller.h
-        src/model/controller/conInterf/controllerItf.cpp
-        src/model/controller/conInterf/controllerItf.h
-        src/model/hwComponent/abstract/makeComponent.h
-        src/model/hwComponent/abstract/slicable.h
-        src/model/hwComponent/abstract/Slice.h
-        src/model/FlowBlock/abstract/flowBlock_Base.cpp
-        src/model/FlowBlock/abstract/flowBlock_Base.h
-        src/model/controller/flowController.cpp
-        src/model/controller/hwCompController.cpp
+
+
+
+FILE(GLOB_RECURSE SRC_ABS             RELATIVE ${CMAKE_SOURCE_DIR} "src/abstract/*.cpp")
+FILE(GLOB_RECURSE SRC_APP             RELATIVE ${CMAKE_SOURCE_DIR} "src/application/*.cpp")
+FILE(GLOB_RECURSE SRC_FED             RELATIVE ${CMAKE_SOURCE_DIR} "src/frontEnd/*.cpp")
+FILE(GLOB_RECURSE SRC_MODEL           RELATIVE ${CMAKE_SOURCE_DIR} "src/model/*.cpp")
+FILE(GLOB_RECURSE SRC_SIM             RELATIVE ${CMAKE_SOURCE_DIR} "src/sim/*.cpp")
+FILE(GLOB_RECURSE SRC_GEN             RELATIVE ${CMAKE_SOURCE_DIR} "src/gen/*.cpp")
+FILE(GLOB_RECURSE SRC_TEST            RELATIVE ${CMAKE_SOURCE_DIR} "src/test/*.cpp")
+FILE(GLOB_RECURSE SRC_UTIL            RELATIVE ${CMAKE_SOURCE_DIR} "src/util/*.cpp")
+FILE(GLOB_RECURSE SRC_EXAMPLE         RELATIVE ${CMAKE_SOURCE_DIR} "src/example/*.cpp")
+FILE(GLOB_RECURSE SRC_PARAM           RELATIVE ${CMAKE_SOURCE_DIR} "src/params/*.cpp")
+FILE(GLOB_RECURSE SRC_LIB             RELATIVE ${CMAKE_SOURCE_DIR} "src/lib/*.cpp")
+FILE(GLOB_RECURSE SRC_MODEL_COMPILE   RELATIVE ${CMAKE_SOURCE_DIR} "src/modelCompile/proxyEventBase.cpp")
+
+
+INCLUDE_DIRECTORIES( ./extSim/ridecore/src/test/ridecoreVer)
+add_subdirectory(extSim/ridecore/src/fpga)
+FILE(GLOB_RECURSE SRC_RIDE_SIM        RELATIVE ${CMAKE_SOURCE_DIR} "extSim/ridecore/src/test/ridecoreVer/*.cpp")
+###### BUILD SIM
+#if(BUILD_EXT_SIM)
+#
+#
+#else()
+#
+#    set(SRC_RIDE_SIM "")
+#
+#endif()
+
+
+add_executable(Kathryn
+        main.cpp
+        #main2.cpp
+        #main3.cpp
+        src/kathryn.cpp
+        ${SRC_ABS}
+        ${SRC_APP}
+        ${SRC_FED}
+        ${SRC_MODEL}
+        ${SRC_SIM}
+        ${SRC_GEN}
+        ${SRC_TEST}
+        ${SRC_UTIL}
+        ${SRC_EXAMPLE}
+        ${SRC_PARAM}
+        ${SRC_LIB}
+        ${SRC_MODEL_COMPILE}
+        ${SRC_RIDE_SIM}
+
+        #blinkSample.cpp
+        #src/params/prjParam.h
 )
+
+###if(BUILD_EXT_SIM)
+    target_link_libraries(Kathryn PRIVATE verilator_ridecore)
+###endif()
+
+

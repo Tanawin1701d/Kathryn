@@ -1,0 +1,167 @@
+//
+// Created by tanawin on 20/6/2024.
+//
+
+#ifndef MODULEGEN_H
+#define MODULEGEN_H
+
+#include "unordered_map"
+#include "gen/proxyHwComp/expression/exprGen.h"
+#include "gen/proxyHwComp/expression/nestGen.h"
+#include "gen/proxyHwComp/register/regGen.h"
+#include "gen/proxyHwComp/value/valueGen.h"
+#include "gen/proxyHwComp/wire/wireGen.h"
+#include "gen/proxyHwComp/abstract/logicGenBase.h"
+
+
+#include "model/hwComponent/memBlock/MemBlock.h"
+#include "model/hwComponent/register/register.h"
+#include "model/hwComponent/wire/wireAuto.h"
+#include "model/hwComponent/wire/wireSubType.h"
+#include "model/hwComponent/expression/expression.h"
+#include "model/hwComponent/value/value.h"
+#include "model/hwComponent/expression/nest.h"
+#include "model/flowBlock/abstract/spReg/waitReg.h"
+#include "util/fileWriter/fileWriterGroup.h"
+
+
+namespace kathryn{
+
+
+    enum MODULE_GEN_PROGRESS{
+        MGP_UNINIT,
+        MGP_INITED_ELE,
+        MGP_ROUTED,
+        MGP_MARK_PRE_WRITE,
+        MGP_MARK_PRE_REDUNDANT
+    };
+
+
+    class Module;
+    class GenStructure;
+    class ModuleGen{
+    protected:
+        Module*        _master           = nullptr;
+        int            depthFromGlobalModule = 0;
+        MODULE_GEN_PROGRESS _mgp = MGP_UNINIT;
+
+    public:
+        LogicGenBaseVec   _regPool;
+        LogicGenBaseVec   _wirePool;
+        LogicGenBaseVec   _wirePoolWithInputMarker; //// with marker that mark as input of the module (only module)
+        LogicGenBaseVec   _wirePoolWithOutputMarker; //// with marker that mark as output of the module (only module)
+        LogicGenBaseVec   _exprPool;
+        LogicGenBaseVec   _nestPool;
+        LogicGenBaseVec   _valPool;
+        LogicGenBaseVec   _pmValPool;
+        LogicGenBaseVec   _memBlockPool;
+        LogicGenBaseVec   _memBlockElePool;
+        ///// genWirePool it can be use after finalize Route Ele is used
+        LogicGenBaseVec   _genWirePools[WIRE_AUTO_GEN_CNT];
+
+        ////// genWireMap gen engine must create when wire is build and
+        /// add to the structure
+        std::unordered_map<Operable*, int> _genWireMaps[WIRE_AUTO_GEN_CNT];
+        std::vector<WireAuto*>             _genWires   [WIRE_AUTO_GEN_CNT];
+        std::vector<ModuleGen*>            _subModulePool;
+
+        explicit ModuleGen(Module* master);
+
+        MODULE_GEN_PROGRESS getGenProgress()const {return _mgp;}
+        Module* getMasterModule() const {return _master;}
+
+        /*
+         * main progress
+         */
+
+        void startInitEle    ();
+        void startRouteEle   ();
+        void finalizeRouteEle();
+
+        void startWriteFileMaster(bool               requireNewFile,
+                                  FileWriterBase*    upperFileWriter,
+                                  FileWriterGroup*   writerGroup,
+                                  bool               isExplicitMod,
+                                  const std::string& explicitModName
+                                  );
+
+        void startWriteFile(FileWriterBase* fileWriter,
+                            const std::string& explicitModName);
+
+        /*
+         * routing operation
+         */
+        WireAuto* genAutoWireBase(Operable* opr1, Operable* realSrc,
+                                     const std::string& wireName,
+                                     WIRE_AUTO_GEN_TYPE wireGenType,
+                                     bool               connectTheWire = true);
+        bool         isThereAutoGenWire(Operable* realSrc, WIRE_AUTO_GEN_TYPE wireGenType);
+        WireAuto* getAutoGenWire    (Operable* realSrc, WIRE_AUTO_GEN_TYPE wireGenType);
+        //// route opr1
+        Operable* routeSrcOprToThisModule (Operable* exactRealSrc);
+        int       getDept() const{return depthFromGlobalModule;}
+        //// global io
+        std::vector<WireAuto*>& getAutoGenWireRefs (WIRE_AUTO_GEN_TYPE genWireType){
+            return _genWires[genWireType];
+        }
+
+        /**
+         * file generator
+         */
+        std::vector<std::string> getIoDec();
+        std::vector<std::string> getParamDec();
+        std::string getSubModuleDec(ModuleGen* mdGen);
+        std::string getOpr();
+
+        ////// ^------ it should be called from getSubModuleDec
+        /**
+         *  cmp function
+         */
+
+        /**
+         * recruit function
+         */
+
+        template<typename T>
+        void createLogicGenBase(std::vector<T*>& srcs){
+            for(T* src: srcs){
+                src->createLogicGen();
+            }
+        }
+
+        template<typename T>
+        void recruitLogicGenBase(LogicGenBaseVec& des,
+                                 std::vector<T*>& srcs){
+            for(T* src: srcs){
+                LogicGenBase* logicGenBase = src->getLogicGen();
+                assert(logicGenBase != nullptr);
+                des.push_back(logicGenBase);
+            }
+        }
+
+        template<typename T>
+        LogicGenBaseVec recruitLogicGenBase(std::vector<T*>& srcs){
+            LogicGenBaseVec result;
+            recruitLogicGenBase(result, srcs);
+            return result;
+        }
+
+        template<typename T>
+        void createAndRecruitLogicGenBase(LogicGenBaseVec& des,
+        std::vector<T*>& srcs){
+            createLogicGenBase(srcs);
+            recruitLogicGenBase(des, srcs);
+        }
+    };
+
+    class ModuleGenInterface{
+    public:
+        virtual ~ModuleGenInterface() = default;
+        virtual void       createModuleGen() = 0;
+        virtual ModuleGen* getModuleGen() = 0;
+
+    };
+
+}
+
+#endif //MODULEGEN_H

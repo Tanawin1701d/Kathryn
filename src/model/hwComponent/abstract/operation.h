@@ -4,6 +4,10 @@
 
 #ifndef KATHRYN_OPERATION_H
 #define KATHRYN_OPERATION_H
+
+#include <string>
+#include <cassert>
+
 namespace kathryn {
     enum LOGIC_OP {
         /** bitwise operators*/
@@ -24,18 +28,28 @@ namespace kathryn {
         RELATION_LEQ, // <=
         RELATION_GE,  // >
         RELATION_GEQ, // >=
+        RELATION_SLT, // sign less than
+        RELATION_SGT, // sign greater than
         /** arithmaktic operators*/
         ARITH_PLUS,   // +
         ARITH_MINUS,  // -
         ARITH_MUL,    // *
         ARITH_DIV,    // /
         ARITH_DIVR,   // %
+        EXTEND_BIT,   /// bit extender
         /** assign for build new variable*/
         ASSIGN,       // =
-        /** other operator*/
-        DUMMY
 
+        /** other operator*/
+        OP_DUMMY,
+        LOGIC_OP_COUNT
     };
+
+    std::string lop_to_string(LOGIC_OP op);
+    bool isSingleOpr(LOGIC_OP op);
+    bool isDoubleOpr(LOGIC_OP op);
+
+
 
     const int LOGICAL_SIZE = 1;
 

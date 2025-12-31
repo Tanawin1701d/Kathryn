@@ -1,0 +1,17 @@
+cmake_minimum_required(VERSION 3.28)
+project(modelCompile)
+
+set(CMAKE_CXX_STANDARD 17)
+
+
+INCLUDE_DIRECTORIES( ../src )
+
+
+add_executable(modelCompile
+        main.cpp
+        #generated/proxyEvent.cpp
+        ../src/util/fileWriter/fileWriterBase.cpp
+        ../src/sim/modelSimEngine/base/proxyEventBase.cpp
+        ../src/sim/simResWriter/simResWriter.cpp
+        generated/simple_gen_file_15.cpp.cpp
+ )

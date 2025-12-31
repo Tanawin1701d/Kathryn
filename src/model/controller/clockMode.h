@@ -1,0 +1,28 @@
+//
+// Created by tanawin on 19/9/25.
+//
+
+#ifndef SRC_MODEL_CONTROLLER_CLOCKMODE_H
+#define SRC_MODEL_CONTROLLER_CLOCKMODE_H
+
+namespace kathryn{
+
+enum CLOCK_MODE{
+    CM_POSEDGE,
+    CM_NEGEDGE,
+    CM_CLK_FREE,
+    CM_CLK_UNUSED,
+    CM_AMT
+};
+
+
+void SET_CLK_MODE(CLOCK_MODE mode);
+void SET_CLK_MODE2NEG_EDGE();
+void SET_CLK_MODE2DEF();
+CLOCK_MODE GET_CLOCK_MODE();
+
+
+
+}
+
+#endif //SRC_MODEL_CONTROLLER_CLOCKMODE_H

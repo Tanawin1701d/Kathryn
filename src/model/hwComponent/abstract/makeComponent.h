@@ -8,10 +8,56 @@
 #include <typeinfo>
 #include <memory>
 #include <type_traits>
-#include "model/controller/controller.h"
 #include "model/controller/conInterf/controllerItf.h"
 #include "model/hwComponent/abstract/identifiable.h"
 
+
+/** this is for user usage*/
+#define mMod(name, TypeName, ...) TypeName& name = _make<TypeName>(#TypeName, #name, true, __VA_ARGS__)
+#define mWire( name, argument)    Wire&     name = _make<Wire>    ("uncatagorizedYet", #name, true,argument)
+#define mIn( name, argument)      Wire&     name = _makeIo<Wire>  (true,"uncatagorizedYet", #name, true,argument, false)
+#define mOut( name, argument)     Wire&     name = _makeIo<Wire>  (false,"uncatagorizedYet", #name, true,argument, false)
+#define mReg( name, argument)     Reg&      name = _make<Reg>     ("uncatagorizedYet", #name, true, argument)
+#define mExpr(name, argument)     expression& name = _make<expression>("uncatagorizedYet", #name, true, argument)
+#define mVal(name, ...)           Val&      name = _make<Val>     ("uncatagorizedYet", #name, true, __VA_ARGS__)
+#define mPmVal(name, defaultVal)  PmVal&    name = _make<PmVal>   ("uncatagorizedYet", #name, true, defaultVal)
+#define mMem(name, depth, width)  MemBlock& name = _make<MemBlock>("uncatagorizedYet", #name, true, depth, width)
+#define g(...) makeNest(true,__VA_ARGS__)
+#define gr(...) makeNestReadOnly(true, __VA_ARGS__)
+#define gMan(...) makeNestMan(true, __VA_ARGS__)
+#define mBox(name, TypeName) TypeName& name = _make<TypeName>("uncatagorizedYet",#name, true)
+
+#define mOprReg(varyName, argument)        _make<Reg>        ("uncatagorizedYet" ,  varyName, true, argument)
+#define mOprWire(varyName, argument)       _make<Wire>       ("uncatagorizedYet" ,  varyName, true,argument)
+#define mOprMod(varyName, TypeName, ...)   _make<TypeName>   (#TypeName, varyName, true, __VA_ARGS__)
+#define mOprVal(varyName, ...)             _make<Val>        ("uncatagorizedYet" ,  varyName, true, __VA_ARGS__)
+
+/** this is for internal use nest is not allow here (only useNest man)*/
+#define makeMod(name, TypeName, ...) Module&   name = _make<TypeName>(#TypeName, #name, false, __VA_ARGS__)
+#define makeWire( name, argument)    Wire&     name = _make<Wire>    ("uncatagorizedYet" , #name, false,argument)
+#define makeReg( name, argument)     Reg&      name = _make<Reg>     ("uncatagorizedYet" , #name, false, argument)
+#define makeVal(name, ...)           Val&      name = _make<Val>     ("uncatagorizedYet" , #name, false, __VA_ARGS__)
+#define makeMem(name, depth, width)  MemBlock& name = _make<MemBlock>("uncatagorizedYet" , #name, false, depth, width)
+#define gManInternal(...) makeNestMan(false, __VA_ARGS__)
+#define gManInternalReadOnly(...) makeNestManReadOnly(false, __VA_ARGS__)
+
+#define makeOprWireWoDef( varyName, argument)  _make<Wire>       ("uncatagorizedYet" ,  varyName, false,argument, false)
+#define makeOprWire( varyName, argument)       _make<Wire>       ("uncatagorizedYet" ,  varyName, false,argument)
+#define makeOprReg( varyName, argument)        _make<Reg>        ("uncatagorizedYet" ,  varyName, false, argument)
+#define makeOprVal(varyName, ...)              _make<Val>        ("uncatagorizedYet" ,  varyName, false, __VA_ARGS__)
+#define makeOprMem(varyName, depth, width)     _make<MemBlock>   ("uncatagorizedYet" ,  varyName, false, depth, width)
+#define makeOprProxyExpr(varyName, size)       _make<expression> ("uncatagorizedYet" ,  varyName, false, size)
+#define makeOprIoWire(varyName, size, type)    _make<WireAuto>("uncatagorizedYet" ,  varyName, true, size, type)
+/////#define g(...) makeNest(false,__VA_ARGS__)
+#define makeBox(name, TypeName) TypeName& name = _make<TypeName>("uncatagorizedYet", #name, false)
+
+
+/*** box is globally used in userland and internal land*/
+#define box(tn) struct tn: Box
+#define initBox(tn)  auto& operator=(const tn& rhs) { Box::operator=((Box&) rhs); return *this;};
+
+
+#define var auto&
 
 
 namespace kathryn {
@@ -21,28 +67,55 @@ namespace kathryn {
      * it must set from made and
      **/
 
+    void unlockAlloc();
 
-    /** This is used for represent */
-    void* declaredAddr;
-
-    /** todo for now it is used for creating module but we will make it compatable in the future */
     template<typename T, typename... Args>
-    std::shared_ptr<T> make(Args&&... args){
+    T& _make(const std::string& typeName, const std::string& name, bool isUserDec,Args&&... args){
         static_assert(std::is_base_of<HwCompControllerItf, T>::value,
-                "make model component must base on Controller controllable"
+                "make model component must base on ModelController controllable"
                 );
-        static_assert(std::is_base_of<Identifiable, T>::value,
+        static_assert(std::is_base_of<IdentBase, T>::value,
                       "make model component must base on Identifiable"
                 );
 
         /** make initializer*/
-        getControllerPtr()->unlockAllocation();
-        auto objPtr = std::make_shared<T>(std::forward<Args>(args)...);
-        objPtr->com_final();
-        objPtr->setTypeName(typeid(T).name());
-        return objPtr;
+        unlockAlloc();
+        setRetrieveVarMeta(typeName, name, isUserDec);
+        auto objPtr = new T(std::forward<Args>(args)...);
+        objPtr->com_final(); /** /* typicallly it is used only module and box*/
+
+        return *objPtr;
     }
 
+    template<typename T, typename... Args>
+    T& _makeIo(bool isInput, const std::string& typeName, const std::string& name, bool isUserDec,Args&&... args){
+        T& x = _make<T>(typeName, name, isUserDec, args...);
+        if (isInput){
+            x.asInput();
+        }else{
+            x.asOutput();
+        }
+        return x;
+    }
+
+    // we will use it later for declaration of zero argument
+    // template<typename T>
+    // T& _make(const std::string name, bool isUserDec){
+    //     static_assert(std::is_base_of<HwCompControllerItf, T>::value,
+    //                   "make model component must base on ModelController controllable"
+    //     );
+    //     static_assert(std::is_base_of<IdentBase, T>::value,
+    //                   "make model component must base on Identifiable"
+    //     );
+    //
+    //     /** make initializer*/
+    //     unlockAlloc();
+    //     setRetrieveVarMeta(name, isUserDec);
+    //     auto objPtr = new T();
+    //     objPtr->com_final(); /** /* typicallly it is used only module and box*/
+    //
+    //     return *objPtr;
+    // }
 
 }
 

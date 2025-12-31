@@ -10,16 +10,14 @@
 #include <string>
 #include <iostream>
 #include <utility>
-#include "model/hwComponent/abstract/slicable.h"
-#include "model/hwComponent/abstract/operation.h"
-#include "model/hwComponent/abstract/assignable.h"
-#include "model/hwComponent/abstract/operable.h"
-#include "model/hwComponent/abstract/identifiable.h"
+
 #include "model/controller/conInterf/controllerItf.h"
+#include "model/hwComponent/abstract/logicComp.h"
+#include "gen/proxyHwComp/expression/exprGen.h"
 
 
 /**
- * expression is the class that represent the value from hardware
+ * exprMetas is the class that represent the value from hardware
  * component such as register and wire
  *
  * */
@@ -29,50 +27,87 @@ namespace kathryn {
 
 
 
-    class expression : public Assignable<expression>, public Operable,
-                       public Slicable<expression>,
-                       public AssignCallbackFromAgent<expression>,
-                       public Identifiable,
-                       public HwCompControllerItf{
-    private:
-
-        /** meta data that contain bi operation*/
-        LOGIC_OP _op;
-        std::shared_ptr<Operable> _a;
-        Slice _aSlice{};
-        std::shared_ptr<Operable> _b;
-        Slice _bSlice{};
+    class expression : public LogicComp<expression>{
+    friend class expressionSimEngine;
+    friend class ExprGen;
+    protected:
+        bool _valueAssinged = false;
+        /** metas data that contain bi operation*/
+        const LOGIC_OP _op;
+        Operable* _a;
+        Operable* _b;
 
     protected:
         void com_init() override;
 
 
+
     public:
         /** constructor auto get id of the system*/
-        explicit expression(LOGIC_OP,
-                            std::shared_ptr<Operable> a,
-                            Slice aSlice,
-                            std::shared_ptr<Operable> b,
-                            Slice bSlice,
+        explicit expression(LOGIC_OP op,
+                            const Operable* a,
+                            const Operable* b,
                             int exp_size
                             );
+        explicit expression(int exp_size);
+
+        void com_final() override {};
         /** override assignable*/
-        expression& operator <<= (Operable& b) override {std::cout << "we not support <<= operator in expression";};
-        expression& operator =   (Operable& b) override;
+        void doBlockAsm(Operable& srcOpr, Slice desSlice) override{
+            mfAssert(false, "expr don't support doBlockAsm");
+            assert(false);
+        };
+        void doNonBlockAsm(Operable& srcOpr, Slice desSlice) override;
+        void doNonBlockAsmMulAssCheck(Operable& srcOpr, Slice desSlice);
+
+        void doBlockAsm(Operable& srcOpr,
+                        std::vector<AssignMeta*>& resultMetaCollector,
+                        Slice  absSrcSlice,
+                        Slice  absDesSlice) override{
+            mfAssert(false, "expr don't support doBlockAsm"); assert(false);
+        }
+        void doNonBlockAsm(Operable& srcOpr,
+                           std::vector<AssignMeta*>& resultMetaCollector,
+                           Slice  absSrcSlice,
+                           Slice  absDesSlice) override{
+            mfAssert(absDesSlice == getSlice()                    ,
+                     "des expression assign wrapper doesn't cover entire expression");
+            mfAssert(absSrcSlice.getSize() >= getSlice().getSize(),
+                     "src expression assign wrapper doesn't cover entire expression");
+            doGlobalAsm(srcOpr, resultMetaCollector, absSrcSlice, absDesSlice, ASM_DIRECT);
+        }
+
+        CLOCK_MODE getCurAssignClkMode() override {return CM_CLK_FREE;}
+
+        expression& operator = (Operable& b)  { operatorEq(b);                                return *this;}
+        expression& operator = (ull b)        { operatorEq(b);                                   return *this;}
+        expression& operator = (expression& b){ if (this == &b){return *this;} operatorEq(b); return *this;}
         /**override operable*/
-        Operable& getExactOperable() override { return *(Operable*)(this); };
-        Slice getOperableSlice() override { return getSlice(); }
+
+
+
+
         /** override slicable*/
         SliceAgent<expression>& operator() (int start, int stop) override;
         SliceAgent<expression>& operator() (int idx) override;
-        /** call back assignable from client agent*/
-        [[maybe_unused]]
-        expression& callBackBlockAssignFromAgent(Operable& b, Slice absSlice) override;
-        expression& callBackNonBlockAssignFromAgent(Operable& b, Slice absSlice) override;
+        SliceAgent<expression>& operator() (Slice sl) override;
+        Operable* doSlice(Slice sl) override;
+
+        /** override debugg message*/
+        //std::vector<std::string> getDebugAssignmentValue() override;
+
+        /** get set method */
+        LOGIC_OP getOp() const {return _op;};
+        Operable* getOperandA() const {return _a;}
+        Operable* getOperandB() const {return _b;}
+
+        /**check short*/
+        Operable* checkShortCircuit() override;
+
+        void createLogicGen() override;
 
     };
 
-    typedef std::shared_ptr<expression> expressionPtr;
 
 
 

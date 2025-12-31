@@ -1,0 +1,73 @@
+//
+// Created by tanawin on 13/9/25.
+//
+
+#ifndef SRC_MODEL_FLOW_BLOCK_PIPELINE_ZYNC_H
+#define SRC_MODEL_FLOW_BLOCK_PIPELINE_ZYNC_H
+
+#include "syncMeta.h"
+#include "model/flowBlock/abstract/flowBlock_Base.h"
+#include "model/flowBlock/abstract/loopStMacro.h"
+#include "model/flowBlock/abstract/spReg/stateReg.h"
+#include "model/flowBlock/abstract/nodes/node.h"
+#include "model/flowBlock/abstract/nodes/stateNode.h"
+
+#define zync(zyncMeta)        for(auto kathrynBlock = new FlowBlockZyncBase(zyncMeta, nullptr); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define zyncc(zyncMeta, cond) for(auto kathrynBlock = new FlowBlockZyncBase(zyncMeta, &cond  ); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+
+//#define zync_con(cond)        for(auto kathrynBlock = new FlowBlockZyncBase(&cond);             kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+
+namespace kathryn{
+
+    class FlowBlockZyncBase: public FlowBlockBase, public LoopStMacro{
+    protected:
+        const std::string _zyncName = "ZYNC_UNNAMED";
+        SyncMeta& _syncMeta;
+        Operable* _acceptCond = nullptr; ///// this condition must be true when the system is in prepSendNode,
+                                            ///// if the preSend will not wait and not activate further layer
+        ////// meta data
+        bool autoActivatePipe = false;
+
+
+        ////// node
+        StateNode*  prepSendNode = nullptr;
+        PseudoNode* exitNode     = nullptr;
+        /////// expresion
+        ////// node wrap for summarize
+        NodeWrap*      resultNodeWrap    = nullptr;
+
+    public:
+        FlowBlockZyncBase(SyncMeta& syncMeta, Operable* acceptCond = nullptr);
+        ~FlowBlockZyncBase() override;
+        /** manage the system */
+        void assignReadySignal();
+        StateNode* getPreSendNode() { assert(prepSendNode != nullptr); return prepSendNode;}
+        SyncMeta& getSyncMeta() const { return _syncMeta;}
+
+        /** for controller add the local element to this sub block*/
+        void addSubFlowBlock       (FlowBlockBase* subBlock) override;
+        void addConFlowBlock       (FlowBlockBase* conBlock) override;
+        NodeWrap* sumarizeBlock    () override;
+        /** auto activate pipe*/
+        void setAutoActivatePipe(){autoActivatePipe = true;}
+        bool isAutoActivatePipe() const {return autoActivatePipe;}
+
+        /** on this block is start interact to controller*/
+        void onAttachBlock() override;
+        /** on leave this block*/
+        void onDetachBlock() override;
+        /** for module to build hardware component*/
+        void buildHwMaster() override;
+        void buildHwComponent() override;
+        /** get describe*/
+        void addMdLog(MdLogVal* mdLogVal) override;
+        /** Loop macro to notice position of system*/
+        void doPreFunction() override;
+        void doPostFunction() override;
+
+
+    };
+
+}
+
+#endif //SRC_MODEL_FLOW_BLOCK_PIPELINE_ZYNC_H

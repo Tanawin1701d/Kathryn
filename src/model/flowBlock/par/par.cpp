@@ -1,0 +1,324 @@
+//
+// Created by tanawin on 4/12/2566.
+//
+
+#include "par.h"
+#include "model/controller/controller.h"
+
+
+namespace kathryn{
+
+
+    FlowBlockPar::FlowBlockPar(FLOW_BLOCK_TYPE fbType):
+    FlowBlockBase(fbType,
+      {
+              {FLOW_ST_BASE_STACK,
+               FLOW_ST_PATTERN_STACK
+              },
+              FLOW_JO_SUB_FLOW,
+              true
+      })
+      {
+        assert((fbType == PARALLEL_AUTO_SYNC) ||
+               (fbType == PARALLEL_NO_SYN));
+    }
+
+    FlowBlockPar::~FlowBlockPar(){
+        delete resultNodeWrap;
+        delete basicStNode;
+        delete synNode;
+        delete pseudoExitNode;
+    }
+
+    NodeWrap*
+    FlowBlockPar::sumarizeBlock() {
+        assert(resultNodeWrap != nullptr);
+        return resultNodeWrap;
+    }
+
+
+    void
+    FlowBlockPar::onAttachBlock(){
+        ctrl->on_attach_flowBlock(this);
+    }
+
+    void
+    FlowBlockPar::onDetachBlock() {
+        ctrl->on_detach_flowBlock(this);
+    }
+
+    void
+    FlowBlockPar::buildHwComponent() {
+        mfAssert((!_basicNodes.empty()) || (!_subBlocks.empty()),
+                 "parBlock has no assignment"
+                 );
+        assert(_conBlocks.empty());
+
+        /**
+         *
+         * build node for basic assignment
+         *
+         * */
+        if (!_basicNodes.empty()){
+            basicStNode = new StateNode(getClockMode());
+            basicStNode->setInternalIdent("parStateReg_" + std::to_string(getGlobalId()));
+            addSysNode(basicStNode);
+            fillIntResetToNodeIfThere(basicStNode);
+            fillHoldToNodeIfThere(basicStNode);
+            /** add basic assignment to depend on stateNode*/
+            for (auto nd : _basicNodes){
+                assert(nd->getNodeType() == ASM_NODE);
+                basicStNode->addSlaveAsmNode((AsmNode*)nd);
+            }
+        }
+
+
+        /**
+         *
+         * gen node wrap
+         *
+         * */
+        for (auto fb : _subBlocks){
+            NodeWrap* nw = fb->sumarizeBlock();
+            assert(nw != nullptr);
+            nodeWrapOfSubBlock.push_back(nw);
+        }
+
+        /**
+         * gen force exit node
+         * */
+        genSumForceExitNode(nodeWrapOfSubBlock);
+
+        /**
+         *
+         * determine basic cycle used
+         *
+         * */
+        NodeWrapCycleDet cycleDet;
+        if (basicStNode != nullptr)
+            cycleDet.addToDet(basicStNode);
+        cycleDet.addToDet(nodeWrapOfSubBlock);
+        cycleUsed = cycleDet.getMaxCycleHorizon();
+        /**
+         * build result node wrap entrance
+         * */
+        /*** entrance node management*/
+        resultNodeWrap = new NodeWrap();
+        if (basicStNode != nullptr) {
+            resultNodeWrap->addEntraceNode(basicStNode);
+            if (isThereIntStart()){
+                basicStNode->addDependNode(intNodes[INT_START], nullptr);
+            }
+        }
+        for (auto nw : nodeWrapOfSubBlock){
+            resultNodeWrap->transferEntNodeFrom(nw);
+            if (isThereIntStart()){
+                nw->addDependNodeToAllNode(intNodes[INT_START]);
+            }
+        }
+        /** scan for master join block**/
+        masterJoinFlowBlock = scanMasterJoinSubBlock();
+        /**
+         * assemble the result node wrap focused on synchronization and exit parameter
+         * **/
+        buildSyncNode();
+        assignExitToRnw();
+        assignCycleUsedToRnw();
+        assignForceExitToRnw();
+    }
+
+
+    void FlowBlockPar::assignCycleUsedToRnw(){
+        resultNodeWrap->setCycleUsed(cycleUsed);
+    }
+
+    void FlowBlockPar::assignForceExitToRnw() {
+        if (_areThereForceExit){
+            resultNodeWrap->addForceExitNode(_forceExitNode);
+        }
+    }
+
+    void
+    FlowBlockPar::doPreFunction() {
+        onAttachBlock();
+    }
+
+    void
+    FlowBlockPar::doPostFunction(){
+        onDetachBlock();
+    }
+
+    std::string FlowBlockPar::getMdDescribe() {
+        std::string ret;
+
+        ret += "basicStateNode is " +
+                ((basicStNode != nullptr) ?
+                basicStNode->getMdIdentVal() + "  " + basicStNode->getMdDescribe():
+                ""
+                ) +"\n";
+
+        ret += "synNode is " +
+                ((synNode != nullptr) ?
+                synNode->getMdIdentVal() + "  " + synNode->getMdDescribe():
+                "") + "\n";
+
+        ret += "pseudoExitNode is " +
+                ((pseudoExitNode != nullptr) ?
+                pseudoExitNode->getMdIdentVal() + "  " + pseudoExitNode->getMdDescribe():
+                "") + "\n";
+
+        ret += getMdDescribeRecur();
+        ret += "\n";
+
+        return ret;
+    }
+
+    void FlowBlockPar::addMdLog(MdLogVal *mdLogVal) {
+
+
+        mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() + " ]");
+
+        mdLogVal->addVal("basicStateNode is " +
+                         ((basicStNode != nullptr) ?
+                          basicStNode->getMdIdentVal() + "  " + basicStNode->getMdDescribe():
+                          ""
+                         ));
+
+        mdLogVal->addVal("synNode is " +
+                         ((synNode != nullptr) ?
+                          synNode->getMdIdentVal() + "  " + synNode->getMdDescribe():
+                          ""));
+
+        mdLogVal->addVal("pseudoExitNode is " +
+                         ((pseudoExitNode != nullptr) ?
+                          pseudoExitNode->getMdIdentVal() + "  " + pseudoExitNode->getMdDescribe():
+                          ""));
+
+        Node* exitNode = resultNodeWrap->getExitNode();
+        mdLogVal->addVal("exit node is " +
+                        ( (exitNode != nullptr) ?
+                            exitNode->getMdIdentVal() + "  " + exitNode->getMdDescribe():
+                            ""));
+
+        if (resultNodeWrap->isThereForceExitNode()){
+            mdLogVal->addVal("forceExit is " + resultNodeWrap->getForceExitNode()->getMdIdentVal() +
+                             "  " +
+                             resultNodeWrap->getForceExitNode()->getMdDescribe());
+        }
+
+        addMdLogRecur(mdLogVal);
+    }
+
+    /**
+     *
+     *
+     * parallel block auto
+     *
+     *
+     * */
+
+    void FlowBlockParAuto::buildSyncNode() {
+        int amt_block = ((basicStNode != nullptr) ? 1 : 0) +
+                        (int)(nodeWrapOfSubBlock.size());
+        /** build syn node if need*/
+        if (
+            (masterJoinFlowBlock == nullptr) && //// no user defined exit
+            (cycleUsed == IN_CONSIST_CYCLE_USED) && ///// can't know the longest subblock
+             (amt_block > 1) /** incase amt_block == 1 we don't have to sync*/
+                ){
+            /////// syn reg needed
+            int synSize = amt_block;
+            synNode = new SynNode(synSize, getClockMode());
+            addSysNode(synNode);
+            fillIntResetToNodeIfThere(synNode);
+            ///////[warning] this time we ensure that gensumforceExit is declared
+            if(_forceExitNode){
+                synNode->setForceExitEvent(_forceExitNode);
+            }
+            synNode->setInternalIdent(
+                    "parSynNode_" +
+                    std::to_string(getGlobalId())
+                    );
+            /**syn node don't need to specify join operation due to it used own logic or*/
+            if (basicStNode != nullptr){
+                synNode->addDependNode(basicStNode, nullptr);
+            }
+            for (auto nw : nodeWrapOfSubBlock){
+                synNode->addDependNode(nw->getExitNode(), nullptr);
+            }
+            ////// assign sync reg and sync node don't have to set join op because
+            /////////// sync register will handle it
+            synNode->assign();
+        }
+
+    }
+
+    void FlowBlockParAuto::assignExitToRnw() {
+
+        int amt_block = ((basicStNode != nullptr) ? 1 : 0) +
+                        (int)(nodeWrapOfSubBlock.size());
+
+        if (synNode != nullptr){
+            resultNodeWrap->addExitNode(synNode);
+        }else if (masterJoinFlowBlock != nullptr){ //// masterJoin is come from user declaration
+            NodeWrap* joinnerNodeWrap = masterJoinFlowBlock->sumarizeBlock();
+            Node* exitNode = joinnerNodeWrap->getExitNode();
+            assert(exitNode != nullptr);
+            resultNodeWrap->addExitNode(exitNode);
+        }else{
+            /** get Match allow nullptr*/
+            Node* exitNode = nullptr;
+            if (cycleUsed >= 0){    /////// can determine cycle
+                exitNode = getMatchNodeFromNdsOrNws({basicStNode},
+                                                    nodeWrapOfSubBlock,
+                                                    cycleUsed);
+            }else{ /////// cannot determine but have only one
+                assert(amt_block == 1); //// in > 1
+                exitNode = getAnyNodeFromNdsOrNws({basicStNode},
+                                                  nodeWrapOfSubBlock);
+            }
+            assert(exitNode != nullptr);
+            resultNodeWrap->addExitNode(exitNode);
+        }
+
+    }
+
+
+    /**
+     *
+     *
+     * parallel block no sync
+     *
+     *
+     * */
+    void FlowBlockParNoSync::assignExitToRnw() {
+
+        int amt_block = ((basicStNode != nullptr) ? 1 : 0) +
+                        (int)(nodeWrapOfSubBlock.size());
+
+        /** get Match allow nullptr*/
+        Node* exitNode = nullptr;
+        if (cycleUsed >= 0){
+            exitNode = getMatchNodeFromNdsOrNws({basicStNode},
+                                                nodeWrapOfSubBlock,
+                                                cycleUsed);
+        }else if (amt_block == 1){
+            assert(amt_block == 1);
+            exitNode = getAnyNodeFromNdsOrNws({basicStNode},
+                                              nodeWrapOfSubBlock);
+        }else{
+            assert(amt_block > 1);
+            pseudoExitNode = new PseudoNode(1, BITWISE_OR);
+            addSysNode(pseudoExitNode);
+            if (basicStNode != nullptr)
+                pseudoExitNode->addDependNode(basicStNode, nullptr);
+            for (auto nw : nodeWrapOfSubBlock){
+                pseudoExitNode->addDependNode(nw->getExitNode(), nullptr);
+            }
+            pseudoExitNode->assign();
+            exitNode  = pseudoExitNode;
+        }
+        assert(exitNode != nullptr);
+        resultNodeWrap->addExitNode(exitNode);
+    }
+}

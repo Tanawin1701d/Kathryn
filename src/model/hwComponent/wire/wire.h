@@ -5,43 +5,67 @@
 #ifndef KATHRYN_WIRE_H
 #define KATHRYN_WIRE_H
 
-#include <iostream>
-#include "model/hwComponent/abstract/slicable.h"
-#include "model/hwComponent/abstract/assignable.h"
-#include "model/hwComponent/abstract/operable.h"
-#include "model/hwComponent/abstract/identifiable.h"
+#include<iostream>
+#include "model/hwComponent/abstract/logicComp.h"
 #include "model/controller/conInterf/controllerItf.h"
+#include "gen/proxyHwComp/wire/wireGen.h"
+#include "model/hwComponent/abstract/WireMarker.h"
 
 namespace kathryn{
 
-    class Wire : public Assignable<Wire>, public Operable,
-            public Slicable<Wire>,
-            public AssignCallbackFromAgent<Wire>,
-            public Identifiable,
-            public HwCompControllerItf{
+    class Wire : public LogicComp<Wire>, public WireMarker{
     protected:
+        bool _requireDefVal = false;
         void com_init() override;
+
     public:
-        explicit Wire(int size);
+        explicit Wire(int size,
+            bool requireDefVal = true,
+            bool initCom       = true);
+
+        void com_final() override{};
 
         /**override assignable*/
-        [[maybe_unused]]
-        Wire& operator <<= (Operable& b) override {std::cout << "we not support <<= operator in wire";};
-        Wire& operator =   (Operable& b) override;
-        /**override operable*/
-        Operable& getExactOperable() override {return *(Operable*)(this);}
-        Slice getOperableSlice() override {return getSlice();}
+        void doBlockAsm(Operable& srcOpr, Slice desSlice) override;
+        void doNonBlockAsm(Operable& srcOpr, Slice desSlice) override;
+
+        void doBlockAsm(Operable& srcOpr,
+                        std::vector<AssignMeta*>& resultMetaCollector,
+                        Slice  absSrcSlice,
+                        Slice  absDesSlice) override{
+            mfAssert(false, "wire don't support this doBlockAsm"); assert(false);
+        }
+        void doNonBlockAsm(Operable& srcOpr,
+                           std::vector<AssignMeta*>& resultMetaCollector,
+                           Slice  absSrcSlice,
+                           Slice  absDesSlice) override{
+            doGlobalAsm(srcOpr, resultMetaCollector, absSrcSlice, absDesSlice, ASM_DIRECT);
+        }
+
+        CLOCK_MODE getCurAssignClkMode() override { return CM_CLK_FREE;};
+
+        Wire& operator = (Operable& b){ operatorEq(b);                                 return *this;}
+        Wire& operator = (ull b)      { operatorEq(b);                                    return *this;}
+        Wire& operator = (Wire& b)    { if (this == &b){return *this;} operatorEq(b);  return *this;}
+
         /**override slicable*/
         SliceAgent<Wire>& operator() (int start, int stop) override;
         SliceAgent<Wire>& operator() (int idx) override;
-        /**overide assign call back*/
-        Wire& callBackBlockAssignFromAgent(Operable& b, Slice absSlice) override;
-        Wire& callBackNonBlockAssignFromAgent(Operable& b, Slice absSlice) override;
+        SliceAgent<Wire>& operator() (Slice sl) override;
+        Operable* doSlice(Slice sl) override;
+        void makeDefEvent();
+        Operable* checkShortCircuit() override;
 
+        /**override logicc gen base*/
+        void createLogicGen() override;
+        /** override global input*/
+        bool checkIntegrity()                  override;
+        Operable* getOprFromGlobIo()           override;
+        Assignable* getAsbFromWireMarker()     override;
 
     };
 
-    typedef std::shared_ptr<Wire> WirePtr;
+
 
 }
 

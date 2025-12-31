@@ -1,0 +1,31 @@
+//
+// Created by tanawin on 26/6/2024.
+//
+
+#include "kathryn.h"
+#include "genEle.h"
+
+#include "test/autoGen/genMng.h"
+
+namespace kathryn{
+
+
+    GenEle::GenEle(int id): _id(id){
+        addGenEle(this);
+    }
+
+
+    void GenEle::startGen(PARAM& params){
+
+        start(params);
+        startModelKathryn();
+        GenController* genCtrl = getGenController();
+        assert(genCtrl != nullptr);
+        genCtrl->initEnv(params);
+        genCtrl->start();
+        resetKathryn();
+
+
+    }
+
+}

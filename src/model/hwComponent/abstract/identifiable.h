@@ -8,80 +8,141 @@
 #include <string>
 #include <utility>
 #include <memory>
+#include <cassert>
+#include <vector>
+#include "model/debugger/modelDebugger.h"
+
+#include "model/abstract/identBase/identBase.h"
+
 
 typedef unsigned long long int ull;
 
 namespace kathryn {
 
-    extern ull LAST_IDENT_ID;
+    struct VarMeta{
+        std::string varType; //// for module use module type
+        std::string varName;
+        bool        isUser;
+
+        bool operator == (const VarMeta& rhs) const {
+            return (varType == rhs.varType) &
+                   (varName == rhs.varName) &
+                   (isUser  == rhs.isUser );
+        } 
+    };
+
+    bool    isVarNameRetrievable(ull deviceIdentId);
+    VarMeta retrieveVarMeta();
+    void    setRetrieveVarMeta(std::string varType,
+                               std::string name,
+                               bool isUserDec);
 
 
     enum HW_COMPONENT_TYPE{
-        TYPE_REG,
-        TYPE_WIRE,
-        TYPE_EXPRESSION,
-        TYPE_MODULE,
-        TYPE_VAL
-
+        TYPE_REG = 0,
+        TYPE_STATE_REG = 1,
+        TYPE_COND_WAIT_STATE_REG = 2,
+        TYPE_CYCLE_WAIT_STATE_REG = 3,
+        TYPE_WIRE = 4,
+        TYPE_EXPRESSION = 5,
+        TYPE_NEST = 6,
+        TYPE_MODULE = 7,
+        TYPE_VAL = 8,
+        TYPE_MEM_BLOCK = 9,
+        TYPE_MEM_BLOCK_INDEXER = 10,
+        TYPE_BOX = 11,
+        TYPE_INTF = 12,
+        TYPE_PMVAL = 13,
+        TYPE_COUNT = 14
     };
 
+    static const std::string GLOBAL_PREFIX[TYPE_COUNT] = {"REG",
+                                                          "SR_ST",
+                                                          "SR_CDWT",
+                                                          "SR_CYWT",
+                                                          "WIRE",
+                                                          "EXPR",
+                                                          "NEST",
+                                                          "MODULE",
+                                                          "VAL",
+                                                          "MEM_BLOCK",
+                                                          "MEM_BLOCK_INDEXER",
+                                                          "BOX",
+                                                          "PMVAL",
+                                                          "ITF"
+                                                        };
+
     class Module;
-    class Identifiable {
-    private:
+    class Identifiable: public IdentBase {
+    protected:
         const std::string UNNAME_STR = "unnamed";
         /** name type such as Reg Wire ModuleClassName*/
         HW_COMPONENT_TYPE _type;
-        std::string _typeName; /// sub type of component typically we use for module
-        std::string _globalName;
-        ull         _globalId; /// id that DISTINCT // for all element even it is the same type
-        /// name for debugging
-
+        VarMeta           _varMeta; /// sub type of component typically we use for module
         /** local variable*/
-        std::shared_ptr<Module> _parent; /// if it is nullptr it is not localized
-        ull                     _localId; /// id that use in the component
+        Module* _parent; /// if it is nullptr it is not localized
         /// it will share among the same module
 
     public:
         /** assign and auto increment object id */
         explicit Identifiable(HW_COMPONENT_TYPE type) :
-            _type(type),
-            _typeName(UNNAME_STR),
-            _globalName(UNNAME_STR),
-            _globalId(LAST_IDENT_ID++),
-            _parent(nullptr),
-            _localId(-1)
-            {};
+                IdentBase(),
+                _type(type),
+                _varMeta({"UN_INIT_TYPE","UN_INIT_VN", false}),
+                _parent(nullptr)
+            {
 
-        template<typename T>
-        std::shared_ptr<T> cast(){
-            return std::make_shared<T>(this);
+            if (isVarNameRetrievable(_globalId)){ _varMeta = retrieveVarMeta();}
+            if (!_varMeta.isUser){ _varMeta.varName += "_SYS";}
+            _globalName = GLOBAL_PREFIX[type] + std::to_string(_globalId);
+
+            if (_globalId ==4154 || _globalId ==5088){
+                //mfAssert(false, "dddddd");
+                int x = 0;
+                if (_globalId == 5088){
+                    x = 1;
+                }
+            }
+
+            };
+
+        virtual ~Identifiable() = default;
+
+        Identifiable& operator = (const Identifiable& ident){
+            if (this == &ident){
+                return *this;
+            }
+            _type       = ident._type;
+            _varMeta    = ident._varMeta;
+            _varMeta.varName += "_CP";
+            _parent     = ident._parent;
+            return *this;
         }
 
-        bool isLocalized() {return _parent != nullptr;}
+        /** get hardware component type*/
+        [[nodiscard]]
+        HW_COMPONENT_TYPE  getType() const {return _type;}
+        /** get/set typeName (variable name)*/
+        [[nodiscard]]
+        const std::string& getVarName() const {return _varMeta.varName;}
+        void               setVarName(std::string typeName) { _varMeta.varName = std::move(typeName);}
+        bool               isUserVar() const {return _varMeta.isUser;}
+        [[nodiscard]]
+        VarMeta&           getVarMeta() {return _varMeta;}
 
-        /** get set method*/
-        HW_COMPONENT_TYPE getType() const {return _type;}
+        /**build Inherit varname*/
+        void               buildInheritName() override;
 
-        const std::string& getTypeName() const {return _typeName;}
-        void setTypeName(std::string typeName) {_typeName = std::move(typeName);}
+        Module*            getParent(){return _parent;}
+        void               setParent(Module* parent) {_parent = parent;}
 
-        const std::string& getGlobalName() const {return _globalName;}
-        void setGlobalName(const std::string& globalName) {_globalName = globalName;}
-
-        ull getGlobalId() const {return _globalId;}
-        /// global id can not be set it permanent when class is initialized void setGlobalId(ull globalId) {_globalId = globalId;}
-
-        std::shared_ptr<Module> getParent(){return _parent;}
-        void setParent(std::shared_ptr<Module> parent) {_parent = std::move(parent);}
-
-        ull  getLocalId(ull id) const{return _localId;}
-        void setLocalId(ull id)      {_localId = id; }
-
-
+        /** get debug value*/
+        [[nodiscard]]std::string
+        getIdentDebugValue() const{
+            return getGlobalName() + "_localName_" + getVarName();
+        }
 
     };
-
-    typedef std::shared_ptr<Identifiable> IdentifiablePtr;
 
 }
 

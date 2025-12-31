@@ -3,40 +3,70 @@
 //
 
 #include "register.h"
+
+#include "model/hwComponent/globalComponent/globalComponent.h"
 #include "model/hwComponent/expression/expression.h"
 #include "model/controller/controller.h"
+#include "sim/modelSimEngine/hwComponent/register/registerSim.h"
 
 
 namespace kathryn{
 
-    Reg::Reg(int size) : Assignable(),Operable(),
-                         Slicable<Reg>(Slice{0, size}),
-                         Identifiable(TYPE_REG) {}
+    /** constructor need to init communication with controller*/
+    Reg::Reg(int size, bool initCom, HW_COMPONENT_TYPE hwType, bool requiredAllocCheck) :
+            LogicComp({0, size},
+                      hwType,
+                      new RegSimEngine(this, VST_REG),
+                      requiredAllocCheck){
+        AssignOpr::setMaster(this);
+        AssignCallbackFromAgent::setMaster(this);
+        if (initCom) {
+            com_init();
+        }
+        AssignOpr::setMaster(this);
+        AssignCallbackFromAgent::setMaster(this);
+    }
 
     void Reg::com_init() {
-        ctrl->on_reg_init(std::shared_ptr<Reg>(this));
+        ctrl->on_reg_init(this);
     }
 
-    Reg& Reg::operator<<=(Operable &b) {
-        /** todo this must call model control system to determine
-         * given information and condition of updating value
-        /* we will call model building to comunicate with it*/
-        //** todo return agent of this type*/
-        return *this;
+    /***
+     *
+     * standard assignment
+     *
+     * */
+
+    void Reg::doBlockAsm(Operable&b, Slice desSlice) {
+        doGlobalAsm(b, desSlice, ASM_DIRECT);
     }
 
-    Reg& Reg::operator=(Operable &b) {
-        /** todo first version we not support this operator*/
-        return *this;
+    void Reg::doNonBlockAsm(Operable&b, Slice desSlice){
+        doGlobalAsm(b, desSlice, ASM_EQ_DEPNODE);
+    }
+
+    void Reg::doGlobalAsm(Operable& srcOpr, Slice desSlice, ASM_TYPE asmType) {
+        assert(getAssignMode() == AM_MOD);
+        assert(desSlice.getSize() <= getSlice().getSize());
+        assert(desSlice.stop <= getSlice().stop);
+        /** bit control policy is shink the msb bit*/
+        Slice finalizeDesSlice = desSlice.getMatchSizeSubSlice(srcOpr.getOperableSlice());
+        ctrl->on_reg_update(
+                generateBasicNode(srcOpr, finalizeDesSlice, asmType),
+                this
+        );
     }
 
     /** slicable override*/
 
 
     SliceAgent<Reg>& Reg::operator()(int start, int stop) {
-        auto ret =  std::make_shared<SliceAgent<Reg>>(
-                                            std::shared_ptr<Reg>(this),
-                                            Slice{start, stop});
+        /***TODO sliceAgent must be Delete
+         * but fow now we neglect it
+         * */
+        auto ret =  new SliceAgent<Reg>(this,
+                                        getAbsSubSlice(start, stop, getSlice())
+                                        );
         return *ret;
     }
 
@@ -44,24 +74,58 @@ namespace kathryn{
         return operator() (idx, idx+1);
     }
 
-    Reg& Reg::callBackBlockAssignFromAgent(Operable &b, Slice absSlice) {
-        /** todo this must call model control system to determine
-         * given information and condition of updating value
-        /* we will call model building to comunicate with it*/
-        //** todo return agent of this type*/
-        return *this;
-    }
-
-    Reg &Reg::callBackNonBlockAssignFromAgent(Operable &b, Slice absSlice) {
-        return *this;
+    SliceAgent<Reg>& Reg::operator() (Slice sl){
+        return operator() (sl.start, sl.stop);
     }
 
 
+    Operable* Reg::doSlice(Slice sl){
+        auto& x = operator() (sl.start, sl.stop);
+        return x.castToOperable();
+    }
 
-    /** assign call back*/
+    void Reg::makeResetEvent(ull value, CLOCK_MODE cm){ //// we lock it to the posedge clock
+        makeVal(rstRegVal, getSlice().getSize(), value);
+
+        UpdateEventBase* ueb = createUEHelper(nullptr,
+                                              rstWire,
+                                              &rstRegVal,
+                                              {0, getSlice().getSize()},
+                                              DEFAULT_UE_PRI_RST,
+                                              cm,
+                                              false);
+        addUpdateMeta(ueb);
+    }
+
+    Operable* Reg::checkShortCircuit(){
+        return nullptr;
+    }
 
 
+    void Reg::createLogicGen(){
+        _genEngine = new RegGen(
+            _parent->getModuleGen(),
+            this
+        );
+    }
 
+    bool Reg::checkIntegrity(){
+        return getMarker() != WMT_GLOB_INPUT &&
+               getMarker() != WMT_INPUT_MD   &&
+               getMarker() != WMT_OUTPUT_MD;
+    }
+
+    Operable* Reg::getOprFromGlobIo(){
+        return this;
+    };
+
+    Assignable* Reg::getAsbFromWireMarker(){
+        return this;
+    }
+
+    /**
+     * Reg Logic Sim
+     * */
 
 
 

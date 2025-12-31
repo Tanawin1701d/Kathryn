@@ -4,48 +4,70 @@
 
 #include "expression.h"
 #include "model/controller/controller.h"
-
-#include <utility>
-
+#include "sim/modelSimEngine/hwComponent/expression/expressionSim.h"
 
 namespace kathryn{
 
     /**
-     * expression
+     * exprMetas
      * */
 
     expression::expression(LOGIC_OP op,
-                           std::shared_ptr<Operable> a,
-                           Slice aSlice,
-                           std::shared_ptr<Operable> b,
-                           Slice bSlice,
+                           const Operable* a,
+                           const Operable* b,
                            int exp_size):
-   Assignable<expression>(),
-    Operable(),
-    Slicable<expression>({0, exp_size}),
-    Identifiable(TYPE_EXPRESSION),
+    LogicComp<expression>({0, exp_size},
+                          TYPE_EXPRESSION,
+                          new expressionSimEngine(this, VST_WIRE),
+                          false),
+    _valueAssinged(true),
     _op(op),
-    _a(std::move(a)),
-    _aSlice(aSlice),
-    _b(std::move(b)),
-    _bSlice(bSlice)
+    _a(const_cast<Operable *>(a)),
+    _b(const_cast<Operable *>(b))
     {
         com_init();
+        AssignOpr::setMaster(this);
+        AssignCallbackFromAgent::setMaster(this);
     }
+
+    expression::expression(int exp_size):
+    LogicComp<expression>({0, exp_size},
+                          TYPE_EXPRESSION,
+                          new expressionSimEngine(this, VST_WIRE),
+                          false),
+    _valueAssinged(false),
+    _op(ASSIGN),
+    _a(nullptr),
+    _b(nullptr){
+        com_init();
+        AssignOpr::setMaster(this);
+        AssignCallbackFromAgent::setMaster(this);
+    }
+
 
     void expression::com_init() {
-        ctrl->on_expression_init(expressionPtr (this));
+        ctrl->on_expression_init(this);
     }
 
-    expression& expression::operator=(Operable &b) {
-        return *this;
+    void expression::doNonBlockAsm(Operable &srcOpr, Slice desSlice) {
+        assert(!_valueAssinged);
+        doNonBlockAsmMulAssCheck(srcOpr, desSlice);
     }
+
+    void expression::doNonBlockAsmMulAssCheck(Operable& srcOpr, Slice desSlice){
+        mfAssert(getAssignMode() == AM_MOD, "expression can use operator = only in MD mode");
+        _a = &srcOpr;
+        assert(srcOpr.getOperableSlice().getSize() == getOperableSlice().getSize());
+        assert(desSlice.getSize() == getOperableSlice().getSize());
+        mfAssert(!_valueAssinged, "multiple expression assign detect");
+        _valueAssinged = true;
+    }
+
+
 
     SliceAgent<expression>& expression::operator()(int start, int stop) {
-        auto ret =  std::make_shared<SliceAgent<expression>>(
-                                std::shared_ptr<expression>(this),
-                                getSlice()
-                );
+        auto ret =  new SliceAgent<expression>(this,
+                                               getAbsSubSlice(start, stop, getSlice()));
         return *ret;
     }
 
@@ -53,16 +75,51 @@ namespace kathryn{
         return operator() (idx, idx+1);
     }
 
-    expression& expression::callBackBlockAssignFromAgent(Operable &b, Slice absSlice) {
-        std::cout << "expression should not be assign in slice mode" << std::endl;
-        assert(true);
-        return *this;
+    SliceAgent<expression>& expression::operator()(Slice sl) {
+        return operator() (sl.start, sl.stop);
     }
 
-    expression& expression::callBackNonBlockAssignFromAgent(Operable &b, Slice absSlice) {
-        std::cout << "expression should not be assign in slice mode" << std::endl;
-        assert(true);
-        return *this;
+    Operable* expression::doSlice(Slice sl){
+        auto& x = operator() (sl.start, sl.stop);
+        return x.castToOperable();
     }
+
+    Operable* expression::checkShortCircuit(){
+        if (isInCheckPath){
+            std::cout << "path end " << std::to_string(castToIdent()->getGlobalId()) << std::endl;
+            return this;
+        }
+        isInCheckPath = true;
+
+        Operable* result;
+        if (_a != nullptr){
+            result = _a->checkShortCircuit();
+            if (result != nullptr){
+                std::cout << "path a " << std::to_string(castToIdent()->getGlobalId()) << std::endl;
+                return result;
+            }
+        }
+        if (_b != nullptr){
+            result = _b->checkShortCircuit();
+            if (result != nullptr){
+                std::cout << "path b " << std::to_string(castToIdent()->getGlobalId()) << std::endl;
+                return result;
+            }
+        }
+
+        isInCheckPath = false;
+        return nullptr;
+    }
+
+    void expression::createLogicGen(){
+        _genEngine = new ExprGen(
+            _parent->getModuleGen(),
+            this
+        );
+    }
+
+
+
+
 
 }

@@ -2,94 +2,209 @@
 // Created by tanawin on 30/11/2566.
 //
 
-#ifndef KATHRYN_CONTROLLER_H
-#define KATHRYN_CONTROLLER_H
+#ifndef KATHRYN_MODEL_CONTROLLER_H
+#define KATHRYN_MODEL_CONTROLLER_H
 
 #include <stack>
 #include <memory>
 
+#include "abstract/mainControlable.h"
+
 #include "model/hwComponent/module/module.h"
-#include "model/FlowBlock/abstract/flowBlock_Base.h"
+#include "model/flowBlock/abstract/nodes/asmNode.h"
+#include "model/flowBlock/abstract/flowBlock_Base.h"
+
+/** flow block include */
+
+#include "model/flowBlock/seq/seq.h"
+#include "model/flowBlock/par/par.h"
+#include "model/flowBlock/loop/whileBase.h"
+#include "model/flowBlock/loop/doWhileBase.h"
+#include "model/flowBlock/loop/cbreak.h"
+#include "model/flowBlock/cond/zif.h"
+#include "model/flowBlock/cond/zelif.h"
+#include "model/flowBlock/cond/if.h"
+#include "model/flowBlock/cond/elif.h"
+#include "model/flowBlock/pick/pick.h"
+#include "model/flowBlock/abstract/spReg/stateReg.h"
+#include "model/flowBlock/abstract/spReg/syncReg.h"
+#include "model/flowBlock/time/wait.h"
+#include "model/hwComponent/memBlock/MemBlock.h"
+#include "model/flowBlock/pipeline/pipe.h"
+#include "model/flowBlock/pipeline/syncMeta.h"
+#include "model/flowBlock/pipeline/zync.h"
+#include "model/flowBlock/pseudo/pseudo.h"
+
+/** data Structure*/
+
+#include "model/hwCollection/dataStructure/slot/regSlot.h"
+#include "model/hwCollection/dataStructure/slot/wireSlot.h"
+#include "model/hwCollection/dataStructure/table/table.h"
+#include "model/hwCollection/dataStructure/mux/mux.h"
+
+
+/** clk mode*/
+#include "model/controller/clockMode.h"
+
+
+#include "model/interface/singleHandShake/shs.h"
+
+
+#include "util/type/typeConv.h"
+#include "util/str/strUtil.h"
+
 
 
 namespace kathryn {
 
     enum MODULE_BUILDING_STATE{
-        MODULE_COMPONENT_CONSTRUCT,
-        MODULE_DESIGN_FLOW_CONSTRUCT,
-        MODULE_FINISHED_CONSTRUCT
+        MODULE_INIT, /** module element is declared but not yet init design flow only for element initialization*/
+        MODULE_END_GLOB_DECLARE, /** module end init element*/
+        MODULE_INIT_DESIGN_FLOW, /** module start init design flow*/
+        MODULE_END, /** module finalize*/
+
+        MODULE_INIT_AUX,
+        MODULE_FINAL_AUX
+
     };
 
     struct Module_Stack_Element{
-        ModulePtr md;
+        Module* md;
         MODULE_BUILDING_STATE state;
     };
 
 
+    class MainControlable;
 
-    class Controller {
+    class ModelController : public MainControlable {
 
     private:
         bool hwCompAllocLock = true; /** this is used to indicate whether make<> is used or not only make<> can unlock*/
         /** building stack*/
+        ////// module stack
         std::stack<Module_Stack_Element>  moduleStack;
-        std::stack<FlowBlockBasePtr>      flowBlockStack; //// collect stack of all flowblock
-        std::stack<FlowBlockBasePtr>      patternFlowBlockStack; //// stack of only seq or parallel
-        std::stack<FlowBlockBasePtr>      condStlessFlowBlockStack; /// stack of only cif or celif celse
+        ////// box stack to determine which hw element belong to stack
+        std::stack<Box*> boxStack;
+        ////// flow describe stack
+        std::stack<FlowBlockBase*> flowBlockStacks[FLOW_ST_CNT];
         /////// pattern flow block is subset of flowBlockStack
+        Module* globalModulePtr = nullptr;
 
     protected:
         /** get module that response we now consider*/
-        ModulePtr getTargetModulePtr();
+        Module* getTopModulePtr();
+        Module_Stack_Element& getTargetModuleEle();
 
-        void tryPopFromStack(const FlowBlockBasePtr& flowPtr, std::stack<FlowBlockBasePtr>& srcSt);
-        void tryPopCtrlFlowFromAllStack(const FlowBlockBasePtr& flowPtr);
-
-        bool isAllFlowStackEmpty() {return  flowBlockStack.empty() &&
-                                            patternFlowBlockStack.empty() &&
-                                            condStlessFlowBlockStack.empty();}
+       void           popFlowBlock(FlowBlockBase* fb);
+       void           pushFlowBlock(FlowBlockBase* fb);
+       void           detachTopFlowBlock();
+    public:
+        FlowBlockBase* getTopFlowBlockBase();
+        FlowBlockBase* getTopFlowBlockBase(FLOW_STACK_TYPE stackEnum);
 
 
     public:
 
         /**
-         * event handling function
+         *
+         * Hardware component handling fucntion
+         *
+         * */
+        explicit ModelController();
+        void start() override;
+        void reset() override;
+        void clean() override;
+        Module* getGlobalModule();
+        /** state register handling*/
+        void on_sp_reg_init(CtrlFlowRegBase* ptr, SP_REG_TYPE regType);
+        /** register handling*/
+        void on_reg_init(Reg* ptr);
+        void on_reg_update(AsmNode* asmNode, Reg* srcReg);
+        /** wire handling*/
+        void on_wire_init(Wire* ptr);
+        void on_wire_update(AsmNode* asmNode, Wire* srcWire);
+        /** exprMetas handling*/
+        void on_expression_init(expression* ptr);
+        /** on memBlock and its agent is updated*/
+        void on_memBlk_init(MemBlock* ptr);
+        void on_memBlkEleHolder_update(AsmNode* asmNode,MemBlockEleHolder* srcHolder);
+        /** on nest init*/
+        void on_nest_init(nest* ptr);
+        void on_nest_update(AsmNode* asmNode, nest* srcNest);
+        /** value and pm value handling*/
+        void on_value_init(Val* ptr);
+        void on_pmValue_init(PmVal* ptr);
+        /** box handling*/
+        void on_box_init(Box* ptr);
+        void on_box_end_init(Box* ptr);
+        void on_box_update(AsmNode* asmNode, Box* box);
+        void on_box_tryAddToBox(Operable* opr1, Assignable* asb);
+        /** interface handling*/
+        void on_itf_init(ModelInterface* ptr);
+
+        //void on_chk_and_lock_belongBlk(Assignable* asb, Operable* opr);
+        //void on_chk_and_release_blk(Assignable* asb);
+
+        /**
+         *
+         * module handling
+         *
          * */
 
-        /** register handling*/
-        void on_reg_init(const RegPtr& ptr);
-        void on_reg_update(const std::shared_ptr<UpdateEvent>& upEvent);
-        /** wire handling*/
-        void on_wire_init(const WirePtr& ptr);
-        void on_wire_update(const std::shared_ptr<UpdateEvent>& upEvent);
-        /** expression handling*/
-        void on_expression_init(const expressionPtr& ptr);
-        /** value handling*/
-        void on_value_init(const ValPtr& ptr);
-        /** module handling*/
-        void on_module_init_components(const ModulePtr& ptr);
-        void on_module_init_designFlow(ModulePtr ptr); /** todo make design flow implement correctly*/
-        void on_module_final(ModulePtr ptr);
+        ////// for global module
+        void on_globalModule_init_component();
+        void on_globalModule_init_designFlow();
+        void on_globalModule_init_auxilaryComponent(); ///// for init some readonly logic for simulation trigger
+        void on_globalModule_final_auxilaryComponent();
+        ////// for nomal module
+        void on_module_init_components(Module* ptr);
+        void on_module_end_init_components(Module* ptr);
+        void on_module_init_designFlow(Module* ptr); /** todo make design flow implement correctly*/
+        void on_module_final(Module* ptr);
 
-        /** control flow block handler*/
-        void on_attach_flowBlock(const FlowBlockBasePtr& fb);
-        void on_detach_flowBlock(const FlowBlockBasePtr& fb);
+
+
+        /**
+         *
+         * control flow block handler
+         *
+         * */
+
+        void assignFlowBlockParent(FlowBlockBase* fb);
+        bool isAllFlowStackEmpty();
+        bool isFlowStackEmpty(FLOW_STACK_TYPE flowStackType);
+        bool isTopFbBelongToTopModule();
+        void tryPurifyFlowStack();
+        void on_attach_flowBlock(FlowBlockBase* fb);
+        void on_detach_flowBlock(FlowBlockBase* fb);
+        void on_attachAndDetach_intrSignal(INT_TYPE intType, Operable* sig);
+        //Operable& on_get_check_next_pipblk_ready_signal();
+        FLOW_BLOCK_TYPE get_top_pattern_flow_block_type();
+
+        bool isTopOfStackBelongToTheSameModule(FLOW_STACK_TYPE a, FLOW_STACK_TYPE b);
 
         /** lock allocation*/
         void lockAllocation() {hwCompAllocLock = true;};
         void unlockAllocation(){hwCompAllocLock = false;};
+        [[nodiscard]]
         bool isAllocationLock() const{return hwCompAllocLock;}
+
+        /** for debugging and model checking purpose*/
+        std::string getCurModelStack();
+
+        /**
+         *
+         * pipeline controller
+         *
+         * */
 
     };
 
-
-    typedef std::shared_ptr<Controller> ControllerPtr;
     /** this is entrace for every device to com_init with controller*/
-    ControllerPtr getControllerPtr();
-    void          freeControllerPtr();
-
-
+    ModelController* getControllerPtr();
+    Module*          getGlobalModulePtr();
+    void             freeControllerPtr();
 
 }
 
-#endif //KATHRYN_CONTROLLER_H
+#endif //KATHRYN_ModelCONTROLLER_H

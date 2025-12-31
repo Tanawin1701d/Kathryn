@@ -1,0 +1,106 @@
+//
+// Created by tanawin on 22/1/2567.
+//
+
+#include "kathryn.h"
+#include "test/autoSim/simAutoInterface.h"
+#include "autoTestInterface.h"
+
+namespace kathryn{
+
+    class testSimMod11: public Module{
+    public:
+        bool testAutoSkip = false;
+
+        mReg(a, 8);
+        mReg(b, 8);
+        mVal(cond, 3, 2);
+        mVal(one, 8, 1);
+        mVal(two, 8, 2);
+        mVal(three, 8, 3);
+
+        explicit testSimMod11(bool testAutoSkip): Module(){}
+
+        void flow() override{
+
+            cwhile(cond){
+                zif(a > b){
+                    a <<= a + one;
+                }
+                zelif(a < b){
+                    a <<= a + two;
+                    zif(a > b){
+                        b <<= b - one;
+                    }zelse{
+                        b <<= b - two;
+                    }
+                }
+            }
+
+        }
+
+    };
+
+    ///static std::string vcdPath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/simAutoTest11.vcd";
+    ////static std::string profilePath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/profAutoTest11.vcd";
+
+
+    class sim11 :public SimAutoInterface{
+    public:
+
+        testSimMod11* _md;
+
+        sim11(testSimMod11* md, int idx, const std::string& prefix, SimProxyBuildMode simProxyBuildMode):SimAutoInterface(idx,
+                                              200,
+                                              prefix + "simAutoResult"+std::to_string(idx)+".vcd",
+                                              prefix + "simAutoResult"+std::to_string(idx)+".prof",
+                                              simProxyBuildMode),
+                             _md(md)
+        {}
+
+        void simAssert() override{
+
+
+            incCycle(3);
+            incCycle(5);
+            sim {
+                ull testVal = 2 + 6 * 2;
+                testAndPrint("check base line function", (ull)_md->a, testVal);
+            };
+            sim{
+                ull testVal = 48 - 6 * 2;
+                testAndPrint("check bascheck base line functione line function", (ull)_md->b, testVal);
+            };
+
+        }
+
+        void simDriven() override{
+            incCycle(2);
+
+            sim {
+                _md->a = 2;
+                _md->b = 48;
+            };
+
+        }
+
+    };
+
+
+    class Sim11TestEle: public AutoTestEle{
+    public:
+        explicit Sim11TestEle(int id): AutoTestEle(id){}
+        void start(std::string prefix, SimProxyBuildMode simProxyBuildMode) override{
+            mMod(d, testSimMod11, 1);
+            startModelKathryn();
+            sim11 simulator((testSimMod11*) &d, _simId, prefix, simProxyBuildMode);
+            simulator.simStart();
+        }
+
+    };
+
+    Sim11TestEle ele11(11);
+
+    ///sim2 testCase2;
+
+}
