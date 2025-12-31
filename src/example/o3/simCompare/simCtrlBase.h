@@ -30,13 +30,15 @@ namespace kathryn::o3{
         SlotWriterBase& _slotWriter;
         SimState& _state;
 
-    public:
         explicit O3SimCtrlBase(CYCLE                    limitCycle,
                                const std::string&       prefix,
                                std::vector<std::string> testTypes,
                                SimProxyBuildMode        buildMode,
                                SlotWriterBase&          slotWriter,
                                SimState&                state);
+
+        virtual ~O3SimCtrlBase() = default;
+
 
         ////// memory management for each cycle
 
