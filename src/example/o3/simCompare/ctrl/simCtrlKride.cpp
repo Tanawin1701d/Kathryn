@@ -2,7 +2,7 @@
 // Created by tanawin on 25/12/25.
 //
 
-#include "simCtrlKride.h"
+#include "../simCtrlKride.h"
 
 #include <utility>
 

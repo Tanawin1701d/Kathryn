@@ -8,7 +8,6 @@
 #include "util/fileWriter/slotWriter/slotWriterBase.h"
 #include "kathryn.h"
 #include "simState.h"
-#include "simState.h"
 #include "example/o3/core/mpft.h"
 #include "example/o3/core/parameter.h"
 #include "example/o3/simShare/recPipStage.h"

@@ -8,7 +8,7 @@
 #include <fstream>
 #include "kathryn.h"
 #include "frontEnd/cmd/paramReader.h"
-#include "simState.h"
+#include "../simState.h"
 
 namespace kathryn::o3{
 

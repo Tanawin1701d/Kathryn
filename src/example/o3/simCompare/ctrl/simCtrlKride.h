@@ -6,7 +6,7 @@
 #define EXAMPLE_O3_SIMCOMPARE_SIMCTRLKRIDE_H
 
 #include "simCtrlBase.h"
-#include "simStateKride.h"
+#include "../simStateKride.h"
 #include "example/o3/simulation/top.h"
 
 namespace kathryn::o3{

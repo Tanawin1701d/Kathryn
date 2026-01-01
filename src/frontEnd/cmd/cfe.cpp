@@ -13,7 +13,7 @@
 #include "test/autoSim/simMng.h"
 #include "test/autoGen/genMng.h"
 #include "example/o3/simulation/o3_sim.h"
-#include "example/o3/simCompare/simCtrlKride.h"
+#include "example/o3/simCompare/ctrl/simCtrlKride.h"
 
 
 ///#ifdef BUILD_EXT_SIM
