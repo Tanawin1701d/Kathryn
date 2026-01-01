@@ -251,15 +251,15 @@ namespace kathryn::o3{
         rrf.freenum       = ull(_core.regArch.rrf.freenum);
         rrf.reqPtr        = ull(_core.regArch.rrf.reqPtr);
         rrf.nextRrfCycle  = ull(_core.regArch.rrf.nextRrfCycle);
+    }
 
-
+    void SimStateKride::recruitNextCycle(){
         isLastCycleMisPred = ull(_core.tagMgmt.bc.mis) != 0;
         isLastCycleSucc    = ull(_core.tagMgmt.bc.suc) != 0;
         ///////// state recorder for next cycle
         isLastCycleDisp1   = ull(_core.pDisp.dbg_isDisp1);
         isLastCycleDisp2   = ull(_core.pDisp.dbg_isDisp2);
         lastDispatchPtr    = ull(_core.regArch.rrf.getReqPtr());
-
     }
 
     void SimStateKride::printSlotWindow(SlotWriterBase& writer){

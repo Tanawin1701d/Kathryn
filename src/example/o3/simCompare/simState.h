@@ -346,7 +346,8 @@ namespace kathryn::o3{
             }
         }
 
-        virtual void recruitValue() = 0;
+        virtual void recruitValue()     = 0;
+        virtual void recruitNextCycle() = 0;
 
         bool compare(SimState& rhs) const;
         virtual void printSlotWindow(SlotWriterBase& writer);

@@ -38,6 +38,7 @@ namespace kathryn::o3{
         void assignARF_Table (int tableIdx, RegSlot& busySlot, RegSlot& renameSlot);
 
         void recruitValue() override;
+        void recruitNextCycle() override;
 
         void printSlotWindow(SlotWriterBase& writer) override;
 
