@@ -66,7 +66,7 @@ namespace kathryn::o3{
 
     }
 
-    void CombCtrl::doCompare(){
+    bool CombCtrl::doCompare(){
         std::cout << TC_BLUE <<
                     "[O3 RISC-V CMP] -----> start compare"
                   << TC_DEF << std::endl;
@@ -77,6 +77,7 @@ namespace kathryn::o3{
         }else{
             std::cout << TC_GREEN << "[O3 RISC-V CMP] compare failed see slot writer for the reason mismatch" << TC_DEF << std::endl;
         }
+        return compareValid;
 
     }
 
@@ -95,10 +96,22 @@ namespace kathryn::o3{
             doKrideCycle(false);
             _slaveRide.doRideInit(_curTestCaseIdx);
             //////// iterate for 100 cycle
+            bool retard = false;
+            int  retartedCount = 0;
             for (int i = 0; i <= 150; i++){
+                if (retard && (retartedCount < BELAYED_AFTER_MIS_CMP)){
+                    break;
+                }
                 doKrideCycle(true);
                 _slaveRide.doRideCycle(true);
-                doCompare();
+
+                if (!retard){
+                    retard = ~doCompare(); ///// if belayed  = commpare not corect!
+                }
+                if (retard){
+                    if (retartedCount >= BELAYED_AFTER_MIS_CMP){break;}
+                    retartedCount++;
+                }
             }
             /////////////////////////////////
             testRegister();

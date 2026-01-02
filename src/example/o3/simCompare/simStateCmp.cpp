@@ -230,12 +230,15 @@ namespace kathryn::o3{
         }
 
         if (st2 == rhs.st2){
-            compareResult &= checkAndPrintSimValueUll(rrftag   , rhs.rrftag   , "exec LDST", "rrftag"   );
-            compareResult &= checkAndPrintSimValueUll(rdUse    , rhs.rdUse    , "exec LDST", "rdUse"    );
-            compareResult &= checkAndPrintSimValueUll(spec     , rhs.spec     , "exec LDST", "spec"     );
-            compareResult &= checkAndPrintSimValueUll(specTag  , rhs.specTag  , "exec LDST", "specTag"  );
-            compareResult &= checkAndPrintSimValueUll(stBufData, rhs.stBufData, "exec LDST", "stBufData");
-            compareResult &= checkAndPrintSimValueUll(stBufHit , rhs.stBufHit , "exec LDST", "stBufHit" );
+            if (st2 == PS_RUNNING){
+                compareResult &= checkAndPrintSimValueUll(rrftag   , rhs.rrftag   , "exec LDST", "rrftag"   );
+                compareResult &= checkAndPrintSimValueUll(rdUse    , rhs.rdUse    , "exec LDST", "rdUse"    );
+                compareResult &= checkAndPrintSimValueUll(spec     , rhs.spec     , "exec LDST", "spec"     );
+                compareResult &= checkAndPrintSimValueUll(specTag  , rhs.specTag  , "exec LDST", "specTag"  );
+                compareResult &= checkAndPrintSimValueUll(stBufData, rhs.stBufData, "exec LDST", "stBufData");
+                compareResult &= checkAndPrintSimValueUll(stBufHit , rhs.stBufHit , "exec LDST", "stBufHit" );
+            }
+
         }else{
             printStateMisMatch("exec1 LDST stage", st1, rhs.st1);
             compareResult = false;
@@ -286,8 +289,14 @@ namespace kathryn::o3{
      */
 
     bool SimState::STORE_BUF_ENTRY::compare(const STORE_BUF_ENTRY& rhs) const{
-        return checkAndPrintSimValueBool(busy    , rhs.busy,     "STORE_BUF", "busy") &&
-               checkAndPrintSimValueUll (complete, rhs.complete, "STORE_BUF", "complete") &&
+
+        if (!checkAndPrintSimValueBool(busy    , rhs.busy,     "STORE_BUF", "busy")){
+            return false;
+        }
+
+        if (busy == 0){ return true; }
+
+        return checkAndPrintSimValueUll (complete, rhs.complete, "STORE_BUF", "complete") &&
                checkAndPrintSimValueUll (spec    , rhs.spec,     "STORE_BUF", "spec") &&
                checkAndPrintSimValueUll (specTag , rhs.specTag,  "STORE_BUF", "specTag") &&
                checkAndPrintSimValueUll (mem_addr, rhs.mem_addr, "STORE_BUF", "mem_addr") &&
@@ -336,19 +345,19 @@ namespace kathryn::o3{
     bool SimState::ARF_STATE::compare(const ARF_STATE& rhs) const{
 
         bool compareResult = true;
-        for (int idx = 0; idx <= SPECTAG_LEN; idx++){
+        for (int tableIdx = 0; tableIdx <= SPECTAG_LEN; tableIdx++){
 
             for (int archIdx = 0; archIdx < REG_NUM; archIdx++){
-                compareResult &= checkAndPrintSimValueBool(busy[idx][archIdx],
-                                                          rhs.busy[idx][archIdx],
+                compareResult &= checkAndPrintSimValueBool(busy[tableIdx][archIdx],
+                                                          rhs.busy[tableIdx][archIdx],
                                                           "ARF",
-                                                          "busy spec: " + std::to_string(idx) +
+                                                          "busy spec: " + std::to_string(tableIdx) +
                                                           " archIdx: " + std::to_string(archIdx));
-                if (busy[idx][archIdx]){
-                    compareResult &= checkAndPrintSimValueUll(rename[idx][archIdx],
-                                                              rhs.rename[idx][archIdx], "ARF",
-                                                                "archRem spec: " + std::to_string(idx) +
-                                                                "archIdx: " + std::to_string(archIdx)
+                if (busy[tableIdx][archIdx]){
+                    compareResult &= checkAndPrintSimValueUll(rename[tableIdx][archIdx],
+                                                              rhs.rename[tableIdx][archIdx], "ARF",
+                                                              "archRem spec: " + std::to_string(tableIdx) +
+                                                              "archIdx: " + std::to_string(archIdx)
                     );
                 }
             }

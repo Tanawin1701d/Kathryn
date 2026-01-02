@@ -11,7 +11,7 @@
 namespace kathryn::o3{
 
     class CombCtrl : public SimCtrlKride{
-
+        const int BELAYED_AFTER_MIS_CMP = 1;
         SimCtrlRide& _slaveRide;
 
     public:
@@ -29,7 +29,7 @@ namespace kathryn::o3{
 
         void doKrideInit (int  curTestCaseIdx);
         void doKrideCycle(bool recordThisCycle);
-        void doCompare();
+        bool doCompare();
 
         void describeCon  () override;
 

@@ -232,7 +232,7 @@ namespace kathryn::o3{
             bool com1Status = false;
             bool com2Status = false;
             COMMIT_ENTRY comEntries[RRF_NUM]{};
-
+            //////// do not compare this section
             bool isPrevCycleDp1 = false;
             bool isPrevCycleDp2 = false;
             ull  dpPointer = 0;
