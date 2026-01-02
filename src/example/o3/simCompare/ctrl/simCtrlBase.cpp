@@ -27,7 +27,45 @@ namespace kathryn::o3{
         lastDmemEnable  = false;
         lastDmemRead    = true;
         lastDmemAddr    = 0;
-        lastDmemData    = 0;
+        lastDmemWData    = 0;
+    }
+
+    bool O3SimCtrlBase::compareMemOp(O3SimCtrlBase& rhs){
+
+        if (!lastDmemEnable){return true;}
+        bool result = true;
+
+        if (lastDmemRead != rhs.lastDmemRead){
+            std::cout << TC_RED
+                      << "Dmem read misMatch Kride got: "
+                      << lastDmemRead
+                      << "    Ride got: "
+                      << rhs.lastDmemRead
+                      << std::endl;
+            result = false;
+        }
+        if (lastDmemAddr != rhs.lastDmemAddr){
+            std::cout << TC_RED
+                      << "Dmem addr misMatch Kride got: "
+                      << cvtNum2HexStr(lastDmemAddr)
+                      << "    Ride got: "
+                      << cvtNum2HexStr(rhs.lastDmemAddr)
+                      << std::endl;
+            result = false;
+        }
+
+        if (!lastDmemRead){ ///// it is write
+            if (lastDmemWData != rhs.lastDmemWData){
+                std::cout << TC_RED
+                          << "Dmem write Data misMatch Kride got: "
+                          << cvtNum2HexStr(lastDmemWData)
+                          << "    Ride got: "
+                          << cvtNum2HexStr(rhs.lastDmemWData)
+                          << std::endl;
+            }
+        }
+        return result;
+
     }
 
 

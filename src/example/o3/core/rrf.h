@@ -37,8 +37,6 @@ namespace kathryn::o3{
             nextRrfCycle.makeResetEvent();
 
             dataStructProbGrp.rrf.init(&table);
-
-
         }
 
         opr& isRecur(){ return nextRrfCycle;}

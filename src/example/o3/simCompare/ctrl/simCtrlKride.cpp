@@ -2,7 +2,7 @@
 // Created by tanawin on 25/12/25.
 //
 
-#include "../simCtrlKride.h"
+#include "simCtrlKride.h"
 
 #include <utility>
 
@@ -104,7 +104,7 @@ namespace kathryn::o3{
 
         lastDmemRead = (dmem_we == 0);
         lastDmemAddr = static_cast<uint32_t>(dmem_rwaddr);
-        lastDmemData = static_cast<uint32_t>(dmem_wdata);
+        lastDmemWData = static_cast<uint32_t>(dmem_wdata);
     }
 
 
@@ -117,8 +117,8 @@ namespace kathryn::o3{
         if (lastDmemRead){
             _topSim.ijDmem0.s(_dmem[aligned_addr]);
         }else{
-            _dmem[aligned_addr] = lastDmemData;
-            std::cout << "write Detect at @ " << cvtNum2HexStr(lastDmemAddr) << " with data " << lastDmemData << std::endl;
+            _dmem[aligned_addr] = lastDmemWData;
+            std::cout << "write Detect at @ " << cvtNum2HexStr(lastDmemAddr) << " with data " << lastDmemWData << std::endl;
         }
     }
     void  SimCtrlKride::resetRegister(){
