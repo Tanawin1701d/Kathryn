@@ -28,6 +28,10 @@ namespace kathryn::o3{
         RegArch&  regArch;
         TagMgmt&  tagMgmt;
         Rob&      rob;
+
+        RegSlot& dcd1     = pm.dc.dcd1;
+        RegSlot& dcd2     = pm.dc.dcd2;
+        RegSlot& dcdShare = pm.dc.dcdShared;
                                     //// it join the two rsv together
         mWire(aluRsvIdx2_final   , ALU_ENT_SEL + 1);  //// it is one hot index
         mWire(mulRsvIdx2_final   , MUL_ENT_SEL);
@@ -60,6 +64,13 @@ namespace kathryn::o3{
                 (isRsvRequired(pm.dc.dcd1, RS_ENT_IDX).uext(2) +
                  isRsvRequired(pm.dc.dcd2, RS_ENT_IDX).uext(2));
         }
+
+        void onSucPred(opr& sucTag){
+            dcd1(spec) <<= dcd1(spec) & (dcd1(specTag) != sucTag);
+            dcd2(spec) <<= dcd2(spec) & (dcd2(specTag) != sucTag);
+        }
+
+
 
         WireSlot cvtdecInstrToRsv(RegSlot& dcd, RegSlot& dcdShard, opr* desRrf , int decLaneIdx){
             /////// decLaneIdx start from 0
@@ -106,10 +117,6 @@ namespace kathryn::o3{
         }
 
         void flow() override{
-
-            auto& dcd1     = pm.dc.dcd1;
-            auto& dcd2     = pm.dc.dcd2;
-            auto& dcdShare = pm.dc.dcdShared;
 
             /**
              * RSV CALCULATION

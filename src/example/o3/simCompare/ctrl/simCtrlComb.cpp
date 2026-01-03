@@ -67,16 +67,9 @@ namespace kathryn::o3{
     }
 
     bool CombCtrl::doCompare(){
-        std::cout << TC_BLUE <<
-                    "[O3 RISC-V CMP] -----> start compare"
-                  << TC_DEF << std::endl;
         bool compareValid = _state.compare(_slaveRide._state);
         compareValid &= compareMemOp(_slaveRide);
-        if (compareValid){
-            std::cout << TC_GREEN << "[O3 RISC-V CMP] compare pass" << TC_DEF << std::endl;
-        }else{
-            std::cout << TC_GREEN << "[O3 RISC-V CMP] compare failed see slot writer for the reason mismatch" << TC_DEF << std::endl;
-        }
+
         return compareValid;
 
     }
@@ -98,6 +91,9 @@ namespace kathryn::o3{
             //////// iterate for 100 cycle
             bool retard = false;
             int  retartedCount = 0;
+            std::cout << TC_BLUE <<
+                    "[O3 RISC-V CMP] -----> start compare"
+                  << TC_DEF << std::endl;
             for (int i = 0; i <= 150; i++){
                 if (retard && (retartedCount < BELAYED_AFTER_MIS_CMP)){
                     break;
@@ -106,12 +102,18 @@ namespace kathryn::o3{
                 _slaveRide.doRideCycle(true);
 
                 if (!retard){
-                    retard = ~doCompare(); ///// if belayed  = commpare not corect!
+                    retard = !doCompare(); ///// if belayed  = commpare not corect!
                 }
                 if (retard){
                     if (retartedCount >= BELAYED_AFTER_MIS_CMP){break;}
                     retartedCount++;
                 }
+            }
+
+            if (retard){
+                std::cout << TC_GREEN << "[O3 RISC-V CMP] compare failed see slot writer for the reason mismatch" << TC_DEF << std::endl;
+            }else{
+                std::cout << TC_GREEN << "[O3 RISC-V CMP] compare pass" << TC_DEF << std::endl;
             }
             /////////////////////////////////
             testRegister();

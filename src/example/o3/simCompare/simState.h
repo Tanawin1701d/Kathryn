@@ -243,7 +243,7 @@ namespace kathryn::o3{
                 }
             }
 
-            bool compare(const COMMIT_STATE& rhs) const;
+            bool compare(const COMMIT_STATE& rhs, ull reqPtr) const;
             void printSlot(SlotWriterBase& writer);
         } rob;
 
@@ -317,7 +317,10 @@ namespace kathryn::o3{
             ull reqPtr       = 0;
             ull nextRrfCycle = 0;
 
-            bool compare(const RRF_STATE& rhs) const;
+            /**
+             * check only on comPtr to reqPtr)
+             */
+            bool compare(const RRF_STATE& rhs, ull comPtr) const;
             void printSlot(SlotWriterBase& writer);
         }rrf;
 

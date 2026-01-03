@@ -57,6 +57,7 @@ namespace kathryn{
         Operable* doSlice(Slice sl) override;
         /**make rstEvent*/
         void makeResetEvent(ull value = 0, CLOCK_MODE cm = CM_POSEDGE);
+        void makeDefEvent(ull defValue = 0) override;
         /** return type*/
         Operable* checkShortCircuit() override;
 

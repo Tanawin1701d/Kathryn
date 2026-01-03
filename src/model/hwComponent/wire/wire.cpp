@@ -66,9 +66,9 @@ namespace kathryn{
         return x.castToOperable();
     }
 
-    void Wire::makeDefEvent(){
+    void Wire::makeDefEvent(ull defVal){
         if (_requireDefVal){
-            makeVal(defWireVal, getSlice().getSize(), 0);
+            makeVal(defWireVal, getSlice().getSize(), defVal);
 
             UpdateEventBasic*  defEvent = createUEHelper(&defWireVal,
                                                          {0, getSlice().getSize()},

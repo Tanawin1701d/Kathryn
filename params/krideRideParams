@@ -5,6 +5,6 @@ testType = testKrideRideCombSim
 ; path to o3 result folder
 ; do not forget to add / after the path
 
-prefix = /media/tanawin/tanawin1701e/project2/Kathryn/KOut/testKrideRideComb/
+prefix = /media/tanawin/tanawin1701e/project2/Kathryn/KOut/krideRideComb/
 
 buildSimMode = gcr

@@ -19,6 +19,7 @@
 namespace kathryn::o3{
 
     struct FetchMod;
+    struct DpMod;
     struct RsvBase;
     struct BranchExec: Module{
 
@@ -26,6 +27,7 @@ namespace kathryn::o3{
         RegArch&      regArch;
         PipStage&     pm;
         FetchMod&     fetchMod;
+        DpMod&        dispMod;
         Rob&          rob;
         ByPass&       bp;
         Rsvs&         rsvs;
@@ -39,12 +41,14 @@ namespace kathryn::o3{
                             RegArch& regArch,
                             PipStage& pm,
                             FetchMod& fetchMod,
+                            DpMod&    dispMod,
                             Rob& rob,
                             Rsvs& rsvs) :
         tagMgmt(tagMgmt),
         regArch(regArch),
         pm(pm),
         fetchMod(fetchMod),
+        dispMod(dispMod),
         rob(rob),
         bp(regArch.bpp.addByPassEle()),
         rsvs(rsvs),

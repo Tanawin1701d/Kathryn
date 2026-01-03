@@ -53,7 +53,7 @@ namespace kathryn{
         SliceAgent<Wire>& operator() (int idx) override;
         SliceAgent<Wire>& operator() (Slice sl) override;
         Operable* doSlice(Slice sl) override;
-        void makeDefEvent();
+        void makeDefEvent(ull defVal = 0) override;
         Operable* checkShortCircuit() override;
 
         /**override logicc gen base*/

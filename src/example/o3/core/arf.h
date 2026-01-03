@@ -11,10 +11,10 @@
 
 namespace kathryn::o3{
 
-    static int ARF_MIS_PRIORITY = DEFAULT_UE_PRI_USER + 3;
-    static int ARF_SUC_PRIORITY = DEFAULT_UE_PRI_USER + 2;
-    static int ARF_REN_PRIORITY = DEFAULT_UE_PRI_USER + 1;
-    static int ARF_COM_PRIORITY = DEFAULT_UE_PRI_USER;
+    static int ARF_MIS_PRIORITY = DEFAULT_UE_PRI_USER + 4;
+    static int ARF_SUC_PRIORITY = DEFAULT_UE_PRI_USER + 3;
+    static int ARF_REN_PRIORITY = DEFAULT_UE_PRI_USER + 2;
+    static int ARF_COM_PRIORITY = DEFAULT_UE_PRI_USER + 1;
 
     struct RenameCmd{
         opr& renEn;       // 1

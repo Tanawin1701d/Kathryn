@@ -97,6 +97,18 @@ namespace kathryn{
         addUpdateMeta(ueb);
     }
 
+    void Reg::makeDefEvent(ull defValue){
+        makeVal(rstRegVal, getSlice().getSize(), defValue);
+
+        UpdateEventBase* ueb = createUEHelper(&rstRegVal,
+                                              {0, getSlice().getSize()},
+                                              DEFAULT_UE_PRI_MIN,
+                                              CM_POSEDGE, //// now it is lock for positive edge clock
+                                              false);
+        addUpdateMeta(ueb);
+
+    }
+
     Operable* Reg::checkShortCircuit(){
         return nullptr;
     }
