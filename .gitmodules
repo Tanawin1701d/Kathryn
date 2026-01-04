@@ -1,0 +1,3 @@
+[submodule "extSim/ridecore"]
+	path = extSim/ridecore
+	url = git@github.com:Tanawin1701d/ridecore.git

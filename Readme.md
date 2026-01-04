@@ -1,6 +1,6 @@
 # KATHRYN
 
-Kathryn is a brand new Hardware Design Framework embedded in C++ and Python(next release) to **abstract** control logic, **reduce** manual hardware routing, and **automate** hardware resource management at Cycle-accurate level in Userland.
+Kathryn is a brand new Hardware Design Framework embedded in C++ and Python(next release) to **abstract** control logic, **reduce** manual hardware routing, and **automate** hardware resource management at ***Cycle-accurate level in Userland***.
 
 Moreover, Kathryn **provides** effortless profiling, and **boost** design space exploration and increase simulation productivity.
 
