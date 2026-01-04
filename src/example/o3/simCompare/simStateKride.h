@@ -35,9 +35,16 @@ namespace kathryn::o3{
         void assignRSV_Entry (RSV_BASE_ENTRY& entry  , RegSlot& regSlot);
         void assignRSV_Branch(RSV_BRANCH_ENTRY& entry, RegSlot& regSlot);
         void assignRSV_Mul   (RSV_MUL_ENTRY& entry   , RegSlot& regSlot);
+
+        void assignEXEC_Entry (RSV_BASE_ENTRY& entry  , RegSlot& regSlot);
+        void assignEXEC_Branch(RSV_BRANCH_ENTRY& entry, RegSlot& regSlot);
+        void assignEXEC_Mul   (RSV_MUL_ENTRY& entry   , RegSlot& regSlot);
+        void assignEXEC_LDST (RSV_BASE_ENTRY& entry  , RegSlot& regSlot) ;
+
         void assignARF_Table (int tableIdx, RegSlot& busySlot, RegSlot& renameSlot);
 
         void recruitValue() override;
+        void recruitNextCycle() override;
 
         void printSlotWindow(SlotWriterBase& writer) override;
 

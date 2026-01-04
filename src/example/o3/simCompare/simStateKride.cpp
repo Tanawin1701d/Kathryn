@@ -66,6 +66,48 @@ namespace kathryn::o3{
     }
 
 
+    void SimStateKride::assignEXEC_Entry (RSV_BASE_ENTRY& entry  , RegSlot& regSlot){
+        assignRSV_Entry(entry, regSlot);
+        entry.busy    = 0;
+        entry.sortbit = 0;
+        entry.valid1  = 0;
+        entry.valid2  = 0;
+    }
+    void SimStateKride::assignEXEC_Branch(RSV_BRANCH_ENTRY& entry, RegSlot& regSlot){
+        assignRSV_Branch(entry, regSlot);
+        entry.busy     = 0;
+        entry.sortbit  = 0;
+        entry.imm      = 0;
+        entry.src1_sel = 0;
+        entry.valid1   = 0;
+        entry.src2_sel = 0;
+        entry.valid2   = 0;
+
+    }
+
+    void SimStateKride::assignEXEC_Mul(RSV_MUL_ENTRY& entry, RegSlot& regSlot){
+        assignRSV_Mul(entry, regSlot);
+        entry.busy     = 0;
+        entry.sortbit  = 0;
+        entry.imm      = 0;
+        entry.alu_op   = 0;
+        entry.src1_sel = 0;
+        entry.valid1   = 0;
+        entry.src2_sel = 0;
+        entry.valid2   = 0;
+    }
+    void SimStateKride::assignEXEC_LDST(RSV_BASE_ENTRY& entry, RegSlot& regSlot){
+        assignRSV_Entry(entry, regSlot);
+        entry.busy     = 0;
+        entry.sortbit  = 0;
+        entry.alu_op   = 0;
+        entry.src1_sel = 0;
+        entry.valid1   = 0;
+        entry.src2_sel = 0;
+        entry.valid2   = 0;
+    }
+
+
     void SimStateKride::assignARF_Table(int tableIdx,RegSlot& busySlot, RegSlot& renameSlot){
         for (int regIdx = 0; regIdx < REG_NUM; regIdx++){
             arf.busy  [tableIdx][regIdx] = (ull(busySlot  (regIdx)) != 0);
@@ -164,21 +206,24 @@ namespace kathryn::o3{
         st_issue_ldst  = generatePipState(nullptr, &zyncProbGrp.issueLdSt);
         idx_issue_ldst = ull(_core.rsvs.ls.checkIdx);
 
-        //// execute
+        //////////////////////
+        //// execute /////////
+        //////////////////////
+
         exec_alu1.st = generatePipState(&pipProbGrp.execAlu1, nullptr);
-        assignRSV_Entry(exec_alu1.entry, _core.pExAlu1.src);
+        assignEXEC_Entry(exec_alu1.entry, _core.pExAlu1.src);
         exec_alu2.st = generatePipState(&pipProbGrp.execAlu2, nullptr);
-        assignRSV_Entry(exec_alu2.entry, _core.pExAlu2.src);
+        assignEXEC_Entry(exec_alu2.entry, _core.pExAlu2.src);
 
         exec_mul.st = generatePipState(&pipProbGrp.execMul, nullptr);
-        assignRSV_Mul(exec_mul.entry, _core.pMulAlu.src);
+        assignEXEC_Mul(exec_mul.entry, _core.pMulAlu.src);
 
         exec_branch.st = generatePipState(&pipProbGrp.execBranch, nullptr);
-        assignRSV_Branch(exec_branch.entry, _core.pExBra.src);
+        assignEXEC_Branch(exec_branch.entry, _core.pExBra.src);
 
         exec_ldst.st1 = generatePipState(&pipProbGrp.execLdSt, &zyncProbGrp.loadStore2);
         exec_ldst.st2 = generatePipState(&pipProbGrp.execLdSt2, nullptr);
-        assignRSV_Entry(exec_ldst.entry, _core.pExLdSt.src);
+        assignEXEC_LDST(exec_ldst.entry, _core.pExLdSt.src);
         exec_ldst.rrftag    =   ull(_core.pExLdSt.lsRes(rrftag));
         exec_ldst.rdUse     =   ull(_core.pExLdSt.lsRes(rdUse));
         exec_ldst.spec      =   ull(_core.pExLdSt.lsRes(spec));
@@ -251,15 +296,15 @@ namespace kathryn::o3{
         rrf.freenum       = ull(_core.regArch.rrf.freenum);
         rrf.reqPtr        = ull(_core.regArch.rrf.reqPtr);
         rrf.nextRrfCycle  = ull(_core.regArch.rrf.nextRrfCycle);
+    }
 
-
+    void SimStateKride::recruitNextCycle(){
         isLastCycleMisPred = ull(_core.tagMgmt.bc.mis) != 0;
         isLastCycleSucc    = ull(_core.tagMgmt.bc.suc) != 0;
         ///////// state recorder for next cycle
         isLastCycleDisp1   = ull(_core.pDisp.dbg_isDisp1);
         isLastCycleDisp2   = ull(_core.pDisp.dbg_isDisp2);
         lastDispatchPtr    = ull(_core.regArch.rrf.getReqPtr());
-
     }
 
     void SimStateKride::printSlotWindow(SlotWriterBase& writer){

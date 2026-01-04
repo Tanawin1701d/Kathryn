@@ -13,7 +13,8 @@
 #include "test/autoSim/simMng.h"
 #include "test/autoGen/genMng.h"
 #include "example/o3/simulation/o3_sim.h"
-#include "example/o3/simCompare/simCtrlKride.h"
+#include "example/o3/simCompare/ctrl/simCtrlKride.h"
+#include "example/o3/simCompare/ctrl/simCtrlComb.h"
 
 
 ///#ifdef BUILD_EXT_SIM
@@ -91,6 +92,12 @@ namespace kathryn{
 
     }
 
+    void test_comb_kride_ride(PARAM& params){
+        o3::COMB_MNG combSimMng;
+        combSimMng.start(params);
+        std::cout << TC_GREEN << "finish comb kride ride sim [sim]" << TC_DEF << std::endl;
+    }
+
 
     void start(PARAM& params) {
 
@@ -114,11 +121,13 @@ namespace kathryn{
         }else if (params["testType"]  == "testSimpleCacheAcc"){
             //test_cacheAc_sim(params);
         }else if (params["testType"]  == "testO3Sim"){
-               test_o3_sim(params);
+            test_o3_sim(params);
         }else if (params["testType"] == "testKrideSim"){
-                test_kride_sim(params);
+            test_kride_sim(params);
         }else if (params["testType"] == "testRideSim"){
-                test_ride_sim(params);
+            test_ride_sim(params);
+        }else if (params["testType"] == "testKrideRideCombSim"){
+            test_comb_kride_ride(params);
         }else{
             std::cout << "there is no command to test system" << std::endl;
         }

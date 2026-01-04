@@ -152,6 +152,8 @@ namespace kathryn{
             return Slicable<TYPE_COMP>::getSlice();
         }
 
+        virtual void makeDefEvent(ull defVal) {assert(false);}
+
         void startCheckShortCircuit(){
             Operable* matchOpr = checkShortCircuit();
             if (matchOpr != nullptr){

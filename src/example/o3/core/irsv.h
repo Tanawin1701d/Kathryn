@@ -50,7 +50,7 @@ namespace kathryn::o3{
             zif (nb0.sValid){ /// there is empty space for next update
                 /// if there is no 1 for next cycle  (the )
                 zif(~nb1.sValid){
-                    allocPtr <<= 0; ////// it is empty
+                    allocPtr <<= 1; ////// it is empty
                 }zelif((nb1.sIdx == 0) && (ne1.sIdx == (_table.getNumRow()-1))){
                     ////// case 0  is bubble there is 1 atstart and 1 at the end
                     allocPtr <<= nb0.sIdx; ///// nb0

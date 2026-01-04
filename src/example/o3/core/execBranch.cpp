@@ -4,6 +4,8 @@
 
 #include "fetch.h"
 #include "execBranch.h"
+
+#include "dispatch.h"
 #include "rsv.h"
 #include "rsvs.h"
 
@@ -33,6 +35,8 @@ namespace kathryn::o3{
         tagMgmt.bc.suc = 1;
         /////// fetch update gshare pred system
         fetchMod.onSucPred(sucTag);
+        /////// dp update the register
+        dispMod.onSucPred(sucTag);
         /////// pipeline stage management
         pm.onSucPred();
         /////// reservation station management

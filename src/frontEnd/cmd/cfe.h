@@ -35,6 +35,8 @@ namespace kathryn {
 
     void test_ride_sim(PARAM& params);
 
+    void test_comb_kride_ride(PARAM& params);
+
 }
 
 #endif //KATHRYN_CFE_H

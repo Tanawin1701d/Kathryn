@@ -16,7 +16,7 @@ namespace kathryn::o3{
                                const std::string& stageName,
                                const std::string& simName){
         if (lhs != rhs){
-            std::cout << stageName << "with simType "<< simName
+            std::cout << stageName << " with simType "<< simName
                       << ": LHS: " << lhs << " RHS: " << rhs << std::endl;
             return false;
         }
@@ -27,7 +27,7 @@ namespace kathryn::o3{
                                const std::string& stageName,
                                const std::string& simName){
         if (lhs != rhs){
-            std::cout << stageName << "with simType "<< simName
+            std::cout << stageName << " with simType "<< simName
                       << ": LHS: " << lhs << " RHS: " << rhs << std::endl;
             return false;
         }
@@ -49,6 +49,9 @@ namespace kathryn::o3{
             printStateMisMatch("fetch stage", st, rhs.st);
             return false;
         }
+
+        if (st != PS_RUNNING){ return true;}
+
         bool compareResult = true;
         compareResult &= checkAndPrintSimValueUll(pc, rhs.pc, "fetch", "pc");
         return compareResult;
@@ -65,6 +68,8 @@ namespace kathryn::o3{
             printStateMisMatch("decode stage", st, rhs.st);
             return false;
         }
+
+        if (st != PS_RUNNING){return true;}
 
         bool compareResult = true;
         compareResult &= checkAndPrintSimValueUll(inst1 , rhs.inst1 , "decode", "inst1" );
@@ -121,6 +126,8 @@ namespace kathryn::o3{
             return false;
         }
 
+        if (st != PS_RUNNING){return true;}
+
         bool compareResult = true;
         compareResult &= checkAndPrintSimValueUll(pc, rhs.pc, "dispatch", "pc");
         compareResult &= checkAndPrintSimValueUll(desEqSrc1, rhs.desEqSrc1, "dispatch", "desEqSrc1");
@@ -146,7 +153,6 @@ namespace kathryn::o3{
 
         compareResult &= checkAndPrintSimValueUll(sortbit, rhs.sortbit, name, "sortbit");
         compareResult &= checkAndPrintSimValueUll(pc     , rhs.pc     , name, "pc"     );
-        compareResult &= checkAndPrintSimValueUll(imm    , rhs.imm    , name, "imm"    );
         compareResult &= checkAndPrintSimValueUll(rrftag , rhs.rrftag , name, "rrftag" );
         compareResult &= checkAndPrintSimValueUll(dstval , rhs.dstval , name, "dstval" );
         compareResult &= checkAndPrintSimValueUll(alu_op , rhs.alu_op , name, "alu_op" );
@@ -156,7 +162,12 @@ namespace kathryn::o3{
             compareResult &= checkAndPrintSimValueUll(src1, rhs.src1, name, "src1");
         }
         if (valid2 && src2_sel == SRC_B_RS2){
-            compareResult &= checkAndPrintSimValueUll(src2, rhs.src2, name, "src2");
+            if (src2_sel == SRC_B_RS2){
+                compareResult &= checkAndPrintSimValueUll(src2, rhs.src2, name, "src2");
+            }else if (src2_sel == SRC_B_IMM){
+                compareResult &= checkAndPrintSimValueUll(imm, rhs.imm, name, "imm");
+            }
+
         }
         return compareResult;
     }
@@ -230,12 +241,15 @@ namespace kathryn::o3{
         }
 
         if (st2 == rhs.st2){
-            compareResult &= checkAndPrintSimValueUll(rrftag   , rhs.rrftag   , "exec LDST", "rrftag"   );
-            compareResult &= checkAndPrintSimValueUll(rdUse    , rhs.rdUse    , "exec LDST", "rdUse"    );
-            compareResult &= checkAndPrintSimValueUll(spec     , rhs.spec     , "exec LDST", "spec"     );
-            compareResult &= checkAndPrintSimValueUll(specTag  , rhs.specTag  , "exec LDST", "specTag"  );
-            compareResult &= checkAndPrintSimValueUll(stBufData, rhs.stBufData, "exec LDST", "stBufData");
-            compareResult &= checkAndPrintSimValueUll(stBufHit , rhs.stBufHit , "exec LDST", "stBufHit" );
+            if (st2 == PS_RUNNING){
+                compareResult &= checkAndPrintSimValueUll(rrftag   , rhs.rrftag   , "exec LDST", "rrftag"   );
+                compareResult &= checkAndPrintSimValueUll(rdUse    , rhs.rdUse    , "exec LDST", "rdUse"    );
+                compareResult &= checkAndPrintSimValueUll(spec     , rhs.spec     , "exec LDST", "spec"     );
+                compareResult &= checkAndPrintSimValueUll(specTag  , rhs.specTag  , "exec LDST", "specTag"  );
+                compareResult &= checkAndPrintSimValueUll(stBufData, rhs.stBufData, "exec LDST", "stBufData");
+                compareResult &= checkAndPrintSimValueUll(stBufHit , rhs.stBufHit , "exec LDST", "stBufHit" );
+            }
+
         }else{
             printStateMisMatch("exec1 LDST stage", st1, rhs.st1);
             compareResult = false;
@@ -269,12 +283,12 @@ namespace kathryn::o3{
 
     }
 
-    bool SimState::COMMIT_STATE::compare(const COMMIT_STATE& rhs) const{
+    bool SimState::COMMIT_STATE::compare(const COMMIT_STATE& rhs, ull reqPtr) const{
         bool compareResult = true;
         compareResult &= checkAndPrintSimValueUll(comPtr    , rhs.comPtr    , "COMMIT", "comPtr"    );
         compareResult &= checkAndPrintSimValueBool(com1Status, rhs.com1Status, "COMMIT", "com1Status");
         compareResult &= checkAndPrintSimValueBool(com2Status, rhs.com2Status, "COMMIT", "com2Status");
-        for (int rrfIdx = 0; rrfIdx < RRF_NUM; rrfIdx++){
+        for (ull rrfIdx = comPtr; rrfIdx != reqPtr; rrfIdx = (rrfIdx+1)%RRF_NUM){
             compareResult &= comEntries[rrfIdx].compare(rhs.comEntries[rrfIdx]);
         }
 
@@ -286,8 +300,14 @@ namespace kathryn::o3{
      */
 
     bool SimState::STORE_BUF_ENTRY::compare(const STORE_BUF_ENTRY& rhs) const{
-        return checkAndPrintSimValueBool(busy    , rhs.busy,     "STORE_BUF", "busy") &&
-               checkAndPrintSimValueUll (complete, rhs.complete, "STORE_BUF", "complete") &&
+
+        if (!checkAndPrintSimValueBool(busy    , rhs.busy,     "STORE_BUF", "busy")){
+            return false;
+        }
+
+        if (busy == 0){ return true; }
+
+        return checkAndPrintSimValueUll (complete, rhs.complete, "STORE_BUF", "complete") &&
                checkAndPrintSimValueUll (spec    , rhs.spec,     "STORE_BUF", "spec") &&
                checkAndPrintSimValueUll (specTag , rhs.specTag,  "STORE_BUF", "specTag") &&
                checkAndPrintSimValueUll (mem_addr, rhs.mem_addr, "STORE_BUF", "mem_addr") &&
@@ -336,19 +356,19 @@ namespace kathryn::o3{
     bool SimState::ARF_STATE::compare(const ARF_STATE& rhs) const{
 
         bool compareResult = true;
-        for (int idx = 0; idx <= SPECTAG_LEN; idx++){
+        for (int tableIdx = 0; tableIdx <= SPECTAG_LEN; tableIdx++){
 
             for (int archIdx = 0; archIdx < REG_NUM; archIdx++){
-                compareResult &= checkAndPrintSimValueBool(busy[idx][archIdx],
-                                                          rhs.busy[idx][archIdx],
+                compareResult &= checkAndPrintSimValueBool(busy[tableIdx][archIdx],
+                                                          rhs.busy[tableIdx][archIdx],
                                                           "ARF",
-                                                          "busy spec: " + std::to_string(idx) +
+                                                          "busy spec: " + std::to_string(tableIdx) +
                                                           " archIdx: " + std::to_string(archIdx));
-                if (busy[idx][archIdx]){
-                    compareResult &= checkAndPrintSimValueUll(rename[idx][archIdx],
-                                                              rhs.rename[idx][archIdx], "ARF",
-                                                                "archRem spec: " + std::to_string(idx) +
-                                                                "archIdx: " + std::to_string(archIdx)
+                if (busy[tableIdx][archIdx]){
+                    compareResult &= checkAndPrintSimValueUll(rename[tableIdx][archIdx],
+                                                              rhs.rename[tableIdx][archIdx], "ARF",
+                                                              "archRem spec: " + std::to_string(tableIdx) +
+                                                              "archIdx: " + std::to_string(archIdx)
                     );
                 }
             }
@@ -356,9 +376,10 @@ namespace kathryn::o3{
         return compareResult;
     }
 
-    bool SimState::RRF_STATE::compare(const RRF_STATE& rhs) const{
+    bool SimState::RRF_STATE::compare(const RRF_STATE& rhs, ull comPtr) const{
         bool compareResult = true;
-        for (int idx = 0; idx < RRF_NUM; idx++){
+        for (ull idx = comPtr; idx != reqPtr; idx = (idx+1)%RRF_NUM){ ///// turn around check
+
             compareResult &= checkAndPrintSimValueBool(busy[idx], rhs.busy[idx], "RRF", "valids" + std::to_string(idx));
             if (busy[idx]){
                 compareResult &= checkAndPrintSimValueUll(data[idx], rhs.data[idx],
@@ -404,14 +425,14 @@ namespace kathryn::o3{
         compareResult &= exec_branch.compare(rhs.exec_branch);
         compareResult &= exec_ldst.compare(rhs.exec_ldst);
 
-        compareResult &= rob.compare(rhs.rob);
+        compareResult &= rob.compare(rhs.rob, rrf.reqPtr);
         compareResult &= stbuf.compare(rhs.stbuf);
 
         //// register architecture
         compareResult &= mpft.compare(rhs.mpft);
         compareResult &= tagGen.compare(rhs.tagGen);
         compareResult &= arf.compare(rhs.arf);
-        compareResult &= rrf.compare(rhs.rrf);
+        compareResult &= rrf.compare(rhs.rrf, rob.comPtr);
 
         return compareResult;
     }

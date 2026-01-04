@@ -28,7 +28,6 @@ namespace kathryn::o3{
             SET_ASM_PRI_TO_MANUAL(RSV_SORTBIT_RST_PRED_PRIORITY);
             _table.doCusLogic([&](RegSlot& lhs, int rowIdx){
                 lhs(sortBit) <<= lhs(sortBit) & (~regArch.rrf.nextRrfCycle);
-
             });
             SET_ASM_PRI_TO_AUTO();
         }
@@ -36,9 +35,6 @@ namespace kathryn::o3{
 
         void tryWriteEntry(opr& targetIdx, opr& binIdx, WireSlot& iw){
             zif (targetIdx == RSV_IDX){
-                if (sortReq){
-                    resetSortBit();
-                }
                 RsvBase::writeEntry(binIdx, iw);
             }
         }
@@ -93,6 +89,10 @@ namespace kathryn::o3{
              * issue sync
              */
             dbg_isSlotReady = slotReady(iw);
+
+            if (sortReq){
+                resetSortBit();
+            }
 
             cwhile(true){
                 zyncc(syncMeta, dbg_isSlotReady){ tryInitProbe(issueProbe);

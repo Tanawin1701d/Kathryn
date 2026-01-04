@@ -8,7 +8,6 @@
 #include "util/fileWriter/slotWriter/slotWriterBase.h"
 #include "kathryn.h"
 #include "simState.h"
-#include "simState.h"
 #include "example/o3/core/mpft.h"
 #include "example/o3/core/parameter.h"
 #include "example/o3/simShare/recPipStage.h"
@@ -233,7 +232,7 @@ namespace kathryn::o3{
             bool com1Status = false;
             bool com2Status = false;
             COMMIT_ENTRY comEntries[RRF_NUM]{};
-
+            //////// do not compare this section
             bool isPrevCycleDp1 = false;
             bool isPrevCycleDp2 = false;
             ull  dpPointer = 0;
@@ -244,7 +243,7 @@ namespace kathryn::o3{
                 }
             }
 
-            bool compare(const COMMIT_STATE& rhs) const;
+            bool compare(const COMMIT_STATE& rhs, ull reqPtr) const;
             void printSlot(SlotWriterBase& writer);
         } rob;
 
@@ -318,7 +317,10 @@ namespace kathryn::o3{
             ull reqPtr       = 0;
             ull nextRrfCycle = 0;
 
-            bool compare(const RRF_STATE& rhs) const;
+            /**
+             * check only on comPtr to reqPtr)
+             */
+            bool compare(const RRF_STATE& rhs, ull comPtr) const;
             void printSlot(SlotWriterBase& writer);
         }rrf;
 
@@ -346,7 +348,8 @@ namespace kathryn::o3{
             }
         }
 
-        virtual void recruitValue() = 0;
+        virtual void recruitValue()     = 0;
+        virtual void recruitNextCycle() = 0;
 
         bool compare(SimState& rhs) const;
         virtual void printSlotWindow(SlotWriterBase& writer);

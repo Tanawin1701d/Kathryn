@@ -8,7 +8,7 @@
 #include <fstream>
 #include "kathryn.h"
 #include "frontEnd/cmd/paramReader.h"
-#include "simState.h"
+#include "../simState.h"
 
 namespace kathryn::o3{
 
@@ -25,7 +25,7 @@ namespace kathryn::o3{
         bool     lastDmemEnable = false; //// enabler
         bool     lastDmemRead   = true;  //// used if enabler is true
         uint32_t lastDmemAddr   = 0;
-        uint32_t lastDmemData   = 0;
+        uint32_t lastDmemWData   = 0;
 
         SlotWriterBase& _slotWriter;
         SimState& _state;
@@ -43,6 +43,8 @@ namespace kathryn::o3{
         ////// memory management for each cycle
 
         void          resetDmem();
+
+        bool          compareMemOp(O3SimCtrlBase& rhs);
 
 
         ////// memory initialization

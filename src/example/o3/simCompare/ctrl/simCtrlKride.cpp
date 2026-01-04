@@ -64,7 +64,8 @@ namespace kathryn::o3{
                 ///////// record the system
                 _state.recruitValue();
                 _state.printSlotWindow(_slotWriter);
-                postCycleAction();
+                _state.recruitNextCycle();
+                postCycleAction(); ///// assign value to the print
                 _slotWriter.concludeEachCycle();
                 //////////////////////////////////
                 conNextCycle(1);
@@ -103,7 +104,7 @@ namespace kathryn::o3{
 
         lastDmemRead = (dmem_we == 0);
         lastDmemAddr = static_cast<uint32_t>(dmem_rwaddr);
-        lastDmemData = static_cast<uint32_t>(dmem_wdata);
+        lastDmemWData = static_cast<uint32_t>(dmem_wdata);
     }
 
 
@@ -116,8 +117,8 @@ namespace kathryn::o3{
         if (lastDmemRead){
             _topSim.ijDmem0.s(_dmem[aligned_addr]);
         }else{
-            _dmem[aligned_addr] = lastDmemData;
-            std::cout << "write Detect at @ " << cvtNum2HexStr(lastDmemAddr) << " with data " << lastDmemData << std::endl;
+            _dmem[aligned_addr] = lastDmemWData;
+            std::cout << "write Detect at @ " << cvtNum2HexStr(lastDmemAddr) << " with data " << lastDmemWData << std::endl;
         }
     }
     void  SimCtrlKride::resetRegister(){

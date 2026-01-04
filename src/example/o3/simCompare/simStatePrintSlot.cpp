@@ -68,7 +68,7 @@ namespace kathryn::o3{
         }
 
         if (isOhIdx){
-            writer.addSlotVal(RPS_ISSUE, "issue idx: " + cvtNum2BinStr(issueIdx));
+            writer.addSlotVal(RPS_ISSUE, "issue idx: " + std::to_string(log2(issueIdx)));
         }else{
             writer.addSlotVal(RPS_ISSUE, "issue idx: " + std::to_string(issueIdx));
 
@@ -377,9 +377,9 @@ namespace kathryn::o3{
         if (isPrevCycleDp1){
             writer.addSlotVal(RPS_COMMIT, "-----------");
             writer.addSlotVal(RPS_COMMIT, "dispatched");
-            comEntries[comPtr % RRF_NUM].printSlot(writer);
+            comEntries[dpPointer % RRF_NUM].printSlot(writer);
             if (isPrevCycleDp2){
-                comEntries[(comPtr + 1) % RRF_NUM].printSlot(writer);
+                comEntries[(dpPointer + 1) % RRF_NUM].printSlot(writer);
             }
 
         }
@@ -467,6 +467,9 @@ namespace kathryn::o3{
     }
 
     void SimState::RRF_STATE::printSlot(SlotWriterBase& writer){
+        writer.addSlotVal(RPS_RRF, "freeNum " + std::to_string(freenum));
+        writer.addSlotVal(RPS_RRF, "reqPtr"   + std::to_string(reqPtr));
+        writer.addSlotVal(RPS_RRF, "nextCycle" + std::to_string(nextRrfCycle));
         // for (int rrfIdx = 0; rrfIdx < REG_NUM; rrfIdx++){
         //     writer.addSlotVal(RPS_RRF, "RRFIDX " + std::to_string(rrfIdx) +
         //                                 " /V: " + std::to_string(busy[rrfIdx]) +

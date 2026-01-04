@@ -31,17 +31,14 @@ namespace kathryn::o3{
 
         Rrf():
         table(smRRF, RRF_NUM){
-            table       .makeColResetEvent(rrfValid, 0);
-            freenum     .makeResetEvent(RRF_NUM);
-            reqPtr      .makeResetEvent();
-            nextRrfCycle.makeResetEvent();
+            table        .makeColResetEvent(rrfValid, 0);
+            freenum      .makeResetEvent(RRF_NUM);
+            reqPtr       .makeResetEvent();
+            nextRrfCycle .makeResetEvent();
+            nextRrfCycle .makeDefEvent();
 
             dataStructProbGrp.rrf.init(&table);
-
-
         }
-
-        opr& isRecur(){ return nextRrfCycle;}
 
         opr& isRenamable(opr& req2){
             return (freenum + commitReqSize) >= (req2.uext(2) + 1);
