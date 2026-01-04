@@ -71,11 +71,11 @@ namespace kathryn::o3{
                 zif(bc.checkIsSuc(src)){
                     lsRes(spec) <<= 0; /// on flight clean data
                 }
+                auto[buf_found, buf_data] =  stBuf.searchNewest(effAddr);
+                lsRes(stBufData) <<= buf_data;
+                lsRes(stBufHit)  <<= buf_found;
                 ////// assign specific role
                 zif(isLoad){ /// try to read data from memory
-                    auto[buf_found, buf_data] =  stBuf.searchNewest(effAddr);
-                    lsRes(stBufData) <<= buf_data;
-                    lsRes(stBufHit)  <<= buf_found;
                     //// read has more priority
                     SET_ASM_PRI_TO_MANUAL(DEFAULT_UE_PRI_USER+1);
                     lss.dmem_we     = 0;
