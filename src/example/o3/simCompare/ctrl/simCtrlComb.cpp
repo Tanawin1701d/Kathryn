@@ -16,7 +16,8 @@ namespace kathryn::o3{
                        SlotWriterBase&          slotWriter,
                        SimState&                state,
                        TopSim&                  topSim,
-                       SimCtrlRide&             slaveRide
+                       SimCtrlRide&             slaveRide,
+                       bool                     reqRegTest
     ):
     SimCtrlKride(limitCycle,
                  prefix,
@@ -25,13 +26,13 @@ namespace kathryn::o3{
                  slotWriter,
                  state,
                  topSim),
-    _slaveRide(slaveRide)
+    _slaveRide  (slaveRide),
+    _reqRegTest (reqRegTest)
     {}
 
     bool CombCtrl::doCompare(){
         bool compareValid = _state.compare(_slaveRide._state);
         compareValid &= compareMemOp(_slaveRide);
-
         return compareValid;
 
     }
@@ -47,9 +48,9 @@ namespace kathryn::o3{
                       << TC_DEF << std::endl;
 
             ////// init kride and ride
-            doWorkloadInit(_curTestCaseIdx, true);
+            doWorkloadInit(_curTestCaseIdx, _reqRegTest);
             doWorkloadCycle(false);
-            _slaveRide.doWorkloadInit(_curTestCaseIdx, true);
+            _slaveRide.doWorkloadInit(_curTestCaseIdx, _reqRegTest);
             //////// iterate for 100 cycle
             bool retard = false;
             int  retartedCount = 0;
@@ -72,14 +73,28 @@ namespace kathryn::o3{
                 }
             }
 
+            if (isExecFin() && _slaveRide.isExecFin()){
+                std::cout << TC_GREEN << "[O3 RISC-V CMP] slave is equal " << TC_DEF << std::endl;
+                break;
+            }else if (isExecFin()){
+                std::cout << TC_RED << "[O3 RISC-V CMP] master is finish but slave not" << TC_DEF << std::endl;
+                break;
+            }else if (_slaveRide.isExecFin()){
+                std::cout << TC_RED << "[O3 RISC-V CMP] slave is  finish not like" << TC_DEF << std::endl;
+                break;
+            }
+
             if (retard){
                 std::cout << TC_RED << "[O3 RISC-V CMP] compare failed see slot writer for the reason mismatch" << TC_DEF << std::endl;
             }else{
                 std::cout << TC_GREEN << "[O3 RISC-V CMP] compare pass" << TC_DEF << std::endl;
             }
             /////////////////////////////////
-            testRegister();
-            _slaveRide.testRegister();
+
+            if (_reqRegTest){
+                testRegister();
+                _slaveRide.testRegister();
+            }
             finalPerfCol();
         }
 

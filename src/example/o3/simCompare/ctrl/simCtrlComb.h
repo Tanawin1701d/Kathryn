@@ -15,6 +15,7 @@ namespace kathryn::o3{
     protected:
         const int BELAYED_AFTER_MIS_CMP = 1;
         SimCtrlRide& _slaveRide;
+        bool _reqRegTest;
 
     public:
 
@@ -25,13 +26,14 @@ namespace kathryn::o3{
                           SlotWriterBase&          slotWriter,
                           SimState&                state,
                           TopSim&                  topSim,
-                          SimCtrlRide&             slaveRide
+                          SimCtrlRide&             slaveRide,
+                          bool                     reqRegTest
 
                           );
 
         bool doCompare();
 
-        void describeCon  () override;
+        void describeCon() override;
 
     };
 
@@ -40,11 +42,23 @@ namespace kathryn::o3{
     public:
         void start(PARAM& params){
 
-            std::vector<std::string> testTypes = {
-                "Imm"       , "Reg"        , "Branch", "BranchSuc",
-                "BranchLong", "BranchMidRd", "OverRrf",
-                "LoadImm"   , "BranchSc"   , "memOp"
-            };
+            std::vector<std::string> testTypes = {};
+
+            if (params["workload"] == "standard"){
+
+                testTypes = {
+                    "Imm"       , "Reg"        , "Branch", "BranchSuc",
+                    "BranchLong", "BranchMidRd", "OverRrf",
+                    "LoadImm"   , "BranchSc"   , "memOp"
+                };
+
+            }else if (params["workload"] == "cpp"){
+                testTypes = { "Fibo" };
+            }
+
+            ull limitCycle = stoull(params["limitCycle"]);
+            bool reqRegTest = stoi(params["reqRegTest"]) == 1;
+
             std::vector<std::string> slotColumnNames = {"MPFT"    , "ARF","RRF"  , "FETCH"  ,"DECODE",
                                                         "DISPATCH", "RSV","ISSUE", "EXECUTE","COMMIT", "STBUF"};
             std::vector<int> slotColumnWidth =         {20, 40   , 25, 25, 30,
@@ -66,7 +80,7 @@ namespace kathryn::o3{
 
             startModelKathryn();
 
-            SimCtrlRide  slaveSimulator(2500,
+            SimCtrlRide  slaveSimulator(limitCycle,
                             params["prefix"],
                             testTypes,
                             getSPBM(params),
@@ -75,14 +89,16 @@ namespace kathryn::o3{
                             *slaveCore
             );
 
-            CombCtrl simulator(2500,
+            CombCtrl simulator(limitCycle,
                             params["prefix"],
                             testTypes,
                             getSPBM(params),
                             slotWriterKride,
                             simState,
                             (TopSim&)o3Top,
-                            slaveSimulator
+                            slaveSimulator,
+                            reqRegTest
+
             );
             simulator.simStart();
             resetKathryn();

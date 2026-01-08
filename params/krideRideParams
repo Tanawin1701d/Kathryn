@@ -8,3 +8,7 @@ testType = testKrideRideCombSim
 prefix = /media/tanawin/tanawin1701e/project2/Kathryn/KOut/krideRideComb/
 
 buildSimMode = gcr
+
+workload = standard
+limitCycle = 10000
+reqRegTest = 1

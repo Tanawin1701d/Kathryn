@@ -1,6 +1,6 @@
 ioOptimize = false
 
-testType = testKrideRideCombCxxSim
+testType = testKrideRideCombSim
 
 ; path to o3 result folder
 ; do not forget to add / after the path
@@ -8,3 +8,8 @@ testType = testKrideRideCombCxxSim
 prefix = /media/tanawin/tanawin1701e/project2/Kathryn/KOut/krideRideCxx/
 
 buildSimMode = gcr
+
+
+workload = cpp
+limitCycle = 10000
+reqRegTest = 0
