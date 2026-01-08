@@ -27,6 +27,8 @@ namespace kathryn::o3{
         regArch.arf.onMisPred(misTag);
         regArch.rrf.onMisPred(src(rrftag),
                               rob.getComPtr());
+        ///// do recovery on store buffer
+        stBuf.onMisPred(fixTag);
 
     }
 
@@ -42,10 +44,12 @@ namespace kathryn::o3{
         /////// reservation station management
         rsvs.onSucPred(sucTag);
         //// do update the tag system
-        tagMgmt.mpft.onPredSuc(src(specTag));
+        tagMgmt.mpft.onPredSuc(sucTag);
         tagMgmt.tagGen.onSucPred();
         //// do update the register architecture
         regArch.arf.onSucPred(sucTag);
+        //// do update the store buffer
+        stBuf.onSucPred(sucTag);
 
     }
 

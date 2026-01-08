@@ -59,6 +59,8 @@ namespace kathryn::o3{
         virtual void  readAssembly (const std::string& filePath);
         virtual void  readAssertVal(const std::string& filePath);
 
+        void  writeMemOp();
+
         ///// on model action
         virtual void  readMem2Fetch         (){assert(false);} //// it has to place at the begin of cycle
         virtual void  readWriteDataMemGetCmd(){assert(false);} //// it has to place at the end of cycle

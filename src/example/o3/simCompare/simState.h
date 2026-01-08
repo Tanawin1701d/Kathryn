@@ -278,6 +278,12 @@ namespace kathryn::o3{
             bool fullNext = false;
             bool emptyNext = false;
 
+            STORE_BUF_STATE(){
+                for (int i = 0; i < STBUF_ENT_NUM; i++){
+                    entries[i].idx = i;
+                }
+            }
+
 
             bool compare(const STORE_BUF_STATE& rhs) const;
             void printSlot(SlotWriterBase& writer);

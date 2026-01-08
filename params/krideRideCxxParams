@@ -11,5 +11,5 @@ buildSimMode = gcr
 
 
 workload = cpp
-limitCycle = 10000
+limitCycle = 300000
 reqRegTest = 0

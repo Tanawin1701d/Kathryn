@@ -65,6 +65,7 @@ namespace kathryn::o3{
         _state.recruitValue();
         if (recordThisCycle){
             _state.printSlotWindow(_slotWriter);
+            writeMemOp();
 
             _slotWriter.addSlotVal(RPS_RSV, "--BR-------");
             _slotWriter.addSlotVal(RPS_RSV, "allocPtr " + std::to_string(ull(_core.rsvs.br.allocPtr)));
@@ -166,7 +167,10 @@ namespace kathryn::o3{
                 std::cout << "skip write due to exceed memory address" << std::endl;
             }else{
                 _dmem[aligned_addr] = lastDmemWData;
-                std::cout << "write Detect at @ " << cvtNum2HexStr(lastDmemAddr) << " with data " << lastDmemWData << std::endl;
+                if (lastDmemAddr == 0x0 || lastDmemAddr == 0x4 || lastDmemAddr == 0x8){
+                    std::cout << "write Detect at KRide @ " << cvtNum2HexStr(lastDmemAddr) << " with data " << lastDmemWData << std::endl;
+                }
+                //
             }
 
 

@@ -57,7 +57,8 @@ namespace kathryn::o3{
             std::cout << TC_BLUE <<
                     "[O3 RISC-V CMP] -----> start compare"
                   << TC_DEF << std::endl;
-            for (int i = 0; i <= 150; i++){
+            ull cycleCnt = 0;
+            while (true){
                 if (retard && (retartedCount < BELAYED_AFTER_MIS_CMP)){
                     break;
                 }
@@ -71,18 +72,24 @@ namespace kathryn::o3{
                     if (retartedCount >= BELAYED_AFTER_MIS_CMP){break;}
                     retartedCount++;
                 }
-            }
 
-            if (isExecFin() && _slaveRide.isExecFin()){
-                std::cout << TC_GREEN << "[O3 RISC-V CMP] slave is equal " << TC_DEF << std::endl;
-                break;
-            }else if (isExecFin()){
-                std::cout << TC_RED << "[O3 RISC-V CMP] master is finish but slave not" << TC_DEF << std::endl;
-                break;
-            }else if (_slaveRide.isExecFin()){
-                std::cout << TC_RED << "[O3 RISC-V CMP] slave is  finish not like" << TC_DEF << std::endl;
-                break;
+
+                if (isExecFin() && _slaveRide.isExecFin()){
+                    std::cout << TC_GREEN << "slave is equal " << TC_DEF << std::endl;
+                    break;
+                }else if (isExecFin()){
+                    std::cout << TC_RED << "master is finish but slave not" << TC_DEF << std::endl;
+                    break;
+                }else if (_slaveRide.isExecFin()){
+                    std::cout << TC_RED << "slave is  finish not like" << TC_DEF << std::endl;
+                    break;
+                }
+                if (cycleCnt % 10000 == 0){
+                    std::cout << TC_BLUE << "[O3 RISC-V CMP] -----> computing cycle " << cycleCnt << std::endl;
+                }
+                cycleCnt++;
             }
+            std::cout << TC_BLUE << "[O3 RISC-V CMP] -----> sim done in " << cycleCnt << " cycles" << TC_DEF << std::endl;
 
             if (retard){
                 std::cout << TC_RED << "[O3 RISC-V CMP] compare failed see slot writer for the reason mismatch" << TC_DEF << std::endl;

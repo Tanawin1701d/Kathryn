@@ -55,7 +55,7 @@ namespace kathryn::o3{
                       prob       , rsvs.mul.execSrc           ); //// multiplier unit
         mMod(pExBra,  BranchExec , tagMgmt          , regArch,
                       pm         , pFetch           , pDisp  ,
-                      prob       ,
+                      prob       , storeBuf         ,
                       rsvs    ); //// branch unit
         mMod(pExLdSt, ExecLdSt   , pm.ldSt          , regArch,
                       tagMgmt.bc , prob             , rsvs.ls.execSrc,

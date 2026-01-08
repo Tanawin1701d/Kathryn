@@ -14,6 +14,7 @@
 #include "isaParam.h"
 #include "srcSel.h"
 #include "rsvs.h"
+#include "storeBuf.h"
 
 
 namespace kathryn::o3{
@@ -31,7 +32,9 @@ namespace kathryn::o3{
         Rob&          rob;
         ByPass&       bp;
         Rsvs&         rsvs;
+        StoreBuf&     stBuf;
         RegSlot&      src;
+
         PipSimProbe* psp = nullptr;
         mWire(calAddr, ADDR_LEN);
         mWire(brTaken, 1);
@@ -43,6 +46,7 @@ namespace kathryn::o3{
                             FetchMod& fetchMod,
                             DpMod&    dispMod,
                             Rob& rob,
+                            StoreBuf& stBuf,
                             Rsvs& rsvs) :
         tagMgmt(tagMgmt),
         regArch(regArch),
@@ -50,6 +54,7 @@ namespace kathryn::o3{
         fetchMod(fetchMod),
         dispMod(dispMod),
         rob(rob),
+        stBuf(stBuf),
         bp(regArch.bpp.addByPassEle()),
         rsvs(rsvs),
         src(rsvs.br.execSrc){}

@@ -62,6 +62,13 @@ namespace kathryn::o3{
         assignEleIfThere(entry.src2_signed, regSlot, md_req_in_signed_2);
         assignEleIfThere(entry.sel_lohi   , regSlot, md_req_out_sel);
 
+        entry.pc      = 0; //// mul and ldst discard it
+        entry.imm     = 0;
+        entry.alu_op  = 0; //////  mul and ldst discard it
+        entry.src1_sel = 0, entry.src2_sel = 0; ///// ldst discards it
+
+
+
 
     }
 

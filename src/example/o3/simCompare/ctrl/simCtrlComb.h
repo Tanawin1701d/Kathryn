@@ -7,6 +7,7 @@
 
 #include "simCtrlKride.h"
 #include "simCtrlRide.h"
+#include "util/fileWriter/slotWriter/wslotWriter.h"
 
 namespace kathryn::o3{
 
@@ -53,7 +54,8 @@ namespace kathryn::o3{
                 };
 
             }else if (params["workload"] == "cpp"){
-                testTypes = { "Fibo" };
+                testTypes = { "Tarai" };
+                testTypes = { "Cprime" };
             }
 
             ull limitCycle = stoull(params["limitCycle"]);
@@ -64,10 +66,12 @@ namespace kathryn::o3{
             std::vector<int> slotColumnWidth =         {20, 40   , 25, 25, 30,
                                                         30, 35   , 25, 35, 25, 25};
 
-            SlotWriter slotWriterKride(slotColumnNames, slotColumnWidth,
-                std::move(params["prefix"] + testTypes[0] + "/oslot_kride.sl"));
-            SlotWriter slotWriterRide (slotColumnNames, slotColumnWidth,
-                std::move(params["prefix"] + testTypes[0] + "/oslot_ride.sl"));
+            WSlotWriter slotWriterKride(slotColumnNames, slotColumnWidth,
+                params["prefix"] + testTypes[0] + "/oslot_kride.sl",
+                2500);
+            WSlotWriter slotWriterRide (slotColumnNames, slotColumnWidth,
+                params["prefix"] + testTypes[0] + "/oslot_ride.sl",
+                2500);
 
             ///////// build model core
             mMod(o3Top, TopSim, false);
@@ -101,6 +105,10 @@ namespace kathryn::o3{
 
             );
             simulator.simStart();
+
+            slotWriterKride.finalizeLastWindow();
+            slotWriterRide.finalizeLastWindow();
+
             resetKathryn();
             std::cout << TC_GREEN << "--------------------------------" << std::endl;
         }

@@ -134,4 +134,18 @@ namespace kathryn::o3{
 
     }
 
+
+    void O3SimCtrlBase::writeMemOp(){
+
+        if (!lastDmemRead){
+            _slotWriter.addSlotVal(RPS_STBUF, "-------");
+            _slotWriter.addSlotVal(RPS_STBUF, "write @ " + cvtNum2HexStr(lastDmemAddr));
+            _slotWriter.addSlotVal(RPS_STBUF, "    with Data" + cvtNum2HexStr(lastDmemWData));
+
+        }
+
+
+    }
+
+
 }
