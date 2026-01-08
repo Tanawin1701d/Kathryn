@@ -41,6 +41,8 @@ namespace kathryn::o3{
         mWire(dbg_isAluRsvAllocatable, 1);
         mWire(dbg_isBranchRsvAllocatable, 1);
         mWire(dbg_isRenamable, 1);
+        mWire(dbg_imm1, DATA_LEN);
+        mWire(dbg_imm2, DATA_LEN);
 
         mWire(dbg_isDisp1, 1);
         mWire(dbg_isDisp2, 1);
@@ -147,12 +149,12 @@ namespace kathryn::o3{
             lsRsvIdx2_final = mux(dcd1(rsEnt) == RS_ENT_LDST, lsRsvIdx2, lsRsvIdx);
 
             ///// rename command
-            RenameCmd renCmd1{dcd1(rdUse)   , regArch.rrf.getReqPtr(),
-                              dcd1(rdIdx)   ,
-                              dcd1(isBranch), dcd1(specTag)};
-            RenameCmd renCmd2{dcd2(rdUse)   , regArch.rrf.getReqPtr()+1,
-                              dcd2(rdIdx)   ,
-                              dcd2(isBranch), dcd2(specTag)};
+            RenameCmd renCmd1{dcd1(rdUse)                 , regArch.rrf.getReqPtr(),
+                              dcd1(rdIdx)                 ,
+                              dcd1(isBranch)              , dcd1(specTag)};
+            RenameCmd renCmd2{dcd2(rdUse)&(~dcd2(invalid)), regArch.rrf.getReqPtr()+1,
+                              dcd2(rdIdx)                 ,
+                              dcd2(isBranch)              , dcd2(specTag)};
             ///// dispatch signal
             opr& isRenamable = regArch.rrf.isRenamable(~dcd2(invalid));
             opr& isdispatable = isAluRsvAllocatable    & isMulRsvAllocatable &
@@ -166,6 +168,8 @@ namespace kathryn::o3{
             dbg_isAluRsvAllocatable      = isAluRsvAllocatable;
             dbg_isBranchRsvAllocatable   = isBranchRsvAllocatable;
             dbg_isRenamable              = isRenamable;
+            dbg_imm1                     = entry1(imm);
+            dbg_imm2                     = entry2(imm);
 
             pip(pm.ds.sync){                               initProbe(pipProbGrp .dispatch);
                 zyncc(pm.rs.sync, isdispatable){ autoSync  initProbe(zyncProbGrp.dispatch);

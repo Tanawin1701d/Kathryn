@@ -29,6 +29,8 @@ namespace kathryn::o3{
     ZyncSimProb* zsp  = nullptr;
     PipSimProbe* psp2 = nullptr;
 
+    mWire(dbg_effAddr, ADDR_LEN);
+
 
     explicit ExecLdSt(LdStStage& ldSt_stage,
                      RegArch&    regArch,
@@ -61,6 +63,9 @@ namespace kathryn::o3{
         opr& data      = src(phyIdx_2);
         opr& effAddr   = src(phyIdx_1) + src(imm);
 
+        dbg_effAddr = effAddr;
+
+
         //////// operate the store buffer
         stBuf.flow();
 
@@ -68,9 +73,6 @@ namespace kathryn::o3{
             zyncc(lss.sync2, (isLoad || (!stBuf.isFull()))){ tryInitProbe(zsp)
                 //////assign ordinaty data to next stage rrftag. rdIse. spec. spectag
                 lsRes <<= src;
-                zif(bc.checkIsSuc(src)){
-                    lsRes(spec) <<= 0; /// on flight clean data
-                }
                 auto[buf_found, buf_data] =  stBuf.searchNewest(effAddr);
                 lsRes(stBufData) <<= buf_data;
                 lsRes(stBufHit)  <<= buf_found;
@@ -88,7 +90,7 @@ namespace kathryn::o3{
         }
         //////// second stage
         opr& resolvedData = mux(lsRes(stBufHit), lsRes(stBufData), lss.dmem_rdata);
-        bp.addSrc(src(rrftag), resolvedData);
+        bp.addSrc(lsRes(rrftag), resolvedData);
 
         pip(lss.sync2){ tryInitProbe(psp2)
             rob.onWriteBack(lsRes(rrftag));

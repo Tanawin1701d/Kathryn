@@ -203,12 +203,16 @@ namespace kathryn::o3{
             pipStat st1 = PS_IDLE;
             pipStat st2 = PS_IDLE;
             RSV_BASE_ENTRY entry{};
+            ull     effAddr = 0;
+
+
             ull rrftag    = 0;
             ull rdUse     = 0;
             ull spec      = 0;
             ull specTag   = 0;
             ull stBufData = 0;
             ull stBufHit  = 0;
+            ull loadData  = 0;
 
             bool compare(const EXEC_LDST_STATE& rhs) const;
             void printSlot(SlotWriterBase& writer, COMMIT_STATE& commitState);

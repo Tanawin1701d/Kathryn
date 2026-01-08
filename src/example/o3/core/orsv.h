@@ -96,9 +96,9 @@ namespace kathryn::o3{
 
             cwhile(true){
                 zyncc(syncMeta, dbg_isSlotReady){ tryInitProbe(issueProbe);
-                    tryOwSpecBit(iw, bc);
                     //////// reset the table
                     onIssue(ohIdx, iw);
+                    tryOwSpecBit(iw, bc);
                 }
             }
         }

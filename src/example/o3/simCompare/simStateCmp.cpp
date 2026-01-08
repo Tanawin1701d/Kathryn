@@ -235,6 +235,9 @@ namespace kathryn::o3{
         bool compareResult = true;
         if (st1 == rhs.st1){
             compareResult &= entry.compare(rhs.entry);
+            if (st1 == PS_RUNNING){
+                compareResult &= checkAndPrintSimValueUll(effAddr, rhs.effAddr, "exec LDST", "effAddr");
+            }
         }else{
             printStateMisMatch("exec LDST stage", st1, rhs.st1);
             compareResult = false;
@@ -246,8 +249,14 @@ namespace kathryn::o3{
                 compareResult &= checkAndPrintSimValueUll(rdUse    , rhs.rdUse    , "exec LDST", "rdUse"    );
                 compareResult &= checkAndPrintSimValueUll(spec     , rhs.spec     , "exec LDST", "spec"     );
                 compareResult &= checkAndPrintSimValueUll(specTag  , rhs.specTag  , "exec LDST", "specTag"  );
-                compareResult &= checkAndPrintSimValueUll(stBufData, rhs.stBufData, "exec LDST", "stBufData");
-                compareResult &= checkAndPrintSimValueUll(stBufHit , rhs.stBufHit , "exec LDST", "stBufHit" );
+                if (rdUse != 0){
+                    compareResult &= checkAndPrintSimValueUll(stBufHit , rhs.stBufHit , "exec LDST", "stBufHit" );
+                    if (stBufHit != 0){
+                        compareResult &= checkAndPrintSimValueUll(stBufData, rhs.stBufData, "exec LDST", "stBufData");
+                    }else{
+                        compareResult &= checkAndPrintSimValueUll(loadData, rhs.loadData, "exec LDST", "load data");
+                    }
+                }
             }
 
         }else{

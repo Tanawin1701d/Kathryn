@@ -104,12 +104,25 @@ namespace kathryn::o3{
 
         std::pair<opr&, opr&> searchNewest(opr& addr){
 
-            ///// find newst system.
-            auto[result, binIdx] = _table.findMBO_BIDX(true, finPtr,
-                [&](RegSlot& lhs)->opr&{
-                return lhs(busy) & (lhs(mem_addr) == addr);
-            });
-            return {result(busy), daytas[binIdx]};
+            /// find newst system.
+             auto[result, binIdx] = _table.findMBO_BIDX(true, finPtr,
+                 [&](RegSlot& lhs)->opr&{
+                 return lhs(busy) & (lhs(mem_addr) == addr);
+             });
+
+            // mWire(hit, 1);
+            // mWire(findIdx, STBUF_ENT_SEL);
+            // mWire(data, DATA_LEN);
+            //
+            // for (int i = 0; i < STBUF_ENT_NUM; i++){
+            //     zif( (_table(i)(busy)) && (_table(i)(mem_addr) == addr)){
+            //         hit = 1;
+            //         findIdx = i;
+            //     }
+            // }
+            // return {hit, daytas[findIdx]};
+
+            return {result(busy) & (result(mem_addr) == addr), daytas[binIdx]};
         }
 
         void flow(){ //// retire and do other thing
@@ -121,7 +134,7 @@ namespace kathryn::o3{
             lss.dmem_rwaddr = retireSlot(mem_addr);
             lss.dmem_wdata = daytas[retPtr];
 
-            zif (retireSlot(busy) & retireSlot(complete)){
+            zif (retireSlot(busy) & retireSlot(complete) & (~bc.isBrMissPred())){
                 zif(lss.dmem_we = 1){ ///// try to make it equal to one if not update will not occur because memory hold them all
                     retPtr <<= (retPtr + 1);
                     _table[retPtr](busy)     <<= 0;

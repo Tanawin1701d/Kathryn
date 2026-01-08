@@ -121,12 +121,12 @@ namespace kathryn::o3{
         ////// rsIdx use with data in the system
 
 ///// IMEM parameter
-constexpr int IMEM_IDX_WIDTH = 10;
+constexpr int IMEM_IDX_WIDTH = 11;
 constexpr int IMEM_ROW   = 1 << IMEM_IDX_WIDTH;
 constexpr int IMEM_WIDTH = 32;
 
 ///// DMEM parameter
-constexpr int DMEM_IDX_WIDTH = 12;
+constexpr int DMEM_IDX_WIDTH = 11;
 constexpr int DMEM_ROW   = 1 << DMEM_IDX_WIDTH;
 constexpr int DMEM_WIDTH = 32;
 

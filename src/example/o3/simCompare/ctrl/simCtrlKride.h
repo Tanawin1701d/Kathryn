@@ -28,6 +28,9 @@ namespace kathryn::o3{
 
         void  describeCon  () override;
 
+        void doWorkloadInit (int curTestCaseIdx, bool reqRegTest) override;
+        void doWorkloadCycle(bool recordThisCycle) override;
+
         void  readMem2Fetch() override;
         void  readWriteDataMemGetCmd() override;
         void  readWriteDataMemDoCmd() override;

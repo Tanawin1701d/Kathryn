@@ -1,42 +1,30 @@
 //
-// Created by tanawin on 1/1/26.
+// Created by tanawin on 6/1/26.
 //
 
-#include "simCtrlComb.h"
-
-#include <utility>
+#include "simCtrlCombCxx.h"
 
 namespace kathryn::o3{
 
 
-    CombCtrl::CombCtrl(CYCLE                    limitCycle,
-                       const std::string&       prefix,
-                       std::vector<std::string> testTypes,
-                       SimProxyBuildMode        buildMode,
-                       SlotWriterBase&          slotWriter,
-                       SimState&                state,
-                       TopSim&                  topSim,
-                       SimCtrlRide&             slaveRide
-    ):
-    SimCtrlKride(limitCycle,
-                 prefix,
-                 std::move(testTypes),
-                 buildMode,
-                 slotWriter,
-                 state,
-                 topSim),
-    _slaveRide(slaveRide)
-    {}
+    CombCtrlCxx::CombCtrlCxx(CYCLE       limitCycle,
+                const std::string&       prefix,
+                std::vector<std::string> testTypes,
+                SimProxyBuildMode        buildMode,
+                SlotWriterBase&          slotWriter,
+                SimState&                state,
+                TopSim&                  topSim,
+                SimCtrlRide&             slaveRide):
+    CombCtrl(limitCycle,
+             prefix,
+             testTypes,
+             buildMode,
+             slotWriter,
+             state,
+             topSim,
+             slaveRide){}
 
-    bool CombCtrl::doCompare(){
-        bool compareValid = _state.compare(_slaveRide._state);
-        compareValid &= compareMemOp(_slaveRide);
-
-        return compareValid;
-
-    }
-
-    void CombCtrl::describeCon(){
+    void CombCtrlCxx::describeCon(){
 
         for (; _curTestCaseIdx < _testTypes.size(); _curTestCaseIdx++){
             std::cout << std::endl
@@ -47,16 +35,16 @@ namespace kathryn::o3{
                       << TC_DEF << std::endl;
 
             ////// init kride and ride
-            doWorkloadInit(_curTestCaseIdx, true);
+            doWorkloadInit(_curTestCaseIdx, false);
             doWorkloadCycle(false);
-            _slaveRide.doWorkloadInit(_curTestCaseIdx, true);
+            _slaveRide.doWorkloadInit(_curTestCaseIdx, false);
             //////// iterate for 100 cycle
             bool retard = false;
             int  retartedCount = 0;
             std::cout << TC_BLUE <<
                     "[O3 RISC-V CMP] -----> start compare"
                   << TC_DEF << std::endl;
-            for (int i = 0; i <= 150; i++){
+            while (true){
                 if (retard && (retartedCount < BELAYED_AFTER_MIS_CMP)){
                     break;
                 }
@@ -70,6 +58,19 @@ namespace kathryn::o3{
                     if (retartedCount >= BELAYED_AFTER_MIS_CMP){break;}
                     retartedCount++;
                 }
+
+
+                if (isExecFin() && _slaveRide.isExecFin()){
+                    std::cout << TC_GREEN << "slave is equal " << TC_DEF << std::endl;
+                    break;
+                }else if (isExecFin()){
+                    std::cout << TC_RED << "master is finish but slave not" << TC_DEF << std::endl;
+                    break;
+                }else if (_slaveRide.isExecFin()){
+                    std::cout << TC_RED << "slave is  finish not like" << TC_DEF << std::endl;
+                    break;
+                }
+
             }
 
             if (retard){
@@ -78,12 +79,9 @@ namespace kathryn::o3{
                 std::cout << TC_GREEN << "[O3 RISC-V CMP] compare pass" << TC_DEF << std::endl;
             }
             /////////////////////////////////
-            testRegister();
-            _slaveRide.testRegister();
             finalPerfCol();
         }
 
     }
-
 
 }

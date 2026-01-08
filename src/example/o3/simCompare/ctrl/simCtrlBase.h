@@ -18,8 +18,8 @@ namespace kathryn::o3{
         int _curTestCaseIdx = 0;
         std::string _prefixFolder;
         std::vector<std::string> _testTypes;
-        uint32_t _imem      [IMEM_ROW]{};
-        uint32_t _dmem      [DMEM_ROW]{};
+        uint32_t _imem      [IMEM_ROW]{}; ///// 512  * 4 rows
+        uint32_t _dmem      [DMEM_ROW]{}; ///// 2048 * 1 rows
         uint32_t _regTestVal[REG_NUM] {};
 
         bool     lastDmemEnable = false; //// enabler
@@ -40,12 +40,20 @@ namespace kathryn::o3{
         virtual ~O3SimCtrlBase() = default;
 
 
+        virtual void doWorkloadInit (int curTestCaseIdx, bool reqRegTest)   = 0;
+        virtual void doWorkloadCycle(bool recordThisCycle) = 0;
+
+
         ////// memory management for each cycle
+        bool isExecFin();
 
         void          resetDmem();
 
         bool          compareMemOp(O3SimCtrlBase& rhs);
 
+        uint32_t      readAssemblyBase(const std::string& filePath, //// return remaining
+                                       uint32_t* memPtr,
+                                       uint32_t  numRow);
 
         ////// memory initialization
         virtual void  readAssembly (const std::string& filePath);

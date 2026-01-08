@@ -35,40 +35,79 @@ namespace kathryn::o3{
     _topSim(topSim),
     _core(topSim.myCore){}
 
+    void SimCtrlKride::doWorkloadInit(int curTestCaseIdx, bool reqRegTest){
+
+        _vcdWriter-> renew(_prefixFolder + _testTypes[curTestCaseIdx]+ "/owave.vcd");
+        _flowWriter->renew(_prefixFolder + _testTypes[curTestCaseIdx]+ "/oprofile.prof");
+        _slotWriter. renew(_prefixFolder + _testTypes[curTestCaseIdx]+ "/oslot_kride.sl");
+        //////// set reset wire to 1
+        *rstWire = 1;
+        //////// cycle before cycle cycle is running
+        conNextCycle(1);
+        *rstWire = 0;
+        resetRegister();
+        readAssembly (_prefixFolder + _testTypes[curTestCaseIdx] + "/asm.out");
+        if (reqRegTest){
+            readAssertVal(_prefixFolder + _testTypes[curTestCaseIdx] + "/ast.out");
+        }
+        //resetDmem();   we dont use it any more na krub
+
+    }
+
+    void SimCtrlKride::doWorkloadCycle(bool recordThisCycle){
+        ///////// give the data to
+        readMem2Fetch();
+        readWriteDataMemDoCmd(); ///// do the dmem command command
+
+        conEndCycle();
+        readWriteDataMemGetCmd();
+        ///////// record the system
+        _state.recruitValue();
+        if (recordThisCycle){
+            _state.printSlotWindow(_slotWriter);
+
+            _slotWriter.addSlotVal(RPS_RSV, "--BR-------");
+            _slotWriter.addSlotVal(RPS_RSV, "allocPtr " + std::to_string(ull(_core.rsvs.br.allocPtr)));
+            _slotWriter.addSlotVal(RPS_RSV, "b1"  +   std::to_string(ull( _core.rsvs.br.dbg_b1_valid))  +   "  value " + std::to_string(ull( _core.rsvs.br.dbg_b1_idx))) ;
+            _slotWriter.addSlotVal(RPS_RSV, "e1"  +   std::to_string(ull( _core.rsvs.br.dbg_e1_valid))  +   "  value " + std::to_string(ull( _core.rsvs.br.dbg_e1_idx))) ;
+            _slotWriter.addSlotVal(RPS_RSV, "e0"  +   std::to_string(ull( _core.rsvs.br.dbg_e0_valid))  +   "  value " + std::to_string(ull( _core.rsvs.br.dbg_e0_idx))) ;
+            _slotWriter.addSlotVal(RPS_RSV, "nb1"   + std::to_string(ull(  _core.rsvs.br.dbg_nb1_valid))  +   "  value " + std::to_string(ull(  _core.rsvs.br.dbg_nb1_idx))) ;
+            _slotWriter.addSlotVal(RPS_RSV, "ne1"   + std::to_string(ull(  _core.rsvs.br.dbg_ne1_valid))  +   "  value " + std::to_string(ull(  _core.rsvs.br.dbg_ne1_idx))) ;
+            _slotWriter.addSlotVal(RPS_RSV, "nb0"   + std::to_string(ull(  _core.rsvs.br.dbg_nb0_valid))  +   "  value " + std::to_string(ull(  _core.rsvs.br.dbg_nb0_idx))) ;
+
+            _slotWriter.addSlotVal(RPS_RSV, "--LS-------");
+            _slotWriter.addSlotVal(RPS_RSV, "allocPtr " + std::to_string(ull(_core.rsvs.ls.allocPtr)));
+            _slotWriter.addSlotVal(RPS_RSV, "b1"  +   std::to_string(ull( _core.rsvs.ls.dbg_b1_valid))  +   "  value " + std::to_string(ull( _core.rsvs.ls.dbg_b1_idx))) ;
+            _slotWriter.addSlotVal(RPS_RSV, "e1"  +   std::to_string(ull( _core.rsvs.ls.dbg_e1_valid))  +   "  value " + std::to_string(ull( _core.rsvs.ls.dbg_e1_idx))) ;
+            _slotWriter.addSlotVal(RPS_RSV, "e0"  +   std::to_string(ull( _core.rsvs.ls.dbg_e0_valid))  +   "  value " + std::to_string(ull( _core.rsvs.ls.dbg_e0_idx))) ;
+            _slotWriter.addSlotVal(RPS_RSV, "nb1"   + std::to_string(ull(  _core.rsvs.ls.dbg_nb1_valid))  +   "  value " + std::to_string(ull(  _core.rsvs.ls.dbg_nb1_idx))) ;
+            _slotWriter.addSlotVal(RPS_RSV, "ne1"   + std::to_string(ull(  _core.rsvs.ls.dbg_ne1_valid))  +   "  value " + std::to_string(ull(  _core.rsvs.ls.dbg_ne1_idx))) ;
+            _slotWriter.addSlotVal(RPS_RSV, "nb0"   + std::to_string(ull(  _core.rsvs.ls.dbg_nb0_valid))  +   "  value " + std::to_string(ull(  _core.rsvs.ls.dbg_nb0_idx))) ;
+
+            _slotWriter.addSlotVal(RPS_DISPATCH, "--imm1------- "  + cvtNum2HexStr(ull(_core.pDisp.dbg_imm1)));
+            _slotWriter.addSlotVal(RPS_DISPATCH, "--imm2------- "  + cvtNum2HexStr(ull(_core.pDisp.dbg_imm2)));
+            _slotWriter.addSlotVal(RPS_DISPATCH, "--inst1------- " + cvtNum2HexStr(ull(_core.pm.dc.dcd1(inst))));
+            _slotWriter.addSlotVal(RPS_DISPATCH, "--inst2------- " + cvtNum2HexStr(ull(_core.pm.dc.dcd2(inst))));
+
+
+
+        }
+        _state.recruitNextCycle();
+        postCycleAction(); ///// assign value to the print
+        _slotWriter.concludeEachCycle();
+        //////////////////////////////////
+        conNextCycle(1);
+    }
+
     void SimCtrlKride::describeCon(){
 
         for (; _curTestCaseIdx < _testTypes.size(); _curTestCaseIdx++){
             std::cout << TC_BLUE << "[O3 RISC-V] test type is " << _testTypes[_curTestCaseIdx] << TC_DEF << std::endl;
             //////////////  read assembly and assertVal
-
-            _vcdWriter-> renew(_prefixFolder + _testTypes[_curTestCaseIdx]+ "/owave.vcd");
-            _flowWriter->renew(_prefixFolder + _testTypes[_curTestCaseIdx]+ "/oprofile.prof");
-            _slotWriter. renew(_prefixFolder + _testTypes[_curTestCaseIdx]+ "/oslot.sl");
-            //////// set reset wire to 1
-            *rstWire = 1;
-            //////// cycle before cycle cycle is running
-            conNextCycle(1);
-            *rstWire = 0;
-            resetRegister();
-            readAssembly (_prefixFolder + _testTypes[_curTestCaseIdx] + "/asm.out");
-            readAssertVal(_prefixFolder + _testTypes[_curTestCaseIdx] + "/ast.out");
-            resetDmem();
+            doWorkloadInit(_curTestCaseIdx, true);
             //////// iterate for 100 cycle
             for (int i = 0; i <= 150; i++){
-                ///////// give the data to
-                readMem2Fetch();
-                readWriteDataMemDoCmd(); ///// do the dmem command command
-
-                conEndCycle();
-                readWriteDataMemGetCmd();
-                ///////// record the system
-                _state.recruitValue();
-                _state.printSlotWindow(_slotWriter);
-                _state.recruitNextCycle();
-                postCycleAction(); ///// assign value to the print
-                _slotWriter.concludeEachCycle();
-                //////////////////////////////////
-                conNextCycle(1);
+                doWorkloadCycle(true);
             }
             /////////////////////////////////
             testRegister();
@@ -115,10 +154,22 @@ namespace kathryn::o3{
         uint32_t aligned_addr = lastDmemAddr >> 2;
 
         if (lastDmemRead){
-            _topSim.ijDmem0.s(_dmem[aligned_addr]);
+
+            if (aligned_addr >= DMEM_ROW){
+                std::cout << "skip read due to exceed memory address" << std::endl;
+            }else{
+                _topSim.ijDmem0.s(_dmem[aligned_addr]);
+            }
         }else{
-            _dmem[aligned_addr] = lastDmemWData;
-            std::cout << "write Detect at @ " << cvtNum2HexStr(lastDmemAddr) << " with data " << lastDmemWData << std::endl;
+
+            if (aligned_addr >= DMEM_ROW){
+                std::cout << "skip write due to exceed memory address" << std::endl;
+            }else{
+                _dmem[aligned_addr] = lastDmemWData;
+                std::cout << "write Detect at @ " << cvtNum2HexStr(lastDmemAddr) << " with data " << lastDmemWData << std::endl;
+            }
+
+
         }
     }
     void  SimCtrlKride::resetRegister(){

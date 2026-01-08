@@ -13,13 +13,14 @@ namespace kathryn::o3{
 
     struct BroadCast{
         mWire(mis, 1);
+        mWire(fixTag, SPECTAG_LEN);
         mWire(suc, 1);
         mWire(misTag, SPECTAG_LEN);
         mWire(sucTag, SPECTAG_LEN);
         opr& isBrMissPred(){ return mis;}
         opr& isBrSuccPred(){ return suc;}
         opr& checkIsKill(opr& specIdx){
-            return mis & (misTag == specIdx);
+            return mis & ( (fixTag&specIdx) != 0);
         }
         opr& checkIsSuc (opr& specIdx){
             return suc & (sucTag == specIdx);

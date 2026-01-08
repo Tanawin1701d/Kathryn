@@ -21,6 +21,16 @@ namespace kathryn::o3{
     _state       (state){}
 
 
+    bool O3SimCtrlBase::isExecFin(){
+
+        if ((!lastDmemRead) && (lastDmemAddr == 8) && (lastDmemWData == 1)){
+            return true;
+        }
+        return false;
+
+    }
+
+
 
     void O3SimCtrlBase::resetDmem(){
         std::memset(_dmem, 0, sizeof(_dmem));
@@ -68,30 +78,46 @@ namespace kathryn::o3{
 
     }
 
+    uint32_t O3SimCtrlBase::readAssemblyBase(const std::string& filePath,
+                                             uint32_t* memPtr,
+                                             uint32_t numRow){
 
-    void O3SimCtrlBase::readAssembly(const std::string& filePath){
         ////////// initialize file
         std::ifstream asmFile(filePath, std::ios::binary);
         if (!asmFile.is_open()){assert(false);}
         asmFile.seekg(0, std::ios::end);
         std::streampos fileSize = asmFile.tellg();
         assert((fileSize % 4) == 0);
+        assert(fileSize <= (numRow << 2));
         asmFile.seekg(0, std::ios::beg);
 
         /** read instruction from file and write it to memory block*/
         uint32_t writeAddr = 0;
         uint32_t instr;
         while(asmFile.read(reinterpret_cast<char*>(&instr), sizeof instr)){
-            assert((instr & 0b11) == 0b11); ////// check instruction
-            _imem[writeAddr] = instr;
+            memPtr[writeAddr] = instr;
             writeAddr++;
         }
         asmFile.close();
 
         ///// fill all with zero
-        std::fill(_imem + writeAddr, _imem + IMEM_ROW, 0);
+        std::fill(memPtr + writeAddr, memPtr + numRow, 0);
 
-        std::cout << TC_GREEN << "initialize mem finish" << TC_DEF << std::endl;
+        return numRow - writeAddr; //// the result is in byte * 4
+    }
+
+
+
+    void O3SimCtrlBase::readAssembly(const std::string& filePath){
+        std::cout << TC_BLUE << "initialize IMEM" << TC_DEF << std::endl;
+        uint32_t iremainRow = readAssemblyBase(filePath, _imem, IMEM_ROW);
+        std::cout << TC_BLUE << "remainRow: " << iremainRow << TC_DEF << std::endl;
+        std::cout << TC_GREEN << "initialize IMEM finish" << TC_DEF << std::endl;
+
+        std::cout << TC_BLUE << "initialize DMEM" << TC_DEF << std::endl;
+        uint32_t dremainRow = readAssemblyBase(filePath, _dmem, DMEM_ROW);
+        std::cout << TC_BLUE << "remainRow: " << dremainRow << TC_DEF << std::endl;
+        std::cout << TC_GREEN << "initialize IMEM finish" << TC_DEF << std::endl;
     }
 
     void O3SimCtrlBase::readAssertVal(const std::string& filePath){

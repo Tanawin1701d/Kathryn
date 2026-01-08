@@ -73,6 +73,7 @@ namespace kathryn::o3{
             //// assign static wire to bc
             tagMgmt.bc.misTag = spTag;
             tagMgmt.bc.sucTag = spTag;
+            tagMgmt.bc.fixTag = fixTag;
 
             //// calculate the address
             opr& nextPc = srcPc + 4;

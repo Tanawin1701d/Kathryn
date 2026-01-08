@@ -30,7 +30,7 @@ namespace kathryn::o3{
             if (checkNext){
                 auto& isSpec = sidedSlot(spec);
                 auto& isKilled = bc.checkIsKill(sidedSlot(specTag));
-                checkBusy = &(sidedSlot(busy) & (~isSpec | isKilled));
+                checkBusy = &(sidedSlot(busy) & ~(isSpec & isKilled));
             }
 
 
@@ -41,7 +41,11 @@ namespace kathryn::o3{
 
         });
 
-        return{iw(busy) == value, binIdx};
+        if (checkNext){
+            return {(iw(busy) && ~(iw(spec) & bc.checkIsKill(iw(specTag)))) == value, binIdx};
+        }
+            return{iw(busy) == value, binIdx};
+
     }
 
 

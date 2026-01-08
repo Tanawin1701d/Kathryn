@@ -224,12 +224,15 @@ namespace kathryn::o3{
         exec_ldst.st1 = generatePipState(&pipProbGrp.execLdSt, &zyncProbGrp.loadStore2);
         exec_ldst.st2 = generatePipState(&pipProbGrp.execLdSt2, nullptr);
         assignEXEC_LDST(exec_ldst.entry, _core.pExLdSt.src);
+        exec_ldst.effAddr = ull(_core.pExLdSt.dbg_effAddr);
+
         exec_ldst.rrftag    =   ull(_core.pExLdSt.lsRes(rrftag));
         exec_ldst.rdUse     =   ull(_core.pExLdSt.lsRes(rdUse));
         exec_ldst.spec      =   ull(_core.pExLdSt.lsRes(spec));
         exec_ldst.specTag   =   ull(_core.pExLdSt.lsRes(specTag));
         exec_ldst.stBufData =   ull(_core.pExLdSt.lsRes(stBufData));
         exec_ldst.stBufHit  =   ull(_core.pExLdSt.lsRes(stBufHit));
+        exec_ldst.loadData = ull(_core.pExLdSt.lss.dmem_rdata);
 
         //// commit
         rob.comPtr = ull(_core.prob.comPtr);

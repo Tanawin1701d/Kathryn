@@ -331,7 +331,9 @@ namespace kathryn::o3{
         writer.addSlotVal(RPS_EXECUTE, "----> LDST Stage ");
         if (writeSlotIfRunning(RPS_EXECUTE, st1, writer)){
             entry.printDetailedSlot(writer, RPS_EXECUTE, commitState);
+            writer.addSlotVal(RPS_EXECUTE, "effAddr " + cvtNum2HexStr(effAddr));
         }
+
 
         writer.addSlotVal(RPS_EXECUTE, "-----> EXEC Stage 2");
         if (writeSlotIfRunning(RPS_EXECUTE, st2, writer)){
@@ -340,6 +342,7 @@ namespace kathryn::o3{
                                            " /specTag:" + cvtNum2BinStr(specTag));
             writer.addSlotVal(RPS_EXECUTE, "stbHit:" + std::to_string(stBufHit) +
                                            "stbData:" + cvtNum2HexStr(stBufData));
+            writer.addSlotVal(RPS_EXECUTE, "loadData: " + std::to_string(loadData));
         }
     }
 

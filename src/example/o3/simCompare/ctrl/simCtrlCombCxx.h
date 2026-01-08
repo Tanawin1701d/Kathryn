@@ -1,49 +1,36 @@
 //
-// Created by tanawin on 1/1/26.
+// Created by tanawin on 6/1/26.
 //
 
-#ifndef EXAMPLE_O3_SIMCOMPARE_CTRL_SIMCTRLCOMB_H
-#define EXAMPLE_O3_SIMCOMPARE_CTRL_SIMCTRLCOMB_H
+#ifndef EXAMPLE_O3_SIMCOMPARE_CTRL_SIMCTRLCOMBCXX_H
+#define EXAMPLE_O3_SIMCOMPARE_CTRL_SIMCTRLCOMBCXX_H
 
-#include "simCtrlKride.h"
-#include "simCtrlRide.h"
+#include "simCtrlComb.h"
 
 namespace kathryn::o3{
 
-    class CombCtrl : public SimCtrlKride{
-
-    protected:
-        const int BELAYED_AFTER_MIS_CMP = 1;
-        SimCtrlRide& _slaveRide;
-
+    class CombCtrlCxx: public CombCtrl{
     public:
+        explicit CombCtrlCxx(CYCLE                    limitCycle,
+                             const std::string&       prefix,
+                             std::vector<std::string> testTypes,
+                             SimProxyBuildMode        buildMode,
+                             SlotWriterBase&          slotWriter,
+                             SimState&                state,
+                             TopSim&                  topSim,
+                             SimCtrlRide&             slaveRide
+                             );
 
-        explicit CombCtrl(CYCLE                    limitCycle,
-                          const std::string&       prefix,
-                          std::vector<std::string> testTypes,
-                          SimProxyBuildMode        buildMode,
-                          SlotWriterBase&          slotWriter,
-                          SimState&                state,
-                          TopSim&                  topSim,
-                          SimCtrlRide&             slaveRide
-
-                          );
-
-        bool doCompare();
-
-        void describeCon  () override;
+        void describeCon() override;
 
     };
 
-
-    class COMB_MNG{
+    class COMB_CXX_MNG{
     public:
         void start(PARAM& params){
 
             std::vector<std::string> testTypes = {
-                "Imm"       , "Reg"        , "Branch", "BranchSuc",
-                "BranchLong", "BranchMidRd", "OverRrf",
-                "LoadImm"   , "BranchSc"   , "memOp"
+                "Fibo"
             };
             std::vector<std::string> slotColumnNames = {"MPFT"    , "ARF","RRF"  , "FETCH"  ,"DECODE",
                                                         "DISPATCH", "RSV","ISSUE", "EXECUTE","COMMIT", "STBUF"};
@@ -66,7 +53,7 @@ namespace kathryn::o3{
 
             startModelKathryn();
 
-            SimCtrlRide  slaveSimulator(2500,
+            SimCtrlRide  slaveSimulator(10000,
                             params["prefix"],
                             testTypes,
                             getSPBM(params),
@@ -75,14 +62,14 @@ namespace kathryn::o3{
                             *slaveCore
             );
 
-            CombCtrl simulator(2500,
-                            params["prefix"],
-                            testTypes,
-                            getSPBM(params),
-                            slotWriterKride,
-                            simState,
-                            (TopSim&)o3Top,
-                            slaveSimulator
+            CombCtrlCxx simulator(10000,
+                                  params["prefix"],
+                                  testTypes,
+                                  getSPBM(params),
+                                  slotWriterKride,
+                                  simState,
+                                  (TopSim&)o3Top,
+                                  slaveSimulator
             );
             simulator.simStart();
             resetKathryn();
@@ -92,7 +79,4 @@ namespace kathryn::o3{
 
 }
 
-
-
-
-#endif //EXAMPLE_O3_SIMCOMPARE_CTRL_SIMCTRLCOMB_H
+#endif //KATHRYN_SIMCTRLCOMBCXX_H

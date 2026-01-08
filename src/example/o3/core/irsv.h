@@ -21,6 +21,20 @@ namespace kathryn::o3{
         SearchResult b1 ,  e1,  e0;
         SearchResult nb1, ne1, nb0; /// search to fix alloc pointer
 
+        mWire(dbg_b1_valid, 1);
+        mWire(dbg_e1_valid, 1);
+        mWire(dbg_e0_valid, 1);
+        mWire(dbg_nb1_valid, 1);
+        mWire(dbg_ne1_valid, 1);
+        mWire(dbg_nb0_valid, 1);
+
+        mWire(dbg_b1_idx, 3);
+        mWire(dbg_e1_idx, 3);
+        mWire(dbg_e0_idx, 3);
+        mWire(dbg_nb1_idx, 3);
+        mWire(dbg_ne1_idx, 3);
+        mWire(dbg_nb0_idx, 3);
+
         IRsv(int rsv_idx  , SlotMeta meta,
              int indexSize, std::string debugName,
              BroadCast& bc):
@@ -55,7 +69,7 @@ namespace kathryn::o3{
                     ////// case 0  is bubble there is 1 atstart and 1 at the end
                     allocPtr <<= nb0.sIdx; ///// nb0
                 }zelse{
-                    allocPtr <<= (nb1.sIdx+1);
+                    allocPtr <<= (ne1.sIdx+1);
                 }
             }
             /// incase update when entrance the filler at rename stage will handle it
@@ -95,11 +109,25 @@ namespace kathryn::o3{
 
             cwhile(true){
                 zyncc(syncMeta, slotReady(iw)){ tryInitProbe(issueProbe);
-                    tryOwSpecBit(iw, bc);
                     //////// reset the table
                     onIssue(checkIdx, iw); //// reset busy
+                    tryOwSpecBit(iw, bc);
                 }
             }
+
+            dbg_b1_valid     = b1.first;
+            dbg_e1_valid     = e1.first;
+            dbg_e0_valid     = e0.first;
+            dbg_nb1_valid     = nb1.first;
+            dbg_ne1_valid     = ne1.first;
+            dbg_nb0_valid     = nb0.first;
+
+            dbg_b1_idx    =    b1.second;
+            dbg_e1_idx    =    e1.second;
+            dbg_e0_idx    =    e0.second;
+            dbg_nb1_idx    =    nb1.second;
+            dbg_ne1_idx    =    ne1.second;
+            dbg_nb0_idx    =    nb0.second;
         }
 
     };

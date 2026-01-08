@@ -19,6 +19,7 @@
 
 ///#ifdef BUILD_EXT_SIM
 #include "simCtrlRide.h"
+#include "example/o3/simCompare/ctrl/simCtrlCombCxx.h"
 ///#endif
 
 
@@ -98,6 +99,14 @@ namespace kathryn{
         std::cout << TC_GREEN << "finish comb kride ride sim [sim]" << TC_DEF << std::endl;
     }
 
+    void test_comb_kride_ride_cxx(PARAM& params){
+
+        o3::COMB_CXX_MNG combSimMng;
+        combSimMng.start(params);
+        std::cout << TC_GREEN << "finish comb kride ride sim [sim]" << TC_DEF << std::endl;
+
+    }
+
 
     void start(PARAM& params) {
 
@@ -128,6 +137,8 @@ namespace kathryn{
             test_ride_sim(params);
         }else if (params["testType"] == "testKrideRideCombSim"){
             test_comb_kride_ride(params);
+        }else if (params["testType"] == "testKrideRideCombCxxSim"){
+            test_comb_kride_ride_cxx(params);
         }else{
             std::cout << "there is no command to test system" << std::endl;
         }
