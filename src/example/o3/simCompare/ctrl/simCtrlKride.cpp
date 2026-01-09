@@ -90,7 +90,8 @@ namespace kathryn::o3{
             _slotWriter.addSlotVal(RPS_DISPATCH, "--inst1------- " + cvtNum2HexStr(ull(_core.pm.dc.dcd1(inst))));
             _slotWriter.addSlotVal(RPS_DISPATCH, "--inst2------- " + cvtNum2HexStr(ull(_core.pm.dc.dcd2(inst))));
 
-
+            _slotWriter.addSlotVal(RPS_MPFT, "-- cycle --");
+            _slotWriter.addSlotVal(RPS_MPFT, "cc: " + std::to_string(cycleCnt));
 
         }
         _state.recruitNextCycle();

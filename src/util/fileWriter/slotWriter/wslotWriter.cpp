@@ -29,6 +29,11 @@ namespace kathryn{
         WSlotWriter::init();
     }
 
+    void WSlotWriter::renew(const std::string& fileName){
+        finalizeLastWindow();
+        SlotWriterBase::renew(fileName);
+    }
+
     void WSlotWriter::addSlotVal(int slotIdx,
                                  const std::string& value){
 

@@ -30,6 +30,8 @@ namespace kathryn::o3{
         SlotWriterBase& _slotWriter;
         SimState& _state;
 
+        ull cycleCnt = 0;
+
         explicit O3SimCtrlBase(CYCLE                    limitCycle,
                                const std::string&       prefix,
                                std::vector<std::string> testTypes,

@@ -54,8 +54,9 @@ namespace kathryn::o3{
                 };
 
             }else if (params["workload"] == "cpp"){
-                testTypes = { "Tarai" };
-                testTypes = { "Cprime" };
+                ///testTypes = { "Tarai" };
+                testTypes = { "Fibo"  , "Tarai", "Cprime" , "Acker"   , "Hanoi"  ,
+                              "Matmul", "Sort3", "Stencil", "Stirling", "Komachi" };
             }
 
             ull limitCycle = stoull(params["limitCycle"]);

@@ -57,7 +57,6 @@ namespace kathryn::o3{
             std::cout << TC_BLUE <<
                     "[O3 RISC-V CMP] -----> start compare"
                   << TC_DEF << std::endl;
-            ull cycleCnt = 0;
             while (true){
                 if (retard && (retartedCount < BELAYED_AFTER_MIS_CMP)){
                     break;
@@ -85,7 +84,7 @@ namespace kathryn::o3{
                     break;
                 }
                 if (cycleCnt % 10000 == 0){
-                    std::cout << TC_BLUE << "[O3 RISC-V CMP] -----> computing cycle " << cycleCnt << std::endl;
+                    std::cout << TC_BLUE << "[O3 RISC-V CMP] -----> computing cycle " << cycleCnt << TC_DEF << std::endl;
                 }
                 cycleCnt++;
             }
