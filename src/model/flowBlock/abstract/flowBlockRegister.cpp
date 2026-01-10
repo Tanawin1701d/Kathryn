@@ -29,6 +29,8 @@ namespace kathryn{
             "PICK"               ,
             "PICK_WHEN"          ,
             "PSUEDO_BLOCK"       ,
+            "ZTATE_BLOCK"        ,
+            "ZCASE_BLOCK"        ,
             "DUMMY_BLOCK"
         };
         assert(fbt < FLOW_BLOCK_COUNT);

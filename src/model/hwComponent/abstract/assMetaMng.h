@@ -6,6 +6,7 @@
 #define MODEL_HWCOMPONENT_ABSTACT_ASSMETA_H
 
 #include "updateEvent.h"
+#include "model/flowBlock/abstract/nodes/asmNode.h"
 
 namespace kathryn{
 
@@ -89,15 +90,23 @@ namespace kathryn{
         /// the assign meta belongs to assignMeta
         std::vector<AssignMeta*> assignMetas;
 
+        ClassAssignMeta(){}
+
         ClassAssignMeta(AssignMeta* assignMeta){
             assignMetas.push_back(assignMeta);
         }
 
-        ~ClassAssignMeta(){
+        //////// all assignment Metas is supposed to be deleted because this class eventually creates
+        //////// new one.
+        virtual ~ClassAssignMeta(){
             for (auto* assignMeta: assignMetas){
                 delete assignMeta;
             }
         }
+
+        bool isEmpty(){return assignMetas.empty();}
+
+        int getSize() const{return assignMetas.size();}
 
         AssignMeta* getSampleAssignMeta(){
             assert(!assignMetas.empty());
@@ -117,7 +126,9 @@ namespace kathryn{
         }
 
         void addAssignMeta(AssignMeta* assignMeta){
-            assert(isJoinable(assignMeta));
+            if (!isEmpty()){
+                assert(isJoinable(assignMeta));
+            }
             assignMetas.push_back(assignMeta);
         }
 
@@ -132,7 +143,30 @@ namespace kathryn{
 
     };
 
-    std::vector<ClassAssignMeta*> classifyAss(std::vector<AssignMeta*>& baseMetas);
+    inline void tryAddOrCreateAsmMeta(
+        AsmNode* asmNode,
+        std::vector<ClassAssignMeta*>& assignMetas
+    ){
+
+        assert(asmNode != nullptr);
+        for (AssignMeta* asmMeta: asmNode->getAssignMetas()){
+            bool found = false;
+            for (ClassAssignMeta* classAsm: assignMetas){
+                if (classAsm->isJoinable(asmMeta)){
+                    classAsm->addAssignMeta(asmMeta);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found){
+                assignMetas.push_back(new ClassAssignMeta(asmMeta));
+            }
+        }
+        asmNode->transferOutAssignMetaOwnership();
+
+    }
+
+    //// std::vector<ClassAssignMeta*> classifyAss(std::vector<AssignMeta*>& baseMetas);
 
 }
 

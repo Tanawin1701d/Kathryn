@@ -304,17 +304,24 @@ namespace kathryn{
 
 
     struct UpdateEventSwitch: UpdateEventBase{
-        Operable* stateIden = nullptr;
+        Operable& stateIden;
+        /////// incase
         std::vector<int>            subStmtIdxs;
         std::vector<UpdateEventBase*> subStmts;
 
-        explicit UpdateEventSwitch(Operable* stateIden):
+        explicit UpdateEventSwitch(Operable& stateIden):
         UpdateEventBase(UET_SWITCH, false),
-        stateIden(stateIden){}
+        stateIden(stateIden){
+        }
+
+        int getAmtMatchIdx(){
+            return 1 << stateIden.getOperableSlice().getSize();
+        }
 
         void addSubStmt(int matchVal, UpdateEventBase* stmt){
 
-            assert(stmt != nullptr);
+            assert(stmt      != nullptr);
+            assert( (matchVal >= -1) && (matchVal < getAmtMatchIdx()));
             if (subStmtIdxs.empty()){
                 setPriority(stmt->_priority);
                 setClkMode (stmt->_clkMode);
@@ -326,11 +333,9 @@ namespace kathryn{
 
         Operable* checkShortCircuitProxy() override{
             Operable* result = nullptr;
-            if (stateIden != nullptr){
-                result = stateIden->checkShortCircuit();
-                if (result != nullptr){
-                    return result;
-                }
+            result = stateIden.checkShortCircuit();
+            if (result != nullptr){
+                return result;
             }
             for (auto* stmt: subStmts){
                 result = stmt->checkShortCircuitProxy();
@@ -343,7 +348,7 @@ namespace kathryn{
         ///////// for simulation generation
 
         void getDep(std::vector<Operable*>& resultDep) override{
-            resultDep.push_back(stateIden);
+            resultDep.push_back(&stateIden);
             for (auto* stmt: subStmts){
                 stmt->getDep(resultDep);
             }
