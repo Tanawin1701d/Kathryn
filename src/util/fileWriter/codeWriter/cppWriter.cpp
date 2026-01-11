@@ -18,6 +18,12 @@ namespace kathryn{
         return *ifBlock;
     }
 
+    CbSwitchCxx& CbBaseCxx::addSwitch(std::string switchIdent){
+        auto* switchBlock = new CbSwitchCxx(std::move(switchIdent));
+        appendSubBlock(switchBlock);
+        return *switchBlock;
+    }
+
     CbBaseCxx& CbBaseCxx::addSubBlock(){
         auto* subBlock = new CbBaseCxx();
         appendSubBlock(subBlock);
@@ -107,9 +113,44 @@ namespace kathryn{
 
     /**
      *
-     * CbFuncDec
+     * CbSwitchFunc
      *
      */
+
+    CbBaseCxx& CbSwitchCxx::addCase(int caseVal){
+
+        if (caseVal == -1){
+            assert(!isDefaultOccure);
+            isDefaultOccure = true;
+        }
+        _caseIdents.push_back(caseVal);
+        return CbBaseCxx::addSubBlock();
+
+    }
+
+    std::string CbSwitchCxx::toString(int ident){
+        std::string preRet;
+        std::string indentVal = genConString(' ', ident);
+        std::string indentValInside = genConString(' ', ident + CXX_IDENT);
+
+        preRet += indentVal + "switch(" + _switchIdent + "){\n";
+
+        assert(_subBlocks.size() == _caseIdents.size());
+        for (int idx = 0; idx < _subBlocks.size(); idx++){
+
+            /////// add break to break
+            _subBlocks[idx]->addSt("break", true);
+
+            std::string finalizedCaseId = _caseIdents[idx] == -1 ? "default"
+                                                                 : std::to_string(_caseIdents[idx]);
+            preRet += indentValInside + "case " + std::to_string(_caseIdents[idx]) + ":\n";
+            preRet += _subBlocks[idx]->toString(ident + 2* CXX_IDENT) + "\n";
+        }
+
+        preRet += indentVal + "}";
+        return preRet;
+    }
+
 
 
 }

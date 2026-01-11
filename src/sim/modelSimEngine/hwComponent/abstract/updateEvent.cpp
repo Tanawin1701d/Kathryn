@@ -100,7 +100,24 @@ namespace kathryn{
                                       LogicSimEngine& logicSimEngine,
                                       const std::string& auxAssStr){
 
-        assert(false);
+        //////// get switch identifier
+        Operable& stateIden  = master->stateIden;
+        std::string identStr = getSlicedSrcOprFromOpr(&stateIden).toString();
+        //////// build add ident to cxx block
+        CbSwitchCxx* switchCxx = &cb.addSwitch(identStr);
+
+        for (int idx = 0; idx < master->getMatchNum(); idx++){
+            UpdateEventBase*          ueb       = master->getSubStmts(idx);
+            int                       matchIdx  = master->getSubStmtMatchIdxs(idx);
+            UpdateEventBaseSimEngine* simEngine = ueb->createSimEvent();
+
+            CbBaseCxx* matchWorkBlock = &switchCxx->addCase(matchIdx);
+            simEngine->createSimOp(*matchWorkBlock, logicSimEngine, auxAssStr);
+
+            subEngine.push_back(simEngine);
+        }
+
+
 
     }
 }

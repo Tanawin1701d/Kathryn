@@ -314,14 +314,22 @@ namespace kathryn{
         stateIden(stateIden){
         }
 
-        int getAmtMatchIdx(){
+        int getMaxIdx() const{
             return 1 << stateIden.getOperableSlice().getSize();
         }
+
+        int getMatchNum()const{
+            assert(subStmtIdxs.size() == subStmts.size());
+            return subStmtIdxs.size();
+        }
+
+        int              getSubStmtMatchIdxs(int idx) const{ return subStmtIdxs[idx];}
+        UpdateEventBase* getSubStmts        (int idx) const{ return subStmts[idx];}
 
         void addSubStmt(int matchVal, UpdateEventBase* stmt){
 
             assert(stmt      != nullptr);
-            assert( (matchVal >= -1) && (matchVal < getAmtMatchIdx()));
+            assert( (matchVal >= -1) && (matchVal < getMaxIdx()));
             if (subStmtIdxs.empty()){
                 setPriority(stmt->_priority);
                 setClkMode (stmt->_clkMode);

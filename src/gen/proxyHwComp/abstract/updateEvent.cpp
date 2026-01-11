@@ -5,6 +5,7 @@
 #include "gen/proxyHwComp/abstract/updateEvent.h"
 #include "gen/proxyHwComp/module/moduleGen.h"
 
+
 namespace kathryn{
     /**
      * gen base
