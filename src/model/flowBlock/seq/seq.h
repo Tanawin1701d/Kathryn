@@ -2,8 +2,8 @@
 // Created by tanawin on 5/12/2566.
 //
 
-#ifndef KATHRYN_SEQ_H
-#define KATHRYN_SEQ_H
+#ifndef MODEL_FLOWBLOCK_SEQ_SEQ_H
+#define MODEL_FLOWBLOCK_SEQ_SEQ_H
 
 
 #include "model/flowBlock/abstract/flowBlock_Base.h"
@@ -85,4 +85,4 @@ namespace kathryn {
 
 }
 
-#endif //KATHRYN_SEQ_H
+#endif //MODEL_FLOWBLOCK_SEQ_SEQ_H

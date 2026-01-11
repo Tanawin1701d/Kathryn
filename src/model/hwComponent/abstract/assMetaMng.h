@@ -6,7 +6,7 @@
 #define MODEL_HWCOMPONENT_ABSTACT_ASSMETA_H
 
 #include "updateEvent.h"
-#include "model/flowBlock/abstract/nodes/asmNode.h"
+//#include "model/flowBlock/abstract/nodes/asmNode.h"
 
 namespace kathryn{
 
@@ -143,28 +143,11 @@ namespace kathryn{
 
     };
 
-    inline void tryAddOrCreateAsmMeta(
+    struct AsmNode;
+    void tryAddOrCreateAsmMeta(
         AsmNode* asmNode,
         std::vector<ClassAssignMeta*>& assignMetas
-    ){
-
-        assert(asmNode != nullptr);
-        for (AssignMeta* asmMeta: asmNode->getAssignMetas()){
-            bool found = false;
-            for (ClassAssignMeta* classAsm: assignMetas){
-                if (classAsm->isJoinable(asmMeta)){
-                    classAsm->addAssignMeta(asmMeta);
-                    found = true;
-                    break;
-                }
-            }
-            if (!found){
-                assignMetas.push_back(new ClassAssignMeta(asmMeta));
-            }
-        }
-        asmNode->transferOutAssignMetaOwnership();
-
-    }
+    );
 
     //// std::vector<ClassAssignMeta*> classifyAss(std::vector<AssignMeta*>& baseMetas);
 

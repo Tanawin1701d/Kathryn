@@ -13,10 +13,12 @@
 #include "model/flowBlock/abstract/nodes/stateNode.h"
 #include "model/flowBlock/abstract/loopStMacro.h"
 
+#define ztate(identState) for(auto kathrynBlock = new FlowBlockZtate(identState); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+
 namespace kathryn{
 
     class FlowBlockZtate: public FlowBlockBase,
-                                 LoopStMacro{
+                          public LoopStMacro{
     private:
         Operable& _identState;
         std::vector<ZStateClassAsm*> _assignMetas;

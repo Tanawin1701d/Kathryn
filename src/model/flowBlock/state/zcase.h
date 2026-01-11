@@ -9,6 +9,9 @@
 #include "model/flowBlock/abstract/loopStMacro.h"
 #include "model/flowBlock/abstract/nodes/node.h"
 
+#define zcase(caseValue) for(auto kathrynBlock = new FlowBlockZCase(caseValue); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define zcasedef for(auto kathrynBlock = new FlowBlockZCase(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+
 namespace kathryn{
 
     class FlowBlockZCase: public FlowBlockBase, public LoopStMacro{

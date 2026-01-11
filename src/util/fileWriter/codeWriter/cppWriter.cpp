@@ -141,10 +141,12 @@ namespace kathryn{
             /////// add break to break
             _subBlocks[idx]->addSt("break", true);
 
-            std::string finalizedCaseId = _caseIdents[idx] == -1 ? "default"
-                                                                 : std::to_string(_caseIdents[idx]);
-            preRet += indentValInside + "case " + std::to_string(_caseIdents[idx]) + ":\n";
+            std::string finalizedCaseStr = _caseIdents[idx] == -1 ? "default"
+                                                                 : "case " + std::to_string(_caseIdents[idx]);
+            preRet += indentValInside +  finalizedCaseStr + ":\n";
+            preRet += indentValInside + " {\n";
             preRet += _subBlocks[idx]->toString(ident + 2* CXX_IDENT) + "\n";
+            preRet += indentValInside + " }\n";
         }
 
         preRet += indentVal + "}";

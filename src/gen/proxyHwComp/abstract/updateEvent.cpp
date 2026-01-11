@@ -17,11 +17,6 @@ namespace kathryn{
         }
     }
 
-
-    void UEBaseGenEngine::rerouteAndReplace(Operable*& srcOpr, ModuleGen* mdGen){
-        srcOpr = rerouteBase(srcOpr, mdGen);
-    }
-
     Operable* UEBaseGenEngine::rerouteBase(Operable* srcOpr, ModuleGen* mdGen){
         if (srcOpr == nullptr){
             return nullptr;
@@ -29,6 +24,9 @@ namespace kathryn{
         return mdGen->routeSrcOprToThisModule(srcOpr);
     }
 
+    void UEBaseGenEngine::rerouteAndReplace(Operable*& srcOpr, ModuleGen* mdGen){
+        srcOpr = rerouteBase(srcOpr, mdGen);
+    }
 
     /**
      * basic
@@ -62,7 +60,6 @@ namespace kathryn{
     }
 
     /**
-     *
      * grp
      */
     void UEGrpGenEngine::reroute(ModuleGen* mdGen){
@@ -84,7 +81,6 @@ namespace kathryn{
     }
 
     /**
-     *
      * cond
      */
     void UECondGenEngine::reroute(ModuleGen* mdGen){
@@ -142,7 +138,8 @@ namespace kathryn{
      * switch
      */
     void UESwitchGenEngine::reroute(ModuleGen* mdGen){
-        rerouteAndReplace(master->stateIden, mdGen);
+        Operable* ident = &master->getStateIdent();
+        rerouteAndReplace(ident, mdGen);
         for (UpdateEventBase* ueb: master->subStmts){
             UEBaseGenEngine* genEngine = ueb->createGenEngine();
             genEngine->reroute(mdGen);
@@ -151,7 +148,19 @@ namespace kathryn{
     }
 
     void UESwitchGenEngine::genAss(CbBaseVerilog& cbVer, AssignGenBase* assignGen){
-        assert(false);
+
+        std::string stateIdent = assignGen->getOprStrFromOpr(&master->getStateIdent());
+         CbSwitchVerilog* cbVerSwitch = &cbVer.addSwitch(stateIdent);
+
+        for (int idx = 0; idx < master->getMatchNum(); idx++){
+            UEBaseGenEngine* genEngine = master->getSubStmts(idx)->createGenEngine();
+            int              matchIdx    = master->getSubStmtMatchIdxs(idx);
+            CbBaseVerilog* caseBlock = &cbVerSwitch->addCase(matchIdx);
+            genEngine->genAss(*caseBlock, assignGen);
+            subEngine.push_back(genEngine);
+        }
+
+
     }
 
 }

@@ -306,7 +306,7 @@ namespace kathryn{
     struct UpdateEventSwitch: UpdateEventBase{
         Operable& stateIden;
         /////// incase
-        std::vector<int>            subStmtIdxs;
+        std::vector<int>              subStmtIdxs;
         std::vector<UpdateEventBase*> subStmts;
 
         explicit UpdateEventSwitch(Operable& stateIden):
@@ -323,8 +323,19 @@ namespace kathryn{
             return subStmtIdxs.size();
         }
 
-        int              getSubStmtMatchIdxs(int idx) const{ return subStmtIdxs[idx];}
-        UpdateEventBase* getSubStmts        (int idx) const{ return subStmts[idx];}
+        Operable& getStateIdent(){
+            return stateIden;
+        }
+
+        int getSubStmtMatchIdxs(int idx) const{
+            assert(idx < subStmtIdxs.size());
+            return subStmtIdxs[idx];
+        }
+
+        UpdateEventBase* getSubStmts(int idx) const{
+            assert(idx < subStmts.size());
+            return subStmts[idx];
+        }
 
         void addSubStmt(int matchVal, UpdateEventBase* stmt){
 

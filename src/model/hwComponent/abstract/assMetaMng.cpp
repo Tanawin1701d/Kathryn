@@ -3,10 +3,35 @@
 //
 
 #include "assMetaMng.h"
-
+#include "model/flowBlock/abstract/nodes/asmNode.h"
 #include <vector>
 
 namespace kathryn{
+
+    void tryAddOrCreateAsmMeta(
+        AsmNode* asmNode,
+        std::vector<ClassAssignMeta*>& assignMetas
+    ){
+
+        assert(asmNode != nullptr);
+        for (AssignMeta* asmMeta: asmNode->getAssignMetas()){
+            bool found = false;
+            for (ClassAssignMeta* classAsm: assignMetas){
+                if (classAsm->isJoinable(asmMeta)){
+                    classAsm->addAssignMeta(asmMeta);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found){
+                assignMetas.push_back(new ClassAssignMeta(asmMeta));
+            }
+        }
+        asmNode->transferOutAssignMetaOwnership();
+
+    }
+
+
 
     // std::vector<ClassAssignMeta*> classifyAss(std::vector<AssignMeta*>& baseMetas){
     //

@@ -6,7 +6,6 @@
 #define CPPWRITER_H
 #include "codeBaseWriter.h"
 #include <cassert>
-#include <utility>
 
 
 namespace kathryn{
@@ -60,8 +59,9 @@ struct CbSwitchCxx: CbBaseCxx{
             _switchIdent(std::move(switchIdent)){}
 
     /////// disable the unused function
-    CbIfCxx  & addIf(std::string condition) override{assert(false);}
-    CbBaseCxx& addSubBlock() override{assert(false);}
+    CbIfCxx&     addIf(std::string condition)       override{assert(false);}
+    CbSwitchCxx& addSwitch(std::string switchIdent) override{assert(false);}
+    CbBaseCxx&   addSubBlock() override{assert(false);}
 
     CbBaseCxx&  addCase(int caseVal);
     std::string toString(int ident) override;
