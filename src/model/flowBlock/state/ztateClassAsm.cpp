@@ -44,13 +44,19 @@ namespace kathryn{
         _caseAssignMetas.push_back(classAssignMeta);
     }
 
-    AsmNode* ZStateClassAsm::createAsmNode(){
+    AsmNode* ZStateClassAsm::createAsmNode(const std::vector<int>& globCaseIdents){
 
         stateUeEvent = new UpdateEventSwitch(*_identifier);
 
         assert(_caseIdent.size() == getSize());
+        int originIdx = 0;
         for (int i = 0; i < _caseIdent.size(); i++){
+            while(_caseIdent[i] != globCaseIdents[originIdx]){
+                stateUeEvent->addSubStmt(globCaseIdents[originIdx], nullptr);
+                originIdx++;
+            }
             stateUeEvent->addSubStmt(_caseIdent[i], _caseAssignMetas[i]->createEventGrp());
+            originIdx++;
         }
 
         ///// sample should be the first one in the block

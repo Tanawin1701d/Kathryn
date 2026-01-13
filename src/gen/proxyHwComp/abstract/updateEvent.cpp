@@ -141,9 +141,11 @@ namespace kathryn{
         Operable* ident = &master->getStateIdent();
         rerouteAndReplace(ident, mdGen);
         for (UpdateEventBase* ueb: master->subStmts){
-            UEBaseGenEngine* genEngine = ueb->createGenEngine();
-            genEngine->reroute(mdGen);
-            subEngine.push_back(genEngine);
+            if (ueb != nullptr){
+                UEBaseGenEngine* genEngine = ueb->createGenEngine();
+                genEngine->reroute(mdGen);
+                subEngine.push_back(genEngine);
+            }
         }
     }
 
@@ -153,11 +155,17 @@ namespace kathryn{
          CbSwitchVerilog* cbVerSwitch = &cbVer.addSwitch(stateIdent);
 
         for (int idx = 0; idx < master->getMatchNum(); idx++){
-            UEBaseGenEngine* genEngine = master->getSubStmts(idx)->createGenEngine();
+
             int              matchIdx    = master->getSubStmtMatchIdxs(idx);
             CbBaseVerilog* caseBlock = &cbVerSwitch->addCase(matchIdx);
-            genEngine->genAss(*caseBlock, assignGen);
-            subEngine.push_back(genEngine);
+
+            UpdateEventBase* ueb = master->getSubStmts(idx);
+            if (ueb != nullptr){
+                UEBaseGenEngine* genEngine = ueb->createGenEngine();
+                genEngine->genAss(*caseBlock, assignGen);
+                subEngine.push_back(genEngine);
+            }
+
         }
 
 

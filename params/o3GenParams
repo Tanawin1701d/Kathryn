@@ -1,0 +1,16 @@
+testType = testGenO3
+
+; gen Path is prefix of the file include file name
+
+genFolder = /media/tanawin/tanawin1701e/project2/Kathryn/KOut/o3Gen
+topFileName = top
+topModName = top
+; it is used to extract 1 module per file
+extractMulFile = false
+
+; in case there is multiple file gen allow used "genPathGroup" (do not put / at the end)
+; genPathGroup = /media/tanawin/tanawin1701e/project2/Kathryn/KOut/riscv/gen
+
+; the synthesis name
+
+synName = o3TestSynthesis

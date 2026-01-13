@@ -80,91 +80,114 @@ namespace kathryn::o3{
 
             mWire(aluOpArith, ALU_OP_WIDTH);
 
-            zif(opc == RV32_LOAD){
-                dcw(rdUse) = 1;
-                dcw(rsEnt) = RS_ENT_LDST;
-            } zelif(opc == RV32_STORE){
-                dcw(imm_type) = IMM_S;
-                dcw(rsEnt)    = RS_ENT_LDST;
-                dcw(rsUse_2)  = 1;
-            } zelif(opc == RV32_BRANCH){
-                zif   (funct3 == RV32_FUNCT3_BEQ ){ dcw(aluOp) = ALU_OP_SEQ; }
-                zelif (funct3 == RV32_FUNCT3_BNE ){ dcw(aluOp) = ALU_OP_SNE; }
-                zelif (funct3 == RV32_FUNCT3_BLT ){ dcw(aluOp) = ALU_OP_SLT; }
-                zelif (funct3 == RV32_FUNCT3_BLTU){ dcw(aluOp) = ALU_OP_SLTU;}
-                zelif (funct3 == RV32_FUNCT3_BGE ){ dcw(aluOp) = ALU_OP_SGE; }
-                zelif (funct3 == RV32_FUNCT3_BGEU){ dcw(aluOp) = ALU_OP_SGEU;}
-                zelse{dcw(illLegal) = 1;}
-                dcw(rsEnt)   = RS_ENT_BRANCH;
-                dcw(rsUse_2) = 1;
-                dcw(rsSel_2) = SRC_B_RS2;
 
-                ///// calculate the next address
-                dcw(isBranch) = ~inv;
+            ztate(opc){
+                zcase(RV32_LOAD){
+                    dcw(rdUse) = 1;
+                    dcw(rsEnt) = RS_ENT_LDST;
+                }
+                zcase( RV32_STORE){
+                    dcw(imm_type) = IMM_S;
+                    dcw(rsEnt)    = RS_ENT_LDST;
+                    dcw(rsUse_2)  = 1;
+                }
+                zcase(RV32_BRANCH){
+                    ztate(funct3){
+                        zcase (RV32_FUNCT3_BEQ ){ dcw(aluOp) = ALU_OP_SEQ; }
+                        zcase (RV32_FUNCT3_BNE ){ dcw(aluOp) = ALU_OP_SNE; }
+                        zcase (RV32_FUNCT3_BLT ){ dcw(aluOp) = ALU_OP_SLT; }
+                        zcase (RV32_FUNCT3_BLTU){ dcw(aluOp) = ALU_OP_SLTU;}
+                        zcase (RV32_FUNCT3_BGE ){ dcw(aluOp) = ALU_OP_SGE; }
+                        zcase (RV32_FUNCT3_BGEU){ dcw(aluOp) = ALU_OP_SGEU;}
+                        zcasedef{dcw(illLegal) = 1;}
+                    }
 
-            } zelif(opc == RV32_JAL){
-                dcw(rsEnt)    = RS_ENT_JAL;
-                dcw(rsUse_1)  = 0;
-                dcw(rsSel_1)  = SRC_A_PC;
-                dcw(rsSel_2)  = SRC_B_FOUR;
-                dcw(rdUse)    = 1;
-                dcw(isBranch) = ~inv;
-            } zelif(opc == RV32_JALR){
-                dcw(illLegal) = (funct3 != 0);
-                dcw(rsEnt)    = RS_ENT_JALR;
-                dcw(rsSel_1)  = SRC_A_PC;
-                dcw(rsSel_2)  = SRC_B_FOUR;
-                dcw(rdUse)    = 1;
-                dcw(isBranch) = ~inv;
-            } zelif(opc == RV32_OP_IMM){
-                dcw(aluOp) = aluOpArith;
-                dcw(rdUse) = 1;
-            } zelif(opc == RV32_OP){
-                dcw(aluOp)   = aluOpArith;
-                dcw(rdUse) = 1;
-                dcw(rsUse_2) = 1;
-                dcw(rsSel_2) = SRC_B_RS2;
-                zif( (funct7 == RV32_FUNCT7_MUL_DIV) ){
-                    zif ((funct3 == RV32_FUNCT3_MUL) ||
-                         (funct3 == RV32_FUNCT3_MULH) ||
-                         (funct3 == RV32_FUNCT3_MULHSU) ||
-                         (funct3 == RV32_FUNCT3_MULHU)){
-                        dcw(rsEnt) = RS_ENT_MUL;
-                    }zelse{
-                        dcw(rsEnt) = RS_ENT_DIV;
+                    dcw(rsEnt)   = RS_ENT_BRANCH;
+                    dcw(rsUse_2) = 1;
+                    dcw(rsSel_2) = SRC_B_RS2;
+
+                    ///// calculate the next address
+                    dcw(isBranch) = ~inv;
+                }
+                zcase(RV32_JAL){
+                    dcw(rsEnt)    = RS_ENT_JAL;
+                    dcw(rsUse_1)  = 0;
+                    dcw(rsSel_1)  = SRC_A_PC;
+                    dcw(rsSel_2)  = SRC_B_FOUR;
+                    dcw(rdUse)    = 1;
+                    dcw(isBranch) = ~inv;
+                }
+                zcase(RV32_JALR){
+                    dcw(illLegal) = (funct3 != 0);
+                    dcw(rsEnt)    = RS_ENT_JALR;
+                    dcw(rsSel_1)  = SRC_A_PC;
+                    dcw(rsSel_2)  = SRC_B_FOUR;
+                    dcw(rdUse)    = 1;
+                    dcw(isBranch) = ~inv;
+                }
+                zcase(RV32_OP_IMM){
+                    dcw(aluOp) = aluOpArith;
+                    dcw(rdUse) = 1;
+                }
+                zcase(RV32_OP){
+                    dcw(aluOp)   = aluOpArith;
+                    dcw(rdUse) = 1;
+                    dcw(rsUse_2) = 1;
+                    dcw(rsSel_2) = SRC_B_RS2;
+                    zif( (funct7 == RV32_FUNCT7_MUL_DIV) ){
+                        zif ((funct3 == RV32_FUNCT3_MUL) ||
+                             (funct3 == RV32_FUNCT3_MULH) ||
+                             (funct3 == RV32_FUNCT3_MULHSU) ||
+                             (funct3 == RV32_FUNCT3_MULHU)){
+                            dcw(rsEnt) = RS_ENT_MUL;
+                        }zelse{
+                            dcw(rsEnt) = RS_ENT_DIV;
+                        }
                     }
                 }
-            } zelif (opc == RV32_AUIPC){
-                dcw(imm_type)  = IMM_U;
-                dcw(rdUse   )  = 1;
-                dcw(rsUse_1 )  = 0;
-                dcw(rsSel_1 )  = SRC_A_PC;
-            } zelif (opc == RV32_LUI){
-                dcw(imm_type) = IMM_U;
-                dcw(rdUse   ) = 1;
-                dcw(rsUse_1 ) = 0;
-                dcw(rsSel_1 ) = SRC_A_ZERO;
-            } zelse{
-                dcw(illLegal) = 1;
-            }
-            ///////// alu op
-            zif  (funct3 == RV32_FUNCT3_ADD_SUB){
-                aluOpArith = ALU_OP_ADD;
-                zif (opc == RV32_OP && funct7.sl(5)){
-                    aluOpArith = ALU_OP_SUB;
+                zcase(RV32_AUIPC){
+                    dcw(imm_type)  = IMM_U;
+                    dcw(rdUse   )  = 1;
+                    dcw(rsUse_1 )  = 0;
+                    dcw(rsSel_1 )  = SRC_A_PC;
+                }
+                zcase(RV32_LUI){
+                    dcw(imm_type) = IMM_U;
+                    dcw(rdUse   ) = 1;
+                    dcw(rsUse_1 ) = 0;
+                    dcw(rsSel_1 ) = SRC_A_ZERO;
+                }
+                zcasedef{
+                    dcw(illLegal) = 1;
                 }
             }
-             zelif(funct3 == RV32_FUNCT3_SLL    ){aluOpArith = ALU_OP_SLL;}
-             zelif(funct3 == RV32_FUNCT3_SLT    ){aluOpArith = ALU_OP_SLT;}
-             zelif(funct3 == RV32_FUNCT3_SLTU   ){aluOpArith = ALU_OP_SLTU;}
-             zelif(funct3 == RV32_FUNCT3_XOR    ){aluOpArith = ALU_OP_XOR;}
-             zelif(funct3 == RV32_FUNCT3_SRA_SRL && funct7.sl(5)){
-                aluOpArith = ALU_OP_SRA;
-            }zelif(funct3 == RV32_FUNCT3_SRA_SRL && (~funct7.sl(5))){
-                aluOpArith = ALU_OP_SRL;
-            }zelif(funct3 == RV32_FUNCT3_OR     ){aluOpArith = ALU_OP_OR;}
-             zelif(funct3 == RV32_FUNCT3_AND    ){aluOpArith = ALU_OP_AND;}
-             zelse{aluOpArith = ALU_OP_ADD;}
+            ///////// alu op
+            // zif  (funct3 == RV32_FUNCT3_ADD_SUB){
+            //     aluOpArith = ALU_OP_ADD;
+            //     zif (opc == RV32_OP && funct7.sl(5)){
+            //         aluOpArith = ALU_OP_SUB;
+            //     }
+            // }
+
+            ztate(funct3){
+                zcase(RV32_FUNCT3_ADD_SUB){
+                    aluOpArith = ALU_OP_ADD;
+                    zif (opc == RV32_OP && funct7.sl(5)){
+                        aluOpArith = ALU_OP_SUB;
+                    }
+                }
+                zcase(RV32_FUNCT3_SLL    ){aluOpArith = ALU_OP_SLL;}
+                zcase(RV32_FUNCT3_SLT    ){aluOpArith = ALU_OP_SLT;}
+                zcase(RV32_FUNCT3_SLTU   ){aluOpArith = ALU_OP_SLTU;}
+                zcase(RV32_FUNCT3_XOR    ){aluOpArith = ALU_OP_XOR;}
+                zcase(RV32_FUNCT3_SRA_SRL){
+                    zif(funct7.sl(5)){ aluOpArith = ALU_OP_SRA;}
+                    zelse            { aluOpArith = ALU_OP_SRL;}
+                }
+                zcase(RV32_FUNCT3_OR     ){aluOpArith = ALU_OP_OR;}
+                zcase(RV32_FUNCT3_AND    ){aluOpArith = ALU_OP_AND;}
+                zcasedef{aluOpArith = ALU_OP_ADD;}
+            }
 
             /////// multiplier
 
@@ -173,32 +196,36 @@ namespace kathryn::o3{
             dcw(md_req_in_signed_2) = 0;
             dcw(md_req_out_sel)     = MD_OUT_LO;
 
-            zif(funct3 == RV32_FUNCT3_MUL){
-                // Default values are already set
-            }zelif(funct3 == RV32_FUNCT3_MULH){
-                dcw(md_req_in_signed_1) = 1;
-                dcw(md_req_in_signed_2) = 1;
-                dcw(md_req_out_sel) = MD_OUT_HI;
-            }zelif(funct3 == RV32_FUNCT3_MULHSU){
-                dcw(md_req_in_signed_1) = 1;
-                dcw(md_req_out_sel) = MD_OUT_HI;
-            }zelif(funct3 == RV32_FUNCT3_MULHU){
-                dcw(md_req_out_sel) = MD_OUT_HI;
-            }zelif(funct3 == RV32_FUNCT3_DIV){
-                dcw(md_req_op) = MD_OP_DIV;
-                dcw(md_req_in_signed_1) = 1;
-                dcw(md_req_in_signed_2) = 1;
-            }zelif(funct3 == RV32_FUNCT3_DIVU){
-                dcw(md_req_op) = MD_OP_DIV;
-            }zelif(funct3 == RV32_FUNCT3_REM){
-                dcw(md_req_op) = MD_OP_REM;
-                dcw(md_req_in_signed_1) = 1;
-                dcw(md_req_in_signed_2) = 1;
-                dcw(md_req_out_sel) = MD_OUT_REM;
-           } zelif (funct3 == RV32_FUNCT3_REMU) {
-               dcw(md_req_op) = MD_OP_REM;
-               dcw(md_req_out_sel) = MD_OUT_REM;
-           }
+
+            ztate(funct3){
+                // zcase(RV32_FUNCT3_MUL){
+                //     // Default values are already set
+                // }
+                zcase(RV32_FUNCT3_MULH){
+                    dcw(md_req_in_signed_1) = 1;
+                    dcw(md_req_in_signed_2) = 1;
+                    dcw(md_req_out_sel) = MD_OUT_HI;
+                }zcase(RV32_FUNCT3_MULHSU){
+                    dcw(md_req_in_signed_1) = 1;
+                    dcw(md_req_out_sel) = MD_OUT_HI;
+                }zcase(RV32_FUNCT3_MULHU){
+                    dcw(md_req_out_sel) = MD_OUT_HI;
+                }zcase(RV32_FUNCT3_DIV){
+                    dcw(md_req_op) = MD_OP_DIV;
+                    dcw(md_req_in_signed_1) = 1;
+                    dcw(md_req_in_signed_2) = 1;
+                }zcase(RV32_FUNCT3_DIVU){
+                    dcw(md_req_op) = MD_OP_DIV;
+                }zcase(RV32_FUNCT3_REM){
+                    dcw(md_req_op) = MD_OP_REM;
+                    dcw(md_req_in_signed_1) = 1;
+                    dcw(md_req_in_signed_2) = 1;
+                    dcw(md_req_out_sel) = MD_OUT_REM;
+                }zcase(RV32_FUNCT3_REMU) {
+                    dcw(md_req_op) = MD_OP_REM;
+                    dcw(md_req_out_sel) = MD_OUT_REM;
+                }
+            }
         }
 
 

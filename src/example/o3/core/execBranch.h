@@ -71,8 +71,8 @@ namespace kathryn::o3{
             opr& spTag   = src(specTag);
             opr& fixTag  = tagMgmt.mpft.getFixTag(OH(spTag));
 
-            opr& srcA   = getAluSrcA(src);
-            opr& srcB   = getAluSrcB(src, true); //// take imm from br
+            opr& srcA   = src(phyIdx_1);
+            opr& srcB   = src(phyIdx_2); //// take imm from br
             brTaken     = alu(src(aluOp), srcA, srcB).sl(0);
 
             //// assign static wire to bc

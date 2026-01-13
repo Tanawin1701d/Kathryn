@@ -304,6 +304,9 @@ namespace kathryn{
 
 
     struct UpdateEventSwitch: UpdateEventBase{
+        bool      isInitMeta = false; ///// some time this switch event will be init with nullptr
+                                     ////// substmts to maintain the free switch matched case
+                                     ////// therefore the meta data may be not initialized at that time
         Operable& stateIden;
         /////// incase
         std::vector<int>              subStmtIdxs;
@@ -339,11 +342,12 @@ namespace kathryn{
 
         void addSubStmt(int matchVal, UpdateEventBase* stmt){
 
-            assert(stmt      != nullptr);
+            //assert(stmt      != nullptr);  nullptr mean dummy operation in this case
             assert( (matchVal >= -1) && (matchVal < getMaxIdx()));
-            if (subStmtIdxs.empty()){
+            if (!isInitMeta && (stmt != nullptr)){
                 setPriority(stmt->_priority);
                 setClkMode (stmt->_clkMode);
+                isInitMeta = true;
             }
             subStmtIdxs.push_back(matchVal);
             subStmts   .push_back(stmt);
@@ -357,6 +361,7 @@ namespace kathryn{
                 return result;
             }
             for (auto* stmt: subStmts){
+                if (stmt == nullptr){continue;}
                 result = stmt->checkShortCircuitProxy();
                 if (result != nullptr){
                     return result;
@@ -369,6 +374,7 @@ namespace kathryn{
         void getDep(std::vector<Operable*>& resultDep) override{
             resultDep.push_back(&stateIden);
             for (auto* stmt: subStmts){
+                if (stmt == nullptr){continue;}
                 stmt->getDep(resultDep);
             }
         }
@@ -381,6 +387,7 @@ namespace kathryn{
         UpdateEventBase* clone() override{
             auto* ueb = new UpdateEventSwitch(*this);
             for (int idx = 0; idx < subStmts.size(); idx++){
+                if (ueb->subStmts[idx] == nullptr){continue;}
                 ueb->subStmts[idx] = subStmts[idx]->clone();
             }
             return ueb;

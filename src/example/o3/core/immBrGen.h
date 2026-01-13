@@ -23,10 +23,12 @@ namespace kathryn::o3{
             instr(21, 31), zero1).sext(ADDR_LEN);
         opr& jalrOffset = g(instr(31), instr(21, 31), zero1).sext(ADDR_LEN);
 
-        zif  (opc == RV32_BRANCH){result = brOffset;}
-        zelif(opc == RV32_JAL   ){result = jalOffset;}
-        zelif(opc == RV32_JALR  ){result = jalrOffset;}
-        zelse{ result = 0; }
+        ztate(opc){
+            zcase(RV32_BRANCH){result = brOffset;}
+            zcase(RV32_JAL   ){result = jalOffset;}
+            zcase(RV32_JALR  ){result = jalrOffset;}
+            zcasedef{ result = 0; }
+        }
     }
 
 }

@@ -33,6 +33,11 @@ FlowBlockZtate::FlowBlockZtate(Operable &identState):
 
         std::vector<ClassAssignMeta*> classAssMetas = subBlockZcase->getClassAssMetas();
 
+
+        _caseMatchPool.push_back(subBlockZcase->getCaseId());
+
+        //// try to each assignment to group
+
         for(ClassAssignMeta* caseClassAssMeta: classAssMetas){
             bool found = false;
             for(ZStateClassAsm* zstateClassAsm: _assignMetas){
@@ -99,7 +104,7 @@ FlowBlockZtate::FlowBlockZtate(Operable &identState):
         ///// generate the node
         std::vector<AsmNode*> result;
         for (ZStateClassAsm* ztateClassAsm: _assignMetas){
-            result.push_back(ztateClassAsm->createAsmNode());
+            result.push_back(ztateClassAsm->createAsmNode(_caseMatchPool));
         }
         return result;
 

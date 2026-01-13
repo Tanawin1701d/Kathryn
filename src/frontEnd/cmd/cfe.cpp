@@ -15,6 +15,7 @@
 #include "example/o3/simulation/o3_sim.h"
 #include "example/o3/simCompare/ctrl/simCtrlKride.h"
 #include "example/o3/simCompare/ctrl/simCtrlComb.h"
+#include "example/o3/generation/O3_gen.h"
 
 
 ///#ifdef BUILD_EXT_SIM
@@ -99,6 +100,14 @@ namespace kathryn{
         std::cout << TC_GREEN << "finish comb kride ride sim [sim]" << TC_DEF << std::endl;
     }
 
+    void test_o3_gen(PARAM& params){
+        o3::O3_GEN_MNG o3Gen;
+        o3Gen.startGen(params);
+        std::cout << TC_GREEN << "finish O3 [gen]" << TC_DEF << std::endl;
+    }
+
+
+
 
 
     void start(PARAM& params) {
@@ -130,6 +139,8 @@ namespace kathryn{
             test_ride_sim(params);
         }else if (params["testType"] == "testKrideRideCombSim"){
             test_comb_kride_ride(params);
+        }else if (params["testType"] == "testGenO3"){
+            test_o3_gen(params);
         }else{
             std::cout << "there is no command to test system" << std::endl;
         }

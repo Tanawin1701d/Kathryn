@@ -107,14 +107,19 @@ namespace kathryn{
         CbSwitchCxx* switchCxx = &cb.addSwitch(identStr);
 
         for (int idx = 0; idx < master->getMatchNum(); idx++){
-            UpdateEventBase*          ueb       = master->getSubStmts(idx);
+
+            ///// build case
             int                       matchIdx  = master->getSubStmtMatchIdxs(idx);
-            UpdateEventBaseSimEngine* simEngine = ueb->createSimEvent();
-
             CbBaseCxx* matchWorkBlock = &switchCxx->addCase(matchIdx);
-            simEngine->createSimOp(*matchWorkBlock, logicSimEngine, auxAssStr);
+            ///// update event case
+            UpdateEventBase*          ueb       = master->getSubStmts(idx);
+            if (ueb != nullptr){
+                UpdateEventBaseSimEngine* simEngine = ueb->createSimEvent();
+                simEngine->createSimOp(*matchWorkBlock, logicSimEngine, auxAssStr);
+                subEngine.push_back(simEngine);
+            }
 
-            subEngine.push_back(simEngine);
+
         }
 
 

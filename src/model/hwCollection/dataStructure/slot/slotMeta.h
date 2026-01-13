@@ -7,6 +7,8 @@
 #include <cassert>
 #include <string>
 #include <vector>
+#include <algorithm>
+
 
 #include "model/debugger/modelDebugger.h"
 
@@ -186,6 +188,19 @@ namespace kathryn{
                 rhs._fieldMetas.begin(),
                 rhs._fieldMetas.end());
             return result;
+        }
+
+        SlotMeta operator - (const std::vector<std::string>& deleteItem) const{
+
+            std::vector<FieldMeta> newFieldMetas;
+            for (const FieldMeta& fieldMeta: _fieldMetas){
+                if (std::find(deleteItem.begin(), deleteItem.end(), fieldMeta._name) == deleteItem.end()){
+                    newFieldMetas.push_back(fieldMeta);
+                }
+            }
+            return {newFieldMetas};
+
+            
         }
 
         void addField(const FieldMeta& fieldMeta){

@@ -139,20 +139,25 @@ namespace kathryn::o3{
             auto& i2 = pm.ft.iMem2;
             auto& i3 = pm.ft.iMem3;
 
-            zif(selIdx == 0){
-                raw(inst1)    <<=  i0;
-                raw(inst2)    <<=  i1;
-            }zelif(selIdx == 1){
-                raw(inst1)    <<=  i1;
-                raw(inst2)    <<=  i2;
-            }zelif(selIdx == 2){
-                raw(inst1)    <<=  i2;
-                raw(inst2)    <<=  i3;
-            }zelse{ ///// the second instruction is invalid
-                raw(inst1)    <<= i3;
-                raw(inst2)    <<= i0;
-                raw(invalid2) <<= 1;
-                raw(npc)      <<= (curPc + 4);
+            ztate(selIdx){
+                zcase(0){
+                    raw(inst1)    <<=  i0;
+                    raw(inst2)    <<=  i1;
+                }
+                zcase(1){
+                    raw(inst1)    <<=  i1;
+                    raw(inst2)    <<=  i2;
+                }
+                zcase(2){
+                    raw(inst1)    <<=  i2;
+                    raw(inst2)    <<=  i3;
+                }
+                zcasedef{ ///// the second instruction is invalid
+                    raw(inst1)    <<= i3;
+                    raw(inst2)    <<= i0;
+                    raw(invalid2) <<= 1;
+                    raw(npc)      <<= (curPc + 4);
+                }
             }
         }
     };

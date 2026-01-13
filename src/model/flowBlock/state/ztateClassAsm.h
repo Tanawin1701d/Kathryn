@@ -33,7 +33,7 @@ namespace kathryn{
         /** create the block belong to the caseid*/
         void addCaseBlock(int caseIdent, ClassAssignMeta* classAssignMeta);
         /** create assignment node and stateUe that conclude this event*/
-        AsmNode* createAsmNode();
+        AsmNode* createAsmNode(const std::vector<int>& globCaseIdents);
 
 
     };

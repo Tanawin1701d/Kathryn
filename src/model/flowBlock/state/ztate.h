@@ -21,6 +21,7 @@ namespace kathryn{
                           public LoopStMacro{
     private:
         Operable& _identState;
+        std::vector<int>             _caseMatchPool; ///// total match case that it have
         std::vector<ZStateClassAsm*> _assignMetas;
 
     public:

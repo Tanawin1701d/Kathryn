@@ -11,15 +11,22 @@
 
 namespace kathryn::o3{
     struct Rsvs{
+
+        std::vector<std::string> mulExField = {pc, aluOp, rsSel_1,  rsSel_2};
+        std::vector<std::string> brExField  = {rsSel_1, rsSel_2};
+        std::vector<std::string> ldStExField = {aluOp, rsSel_1, rsSel_2};
+
         ORsv alu1, alu2, mul;
         IRsv br, ls;
         std::vector<RsvBase*> rsvs{&alu1, &alu2, &mul, &br, &ls};
+
+
         Rsvs(RegArch& regArch, BroadCast& bc):
-        alu1(RS_ENT_ALU   , smRsvBase + smRsvAlu   , ALU_ENT_NUM   , regArch        ),
-        alu2(RS_ENT_ALU   , smRsvBase + smRsvAlu   , ALU_ENT_NUM   , regArch        ),
-        mul (RS_ENT_MUL   , smRsvBase + smRsvMul   , MUL_ENT_NUM   , regArch, smRsvI),
-        br  (RS_ENT_BRANCH, smRsvBase + smRsvBranch, BRANCH_ENT_SEL, "br"   , bc    ),
-        ls  (RS_ENT_LDST  , smRsvBase + smRsvAlu   , LDST_ENT_SEL  , "ld"   , bc    ){}
+        alu1(RS_ENT_ALU   , smRsvBase + smRsvAlu                 , ALU_ENT_NUM   , regArch        ),
+        alu2(RS_ENT_ALU   , smRsvBase + smRsvAlu                 , ALU_ENT_NUM   , regArch        ),
+        mul (RS_ENT_MUL   , smRsvBase + smRsvMul    - mulExField , MUL_ENT_NUM   , regArch       , smRsvI         ),
+        br  (RS_ENT_BRANCH, smRsvBase + smRsvBranch - brExField  , BRANCH_ENT_SEL, "br"   , bc    ),
+        ls  (RS_ENT_LDST  , smRsvBase + smRsvAlu    - ldStExField, LDST_ENT_SEL  , "ld"   , bc    ){}
 
         void onMisPred(opr& fixTag){
             for (RsvBase* rsv: rsvs){

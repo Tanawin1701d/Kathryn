@@ -26,20 +26,22 @@ namespace kathryn::o3{
 
 
 
-        zif(op == ALU_OP_ADD)  out = srcA + srcB;
-        zif(op == ALU_OP_SLL)  out = srcA << shamt;
-        zif(op == ALU_OP_XOR)  out = srcA ^ srcB;
-        zif(op == ALU_OP_OR)   out = srcA | srcB;
-        zif(op == ALU_OP_AND)  out = srcA & srcB;
-        zif(op == ALU_OP_SRL)  out = srcA >> shamt;
-        zif(op == ALU_OP_SEQ)  out = (srcA == srcB).uext(DATA_LEN);
-        zif(op == ALU_OP_SNE)  out = (srcA != srcB).uext(DATA_LEN);
-        zif(op == ALU_OP_SUB)  out = srcA - srcB;
-        zif(op == ALU_OP_SRA)  out = ((signMask & aMsbExt) | (srcA >> shamt));
-        zif(op == ALU_OP_SLT)  out = (srcA.slt(srcB)).uext(DATA_LEN);
-        zif(op == ALU_OP_SGE)  out = (srcA.sgt(srcB) | (srcA == srcB)).uext(DATA_LEN);;
-        zif(op == ALU_OP_SLTU) out = srcA < srcB;
-        zif(op == ALU_OP_SGEU) out = srcA >= srcB;
+        ztate(op){
+            zcase(ALU_OP_ADD)  { out = srcA + srcB;                                      }
+            zcase(ALU_OP_SLL)  { out = srcA << shamt;                                    }
+            zcase(ALU_OP_XOR)  { out = srcA ^ srcB;                                      }
+            zcase(ALU_OP_OR)   { out = srcA | srcB;                                      }
+            zcase(ALU_OP_AND)  { out = srcA & srcB;                                      }
+            zcase(ALU_OP_SRL)  { out = srcA >> shamt;                                    }
+            zcase(ALU_OP_SEQ)  { out = (srcA == srcB).uext(DATA_LEN);                    }
+            zcase(ALU_OP_SNE)  { out = (srcA != srcB).uext(DATA_LEN);                    }
+            zcase(ALU_OP_SUB)  { out = srcA - srcB;                                      }
+            zcase(ALU_OP_SRA)  { out = ((signMask & aMsbExt) | (srcA >> shamt));         }
+            zcase(ALU_OP_SLT)  { out = (srcA.slt(srcB)).uext(DATA_LEN);                  }
+            zcase(ALU_OP_SGE)  { out = (srcA.sgt(srcB) | (srcA == srcB)).uext(DATA_LEN); }
+            zcase(ALU_OP_SLTU) { out = srcA < srcB;                                      }
+            zcase(ALU_OP_SGEU) { out = srcA >= srcB;                                     }
+        }
         return out;
     }
 
