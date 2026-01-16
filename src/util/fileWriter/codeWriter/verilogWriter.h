@@ -38,10 +38,10 @@ namespace kathryn{
     struct CbIfVerilog: CbBaseVerilog{
         bool               _markAsSubChain = false; //// for elif else
         std::string        _cond;
-        std::vector<CbIfVerilog> _contBlock;
+        std::vector<CbIfVerilog*> _contBlock;
 
         CbIfVerilog(bool isSubChain, std::string condtion);
-        ~CbIfVerilog() = default;
+        ~CbIfVerilog() override;
 
         CbIfVerilog& addElif(std::string condition);
         std::string toString(int ident) override;

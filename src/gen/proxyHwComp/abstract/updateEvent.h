@@ -86,6 +86,7 @@ namespace kathryn{
             assert(m != nullptr);
         }
 
+
         void reroute(ModuleGen* mdGen) override;
         void genAss(CbBaseVerilog& cbVer, AssignGenBase* assignGen) override;
 

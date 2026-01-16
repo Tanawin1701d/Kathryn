@@ -46,7 +46,7 @@ namespace kathryn{
 
     AsmNode* ZStateClassAsm::createAsmNode(const std::vector<int>& globCaseIdents){
 
-        stateUeEvent = new UpdateEventSwitch(*_identifier);
+        stateUeEvent = new UpdateEventSwitch(_identifier);
 
         assert(_caseIdent.size() == getSize());
         int originIdx = 0;

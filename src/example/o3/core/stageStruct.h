@@ -34,10 +34,11 @@ namespace kathryn::o3{
         SyncMeta sync{"fetchSync"};
 
         FetchStage(){
-            iMem0.asInputGlob("iMem0");
-            iMem1.asInputGlob("iMem1");
-            iMem2.asInputGlob("iMem2");
-            iMem3.asInputGlob("iMem3");
+            curPc.asOutputGlob("curPc");
+            iMem0.asInputGlob ("iMem0");
+            iMem1.asInputGlob ("iMem1");
+            iMem2.asInputGlob ("iMem2");
+            iMem3.asInputGlob ("iMem3");
 
         }
 

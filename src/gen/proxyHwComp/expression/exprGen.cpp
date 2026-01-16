@@ -86,10 +86,11 @@ namespace kathryn{
             case ARITH_DIV   : {assert(aSize == bSize); retStr += _aSliced + "   /  "    + _bSliced; break;}
             case ARITH_DIVR  : {assert(aSize == bSize); retStr += _aSliced + "   %  "    + _bSliced; break;}
             case EXTEND_BIT  :{
-                int desSize = _master->getSlice().getSize();
-                ull desMask = desSize == bitSizeOfUll ? -1: ((((ull)1) << desSize) - 1);
+                // int desSize = _master->getSlice().getSize();
+                // ull desMask = desSize == bitSizeOfUll ? -1: ((((ull)1) << desSize) - 1);
 
-                retStr += _aSliced + " ? " + std::to_string(desMask) + " : 0";  break;
+                //retStr += _aSliced + " ? " + std::to_string(desMask) + " : 0";  break;
+                retStr += _aSliced + " ? -1 : 0 ";  break;
             }
             case ASSIGN      :{  retStr += _aSliced; break;}
             case OP_DUMMY:

@@ -22,6 +22,8 @@ namespace kathryn{
 
         void routeDep() override{};
 
+        std::string getValStr() const;
+
         std::string decIo()       override;
         std::string decVariable() override;
         std::string decOp()       override;

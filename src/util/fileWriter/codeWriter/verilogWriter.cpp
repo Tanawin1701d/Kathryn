@@ -82,9 +82,16 @@ namespace kathryn{
     _markAsSubChain(isSubChain),
     _cond(std::move(condtion)){}
 
+    CbIfVerilog::~CbIfVerilog(){
+        for (CbIfVerilog* contBlock: _contBlock){
+            delete contBlock;
+        }
+    }
+
     CbIfVerilog& CbIfVerilog::addElif(std::string condition){
-        _contBlock.emplace_back(true,std::move(condition));
-        return _contBlock.back();
+        auto* elifBlock = new CbIfVerilog(true, std::move(condition));
+        _contBlock.push_back(elifBlock);
+        return *elifBlock;
     }
 
     std::string CbIfVerilog::toString(int ident){
@@ -105,8 +112,8 @@ namespace kathryn{
 
         preRet += indentVal + "end ";
 
-        for(CbIfVerilog& contBlock: _contBlock){
-            preRet += contBlock.toString(ident);
+        for(CbIfVerilog* contBlock: _contBlock){
+            preRet += contBlock->toString(ident);
         }
         if (!_markAsSubChain){
             preRet += "\n";

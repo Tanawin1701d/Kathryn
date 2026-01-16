@@ -307,18 +307,18 @@ namespace kathryn{
         bool      isInitMeta = false; ///// some time this switch event will be init with nullptr
                                      ////// substmts to maintain the free switch matched case
                                      ////// therefore the meta data may be not initialized at that time
-        Operable& stateIden;
+        Operable* stateIden;
         /////// incase
         std::vector<int>              subStmtIdxs;
         std::vector<UpdateEventBase*> subStmts;
 
-        explicit UpdateEventSwitch(Operable& stateIden):
+        explicit UpdateEventSwitch(Operable* stateIden):
         UpdateEventBase(UET_SWITCH, false),
         stateIden(stateIden){
         }
 
         int getMaxIdx() const{
-            return 1 << stateIden.getOperableSlice().getSize();
+            return 1 << stateIden->getOperableSlice().getSize();
         }
 
         int getMatchNum()const{
@@ -326,7 +326,11 @@ namespace kathryn{
             return subStmtIdxs.size();
         }
 
-        Operable& getStateIdent(){
+        Operable* getStateIdent(){
+            return stateIden;
+        }
+
+        Operable*& getStateIdentRef(){
             return stateIden;
         }
 
@@ -356,7 +360,7 @@ namespace kathryn{
 
         Operable* checkShortCircuitProxy() override{
             Operable* result = nullptr;
-            result = stateIden.checkShortCircuit();
+            result = stateIden->checkShortCircuit();
             if (result != nullptr){
                 return result;
             }
@@ -372,7 +376,7 @@ namespace kathryn{
         ///////// for simulation generation
 
         void getDep(std::vector<Operable*>& resultDep) override{
-            resultDep.push_back(&stateIden);
+            resultDep.push_back(stateIden);
             for (auto* stmt: subStmts){
                 if (stmt == nullptr){continue;}
                 stmt->getDep(resultDep);

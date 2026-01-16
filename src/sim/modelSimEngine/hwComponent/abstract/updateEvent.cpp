@@ -101,8 +101,8 @@ namespace kathryn{
                                       const std::string& auxAssStr){
 //assert(false);
         //////// get switch identifier
-        Operable& stateIden  = master->stateIden;
-        std::string identStr = getSlicedSrcOprFromOpr(&stateIden).toString();
+        Operable* stateIden  = master->stateIden;
+        std::string identStr = getSlicedSrcOprFromOpr(stateIden).toString();
         //////// build add ident to cxx block
         CbSwitchCxx* switchCxx = &cb.addSwitch(identStr);
 

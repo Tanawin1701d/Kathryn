@@ -133,13 +133,14 @@ namespace kathryn{
 
     }
 
+
     /**
      *
      * switch
      */
     void UESwitchGenEngine::reroute(ModuleGen* mdGen){
-        Operable* ident = &master->getStateIdent();
-        rerouteAndReplace(ident, mdGen);
+        Operable*& identRef = master->getStateIdentRef();
+        rerouteAndReplace(identRef, mdGen);
         for (UpdateEventBase* ueb: master->subStmts){
             if (ueb != nullptr){
                 UEBaseGenEngine* genEngine = ueb->createGenEngine();
@@ -151,7 +152,7 @@ namespace kathryn{
 
     void UESwitchGenEngine::genAss(CbBaseVerilog& cbVer, AssignGenBase* assignGen){
 
-        std::string stateIdent = assignGen->getOprStrFromOpr(&master->getStateIdent());
+        std::string stateIdent = assignGen->getOprStrFromOpr(master->getStateIdent());
          CbSwitchVerilog* cbVerSwitch = &cbVer.addSwitch(stateIdent);
 
         for (int idx = 0; idx < master->getMatchNum(); idx++){
