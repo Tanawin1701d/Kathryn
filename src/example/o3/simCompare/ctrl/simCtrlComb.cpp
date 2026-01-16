@@ -17,7 +17,8 @@ namespace kathryn::o3{
                        SimState&                state,
                        TopSim&                  topSim,
                        SimCtrlRide&             slaveRide,
-                       bool                     reqRegTest
+                       bool                     reqRegTest,
+                       ResultWriter*            resultWriter
     ):
     SimCtrlKride(limitCycle,
                  prefix,
@@ -25,7 +26,8 @@ namespace kathryn::o3{
                  buildMode,
                  slotWriter,
                  state,
-                 topSim),
+                 topSim,
+                 resultWriter),
     _slaveRide  (slaveRide),
     _reqRegTest (reqRegTest)
     {}
@@ -38,6 +40,8 @@ namespace kathryn::o3{
     }
 
     void CombCtrl::describeCon(){
+
+        std::vector<int> errorIndexs;
 
         for (; _curTestCaseIdx < _testTypes.size(); _curTestCaseIdx++){
             std::cout << std::endl
@@ -92,6 +96,7 @@ namespace kathryn::o3{
 
             if (retard){
                 std::cout << TC_RED << "[O3 RISC-V CMP] compare failed see slot writer for the reason mismatch" << TC_DEF << std::endl;
+                errorIndexs.push_back(_curTestCaseIdx);
             }else{
                 std::cout << TC_GREEN << "[O3 RISC-V CMP] compare pass" << TC_DEF << std::endl;
             }
@@ -102,6 +107,10 @@ namespace kathryn::o3{
                 _slaveRide.testRegister();
             }
             finalPerfCol();
+        }
+
+        for (int errorIdx: errorIndexs){
+            std::cout << TC_RED << "[O3 RISC-V CMP] error in test case " << errorIdx << TC_DEF << std::endl;
         }
 
     }

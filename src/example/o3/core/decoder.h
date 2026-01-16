@@ -6,10 +6,8 @@
 #define KATHRYN_SRC_EXAMPLE_O3_DECODER_H
 
 #include "kathryn.h"
-#include "parameter.h"
 #include "stageStruct.h"
-#include "isaParam.h"
-#include "example/o3/simulation/proberGrp.h"
+#include "example/o3/simulation/proberGrp.h"  ///DC
 
 
 namespace kathryn::o3{
@@ -18,7 +16,7 @@ namespace kathryn::o3{
         PipStage& pm;
         TagMgmt& tagMgmt;
 
-        mWire(dbg_isGenable, 1);
+        mWire(dbg_isGenable, 1); ///DC
 
         explicit DecMod(
         PipStage&  pm,
@@ -30,14 +28,14 @@ namespace kathryn::o3{
         void  decode(int idx){ //// idx start at 1 the second is 2
 
             bool isFirst = (idx == 1);
-            RegSlot&  raw = pm.ft.raw;
-            Reg&      instr = isFirst? pm.ft.raw(inst1)   : pm.ft.raw(inst2);
+            RegSlot&  raw       = pm.ft.raw;
+            Reg&      instr     = isFirst? pm.ft.raw(inst1)   : pm.ft.raw(inst2);
             WireSlot& dcwFirst  = pm.dc.dcw1;
-            WireSlot& dcw   = isFirst? pm.dc.dcw1 : pm.dc.dcw2;
+            WireSlot& dcw       = isFirst? pm.dc.dcw1 : pm.dc.dcw2;
+
             mVal(invalid1_dummy, 1, 0);
             opr&      inv   = isFirst? (opr&) invalid1_dummy :
                                        (opr&) pm.ft.raw(invalid2);
-
 
             ///////////// src
             Operable& opc     = instr( 0,  7);
@@ -55,13 +53,10 @@ namespace kathryn::o3{
             ///////////// calculate address and validation
             if (idx == 1){
                 dcw(invalid)   = 0; ///// we are sure about first instruction
-                dcw(pred_addr) = mux( raw(prCond) & dcw(isBranch),
-                                        raw(npc),
-                                        raw(pc) + 4); //// if the decoded show it is branch or jump it will be overrided
+                dcw(pred_addr) = raw(pc) + 4; //// if the decoded show it is branch or jump it will be overrided
             }else{
                 /// if the first one is the branch and predict taken we
-                dcw(invalid)   = raw(invalid2) |
-                                 (raw(prCond) & dcwFirst(isBranch));
+                dcw(invalid)   = raw(invalid2);
                 dcw(pred_addr) = raw(npc);
             }
 
@@ -161,13 +156,6 @@ namespace kathryn::o3{
                     dcw(illLegal) = 1;
                 }
             }
-            ///////// alu op
-            // zif  (funct3 == RV32_FUNCT3_ADD_SUB){
-            //     aluOpArith = ALU_OP_ADD;
-            //     zif (opc == RV32_OP && funct7.sl(5)){
-            //         aluOpArith = ALU_OP_SUB;
-            //     }
-            // }
 
             ztate(funct3){
                 zcase(RV32_FUNCT3_ADD_SUB){
@@ -245,7 +233,7 @@ namespace kathryn::o3{
                 dcw1(isBranch), //// isBranch will set when invalid is false and the instruction is jumping instruction
                 dcw2(isBranch));
 
-            dbg_isGenable = isGenable;
+            dbg_isGenable = isGenable; ///DC
 
             pip(pm.dc.sync){                    initProbe(pipProbGrp .decode);
                 zyncc(pm.ds.sync, isGenable){   initProbe(zyncProbGrp.decode);
@@ -253,7 +241,6 @@ namespace kathryn::o3{
                     dcd1 <<= dcw1;
                     dcd2 <<= dcw2;
                     dcdShared(pc)  <<= pm.ft.raw(pc);
-                    dcdShared(bhr) <<= pm.ft.raw(bhr);
 
                     dcdShared(desEqSrc1) <<=
                         ((dcw2(rsIdx_1) == dcw1(rdIdx)) & dcw1(rdUse));

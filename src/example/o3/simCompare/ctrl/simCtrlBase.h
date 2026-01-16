@@ -9,6 +9,7 @@
 #include "kathryn.h"
 #include "frontEnd/cmd/paramReader.h"
 #include "../simState.h"
+#include "example/o3/simCompare/resultWriter.h"
 
 namespace kathryn::o3{
 
@@ -29,6 +30,7 @@ namespace kathryn::o3{
 
         SlotWriterBase& _slotWriter;
         SimState& _state;
+        ResultWriter* _resultWriter = nullptr; ///// null result pointer is acceptable
 
         ull cycleCnt = 0;
 
@@ -37,7 +39,8 @@ namespace kathryn::o3{
                                std::vector<std::string> testTypes,
                                SimProxyBuildMode        buildMode,
                                SlotWriterBase&          slotWriter,
-                               SimState&                state);
+                               SimState&                state,
+                               ResultWriter*            resultWriter = nullptr);
 
         virtual ~O3SimCtrlBase() = default;
 

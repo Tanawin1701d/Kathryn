@@ -5,8 +5,6 @@
 #ifndef KATHRYN_SRC_EXAMPLE_O3_IMMGEN_H
 #define KATHRYN_SRC_EXAMPLE_O3_IMMGEN_H
 
-
-#include "kathryn.h"
 #include "parameter.h"
 
 namespace kathryn::o3{

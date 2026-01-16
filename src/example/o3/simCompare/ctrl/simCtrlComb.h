@@ -28,7 +28,8 @@ namespace kathryn::o3{
                           SimState&                state,
                           TopSim&                  topSim,
                           SimCtrlRide&             slaveRide,
-                          bool                     reqRegTest
+                          bool                     reqRegTest,
+                          ResultWriter*            resultWriter = nullptr
 
                           );
 
@@ -74,6 +75,9 @@ namespace kathryn::o3{
                 params["prefix"] + testTypes[0] + "/oslot_ride.sl",
                 2500);
 
+            ResultWriter resultWriterKride(params["prefix"] + testTypes[0] + "/kathryn_kride_result");
+            ResultWriter resultWriterRide(params["prefix"] + testTypes[0] + "/verilator_ride_result");
+
             ///////// build model core
             mMod(o3Top, TopSim, false);
             auto* slaveCore = new Vpipeline();
@@ -91,7 +95,8 @@ namespace kathryn::o3{
                             getSPBM(params),
                             slotWriterRide,
                             slaveState,
-                            *slaveCore
+                            *slaveCore,
+                            &resultWriterRide
             );
 
             CombCtrl simulator(limitCycle,
@@ -102,8 +107,8 @@ namespace kathryn::o3{
                             simState,
                             (TopSim&)o3Top,
                             slaveSimulator,
-                            reqRegTest
-
+                            reqRegTest,
+                            &resultWriterKride
             );
             simulator.simStart();
 

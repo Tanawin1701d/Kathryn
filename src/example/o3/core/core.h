@@ -5,8 +5,7 @@
 #ifndef KATHRYN_SRC_O3_CORE_H
 #define KATHRYN_SRC_O3_CORE_H
 
-#include "kathryn.h"
-//////// include pipeline staage
+//////// include pipeline stages
 #include "fetch.h"
 #include "decoder.h"
 #include "dispatch.h"
@@ -14,11 +13,8 @@
 #include "execMul.h"
 #include "execLdSt.h"
 #include "execBranch.h"
-
+//////// include data structure
 #include "rob.h"
-//////// parameter
-#include "slotParam.h"
-//////// regmgmt + tagmgmt
 #include "rsvs.h"
 #include "stageStruct.h"
 #include "storeBuf.h"
@@ -54,7 +50,7 @@ namespace kathryn::o3{
         mMod(pMulAlu, ExecMul    , pm.mu            , regArch,
                       prob       , rsvs.mul.execSrc           ); //// multiplier unit
         mMod(pExBra,  BranchExec , tagMgmt          , regArch,
-                      pm         , pFetch           , pDisp  ,
+                      pm         , pDisp  ,
                       prob       , storeBuf         ,
                       rsvs    ); //// branch unit
         mMod(pExLdSt, ExecLdSt   , pm.ldSt          , regArch,
@@ -65,22 +61,21 @@ namespace kathryn::o3{
         explicit Core(int x){
             ///// add reservation to bypass and prediction control
             regArch.bpp.addRsvs(&rsvs);
-            prob.setFetchMod(&pFetch);
         }
 
         void flow() override{
 
             ///// set sim probe for the exec unit and reservation station
-            pExAlu1   .setSimProbe (&pipProbGrp.execAlu1   );
-            pExAlu2   .setSimProbe (&pipProbGrp.execAlu2   );
-            pMulAlu   .setSimProbe (&pipProbGrp.execMul    );
-            pExBra    .setSimProbe (&pipProbGrp.execBranch );
-            pExLdSt   .setSimProbe (&pipProbGrp.execLdSt   );
-            pExLdSt   .setZyncProb (&zyncProbGrp.loadStore2);
-            pExLdSt   .setSimProbe2(&pipProbGrp.execLdSt2  );
+            pExAlu1   .setSimProbe (&pipProbGrp.execAlu1   ); ///DC
+            pExAlu2   .setSimProbe (&pipProbGrp.execAlu2   ); ///DC
+            pMulAlu   .setSimProbe (&pipProbGrp.execMul    ); ///DC
+            pExBra    .setSimProbe (&pipProbGrp.execBranch ); ///DC
+            pExLdSt   .setSimProbe (&pipProbGrp.execLdSt   ); ///DC
+            pExLdSt   .setZyncProb (&zyncProbGrp.loadStore2); ///DC
+            pExLdSt   .setSimProbe2(&pipProbGrp.execLdSt2  ); ///DC
 
             ///// rsv operation
-            rsvs.setDebugProbe();
+            rsvs.setDebugProbe(); ///DC
             rsvs.buildIssues(pm, tagMgmt.bc);
         }
     };

@@ -17,10 +17,10 @@ namespace kathryn::o3{
         mVal(zero1, 1, 0);
         opr& opc = instr(0, 7);
 
-        opr& brOffset  = g(instr(31), instr(7), instr(25, 31),
-            instr(8, 12), zero1).sext(ADDR_LEN);
-        opr& jalOffset = g(instr(31), instr(12, 20), instr(20),
-            instr(21, 31), zero1).sext(ADDR_LEN);
+        opr& brOffset   = g(instr(31), instr(7), instr(25, 31),
+                            instr(8, 12), zero1).sext(ADDR_LEN);
+        opr& jalOffset  = g(instr(31), instr(12, 20), instr(20),
+                            instr(21, 31), zero1).sext(ADDR_LEN);
         opr& jalrOffset = g(instr(31), instr(21, 31), zero1).sext(ADDR_LEN);
 
         ztate(opc){

@@ -5,8 +5,9 @@
 #ifndef SRC_EXAMPLE_O3_ALUEXEC_H
 #define SRC_EXAMPLE_O3_ALUEXEC_H
 
-#include "alu.h"
+
 #include "kathryn.h"
+#include "alu.h"
 #include "rob.h"
 #include "srcSel.h"
 #include "stageStruct.h"
@@ -19,7 +20,7 @@ namespace kathryn::o3{
     Rob&       rob;
     RegSlot&   src;
     ByPass&    bp;
-    PipSimProbe* psp = nullptr;
+    PipSimProbe* psp = nullptr; ///DC
 
     explicit ExecAlu(ExecStage& exSt,
                      RegArch& regArch,

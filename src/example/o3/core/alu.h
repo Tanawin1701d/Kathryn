@@ -22,10 +22,6 @@ namespace kathryn::o3{
         mVal(fullBit, DATA_LEN, (ull)(-1));
         opr& signMask = ~(fullBit >> shamt);
 
-
-
-
-
         ztate(op){
             zcase(ALU_OP_ADD)  { out = srcA + srcB;                                      }
             zcase(ALU_OP_SLL)  { out = srcA << shamt;                                    }

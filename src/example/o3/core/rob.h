@@ -5,14 +5,10 @@
 #ifndef KATHRYN_SRC_EXAMPLE_O3_ROB_H
 #define KATHRYN_SRC_EXAMPLE_O3_ROB_H
 
-#include "kathryn.h"
-#include "parameter.h"
-#include "slotParam.h"
 #include "stageStruct.h"
 
 namespace kathryn::o3{
 
-    struct FetchMod;
     struct StoreBuf;
 
     struct Rob: Module{
@@ -27,7 +23,6 @@ namespace kathryn::o3{
         WireSlot   com2Entry{_table[comPtr+1].v()};
         WireSlot   selectedEntry{smROB};
         RegArch&   regArch;
-        FetchMod*  fetchMod;
         StoreBuf&  storeBuf;
 
         Rob(PipStage& pipStage, RegArch& regArch,
@@ -35,7 +30,6 @@ namespace kathryn::o3{
             _table(smROB, RRF_NUM),
             pm(pipStage),
             regArch(regArch),
-            fetchMod(nullptr),
             storeBuf(storeBuf){
             _table.makeColResetEvent(wbFin, 0);
             _table.makeColResetEvent(isBranch, 0);
@@ -43,17 +37,13 @@ namespace kathryn::o3{
             dataStructProbGrp.commit.init(&_table);
         }
 
-
-
         opr& getComPtr(){ return comPtr;}
 
         WireSlot& getBranchUpdateEntry(){ return selectedEntry;}
 
-
         void flow() override;
 
         void onDispatch(opr& idx, RegSlot& dpValue, RegSlot& dpShareVal){
-
             opr& opc = dpValue(inst)(0, 7);
             _table[idx](wbFin) <<= 0;
             _table[idx](storeBit) <<= (opc == RV32_STORE);
@@ -63,17 +53,6 @@ namespace kathryn::o3{
 
         void onWriteBack(opr& idx){
             _table[idx](wbFin) <<= 1;
-        }
-
-        void onWriteBackBranch(opr& idx, opr& jaddr,
-                               opr& jCond){
-            _table[idx](wbFin)    <<= 1;
-            _table[idx](jumpAddr) <<= jaddr;
-            _table[idx](jumpCond) <<= jCond;
-        }
-
-        void setFetchMod(FetchMod* infetchMod){
-            fetchMod = infetchMod;
         }
     };
 

@@ -14,7 +14,7 @@ namespace kathryn::o3{
         RegArch&   regArch;
         bool       sortReq = false;
         mWire(checkIdx, _table.getSufficientIdxSize(true));
-        mWire(dbg_isSlotReady, 1);
+        mWire(dbg_isSlotReady, 1); ///DC
 
         ORsv(int rsv_idx, SlotMeta meta,
              int amtRow , RegArch& regArch,
@@ -88,7 +88,7 @@ namespace kathryn::o3{
             /**
              * issue sync
              */
-            dbg_isSlotReady = slotReady(iw);
+            dbg_isSlotReady = slotReady(iw); ///DC
 
             if (sortReq){
                 resetSortBit();

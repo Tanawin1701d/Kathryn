@@ -60,14 +60,12 @@ namespace kathryn::o3{
         void onMisPred(opr& misRrf, opr& curCommitPtr){ /// size supposed to be equal to rrf
             opr& nextRrf = misRrf + 1;
             reqPtr <<= nextRrf;
+
+            freenum <<= (RRF_ENTRIES - nextRrf) + curCommitPtr;
             zif(curCommitPtr >= nextRrf){
                 ///// the free entry is bubble
                 /// it must be >= because should be full only (freenum = 0)
-                freenum <<= curCommitPtr - nextRrf;
-            }zelse{
-
-                //////// the free entry is top and down
-                freenum <<= (RRF_ENTRIES - nextRrf) + curCommitPtr ;
+                freenum <<= (curCommitPtr - nextRrf).uext(RRF_SEL + 1);
             }
         }
 

@@ -24,7 +24,8 @@ namespace kathryn::o3{
                               SimProxyBuildMode        buildMode,
                               SlotWriterBase&          slotWriter,
                               SimState&                state,
-                              TopSim&                  topSim);
+                              TopSim&                  topSim,
+                              ResultWriter*            resultWriter = nullptr);
 
         void  describeCon  () override;
 

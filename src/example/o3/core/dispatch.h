@@ -7,7 +7,6 @@
 
 #include "kathryn.h"
 
-#include "parameter.h"
 #include "immGen.h"
 #include "immBrGen.h"
 
@@ -17,7 +16,7 @@
 #include "srcOpr.h"
 #include "rob.h"
 #include "stageStruct.h"
-#include "example/o3/simulation/proberGrp.h"
+#include "example/o3/simulation/proberGrp.h"  ///DC
 
 
 namespace kathryn::o3{
@@ -38,22 +37,20 @@ namespace kathryn::o3{
         mWire(branchRsvIdx2_final, BRANCH_ENT_SEL); //// it is binary index
         mWire(lsRsvIdx2_final    , LDST_ENT_SEL);
 
-        mWire(dbg_isAluRsvAllocatable, 1);
-        mWire(dbg_isBranchRsvAllocatable, 1);
-        mWire(dbg_isRenamable, 1);
-        mWire(dbg_imm1, DATA_LEN);
-        mWire(dbg_imm2, DATA_LEN);
+        mWire(dbg_isAluRsvAllocatable, 1);      ///DC
+        mWire(dbg_isBranchRsvAllocatable, 1);   ///DC
+        mWire(dbg_isRenamable, 1);              ///DC
+        mWire(dbg_imm1, DATA_LEN);              ///DC
+        mWire(dbg_imm2, DATA_LEN);              ///DC
 
-        mWire(dbg_isDisp1, 1);
-        mWire(dbg_isDisp2, 1);
+        mWire(dbg_isDisp1, 1); ///DC
+        mWire(dbg_isDisp2, 1); ///DC
 
         DpMod(PipStage& pm    , Rsvs& rsvs,
               RegArch& regArch, TagMgmt& tagMgmt,
               Rob& rob):
-            pm     (pm),
-            rsvs   (rsvs),
-            regArch(regArch),
-            tagMgmt(tagMgmt),
+            pm     (pm)     , rsvs   (rsvs),
+            regArch(regArch), tagMgmt(tagMgmt),
             rob    (rob){}
 
         Operable& isRsvRequired(RegSlot& dcd, int RS_ENT_IDX){
@@ -195,7 +192,7 @@ namespace kathryn::o3{
                     rsvs.br .tryWriteEntry(dcd1(rsEnt), branchRsvIdx, entry1);
                     rsvs.ls .tryWriteEntry(dcd1(rsEnt), lsRsvIdx    , entry1);
                     rob.onDispatch(reqPtr, dcd1, dcdShare); //// acknowledge reroder buffer
-                    dbg_isDisp1 = 1;
+                    dbg_isDisp1 = 1; ///DC
                     /***
                      * dispatch entry 2
                      */
@@ -213,7 +210,7 @@ namespace kathryn::o3{
                         rsvs.br .tryWriteEntry(dcd2(rsEnt), branchRsvIdx2_final, entry2);
                         rsvs.ls .tryWriteEntry(dcd2(rsEnt), lsRsvIdx2_final    , entry2);
                         rob.onDispatch(reqPtr+1, dcd2, dcdShare);
-                        dbg_isDisp2 = 1;
+                        dbg_isDisp2 = 1; ///DC
                     }
                 }
             }

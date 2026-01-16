@@ -20,7 +20,6 @@
 
 ///#ifdef BUILD_EXT_SIM
 #include "simCtrlRide.h"
-#include "example/o3/simCompare/ctrl/simCtrlCombCxx.h"
 ///#endif
 
 

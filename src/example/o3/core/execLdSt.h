@@ -5,13 +5,10 @@
 #ifndef SRC_EXAMPLE_O3_EXECLDST_H
 #define SRC_EXAMPLE_O3_EXECLDST_H
 
-#include "alu.h"
 #include "kathryn.h"
 #include "rob.h"
-#include "srcSel.h"
 #include "stageStruct.h"
 #include "storeBuf.h"
-#include "model/hwCollection/dataStructure/mux/mux.h"
 
 namespace kathryn::o3{
 
@@ -25,11 +22,11 @@ namespace kathryn::o3{
     RegSlot&     lsRes; /// load store result stage
     ByPass&      bp;
     StoreBuf&    stBuf;
-    PipSimProbe* psp1 = nullptr;
-    ZyncSimProb* zsp  = nullptr;
-    PipSimProbe* psp2 = nullptr;
+    PipSimProbe* psp1 = nullptr; ///DC
+    ZyncSimProb* zsp  = nullptr; ///DC
+    PipSimProbe* psp2 = nullptr; ///DC
 
-    mWire(dbg_effAddr, ADDR_LEN);
+    mWire(dbg_effAddr, ADDR_LEN); ///DC
 
 
     explicit ExecLdSt(LdStStage& ldSt_stage,
@@ -52,9 +49,9 @@ namespace kathryn::o3{
         //// set tag tracker
     }
 
-    void setSimProbe (PipSimProbe* in_psp){psp1 = in_psp;}
-    void setSimProbe2(PipSimProbe* in_psp){psp2 = in_psp;}
-    void setZyncProb (ZyncSimProb* in_zsp){zsp  = in_zsp;}
+    void setSimProbe (PipSimProbe* in_psp){psp1 = in_psp;} ///DC
+    void setSimProbe2(PipSimProbe* in_psp){psp2 = in_psp;} ///DC
+    void setZyncProb (ZyncSimProb* in_zsp){zsp  = in_zsp;} ///DC
 
     void flow() override{
 
@@ -63,7 +60,7 @@ namespace kathryn::o3{
         opr& data      = src(phyIdx_2);
         opr& effAddr   = src(phyIdx_1) + src(imm);
 
-        dbg_effAddr = effAddr;
+        dbg_effAddr = effAddr; ///DC
 
 
         //////// operate the store buffer

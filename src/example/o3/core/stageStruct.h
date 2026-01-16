@@ -5,9 +5,6 @@
 #ifndef KATHRYN_SRC_EXAMPLE_O3_STAGEPARAM_H
 #define KATHRYN_SRC_EXAMPLE_O3_STAGEPARAM_H
 
-
-#include "kathryn.h"
-
 #include "parameter.h"
 #include "slotParam.h"
 

@@ -19,7 +19,7 @@ namespace kathryn::o3{
         Rob&       rob;
         RegSlot&   src;
         ByPass&    bp;
-        PipSimProbe* psp = nullptr;
+        PipSimProbe* psp = nullptr; ///DC
 
         explicit ExecMul(MulStage& muSt,
                          RegArch&  regArch,

@@ -5,9 +5,6 @@
 #ifndef EXAMPLE_O3_CORE_STOREBUF_H
 #define EXAMPLE_O3_CORE_STOREBUF_H
 
-
-#include "kathryn.h"
-#include "parameter.h"
 #include "search_idx.h"
 #include "slotParam.h"
 

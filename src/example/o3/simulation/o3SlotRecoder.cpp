@@ -746,8 +746,8 @@ namespace kathryn::o3{
         ull sim_storeBit = ull(targetRegSlot(storeBit));
 
         ull sim_pc       = ull(targetRegSlot(pc));
-        ull sim_jumpAddr = ull(targetRegSlot(jumpAddr));
-        ull sim_jumpCond = ull(targetRegSlot(jumpCond));
+        // ull sim_jumpAddr = ull(targetRegSlot(jumpAddr));
+        // ull sim_jumpCond = ull(targetRegSlot(jumpCond));
 
 
         //////// basic string for rob entry
@@ -767,11 +767,11 @@ namespace kathryn::o3{
         result.push_back(entryStr);
 
         //////// branch info add in case it is branch
-        if (sim_isBranch){
-            result.push_back("/br: c  "    + std::to_string(sim_jumpCond));
-            result.push_back("/br: pc "  + cvtNum2HexStr(sim_pc));
-            result.push_back("/br: to "  + cvtNum2HexStr(sim_jumpAddr));
-        }
+        // if (sim_isBranch){
+        //     result.push_back("/br: c  "    + std::to_string(sim_jumpCond));
+        //     result.push_back("/br: pc "  + cvtNum2HexStr(sim_pc));
+        //     result.push_back("/br: to "  + cvtNum2HexStr(sim_jumpAddr));
+        // }
         return result;
 
     }

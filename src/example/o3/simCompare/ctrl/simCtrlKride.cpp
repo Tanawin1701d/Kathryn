@@ -16,14 +16,16 @@ namespace kathryn::o3{
                                SimProxyBuildMode        buildMode,
                                SlotWriterBase&          slotWriter,
                                SimState&                state,
-                               TopSim&                  topSim):
+                               TopSim&                  topSim,
+                               ResultWriter*            resultWriter):
 
     O3SimCtrlBase(  limitCycle,
                     prefix,
                     std::move(testTypes),
                     buildMode,
                     slotWriter,
-                    state),
+                    state,
+                    resultWriter),
     SimInterface(limitCycle,
                  "/tmp/vcdDummy",
                  "/tmp/prodummy",
@@ -40,6 +42,10 @@ namespace kathryn::o3{
         _vcdWriter-> renew(_prefixFolder + _testTypes[curTestCaseIdx]+ "/owave.vcd");
         _flowWriter->renew(_prefixFolder + _testTypes[curTestCaseIdx]+ "/oprofile.prof");
         _slotWriter. renew(_prefixFolder + _testTypes[curTestCaseIdx]+ "/oslot_kride.sl");
+        if (_resultWriter != nullptr){
+            _resultWriter->fillCycleCnt(cycleCnt);
+            _resultWriter->renew(_prefixFolder + _testTypes[curTestCaseIdx]+ "/kathryn_kride_result");
+        }
         //////// set reset wire to 1
         *rstWire = 1;
         //////// cycle before cycle cycle is running

@@ -12,13 +12,15 @@ namespace kathryn::o3{
                                  std::vector<std::string> testTypes,
                                  SimProxyBuildMode        buildMode,
                                  SlotWriterBase&          slotWriter,
-                                 SimState&                state):
+                                 SimState&                state,
+                                 ResultWriter*            resultWriter):
 
 
     _prefixFolder(prefix),
     _testTypes   (testTypes),
     _slotWriter  (slotWriter),
-    _state       (state){}
+    _state       (state),
+    _resultWriter(resultWriter){}
 
 
     bool O3SimCtrlBase::isExecFin(){

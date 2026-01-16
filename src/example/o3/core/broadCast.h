@@ -15,7 +15,6 @@ namespace kathryn::o3{
         mWire(mis, 1);
         mWire(fixTag, SPECTAG_LEN);
         mWire(suc, 1);
-        mWire(misTag, SPECTAG_LEN);
         mWire(sucTag, SPECTAG_LEN);
         opr& isBrMissPred(){ return mis;}
         opr& isBrSuccPred(){ return suc;}
@@ -25,14 +24,12 @@ namespace kathryn::o3{
         opr& checkIsSuc (opr& specIdx){
             return suc & (sucTag == specIdx);
         }
-
         opr& checkIsSuc(Slot& src){
 
             opr& specOpr = *src.hwFieldAt(spec)._opr;
             opr& specIdx  = *src.hwFieldAt(specTag)._opr;
             return suc & specOpr & (sucTag == specIdx);
         }
-
     };
 
 }

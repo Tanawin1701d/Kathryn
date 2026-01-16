@@ -5,21 +5,14 @@
 #ifndef KATHRYN_SRC_EXAMPLE_O3_BRANCHEXEC_H
 #define KATHRYN_SRC_EXAMPLE_O3_BRANCHEXEC_H
 
-#include "alu.h"
 #include "kathryn.h"
-#include "parameter.h"
+#include "alu.h"
 #include "rob.h"
-#include "slotParam.h"
-#include "stageStruct.h"
-#include "isaParam.h"
-#include "srcSel.h"
 #include "rsvs.h"
-#include "storeBuf.h"
 
 
 namespace kathryn::o3{
 
-    struct FetchMod;
     struct DpMod;
     struct RsvBase;
     struct BranchExec: Module{
@@ -27,7 +20,6 @@ namespace kathryn::o3{
         TagMgmt&      tagMgmt;
         RegArch&      regArch;
         PipStage&     pm;
-        FetchMod&     fetchMod;
         DpMod&        dispMod;
         Rob&          rob;
         ByPass&       bp;
@@ -35,7 +27,7 @@ namespace kathryn::o3{
         StoreBuf&     stBuf;
         RegSlot&      src;
 
-        PipSimProbe* psp = nullptr;
+        PipSimProbe* psp = nullptr;  ///DC
         mWire(calAddr, ADDR_LEN);
         mWire(brTaken, 1);
 
@@ -43,7 +35,6 @@ namespace kathryn::o3{
         explicit BranchExec(TagMgmt& tagMgmt,
                             RegArch& regArch,
                             PipStage& pm,
-                            FetchMod& fetchMod,
                             DpMod&    dispMod,
                             Rob& rob,
                             StoreBuf& stBuf,
@@ -51,7 +42,6 @@ namespace kathryn::o3{
         tagMgmt(tagMgmt),
         regArch(regArch),
         pm(pm),
-        fetchMod(fetchMod),
         dispMod(dispMod),
         rob(rob),
         stBuf(stBuf),
@@ -76,7 +66,6 @@ namespace kathryn::o3{
             brTaken     = alu(src(aluOp), srcA, srcB).sl(0);
 
             //// assign static wire to bc
-            tagMgmt.bc.misTag = spTag;
             tagMgmt.bc.sucTag = spTag;
             tagMgmt.bc.fixTag = fixTag;
 
@@ -95,7 +84,7 @@ namespace kathryn::o3{
             pip(pm.br.sync){  tryInitProbe(psp);
 
                 /////// write back the data if it needed
-                rob.onWriteBackBranch(src(rrftag), calAddr, brCond);
+                rob.onWriteBack(src(rrftag));
                 zif(src(rdUse)){
                     regArch.rrf.onWback(src(rrftag), nextPc);
                     regArch.bpp.doByPass(bp);

@@ -6,7 +6,6 @@
 #define SRC_EXAMPLE_O3_SRCSEL_H
 
 #include "kathryn.h"
-#include "rob.h"
 
 namespace kathryn::o3{
 

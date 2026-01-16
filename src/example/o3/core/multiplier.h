@@ -4,7 +4,6 @@
 #ifndef KATHRYN_MULTIPLIER_H
 #define KATHRYN_MULTIPLIER_H
 
-#include "kathryn.h"
 #include "parameter.h"
 
 namespace kathryn::o3{

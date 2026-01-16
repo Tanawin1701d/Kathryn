@@ -5,10 +5,8 @@
 #ifndef KATHRYN_SRC_EXAMPLE_O3_MPFT_H
 #define KATHRYN_SRC_EXAMPLE_O3_MPFT_H
 
-#include "kathryn.h"
-#include "parameter.h"
 #include "slotParam.h"
-#include "example/o3/simulation/proberGrp.h"
+#include "example/o3/simulation/proberGrp.h"  ///DC
 
 namespace kathryn::o3{
 
@@ -26,14 +24,11 @@ namespace kathryn::o3{
         void onPredSuc(opr& tag1){
 
             _table.doCusLogic([&](RegSlot& lhs, int rowIdx){
+                lhs(mpft_fixTag) <<= (lhs(mpft_fixTag) & (~tag1));
                 zif (tag1.sl(rowIdx)){ ///// matched tag
                     ///// clean entire row
                     lhs(mpft_valid) <<= 0;
                     lhs(mpft_fixTag) <<= 0;
-                }zelse{
-                    ///// fix other tag
-                    lhs(mpft_fixTag) <<=
-                        (lhs(mpft_fixTag) & (~tag1));
                 }
             });
 

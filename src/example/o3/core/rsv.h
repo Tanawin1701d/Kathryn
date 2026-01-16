@@ -5,9 +5,6 @@
 #ifndef KATHRYN_SRC_EXAMPLE_O3_RSV_H
 #define KATHRYN_SRC_EXAMPLE_O3_RSV_H
 
-
-#include "kathryn.h"
-#include "slotParam.h"
 #include "stageStruct.h"
 
 namespace kathryn::o3{
@@ -28,15 +25,15 @@ namespace kathryn::o3{
         Table    _table;
         RegSlot  execSrc;
 
-        ZyncSimProb*   issueProbe = nullptr;
-        TableSimProbe* stationProbe = nullptr;
+        ZyncSimProb*   issueProbe = nullptr;     ///DC
+        TableSimProbe* stationProbe = nullptr;   ///DC
 
-        void setSimProbe(ZyncSimProb* issueP, TableSimProbe* stationP){
-            issueProbe = issueP;
-            stationProbe = stationP;
-            assert(stationProbe != nullptr);
-            stationProbe->init(&_table);
-        }
+        void setSimProbe(ZyncSimProb* issueP, TableSimProbe* stationP){  ///DC
+            issueProbe = issueP;                                         ///DC
+            stationProbe = stationP;                                     ///DC
+            assert(stationProbe != nullptr);                             ///DC
+            stationProbe->init(&_table);                                 ///DC
+        }                                                                ///DC
 
         RsvBase(const SlotMeta& meta, int amtRow):
         _meta(meta),_table(meta, amtRow),
@@ -54,14 +51,16 @@ namespace kathryn::o3{
 
         void tryOwSpecBit(WireSlot& iw, BroadCast& bc){
             ///////// we have to override the spec bit if it is on the fly
-            auto& isSpec    = iw(spec);
-            auto& specTagIdx= iw(specTag);
-            //// send data
-
-            zif ( isSpec && bc.checkIsSuc(specTagIdx)){
+            // auto& isSpec    = iw(spec);
+            // auto& specTagIdx= iw(specTag);
+            // //// send data
+            //
+            // zif ( isSpec && bc.checkIsSuc(specTagIdx)){
+            //     execSrc(spec) <<= 0;
+            // }
+            zif ( bc.checkIsSuc(iw)){
                 execSrc(spec) <<= 0;
             }
-
         }
 
         virtual void writeEntry(opr& binIdx, WireSlot& iw){
