@@ -174,6 +174,9 @@ namespace kathryn::o3{
                 std::cout << "skip write due to exceed memory address" << std::endl;
             }else{
                 _dmem[aligned_addr] = lastDmemWData;
+                if ((_resultWriter != nullptr) && (aligned_addr == 0x0)){
+                    _resultWriter->fillResult(lastDmemWData);
+                }
                 if (lastDmemAddr == 0x0 || lastDmemAddr == 0x4 || lastDmemAddr == 0x8){
                     std::cout << "write Detect at KRide @ " << cvtNum2HexStr(lastDmemAddr) << " with data " << lastDmemWData << std::endl;
                 }

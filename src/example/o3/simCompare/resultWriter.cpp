@@ -13,7 +13,7 @@ namespace kathryn::o3{
     }
 
     ResultWriter::~ResultWriter(){
-        finalizeTheWriteData();
+        //finalizeTheWriteData();
     }
 
     void ResultWriter::fillResult(uint32_t value){
@@ -33,6 +33,8 @@ namespace kathryn::o3{
             std::string resultStr {resultChar};
             addData(resultStr);
         }
+        _cycleCnt = 0;
+        _results.clear();
     }
 
     void ResultWriter::renew(const std::string& fileName){

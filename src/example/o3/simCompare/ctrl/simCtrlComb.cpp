@@ -90,7 +90,10 @@ namespace kathryn::o3{
                 if (cycleCnt % 10000 == 0){
                     std::cout << TC_BLUE << "[O3 RISC-V CMP] -----> computing cycle " << cycleCnt << TC_DEF << std::endl;
                 }
-                cycleCnt++;
+
+                ////// increase cycle counter
+                incCycleCnt();
+                _slaveRide.incCycleCnt();
             }
             std::cout << TC_BLUE << "[O3 RISC-V CMP] -----> sim done in " << cycleCnt << " cycles" << TC_DEF << std::endl;
 

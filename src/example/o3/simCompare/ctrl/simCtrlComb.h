@@ -115,6 +115,9 @@ namespace kathryn::o3{
             slotWriterKride.finalizeLastWindow();
             slotWriterRide.finalizeLastWindow();
 
+            resultWriterKride.finalizeTheWriteData();
+            resultWriterRide.finalizeTheWriteData();
+
             resetKathryn();
             std::cout << TC_GREEN << "--------------------------------" << std::endl;
         }
