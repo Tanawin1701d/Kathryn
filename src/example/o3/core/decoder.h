@@ -236,7 +236,7 @@ namespace kathryn::o3{
             dbg_isGenable = isGenable; ///DC
 
             pip(pm.dc.sync){                    initProbe(pipProbGrp .decode);
-                zyncc(pm.ds.sync, isGenable){   initProbe(zyncProbGrp.decode);
+                zyncc(pm.sync_dp, isGenable){   initProbe(zyncProbGrp.decode);
                     ///////// decoded value (except specTag and spec)
                     dcd1 <<= dcw1;
                     dcd2 <<= dcw2;

@@ -24,6 +24,7 @@ namespace kathryn::o3{
         SlotMeta _meta;
         Table    _table;
         RegSlot  execSrc;
+        SyncPip  sync {"rsv_exec_sync"};
 
         ZyncSimProb*   issueProbe = nullptr;     ///DC
         TableSimProbe* stationProbe = nullptr;   ///DC
@@ -43,7 +44,7 @@ namespace kathryn::o3{
 
         virtual ~RsvBase() = default;
 
-        virtual void buildIssue(SyncMeta& syncMeta, BroadCast& bc) = 0;
+        virtual void buildIssue(BroadCast& bc) = 0;
 
         Operable& slotReady(WireSlot& iw){
             return iw(busy) && iw(rsValid_1) && iw(rsValid_2);

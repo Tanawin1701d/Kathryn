@@ -14,33 +14,32 @@ namespace kathryn::o3{
 
 
     struct ExecMul: Module{
-        MulStage&  mulSt;
         RegArch&   regArch;
         Rob&       rob;
-        RegSlot&   src;
+        RsvBase&   rsv;
         ByPass&    bp;
         PipSimProbe* psp = nullptr; ///DC
 
-        explicit ExecMul(MulStage& muSt,
-                         RegArch&  regArch,
-                         Rob&      rob,
-                         RegSlot&  src):
-        mulSt  (muSt),
+        explicit ExecMul(RegArch& regArch,
+                         Rob&     rob,
+                         RsvBase& rsv
+                         ):
         regArch(regArch),
         rob    (rob),
-        src    (src),
+        rsv    (rsv),
         bp     (regArch.bpp.addByPassEle()){
-            mulSt.sync.setTagTracker(src);
+            //mulSync.setTagTracker(src);
         }
 
         void setSimProbe(PipSimProbe* in_psp){psp = in_psp;}
 
         void flow() override{
 
+            RegSlot& src    = rsv.execSrc;
             opr& mulRes = multiplier(src);
             bp.addSrc(src(rrftag), mulRes);
 
-            pip(mulSt.sync){tryInitProbe(psp);
+            pip(rsv.sync){ tryInitProbe(psp);
                 rob.onWriteBack(src(rrftag));
                 zif(src(rdUse)){
                     regArch.rrf.onWback(src(rrftag), mulRes);

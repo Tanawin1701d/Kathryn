@@ -86,7 +86,7 @@ namespace kathryn::o3{
             return {_table[*selIdx](busy).v(), *selIdx};
         }
 
-        void buildIssue(SyncMeta& syncMeta, BroadCast& bc) override{
+        void buildIssue(BroadCast& bc) override{
 
             /*
              *  the required Idx
@@ -106,7 +106,7 @@ namespace kathryn::o3{
             WireSlot iw(_table[checkIdx].v());
 
             cwhile(true){
-                zyncc(syncMeta, slotReady(iw)){ tryInitProbe(issueProbe);
+                zyncc(sync, slotReady(iw)){ tryInitProbe(issueProbe);
                     //////// reset the table
                     onIssue(checkIdx, iw); //// reset busy
                     tryOwSpecBit(iw, bc);

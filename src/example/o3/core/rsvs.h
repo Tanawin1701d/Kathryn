@@ -30,7 +30,9 @@ namespace kathryn::o3{
         void onMisPred(opr& fixTag){
             for (RsvBase* rsv: rsvs){
                 rsv->onMisPred(fixTag);
+                rsv->sync.holdMaster();
             }
+            ls.sync.killIfTagMet(true, fixTag);
         }
 
         void onSucPred(opr& sucTag){
@@ -41,14 +43,14 @@ namespace kathryn::o3{
 
         void buildIssues(PipStage& pm, BroadCast& bc){
             ///// build alu reservation station issue logic
-            alu1.buildIssue(pm.ex[0].sync, bc);
-            alu2.buildIssue(pm.ex[1].sync, bc);
+            alu1.buildIssue(bc);
+            alu2.buildIssue(bc);
             ///// build alu reservation station issue logic
-            mul.buildIssue(pm.mu.sync, bc);
+            mul.buildIssue(bc);
             ///// build branch reservation station internal logic
-            br.buildIssue(pm.br.sync, bc);
+            br.buildIssue(bc);
             ///// build load/store reservation station internal logic
-            ls.buildIssue(pm.ldSt.sync, bc);
+            ls.buildIssue(bc);
         }
 
         void setDebugProbe(){ ///DC

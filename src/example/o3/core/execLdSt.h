@@ -18,7 +18,7 @@ namespace kathryn::o3{
     RegArch&     regArch;
     BroadCast&   bc;
     Rob&         rob;
-    RegSlot&     src;   /// load store inquiry stage
+    RsvBase&     rsv;
     RegSlot&     lsRes; /// load store result stage
     ByPass&      bp;
     StoreBuf&    stBuf;
@@ -33,19 +33,19 @@ namespace kathryn::o3{
                      RegArch&    regArch,
                      BroadCast&  bc,
                      Rob&        rob,
-                     RegSlot&    src,
+                     RsvBase&    rsv,
                      StoreBuf&   stBuf) :
         lss    (ldSt_stage),
         regArch(regArch),
         bc     (bc),
         rob    (rob),
-        src    (src),
+        rsv    (rsv),
         lsRes  (lss.lsRes),
         bp     (regArch.bpp.addByPassEle()),
         stBuf  (stBuf){
 
-        lss.sync.setTagTracker(src);
-        lss.sync2.setTagTracker(lsRes);
+        rsv.sync.setTagTracker(rsv.execSrc);
+        ///lss.sync2.setTagTracker(lsRes);
         //// set tag tracker
     }
 
@@ -56,6 +56,9 @@ namespace kathryn::o3{
     void flow() override{
 
         ////// first stage
+
+        RegSlot& src = rsv.execSrc;
+
         opr& isLoad    = src(rdUse);
         opr& data      = src(phyIdx_2);
         opr& effAddr   = src(phyIdx_1) + src(imm);
@@ -66,7 +69,7 @@ namespace kathryn::o3{
         //////// operate the store buffer
         stBuf.flow();
 
-        pip(lss.sync){ tryInitProbe(psp1);
+        pip(rsv.sync){ tryInitProbe(psp1);
             zyncc(lss.sync2, (isLoad || (!stBuf.isFull()))){ tryInitProbe(zsp)
                 //////assign ordinaty data to next stage rrftag. rdIse. spec. spectag
                 lsRes <<= src;

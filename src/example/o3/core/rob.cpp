@@ -18,7 +18,7 @@ namespace kathryn::o3{
             selectedEntry = com2Entry;
         }
 
-        pip(pm.cm.sync){autoSync
+        pip(pm.sync_cm){autoSync
             /////// commit the instruction
                 ////// due to branch can do only one
             ////// we have to set commit commad

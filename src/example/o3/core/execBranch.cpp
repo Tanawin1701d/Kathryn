@@ -16,11 +16,11 @@ namespace kathryn::o3{
         ////// fetch update pc and gshare pred system
         pm.ft.incPc(fixPc, true);
         /////// pipeline stage management
-        pm  .onMisPred(fixTag);
+        pm  .onMisPred();
         /////// reservation station management
         rsvs.onMisPred(fixTag);
         ////// do recovery on the tag system
-        tagMgmt.mpft  .onMissPred();
+        tagMgmt.mpft  .onMisPred();
         tagMgmt.tagGen.onMisPred(misTag);
         ////// do recovery on register architecture
         regArch.arf.onMisPred(misTag);

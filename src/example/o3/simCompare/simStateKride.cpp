@@ -218,19 +218,19 @@ namespace kathryn::o3{
         //////////////////////
 
         exec_alu1.st = generatePipState(&pipProbGrp.execAlu1, nullptr);
-        assignEXEC_Entry(exec_alu1.entry, _core.pExAlu1.src);
+        assignEXEC_Entry(exec_alu1.entry, _core.rsvs.alu1.execSrc);
         exec_alu2.st = generatePipState(&pipProbGrp.execAlu2, nullptr);
-        assignEXEC_Entry(exec_alu2.entry, _core.pExAlu2.src);
+        assignEXEC_Entry(exec_alu2.entry, _core.rsvs.alu2.execSrc);
 
         exec_mul.st = generatePipState(&pipProbGrp.execMul, nullptr);
-        assignEXEC_Mul(exec_mul.entry, _core.pMulAlu.src);
+        assignEXEC_Mul(exec_mul.entry, _core.rsvs.mul.execSrc);
 
         exec_branch.st = generatePipState(&pipProbGrp.execBranch, nullptr);
         assignEXEC_Branch(exec_branch.entry, _core.pExBra.src);
 
         exec_ldst.st1 = generatePipState(&pipProbGrp.execLdSt, &zyncProbGrp.loadStore2);
         exec_ldst.st2 = generatePipState(&pipProbGrp.execLdSt2, nullptr);
-        assignEXEC_LDST(exec_ldst.entry, _core.pExLdSt.src);
+        assignEXEC_LDST(exec_ldst.entry, _core.rsvs.ls.execSrc);
         exec_ldst.effAddr = ull(_core.pExLdSt.dbg_effAddr);
 
         exec_ldst.rrftag    =   ull(_core.pExLdSt.lsRes(rrftag));

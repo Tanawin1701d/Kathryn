@@ -28,7 +28,9 @@ namespace kathryn::o3{
 
         SlotMeta meta{smFetch};
         RegSlot  raw {smFetch};
-        SyncMeta sync{"fetchSync"};
+
+        SyncMeta sync    {"fetchSync"};
+
 
         FetchStage(){
             curPc.asOutputGlob("curPc");
@@ -56,40 +58,19 @@ namespace kathryn::o3{
         WireSlot  dcw2    {decodedMeta};
         RegSlot  dcdShared{sharedMeta};
 
-        SyncMeta sync {"decodeSync"};
+        SyncMeta sync    {"decodeSync"};
 
         Operable& getIsAlocRsv(RegSlot& dcd){ return dcw1(rsIdx_1); }
 
     };
 
-    struct DispStage{
-        SyncMeta sync {"dispSync"};
-    };
-
-    struct RsvStage{
-        SyncMeta sync {"rsvSync"};
-    };
-
-    struct ExecStage{
-        SyncPip sync {"execSync"};
-    };
-
-    struct MulStage{
-        SyncPip sync {"mulSync"};
-    };
-
-    struct BranchStage{
-        SyncMeta sync {"branchSync"};
-    };
-
     struct LdStStage{
-        SyncPip sync  {"ldStSync"};
-        SyncPip sync2 {"ldStLastSync"};
         mWire(dmem_rdata, DATA_LEN);
         mWire(dmem_we , 1);
         mWire(dmem_rwaddr, ADDR_LEN); //// must mux with reading
         mWire(dmem_wdata, DATA_LEN);
         RegSlot lsRes {smLdSt};
+        SyncPip  sync2 {"ldStLastSync"};
 
         LdStStage(){
             dmem_rdata  .asInputGlob ("dmem_rdata");
@@ -100,10 +81,6 @@ namespace kathryn::o3{
 
         }
 
-    };
-
-    struct CommitStage{
-        SyncMeta sync {"commitSync"};
     };
 
     struct ByPass{
@@ -162,12 +139,6 @@ namespace kathryn::o3{
 
         void doByPass(ByPass& bp);
 
-        // void tryAssignByPassAll(Operable& desIdent, Reg& desVal){
-        //     for (auto& bp : _bps){
-        //         bp->tryAssignByPass(desIdent, desVal);
-        //     }
-        // }
-
     };
 
 
@@ -191,40 +162,41 @@ namespace kathryn::o3{
     struct PipStage{
         FetchStage  ft;
         DecodeStage dc;
-        DispStage   ds;
-        RsvStage    rs;
-        ExecStage   ex[2];
-        MulStage   mu;
-        BranchStage br;
         LdStStage   ldSt;
-        CommitStage cm;
 
-        void onMisPred(opr& fixTag){
+        SyncMeta sync_dp    {"dispSync"};
+        SyncMeta sync_rs    {"rsvSync"};
+
+        SyncMeta sync_cm    {"commitSync"};
+
+
+        void onMisPred(){
             ////// kill the in-order stage
             ft.sync.killSlave(true);
             dc.sync.killSlave(true);
-            ds.sync.killSlave(true);
+            sync_dp.killSlave(true);
+            sync_cm.holdSlave();
             ////// kill the out-of-order exec Unit stage
-            ex[0].sync .killIfTagMet(true, fixTag);
-            ex[1].sync .killIfTagMet(true, fixTag);
-            mu   .sync .killIfTagMet(true, fixTag);
-            ldSt .sync .killIfTagMet(true, fixTag);
-            ldSt .sync2.killIfTagMet(true, fixTag);
+            //sync_ex1  .killIfTagMet(true, fixTag);
+            //sync_ex2  .killIfTagMet(true, fixTag);
+            //sync_mul  .killIfTagMet(true, fixTag);
+            //ldSt.sync1.killIfTagMet(true, fixTag);
+            //ldSt.sync2.killIfTagMet(true, fixTag);
             ////// hold reservation station to exection unit
-            ex[0].sync .holdMaster();
-            ex[1].sync .holdMaster();
-            mu   .sync .holdMaster();
-            br   .sync .holdMaster();
-            ldSt .sync .holdMaster();
+            // sync_ex1  .holdMaster();
+            // sync_ex2  .holdMaster();
+            // sync_mul  .holdMaster();
+            // sync_br   .holdMaster();
+            // ldSt.sync1.holdMaster();
             ///ldSt .sync2.holdMaster(); //// because the master is not reservation station
             ////// hold commit to not
-            cm.sync.holdSlave();
+
 
         }
         void onSucPred(){
             dc.sync.holdMaster(); //// hold fetch <-> decode
-            ds.sync.holdMaster(); //// hold decode <-> dispatch to generate tag, but allowing system to enter decode state
-            rs.sync.holdMaster(); //// hold dispatch <-> reservation station
+            sync_dp.holdMaster(); //// hold decode <-> dispatch to generate tag, but allowing system to enter decode state
+            sync_rs.holdMaster(); //// hold dispatch <-> reservation station
         }
 
 

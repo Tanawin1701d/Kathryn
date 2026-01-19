@@ -18,7 +18,7 @@ namespace kathryn::o3{
             _table.makeColResetEvent(mpft_valid, 0);
             _table.makeColResetEvent(mpft_fixTag, 0);
             /////// debug probe
-            dataStructProbGrp.mpft.init(&_table);
+            dataStructProbGrp.mpft.init(&_table); ///DC
         }
 
         void onPredSuc(opr& tag1){
@@ -33,7 +33,7 @@ namespace kathryn::o3{
             });
 
         }
-        void onMissPred(){
+        void onMisPred(){
             _table.doGlobColAsm({mpft_valid}, 0);
             _table.doGlobColAsm({mpft_fixTag}, 0);
         }

@@ -11,40 +11,39 @@
 #include "rob.h"
 #include "srcSel.h"
 #include "stageStruct.h"
+#include "rsv.h"
 
 namespace kathryn::o3{
 
     struct ExecAlu: Module{
-    ExecStage& exSt;
-    RegArch&   regArch;
-    Rob&       rob;
-    RegSlot&   src;
-    ByPass&    bp;
+    RegArch&     regArch;
+    Rob&         rob;
+    RsvBase&     rsv;
+    ByPass&      bp;
     PipSimProbe* psp = nullptr; ///DC
 
-    explicit ExecAlu(ExecStage& exSt,
-                     RegArch& regArch,
+    explicit ExecAlu(RegArch& regArch,
                      Rob& rob,
-                     RegSlot& src) :
-        exSt(exSt),
+                     RsvBase& rsvBase) :
         regArch(regArch),
         rob(rob),
-        src(src),
+        rsv(rsvBase),
         bp(regArch.bpp.addByPassEle()){
-        exSt.sync.setTagTracker(src);
+        // exSync.setTagTracker(src);
     }
 
     void setSimProbe(PipSimProbe* in_psp){psp = in_psp;}
 
     void flow() override{
 
-        opr& srcA   = getAluSrcA(src);
-        opr& srcB   = getAluSrcB(src);
-        opr& result = alu(src(aluOp), srcA, srcB);
+        RegSlot& src    = rsv.execSrc;
+        opr&     srcA   = getAluSrcA(src);
+        opr&     srcB   = getAluSrcB(src);
+        opr&     result = alu(src(aluOp), srcA, srcB);
         bp.addSrc(src(rrftag), result);
 
         ///// init pip meta data
-        pip(exSt.sync){ tryInitProbe(psp);
+        pip(rsv.sync){ tryInitProbe(psp);
             rob.onWriteBack(src(rrftag));
             zif(src(rdUse)){
                 regArch.rrf.onWback(src(rrftag), result);

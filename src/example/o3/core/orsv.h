@@ -61,7 +61,7 @@ namespace kathryn::o3{
 
         
 
-        void buildIssue(SyncMeta& syncMeta, BroadCast& bc) override{
+        void buildIssue(BroadCast& bc) override{
             /*
             * find the free slot
             */
@@ -95,7 +95,7 @@ namespace kathryn::o3{
             }
 
             cwhile(true){
-                zyncc(syncMeta, dbg_isSlotReady){ tryInitProbe(issueProbe);
+                zyncc(sync, dbg_isSlotReady){ tryInitProbe(issueProbe);
                     //////// reset the table
                     onIssue(ohIdx, iw);
                     tryOwSpecBit(iw, bc);

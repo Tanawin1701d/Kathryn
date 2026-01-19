@@ -43,19 +43,14 @@ namespace kathryn::o3{
         mMod(pDisp ,  DpMod     , pm     , rsvs ,
                       regArch   , tagMgmt, prob); //// dispathc
         /////// back-end
-        mMod(pExAlu1,  ExecAlu   , pm.ex[0]         , regArch,
-                       prob      , rsvs.alu1.execSrc          ); //// exec
-        mMod(pExAlu2,  ExecAlu   , pm.ex[1]         , regArch,
-                       prob      , rsvs.alu2.execSrc          );
-        mMod(pMulAlu, ExecMul    , pm.mu            , regArch,
-                      prob       , rsvs.mul.execSrc           ); //// multiplier unit
-        mMod(pExBra,  BranchExec , tagMgmt          , regArch,
-                      pm         , pDisp  ,
-                      prob       , storeBuf         ,
-                      rsvs    ); //// branch unit
-        mMod(pExLdSt, ExecLdSt   , pm.ldSt          , regArch,
-                      tagMgmt.bc , prob             , rsvs.ls.execSrc,
-                      storeBuf);
+        mMod(pExAlu1,  ExecAlu   , regArch, prob    , rsvs.alu1); //// exec
+        mMod(pExAlu2,  ExecAlu   , regArch, prob    , rsvs.alu2);
+        mMod(pMulAlu, ExecMul    , regArch, prob    , rsvs.mul ); //// multiplier unit
+        mMod(pExBra,  BranchExec , tagMgmt, regArch ,
+                                   pm     , pDisp   ,
+                                   prob   , storeBuf, rsvs    ); //// branch unit
+        mMod(pExLdSt, ExecLdSt   , pm.ldSt, regArch , tagMgmt.bc,
+                                   prob   , rsvs.ls , storeBuf);
 
 
         explicit Core(int x){

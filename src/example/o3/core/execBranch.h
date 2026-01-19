@@ -81,7 +81,7 @@ namespace kathryn::o3{
 
 
 
-            pip(pm.br.sync){  tryInitProbe(psp);
+            pip(rsvs.br.sync){  tryInitProbe(psp);
 
                 /////// write back the data if it needed
                 rob.onWriteBack(src(rrftag));
