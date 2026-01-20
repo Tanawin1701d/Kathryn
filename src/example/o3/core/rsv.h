@@ -65,9 +65,9 @@ namespace kathryn::o3{
         }
 
         virtual void writeEntry(opr& binIdx, WireSlot& iw){
-            SET_ASM_PRI_TO_MANUAL(RSV_WRITE_ENTRY_PRED_PRIORITY);
+            SET_ASM_PRI_TO_MANUAL(RSV_WRITE_ENTRY_PRED_PRIORITY); ///CTRL RSV_SHARED
             _table[binIdx] <<= iw;
-            SET_ASM_PRI_TO_AUTO();
+            SET_ASM_PRI_TO_AUTO(); ///CTRL RSV_SHARED
         }
 
         virtual void onIssue(opr& issueIdx, WireSlot& iw){
@@ -81,7 +81,7 @@ namespace kathryn::o3{
 
         virtual void onMisPred(opr& fixTag){
 
-            SET_ASM_PRI_TO_MANUAL(RSV_MIS_PRED_PRIORITY);
+            SET_ASM_PRI_TO_MANUAL(RSV_MIS_PRED_PRIORITY); ///CTRL RSV_SHARED
             _table.doCusLogic([&](RegSlot& lhs, int rowIdx){
                 auto& isBusy    = lhs(busy);
                 auto& isSpec    = lhs(spec);
@@ -91,7 +91,7 @@ namespace kathryn::o3{
                     isBusy <<= 0;
                 }
             });
-            SET_ASM_PRI_TO_AUTO();
+            SET_ASM_PRI_TO_AUTO(); ///CTRL RSV_SHARED
 
 
         }

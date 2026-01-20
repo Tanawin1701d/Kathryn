@@ -81,7 +81,7 @@ namespace kathryn::o3{
             renameReqSize = req2.uext(2) + 1;
             doRenameOrCommit();
             ////// rename have more priority than write back
-            SET_ASM_PRI_TO_MANUAL(RRF_RENAME_PRI);
+            SET_ASM_PRI_TO_MANUAL(RRF_RENAME_PRI);  ///CTRL RRF
 
             table[reqPtr](rrfValid) <<= 0;
             zif(req2){
@@ -91,7 +91,7 @@ namespace kathryn::o3{
             opr& nextRrf = reqPtr + renameReqSize;
             nextRrfCycle <<= reqPtr > nextRrf;
             reqPtr <<= nextRrf;
-            SET_ASM_PRI_TO_AUTO();
+            SET_ASM_PRI_TO_AUTO();  ///CTRL RRF
 
         }
 

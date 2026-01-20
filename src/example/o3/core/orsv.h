@@ -25,11 +25,11 @@ namespace kathryn::o3{
             sortReq(osm.isThereField(sortBit)){}
 
         void resetSortBit(){
-            SET_ASM_PRI_TO_MANUAL(RSV_SORTBIT_RST_PRED_PRIORITY);
+            SET_ASM_PRI_TO_MANUAL(RSV_SORTBIT_RST_PRED_PRIORITY); ///CTRL RSV_SHARED
             _table.doCusLogic([&](RegSlot& lhs, int rowIdx){
                 lhs(sortBit) <<= lhs(sortBit) & (~regArch.rrf.nextRrfCycle);
             });
-            SET_ASM_PRI_TO_AUTO();
+            SET_ASM_PRI_TO_AUTO(); ///CTRL RSV_SHARED
         }
 
 
