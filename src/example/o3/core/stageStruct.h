@@ -29,7 +29,7 @@ namespace kathryn::o3{
         SlotMeta meta{smFetch};
         RegSlot  raw {smFetch};
 
-        SyncMeta sync    {"fetchSync"};
+        SyncMeta sync    {"fetchSync"}; ///CTRL FETCH
 
 
         FetchStage(){
@@ -58,7 +58,7 @@ namespace kathryn::o3{
         WireSlot  dcw2    {decodedMeta};
         RegSlot  dcdShared{sharedMeta};
 
-        SyncMeta sync    {"decodeSync"};
+        SyncMeta sync    {"decodeSync"}; ///CTRL DECODE
 
         Operable& getIsAlocRsv(RegSlot& dcd){ return dcw1(rsIdx_1); }
 
@@ -70,11 +70,11 @@ namespace kathryn::o3{
         mWire(dmem_rwaddr, ADDR_LEN); //// must mux with reading
         mWire(dmem_wdata, DATA_LEN);
         RegSlot lsRes {smLdSt};
-        SyncPip  sync2 {"ldStLastSync"};
+        SyncPip  sync2 {"ldStLastSync"}; ///CTRL EXEC_LDST
 
         LdStStage(){
             dmem_rdata  .asInputGlob ("dmem_rdata");
-            dmem_we     .asOutputGlob("dmem_we");
+            dmem_we     .asOutputGlob("dmem_we"); ///CTRL GROB
             dmem_rwaddr .asOutputGlob("dmem_rwaddr");
             dmem_wdata  .asOutputGlob("dmem_wdata");
 
@@ -164,18 +164,21 @@ namespace kathryn::o3{
         DecodeStage dc;
         LdStStage   ldSt;
 
-        SyncMeta sync_dp    {"dispSync"};
-        SyncMeta sync_rs    {"rsvSync"};
+        SyncMeta sync_dp    {"dispSync"}; ///CTRL DECODE
+        SyncMeta sync_rs    {"rsvSync"}; ///CTRL DISPATCH
 
-        SyncMeta sync_cm    {"commitSync"};
+        SyncMeta sync_cm    {"commitSync"}; ///CTRL ROB
 
 
         void onMisPred(){
             ////// kill the in-order stage
-            ft.sync.killSlave(true);
-            dc.sync.killSlave(true);
-            sync_dp.killSlave(true);
-            sync_cm.holdSlave();
+            ft.sync.killSlave(true); ///CTRL FETCH
+            dc.sync.killSlave(true); ///CTRL DECODE
+            sync_dp.killSlave(true); ///CTRL DISPATCH
+            sync_cm.holdSlave();     ///CTRL ROB
+
+
+
             ////// kill the out-of-order exec Unit stage
             //sync_ex1  .killIfTagMet(true, fixTag);
             //sync_ex2  .killIfTagMet(true, fixTag);
@@ -194,9 +197,9 @@ namespace kathryn::o3{
 
         }
         void onSucPred(){
-            dc.sync.holdMaster(); //// hold fetch <-> decode
-            sync_dp.holdMaster(); //// hold decode <-> dispatch to generate tag, but allowing system to enter decode state
-            sync_rs.holdMaster(); //// hold dispatch <-> reservation station
+            dc.sync.holdMaster(); ///CTRL DECODE //// hold fetch <-> decode
+            sync_dp.holdMaster(); ///CTRL DISPATCH //// hold decode <-> dispatch to generate tag, but allowing system to enter decode state
+            sync_rs.holdMaster(); ///CTRL RSV_SHARED //// hold dispatch <-> reservation station
         }
 
 

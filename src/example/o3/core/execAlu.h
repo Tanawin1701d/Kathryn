@@ -43,7 +43,7 @@ namespace kathryn::o3{
         bp.addSrc(src(rrftag), result);
 
         ///// init pip meta data
-        pip(rsv.sync){ tryInitProbe(psp);
+        pip(rsv.sync){ tryInitProbe(psp); ///CTRL EXEC_ALU
             rob.onWriteBack(src(rrftag));
             zif(src(rdUse)){
                 regArch.rrf.onWback(src(rrftag), result);

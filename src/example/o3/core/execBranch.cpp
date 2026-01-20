@@ -12,7 +12,7 @@ namespace kathryn::o3{
 
     void BranchExec::onMisPred(opr& fixTag, opr& misTag, opr& fixPc){
         ////// update the meta-data
-        tagMgmt.bc.mis = 1;
+        tagMgmt.bc.mis = 1;  /// not count as control flow data because it is only inflight update meta-data
         ////// fetch update pc and gshare pred system
         pm.ft.incPc(fixPc, true);
         /////// pipeline stage management
@@ -33,7 +33,7 @@ namespace kathryn::o3{
 
     void BranchExec::onSucPred(opr& fixTag, opr& sucTag){
         ////// update the meta-data
-        tagMgmt.bc.suc = 1;
+        tagMgmt.bc.suc = 1; /// not count as control flow data because it is only inflight update meta-data
         /////// dp update the register
         dispMod.onSucPred(sucTag);
         /////// pipeline stage management

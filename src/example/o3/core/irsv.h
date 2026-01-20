@@ -105,8 +105,8 @@ namespace kathryn::o3{
              */
             WireSlot iw(_table[checkIdx].v());
 
-            cwhile(true){
-                zyncc(sync, slotReady(iw)){ tryInitProbe(issueProbe);
+            cwhile(true){                                             ///CTRL RSV_SHARED
+                zyncc(sync, slotReady(iw)){ tryInitProbe(issueProbe); ///CTRL RSV_SHARED
                     //////// reset the table
                     onIssue(checkIdx, iw); //// reset busy
                     tryOwSpecBit(iw, bc);

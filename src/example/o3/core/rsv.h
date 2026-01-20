@@ -24,7 +24,7 @@ namespace kathryn::o3{
         SlotMeta _meta;
         Table    _table;
         RegSlot  execSrc;
-        SyncPip  sync {"rsv_exec_sync"};
+        SyncPip  sync {"rsv_exec_sync"}; ///CTRL RSV_SHARED
 
         ZyncSimProb*   issueProbe = nullptr;     ///DC
         TableSimProbe* stationProbe = nullptr;   ///DC

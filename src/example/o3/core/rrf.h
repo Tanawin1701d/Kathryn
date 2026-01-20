@@ -37,7 +37,7 @@ namespace kathryn::o3{
             nextRrfCycle .makeResetEvent();
             nextRrfCycle .makeDefEvent();
 
-            dataStructProbGrp.rrf.init(&table);
+            dataStructProbGrp.rrf.init(&table); ///DC
         }
 
         opr& isRenamable(opr& req2){
@@ -75,15 +75,15 @@ namespace kathryn::o3{
         }
 
         ////// on the table there should no conflict (rename<->wb<->commit)
-        void onRename(opr& req1, opr& req2){
+        ////////////////it is ok to not have req1
+        void onRename(opr& req2){
             ////// isRenamable must be use
-            renameReqSize = req1.uext(2) + req2.uext(2);
+            renameReqSize = req2.uext(2) + 1;
             doRenameOrCommit();
             ////// rename have more priority than write back
             SET_ASM_PRI_TO_MANUAL(RRF_RENAME_PRI);
-            zif(req1){
-                table[reqPtr](rrfValid) <<= 0;
-            }
+
+            table[reqPtr](rrfValid) <<= 0;
             zif(req2){
                 table[reqPtr+1](rrfValid) <<= 0;
                 ///// request 2 will not set if req1 is set

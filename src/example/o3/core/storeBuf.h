@@ -119,7 +119,7 @@ namespace kathryn::o3{
             lss.dmem_wdata = daytas[retPtr];
 
             zif (retireSlot(busy) & retireSlot(complete) & (~bc.isBrMissPred())){
-                zif(lss.dmem_we = 1){ ///// try to make it equal to one if not update will not occur because memory hold them all
+                zif(lss.dmem_we = 1){ ///// try to make it equal to one if not update will not occur because memory hold them all  ///CTRL GROB
                     retPtr <<= (retPtr + 1);
                     _table[retPtr](busy)     <<= 0;
                     _table[retPtr](complete) <<= 0;

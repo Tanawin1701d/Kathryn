@@ -168,10 +168,10 @@ namespace kathryn::o3{
             dbg_imm1                     = entry1(imm);
             dbg_imm2                     = entry2(imm);
 
-            pip(pm.sync_dp){                               initProbe(pipProbGrp .dispatch);
-                zyncc(pm.sync_rs, isdispatable){ autoSync  initProbe(zyncProbGrp.dispatch);
+            pip(pm.sync_dp){                               initProbe(pipProbGrp .dispatch); ///CTRL DISPATCH
+                zyncc(pm.sync_rs, isdispatable){ autoSync  initProbe(zyncProbGrp.dispatch); ///CTRL DISPATCH
                     ////////
-                    regArch.rrf.onRename(~dcd1(invalid), ~dcd2(invalid));
+                    regArch.rrf.onRename(~dcd2(invalid));
                     opr& reqPtr = regArch.rrf.getReqPtr();
                     //////// update arf
                     regArch.arf.onRename(renCmd1, renCmd2);

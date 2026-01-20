@@ -5,7 +5,7 @@
 #ifndef SRC_EXAMPLE_O3_SRCSEL_H
 #define SRC_EXAMPLE_O3_SRCSEL_H
 
-#include "kathryn.h"
+#include "parameter.h"
 
 namespace kathryn::o3{
 

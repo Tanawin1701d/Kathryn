@@ -39,7 +39,7 @@ namespace kathryn::o3{
             opr& mulRes = multiplier(src);
             bp.addSrc(src(rrftag), mulRes);
 
-            pip(rsv.sync){ tryInitProbe(psp);
+            pip(rsv.sync){ tryInitProbe(psp); ///CTRL EXEC_MUL
                 rob.onWriteBack(src(rrftag));
                 zif(src(rdUse)){
                     regArch.rrf.onWback(src(rrftag), mulRes);

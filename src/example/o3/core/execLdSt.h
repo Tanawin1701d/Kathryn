@@ -69,8 +69,8 @@ namespace kathryn::o3{
         //////// operate the store buffer
         stBuf.flow();
 
-        pip(rsv.sync){ tryInitProbe(psp1);
-            zyncc(lss.sync2, (isLoad || (!stBuf.isFull()))){ tryInitProbe(zsp)
+        pip(rsv.sync){ tryInitProbe(psp1); ///CTRL EXEC_LDST
+            zyncc(lss.sync2, (isLoad || (!stBuf.isFull()))){ tryInitProbe(zsp) ///CTRL EXEC_LDST
                 //////assign ordinaty data to next stage rrftag. rdIse. spec. spectag
                 lsRes <<= src;
                 auto[buf_found, buf_data] =  stBuf.searchNewest(effAddr);
@@ -92,7 +92,7 @@ namespace kathryn::o3{
         opr& resolvedData = mux(lsRes(stBufHit), lsRes(stBufData), lss.dmem_rdata);
         bp.addSrc(lsRes(rrftag), resolvedData);
 
-        pip(lss.sync2){ tryInitProbe(psp2)
+        pip(lss.sync2){ tryInitProbe(psp2) ///CTRL EXEC_LDST
             rob.onWriteBack(lsRes(rrftag));
             zif(lsRes(rdUse)){ ///// it is a load data
                 regArch.rrf.onWback(lsRes(rrftag), resolvedData);

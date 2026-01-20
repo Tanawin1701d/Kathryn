@@ -43,8 +43,8 @@ namespace kathryn::o3{
 
         void flow(){
             ///// pipeline manager
-            pip(pm.ft.sync){ autoSync     initProbe(pipProbGrp .fetch);
-                zync(pm.dc.sync){          initProbe(zyncProbGrp.fetch);
+            pip(pm.ft.sync){ autoSync     initProbe(pipProbGrp .fetch); ///CTRL FETCH
+                zync(pm.dc.sync){          initProbe(zyncProbGrp.fetch);///CTRL FETCH
                     selLog();
                 }
             }

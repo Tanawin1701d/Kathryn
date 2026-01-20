@@ -94,8 +94,8 @@ namespace kathryn::o3{
                 resetSortBit();
             }
 
-            cwhile(true){
-                zyncc(sync, dbg_isSlotReady){ tryInitProbe(issueProbe);
+            cwhile(true){ ///CTRL RSV_SHARED
+                zyncc(sync, dbg_isSlotReady){ tryInitProbe(issueProbe); ///CTRL RSV_SHARED
                     //////// reset the table
                     onIssue(ohIdx, iw);
                     tryOwSpecBit(iw, bc);
