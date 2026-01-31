@@ -39,6 +39,7 @@ namespace kathryn::o3{
 // #endif
         cmSlot    (commitSlot){
             curPc.makeResetEvent();
+            pm.ft.raw.makeResetEvent();
         }
 
         void flow(){

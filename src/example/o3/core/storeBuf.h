@@ -37,6 +37,8 @@ namespace kathryn::o3{
             comPtr.makeResetEvent();
             retPtr.makeResetEvent();
             _table.makeColResetEvent(busy);
+            _table.makeColResetEvent(complete);
+            _table.makeColResetEvent(spec);
 
         }
 

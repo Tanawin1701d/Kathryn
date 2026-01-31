@@ -22,7 +22,11 @@ namespace kathryn::o3{
         PipStage&  pm,
         TagMgmt&   tagMg) :
             pm(pm),
-            tagMgmt(tagMg){}
+            tagMgmt(tagMg){
+            pm.dc.dcd1     .makeResetEvent();
+            pm.dc.dcd2     .makeResetEvent();
+            pm.dc.dcdShared.makeResetEvent();
+        }
 
         ////// dcd = decoded
         void  decode(int idx){ //// idx start at 1 the second is 2

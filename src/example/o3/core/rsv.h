@@ -39,7 +39,9 @@ namespace kathryn::o3{
         RsvBase(const SlotMeta& meta, int amtRow):
         _meta(meta),_table(meta, amtRow),
         execSrc(meta){
-            _table.makeColResetEvent(busy, 0);
+            //_table.makeColResetEvent(busy, 0);
+            _table.makeResetEvent(0);
+            execSrc.makeResetEvent();
         }
 
         virtual ~RsvBase() = default;
