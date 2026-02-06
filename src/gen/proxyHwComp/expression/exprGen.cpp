@@ -83,8 +83,10 @@ namespace kathryn{
             case ARITH_PLUS  : {assert(aSize == bSize); retStr += _aSliced + "   +  "    + _bSliced; break;}
             case ARITH_MINUS : {assert(aSize == bSize); retStr += _aSliced + "   -  "    + _bSliced; break;}
             case ARITH_MUL   : {assert(aSize == bSize); retStr += _aSliced + "   *  "    + _bSliced; break;}
-            case ARITH_DIV   : {assert(aSize == bSize); retStr += _aSliced + "   /  "    + _bSliced; break;}
-            case ARITH_DIVR  : {assert(aSize == bSize); retStr += _aSliced + "   %  "    + _bSliced; break;}
+            case ARITH_DIV   : {assert(aSize == bSize); retStr += "(" + _bSliced + " == 0) ? 0: " +
+                                                                  "(" + _aSliced + " / "          + _bSliced + ")"; break;}
+            case ARITH_DIVR  : {assert(aSize == bSize); retStr += "(" + _bSliced + " == 0) ? 0: " +
+                                                                  "(" + _aSliced + " % "          + _bSliced + ")"; break;}
             case EXTEND_BIT  :{
                 // int desSize = _master->getSlice().getSize();
                 // ull desMask = desSize == bitSizeOfUll ? -1: ((((ull)1) << desSize) - 1);

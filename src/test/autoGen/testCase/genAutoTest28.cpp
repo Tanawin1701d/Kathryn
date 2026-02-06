@@ -11,9 +11,13 @@ namespace kathryn{
     public:
         mReg (a, 8);
         mReg (b, 8);
+        mReg (c, 8);
+        mWire(d, 8);
         explicit testGenMod28(int x): Module(){
             a.asOutputGlob("a");
             b.asOutputGlob("b");
+            c.asOutputGlob("c");
+            d.asOutputGlob("d");
         }
 
         void flow() override{
