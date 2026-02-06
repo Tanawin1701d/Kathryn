@@ -66,7 +66,7 @@ namespace kathryn::o3{
 
     struct LdStStage{
         mWire(dmem_rdata, DATA_LEN);
-        mWire(dmem_we , 1);
+        mWire(dmem_we , 1); ///CTRL GROB
         mWire(dmem_rwaddr, ADDR_LEN); //// must mux with reading
         mWire(dmem_wdata, DATA_LEN);
         RegSlot lsRes {smLdSt};

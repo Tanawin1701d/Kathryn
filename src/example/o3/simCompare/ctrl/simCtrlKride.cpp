@@ -42,8 +42,8 @@ namespace kathryn::o3{
         _vcdWriter-> renew(_prefixFolder + _testTypes[curTestCaseIdx]+ "/owave.vcd");
         _flowWriter->renew(_prefixFolder + _testTypes[curTestCaseIdx]+ "/oprofile.prof");
         _slotWriter. renew(_prefixFolder + _testTypes[curTestCaseIdx]+ "/oslot_kride.sl");
+        doWorkloadExit();
         if (_resultWriter != nullptr){
-            _resultWriter->fillCycleCnt(cycleCnt);
             _resultWriter->renew(_prefixFolder + _testTypes[curTestCaseIdx]+ "/kathryn_kride_result");
         }
         //////// set reset wire to 1

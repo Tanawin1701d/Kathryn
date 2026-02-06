@@ -47,6 +47,7 @@ namespace kathryn::o3{
 
         virtual void doWorkloadInit (int curTestCaseIdx, bool reqRegTest)   = 0;
         virtual void doWorkloadCycle(bool recordThisCycle) = 0;
+        virtual void doWorkloadExit();
 
 
         ////// memory management for each cycle

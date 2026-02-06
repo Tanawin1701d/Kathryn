@@ -22,6 +22,14 @@ namespace kathryn::o3{
     _state       (state),
     _resultWriter(resultWriter){}
 
+    void O3SimCtrlBase::doWorkloadExit(){
+        if (_resultWriter != nullptr){
+            _resultWriter->fillCycleCnt(cycleCnt);
+            cycleCnt = 0;
+        }
+
+    }
+
 
     bool O3SimCtrlBase::isExecFin(){
 

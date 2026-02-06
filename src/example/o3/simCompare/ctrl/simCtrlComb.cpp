@@ -111,12 +111,15 @@ namespace kathryn::o3{
             }
             finalPerfCol();
         }
+        doWorkloadExit();
+        _slaveRide.doWorkloadExit();
 
-        for (int errorIdx: errorIndexs){
-            std::cout << TC_RED << "[O3 RISC-V CMP] error in test case " << errorIdx << TC_DEF << std::endl;
+        if (errorIndexs.empty()){
+            std::cout << TC_RED << "[O3 RISC-V CMP] all tests passes" << TC_DEF << std::endl;
+        }else{
+            for (int errorIdx: errorIndexs){
+                std::cout << TC_RED << "[O3 RISC-V CMP] error in test case " << errorIdx << TC_DEF << std::endl;
+            }
         }
-
     }
-
-
 }
