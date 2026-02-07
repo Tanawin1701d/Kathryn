@@ -36,6 +36,7 @@
 #include "model/flowBlock/pseudo/pseudo.h"
 #include "model/flowBlock/state/ztate.h"
 #include "model/flowBlock/state/zcase.h"
+#include "model/flowBlock/pipeStream/pipeStream.h"
 
 /** data Structure*/
 

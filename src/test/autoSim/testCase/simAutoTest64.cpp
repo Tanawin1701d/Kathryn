@@ -67,5 +67,5 @@ namespace kathryn{
 
     };
 
-    Sim64TestEle ele64(-1);
+    Sim64TestEle ele64(64);
 }
