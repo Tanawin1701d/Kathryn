@@ -10,174 +10,6 @@ namespace kathryn{
     /**
      *
      *
-     * sequenceElement
-     *
-     *
-     * */
-
-
-    SequenceEle::SequenceEle(Node *asmNode) {
-        assert(asmNode != nullptr);
-        assert(asmNode->getNodeType() == ASM_NODE);
-        _asmNode = (AsmNode*)asmNode;
-    }
-
-    SequenceEle::SequenceEle(FlowBlockBase *fbBase) {
-        assert(fbBase != nullptr);
-        _subBlock  = fbBase;
-    }
-
-    SequenceEle::~SequenceEle() {
-        delete _stateNode;
-
-    }
-
-    void SequenceEle::genNode(CLOCK_MODE cm) {
-
-        assert( (_asmNode != nullptr) ^ (_subBlock != nullptr));
-
-        ///// it is the basic assignment
-        if (_asmNode != nullptr){
-            _stateNode = new StateNode(cm);
-            _stateNode->addSlaveAsmNode(_asmNode);
-            if (_intRstNode != nullptr) {
-                _stateNode->setInterruptReset(_intRstNode);
-            }
-            if (_holdNode != nullptr) {
-                _stateNode->setHold(_holdNode);
-            }
-        }else if (_subBlock != nullptr){
-            _complexNode = _subBlock->sumarizeBlock();
-        }else{
-            assert(false);
-        }
-    }
-
-    void SequenceEle::setIdentStateId(ull masterIdx, int idx) const{
-        assert((_stateNode != nullptr) ^ (_complexNode != nullptr));
-        if (_stateNode != nullptr){
-            _stateNode->setInternalIdent(
-                    "seqStateReg_"+
-                    std::to_string(masterIdx)+
-                    "_" +
-                    std::to_string(idx));
-        }
-    }
-
-    void SequenceEle::setIntReset(OprNode* intResetNode){
-        _intRstNode = intResetNode;
-    }
-
-    void SequenceEle::setHoldNode(OprNode* holdNode){
-        _holdNode = holdNode;
-    }
-
-
-    void SequenceEle::addToCycleDet(NodeWrapCycleDet &deter) const {
-        if (_asmNode != nullptr){
-            deter.addToDet(_asmNode);
-        } else if (_subBlock != nullptr){
-            deter.addToDet(_complexNode);
-        }else{
-            assert(false);
-        }
-    }
-
-    void SequenceEle::assignDependDent(SequenceEle *predecessor) const {
-        assert(predecessor != nullptr);
-        assert((_asmNode != nullptr) ^ (_subBlock != nullptr));
-
-        if (_asmNode != nullptr){
-            _stateNode->addDependNode(predecessor->getStateFinishIden(), nullptr);
-            _stateNode->assign();   ///// assign state node to actual value
-        }else if (_subBlock != nullptr){
-            _complexNode->addDependNodeToAllNode(predecessor->getStateFinishIden());
-            _complexNode->assignAllNode();
-        }else{
-            assert(false);
-        }
-
-    }
-
-    void SequenceEle::assignIntStart(OprNode* intStartNode){
-        assert(intStartNode != nullptr);
-
-        if (_asmNode !=nullptr){
-            _stateNode->addDependNode(intStartNode, nullptr);
-        }else if(_subBlock != nullptr){
-            _complexNode->addDependNodeToAllNode(intStartNode);
-        }else{
-            assert(false);
-        }
-    }
-
-    Node* SequenceEle::getStateFinishIden() const {
-        assert( (_asmNode != nullptr) ^ (_subBlock != nullptr));
-        if (_asmNode != nullptr){
-            return _stateNode;
-        }else if (_subBlock != nullptr){
-            return _complexNode->getExitNode();
-        }
-        assert(false);
-    }
-
-    std::vector<Node *> SequenceEle::getEntranceNodes() {
-        assert( (_asmNode != nullptr) ^ (_subBlock != nullptr));
-        if (_asmNode != nullptr){
-            return {_stateNode};
-        }else if (_subBlock != nullptr){
-            return _complexNode->entranceNodes;
-        }
-        assert(false);
-    }
-
-    bool SequenceEle::isThereForceExitNode() const{
-        return (_complexNode != nullptr)  &&
-                (_complexNode->isThereForceExitNode());
-    }
-
-    Node *SequenceEle::getForceExitNode() const {
-        assert(isThereForceExitNode());
-        return _complexNode->getForceExitNode();
-    }
-
-    bool SequenceEle::isNodeWrap() const{
-        return _complexNode != nullptr;
-    }
-
-    bool SequenceEle::isBasicNode() const{
-        return _stateNode != nullptr;
-    }
-
-    NodeWrap *SequenceEle::getNodeWrap() const {
-        return _complexNode;
-    }
-
-    StateNode *SequenceEle::getBasicNode() const {
-        return _stateNode;
-    }
-
-    std::string SequenceEle::getDescribe(){
-
-        if (isBasicNode()){
-            return _stateNode->getMdIdentVal() + " " + _stateNode->getMdDescribe();
-        }else if (isNodeWrap()){
-            return _complexNode->getMdIdentVal() + _complexNode->getMdDescribe();
-        }
-        assert(false);
-
-    }
-
-    void SequenceEle::addToSystemNodes(std::vector<Node*>& sysNode){
-        if (_asmNode != nullptr){
-            assert(_stateNode != nullptr);
-            sysNode.push_back(_stateNode);
-        }
-    }
-
-    /**
-     *
-     *
      * sequence flow
      *
      *
@@ -186,7 +18,7 @@ namespace kathryn{
     FlowBlockSeq::FlowBlockSeq(): FlowBlockBase(SEQUENTIAL,
                                                 {
                                                         {FLOW_ST_BASE_STACK,
-                                                                      FLOW_ST_PATTERN_STACK},
+                                                         FLOW_ST_PATTERN_STACK},
                                                         FLOW_JO_SUB_FLOW,
                                                         true
                                                 }),
@@ -201,14 +33,14 @@ namespace kathryn{
 
     void FlowBlockSeq::addElementInFlowBlock(Node* node) {
         assert(node != nullptr);
-        _subSeqMetas.push_back(new SequenceEle(node));
+        _subSeqMetas.push_back(new SequenceEleBasic(node));
         /** base function to notice existence of sub flow element*/
         FlowBlockBase::addElementInFlowBlock(node);
     }
 
     void FlowBlockSeq::addSubFlowBlock(FlowBlockBase *subBlock) {
         assert(subBlock != nullptr);
-        _subSeqMetas.emplace_back(new SequenceEle(subBlock));
+        _subSeqMetas.emplace_back(new SequenceEleFlowBlock(subBlock));
         /** base function to notice existence of sub flow block*/
         FlowBlockBase::addSubFlowBlock(subBlock);
     }

@@ -11,47 +11,14 @@
 #include "model/flowBlock/abstract/spReg/stateReg.h"
 #include "model/flowBlock/abstract/nodes/node.h"
 #include "model/flowBlock/abstract/nodes/stateNode.h"
+#include "seqEle.h"
+
 
 #define seq for(auto kathrynBlock = new FlowBlockSeq(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
 
 namespace kathryn {
 
-    class SequenceEle{
-    public:
-        /**node and flow block*/
-        OprNode*          _intRstNode = nullptr;
-        OprNode*          _holdNode   = nullptr;
-        Node*             _simpleNode = nullptr;
-        AsmNode*          _asmNode    = nullptr;
-        FlowBlockBase*    _subBlock   = nullptr;
 
-        /**state representation*/
-        StateNode* _stateNode       = nullptr;
-        NodeWrap*  _complexNode     = nullptr;
-
-        explicit SequenceEle(Node*          simpleNode);
-        explicit SequenceEle(FlowBlockBase* fbBase    );
-        ~SequenceEle();
-
-        void               genNode             (CLOCK_MODE cm); /// clock mode is used only when state node is used
-        void               setIdentStateId     (ull masterIdx, int subIdx) const;
-        void               setIntReset         (OprNode* intResetNode);
-        void               setHoldNode          (OprNode* holdNode);
-        void               addToCycleDet       (NodeWrapCycleDet& deter) const;
-        void               assignDependDent    (SequenceEle* predecessor) const;
-        void               assignIntStart      (OprNode* intStartNode);
-        Node*              getStateFinishIden  () const;
-        std::vector<Node*> getEntranceNodes    ();
-        bool               isThereForceExitNode() const;
-        Node*              getForceExitNode    () const;
-        bool               isNodeWrap          () const;
-        NodeWrap*          getNodeWrap         () const;
-        bool               isBasicNode         () const;
-        StateNode*         getBasicNode        () const;
-        std::string        getDescribe         ();
-        void               addToSystemNodes    (std::vector<Node*>& sysNode);
-
-    };
 
     class FlowBlockSeq : public FlowBlockBase, public LoopStMacro{
     private:

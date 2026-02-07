@@ -31,6 +31,7 @@ namespace kathryn{
             "PSUEDO_BLOCK"       ,
             "ZTATE_BLOCK"        ,
             "ZCASE_BLOCK"        ,
+            "PIPE_STREAM"        ,
             "DUMMY_BLOCK"
         };
         assert(fbt < FLOW_BLOCK_COUNT);
