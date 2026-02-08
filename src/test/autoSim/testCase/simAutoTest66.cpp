@@ -26,7 +26,7 @@ namespace kathryn{
 
         void flow() override{
 
-            a.makeResetEvent(1);
+            a.makeResetEvent(4);
             b.makeResetEvent(1);
 
             ///// test priority of the zif block
@@ -68,6 +68,13 @@ namespace kathryn{
 
         void describeCon() override{
 
+            conNextCycle(8);
+            testAndPrint("res", ull(_md->res), 3);
+            conNextCycle(6);
+            testAndPrint("res", ull(_md->res), 8);
+            conNextCycle(7);
+            testAndPrint("res", ull(_md->res), 15);
+
         }
 
     };
@@ -85,5 +92,5 @@ namespace kathryn{
 
     };
 
-    Sim66TestEle ele66(-1);
+    Sim66TestEle ele66(66);
 }
