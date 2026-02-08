@@ -12,7 +12,7 @@ namespace kathryn::o3{
 
     struct TopSim: Module{
 
-        mMod(myCore, Core, 0);
+        mMod(myCore, Core, true);
 
         ///// imem
         mReg(ijImem0, INST_WIDTH);

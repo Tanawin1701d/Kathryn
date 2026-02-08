@@ -66,10 +66,10 @@ namespace kathryn::o3{
                     break;
                 }
                 doWorkloadCycle(true);
-                _slaveRide.doWorkloadCycle(true);
+                ///// _slaveRide.doWorkloadCycle(true);
 
                 if (!retard){
-                    retard = !doCompare(); ///// if belayed  = commpare not corect!
+                    retard = false; //!doCompare(); ///// if belayed  = commpare not corect!
                 }
                 if (retard){
                     if (retartedCount >= BELAYED_AFTER_MIS_CMP){break;}

@@ -23,7 +23,7 @@ namespace kathryn::o3{
 
 
     struct Core: Module{
-
+        bool isSqrt;
         /////// tagmgmt
         TagMgmt  tagMgmt;
         /////// register architecture
@@ -45,7 +45,7 @@ namespace kathryn::o3{
         /////// back-end
         mMod(pExAlu1,  ExecAlu   , regArch, prob    , rsvs.alu1); //// exec
         mMod(pExAlu2,  ExecAlu   , regArch, prob    , rsvs.alu2);
-        mMod(pMulAlu, ExecMul    , regArch, prob    , rsvs.mul ); //// multiplier unit
+        mMod(pMulAlu, ExecMul    , regArch, prob    , rsvs.mul, isSqrt); //// multiplier unit
         mMod(pExBra,  BranchExec , tagMgmt, regArch ,
                                    pm     , pDisp   ,
                                    prob   , storeBuf, rsvs    ); //// branch unit
@@ -53,7 +53,8 @@ namespace kathryn::o3{
                                    prob   , rsvs.ls , storeBuf);
 
 
-        explicit Core(int x){
+        explicit Core(bool isSqrt):
+        isSqrt(isSqrt){
             ///// add reservation to bypass and prediction control
             regArch.bpp.addRsvs(&rsvs);
         }
