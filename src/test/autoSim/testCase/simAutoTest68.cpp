@@ -10,58 +10,37 @@
 namespace kathryn{
 
     ////// simple pipeline
-    class testSimMod67: public Module{
+    class testSimMod68: public Module{
     public:
-        mReg(a, 32);
-        mReg(b, 32);
-        mReg(r1, 32);
-        mReg(r2, 32);
-        mReg(res, 32);
-        SyncMeta fetch{"fetch"};
-        SyncMeta decode{"decode"};
+        mReg (a, 32);
+        mWire(b, 32);
 
 
-        explicit testSimMod67(int x){}
+        explicit testSimMod68(int x){}
 
         void flow() override{
-            a.makeResetEvent();
-            b.makeResetEvent();
 
-            pip(fetch){ autoSync
-                zync(decode){
-                    a <<= 128;
-                    b <<= 256;
-                }
+            par{
+                a <<= 48;
+                b =   48;
             }
 
-            pip(decode){
-                seq{
-                    par{
-                        sqrtInt(a, r1);
-                        sqrtInt(b, r2);
-                    }
-                    res <<= r1 * r2;
-                }
-            }
 
-            seq{
-                syWait(3)
-                par{decode.killSlave(false);}
-            }
+
 
         }
     };
 
-    ///static std::string vcdPath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/simAutoTest67.vcd";
-    ////static std::string profilePath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/profAutoTest67.vcd";
+    ///static std::string vcdPath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/simAutoTest68.vcd";
+    ////static std::string profilePath = "/media/tanawin/tanawin1701e/project2/Kathryn/KOut/profAutoTest68.vcd";
 
 
-    class sim67 :public SimAutoInterface{
+    class sim68 :public SimAutoInterface{
     public:
 
-        testSimMod67* _md;
+        testSimMod68* _md;
 
-        sim67(testSimMod67* md, int idx, const std::string& prefix, SimProxyBuildMode simProxyBuildMode):SimAutoInterface(idx,
+        sim68(testSimMod68* md, int idx, const std::string& prefix, SimProxyBuildMode simProxyBuildMode):SimAutoInterface(idx,
                                               200,
                                               prefix + "simAutoResult"+std::to_string(idx)+".vcd",
                                               prefix + "simAutoResult"+std::to_string(idx)+".prof", simProxyBuildMode),
@@ -70,11 +49,17 @@ namespace kathryn{
 
         void describeCon() override{
 
+            conEndCycle();
+            testAndPrint("check a REG is not set to" + std::to_string(0), ull(_md->a), 0);
+            testAndPrint("check b REG is not set to" + std::to_string(48), ull(_md->b), 48);
+            conNextCycle(1);
+            conEndCycle();
+            testAndPrint("check a REG is not set to" + std::to_string(0), ull(_md->a), 48);
+            testAndPrint("check b REG is not set to" + std::to_string(48), ull(_md->b), 0);
+
+
             // ////// skip first zync State
-            conNextCycle(10);
-            testAndPrint("check r1  equal to " + std::to_string( 64), ull(_md->r1 ), 64 );
-            testAndPrint("check r2  equal to " + std::to_string(128), ull(_md->r2 ), 128);
-            testAndPrint("check res equal to " + std::to_string(  0), ull(_md->res), 0  );
+            // conNextCycle(1);
             // for (int i = 1; i < 5; i++){
             //     conEndCycle();
             //     testAndPrint("check a equal to " + std::to_string(i), ull(_md->a), i);
@@ -98,17 +83,17 @@ namespace kathryn{
     };
 
 
-    class Sim67TestEle: public AutoTestEle{
+    class Sim68TestEle: public AutoTestEle{
     public:
-        explicit Sim67TestEle(int id): AutoTestEle(id){}
+        explicit Sim68TestEle(int id): AutoTestEle(id){}
         void start(std::string prefix, SimProxyBuildMode simProxyBuildMode) override{
-            mMod(d, testSimMod67, 1);
+            mMod(d, testSimMod68, 1);
             startModelKathryn();
-            sim67 simulator((testSimMod67*) &d, _simId, prefix, simProxyBuildMode);
+            sim68 simulator((testSimMod68*) &d, _simId, prefix, simProxyBuildMode);
             simulator.simStart();
         }
 
     };
 
-    Sim67TestEle ele67(67);
+    Sim68TestEle ele68(68);
 }
