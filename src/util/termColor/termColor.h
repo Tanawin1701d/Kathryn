@@ -9,7 +9,7 @@
 
 namespace kathryn{
 
-    /** thank for source code from
+    /** Thanks for source code from
      * https://stackoverflow.com/questions/2616906/how-do-i-output-coloured-text-to-a-linux-terminal
      * */
     enum Code {

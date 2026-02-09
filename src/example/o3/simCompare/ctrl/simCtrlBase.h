@@ -9,6 +9,7 @@
 #include "kathryn.h"
 #include "frontEnd/cmd/paramReader.h"
 #include "../simState.h"
+#include "example/o3/simCompare/resultWriter.h"
 
 namespace kathryn::o3{
 
@@ -18,8 +19,8 @@ namespace kathryn::o3{
         int _curTestCaseIdx = 0;
         std::string _prefixFolder;
         std::vector<std::string> _testTypes;
-        uint32_t _imem      [IMEM_ROW]{};
-        uint32_t _dmem      [DMEM_ROW]{};
+        uint32_t _imem      [IMEM_ROW]{}; ///// 512  * 4 rows
+        uint32_t _dmem      [DMEM_ROW]{}; ///// 2048 * 1 rows
         uint32_t _regTestVal[REG_NUM] {};
 
         bool     lastDmemEnable = false; //// enabler
@@ -29,27 +30,44 @@ namespace kathryn::o3{
 
         SlotWriterBase& _slotWriter;
         SimState& _state;
+        ResultWriter* _resultWriter = nullptr; ///// null result pointer is acceptable
+
+        ull cycleCnt = 0;
 
         explicit O3SimCtrlBase(CYCLE                    limitCycle,
                                const std::string&       prefix,
                                std::vector<std::string> testTypes,
                                SimProxyBuildMode        buildMode,
                                SlotWriterBase&          slotWriter,
-                               SimState&                state);
+                               SimState&                state,
+                               ResultWriter*            resultWriter = nullptr);
 
         virtual ~O3SimCtrlBase() = default;
 
 
+        virtual void doWorkloadInit (int curTestCaseIdx, bool reqRegTest)   = 0;
+        virtual void doWorkloadCycle(bool recordThisCycle) = 0;
+        virtual void doWorkloadExit();
+
+
         ////// memory management for each cycle
+        bool isExecFin();
 
         void          resetDmem();
 
         bool          compareMemOp(O3SimCtrlBase& rhs);
 
+        uint32_t      readAssemblyBase(const std::string& filePath, //// return remaining
+                                       uint32_t* memPtr,
+                                       uint32_t  numRow);
 
         ////// memory initialization
         virtual void  readAssembly (const std::string& filePath);
         virtual void  readAssertVal(const std::string& filePath);
+
+        void writeMemOp();
+
+        void incCycleCnt(){ cycleCnt++;}
 
         ///// on model action
         virtual void  readMem2Fetch         (){assert(false);} //// it has to place at the begin of cycle

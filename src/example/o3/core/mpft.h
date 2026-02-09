@@ -5,10 +5,8 @@
 #ifndef KATHRYN_SRC_EXAMPLE_O3_MPFT_H
 #define KATHRYN_SRC_EXAMPLE_O3_MPFT_H
 
-#include "kathryn.h"
-#include "parameter.h"
 #include "slotParam.h"
-#include "example/o3/simulation/proberGrp.h"
+#include "example/o3/simulation/proberGrp.h"  ///DC
 
 namespace kathryn::o3{
 
@@ -20,25 +18,22 @@ namespace kathryn::o3{
             _table.makeColResetEvent(mpft_valid, 0);
             _table.makeColResetEvent(mpft_fixTag, 0);
             /////// debug probe
-            dataStructProbGrp.mpft.init(&_table);
+            dataStructProbGrp.mpft.init(&_table); ///DC
         }
 
         void onPredSuc(opr& tag1){
 
             _table.doCusLogic([&](RegSlot& lhs, int rowIdx){
+                lhs(mpft_fixTag) <<= (lhs(mpft_fixTag) & (~tag1));
                 zif (tag1.sl(rowIdx)){ ///// matched tag
                     ///// clean entire row
                     lhs(mpft_valid) <<= 0;
                     lhs(mpft_fixTag) <<= 0;
-                }zelse{
-                    ///// fix other tag
-                    lhs(mpft_fixTag) <<=
-                        (lhs(mpft_fixTag) & (~tag1));
                 }
             });
 
         }
-        void onMissPred(){
+        void onMisPred(){
             _table.doGlobColAsm({mpft_valid}, 0);
             _table.doGlobColAsm({mpft_fixTag}, 0);
         }

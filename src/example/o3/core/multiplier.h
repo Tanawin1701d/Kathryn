@@ -4,7 +4,6 @@
 #ifndef KATHRYN_MULTIPLIER_H
 #define KATHRYN_MULTIPLIER_H
 
-#include "kathryn.h"
 #include "parameter.h"
 
 namespace kathryn::o3{
@@ -30,8 +29,9 @@ namespace kathryn::o3{
                     );
 
         return mux(src(md_req_out_sel)(0),
-                   res.sl(0, DATA_LEN),
-                   res.sl(DATA_LEN, 2 * DATA_LEN));
+                   res.sl(DATA_LEN, 2 * DATA_LEN),
+                   res.sl(0, DATA_LEN)
+                   );
     }
 }
 

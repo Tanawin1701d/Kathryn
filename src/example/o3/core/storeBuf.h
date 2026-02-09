@@ -5,9 +5,6 @@
 #ifndef EXAMPLE_O3_CORE_STOREBUF_H
 #define EXAMPLE_O3_CORE_STOREBUF_H
 
-
-#include "kathryn.h"
-#include "parameter.h"
 #include "search_idx.h"
 #include "slotParam.h"
 
@@ -40,6 +37,8 @@ namespace kathryn::o3{
             comPtr.makeResetEvent();
             retPtr.makeResetEvent();
             _table.makeColResetEvent(busy);
+            _table.makeColResetEvent(complete);
+            _table.makeColResetEvent(spec);
 
         }
 
@@ -104,12 +103,12 @@ namespace kathryn::o3{
 
         std::pair<opr&, opr&> searchNewest(opr& addr){
 
-            ///// find newst system.
-            auto[result, binIdx] = _table.findMBO_BIDX(true, finPtr,
-                [&](RegSlot& lhs)->opr&{
-                return lhs(busy) & (lhs(mem_addr) == addr);
-            });
-            return {result(busy), daytas[binIdx]};
+            /// find newst system.
+             auto[result, binIdx] = _table.findMBO_BIDX(true, finPtr,
+                 [&](RegSlot& lhs)->opr&{
+                 return lhs(busy) & (lhs(mem_addr) == addr);
+             });
+            return {result(busy) & (result(mem_addr) == addr), daytas[binIdx]};
         }
 
         void flow(){ //// retire and do other thing
@@ -121,8 +120,8 @@ namespace kathryn::o3{
             lss.dmem_rwaddr = retireSlot(mem_addr);
             lss.dmem_wdata = daytas[retPtr];
 
-            zif (retireSlot(busy) & retireSlot(complete)){
-                zif(lss.dmem_we = 1){ ///// try to make it equal to one if not update will not occur because memory hold them all
+            zif (retireSlot(busy) & retireSlot(complete) & (~bc.isBrMissPred())){
+                zif(lss.dmem_we = 1){ ///// try to make it equal to one if not update will not occur because memory hold them all  ///CTRL GROB
                     retPtr <<= (retPtr + 1);
                     _table[retPtr](busy)     <<= 0;
                     _table[retPtr](complete) <<= 0;

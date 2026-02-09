@@ -21,6 +21,20 @@ namespace kathryn::o3{
         SearchResult b1 ,  e1,  e0;
         SearchResult nb1, ne1, nb0; /// search to fix alloc pointer
 
+        mWire(dbg_b1_valid, 1);    ///DC
+        mWire(dbg_e1_valid, 1);    ///DC
+        mWire(dbg_e0_valid, 1);    ///DC
+        mWire(dbg_nb1_valid, 1);   ///DC
+        mWire(dbg_ne1_valid, 1);   ///DC
+        mWire(dbg_nb0_valid, 1);   ///DC
+
+        mWire(dbg_b1_idx, 3);    ///DC
+        mWire(dbg_e1_idx, 3);    ///DC
+        mWire(dbg_e0_idx, 3);    ///DC
+        mWire(dbg_nb1_idx, 3);    ///DC
+        mWire(dbg_ne1_idx, 3);    ///DC
+        mWire(dbg_nb0_idx, 3);    ///DC
+
         IRsv(int rsv_idx  , SlotMeta meta,
              int indexSize, std::string debugName,
              BroadCast& bc):
@@ -55,7 +69,7 @@ namespace kathryn::o3{
                     ////// case 0  is bubble there is 1 atstart and 1 at the end
                     allocPtr <<= nb0.sIdx; ///// nb0
                 }zelse{
-                    allocPtr <<= (nb1.sIdx+1);
+                    allocPtr <<= (ne1.sIdx+1);
                 }
             }
             /// incase update when entrance the filler at rename stage will handle it
@@ -66,26 +80,24 @@ namespace kathryn::o3{
          */
 
         pair<opr&, opr&> buildFreeIndex(opr* reqIdx, RsvBase* friendRsv = nullptr){
-            assert(friendRsv == nullptr);
+            assert(friendRsv == nullptr); ///DC
 
             opr* selIdx = (reqIdx == nullptr)? &allocPtr : reqIdx;
-
             return {_table[*selIdx](busy).v(), *selIdx};
-
         }
 
-        void buildIssue(SyncMeta& syncMeta, BroadCast& bc) override{
+        void buildIssue(BroadCast& bc) override{
 
             /*
              *  the required Idx
              */
+            checkIdx = allocPtr;
             zif(e0.sValid){ ///  there is empty slot
+                checkIdx = b1.sIdx;
                 zif((b1.sIdx == 0) && (e1.sIdx == (_table.getNumRow()-1))){ ///// zero bubble
                     //// it may be entirely zeros but we will check it at slotReady(iw)
                     checkIdx = (e0.sIdx + 1);
-                }zelse{ checkIdx = b1.sIdx; }
-            }zelse{
-                checkIdx = allocPtr;
+                }
             }
 
             /**
@@ -93,13 +105,27 @@ namespace kathryn::o3{
              */
             WireSlot iw(_table[checkIdx].v());
 
-            cwhile(true){
-                zyncc(syncMeta, slotReady(iw)){ tryInitProbe(issueProbe);
-                    tryOwSpecBit(iw, bc);
+            cwhile(true){                                             ///CTRL RSV_SHARED
+                zyncc(sync, slotReady(iw)){ tryInitProbe(issueProbe); ///CTRL RSV_SHARED
                     //////// reset the table
                     onIssue(checkIdx, iw); //// reset busy
+                    tryOwSpecBit(iw, bc);
                 }
             }
+
+            dbg_b1_valid     = b1.first;   ///DC
+            dbg_e1_valid     = e1.first;   ///DC
+            dbg_e0_valid     = e0.first;   ///DC
+            dbg_nb1_valid     = nb1.first; ///DC
+            dbg_ne1_valid     = ne1.first; ///DC
+            dbg_nb0_valid     = nb0.first; ///DC
+
+            dbg_b1_idx    =    b1.second;    ///DC
+            dbg_e1_idx    =    e1.second;    ///DC
+            dbg_e0_idx    =    e0.second;    ///DC
+            dbg_nb1_idx    =    nb1.second;  ///DC
+            dbg_ne1_idx    =    ne1.second;  ///DC
+            dbg_nb0_idx    =    nb0.second;  ///DC
         }
 
     };

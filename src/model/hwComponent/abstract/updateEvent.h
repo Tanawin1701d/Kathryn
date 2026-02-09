@@ -304,20 +304,54 @@ namespace kathryn{
 
 
     struct UpdateEventSwitch: UpdateEventBase{
-        Operable* stateIden = nullptr;
-        std::vector<int>            subStmtIdxs;
+        bool      isInitMeta = false; ///// some time this switch event will be init with nullptr
+                                     ////// substmts to maintain the free switch matched case
+                                     ////// therefore the meta data may be not initialized at that time
+        Operable* stateIden;
+        /////// incase
+        std::vector<int>              subStmtIdxs;
         std::vector<UpdateEventBase*> subStmts;
 
         explicit UpdateEventSwitch(Operable* stateIden):
         UpdateEventBase(UET_SWITCH, false),
-        stateIden(stateIden){}
+        stateIden(stateIden){
+        }
+
+        int getMaxIdx() const{
+            return 1 << stateIden->getOperableSlice().getSize();
+        }
+
+        int getMatchNum()const{
+            assert(subStmtIdxs.size() == subStmts.size());
+            return subStmtIdxs.size();
+        }
+
+        Operable* getStateIdent(){
+            return stateIden;
+        }
+
+        Operable*& getStateIdentRef(){
+            return stateIden;
+        }
+
+        int getSubStmtMatchIdxs(int idx) const{
+            assert(idx < subStmtIdxs.size());
+            return subStmtIdxs[idx];
+        }
+
+        UpdateEventBase* getSubStmts(int idx) const{
+            assert(idx < subStmts.size());
+            return subStmts[idx];
+        }
 
         void addSubStmt(int matchVal, UpdateEventBase* stmt){
 
-            assert(stmt != nullptr);
-            if (subStmtIdxs.empty()){
+            //assert(stmt      != nullptr);  nullptr mean dummy operation in this case
+            assert( (matchVal >= -1) && (matchVal < getMaxIdx()));
+            if (!isInitMeta && (stmt != nullptr)){
                 setPriority(stmt->_priority);
                 setClkMode (stmt->_clkMode);
+                isInitMeta = true;
             }
             subStmtIdxs.push_back(matchVal);
             subStmts   .push_back(stmt);
@@ -326,13 +360,12 @@ namespace kathryn{
 
         Operable* checkShortCircuitProxy() override{
             Operable* result = nullptr;
-            if (stateIden != nullptr){
-                result = stateIden->checkShortCircuit();
-                if (result != nullptr){
-                    return result;
-                }
+            result = stateIden->checkShortCircuit();
+            if (result != nullptr){
+                return result;
             }
             for (auto* stmt: subStmts){
+                if (stmt == nullptr){continue;}
                 result = stmt->checkShortCircuitProxy();
                 if (result != nullptr){
                     return result;
@@ -345,6 +378,7 @@ namespace kathryn{
         void getDep(std::vector<Operable*>& resultDep) override{
             resultDep.push_back(stateIden);
             for (auto* stmt: subStmts){
+                if (stmt == nullptr){continue;}
                 stmt->getDep(resultDep);
             }
         }
@@ -357,6 +391,7 @@ namespace kathryn{
         UpdateEventBase* clone() override{
             auto* ueb = new UpdateEventSwitch(*this);
             for (int idx = 0; idx < subStmts.size(); idx++){
+                if (ueb->subStmts[idx] == nullptr){continue;}
                 ueb->subStmts[idx] = subStmts[idx]->clone();
             }
             return ueb;

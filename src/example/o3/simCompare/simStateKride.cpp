@@ -62,6 +62,13 @@ namespace kathryn::o3{
         assignEleIfThere(entry.src2_signed, regSlot, md_req_in_signed_2);
         assignEleIfThere(entry.sel_lohi   , regSlot, md_req_out_sel);
 
+        entry.pc      = 0; //// mul and ldst discard it
+        entry.imm     = 0;
+        entry.alu_op  = 0; //////  mul and ldst discard it
+        entry.src1_sel = 0, entry.src2_sel = 0; ///// ldst discards it
+
+
+
 
     }
 
@@ -211,25 +218,28 @@ namespace kathryn::o3{
         //////////////////////
 
         exec_alu1.st = generatePipState(&pipProbGrp.execAlu1, nullptr);
-        assignEXEC_Entry(exec_alu1.entry, _core.pExAlu1.src);
+        assignEXEC_Entry(exec_alu1.entry, _core.rsvs.alu1.execSrc);
         exec_alu2.st = generatePipState(&pipProbGrp.execAlu2, nullptr);
-        assignEXEC_Entry(exec_alu2.entry, _core.pExAlu2.src);
+        assignEXEC_Entry(exec_alu2.entry, _core.rsvs.alu2.execSrc);
 
         exec_mul.st = generatePipState(&pipProbGrp.execMul, nullptr);
-        assignEXEC_Mul(exec_mul.entry, _core.pMulAlu.src);
+        assignEXEC_Mul(exec_mul.entry, _core.rsvs.mul.execSrc);
 
         exec_branch.st = generatePipState(&pipProbGrp.execBranch, nullptr);
         assignEXEC_Branch(exec_branch.entry, _core.pExBra.src);
 
         exec_ldst.st1 = generatePipState(&pipProbGrp.execLdSt, &zyncProbGrp.loadStore2);
         exec_ldst.st2 = generatePipState(&pipProbGrp.execLdSt2, nullptr);
-        assignEXEC_LDST(exec_ldst.entry, _core.pExLdSt.src);
+        assignEXEC_LDST(exec_ldst.entry, _core.rsvs.ls.execSrc);
+        exec_ldst.effAddr = ull(_core.pExLdSt.dbg_effAddr);
+
         exec_ldst.rrftag    =   ull(_core.pExLdSt.lsRes(rrftag));
         exec_ldst.rdUse     =   ull(_core.pExLdSt.lsRes(rdUse));
         exec_ldst.spec      =   ull(_core.pExLdSt.lsRes(spec));
         exec_ldst.specTag   =   ull(_core.pExLdSt.lsRes(specTag));
         exec_ldst.stBufData =   ull(_core.pExLdSt.lsRes(stBufData));
         exec_ldst.stBufHit  =   ull(_core.pExLdSt.lsRes(stBufHit));
+        exec_ldst.loadData = ull(_core.pExLdSt.lss.dmem_rdata);
 
         //// commit
         rob.comPtr = ull(_core.prob.comPtr);

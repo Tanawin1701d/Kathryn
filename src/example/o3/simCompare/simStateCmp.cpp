@@ -7,17 +7,19 @@
 namespace kathryn::o3{
 
     void printStateMisMatch(const std::string& stageName, pipStat lhs, pipStat rhs){
-        std::cout << stageName << ": Mismatch on simState" << std::endl;
-        std::cout << "lhs: " << pipStatToString(lhs)
-                  << " rhs: " << pipStatToString(rhs) << std::endl;
+        std::cout << TC_RED << stageName << ": Mismatch on simState" << TC_DEF << std::endl;
+        std::cout << TC_RED
+                  << "lhs: " << pipStatToString(lhs)
+                  << " rhs: " << pipStatToString(rhs)
+                  << TC_DEF << std::endl;
     }
 
     bool checkAndPrintSimValueUll(ull lhs, ull rhs,
                                const std::string& stageName,
                                const std::string& simName){
         if (lhs != rhs){
-            std::cout << stageName << " with simType "<< simName
-                      << ": LHS: " << lhs << " RHS: " << rhs << std::endl;
+            std::cout << TC_RED << stageName << " with simType "<< simName
+                      << ": LHS: " << lhs << " RHS: " << rhs << TC_DEF << std::endl;
             return false;
         }
         return true;
@@ -27,8 +29,8 @@ namespace kathryn::o3{
                                const std::string& stageName,
                                const std::string& simName){
         if (lhs != rhs){
-            std::cout << stageName << " with simType "<< simName
-                      << ": LHS: " << lhs << " RHS: " << rhs << std::endl;
+            std::cout << TC_RED << stageName << " with simType "<< simName
+                      << ": LHS: " << lhs << " RHS: " << rhs << TC_DEF << std::endl;
             return false;
         }
         return true;
@@ -235,6 +237,9 @@ namespace kathryn::o3{
         bool compareResult = true;
         if (st1 == rhs.st1){
             compareResult &= entry.compare(rhs.entry);
+            if (st1 == PS_RUNNING){
+                compareResult &= checkAndPrintSimValueUll(effAddr, rhs.effAddr, "exec LDST", "effAddr");
+            }
         }else{
             printStateMisMatch("exec LDST stage", st1, rhs.st1);
             compareResult = false;
@@ -246,8 +251,14 @@ namespace kathryn::o3{
                 compareResult &= checkAndPrintSimValueUll(rdUse    , rhs.rdUse    , "exec LDST", "rdUse"    );
                 compareResult &= checkAndPrintSimValueUll(spec     , rhs.spec     , "exec LDST", "spec"     );
                 compareResult &= checkAndPrintSimValueUll(specTag  , rhs.specTag  , "exec LDST", "specTag"  );
-                compareResult &= checkAndPrintSimValueUll(stBufData, rhs.stBufData, "exec LDST", "stBufData");
-                compareResult &= checkAndPrintSimValueUll(stBufHit , rhs.stBufHit , "exec LDST", "stBufHit" );
+                if (rdUse != 0){
+                    compareResult &= checkAndPrintSimValueUll(stBufHit , rhs.stBufHit , "exec LDST", "stBufHit" );
+                    if (stBufHit != 0){
+                        compareResult &= checkAndPrintSimValueUll(stBufData, rhs.stBufData, "exec LDST", "stBufData");
+                    }else{
+                        compareResult &= checkAndPrintSimValueUll(loadData, rhs.loadData, "exec LDST", "load data");
+                    }
+                }
             }
 
         }else{

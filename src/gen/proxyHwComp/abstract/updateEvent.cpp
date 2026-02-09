@@ -5,6 +5,7 @@
 #include "gen/proxyHwComp/abstract/updateEvent.h"
 #include "gen/proxyHwComp/module/moduleGen.h"
 
+
 namespace kathryn{
     /**
      * gen base
@@ -16,11 +17,6 @@ namespace kathryn{
         }
     }
 
-
-    void UEBaseGenEngine::rerouteAndReplace(Operable*& srcOpr, ModuleGen* mdGen){
-        srcOpr = rerouteBase(srcOpr, mdGen);
-    }
-
     Operable* UEBaseGenEngine::rerouteBase(Operable* srcOpr, ModuleGen* mdGen){
         if (srcOpr == nullptr){
             return nullptr;
@@ -28,6 +24,9 @@ namespace kathryn{
         return mdGen->routeSrcOprToThisModule(srcOpr);
     }
 
+    void UEBaseGenEngine::rerouteAndReplace(Operable*& srcOpr, ModuleGen* mdGen){
+        srcOpr = rerouteBase(srcOpr, mdGen);
+    }
 
     /**
      * basic
@@ -61,7 +60,6 @@ namespace kathryn{
     }
 
     /**
-     *
      * grp
      */
     void UEGrpGenEngine::reroute(ModuleGen* mdGen){
@@ -83,7 +81,6 @@ namespace kathryn{
     }
 
     /**
-     *
      * cond
      */
     void UECondGenEngine::reroute(ModuleGen* mdGen){
@@ -136,21 +133,43 @@ namespace kathryn{
 
     }
 
+
     /**
      *
      * switch
      */
     void UESwitchGenEngine::reroute(ModuleGen* mdGen){
-        rerouteAndReplace(master->stateIden, mdGen);
+        Operable*& identRef = master->getStateIdentRef();
+        rerouteAndReplace(identRef, mdGen);
         for (UpdateEventBase* ueb: master->subStmts){
-            UEBaseGenEngine* genEngine = ueb->createGenEngine();
-            genEngine->reroute(mdGen);
-            subEngine.push_back(genEngine);
+            if (ueb != nullptr){
+                UEBaseGenEngine* genEngine = ueb->createGenEngine();
+                genEngine->reroute(mdGen);
+                subEngine.push_back(genEngine);
+            }
         }
     }
 
     void UESwitchGenEngine::genAss(CbBaseVerilog& cbVer, AssignGenBase* assignGen){
-        assert(false);
+
+        std::string stateIdent = assignGen->getOprStrFromOpr(master->getStateIdent());
+         CbSwitchVerilog* cbVerSwitch = &cbVer.addSwitch(stateIdent);
+
+        for (int idx = 0; idx < master->getMatchNum(); idx++){
+
+            int              matchIdx    = master->getSubStmtMatchIdxs(idx);
+            CbBaseVerilog* caseBlock = &cbVerSwitch->addCase(matchIdx);
+
+            UpdateEventBase* ueb = master->getSubStmts(idx);
+            if (ueb != nullptr){
+                UEBaseGenEngine* genEngine = ueb->createGenEngine();
+                genEngine->genAss(*caseBlock, assignGen);
+                subEngine.push_back(genEngine);
+            }
+
+        }
+
+
     }
 
 }

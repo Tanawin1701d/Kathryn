@@ -5,9 +5,6 @@
 #ifndef KATHRYN_SRC_EXAMPLE_O3_RSV_H
 #define KATHRYN_SRC_EXAMPLE_O3_RSV_H
 
-
-#include "kathryn.h"
-#include "slotParam.h"
 #include "stageStruct.h"
 
 namespace kathryn::o3{
@@ -27,26 +24,29 @@ namespace kathryn::o3{
         SlotMeta _meta;
         Table    _table;
         RegSlot  execSrc;
+        SyncPip  sync {"rsv_exec_sync"}; ///CTRL RSV_SHARED
 
-        ZyncSimProb*   issueProbe = nullptr;
-        TableSimProbe* stationProbe = nullptr;
+        ZyncSimProb*   issueProbe = nullptr;     ///DC
+        TableSimProbe* stationProbe = nullptr;   ///DC
 
-        void setSimProbe(ZyncSimProb* issueP, TableSimProbe* stationP){
-            issueProbe = issueP;
-            stationProbe = stationP;
-            assert(stationProbe != nullptr);
-            stationProbe->init(&_table);
-        }
+        void setSimProbe(ZyncSimProb* issueP, TableSimProbe* stationP){  ///DC
+            issueProbe = issueP;                                         ///DC
+            stationProbe = stationP;                                     ///DC
+            assert(stationProbe != nullptr);                             ///DC
+            stationProbe->init(&_table);                                 ///DC
+        }                                                                ///DC
 
         RsvBase(const SlotMeta& meta, int amtRow):
         _meta(meta),_table(meta, amtRow),
         execSrc(meta){
-            _table.makeColResetEvent(busy, 0);
+            //_table.makeColResetEvent(busy, 0);
+            _table.makeResetEvent(0);
+            execSrc.makeResetEvent();
         }
 
         virtual ~RsvBase() = default;
 
-        virtual void buildIssue(SyncMeta& syncMeta, BroadCast& bc) = 0;
+        virtual void buildIssue(BroadCast& bc) = 0;
 
         Operable& slotReady(WireSlot& iw){
             return iw(busy) && iw(rsValid_1) && iw(rsValid_2);
@@ -54,20 +54,22 @@ namespace kathryn::o3{
 
         void tryOwSpecBit(WireSlot& iw, BroadCast& bc){
             ///////// we have to override the spec bit if it is on the fly
-            auto& isSpec    = iw(spec);
-            auto& specTagIdx= iw(specTag);
-            //// send data
-
-            zif ( isSpec && bc.checkIsSuc(specTagIdx)){
+            // auto& isSpec    = iw(spec);
+            // auto& specTagIdx= iw(specTag);
+            // //// send data
+            //
+            // zif ( isSpec && bc.checkIsSuc(specTagIdx)){
+            //     execSrc(spec) <<= 0;
+            // }
+            zif ( bc.checkIsSuc(iw)){
                 execSrc(spec) <<= 0;
             }
-
         }
 
         virtual void writeEntry(opr& binIdx, WireSlot& iw){
-            SET_ASM_PRI_TO_MANUAL(RSV_WRITE_ENTRY_PRED_PRIORITY);
+            SET_ASM_PRI_TO_MANUAL(RSV_WRITE_ENTRY_PRED_PRIORITY); ///CTRL RSV_SHARED
             _table[binIdx] <<= iw;
-            SET_ASM_PRI_TO_AUTO();
+            SET_ASM_PRI_TO_AUTO(); ///CTRL RSV_SHARED
         }
 
         virtual void onIssue(opr& issueIdx, WireSlot& iw){
@@ -81,7 +83,7 @@ namespace kathryn::o3{
 
         virtual void onMisPred(opr& fixTag){
 
-            SET_ASM_PRI_TO_MANUAL(RSV_MIS_PRED_PRIORITY);
+            SET_ASM_PRI_TO_MANUAL(RSV_MIS_PRED_PRIORITY); ///CTRL RSV_SHARED
             _table.doCusLogic([&](RegSlot& lhs, int rowIdx){
                 auto& isBusy    = lhs(busy);
                 auto& isSpec    = lhs(spec);
@@ -91,7 +93,7 @@ namespace kathryn::o3{
                     isBusy <<= 0;
                 }
             });
-            SET_ASM_PRI_TO_AUTO();
+            SET_ASM_PRI_TO_AUTO(); ///CTRL RSV_SHARED
 
 
         }

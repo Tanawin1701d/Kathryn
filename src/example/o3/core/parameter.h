@@ -5,10 +5,8 @@
 #ifndef KATHRYN_SRC_EXAMPLE_O3_PARAMETER_H
 #define KATHRYN_SRC_EXAMPLE_O3_PARAMETER_H
 
-#include <string>
-#include <string_view>
-
 #include "kathryn.h"
+#include "isaParam.h"
 
 namespace kathryn::o3{
 
@@ -26,8 +24,6 @@ namespace kathryn::o3{
     O3_PARAM_STR(invalid1);
     O3_PARAM_STR(inst2);
     O3_PARAM_STR(invalid2);
-    O3_PARAM_STR(bhr);
-    O3_PARAM_STR(prCond);
     ////// start from decoder
 
     O3_PARAM_STR(inst);
@@ -111,8 +107,6 @@ namespace kathryn::o3{
     //// for ROB
     O3_PARAM_STR(wbFin);
     O3_PARAM_STR(storeBit);
-    O3_PARAM_STR(jumpAddr); //// result from branch
-    O3_PARAM_STR(jumpCond);
 
     //// for Exec Unit
     O3_PARAM_STR(bpValid);
@@ -121,12 +115,12 @@ namespace kathryn::o3{
         ////// rsIdx use with data in the system
 
 ///// IMEM parameter
-constexpr int IMEM_IDX_WIDTH = 10;
+constexpr int IMEM_IDX_WIDTH = 11;
 constexpr int IMEM_ROW   = 1 << IMEM_IDX_WIDTH;
 constexpr int IMEM_WIDTH = 32;
 
 ///// DMEM parameter
-constexpr int DMEM_IDX_WIDTH = 12;
+constexpr int DMEM_IDX_WIDTH = 11;
 constexpr int DMEM_ROW   = 1 << DMEM_IDX_WIDTH;
 constexpr int DMEM_WIDTH = 32;
 

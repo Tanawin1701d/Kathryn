@@ -63,20 +63,20 @@ namespace kathryn::o3{
         void onMisPred(opr& misTag,
                        Table&    rcvTabBusy,
                        Table&    rcvTabRename){
-            SET_ASM_PRI_TO_MANUAL(ARF_MIS_PRIORITY);
+            SET_ASM_PRI_TO_MANUAL(ARF_MIS_PRIORITY);  ///CTRL ARF
             busyTemp   = rcvTabBusy  [OH(misTag)].v();
             renameTemp = rcvTabRename[OH(misTag)].v();
-            SET_ASM_PRI_TO_AUTO();
+            SET_ASM_PRI_TO_AUTO(); ///CTRL ARF
         }
 
         /////// system going to succcess
         void onSucPred(opr& sucTag, PreRenGrp& masterRenGrp){
-            SET_ASM_PRI_TO_MANUAL(ARF_SUC_PRIORITY);
+            SET_ASM_PRI_TO_MANUAL(ARF_SUC_PRIORITY); ///CTRL ARF
             zif(sucTag.sl(idx) | (~isAsRecvGrp)){
                 busyTemp   = masterRenGrp.busyTemp;
                 renameTemp = masterRenGrp.renameTemp;
             }
-            SET_ASM_PRI_TO_AUTO();
+            SET_ASM_PRI_TO_AUTO(); ///CTRL ARF
         }
 
         void commitBase(opr& comEn    , opr& comRrfPtr,
@@ -95,10 +95,10 @@ namespace kathryn::o3{
                       opr& comEn2    , opr& comRrfPtr2,
                       opr& comArcIdx2,
                       RegSlot& renameReg){
-            SET_ASM_PRI_TO_MANUAL(ARF_COM_PRIORITY);
+            SET_ASM_PRI_TO_MANUAL(ARF_COM_PRIORITY); ///CTRL ARF
             commitBase(comEn1, comRrfPtr1, comArcIdx1, renameReg);
             commitBase(comEn2, comRrfPtr2, comArcIdx2, renameReg);
-            SET_ASM_PRI_TO_AUTO();
+            SET_ASM_PRI_TO_AUTO(); ///CTRL ARF
         }
 
         void renameBase(RenameCmd& renCmd){
@@ -109,9 +109,9 @@ namespace kathryn::o3{
         }
 
         void onRename(RenameCmd& renCmd1, RenameCmd& renCmd2, bool override = false){
-            SET_ASM_PRI_TO_MANUAL(ARF_REN_PRIORITY);
+            SET_ASM_PRI_TO_MANUAL(ARF_REN_PRIORITY); ///CTRL ARF
             if (override){
-                renameBase(renCmd1); //// order cannot be changed
+                renameBase(renCmd1);              //// order cannot be changed
                 renameBase(renCmd2);
             }else{
                 ////// the isAsRecvGrp is set from decode stage
@@ -133,7 +133,7 @@ namespace kathryn::o3{
                     renameBase(renCmd2);
                 }
             }
-            SET_ASM_PRI_TO_AUTO();
+            SET_ASM_PRI_TO_AUTO(); ///CTRL ARF
         }
 
     };
@@ -164,8 +164,8 @@ namespace kathryn::o3{
             rename      .makeResetEvent(0);
             busyMaster  .makeResetEvent(0);
             renameMaster.makeResetEvent(0);
-            dataStructProbGrp.arfBusy.init(&busy);
-            dataStructProbGrp.arfRename.init(&rename);
+            dataStructProbGrp.arfBusy.init(&busy);      ///DC
+            dataStructProbGrp.arfRename.init(&rename);  ///DC
 
             ////// initialize preRenGrp
             for(int i = 0; i < SPECTAG_LEN; i++){
@@ -228,8 +228,8 @@ namespace kathryn::o3{
                                   renameMaster);
 
             ////// does not need to update any priority//// order cannot be changed
-            updateArfReg(comEn1, comArcIdx1, comData1);
-            updateArfReg(comEn2, comArcIdx2, comData2);
+            updateArfReg(comEn1, comArcIdx1, comData1); ///   due to it contain commit eneable at the destination
+            updateArfReg(comEn2, comArcIdx2, comData2); ///
 
         }
 

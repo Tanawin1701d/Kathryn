@@ -34,6 +34,9 @@
 #include "model/flowBlock/pipeline/syncMeta.h"
 #include "model/flowBlock/pipeline/zync.h"
 #include "model/flowBlock/pseudo/pseudo.h"
+#include "model/flowBlock/state/ztate.h"
+#include "model/flowBlock/state/zcase.h"
+#include "model/flowBlock/pipeStream/pipeStream.h"
 
 /** data Structure*/
 

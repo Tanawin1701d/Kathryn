@@ -14,6 +14,7 @@ namespace kathryn{
 
 
 struct CbIfCxx;
+struct CbSwitchCxx;
 struct CbFuncDec;
 
 constexpr char CXX_ULL_SUFFIX [] = "ULL";
@@ -22,9 +23,10 @@ struct CbBaseCxx: CbBase{
 
     CbBaseCxx(): CbBase(){}
     ~CbBaseCxx()  = default;
-    CbIfCxx& addIf(std::string condition);
-    CbBaseCxx& addSubBlock();
-    std::string toString(int ident) override;
+    virtual CbIfCxx&     addIf(std::string condition);
+    virtual CbSwitchCxx& addSwitch(std::string switchIdent);
+    virtual CbBaseCxx&   addSubBlock();
+    std::string          toString(int ident) override;
 
 
 };
@@ -46,6 +48,23 @@ struct CbIfCxx: CbBaseCxx{
     CbIfCxx& addElif(std::string condition);
     std::string toString(int ident) override;
 
+};
+
+struct CbSwitchCxx: CbBaseCxx{
+    std::string _switchIdent;
+    bool isDefaultOccure = false;
+    std::vector<int> _caseIdents;
+
+    CbSwitchCxx(std::string switchIdent):
+            _switchIdent(std::move(switchIdent)){}
+
+    /////// disable the unused function
+    CbIfCxx&     addIf(std::string condition)       override{assert(false);}
+    CbSwitchCxx& addSwitch(std::string switchIdent) override{assert(false);}
+    CbBaseCxx&   addSubBlock() override{assert(false);}
+
+    CbBaseCxx&  addCase(int caseVal);
+    std::string toString(int ident) override;
 
 };
 

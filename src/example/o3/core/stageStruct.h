@@ -5,9 +5,6 @@
 #ifndef KATHRYN_SRC_EXAMPLE_O3_STAGEPARAM_H
 #define KATHRYN_SRC_EXAMPLE_O3_STAGEPARAM_H
 
-
-#include "kathryn.h"
-
 #include "parameter.h"
 #include "slotParam.h"
 
@@ -31,13 +28,16 @@ namespace kathryn::o3{
 
         SlotMeta meta{smFetch};
         RegSlot  raw {smFetch};
-        SyncMeta sync{"fetchSync"};
+
+        SyncMeta sync    {"fetchSync"}; ///CTRL FETCH
+
 
         FetchStage(){
-            iMem0.asInputGlob("iMem0");
-            iMem1.asInputGlob("iMem1");
-            iMem2.asInputGlob("iMem2");
-            iMem3.asInputGlob("iMem3");
+            curPc.asOutputGlob("curPc");
+            iMem0.asInputGlob ("iMem0");
+            iMem1.asInputGlob ("iMem1");
+            iMem2.asInputGlob ("iMem2");
+            iMem3.asInputGlob ("iMem3");
 
         }
 
@@ -58,54 +58,29 @@ namespace kathryn::o3{
         WireSlot  dcw2    {decodedMeta};
         RegSlot  dcdShared{sharedMeta};
 
-        SyncMeta sync {"decodeSync"};
+        SyncMeta sync    {"decodeSync"}; ///CTRL DECODE
 
         Operable& getIsAlocRsv(RegSlot& dcd){ return dcw1(rsIdx_1); }
 
     };
 
-    struct DispStage{
-        SyncMeta sync {"dispSync"};
-    };
-
-    struct RsvStage{
-        SyncMeta sync {"rsvSync"};
-    };
-
-    struct ExecStage{
-        SyncPip sync {"execSync"};
-    };
-
-    struct MulStage{
-        SyncPip sync {"mulSync"};
-    };
-
-    struct BranchStage{
-        SyncMeta sync {"branchSync"};
-    };
-
     struct LdStStage{
-        SyncPip sync  {"ldStSync"};
-        SyncPip sync2 {"ldStLastSync"};
         mWire(dmem_rdata, DATA_LEN);
-        mWire(dmem_we , 1);
+        mWire(dmem_we , 1); ///CTRL GROB
         mWire(dmem_rwaddr, ADDR_LEN); //// must mux with reading
         mWire(dmem_wdata, DATA_LEN);
         RegSlot lsRes {smLdSt};
+        SyncPip  sync2 {"ldStLastSync"}; ///CTRL EXEC_LDST
 
         LdStStage(){
             dmem_rdata  .asInputGlob ("dmem_rdata");
-            dmem_we     .asOutputGlob("dmem_we");
+            dmem_we     .asOutputGlob("dmem_we"); ///CTRL GROB
             dmem_rwaddr .asOutputGlob("dmem_rwaddr");
             dmem_wdata  .asOutputGlob("dmem_wdata");
 
 
         }
 
-    };
-
-    struct CommitStage{
-        SyncMeta sync {"commitSync"};
     };
 
     struct ByPass{
@@ -164,12 +139,6 @@ namespace kathryn::o3{
 
         void doByPass(ByPass& bp);
 
-        // void tryAssignByPassAll(Operable& desIdent, Reg& desVal){
-        //     for (auto& bp : _bps){
-        //         bp->tryAssignByPass(desIdent, desVal);
-        //     }
-        // }
-
     };
 
 
@@ -193,40 +162,44 @@ namespace kathryn::o3{
     struct PipStage{
         FetchStage  ft;
         DecodeStage dc;
-        DispStage   ds;
-        RsvStage    rs;
-        ExecStage   ex[2];
-        MulStage   mu;
-        BranchStage br;
         LdStStage   ldSt;
-        CommitStage cm;
 
-        void onMisPred(opr& fixTag){
+        SyncMeta sync_dp    {"dispSync"}; ///CTRL DECODE
+        SyncMeta sync_rs    {"rsvSync"}; ///CTRL DISPATCH
+
+        SyncMeta sync_cm    {"commitSync"}; ///CTRL ROB
+
+
+        void onMisPred(){
             ////// kill the in-order stage
-            ft.sync.killSlave(true);
-            dc.sync.killSlave(true);
-            ds.sync.killSlave(true);
+            ft.sync.killSlave(true); ///CTRL FETCH
+            dc.sync.killSlave(true); ///CTRL DECODE
+            sync_dp.killSlave(true); ///CTRL DISPATCH
+            sync_cm.holdSlave();     ///CTRL ROB
+
+
+
             ////// kill the out-of-order exec Unit stage
-            ex[0].sync .killIfTagMet(true, fixTag);
-            ex[1].sync .killIfTagMet(true, fixTag);
-            mu   .sync .killIfTagMet(true, fixTag);
-            ldSt .sync .killIfTagMet(true, fixTag);
-            ldSt .sync2.killIfTagMet(true, fixTag);
+            //sync_ex1  .killIfTagMet(true, fixTag);
+            //sync_ex2  .killIfTagMet(true, fixTag);
+            //sync_mul  .killIfTagMet(true, fixTag);
+            //ldSt.sync1.killIfTagMet(true, fixTag);
+            //ldSt.sync2.killIfTagMet(true, fixTag);
             ////// hold reservation station to exection unit
-            ex[0].sync .holdMaster();
-            ex[1].sync .holdMaster();
-            mu   .sync .holdMaster();
-            br   .sync .holdMaster();
-            ldSt .sync .holdMaster();
+            // sync_ex1  .holdMaster();
+            // sync_ex2  .holdMaster();
+            // sync_mul  .holdMaster();
+            // sync_br   .holdMaster();
+            // ldSt.sync1.holdMaster();
             ///ldSt .sync2.holdMaster(); //// because the master is not reservation station
             ////// hold commit to not
-            cm.sync.holdSlave();
+
 
         }
         void onSucPred(){
-            dc.sync.holdMaster(); //// hold fetch <-> decode
-            ds.sync.holdMaster(); //// hold decode <-> dispatch to generate tag, but allowing system to enter decode state
-            rs.sync.holdMaster(); //// hold dispatch <-> reservation station
+            dc.sync.holdMaster(); ///CTRL DECODE //// hold fetch <-> decode
+            sync_dp.holdMaster(); ///CTRL DISPATCH //// hold decode <-> dispatch to generate tag, but allowing system to enter decode state
+            sync_rs.holdMaster(); ///CTRL RSV_SHARED //// hold dispatch <-> reservation station
         }
 
 

@@ -14,7 +14,7 @@ namespace kathryn::o3{
         RegArch&   regArch;
         bool       sortReq = false;
         mWire(checkIdx, _table.getSufficientIdxSize(true));
-        mWire(dbg_isSlotReady, 1);
+        mWire(dbg_isSlotReady, 1); ///DC
 
         ORsv(int rsv_idx, SlotMeta meta,
              int amtRow , RegArch& regArch,
@@ -25,11 +25,11 @@ namespace kathryn::o3{
             sortReq(osm.isThereField(sortBit)){}
 
         void resetSortBit(){
-            SET_ASM_PRI_TO_MANUAL(RSV_SORTBIT_RST_PRED_PRIORITY);
+            SET_ASM_PRI_TO_MANUAL(RSV_SORTBIT_RST_PRED_PRIORITY); ///CTRL RSV_SHARED
             _table.doCusLogic([&](RegSlot& lhs, int rowIdx){
                 lhs(sortBit) <<= lhs(sortBit) & (~regArch.rrf.nextRrfCycle);
             });
-            SET_ASM_PRI_TO_AUTO();
+            SET_ASM_PRI_TO_AUTO(); ///CTRL RSV_SHARED
         }
 
 
@@ -61,7 +61,7 @@ namespace kathryn::o3{
 
         
 
-        void buildIssue(SyncMeta& syncMeta, BroadCast& bc) override{
+        void buildIssue(BroadCast& bc) override{
             /*
             * find the free slot
             */
@@ -88,17 +88,17 @@ namespace kathryn::o3{
             /**
              * issue sync
              */
-            dbg_isSlotReady = slotReady(iw);
+            dbg_isSlotReady = slotReady(iw); ///DC
 
             if (sortReq){
                 resetSortBit();
             }
 
-            cwhile(true){
-                zyncc(syncMeta, dbg_isSlotReady){ tryInitProbe(issueProbe);
-                    tryOwSpecBit(iw, bc);
+            cwhile(true){ ///CTRL RSV_SHARED
+                zyncc(sync, dbg_isSlotReady){ tryInitProbe(issueProbe); ///CTRL RSV_SHARED
                     //////// reset the table
                     onIssue(ohIdx, iw);
+                    tryOwSpecBit(iw, bc);
                 }
             }
         }

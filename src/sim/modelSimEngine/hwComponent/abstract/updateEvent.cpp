@@ -99,8 +99,30 @@ namespace kathryn{
     void UpdateEventSwitchSimEngine::createSimOp(CbBaseCxx& cb,
                                       LogicSimEngine& logicSimEngine,
                                       const std::string& auxAssStr){
+//assert(false);
+        //////// get switch identifier
+        Operable* stateIden  = master->stateIden;
+        std::string identStr = getSlicedSrcOprFromOpr(stateIden).toString();
+        //////// build add ident to cxx block
+        CbSwitchCxx* switchCxx = &cb.addSwitch(identStr);
 
-        assert(false);
+        for (int idx = 0; idx < master->getMatchNum(); idx++){
+
+            ///// build case
+            int                       matchIdx  = master->getSubStmtMatchIdxs(idx);
+            CbBaseCxx* matchWorkBlock = &switchCxx->addCase(matchIdx);
+            ///// update event case
+            UpdateEventBase*          ueb       = master->getSubStmts(idx);
+            if (ueb != nullptr){
+                UpdateEventBaseSimEngine* simEngine = ueb->createSimEvent();
+                simEngine->createSimOp(*matchWorkBlock, logicSimEngine, auxAssStr);
+                subEngine.push_back(simEngine);
+            }
+
+
+        }
+
+
 
     }
 }

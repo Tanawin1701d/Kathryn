@@ -28,6 +28,8 @@ namespace kathryn{
                     const std::string& fileName,
                     int windowSize = 10);
 
+        void renew(const std::string& fileName) override;
+
         void addSlotVal (int slotIdx, const std::string& value) override;
         void addSlotVals(int slotIdx, const std::vector<std::string>& values) override;
 

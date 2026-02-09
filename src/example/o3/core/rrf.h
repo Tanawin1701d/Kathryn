@@ -37,7 +37,7 @@ namespace kathryn::o3{
             nextRrfCycle .makeResetEvent();
             nextRrfCycle .makeDefEvent();
 
-            dataStructProbGrp.rrf.init(&table);
+            dataStructProbGrp.rrf.init(&table); ///DC
         }
 
         opr& isRenamable(opr& req2){
@@ -60,14 +60,12 @@ namespace kathryn::o3{
         void onMisPred(opr& misRrf, opr& curCommitPtr){ /// size supposed to be equal to rrf
             opr& nextRrf = misRrf + 1;
             reqPtr <<= nextRrf;
+
+            freenum <<= (RRF_ENTRIES - nextRrf) + curCommitPtr;
             zif(curCommitPtr >= nextRrf){
                 ///// the free entry is bubble
                 /// it must be >= because should be full only (freenum = 0)
-                freenum <<= curCommitPtr - nextRrf;
-            }zelse{
-
-                //////// the free entry is top and down
-                freenum <<= (RRF_ENTRIES - nextRrf) + curCommitPtr ;
+                freenum <<= (curCommitPtr - nextRrf).uext(RRF_SEL + 1);
             }
         }
 
@@ -77,15 +75,15 @@ namespace kathryn::o3{
         }
 
         ////// on the table there should no conflict (rename<->wb<->commit)
-        void onRename(opr& req1, opr& req2){
+        ////////////////it is ok to not have req1
+        void onRename(opr& req2){
             ////// isRenamable must be use
-            renameReqSize = req1.uext(2) + req2.uext(2);
+            renameReqSize = req2.uext(2) + 1;
             doRenameOrCommit();
             ////// rename have more priority than write back
-            SET_ASM_PRI_TO_MANUAL(RRF_RENAME_PRI);
-            zif(req1){
-                table[reqPtr](rrfValid) <<= 0;
-            }
+            SET_ASM_PRI_TO_MANUAL(RRF_RENAME_PRI);  ///CTRL RRF
+
+            table[reqPtr](rrfValid) <<= 0;
             zif(req2){
                 table[reqPtr+1](rrfValid) <<= 0;
                 ///// request 2 will not set if req1 is set
@@ -93,7 +91,7 @@ namespace kathryn::o3{
             opr& nextRrf = reqPtr + renameReqSize;
             nextRrfCycle <<= reqPtr > nextRrf;
             reqPtr <<= nextRrf;
-            SET_ASM_PRI_TO_AUTO();
+            SET_ASM_PRI_TO_AUTO();  ///CTRL RRF
 
         }
 

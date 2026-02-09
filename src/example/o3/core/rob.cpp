@@ -4,22 +4,15 @@
 
 
 #include "rob.h"
-#include "fetch.h"
 #include "storeBuf.h"
 
 namespace kathryn::o3{
+
     void Rob::flow(){
         comPtr2 = comPtr + 1;
         comPtr <<= (comPtr + com1Status + com2Status);
 
-
-        selectedEntry = com1Entry;
-        zif(com2Status & com2Entry(storeBit)){
-            ///// com2Status make sure that com1Status is not branch or store and current is ready to commit
-            selectedEntry = com2Entry;
-        }
-
-        pip(pm.cm.sync){autoSync
+        pip(pm.sync_cm){autoSync ///CTRL ROB
             /////// commit the instruction
                 ////// due to branch can do only one
             ////// we have to set commit commad
@@ -40,12 +33,6 @@ namespace kathryn::o3{
                 com2Entry(rdIdx),
                 regArch.rrf.getPhyData(comPtr2)
             );
-            ///// handle branch
-            zif( (com1Status & com1Entry(isBranch)) |
-                 (com2Status & com2Entry(isBranch))
-            ){      assert(fetchMod != nullptr);
-                    fetchMod->onBranchCommit();
-            }
 
             zif ((com1Status & com1Entry(storeBit)) |
                  (com2Status & com2Entry(storeBit))){

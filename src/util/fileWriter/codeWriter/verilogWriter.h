@@ -22,12 +22,15 @@ namespace kathryn{
 
     struct CbIfVerilog;
     struct CbAlwaysVerilog;
+    struct CbSwitchVerilog;
+
     struct CbBaseVerilog: CbBase{
         CbBaseVerilog(): CbBase(){}
         ~CbBaseVerilog()  = default;
-        CbIfVerilog& addIf(std::string condition);
-        CbAlwaysVerilog& addAlways(Verilog_SEN_TYPE verSenType, std::string senName);
-        CbBaseVerilog& addSubBlock();
+        virtual CbIfVerilog&     addIf(std::string condition);
+        virtual CbAlwaysVerilog& addAlways(Verilog_SEN_TYPE verSenType, std::string senName);
+        virtual CbSwitchVerilog& addSwitch(std::string switchIdent);
+        virtual CbBaseVerilog&   addSubBlock();
         std::string toString(int ident) override;
     };
 
@@ -35,13 +38,18 @@ namespace kathryn{
     struct CbIfVerilog: CbBaseVerilog{
         bool               _markAsSubChain = false; //// for elif else
         std::string        _cond;
-        std::vector<CbIfVerilog> _contBlock;
+        std::vector<CbIfVerilog*> _contBlock;
 
         CbIfVerilog(bool isSubChain, std::string condtion);
-        ~CbIfVerilog() = default;
+        ~CbIfVerilog() override;
 
         CbIfVerilog& addElif(std::string condition);
         std::string toString(int ident) override;
+
+        //////// disable the uncodable block
+        CbAlwaysVerilog& addAlways(Verilog_SEN_TYPE verSenType, std::string senName) override{assert(false);}
+        ////////////////////////////////////
+
     };
 
     struct CbAlwaysVerilog: CbBaseVerilog{
@@ -55,6 +63,27 @@ namespace kathryn{
 
 
         std::string toString(int ident) override;
+    };
+
+    struct CbSwitchVerilog: CbBaseVerilog{
+        std::string _switchIdent;
+        bool isDefaultOccure = false;
+        std::vector<int> _caseIdents;
+
+        CbSwitchVerilog(std::string switchIdent):
+                _switchIdent(std::move(switchIdent)){}
+
+        /**
+         * disable uncodable block
+         */
+        CbIfVerilog&     addIf      (std::string condition)                            override{assert(false);}
+        CbAlwaysVerilog& addAlways  (Verilog_SEN_TYPE verSenType, std::string senName) override{assert(false);}
+        CbSwitchVerilog& addSwitch  (std::string switchIdent)                          override{assert(false);}
+        CbBaseVerilog&   addSubBlock()                                                 override{assert(false);}
+
+        CbBaseVerilog& addCase(int caseVal);
+        std::string    toString(int ident) override;
+
     };
 
 }

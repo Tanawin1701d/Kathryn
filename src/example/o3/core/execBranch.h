@@ -5,20 +5,14 @@
 #ifndef KATHRYN_SRC_EXAMPLE_O3_BRANCHEXEC_H
 #define KATHRYN_SRC_EXAMPLE_O3_BRANCHEXEC_H
 
-#include "alu.h"
 #include "kathryn.h"
-#include "parameter.h"
+#include "alu.h"
 #include "rob.h"
-#include "slotParam.h"
-#include "stageStruct.h"
-#include "isaParam.h"
-#include "srcSel.h"
 #include "rsvs.h"
 
 
 namespace kathryn::o3{
 
-    struct FetchMod;
     struct DpMod;
     struct RsvBase;
     struct BranchExec: Module{
@@ -26,13 +20,14 @@ namespace kathryn::o3{
         TagMgmt&      tagMgmt;
         RegArch&      regArch;
         PipStage&     pm;
-        FetchMod&     fetchMod;
         DpMod&        dispMod;
         Rob&          rob;
         ByPass&       bp;
         Rsvs&         rsvs;
+        StoreBuf&     stBuf;
         RegSlot&      src;
-        PipSimProbe* psp = nullptr;
+
+        PipSimProbe* psp = nullptr;  ///DC
         mWire(calAddr, ADDR_LEN);
         mWire(brTaken, 1);
 
@@ -40,16 +35,16 @@ namespace kathryn::o3{
         explicit BranchExec(TagMgmt& tagMgmt,
                             RegArch& regArch,
                             PipStage& pm,
-                            FetchMod& fetchMod,
                             DpMod&    dispMod,
                             Rob& rob,
+                            StoreBuf& stBuf,
                             Rsvs& rsvs) :
         tagMgmt(tagMgmt),
         regArch(regArch),
         pm(pm),
-        fetchMod(fetchMod),
         dispMod(dispMod),
         rob(rob),
+        stBuf(stBuf),
         bp(regArch.bpp.addByPassEle()),
         rsvs(rsvs),
         src(rsvs.br.execSrc){}
@@ -66,13 +61,13 @@ namespace kathryn::o3{
             opr& spTag   = src(specTag);
             opr& fixTag  = tagMgmt.mpft.getFixTag(OH(spTag));
 
-            opr& srcA   = getAluSrcA(src);
-            opr& srcB   = getAluSrcB(src, true); //// take imm from br
+            opr& srcA   = src(phyIdx_1);
+            opr& srcB   = src(phyIdx_2); //// take imm from br
             brTaken     = alu(src(aluOp), srcA, srcB).sl(0);
 
             //// assign static wire to bc
-            tagMgmt.bc.misTag = spTag;
             tagMgmt.bc.sucTag = spTag;
+            tagMgmt.bc.fixTag = fixTag;
 
             //// calculate the address
             opr& nextPc = srcPc + 4;
@@ -86,10 +81,10 @@ namespace kathryn::o3{
 
 
 
-            pip(pm.br.sync){  tryInitProbe(psp);
+            pip(rsvs.br.sync){  tryInitProbe(psp); ///CTRL EXEC_BRANCH
 
                 /////// write back the data if it needed
-                rob.onWriteBackBranch(src(rrftag), calAddr, brCond);
+                rob.onWriteBack(src(rrftag));
                 zif(src(rdUse)){
                     regArch.rrf.onWback(src(rrftag), nextPc);
                     regArch.bpp.doByPass(bp);

@@ -538,7 +538,7 @@ namespace kathryn{
         Operable& resultIdx = *finalNode.idx;
         finalNode.destroy();
         ///// we have to delete the augmented filed
-        return {result(0, getMeta().getNumField()-2), resultIdx};
+        return {result(0, getMeta().getNumField()), resultIdx};
 
     }
 

@@ -7,24 +7,32 @@
 
 #include "irsv.h"
 #include "orsv.h"
-#include "stageStruct.h"
 
 namespace kathryn::o3{
     struct Rsvs{
+
+        std::vector<std::string> mulExField  = {pc, aluOp, rsSel_1,  rsSel_2};
+        std::vector<std::string> brExField   = {rsSel_1, rsSel_2};
+        std::vector<std::string> ldStExField = {aluOp, rsSel_1, rsSel_2};
+
         ORsv alu1, alu2, mul;
         IRsv br, ls;
         std::vector<RsvBase*> rsvs{&alu1, &alu2, &mul, &br, &ls};
+
+
         Rsvs(RegArch& regArch, BroadCast& bc):
-        alu1(RS_ENT_ALU   , smRsvBase + smRsvAlu   , ALU_ENT_NUM   , regArch        ),
-        alu2(RS_ENT_ALU   , smRsvBase + smRsvAlu   , ALU_ENT_NUM   , regArch        ),
-        mul (RS_ENT_MUL   , smRsvBase + smRsvMul   , MUL_ENT_NUM   , regArch, smRsvI),
-        br  (RS_ENT_BRANCH, smRsvBase + smRsvBranch, BRANCH_ENT_SEL, "br"   , bc    ),
-        ls  (RS_ENT_LDST  , smRsvBase + smRsvAlu   , LDST_ENT_SEL  , "ld"   , bc    ){}
+        alu1(RS_ENT_ALU   , smRsvBase + smRsvAlu                 , ALU_ENT_NUM   , regArch        ),
+        alu2(RS_ENT_ALU   , smRsvBase + smRsvAlu                 , ALU_ENT_NUM   , regArch        ),
+        mul (RS_ENT_MUL   , smRsvBase + smRsvMul    - mulExField , MUL_ENT_NUM   , regArch, smRsvI),
+        br  (RS_ENT_BRANCH, smRsvBase + smRsvBranch - brExField  , BRANCH_ENT_SEL, "br"   , bc    ),
+        ls  (RS_ENT_LDST  , smRsvBase + smRsvAlu    - ldStExField, LDST_ENT_SEL  , "ld"   , bc    ){}
 
         void onMisPred(opr& fixTag){
             for (RsvBase* rsv: rsvs){
                 rsv->onMisPred(fixTag);
+                rsv->sync.holdMaster();
             }
+            ls.sync.killIfTagMet(true, fixTag);
         }
 
         void onSucPred(opr& sucTag){
@@ -35,28 +43,25 @@ namespace kathryn::o3{
 
         void buildIssues(PipStage& pm, BroadCast& bc){
             ///// build alu reservation station issue logic
-            alu1.buildIssue(pm.ex[0].sync, bc);
-            alu2.buildIssue(pm.ex[1].sync, bc);
+            alu1.buildIssue(bc);
+            alu2.buildIssue(bc);
             ///// build alu reservation station issue logic
-            mul.buildIssue(pm.mu.sync, bc);
+            mul.buildIssue(bc);
             ///// build branch reservation station internal logic
-            br.buildIssue(pm.br.sync, bc);
+            br.buildIssue(bc);
             ///// build load/store reservation station internal logic
-            ls.buildIssue(pm.ldSt.sync, bc);
+            ls.buildIssue(bc);
         }
 
-        //////START DO NOT COUNT
-
-        void setDebugProbe(){
+        void setDebugProbe(){ ///DC
             ///// todo set simprobe for all
-            alu1.setSimProbe(&zyncProbGrp.issueAlu1   , &dataStructProbGrp.rsvAlu1  );
-            alu2.setSimProbe(&zyncProbGrp.issueAlu2   , &dataStructProbGrp.rsvAlu2  );
-            mul .setSimProbe(&zyncProbGrp.issueMul    , &dataStructProbGrp.rsvMul   );
-            br  .setSimProbe(&zyncProbGrp.issueBranch , &dataStructProbGrp.rsvbranch);
-            ls  .setSimProbe(&zyncProbGrp.issueLdSt   , &dataStructProbGrp.rsvLdSt  );
-        }
+            alu1.setSimProbe(&zyncProbGrp.issueAlu1   , &dataStructProbGrp.rsvAlu1  ); ///DC
+            alu2.setSimProbe(&zyncProbGrp.issueAlu2   , &dataStructProbGrp.rsvAlu2  ); ///DC
+            mul .setSimProbe(&zyncProbGrp.issueMul    , &dataStructProbGrp.rsvMul   ); ///DC
+            br  .setSimProbe(&zyncProbGrp.issueBranch , &dataStructProbGrp.rsvbranch); ///DC
+            ls  .setSimProbe(&zyncProbGrp.issueLdSt   , &dataStructProbGrp.rsvLdSt  ); ///DC
+        } ///DC
 
-        //////END DO NOT COUNT
     };
 }
 

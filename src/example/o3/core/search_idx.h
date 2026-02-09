@@ -5,8 +5,8 @@
 #ifndef KATHRYN_SRC_EXAMPLE_O3_SEARCH_IDX_H
 #define KATHRYN_SRC_EXAMPLE_O3_SEARCH_IDX_H
 
-#include "kathryn.h"
 #include "stageStruct.h"
+
 using namespace std;
 
 #define sValid first
@@ -30,18 +30,20 @@ namespace kathryn::o3{
             if (checkNext){
                 auto& isSpec = sidedSlot(spec);
                 auto& isKilled = bc.checkIsKill(sidedSlot(specTag));
-                checkBusy = &(sidedSlot(busy) & (~isSpec | isKilled));
+                checkBusy = &(sidedSlot(busy) & ~(isSpec & isKilled));
             }
-
 
             if (isBegin){
                 return (*checkBusy) == value; /// select left we want begin
             }
             return (*checkBusy) != value; /// select left if right is not really correct
-
         });
 
-        return{iw(busy) == value, binIdx};
+        if (checkNext){
+            return {(iw(busy) && ~(iw(spec) & bc.checkIsKill(iw(specTag)))) == value, binIdx};
+        }
+            return{iw(busy) == value, binIdx};
+
     }
 
 

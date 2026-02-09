@@ -50,7 +50,7 @@ namespace kathryn {
                                               &upState,
                                               Slice({nextFillActivateId, nextFillActivateId + 1}),
                                               DEFAULT_UE_PRI_INTERNAL_MAX,
-                                              cm);
+                                              CM_CLK_FREE);
         testWire.addUpdateMeta(testEvent);
         nextFillActivateId++;
         assert(nextFillActivateId <= getSlice().getSize());

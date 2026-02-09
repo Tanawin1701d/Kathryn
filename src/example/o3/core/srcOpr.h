@@ -5,8 +5,6 @@
 #ifndef KATHRYN_SRC_EXAMPLE_O3_SRCOPR_H
 #define KATHRYN_SRC_EXAMPLE_O3_SRCOPR_H
 
-#include "kathryn.h"
-#include "parameter.h"
 #include "stageStruct.h"
 
 namespace kathryn::o3{

@@ -16,7 +16,9 @@ namespace kathryn::o3{
                        SlotWriterBase&          slotWriter,
                        SimState&                state,
                        TopSim&                  topSim,
-                       SimCtrlRide&             slaveRide
+                       SimCtrlRide&             slaveRide,
+                       bool                     reqRegTest,
+                       ResultWriter*            resultWriter
     ):
     SimCtrlKride(limitCycle,
                  prefix,
@@ -24,57 +26,22 @@ namespace kathryn::o3{
                  buildMode,
                  slotWriter,
                  state,
-                 topSim),
-    _slaveRide(slaveRide)
+                 topSim,
+                 resultWriter),
+    _slaveRide  (slaveRide),
+    _reqRegTest (reqRegTest)
     {}
-
-
-    void CombCtrl::doKrideInit(int curTestCaseIdx){
-
-        _vcdWriter-> renew(_prefixFolder + _testTypes[_curTestCaseIdx]+ "/owave.vcd");
-        _flowWriter->renew(_prefixFolder + _testTypes[_curTestCaseIdx]+ "/oprofile.prof");
-        _slotWriter. renew(_prefixFolder + _testTypes[_curTestCaseIdx]+ "/oslot_kride.sl");
-        //////// set reset wire to 1
-        *rstWire = 1;
-        //////// cycle before cycle cycle is running
-        conNextCycle(1);
-        *rstWire = 0;
-        resetRegister();
-        readAssembly (_prefixFolder + _testTypes[_curTestCaseIdx] + "/asm.out");
-        readAssertVal(_prefixFolder + _testTypes[_curTestCaseIdx] + "/ast.out");
-        resetDmem();
-
-    }
-
-    void CombCtrl::doKrideCycle(bool recordThisCycle){
-        ///////// give the data to
-        readMem2Fetch();
-        readWriteDataMemDoCmd(); ///// do the dmem command command
-
-        conEndCycle();
-        readWriteDataMemGetCmd();
-        ///////// record the system
-        _state.recruitValue();
-        if (recordThisCycle){
-            _state.printSlotWindow(_slotWriter);
-        }
-        _state.recruitNextCycle();
-        postCycleAction(); ///// assign value to the print
-        _slotWriter.concludeEachCycle();
-        //////////////////////////////////
-        conNextCycle(1);
-
-    }
 
     bool CombCtrl::doCompare(){
         bool compareValid = _state.compare(_slaveRide._state);
         compareValid &= compareMemOp(_slaveRide);
-
         return compareValid;
 
     }
 
     void CombCtrl::describeCon(){
+
+        std::vector<int> errorIndexs;
 
         for (; _curTestCaseIdx < _testTypes.size(); _curTestCaseIdx++){
             std::cout << std::endl
@@ -85,21 +52,21 @@ namespace kathryn::o3{
                       << TC_DEF << std::endl;
 
             ////// init kride and ride
-            doKrideInit(_curTestCaseIdx);
-            doKrideCycle(false);
-            _slaveRide.doRideInit(_curTestCaseIdx);
+            doWorkloadInit(_curTestCaseIdx, _reqRegTest);
+            doWorkloadCycle(false);
+            _slaveRide.doWorkloadInit(_curTestCaseIdx, _reqRegTest);
             //////// iterate for 100 cycle
             bool retard = false;
             int  retartedCount = 0;
             std::cout << TC_BLUE <<
                     "[O3 RISC-V CMP] -----> start compare"
                   << TC_DEF << std::endl;
-            for (int i = 0; i <= 150; i++){
+            while (true){
                 if (retard && (retartedCount < BELAYED_AFTER_MIS_CMP)){
                     break;
                 }
-                doKrideCycle(true);
-                _slaveRide.doRideCycle(true);
+                doWorkloadCycle(true);
+                _slaveRide.doWorkloadCycle(true);
 
                 if (!retard){
                     retard = !doCompare(); ///// if belayed  = commpare not corect!
@@ -108,20 +75,51 @@ namespace kathryn::o3{
                     if (retartedCount >= BELAYED_AFTER_MIS_CMP){break;}
                     retartedCount++;
                 }
+
+
+                if (isExecFin() && _slaveRide.isExecFin()){
+                    std::cout << TC_GREEN << "slave is equal " << TC_DEF << std::endl;
+                    break;
+                }else if (isExecFin()){
+                    std::cout << TC_RED << "master is finish but slave not" << TC_DEF << std::endl;
+                    break;
+                }else if (_slaveRide.isExecFin()){
+                    std::cout << TC_RED << "slave is  finish not like" << TC_DEF << std::endl;
+                    break;
+                }
+                if (cycleCnt % 10000 == 0){
+                    std::cout << TC_BLUE << "[O3 RISC-V CMP] -----> computing cycle " << cycleCnt << TC_DEF << std::endl;
+                }
+
+                ////// increase cycle counter
+                incCycleCnt();
+                _slaveRide.incCycleCnt();
             }
+            std::cout << TC_BLUE << "[O3 RISC-V CMP] -----> sim done in " << cycleCnt << " cycles" << TC_DEF << std::endl;
 
             if (retard){
-                std::cout << TC_GREEN << "[O3 RISC-V CMP] compare failed see slot writer for the reason mismatch" << TC_DEF << std::endl;
+                std::cout << TC_RED << "[O3 RISC-V CMP] compare failed see slot writer for the reason mismatch" << TC_DEF << std::endl;
+                errorIndexs.push_back(_curTestCaseIdx);
             }else{
                 std::cout << TC_GREEN << "[O3 RISC-V CMP] compare pass" << TC_DEF << std::endl;
             }
             /////////////////////////////////
-            testRegister();
-            _slaveRide.testRegister();
+
+            if (_reqRegTest){
+                testRegister();
+                _slaveRide.testRegister();
+            }
             finalPerfCol();
         }
+        doWorkloadExit();
+        _slaveRide.doWorkloadExit();
 
+        if (errorIndexs.empty()){
+            std::cout << TC_RED << "[O3 RISC-V CMP] all tests passes" << TC_DEF << std::endl;
+        }else{
+            for (int errorIdx: errorIndexs){
+                std::cout << TC_RED << "[O3 RISC-V CMP] error in test case " << errorIdx << TC_DEF << std::endl;
+            }
+        }
     }
-
-
 }

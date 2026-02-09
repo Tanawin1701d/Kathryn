@@ -5,7 +5,6 @@
 #ifndef KATHRYN_SRC_EXAMPLE_O3_BLKPARAM_H
 #define KATHRYN_SRC_EXAMPLE_O3_BLKPARAM_H
 
-#include "kathryn.h"
 #include "parameter.h"
 
 using namespace std;
@@ -17,41 +16,41 @@ namespace kathryn::o3{
          */
 
         inline SlotMeta smFetch {
-            {inst1   , inst2   , invalid2,       pc,      npc, prCond, bhr        },
-            {INSN_LEN, INSN_LEN, 1       , ADDR_LEN, ADDR_LEN, 1     , GSH_BHR_LEN}
+            {inst1   , inst2   , invalid2,       pc,      npc},
+            {INSN_LEN, INSN_LEN, 1       , ADDR_LEN, ADDR_LEN}
         };
 
-        inline SlotMeta smBhrs{bhr, GSH_BHR_LEN, SPECTAG_LEN, 0};
+        ///inline SlotMeta smBhrs{bhr, GSH_BHR_LEN, SPECTAG_LEN, 0};
 
         /**
          * DECODE STAGE
          */
 
         inline SlotMeta smDecBase {
-            {inst             , invalid           , imm_type    , aluOp          , rsEnt, /////// operation
-             isBranch         , pred_addr         , spec        , specTag        , illLegal, ////// branch
-             rdIdx            , rdUse             ,    /////// destination
-             rsIdx_1          , rsSel_1           , rsUse_1     , /////// src1
-             rsIdx_2          , rsSel_2           , rsUse_2     , /////// src2
-             dmem_size        , dmem_type         , //////// memory
-             md_req_op        , md_req_in_signed_1, //////// multiplication
-            md_req_in_signed_2, md_req_out_sel
+            {inst              , invalid           , imm_type    , aluOp          , rsEnt, /////// operation
+             isBranch          , pred_addr         , spec        , specTag        , illLegal, ////// branch
+             rdIdx             , rdUse             ,    /////// destination
+             rsIdx_1           , rsSel_1           , rsUse_1     , /////// src1
+             rsIdx_2           , rsSel_2           , rsUse_2     , /////// src2
+             dmem_size         , dmem_type         , //////// memory
+             md_req_op         , md_req_in_signed_1, //////// multiplication
+             md_req_in_signed_2, md_req_out_sel
             },
 
-            {INSN_LEN         , 1                 , IMM_TYPE_WIDTH , ALU_OP_WIDTH   , RS_ENT_SEL,
-             1                , ADDR_LEN          , 1              , SPECTAG_LEN    , 1         ,
-             REG_SEL          , 1                 ,
-             REG_SEL          , SRC_A_SEL_WIDTH   , 1              ,
-             REG_SEL          , SRC_B_SEL_WIDTH   , 1              ,
-             3                , MEM_TYPE_WIDTH    ,
-             MD_OP_WIDTH      , 1                 ,
-             1                , MD_OUT_SEL_WIDTH
+            {INSN_LEN          , 1                 , IMM_TYPE_WIDTH , ALU_OP_WIDTH   , RS_ENT_SEL,
+             1                 , ADDR_LEN          , 1              , SPECTAG_LEN    , 1         ,
+             REG_SEL           , 1                 ,
+             REG_SEL           , SRC_A_SEL_WIDTH   , 1              ,
+             REG_SEL           , SRC_B_SEL_WIDTH   , 1              ,
+             3                 , MEM_TYPE_WIDTH    ,
+             MD_OP_WIDTH       , 1                 ,
+             1                 , MD_OUT_SEL_WIDTH
             }
         };
 
         inline SlotMeta smDecShard {
-            {      pc, bhr        , desEqSrc1, desEqSrc2},
-            {ADDR_LEN, GSH_BHR_LEN, 1        , 1        }
+            {      pc, desEqSrc1, desEqSrc2},
+            {ADDR_LEN, 1        , 1        }
         };
 
         /**
@@ -149,11 +148,11 @@ namespace kathryn::o3{
      * ROB
      */
     inline SlotMeta smROB{    ///// check it
-        {wbFin      , isBranch, storeBit, rdUse   , rdIdx  ,
-         bhr        , pc      , jumpAddr, jumpCond          },
+        {wbFin, isBranch, storeBit,
+         rdUse, rdIdx   , pc       },
         /////////////////////////////////////////////////
-        {1          , 1       , 1       , 1       , REG_SEL,
-         GSH_BHR_LEN, ADDR_LEN, ADDR_LEN, 1       }
+        {1    , 1       , 1       ,
+         1    , REG_SEL , ADDR_LEN}
     };
 
 }

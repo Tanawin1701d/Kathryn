@@ -131,8 +131,25 @@ namespace kathryn{
             case LOGIC_OP_COUNT: break;
         }
 
-        ValR resultOpr = desOpr.eq(operatedVar);
-        cb.addSt(resultOpr.toString());
+        if ( (_master->getOp() == ARITH_DIV) || (_master->getOp() == ARITH_DIVR)){ ////// it have to check the value
+
+            //////// make zero
+            ValR x(getValR_Type(), bSize, std::to_string(_initVal)+CXX_ULL_SUFFIX);
+            /////// due to ull string init we must cast first
+            ValR zero = x.castBase(x._valType, x._size);
+
+            //////// create the conditional block
+            CbIfCxx& cbIfBlock   = cb.addIf( (_bSliced == zero).toString());
+            CbIfCxx& cbElseBlock = cbIfBlock.addElif("");
+
+            cbIfBlock.addSt(desOpr.eq(zero).toString());   //// the all source and size of thedestination should be equal
+            cbElseBlock.addSt(desOpr.eq(operatedVar).toString());
+        }else{
+            ValR resultOpr = desOpr.eq(operatedVar);
+            cb.addSt(resultOpr.toString());
+        }
+
+
 
     }
 

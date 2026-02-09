@@ -29,6 +29,12 @@ namespace kathryn{
         return *alwaysBlock;
     }
 
+    CbSwitchVerilog& CbBaseVerilog::addSwitch(std::string switchIdent){
+        auto* switchBlock = new CbSwitchVerilog(std::move(switchIdent));
+        appendSubBlock(switchBlock);
+        return *switchBlock;
+    }
+
 
     std::string CbBaseVerilog::toString(int ident){
 
@@ -76,9 +82,16 @@ namespace kathryn{
     _markAsSubChain(isSubChain),
     _cond(std::move(condtion)){}
 
+    CbIfVerilog::~CbIfVerilog(){
+        for (CbIfVerilog* contBlock: _contBlock){
+            delete contBlock;
+        }
+    }
+
     CbIfVerilog& CbIfVerilog::addElif(std::string condition){
-        _contBlock.emplace_back(true,std::move(condition));
-        return _contBlock.back();
+        auto* elifBlock = new CbIfVerilog(true, std::move(condition));
+        _contBlock.push_back(elifBlock);
+        return *elifBlock;
     }
 
     std::string CbIfVerilog::toString(int ident){
@@ -99,8 +112,8 @@ namespace kathryn{
 
         preRet += indentVal + "end ";
 
-        for(CbIfVerilog& contBlock: _contBlock){
-            preRet += contBlock.toString(ident);
+        for(CbIfVerilog* contBlock: _contBlock){
+            preRet += contBlock->toString(ident);
         }
         if (!_markAsSubChain){
             preRet += "\n";
@@ -133,6 +146,43 @@ namespace kathryn{
 
         return preRet;
 
+    }
+
+    /**
+     *
+     * CbSwitchVerilog
+     *
+     */
+
+    CbBaseVerilog& CbSwitchVerilog::addCase(int caseVal){
+        if (caseVal == -1){
+            assert(!isDefaultOccure);
+            isDefaultOccure = true;
+        }
+        _caseIdents.push_back(caseVal);
+        return CbBaseVerilog::addSubBlock();
+    }
+
+    std::string CbSwitchVerilog::toString(int ident){
+        std::string preRet;
+        std::string indentVal = genConString(' ', ident);
+        std::string indentValInside = genConString(' ', ident + Verilog_IDENT);
+
+        preRet += indentVal + "case(" + _switchIdent + ")\n";
+
+        assert(_subBlocks.size() == _caseIdents.size());
+        for (int idx = 0; idx < _subBlocks.size(); idx++){
+
+            std::string finalizedCaseId = _caseIdents[idx] == -1 ? "default"
+                                                                 : std::to_string(_caseIdents[idx]);
+            preRet += indentValInside + finalizedCaseId + ":\n";
+            preRet += indentValInside + " begin\n";
+            preRet += _subBlocks[idx]->toString(ident + 2* Verilog_IDENT) + "\n";
+            preRet += indentValInside + " end\n";
+        }
+
+        preRet += indentVal + "endcase\n";
+        return preRet;
     }
 
 

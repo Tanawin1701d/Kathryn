@@ -25,7 +25,7 @@ namespace kathryn{
         ZifClassAsm(Operable* condition, AssignMeta* assignMeta);
         /** create Event Group*/
         void addZelifStage  (ZifClassAsm* classAsmMeta); //// zelse as well
-        /** build Node*/
+        /** build Node and condUe that conclude this event*/
         AsmNode* createAsmNode();
 
     };
