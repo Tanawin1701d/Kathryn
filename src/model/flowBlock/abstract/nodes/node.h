@@ -36,6 +36,7 @@ namespace kathryn {
         START_NODE,
         WAITCOND_NODE,
         WAITCYCLE_NODE,
+        COUNTER_NODE,
         NODE_TYPE_CNT
     };
 

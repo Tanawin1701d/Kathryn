@@ -14,6 +14,7 @@ namespace kathryn{
     class ModelDebuggable{
 
     public:
+        virtual ~ModelDebuggable() = default;
         /** this is legacy method*/
         virtual std::string getMdDescribe(){
             return "[this component has no description]";
