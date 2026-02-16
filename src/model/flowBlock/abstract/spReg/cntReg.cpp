@@ -56,7 +56,7 @@ namespace kathryn{
             nullptr,
             upCountEvent,
             &((*this) + 1),
-            Slice({1, _cntBitSz}),
+            Slice({0, _cntBitSz}),
             DEFAULT_UE_PRI_INTERNAL_MAX-1,
             cm
         );

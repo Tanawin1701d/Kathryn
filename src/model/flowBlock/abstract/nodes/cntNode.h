@@ -2,8 +2,8 @@
 // Created by tanawin on 14/2/2026.
 //
 
-#ifndef KATHRYN_WAITNODE_H
-#define KATHRYN_WAITNODE_H
+#ifndef MODEL_FLOWBLOCK_ABSTRACT_NODES_CNTNODE_H
+#define MODEL_FLOWBLOCK_ABSTRACT_NODES_CNTNODE_H
 
 #include "node.h"
 #include "model/flowBlock/abstract/spReg/cntReg.h"
@@ -42,6 +42,8 @@ namespace kathryn{
             return _counter->generateEndExpr();
         }
 
+        Operable* getCounter(){return _counter;}
+
         void assign() override{
             assert(_counter!= nullptr);
             /**normal start event*/
@@ -64,4 +66,4 @@ namespace kathryn{
 
 }
 
-#endif //KATHRYN_WAITNODE_H
+#endif //MODEL_FLOWBLOCK_ABSTRACT_NODES_CNTNODE_H

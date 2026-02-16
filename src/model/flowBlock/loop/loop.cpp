@@ -14,7 +14,10 @@ namespace kathryn{
                       FLOW_JO_SUB_FLOW,
                       true
                   }),
-    _loopCount(loopCount){
+    _loopCount(loopCount),
+    _loopId(new expression(calBitUsedInCounter(_loopCount))){
+
+
     }
 
     FlowBlockLoop::~FlowBlockLoop() {
@@ -32,17 +35,6 @@ namespace kathryn{
         assert(_subBlockNodeWrap != nullptr);
 
 
-        //** initialize node*/
-        if (getFlowType() == CWHILE){
-            conditionNode = new PseudoNode(1, BITWISE_OR);
-            conditionNode->setInternalIdent("cConNode" + std::to_string(getGlobalId()));
-        }else{////// SWHILE
-            conditionNode = new StateNode(getClockMode());
-            conditionNode->setInternalIdent("sConNode" + std::to_string(getGlobalId()));
-            fillIntResetToNodeIfThere(conditionNode);
-            fillHoldToNodeIfThere(conditionNode);
-        }
-
         _entNode = new PseudoNode(1, BITWISE_OR);
         _entNode->setInternalIdent("cEntNode" + std::to_string(getGlobalId()));
         addSysNode(_entNode);
@@ -51,51 +43,54 @@ namespace kathryn{
         _loopNode->setInternalIdent("cLoopNode" + std::to_string(getGlobalId()));
         addSysNode(_loopNode);
 
-        _cntNode = new CounterReg(_loopCount);
+        _cntNode = new CounterNode(_loopCount, getClockMode());
+        _cntNode->setInternalIdent("countNode" + std::to_string(getGlobalId()));
+        addSysNode(_cntNode);
+
         _exitNode = new PseudoNode(1, BITWISE_AND);
+        _exitNode->setInternalIdent("cExitNode" + std::to_string(getGlobalId()));
+        addSysNode(_exitNode);
 
-        exitNode = new PseudoNode()
 
-        exitNode          = new PseudoNode(1, BITWISE_OR);
-        addSysNode(exitNode);
-        resultNodeWrapper = new NodeWrap();
-        ////////////////////////////////////////////////////////////////////
-
-        /** do sub block dep init*/
-        subBlockNodeWrap->addDependNodeToAllNode(conditionNode, _purifiedCondExpr);
-        subBlockNodeWrap->assignAllNode();
-
-        /**do condition node Dep*/
-            //// codition trigger from outside willbe trigger in upper node
-        conditionNode->addDependNode(subBlockNodeWrap->getExitNode(),
-                                     subBlockNodeWrap->isThereForceExitNode()?
-                                        ( &(~(*subBlockNodeWrap->getForceExitNode()->getExitOpr())) ):
-                                        nullptr
-                                     );
+        ////// handle start signal
         if(isThereIntStart()){
-            conditionNode->addDependNode(intNodes[INT_START], nullptr);
+            _entNode->addDependNode(intNodes[INT_START], nullptr);
         }
-        /**do exit NOde Dep*/
-        if (!_fallTrue) {
-            exitNode->addDependNode(conditionNode, &(!(*_purifiedCondExpr)) );
-        }
-        if (subBlockNodeWrap->isThereForceExitNode()){
-            exitNode->addDependNode(subBlockNodeWrap->getForceExitNode(), nullptr);
-        }
-
-        if (_fallTrue && (!subBlockNodeWrap->isThereForceExitNode())){
-            ///////// incase there is no exit source we warning user that there is infinite loop
-            /////////// TODO warning
-            exitDummy = new DummyNode(&makeOprVal("exitDummy",1, 0));
-            addSysNode(exitDummy);
-            exitNode->addDependNode(exitDummy, nullptr);
-        }
-
-        exitNode->assign();
+        ////// no need to reset or hold the system
 
 
-        resultNodeWrapper->addEntraceNode(conditionNode);
-        resultNodeWrapper->addExitNode(exitNode);
+        ////// loop node
+        _loopNode->addDependNode(_entNode, nullptr);
+        _loopNode->addDependNode(_subBlockNodeWrap->getExitNode(),
+                                 &(~(*_cntNode->getExitOpr())));
+        _loopNode->assign();
+
+        ////// counter Node
+        _cntNode->addDependNode(_entNode, nullptr);
+        _cntNode->makeIncCounterEvent(_subBlockNodeWrap->getExitNode());
+        _cntNode->assign();
+
+        ////// exit node
+        _exitNode->addDependNode(_subBlockNodeWrap->getExitNode(),
+                                 _cntNode->getExitOpr());
+        _exitNode->assign();
+
+        /////// sub block trigger
+        _subBlockNodeWrap->addDependNodeToAllNode(_loopNode, nullptr);
+        _subBlockNodeWrap->assignAllNode();
+
+
+        _resultNodeWrapper = new NodeWrap();
+        _resultNodeWrapper->addEntraceNode(_entNode);
+        _resultNodeWrapper->addExitNode(_exitNode);
+        if (_subBlockNodeWrap->getCycleUsed() != IN_CONSIST_CYCLE_USED){
+            _resultNodeWrapper->setCycleUsed(_subBlockNodeWrap->getCycleUsed() * _loopCount);
+        }
+        if (_subBlockNodeWrap->isThereForceExitNode()){
+            _resultNodeWrapper->addForceExitNode(_subBlockNodeWrap->getForceExitNode());
+        }
+
+        (*_loopId) = (*_cntNode->getCounter());
 
     }
 
@@ -108,28 +103,28 @@ namespace kathryn{
 
     void FlowBlockLoop::addSubFlowBlock(FlowBlockBase *subBlock) {
         assert(subBlock != nullptr);
-        assert(!isGetFlowBlockYet);
-        isGetFlowBlockYet = true;
+        assert(!_isGetFlowBlockYet);
+        _isGetFlowBlockYet = true;
         FlowBlockBase::addSubFlowBlock(subBlock);
     }
 
     NodeWrap* FlowBlockLoop::sumarizeBlock() {
-        assert(resultNodeWrapper != nullptr);
-        return resultNodeWrapper;
+        assert(_resultNodeWrapper != nullptr);
+        return _resultNodeWrapper;
     }
 
     void FlowBlockLoop::onAttachBlock() {
         ctrl->on_attach_flowBlock(this);
         /** in cwhile we implcitcally add sub block to system*/
         auto sb = genImplicitSubBlk(PARALLEL_NO_SYN);
-        implicitFlowBlock = sb;
+        _implicitFlowBlock = sb;
         sb->onAttachBlock();
     }
 
     void FlowBlockLoop::onDetachBlock() {
-        assert(implicitFlowBlock != nullptr);
-        implicitFlowBlock->onDetachBlock();
-        assert(isGetFlowBlockYet);
+        assert(_implicitFlowBlock != nullptr);
+        _implicitFlowBlock->onDetachBlock();
+        assert(_isGetFlowBlockYet);
         ctrl->on_detach_flowBlock(this);
     }
 
@@ -144,15 +139,15 @@ namespace kathryn{
     void FlowBlockLoop::addMdLog(MdLogVal* mdLogVal){
 
         mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() + " ]");
-        mdLogVal->addVal("entNode " + entNode->getMdIdentVal() + " " + entNode->getMdDescribe());
-        mdLogVal->addVal("loopNode " + entNode->getMdIdentVal() + " " + loopNode->getMdDescribe());
-        mdLogVal->addVal("exitNode " + exitNode->getMdIdentVal() + " " + exitNode->getMdDescribe());
+        mdLogVal->addVal("entNode " + _entNode->getMdIdentVal() + " " + _entNode->getMdDescribe());
+        mdLogVal->addVal("loopNode " + _entNode->getMdIdentVal() + " " + _loopNode->getMdDescribe());
+        mdLogVal->addVal("cntNode " + _cntNode->getMdIdentVal() + " " + _cntNode->getMdDescribe());
+        mdLogVal->addVal("exitNode " + _exitNode->getMdIdentVal() + " " + _exitNode->getMdDescribe());
         mdLogVal->addVal("resultNodeWrap is" +
-                         resultNodeWrapper->getMdIdentVal() + " " + resultNodeWrapper->getMdDescribe());
+            _resultNodeWrapper->getMdIdentVal() + " " + _resultNodeWrapper->getMdDescribe());
 
         auto subLog = mdLogVal->makeNewSubVal();
-        implicitFlowBlock->addMdLog(subLog);
-
+        _implicitFlowBlock->addMdLog(subLog);
     }
 
 }

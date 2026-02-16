@@ -2,8 +2,8 @@
 // Created by tanawin on 3/1/2567.
 //
 
-#ifndef KATHRYN_WAITREG_H
-#define KATHRYN_WAITREG_H
+#ifndef MODEL_FLOWBLOCK_ABSTRACT_SPREG_CNTREG_H
+#define MODEL_FLOWBLOCK_ABSTRACT_SPREG_CNTREG_H
 
 #include <iostream>
 #include <cmath>
@@ -62,4 +62,4 @@ namespace kathryn{
 
 }
 
-#endif //KATHRYN_WAITREG_H
+#endif //MODEL_FLOWBLOCK_ABSTRACT_SPREG_CNTREG_H

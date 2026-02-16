@@ -21,6 +21,7 @@
 #include "model/flowBlock/loop/whileBase.h"
 #include "model/flowBlock/loop/doWhileBase.h"
 #include "model/flowBlock/loop/cbreak.h"
+#include "model/flowBlock/loop/loop.h"
 #include "model/flowBlock/cond/zif.h"
 #include "model/flowBlock/cond/zelif.h"
 #include "model/flowBlock/cond/if.h"
@@ -37,6 +38,7 @@
 #include "model/flowBlock/state/ztate.h"
 #include "model/flowBlock/state/zcase.h"
 #include "model/flowBlock/pipeStream/pipeStream.h"
+
 
 /** data Structure*/
 

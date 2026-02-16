@@ -8,13 +8,19 @@
 #include "model/flowBlock/abstract/flowBlock_Base.h"
 #include "model/flowBlock/abstract/loopStMacro.h"
 #include "model/flowBlock/abstract/nodes/node.h"
-#include "model/flowBlock/abstract/spReg/cntReg.h"
+#include "model/flowBlock/abstract/nodes/cntNode.h"
+
+
+#define cloop(kathrynLoopName, loopNumber) \
+    for(auto kathrynBlock = new FlowBlockLoop(loopNumber); kathrynBlock->doPrePostFunction(); kathrynBlock->step()) \
+        for (Operable& kathrynLoopName = kathrynBlock->getLoopId(); !kathrynBlock->isGottenLoopVar(); kathrynBlock->setGetLoopVar())
 
 namespace kathryn{
 
     class FlowBlockLoop: public FlowBlockBase, public LoopStMacro{
     protected:
         int _loopCount = 0;
+        bool getLoopVar = false;
         //////// block
         FlowBlockBase* _implicitFlowBlock = nullptr;
         bool           _isGetFlowBlockYet = false;
@@ -23,8 +29,10 @@ namespace kathryn{
         NodeWrap*      _subBlockNodeWrap  = nullptr;
         PseudoNode*    _entNode           = nullptr;
         PseudoNode*    _loopNode          = nullptr;
-        CounterReg*    _cntNode           = nullptr;
+        CounterNode*    _cntNode          = nullptr;
         PseudoNode*    _exitNode          = nullptr;
+        //////// user wire
+        expression*    _loopId            = nullptr;
 
 
         //// it is wrap is as same as result but it is used for loop assignment
@@ -55,6 +63,12 @@ namespace kathryn{
         void doPostFunction() override;
 
         void addMdLog(MdLogVal* mdLogVal) override;
+
+        Operable& getLoopId(){return *_loopId;}
+
+        void setGetLoopVar(){ getLoopVar = true; }
+        bool isGottenLoopVar(){return getLoopVar;}
+        
     };
 
 }
