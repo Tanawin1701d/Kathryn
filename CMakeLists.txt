@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
 project(Kathryn)
-
 set(CMAKE_CXX_STANDARD 17)
 
 #add_compile_options(-O3)
@@ -8,19 +7,17 @@ set(CMAKE_CXX_STANDARD 17)
 #set(CMAKE_BUILD_TYPE Debug)
 #add_definitions(-DMODELCOMPILEVB) ### model compile verbose
 
-#option( BUILD_EXT_SIM "buildExternalSimulator(VERILATOR)" ON)
-#if(BUILD_EXT_SIM)
-#    target_compile_definitions(Kathryn PRIVATE BUILD_EXT_SIM)
-#endif()
+option(BUILD_RIDECORE "Enable RideCore integration" OFF) # for cmake side
+if (BUILD_RIDECORE)
+    add_definitions(-DBUILD_RIDECORE)   # for CXX code side
+endif ()
+
+
 
 add_definitions(-DNOTEXCEED64)
 add_compile_definitions(KATHRYN_PROJ_FOLD_PATH=${CMAKE_SOURCE_DIR})
 
 INCLUDE_DIRECTORIES( ./src )
-
-
-
-
 
 FILE(GLOB_RECURSE SRC_ABS             RELATIVE ${CMAKE_SOURCE_DIR} "src/abstract/*.cpp")
 FILE(GLOB_RECURSE SRC_APP             RELATIVE ${CMAKE_SOURCE_DIR} "src/application/*.cpp")
@@ -36,18 +33,13 @@ FILE(GLOB_RECURSE SRC_LIB             RELATIVE ${CMAKE_SOURCE_DIR} "src/lib/*.cp
 FILE(GLOB_RECURSE SRC_MODEL_COMPILE   RELATIVE ${CMAKE_SOURCE_DIR} "src/modelCompile/proxyEventBase.cpp")
 
 
-INCLUDE_DIRECTORIES( ./extSim/ridecore/src/test/ridecoreVer)
-add_subdirectory(extSim/ridecore/src/fpga)
-FILE(GLOB_RECURSE SRC_RIDE_SIM        RELATIVE ${CMAKE_SOURCE_DIR} "extSim/ridecore/src/test/ridecoreVer/*.cpp")
-###### BUILD SIM
-#if(BUILD_EXT_SIM)
-#
-#
-#else()
-#
-#    set(SRC_RIDE_SIM "")
-#
-#endif()
+if (BUILD_RIDECORE)
+    INCLUDE_DIRECTORIES(./extSim/ridecore/src/test/ridecoreVer)
+    add_subdirectory(extSim/ridecore/src/fpga)
+    FILE(GLOB_RECURSE SRC_RIDE_SIM RELATIVE ${CMAKE_SOURCE_DIR} "extSim/ridecore/src/test/ridecoreVer/*.cpp")
+else ()
+    set(SRC_RIDE_SIM "")
+endif ()
 
 
 add_executable(Kathryn
@@ -70,11 +62,8 @@ add_executable(Kathryn
         ${SRC_RIDE_SIM}
 
         #blinkSample.cpp
-        #src/params/prjParam.h
 )
 
-###if(BUILD_EXT_SIM)
+if (BUILD_RIDECORE)
     target_link_libraries(Kathryn PRIVATE verilator_ridecore)
-###endif()
-
-
+endif ()

@@ -36,11 +36,12 @@ namespace kathryn{
         ZTATE_BLOCK         = 21,
         ZCASE_BLOCK         = 22,
         PIPE_STREAM         = 23,
+        CLOOP               = 24,
         /** new flow block should be append here*/
 
         /************************************** **/
-        DUMMY_BLOCK         = 24,
-        FLOW_BLOCK_COUNT    = 25
+        DUMMY_BLOCK         = 25,
+        FLOW_BLOCK_COUNT    = 26
     };
 
     std::string FBT_to_string(FLOW_BLOCK_TYPE fbt);

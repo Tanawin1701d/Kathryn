@@ -17,7 +17,8 @@ namespace kathryn{
         "OPR_NODE",
         "START_NODE",
         "WAITCOND_NODE",
-        "WAITCYCLE_NODE"
+        "WAITCYCLE_NODE",
+        "COUNTER_NODE"
         };
         return mapper[nt];
 

@@ -7,21 +7,19 @@
 #include "cfe.h"
 
 #include "example/riscv/generation/RISCV_gen.h"
-#include "example/cacheAc/simpleServer/unitTest/systemTest.h"
 #include "example/riscv/simulation/RISCV_sim.h"
 #include "example/riscv/simulation/RISCV_sim_sort.h"
 #include "test/autoSim/simMng.h"
 #include "test/autoGen/genMng.h"
 #include "example/o3/simulation/o3_sim.h"
 #include "example/o3/simCompare/ctrl/simCtrlKride.h"
-#include "example/o3/simCompare/ctrl/simCtrlComb.h"
 #include "example/o3/generation/O3_gen.h"
 
 
-///#ifdef BUILD_EXT_SIM
+#ifdef BUILD_RIDECORE
+#include "example/o3/simCompare/ctrl/simCtrlComb.h"
 #include "simCtrlRide.h"
-///#endif
-
+#endif
 
 namespace kathryn{
 
@@ -74,6 +72,7 @@ namespace kathryn{
     }
 
     void test_kride_sim(PARAM& params){
+        
         o3::KRIDE_MNG krideSimMng;
         krideSimMng.start(params);
         std::cout << TC_GREEN << "finish kride sim [sim]" << TC_DEF << std::endl;
@@ -82,21 +81,27 @@ namespace kathryn{
 
     void test_ride_sim(PARAM& params){
 
-////#ifdef BUILD_EXT_SIM
-
+#ifdef BUILD_RIDECORE
         o3::RIDE_MNG rideSimMng;
         rideSimMng.start(params);
         std::cout << TC_GREEN << "finish ride sim [sim]" << TC_DEF << std::endl;
-
-
-////#endif
+#else
+        std::cout << "RIDE simulation is not enabled. Please build with BUILD_RIDECORE=ON" << std::endl;
+#endif
 
     }
 
     void test_comb_kride_ride(PARAM& params){
+
+#ifdef BUILD_RIDECORE
         o3::COMB_MNG combSimMng;
         combSimMng.start(params);
         std::cout << TC_GREEN << "finish comb kride ride sim [sim]" << TC_DEF << std::endl;
+#else
+        std::cout << "RIDE simulation is not enabled. Please build with BUILD_RIDECORE=ON" << std::endl;
+#endif
+
+
     }
 
     void test_o3_gen(PARAM& params){
