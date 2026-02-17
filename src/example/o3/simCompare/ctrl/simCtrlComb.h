@@ -5,6 +5,8 @@
 #ifndef EXAMPLE_O3_SIMCOMPARE_CTRL_SIMCTRLCOMB_H
 #define EXAMPLE_O3_SIMCOMPARE_CTRL_SIMCTRLCOMB_H
 
+#ifdef BUILD_RIDECORE
+
 #include "simCtrlKride.h"
 #include "simCtrlRide.h"
 #include "util/fileWriter/slotWriter/wslotWriter.h"
@@ -125,7 +127,7 @@ namespace kathryn::o3{
 
 }
 
-
+#endif
 
 
 #endif //EXAMPLE_O3_SIMCOMPARE_CTRL_SIMCTRLCOMB_H

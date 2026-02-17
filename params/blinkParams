@@ -1,0 +1,5 @@
+; path to riscv result folder
+; do not forget to add / at the end of any file/folder path
+
+vcdFile = <your vcd file path>/
+profFile = <your profiler file path>/

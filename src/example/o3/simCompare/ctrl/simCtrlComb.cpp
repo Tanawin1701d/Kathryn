@@ -2,6 +2,9 @@
 // Created by tanawin on 1/1/26.
 //
 
+
+#ifdef BUILD_RIDECORE
+
 #include "simCtrlComb.h"
 
 #include <utility>
@@ -123,3 +126,5 @@ namespace kathryn::o3{
         }
     }
 }
+
+#endif //BUILD_RIDECORE

@@ -91,5 +91,44 @@ READER MIGHT THINK THAT WE ARE ALTERNATIVE SYSTEM-C OR PIPELINE-C. IN FACT, WE C
 - this example demonstrates complex cycle-accurate pipeline management in Kathryn, the system synchronize fetchChannel and decodeChannel together through ```pip``` and ```zync``` block
 - Additionally, we support  various type of ```zync``` block such as ```zyncc(channel, condition)```. The ```zyncc``` block will be conducted if only ```condition``` is valid.
 - The channel can be stalled or killed using command in line 22 - 23
+
+### Quick Start
+
+#### 1. test the system
+
+``` bash
+# 1. download the source code 
+git clone https://github.com/kathryn-tools/kathryn.git
+# 2. change the directory  
+cd kathryn
+# 3. make and change the build directory
+mkdir build && cd build
+# 4. build the system
+cmake -DBUILD_RIDECORE=OFF ..
+make -j
+# 5. change the output directory (prefix) variable in params/smParams 
+# 6. run the test
+./kathryn ../params/smParams
+```
+
+#### 2. run the blink example
+Blink example help you to understand how to create a simple design with Kathryn.
+
+``` bash
+# 1. download the source code 
+git clone https://github.com/kathryn-tools/kathryn.git
+# 2. change the directory  
+cd kathryn
+# 3. uncomment blinkSample.cpp in add_executable in CMakeLists.txt
+# 4. make and change the build directory
+mkdir build && cd build
+# 5. build the system
+cmake -DBUILD_RIDECORE=OFF ..
+make -j
+# 6. change the output directory (vcdFile/profFile) variable in params/blinkParams 
+# 7. run the test
+./kathryn ../params/blinkParams
+```
+
 ### Curious to dive deeper?
 - Visit the official [Kathryn website](https://www.kathryn-tools.org/) for more details.
