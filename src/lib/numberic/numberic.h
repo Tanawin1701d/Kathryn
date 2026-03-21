@@ -10,7 +10,7 @@
 
 namespace kathryn{
 
-    Operable& ext(Operable& value, int targetSize, Operable& sign);
+    Operable& ext(Operable& value, int target_size, Operable& sign);
 
 }
 

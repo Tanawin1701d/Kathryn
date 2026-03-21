@@ -13,19 +13,19 @@
 // namespace kathryn::o3{
 //
 //     struct Pht{ ///// pattern history table
-//         mMem(pht0, GSH_PHT_NUM, 2); ///// for fetch
-//         mMem(pht1, GSH_PHT_NUM, 2); ///// for rob
+//         m_mem(pht0, GSH_PHT_NUM, 2); ///// for fetch
+//         m_mem(pht1, GSH_PHT_NUM, 2); ///// for rob
 //
 //         Reg& read(opr& addr, bool first){
 //             ///// target resource
-//             MemBlock& targetBlock = first ? pht0 : pht1;
-//             mReg(readResult, 2);
+//             MemBlock& target_block = first ? pht0 : pht1;
+//             m_reg(read_result, 2);
 //             ///// read the register
 //             SET_CLK_MODE2NEG_EDGE();
-//             readResult <<= targetBlock[addr];
+//             read_result <<= target_block[addr];
 //             SET_CLK_MODE2DEF();
 //
-//             return readResult;
+//             return read_result;
 //         }
 //
 //         void write(opr& addr, opr& data){
@@ -40,65 +40,65 @@
 //     struct Gshare{
 //         Mpft&   mpft;
 //         Pht     phts;
-//         RegSlot bhrs{smBhrs};
+//         RegSlot bhrs{sm_bhrs};
 //
-//         mReg (bhrMaster, GSH_BHR_LEN);
-//         mWire(fetPhtVal, 2); ///// from fetch the data system
-//         mWire(robPhtVal, 2); ///// from rob fetch
+//         m_reg (bhr_master, GSH_BHR_LEN);
+//         m_wire(fet_pht_val, 2); ///// from fetch the data system
+//         m_wire(rob_pht_val, 2); ///// from rob fetch
 //
 //         Gshare(Mpft& mpft): mpft(mpft){
-//             bhrs     .makeResetEvent(0);
-//             bhrMaster.makeResetEvent(0);
+//             bhrs     .make_reset_event(0);
+//             bhr_master.make_reset_event(0);
 //
 //         }
 //
-//         void buildPhtReader(opr& fetAddr,
-//                             opr& robAddr){
-//             fetPhtVal = phts.read(fetAddr, true ); ///// fetch got first bank
-//             robPhtVal = phts.read(robAddr, false); ///// rob got second bank
+//         void build_pht_reader(opr& fet_addr,
+//                             opr& rob_addr){
+//             fet_pht_val = phts.read(fet_addr, true ); ///// fetch got first bank
+//             rob_pht_val = phts.read(rob_addr, false); ///// rob got second bank
 //         }
 //
-//         void onSucPred_bhrUpdate(opr& sucTag,
-//                                  opr& fetchHitAndTake){
-//             bhrs[OH(sucTag)] <<= gr(bhrMaster(0, GSH_BHR_LEN - 1), fetchHitAndTake);
+//         void onSucPred_bhrUpdate(opr& suc_tag,
+//                                  opr& fetch_hit_and_take){
+//             bhrs[OH(suc_tag)] <<= gr(bhr_master(0, GSH_BHR_LEN - 1), fetch_hit_and_take);
 //         }
 //
-//         void onMisPred_bhrUpdate(opr& misTag){
+//         void onMisPred_bhrUpdate(opr& mis_tag){
 //
-//             opr& fixBhr = bhrs[OH(misTag)].v();
+//             opr& fix_bhr = bhrs[OH(mis_tag)].v();
 //             for (int idx = 0; idx < SPECTAG_LEN; idx++){
-//                 bhrs(idx) <<= fixBhr;
+//                 bhrs(idx) <<= fix_bhr;
 //             }
-//             bhrMaster <<= fixBhr;
+//             bhr_master <<= fix_bhr;
 //
 //         }
 //
 //         ///// it will invoke when btb is hit
-//         void onCommit_bhrUpdate(opr& fetchBtbHit,
-//                                 opr& fetchPredCond){
+//         void onCommit_bhrUpdate(opr& fetch_btb_hit,
+//                                 opr& fetch_pred_cond){
 //             /////// bhrs
-//             zif (fetchBtbHit){
+//             zif (fetch_btb_hit){
 //                 for (int idx = 0; idx < SPECTAG_LEN; idx++){
-//                     bhrs(idx) <<= gr(bhrs(idx).sl(0, GSH_BHR_LEN - 1),  fetchPredCond);
+//                     bhrs(idx) <<= gr(bhrs(idx).sl(0, GSH_BHR_LEN - 1),  fetch_pred_cond);
 //                 }
-//                 bhrMaster <<= gr(bhrMaster(0, GSH_BHR_LEN - 1), fetchPredCond);
+//                 bhr_master <<= gr(bhr_master(0, GSH_BHR_LEN - 1), fetch_pred_cond);
 //             }
 //         }
 //
-//         void onCommit_PhtUpdate(opr& commitPhtAddr,
-//                                 opr& commitCond){
+//         void onCommit_PhtUpdate(opr& commit_pht_addr,
+//                                 opr& commit_cond){
 //
 //             /////// calculate new value and put it back
-//             mVal(PHTENEG, 2, 0b00);
-//             mVal(PHTEPOS, 2, 0b11);
+//             m_val(PHTENEG, 2, 0b00);
+//             m_val(PHTEPOS, 2, 0b11);
 //             /////// for 1 +1 /  for 0 -1  to operate the saved state machine
-//             opr& robPhtValOpVal = mux(commitCond, commitCond.uext(2), PHTENEG);
+//             opr& rob_pht_val_op_val = mux(commit_cond, commit_cond.uext(2), PHTENEG);
 //
-//             opr& robPhtValNew = mux( (robPhtVal == PHTENEG) && (~commitCond), PHTENEG,
-//                                 mux((robPhtVal == PHTEPOS) && ( commitCond), PHTEPOS,
-//                                 robPhtVal + robPhtValOpVal
+//             opr& rob_pht_val_new = mux( (rob_pht_val == PHTENEG) && (~commit_cond), PHTENEG,
+//                                 mux((rob_pht_val == PHTEPOS) && ( commit_cond), PHTEPOS,
+//                                 rob_pht_val + rob_pht_val_op_val
 //                                 ));
-//             phts.write(commitPhtAddr, robPhtValNew);
+//             phts.write(commit_pht_addr, rob_pht_val_new);
 //         }
 //
 //     };

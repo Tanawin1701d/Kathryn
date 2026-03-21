@@ -6,12 +6,12 @@
 #define KATHRYN_SRC_EXAMPLE_O3_PARAMETER_H
 
 #include "kathryn.h"
-#include "isaParam.h"
+#include "isa_param.h"
 
 namespace kathryn::o3{
 
 #define str(name) std::string(name)
-#define toS(value) std::to_string(value)
+#define to_s(value) std::to_string(value)
 #define O3_PARAM_STR(name) constexpr char name[] = #name;
 
 ///#define BTB_ENABLE
@@ -45,30 +45,30 @@ namespace kathryn::o3{
     O3_PARAM_STR(invalid);
 
 
-    O3_PARAM_STR(rdIdx);
-    O3_PARAM_STR(rdUse);
+    O3_PARAM_STR(rd_idx);
+    O3_PARAM_STR(rd_use);
 
-    O3_PARAM_STR(aluOp);
+    O3_PARAM_STR(alu_op);
     O3_PARAM_STR(opcode);
 
-    O3_PARAM_STR(isBranch);
+    O3_PARAM_STR(is_branch);
     O3_PARAM_STR(pred_addr);
     O3_PARAM_STR(spec);
-    O3_PARAM_STR(specTag);
+    O3_PARAM_STR(spec_tag);
 
     /// load store buffer
     O3_PARAM_STR(complete);
     O3_PARAM_STR(mem_addr);
 
     O3_PARAM_STR(busy);
-    O3_PARAM_STR(sortBit);
+    O3_PARAM_STR(sort_bit);
 
 
-    O3_PARAM_STR(rsEnt);
+    O3_PARAM_STR(rs_ent);
 
     O3_PARAM_STR(rs_valid_);
 
-    O3_PARAM_STR(illLegal);
+    O3_PARAM_STR(ill_legal);
 
     O3_PARAM_STR(dmem_size);
     O3_PARAM_STR(dmem_type);
@@ -79,11 +79,11 @@ namespace kathryn::o3{
     O3_PARAM_STR(md_req_in_signed_2);
     O3_PARAM_STR(md_req_out_sel);
 
-    O3_PARAM_STR(desEqSrc1);
-    O3_PARAM_STR(desEqSrc2);
+    O3_PARAM_STR(des_eq_src1);
+    O3_PARAM_STR(des_eq_src2);
     ////// start from ldsdt
-    O3_PARAM_STR(stBufData); //// the data from
-    O3_PARAM_STR(stBufHit);
+    O3_PARAM_STR(st_buf_data); //// the data from
+    O3_PARAM_STR(st_buf_hit);
     ////// start from rsv
     O3_PARAM_STR(imm);
     O3_PARAM_STR(imm_br);
@@ -98,21 +98,21 @@ namespace kathryn::o3{
     O3_PARAM_STR(mpft_valid)
     O3_PARAM_STR(mpft_fixTag)
     //// for RRF
-    O3_PARAM_STR(rrfValid);
-    O3_PARAM_STR(rrfData);
+    O3_PARAM_STR(rrf_valid);
+    O3_PARAM_STR(rrf_data);
     //// for ARF
-    O3_PARAM_STR(arfBusy);
-    O3_PARAM_STR(arfRenamed);
-    O3_PARAM_STR(arfData);
+    O3_PARAM_STR(arf_busy);
+    O3_PARAM_STR(arf_renamed);
+    O3_PARAM_STR(arf_data);
     //// for ROB
-    O3_PARAM_STR(wbFin);
-    O3_PARAM_STR(storeBit);
+    O3_PARAM_STR(wb_fin);
+    O3_PARAM_STR(store_bit);
 
     //// for Exec Unit
-    O3_PARAM_STR(bpValid);
+    O3_PARAM_STR(bp_valid);
 
 
-        ////// rsIdx use with data in the system
+        ////// rs_idx use with data in the system
 
 ///// IMEM parameter
 constexpr int IMEM_IDX_WIDTH = 11;

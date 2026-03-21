@@ -6,9 +6,9 @@
 #define KATHRYN_SRC_EXAMPLE_O3_FETCH_H
 
 #include "kathryn.h"
-#include "stageStruct.h"
+#include "stage_struct.h"
 #include "parameter.h"
-#include "example/o3/simulation/proberGrp.h" ///DC
+#include "example/o3/simulation/prober_grp.h" ///DC
 #include "btb.h"
 #include "gshare.h"
 
@@ -17,36 +17,36 @@ namespace kathryn::o3{
 
     struct FetchMod : Module{
         PipStage& pm;
-        Reg&      curPc;
+        Reg&      cur_pc;
 // #ifdef BTB_ENABLE
 //         Btb       btb;
 //         Gshare    gshare;
 // #endif
-        WireSlot& cmSlot;
+        WireSlot& cm_slot;
 
-        // mWire(fetchPredCond   , 1); /// from
-        // mWire(fetchBtbHit     , 1);
-        // mWire(fetchHitAndTaken, 1);
-        // mWire(fetchBtbAddr    , ADDR_LEN);
+        // m_wire(fetch_pred_cond   , 1); /// from
+        // m_wire(fetch_btb_hit     , 1);
+        // m_wire(fetch_hit_and_taken, 1);
+        // m_wire(fetch_btb_addr    , ADDR_LEN);
 
         explicit FetchMod(PipStage&  pm,
-                          TagMgmt& tagMgmt,
-                          WireSlot& commitSlot) :
+                          TagMgmt& tag_mgmt,
+                          WireSlot& commit_slot) :
         pm        (pm),
-        curPc     (pm.ft.curPc),
+        cur_pc     (pm.ft.cur_pc),
 // #ifdef BTB_ENABLE
-//         gshare    (tagMgmt.mpft),
+//         gshare    (tag_mgmt.mpft),
 // #endif
-        cmSlot    (commitSlot){
-            curPc.makeResetEvent();
-            pm.ft.raw.makeResetEvent();
+        cm_slot    (commit_slot){
+            cur_pc.make_reset_event();
+            pm.ft.raw.make_reset_event();
         }
 
         void flow(){
             ///// pipeline manager
-            pip(pm.ft.sync){ autoSync     initProbe(pipProbGrp .fetch); ///CTRL FETCH
-                zync(pm.dc.sync){          initProbe(zyncProbGrp.fetch);///CTRL FETCH
-                    selLog();
+            pip(pm.ft.sync){ auto_sync     init_probe(pip_prob_grp .fetch); ///CTRL FETCH
+                zync(pm.dc.sync){          init_probe(zync_prob_grp.fetch);///CTRL FETCH
+                    sel_log();
                 }
             }
         }
@@ -54,84 +54,84 @@ namespace kathryn::o3{
 // #ifdef BTB_ENABLE
 //
 //             ///// search data from btb for fetch
-//             std::tie(fetchBtbHit, fetchBtbAddr) =
-//                 btb.onInquire(curPc, pm.ft.raw(invalid2));
+//             std::tie(fetch_btb_hit, fetch_btb_addr) =
+//                 btb.on_inquire(cur_pc, pm.ft.raw(invalid2));
 //             ///// search data from pht for fetch
-//             gshare.buildPhtReader(convertPcToPhtIdx(curPc         , gshare.bhrMaster),
-//                                   convertPcToPhtIdx(cmSlot(pc), cmSlot(bhr) ));
-//             fetchPredCond    = (gshare.fetPhtVal > 1);
-//             fetchHitAndTaken = fetchBtbHit & fetchPredCond;
+//             gshare.build_pht_reader(convert_pc_to_pht_idx(cur_pc         , gshare.bhr_master),
+//                                   convert_pc_to_pht_idx(cm_slot(pc), cm_slot(bhr) ));
+//             fetch_pred_cond    = (gshare.fet_pht_val > 1);
+//             fetch_hit_and_taken = fetch_btb_hit & fetch_pred_cond;
 //
 // #endif
 
-//                fetchHitAndTaken = 0;
+//                fetch_hit_and_taken = 0;
 
 
-        // opr& convertPcToPhtIdx(opr& inPc, opr& inBhr){
-        //     return inPc.sl(GSH_BHR_ST_IDX, GSH_BHR_END_IDX) ^ inBhr;
+        // opr& convert_pc_to_pht_idx(opr& in_pc, opr& in_bhr){
+        //     return in_pc.sl(GSH_BHR_ST_IDX, GSH_BHR_END_IDX) ^ in_bhr;
         // }
 
-//         void onSucPred(opr& sucTag){
+//         void on_suc_pred(opr& suc_tag){
 // #ifdef BTB_ENABLE
 //
-//             gshare.onSucPred_bhrUpdate(sucTag,
-//                                        fetchHitAndTaken);
+//             gshare.onSucPred_bhrUpdate(suc_tag,
+//                                        fetch_hit_and_taken);
 // #endif
 //
 //         }
 
-//         void onMisPred(opr& misTag, opr& fixedPc){
+//         void on_mis_pred(opr& mis_tag, opr& fixed_pc){
 //             ///// fixed Pc
-//             pm.ft.incPc(fixedPc, true);
+//             pm.ft.inc_pc(fixed_pc, true);
 //             ///// fix gshare predictor
 // #ifdef BTB_ENABLE
-//             gshare.onMisPred_bhrUpdate(misTag);
+//             gshare.onMisPred_bhrUpdate(mis_tag);
 // #endif
 //         }
 
 
-//         void onBranchCommit(){
+//         void on_branch_commit(){
 // #ifdef BTB_ENABLE
 //             ////// update btb data
-//             btb.onCommit(cmSlot(pc), cmSlot(jumpAddr));
+//             btb.on_commit(cm_slot(pc), cm_slot(jump_addr));
 //             ////// update gshare predictor
-//             opr& phtAddr = convertPcToPhtIdx(cmSlot(pc), cmSlot(bhr));
-//             gshare.onCommit_PhtUpdate(phtAddr, cmSlot(jumpCond));
+//             opr& pht_addr = convert_pc_to_pht_idx(cm_slot(pc), cm_slot(bhr));
+//             gshare.onCommit_PhtUpdate(pht_addr, cm_slot(jump_cond));
 //             ////// the bhr update //// I dont know why they do something like this
-//             gshare.onCommit_bhrUpdate(fetchBtbHit, fetchPredCond);
+//             gshare.onCommit_bhrUpdate(fetch_btb_hit, fetch_pred_cond);
 // #endif
 //         }
 
-        void selLog(){
+        void sel_log(){
             ///// ignore first 4 bytes, because instruction is 4 bytes long
-            opr& selIdx = curPc(2, 4);
+            opr& sel_idx = cur_pc(2, 4);
             ///// cal next pc
-            opr& cal_npc    = mux(selIdx.sl(0), curPc + 4,
-                                  curPc + 8);
-            pm.ft.incPc(cal_npc);
+            opr& cal_npc    = mux(sel_idx.sl(0), cur_pc + 4,
+                                  cur_pc + 8);
+            pm.ft.inc_pc(cal_npc);
             ///// slot assign
             RegSlot& raw = pm.ft.raw;
-            raw(invalid2) <<= selIdx.sl(0);
-            raw(pc)       <<= curPc;
+            raw(invalid2) <<= sel_idx.sl(0);
+            raw(pc)       <<= cur_pc;
 
             raw(npc)      <<= cal_npc;
             ////// read instruction from main memory
-            auto& i0 = pm.ft.iMem0;
-            auto& i1 = pm.ft.iMem1;
-            auto& i2 = pm.ft.iMem2;
-            auto& i3 = pm.ft.iMem3;
+            auto& i0 = pm.ft.i_mem0;
+            auto& i1 = pm.ft.i_mem1;
+            auto& i2 = pm.ft.i_mem2;
+            auto& i3 = pm.ft.i_mem3;
 
-            raw(inst1) <<= mux(selIdx, {&i0, &i1, &i2, &i3});
-            raw(inst2) <<= mux(selIdx, {&i1, &i2, &i3, &i0});
+            raw(inst1) <<= mux(sel_idx, {&i0, &i1, &i2, &i3});
+            raw(inst2) <<= mux(sel_idx, {&i1, &i2, &i3, &i0});
         }
-//            raw(prCond)   <<= fetchHitAndTaken;
+//            raw(pr_cond)   <<= fetch_hit_and_taken;
 // #ifdef BTB_ENABLE
-//             raw(bhr)      <<= gshare.bhrMaster;
+//             raw(bhr)      <<= gshare.bhr_master;
 // #else
 //            raw(bhr)      <<= 0;
 //#endif
 
-            // ztate(selIdx){
+            // ztate(sel_idx){
             //     zcase(0){
             //         raw(inst1)    <<=  i0;
             //         raw(inst2)    <<=  i1;
@@ -148,7 +148,7 @@ namespace kathryn::o3{
             //         raw(inst1)    <<= i3;
             //         raw(inst2)    <<= i0;
             //         raw(invalid2) <<= 1;
-            //         raw(npc)      <<= (curPc + 4);
+            //         raw(npc)      <<= (cur_pc + 4);
             //     }
             // }
 

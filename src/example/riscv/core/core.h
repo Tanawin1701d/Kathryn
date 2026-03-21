@@ -5,12 +5,12 @@
 #ifndef KATHRYN_CORE_H
 #define KATHRYN_CORE_H
 
-#include"kathryn.h"
-#include"example/riscv/parameter.h"
-#include"fetch.h"
-#include"decode.h"
-#include"execute.h"
-#include"writeBack.h"
+#include "kathryn.h"
+#include "example/riscv/parameter.h"
+#include "fetch.h"
+#include "decode.h"
+#include "execute.h"
+#include "write_back.h"
 
 namespace kathryn{
 
@@ -20,31 +20,31 @@ namespace kathryn{
         class Riscv : public Module {
         public:
 
-            // mWire(misPredic, 1);
-            // mWire(restartPc, XLEN);
+            // m_wire(mis_predic, 1);
+            // m_wire(restart_pc, XLEN);
             /** ele*/
             /***bypass ele*/
-            CORE_DATA coreData{};
+            CORE_DATA core_data{};
 
             /** storage*/
-            mMem(regFile, AMT_REG, XLEN);
-            StorageMgmt memBlk;
+            m_mem(reg_file, AMT_REG, XLEN);
+            StorageMgmt mem_blk;
             /** pipline element*/
             Fetch       fetch;
             Decode      decode;
             Execute     execute;
-            WriteBack   writeBack;
+            WriteBack   write_back;
 
-            ///FlowBlockPipeWrapper* pipProbe = nullptr;
+            ///FlowBlockPipeWrapper* pip_probe = nullptr;
 
             explicit Riscv(bool x):
             ///////////// transfer ele
-            memBlk (MEM_ADDR_IDX_ACTUAL_AL32, XLEN), //// -2 due to it is 4 byte align
+            mem_blk (MEM_ADDR_IDX_ACTUAL_AL32, XLEN), //// -2 due to it is 4 byte align
             ///////////// data path
-            fetch  (coreData, memBlk),
-            decode (coreData),
-            execute(coreData, memBlk),
-            writeBack(coreData){}
+            fetch  (core_data, mem_blk),
+            decode (core_data),
+            execute(core_data, mem_blk),
+            write_back(core_data){}
 
 
             void flow() override {
@@ -52,16 +52,16 @@ namespace kathryn{
                 /** calulate next cycle*/
                 ///// if mispredict occure the execution will write it back
                 // cwhile(true){
-                //     coreData.pc <<= coreData.pc + 4;
+                //     core_data.pc <<= core_data.pc + 4;
                 // }
 
                 /** pipe line wrapper */
                 fetch    .flow();
                 decode   .flow();
-                execute  .flow(regFile);
-                writeBack.flow(regFile);
+                execute  .flow(reg_file);
+                write_back.flow(reg_file);
 
-                memBlk.buildReadFlow();
+                mem_blk.build_read_flow();
             }
 
         };

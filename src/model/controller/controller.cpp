@@ -7,24 +7,24 @@
 namespace kathryn{
 
     /** central initializer*/
-    ModelController*    centralControllerPtr = nullptr;
-    ///Module*             globalModulePtr      = nullptr;
+    ModelController*    central_controller_ptr = nullptr;
+    ///Module*             global_module_ptr      = nullptr;
 
 
     ModelController::ModelController() {
         /** to prevent loop allocation in global module constructor*/
-        centralControllerPtr = this;
+        central_controller_ptr = this;
         on_globalModule_init_component();
     }
 
     void ModelController::start(){
-        assert(globalModulePtr != nullptr);
+        assert(global_module_ptr != nullptr);
         /***
          * global Module must be auto initiated when controller is initialize or it is reset
          * */
-        on_module_end_init_components(globalModulePtr);
+        on_module_end_init_components(global_module_ptr);
         on_globalModule_init_designFlow();
-        on_module_final(moduleStack.top().md);
+        on_module_final(module_stack.top().md);
     }
 
 
@@ -35,58 +35,58 @@ namespace kathryn{
 
     void ModelController::clean(){
         /** delete old global module**/
-        assert(isAllFlowStackEmpty());
-        assert(moduleStack.empty());
-        delete globalModulePtr;
-        globalModulePtr = nullptr;
+        assert(is_all_flow_stack_empty());
+        assert(module_stack.empty());
+        delete global_module_ptr;
+        global_module_ptr = nullptr;
     }
 
-    Module* ModelController::getGlobalModule(){
-        assert(globalModulePtr != nullptr);
-        return globalModulePtr;
+    Module* ModelController::get_global_module_ptr(){
+        assert(global_module_ptr != nullptr);
+        return global_module_ptr;
     }
 
-    ModelController* getControllerPtr(){
+    ModelController* get_controller_ptr(){
         /// initiate controller before return
         /***lazy initializer*/
-        if (centralControllerPtr == nullptr){
+        if (central_controller_ptr == nullptr){
             new ModelController();
             /** the constructor of model controller will handle itself*/
         }
-        return centralControllerPtr;
+        return central_controller_ptr;
     }
 
-    Module* getGlobalModulePtr(){
-        return getControllerPtr()->getGlobalModule();
+    Module* get_global_module_ptr(){
+        return get_controller_ptr()->get_global_module_ptr();
     }
 
 
 
-    std::string ModelController::getCurModelStack() {
+    std::string ModelController::get_cur_model_stack() {
 
-        std::vector<Module_Stack_Element> mdVec = cvtStackToVec(moduleStack);
-        std::vector<FlowBlockBase*>       fbVec = cvtStackToVec(flowBlockStacks[FLOW_ST_BASE_STACK]);
+        std::vector<Module_Stack_Element> md_vec = cvt_stack_to_vec(module_stack);
+        std::vector<FlowBlockBase*>       fb_vec = cvt_stack_to_vec(flow_block_stacks[FLOW_ST_BASE_STACK]);
 
-        int accumIdent = 0;
+        int accum_ident = 0;
         std::string result;
 
-        for (auto mod: mdVec){
-            result += (mod.md->getVarName() + "\n");
-            result += genConString(' ', accumIdent);
-            accumIdent += 4;
+        for (auto mod: md_vec){
+            result += (mod.md->get_var_name() + "\n");
+            result += gen_con_string(' ', accum_ident);
+            accum_ident += 4;
         }
 
-        for (int i = 0; i < fbVec.size(); i++){
+        for (int i = 0; i < fb_vec.size(); i++){
             std::string position;
             if (i > 0){
-                if (fbVec[i]->getFlowType() != CSELIF && fbVec[i]->getFlowType() != CSELSE) {
-                    position += " subBlockIdx " + std::to_string(fbVec[i - 1]->getSubBlocks().size()) + "    ";
+                if (fb_vec[i]->get_flow_type() != CSELIF && fb_vec[i]->get_flow_type() != CSELSE) {
+                    position += " sub_block_idx " + std::to_string(fb_vec[i - 1]->get_sub_blocks().size()) + "    ";
                 }
-                position += " conBlockIdx " + std::to_string(fbVec[i-1]->getConBlocks().size());
+                position += " con_block_idx " + std::to_string(fb_vec[i-1]->get_con_blocks().size());
             }
-            result += (fbVec[i]->getGlobalName() + "@ " + position + "\n" );
-            result += genConString(' ', accumIdent);
-            accumIdent += 4;
+            result += (fb_vec[i]->get_global_name() + "@ " + position + "\n" );
+            result += gen_con_string(' ', accum_ident);
+            accum_ident += 4;
         }
 
         return result;
@@ -95,10 +95,10 @@ namespace kathryn{
 
 
 
-//    void freeControllerPtr(){
+//    void free_controller_ptr(){
 //        ///// finalize global module if it have
-//        if (centralControllerPtr != nullptr){
-//            centralControllerPtr->on_module_final(globalModulePtr);
+//        if (central_controller_ptr != nullptr){
+//            central_controller_ptr->on_module_final(global_module_ptr);
 //        }
 //    }
 

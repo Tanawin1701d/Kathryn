@@ -11,55 +11,55 @@
 namespace kathryn::o3{
     struct Rsvs{
 
-        std::vector<std::string> mulExField  = {pc, aluOp, rsSel_1,  rsSel_2};
-        std::vector<std::string> brExField   = {rsSel_1, rsSel_2};
-        std::vector<std::string> ldStExField = {aluOp, rsSel_1, rsSel_2};
+        std::vector<std::string> mul_ex_field  = {pc, alu_op, rsSel_1,  rsSel_2};
+        std::vector<std::string> br_ex_field   = {rsSel_1, rsSel_2};
+        std::vector<std::string> ld_st_ex_field = {alu_op, rsSel_1, rsSel_2};
 
         ORsv alu1, alu2, mul;
         IRsv br, ls;
         std::vector<RsvBase*> rsvs{&alu1, &alu2, &mul, &br, &ls};
 
 
-        Rsvs(RegArch& regArch, BroadCast& bc):
-        alu1(RS_ENT_ALU   , smRsvBase + smRsvAlu                 , ALU_ENT_NUM   , regArch        ),
-        alu2(RS_ENT_ALU   , smRsvBase + smRsvAlu                 , ALU_ENT_NUM   , regArch        ),
-        mul (RS_ENT_MUL   , smRsvBase + smRsvMul    - mulExField , MUL_ENT_NUM   , regArch, smRsvI),
-        br  (RS_ENT_BRANCH, smRsvBase + smRsvBranch - brExField  , BRANCH_ENT_SEL, "br"   , bc    ),
-        ls  (RS_ENT_LDST  , smRsvBase + smRsvAlu    - ldStExField, LDST_ENT_SEL  , "ld"   , bc    ){}
+        Rsvs(RegArch& reg_arch, BroadCast& bc):
+        alu1(RS_ENT_ALU   , sm_rsv_base + sm_rsv_alu                 , ALU_ENT_NUM   , reg_arch        ),
+        alu2(RS_ENT_ALU   , sm_rsv_base + sm_rsv_alu                 , ALU_ENT_NUM   , reg_arch        ),
+        mul (RS_ENT_MUL   , sm_rsv_base + sm_rsv_mul    - mul_ex_field , MUL_ENT_NUM   , reg_arch, sm_rsv_i),
+        br  (RS_ENT_BRANCH, sm_rsv_base + sm_rsv_branch - br_ex_field  , BRANCH_ENT_SEL, "br"   , bc    ),
+        ls  (RS_ENT_LDST  , sm_rsv_base + sm_rsv_alu    - ld_st_ex_field, LDST_ENT_SEL  , "ld"   , bc    ){}
 
-        void onMisPred(opr& fixTag){
+        void on_mis_pred(opr& fix_tag){
             for (RsvBase* rsv: rsvs){
-                rsv->onMisPred(fixTag);
-                rsv->sync.holdMaster();
+                rsv->on_mis_pred(fix_tag);
+                rsv->sync.hold_master();
             }
-            ls.sync.killIfTagMet(true, fixTag);
+            ls.sync.kill_if_tag_met(true, fix_tag);
         }
 
-        void onSucPred(opr& sucTag){
+        void on_suc_pred(opr& suc_tag){
             for (RsvBase* rsv: rsvs){
-                rsv->onSucPred(sucTag);
+                rsv->on_suc_pred(suc_tag);
             }
         }
 
-        void buildIssues(PipStage& pm, BroadCast& bc){
+        void build_issues(PipStage& pm, BroadCast& bc){
             ///// build alu reservation station issue logic
-            alu1.buildIssue(bc);
-            alu2.buildIssue(bc);
+            alu1.build_issue(bc);
+            alu2.build_issue(bc);
             ///// build alu reservation station issue logic
-            mul.buildIssue(bc);
+            mul.build_issue(bc);
             ///// build branch reservation station internal logic
-            br.buildIssue(bc);
+            br.build_issue(bc);
             ///// build load/store reservation station internal logic
-            ls.buildIssue(bc);
+            ls.build_issue(bc);
         }
 
-        void setDebugProbe(){ ///DC
+        void set_debug_probe(){ ///DC
             ///// todo set simprobe for all
-            alu1.setSimProbe(&zyncProbGrp.issueAlu1   , &dataStructProbGrp.rsvAlu1  ); ///DC
-            alu2.setSimProbe(&zyncProbGrp.issueAlu2   , &dataStructProbGrp.rsvAlu2  ); ///DC
-            mul .setSimProbe(&zyncProbGrp.issueMul    , &dataStructProbGrp.rsvMul   ); ///DC
-            br  .setSimProbe(&zyncProbGrp.issueBranch , &dataStructProbGrp.rsvbranch); ///DC
-            ls  .setSimProbe(&zyncProbGrp.issueLdSt   , &dataStructProbGrp.rsvLdSt  ); ///DC
+            alu1.set_sim_probe(&zync_prob_grp.issue_alu1   , &data_struct_prob_grp.rsv_alu1  ); ///DC
+            alu2.set_sim_probe(&zync_prob_grp.issue_alu2   , &data_struct_prob_grp.rsv_alu2  ); ///DC
+            mul .set_sim_probe(&zync_prob_grp.issue_mul    , &data_struct_prob_grp.rsv_mul   ); ///DC
+            br  .set_sim_probe(&zync_prob_grp.issue_branch , &data_struct_prob_grp.rsvbranch); ///DC
+            ls  .set_sim_probe(&zync_prob_grp.issue_ld_st   , &data_struct_prob_grp.rsv_ld_st  ); ///DC
         } ///DC
 
     };

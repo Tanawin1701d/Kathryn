@@ -4,7 +4,7 @@
 
 #ifndef KATHRYN_PARAMETER_H
 #define KATHRYN_PARAMETER_H
-#include "model/hwComponent/abstract/Slice.h"
+#include "model/hw_component/abstract/slice.h"
 
 namespace kathryn{
 

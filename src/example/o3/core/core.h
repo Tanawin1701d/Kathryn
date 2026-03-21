@@ -9,15 +9,15 @@
 #include "fetch.h"
 #include "decoder.h"
 #include "dispatch.h"
-#include "execAlu.h"
-#include "execMul.h"
-#include "execLdSt.h"
-#include "execBranch.h"
+#include "exec_alu.h"
+#include "exec_mul.h"
+#include "exec_ld_st.h"
+#include "exec_branch.h"
 //////// include data structure
 #include "rob.h"
 #include "rsvs.h"
-#include "stageStruct.h"
-#include "storeBuf.h"
+#include "stage_struct.h"
+#include "store_buf.h"
 
 namespace kathryn::o3{
 
@@ -25,53 +25,53 @@ namespace kathryn::o3{
     struct Core: Module{
 
         /////// tagmgmt
-        TagMgmt  tagMgmt;
+        TagMgmt  tag_mgmt;
         /////// register architecture
-        RegArch  regArch {tagMgmt.mpft};
+        RegArch  reg_arch {tag_mgmt.mpft};
         /////// reservation stations
-        Rsvs     rsvs {regArch, tagMgmt.bc};
+        Rsvs     rsvs {reg_arch, tag_mgmt.bc};
         /////// pipeline manager
         PipStage pm;
         /////// store buffer
-        StoreBuf   storeBuf{pm.ldSt, tagMgmt.bc};
+        StoreBuf   store_buf{pm.ld_st, tag_mgmt.bc};
         /////// reorder buffer
-        mMod(prob, Rob, pm, regArch, storeBuf);
+        m_mod(prob, Rob, pm, reg_arch, store_buf);
         /////// front-end
-        mMod(pFetch,  FetchMod  , pm     , tagMgmt,
-                      prob.getBranchUpdateEntry());
-        mMod(pDec  ,  DecMod    , pm     , tagMgmt); //// decoder
-        mMod(pDisp ,  DpMod     , pm     , rsvs ,
-                      regArch   , tagMgmt, prob); //// dispathc
+        m_mod(p_fetch,  FetchMod  , pm     , tag_mgmt,
+                      prob.get_branch_update_entry());
+        m_mod(p_dec  ,  DecMod    , pm     , tag_mgmt); //// decoder
+        m_mod(p_disp ,  DpMod     , pm     , rsvs ,
+                      reg_arch   , tag_mgmt, prob); //// dispathc
         /////// back-end
-        mMod(pExAlu1,  ExecAlu   , regArch, prob    , rsvs.alu1); //// exec
-        mMod(pExAlu2,  ExecAlu   , regArch, prob    , rsvs.alu2);
-        mMod(pMulAlu, ExecMul    , regArch, prob    , rsvs.mul ); //// multiplier unit
-        mMod(pExBra,  BranchExec , tagMgmt, regArch ,
-                                   pm     , pDisp   ,
-                                   prob   , storeBuf, rsvs    ); //// branch unit
-        mMod(pExLdSt, ExecLdSt   , pm.ldSt, regArch , tagMgmt.bc,
-                                   prob   , rsvs.ls , storeBuf);
+        m_mod(p_ex_alu1,  ExecAlu   , reg_arch, prob    , rsvs.alu1); //// exec
+        m_mod(p_ex_alu2,  ExecAlu   , reg_arch, prob    , rsvs.alu2);
+        m_mod(p_mul_alu, ExecMul    , reg_arch, prob    , rsvs.mul ); //// multiplier unit
+        m_mod(p_ex_bra,  BranchExec , tag_mgmt, reg_arch ,
+                                   pm     , p_disp   ,
+                                   prob   , store_buf, rsvs    ); //// branch unit
+        m_mod(p_ex_ld_st, ExecLdSt   , pm.ld_st, reg_arch , tag_mgmt.bc,
+                                   prob   , rsvs.ls , store_buf);
 
 
         explicit Core(int x){
             ///// add reservation to bypass and prediction control
-            regArch.bpp.addRsvs(&rsvs);
+            reg_arch.bpp.add_rsvs(&rsvs);
         }
 
         void flow() override{
 
             ///// set sim probe for the exec unit and reservation station
-            pExAlu1   .setSimProbe (&pipProbGrp.execAlu1   ); ///DC
-            pExAlu2   .setSimProbe (&pipProbGrp.execAlu2   ); ///DC
-            pMulAlu   .setSimProbe (&pipProbGrp.execMul    ); ///DC
-            pExBra    .setSimProbe (&pipProbGrp.execBranch ); ///DC
-            pExLdSt   .setSimProbe (&pipProbGrp.execLdSt   ); ///DC
-            pExLdSt   .setZyncProb (&zyncProbGrp.loadStore2); ///DC
-            pExLdSt   .setSimProbe2(&pipProbGrp.execLdSt2  ); ///DC
+            p_ex_alu1   .set_sim_probe (&pip_prob_grp.exec_alu1   ); ///DC
+            p_ex_alu2   .set_sim_probe (&pip_prob_grp.exec_alu2   ); ///DC
+            p_mul_alu   .set_sim_probe (&pip_prob_grp.exec_mul    ); ///DC
+            p_ex_bra    .set_sim_probe (&pip_prob_grp.exec_branch ); ///DC
+            p_ex_ld_st   .set_sim_probe (&pip_prob_grp.exec_ld_st   ); ///DC
+            p_ex_ld_st   .set_zync_prob (&zync_prob_grp.load_store2); ///DC
+            p_ex_ld_st   .set_sim_probe2(&pip_prob_grp.exec_ld_st2  ); ///DC
 
             ///// rsv operation
-            rsvs.setDebugProbe(); ///DC
-            rsvs.buildIssues(pm, tagMgmt.bc);
+            rsvs.set_debug_probe(); ///DC
+            rsvs.build_issues(pm, tag_mgmt.bc);
         }
     };
 }

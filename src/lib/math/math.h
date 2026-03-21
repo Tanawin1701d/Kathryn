@@ -9,8 +9,8 @@
 
 namespace kathryn{
 
-    Operable& sqrtInt(Operable& x);
-    void      sqrtInt(Operable& x, Reg& y);
+    Operable& sqrt_int(Operable& x);
+    void      sqrt_int(Operable& x, Reg& y);
 
 }
 

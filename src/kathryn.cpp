@@ -10,38 +10,38 @@ namespace kathryn{
 
 
 
-    void startModelKathryn(){
-        getControllerPtr()->start();
+    void start_model_kathryn(){
+        get_controller_ptr()->start();
     }
 
-    void startGenKathryn(PARAM& params){
-        GenController* genCtrl = getGenController();
-        assert(genCtrl != nullptr);
-        genCtrl->initEnv(params);
-        genCtrl->start();
+    void start_gen_kathryn(PARAM& params){
+        GenController* gen_ctrl = get_gen_controller_ptr();
+        assert(gen_ctrl != nullptr);
+        gen_ctrl->init_env(params);
+        gen_ctrl->start();
     }
 
-    void resetKathryn(){
+    void reset_kathryn(){
 
         /** flush model formation log value first*/
-        // flushMfDebugger();
+        // flush_mf_debugger();
 
         /** clean global io declaration*/
-        cleanGlobPool();
+        clean_glob_pool();
         /** reset model layer*/
-        getControllerPtr()->reset();
+        get_controller_ptr()->reset();
         /** reset simulation layer*/
-        getSimController()->reset();
+        get_sim_controller_ptr()->reset();
         /** reset generator*/
-        getGenController()->reset();
+        get_gen_controller_ptr()->reset();
 
 
 
     }
 
-    PARAM readParamKathryn(std::string filePath){
-        ParamReader paramReader(std::move(filePath));
-        PARAM params = paramReader.getKeyVal();
+    PARAM read_param_kathryn(std::string file_path){
+        ParamReader param_reader(std::move(file_path));
+        PARAM params = param_reader.get_key_val();
 
         return params;
     }

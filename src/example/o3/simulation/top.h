@@ -12,27 +12,27 @@ namespace kathryn::o3{
 
     struct TopSim: Module{
 
-        mMod(myCore, Core, 0);
+        m_mod(my_core, Core, 0);
 
         ///// imem
-        mReg(ijImem0, INST_WIDTH);
-        mReg(ijImem1, INST_WIDTH);
-        mReg(ijImem2, INST_WIDTH);
-        mReg(ijImem3, INST_WIDTH);
+        m_reg(ij_imem0, INST_WIDTH);
+        m_reg(ij_imem1, INST_WIDTH);
+        m_reg(ij_imem2, INST_WIDTH);
+        m_reg(ij_imem3, INST_WIDTH);
 
         ///// dmem
-        mReg(ijDmem0, DATA_LEN);
+        m_reg(ij_dmem0, DATA_LEN);
 
         TopSim(int x){};
 
         void flow() override{
             ///// imem
-            myCore.pm.ft.iMem0 = ijImem0;
-            myCore.pm.ft.iMem1 = ijImem1;
-            myCore.pm.ft.iMem2 = ijImem2;
-            myCore.pm.ft.iMem3 = ijImem3;
+            my_core.pm.ft.i_mem0 = ij_imem0;
+            my_core.pm.ft.i_mem1 = ij_imem1;
+            my_core.pm.ft.i_mem2 = ij_imem2;
+            my_core.pm.ft.i_mem3 = ij_imem3;
             ///// dmem
-            myCore.pm.ldSt.dmem_rdata = ijDmem0;
+            my_core.pm.ld_st.dmem_rdata = ij_dmem0;
         }
 
     };

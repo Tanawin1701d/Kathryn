@@ -7,21 +7,21 @@
 
 
 #include "model/controller/controller.h"
-#include "gen/controller/genController.h"
-#include "frontEnd/cmd/paramReader.h"
-#include "sim/interface/simInterface.h"
+#include "gen/controller/gen_controller.h"
+#include "front_end/cmd/param_reader.h"
+#include "sim/interface/sim_interface.h"
 
 
-#include "util/fileWriter/slotWriter/slotWriter.h"
-#include "model/hwComponent/abstract/globPool.h"
+#include "util/file_writer/slot_writer/slot_writer.h"
+#include "model/hw_component/abstract/glob_pool.h"
 #include "util/logger/logger.h"
 
 namespace kathryn{
 
-    void startModelKathryn();
-    void startGenKathryn(PARAM& params);
-    void resetKathryn();
-    PARAM readParamKathryn(std::string filePath);
+    void start_model_kathryn();
+    void start_gen_kathryn(PARAM& params);
+    void reset_kathryn();
+    PARAM read_param_kathryn(std::string file_path);
 
 }
 

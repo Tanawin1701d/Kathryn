@@ -10,16 +10,16 @@ namespace kathryn::o3{
 
     inline opr& multiplier(RegSlot& src){
 
-        opr& srcAU = src(phyIdx_1).uext(2*DATA_LEN);
-        opr& srcAS = src(phyIdx_1).sext(2*DATA_LEN);
+        opr& src_au = src(phyIdx_1).uext(2*DATA_LEN);
+        opr& src_as = src(phyIdx_1).sext(2*DATA_LEN);
 
-        opr& srcBU = src(phyIdx_2).uext(2*DATA_LEN);
-        opr& srcBS = src(phyIdx_2).sext(2*DATA_LEN);
+        opr& src_bu = src(phyIdx_2).uext(2*DATA_LEN);
+        opr& src_bs = src(phyIdx_2).sext(2*DATA_LEN);
 
-        opr& res_uu = srcAU * srcBU;
-        opr& res_us = srcAU * srcBS;
-        opr& res_su = srcAS * srcBU;
-        opr& res_ss = srcAS * srcBS;
+        opr& res_uu = src_au * src_bu;
+        opr& res_us = src_au * src_bs;
+        opr& res_su = src_as * src_bu;
+        opr& res_ss = src_as * src_bs;
 
         opr& res = mux( g(src(md_req_in_signed_1), src(md_req_in_signed_2)),
                         {&res_uu, ///// 0 0

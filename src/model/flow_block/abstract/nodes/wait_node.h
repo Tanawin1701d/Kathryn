@@ -1,0 +1,140 @@
+//
+// Created by tanawin on 4/1/2567.
+//
+
+#ifndef KATHRYN_WAITNODE_H
+#define KATHRYN_WAITNODE_H
+
+#include "node.h"
+#include "model/flow_block/abstract/sp_reg/wait_reg.h"
+
+namespace kathryn{
+
+    struct WaitCondNode : Node{
+
+        CondWaitStateReg* _condWaitStateReg = nullptr;
+
+        explicit WaitCondNode(Operable* wait_cond, CLOCK_MODE clock_mode):
+                Node(WAITCOND_NODE){
+            assert(wait_cond != nullptr);
+            _condWaitStateReg = new CondWaitStateReg(wait_cond);
+            add_cycle_related_reg(_condWaitStateReg);
+            set_clock_mode(clock_mode);
+        }
+
+        void make_unset_state_event() override{
+            assert(_condWaitStateReg != nullptr);
+            _condWaitStateReg->make_un_set_state_event(get_clock_mode());
+        }
+
+        void make_user_reset_event() override{
+            if (is_threre_int_reset()){
+                _condWaitStateReg->make_user_rst_event(int_reset->get_exit_opr_ptr(), get_clock_mode());
+            }
+
+        }
+
+        Operable*get_state_operating_ptr() override{
+            assert(_condWaitStateReg != nullptr);
+            return _condWaitStateReg->generate_end_expr();
+        }
+
+        Operable*get_exit_opr_ptr() override{
+            assert(_condWaitStateReg != nullptr);
+            Operable* bined_with_reset_sig =
+                bind_with_rst_out_put_if_reset(_condWaitStateReg->generate_end_expr());
+            Operable* bined_with_hold_sig =
+                bind_with_hold_if_hold(bined_with_reset_sig);
+            return bined_with_hold_sig;
+        }
+
+        void assign() override{
+            assert(!node_srcs.empty());
+            for(auto node_src: node_srcs){
+                _condWaitStateReg->add_depend_state(node_src.depend_node->get_exit_opr_ptr(), node_src.condition, get_clock_mode());
+            }
+            if (is_there_hold()){
+                _condWaitStateReg->add_depend_state(get_state_operating_ptr(), hold_node->get_exit_opr_ptr(), get_clock_mode());
+            }
+
+            make_unset_state_event();
+            make_user_reset_event();
+            _condWaitStateReg->set_var_name(ident_name);
+        }
+
+        int get_cycle_used() override {return NODE_CYCLE_USED_UNKNOWN;}
+
+    };
+
+    struct WaitCycleNode : Node{
+        int _cycle = -1;
+        CycleWaitStateReg* _cycleWaitStateReg = nullptr;
+
+        explicit WaitCycleNode(int cycle, CLOCK_MODE clock_mode):
+                Node(WAITCYCLE_NODE),
+                _cycle(cycle){
+
+            _cycleWaitStateReg = new CycleWaitStateReg(cycle);
+            add_cycle_related_reg(_cycleWaitStateReg);
+            set_clock_mode(clock_mode);
+        }
+
+        explicit WaitCycleNode(Operable* opr1, CLOCK_MODE clock_mode):
+                Node(WAITCYCLE_NODE)
+        {
+            _cycleWaitStateReg = new CycleWaitStateReg(opr1);
+            add_cycle_related_reg(_cycleWaitStateReg);
+            set_clock_mode(clock_mode);
+        }
+
+        void make_unset_state_event() override{
+            assert(_cycleWaitStateReg != nullptr);
+            _cycleWaitStateReg->make_un_set_state_event(get_clock_mode());
+        }
+
+        void make_user_reset_event() override{
+            if(is_threre_int_reset()){
+                _cycleWaitStateReg->make_user_rst_event(int_reset->get_exit_opr_ptr(), get_clock_mode());
+            }
+
+        }
+
+        Operable*get_exit_opr_ptr() override{
+            assert(_cycleWaitStateReg != nullptr);
+            Operable* bined_with_reset_signal =
+                bind_with_rst_out_put_if_reset(_cycleWaitStateReg->generate_end_expr());
+            Operable* bined_with_hold_signal =
+                bind_with_hold_if_hold(bined_with_reset_signal);
+            return bined_with_hold_signal;
+        }
+
+        void assign() override{
+
+            /**normal start event*/
+            for(auto node_src: node_srcs){
+                _cycleWaitStateReg->add_depend_state(node_src.depend_node->get_exit_opr_ptr(), node_src.condition, get_clock_mode());
+            }
+            /** inc event*/
+            if (is_there_hold()){
+                _cycleWaitStateReg->make_inc_state_event(hold_node->get_exit_opr_ptr(), get_clock_mode());
+            }else{
+                _cycleWaitStateReg->make_inc_state_event(nullptr, get_clock_mode());
+            }
+            /** unset event*/
+            make_unset_state_event();
+            make_user_reset_event();
+            _cycleWaitStateReg->set_var_name(ident_name);
+        }
+
+        int get_cycle_used() override{
+            if (is_there_hold()){
+                return IN_CONSIST_CYCLE_USED;
+            }
+            return _cycle;
+        }
+
+    };
+
+}
+
+#endif //KATHRYN_WAITNODE_H

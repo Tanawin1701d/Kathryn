@@ -8,7 +8,7 @@
 
 #include "kathryn.h"
 #include "parameter.h"
-#include "lib/instr/instrBase.h"
+#include "lib/instr/instr_base.h"
 
 
 namespace kathryn{
@@ -16,17 +16,17 @@ namespace kathryn{
     namespace riscv{
 
         struct FETCH_DATA{
-            SyncMeta sync{"fetchSync"};
-            mReg(fetch_pc    , MEM_ADDR_IDX);
-            mReg(fetch_nextpc, MEM_ADDR_IDX);
-            mReg(fetch_instr, XLEN);
+            SyncMeta sync{"fetch_sync"};
+            m_reg(fetch_pc    , MEM_ADDR_IDX);
+            m_reg(fetch_nextpc, MEM_ADDR_IDX);
+            m_reg(fetch_instr, XLEN);
         };
 
         struct DECODE_DATA{
             InstrRepo repo;
-            mReg(pc, XLEN);
-            mReg(nextPc, XLEN);
-            SyncMeta sync{"decodeSync"};
+            m_reg(pc, XLEN);
+            m_reg(next_pc, XLEN);
+            SyncMeta sync{"decode_sync"};
 
             explicit DECODE_DATA(Operable& instr):
                 repo(XLEN, AMT_DEC_SRC_REG,
@@ -34,18 +34,18 @@ namespace kathryn{
         };
 
         struct EXEC_DATA{
-            SyncMeta sync{"execSync"};
-            OPR_HW   wbData{XLEN, REG_IDX,0, false}; //// write back data
+            SyncMeta sync{"exec_sync"};
+            OPR_HW   wb_data{XLEN, REG_IDX,0, false}; //// write back data
         };
 
         struct WRITE_BACK_DATA{
 
-            SyncMeta sync{"wbSync"};
+            SyncMeta sync{"wb_sync"};
         };
 
         struct BYPASS_DATA{
-            mWire(idx, REG_IDX);
-            mWire(value, XLEN);
+            m_wire(idx, REG_IDX);
+            m_wire(value, XLEN);
         };
 
 
@@ -56,16 +56,16 @@ namespace kathryn{
             WRITE_BACK_DATA wb;
             BYPASS_DATA bp;
 
-            mReg (pc, MEM_ADDR_IDX); //// the fetching pc
+            m_reg (pc, MEM_ADDR_IDX); //// the fetching pc
 
             void kill(){
-                ft.sync.killSlave(true);
-                dc.sync.killSlave(true);
+                ft.sync.kill_slave(true);
+                dc.sync.kill_slave(true);
             }
 
-            void changePc(opr& newPc){
+            void change_pc(opr& new_pc){
                 SET_ASM_PRI_TO_MANUAL(DEFAULT_UE_PRI_USER+1);
-                pc <<= newPc;
+                pc <<= new_pc;
                 SET_ASM_PRI_TO_AUTO();
             }
 

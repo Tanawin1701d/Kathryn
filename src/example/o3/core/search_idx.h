@@ -5,44 +5,44 @@
 #ifndef KATHRYN_SRC_EXAMPLE_O3_SEARCH_IDX_H
 #define KATHRYN_SRC_EXAMPLE_O3_SEARCH_IDX_H
 
-#include "stageStruct.h"
+#include "stage_struct.h"
 
 using namespace std;
 
-#define sValid first
-#define sIdx   second
+#define s_valid first
+#define s_idx   second
 
 namespace kathryn::o3{
     typedef std::pair<Operable&, Operable&> SearchResult;
     ///////// valid / index binary
     inline std::pair<Operable&,Operable&>
-    searchIdx(Table& table,int value,
-              bool isBegin, BroadCast& bc,
-              bool checkNext){
+    search_idx(Table& table,int value,
+              bool is_begin, BroadCast& bc,
+              bool check_next){
 
-        auto [iw, binIdx] =
-        table.doReducBinIdx([&](
+        auto [iw, bin_idx] =
+        table.do_reduc_bin_idx([&](
              WireSlot& lhs, Operable* lidx,
              WireSlot& rhs, Operable* ridx) -> Operable&{
 
-            WireSlot& sidedSlot = isBegin ? lhs : rhs;
-            Operable* checkBusy = &sidedSlot(busy);
-            if (checkNext){
-                auto& isSpec = sidedSlot(spec);
-                auto& isKilled = bc.checkIsKill(sidedSlot(specTag));
-                checkBusy = &(sidedSlot(busy) & ~(isSpec & isKilled));
+            WireSlot& sided_slot = is_begin ? lhs : rhs;
+            Operable* check_busy = &sided_slot(busy);
+            if (check_next){
+                auto& is_spec = sided_slot(spec);
+                auto& is_killed = bc.check_is_kill(sided_slot(spec_tag));
+                check_busy = &(sided_slot(busy) & ~(is_spec & is_killed));
             }
 
-            if (isBegin){
-                return (*checkBusy) == value; /// select left we want begin
+            if (is_begin){
+                return (*check_busy) == value; /// select left we want begin
             }
-            return (*checkBusy) != value; /// select left if right is not really correct
+            return (*check_busy) != value; /// select left if right is not really correct
         });
 
-        if (checkNext){
-            return {(iw(busy) && ~(iw(spec) & bc.checkIsKill(iw(specTag)))) == value, binIdx};
+        if (check_next){
+            return {(iw(busy) && ~(iw(spec) & bc.check_is_kill(iw(spec_tag)))) == value, bin_idx};
         }
-            return{iw(busy) == value, binIdx};
+            return{iw(busy) == value, bin_idx};
 
     }
 

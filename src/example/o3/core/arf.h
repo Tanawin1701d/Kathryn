@@ -6,7 +6,7 @@
 #define KATHRYN_SRC_EXAMPLE_O3_ARF_H
 
 #include "kathryn.h"
-#include "slotParam.h"
+#include "slot_param.h"
 #include "mpft.h"
 
 namespace kathryn::o3{
@@ -17,34 +17,34 @@ namespace kathryn::o3{
     static int ARF_COM_PRIORITY = DEFAULT_UE_PRI_USER + 1;
 
     struct RenameCmd{
-        opr& renEn;       // 1
-        opr& renRrfPtr;   // RRF_SEL
-        opr& renArcIdx;   // REG_SEL
-        opr& isBranch;
-        opr& specTag;
+        opr& ren_en;       // 1
+        opr& ren_rrf_ptr;   // RRF_SEL
+        opr& ren_arc_idx;   // REG_SEL
+        opr& is_branch;
+        opr& spec_tag;
     };
 
     struct RenamedData{
         opr& busy;
-        opr& rrfIdx;
+        opr& rrf_idx;
     };
 
     struct PreRenGrp{
         int idx = -1; //// -1 is for master
-        mExpr(isAsRecvGrp, 1);
-        WireSlot busyTemp  {smARFBusy};
-        WireSlot renameTemp{smARFRenamed};
+        m_expr(is_as_recv_grp, 1);
+        WireSlot busy_temp  {sm_arf_busy};
+        WireSlot rename_temp{sm_arf_renamed};
 
 
         /**
         *
         * for master table
         */
-        void tiedToMaster(RegSlot& busySlot, RegSlot& renameSlot){
-            busyTemp      = busySlot;
-            renameTemp    = renameSlot;
-            busySlot    <<= busyTemp;
-            renameSlot  <<= renameTemp;
+        void tied_to_master(RegSlot& busy_slot, RegSlot& rename_slot){
+            busy_temp      = busy_slot;
+            rename_temp    = rename_slot;
+            busy_slot    <<= busy_temp;
+            rename_slot  <<= rename_temp;
         }
 
         /**
@@ -52,85 +52,85 @@ namespace kathryn::o3{
          */
 
         ///// in normal case loop tied it to the system
-        void tiedToTable(Table& busyTable, Table& renameTable){
+        void tied_to_table(Table& busy_table, Table& rename_table){
             assert(idx != -1);
-            busyTemp           = busyTable(idx);
-            renameTemp         = renameTable(idx);
-            busyTable(idx)   <<= busyTemp;
-            renameTable(idx) <<= renameTemp;
+            busy_temp           = busy_table(idx);
+            rename_temp         = rename_table(idx);
+            busy_table(idx)   <<= busy_temp;
+            rename_table(idx) <<= rename_temp;
         }
 
-        void onMisPred(opr& misTag,
-                       Table&    rcvTabBusy,
-                       Table&    rcvTabRename){
+        void on_mis_pred(opr& mis_tag,
+                       Table&    rcv_tab_busy,
+                       Table&    rcv_tab_rename){
             SET_ASM_PRI_TO_MANUAL(ARF_MIS_PRIORITY);  ///CTRL ARF
-            busyTemp   = rcvTabBusy  [OH(misTag)].v();
-            renameTemp = rcvTabRename[OH(misTag)].v();
+            busy_temp   = rcv_tab_busy  [OH(mis_tag)].v();
+            rename_temp = rcv_tab_rename[OH(mis_tag)].v();
             SET_ASM_PRI_TO_AUTO(); ///CTRL ARF
         }
 
         /////// system going to succcess
-        void onSucPred(opr& sucTag, PreRenGrp& masterRenGrp){
+        void on_suc_pred(opr& suc_tag, PreRenGrp& master_ren_grp){
             SET_ASM_PRI_TO_MANUAL(ARF_SUC_PRIORITY); ///CTRL ARF
-            zif(sucTag.sl(idx) | (~isAsRecvGrp)){
-                busyTemp   = masterRenGrp.busyTemp;
-                renameTemp = masterRenGrp.renameTemp;
+            zif(suc_tag.sl(idx) | (~is_as_recv_grp)){
+                busy_temp   = master_ren_grp.busy_temp;
+                rename_temp = master_ren_grp.rename_temp;
             }
             SET_ASM_PRI_TO_AUTO(); ///CTRL ARF
         }
 
-        void commitBase(opr& comEn    , opr& comRrfPtr,
-                        opr& comArcIdx, RegSlot& renameBase){
+        void commit_base(opr& com_en    , opr& com_rrf_ptr,
+                        opr& com_arc_idx, RegSlot& rename_base){
 
             ///// busy doesnt have to be set if it unset already, it is ok!
-            opr& comEntryMatch =  (renameBase[comArcIdx].v() == comRrfPtr);
-            zif(comEn && comEntryMatch){
-                busyTemp[comArcIdx] = 0;
+            opr& com_entry_match =  (rename_base[com_arc_idx].v() == com_rrf_ptr);
+            zif(com_en && com_entry_match){
+                busy_temp[com_arc_idx] = 0;
             }
 
         }
 
-        void onCommit(opr& comEn1    , opr& comRrfPtr1,
-                      opr& comArcIdx1,
-                      opr& comEn2    , opr& comRrfPtr2,
-                      opr& comArcIdx2,
-                      RegSlot& renameReg){
+        void on_commit(opr& com_en1    , opr& com_rrf_ptr1,
+                      opr& com_arc_idx1,
+                      opr& com_en2    , opr& com_rrf_ptr2,
+                      opr& com_arc_idx2,
+                      RegSlot& rename_reg){
             SET_ASM_PRI_TO_MANUAL(ARF_COM_PRIORITY); ///CTRL ARF
-            commitBase(comEn1, comRrfPtr1, comArcIdx1, renameReg);
-            commitBase(comEn2, comRrfPtr2, comArcIdx2, renameReg);
+            commit_base(com_en1, com_rrf_ptr1, com_arc_idx1, rename_reg);
+            commit_base(com_en2, com_rrf_ptr2, com_arc_idx2, rename_reg);
             SET_ASM_PRI_TO_AUTO(); ///CTRL ARF
         }
 
-        void renameBase(RenameCmd& renCmd){
-            zif(renCmd.renEn){
-                busyTemp[renCmd.renArcIdx]   = 1;
-                renameTemp[renCmd.renArcIdx] = renCmd.renRrfPtr;
+        void rename_base(RenameCmd& ren_cmd){
+            zif(ren_cmd.ren_en){
+                busy_temp[ren_cmd.ren_arc_idx]   = 1;
+                rename_temp[ren_cmd.ren_arc_idx] = ren_cmd.ren_rrf_ptr;
             }
         }
 
-        void onRename(RenameCmd& renCmd1, RenameCmd& renCmd2, bool override = false){
+        void on_rename(RenameCmd& ren_cmd1, RenameCmd& ren_cmd2, bool override = false){
             SET_ASM_PRI_TO_MANUAL(ARF_REN_PRIORITY); ///CTRL ARF
             if (override){
-                renameBase(renCmd1);              //// order cannot be changed
-                renameBase(renCmd2);
+                rename_base(ren_cmd1);              //// order cannot be changed
+                rename_base(ren_cmd2);
             }else{
-                ////// the isAsRecvGrp is set from decode stage
+                ////// the is_as_recv_grp is set from decode stage
                 ////// it should be undone first
-                opr& instr1WantThisSlotToRcv = (renCmd1.isBranch && renCmd1.specTag.sl(idx));
-                opr& instr2WantThisSlotToRcv = (renCmd2.isBranch && renCmd2.specTag.sl(idx));
+                opr& instr1WantThisSlotToRcv = (ren_cmd1.is_branch && ren_cmd1.spec_tag.sl(idx));
+                opr& instr2WantThisSlotToRcv = (ren_cmd2.is_branch && ren_cmd2.spec_tag.sl(idx));
                 ////// undo both instruction 1 and instruction 2
-                opr& isAsRecvGrp_undo = (isAsRecvGrp &&
+                opr& isAsRecvGrp_undo = (is_as_recv_grp &&
                                          (!(instr1WantThisSlotToRcv |
                                             instr2WantThisSlotToRcv))
                                          );
                 ////// rename 1
                 zif(~isAsRecvGrp_undo){
-                    renameBase(renCmd1);
+                    rename_base(ren_cmd1);
                 }
                 ////// rename 2 (if the first instruction is branch and this table is just rcv )
                 opr& isAsRecvGrp_undo_only_second_instr = (isAsRecvGrp_undo |  instr1WantThisSlotToRcv);
                 zif (~isAsRecvGrp_undo_only_second_instr){
-                    renameBase(renCmd2);
+                    rename_base(ren_cmd2);
                 }
             }
             SET_ASM_PRI_TO_AUTO(); ///CTRL ARF
@@ -139,7 +139,7 @@ namespace kathryn::o3{
     };
 
 
-    ////// | rename <-> commit <-> success | missPredict
+    ////// | rename <-> commit <-> success | miss_predict
     ////// mispredict copy the fix table to all table (master table include)
     ////// rename on all table that is free and master table (have the most priorty)
     ////// success copy the master to the success table (rename cannot occur at the same time with rename)
@@ -149,92 +149,92 @@ namespace kathryn::o3{
     struct Arf{
 
         ////// rename table
-        Table    busy        {smARFBusy, SPECTAG_LEN};
-        Table    rename      {smARFRenamed, SPECTAG_LEN}; ////// row re recover tag col is reg
-        RegSlot  busyMaster  {smARFBusy};
-        RegSlot  renameMaster{smARFRenamed};
-        PreRenGrp preRenGrp[SPECTAG_LEN];
-        PreRenGrp preRenMaster;
+        Table    busy        {sm_arf_busy, SPECTAG_LEN};
+        Table    rename      {sm_arf_renamed, SPECTAG_LEN}; ////// row re recover tag col is reg
+        RegSlot  busy_master  {sm_arf_busy};
+        RegSlot  rename_master{sm_arf_renamed};
+        PreRenGrp pre_ren_grp[SPECTAG_LEN];
+        PreRenGrp pre_ren_master;
         ////// architecture data file
-        RegSlot  archRegs    {smARFData};
+        RegSlot  arch_regs    {sm_arf_data};
 
         explicit Arf(Mpft& mpft){
             ////// reset the register
-            busy        .makeResetEvent(0);
-            rename      .makeResetEvent(0);
-            busyMaster  .makeResetEvent(0);
-            renameMaster.makeResetEvent(0);
-            dataStructProbGrp.arfBusy.init(&busy);      ///DC
-            dataStructProbGrp.arfRename.init(&rename);  ///DC
+            busy        .make_reset_event(0);
+            rename      .make_reset_event(0);
+            busy_master  .make_reset_event(0);
+            rename_master.make_reset_event(0);
+            data_struct_prob_grp.arf_busy.init(&busy);      ///DC
+            data_struct_prob_grp.arf_rename.init(&rename);  ///DC
 
-            ////// initialize preRenGrp
+            ////// initialize pre_ren_grp
             for(int i = 0; i < SPECTAG_LEN; i++){
-                preRenGrp[i].idx = i;
-                preRenGrp[i].isAsRecvGrp = mpft.isUsed(i);
-                preRenGrp[i].tiedToTable(busy, rename);
+                pre_ren_grp[i].idx = i;
+                pre_ren_grp[i].is_as_recv_grp = mpft.is_used(i);
+                pre_ren_grp[i].tied_to_table(busy, rename);
             }
-            preRenMaster.idx         = -1;
-            preRenMaster.isAsRecvGrp =  1;
-            preRenMaster.tiedToMaster(busyMaster, renameMaster);
+            pre_ren_master.idx         = -1;
+            pre_ren_master.is_as_recv_grp =  1;
+            pre_ren_master.tied_to_master(busy_master, rename_master);
         }
 
-        RenamedData getRenamedData(opr& archIdx){
-            return {busyMaster  [archIdx].v(),
-                    renameMaster[archIdx].v()};
+        RenamedData get_renamed_data(opr& arch_idx){
+            return {busy_master  [arch_idx].v(),
+                    rename_master[arch_idx].v()};
         }
 
-        opr& getArfData(opr& archIdx){
-            return archRegs[archIdx].v();
+        opr& get_arf_data(opr& arch_idx){
+            return arch_regs[arch_idx].v();
         }
 
-        void updateArfReg(opr& comEn, opr& comArcIdx, opr& data){
-            zif(comEn & (comArcIdx != 0)){
-                archRegs[comArcIdx] <<= data;
-            }
-        }
-        void onMisPred(opr& misTag){
-            for(int specIdx = 0; specIdx < SPECTAG_LEN; specIdx++){
-                preRenGrp[specIdx].onMisPred(misTag, busy, rename);
-            }
-            preRenMaster.onMisPred(misTag, busy, rename);
-        }
-
-        void onSucPred(opr& sucTag){
-            for (int specIdx = 0; specIdx < SPECTAG_LEN; specIdx++){
-                ///////// it must be data from preMaster because it can be occur with commit at the same time
-                preRenGrp[specIdx].onSucPred(sucTag, preRenMaster);
+        void update_arf_reg(opr& com_en, opr& com_arc_idx, opr& data){
+            zif(com_en & (com_arc_idx != 0)){
+                arch_regs[com_arc_idx] <<= data;
             }
         }
-
-        void onRename(RenameCmd& renCmd1, RenameCmd& renCmd2){
-            for (int specIdx = 0; specIdx < SPECTAG_LEN; specIdx++){
-                preRenGrp[specIdx].onRename(renCmd1, renCmd2, false);
+        void on_mis_pred(opr& mis_tag){
+            for(int spec_idx = 0; spec_idx < SPECTAG_LEN; spec_idx++){
+                pre_ren_grp[spec_idx].on_mis_pred(mis_tag, busy, rename);
             }
-            preRenMaster.onRename(renCmd1, renCmd2, true);
+            pre_ren_master.on_mis_pred(mis_tag, busy, rename);
         }
 
-        void onCommit(opr& comEn1    , opr& comRrfPtr1,
-                      opr& comArcIdx1, opr& comData1  ,
-                      opr& comEn2    , opr& comRrfPtr2,
-                      opr& comArcIdx2, opr& comData2)
+        void on_suc_pred(opr& suc_tag){
+            for (int spec_idx = 0; spec_idx < SPECTAG_LEN; spec_idx++){
+                ///////// it must be data from pre_master because it can be occur with commit at the same time
+                pre_ren_grp[spec_idx].on_suc_pred(suc_tag, pre_ren_master);
+            }
+        }
+
+        void on_rename(RenameCmd& ren_cmd1, RenameCmd& ren_cmd2){
+            for (int spec_idx = 0; spec_idx < SPECTAG_LEN; spec_idx++){
+                pre_ren_grp[spec_idx].on_rename(ren_cmd1, ren_cmd2, false);
+            }
+            pre_ren_master.on_rename(ren_cmd1, ren_cmd2, true);
+        }
+
+        void on_commit(opr& com_en1    , opr& com_rrf_ptr1,
+                      opr& com_arc_idx1, opr& com_data1  ,
+                      opr& com_en2    , opr& com_rrf_ptr2,
+                      opr& com_arc_idx2, opr& com_data2)
         {
-            for (int specIdx = 0; specIdx < SPECTAG_LEN; specIdx++){
-                preRenGrp[specIdx].onCommit(comEn1, comRrfPtr1, comArcIdx1,
-                                            comEn2, comRrfPtr2, comArcIdx2,
-                                            rename(specIdx));
+            for (int spec_idx = 0; spec_idx < SPECTAG_LEN; spec_idx++){
+                pre_ren_grp[spec_idx].on_commit(com_en1, com_rrf_ptr1, com_arc_idx1,
+                                            com_en2, com_rrf_ptr2, com_arc_idx2,
+                                            rename(spec_idx));
             }
-            preRenMaster.onCommit(comEn1, comRrfPtr1, comArcIdx1,
-                                  comEn2, comRrfPtr2, comArcIdx2,
-                                  renameMaster);
+            pre_ren_master.on_commit(com_en1, com_rrf_ptr1, com_arc_idx1,
+                                  com_en2, com_rrf_ptr2, com_arc_idx2,
+                                  rename_master);
 
             ////// does not need to update any priority//// order cannot be changed
-            updateArfReg(comEn1, comArcIdx1, comData1); ///   due to it contain commit eneable at the destination
-            updateArfReg(comEn2, comArcIdx2, comData2); ///
+            update_arf_reg(com_en1, com_arc_idx1, com_data1); ///   due to it contain commit eneable at the destination
+            update_arf_reg(com_en2, com_arc_idx2, com_data2); ///
 
         }
 
 
-        ////// | rename <-> commit <-> success | missPredict
+        ////// | rename <-> commit <-> success | miss_predict
     };
 
 }

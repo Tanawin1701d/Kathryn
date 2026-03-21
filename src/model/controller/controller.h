@@ -5,58 +5,58 @@
 #ifndef KATHRYN_MODEL_CONTROLLER_H
 #define KATHRYN_MODEL_CONTROLLER_H
 
-#include <stack>
-#include <memory>
+#include "stack"
+#include "memory"
 
-#include "abstract/mainControlable.h"
+#include "abstract/main_controlable.h"
 
-#include "model/hwComponent/module/module.h"
-#include "model/flowBlock/abstract/nodes/asmNode.h"
-#include "model/flowBlock/abstract/flowBlock_Base.h"
+#include "model/hw_component/module/module.h"
+#include "model/flow_block/abstract/nodes/asm_node.h"
+#include "model/flow_block/abstract/flow_block__base.h"
 
 /** flow block include */
 
-#include "model/flowBlock/seq/seq.h"
-#include "model/flowBlock/par/par.h"
-#include "model/flowBlock/loop/whileBase.h"
-#include "model/flowBlock/loop/doWhileBase.h"
-#include "model/flowBlock/loop/cbreak.h"
-#include "model/flowBlock/loop/loop.h"
-#include "model/flowBlock/cond/zif.h"
-#include "model/flowBlock/cond/zelif.h"
-#include "model/flowBlock/cond/if.h"
-#include "model/flowBlock/cond/elif.h"
-#include "model/flowBlock/pick/pick.h"
-#include "model/flowBlock/abstract/spReg/stateReg.h"
-#include "model/flowBlock/abstract/spReg/syncReg.h"
-#include "model/flowBlock/time/wait.h"
-#include "model/hwComponent/memBlock/MemBlock.h"
-#include "model/flowBlock/pipeline/pipe.h"
-#include "model/flowBlock/pipeline/syncMeta.h"
-#include "model/flowBlock/pipeline/zync.h"
-#include "model/flowBlock/pseudo/pseudo.h"
-#include "model/flowBlock/state/ztate.h"
-#include "model/flowBlock/state/zcase.h"
-#include "model/flowBlock/pipeStream/pipeStream.h"
+#include "model/flow_block/seq/seq.h"
+#include "model/flow_block/par/par.h"
+#include "model/flow_block/loop/while_base.h"
+#include "model/flow_block/loop/do_while_base.h"
+#include "model/flow_block/loop/cbreak.h"
+#include "model/flow_block/loop/loop.h"
+#include "model/flow_block/cond/zif.h"
+#include "model/flow_block/cond/zelif.h"
+#include "model/flow_block/cond/if.h"
+#include "model/flow_block/cond/elif.h"
+#include "model/flow_block/pick/pick.h"
+#include "model/flow_block/abstract/sp_reg/state_reg.h"
+#include "model/flow_block/abstract/sp_reg/sync_reg.h"
+#include "model/flow_block/time/wait.h"
+#include "model/hw_component/mem_block/mem_block.h"
+#include "model/flow_block/pipeline/pipe.h"
+#include "model/flow_block/pipeline/sync_meta.h"
+#include "model/flow_block/pipeline/zync.h"
+#include "model/flow_block/pseudo/pseudo.h"
+#include "model/flow_block/state/ztate.h"
+#include "model/flow_block/state/zcase.h"
+#include "model/flow_block/pipe_stream/pipe_stream.h"
 
 
 /** data Structure*/
 
-#include "model/hwCollection/dataStructure/slot/regSlot.h"
-#include "model/hwCollection/dataStructure/slot/wireSlot.h"
-#include "model/hwCollection/dataStructure/table/table.h"
-#include "model/hwCollection/dataStructure/mux/mux.h"
+#include "model/hw_collection/data_structure/slot/reg_slot.h"
+#include "model/hw_collection/data_structure/slot/wire_slot.h"
+#include "model/hw_collection/data_structure/table/table.h"
+#include "model/hw_collection/data_structure/mux/mux.h"
 
 
 /** clk mode*/
-#include "model/controller/clockMode.h"
+#include "model/controller/clock_mode.h"
 
 
-#include "model/interface/singleHandShake/shs.h"
+#include "model/interface/single_hand_shake/shs.h"
 
 
-#include "util/type/typeConv.h"
-#include "util/str/strUtil.h"
+#include "util/type/type_conv.h"
+#include "util/str/str_util.h"
 
 
 
@@ -84,28 +84,28 @@ namespace kathryn {
     class ModelController : public MainControlable {
 
     private:
-        bool hwCompAllocLock = true; /** this is used to indicate whether make<> is used or not only make<> can unlock*/
+        bool hw_comp_alloc_lock = true; /** this is used to indicate whether make<> is used or not only make<> can unlock*/
         /** building stack*/
         ////// module stack
-        std::stack<Module_Stack_Element>  moduleStack;
+        std::stack<Module_Stack_Element>  module_stack;
         ////// box stack to determine which hw element belong to stack
-        std::stack<Box*> boxStack;
+        std::stack<Box*> box_stack;
         ////// flow describe stack
-        std::stack<FlowBlockBase*> flowBlockStacks[FLOW_ST_CNT];
-        /////// pattern flow block is subset of flowBlockStack
-        Module* globalModulePtr = nullptr;
+        std::stack<FlowBlockBase*> flow_block_stacks[FLOW_ST_CNT];
+        /////// pattern flow block is subset of flow_block_stack
+        Module* global_module_ptr = nullptr;
 
     protected:
         /** get module that response we now consider*/
-        Module* getTopModulePtr();
-        Module_Stack_Element& getTargetModuleEle();
+        Module* get_top_module_ptr();
+        Module_Stack_Element& get_target_module_ele();
 
-       void           popFlowBlock(FlowBlockBase* fb);
-       void           pushFlowBlock(FlowBlockBase* fb);
-       void           detachTopFlowBlock();
+       void           pop_flow_block(FlowBlockBase* fb);
+       void           push_flow_block(FlowBlockBase* fb);
+       void           detach_top_flow_block();
     public:
-        FlowBlockBase* getTopFlowBlockBase();
-        FlowBlockBase* getTopFlowBlockBase(FLOW_STACK_TYPE stackEnum);
+        FlowBlockBase*get_top_flow_block_base_ptr();
+        FlowBlockBase*get_top_flow_block_base_ptr(FLOW_STACK_TYPE stack_enum);
 
 
     public:
@@ -119,30 +119,30 @@ namespace kathryn {
         void start() override;
         void reset() override;
         void clean() override;
-        Module* getGlobalModule();
+        Module*get_global_module_ptr();
         /** state register handling*/
-        void on_sp_reg_init(CtrlFlowRegBase* ptr, SP_REG_TYPE regType);
+        void on_sp_reg_init(CtrlFlowRegBase* ptr, SP_REG_TYPE reg_type);
         /** register handling*/
         void on_reg_init(Reg* ptr);
-        void on_reg_update(AsmNode* asmNode, Reg* srcReg);
+        void on_reg_update(AsmNode* asm_node, Reg* src_reg);
         /** wire handling*/
         void on_wire_init(Wire* ptr);
-        void on_wire_update(AsmNode* asmNode, Wire* srcWire);
-        /** exprMetas handling*/
+        void on_wire_update(AsmNode* asm_node, Wire* src_wire);
+        /** expr_metas handling*/
         void on_expression_init(expression* ptr);
-        /** on memBlock and its agent is updated*/
+        /** on mem_block and its agent is updated*/
         void on_memBlk_init(MemBlock* ptr);
-        void on_memBlkEleHolder_update(AsmNode* asmNode,MemBlockEleHolder* srcHolder);
+        void on_memBlkEleHolder_update(AsmNode* asm_node,MemBlockEleHolder* src_holder);
         /** on nest init*/
         void on_nest_init(nest* ptr);
-        void on_nest_update(AsmNode* asmNode, nest* srcNest);
+        void on_nest_update(AsmNode* asm_node, nest* src_nest);
         /** value and pm value handling*/
         void on_value_init(Val* ptr);
         void on_pmValue_init(PmVal* ptr);
         /** box handling*/
         void on_box_init(Box* ptr);
         void on_box_end_init(Box* ptr);
-        void on_box_update(AsmNode* asmNode, Box* box);
+        void on_box_update(AsmNode* asm_node, Box* box);
         void on_box_tryAddToBox(Operable* opr1, Assignable* asb);
         /** interface handling*/
         void on_itf_init(ModelInterface* ptr);
@@ -175,27 +175,27 @@ namespace kathryn {
          *
          * */
 
-        void assignFlowBlockParent(FlowBlockBase* fb);
-        bool isAllFlowStackEmpty();
-        bool isFlowStackEmpty(FLOW_STACK_TYPE flowStackType);
-        bool isTopFbBelongToTopModule();
-        void tryPurifyFlowStack();
+        void assign_flow_block_parent(FlowBlockBase* fb);
+        bool is_all_flow_stack_empty();
+        bool is_flow_stack_empty(FLOW_STACK_TYPE flow_stack_type);
+        bool is_top_fb_belong_to_top_module();
+        void try_purify_flow_stack();
         void on_attach_flowBlock(FlowBlockBase* fb);
         void on_detach_flowBlock(FlowBlockBase* fb);
-        void on_attachAndDetach_intrSignal(INT_TYPE intType, Operable* sig);
+        void on_attachAndDetach_intrSignal(INT_TYPE int_type, Operable* sig);
         //Operable& on_get_check_next_pipblk_ready_signal();
         FLOW_BLOCK_TYPE get_top_pattern_flow_block_type();
 
-        bool isTopOfStackBelongToTheSameModule(FLOW_STACK_TYPE a, FLOW_STACK_TYPE b);
+        bool is_top_of_stack_belong_to_the_same_module(FLOW_STACK_TYPE a, FLOW_STACK_TYPE b);
 
         /** lock allocation*/
-        void lockAllocation() {hwCompAllocLock = true;};
-        void unlockAllocation(){hwCompAllocLock = false;};
+        void lock_allocation() {hw_comp_alloc_lock = true;};
+        void unlock_allocation(){hw_comp_alloc_lock = false;};
         [[nodiscard]]
-        bool isAllocationLock() const{return hwCompAllocLock;}
+        bool is_allocation_lock() const{return hw_comp_alloc_lock;}
 
         /** for debugging and model checking purpose*/
-        std::string getCurModelStack();
+        std::string get_cur_model_stack();
 
         /**
          *
@@ -206,9 +206,9 @@ namespace kathryn {
     };
 
     /** this is entrace for every device to com_init with controller*/
-    ModelController* getControllerPtr();
-    Module*          getGlobalModulePtr();
-    void             freeControllerPtr();
+    ModelController* get_controller_ptr();
+    Module*          get_global_module_ptr();
+    void             free_controller_ptr();
 
 }
 

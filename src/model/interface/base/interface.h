@@ -4,9 +4,9 @@
 
 #ifndef src_model_interface_base_INTERFACE_H
 #define src_model_interface_base_INTERFACE_H
-#include "model/hwComponent/abstract/identifiable.h"
+#include "model/hw_component/abstract/identifiable.h"
 
-#include "model/controller/conInterf/controllerItf.h"
+#include "model/controller/con_interf/controller_itf.h"
 
 namespace kathryn{
 
@@ -25,15 +25,15 @@ namespace kathryn{
 
         void com_init() override;
 
-        virtual void buildLogicBase() = 0;
-        virtual void buildUserLogic(){ };
-        virtual void transferPayLoad() = 0;
+        virtual void build_logic_base() = 0;
+        virtual void build_user_logic(){ };
+        virtual void transfer_pay_load() = 0;
 
 
         //////// model debugable
 
-        std::string getMdIdentVal() override{
-            return getIdentDebugValue();
+        std::string get_md_ident_val() override{
+            return get_ident_debug_value();
         }
 
     };

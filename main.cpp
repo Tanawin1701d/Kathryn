@@ -1,9 +1,9 @@
 
 
-///#include "test/simTest/simTest11.h"
+///#include "test/sim_test/sim_test11.h"
 
 #include "kathryn.h"
-#include "frontEnd/cmd/cfe.h"
+#include "front_end/cmd/cfe.h"
 
 using namespace kathryn;
 
@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
     if (argc < 2){
         std::cout << "there is no argument value" << std::endl;
     }
-    auto params = readParamKathryn(argv[1]);
+    auto params = read_param_kathryn(argv[1]);
 
 
     /***** model and simulation start here*/

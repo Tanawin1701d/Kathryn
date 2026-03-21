@@ -5,8 +5,8 @@
 #ifndef KATHRYN_PMATH_H
 #define KATHRYN_PMATH_H
 
-#include <cassert>
-#include "sim/logicRep/valRep.h"
+#include "cassert"
+#include "sim/logic_rep/val_rep.h"
 
 namespace kathryn{
 
