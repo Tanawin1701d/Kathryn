@@ -56,7 +56,7 @@ namespace kathryn{
     }
 
     void FlowBlockPipeStream::buildHwComponent() {
-        mfAssert(!_subStreamEles.empty(), "pipestream flow must have at least one element");
+        mf_assert(!_subStreamEles.empty(), "pipestream flow must have at least one element");
         assert(_conBlocks.empty());
         /**generate hardware*/
         std::vector<Node*> allStartNodes;
@@ -66,7 +66,7 @@ namespace kathryn{
             streamMeta->setIntReset(intNodes[INT_RESET]); //// set interrupt reset must be set before gennode
             streamMeta->setHoldNode(holdNode);
             streamMeta->genNode(getClockMode());
-            streamMeta->setIdentStateId(getGlobalId(),idx);
+            streamMeta->setIdentStateId(get_global_id(),idx);
             streamMeta->addToSystemNodes(_sysNodes);
             idx++;
         }
@@ -95,7 +95,7 @@ namespace kathryn{
 
     }
 
-    std::string FlowBlockPipeStream::getMdDescribe() {
+    std::string FlowBlockPipeStream::get_md_describe() {
 
         // std::string ret;
         // int eleCnt = 0;
@@ -110,7 +110,7 @@ namespace kathryn{
 
     }
 
-    void FlowBlockPipeStream::addMdLog(MdLogVal *mdLogVal) {
+    void FlowBlockPipeStream::add_md_log(MdLogVal *mdLogVal) {
 
         // mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() + " ]");
         // for (auto seqEle: _subSeqMetas){

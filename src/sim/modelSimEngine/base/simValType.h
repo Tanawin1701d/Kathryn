@@ -258,7 +258,7 @@ namespace kathryn{
         std::string castToSignStr() const{
 
             SIM_VALREP_TYPE_I_ALL svti = cvtValRepType(_valType);
-            mfAssert(svti.type <= SVTI_64M, "for now sign value conversion is not available");
+            mf_assert(svti.type <= SVTI_64M, "for now sign value conversion is not available");
 
             return "static_cast<" + SVTI_toUnitType(svti) + ">(" + _data + ")";
 

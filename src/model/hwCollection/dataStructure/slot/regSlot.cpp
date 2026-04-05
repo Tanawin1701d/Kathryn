@@ -38,7 +38,7 @@ namespace kathryn{
         ):
         Slot(slotMeta){
             /** this is used to initialize from RegSlot slice*/
-            mfAssert(slotMeta.getNumField() == regs.size(), "field_metas size not match with regs size");
+            mf_assert(slotMeta.getNumField() == regs.size(), "field_metas size not match with regs size");
             _regs = regs;
             for(Reg* reg: _regs){
                 _hwFieldMetas.push_back({reg, reg});
@@ -62,7 +62,7 @@ namespace kathryn{
     void RegSlot::initHwStructure(const std::string& prefixName){
         for(int idx = 0; idx < _meta.getNumField(); idx++){
             FieldMeta fieldMeta = _meta.getCopyField(idx);
-            mfAssert(fieldMeta._size > 0, "field " + fieldMeta._name + " is not pass integrity test");
+            mf_assert(fieldMeta._size > 0, "field " + fieldMeta._name + " is not pass integrity test");
             Reg* newReg = &mOprReg(prefixName +
                 "colIdx_" + std::to_string(idx) +
                 "_" + fieldMeta._name,
@@ -103,7 +103,7 @@ namespace kathryn{
 
     void RegSlot::doGlobAsm(AsmNode* asmNode) {
         assert(asmNode != nullptr);
-        ModelController* ctrl = getControllerPtr();
+        ModelController* ctrl = get_controller_ptr();
         assert(ctrl != nullptr);
         ctrl->on_reg_update(
             asmNode,
@@ -118,7 +118,7 @@ namespace kathryn{
     }
 
     void RegSlot::makeResetEvent(int colIdx, ull resetValue, CLOCK_MODE cm){
-        mfAssert(isValidIdx(colIdx), "index out of range to get " + std::to_string(colIdx));
+        mf_assert(isValidIdx(colIdx), "index out of range to get " + std::to_string(colIdx));
         _regs[colIdx]->makeResetEvent(resetValue, cm);
     }
 
@@ -134,13 +134,13 @@ namespace kathryn{
 
     /** single slicing*/
     Reg& RegSlot::operator () (int idx){
-        mfAssert(isValidIdx(idx), "index out of range to get " + std::to_string(idx));
+        mf_assert(isValidIdx(idx), "index out of range to get " + std::to_string(idx));
         return *_regs[idx];
     }
 
     Reg& RegSlot::operator () (const std::string& fieldName){
         int idx = getIdx(fieldName);
-        mfAssert(_meta.isValidIdx(idx), "field name " + fieldName + " not found");
+        mf_assert(_meta.isValidIdx(idx), "field name " + fieldName + " not found");
         return *_regs[idx];
     }
 
@@ -159,8 +159,8 @@ namespace kathryn{
         int idx    = getIdx(startField);
         int endIdx = getIdx(endField) + 1;
 
-        mfAssert(isValidIdx(idx)   , "field name " + startField + " not found");
-        mfAssert(isValidIdx(endIdx), "field name " + endField + " not found");
+        mf_assert(isValidIdx(idx)   , "field name " + startField + " not found");
+        mf_assert(isValidIdx(endIdx), "field name " + endField + " not found");
 
         return (*this)(idx, endIdx);
     }

@@ -28,7 +28,7 @@ namespace kathryn{
     }
 
     void Reg::com_init() {
-        ctrl->on_reg_init(this);
+        _ctrl->on_reg_init(this);
     }
 
     /***
@@ -51,7 +51,7 @@ namespace kathryn{
         assert(desSlice.stop <= getSlice().stop);
         /** bit control policy is shink the msb bit*/
         Slice finalizeDesSlice = desSlice.getMatchSizeSubSlice(srcOpr.getOperableSlice());
-        ctrl->on_reg_update(
+        _ctrl->on_reg_update(
                 generateBasicNode(srcOpr, finalizeDesSlice, asmType),
                 this
         );

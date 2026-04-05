@@ -44,8 +44,8 @@ namespace kathryn{
         void doPreFunction() override;
         void doPostFunction() override;
         /** debug method*/
-        std::string getMdDescribe() override;
-        void addMdLog(MdLogVal* mdLogVal) override;
+        std::string get_md_describe() override;
+        void add_md_log(MdLogVal* mdLogVal) override;
     };
 
     /***
@@ -78,8 +78,8 @@ namespace kathryn{
         void doPreFunction() override;
         void doPostFunction() override;
         /** debugger*/
-        std::string getMdDescribe() override;
-        void addMdLog(MdLogVal* mdLogVal) override;
+        std::string get_md_describe() override;
+        void add_md_log(MdLogVal* mdLogVal) override;
     };
 
 }

@@ -41,7 +41,7 @@ namespace kathryn{
         int indexSize   = sel.getOperableSlice().getSize();
         int capableSize = 1 << indexSize;
         assert(indexSize >= 1);
-        mfAssert(capableSize == srcs.size(), "the input amount should be 2^(sel)");
+        mf_assert(capableSize == srcs.size(), "the input amount should be 2^(sel)");
 
         //// initialize queue
         std::queue<Operable*> muxQueue;

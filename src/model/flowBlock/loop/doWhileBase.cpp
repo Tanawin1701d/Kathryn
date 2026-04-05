@@ -99,15 +99,15 @@ namespace kathryn {
         onDetachBlock();
     }
 
-    void FlowBlockDowhile::addMdLog(MdLogVal *mdLogVal) {
+    void FlowBlockDowhile::add_md_log(MdLogVal *mdLogVal) {
 
-        mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() + " ]");
-        mdLogVal->addVal("exitNode " + exitNode->getMdIdentVal() + " " + exitNode->getMdDescribe());
+        mdLogVal->addVal("[ " + FlowBlockBase::get_md_ident_val() + " ]");
+        mdLogVal->addVal("exitNode " + exitNode->get_md_ident_val() + " " + exitNode->get_md_describe());
         mdLogVal->addVal("resultNodeWrap is" +
-                         resultNodeWrapper->getMdIdentVal() + " " + resultNodeWrapper->getMdDescribe());
+                         resultNodeWrapper->get_md_ident_val() + " " + resultNodeWrapper->get_md_describe());
 
         auto subLog = mdLogVal->makeNewSubVal();
-        implicitFlowBlock->addMdLog(subLog);
+        implicitFlowBlock->add_md_log(subLog);
 
     }
 

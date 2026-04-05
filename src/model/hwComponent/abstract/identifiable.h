@@ -94,14 +94,14 @@ namespace kathryn {
                 _parent(nullptr)
             {
 
-            if (isVarNameRetrievable(_globalId)){ _varMeta = retrieveVarMeta();}
+            if (isVarNameRetrievable(_global_id)){ _varMeta = retrieveVarMeta();}
             if (!_varMeta.isUser){ _varMeta.varName += "_SYS";}
-            _globalName = GLOBAL_PREFIX[type] + std::to_string(_globalId);
+            _global_name = GLOBAL_PREFIX[type] + std::to_string(_global_id);
 
-            if (_globalId ==78){
+            if (_global_id ==78){
                 //mfAssert(false, "dddddd");
                 int x = 0;
-                if (_globalId == 5088){
+                if (_global_id == 5088){
                     x = 1;
                 }
             }
@@ -133,7 +133,7 @@ namespace kathryn {
         VarMeta&           getVarMeta() {return _varMeta;}
 
         /**build Inherit varname*/
-        void               buildInheritName() override;
+        void               build_inherit_name() override;
 
         Module*            getParent(){return _parent;}
         void               setParent(Module* parent) {_parent = parent;}
@@ -141,7 +141,7 @@ namespace kathryn {
         /** get debug value*/
         [[nodiscard]]std::string
         getIdentDebugValue() const{
-            return getGlobalName() + "_localName_" + getVarName();
+            return get_global_name() + "_localName_" + getVarName();
         }
 
     };

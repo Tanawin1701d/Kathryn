@@ -16,9 +16,9 @@ namespace kathryn {
      * */
     class HwCompControllerItf {
     protected:
-        ModelController* ctrl;
+        ModelController* _ctrl;
     public:
-        explicit HwCompControllerItf(bool requiredAllocCheck = true);
+        explicit HwCompControllerItf(bool required_alloc_check = true);
 
         /** use while constructor is invoke*/
         virtual void com_init() { assert(false); }

@@ -8,7 +8,7 @@
 namespace kathryn {
 
     void SyncReg::com_init() {
-        ctrl->on_sp_reg_init(this, SP_SYNC_REG);
+        _ctrl->on_sp_reg_init(this, SP_SYNC_REG);
     }
 
     SyncReg::SyncReg(int size): CtrlFlowRegBase(size,

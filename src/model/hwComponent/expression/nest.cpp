@@ -39,7 +39,7 @@ namespace kathryn{
     /** nest class*/
 
     void nest::com_init() {
-        ctrl->on_nest_init(this);
+        _ctrl->on_nest_init(this);
     }
 
     nest::nest(int size, std::vector<NestMeta> nestList):
@@ -100,7 +100,7 @@ namespace kathryn{
         /** basic node building*/
         auto* asmNode = new AsmNode(resultCollector);
         /** update node*/
-        ctrl->on_nest_update(asmNode, this);
+        _ctrl->on_nest_update(asmNode, this);
     }
 
     void nest::doNonBlockAsm(Operable &srcOpr, Slice desSlice) {
@@ -115,7 +115,7 @@ namespace kathryn{
         /** basic node building*/
         auto* asmNode = new AsmNode(resultCollector);
         /** update node*/
-        ctrl->on_nest_update(asmNode, this);
+        _ctrl->on_nest_update(asmNode, this);
     }
 
     /** assign enforcer*/
@@ -155,7 +155,7 @@ namespace kathryn{
                           Slice absSrcSlice,
                           Slice absDesSlice,
                           bool isblockingAsm){
-        mfAssert(!readOnly, "this nest list is readonly mode");
+        mf_assert(!readOnly, "this nest list is readonly mode");
         assert(absSrcSlice.getSize() >= absDesSlice.getSize());
         assert(absSrcSlice.stop <= srcOpr.getOperableSlice().getSize());
         assert(absDesSlice.stop <= getOperableSlice().getSize());

@@ -114,7 +114,7 @@ namespace kathryn{
         OP_FLAG("-O" + std::to_string(opLev)),
         PROJECT_DIR(KATHRYN_PROJECT_DIR){
 
-            mfAssert(opLev >= 0 && opLev <= 3,
+            mf_assert(opLev >= 0 && opLev <= 3,
                 "invalid optimization level");
 
         }

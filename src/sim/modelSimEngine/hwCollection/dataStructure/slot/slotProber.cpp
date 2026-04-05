@@ -10,13 +10,13 @@ namespace kathryn{
     void SlotSimProbe::init(Slot* inputSlot){
 
         this->slot = inputSlot;
-        mfAssert(slot != nullptr, "slot is null");
+        mf_assert(slot != nullptr, "slot is null");
         prevValues.resize(slot->getNumField(),0);
     }
 
 
     FieldSimInfo64 SlotSimProbe::getCurSimInfo(int col){
-        mfAssert(slot->isValidIdx(col), "get cur sim info at " +
+        mf_assert(slot->isValidIdx(col), "get cur sim info at " +
             std::to_string(col) + " out of range");
 
         FieldMeta   field       = slot->getMeta().getCopyField(col);

@@ -11,7 +11,7 @@ namespace kathryn{
 
 
     void startModelKathryn(){
-        getControllerPtr()->start();
+        get_controller_ptr()->start();
     }
 
     void startGenKathryn(PARAM& params){
@@ -29,7 +29,7 @@ namespace kathryn{
         /** clean global io declaration*/
         cleanGlobPool();
         /** reset model layer*/
-        getControllerPtr()->reset();
+        get_controller_ptr()->reset();
         /** reset simulation layer*/
         getSimController()->reset();
         /** reset generator*/

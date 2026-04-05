@@ -52,10 +52,10 @@ namespace kathryn{
         //** initialize node*/
         if (getFlowType() == CWHILE){
             conditionNode = new PseudoNode(1, BITWISE_OR);
-            conditionNode->setInternalIdent("cConNode" + std::to_string(getGlobalId()));
+            conditionNode->setInternalIdent("cConNode" + std::to_string(get_global_id()));
         }else{////// SWHILE
             conditionNode = new StateNode(getClockMode());
-            conditionNode->setInternalIdent("sConNode" + std::to_string(getGlobalId()));
+            conditionNode->setInternalIdent("sConNode" + std::to_string(get_global_id()));
             fillIntResetToNodeIfThere(conditionNode);
             fillHoldToNodeIfThere(conditionNode);
         }
@@ -146,16 +146,16 @@ namespace kathryn{
         onDetachBlock();
     }
 
-    void FlowBlockWhile::addMdLog(MdLogVal* mdLogVal){
+    void FlowBlockWhile::add_md_log(MdLogVal* mdLogVal){
 
-        mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() + " ]");
-        mdLogVal->addVal("conNode " + conditionNode->getMdIdentVal() + " " + conditionNode->getMdDescribe());
-        mdLogVal->addVal("exitNode " + exitNode->getMdIdentVal() + " " + exitNode->getMdDescribe());
+        mdLogVal->addVal("[ " + FlowBlockBase::get_md_ident_val() + " ]");
+        mdLogVal->addVal("conNode " + conditionNode->get_md_ident_val() + " " + conditionNode->get_md_describe());
+        mdLogVal->addVal("exitNode " + exitNode->get_md_ident_val() + " " + exitNode->get_md_describe());
         mdLogVal->addVal("resultNodeWrap is" +
-                         resultNodeWrapper->getMdIdentVal() + " " + resultNodeWrapper->getMdDescribe());
+                         resultNodeWrapper->get_md_ident_val() + " " + resultNodeWrapper->get_md_describe());
 
         auto subLog = mdLogVal->makeNewSubVal();
-        implicitFlowBlock->addMdLog(subLog);
+        implicitFlowBlock->add_md_log(subLog);
 
     }
 

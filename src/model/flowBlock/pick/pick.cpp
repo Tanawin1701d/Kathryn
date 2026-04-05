@@ -66,7 +66,7 @@ namespace kathryn{
 
         /////// build start node
         jointNode = new PseudoNode(1, BITWISE_OR);
-        jointNode->setInternalIdent("jointOfPickNode" + std::to_string(getGlobalId()));
+        jointNode->setInternalIdent("jointOfPickNode" + std::to_string(get_global_id()));
         if (isThereIntStart()){
             jointNode->addDependNode(intNodes[INT_START], nullptr);
         }
@@ -81,7 +81,7 @@ namespace kathryn{
         if (reqAutoExit){
             autoExitNode = new PseudoNode(1, BITWISE_AND);
             addSysNode(autoExitNode);
-            autoExitNode->setInternalIdent("pickAutoExit" + std::to_string(getGlobalId()));
+            autoExitNode->setInternalIdent("pickAutoExit" + std::to_string(get_global_id()));
             Operable* allFalse = nullptr;
             for (FlowBlockPickCond* fpc: pickCondBlocks){
                 assert(fpc != nullptr);
@@ -99,7 +99,7 @@ namespace kathryn{
         /////// build exit node
         exitNode = new PseudoNode(1, BITWISE_OR);
         addSysNode(exitNode);
-        exitNode->setInternalIdent("pickExit" + std::to_string(getGlobalId()));
+        exitNode->setInternalIdent("pickExit" + std::to_string(get_global_id()));
         ////// join all exit node
         for (auto & nodeWrapOfPickCondBlock : nodeWrapOfPickCondBlocks){
             exitNode->addDependNode(

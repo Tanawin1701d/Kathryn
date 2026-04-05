@@ -23,7 +23,7 @@ namespace kathryn{
         _desSynName     = param[_desSynthesisPrefix];
 
         _writerGroup.setPrefixFolder(_desVerilogFolder);
-        _masterModule   = getGlobalModulePtr();
+        _masterModule   = get_global_module_ptr();
     }
 
     void GenController::initEle(){

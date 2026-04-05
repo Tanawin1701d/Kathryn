@@ -33,7 +33,7 @@ namespace kathryn{
                         std::vector<AssignMeta*>& resultMetaCollector,
                         Slice  absSrcSlice,
                         Slice  absDesSlice) override{
-            mfAssert(false, "wire don't support this doBlockAsm"); assert(false);
+            mf_assert(false, "wire don't support this doBlockAsm"); assert(false);
         }
         void doNonBlockAsm(Operable& srcOpr,
                            std::vector<AssignMeta*>& resultMetaCollector,

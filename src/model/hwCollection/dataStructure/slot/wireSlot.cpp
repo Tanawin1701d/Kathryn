@@ -8,12 +8,12 @@
 namespace kathryn{
 
     WireSlotDynSliceAgent& WireSlotDynSliceAgent::operator <<=(Operable&){
-        mfAssert(false, "wire slot not support <<= operator");
+        mf_assert(false, "wire slot not support <<= operator");
         return *this;
     }
 
     WireSlotDynSliceAgent& WireSlotDynSliceAgent::operator <<=(ull){
-        mfAssert(false, "wire slot not support <<= operator");
+        mf_assert(false, "wire slot not support <<= operator");
         return *this;
     }
 
@@ -32,7 +32,7 @@ namespace kathryn{
         ):
         Slot(slotMeta){
             /** this is used to initialize from slice*/
-            mfAssert(slotMeta.getNumField() == wires.size(), "field_metas size not match with wires size");
+            mf_assert(slotMeta.getNumField() == wires.size(), "field_metas size not match with wires size");
             _wires = wires;
             for(Wire* wire: _wires){
                 _hwFieldMetas.push_back({wire, wire});
@@ -64,7 +64,7 @@ namespace kathryn{
 
         for(int idx = 0; idx < _meta.getNumField(); idx++){
             FieldMeta fieldMeta = _meta.getCopyField(idx);
-            mfAssert(fieldMeta._size > 0, "field " + fieldMeta._name + " is not pass integrity test");
+            mf_assert(fieldMeta._size > 0, "field " + fieldMeta._name + " is not pass integrity test");
             Wire* newWire = &mOprWire(prefixName + "_" +fieldMeta._name, fieldMeta._size);
             _wires.push_back(newWire);
             _hwFieldMetas.push_back({newWire, newWire});
@@ -107,13 +107,13 @@ namespace kathryn{
 
     /** single slicing*/
     Wire& WireSlot::operator () (int idx){
-        mfAssert(isValidIdx(idx), "index out of range to get " + std::to_string(idx));
+        mf_assert(isValidIdx(idx), "index out of range to get " + std::to_string(idx));
         return *_wires[idx];
     }
 
     Wire& WireSlot::operator () (const std::string& fieldName){
         int idx = getIdx(fieldName);
-        mfAssert(_meta.isValidIdx(idx), "field name " + fieldName + " not found");
+        mf_assert(_meta.isValidIdx(idx), "field name " + fieldName + " not found");
         return *_wires[idx];
     }
 
@@ -131,8 +131,8 @@ namespace kathryn{
         int idx    = getIdx(startField);
         int endIdx = getIdx(endField) + 1;
 
-        mfAssert(isValidIdx(idx)   , "field name " + startField + " not found");
-        mfAssert(isValidIdx(endIdx-1), "field name " + endField + " not found");
+        mf_assert(isValidIdx(idx)   , "field name " + startField + " not found");
+        mf_assert(isValidIdx(endIdx-1), "field name " + endField + " not found");
 
         return (*this)(idx, endIdx);
     }
@@ -161,14 +161,14 @@ namespace kathryn{
     }
 
     void WireSlot::addWire(const std::string& fieldName, Wire& wire){
-        mfAssert(!isThereField(fieldName), "field name " + fieldName + "alreadyExist");
+        mf_assert(!isThereField(fieldName), "field name " + fieldName + "alreadyExist");
         _meta        .addField({fieldName, wire.getOperableSlice().getSize()});
         _wires       .push_back(&wire);
         _hwFieldMetas.push_back({&wire, &wire});
     }
 
     void WireSlot::addWire(const std::string& fieldName, int size){
-        mfAssert(size > 0, "wire size must be positive");
+        mf_assert(size > 0, "wire size must be positive");
         Wire& newAddedWire = mOprWire(fieldName, size);
         addWire(fieldName, newAddedWire);
     }
@@ -204,7 +204,7 @@ namespace kathryn{
 
     void WireSlot::doGlobAsm(AsmNode* asmNode) {
         assert(asmNode != nullptr);
-        ModelController* ctrl = getControllerPtr();
+        ModelController* ctrl = get_controller_ptr();
         assert(ctrl != nullptr);
         ctrl->on_wire_update(
             asmNode,
@@ -214,13 +214,13 @@ namespace kathryn{
 
     /** it will match by name*/
     WireSlot& WireSlot::operator <<= (const Slot& ) const{
-        mfAssert(false, "wire slot not support <<= WireSlot::operator");
+        mf_assert(false, "wire slot not support <<= WireSlot::operator");
         assert(false);
         // return *this;
     }
 
     WireSlot& WireSlot::operator <<= (const WireSlot&){
-        mfAssert(false, "wire slot not support <<= WireSlot::operator");
+        mf_assert(false, "wire slot not support <<= WireSlot::operator");
         assert(false);
         //return *this;
     }

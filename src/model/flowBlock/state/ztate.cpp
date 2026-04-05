@@ -62,8 +62,8 @@ FlowBlockZtate::FlowBlockZtate(Operable &identState):
     }
 
     void FlowBlockZtate::addIntSignal(INT_TYPE type, Operable* signal){
-        mfAssert(!isThereIntStart(), "start interrupt can start in zblock");
-        mfAssert(!isThereIntRst(), "start interrupt can reset in zblock");
+        mf_assert(!isThereIntStart(), "start interrupt can start in zblock");
+        mf_assert(!isThereIntRst(), "start interrupt can reset in zblock");
     }
 
     NodeWrap *FlowBlockZtate::sumarizeBlock() {
@@ -83,11 +83,11 @@ FlowBlockZtate::FlowBlockZtate(Operable &identState):
         assert(false);
     }
 
-    std::string FlowBlockZtate::getMdDescribe() {
+    std::string FlowBlockZtate::get_md_describe() {
         assert(false);
     }
 
-    void FlowBlockZtate::addMdLog(MdLogVal *mdLogVal) {
+    void FlowBlockZtate::add_md_log(MdLogVal *mdLogVal) {
         assert(false);
     }
 

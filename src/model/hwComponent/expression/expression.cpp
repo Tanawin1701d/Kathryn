@@ -46,7 +46,7 @@ namespace kathryn{
 
 
     void expression::com_init() {
-        ctrl->on_expression_init(this);
+        _ctrl->on_expression_init(this);
     }
 
     void expression::doNonBlockAsm(Operable &srcOpr, Slice desSlice) {
@@ -55,11 +55,11 @@ namespace kathryn{
     }
 
     void expression::doNonBlockAsmMulAssCheck(Operable& srcOpr, Slice desSlice){
-        mfAssert(getAssignMode() == AM_MOD, "expression can use operator = only in MD mode");
+        mf_assert(getAssignMode() == AM_MOD, "expression can use operator = only in MD mode");
         _a = &srcOpr;
         assert(srcOpr.getOperableSlice().getSize() == getOperableSlice().getSize());
         assert(desSlice.getSize() == getOperableSlice().getSize());
-        mfAssert(!_valueAssinged, "multiple expression assign detect");
+        mf_assert(!_valueAssinged, "multiple expression assign detect");
         _valueAssinged = true;
     }
 
@@ -86,7 +86,7 @@ namespace kathryn{
 
     Operable* expression::checkShortCircuit(){
         if (isInCheckPath){
-            std::cout << "path end " << std::to_string(castToIdent()->getGlobalId()) << std::endl;
+            std::cout << "path end " << std::to_string(castToIdent()->get_global_id()) << std::endl;
             return this;
         }
         isInCheckPath = true;
@@ -95,14 +95,14 @@ namespace kathryn{
         if (_a != nullptr){
             result = _a->checkShortCircuit();
             if (result != nullptr){
-                std::cout << "path a " << std::to_string(castToIdent()->getGlobalId()) << std::endl;
+                std::cout << "path a " << std::to_string(castToIdent()->get_global_id()) << std::endl;
                 return result;
             }
         }
         if (_b != nullptr){
             result = _b->checkShortCircuit();
             if (result != nullptr){
-                std::cout << "path b " << std::to_string(castToIdent()->getGlobalId()) << std::endl;
+                std::cout << "path b " << std::to_string(castToIdent()->get_global_id()) << std::endl;
                 return result;
             }
         }

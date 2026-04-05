@@ -54,7 +54,7 @@ namespace kathryn {
         void com_final() override {};
         /** override assignable*/
         void doBlockAsm(Operable& srcOpr, Slice desSlice) override{
-            mfAssert(false, "expr don't support doBlockAsm");
+            mf_assert(false, "expr don't support doBlockAsm");
             assert(false);
         };
         void doNonBlockAsm(Operable& srcOpr, Slice desSlice) override;
@@ -64,15 +64,15 @@ namespace kathryn {
                         std::vector<AssignMeta*>& resultMetaCollector,
                         Slice  absSrcSlice,
                         Slice  absDesSlice) override{
-            mfAssert(false, "expr don't support doBlockAsm"); assert(false);
+            mf_assert(false, "expr don't support doBlockAsm"); assert(false);
         }
         void doNonBlockAsm(Operable& srcOpr,
                            std::vector<AssignMeta*>& resultMetaCollector,
                            Slice  absSrcSlice,
                            Slice  absDesSlice) override{
-            mfAssert(absDesSlice == getSlice()                    ,
+            mf_assert(absDesSlice == getSlice()                    ,
                      "des expression assign wrapper doesn't cover entire expression");
-            mfAssert(absSrcSlice.getSize() >= getSlice().getSize(),
+            mf_assert(absSrcSlice.getSize() >= getSlice().getSize(),
                      "src expression assign wrapper doesn't cover entire expression");
             doGlobalAsm(srcOpr, resultMetaCollector, absSrcSlice, absDesSlice, ASM_DIRECT);
         }

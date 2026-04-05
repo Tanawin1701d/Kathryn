@@ -182,9 +182,9 @@ namespace kathryn{
     }
 
     void SimInterface::describeModelTriggerWrapper(){
-        getControllerPtr()->on_globalModule_init_auxilaryComponent();
+        get_controller_ptr()->on_globalModule_init_auxilaryComponent();
         describeModelTrigger();
-        getControllerPtr()->on_globalModule_final_auxilaryComponent();
+        get_controller_ptr()->on_globalModule_final_auxilaryComponent();
     }
 
 
@@ -227,7 +227,7 @@ namespace kathryn{
     void SimInterface::createModelSimEvent(){
 
         /** generate c++ file**/
-        _proxyBuildMng.setStartModule(getGlobalModulePtr()); /// todo , SIM_CLIENT_PATH);
+        _proxyBuildMng.setStartModule(get_global_module_ptr()); /// todo , SIM_CLIENT_PATH);
         _proxyBuildMng.setTracer(&_traceEvents);
 
         if (hasConfig(_simProxyBuildMode, SimProxyBuildMode::SPB_GEN)){
@@ -256,7 +256,7 @@ namespace kathryn{
     }
 
     void SimInterface::initPerfCol(){
-        Module* globalMd = getGlobalModulePtr();
+        Module* globalMd = get_global_module_ptr();
         assert(globalMd != nullptr);
         assert(_flowWriter != nullptr);
         _flowWriter->init(globalMd);

@@ -41,8 +41,8 @@ namespace kathryn{
         /** for module to build hardware component*/
         void buildHwComponent() override;
         /** get describe*/
-        std::string getMdDescribe() override;
-        void addMdLog(MdLogVal *mdLogVal) override;
+        std::string get_md_describe() override;
+        void add_md_log(MdLogVal *mdLogVal) override;
         /** Loop macro to notice position of system*/
         void doPreFunction() override;
         void doPostFunction() override;

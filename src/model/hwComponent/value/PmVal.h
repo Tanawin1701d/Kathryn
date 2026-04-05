@@ -41,22 +41,22 @@ namespace kathryn{
          * override assignable
          * */
         void doBlockAsm(Operable& b, Slice desSlice) override {
-            mfAssert(false, "val don't support this <<= assigment"); assert(false);
+            mf_assert(false, "val don't support this <<= assigment"); assert(false);
         }
         void doNonBlockAsm(Operable& b, Slice desSlice) override {
-            mfAssert(false, "val don't support this   = assigment"); assert(false);
+            mf_assert(false, "val don't support this   = assigment"); assert(false);
         }
         void doBlockAsm(Operable& srcOpr,
                         std::vector<AssignMeta*>& resultMetaCollector,
                         Slice  absSrcSlice,
                         Slice  absDesSlice) override{
-            mfAssert(false, "val don't support this doBlockAsm"); assert(false);
+            mf_assert(false, "val don't support this doBlockAsm"); assert(false);
         }
         void doNonBlockAsm(Operable& srcOpr,
                            std::vector<AssignMeta*>& resultMetaCollector,
                            Slice  absSrcSlice,
                            Slice  absDesSlice) override{
-            mfAssert(false, "val don't support this doNonBlockAsm"); assert(false);
+            mf_assert(false, "val don't support this doNonBlockAsm"); assert(false);
         }
 
         PmVal& operator = (Operable& b){ operatorEq(b);                                return *this;}

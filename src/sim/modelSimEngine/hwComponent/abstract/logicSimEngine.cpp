@@ -39,7 +39,7 @@ namespace kathryn{
 
     std::string LogicSimEngine::genAssignAEqB(Slice desSlice, bool isDesTemp,
                                               Operable* srcOpr){
-        if (_ident->getGlobalId() == 103){
+        if (_ident->get_global_id() == 103){
             std::cout << "got 103" << std::endl;
         }
         assert(srcOpr != nullptr);
@@ -138,7 +138,7 @@ namespace kathryn{
     }
 
     ValR LogicSimEngine::getValRep(){
-        std::string name = _ident->getGlobalName() +
+        std::string name = _ident->get_global_name() +
             (_ident->isUserVar() ? "_USER_" + _ident->getVarName() : "_SYS");
 
         int size = _asb->getAssignSlice().getSize();
@@ -178,7 +178,7 @@ namespace kathryn{
 
     void LogicSimEngine::createOp(CbBaseCxx& cb){
         ///////// build string
-        cb.addCm(_ident->getGlobalName());
+        cb.addCm(_ident->get_global_name());
 
         _asb->sortUpEventByPriority();
         if (_isTempReq){
@@ -227,7 +227,7 @@ namespace kathryn{
 
 
     ValRepBase& LogicSimEngine::getProxyRep(){
-        mfAssert(proxyRep.isInUsed(), "you might access the element that have not been tied with "
+        mf_assert(proxyRep.isInUsed(), "you might access the element that have not been tied with "
                  "registeration of proxy sim manager");
         return proxyRep;
     }

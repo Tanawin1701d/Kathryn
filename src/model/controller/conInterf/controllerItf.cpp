@@ -8,11 +8,11 @@
 
 
 namespace kathryn{
-    HwCompControllerItf::HwCompControllerItf(bool requiredAllocCheck): ctrl(getControllerPtr()) {
+    HwCompControllerItf::HwCompControllerItf(bool required_alloc_check): _ctrl(get_controller_ptr()) {
 
-        if (requiredAllocCheck) {
-            assert(!ctrl->isAllocationLock());
-            ctrl->lockAllocation();
+        if (required_alloc_check) {
+            assert(!_ctrl->is_allocation_lock());
+            _ctrl->lock_allocation();
         }
     }
 }

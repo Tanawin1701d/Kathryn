@@ -86,7 +86,7 @@ namespace kathryn{
         ///
         /////// read mode
         ///
-        cb.addCm(_ident->getGlobalName() + "  readMode");
+        cb.addCm(_ident->get_global_name() + "  readMode");
         ////// we are so sure that it is the same as the width
         ValR memValR = _master->_master->getSimEngine()->getValRep();
         ////////// we must fix indexer type to match main memory
@@ -105,7 +105,7 @@ namespace kathryn{
         std::string auxAssVal = setterEq.toString() + "; " + indexerEq.toString() + ";";
 
         ///////// build string
-        cb.addCm(_ident->getGlobalName());
+        cb.addCm(_ident->get_global_name());
         //assert(_asb->checkDesIsFullyAssignAndEqual());
         createOpWithSoleCondition(cb, auxAssVal);
     }
@@ -114,7 +114,7 @@ namespace kathryn{
     void MemEleHolderSimEngine::createOpEndCycle(CbBaseCxx& cb){
 
         if (_master->isWriteMode()){
-            cb.addCm(_ident->getGlobalName());
+            cb.addCm(_ident->get_global_name());
 
             CbIfCxx&  ifBlock = cb.addIf(getIsSetVar().toString());
             ValR memBlkValR = _master->_master->getSimEngine()->getValRep();

@@ -24,10 +24,10 @@ namespace kathryn{
         std::string getDebugString(){
             std::string result =  "depend on state ";
             for (auto dep: dependState){
-                result += dep->castToIdent()->getGlobalName() + ",";
+                result += dep->castToIdent()->get_global_name() + ",";
             }
             result += "when " + ((condition != nullptr) ?
-                    condition->castToIdent()->getGlobalName() :
+                    condition->castToIdent()->get_global_name() :
                     "none"
                     );
             return result;

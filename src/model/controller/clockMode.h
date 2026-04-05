@@ -6,8 +6,12 @@
 #define SRC_MODEL_CONTROLLER_CLOCKMODE_H
 
 namespace kathryn{
-
-enum CLOCK_MODE{
+    /**
+     * this is the global function
+     * that enable the block and assignment to
+     * collect the designer's sensitive clock model
+     */
+    enum CLOCK_MODE{
     CM_POSEDGE,
     CM_NEGEDGE,
     CM_CLK_FREE,

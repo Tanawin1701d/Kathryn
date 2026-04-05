@@ -90,14 +90,14 @@ namespace kathryn {
 
         /** override assignable*/
         void doBlockAsm(Operable& srcOpr, Slice desSlice) override {
-            mfAssert(getAssignMode() == AM_MOD, "agent can use operator <<= only in MD mode");
+            mf_assert(getAssignMode() == AM_MOD, "agent can use operator <<= only in MD mode");
             assert(desSlice.getSize() <= Slicable<T>::getSlice().getSize());
             assert(desSlice.stop      <= Slicable<T>::getSlice().stop);
             _master->callBackBlockAssignFromAgent(srcOpr,desSlice);
         }
 
         void doNonBlockAsm(Operable& srcOpr, Slice desSlice) override{
-            mfAssert(getAssignMode() == AM_MOD, "agent can use operator <<= only in MD mode");
+            mf_assert(getAssignMode() == AM_MOD, "agent can use operator <<= only in MD mode");
             assert(desSlice.getSize() <= Slicable<T>::getSlice().getSize());
             assert(desSlice.stop      <= Slicable<T>::getSlice().stop);
             _master->callBackNonBlockAssignFromAgent(srcOpr,desSlice);

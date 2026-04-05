@@ -10,7 +10,7 @@
 namespace kathryn {
 
     void StateReg::com_init() {
-        ctrl->on_sp_reg_init(this, SP_STATE_REG);
+        _ctrl->on_sp_reg_init(this, SP_STATE_REG);
     }
 
     StateReg::StateReg(bool rstReq): CtrlFlowRegBase(1,

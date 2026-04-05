@@ -54,7 +54,7 @@ namespace kathryn{
                 if (top.nextDepIdx == 0){
                     ////////// first in in stack
                     if (isVisit){
-                        mfAssert(isResult,
+                        mf_assert(isResult,
                                  "cycle dep detect at node " + top.mpd->getValRep().getData());
                         dfs.pop();
                         continue;

@@ -132,16 +132,16 @@ namespace kathryn{
 
     }
 
-    void FlowBlockPipeBase::addMdLog(MdLogVal* mdLogVal){
-        mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() + " ]");
-        mdLogVal->addVal( "entNode " +       entNode->getMdIdentVal()      + " " + entNode->getMdDescribe());
-        mdLogVal->addVal( "waitNode " +      waitNode->getMdIdentVal()     + " " + waitNode->getMdDescribe());
-        mdLogVal->addVal( "exitDummy " +     exitDummy->getMdIdentVal()    + " " + exitDummy->getMdDescribe());
+    void FlowBlockPipeBase::add_md_log(MdLogVal* mdLogVal){
+        mdLogVal->addVal("[ " + FlowBlockBase::get_md_ident_val() + " ]");
+        mdLogVal->addVal( "entNode " +       entNode->get_md_ident_val()      + " " + entNode->get_md_describe());
+        mdLogVal->addVal( "waitNode " +      waitNode->get_md_ident_val()     + " " + waitNode->get_md_describe());
+        mdLogVal->addVal( "exitDummy " +     exitDummy->get_md_ident_val()    + " " + exitDummy->get_md_describe());
         mdLogVal->addVal("resultNodeWrap is" +
-                         resultNodeWrap->getMdIdentVal() + " " + resultNodeWrap->getMdDescribe());
+                         resultNodeWrap->get_md_ident_val() + " " + resultNodeWrap->get_md_describe());
 
         auto subLog = mdLogVal->makeNewSubVal();
-        implicitFlowBlock->addMdLog(subLog);
+        implicitFlowBlock->add_md_log(subLog);
 
     }
 

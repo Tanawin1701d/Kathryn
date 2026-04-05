@@ -38,7 +38,7 @@ namespace kathryn{
         std::string    getZepTrackName();
         bool           isJoinMaster() { return _isJoinMaster; }
 
-        void buildInheritName() override;
+        void build_inherit_name() override;
 
 
 

@@ -25,12 +25,12 @@ namespace kathryn{
 
 
     bool SimProbe::isWaiting(){
-        mfAssert(false, "standard simprobe not support isWaiting()");
+        mf_assert(false, "standard simprobe not support isWaiting()");
         return false;
     }
 
     bool SimProbe::isExecuting(){
-        mfAssert(checkSimEngineReady(), "cannot find sim engine for flow block to probe");
+        mf_assert(checkSimEngineReady(), "cannot find sim engine for flow block to probe");
         FlowBaseSimEngine* fbse = _flowBlockBase->getSimEngine();
         return fbse->isBlockRunning();
     }

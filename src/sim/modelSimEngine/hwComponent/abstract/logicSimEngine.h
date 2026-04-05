@@ -55,7 +55,7 @@ namespace kathryn{
         ValR                     getValRep() override;
         std::vector<std::string> getRegisVarName() override;
         ValR                     getTempValRep();
-        ull                      getVarId()        override{return _ident->getGlobalId();}
+        ull                      getVarId()        override{return _ident->get_global_id();}
         SIM_VALREP_TYPE_ALL      getValR_Type() override;
         CLOCK_MODE               getClockMode() override;
         void                     setVCDWriteStatus(bool status){ _setToWrite = status;}

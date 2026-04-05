@@ -30,7 +30,7 @@ namespace kathryn{
 
     void NestSimEngine::createOp(CbBaseCxx& cb){
         ///////// build string
-        cb.addCm(_ident->getGlobalName());
+        cb.addCm(_ident->get_global_name());
 
         /////////// we build from low priority to high priority
         int startIdx = 0;

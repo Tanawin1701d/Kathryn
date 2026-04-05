@@ -14,7 +14,7 @@ namespace kathryn{
     void WireAuto::buildHierarchy(Module* masterModule){
         assert(masterModule != nullptr);
         setParent(masterModule);
-        buildInheritName();
+        build_inherit_name();
     }
 
     void WireAuto::createLogicGen(){

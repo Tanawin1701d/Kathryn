@@ -65,7 +65,7 @@ namespace kathryn{
 
     void flushMfDebugger(){
         for (auto& mfValue : mfStorage){
-            *outFileMF << "[ " << mfValue.mdDebug->getMdIdentVal()
+            *outFileMF << "[ " << mfValue.mdDebug->get_md_ident_val()
                        << " ]    " << mfValue.debugMsg << "\n";
             *outFileMF << "---------------------------\n";
         }

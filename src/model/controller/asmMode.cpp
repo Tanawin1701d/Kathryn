@@ -10,22 +10,22 @@
 namespace kathryn{
 
 
-    ASM_NODE_PRIORITY_MODE curAsmNodePriorityMode = ANPM_AUTO;
-    int                    curAsmNodePriority = DEFAULT_UE_PRI_USER;
+    ASM_NODE_PRIORITY_MODE cur_asm_node_priority_mode = ANPM_AUTO;
+    int                    cur_asm_node_priority = DEFAULT_UE_PRI_USER;
 
     ASM_NODE_PRIORITY_MODE GET_ASM_PRI_MODE(){
-        return curAsmNodePriorityMode;
+        return cur_asm_node_priority_mode;
     }
     int GET_ASM_PRI_VAL(){
-        return curAsmNodePriority;
+        return cur_asm_node_priority;
     }
     void SET_ASM_PRI_TO_AUTO(){
-        curAsmNodePriorityMode = ANPM_AUTO;
-        curAsmNodePriority     = DEFAULT_UE_PRI_USER;
+        cur_asm_node_priority_mode = ANPM_AUTO;
+        cur_asm_node_priority     = DEFAULT_UE_PRI_USER;
     }
     void SET_ASM_PRI_TO_MANUAL(int priority){
-        curAsmNodePriorityMode = ANPM_MANUAL;
-        curAsmNodePriority     = priority;
+        cur_asm_node_priority_mode = ANPM_MANUAL;
+        cur_asm_node_priority     = priority;
 
     }
 

@@ -39,8 +39,8 @@ FlowBlockPseudo::FlowBlockPseudo(AsmNode* plainNode):
     }
 
     void FlowBlockPseudo::addIntSignal(INT_TYPE type, Operable* signal){
-        mfAssert(!isThereIntStart(), "start interrupt can start in Pseudo block");
-        mfAssert(!isThereIntRst(), "start interrupt can reset in Pseudo block");
+        mf_assert(!isThereIntStart(), "start interrupt can start in Pseudo block");
+        mf_assert(!isThereIntRst(), "start interrupt can reset in Pseudo block");
     }
 
     NodeWrap *FlowBlockPseudo::sumarizeBlock() {
@@ -59,11 +59,11 @@ FlowBlockPseudo::FlowBlockPseudo(AsmNode* plainNode):
         assert(false);
     }
 
-    std::string FlowBlockPseudo::getMdDescribe() {
+    std::string FlowBlockPseudo::get_md_describe() {
         assert(false);
     }
 
-    void FlowBlockPseudo::addMdLog(MdLogVal *mdLogVal) {
+    void FlowBlockPseudo::add_md_log(MdLogVal *mdLogVal) {
         assert(false);
     }
 

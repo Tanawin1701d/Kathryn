@@ -269,7 +269,7 @@ namespace kathryn {
         std::string getMdDescribeRecur() {
             std::string ret = "----------- sub Block --------\n";
             for (auto sb : _subBlocks){
-                ret += sb->getMdDescribe();
+                ret += sb->get_md_describe();
                 ret += "\n";
             }
             return ret;
@@ -281,11 +281,11 @@ namespace kathryn {
             mdLogVal->addVal("-----sub block------");
             for (auto sb: _subBlocks){
                 auto subStruct = mdLogVal->makeNewSubVal();
-                sb->addMdLog(subStruct);
+                sb->add_md_log(subStruct);
             }
         }
 
-        [[nodiscard]]std::string getMdIdentVal() override{
+        [[nodiscard]]std::string get_md_ident_val() override{
             return FBT_to_string(getFlowType()) + "_blockId_" + std::to_string(_fbId);
         }
     };

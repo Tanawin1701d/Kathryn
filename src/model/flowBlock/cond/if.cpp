@@ -97,10 +97,10 @@ namespace kathryn{
 
         if (getFlowType() == CIF){
             condNode = new PseudoNode(1, BITWISE_OR);
-            condNode->setInternalIdent("cifNode" + std::to_string(getGlobalId()));
+            condNode->setInternalIdent("cifNode" + std::to_string(get_global_id()));
         }else if(getFlowType() == SIF){
             condNode = new StateNode(getClockMode());
-            condNode->setInternalIdent("sifNode" + std::to_string(getGlobalId()));
+            condNode->setInternalIdent("sifNode" + std::to_string(get_global_id()));
             fillIntResetToNodeIfThere(condNode);
             fillHoldToNodeIfThere(condNode);
         }else{assert(false);}
@@ -113,7 +113,7 @@ namespace kathryn{
 
         exitNode = new PseudoNode(1, BITWISE_OR);
         addSysNode(exitNode);
-        exitNode->setInternalIdent("ifExitNode" + std::to_string(getGlobalId()));
+        exitNode->setInternalIdent("ifExitNode" + std::to_string(get_global_id()));
         resultNodeWrap = new NodeWrap();
 
 
@@ -205,22 +205,22 @@ namespace kathryn{
     }
 
 
-    std::string FlowBlockIf::getMdDescribe() {
+    std::string FlowBlockIf::get_md_describe() {
         std::string ret;
-        ret += "[ " + FlowBlockBase::getMdIdentVal() +" ]\n";
-        ret += "exitNode is " + ((exitNode != nullptr) ? exitNode->getMdIdentVal()+ "  " + exitNode->getMdDescribe(): "") + "\n";
-        ret += "[implicitFlowBlock]" + implicitFlowBlock->getMdDescribe() + "\n";
+        ret += "[ " + FlowBlockBase::get_md_ident_val() +" ]\n";
+        ret += "exitNode is " + ((exitNode != nullptr) ? exitNode->get_md_ident_val()+ "  " + exitNode->get_md_describe(): "") + "\n";
+        ret += "[implicitFlowBlock]" + implicitFlowBlock->get_md_describe() + "\n";
         return ret;
     }
 
-    void FlowBlockIf::addMdLog(MdLogVal *mdLogVal) {
+    void FlowBlockIf::add_md_log(MdLogVal *mdLogVal) {
         assert(allCondes.size() == allPurifiedCondes.size());
-        mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() +" ]");
+        mdLogVal->addVal("[ " + FlowBlockBase::get_md_ident_val() +" ]");
         int cnt = 0;
         if (resultNodeWrap->isThereForceExitNode()){
-            mdLogVal->addVal("forceExit is " + resultNodeWrap->getForceExitNode()->getMdIdentVal() +
+            mdLogVal->addVal("forceExit is " + resultNodeWrap->getForceExitNode()->get_md_ident_val() +
                              "  " +
-                             resultNodeWrap->getForceExitNode()->getMdDescribe());
+                             resultNodeWrap->getForceExitNode()->get_md_describe());
         }
         for (auto sb : _subBlocks){
             std::string subBlockHeaderDebug = "----> subblock " + std::to_string(cnt) + " condition ";
@@ -229,7 +229,7 @@ namespace kathryn{
             }
             mdLogVal->addVal(subBlockHeaderDebug);
 
-            sb->addMdLog(mdLogVal->makeNewSubVal());
+            sb->add_md_log(mdLogVal->makeNewSubVal());
             cnt++;
         }
     }

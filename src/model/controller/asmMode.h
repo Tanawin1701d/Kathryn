@@ -8,7 +8,11 @@
 
 namespace kathryn{
 
-    ///// this is global system to specify the priority when do the assignment
+    /**
+     this is global system to specify the priority of the assigmment operator
+     it is used to solve the collision of the two assignment operator
+    */
+
     enum ASM_NODE_PRIORITY_MODE{
         ANPM_AUTO, ///// default for user is 10
         ANPM_MANUAL

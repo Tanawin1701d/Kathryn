@@ -9,7 +9,7 @@
 namespace kathryn{
 
     void ModelInterface::com_init(){
-        ctrl->on_itf_init(this);
+        _ctrl->on_itf_init(this);
     }
 
 

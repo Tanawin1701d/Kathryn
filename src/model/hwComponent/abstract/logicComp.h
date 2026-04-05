@@ -90,7 +90,7 @@ namespace kathryn{
 
         /** iterable override*/
 
-        std::string getMdIdentVal() override{
+        std::string get_md_ident_val() override{
             return getIdentDebugValue();
         }
 
@@ -157,8 +157,8 @@ namespace kathryn{
         void startCheckShortCircuit(){
             Operable* matchOpr = checkShortCircuit();
             if (matchOpr != nullptr){
-                std::cout << getMdIdentVal() << "  match with " << matchOpr->castToIdent()->getIdentDebugValue() << std::endl;
-                mfAssert(false, "get short circuit");
+                std::cout << get_md_ident_val() << "  match with " << matchOpr->castToIdent()->getIdentDebugValue() << std::endl;
+                mf_assert(false, "get short circuit");
             }
         }
 

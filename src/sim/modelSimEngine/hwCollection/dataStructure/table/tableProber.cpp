@@ -18,7 +18,7 @@ namespace kathryn{
 
 
     SlotSimInfo64 TableSimProbe::getCurValues(int rowIdx){
-        mfAssert(table->isValidIdx(rowIdx), "get cur sim info at " + std::to_string(rowIdx) + " out of range");
+        mf_assert(table->isValidIdx(rowIdx), "get cur sim info at " + std::to_string(rowIdx) + " out of range");
         return rowSimProbes[rowIdx].getCurValues();
     }
 

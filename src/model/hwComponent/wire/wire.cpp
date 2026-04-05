@@ -29,18 +29,18 @@ namespace kathryn{
 
 
     void Wire::com_init() {
-        ctrl->on_wire_init(this);
+        _ctrl->on_wire_init(this);
     }
 
     void Wire::doBlockAsm(Operable &srcOpr, Slice desSlice) {
-        mfAssert(false, "wire doesn't support blocking asignment <<=");
+        mf_assert(false, "wire doesn't support blocking asignment <<=");
     }
 
     void Wire::doNonBlockAsm(Operable &srcOpr, Slice desSlice) {
         assert(getAssignMode() == AM_MOD);
         assert(getSlice().isContain(desSlice));
         Slice finalizeDesSlice = desSlice.getMatchSizeSubSlice(srcOpr.getOperableSlice());
-        ctrl->on_wire_update(
+        _ctrl->on_wire_update(
                 generateBasicNode(srcOpr, finalizeDesSlice, ASM_DIRECT),
                 this);
     }

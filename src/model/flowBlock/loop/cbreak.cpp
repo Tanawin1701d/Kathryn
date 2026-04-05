@@ -85,16 +85,16 @@ namespace kathryn{
 
     }
 
-    std::string FlowBlockSCBreak::getMdDescribe(){
+    std::string FlowBlockSCBreak::get_md_describe(){
         std::string ret;
-        ret += "[breakNode is]"+ (breakNode != nullptr ? breakNode->getMdDescribe() : "") + "\n";
+        ret += "[breakNode is]"+ (breakNode != nullptr ? breakNode->get_md_describe() : "") + "\n";
         return ret;
     }
 
-    void FlowBlockSCBreak::addMdLog(MdLogVal *mdLogVal) {
-        mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() + " ]");
+    void FlowBlockSCBreak::add_md_log(MdLogVal *mdLogVal) {
+        mdLogVal->addVal("[ " + FlowBlockBase::get_md_ident_val() + " ]");
         mdLogVal->addVal("breakNode is " +
-                             (breakNode != nullptr ? breakNode->getMdDescribe() : ""));
+                             (breakNode != nullptr ? breakNode->get_md_describe() : ""));
     }
 
     void FlowBlockSCBreak::doPreFunction() {

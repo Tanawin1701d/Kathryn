@@ -60,7 +60,7 @@ namespace kathryn{
         addSysNode(_waitNode);
         fillIntResetToNodeIfThere(_waitNode);
         fillHoldToNodeIfThere(_waitNode);
-        _waitNode->setInternalIdent("waitCond"+std::to_string(getGlobalId()));
+        _waitNode->setInternalIdent("waitCond"+std::to_string(get_global_id()));
 
         /** result node wrap*/
         _resultNodeWrap = new NodeWrap();
@@ -77,18 +77,18 @@ namespace kathryn{
         onDetachBlock();
     }
 
-    std::string FlowBlockCondWait::getMdDescribe(){
+    std::string FlowBlockCondWait::get_md_describe(){
         std::string ret;
-        ret += "[ " + getMdIdentVal() + " ]\n";
+        ret += "[ " + get_md_ident_val() + " ]\n";
         ret += "exitCond is " + _exitCond->castToIdent()->getIdentDebugValue() + "\n";
-        ret += "_waitNode is " +_waitNode->getMdIdentVal()+ " " +_waitNode->getMdDescribe() + "\n";
+        ret += "_waitNode is " +_waitNode->get_md_ident_val()+ " " +_waitNode->get_md_describe() + "\n";
         return ret;
     }
 
-    void FlowBlockCondWait::addMdLog(MdLogVal *mdLogVal) {
-        mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() + "]");
+    void FlowBlockCondWait::add_md_log(MdLogVal *mdLogVal) {
+        mdLogVal->addVal("[ " + FlowBlockBase::get_md_ident_val() + "]");
         mdLogVal->addVal("exitVal cond is " + _exitCond->castToIdent()->getIdentDebugValue());
-        mdLogVal->addVal("waitNode is " + _waitNode->getMdIdentVal()+ " " +_waitNode->getMdDescribe());
+        mdLogVal->addVal("waitNode is " + _waitNode->get_md_ident_val()+ " " +_waitNode->get_md_describe());
     }
 
     /***
@@ -161,7 +161,7 @@ namespace kathryn{
         addSysNode(_waitNode);
         fillIntResetToNodeIfThere(_waitNode);
         fillHoldToNodeIfThere(_waitNode);
-        _waitNode->setInternalIdent("waitCycle"+std::to_string(getGlobalId()));
+        _waitNode->setInternalIdent("waitCycle"+std::to_string(get_global_id()));
 
         /** result node wrap*/
         _resultNodeWrap = new NodeWrap();
@@ -178,17 +178,17 @@ namespace kathryn{
         onDetachBlock();
     }
 
-    std::string FlowBlockCycleWait::getMdDescribe(){
+    std::string FlowBlockCycleWait::get_md_describe(){
         std::string ret;
         ret += "\n";
-        ret += "[_waitNode] is " + _waitNode->getMdIdentVal() + "  " + _waitNode->getMdDescribe() + "\n";
+        ret += "[_waitNode] is " + _waitNode->get_md_ident_val() + "  " + _waitNode->get_md_describe() + "\n";
         ret += "[cnt] is " + cnt->castToIdent()->getIdentDebugValue()+ "\n";
         return ret;
     }
 
-    void FlowBlockCycleWait::addMdLog(MdLogVal *mdLogVal) {
-        mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() + "]");
-        mdLogVal->addVal( "wait Node is " + _waitNode->getMdIdentVal() + "  " + _waitNode->getMdDescribe());
+    void FlowBlockCycleWait::add_md_log(MdLogVal *mdLogVal) {
+        mdLogVal->addVal("[ " + FlowBlockBase::get_md_ident_val() + "]");
+        mdLogVal->addVal( "wait Node is " + _waitNode->get_md_ident_val() + "  " + _waitNode->get_md_describe());
         mdLogVal->addVal("counter" + cnt->castToIdent()->getIdentDebugValue());
     }
 

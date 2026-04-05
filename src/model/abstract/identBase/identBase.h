@@ -11,32 +11,35 @@ namespace kathryn{
 
     extern ull GLOBAL_MODEL_ID;
 
-    ull getLastIdentId();
+    ull get_last_ident_id();
 
     class IdentBase{
 
     protected:
-        bool                     _isFinalize = false;
-        ull                      _globalId = -1; ///// Id that shared with all others model element
-        std::string              _globalName; ////// global name that shared with all other model element
-        std::vector<std::string> _inheritName;////// name that inherit from master
+        bool                     _is_finalized = false; ///// is the variable below stable
+        ull                      _global_id    = -1;    ///// Id that shared with all others model element
+        std::string              _global_name;          ////// global name that shared with all other model element
+        std::vector<std::string> _inherit_name;         ////// name that inherit from master
 
     public:
         explicit IdentBase();
 
-        bool getIdentIsFinalize() const;
-        void setIdentIsFinalize();
+        bool is_ident_finalized() const;
+        void finalize_ident    ();
 
-        ull getGlobalId()const {return _globalId;}
+        ull                get_global_id     ()const {return _global_id;}
+        const std::string& get_global_name() const;
+        void               set_global_name   (const std::string &global_name);
 
-        const std::string& getGlobalName() const;
-        void setGlobalName(const std::string &globalName);
+        const std::vector<std::string>&
+                           get_inherit_name() const;
+        void               set_inherit_name(const std::vector<std::string> &inherit_name);
+        std::string        concat_inheritName();
 
-        const std::vector<std::string>& getInheritName() const;
-        void setInheritName(const std::vector<std::string> &inheritName);
-        virtual void buildInheritName() = 0;
 
-        std::string concat_inheritName();
+        virtual void       build_inherit_name() = 0;
+
+
 
         IdentBase& operator = (const IdentBase& rhs);
 

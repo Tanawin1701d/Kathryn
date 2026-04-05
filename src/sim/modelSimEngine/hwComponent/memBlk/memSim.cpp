@@ -13,7 +13,7 @@ namespace kathryn{
         _master(master){ assert(master != nullptr); }
 
     ValR MemSimEngine::getValRep(){
-        std::string     name = _master->getGlobalName();
+        std::string     name = _master->get_global_name();
         int             size = _master->getWidthSize();
 
         return {SIM_VALREP_TYPE_ALL(size), size, name};
@@ -24,7 +24,7 @@ namespace kathryn{
     }
 
 
-    ull MemSimEngine::getVarId(){ return _master->getGlobalId(); }
+    ull MemSimEngine::getVarId(){ return _master->get_global_id(); }
 
     SIM_VALREP_TYPE_ALL MemSimEngine::getValR_Type(){
         return SIM_VALREP_TYPE_ALL(_master->getWidthSize());

@@ -44,8 +44,8 @@ namespace kathryn{
         Box& operator <<= (Box& rhs);
 
         /** for debug*/
-        std::string getMdIdentVal() override;
-        void addMdLog(MdLogVal* mdLogVal) override;
+        std::string get_md_ident_val() override;
+        void add_md_log(MdLogVal* mdLogVal) override;
 
     };
 

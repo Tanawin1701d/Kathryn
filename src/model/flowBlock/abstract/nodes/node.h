@@ -207,14 +207,14 @@ namespace kathryn {
         virtual bool      isStateFullNode(){ return true; }
 
         /** get debugger value*/
-        std::string getMdIdentVal() override{
+        std::string get_md_ident_val() override{
             std::string ret = NT_to_string(nodeType) + " @ " + std::to_string((ull)this);
             return ret;
         }
-        void addMdLog(MdLogVal* mdLogVal) override{
-            mdLogVal->addVal("[Node] " + getMdIdentVal() +  "have node dep");
+        void add_md_log(MdLogVal* mdLogVal) override{
+            mdLogVal->addVal("[Node] " + get_md_ident_val() +  "have node dep");
             for (auto depSrc : nodeSrcs){
-                mdLogVal->addVal(depSrc.dependNode->getMdIdentVal());
+                mdLogVal->addVal(depSrc.dependNode->get_md_ident_val());
             }
         }
         /** internal value identifier for debugging purpose*/

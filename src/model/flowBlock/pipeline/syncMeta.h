@@ -68,17 +68,17 @@ namespace kathryn{
 
         ////// set start signal
         void setMasterReady(Operable& opr1){
-            mfAssert(opr1.getOperableSlice().getSize() == 1, "setMasterReady size must be 1");
+            mf_assert(opr1.getOperableSlice().getSize() == 1, "setMasterReady size must be 1");
             setSyncWireBase(_syncMasterReady, opr1);
         }
 
         void setSlaveReady(Operable& opr1){
-            mfAssert(opr1.getOperableSlice().getSize() == 1, "setSlaveReady size must be 1");
+            mf_assert(opr1.getOperableSlice().getSize() == 1, "setSlaveReady size must be 1");
             setSyncWireBase(_syncSlaveReady, opr1);
         }
 
         void setSlaveFinish(Operable& opr1){
-            mfAssert(opr1.getOperableSlice().getSize() == 1, "setSlaveReady size must be 1");
+            mf_assert(opr1.getOperableSlice().getSize() == 1, "setSlaveReady size must be 1");
             setSyncWireBase(_syncSlaveFin, opr1);
         }
 

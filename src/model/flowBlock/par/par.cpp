@@ -49,7 +49,7 @@ namespace kathryn{
 
     void
     FlowBlockPar::buildHwComponent() {
-        mfAssert((!_basicNodes.empty()) || (!_subBlocks.empty()),
+        mf_assert((!_basicNodes.empty()) || (!_subBlocks.empty()),
                  "parBlock has no assignment"
                  );
         assert(_conBlocks.empty());
@@ -61,7 +61,7 @@ namespace kathryn{
          * */
         if (!_basicNodes.empty()){
             basicStNode = new StateNode(getClockMode());
-            basicStNode->setInternalIdent("parStateReg_" + std::to_string(getGlobalId()));
+            basicStNode->setInternalIdent("parStateReg_" + std::to_string(get_global_id()));
             addSysNode(basicStNode);
             fillIntResetToNodeIfThere(basicStNode);
             fillHoldToNodeIfThere(basicStNode);
@@ -148,23 +148,23 @@ namespace kathryn{
         onDetachBlock();
     }
 
-    std::string FlowBlockPar::getMdDescribe() {
+    std::string FlowBlockPar::get_md_describe() {
         std::string ret;
 
         ret += "basicStateNode is " +
                 ((basicStNode != nullptr) ?
-                basicStNode->getMdIdentVal() + "  " + basicStNode->getMdDescribe():
+                basicStNode->get_md_ident_val() + "  " + basicStNode->get_md_describe():
                 ""
                 ) +"\n";
 
         ret += "synNode is " +
                 ((synNode != nullptr) ?
-                synNode->getMdIdentVal() + "  " + synNode->getMdDescribe():
+                synNode->get_md_ident_val() + "  " + synNode->get_md_describe():
                 "") + "\n";
 
         ret += "pseudoExitNode is " +
                 ((pseudoExitNode != nullptr) ?
-                pseudoExitNode->getMdIdentVal() + "  " + pseudoExitNode->getMdDescribe():
+                pseudoExitNode->get_md_ident_val() + "  " + pseudoExitNode->get_md_describe():
                 "") + "\n";
 
         ret += getMdDescribeRecur();
@@ -173,37 +173,37 @@ namespace kathryn{
         return ret;
     }
 
-    void FlowBlockPar::addMdLog(MdLogVal *mdLogVal) {
+    void FlowBlockPar::add_md_log(MdLogVal *mdLogVal) {
 
 
-        mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() + " ]");
+        mdLogVal->addVal("[ " + FlowBlockBase::get_md_ident_val() + " ]");
 
         mdLogVal->addVal("basicStateNode is " +
                          ((basicStNode != nullptr) ?
-                          basicStNode->getMdIdentVal() + "  " + basicStNode->getMdDescribe():
+                          basicStNode->get_md_ident_val() + "  " + basicStNode->get_md_describe():
                           ""
                          ));
 
         mdLogVal->addVal("synNode is " +
                          ((synNode != nullptr) ?
-                          synNode->getMdIdentVal() + "  " + synNode->getMdDescribe():
+                          synNode->get_md_ident_val() + "  " + synNode->get_md_describe():
                           ""));
 
         mdLogVal->addVal("pseudoExitNode is " +
                          ((pseudoExitNode != nullptr) ?
-                          pseudoExitNode->getMdIdentVal() + "  " + pseudoExitNode->getMdDescribe():
+                          pseudoExitNode->get_md_ident_val() + "  " + pseudoExitNode->get_md_describe():
                           ""));
 
         Node* exitNode = resultNodeWrap->getExitNode();
         mdLogVal->addVal("exit node is " +
                         ( (exitNode != nullptr) ?
-                            exitNode->getMdIdentVal() + "  " + exitNode->getMdDescribe():
+                            exitNode->get_md_ident_val() + "  " + exitNode->get_md_describe():
                             ""));
 
         if (resultNodeWrap->isThereForceExitNode()){
-            mdLogVal->addVal("forceExit is " + resultNodeWrap->getForceExitNode()->getMdIdentVal() +
+            mdLogVal->addVal("forceExit is " + resultNodeWrap->getForceExitNode()->get_md_ident_val() +
                              "  " +
-                             resultNodeWrap->getForceExitNode()->getMdDescribe());
+                             resultNodeWrap->getForceExitNode()->get_md_describe());
         }
 
         addMdLogRecur(mdLogVal);
@@ -237,7 +237,7 @@ namespace kathryn{
             }
             synNode->setInternalIdent(
                     "parSynNode_" +
-                    std::to_string(getGlobalId())
+                    std::to_string(get_global_id())
                     );
             /**syn node don't need to specify join operation due to it used own logic or*/
             if (basicStNode != nullptr){

@@ -44,7 +44,7 @@ std::string LogicGenBase::getOpr(){
     // if (!_ident->isUserVar()){
     //     return _ident->getGlobalName();
     // }
-    return _ident->getGlobalName() + "_" + _ident->getVarName();
+    return _ident->get_global_name() + "_" + _ident->getVarName();
 
 }
 

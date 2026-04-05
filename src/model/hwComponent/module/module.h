@@ -148,9 +148,9 @@ namespace kathryn{
         virtual void buildFlow();
         /** model debug*/
         [[maybe_unused]]
-        std::string getMdDescribe() override;
-        void        addMdLog(MdLogVal* mdLogVal) override;
-        std::string getMdIdentVal() override{return getIdentDebugValue();};
+        std::string get_md_describe() override;
+        void        add_md_log(MdLogVal* mdLogVal) override;
+        std::string get_md_ident_val() override{return getIdentDebugValue();};
 
         ModuleSimEngine* getSimEngine() override{
             return _moduleSimEngine;

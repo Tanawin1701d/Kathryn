@@ -19,16 +19,16 @@ namespace kathryn{
         _meta(std::move(meta)),
         _rows(rows),
         _isMasterTable(false){
-            mfAssert(!rows.empty(), "rows cannot be empty");
+            mf_assert(!rows.empty(), "rows cannot be empty");
             for (RegSlot* row: rows){
-                mfAssert(row != nullptr, "row cannot be nullptr");
+                mf_assert(row != nullptr, "row cannot be nullptr");
             }
         }
 
     Table::Table(const SlotMeta&  slotMeta, int amtRow, const std::string& prefixName):
         _meta(std::move(slotMeta)),
         _isMasterTable(true){
-            mfAssert(amtRow > 0, "amtRow must be greater than 0");
+            mf_assert(amtRow > 0, "amtRow must be greater than 0");
             buildRows(_meta, amtRow, prefixName);
         }
 
@@ -38,7 +38,7 @@ namespace kathryn{
               const std::string& prefixName):
         _meta(fieldNames, fieldSizes),
         _isMasterTable(true){
-            mfAssert(amtRow > 0, "amtRow must be greater than 0");
+            mf_assert(amtRow > 0, "amtRow must be greater than 0");
             buildRows(_meta, amtRow, prefixName);
         }
 
@@ -211,18 +211,18 @@ namespace kathryn{
     }
 
     WireSlot Table::genDynWireSlotBiIdx(Operable& requiredIdx){
-        mfAssert(isSufficientBinIdx(requiredIdx), "requiredIdx is not sufficient to get all system");
+        mf_assert(isSufficientBinIdx(requiredIdx), "requiredIdx is not sufficient to get all system");
         return genDynWireSlotBase(requiredIdx, false);
     }
 
     WireSlot Table::genDynWireSlotOHIdx(Operable& requiredIdx){
-        mfAssert(isSufficientOHIdx(requiredIdx), "requiredIdx is not sufficient to get all system");
+        mf_assert(isSufficientOHIdx(requiredIdx), "requiredIdx is not sufficient to get all system");
         return genDynWireSlotBase(requiredIdx, true);
     }
 
     ////// this will asssign the slot
     void Table::doGlobAsm(Slot& srcSlot, Operable& requiredIdx, ASM_TYPE asmType, bool isOneHotIdx){
-        mfAssert(isSufficientIdx(requiredIdx, isOneHotIdx), "requiredIdx is not sufficient to get all system");
+        mf_assert(isSufficientIdx(requiredIdx, isOneHotIdx), "requiredIdx is not sufficient to get all system");
         std::vector<AssignMeta*> allRowCollector;
         std::vector<Operable*>   allRowPreCond;
 
@@ -254,15 +254,15 @@ namespace kathryn{
             asmNode->addSpecificPreCondition(allRowPreCond[idx], idx);
         }
         /////// we have to add it to controller by ourself
-        ModelController* ctrl = getControllerPtr();
+        ModelController* ctrl = get_controller_ptr();
         assert(ctrl != nullptr);
         ctrl->on_reg_update(asmNode, nullptr);
 
     }
 
     void Table::doGlobAsm(Operable& srcOpr, Operable& rowIdx, Operable& colIdx, ASM_TYPE asmType, bool isOHRow){
-        mfAssert(isSufficientIdx(rowIdx, isOHRow), "requiredIdx is not sufficient to get all system");
-        mfAssert(_rows[0]->isSufficientIdx(colIdx.getOperableSlice().getSize()), "column is not sufficient to get all column");
+        mf_assert(isSufficientIdx(rowIdx, isOHRow), "requiredIdx is not sufficient to get all system");
+        mf_assert(_rows[0]->isSufficientIdx(colIdx.getOperableSlice().getSize()), "column is not sufficient to get all column");
 
         std::vector<AssignMeta*> allRowCollector;
         std::vector<Operable*>   allRowPreCond;
@@ -294,7 +294,7 @@ namespace kathryn{
             asmNode->addSpecificPreCondition(allRowPreCond[idx], idx);
         }
         ///// add it to the whole main controller
-        ModelController* ctrl = getControllerPtr();
+        ModelController* ctrl = get_controller_ptr();
         assert(ctrl != nullptr);
         ctrl->on_reg_update(asmNode, nullptr);
 
@@ -307,7 +307,7 @@ namespace kathryn{
 
     Table& Table::doGlobColAsm(int colIdx, ull assignVal){
 
-        mfAssert(colIdx < getMeta().getNumField(), "colIdx is out of range");
+        mf_assert(colIdx < getMeta().getNumField(), "colIdx is out of range");
         ////// gen the value
         int requiredSize = getMeta().getCopyField(colIdx)._size;
         mVal(av, requiredSize, assignVal);
@@ -323,7 +323,7 @@ namespace kathryn{
         ////// create asmNode
         auto* asmNode = new AsmNode(allRowCollector);
         ////// put it to the controller
-        ModelController* ctrl = getControllerPtr();
+        ModelController* ctrl = get_controller_ptr();
         assert(ctrl != nullptr);
         ctrl->on_reg_update(asmNode, nullptr);
 
@@ -407,7 +407,7 @@ namespace kathryn{
                 //// get condition node
                 Operable& selectLeft = cusLogic(*srcNodeLeft.slot,  srcNodeLeft.idx,
                                                 *srcNodeRight.slot, srcNodeRight.idx);
-                mfAssert(selectLeft.getOperableSlice().getSize() == 1, "selectLeft is not a single bit");
+                mf_assert(selectLeft.getOperableSlice().getSize() == 1, "selectLeft is not a single bit");
                 ReducNode binedReducNode = createMux(srcNodeLeft, srcNodeRight, selectLeft, debugIdx++, requiredIdx);
                 desReducQueue->push(binedReducNode);
 
@@ -571,13 +571,13 @@ namespace kathryn{
      * static slicing
      */
     RegSlot& Table::operator () (int idx){
-        mfAssert(isValidIdx(idx), "index out of range to get " + std::to_string(idx));
+        mf_assert(isValidIdx(idx), "index out of range to get " + std::to_string(idx));
         return *_rows[idx];
     }
 
     Table Table::operator() (int start, int end){
 
-        mfAssert(checkValidRange(start, end), "invalid range to get");
+        mf_assert(checkValidRange(start, end), "invalid range to get");
         std::vector<RegSlot*> newRows;
         for (int idx = start; idx < end; idx++){
             newRows.push_back(_rows[idx]);
@@ -606,8 +606,8 @@ namespace kathryn{
     Table Table::sliceByCol(const std::string& startField, const std::string& endField){
         int startIdx = getMeta().getIdx(startField);
         int endIdx   = getMeta().getIdx(endField) + 1;
-        mfAssert(getMeta().isValidIdx(startIdx), "field name " + startField + " not found");
-        mfAssert(getMeta().isValidIdx(endIdx), "field name " + endField + " not found");
+        mf_assert(getMeta().isValidIdx(startIdx), "field name " + startField + " not found");
+        mf_assert(getMeta().isValidIdx(endIdx), "field name " + endField + " not found");
         return sliceByCol(startIdx, endIdx);
     }
     Table Table::sliceByCol(const std::vector<int>& fieldIdxs){
@@ -648,7 +648,7 @@ namespace kathryn{
     Table Table::joinTableByRow(const Table& rhs){
         SlotMeta rhsMeta = rhs.getMeta();
         SlotMeta newMeta = getMeta();
-        mfAssert(newMeta == rhsMeta, "slot meta is not match");
+        mf_assert(newMeta == rhsMeta, "slot meta is not match");
 
         ////// new row
         std::vector<RegSlot*> newRows = _rows;
@@ -662,10 +662,10 @@ namespace kathryn{
         //////// prequisite check
         SlotMeta rhsMeta = rhs.getMeta();
         SlotMeta newMeta = getMeta();
-        mfAssert(newMeta == rhsMeta, "slot meta is not match");
+        mf_assert(newMeta == rhsMeta, "slot meta is not match");
         int curAmtRow = getNumRow();
         int rhsAmtRow = rhs.getNumRow();
-        mfAssert(curAmtRow == rhsAmtRow, "row size is not match");
+        mf_assert(curAmtRow == rhsAmtRow, "row size is not match");
 
         ////// new row
         std::vector<RegSlot*> newRows;
@@ -678,7 +678,7 @@ namespace kathryn{
     }
 
     Table Table::joinTableByCol(const Table& rhs){
-        mfAssert(getNumRow() == rhs.getNumRow(), "row size is not match");
+        mf_assert(getNumRow() == rhs.getNumRow(), "row size is not match");
 
         std::vector<RegSlot*> newRows;
 
@@ -694,8 +694,8 @@ namespace kathryn{
 
 
     Table Table::join(const Table& rhs,  int axis){
-        mfAssert(axis >= 0 && axis <= 1, "axis must be 0 or 1");
-        mfAssert(false, "not implemented yet");
+        mf_assert(axis >= 0 && axis <= 1, "axis must be 0 or 1");
+        mf_assert(false, "not implemented yet");
 
         switch (axis){
             case 0:

@@ -43,13 +43,13 @@ namespace kathryn{
     }
 
     void Module::com_init() {
-        ctrl->on_module_init_components(this);
+        _ctrl->on_module_init_components(this);
         /**post finalize component must be handle when object is buit finish*/
     }
 
     void Module::com_final() {
         /** invoke controller to design end component init*/
-        ctrl->on_module_end_init_components(this);
+        _ctrl->on_module_end_init_components(this);
     }
 
     /**
@@ -153,14 +153,14 @@ namespace kathryn{
             itf->buildLogicBase();
         }
         /** clear everything left in flowblock stack*/
-        ctrl->tryPurifyFlowStack();
-        assert(ctrl->isAllFlowStackEmpty());
+        _ctrl->try_purify_flow_stack();
+        assert(_ctrl->is_all_flow_stack_empty());
 
         /**this ensure that submodule in init component and all is ready to build flow*/
         /** build sub module first*/
         for (auto subMd: _userSubModules){
-            ctrl->on_module_init_designFlow(subMd);
-            ctrl->on_module_final(subMd);
+            _ctrl->on_module_init_designFlow(subMd);
+            _ctrl->on_module_final(subMd);
         }
         buildFlow();
 
@@ -175,7 +175,7 @@ namespace kathryn{
 
         std::vector<NodeWrap*> frontNodeWrap;
 
-        if (getGlobalId() == 8){
+        if (get_global_id() == 8){
             std::cout << "start build flow of a" << std::endl;
         }
 
@@ -189,7 +189,7 @@ namespace kathryn{
                     frontNodeWrap.push_back(fb->sumarizeBlock());
                     break;
                 case FLOW_JO_CON_FLOW:
-                    mfAssert(false, "detect con bare block iteration");
+                    mf_assert(false, "detect con bare block iteration");
                     break;
             case FLOW_JO_EXT_FLOW:
                     /**in case it is extract need flow block*/
@@ -220,7 +220,7 @@ namespace kathryn{
 
 
     std::string
-    Module::getMdDescribe(){
+    Module::get_md_describe(){
 
         for (auto fb: _flowBlockBases){
             //logMD(fb->getMdIdentVal(), fb->getMdDescribe());
@@ -235,11 +235,11 @@ namespace kathryn{
     }
 
 
-    void Module::addMdLog(MdLogVal *mdLogVal) {
-        mdLogVal->addVal("[ " + getMdIdentVal() + " ]");
+    void Module::add_md_log(MdLogVal *mdLogVal) {
+        mdLogVal->addVal("[ " + get_md_ident_val() + " ]");
         for (auto sb : _flowBlockBases){
             auto subLog = mdLogVal->makeNewSubVal();
-            sb->addMdLog(subLog);
+            sb->add_md_log(subLog);
         }
     }
 

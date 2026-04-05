@@ -36,19 +36,19 @@ namespace kathryn{
 
 
         _entNode = new PseudoNode(1, BITWISE_OR);
-        _entNode->setInternalIdent("cEntNode" + std::to_string(getGlobalId()));
+        _entNode->setInternalIdent("cEntNode" + std::to_string(get_global_id()));
         addSysNode(_entNode);
 
         _loopNode = new PseudoNode(1, BITWISE_OR);
-        _loopNode->setInternalIdent("cLoopNode" + std::to_string(getGlobalId()));
+        _loopNode->setInternalIdent("cLoopNode" + std::to_string(get_global_id()));
         addSysNode(_loopNode);
 
         _cntNode = new CounterNode(_loopCount, getClockMode());
-        _cntNode->setInternalIdent("countNode" + std::to_string(getGlobalId()));
+        _cntNode->setInternalIdent("countNode" + std::to_string(get_global_id()));
         addSysNode(_cntNode);
 
         _exitNode = new PseudoNode(1, BITWISE_AND);
-        _exitNode->setInternalIdent("cExitNode" + std::to_string(getGlobalId()));
+        _exitNode->setInternalIdent("cExitNode" + std::to_string(get_global_id()));
         addSysNode(_exitNode);
 
 
@@ -136,18 +136,18 @@ namespace kathryn{
         onDetachBlock();
     }
 
-    void FlowBlockLoop::addMdLog(MdLogVal* mdLogVal){
+    void FlowBlockLoop::add_md_log(MdLogVal* mdLogVal){
 
-        mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() + " ]");
-        mdLogVal->addVal("entNode " + _entNode->getMdIdentVal() + " " + _entNode->getMdDescribe());
-        mdLogVal->addVal("loopNode " + _entNode->getMdIdentVal() + " " + _loopNode->getMdDescribe());
-        mdLogVal->addVal("cntNode " + _cntNode->getMdIdentVal() + " " + _cntNode->getMdDescribe());
-        mdLogVal->addVal("exitNode " + _exitNode->getMdIdentVal() + " " + _exitNode->getMdDescribe());
+        mdLogVal->addVal("[ " + FlowBlockBase::get_md_ident_val() + " ]");
+        mdLogVal->addVal("entNode " + _entNode->get_md_ident_val() + " " + _entNode->get_md_describe());
+        mdLogVal->addVal("loopNode " + _entNode->get_md_ident_val() + " " + _loopNode->get_md_describe());
+        mdLogVal->addVal("cntNode " + _cntNode->get_md_ident_val() + " " + _cntNode->get_md_describe());
+        mdLogVal->addVal("exitNode " + _exitNode->get_md_ident_val() + " " + _exitNode->get_md_describe());
         mdLogVal->addVal("resultNodeWrap is" +
-            _resultNodeWrapper->getMdIdentVal() + " " + _resultNodeWrapper->getMdDescribe());
+            _resultNodeWrapper->get_md_ident_val() + " " + _resultNodeWrapper->get_md_describe());
 
         auto subLog = mdLogVal->makeNewSubVal();
-        _implicitFlowBlock->addMdLog(subLog);
+        _implicitFlowBlock->add_md_log(subLog);
     }
 
 }

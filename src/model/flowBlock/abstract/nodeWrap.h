@@ -113,20 +113,20 @@ namespace kathryn{
             return cycleUsed;
         }
 
-        std::string getMdDescribe() override{
+        std::string get_md_describe() override{
             std::string ret;
             ret += "hasEntranceNode [";
             for (auto entranceNode : entranceNodes){
-                ret += entranceNode->getMdIdentVal();
+                ret += entranceNode->get_md_ident_val();
                 ret += ", ";
             }
 
             ret += "] has exitNode ";
-            ret += exitNode->getMdIdentVal();
+            ret += exitNode->get_md_ident_val();
 
             if (isThereForceExitNode()){
                 ret += "has force exit Node ";
-                ret += forceExitNode->getMdIdentVal();
+                ret += forceExitNode->get_md_ident_val();
             }
 
 
@@ -136,7 +136,7 @@ namespace kathryn{
             return ret;
         }
 
-        std::string getMdIdentVal() override{
+        std::string get_md_ident_val() override{
             return "[nodeWrap @" + std::to_string((ull)this) + " ]";
         }
 

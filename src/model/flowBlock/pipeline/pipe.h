@@ -67,7 +67,7 @@ namespace kathryn{
         void buildHwMaster() override;
         void buildHwComponent() override;
         /** get describe*/
-        void addMdLog(MdLogVal* mdLogVal) override;
+        void add_md_log(MdLogVal* mdLogVal) override;
         /** Loop macro to notice position of system*/
         void doPreFunction() override;
         void doPostFunction() override;

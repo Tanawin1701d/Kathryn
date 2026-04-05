@@ -27,7 +27,7 @@ namespace kathryn{
     }
 
     void Val::com_init() {
-        ctrl->on_value_init(this);
+        _ctrl->on_value_init(this);
     }
 
     SliceAgent<Val>& Val::operator()(int start, int stop){

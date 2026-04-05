@@ -59,7 +59,7 @@ namespace kathryn{
     }
 
     void FlowBlockSeq::buildHwComponent() {
-        mfAssert(!_subSeqMetas.empty(), "seqBlock has no assignment");
+        mf_assert(!_subSeqMetas.empty(), "seqBlock has no assignment");
         assert(_conBlocks.empty());
         NodeWrapCycleDet cycleDet;
         /** generate hardware*/
@@ -68,7 +68,7 @@ namespace kathryn{
             seqMeta->setIntReset(intNodes[INT_RESET]); //// set interrupt reset must be set before gennode
             seqMeta->setHoldNode(holdNode);
             seqMeta->genNode(getClockMode());
-            seqMeta->setIdentStateId(getGlobalId(),idx++);
+            seqMeta->setIdentStateId(get_global_id(),idx++);
             seqMeta->addToCycleDet(cycleDet);
             seqMeta->addToSystemNodes(_sysNodes);
         }
@@ -103,11 +103,11 @@ namespace kathryn{
 
 
 
-    std::string FlowBlockSeq::getMdDescribe() {
+    std::string FlowBlockSeq::get_md_describe() {
 
         std::string ret;
         int eleCnt = 0;
-        ret += "[ " + FlowBlockBase::getMdIdentVal() + " ]\n";
+        ret += "[ " + FlowBlockBase::get_md_ident_val() + " ]\n";
         for (auto seqEle: _subSeqMetas){
             ret += seqEle->getDescribe() + "\n";
             eleCnt++;
@@ -117,16 +117,16 @@ namespace kathryn{
 
     }
 
-    void FlowBlockSeq::addMdLog(MdLogVal *mdLogVal) {
+    void FlowBlockSeq::add_md_log(MdLogVal *mdLogVal) {
 
-        mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() + " ]");
+        mdLogVal->addVal("[ " + FlowBlockBase::get_md_ident_val() + " ]");
         for (auto seqEle: _subSeqMetas){
             mdLogVal->addVal(seqEle->getDescribe());
         }
         if (resultNodeWrap->isThereForceExitNode()){
-            mdLogVal->addVal("forceExit is " + resultNodeWrap->getForceExitNode()->getMdIdentVal() +
+            mdLogVal->addVal("forceExit is " + resultNodeWrap->getForceExitNode()->get_md_ident_val() +
                                                    "  " +
-                                                   resultNodeWrap->getForceExitNode()->getMdDescribe());
+                                                   resultNodeWrap->getForceExitNode()->get_md_describe());
         }
 
         addMdLogRecur(mdLogVal);

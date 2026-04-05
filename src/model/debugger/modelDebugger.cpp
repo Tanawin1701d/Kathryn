@@ -12,25 +12,25 @@
 namespace kathryn{
 
 
-    void ModelDebuggable::addMdLog(MdLogVal *mdLogVal) {
+    void ModelDebuggable::add_md_log(MdLogVal *md_log_val) {
 
-        assert(mdLogVal != nullptr);
-        mdLogVal->addVal("This model log is not implemented.");
-        mdLogVal->addVal("-------------------------------");
+        assert(md_log_val != nullptr);
+        md_log_val->addVal("This model log is not implemented.");
+        md_log_val->addVal("-------------------------------");
 
     }
 
-    void mfAssert(bool valid, std::string msg){
+    void mf_assert(bool valid, std::string msg){
         if (valid){
             return;
         }
         std::cout << msg << std::endl;
-        std::cout << getControllerPtr()->getCurModelStack();
+        std::cout << get_controller_ptr()->get_cur_model_stack_dbg();
         assert(false);
     }
 
 
-    void mfWarn(bool valid, std::string msg){
+    void mf_warn(bool valid, std::string msg){
 
         if (valid){
             return;

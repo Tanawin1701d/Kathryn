@@ -89,7 +89,7 @@ namespace kathryn{
         return _stateNode;
     }
     std::string SequenceEleBasic::getDescribe(){
-        return _stateNode->getMdIdentVal() + " " + _stateNode->getMdDescribe();
+        return _stateNode->get_md_ident_val() + " " + _stateNode->get_md_describe();
     }
     void SequenceEleBasic::addToSystemNodes(std::vector<Node*>& sysNode){
         assert(_stateNode != nullptr);
@@ -162,7 +162,7 @@ namespace kathryn{
         return nullptr;
     }
     std::string SequenceEleFlowBlock::getDescribe(){
-        return _complexNode->getMdIdentVal() + _complexNode->getMdDescribe();
+        return _complexNode->get_md_ident_val() + _complexNode->get_md_describe();
     }
     void SequenceEleFlowBlock::addToSystemNodes(std::vector<Node*>& sysNode){}
 

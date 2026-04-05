@@ -59,24 +59,24 @@ namespace kathryn{
         }
 
         HwFieldMeta& hwFieldRefAt(int idx){
-            mfAssert(isValidIdx(idx), "get hw Field at " + std::to_string(idx) + " out of range");
+            mf_assert(isValidIdx(idx), "get hw Field at " + std::to_string(idx) + " out of range");
             return _hwFieldMetas[idx];
         }
 
         HwFieldMeta& hwFieldRefAt(const std::string& fieldName){
             int fieldId = getIdx(fieldName);
-            mfAssert(isValidIdx(fieldId), "field name " + fieldName + " not found");
+            mf_assert(isValidIdx(fieldId), "field name " + fieldName + " not found");
             return hwFieldRefAt(fieldId);
         }
 
         HwFieldMeta hwFieldAt(int idx) const{
-            mfAssert(isValidIdx(idx), "get hw Field at " + std::to_string(idx) + " out of range");
+            mf_assert(isValidIdx(idx), "get hw Field at " + std::to_string(idx) + " out of range");
             return _hwFieldMetas[idx];
         }
 
         HwFieldMeta hwFieldAt(const std::string& fieldName) const{
             int fieldId = getIdx(fieldName);
-            mfAssert(isValidIdx(fieldId), "field name " + fieldName + " not found");
+            mf_assert(isValidIdx(fieldId), "field name " + fieldName + " not found");
             return hwFieldAt(fieldId);
         }
 
@@ -124,7 +124,7 @@ namespace kathryn{
         AssignMeta* genAssignMeta(Operable& srcOpr, Assignable& desAsb,
                                  ASM_TYPE asmType) const{
 
-            mfAssert(desAsb.getAssignSlice().getSize() <= srcOpr.getOperableSlice().getSize(),
+            mf_assert(desAsb.getAssignSlice().getSize() <= srcOpr.getOperableSlice().getSize(),
             "the size of srcOpr is too small to assign to desAsb");
             Slice srcSlice = srcOpr.getOperableSlice();
             Slice desSlice = desAsb.getAssignSlice();
@@ -186,7 +186,7 @@ namespace kathryn{
 
             std::vector<AssignMeta*> resultCollector;
 
-            mfAssert(srcMatchIdxs.size() == desMatchIdxs.size(),
+            mf_assert(srcMatchIdxs.size() == desMatchIdxs.size(),
                 "size of srcMatchIdxs and desMatchIdxs must be equal");
 
             for (int idx = 0; idx < srcMatchIdxs.size(); idx++){

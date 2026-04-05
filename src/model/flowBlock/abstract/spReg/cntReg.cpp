@@ -64,7 +64,7 @@ namespace kathryn{
     }
 
     void CounterReg::com_init() {
-        ctrl->on_sp_reg_init(this, SP_CYCLE_WAIT_REG);
+        _ctrl->on_sp_reg_init(this, SP_CYCLE_WAIT_REG);
     }
 
     void CounterReg::makeUnSetStateEvent(CLOCK_MODE cm) {

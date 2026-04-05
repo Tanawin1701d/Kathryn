@@ -71,7 +71,7 @@ namespace kathryn{
 
         /////// this cycle ident
         std::string         indentStr = genConString(' ', ident);
-        std::string         showName  = fb->getGlobalName();
+        std::string         showName  = fb->get_global_name();
         FlowBaseSimEngine*  fbse      = fb->getSimEngine();
         ValRepBase&         repBase   = fbse->getProxyRep();
         ull                 cycle     = repBase.getVal();
@@ -102,7 +102,7 @@ namespace kathryn{
 
     void FlowWriter::startColModule(Module* moduleToRec, int ident){
         std::string indentStr = genConString(' ',ident);
-        std::string showName = "Module " + moduleToRec->getGlobalName();
+        std::string showName = "Module " + moduleToRec->get_global_name();
         addData(indentStr + showName + "\n");
         for (FlowBlockBase* fb: moduleToRec->getFlowBlocks()){
             startColFlowBlock(fb, ident + SUBFLOW_IDENT);

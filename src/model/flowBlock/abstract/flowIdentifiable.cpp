@@ -11,7 +11,7 @@ namespace kathryn{
     FlowIdentifiable::FlowIdentifiable(const std::string& localName):
     IdentBase()
     {
-        _globalName = localName + std::to_string(_globalId);
+        _global_name = localName + std::to_string(_global_id);
     }
 
     void FlowIdentifiable::setParent(FlowBlockBase *parentFlowBlock) {
@@ -32,18 +32,18 @@ namespace kathryn{
 
 
 
-    void FlowIdentifiable::buildInheritName() {
+    void FlowIdentifiable::build_inherit_name() {
         /** please remind that we need set Parent before use this function*/
         if (_parentFb != nullptr){
-            _inheritName = _parentFb->getInheritName();
+            _inherit_name = _parentFb->get_inherit_name();
 
         }else if (_parentMod != nullptr){
-            _inheritName = _parentMod->getInheritName();
+            _inherit_name = _parentMod->get_inherit_name();
         }else{
             assert(false);
         }
-        _inheritName.push_back(_globalName);
-        setIdentIsFinalize();
+        _inherit_name.push_back(_global_name);
+        finalize_ident();
 
     }
 

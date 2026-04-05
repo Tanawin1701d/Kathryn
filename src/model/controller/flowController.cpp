@@ -14,78 +14,78 @@ namespace kathryn{
      * */
 
 
-    FlowBlockBase* ModelController::getTopFlowBlockBase() {
-        if (flowBlockStacks[FLOW_ST_BASE_STACK].empty()){
+    FlowBlockBase* ModelController::get_top_flow_block_base_ptr() {
+        if (_flow_block_stacks[FLOW_ST_BASE_STACK].empty()){
            return nullptr;
         }
-        return flowBlockStacks[FLOW_ST_BASE_STACK].top();
+        return _flow_block_stacks[FLOW_ST_BASE_STACK].top();
     }
 
-    FlowBlockBase* ModelController::getTopFlowBlockBase(FLOW_STACK_TYPE flowStackType){
-        assert(flowStackType >= 0);
-        assert(flowStackType < FLOW_ST_CNT);
-        if (flowBlockStacks[flowStackType].empty()){
+    FlowBlockBase* ModelController::get_top_flow_block_base_ptr(FLOW_STACK_TYPE flow_stack_type){
+        assert(flow_stack_type >= 0);
+        assert(flow_stack_type < FLOW_ST_CNT);
+        if (_flow_block_stacks[flow_stack_type].empty()){
             return nullptr;
         }
-        return flowBlockStacks[flowStackType].top();
+        return _flow_block_stacks[flow_stack_type].top();
     }
 
-    void ModelController::popFlowBlock(FlowBlockBase* fb){
-        assert(!flowBlockStacks[FLOW_ST_BASE_STACK].empty());
-        assert( flowBlockStacks[FLOW_ST_BASE_STACK].top() == fb);
+    void ModelController::pop_flow_block(FlowBlockBase* fb){
+        assert(!_flow_block_stacks[FLOW_ST_BASE_STACK].empty());
+        assert( _flow_block_stacks[FLOW_ST_BASE_STACK].top() == fb);
 
-        for (int stIdx: fb->getSelFbStack()){
-            assert(stIdx < FLOW_ST_CNT);
-            assert(!flowBlockStacks[stIdx].empty());
-            assert(flowBlockStacks[stIdx].top() == fb);
-            logMF(fb, "pop_flowBlock " + std::to_string(stIdx));
-            flowBlockStacks[stIdx].pop();
+        for (int st_idx: fb->getSelFbStack()){
+            assert(st_idx < FLOW_ST_CNT);
+            assert(!_flow_block_stacks[st_idx].empty());
+            assert(_flow_block_stacks[st_idx].top() == fb);
+            logMF(fb, "pop_flowBlock " + std::to_string(st_idx));
+            _flow_block_stacks[st_idx].pop();
         }
     }
 
-    void ModelController::pushFlowBlock(FlowBlockBase* fb) {
+    void ModelController::push_flow_block(FlowBlockBase* fb) {
         assert(fb != nullptr);
-        for (int stIdx: fb->getSelFbStack()){
-            logMF(fb, "push to stack " + std::to_string(stIdx));
-            assert(stIdx < FLOW_ST_CNT);
-            flowBlockStacks[stIdx].push(fb);
+        for (int st_idx: fb->getSelFbStack()){
+            logMF(fb, "push to stack " + std::to_string(st_idx));
+            assert(st_idx < FLOW_ST_CNT);
+            _flow_block_stacks[st_idx].push(fb);
         }
     }
 
-    void ModelController::detachTopFlowBlock() {
+    void ModelController::detach_top_flow_block() {
 
         /**get top of the flow block base and build the hardware*/
-        FlowBlockBase* topFb = getTopFlowBlockBase();
-        assert(topFb != nullptr);
-        logMF(topFb, "on_detach_flowBlock");
-        popFlowBlock(topFb);
+        FlowBlockBase* top_fb = get_top_flow_block_base_ptr();
+        assert(top_fb != nullptr);
+        logMF(top_fb, "on_detach_flowBlock");
+        pop_flow_block(top_fb);
         //////topFb->buildHwComponent();
 
 
         /**get front node to inject the subblock*/
-        FlowBlockBase* frontFb = getTopFlowBlockBase();
-        if (!isTopFbBelongToTopModule()){
-            logMF(topFb, "addFlowBlock to module");
-            Module* parentMod = getTopModulePtr();
-            parentMod->addFlowBlock(topFb);
-        }else if (topFb->getJoinFbPol() == FLOW_JO_CON_FLOW){
+        FlowBlockBase* front_fb = get_top_flow_block_base_ptr();
+        if (!is_top_fb_belong_to_top_module()){
+            logMF(top_fb, "addFlowBlock to module");
+            Module* parent_mod = get_top_module_ptr();
+            parent_mod->addFlowBlock(top_fb);
+        }else if (top_fb->getJoinFbPol() == FLOW_JO_CON_FLOW){
             /**it is consecutive block*/
-            logMF(topFb, "addFlowBlock to be con module");
-            frontFb->addConFlowBlock(topFb);
-        }else if (topFb->getJoinFbPol() == FLOW_JO_SUB_FLOW){
+            logMF(top_fb, "addFlowBlock to be con module");
+            front_fb->addConFlowBlock(top_fb);
+        }else if (top_fb->getJoinFbPol() == FLOW_JO_SUB_FLOW){
             /**it is sub block*/
-            logMF(topFb, "addFlowBlock to be sub module");
-            frontFb->addSubFlowBlock(topFb);
-        }else if (topFb->getJoinFbPol() == FLOW_JO_EXT_FLOW){
-            logMF(topFb, "extract flowblock and give it to basic asm");
-            std::vector<AsmNode*> extractedAsmNode = topFb->extract();
-            for (auto asmNode: extractedAsmNode){
-                frontFb->addElementInFlowBlock(asmNode);
+            logMF(top_fb, "addFlowBlock to be sub module");
+            front_fb->addSubFlowBlock(top_fb);
+        }else if (top_fb->getJoinFbPol() == FLOW_JO_EXT_FLOW){
+            logMF(top_fb, "extract flowblock and give it to basic asm");
+            std::vector<AsmNode*> extracted_AsmNode = top_fb->extract();
+            for (auto asmNode: extracted_AsmNode){
+                front_fb->addElementInFlowBlock(asmNode);
             }
             // for (auto basicNode: topFb->getBasicNode()){
             //     frontFb->addElementInFlowBlock(basicNode);
             // }
-            frontFb->addAbandonFlowBlock(topFb);
+            front_fb->addAbandonFlowBlock(top_fb);
             /***we must delete this due to*/
             ///// delete topFb;
         }else{
@@ -94,51 +94,51 @@ namespace kathryn{
 
     }
 
-    void ModelController::assignFlowBlockParent(FlowBlockBase* fb){
+    void ModelController::assign_flow_block_parent(FlowBlockBase* fb){
 
         /** assign master module*/
-        Module* parentMod = getTargetModuleEle().md;
-        assert(parentMod != nullptr);
-        fb->setParent(parentMod);
+        Module* parent_mod = get_target_module_ele().md;
+        assert(parent_mod != nullptr);
+        fb->setParent(parent_mod);
 
         /** assign master flow block*/
-        if (isTopFbBelongToTopModule()){
-            FlowBlockBase* topFb = getTopFlowBlockBase();
-            fb->setParent(topFb);
+        if (is_top_fb_belong_to_top_module()){
+            FlowBlockBase* top_fb = get_top_flow_block_base_ptr();
+            fb->setParent(top_fb);
         }
     }
 
 
-    bool ModelController::isAllFlowStackEmpty(){
-        bool emptyStatus = true;
-        for(const auto & flowBlockStack : flowBlockStacks){
-            emptyStatus &= flowBlockStack.empty();
+    bool ModelController::is_all_flow_stack_empty(){
+        bool empty_status = true;
+        for(const auto & flow_block_stack : _flow_block_stacks){
+            empty_status &= flow_block_stack.empty();
         }
-        return emptyStatus;
+        return empty_status;
     }
 
-    bool ModelController::isFlowStackEmpty(FLOW_STACK_TYPE flowStackType){
+    bool ModelController::is_flow_stack_empty(FLOW_STACK_TYPE flow_stack_type){
 
-        assert(flowStackType >= 0);
-        assert(flowStackType < FLOW_ST_CNT);
+        assert(flow_stack_type >= 0);
+        assert(flow_stack_type < FLOW_ST_CNT);
 
-        return flowBlockStacks[flowStackType].empty();
+        return _flow_block_stacks[flow_stack_type].empty();
     }
 
 
-    bool ModelController::isTopFbBelongToTopModule(){
-        assert(getTopModulePtr() != nullptr);
-        return (!flowBlockStacks[FLOW_ST_BASE_STACK].empty()) &&
-                (flowBlockStacks[FLOW_ST_BASE_STACK].top()->getModuleParent() == getTopModulePtr());
+    bool ModelController::is_top_fb_belong_to_top_module(){
+        assert(get_top_module_ptr() != nullptr);
+        return (!_flow_block_stacks[FLOW_ST_BASE_STACK].empty()) &&
+                (_flow_block_stacks[FLOW_ST_BASE_STACK].top()->getModuleParent() == get_top_module_ptr());
 
     }
 
-    void ModelController::tryPurifyFlowStack() {
-        FlowBlockBase* fb = getTopFlowBlockBase();
+    void ModelController::try_purify_flow_stack() {
+        FlowBlockBase* fb = get_top_flow_block_base_ptr();
         if (fb == nullptr){return;}
         if (fb->isLazyDelete()){
             logMF(fb, "strong purify stack");
-            detachTopFlowBlock();
+            detach_top_flow_block();
         }
     }
 
@@ -148,13 +148,13 @@ namespace kathryn{
         assert(fb != nullptr);
         if (fb->getPurifyReq()){
             logMF(fb, "try purify stack");
-            tryPurifyFlowStack();
+            try_purify_flow_stack();
         }
 
-        assignFlowBlockParent(fb);
-        fb->buildInheritName();
+        assign_flow_block_parent(fb);
+        fb->build_inherit_name();
         /*** add to stack*/
-        pushFlowBlock(fb);
+        push_flow_block(fb);
     }
 
     void ModelController::on_detach_flowBlock(FlowBlockBase* fb) {
@@ -162,91 +162,70 @@ namespace kathryn{
         /** to clean lazy delete of the flow block
          * due to last lazy delete pupose
          * */
-        auto topFb = getTopFlowBlockBase();
-        if (fb != topFb){
+        auto top_fb = get_top_flow_block_base_ptr();
+        if (fb != top_fb){
             ////// it must be lazy delete block inside that it is not deleted yet
-            assert(topFb->isLazyDelete());
+            assert(top_fb->isLazyDelete());
             /////// delete it now
-            tryPurifyFlowStack();
+            try_purify_flow_stack();
         }
 
         /** get our block detach*/
-        auto actualDetachBlock = getTopFlowBlockBase();
+        auto actual_detach_block = get_top_flow_block_base_ptr();
 
         /** if current flowblock is lazy delete do not detach it*/
-        assert(actualDetachBlock == fb);
+        assert(actual_detach_block == fb);
         if (fb->isLazyDelete()){
             return;
         }else{
-            detachTopFlowBlock();
+            detach_top_flow_block();
         }
 
     }
 
     void ModelController::on_attachAndDetach_intrSignal(INT_TYPE intType, Operable* sig) {
         assert(sig != nullptr);
-        tryPurifyFlowStack();
-        mfAssert(isTopFbBelongToTopModule(), "There is no flow block to add intr signal");
-        auto topFb = getTopFlowBlockBase();
+        try_purify_flow_stack();
+        mf_assert(is_top_fb_belong_to_top_module(), "There is no flow block to add intr signal");
+        auto topFb = get_top_flow_block_base_ptr();
         topFb->addIntSignal(intType, sig);
 
     }
 
-
-    // Operable& ModelController::on_get_check_next_pipblk_ready_signal() {
-    //     tryPurifyFlowStack();
-    //     mfAssert(isTopFbBelongToTopModule(), "there is no flow block to get next ready signal");
-    //     assert((!flowBlockStacks[FLOW_ST_PIP_WRAP].empty()) &&
-    //            (flowBlockStacks[FLOW_ST_PIP_WRAP].top()->getModuleParent() == getTopModulePtr())
-    //            );
-    //
-    //     /*** get and gen signal*/
-    //     auto pipWrapBlk = flowBlockStacks[FLOW_ST_PIP_WRAP].top();
-    //     assert(pipWrapBlk->getFlowType() == PIPE_WRAPPER);
-    //     auto castedpipWrapBlk = (FlowBlockPipeWrapper*) pipWrapBlk;
-    //     return castedpipWrapBlk->getNextPipBlockReadySignal();
-    // }
-
     FLOW_BLOCK_TYPE ModelController::get_top_pattern_flow_block_type(){
 
-        bool topPatternFbBelongToTopModule =
-                  (!flowBlockStacks[FLOW_ST_PATTERN_STACK].empty())
-                && (flowBlockStacks[FLOW_ST_PATTERN_STACK].top()->getModuleParent() == getTopModulePtr()
+        bool top_pattern_fb_belong_to_top_module =
+                  (!_flow_block_stacks[FLOW_ST_PATTERN_STACK].empty())
+                && (_flow_block_stacks[FLOW_ST_PATTERN_STACK].top()->getModuleParent() == get_top_module_ptr()
                 );
 
-        if (topPatternFbBelongToTopModule){
-            FlowBlockBase* fb = flowBlockStacks[FLOW_ST_PATTERN_STACK].top();
+        if (top_pattern_fb_belong_to_top_module){
+            FlowBlockBase* fb = _flow_block_stacks[FLOW_ST_PATTERN_STACK].top();
             assert(fb != nullptr);
-            FLOW_BLOCK_TYPE fbType = fb->getFlowType();
-            assert(fbType >= SEQUENTIAL && fbType <= PARALLEL_AUTO_SYNC);
-            return fbType;
-        }else{
-            return DUMMY_BLOCK;
+            FLOW_BLOCK_TYPE fb_type = fb->getFlowType();
+            assert(fb_type >= SEQUENTIAL && fb_type <= PARALLEL_AUTO_SYNC);
+            return fb_type;
         }
-
+        return DUMMY_BLOCK;
     }
 
-    bool ModelController::isTopOfStackBelongToTheSameModule(FLOW_STACK_TYPE a,
-                                                            FLOW_STACK_TYPE b){
+    bool ModelController::is_top_of_stack_belong_to_the_same_module(FLOW_STACK_TYPE a,
+                                                                    FLOW_STACK_TYPE b){
 
-        if (isFlowStackEmpty(a) ||
-            isFlowStackEmpty(b)){return false;}
+        if (is_flow_stack_empty(a) ||
+            is_flow_stack_empty(b)){return false;}
 
 
-        FlowBlockBase* flowBlockA = getTopFlowBlockBase(a);
-        FlowBlockBase* flowBlockB = getTopFlowBlockBase(b);
-        assert(flowBlockA != nullptr && flowBlockB != nullptr);
+        FlowBlockBase* flow_block_a = get_top_flow_block_base_ptr(a);
+        FlowBlockBase* flow_block_b = get_top_flow_block_base_ptr(b);
+        assert(flow_block_a != nullptr && flow_block_b != nullptr);
 
-        Module* parentA = flowBlockA->getModuleParent();
-        Module* parentB = flowBlockB->getModuleParent();
+        Module* parent_a = flow_block_a->getModuleParent();
+        Module* parent_b = flow_block_b->getModuleParent();
 
-        assert(parentA != nullptr &&  parentB != nullptr);
-        return parentA == parentB;
+        assert(parent_a != nullptr &&  parent_b != nullptr);
+        return parent_a == parent_b;
 
     }
-
-
-
-
 
 }

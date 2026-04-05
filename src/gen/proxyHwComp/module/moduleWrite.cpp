@@ -213,7 +213,7 @@ namespace kathryn{
     }
 
     std::string ModuleGen::getOpr(){
-        return _master->getGlobalName() + "_" + _master->getVarName();
+        return _master->get_global_name() + "_" + _master->getVarName();
     }
 
 

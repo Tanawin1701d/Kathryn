@@ -80,8 +80,8 @@ namespace kathryn{
         Operable* checkShortCircuit   () override{return nullptr;}
 
         /** debug method to do will will make debug string more delightful*/
-        std::string getMdDescribe() override {return Identifiable::getIdentDebugValue();}
-        std::string getMdIdentVal() override {return Identifiable::getIdentDebugValue();}
+        std::string get_md_describe() override {return Identifiable::getIdentDebugValue();}
+        std::string get_md_ident_val() override {return Identifiable::getIdentDebugValue();}
 
         Operable*   getIndexer(){ assert(_indexer != nullptr); return _indexer;}
         MemBlock*   getMasterMemBlk(){assert(_master != nullptr); return _master;}

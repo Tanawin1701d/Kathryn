@@ -15,11 +15,11 @@ namespace kathryn{
     }
 
     void Box::com_init() {
-        ctrl->on_box_init(this);
+        _ctrl->on_box_init(this);
     }
 
     void Box::com_final() {
-        ctrl->on_box_end_init(this);
+        _ctrl->on_box_end_init(this);
     }
 
     void Box::addNestMeta(NestMeta nestMeta) {
@@ -48,10 +48,10 @@ namespace kathryn{
                                  bool isBlockAsm,
                                  std::vector<AssignMeta*>& resultCollector) {
 
-        mfAssert(_nestMetas.size() == rhsBox.getNestMetas().size(),
+        mf_assert(_nestMetas.size() == rhsBox.getNestMetas().size(),
                  "box mismatch");
 
-        mfAssert(_recurBoxs.size() == rhsBox.getSubBox().size(),
+        mf_assert(_recurBoxs.size() == rhsBox.getSubBox().size(),
                  "subblock mismatch"
                  );
 
@@ -94,7 +94,7 @@ namespace kathryn{
         /**build assignment node*/
         auto* asmNode = new AsmNode(resultCollector);
         /**communication controller*/
-        ctrl->on_box_update(asmNode, this);
+        _ctrl->on_box_update(asmNode, this);
     }
 
     Box& Box::operator=(Box& rhs) {
@@ -107,11 +107,11 @@ namespace kathryn{
         return *this;
     }
 
-    std::string Box::getMdIdentVal(){
+    std::string Box::get_md_ident_val(){
         return getIdentDebugValue();
     }
 
-    void Box::addMdLog(MdLogVal* mdLogVal){
+    void Box::add_md_log(MdLogVal* mdLogVal){
         assert(mdLogVal != nullptr);
         /** add sub element into log*/
         for (auto nestMeta: _nestMetas){
@@ -121,7 +121,7 @@ namespace kathryn{
         /**add recur box*/
         for (auto recurBox: _recurBoxs){
             MdLogVal* subLog = mdLogVal->makeNewSubVal();
-            recurBox->addMdLog(subLog);
+            recurBox->add_md_log(subLog);
         }
     }
 

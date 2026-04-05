@@ -41,12 +41,12 @@ namespace kathryn{
 
         SlotMeta(const std::vector<std::string>& fieldNames, const std::vector<int>& fieldSizes){
             /** we have to convert it to start from 0 to N */
-            mfAssert(!fieldSizes.empty(), "field size cannot be empty");
-            mfAssert(!fieldNames.empty(), "field name cannot be empty");
-            mfAssert(fieldSizes.size() == fieldNames.size(), "field size and field name size not match");
+            mf_assert(!fieldSizes.empty(), "field size cannot be empty");
+            mf_assert(!fieldNames.empty(), "field name cannot be empty");
+            mf_assert(fieldSizes.size() == fieldNames.size(), "field size and field name size not match");
             /** check fieldSize*/
             for (const int fieldSize: fieldSizes){
-                mfAssert(fieldSize > 0, "field size cannot be negative or zero");
+                mf_assert(fieldSize > 0, "field size cannot be negative or zero");
             }
             /** add to fieldMeta*/
             for (int idx = 0; idx < static_cast<int>(fieldSizes.size()); idx++){
@@ -57,7 +57,7 @@ namespace kathryn{
         SlotMeta(const std::vector<FieldMeta>& fieldMetas):
         _fieldMetas(fieldMetas){
             for (auto fieldMeta: _fieldMetas){
-                mfAssert(fieldMeta.checkIntegrity(), "field meta " + fieldMeta._name + "is not valid");
+                mf_assert(fieldMeta.checkIntegrity(), "field meta " + fieldMeta._name + "is not valid");
             }
         }
 
@@ -66,7 +66,7 @@ namespace kathryn{
 
             for (int idx = 0; idx < numField; idx++){
                 _fieldMetas.push_back({fieldPrefixName + "_" + std::to_string(idx + startSuffixIdx), fieldwidth});
-                mfAssert(_fieldMetas.back().checkIntegrity(), "field meta " + _fieldMetas.back()._name + "is not valid");
+                mf_assert(_fieldMetas.back().checkIntegrity(), "field meta " + _fieldMetas.back()._name + "is not valid");
             }
 
         }
@@ -121,30 +121,30 @@ namespace kathryn{
         /** field operator */
 
         FieldMeta getField(int idx) const{
-            mfAssert(isValidIdx(idx), "index" + std::to_string(idx) +  " out of range");
+            mf_assert(isValidIdx(idx), "index" + std::to_string(idx) +  " out of range");
             return _fieldMetas[idx];
         }
 
         FieldMeta& operator()(int idx){
-            mfAssert(isValidIdx(idx), "index" + std::to_string(idx) +  " out of range");
+            mf_assert(isValidIdx(idx), "index" + std::to_string(idx) +  " out of range");
             return _fieldMetas[idx];
         }
 
         FieldMeta getCopyField(int idx) const{
-            mfAssert(isValidIdx(idx), "index" + std::to_string(idx) +  " out of range");
+            mf_assert(isValidIdx(idx), "index" + std::to_string(idx) +  " out of range");
             return _fieldMetas[idx];
         }
 
         FieldMeta& operator()(std::string fieldName){
             int fieldId = getIdx(fieldName);
-            mfAssert(isValidIdx(fieldId), "field name " + fieldName + " not found");
+            mf_assert(isValidIdx(fieldId), "field name " + fieldName + " not found");
             return _fieldMetas[fieldId];
         }
 
         SlotMeta operator() (int start, int end){
-            mfAssert(isValidIdx(start), "start index" + std::to_string(start) + " out of range");
+            mf_assert(isValidIdx(start), "start index" + std::to_string(start) + " out of range");
             int newAmt = end - start;
-            mfAssert(newAmt > 0 && newAmt <= _fieldMetas.size(), "end index must be larger than start index");
+            mf_assert(newAmt > 0 && newAmt <= _fieldMetas.size(), "end index must be larger than start index");
 
             std::vector<FieldMeta> newFieldMetas;
             for (int idx = start; idx < end; idx++){
@@ -157,7 +157,7 @@ namespace kathryn{
         SlotMeta operator() (const std::vector<int>& fieldIdxs){
             std::vector<FieldMeta> newFieldMetas;
             for (auto idx: fieldIdxs){
-                mfAssert(isValidIdx(idx), "index" + std::to_string(idx) +  " out of range");
+                mf_assert(isValidIdx(idx), "index" + std::to_string(idx) +  " out of range");
                 newFieldMetas.push_back(_fieldMetas[idx]);
             }
             return SlotMeta(newFieldMetas);

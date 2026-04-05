@@ -40,8 +40,8 @@ namespace kathryn{
     }
 
     void FlowBlockZCase::addIntSignal(INT_TYPE type, Operable* signal){
-        mfAssert(!isThereIntStart(), "start interrupt can start in zblock");
-        mfAssert(!isThereIntRst(), "start interrupt can reset in zblock");
+        mf_assert(!isThereIntStart(), "start interrupt can start in zblock");
+        mf_assert(!isThereIntRst(), "start interrupt can reset in zblock");
     }
 
     NodeWrap* FlowBlockZCase::sumarizeBlock() {assert(false);}
@@ -58,11 +58,11 @@ namespace kathryn{
         assert(false);
     }
 
-    std::string FlowBlockZCase::getMdDescribe() {
+    std::string FlowBlockZCase::get_md_describe() {
         assert(false);
     }
 
-    void FlowBlockZCase::addMdLog(MdLogVal *mdLogVal) {
+    void FlowBlockZCase::add_md_log(MdLogVal *mdLogVal) {
         assert(false);
     }
 

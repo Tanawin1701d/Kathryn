@@ -32,12 +32,12 @@ namespace kathryn{
                 continue;
             }else if(splited.size() == 3){
                 assert(splited[1] == "=");
-                mfAssert(result.find(splited[0]) == result.end(),
+                mf_assert(result.find(splited[0]) == result.end(),
                          "detect duplicate parameter"
                          );
                 result[splited[0]] = splited[2];
             }else{
-                mfAssert(false, "invalid paraminput");
+                mf_assert(false, "invalid paraminput");
             }
         }
 

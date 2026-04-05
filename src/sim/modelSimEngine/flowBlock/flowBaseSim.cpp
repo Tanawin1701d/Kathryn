@@ -20,7 +20,7 @@ namespace kathryn{
     ValR FlowBaseSimEngine::getValRep(){
         return {SIM_VALREP_TYPE_ALL(bitSizeOfUll),
             bitSizeOfUll,
-            "PERF_" + _flowBlockBase->getGlobalName()};
+            "PERF_" + _flowBlockBase->get_global_name()};
     }
 
     ValR FlowBaseSimEngine::getVarNameCurStatus(){
@@ -33,7 +33,7 @@ namespace kathryn{
     }
 
     ull FlowBaseSimEngine::getVarId(){
-        return _flowBlockBase->getGlobalId();
+        return _flowBlockBase->get_global_id();
     }
 
     SIM_VALREP_TYPE_ALL FlowBaseSimEngine::getValR_Type(){
@@ -87,7 +87,7 @@ namespace kathryn{
     void FlowBaseSimEngine::createOp(CbBaseCxx& cb){
 
         cb.addCm("////////////////////////////////////");
-        cb.addCm(_flowBlockBase->getGlobalName());
+        cb.addCm(_flowBlockBase->get_global_name());
         ////////////////////////////////////////////////////////////////////////////
         //////////// subBlock build
         ////////////////////////////////////////////////////////////////////////////

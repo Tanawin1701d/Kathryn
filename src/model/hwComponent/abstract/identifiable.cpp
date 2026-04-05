@@ -35,7 +35,7 @@ namespace kathryn{
     }
 
     void setRetrieveVarMeta(std::string varType,std::string name, bool isUserDec){
-        lastIdent    = getLastIdentId();
+        lastIdent    = get_last_ident_id();
         varMeta      = {std::move(varType), std::move(name), isUserDec};
     }
 
@@ -48,12 +48,12 @@ namespace kathryn{
      *
      * */
 
-    void Identifiable::buildInheritName(){
+    void Identifiable::build_inherit_name(){
         if (_parent != nullptr){
-            _inheritName = _parent->getInheritName();
+            _inherit_name = _parent->get_inherit_name();
         }
-        _inheritName.push_back(_globalName);
-        setIdentIsFinalize();
+        _inherit_name.push_back(_global_name);
+        finalize_ident();
     }
 
 

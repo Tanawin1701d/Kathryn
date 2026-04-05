@@ -6,22 +6,22 @@
 
 namespace kathryn{
 
-    CLOCK_MODE curClockMode = CM_POSEDGE;
+    CLOCK_MODE cur_clock_mode = CM_POSEDGE;
 
     void SET_CLK_MODE(CLOCK_MODE cm){
-        curClockMode = cm;
+        cur_clock_mode = cm;
     }
 
     void SET_CLK_MODE2NEG_EDGE(){
-        curClockMode = CM_NEGEDGE;
+        cur_clock_mode = CM_NEGEDGE;
     }
 
     void SET_CLK_MODE2DEF(){
-        curClockMode = CM_POSEDGE;
+        cur_clock_mode = CM_POSEDGE;
     }
 
     CLOCK_MODE GET_CLOCK_MODE(){
-        return curClockMode;
+        return cur_clock_mode;
     }
 
 

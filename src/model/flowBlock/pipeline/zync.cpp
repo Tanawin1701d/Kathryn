@@ -115,12 +115,12 @@ namespace kathryn{
 
     }
 
-    void FlowBlockZyncBase::addMdLog(MdLogVal* mdLogVal){
-        mdLogVal->addVal("[ " + FlowBlockBase::getMdIdentVal() + " ]");
-        mdLogVal->addVal(prepSendNode->getMdIdentVal() + " " + prepSendNode->getMdDescribe());
-        mdLogVal->addVal(exitNode->getMdIdentVal() + " " + exitNode->getMdDescribe());
+    void FlowBlockZyncBase::add_md_log(MdLogVal* mdLogVal){
+        mdLogVal->addVal("[ " + FlowBlockBase::get_md_ident_val() + " ]");
+        mdLogVal->addVal(prepSendNode->get_md_ident_val() + " " + prepSendNode->get_md_describe());
+        mdLogVal->addVal(exitNode->get_md_ident_val() + " " + exitNode->get_md_describe());
         mdLogVal->addVal("resultNodeWrap is" +
-                         resultNodeWrap->getMdIdentVal() + " " + resultNodeWrap->getMdDescribe());
+                         resultNodeWrap->get_md_ident_val() + " " + resultNodeWrap->get_md_describe());
     }
 
     void FlowBlockZyncBase::doPreFunction() {

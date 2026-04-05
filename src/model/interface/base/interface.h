@@ -32,7 +32,7 @@ namespace kathryn{
 
         //////// model debugable
 
-        std::string getMdIdentVal() override{
+        std::string get_md_ident_val() override{
             return getIdentDebugValue();
         }
 

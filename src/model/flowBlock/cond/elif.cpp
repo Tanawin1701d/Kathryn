@@ -60,7 +60,7 @@ namespace kathryn{
     void FlowBlockElif::buildHwComponent() {
         assert(_conBlocks.empty());
         assert(!_subBlocks.empty());
-        mfAssert(!isThereIntStart(), "start interrupt can start in elif block but can start in if block or block inside elif block");
+        mf_assert(!isThereIntStart(), "start interrupt can start in elif block but can start in if block or block inside elif block");
         ///mfAssert(!isThereIntRst(), "start interrupt can reset in elif block but can start in if block or block inside elif block");
         resultNodeWrapper = _subBlocks[0]->sumarizeBlock();
     }
@@ -73,15 +73,15 @@ namespace kathryn{
         onDetachBlock();
     }
 
-    std::string FlowBlockElif::getMdDescribe() {
+    std::string FlowBlockElif::get_md_describe() {
         std::string ret;
-        ret += "[ " + FlowBlockBase::getMdIdentVal() + " ]\n";
-        ret += "[elif implicitFlowBlock]" + implicitSubBlock->getMdDescribe() + "\n";
+        ret += "[ " + FlowBlockBase::get_md_ident_val() + " ]\n";
+        ret += "[elif implicitFlowBlock]" + implicitSubBlock->get_md_describe() + "\n";
         return ret;
     }
 
-    void FlowBlockElif::addMdLog(MdLogVal *mdLogVal){
-        mdLogVal->addVal("[ Elif " + FlowBlockBase::getMdIdentVal() + " ]");
+    void FlowBlockElif::add_md_log(MdLogVal *mdLogVal){
+        mdLogVal->addVal("[ Elif " + FlowBlockBase::get_md_ident_val() + " ]");
         addMdLogRecur(mdLogVal);
     }
 

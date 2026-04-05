@@ -12,7 +12,7 @@ namespace kathryn{
 
 
     void unlockAlloc(){
-        getControllerPtr()->unlockAllocation();
+        get_controller_ptr()->unlock_allocation();
     }
 
 

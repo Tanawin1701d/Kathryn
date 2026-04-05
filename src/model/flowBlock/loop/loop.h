@@ -62,7 +62,7 @@ namespace kathryn{
         void doPreFunction() override;
         void doPostFunction() override;
 
-        void addMdLog(MdLogVal* mdLogVal) override;
+        void add_md_log(MdLogVal* mdLogVal) override;
 
         Operable& getLoopId(){return *_loopId;}
 
