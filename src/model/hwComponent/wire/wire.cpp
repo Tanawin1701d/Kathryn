@@ -1,0 +1,119 @@
+//
+// Created by tanawin on 29/11/2566.
+//
+
+#include "wire.h"
+#include "wireAuto.h"
+#include "model/hwComponent/expression/expression.h"
+#include "model/controller/controller.h"
+#include "sim/modelSimEngine/hwComponent/wire/wireSim.h"
+
+
+namespace kathryn{
+
+
+    Wire::Wire(int size,
+        bool requireDefVal,
+        bool initCom) : LogicComp({0, size},
+                                     TYPE_WIRE,
+                                     new WireSimEngine(this, VST_WIRE),
+                                     true),
+                                     _requireDefVal(requireDefVal)
+    {
+        if (initCom){
+            comInit();
+        }
+        AssignOpr::setMaster(this);
+        AssignCallbackFromAgent::setMaster(this);
+    }
+
+
+    void Wire::comInit() {
+        ctrl->onWireInit(this);
+    }
+
+    void Wire::doBlockAsm(Operable &srcOpr, Slice desSlice) {
+        mfAssert(false, "wire doesn't support blocking asignment <<=");
+    }
+
+    void Wire::doNonBlockAsm(Operable &srcOpr, Slice desSlice) {
+        assert(getAssignMode() == AM_MOD);
+        assert(getSlice().isContain(desSlice));
+        Slice finalizeDesSlice = desSlice.getMatchSizeSubSlice(srcOpr.getOperableSlice());
+        ctrl->onWireUpdate(
+                generateBasicNode(srcOpr, finalizeDesSlice, ASM_DIRECT),
+                this);
+    }
+
+    SliceAgent<Wire>& Wire::operator()(int start, int stop) {
+        auto ret = new SliceAgent<Wire>(
+                this,
+                getAbsSubSlice(start, stop, getSlice())
+                        );
+        return *ret;
+    }
+
+    SliceAgent<Wire>& Wire::operator()(int idx) {
+        return operator()(idx, idx+1);
+    }
+
+    SliceAgent<Wire>& Wire::operator()(Slice slc) {
+        return operator() (slc.start,slc.stop);
+    }
+
+    Operable* Wire::doSlice(Slice sl){
+        auto& x = operator() (sl.start, sl.stop);
+        return x.castToOperable();
+    }
+
+    void Wire::makeDefEvent(ull defVal){
+        if (_requireDefVal){
+            makeVal(defWireVal, getSlice().getSize(), defVal);
+
+            UpdateEventBasic*  defEvent = createUeHelper(&defWireVal,
+                                                         {0, getSlice().getSize()},
+                                                         DEFAULT_UE_PRI_MIN,
+                                                         CM_CLK_FREE,
+                                                         false);
+            addUpdateMeta(defEvent);
+        }
+    }
+
+    /** override callback*/
+    Operable* Wire::checkShortCircuit() {
+
+        if (isInCheckPath){
+            return this;
+        }
+
+        isInCheckPath = true;
+
+        Operable* result = getUpdateMeta().checkShortCircuitProxy();
+
+        isInCheckPath = false;
+        return nullptr;
+    }
+
+    void Wire::createLogicGen(){
+        assert(_parent->getModuleGenPtr() != nullptr);
+
+        _genEngine = new WireGen(
+            _parent->getModuleGenPtr(),
+            this
+        );
+    }
+
+    /** override global input*/
+    bool Wire::checkIntegrity(){
+        return true;
+    }
+    Operable*   Wire::getOprFromGlobIoPtr(){ return this;}
+    Assignable* Wire::getAsbFromWireMarkerPtr(){ return this;}
+
+
+    /////// global input pool
+
+
+
+
+}

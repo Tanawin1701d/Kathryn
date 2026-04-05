@@ -1,0 +1,72 @@
+//
+// Created by tanawin on 29/11/2566.
+//
+
+#ifndef KATHRYN_WIRE_H
+#define KATHRYN_WIRE_H
+
+#include "iostream"
+#include "model/hwComponent/abstract/logicComp.h"
+#include "model/controller/conInterf/controllerItf.h"
+#include "gen/proxyHwComp/wire/wireGen.h"
+#include "model/hwComponent/abstract/wireMarker.h"
+
+namespace kathryn{
+
+    class Wire : public LogicComp<Wire>, public WireMarker{
+    protected:
+        bool _requireDefVal = false;
+        void comInit() override;
+
+    public:
+        explicit Wire(int size,
+            bool requireDefVal = true,
+            bool initCom       = true);
+
+        void comFinal() override{};
+
+        /**override assignable*/
+        void doBlockAsm(Operable& srcOpr, Slice desSlice) override;
+        void doNonBlockAsm(Operable& srcOpr, Slice desSlice) override;
+
+        void doBlockAsm(Operable& srcOpr,
+                        std::vector<AssignMeta*>& resultMetaCollector,
+                        Slice  absSrcSlice,
+                        Slice  absDesSlice) override{
+            mfAssert(false, "wire don't support this doBlockAsm"); assert(false);
+        }
+        void doNonBlockAsm(Operable& srcOpr,
+                           std::vector<AssignMeta*>& resultMetaCollector,
+                           Slice  absSrcSlice,
+                           Slice  absDesSlice) override{
+            doGlobalAsm(srcOpr, resultMetaCollector, absSrcSlice, absDesSlice, ASM_DIRECT);
+        }
+
+        CLOCK_MODE getCurAssignClkMode() override { return CM_CLK_FREE;};
+
+        Wire& operator = (Operable& b){ operatorEq(b);                                 return *this;}
+        Wire& operator = (ull b)      { operatorEq(b);                                    return *this;}
+        Wire& operator = (Wire& b)    { if (this == &b){return *this;} operatorEq(b);  return *this;}
+
+        /**override slicable*/
+        SliceAgent<Wire>& operator() (int start, int stop) override;
+        SliceAgent<Wire>& operator() (int idx) override;
+        SliceAgent<Wire>& operator() (Slice sl) override;
+        Operable* doSlice(Slice sl) override;
+        void makeDefEvent(ull defVal = 0) override;
+        Operable* checkShortCircuit() override;
+
+        /**override logicc gen base*/
+        void createLogicGen() override;
+        /** override global input*/
+        bool checkIntegrity()                  override;
+        Operable*getOprFromGlobIoPtr()           override;
+        Assignable*getAsbFromWireMarkerPtr()     override;
+
+    };
+
+
+
+}
+
+#endif //KATHRYN_WIRE_H
