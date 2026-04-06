@@ -86,7 +86,7 @@ namespace kathryn{
             _forceExitNode = new PseudoNode(1, BITWISE_OR);
             for (auto nw : nws){
                 if (nw->getForceExitNode() != nullptr){
-                    _forceExitNode->addDependNode(nw->getForceExitNode(), nullptr);
+                    _forceExitNode->add_depend_node(nw->getForceExitNode(), nullptr);
                 }
             }
             _forceExitNode->assign();
@@ -120,7 +120,7 @@ namespace kathryn{
             intNodes[intType] = new OprNode(intSignals[intType][0]);
 
             for (int sigId = 1; sigId < intSignals[intType].size(); sigId++){
-                intNodes[intType]->addLogic(
+                intNodes[intType]->add_logic(
                     intNodes[intType]->_value,
                     intSignals[intType][sigId],
                     BITWISE_OR
@@ -179,7 +179,7 @@ namespace kathryn{
         holdNode = new OprNode(holdSignals[0]);
 
         for (int sigId = 1; sigId < static_cast<int>(holdSignals.size()); sigId++){
-            holdNode->addLogic(
+            holdNode->add_logic(
                 holdNode->_value,
                 holdSignals[sigId],
                 BITWISE_OR
@@ -287,7 +287,7 @@ namespace kathryn{
 
         for (Node* node: _basicNodes){
             assert(node != nullptr);
-            assert(node->getNodeType() == ASM_NODE);
+            assert(node->get_node_type() == ASM_NODE);
             ((AsmNode*)node)->overrideClockMode(getClockMode());
         }
 

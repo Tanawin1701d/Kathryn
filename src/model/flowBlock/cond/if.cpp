@@ -97,23 +97,23 @@ namespace kathryn{
 
         if (getFlowType() == CIF){
             condNode = new PseudoNode(1, BITWISE_OR);
-            condNode->setInternalIdent("cifNode" + std::to_string(get_global_id()));
+            condNode->set_internal_ident("cifNode" + std::to_string(get_global_id()));
         }else if(getFlowType() == SIF){
             condNode = new StateNode(getClockMode());
-            condNode->setInternalIdent("sifNode" + std::to_string(get_global_id()));
+            condNode->set_internal_ident("sifNode" + std::to_string(get_global_id()));
             fillIntResetToNodeIfThere(condNode);
             fillHoldToNodeIfThere(condNode);
         }else{assert(false);}
         addSysNode(condNode);
 
         if (isThereIntStart()){
-            condNode->addDependNode(intNodes[INT_START], nullptr);
+            condNode->add_depend_node(intNodes[INT_START], nullptr);
         }
 
 
         exitNode = new PseudoNode(1, BITWISE_OR);
         addSysNode(exitNode);
-        exitNode->setInternalIdent("ifExitNode" + std::to_string(get_global_id()));
+        exitNode->set_internal_ident("ifExitNode" + std::to_string(get_global_id()));
         resultNodeWrap = new NodeWrap();
 
 
@@ -128,7 +128,7 @@ namespace kathryn{
         /** assign first first if*/
         allStatement[0]->addDependNodeToAllNode( condNode,allPurifiedCondes[0]);
         allStatement[0]->assignAllNode();
-        exitNode->addDependNode(allStatement[0]->getExitNode(), nullptr);
+        exitNode->add_depend_node(allStatement[0]->getExitNode(), nullptr);
 
 
         int statementId = 1;
@@ -138,7 +138,7 @@ namespace kathryn{
                         condNode,
                         &((*allPurifiedCondes[statementId]) & (*prevFalse)));
                 allStatement[statementId]->assignAllNode();
-                exitNode->addDependNode(allStatement[statementId]->getExitNode(), nullptr);
+                exitNode->add_depend_node(allStatement[statementId]->getExitNode(), nullptr);
                 prevFalse = &((*prevFalse) & ~(*allPurifiedCondes[statementId]));
             }else{
                 /** case else statement*/
@@ -147,7 +147,7 @@ namespace kathryn{
                         condNode,
                         prevFalse);
                 allStatement[statementId]->assignAllNode();
-                exitNode->addDependNode(allStatement[statementId]->getExitNode(), nullptr);
+                exitNode->add_depend_node(allStatement[statementId]->getExitNode(), nullptr);
             }
         }
 
@@ -156,7 +156,7 @@ namespace kathryn{
         if (allStatement.size() == allPurifiedCondes.size()){
             /** there is no else node*/
             /** prev false is ready*/
-            exitNode->addDependNode(condNode, prevFalse);
+            exitNode->add_depend_node(condNode, prevFalse);
         }
         exitNode->assign();
 

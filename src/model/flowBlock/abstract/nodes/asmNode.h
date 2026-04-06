@@ -25,7 +25,7 @@ namespace kathryn {
                 _assignMetas({assignMeta})
         {
             assert(assignMeta != nullptr);
-            setClockMode(CM_CLK_UNUSED);
+            set_clock_mode(CM_CLK_UNUSED);
 
         }
 
@@ -37,7 +37,7 @@ namespace kathryn {
                 assert(asmMeta != nullptr);
 
             }
-            setClockMode(CM_CLK_UNUSED);
+            set_clock_mode(CM_CLK_UNUSED);
 
         }
 
@@ -68,9 +68,9 @@ namespace kathryn {
         }
 
         void assignFromStateNode(Operable* holdSignal, Operable* resetSignal){
-            assert(nodeSrcs.size() == 1);
+            assert(_node_srcs.size() == 1);
             //assert(nodeSrcs[0].condition == nullptr);
-            assert(nodeSrcs[0].dependNode != nullptr);
+            assert(_node_srcs[0].dependNode != nullptr);
             assert(!_assignMetas.empty());
 
             for (int assignIdx = 0; assignIdx < _assignMetas.size(); assignIdx++) {
@@ -80,15 +80,15 @@ namespace kathryn {
 
                     ////// bind node condition with pre_condition first\
                     ////////// handle condition and reset signal
-                    Operable* condEvent = addLogicWithOutput(nodeSrcs[0].condition, nullptr, BITWISE_AND);
+                    Operable* condEvent = add_logic_with_output(_node_srcs[0].condition, nullptr, BITWISE_AND);
                     if (holdSignal != nullptr){
-                        condEvent = addLogicWithOutput(condEvent, &(~(*holdSignal)), BITWISE_AND);
+                        condEvent = add_logic_with_output(condEvent, &(~(*holdSignal)), BITWISE_AND);
                     }
                     if (resetSignal != nullptr){
-                        condEvent = addLogicWithOutput(condEvent, &(~(*resetSignal)), BITWISE_AND);
+                        condEvent = add_logic_with_output(condEvent, &(~(*resetSignal)), BITWISE_AND);
                     }
                     ////////// handle condition with state
-                    condEvent = addLogicWithOutput(condEvent, nodeSrcs[0].dependNode->getStateOperating(), BITWISE_AND);
+                    condEvent = add_logic_with_output(condEvent, _node_srcs[0].dependNode->get_operating_state_ptr(), BITWISE_AND);
                     ///////////// assign from current dependency
                     assert(assignMeta->preUpdateElement != nullptr);
 
@@ -110,13 +110,13 @@ namespace kathryn {
                 /** for reg = operator*/
                 }else if (assignMeta->asmType == ASM_EQ_DEPNODE){
                     //////////////// assign as same as node that have been assign
-                    for (auto nodeSrc: nodeSrcs[0].dependNode->nodeSrcs) {
+                    for (auto nodeSrc: _node_srcs[0].dependNode->_node_srcs) {
 
-                        Operable* condEvent = addLogicWithOutput(nodeSrc.condition, nullptr, BITWISE_AND);
+                        Operable* condEvent = add_logic_with_output(nodeSrc.condition, nullptr, BITWISE_AND);
                         if (holdSignal != nullptr){
-                            condEvent = addLogicWithOutput(condEvent, &(~(*holdSignal)), BITWISE_AND);
+                            condEvent = add_logic_with_output(condEvent, &(~(*holdSignal)), BITWISE_AND);
                         }
-                        condEvent = addLogicWithOutput(condEvent, nodeSrc.dependNode->getExitOpr(), BITWISE_AND);
+                        condEvent = add_logic_with_output(condEvent, nodeSrc.dependNode->get_exit_opr_ptr(), BITWISE_AND);
 
                         UpdateEventCond* updateWithState = new UpdateEventCond();
                         updateWithState->addSubStmt(condEvent, assignMeta->getCurrentEvent());
@@ -141,9 +141,9 @@ namespace kathryn {
             /*** no need to deal with rst event due to data self invoked*/
         }
         /** assign with no flow block related*/
-        void dryAssign() override{
+        void dry_assign() override{
             assert(!_assignMetas.empty());
-            assert(nodeSrcs.empty());
+            assert(_node_srcs.empty());
 
 
             for (int assignIdx = 0; assignIdx < _assignMetas.size(); assignIdx++) {
@@ -166,7 +166,7 @@ namespace kathryn {
             }
         }
 
-        int getCycleUsed() override { return 1; }
+        int get_cycle_used() override { return 1; }
 
     };
 

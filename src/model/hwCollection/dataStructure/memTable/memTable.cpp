@@ -23,7 +23,7 @@ namespace kathryn{
 
         /////// assign to build the system
         AsmNode* asmNode = WireSlot::genGrpAsmNode(resultCollector);
-        asmNode->dryAssign();
+        asmNode->dry_assign();
         delete asmNode;
         return resultWireSlot;
 
@@ -62,7 +62,7 @@ namespace kathryn{
         }
 
         auto* asmNode = new AsmNode(resultCollector);
-        asmNode->dryAssign();
+        asmNode->dry_assign();
         delete asmNode;
 
 

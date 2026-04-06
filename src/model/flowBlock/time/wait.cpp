@@ -60,7 +60,7 @@ namespace kathryn{
         addSysNode(_waitNode);
         fillIntResetToNodeIfThere(_waitNode);
         fillHoldToNodeIfThere(_waitNode);
-        _waitNode->setInternalIdent("waitCond"+std::to_string(get_global_id()));
+        _waitNode->set_internal_ident("waitCond"+std::to_string(get_global_id()));
 
         /** result node wrap*/
         _resultNodeWrap = new NodeWrap();
@@ -161,7 +161,7 @@ namespace kathryn{
         addSysNode(_waitNode);
         fillIntResetToNodeIfThere(_waitNode);
         fillHoldToNodeIfThere(_waitNode);
-        _waitNode->setInternalIdent("waitCycle"+std::to_string(get_global_id()));
+        _waitNode->set_internal_ident("waitCycle"+std::to_string(get_global_id()));
 
         /** result node wrap*/
         _resultNodeWrap = new NodeWrap();

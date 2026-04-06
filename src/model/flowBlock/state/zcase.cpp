@@ -23,7 +23,7 @@ namespace kathryn{
 
     void FlowBlockZCase::addElementInFlowBlock(Node* node){
         assert(node != nullptr);
-        assert(node->getNodeType() == ASM_NODE);
+        assert(node->get_node_type() == ASM_NODE);
         AsmNode* castedNode = (AsmNode*)node;
         /////// the class may not compatable with the other ASM
         tryAddOrCreateAsmMeta(castedNode, _assignMetas);

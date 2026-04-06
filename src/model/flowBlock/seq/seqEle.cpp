@@ -23,7 +23,7 @@ namespace kathryn{
      */
     SequenceEleBasic::SequenceEleBasic(Node *asmNode) : SequenceEle(){
         assert(asmNode != nullptr);
-        assert(asmNode->getNodeType() == ASM_NODE);
+        assert(asmNode->get_node_type() == ASM_NODE);
         _asmNode = (AsmNode*)asmNode;
     }
     SequenceEleBasic::~SequenceEleBasic(){delete _stateNode;}
@@ -33,16 +33,16 @@ namespace kathryn{
         _stateNode = new StateNode(cm);
         _stateNode->addSlaveAsmNode(_asmNode);
         if (_intRstNode != nullptr) {
-            _stateNode->setInterruptReset(_intRstNode);
+            _stateNode->set_interrupt_reset(_intRstNode);
         }
         if (_holdNode != nullptr) {
-            _stateNode->setHold(_holdNode);
+            _stateNode->set_hold(_holdNode);
         }
     }
 
     void SequenceEleBasic::setIdentStateId (ull masterIdx, int idx) const{
         assert(_stateNode != nullptr);
-        _stateNode->setInternalIdent(
+        _stateNode->set_internal_ident(
                     "seqStateReg_"+
                     std::to_string(masterIdx)+
                     "_" +
@@ -53,12 +53,12 @@ namespace kathryn{
         deter.addToDet(_asmNode);
     }
     void SequenceEleBasic::assignDependDent(SequenceEle* predecessor) const{
-        _stateNode->addDependNode(predecessor->getStateFinishIden(), nullptr);
+        _stateNode->add_depend_node(predecessor->getStateFinishIden(), nullptr);
         _stateNode->assign();   ///// assign state node to actual value
 
     }
     void SequenceEleBasic::assignIntStart(OprNode* intStartNode){
-        _stateNode->addDependNode(intStartNode, nullptr);
+        _stateNode->add_depend_node(intStartNode, nullptr);
     }
     Node* SequenceEleBasic::getStateFinishIden() const{
         assert(_stateNode != nullptr);
@@ -97,7 +97,7 @@ namespace kathryn{
     }
 
     void SequenceEleBasic::assignDependDent    (Node* activatorNode) const{
-        _stateNode->addDependNode(activatorNode, nullptr);
+        _stateNode->add_depend_node(activatorNode, nullptr);
         _stateNode->assign();   ///// assign state node to actual value
     }
 

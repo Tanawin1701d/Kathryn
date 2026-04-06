@@ -63,7 +63,7 @@ namespace kathryn{
         void addDependNodeToAllNode(Node* st, Operable* condition=nullptr) {
             assert(st != nullptr);
             for (auto node: entranceNodes) {
-                node->addDependNode(st, condition);
+                node->add_depend_node(st, condition);
             }
         }
 
@@ -172,7 +172,7 @@ namespace kathryn{
 
         void addToDet(Node* nd){
             assert(nd != nullptr);
-            samplingVec.push_back(nd->getCycleUsed());
+            samplingVec.push_back(nd->get_cycle_used());
         }
         void addToDet(NodeWrap* nw){
             assert(nw != nullptr);
@@ -232,7 +232,7 @@ namespace kathryn{
                 if (nd == nullptr){
                     continue;
                 }
-                if (nd->getCycleUsed() == cycle){
+                if (nd->get_cycle_used() == cycle){
                     return nd;
                 }
             }

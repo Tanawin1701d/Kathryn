@@ -76,7 +76,7 @@ namespace kathryn{
             resultNodeWrap->addForceExitNode(breakNode);
         }else{
             breakCondNode = new PseudoNode(1, BITWISE_AND);
-            breakCondNode->addDependNode(breakNode, forceExitOpr);
+            breakCondNode->add_depend_node(breakNode, forceExitOpr);
             breakCondNode->assign();
             addSysNode(breakCondNode);
             resultNodeWrap->addForceExitNode(breakCondNode);

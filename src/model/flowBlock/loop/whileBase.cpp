@@ -52,10 +52,10 @@ namespace kathryn{
         //** initialize node*/
         if (getFlowType() == CWHILE){
             conditionNode = new PseudoNode(1, BITWISE_OR);
-            conditionNode->setInternalIdent("cConNode" + std::to_string(get_global_id()));
+            conditionNode->set_internal_ident("cConNode" + std::to_string(get_global_id()));
         }else{////// SWHILE
             conditionNode = new StateNode(getClockMode());
-            conditionNode->setInternalIdent("sConNode" + std::to_string(get_global_id()));
+            conditionNode->set_internal_ident("sConNode" + std::to_string(get_global_id()));
             fillIntResetToNodeIfThere(conditionNode);
             fillHoldToNodeIfThere(conditionNode);
         }
@@ -72,20 +72,20 @@ namespace kathryn{
 
         /**do condition node Dep*/
             //// codition trigger from outside willbe trigger in upper node
-        conditionNode->addDependNode(subBlockNodeWrap->getExitNode(),
+        conditionNode->add_depend_node(subBlockNodeWrap->getExitNode(),
                                      subBlockNodeWrap->isThereForceExitNode()?
-                                        ( &(~(*subBlockNodeWrap->getForceExitNode()->getExitOpr())) ):
+                                        ( &(~(*subBlockNodeWrap->getForceExitNode()->get_exit_opr_ptr())) ):
                                         nullptr
                                      );
         if(isThereIntStart()){
-            conditionNode->addDependNode(intNodes[INT_START], nullptr);
+            conditionNode->add_depend_node(intNodes[INT_START], nullptr);
         }
         /**do exit NOde Dep*/
         if (!_fallTrue) {
-            exitNode->addDependNode(conditionNode, &(!(*_purifiedCondExpr)) );
+            exitNode->add_depend_node(conditionNode, &(!(*_purifiedCondExpr)) );
         }
         if (subBlockNodeWrap->isThereForceExitNode()){
-            exitNode->addDependNode(subBlockNodeWrap->getForceExitNode(), nullptr);
+            exitNode->add_depend_node(subBlockNodeWrap->getForceExitNode(), nullptr);
         }
 
         if (_fallTrue && (!subBlockNodeWrap->isThereForceExitNode())){
@@ -93,7 +93,7 @@ namespace kathryn{
             /////////// TODO warning
             exitDummy = new DummyNode(&makeOprVal("exitDummy",1, 0));
             addSysNode(exitDummy);
-            exitNode->addDependNode(exitDummy, nullptr);
+            exitNode->add_depend_node(exitDummy, nullptr);
         }
 
         exitNode->assign();

@@ -18,51 +18,51 @@ namespace kathryn{
                 Node(WAITCOND_NODE){
             assert(waitCond != nullptr);
             _condWaitStateReg = new CondWaitStateReg(waitCond);
-            addCycleRelatedReg(_condWaitStateReg);
-            setClockMode(clockMode);
+            add_cycle_related_reg(_condWaitStateReg);
+            set_clock_mode(clockMode);
         }
 
-        void makeUnsetStateEvent() override{
+        void make_unset_state_event() override{
             assert(_condWaitStateReg != nullptr);
-            _condWaitStateReg->makeUnSetStateEvent(getClockMode());
+            _condWaitStateReg->makeUnSetStateEvent(get_clock_mode());
         }
 
-        void makeUserResetEvent() override{
-            if (isThrereIntReset()){
-                _condWaitStateReg->makeUserRstEvent(intReset->getExitOpr(), getClockMode());
+        void make_user_reset_event() override{
+            if (is_threre_int_reset()){
+                _condWaitStateReg->makeUserRstEvent(_int_reset->get_exit_opr_ptr(), get_clock_mode());
             }
 
         }
 
-        Operable* getStateOperating() override{
+        Operable* get_operating_state_ptr() override{
             assert(_condWaitStateReg != nullptr);
             return _condWaitStateReg->generateEndExpr();
         }
 
-        Operable* getExitOpr() override{
+        Operable* get_exit_opr_ptr() override{
             assert(_condWaitStateReg != nullptr);
             Operable* binedWithResetSig =
-                bindWithRstOutPutIfReset(_condWaitStateReg->generateEndExpr());
+                bind_with_rst_out_put_if_reset(_condWaitStateReg->generateEndExpr());
             Operable* binedWithHoldSig =
-                bindWithHoldIfHold(binedWithResetSig);
+                bind_with_hold_if_hold(binedWithResetSig);
             return binedWithHoldSig;
         }
 
         void assign() override{
-            assert(!nodeSrcs.empty());
-            for(auto nodeSrc: nodeSrcs){
-                _condWaitStateReg->addDependState(nodeSrc.dependNode->getExitOpr(), nodeSrc.condition, getClockMode());
+            assert(!_node_srcs.empty());
+            for(auto nodeSrc: _node_srcs){
+                _condWaitStateReg->addDependState(nodeSrc.dependNode->get_exit_opr_ptr(), nodeSrc.condition, get_clock_mode());
             }
-            if (isThereHold()){
-                _condWaitStateReg->addDependState(getStateOperating(), holdNode->getExitOpr(), getClockMode());
+            if (is_there_hold()){
+                _condWaitStateReg->addDependState(get_operating_state_ptr(), _hold_node->get_exit_opr_ptr(), get_clock_mode());
             }
 
-            makeUnsetStateEvent();
-            makeUserResetEvent();
-            _condWaitStateReg->setVarName(identName);
+            make_unset_state_event();
+            make_user_reset_event();
+            _condWaitStateReg->setVarName(_ident_name);
         }
 
-        int getCycleUsed() override {return NODE_CYCLE_USED_UNKNOWN;}
+        int get_cycle_used() override {return NODE_CYCLE_USED_UNKNOWN;}
 
     };
 
@@ -75,59 +75,59 @@ namespace kathryn{
                 _cycle(cycle){
 
             _cycleWaitStateReg = new CycleWaitStateReg(cycle);
-            addCycleRelatedReg(_cycleWaitStateReg);
-            setClockMode(clockMode);
+            add_cycle_related_reg(_cycleWaitStateReg);
+            set_clock_mode(clockMode);
         }
 
         explicit WaitCycleNode(Operable* opr1, CLOCK_MODE clockMode):
                 Node(WAITCYCLE_NODE)
         {
             _cycleWaitStateReg = new CycleWaitStateReg(opr1);
-            addCycleRelatedReg(_cycleWaitStateReg);
-            setClockMode(clockMode);
+            add_cycle_related_reg(_cycleWaitStateReg);
+            set_clock_mode(clockMode);
         }
 
-        void makeUnsetStateEvent() override{
+        void make_unset_state_event() override{
             assert(_cycleWaitStateReg != nullptr);
-            _cycleWaitStateReg->makeUnSetStateEvent(getClockMode());
+            _cycleWaitStateReg->makeUnSetStateEvent(get_clock_mode());
         }
 
-        void makeUserResetEvent() override{
-            if(isThrereIntReset()){
-                _cycleWaitStateReg->makeUserRstEvent(intReset->getExitOpr(), getClockMode());
+        void make_user_reset_event() override{
+            if(is_threre_int_reset()){
+                _cycleWaitStateReg->makeUserRstEvent(_int_reset->get_exit_opr_ptr(), get_clock_mode());
             }
 
         }
 
-        Operable* getExitOpr() override{
+        Operable* get_exit_opr_ptr() override{
             assert(_cycleWaitStateReg != nullptr);
             Operable* binedWithResetSignal =
-                bindWithRstOutPutIfReset(_cycleWaitStateReg->generateEndExpr());
+                bind_with_rst_out_put_if_reset(_cycleWaitStateReg->generateEndExpr());
             Operable* binedWithHoldSignal =
-                bindWithHoldIfHold(binedWithResetSignal);
+                bind_with_hold_if_hold(binedWithResetSignal);
             return binedWithHoldSignal;
         }
 
         void assign() override{
 
             /**normal start event*/
-            for(auto nodeSrc: nodeSrcs){
-                _cycleWaitStateReg->addDependState(nodeSrc.dependNode->getExitOpr(), nodeSrc.condition, getClockMode());
+            for(auto nodeSrc: _node_srcs){
+                _cycleWaitStateReg->addDependState(nodeSrc.dependNode->get_exit_opr_ptr(), nodeSrc.condition, get_clock_mode());
             }
             /** inc event*/
-            if (isThereHold()){
-                _cycleWaitStateReg->makeIncStateEvent(holdNode->getExitOpr(), getClockMode());
+            if (is_there_hold()){
+                _cycleWaitStateReg->makeIncStateEvent(_hold_node->get_exit_opr_ptr(), get_clock_mode());
             }else{
-                _cycleWaitStateReg->makeIncStateEvent(nullptr, getClockMode());
+                _cycleWaitStateReg->makeIncStateEvent(nullptr, get_clock_mode());
             }
             /** unset event*/
-            makeUnsetStateEvent();
-            makeUserResetEvent();
-            _cycleWaitStateReg->setVarName(identName);
+            make_unset_state_event();
+            make_user_reset_event();
+            _cycleWaitStateReg->setVarName(_ident_name);
         }
 
-        int getCycleUsed() override{
-            if (isThereHold()){
+        int get_cycle_used() override{
+            if (is_there_hold()){
                 return IN_CONSIST_CYCLE_USED;
             }
             return _cycle;

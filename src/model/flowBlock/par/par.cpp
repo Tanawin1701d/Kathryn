@@ -61,13 +61,13 @@ namespace kathryn{
          * */
         if (!_basicNodes.empty()){
             basicStNode = new StateNode(getClockMode());
-            basicStNode->setInternalIdent("parStateReg_" + std::to_string(get_global_id()));
+            basicStNode->set_internal_ident("parStateReg_" + std::to_string(get_global_id()));
             addSysNode(basicStNode);
             fillIntResetToNodeIfThere(basicStNode);
             fillHoldToNodeIfThere(basicStNode);
             /** add basic assignment to depend on stateNode*/
             for (auto nd : _basicNodes){
-                assert(nd->getNodeType() == ASM_NODE);
+                assert(nd->get_node_type() == ASM_NODE);
                 basicStNode->addSlaveAsmNode((AsmNode*)nd);
             }
         }
@@ -107,7 +107,7 @@ namespace kathryn{
         if (basicStNode != nullptr) {
             resultNodeWrap->addEntraceNode(basicStNode);
             if (isThereIntStart()){
-                basicStNode->addDependNode(intNodes[INT_START], nullptr);
+                basicStNode->add_depend_node(intNodes[INT_START], nullptr);
             }
         }
         for (auto nw : nodeWrapOfSubBlock){
@@ -235,16 +235,16 @@ namespace kathryn{
             if(_forceExitNode){
                 synNode->setForceExitEvent(_forceExitNode);
             }
-            synNode->setInternalIdent(
+            synNode->set_internal_ident(
                     "parSynNode_" +
                     std::to_string(get_global_id())
                     );
             /**syn node don't need to specify join operation due to it used own logic or*/
             if (basicStNode != nullptr){
-                synNode->addDependNode(basicStNode, nullptr);
+                synNode->add_depend_node(basicStNode, nullptr);
             }
             for (auto nw : nodeWrapOfSubBlock){
-                synNode->addDependNode(nw->getExitNode(), nullptr);
+                synNode->add_depend_node(nw->getExitNode(), nullptr);
             }
             ////// assign sync reg and sync node don't have to set join op because
             /////////// sync register will handle it
@@ -311,9 +311,9 @@ namespace kathryn{
             pseudoExitNode = new PseudoNode(1, BITWISE_OR);
             addSysNode(pseudoExitNode);
             if (basicStNode != nullptr)
-                pseudoExitNode->addDependNode(basicStNode, nullptr);
+                pseudoExitNode->add_depend_node(basicStNode, nullptr);
             for (auto nw : nodeWrapOfSubBlock){
-                pseudoExitNode->addDependNode(nw->getExitNode(), nullptr);
+                pseudoExitNode->add_depend_node(nw->getExitNode(), nullptr);
             }
             pseudoExitNode->assign();
             exitNode  = pseudoExitNode;

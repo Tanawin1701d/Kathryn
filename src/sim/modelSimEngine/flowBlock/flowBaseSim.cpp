@@ -105,7 +105,7 @@ namespace kathryn{
         cb.addCm("basic node rc");
         for (Node* sysNode : _flowBlockBase->getSysNodes()){
             assert(sysNode != nullptr);
-            for (CtrlFlowRegBase* stateReg : sysNode->getCycleRelatedReg()){
+            for (CtrlFlowRegBase* stateReg : sysNode->get_cycle_related_reg()){
                 if (stateReg != nullptr){
                     ValR stateRegRep = stateReg->getSimEngine()->getValRep();
                     ValR checkRegRep =

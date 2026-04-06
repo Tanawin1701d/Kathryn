@@ -38,9 +38,9 @@ namespace kathryn{
 
     void StreamEle::setIdentStateId(ull masterIdx, int subIdx) const{
         _masterElement->setIdentStateId(masterIdx, subIdx);
-        _entNode      ->setInternalIdent("entNode_"+std::to_string(masterIdx)+"_"+std::to_string(subIdx));
-        _waitPrevNode ->setInternalIdent("waitPrevNode_"+std::to_string(masterIdx)+"_"+std::to_string(subIdx));
-        _waitNextNode ->setInternalIdent("waitNextNode_"+std::to_string(masterIdx)+"_"+std::to_string(subIdx));
+        _entNode      ->set_internal_ident("entNode_"+std::to_string(masterIdx)+"_"+std::to_string(subIdx));
+        _waitPrevNode ->set_internal_ident("waitPrevNode_"+std::to_string(masterIdx)+"_"+std::to_string(subIdx));
+        _waitNextNode ->set_internal_ident("waitNextNode_"+std::to_string(masterIdx)+"_"+std::to_string(subIdx));
     }
     void StreamEle::setIntReset(OprNode* intResetNode){
         _masterElement->setIntReset(intResetNode);
@@ -53,27 +53,27 @@ namespace kathryn{
 
         /////// create communicate channel
 
-        _acceptForPrev->addDependNode(_syncedNext  , nullptr);
-        _acceptForPrev->addDependNode(_waitPrevNode, nullptr);
+        _acceptForPrev->add_depend_node(_syncedNext  , nullptr);
+        _acceptForPrev->add_depend_node(_waitPrevNode, nullptr);
         _acceptForPrev->assign();
 
-        _readyForNext->addDependNode(_waitNextNode                       , nullptr);
-        _readyForNext->addDependNode(_masterElement->getStateFinishIden(), nullptr);
+        _readyForNext->add_depend_node(_waitNextNode                       , nullptr);
+        _readyForNext->add_depend_node(_masterElement->getStateFinishIden(), nullptr);
         _readyForNext->assign();
 
 
-        _syncedNext->addDependNode(_readyForNext, nullptr);
+        _syncedNext->add_depend_node(_readyForNext, nullptr);
         if (nextStreamEle != nullptr){
-            _syncedNext->addDependNode(nextStreamEle->_acceptForPrev, nullptr);
+            _syncedNext->add_depend_node(nextStreamEle->_acceptForPrev, nullptr);
         }
         _syncedNext->assign();
 
         //////// create next wait node
         if (nextStreamEle != nullptr){
-            Operable* notAcceptNext = &(~(*nextStreamEle->_acceptForPrev->getExitOpr()));
-            _waitNextNode->addDependNode(_masterElement->getStateFinishIden(),
+            Operable* notAcceptNext = &(~(*nextStreamEle->_acceptForPrev->get_exit_opr_ptr()));
+            _waitNextNode->add_depend_node(_masterElement->getStateFinishIden(),
                                          notAcceptNext);
-            _waitNextNode->addDependNode(_waitNextNode, notAcceptNext);
+            _waitNextNode->add_depend_node(_waitNextNode, notAcceptNext);
         }
         tryAssignIntSig(_waitNextNode);
         tryAssignHoldSig(_waitNextNode);
@@ -83,18 +83,18 @@ namespace kathryn{
         Operable* prevNotReady = nullptr;
         Operable* prevReady    = nullptr;
         if (prevStreamEle != nullptr){
-            prevReady    = prevStreamEle->_readyForNext->getExitOpr();
+            prevReady    = prevStreamEle->_readyForNext->get_exit_opr_ptr();
             prevNotReady = &(~(*prevReady));
 
-            _waitPrevNode->addDependNode(_syncedNext, prevNotReady);
-            _waitPrevNode->addDependNode(_waitPrevNode, prevNotReady);
+            _waitPrevNode->add_depend_node(_syncedNext, prevNotReady);
+            _waitPrevNode->add_depend_node(_waitPrevNode, prevNotReady);
             tryAssignIntSig(_waitNextNode);
             tryAssignHoldSig(_waitNextNode);
             ///_waitPrevNode->assign(); //// because we have to send to node wrapper
         }
         //////// create entNode
-        _entNode->addDependNode(_waitPrevNode, prevReady);
-        _entNode->addDependNode(_syncedNext, prevReady);
+        _entNode->add_depend_node(_waitPrevNode, prevReady);
+        _entNode->add_depend_node(_syncedNext, prevReady);
         _entNode->assign();
 
         //////// add main flow to entNode
@@ -102,7 +102,7 @@ namespace kathryn{
     }
 
     void StreamEle::assignIntStart(OprNode* intStartNode){
-        _waitPrevNode->addDependNode(intStartNode, nullptr);
+        _waitPrevNode->add_depend_node(intStartNode, nullptr);
     }
 
     void StreamEle::addToSystemNodes(std::vector<Node*>& sysNode){
@@ -113,13 +113,13 @@ namespace kathryn{
 
     void StreamEle::tryAssignIntSig(StateNode* nd) const{
         if (_masterElement->getIntResetNode() != nullptr){
-            nd->setInterruptReset(_masterElement->getIntResetNode());
+            nd->set_interrupt_reset(_masterElement->getIntResetNode());
         }
     }
 
     void StreamEle::tryAssignHoldSig(StateNode* nd) const{
         if (_masterElement->getHoldNode() != nullptr ){
-            nd->setHold(_masterElement->getHoldNode());
+            nd->set_hold(_masterElement->getHoldNode());
         }
     }
 

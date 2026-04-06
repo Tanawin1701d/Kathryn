@@ -56,7 +56,7 @@ namespace kathryn{
     Slot(rhs.getMeta()){
         WireSlot::initHwStructure(prefixName);
         AsmNode* asmNode = genGrpAsmNode(rhs, ASM_DIRECT);
-        asmNode->dryAssign();
+        asmNode->dry_assign();
         delete asmNode;
     }
 
@@ -186,7 +186,7 @@ namespace kathryn{
     void WireSlot::addWireBase(const std::string& fieldName, Operable& value){
         Wire& newAddedWire = mOprWire(fieldName, value.getOperableSlice().getSize());
         AsmNode* newAssignNode = newAddedWire.generateBasicNode(value, newAddedWire.getOperableSlice(), ASM_DIRECT);
-        newAssignNode->dryAssign();
+        newAssignNode->dry_assign();
         delete newAssignNode;
         addWire(fieldName, newAddedWire);
     }

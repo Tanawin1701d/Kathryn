@@ -19,35 +19,35 @@ namespace kathryn{
                 _pseudoAssignMeta(new expression(expr_size)),
                 _joinOp(joinOp){
 
-            setClockMode(CM_CLK_FREE);
+            set_clock_mode(CM_CLK_FREE);
 
         }
 
         void assign() override{
-            assert(!nodeSrcs.empty());
+            assert(!_node_srcs.empty());
             Operable* finalOpr  = nullptr;
             Operable* oprPerSrc = nullptr;
-            for (auto nodeSrc: nodeSrcs){
+            for (auto nodeSrc: _node_srcs){
                 assert(nodeSrc.dependNode != nullptr);
-                oprPerSrc = nodeSrc.dependNode->getExitOpr();
+                oprPerSrc = nodeSrc.dependNode->get_exit_opr_ptr();
                 if (nodeSrc.condition != nullptr){
                     assert(nodeSrc.condition->getOperableSlice().getSize() == 1);
-                    addLogic(oprPerSrc, nodeSrc.condition, BITWISE_AND);
+                    add_logic(oprPerSrc, nodeSrc.condition, BITWISE_AND);
                 }
                 assert(oprPerSrc != nullptr);
-                addLogic(finalOpr, oprPerSrc, _joinOp);
+                add_logic(finalOpr, oprPerSrc, _joinOp);
             }
 
             assert(finalOpr != nullptr);
             *_pseudoAssignMeta = (*finalOpr);
             assert(_pseudoAssignMeta != nullptr);
-            _pseudoAssignMeta->setVarName(identName);
+            _pseudoAssignMeta->setVarName(_ident_name);
         }
-        int getCycleUsed() override { return 0; }
+        int get_cycle_used() override { return 0; }
 
-        Operable* getExitOpr() override{return _pseudoAssignMeta;}
+        Operable* get_exit_opr_ptr() override{return _pseudoAssignMeta;}
 
-        bool isStateFullNode() override{ return false; }
+        bool is_state_full_node() override{ return false; }
 
     };
 
@@ -62,15 +62,15 @@ namespace kathryn{
 
         void assign() override{
             /** we don't support assign from condition or depend state*/
-            assert(nodeSrcs.empty());
-            _value->setVarName(identName);
+            assert(_node_srcs.empty());
+            _value->setVarName(_ident_name);
         }
 
-        int getCycleUsed() override{ return 0; }
+        int get_cycle_used() override{ return 0; }
 
-        Operable* getExitOpr() override{return _value;}
+        Operable* get_exit_opr_ptr() override{return _value;}
 
-        bool isStateFullNode() override{return false;}
+        bool is_state_full_node() override{return false;}
 
     };
 
@@ -81,20 +81,20 @@ namespace kathryn{
                 Node(OPR_NODE),
                 _value(value){
             assert(_value != nullptr);
-            setClockMode(CM_CLK_FREE);
+            set_clock_mode(CM_CLK_FREE);
         }
 
         void assign() override{
             /** we don't support assign from condition or depend state*/
-            assert(nodeSrcs.empty());
+            assert(_node_srcs.empty());
             ////_value->setVarName(identName);
         }
 
-        int getCycleUsed() override{ return 0; }
+        int get_cycle_used() override{ return 0; }
 
-        Operable* getExitOpr() override{return _value;}
+        Operable* get_exit_opr_ptr() override{return _value;}
 
-        bool isStateFullNode() override{return false;}
+        bool is_state_full_node() override{return false;}
 
     };
 

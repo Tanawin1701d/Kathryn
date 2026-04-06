@@ -18,26 +18,26 @@ namespace kathryn{
 
             assert(lastLoopCnt > 0);
              _counter = new CounterReg(lastLoopCnt);
-            addCycleRelatedReg(_counter);
-            setClockMode(clockMode);
+            add_cycle_related_reg(_counter);
+            set_clock_mode(clockMode);
         }
 
-        void makeUnsetStateEvent() override{
+        void make_unset_state_event() override{
             assert(false);
         }
 
-        void makeUserResetEvent() override{
-            if(isThrereIntReset()){
-                _counter->makeUserRstEvent(intReset->getExitOpr(), getClockMode());
+        void make_user_reset_event() override{
+            if(is_threre_int_reset()){
+                _counter->makeUserRstEvent(_int_reset->get_exit_opr_ptr(), get_clock_mode());
             }
         }
 
         void makeIncCounterEvent(Node* incNode){
             assert(incNode != nullptr);
-            _counter->makeIncEvent(incNode->getExitOpr(), getClockMode());
+            _counter->makeIncEvent(incNode->get_exit_opr_ptr(), get_clock_mode());
         }
 
-        Operable* getExitOpr() override{
+        Operable* get_exit_opr_ptr() override{
             assert(_counter != nullptr);
             return _counter->generateEndExpr();
         }
@@ -47,16 +47,16 @@ namespace kathryn{
         void assign() override{
             assert(_counter!= nullptr);
             /**normal start event*/
-            for(auto nodeSrc: nodeSrcs){
-                _counter->addDependState(nodeSrc.dependNode->getExitOpr(),
-                                         nodeSrc.condition, getClockMode());
+            for(auto nodeSrc: _node_srcs){
+                _counter->addDependState(nodeSrc.dependNode->get_exit_opr_ptr(),
+                                         nodeSrc.condition, get_clock_mode());
             }
             /** unset event*/
-            makeUserResetEvent();
-            _counter->setVarName(identName);
+            make_user_reset_event();
+            _counter->setVarName(_ident_name);
         }
 
-        int getCycleUsed() override{
+        int get_cycle_used() override{
             assert(_counter != nullptr);
             ///// hold should not be considered here
             return _counter->getLoopCnt();

@@ -30,7 +30,7 @@ namespace kathryn{
     void FlowBlockZyncBase::assignReadySignal(){
         assert(prepSendNode != nullptr);
         //_syncMeta->setMasterReady()
-        Operable* ready2Sync = addLogicWithOutput(prepSendNode->getExitOpr(), _acceptCond, BITWISE_AND);
+        Operable* ready2Sync = addLogicWithOutput(prepSendNode->get_exit_opr_ptr(), _acceptCond, BITWISE_AND);
         _syncMeta.setMasterReady(*ready2Sync);
     }
 
@@ -80,7 +80,7 @@ namespace kathryn{
         }
         /** prepSendNode*/
         std::string debugName = "zyncBlk_" + _syncMeta.getName();
-        prepSendNode->setInternalIdent("zyncBlk_" + debugName);
+        prepSendNode->set_internal_ident("zyncBlk_" + debugName);
         fillIntResetToNodeIfThere(prepSendNode);
         fillHoldToNodeIfThere    (prepSendNode);
         /** assign assignment node*/
@@ -91,15 +91,15 @@ namespace kathryn{
         assert(readyFinal != nullptr);
         Operable* notReadyFinal = &(~(*readyFinal));
 
-        prepSendNode->addDependNode(prepSendNode, notReadyFinal);
+        prepSendNode->add_depend_node(prepSendNode, notReadyFinal);
             /** add slave assignment node*/
         for (auto nd : _basicNodes){
-            assert(nd->getNodeType() == ASM_NODE);
+            assert(nd->get_node_type() == ASM_NODE);
             prepSendNode->addSlaveAsmNode((AsmNode*)nd, readyFinal);
         }
 
         /** exit Node*/
-        exitNode->addDependNode(prepSendNode, readyFinal);
+        exitNode->add_depend_node(prepSendNode, readyFinal);
         /** assign node*/
         exitNode->assign();
         /** add system node*/

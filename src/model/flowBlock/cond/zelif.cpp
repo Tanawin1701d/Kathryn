@@ -45,7 +45,7 @@ namespace kathryn{
         //     ((AsmNode*)node)->addPreCondition(curCond, BITWISE_AND);
         // }
         // FlowBlockBase::addElementInFlowBlock(node);
-        assert(node->getNodeType() == ASM_NODE);
+        assert(node->get_node_type() == ASM_NODE);
         AsmNode* castedNode = (AsmNode*)node;
         tryAddOrCreateAsmMeta(castedNode, _assignMetas, curCond);
         addAbandonNode(node);

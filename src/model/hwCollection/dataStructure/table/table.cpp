@@ -75,7 +75,7 @@ namespace kathryn{
 
 
         auto* slotAsmNode = new AsmNode(muxedAssignMeta);
-        slotAsmNode->dryAssign();
+        slotAsmNode->dry_assign();
         delete slotAsmNode;
 
         Wire* selectedIdx = nullptr;
@@ -91,7 +91,7 @@ namespace kathryn{
             delete rightAsmIdxMeta;
 
             auto* idxAsmNode = new AsmNode(newAssMeta);
-            idxAsmNode->dryAssign();
+            idxAsmNode->dry_assign();
             delete idxAsmNode;
 
         }
@@ -202,7 +202,7 @@ namespace kathryn{
         ////// generate assignment Node
         AsmNode* asmNode = WireSlot::genGrpAsmNode(allRowCollector, allRowPreCond);
         //// we have to do dry assign
-        asmNode->dryAssign();
+        asmNode->dry_assign();
         delete asmNode;
 
         ///resultWireSlot.doGlobAsm(asmNode);

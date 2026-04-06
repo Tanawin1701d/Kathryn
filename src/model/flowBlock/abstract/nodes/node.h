@@ -60,48 +60,42 @@ namespace kathryn {
         Operable* condition  = nullptr;
     };
 
-    struct Node : public ModelDebuggable
-                {
-        NODE_TYPE                nodeType  = NODE_TYPE_CNT;
-        std::vector<NodeSrcEdge> nodeSrcs;
-        std::string              identName = "NODE_UNNAME";
+    struct Node : public ModelDebuggable{
 
-        Node*                    intReset  = nullptr;
-        Node*                    holdNode  = nullptr;
-
-        CLOCK_MODE               clkMode = CM_CLK_FREE; //// indicate the clk sensitivity type
-        /// for asm node it should be assigned since the was built
-        /// for other flowblock should assign it
-
-        /** simulate support register*/
-        std::vector<CtrlFlowRegBase*> relatedCycleConsumeReg;
+        /// node meta-data
+        NODE_TYPE                _node_type  = NODE_TYPE_CNT;
+        std::string              _ident_name = "NODE_UNNAME";
+        /// node dependency and common element
+        std::vector<NodeSrcEdge> _node_srcs;
+        Node*                    _int_reset  = nullptr;
+        Node*                    _hold_node  = nullptr;
+        CLOCK_MODE               _clk_mode = CM_CLK_FREE; //// indicate the clk sensitivity type
+        /// auxiliary element
+        std::vector<CtrlFlowRegBase*> _related_cycle_consume_reg; /// used to track the cycle consume to measure the performance
 
         Node(Node& rhs) = delete;
 
-        explicit Node(NODE_TYPE nt):
-                nodeType(nt){};
+        explicit Node(NODE_TYPE nt):_node_type(nt){};
 
         ~Node(){};
-        NODE_TYPE getNodeType() const{
-            return nodeType;
-        }
+        NODE_TYPE get_node_type() const{return _node_type;}
 
-        static void addLogic(Operable* &desLogic, Operable *opr1, LOGIC_OP op) {
+        static void add_logic(Operable* &des_logic, Operable *opr1, LOGIC_OP op) {
             assert(op == BITWISE_AND || op == BITWISE_OR);
             assert(opr1 != nullptr);
-            if (desLogic == nullptr) {
-                desLogic = opr1;
+            if (des_logic == nullptr) {
+                des_logic = opr1;
                 return;
             }
 
             if (op == BITWISE_AND) {
-                desLogic = &((*desLogic) & (*opr1));
+                des_logic = &((*des_logic) & (*opr1));
             } else if (op == BITWISE_OR) {
-                desLogic = &((*desLogic) | (*opr1));
+                des_logic = &((*des_logic) | (*opr1));
             }
         }
 
-        static Operable* addLogicWithOutput(Operable* opr1, Operable* opr2, LOGIC_OP op){
+        static Operable* add_logic_with_output(Operable* opr1, Operable* opr2, LOGIC_OP op){
             assert(op == BITWISE_AND || op == BITWISE_OR);
 
             if ( (opr1 == nullptr) && (opr2 == nullptr)){
@@ -122,69 +116,70 @@ namespace kathryn {
         }
 
         /** add dependNode for assignment*/
-        void addDependNode(Node* srcNode, Operable* cond) {
-            assert(srcNode != nullptr);
-            nodeSrcs.push_back({srcNode, cond});
+        void add_depend_node(Node* src_node, Operable* cond) {
+            assert(src_node != nullptr);
+            _node_srcs.push_back({src_node, cond});
         }
         /** add to relatedCycleConsumeReg which is used to identify register that related to cycle usage*/
-        void addCycleRelatedReg(CtrlFlowRegBase* ctrlReg){
-            assert(ctrlReg != nullptr);
-            relatedCycleConsumeReg.push_back(ctrlReg);
+        void add_cycle_related_reg(CtrlFlowRegBase* ctrl_reg){
+            assert(ctrl_reg != nullptr);
+            _related_cycle_consume_reg.push_back(ctrl_reg);
         }
 
-        std::vector<CtrlFlowRegBase*>& getCycleRelatedReg(){
-            return relatedCycleConsumeReg;
+        std::vector<CtrlFlowRegBase*>& get_cycle_related_reg(){
+            return _related_cycle_consume_reg;
         }
 
-        std::vector<NodeSrcEdge>& getDependNodes() {return nodeSrcs;}
+        std::vector<NodeSrcEdge>& get_depend_nodes() {return _node_srcs;}
 
         /**
          * clock
          *
          */
-        void       setClockMode(CLOCK_MODE cm){ clkMode = cm;}
-        CLOCK_MODE getClockMode() const{ return clkMode;}
+        void       set_clock_mode(CLOCK_MODE cm){ _clk_mode = cm;  }
+        CLOCK_MODE get_clock_mode()        const{ return _clk_mode;}
 
         /**
          * interrupt handler
          */
-        ///// interrupt reset
-        void setInterruptReset(Node* rst){
+
+        /// interrupt reset
+        void set_interrupt_reset(Node* rst){
             assert(rst != nullptr);
-            intReset = rst;
+            _int_reset = rst;
         }
 
-        bool isThrereIntReset  () const{ return intReset != nullptr; }
+        bool is_threre_int_reset() const{ return _int_reset != nullptr; }
 
-        Node* getInterruptReset() const{ return intReset; }
+        Node* get_interrupt_reset_ptr() const{ return _int_reset; }
 
-        Operable* bindWithRstOutPutIfReset(Operable* rawExit){
-            assert(rawExit != nullptr);
-            assert(rawExit->getOperableSlice().getSize() == 1);
-            if (isThrereIntReset()){
-                return &( (*rawExit) & (~(*getInterruptReset()->getExitOpr())) );
+        Operable* bind_with_rst_out_put_if_reset(Operable* raw_exit){
+            assert(raw_exit != nullptr);
+            assert(raw_exit->getOperableSlice().getSize() == 1);
+            if (is_threre_int_reset()){
+                return &( (*raw_exit) & (~(*get_interrupt_reset_ptr()->get_exit_opr_ptr())) );
             }
-            return rawExit;
+            return raw_exit;
         }
         ///// hold signal
-        void setHold(Node* hn){ /// hold node
+        void set_hold(Node* hn){ /// hold node
             assert(hn != nullptr);
-            assert(holdNode == nullptr); /// we do not allow override the dsame node
-            holdNode = hn;
+            assert(_hold_node == nullptr); /// we do not allow override the dsame node
+            _hold_node = hn;
         }
 
-        bool  isThereHold()  const { return holdNode != nullptr; }
+        bool  is_there_hold()  const { return _hold_node != nullptr; }
 
-        Node* getHoldNode() const { return holdNode; }
+        Node* get_hold_node() const { return _hold_node; }
 
-        Operable* bindWithHoldIfHold(Operable* rawExit){
-            assert(rawExit != nullptr);
-            assert(rawExit->getOperableSlice().getSize() == 1);
+        Operable* bind_with_hold_if_hold(Operable* raw_exit){
+            assert(raw_exit != nullptr);
+            assert(raw_exit->getOperableSlice().getSize() == 1);
 
-            if (isThereHold()){
-                return &((*rawExit) & (~(*getHoldNode()->getExitOpr())));
+            if (is_there_hold()){
+                return &((*raw_exit) & (~(*get_hold_node()->get_exit_opr_ptr())));
             }
-            return rawExit;
+            return raw_exit;
         }
 
 
@@ -192,37 +187,35 @@ namespace kathryn {
         /**
          * function that allow sp node custom their behavior
          * **/
-        /** unset event when state is raised there must be condition that bring this down*/
-        virtual void      makeUnsetStateEvent(){assert(false);}
-        virtual void      makeUserResetEvent(){assert(false);}
-        /** provided src state data*/
-        virtual Operable* getExitOpr(){ return nullptr; };
-        virtual Operable* getStateOperating(){return nullptr;}
-        /** assign value with proper condition*/
+        /// unset event when state is raised there must be condition that bring this down
+        virtual void      make_unset_state_event(){assert(false);}
+        virtual void      make_user_reset_event (){assert(false);}
+        /// provided src state data
+        virtual Operable* get_exit_opr_ptr       (){ return nullptr; };
+        virtual Operable* get_operating_state_ptr(){return nullptr;}
+        /// assign value with proper condition
         virtual void      assign() = 0; /** please make sure that makeunsetState is called*/
-        virtual void      dryAssign(){assert(false);};
-        /** cycle that is use in this node*/
-        virtual int       getCycleUsed() = 0;
-        /** is Stateful node (reffer to node that consume at least 1 cycle from machine)*/
-        virtual bool      isStateFullNode(){ return true; }
+        virtual void      dry_assign(){assert(false);};
+        /// cycle that is use in this node
+        virtual int       get_cycle_used() = 0;
+        /// is Stateful node (reffer to node that consume at least 1 cycle from machine)
+        virtual bool      is_state_full_node(){ return true; }
 
-        /** get debugger value*/
+        /// get debugger value
         std::string get_md_ident_val() override{
-            std::string ret = NT_to_string(nodeType) + " @ " + std::to_string((ull)this);
+            std::string ret = NT_to_string(_node_type) + " @ " + std::to_string((ull)this);
             return ret;
         }
-        void add_md_log(MdLogVal* mdLogVal) override{
-            mdLogVal->addVal("[Node] " + get_md_ident_val() +  "have node dep");
-            for (auto depSrc : nodeSrcs){
-                mdLogVal->addVal(depSrc.dependNode->get_md_ident_val());
+        void add_md_log(MdLogVal* md_log_val) override{
+            md_log_val->addVal("[Node] " + get_md_ident_val() +  "have node dep");
+            for (auto depSrc : _node_srcs){
+                md_log_val->addVal(depSrc.dependNode->get_md_ident_val());
             }
         }
         /** internal value identifier for debugging purpose*/
-        void setInternalIdent(std::string identVal){
-            identName = std::move(identVal);
+        void set_internal_ident(std::string identVal){
+            _ident_name = std::move(identVal);
         }
-
-
 
     };
 

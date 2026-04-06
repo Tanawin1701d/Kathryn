@@ -28,7 +28,7 @@ namespace kathryn{
         AsmNode* assNode = new AsmNode({sel0, sel1});
         assNode->addSpecificPreCondition(&(sel == 1), 0); ///// for x0
         assNode->addSpecificPreCondition(&(sel == 0), 1); ///// for x1
-        assNode->dryAssign();
+        assNode->dry_assign();
         delete assNode;
 
         return result;

@@ -31,7 +31,7 @@ namespace kathryn{
 
     void FlowBlockZIF::addElementInFlowBlock(Node* node) {
         assert(node != nullptr);
-        assert(node->getNodeType() == ASM_NODE);
+        assert(node->get_node_type() == ASM_NODE);
 
         //////// cast meta data
         AsmNode* castedNode = (AsmNode*)node;

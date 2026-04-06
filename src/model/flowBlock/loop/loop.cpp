@@ -36,43 +36,43 @@ namespace kathryn{
 
 
         _entNode = new PseudoNode(1, BITWISE_OR);
-        _entNode->setInternalIdent("cEntNode" + std::to_string(get_global_id()));
+        _entNode->set_internal_ident("cEntNode" + std::to_string(get_global_id()));
         addSysNode(_entNode);
 
         _loopNode = new PseudoNode(1, BITWISE_OR);
-        _loopNode->setInternalIdent("cLoopNode" + std::to_string(get_global_id()));
+        _loopNode->set_internal_ident("cLoopNode" + std::to_string(get_global_id()));
         addSysNode(_loopNode);
 
         _cntNode = new CounterNode(_loopCount, getClockMode());
-        _cntNode->setInternalIdent("countNode" + std::to_string(get_global_id()));
+        _cntNode->set_internal_ident("countNode" + std::to_string(get_global_id()));
         addSysNode(_cntNode);
 
         _exitNode = new PseudoNode(1, BITWISE_AND);
-        _exitNode->setInternalIdent("cExitNode" + std::to_string(get_global_id()));
+        _exitNode->set_internal_ident("cExitNode" + std::to_string(get_global_id()));
         addSysNode(_exitNode);
 
 
         ////// handle start signal
         if(isThereIntStart()){
-            _entNode->addDependNode(intNodes[INT_START], nullptr);
+            _entNode->add_depend_node(intNodes[INT_START], nullptr);
         }
         ////// no need to reset or hold the system
 
 
         ////// loop node
-        _loopNode->addDependNode(_entNode, nullptr);
-        _loopNode->addDependNode(_subBlockNodeWrap->getExitNode(),
-                                 &(~(*_cntNode->getExitOpr())));
+        _loopNode->add_depend_node(_entNode, nullptr);
+        _loopNode->add_depend_node(_subBlockNodeWrap->getExitNode(),
+                                 &(~(*_cntNode->get_exit_opr_ptr())));
         _loopNode->assign();
 
         ////// counter Node
-        _cntNode->addDependNode(_entNode, nullptr);
+        _cntNode->add_depend_node(_entNode, nullptr);
         _cntNode->makeIncCounterEvent(_subBlockNodeWrap->getExitNode());
         _cntNode->assign();
 
         ////// exit node
-        _exitNode->addDependNode(_subBlockNodeWrap->getExitNode(),
-                                 _cntNode->getExitOpr());
+        _exitNode->add_depend_node(_subBlockNodeWrap->getExitNode(),
+                                 _cntNode->get_exit_opr_ptr());
         _exitNode->assign();
 
         /////// sub block trigger

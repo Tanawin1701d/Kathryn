@@ -60,11 +60,11 @@ namespace kathryn{
     void FlowBlockPipeBase::assignReadySignal(){
         //////// wait signal and last stage means that it is ready
         ////(*_syncMata._syncSlaveReady) = (*entNode->getExitOpr());
-        _syncMata.setSlaveReady(*entNode->getExitOpr());
+        _syncMata.setSlaveReady(*entNode->get_exit_opr_ptr());
 
         //////// set when pipeline is success
         Node* exitNode = subBlockNodeWrap->getExitNode();
-        _syncMata.setSlaveFinish(*exitNode->getExitOpr());
+        _syncMata.setSlaveFinish(*exitNode->get_exit_opr_ptr());
     }
 
     void FlowBlockPipeBase::buildHwMaster(){
@@ -101,14 +101,14 @@ namespace kathryn{
         exitDummy     = new DummyNode(&makeOprVal("exitDummy",1, 0));
 
         ///////// add node dependency
-        entNode->addDependNode(subBlockNodeWrap->getExitNode(), nullptr);
-        entNode->addDependNode(waitNode, nullptr);
+        entNode->add_depend_node(subBlockNodeWrap->getExitNode(), nullptr);
+        entNode->add_depend_node(waitNode, nullptr);
         fillIntResetToNodeIfThere(waitNode);
         fillHoldToNodeIfThere(waitNode);
         if(isThereIntStart()){
-            entNode->addDependNode(intNodes[INT_START], nullptr);
+            entNode->add_depend_node(intNodes[INT_START], nullptr);
         }
-        waitNode->addDependNode(entNode, &(~(*activateSignal)));
+        waitNode->add_depend_node(entNode, &(~(*activateSignal)));
         subBlockNodeWrap->addDependNodeToAllNode(entNode, activateSignal);
 
         ////////// add system Node

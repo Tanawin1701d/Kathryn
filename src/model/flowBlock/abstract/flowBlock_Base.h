@@ -209,7 +209,7 @@ namespace kathryn {
 
         void fillIntResetToNodeIfThere(Node* nd){
             if (intNodes[INT_RESET] != nullptr){
-                nd->setInterruptReset(intNodes[INT_RESET]);
+                nd->set_interrupt_reset(intNodes[INT_RESET]);
             }
         }
 
@@ -221,7 +221,7 @@ namespace kathryn {
 
         void fillHoldToNodeIfThere(Node* nd){
             if (holdNode != nullptr){
-                nd->setHold(holdNode);
+                nd->set_hold(holdNode);
             }
         }
 

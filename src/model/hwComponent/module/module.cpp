@@ -195,7 +195,7 @@ namespace kathryn{
                     /**in case it is extract need flow block*/
                     std::vector<AsmNode*> extractedAsmNode = fb->extract();
                     for (auto node: extractedAsmNode){
-                        node->dryAssign();
+                        node->dry_assign();
                     }
                     break;
             }
