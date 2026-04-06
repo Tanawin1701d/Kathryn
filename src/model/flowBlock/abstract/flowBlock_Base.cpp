@@ -288,7 +288,7 @@ namespace kathryn{
         for (Node* node: _basicNodes){
             assert(node != nullptr);
             assert(node->get_node_type() == ASM_NODE);
-            ((AsmNode*)node)->overrideClockMode(getClockMode());
+            ((AsmNode*)node)->override_clock_mode(getClockMode());
         }
 
     }

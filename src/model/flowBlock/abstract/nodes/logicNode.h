@@ -28,8 +28,8 @@ namespace kathryn{
             Operable* finalOpr  = nullptr;
             Operable* oprPerSrc = nullptr;
             for (auto nodeSrc: _node_srcs){
-                assert(nodeSrc.dependNode != nullptr);
-                oprPerSrc = nodeSrc.dependNode->get_exit_opr_ptr();
+                assert(nodeSrc.depend_node != nullptr);
+                oprPerSrc = nodeSrc.depend_node->get_exit_opr_ptr();
                 if (nodeSrc.condition != nullptr){
                     assert(nodeSrc.condition->getOperableSlice().getSize() == 1);
                     add_logic(oprPerSrc, nodeSrc.condition, BITWISE_AND);
@@ -47,7 +47,7 @@ namespace kathryn{
 
         Operable* get_exit_opr_ptr() override{return _pseudoAssignMeta;}
 
-        bool is_state_full_node() override{ return false; }
+        bool is_stateful_node() override{ return false; }
 
     };
 
@@ -70,7 +70,7 @@ namespace kathryn{
 
         Operable* get_exit_opr_ptr() override{return _value;}
 
-        bool is_state_full_node() override{return false;}
+        bool is_stateful_node() override{return false;}
 
     };
 
@@ -94,7 +94,7 @@ namespace kathryn{
 
         Operable* get_exit_opr_ptr() override{return _value;}
 
-        bool is_state_full_node() override{return false;}
+        bool is_stateful_node() override{return false;}
 
     };
 

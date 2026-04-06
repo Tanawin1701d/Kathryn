@@ -51,7 +51,7 @@ namespace kathryn{
         void assign() override{
             assert(!_node_srcs.empty());
             for(auto nodeSrc: _node_srcs){
-                _condWaitStateReg->addDependState(nodeSrc.dependNode->get_exit_opr_ptr(), nodeSrc.condition, get_clock_mode());
+                _condWaitStateReg->addDependState(nodeSrc.depend_node->get_exit_opr_ptr(), nodeSrc.condition, get_clock_mode());
             }
             if (is_there_hold()){
                 _condWaitStateReg->addDependState(get_operating_state_ptr(), _hold_node->get_exit_opr_ptr(), get_clock_mode());
@@ -112,7 +112,7 @@ namespace kathryn{
 
             /**normal start event*/
             for(auto nodeSrc: _node_srcs){
-                _cycleWaitStateReg->addDependState(nodeSrc.dependNode->get_exit_opr_ptr(), nodeSrc.condition, get_clock_mode());
+                _cycleWaitStateReg->addDependState(nodeSrc.depend_node->get_exit_opr_ptr(), nodeSrc.condition, get_clock_mode());
             }
             /** inc event*/
             if (is_there_hold()){

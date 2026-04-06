@@ -56,7 +56,7 @@ namespace kathryn {
     std::string NT_to_string(NODE_TYPE nt);
 
     struct NodeSrcEdge{
-        Node*     dependNode = nullptr;
+        Node*     depend_node = nullptr;
         Operable* condition  = nullptr;
     };
 
@@ -199,7 +199,7 @@ namespace kathryn {
         /// cycle that is use in this node
         virtual int       get_cycle_used() = 0;
         /// is Stateful node (reffer to node that consume at least 1 cycle from machine)
-        virtual bool      is_state_full_node(){ return true; }
+        virtual bool      is_stateful_node(){ return true; }
 
         /// get debugger value
         std::string get_md_ident_val() override{
@@ -209,7 +209,7 @@ namespace kathryn {
         void add_md_log(MdLogVal* md_log_val) override{
             md_log_val->addVal("[Node] " + get_md_ident_val() +  "have node dep");
             for (auto depSrc : _node_srcs){
-                md_log_val->addVal(depSrc.dependNode->get_md_ident_val());
+                md_log_val->addVal(depSrc.depend_node->get_md_ident_val());
             }
         }
         /** internal value identifier for debugging purpose*/

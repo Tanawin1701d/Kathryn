@@ -54,7 +54,7 @@ namespace kathryn{
                           std::vector<ZifClassAsm*>& assignMetas,
                           Operable* purifiedCondition){
         assert(asmNode != nullptr);
-        for (AssignMeta* asmMeta: asmNode->getAssignMetas()){
+        for (AssignMeta* asmMeta: asmNode->get_assign_metas_ref()){
             bool found = false;
             for (ZifClassAsm* classAsm: assignMetas){
                 if (classAsm->isJoinable(asmMeta)){
@@ -67,7 +67,7 @@ namespace kathryn{
                 assignMetas.push_back(new ZifClassAsm(purifiedCondition,asmMeta));
             }
         }
-        asmNode->transferOutAssignMetaOwnership();
+        asmNode->transfer_out_assign_meta_ownership();
 
     }
 

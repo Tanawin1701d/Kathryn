@@ -26,8 +26,8 @@ namespace kathryn{
         result.generateAssignMeta(x1, result.getOperableSlice(), ASM_DIRECT, CM_CLK_FREE);
 
         AsmNode* assNode = new AsmNode({sel0, sel1});
-        assNode->addSpecificPreCondition(&(sel == 1), 0); ///// for x0
-        assNode->addSpecificPreCondition(&(sel == 0), 1); ///// for x1
+        assNode->add_specific_pre_condition(&(sel == 1), 0); ///// for x0
+        assNode->add_specific_pre_condition(&(sel == 0), 1); ///// for x1
         assNode->dry_assign();
         delete assNode;
 

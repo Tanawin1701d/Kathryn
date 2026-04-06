@@ -62,7 +62,7 @@ namespace kathryn{
             _stateReg->setVarName(_ident_name);
             /*** set event*/
             for (auto nodeSrc: _node_srcs){
-                _stateReg->addDependState(nodeSrc.dependNode->get_exit_opr_ptr(), nodeSrc.condition, get_clock_mode());
+                _stateReg->addDependState(nodeSrc.depend_node->get_exit_opr_ptr(), nodeSrc.condition, get_clock_mode());
             }
             if (is_there_hold()){
                 _stateReg->addDependState(get_operating_state_ptr(), _hold_node->get_exit_opr_ptr(), get_clock_mode());
@@ -76,7 +76,7 @@ namespace kathryn{
                                                            : nullptr;
                 Operable* resetSignal = is_threre_int_reset() ? get_interrupt_reset_ptr()->get_exit_opr_ptr()
                                                            : nullptr;
-                asmNode->assignFromStateNode(holdSignal, resetSignal);
+                asmNode->assign_from_state_node(holdSignal, resetSignal);
             }
         }
 
@@ -135,7 +135,7 @@ namespace kathryn{
             }
             for (auto dependNode : _node_srcs){
                 assert(dependNode.condition == nullptr);
-                _synReg->addDependState(dependNode.dependNode->get_exit_opr_ptr(), notForceExit, get_clock_mode());
+                _synReg->addDependState(dependNode.depend_node->get_exit_opr_ptr(), notForceExit, get_clock_mode());
             }
             /** make unset event*/
             make_unset_state_event();
@@ -144,7 +144,7 @@ namespace kathryn{
 
         int get_cycle_used() override{ return 1; }
 
-        bool is_state_full_node() override { return false;}
+        bool is_stateful_node() override { return false;}
 
     };
 

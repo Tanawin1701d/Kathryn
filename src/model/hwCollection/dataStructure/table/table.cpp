@@ -251,7 +251,7 @@ namespace kathryn{
         /////// we have to create own asm node and push it directly to the system
         auto* asmNode = new AsmNode(allRowCollector);
         for (int idx = 0; idx < allRowPreCond.size(); idx++){
-            asmNode->addSpecificPreCondition(allRowPreCond[idx], idx);
+            asmNode->add_specific_pre_condition(allRowPreCond[idx], idx);
         }
         /////// we have to add it to controller by ourself
         ModelController* ctrl = get_controller_ptr();
@@ -291,7 +291,7 @@ namespace kathryn{
         ///// gen assign Node
         auto* asmNode = new AsmNode(allRowCollector);
         for (int idx = 0; idx < allRowPreCond.size(); idx++){
-            asmNode->addSpecificPreCondition(allRowPreCond[idx], idx);
+            asmNode->add_specific_pre_condition(allRowPreCond[idx], idx);
         }
         ///// add it to the whole main controller
         ModelController* ctrl = get_controller_ptr();

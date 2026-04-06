@@ -48,7 +48,7 @@ namespace kathryn{
             assert(_counter!= nullptr);
             /**normal start event*/
             for(auto nodeSrc: _node_srcs){
-                _counter->addDependState(nodeSrc.dependNode->get_exit_opr_ptr(),
+                _counter->addDependState(nodeSrc.depend_node->get_exit_opr_ptr(),
                                          nodeSrc.condition, get_clock_mode());
             }
             /** unset event*/

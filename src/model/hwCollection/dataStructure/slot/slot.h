@@ -264,7 +264,7 @@ namespace kathryn{
                     idxCheckCond = &(requiredIdx == desIdx);
                 }
 
-                asmNode->addSpecificPreCondition(idxCheckCond, desIdx);
+                asmNode->add_specific_pre_condition(idxCheckCond, desIdx);
             }
             return asmNode;
         }
@@ -276,7 +276,7 @@ namespace kathryn{
             assert(assignMetas.size() == preConditions.size());
             auto* asmNode = new AsmNode(assignMetas);
             for (int idx = 0; idx < preConditions.size(); idx++){
-                asmNode->addSpecificPreCondition(preConditions[idx], idx);
+                asmNode->add_specific_pre_condition(preConditions[idx], idx);
             }
             return asmNode;
         }
