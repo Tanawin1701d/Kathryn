@@ -58,7 +58,7 @@ namespace kathryn{
 
     void FlowBlockSCBreak::buildHwComponent() {
 
-        assert(_conBlocks.empty());
+        assert(_con_blocks.empty());
         /**build internal node*/
         breakNode = new StateNode(getClockMode());
         addSysNode(breakNode);

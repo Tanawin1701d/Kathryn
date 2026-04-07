@@ -63,9 +63,9 @@ namespace kathryn {
     };
 
     struct FB_CTRL_COM_META{
-        std::vector<FLOW_STACK_TYPE> _selFlowStack; //////// which stack for push/pop
-        FLOW_BLOCK_JOIN_POLICY       _joinPolicy; ////// how to join with other block
-        bool                         reqPurify = false;
+        std::vector<FLOW_STACK_TYPE> sel_flow_stack; //////// which stack for push/pop
+        FLOW_BLOCK_JOIN_POLICY       join_policy; ////// how to join with other block
+        bool                         req_purify = false;
     };
 
     extern int nextFbIdx;
@@ -96,12 +96,12 @@ namespace kathryn {
 
         int nextInputOrder = 0;
         /** flow element*/
-        std::vector<FlowBlockBase*> _subBlocks;
-        std::vector<int>            _subBlocksOrder; //// input order in this block
-        std::vector<FlowBlockBase*> _conBlocks;
-        std::vector<int>            _conBlocksOrder; //// input order in this block
-        std::vector<Node*>          _basicNodes;
-        std::vector<int>            _basicNodesOrder; //// input order in this block
+        std::vector<FlowBlockBase*> _sub_blocks;
+        std::vector<int>            _sub_blocks_order; //// input order in this block
+        std::vector<FlowBlockBase*> _con_blocks;
+        std::vector<int>            _con_blocks_order; //// input order in this block
+        std::vector<Node*>          _basic_nodes;
+        std::vector<int>            _basic_nodes_order; //// input order in this block
         std::vector<Node*>          _sysNodes;
 
         std::vector<FlowBlockBase*> _abandonedBlocks;  /// the flow block that have been extracted and push to this block
@@ -170,8 +170,8 @@ namespace kathryn {
         /** when basic behavior describe in flow block*/
         virtual void addElementInFlowBlock(Node* node){
             assert(node != nullptr);
-            _basicNodes.push_back(node);
-            _basicNodesOrder.push_back(nextInputOrder++);
+            _basic_nodes.push_back(node);
+            _basic_nodes_order.push_back(nextInputOrder++);
         }
         /** system node is the node used to monitor by hybrid profiler*/
         virtual void addSysNode(Node* node){
@@ -181,14 +181,14 @@ namespace kathryn {
         /** when inside complex element such as sub flow block is finish, user must add here*/
         virtual void addSubFlowBlock(FlowBlockBase* subBlock){
             assert(subBlock != nullptr);
-            _subBlocks.push_back(subBlock);
-            _subBlocksOrder.push_back(nextInputOrder++);
+            _sub_blocks.push_back(subBlock);
+            _sub_blocks_order.push_back(nextInputOrder++);
         };
         /** add sub con block as consecutive block*/
         virtual void addConFlowBlock(FlowBlockBase* conBlock){
             assert(conBlock != nullptr);
-            _conBlocks.push_back(conBlock);
-            _conBlocksOrder.push_back(nextInputOrder++);
+            _con_blocks.push_back(conBlock);
+            _con_blocks_order.push_back(nextInputOrder++);
         }
         virtual void addAbandonFlowBlock(FlowBlockBase* abandonBlock){
             assert(abandonBlock != nullptr);
@@ -243,11 +243,11 @@ namespace kathryn {
         FLOW_BLOCK_TYPE     getFlowType() const {return _type;}
         int                 getFlowBlockId() const{return _fbId;}
         std::vector<Node*>&
-                            getBasicNode(){return _basicNodes;}
+                            getBasicNode(){return _basic_nodes;}
         std::vector<FlowBlockBase*>&
-                            getSubBlocks(){return _subBlocks;}
+                            getSubBlocks(){return _sub_blocks;}
         std::vector<FlowBlockBase*>&
-                            getConBlocks(){return _conBlocks;}
+                            getConBlocks(){return _con_blocks;}
         std::vector<Node*>&
                             getSysNodes(){return _sysNodes;}
         /** lazy delete is the variable that tell controller whether
@@ -259,16 +259,16 @@ namespace kathryn {
         void                unsetLazyDelete()   {lazyDeletedRequired = false;}
         /** controller communication*/
         [[nodiscard]]
-        std::vector<FLOW_STACK_TYPE> getSelFbStack() const {return _fbCtrlComMeta._selFlowStack;}
+        std::vector<FLOW_STACK_TYPE> getSelFbStack() const {return _fbCtrlComMeta.sel_flow_stack;}
         [[nodiscard]]
-        FLOW_BLOCK_JOIN_POLICY       getJoinFbPol()  const {return _fbCtrlComMeta._joinPolicy;  }
+        FLOW_BLOCK_JOIN_POLICY       getJoinFbPol()  const {return _fbCtrlComMeta.join_policy;  }
         [[nodiscard]]
-        bool                         getPurifyReq()  const {return _fbCtrlComMeta.reqPurify;    }
+        bool                         getPurifyReq()  const {return _fbCtrlComMeta.req_purify;    }
 
         /** debug method*/
         std::string getMdDescribeRecur() {
             std::string ret = "----------- sub Block --------\n";
-            for (auto sb : _subBlocks){
+            for (auto sb : _sub_blocks){
                 ret += sb->get_md_describe();
                 ret += "\n";
             }
@@ -276,10 +276,10 @@ namespace kathryn {
         }
 
         void addMdLogRecur(MdLogVal *mdLogVal){
-            if (_subBlocks.empty())
+            if (_sub_blocks.empty())
                 return;
             mdLogVal->addVal("-----sub block------");
-            for (auto sb: _subBlocks){
+            for (auto sb: _sub_blocks){
                 auto subStruct = mdLogVal->makeNewSubVal();
                 sb->add_md_log(subStruct);
             }

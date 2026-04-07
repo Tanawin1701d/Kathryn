@@ -29,9 +29,9 @@ namespace kathryn{
 
 
     void FlowBlockLoop::buildHwComponent(){
-        assert(_conBlocks.empty());
-        assert(_subBlocks.size() == 1);
-        _subBlockNodeWrap = _subBlocks[0]->sumarizeBlock();
+        assert(_con_blocks.empty());
+        assert(_sub_blocks.size() == 1);
+        _subBlockNodeWrap = _sub_blocks[0]->sumarizeBlock();
         assert(_subBlockNodeWrap != nullptr);
 
 

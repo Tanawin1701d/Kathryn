@@ -51,7 +51,7 @@ namespace kathryn{
     }
     /** buildHwComponent*/
     void FlowBlockCondWait::buildHwComponent() {
-        assert(_conBlocks.empty());
+        assert(_con_blocks.empty());
         assert(!isThereIntStart());
 
         /** build node*/
@@ -148,7 +148,7 @@ namespace kathryn{
     }
 
     void FlowBlockCycleWait::buildHwComponent() {
-        assert(_conBlocks.empty());
+        assert(_con_blocks.empty());
         assert(!isThereIntStart());
 
         /** build node*/

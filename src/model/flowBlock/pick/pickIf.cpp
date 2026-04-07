@@ -56,11 +56,11 @@ namespace kathryn{
     }
 
     void FlowBlockPickCond::buildHwComponent(){
-        assert(_conBlocks.empty());
-        assert(!_subBlocks.empty());
+        assert(_con_blocks.empty());
+        assert(!_sub_blocks.empty());
         mf_assert(!isThereIntStart(), "start interrupt can start in elif block but can start in if block or block inside elif block");
         ///mfAssert(!isThereIntRst(), "start interrupt can reset in elif block but can start in if block or block inside elif block");
-        resultNodeWrapper = _subBlocks[0]->sumarizeBlock();
+        resultNodeWrapper = _sub_blocks[0]->sumarizeBlock();
 
     }
 

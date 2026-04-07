@@ -80,9 +80,9 @@ namespace kathryn{
 
     void FlowBlockIf::buildHwComponent() {
         /**summarize all block*/
-        assert(_subBlocks.size() == 1);
-        allStatement.push_back(_subBlocks[0]->sumarizeBlock());
-        for (auto conFlowBlock: _conBlocks){
+        assert(_sub_blocks.size() == 1);
+        allStatement.push_back(_sub_blocks[0]->sumarizeBlock());
+        for (auto conFlowBlock: _con_blocks){
             allStatement.push_back(conFlowBlock->sumarizeBlock());
         }
         assert(!allCondes.empty());
@@ -222,7 +222,7 @@ namespace kathryn{
                              "  " +
                              resultNodeWrap->getForceExitNode()->get_md_describe());
         }
-        for (auto sb : _subBlocks){
+        for (auto sb : _sub_blocks){
             std::string subBlockHeaderDebug = "----> subblock " + std::to_string(cnt) + " condition ";
             if (cnt < allCondes.size()) {
                 subBlockHeaderDebug += allCondes[cnt]->castToIdent()->getIdentDebugValue();

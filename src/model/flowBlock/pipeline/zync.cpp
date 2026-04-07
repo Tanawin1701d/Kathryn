@@ -64,8 +64,8 @@ namespace kathryn{
 
 
     void FlowBlockZyncBase::buildHwComponent(){
-        assert(_conBlocks.empty());
-        assert(_subBlocks.empty());
+        assert(_con_blocks.empty());
+        assert(_sub_blocks.empty());
         //assert(_syncMeta->_syncMatched != nullptr);
 
         /** init all nodes and condition*/
@@ -93,7 +93,7 @@ namespace kathryn{
 
         prepSendNode->add_depend_node(prepSendNode, notReadyFinal);
             /** add slave assignment node*/
-        for (auto nd : _basicNodes){
+        for (auto nd : _basic_nodes){
             assert(nd->get_node_type() == ASM_NODE);
             prepSendNode->add_slave_asm_node((AsmNode*)nd, readyFinal);
         }

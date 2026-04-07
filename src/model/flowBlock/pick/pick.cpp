@@ -62,7 +62,7 @@ namespace kathryn{
         assert(!nodeWrapOfPickCondBlocks.empty());
         assert(!pickCondBlocks.empty());
         assert(nodeWrapOfPickCondBlocks.size() == pickCondBlocks.size());
-        assert(_conBlocks.empty());
+        assert(_con_blocks.empty());
 
         /////// build start node
         jointNode = new PseudoNode(1, BITWISE_OR);

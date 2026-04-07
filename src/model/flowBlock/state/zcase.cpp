@@ -18,7 +18,7 @@ namespace kathryn{
                 _caseValue(caseValue){}
 
     FlowBlockZCase::~FlowBlockZCase(){
-        _basicNodes.clear();
+        _basic_nodes.clear();
     }
 
     void FlowBlockZCase::addElementInFlowBlock(Node* node){

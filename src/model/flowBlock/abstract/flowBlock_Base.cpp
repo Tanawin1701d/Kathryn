@@ -37,13 +37,13 @@ namespace kathryn{
     }
 
     FlowBlockBase::~FlowBlockBase(){
-        for (auto basicNode : _basicNodes){
+        for (auto basicNode : _basic_nodes){
             delete basicNode;
         }
-        for (auto sub_fb: _subBlocks){
+        for (auto sub_fb: _sub_blocks){
             delete sub_fb;
         }
-        for (auto con_fb: _conBlocks){
+        for (auto con_fb: _con_blocks){
             delete con_fb;
         }
         for (auto abandon_fb:_abandonedBlocks){
@@ -94,7 +94,7 @@ namespace kathryn{
     }
 
     void FlowBlockBase::fillIntRstSignalToChild(){
-        for (auto subBlockPtr: _subBlocks){
+        for (auto subBlockPtr: _sub_blocks){
             assert(subBlockPtr != nullptr);
             for (auto signal: intSignals[INT_RESET]){
                 subBlockPtr->addIntSignal(INT_RESET, signal);
@@ -102,7 +102,7 @@ namespace kathryn{
 
         }
 
-        for (auto conBlockPtr: _conBlocks){
+        for (auto conBlockPtr: _con_blocks){
             assert(conBlockPtr != nullptr);
             for (auto signal: intSignals[INT_RESET]){
                 conBlockPtr->addIntSignal(INT_RESET, signal);
@@ -156,14 +156,14 @@ namespace kathryn{
     }
 
     void FlowBlockBase::fillHoldSignalToChild(){
-        for (auto subBlockPtr: _subBlocks){
+        for (auto subBlockPtr: _sub_blocks){
             assert(subBlockPtr != nullptr);
             for (auto signal: holdSignals){
                 subBlockPtr->addHoldSignal(signal);
             }
         }
 
-        for (auto conBlockPtr: _conBlocks){
+        for (auto conBlockPtr: _con_blocks){
             assert(conBlockPtr != nullptr);
             for (auto signal: holdSignals){
                 conBlockPtr->addHoldSignal(signal);
@@ -223,12 +223,12 @@ namespace kathryn{
 
     void FlowBlockBase::buildSubHwComponent(){
 
-        for (auto subBlockPtr: _subBlocks){
+        for (auto subBlockPtr: _sub_blocks){
             assert(subBlockPtr != nullptr);
             subBlockPtr->buildHwMaster();
         }
 
-        for (auto conBlockPtr: _conBlocks){
+        for (auto conBlockPtr: _con_blocks){
             assert(conBlockPtr != nullptr);
             conBlockPtr->buildHwMaster();
         }
@@ -257,7 +257,7 @@ namespace kathryn{
     FlowBlockBase* FlowBlockBase::scanMasterJoinSubBlock(){
         //////// the master join block must have only 1 sub block
         FlowBlockBase* resultFb = nullptr;
-        for (FlowBlockBase* subFb: _subBlocks){
+        for (FlowBlockBase* subFb: _sub_blocks){
             mfAssert(subFb != nullptr, "subBlock cannot be nullptr");
             if (subFb->isJoinMaster()){
                 mfAssert(resultFb == nullptr, "duplicated master join block");
@@ -271,11 +271,11 @@ namespace kathryn{
 
         std::vector<sortEle> poolEle;
         /***pool sub block in to the array*/
-        for(int i = 0; i < _subBlocks.size(); i++){
-            poolEle.push_back({_subBlocks[i], _subBlocksOrder[i]});
+        for(int i = 0; i < _sub_blocks.size(); i++){
+            poolEle.push_back({_sub_blocks[i], _sub_blocks_order[i]});
         }
-        for(int i = 0; i < _conBlocks.size(); i++){
-            poolEle.push_back({_conBlocks[i], _conBlocksOrder[i]});
+        for(int i = 0; i < _con_blocks.size(); i++){
+            poolEle.push_back({_con_blocks[i], _con_blocks_order[i]});
         }
         /**sort array*/
         std::sort(poolEle.begin(), poolEle.end());
@@ -285,7 +285,7 @@ namespace kathryn{
 
     void FlowBlockBase::overrideClockModeInAllAsmNodes(){
 
-        for (Node* node: _basicNodes){
+        for (Node* node: _basic_nodes){
             assert(node != nullptr);
             assert(node->get_node_type() == ASM_NODE);
             ((AsmNode*)node)->override_clock_mode(getClockMode());

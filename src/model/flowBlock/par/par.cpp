@@ -49,24 +49,24 @@ namespace kathryn{
 
     void
     FlowBlockPar::buildHwComponent() {
-        mf_assert((!_basicNodes.empty()) || (!_subBlocks.empty()),
+        mf_assert((!_basic_nodes.empty()) || (!_sub_blocks.empty()),
                  "parBlock has no assignment"
                  );
-        assert(_conBlocks.empty());
+        assert(_con_blocks.empty());
 
         /**
          *
          * build node for basic assignment
          *
          * */
-        if (!_basicNodes.empty()){
+        if (!_basic_nodes.empty()){
             basicStNode = new StateNode(getClockMode());
             basicStNode->set_internal_ident("parStateReg_" + std::to_string(get_global_id()));
             addSysNode(basicStNode);
             fillIntResetToNodeIfThere(basicStNode);
             fillHoldToNodeIfThere(basicStNode);
             /** add basic assignment to depend on stateNode*/
-            for (auto nd : _basicNodes){
+            for (auto nd : _basic_nodes){
                 assert(nd->get_node_type() == ASM_NODE);
                 basicStNode->add_slave_asm_node((AsmNode*)nd);
             }
@@ -78,7 +78,7 @@ namespace kathryn{
          * gen node wrap
          *
          * */
-        for (auto fb : _subBlocks){
+        for (auto fb : _sub_blocks){
             NodeWrap* nw = fb->sumarizeBlock();
             assert(nw != nullptr);
             nodeWrapOfSubBlock.push_back(nw);

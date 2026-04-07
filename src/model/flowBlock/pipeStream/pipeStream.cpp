@@ -57,7 +57,7 @@ namespace kathryn{
 
     void FlowBlockPipeStream::buildHwComponent() {
         mf_assert(!_subStreamEles.empty(), "pipestream flow must have at least one element");
-        assert(_conBlocks.empty());
+        assert(_con_blocks.empty());
         /**generate hardware*/
         std::vector<Node*> allStartNodes;
         int idx = 0;
