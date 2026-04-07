@@ -25,39 +25,39 @@ namespace kathryn{
         delete exitNode;
     }
 
-    void FlowBlockPick::addElementInFlowBlock(Node* node){
+    void FlowBlockPick::add_basic_node(Node* node){
         assert(false);
     }
 
-    void FlowBlockPick::addSubFlowBlock(FlowBlockBase* subBlock){
-        assert(subBlock->getFlowType() == PICK_WHEN);
-        FlowBlockBase::addSubFlowBlock(subBlock);
+    void FlowBlockPick::add_sub_flow_block(FlowBlockBase* subBlock){
+        assert(subBlock->get_flow_type() == PICK_WHEN);
+        FlowBlockBase::add_sub_flow_block(subBlock);
         pickCondBlocks.push_back(dynamic_cast<FlowBlockPickCond*>(subBlock));
     }
 
-    void FlowBlockPick::addConFlowBlock(FlowBlockBase* conBlock){
+    void FlowBlockPick::add_con_flow_block(FlowBlockBase* conBlock){
         assert(false);
     }
 
 
 
-    NodeWrap* FlowBlockPick::sumarizeBlock(){
+    NodeWrap* FlowBlockPick::sumarize_block(){
         assert(resultNodeWrap != nullptr);
         return resultNodeWrap;
     }
 
-    void FlowBlockPick::onAttachBlock(){
-        ctrl->on_attach_flowBlock(this);
+    void FlowBlockPick::on_attach_block(){
+        _ctrl->on_attach_flowBlock(this);
     }
 
-    void FlowBlockPick::onDetachBlock(){
-        ctrl->on_detach_flowBlock(this);
+    void FlowBlockPick::on_detach_block(){
+        _ctrl->on_detach_flowBlock(this);
     }
 
-    void FlowBlockPick::buildHwComponent(){
+    void FlowBlockPick::build_hw_component(){
         ////// summarize all block
         for (auto pickCondBlock: pickCondBlocks){
-            nodeWrapOfPickCondBlocks.push_back(pickCondBlock->sumarizeBlock());
+            nodeWrapOfPickCondBlocks.push_back(pickCondBlock->sumarize_block());
         }
         assert(!nodeWrapOfPickCondBlocks.empty());
         assert(!pickCondBlocks.empty());
@@ -67,10 +67,10 @@ namespace kathryn{
         /////// build start node
         jointNode = new PseudoNode(1, BITWISE_OR);
         jointNode->set_internal_ident("jointOfPickNode" + std::to_string(get_global_id()));
-        if (isThereIntStart()){
-            jointNode->add_depend_node(intNodes[INT_START], nullptr);
+        if (is_there_intr_start()){
+            jointNode->add_depend_node(_int_nodes[INT_START], nullptr);
         }
-        addSysNode(jointNode);
+        add_sys_node(jointNode);
         for (int sid = 0; sid < nodeWrapOfPickCondBlocks.size(); sid++){
             nodeWrapOfPickCondBlocks[sid]
             ->addDependNodeToAllNode(jointNode,pickCondBlocks[sid]->getCondition());
@@ -80,7 +80,7 @@ namespace kathryn{
         ////// build auto exitNode if needed
         if (reqAutoExit){
             autoExitNode = new PseudoNode(1, BITWISE_AND);
-            addSysNode(autoExitNode);
+            add_sys_node(autoExitNode);
             autoExitNode->set_internal_ident("pickAutoExit" + std::to_string(get_global_id()));
             Operable* allFalse = nullptr;
             for (FlowBlockPickCond* fpc: pickCondBlocks){
@@ -98,7 +98,7 @@ namespace kathryn{
 
         /////// build exit node
         exitNode = new PseudoNode(1, BITWISE_OR);
-        addSysNode(exitNode);
+        add_sys_node(exitNode);
         exitNode->set_internal_ident("pickExit" + std::to_string(get_global_id()));
         ////// join all exit node
         for (auto & nodeWrapOfPickCondBlock : nodeWrapOfPickCondBlocks){
@@ -123,9 +123,9 @@ namespace kathryn{
         resultNodeWrap->addExitNode(exitNode);
 
         //// do force exit node
-        genSumForceExitNode(nodeWrapOfPickCondBlocks);
-        if (_areThereForceExit){
-            resultNodeWrap->addForceExitNode(_forceExitNode);
+        gen_sum_force_exit_node(nodeWrapOfPickCondBlocks);
+        if (_are_there_force_exit){
+            resultNodeWrap->addForceExitNode(_force_exit_node);
         }
 
         //// cycle determiner
@@ -139,12 +139,12 @@ namespace kathryn{
     }
 
     void FlowBlockPick::doPreFunction() {
-        onAttachBlock();
+        on_attach_block();
     }
 
     void
     FlowBlockPick::doPostFunction(){
-        onDetachBlock();
+        on_detach_block();
     }
 
 

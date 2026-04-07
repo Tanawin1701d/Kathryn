@@ -30,29 +30,29 @@ namespace kathryn{
 
 
     ///////////// ELEMENT ADDING
-    void FlowBlockPipeBase::addElementInFlowBlock(Node* node){
+    void FlowBlockPipeBase::add_basic_node(Node* node){
         assert(false);
         // because the implicit par block must be assign to this system
     }
 
-    void FlowBlockPipeBase::addSubFlowBlock(FlowBlockBase* subBlock){
+    void FlowBlockPipeBase::add_sub_flow_block(FlowBlockBase* subBlock){
         assert(subBlock != nullptr);
         assert(!isGetFlowBlockYet);
         isGetFlowBlockYet = true;
-        FlowBlockBase::addSubFlowBlock(subBlock);
+        FlowBlockBase::add_sub_flow_block(subBlock);
     }
 
-    void FlowBlockPipeBase::addConFlowBlock(FlowBlockBase* conBlock){
+    void FlowBlockPipeBase::add_con_flow_block(FlowBlockBase* conBlock){
         ////// it can't have con block for pipeline block
         assert(false);
     }
 
-    void FlowBlockPipeBase::addAbandonFlowBlock(FlowBlockBase* abandonBlock){
+    void FlowBlockPipeBase::add_abandon_flow_block(FlowBlockBase* abandonBlock){
         ////// it can't have abandon block for pipeline block
         assert(false);
     }
 
-    NodeWrap* FlowBlockPipeBase::sumarizeBlock(){
+    NodeWrap* FlowBlockPipeBase::sumarize_block(){
         assert(resultNodeWrap != nullptr);
         return resultNodeWrap;
     }
@@ -67,18 +67,18 @@ namespace kathryn{
         _syncMata.setSlaveFinish(*exitNode->get_exit_opr_ptr());
     }
 
-    void FlowBlockPipeBase::buildHwMaster(){
+    void FlowBlockPipeBase::build_hw_master(){
         ////// fill retrieve slave hold signal
-        addHoldSignal(&_syncMata.holdSlaveSignal);
-        addIntSignal(INT_RESET, &_syncMata.killSlaveSignal);
-        addIntSignal(INT_START, &_syncMata.startSlaveSignal);
+        add_hold_signal(&_syncMata.holdSlaveSignal);
+        add_intr_signal(INT_RESET, &_syncMata.killSlaveSignal);
+        add_intr_signal(INT_START, &_syncMata.startSlaveSignal);
 
         ////// use the base  build function
-        FlowBlockBase::buildHwMaster();
+        FlowBlockBase::build_hw_master();
     }
 
 
-    void FlowBlockPipeBase::buildHwComponent(){
+    void FlowBlockPipeBase::build_hw_component(){
         ////// try to find the activate signal
         Operable* activateSignal = nullptr;
         ////// if it auto, we have to  build the auto trigger for the other side signal
@@ -91,30 +91,30 @@ namespace kathryn{
         ////////////// do integritry check
         assert(_con_blocks.empty());
         assert(_sub_blocks.size() == 1);
-        subBlockNodeWrap = _sub_blocks[0]->sumarizeBlock();
+        subBlockNodeWrap = _sub_blocks[0]->sumarize_block();
         assert(subBlockNodeWrap != nullptr);
 
         //////////// init all nodes and condition
 
         entNode       = new PseudoNode(1, BITWISE_OR);
-        waitNode      = new StateNode(getClockMode());
+        waitNode      = new StateNode(get_clock_mode());
         exitDummy     = new DummyNode(&makeOprVal("exitDummy",1, 0));
 
         ///////// add node dependency
         entNode->add_depend_node(subBlockNodeWrap->getExitNode(), nullptr);
         entNode->add_depend_node(waitNode, nullptr);
-        fillIntResetToNodeIfThere(waitNode);
-        fillHoldToNodeIfThere(waitNode);
-        if(isThereIntStart()){
-            entNode->add_depend_node(intNodes[INT_START], nullptr);
+        fill_intr_reset_to_node_if_there(waitNode);
+        fill_hold_to_node_if_there(waitNode);
+        if(is_there_intr_start()){
+            entNode->add_depend_node(_int_nodes[INT_START], nullptr);
         }
         waitNode->add_depend_node(entNode, &(~(*activateSignal)));
         subBlockNodeWrap->addDependNodeToAllNode(entNode, activateSignal);
 
         ////////// add system Node
-        addSysNode(entNode);
-        addSysNode(waitNode);
-        addSysNode(exitDummy);
+        add_sys_node(entNode);
+        add_sys_node(waitNode);
+        add_sys_node(exitDummy);
 
         ////////// assign Node
                 ////// ent wait for outer  block assign or master
@@ -147,27 +147,27 @@ namespace kathryn{
 
     ///////////// FLOW BLOCK
 
-    void FlowBlockPipeBase::onAttachBlock(){
-        ctrl->on_attach_flowBlock(this);
+    void FlowBlockPipeBase::on_attach_block(){
+        _ctrl->on_attach_flowBlock(this);
         /*** in pipe we implecitcally add parallel sub Block to system*/
-        auto sb = genImplicitSubBlk(PARALLEL_NO_SYN);
+        auto sb = gen_implicit_sub_blk(PARALLEL_NO_SYN);
         implicitFlowBlock = sb;
-        sb->onAttachBlock();
+        sb->on_attach_block();
     }
 
-    void FlowBlockPipeBase::onDetachBlock(){
+    void FlowBlockPipeBase::on_detach_block(){
         assert(implicitFlowBlock != nullptr);
-        implicitFlowBlock->onDetachBlock();
+        implicitFlowBlock->on_detach_block();
         assert(isGetFlowBlockYet);
-        ctrl->on_detach_flowBlock(this);
+        _ctrl->on_detach_flowBlock(this);
     }
 
     void FlowBlockPipeBase::doPreFunction(){
-        onAttachBlock();
+        on_attach_block();
     }
 
     void FlowBlockPipeBase::doPostFunction(){
-        onDetachBlock();
+        on_detach_block();
     }
 
 }

@@ -45,15 +45,15 @@ namespace kathryn {
         explicit FlowBlockPar(FLOW_BLOCK_TYPE fbType);
         ~FlowBlockPar();
         /** override flow block base*/
-        NodeWrap* sumarizeBlock() override; /// to interact from parrent block call
+        NodeWrap* sumarize_block() override; /// to interact from parrent block call
 
         /** on this block is start interact to controller*/
-        void onAttachBlock() override;
+        void on_attach_block() override;
         /** on leave this block*/
-        void onDetachBlock() override;
+        void on_detach_block() override;
 
         /** for module to build hardware component*/
-        void buildHwComponent() override;
+        void build_hw_component() override;
 
         /** Loop macro to notice position of system*/
         void doPreFunction() override;

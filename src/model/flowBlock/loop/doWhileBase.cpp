@@ -11,7 +11,7 @@ namespace kathryn {
     FlowBlockDowhile::FlowBlockDowhile(Operable &condExpr,
                                        FLOW_BLOCK_TYPE fbt) :
             _condExpr(&condExpr),
-            _purifiedCondExpr(purifyCondition(&condExpr)),
+            _purifiedCondExpr(purify_condition(&condExpr)),
             FlowBlockBase(fbt,
                           {
                                   {FLOW_ST_BASE_STACK},
@@ -27,10 +27,10 @@ namespace kathryn {
     }
 
 
-    void FlowBlockDowhile::buildHwComponent() {
+    void FlowBlockDowhile::build_hw_component() {
         assert(_con_blocks.empty());
         assert(_sub_blocks.size() == 1);
-        subBlockNodeWrap = _sub_blocks[0]->sumarizeBlock();
+        subBlockNodeWrap = _sub_blocks[0]->sumarize_block();
         assert(subBlockNodeWrap != nullptr);
 
         /***sub block depend lower deck is assume condition or*/
@@ -38,8 +38,8 @@ namespace kathryn {
                                                  subBlockNodeWrap->isThereForceExitNode()
                                                  ? &((*_purifiedCondExpr) & (~(*subBlockNodeWrap->getForceExitNode()->get_exit_opr_ptr())))
                                                  : _purifiedCondExpr);
-        if (isThereIntStart()) {
-            subBlockNodeWrap->addDependNodeToAllNode(intNodes[INT_START], nullptr);
+        if (is_there_intr_start()) {
+            subBlockNodeWrap->addDependNodeToAllNode(_int_nodes[INT_START], nullptr);
         }
         /** exit node*/
         //////// no need reset signal
@@ -49,7 +49,7 @@ namespace kathryn {
             exitNode->add_depend_node(subBlockNodeWrap->getForceExitNode(), nullptr);
         }
         exitNode->assign();
-        addSysNode(exitNode);
+        add_sys_node(exitNode);
         ////////////////////////////////////////////////////////////////////
         resultNodeWrapper = new NodeWrap();
         resultNodeWrapper->transferEntNodeFrom(subBlockNodeWrap);
@@ -58,45 +58,45 @@ namespace kathryn {
     }
 
 
-    void FlowBlockDowhile::addElementInFlowBlock(Node *node) {
+    void FlowBlockDowhile::add_basic_node(Node *node) {
         assert(false);
         /** cwhile not not except simple node due to implict added flowblock inside*/
     }
 
-    void FlowBlockDowhile::addSubFlowBlock(FlowBlockBase *subBlock) {
+    void FlowBlockDowhile::add_sub_flow_block(FlowBlockBase *subBlock) {
         assert(subBlock != nullptr);
         assert(!isGetFlowBlockYet);
         isGetFlowBlockYet = true;
-        FlowBlockBase::addSubFlowBlock(subBlock);
+        FlowBlockBase::add_sub_flow_block(subBlock);
     }
 
-    NodeWrap *FlowBlockDowhile::sumarizeBlock() {
+    NodeWrap *FlowBlockDowhile::sumarize_block() {
         assert(resultNodeWrapper != nullptr);
         return resultNodeWrapper;
     }
 
-    void FlowBlockDowhile::onAttachBlock() {
-        ctrl->on_attach_flowBlock(this);
+    void FlowBlockDowhile::on_attach_block() {
+        _ctrl->on_attach_flowBlock(this);
         /** in cwhile we implcitcally add sub block to system*/
-        auto sb = genImplicitSubBlk(PARALLEL_NO_SYN);
+        auto sb = gen_implicit_sub_blk(PARALLEL_NO_SYN);
         implicitFlowBlock = sb;
-        sb->onAttachBlock();
+        sb->on_attach_block();
     }
 
-    void FlowBlockDowhile::onDetachBlock() {
+    void FlowBlockDowhile::on_detach_block() {
         assert(implicitFlowBlock != nullptr);
-        implicitFlowBlock->onDetachBlock();
+        implicitFlowBlock->on_detach_block();
         assert(isGetFlowBlockYet);
-        ctrl->on_detach_flowBlock(this);
+        _ctrl->on_detach_flowBlock(this);
     }
 
 
     void FlowBlockDowhile::doPreFunction() {
-        onAttachBlock();
+        on_attach_block();
     }
 
     void FlowBlockDowhile::doPostFunction() {
-        onDetachBlock();
+        on_detach_block();
     }
 
     void FlowBlockDowhile::add_md_log(MdLogVal *mdLogVal) {

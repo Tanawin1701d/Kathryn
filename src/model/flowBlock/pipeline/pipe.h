@@ -45,11 +45,11 @@ namespace kathryn{
         explicit FlowBlockPipeBase(SyncMeta& syncMeta); ///// perpeptual loop indicate that it will loop when subblock is finish
         ~FlowBlockPipeBase() override;
         /** for controller add the local element to this sub block*/
-        void addElementInFlowBlock (Node* node) override;
-        void addSubFlowBlock       (FlowBlockBase* subBlock) override;
-        void addConFlowBlock       (FlowBlockBase* conBlock) override;
-        void addAbandonFlowBlock   (FlowBlockBase* abandonBlock) override;
-        NodeWrap* sumarizeBlock    () override;
+        void add_basic_node (Node* node) override;
+        void add_sub_flow_block       (FlowBlockBase* subBlock) override;
+        void add_con_flow_block       (FlowBlockBase* conBlock) override;
+        void add_abandon_flow_block   (FlowBlockBase* abandonBlock) override;
+        NodeWrap* sumarize_block    () override;
         /**set activate bias usually used in init Pipe */
         void      assignReadySignal ();
 
@@ -60,12 +60,12 @@ namespace kathryn{
         void      setAutoActivatePipe(){autoActivatePipe = true;}
         bool      isAutoActivatePipe() const{return autoActivatePipe;}
         /** on this block is start interact to controller*/
-        void onAttachBlock() override;
+        void on_attach_block() override;
         /** on leave this block*/
-        void onDetachBlock() override;
+        void on_detach_block() override;
         /** for module to build hardware component*/
-        void buildHwMaster() override;
-        void buildHwComponent() override;
+        void build_hw_master() override;
+        void build_hw_component() override;
         /** get describe*/
         void add_md_log(MdLogVal* mdLogVal) override;
         /** Loop macro to notice position of system*/

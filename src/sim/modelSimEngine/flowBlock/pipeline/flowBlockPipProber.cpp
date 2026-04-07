@@ -39,7 +39,7 @@ namespace kathryn{
         checkSimEngineReady();
         FlowBlockBase* implicFb = flowBlockPipBase->getImplicitFlowBlock();
         assert(implicFb != nullptr);
-        return implicFb->getSimEngine()->isBlockRunning();
+        return implicFb->get_sim_engine()->isBlockRunning();
     }
 
 

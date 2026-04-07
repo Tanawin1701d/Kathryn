@@ -23,53 +23,53 @@ namespace kathryn{
         //// delete resultNodeWrapper; it is derive from inside block do not delete
     }
 
-    void FlowBlockPickCond::addElementInFlowBlock(Node* node){
+    void FlowBlockPickCond::add_basic_node(Node* node){
         assert(false);
     }
 
-    void FlowBlockPickCond::addSubFlowBlock(FlowBlockBase* subBlock){
+    void FlowBlockPickCond::add_sub_flow_block(FlowBlockBase* subBlock){
         assert(subBlock != nullptr);
-        FlowBlockBase::addSubFlowBlock(subBlock);
+        FlowBlockBase::add_sub_flow_block(subBlock);
     }
 
-    void FlowBlockPickCond::addConFlowBlock(FlowBlockBase* conBlock){
+    void FlowBlockPickCond::add_con_flow_block(FlowBlockBase* conBlock){
         assert(false);
     }
 
-    NodeWrap* FlowBlockPickCond::sumarizeBlock(){
+    NodeWrap* FlowBlockPickCond::sumarize_block(){
         assert(resultNodeWrapper != nullptr);
         return resultNodeWrapper;
     }
 
-    void FlowBlockPickCond::onAttachBlock(){
-        ctrl->on_attach_flowBlock(this);
-        auto sb = genImplicitSubBlk(PARALLEL_NO_SYN);
+    void FlowBlockPickCond::on_attach_block(){
+        _ctrl->on_attach_flowBlock(this);
+        auto sb = gen_implicit_sub_blk(PARALLEL_NO_SYN);
         implicitFlowBlock = sb;
-        sb->onAttachBlock();
+        sb->on_attach_block();
     }
 
-    void FlowBlockPickCond::onDetachBlock(){
+    void FlowBlockPickCond::on_detach_block(){
         assert(implicitFlowBlock != nullptr);
-        implicitFlowBlock->onDetachBlock();
+        implicitFlowBlock->on_detach_block();
         /////// no need to set lazy delete
-        ctrl->on_detach_flowBlock(this);
+        _ctrl->on_detach_flowBlock(this);
     }
 
-    void FlowBlockPickCond::buildHwComponent(){
+    void FlowBlockPickCond::build_hw_component(){
         assert(_con_blocks.empty());
         assert(!_sub_blocks.empty());
-        mf_assert(!isThereIntStart(), "start interrupt can start in elif block but can start in if block or block inside elif block");
+        mf_assert(!is_there_intr_start(), "start interrupt can start in elif block but can start in if block or block inside elif block");
         ///mfAssert(!isThereIntRst(), "start interrupt can reset in elif block but can start in if block or block inside elif block");
-        resultNodeWrapper = _sub_blocks[0]->sumarizeBlock();
+        resultNodeWrapper = _sub_blocks[0]->sumarize_block();
 
     }
 
     void FlowBlockPickCond::doPreFunction(){
-        onAttachBlock();
+        on_attach_block();
     }
 
     void FlowBlockPickCond::doPostFunction(){
-        onDetachBlock();
+        on_detach_block();
     }
 
 

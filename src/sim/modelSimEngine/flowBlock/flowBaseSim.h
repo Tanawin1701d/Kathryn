@@ -62,7 +62,7 @@ namespace kathryn{
 
     class FlowSimEngineInterface{
     public:
-        virtual FlowBaseSimEngine* getSimEngine() = 0;
+        virtual FlowBaseSimEngine* get_sim_engine() = 0;
     };
 
 

@@ -35,37 +35,37 @@ namespace kathryn{
         delete normExitNode;
     }
 
-    void FlowBlockSCBreak::addElementInFlowBlock(Node *node) {
+    void FlowBlockSCBreak::add_basic_node(Node *node) {
         assert(false);
     }
 
-    void FlowBlockSCBreak::addSubFlowBlock(FlowBlockBase *subBlock) {
+    void FlowBlockSCBreak::add_sub_flow_block(FlowBlockBase *subBlock) {
         assert(false);
     }
 
-    NodeWrap* FlowBlockSCBreak::sumarizeBlock() {
+    NodeWrap* FlowBlockSCBreak::sumarize_block() {
         assert(resultNodeWrap != nullptr);
         return resultNodeWrap;
     }
 
-    void FlowBlockSCBreak::onAttachBlock() {
-        ctrl->on_attach_flowBlock(this);
+    void FlowBlockSCBreak::on_attach_block() {
+        _ctrl->on_attach_flowBlock(this);
     }
 
-    void FlowBlockSCBreak::onDetachBlock() {
-        ctrl->on_detach_flowBlock(this);
+    void FlowBlockSCBreak::on_detach_block() {
+        _ctrl->on_detach_flowBlock(this);
     }
 
-    void FlowBlockSCBreak::buildHwComponent() {
+    void FlowBlockSCBreak::build_hw_component() {
 
         assert(_con_blocks.empty());
         /**build internal node*/
-        breakNode = new StateNode(getClockMode());
-        addSysNode(breakNode);
-        fillIntResetToNodeIfThere(breakNode);
+        breakNode = new StateNode(get_clock_mode());
+        add_sys_node(breakNode);
+        fill_intr_reset_to_node_if_there(breakNode);
 
         normExitNode = new DummyNode(&makeOprVal("cbreakDum", 1, 0));
-        addSysNode(normExitNode);
+        add_sys_node(normExitNode);
         /////////normExitNode->addDependNode(breakNode);
         normExitNode->assign();
 
@@ -78,7 +78,7 @@ namespace kathryn{
             breakCondNode = new PseudoNode(1, BITWISE_AND);
             breakCondNode->add_depend_node(breakNode, forceExitOpr);
             breakCondNode->assign();
-            addSysNode(breakCondNode);
+            add_sys_node(breakCondNode);
             resultNodeWrap->addForceExitNode(breakCondNode);
         }
         resultNodeWrap->addExitNode(normExitNode);
@@ -98,10 +98,10 @@ namespace kathryn{
     }
 
     void FlowBlockSCBreak::doPreFunction() {
-        onAttachBlock();
+        on_attach_block();
     }
 
     void FlowBlockSCBreak::doPostFunction() {
-        onDetachBlock();
+        on_detach_block();
     }
 }

@@ -45,24 +45,24 @@ namespace kathryn{
 
     void FlowBaseSimEngine::getRecurVarName(std::vector<std::string>& result){
         result.push_back(getValRep().getData());
-        for (FlowBlockBase* fb : _flowBlockBase->getSubBlocks()){
-            FlowBaseSimEngine* subBlockSimEngine = fb->getSimEngine();
+        for (FlowBlockBase* fb : _flowBlockBase->get_sub_blocks_ref()){
+            FlowBaseSimEngine* subBlockSimEngine = fb->get_sim_engine();
             subBlockSimEngine->getRecurVarName(result);
         }
-        for (FlowBlockBase* fb : _flowBlockBase->getConBlocks()){
-            FlowBaseSimEngine* conBlockSimEngine = fb->getSimEngine();
+        for (FlowBlockBase* fb : _flowBlockBase->get_con_blocks_ref()){
+            FlowBaseSimEngine* conBlockSimEngine = fb->get_sim_engine();
             conBlockSimEngine->getRecurVarName(result);
         }
     }
 
     void FlowBaseSimEngine::getRecurVarNameCurStsatus(std::vector<std::string>& result){
         result.push_back(getVarNameCurStatus().getData());
-        for (FlowBlockBase* fb : _flowBlockBase->getSubBlocks()){
-            FlowBaseSimEngine* subBlockSimEngine = fb->getSimEngine();
+        for (FlowBlockBase* fb : _flowBlockBase->get_sub_blocks_ref()){
+            FlowBaseSimEngine* subBlockSimEngine = fb->get_sim_engine();
             subBlockSimEngine->getRecurVarNameCurStsatus(result);
         }
-        for (FlowBlockBase* fb : _flowBlockBase->getConBlocks()){
-            FlowBaseSimEngine* conBlockSimEngine = fb->getSimEngine();
+        for (FlowBlockBase* fb : _flowBlockBase->get_con_blocks_ref()){
+            FlowBaseSimEngine* conBlockSimEngine = fb->get_sim_engine();
             conBlockSimEngine->getRecurVarNameCurStsatus(result);
         }
     }
@@ -74,12 +74,12 @@ namespace kathryn{
         cb.addSt(getVarNameCurStatus().buildVar(0));
 
 
-        for (FlowBlockBase* fb : _flowBlockBase->getSubBlocks()){
-            FlowBaseSimEngine* subBlockSimEngine = fb->getSimEngine();
+        for (FlowBlockBase* fb : _flowBlockBase->get_sub_blocks_ref()){
+            FlowBaseSimEngine* subBlockSimEngine = fb->get_sim_engine();
             subBlockSimEngine->createGlobalVariable(cb);
         }
-        for (FlowBlockBase* fb : _flowBlockBase->getConBlocks()){
-            FlowBaseSimEngine* conBlockSimEngine = fb->getSimEngine();
+        for (FlowBlockBase* fb : _flowBlockBase->get_con_blocks_ref()){
+            FlowBaseSimEngine* conBlockSimEngine = fb->get_sim_engine();
             conBlockSimEngine->createGlobalVariable(cb);
         }
     }
@@ -91,8 +91,8 @@ namespace kathryn{
         ////////////////////////////////////////////////////////////////////////////
         //////////// subBlock build
         ////////////////////////////////////////////////////////////////////////////
-        for (FlowBlockBase* fb : _flowBlockBase->getSubBlocks()){
-            FlowBaseSimEngine* subBlockSimEngine = fb->getSimEngine();
+        for (FlowBlockBase* fb : _flowBlockBase->get_sub_blocks_ref()){
+            FlowBaseSimEngine* subBlockSimEngine = fb->get_sim_engine();
             subBlockSimEngine->createOp(cb.addSubBlock());
         }
 
@@ -103,7 +103,7 @@ namespace kathryn{
 
         //////////// basic node recruitment
         cb.addCm("basic node rc");
-        for (Node* sysNode : _flowBlockBase->getSysNodes()){
+        for (Node* sysNode : _flowBlockBase->get_sys_nodes_ref()){
             assert(sysNode != nullptr);
             for (CtrlFlowRegBase* stateReg : sysNode->get_cycle_related_reg()){
                 if (stateReg != nullptr){
@@ -119,14 +119,14 @@ namespace kathryn{
 
         ///////////// sub block recruitment
         cb.addCm("sub block recruitment");
-        for (FlowBlockBase* subFb : _flowBlockBase->getSubBlocks()){
-            FlowBaseSimEngine* subBlockSimEngine = subFb->getSimEngine();
+        for (FlowBlockBase* subFb : _flowBlockBase->get_sub_blocks_ref()){
+            FlowBaseSimEngine* subBlockSimEngine = subFb->get_sim_engine();
             cb.addSt( getVarNameCurStatus()
                 .eq(getVarNameCurStatus() | subBlockSimEngine->getVarNameCurStatus())
                 .toString()
             );
-            for(FlowBlockBase* conOfSubFb: subFb->getConBlocks()){
-                FlowBaseSimEngine* conOfSubFbSimEngine = conOfSubFb->getSimEngine();
+            for(FlowBlockBase* conOfSubFb: subFb->get_con_blocks_ref()){
+                FlowBaseSimEngine* conOfSubFbSimEngine = conOfSubFb->get_sim_engine();
                 cb.addSt( getVarNameCurStatus()
                   .eq(getVarNameCurStatus() | conOfSubFbSimEngine->getVarNameCurStatus())
                   .toString()
@@ -148,8 +148,8 @@ namespace kathryn{
 
         //////////// do for con block
 
-        for (FlowBlockBase* fb : _flowBlockBase->getConBlocks()){
-            FlowBaseSimEngine* conBlockSimEngine = fb->getSimEngine();
+        for (FlowBlockBase* fb : _flowBlockBase->get_con_blocks_ref()){
+            FlowBaseSimEngine* conBlockSimEngine = fb->get_sim_engine();
             conBlockSimEngine->createOp(cb);
         }
 
@@ -165,12 +165,12 @@ namespace kathryn{
         _proxyRepCurBit = modelSimEvent->getValPerf(getVarNameCurStatus().getData());
         _proxyRepCurBit.setSize(1);
         ///////// subblock init
-        for (FlowBlockBase* subBlock : _flowBlockBase->getSubBlocks()){
-            subBlock->getSimEngine()->proxyRetInit(modelSimEvent);
+        for (FlowBlockBase* subBlock : _flowBlockBase->get_sub_blocks_ref()){
+            subBlock->get_sim_engine()->proxyRetInit(modelSimEvent);
         }
         ///////// conblock init
-        for (FlowBlockBase* conBlock : _flowBlockBase->getConBlocks()){
-            conBlock->getSimEngine()->proxyRetInit(modelSimEvent);
+        for (FlowBlockBase* conBlock : _flowBlockBase->get_con_blocks_ref()){
+            conBlock->get_sim_engine()->proxyRetInit(modelSimEvent);
         }
     }
 

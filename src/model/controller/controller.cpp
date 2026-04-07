@@ -77,10 +77,10 @@ namespace kathryn{
         for (int i = 0; i < fb_vec.size(); i++){
             std::string position;
             if (i > 0){
-                if (fb_vec[i]->getFlowType() != CSELIF && fb_vec[i]->getFlowType() != CSELSE) {
-                    position += " subBlockIdx " + std::to_string(fb_vec[i - 1]->getSubBlocks().size()) + "    ";
+                if (fb_vec[i]->get_flow_type() != CSELIF && fb_vec[i]->get_flow_type() != CSELSE) {
+                    position += " subBlockIdx " + std::to_string(fb_vec[i - 1]->get_sub_blocks_ref().size()) + "    ";
                 }
-                position += " conBlockIdx " + std::to_string(fb_vec[i-1]->getConBlocks().size());
+                position += " conBlockIdx " + std::to_string(fb_vec[i-1]->get_con_blocks_ref().size());
             }
             result += (fb_vec[i]->get_global_name() + "@ " + position + "\n" );
             result += genConString(' ', accum_ident);

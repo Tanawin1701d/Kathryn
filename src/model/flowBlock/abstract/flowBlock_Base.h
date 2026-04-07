@@ -6,14 +6,14 @@
 #define KATHRYN_FLOWBLOCK_BASE_H
 
 
-#define intrReset( expr  )   kathrynBlock->addIntSignal(INT_RESET, &expr);
-#define intrStart( expr  )   kathrynBlock->addIntSignal(INT_START, &expr);
-#define holdBlk( expr  )     kathrynBlock->addHoldSignal(&expr);
+#define intrReset( expr  )   kathrynBlock->add_intr_signal(INT_RESET, &expr);
+#define intrStart( expr  )   kathrynBlock->add_intr_signal(INT_START, &expr);
+#define holdBlk( expr  )     kathrynBlock->add_hold_signal(&expr);
 #define intrRstAndStart( expr ) intrReset(expr) intrStart(expr)
 #define exposeBlk( exVar )   exVar = kathrynBlock;
-#define track( name  )       kathrynBlock->setZepTrackName(#name);
-#define strack( name )       kathrynBlock->setZepTrackName(name);
-#define markJoinMaster       kathrynBlock->setJoinMaster();
+#define track( name  )       kathrynBlock->set_zep_track_name(#name);
+#define strack( name )       kathrynBlock->set_zep_track_name(name);
+#define markJoinMaster       kathrynBlock->set_join_master();
 
 #include<memory>
 #include<vector>
@@ -95,178 +95,200 @@ namespace kathryn {
         };
 
         int nextInputOrder = 0;
-        /** flow element*/
+        /** 
+         * flow element
+         */
         std::vector<FlowBlockBase*> _sub_blocks;
         std::vector<int>            _sub_blocks_order; //// input order in this block
         std::vector<FlowBlockBase*> _con_blocks;
         std::vector<int>            _con_blocks_order; //// input order in this block
         std::vector<Node*>          _basic_nodes;
         std::vector<int>            _basic_nodes_order; //// input order in this block
-        std::vector<Node*>          _sysNodes;
+        std::vector<Node*>          _sys_nodes;
 
-        std::vector<FlowBlockBase*> _abandonedBlocks;  /// the flow block that have been extracted and push to this block
-        std::vector<Node*>          _abandonedNodes;    /// the node that have been extracted and push to join collective node
+        std::vector<FlowBlockBase*> _abandoned_blocks;  /// the flow block that have been extracted and push to this block
+        std::vector<Node*>          _abandoned_nodes;    /// the node that have been extracted and push to join collective node
 
-        /**  basic interrupt signals*/
-        std::vector<Operable*>        intSignals[INT_CNT];
-        OprNode*                      intNodes  [INT_CNT]; //// the sum of allnode
-        /** basic  hold signals*/
-        /** the hold signal supposed to hold the state without execute it*/
-        std::vector<Operable*>        holdSignals;
-        OprNode*                      holdNode = nullptr;
-        /** CLOCK MODE*/
-        CLOCK_MODE                    clkMode;
-
-
-
-
-
-        /** status of node*/
+        /** 
+         * interrupt element
+         */
+        ///  basic interrupt signals
+        std::vector<Operable*>        _int_signals[INT_CNT];
+        OprNode*                      _int_nodes  [INT_CNT]; //// the sum of allnode
+        /// basic  hold signals
+        /// the hold signal supposed to hold the state without execute it
+        std::vector<Operable*>        _hold_signals;
+        OprNode*                      _hold_node = nullptr;
+        
+        /** 
+         * CLOCK MODE
+         */
+        CLOCK_MODE                    _clk_mode;
+        
+        /**
+         * Flow Block <-> ctrl data/metadata
+         */
+        /// status of node
         FLOW_BLOCK_TYPE             _type;
-        ModelController*            ctrl = nullptr;
-        bool                        lazyDeletedRequired = false;
-        int                         _fbId;
-        /** controller interactive element*/
-        FB_CTRL_COM_META            _fbCtrlComMeta;
-        /*** for exit management*/
-        bool                        _areThereForceExit = false;
-        PseudoNode*                 _forceExitNode     = nullptr;
-        /*** flow block sim engine*/
-        FlowBaseSimEngine*          _flowSimEngine     = nullptr;
+        ModelController*            _ctrl                  = nullptr;
+        bool                        _lazy_deleted_required = false;
+        int                         _fb_id;
+        /// controller interactive element
+        FB_CTRL_COM_META            _fb_ctrl_com_meta;
+        /// for exit management
+        bool                        _are_there_force_exit = false;
+        PseudoNode*                 _force_exit_node     = nullptr;
+        //// flow block sim engine
+        FlowBaseSimEngine*          _flow_sim_engine     = nullptr;
 
-        /** generate implicit subblock typically used with if and while block*/
-        FlowBlockBase* genImplicitSubBlk(FLOW_BLOCK_TYPE defaultType);
-        /** generate sum of force exit note (the global variable)*/
-        void           genSumForceExitNode(std::vector<NodeWrap*>& nws);
-        /** interrupt node*/
-        void           fillIntRstSignalToChild(); //// use for pass the data when build
-        void           genIntNode();
-        bool           isThereIntStart();
-        bool           isThereIntRst();
-        /** holding system*/
-        void           fillHoldSignalToChild();
-        void           genHoldNode();
-        bool           isThereHold();
-        /** clock mode*/
-        void           setClockMode(CLOCK_MODE mode);
-        CLOCK_MODE     getClockMode() const {return clkMode;}
 
-        ///////////////////////////////////////
-        Operable*      purifyCondition(Operable* rawOpr);
-        FlowBlockBase* scanMasterJoinSubBlock();
+        /// generate implicit subblock typically used with if and while block
+        FlowBlockBase* gen_implicit_sub_blk(FLOW_BLOCK_TYPE defaultType);
+        /// generate sum of force exit note (the global variable)
+        void gen_sum_force_exit_node(std::vector<NodeWrap*>& nws);
+        /// interrupt node
+        void fill_intr_rst_signal_to_child(); /// use for pass the data when build
+        void gen_intr_node                ();
+        bool is_there_intr_start          ();
+        bool is_there_intr_rst            ();
+        /// holding system
+        void fill_hold_signal_to_child();
+        void gen_hold_node            ();
+        bool is_there_hold            ();
+        /// clock mode
+        void set_clock_mode      (CLOCK_MODE mode);
+        CLOCK_MODE get_clock_mode() const{ return _clk_mode; }
+
+        ///
+        Operable*      purify_condition          (Operable* raw_opr);
+        FlowBlockBase* scan_master_join_sub_block();
+
     public:
-        explicit       FlowBlockBase(FLOW_BLOCK_TYPE  type,
-                                     FB_CTRL_COM_META fbCtrlComMeta);
-        virtual        ~FlowBlockBase();
+        explicit FlowBlockBase(FLOW_BLOCK_TYPE  type,
+                               FB_CTRL_COM_META fb_ctrl_com_meta);
+        virtual ~FlowBlockBase();
 
-        Operable*      genIntSumSignal(bool isAndCond, INT_TYPE intrType); //// it pool all condition to single signal
+        Operable* gen_intr_sum_signal(bool is_and_cond, INT_TYPE intr_type); /// it pool all condition to single signal
 
-        FlowBaseSimEngine* getSimEngine() override{
-                return _flowSimEngine;
+        FlowBaseSimEngine* get_sim_engine() override{
+            return _flow_sim_engine;
         }
+
         /**
          * entrance to make controller interact with
          * */
-        /** when basic behavior describe in flow block*/
-        virtual void addElementInFlowBlock(Node* node){
+
+        /// when basic behavior describe in flow block
+        virtual void add_basic_node(Node* node){
             assert(node != nullptr);
             _basic_nodes.push_back(node);
             _basic_nodes_order.push_back(nextInputOrder++);
         }
-        /** system node is the node used to monitor by hybrid profiler*/
-        virtual void addSysNode(Node* node){
+
+        /// system node is the node used to monitor by hybrid profiler
+        virtual void add_sys_node(Node* node){
             assert(node != nullptr);
-            _sysNodes.push_back(node);
+            _sys_nodes.push_back(node);
         }
-        /** when inside complex element such as sub flow block is finish, user must add here*/
-        virtual void addSubFlowBlock(FlowBlockBase* subBlock){
-            assert(subBlock != nullptr);
-            _sub_blocks.push_back(subBlock);
+
+        /// when inside complex element such as sub flow block is finish, user must add here
+        virtual void add_sub_flow_block(FlowBlockBase* sub_block){
+            assert(sub_block != nullptr);
+            _sub_blocks.push_back(sub_block);
             _sub_blocks_order.push_back(nextInputOrder++);
         };
-        /** add sub con block as consecutive block*/
-        virtual void addConFlowBlock(FlowBlockBase* conBlock){
-            assert(conBlock != nullptr);
-            _con_blocks.push_back(conBlock);
+        /// add sub con block as consecutive block
+        virtual void add_con_flow_block(FlowBlockBase* con_block){
+            assert(con_block != nullptr);
+            _con_blocks.push_back(con_block);
             _con_blocks_order.push_back(nextInputOrder++);
         }
-        virtual void addAbandonFlowBlock(FlowBlockBase* abandonBlock){
-            assert(abandonBlock != nullptr);
-            _abandonedBlocks.push_back(abandonBlock);
+
+        virtual void add_abandon_flow_block(FlowBlockBase* abandon_block){
+            assert(abandon_block != nullptr);
+            _abandoned_blocks.push_back(abandon_block);
         }
 
-        virtual void addAbandonNode(Node* abandonNode){
-            assert(abandonNode != nullptr);
-            _abandonedNodes.push_back(abandonNode);
+        virtual void add_abandon_node(Node* abandon_node){
+            assert(abandon_node != nullptr);
+            _abandoned_nodes.push_back(abandon_node);
         }
 
-        virtual void addIntSignal(INT_TYPE type, Operable* signal){
+        /// interrupt signal
+        virtual void add_intr_signal(INT_TYPE type, Operable* signal){
             assert(signal != nullptr);
             assert(type < INT_CNT);
             assert(signal->getOperableSlice().getSize() == 1);
-            intSignals[type].push_back(signal);
+            _int_signals[type].push_back(signal);
         }
 
-        void fillIntResetToNodeIfThere(Node* nd){
-            if (intNodes[INT_RESET] != nullptr){
-                nd->set_interrupt_reset(intNodes[INT_RESET]);
+        void fill_intr_reset_to_node_if_there(Node* nd){
+            if (_int_nodes[INT_RESET] != nullptr){
+                nd->set_interrupt_reset(_int_nodes[INT_RESET]);
             }
         }
 
-        /** hold entrance*/
-        virtual void addHoldSignal(Operable* signal){
+        /// hold entrance
+        virtual void add_hold_signal(Operable* signal){
             assert(signal != nullptr);
-            holdSignals.push_back(signal);
+            _hold_signals.push_back(signal);
         }
 
-        void fillHoldToNodeIfThere(Node* nd){
-            if (holdNode != nullptr){
-                nd->set_hold(holdNode);
+        void fill_hold_to_node_if_there(Node* nd){
+            if (_hold_node != nullptr){
+                nd->set_hold(_hold_node);
             }
         }
 
-        std::vector<sortEle> sortSubAndConFbInOrder();
-        void                 overrideClockModeInAllAsmNodes();
+        std::vector<sortEle> sort_sub_and_con_fb_inorder();
+        void                 override_clock_mode_in_all_asm_nodes();
         /**
          * For custom block
          * */
-        /** when everything is finish call this to get sumarisation*/
-        virtual NodeWrap*   sumarizeBlock() = 0;
-        /*** communicator to controller*/
-        virtual void        onAttachBlock() = 0; //// it is supposed to acknowledge controller whether this block is declared
-        virtual void        onDetachBlock() = 0;
-        /*** for module controller build node and other elements*/
-        virtual void        buildHwMaster();
-        virtual void        buildSubHwComponent();
-        virtual void        buildHwComponent() = 0;
-        ////// getter/setter
-        FLOW_BLOCK_TYPE     getFlowType() const {return _type;}
-        int                 getFlowBlockId() const{return _fbId;}
+        /// when everything is finish call this to get sumarisation
+        virtual NodeWrap* sumarize_block() = 0;
+        /// communicator to controller
+        virtual void on_attach_block    () = 0; /// it is supposed to acknowledge controller whether this block is declared
+        virtual void on_detach_block    () = 0;
+        /// for module controller build node and other elements
+        virtual void build_hw_master       ();
+        virtual void build_sub_hw_component();
+        virtual void build_hw_component    () = 0;
+        /// getter/setter
+        FLOW_BLOCK_TYPE get_flow_type()     const{ return _type; }
+        int             get_flow_block_id() const{ return _fb_id; }
+
         std::vector<Node*>&
-                            getBasicNode(){return _basic_nodes;}
+        get_basic_nodes_ref(){ return _basic_nodes; }
+
         std::vector<FlowBlockBase*>&
-                            getSubBlocks(){return _sub_blocks;}
+        get_sub_blocks_ref(){ return _sub_blocks; }
+
         std::vector<FlowBlockBase*>&
-                            getConBlocks(){return _con_blocks;}
+        get_con_blocks_ref(){ return _con_blocks; }
+
         std::vector<Node*>&
-                            getSysNodes(){return _sysNodes;}
+        get_sys_nodes_ref(){ return _sys_nodes; }
+
         /** lazy delete is the variable that tell controller whether
          * block should be pop from building stack when purifier is done
          * not when block is detach. Usually, It is used in if block
          * */
-        bool                isLazyDelete() const{ return lazyDeletedRequired; }
-        void                setLazyDelete()     { lazyDeletedRequired = true;}
-        void                unsetLazyDelete()   {lazyDeletedRequired = false;}
-        /** controller communication*/
+        bool is_lazy_delete() const{ return _lazy_deleted_required; }
+        void set_lazy_delete(){ _lazy_deleted_required = true; }
+        void unset_lazy_delete(){ _lazy_deleted_required = false; }
+        /// controller communication
         [[nodiscard]]
-        std::vector<FLOW_STACK_TYPE> getSelFbStack() const {return _fbCtrlComMeta.sel_flow_stack;}
-        [[nodiscard]]
-        FLOW_BLOCK_JOIN_POLICY       getJoinFbPol()  const {return _fbCtrlComMeta.join_policy;  }
-        [[nodiscard]]
-        bool                         getPurifyReq()  const {return _fbCtrlComMeta.req_purify;    }
+        std::vector<FLOW_STACK_TYPE> get_sel_fb_stack() const{ return _fb_ctrl_com_meta.sel_flow_stack; }
 
-        /** debug method*/
-        std::string getMdDescribeRecur() {
+        [[nodiscard]]
+        FLOW_BLOCK_JOIN_POLICY get_join_fb_pol() const{ return _fb_ctrl_com_meta.join_policy; }
+
+        [[nodiscard]]
+        bool get_purify_req() const{ return _fb_ctrl_com_meta.req_purify; }
+
+        /// debug method
+        std::string get_md_describe_recur(){
             std::string ret = "----------- sub Block --------\n";
             for (auto sb : _sub_blocks){
                 ret += sb->get_md_describe();
@@ -275,21 +297,21 @@ namespace kathryn {
             return ret;
         }
 
-        void addMdLogRecur(MdLogVal *mdLogVal){
+        void add_md_log_recur(MdLogVal* md_log_val){
             if (_sub_blocks.empty())
                 return;
-            mdLogVal->addVal("-----sub block------");
-            for (auto sb: _sub_blocks){
-                auto subStruct = mdLogVal->makeNewSubVal();
-                sb->add_md_log(subStruct);
+            md_log_val->addVal("-----sub block------");
+            for (auto sb : _sub_blocks){
+                auto sub_struct = md_log_val->makeNewSubVal();
+                sb->add_md_log(sub_struct);
             }
         }
 
-        [[nodiscard]]std::string get_md_ident_val() override{
-            return FBT_to_string(getFlowType()) + "_blockId_" + std::to_string(_fbId);
+        [[nodiscard]] std::string get_md_ident_val() override{
+            return FBT_to_string(get_flow_type()) + "_blockId_" + std::to_string(_fb_id);
         }
-    };
 
+    };
 }
 
 #endif //KATHRYN_FLOWBLOCK_BASE_H

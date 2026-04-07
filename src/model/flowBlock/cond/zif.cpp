@@ -19,7 +19,7 @@ namespace kathryn{
                   FLOW_JO_EXT_FLOW,
                   true
                   }),
-            purifiedCurCond(&(*purifyCondition(&cond)))
+            purifiedCurCond(&(*purify_condition(&cond)))
     {
         ///assert(flowBlockType == ZIF);
         prevFalses.push_back(&(!(*purifiedCurCond)));
@@ -29,28 +29,28 @@ namespace kathryn{
     FlowBlockZIF::~FlowBlockZIF() {}
 
 
-    void FlowBlockZIF::addElementInFlowBlock(Node* node) {
+    void FlowBlockZIF::add_basic_node(Node* node) {
         assert(node != nullptr);
         assert(node->get_node_type() == ASM_NODE);
 
         //////// cast meta data
         AsmNode* castedNode = (AsmNode*)node;
-        FlowBlockBase::addAbandonNode(node);
+        FlowBlockBase::add_abandon_node(node);
         //////// try to add to
         tryAddOrCreateAsmMeta(castedNode, _assignMetas, purifiedCurCond);
     }
 
-    void FlowBlockZIF::addSubFlowBlock(FlowBlockBase *subBlock) {
+    void FlowBlockZIF::add_sub_flow_block(FlowBlockBase *subBlock) {
         assert(false);
     }
 
-    void FlowBlockZIF::addConFlowBlock(FlowBlockBase *fb){
+    void FlowBlockZIF::add_con_flow_block(FlowBlockBase *fb){
         assert(!lastZelifDetected);
         assert(!prevFalses.empty());
         assert(fb != nullptr);
-        assert(fb->getFlowType() == ZELIF || fb->getFlowType() == ZELSE);
+        assert(fb->get_flow_type() == ZELIF || fb->get_flow_type() == ZELSE);
         /** call base function*/
-        FlowBlockBase::addConFlowBlock(fb);
+        FlowBlockBase::add_con_flow_block(fb);
         FlowBlockZELIF* castedZelif = (FlowBlockZELIF*)fb;
 
         Operable* prevFalse = *prevFalses.rbegin();
@@ -87,25 +87,25 @@ namespace kathryn{
 
     }
 
-    void FlowBlockZIF::addIntSignal(INT_TYPE type, Operable* signal){
-        mf_assert(!isThereIntStart(), "start interrupt can start in zblock");
-        mf_assert(!isThereIntRst(), "start interrupt can reset in zblock");
+    void FlowBlockZIF::add_intr_signal(INT_TYPE type, Operable* signal){
+        mf_assert(!is_there_intr_start(), "start interrupt can start in zblock");
+        mf_assert(!is_there_intr_rst(), "start interrupt can reset in zblock");
     }
 
-    NodeWrap *FlowBlockZIF::sumarizeBlock() {
+    NodeWrap *FlowBlockZIF::sumarize_block() {
         assert(false);
     }
 
-    void FlowBlockZIF::onAttachBlock() {
-        ctrl->on_attach_flowBlock(this);
+    void FlowBlockZIF::on_attach_block() {
+        _ctrl->on_attach_flowBlock(this);
     }
 
-    void FlowBlockZIF::onDetachBlock() {
-        setLazyDelete();
-        ctrl->on_detach_flowBlock(this);
+    void FlowBlockZIF::on_detach_block() {
+        set_lazy_delete();
+        _ctrl->on_detach_flowBlock(this);
     }
 
-    void FlowBlockZIF::buildHwComponent() {
+    void FlowBlockZIF::build_hw_component() {
         assert(false);
     }
 
@@ -118,11 +118,11 @@ namespace kathryn{
     }
 
     void FlowBlockZIF::doPreFunction() {
-        onAttachBlock();
+        on_attach_block();
     }
 
     void FlowBlockZIF::doPostFunction() {
-        onDetachBlock();
+        on_detach_block();
     }
 
     std::vector<AsmNode*> FlowBlockZIF::extract(){

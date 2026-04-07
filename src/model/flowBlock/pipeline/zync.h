@@ -45,20 +45,20 @@ namespace kathryn{
         SyncMeta& getSyncMeta() const { return _syncMeta;}
 
         /** for controller add the local element to this sub block*/
-        void addSubFlowBlock       (FlowBlockBase* subBlock) override;
-        void addConFlowBlock       (FlowBlockBase* conBlock) override;
-        NodeWrap* sumarizeBlock    () override;
+        void add_sub_flow_block       (FlowBlockBase* subBlock) override;
+        void add_con_flow_block       (FlowBlockBase* conBlock) override;
+        NodeWrap* sumarize_block    () override;
         /** auto activate pipe*/
         void setAutoActivatePipe(){autoActivatePipe = true;}
         bool isAutoActivatePipe() const {return autoActivatePipe;}
 
         /** on this block is start interact to controller*/
-        void onAttachBlock() override;
+        void on_attach_block() override;
         /** on leave this block*/
-        void onDetachBlock() override;
+        void on_detach_block() override;
         /** for module to build hardware component*/
-        void buildHwMaster() override;
-        void buildHwComponent() override;
+        void build_hw_master() override;
+        void build_hw_component() override;
         /** get describe*/
         void add_md_log(MdLogVal* mdLogVal) override;
         /** Loop macro to notice position of system*/

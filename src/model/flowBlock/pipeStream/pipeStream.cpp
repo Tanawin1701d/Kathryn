@@ -26,36 +26,36 @@ namespace kathryn{
         delete _dummyNode;
     }
 
-    void FlowBlockPipeStream::addElementInFlowBlock(Node* node){
+    void FlowBlockPipeStream::add_basic_node(Node* node){
         assert(node != nullptr);
         auto seqEle = new SequenceEleBasic(node);
         _subStreamEles.push_back(new StreamEle(seqEle));
         /** base function to notice existence of sub flow element*/
-        FlowBlockBase::addElementInFlowBlock(node);
+        FlowBlockBase::add_basic_node(node);
     }
 
-    void FlowBlockPipeStream::addSubFlowBlock(FlowBlockBase* subBlock){
+    void FlowBlockPipeStream::add_sub_flow_block(FlowBlockBase* subBlock){
         assert(subBlock != nullptr);
         auto seqEle = new SequenceEleFlowBlock(subBlock);
         _subStreamEles.emplace_back(new StreamEle(seqEle));
         /** base function to notice existence of sub flow block*/
-        FlowBlockBase::addSubFlowBlock(subBlock);
+        FlowBlockBase::add_sub_flow_block(subBlock);
     }
 
-    NodeWrap* FlowBlockPipeStream::sumarizeBlock(){
+    NodeWrap* FlowBlockPipeStream::sumarize_block(){
         assert(_resultNodeWrap != nullptr);
         return _resultNodeWrap;
     }
 
-    void FlowBlockPipeStream::onAttachBlock() {
-        ctrl->on_attach_flowBlock(this);
+    void FlowBlockPipeStream::on_attach_block() {
+        _ctrl->on_attach_flowBlock(this);
     }
 
-    void FlowBlockPipeStream::onDetachBlock() {
-        ctrl->on_detach_flowBlock(this);
+    void FlowBlockPipeStream::on_detach_block() {
+        _ctrl->on_detach_flowBlock(this);
     }
 
-    void FlowBlockPipeStream::buildHwComponent() {
+    void FlowBlockPipeStream::build_hw_component() {
         mf_assert(!_subStreamEles.empty(), "pipestream flow must have at least one element");
         assert(_con_blocks.empty());
         /**generate hardware*/
@@ -63,11 +63,11 @@ namespace kathryn{
         int idx = 0;
         for (auto& streamMeta: _subStreamEles){
             ///////// initialize hardware
-            streamMeta->setIntReset(intNodes[INT_RESET]); //// set interrupt reset must be set before gennode
-            streamMeta->setHoldNode(holdNode);
-            streamMeta->genNode(getClockMode());
+            streamMeta->setIntReset(_int_nodes[INT_RESET]); //// set interrupt reset must be set before gennode
+            streamMeta->setHoldNode(_hold_node);
+            streamMeta->genNode(get_clock_mode());
             streamMeta->setIdentStateId(get_global_id(),idx);
-            streamMeta->addToSystemNodes(_sysNodes);
+            streamMeta->addToSystemNodes(_sys_nodes);
             idx++;
         }
 
@@ -79,8 +79,8 @@ namespace kathryn{
             StreamEle* nextEle = (idx == (_subStreamEles.size()-1))
                                   ? nullptr: _subStreamEles[idx+1];
             _subStreamEles[idx]->addSyncDependency(prevEle, nextEle);
-            if (isThereIntStart()){
-                _subStreamEles[idx]->assignIntStart(intNodes[INT_START]);
+            if (is_there_intr_start()){
+                _subStreamEles[idx]->assignIntStart(_int_nodes[INT_START]);
             }
             allStartNodes.push_back(streamMeta->getEntranceNode());
         }
@@ -128,11 +128,11 @@ namespace kathryn{
     }
 
     void FlowBlockPipeStream::doPreFunction() {
-        onAttachBlock();
+        on_attach_block();
     }
 
     void FlowBlockPipeStream::doPostFunction() {
-        onDetachBlock();
+        on_detach_block();
     }
 
 

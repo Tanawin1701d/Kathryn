@@ -204,7 +204,7 @@ namespace kathryn{
         std::vector<T>& eleVec){
         for (auto elePtr : eleVec){
             assert(elePtr != nullptr);
-            result.push_back((S*)elePtr->getSimEngine());
+            result.push_back((S*)elePtr->get_sim_engine());
         }
     }
 
@@ -214,7 +214,7 @@ namespace kathryn{
         std::vector<T*>& eleVec){
         for (auto elePtr : eleVec){
             assert(elePtr != nullptr);
-            elePtr->getSimEngine()->proxyRetInit(simEventBase);
+            elePtr->get_sim_engine()->proxyRetInit(simEventBase);
         }
     }
 }

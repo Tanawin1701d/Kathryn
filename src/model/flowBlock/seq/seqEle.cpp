@@ -113,7 +113,7 @@ namespace kathryn{
 
     void SequenceEleFlowBlock::genNode(CLOCK_MODE cm){
         assert(_subBlock != nullptr);
-        _complexNode = _subBlock->sumarizeBlock();
+        _complexNode = _subBlock->sumarize_block();
     }
 
     void SequenceEleFlowBlock::setIdentStateId (ull masterIdx, int idx) const{

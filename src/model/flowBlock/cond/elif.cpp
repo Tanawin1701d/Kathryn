@@ -32,45 +32,45 @@ namespace kathryn{
 
     };
 
-    void FlowBlockElif::addElementInFlowBlock(Node* node) {
+    void FlowBlockElif::add_basic_node(Node* node) {
         assert(false); //// due to implicit sublock declaration
     }
 
-    void FlowBlockElif::addSubFlowBlock(FlowBlockBase* subBlock) {
-        FlowBlockBase::addSubFlowBlock(subBlock);
+    void FlowBlockElif::add_sub_flow_block(FlowBlockBase* subBlock) {
+        FlowBlockBase::add_sub_flow_block(subBlock);
     }
 
-    NodeWrap *FlowBlockElif::sumarizeBlock() {
+    NodeWrap *FlowBlockElif::sumarize_block() {
         assert(resultNodeWrapper != nullptr);
         return resultNodeWrapper;
     }
 
-    void FlowBlockElif::onAttachBlock() {
-        ctrl->on_attach_flowBlock(this);
-        auto sb = genImplicitSubBlk(PARALLEL_NO_SYN);
+    void FlowBlockElif::on_attach_block() {
+        _ctrl->on_attach_flowBlock(this);
+        auto sb = gen_implicit_sub_blk(PARALLEL_NO_SYN);
         implicitSubBlock = sb;
-        sb->onAttachBlock();
+        sb->on_attach_block();
     }
 
-    void FlowBlockElif::onDetachBlock() {
-        implicitSubBlock->onDetachBlock();
-        ctrl->on_detach_flowBlock(this);
+    void FlowBlockElif::on_detach_block() {
+        implicitSubBlock->on_detach_block();
+        _ctrl->on_detach_flowBlock(this);
     }
 
-    void FlowBlockElif::buildHwComponent() {
+    void FlowBlockElif::build_hw_component() {
         assert(_con_blocks.empty());
         assert(!_sub_blocks.empty());
-        mf_assert(!isThereIntStart(), "start interrupt can start in elif block but can start in if block or block inside elif block");
+        mf_assert(!is_there_intr_start(), "start interrupt can start in elif block but can start in if block or block inside elif block");
         ///mfAssert(!isThereIntRst(), "start interrupt can reset in elif block but can start in if block or block inside elif block");
-        resultNodeWrapper = _sub_blocks[0]->sumarizeBlock();
+        resultNodeWrapper = _sub_blocks[0]->sumarize_block();
     }
 
     void FlowBlockElif::doPreFunction() {
-        onAttachBlock();
+        on_attach_block();
     }
 
     void FlowBlockElif::doPostFunction() {
-        onDetachBlock();
+        on_detach_block();
     }
 
     std::string FlowBlockElif::get_md_describe() {
@@ -82,7 +82,7 @@ namespace kathryn{
 
     void FlowBlockElif::add_md_log(MdLogVal *mdLogVal){
         mdLogVal->addVal("[ Elif " + FlowBlockBase::get_md_ident_val() + " ]");
-        addMdLogRecur(mdLogVal);
+        add_md_log_recur(mdLogVal);
     }
 
 

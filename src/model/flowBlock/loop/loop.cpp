@@ -28,33 +28,33 @@ namespace kathryn{
     }
 
 
-    void FlowBlockLoop::buildHwComponent(){
+    void FlowBlockLoop::build_hw_component(){
         assert(_con_blocks.empty());
         assert(_sub_blocks.size() == 1);
-        _subBlockNodeWrap = _sub_blocks[0]->sumarizeBlock();
+        _subBlockNodeWrap = _sub_blocks[0]->sumarize_block();
         assert(_subBlockNodeWrap != nullptr);
 
 
         _entNode = new PseudoNode(1, BITWISE_OR);
         _entNode->set_internal_ident("cEntNode" + std::to_string(get_global_id()));
-        addSysNode(_entNode);
+        add_sys_node(_entNode);
 
         _loopNode = new PseudoNode(1, BITWISE_OR);
         _loopNode->set_internal_ident("cLoopNode" + std::to_string(get_global_id()));
-        addSysNode(_loopNode);
+        add_sys_node(_loopNode);
 
-        _cntNode = new CounterNode(_loopCount, getClockMode());
+        _cntNode = new CounterNode(_loopCount, get_clock_mode());
         _cntNode->set_internal_ident("countNode" + std::to_string(get_global_id()));
-        addSysNode(_cntNode);
+        add_sys_node(_cntNode);
 
         _exitNode = new PseudoNode(1, BITWISE_AND);
         _exitNode->set_internal_ident("cExitNode" + std::to_string(get_global_id()));
-        addSysNode(_exitNode);
+        add_sys_node(_exitNode);
 
 
         ////// handle start signal
-        if(isThereIntStart()){
-            _entNode->add_depend_node(intNodes[INT_START], nullptr);
+        if(is_there_intr_start()){
+            _entNode->add_depend_node(_int_nodes[INT_START], nullptr);
         }
         ////// no need to reset or hold the system
 
@@ -96,44 +96,44 @@ namespace kathryn{
 
 
 
-    void FlowBlockLoop::addElementInFlowBlock(Node *node) {
+    void FlowBlockLoop::add_basic_node(Node *node) {
         assert(false);
         /** cwhile not not except simple node due to implict added flowblock inside*/
     }
 
-    void FlowBlockLoop::addSubFlowBlock(FlowBlockBase *subBlock) {
+    void FlowBlockLoop::add_sub_flow_block(FlowBlockBase *subBlock) {
         assert(subBlock != nullptr);
         assert(!_isGetFlowBlockYet);
         _isGetFlowBlockYet = true;
-        FlowBlockBase::addSubFlowBlock(subBlock);
+        FlowBlockBase::add_sub_flow_block(subBlock);
     }
 
-    NodeWrap* FlowBlockLoop::sumarizeBlock() {
+    NodeWrap* FlowBlockLoop::sumarize_block() {
         assert(_resultNodeWrapper != nullptr);
         return _resultNodeWrapper;
     }
 
-    void FlowBlockLoop::onAttachBlock() {
-        ctrl->on_attach_flowBlock(this);
+    void FlowBlockLoop::on_attach_block() {
+        _ctrl->on_attach_flowBlock(this);
         /** in cwhile we implcitcally add sub block to system*/
-        auto sb = genImplicitSubBlk(PARALLEL_NO_SYN);
+        auto sb = gen_implicit_sub_blk(PARALLEL_NO_SYN);
         _implicitFlowBlock = sb;
-        sb->onAttachBlock();
+        sb->on_attach_block();
     }
 
-    void FlowBlockLoop::onDetachBlock() {
+    void FlowBlockLoop::on_detach_block() {
         assert(_implicitFlowBlock != nullptr);
-        _implicitFlowBlock->onDetachBlock();
+        _implicitFlowBlock->on_detach_block();
         assert(_isGetFlowBlockYet);
-        ctrl->on_detach_flowBlock(this);
+        _ctrl->on_detach_flowBlock(this);
     }
 
 
     void FlowBlockLoop::doPreFunction() {
-        onAttachBlock();
+        on_attach_block();
     }
     void FlowBlockLoop::doPostFunction() {
-        onDetachBlock();
+        on_detach_block();
     }
 
     void FlowBlockLoop::add_md_log(MdLogVal* mdLogVal){

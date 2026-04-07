@@ -16,7 +16,7 @@ namespace kathryn{
 
     bool SimProbe::checkSimEngineReady(){
         return (_flowBlockBase != nullptr) &&
-               (_flowBlockBase->getSimEngine() != nullptr);
+               (_flowBlockBase->get_sim_engine() != nullptr);
     }
 
     bool SimProbe::isIdle(){
@@ -31,7 +31,7 @@ namespace kathryn{
 
     bool SimProbe::isExecuting(){
         mf_assert(checkSimEngineReady(), "cannot find sim engine for flow block to probe");
-        FlowBaseSimEngine* fbse = _flowBlockBase->getSimEngine();
+        FlowBaseSimEngine* fbse = _flowBlockBase->get_sim_engine();
         return fbse->isBlockRunning();
     }
 

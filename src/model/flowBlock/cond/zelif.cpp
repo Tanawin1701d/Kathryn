@@ -16,7 +16,7 @@ namespace kathryn{
                                   false
                           }){
 
-        curCond = purifyCondition(&cond);
+        curCond = purify_condition(&cond);
     }
 
     FlowBlockZELIF::FlowBlockZELIF():
@@ -38,7 +38,7 @@ namespace kathryn{
         //_basicNodes.clear();
     }
 
-    void FlowBlockZELIF::addElementInFlowBlock(Node* node) {
+    void FlowBlockZELIF::add_basic_node(Node* node) {
         assert(node != nullptr);
         // if (curCond != nullptr) {
         //     assert(node->getNodeType() == ASM_NODE);
@@ -48,33 +48,33 @@ namespace kathryn{
         assert(node->get_node_type() == ASM_NODE);
         AsmNode* castedNode = (AsmNode*)node;
         tryAddOrCreateAsmMeta(castedNode, _assignMetas, curCond);
-        addAbandonNode(node);
+        add_abandon_node(node);
     }
 
-    void FlowBlockZELIF::addSubFlowBlock(FlowBlockBase *subBlock) {
+    void FlowBlockZELIF::add_sub_flow_block(FlowBlockBase *subBlock) {
         assert(false);
     }
 
-    void FlowBlockZELIF::addConFlowBlock(FlowBlockBase *fb) {
+    void FlowBlockZELIF::add_con_flow_block(FlowBlockBase *fb) {
         assert(false);
     }
 
-    void FlowBlockZELIF::addIntSignal(INT_TYPE type, Operable* signal){
-        mf_assert(!isThereIntStart(), "start interrupt can start in zblock");
-        mf_assert(!isThereIntRst(), "start interrupt can reset in zblock");
+    void FlowBlockZELIF::add_intr_signal(INT_TYPE type, Operable* signal){
+        mf_assert(!is_there_intr_start(), "start interrupt can start in zblock");
+        mf_assert(!is_there_intr_rst(), "start interrupt can reset in zblock");
     }
 
-    NodeWrap* FlowBlockZELIF::sumarizeBlock() {assert(false);}
+    NodeWrap* FlowBlockZELIF::sumarize_block() {assert(false);}
 
-    void FlowBlockZELIF::onAttachBlock() {
-        ctrl->on_attach_flowBlock(this);
+    void FlowBlockZELIF::on_attach_block() {
+        _ctrl->on_attach_flowBlock(this);
     }
 
-    void FlowBlockZELIF::onDetachBlock() {
-        ctrl->on_detach_flowBlock(this);
+    void FlowBlockZELIF::on_detach_block() {
+        _ctrl->on_detach_flowBlock(this);
     }
 
-    void FlowBlockZELIF::buildHwComponent() {
+    void FlowBlockZELIF::build_hw_component() {
         assert(false);
     }
 
@@ -87,11 +87,11 @@ namespace kathryn{
     }
 
     void FlowBlockZELIF::doPreFunction() {
-        onAttachBlock();
+        on_attach_block();
     }
 
     void FlowBlockZELIF::doPostFunction() {
-        onDetachBlock();
+        on_detach_block();
     }
 
     std::vector<ZifClassAsm*> FlowBlockZELIF::getClassAssMetas(){

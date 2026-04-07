@@ -19,7 +19,7 @@ namespace kathryn{
        }){
         assert(flowBlockType == CIF || flowBlockType == SIF);
         allCondes.push_back(&cond);
-        allPurifiedCondes.push_back(purifyCondition(&cond));
+        allPurifiedCondes.push_back(purify_condition(&cond));
     }
 
     FlowBlockIf::~FlowBlockIf(){
@@ -28,62 +28,62 @@ namespace kathryn{
         delete resultNodeWrap;
     }
 
-    void FlowBlockIf::addElementInFlowBlock(Node *node) {
+    void FlowBlockIf::add_basic_node(Node *node) {
         assert(false); /** this flow type will generate single par or seq block*/
     }
 
-    void FlowBlockIf::addSubFlowBlock(FlowBlockBase *subBlock) {
+    void FlowBlockIf::add_sub_flow_block(FlowBlockBase *subBlock) {
         assert(subBlock != nullptr);
-        FlowBlockBase::addSubFlowBlock(subBlock);
+        FlowBlockBase::add_sub_flow_block(subBlock);
     }
 
-    void FlowBlockIf::addConFlowBlock(FlowBlockBase* conBlock){
+    void FlowBlockIf::add_con_flow_block(FlowBlockBase* conBlock){
         assert(conBlock != nullptr);
-        assert(conBlock->getFlowType() == CSELIF ||
-               conBlock->getFlowType() == CSELSE);
+        assert(conBlock->get_flow_type() == CSELIF ||
+               conBlock->get_flow_type() == CSELSE);
         /*** convert to elif block*/
         FlowBlockElif* elifBlock = (FlowBlockElif*)conBlock;
         /*** call base function*/
-        FlowBlockBase::addConFlowBlock(elifBlock);
+        FlowBlockBase::add_con_flow_block(elifBlock);
         /** push to if-else concern element*/
         /// allStatement.push_back(elifBlock->sumarizeBlock());
         if (elifBlock->getCondition() != nullptr) {
             allCondes.push_back(elifBlock->getCondition());
             allPurifiedCondes.push_back(
-                    purifyCondition(elifBlock->getCondition())
+                    purify_condition(elifBlock->getCondition())
             );
         }
 
-        assert(conBlock->getSubBlocks()[0] != nullptr);
+        assert(conBlock->get_sub_blocks_ref()[0] != nullptr);
     }
 
-    NodeWrap* FlowBlockIf::sumarizeBlock() {
+    NodeWrap* FlowBlockIf::sumarize_block() {
         assert(resultNodeWrap != nullptr);
         return resultNodeWrap;
     }
 
-    void FlowBlockIf::onAttachBlock() {
-        ctrl->on_attach_flowBlock(this);
-        auto sb = genImplicitSubBlk(PARALLEL_NO_SYN);
+    void FlowBlockIf::on_attach_block() {
+        _ctrl->on_attach_flowBlock(this);
+        auto sb = gen_implicit_sub_blk(PARALLEL_NO_SYN);
         implicitFlowBlock = sb;
-        sb->onAttachBlock();
+        sb->on_attach_block();
     }
 
-    void FlowBlockIf::onDetachBlock() {
+    void FlowBlockIf::on_detach_block() {
         assert(implicitFlowBlock != nullptr);
-        implicitFlowBlock->onDetachBlock();
+        implicitFlowBlock->on_detach_block();
         ////// we will hold this end block will handle it
-        setLazyDelete();
+        set_lazy_delete();
 
-        ctrl->on_detach_flowBlock(this);
+        _ctrl->on_detach_flowBlock(this);
     }
 
-    void FlowBlockIf::buildHwComponent() {
+    void FlowBlockIf::build_hw_component() {
         /**summarize all block*/
         assert(_sub_blocks.size() == 1);
-        allStatement.push_back(_sub_blocks[0]->sumarizeBlock());
+        allStatement.push_back(_sub_blocks[0]->sumarize_block());
         for (auto conFlowBlock: _con_blocks){
-            allStatement.push_back(conFlowBlock->sumarizeBlock());
+            allStatement.push_back(conFlowBlock->sumarize_block());
         }
         assert(!allCondes.empty());
         assert(allPurifiedCondes.size() == allCondes.size());
@@ -95,24 +95,24 @@ namespace kathryn{
          *
          * */
 
-        if (getFlowType() == CIF){
+        if (get_flow_type() == CIF){
             condNode = new PseudoNode(1, BITWISE_OR);
             condNode->set_internal_ident("cifNode" + std::to_string(get_global_id()));
-        }else if(getFlowType() == SIF){
-            condNode = new StateNode(getClockMode());
+        }else if(get_flow_type() == SIF){
+            condNode = new StateNode(get_clock_mode());
             condNode->set_internal_ident("sifNode" + std::to_string(get_global_id()));
-            fillIntResetToNodeIfThere(condNode);
-            fillHoldToNodeIfThere(condNode);
+            fill_intr_reset_to_node_if_there(condNode);
+            fill_hold_to_node_if_there(condNode);
         }else{assert(false);}
-        addSysNode(condNode);
+        add_sys_node(condNode);
 
-        if (isThereIntStart()){
-            condNode->add_depend_node(intNodes[INT_START], nullptr);
+        if (is_there_intr_start()){
+            condNode->add_depend_node(_int_nodes[INT_START], nullptr);
         }
 
 
         exitNode = new PseudoNode(1, BITWISE_OR);
-        addSysNode(exitNode);
+        add_sys_node(exitNode);
         exitNode->set_internal_ident("ifExitNode" + std::to_string(get_global_id()));
         resultNodeWrap = new NodeWrap();
 
@@ -172,9 +172,9 @@ namespace kathryn{
         resultNodeWrap->addExitNode(exitNode);
 
         /**force exit condition*/
-        genSumForceExitNode(allStatement);
-        if (_areThereForceExit)
-            resultNodeWrap->addForceExitNode(_forceExitNode);
+        gen_sum_force_exit_node(allStatement);
+        if (_are_there_force_exit)
+            resultNodeWrap->addForceExitNode(_force_exit_node);
 
         /**
          *
@@ -194,9 +194,9 @@ namespace kathryn{
         int cycleUsed = deter.getSameCycleHorizon();
         if (cycleUsed == IN_CONSIST_CYCLE_USED){
             resultNodeWrap->setCycleUsed(IN_CONSIST_CYCLE_USED);
-        }else if (getFlowType() == CIF){
+        }else if (get_flow_type() == CIF){
             resultNodeWrap->setCycleUsed(cycleUsed);
-        }else if (getFlowType() == SIF){
+        }else if (get_flow_type() == SIF){
             resultNodeWrap->setCycleUsed(cycleUsed+1);
         }else{
             assert(false);
@@ -235,11 +235,11 @@ namespace kathryn{
     }
 
     void FlowBlockIf::doPreFunction() {
-        onAttachBlock();
+        on_attach_block();
     }
 
     void FlowBlockIf::doPostFunction() {
-        onDetachBlock();
+        on_detach_block();
     }
 
 }

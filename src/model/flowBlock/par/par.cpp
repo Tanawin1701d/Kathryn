@@ -31,24 +31,24 @@ namespace kathryn{
     }
 
     NodeWrap*
-    FlowBlockPar::sumarizeBlock() {
+    FlowBlockPar::sumarize_block() {
         assert(resultNodeWrap != nullptr);
         return resultNodeWrap;
     }
 
 
     void
-    FlowBlockPar::onAttachBlock(){
-        ctrl->on_attach_flowBlock(this);
+    FlowBlockPar::on_attach_block(){
+        _ctrl->on_attach_flowBlock(this);
     }
 
     void
-    FlowBlockPar::onDetachBlock() {
-        ctrl->on_detach_flowBlock(this);
+    FlowBlockPar::on_detach_block() {
+        _ctrl->on_detach_flowBlock(this);
     }
 
     void
-    FlowBlockPar::buildHwComponent() {
+    FlowBlockPar::build_hw_component() {
         mf_assert((!_basic_nodes.empty()) || (!_sub_blocks.empty()),
                  "parBlock has no assignment"
                  );
@@ -60,11 +60,11 @@ namespace kathryn{
          *
          * */
         if (!_basic_nodes.empty()){
-            basicStNode = new StateNode(getClockMode());
+            basicStNode = new StateNode(get_clock_mode());
             basicStNode->set_internal_ident("parStateReg_" + std::to_string(get_global_id()));
-            addSysNode(basicStNode);
-            fillIntResetToNodeIfThere(basicStNode);
-            fillHoldToNodeIfThere(basicStNode);
+            add_sys_node(basicStNode);
+            fill_intr_reset_to_node_if_there(basicStNode);
+            fill_hold_to_node_if_there(basicStNode);
             /** add basic assignment to depend on stateNode*/
             for (auto nd : _basic_nodes){
                 assert(nd->get_node_type() == ASM_NODE);
@@ -79,7 +79,7 @@ namespace kathryn{
          *
          * */
         for (auto fb : _sub_blocks){
-            NodeWrap* nw = fb->sumarizeBlock();
+            NodeWrap* nw = fb->sumarize_block();
             assert(nw != nullptr);
             nodeWrapOfSubBlock.push_back(nw);
         }
@@ -87,7 +87,7 @@ namespace kathryn{
         /**
          * gen force exit node
          * */
-        genSumForceExitNode(nodeWrapOfSubBlock);
+        gen_sum_force_exit_node(nodeWrapOfSubBlock);
 
         /**
          *
@@ -106,18 +106,18 @@ namespace kathryn{
         resultNodeWrap = new NodeWrap();
         if (basicStNode != nullptr) {
             resultNodeWrap->addEntraceNode(basicStNode);
-            if (isThereIntStart()){
-                basicStNode->add_depend_node(intNodes[INT_START], nullptr);
+            if (is_there_intr_start()){
+                basicStNode->add_depend_node(_int_nodes[INT_START], nullptr);
             }
         }
         for (auto nw : nodeWrapOfSubBlock){
             resultNodeWrap->transferEntNodeFrom(nw);
-            if (isThereIntStart()){
-                nw->addDependNodeToAllNode(intNodes[INT_START]);
+            if (is_there_intr_start()){
+                nw->addDependNodeToAllNode(_int_nodes[INT_START]);
             }
         }
         /** scan for master join block**/
-        masterJoinFlowBlock = scanMasterJoinSubBlock();
+        masterJoinFlowBlock = scan_master_join_sub_block();
         /**
          * assemble the result node wrap focused on synchronization and exit parameter
          * **/
@@ -133,19 +133,19 @@ namespace kathryn{
     }
 
     void FlowBlockPar::assignForceExitToRnw() {
-        if (_areThereForceExit){
-            resultNodeWrap->addForceExitNode(_forceExitNode);
+        if (_are_there_force_exit){
+            resultNodeWrap->addForceExitNode(_force_exit_node);
         }
     }
 
     void
     FlowBlockPar::doPreFunction() {
-        onAttachBlock();
+        on_attach_block();
     }
 
     void
     FlowBlockPar::doPostFunction(){
-        onDetachBlock();
+        on_detach_block();
     }
 
     std::string FlowBlockPar::get_md_describe() {
@@ -167,7 +167,7 @@ namespace kathryn{
                 pseudoExitNode->get_md_ident_val() + "  " + pseudoExitNode->get_md_describe():
                 "") + "\n";
 
-        ret += getMdDescribeRecur();
+        ret += get_md_describe_recur();
         ret += "\n";
 
         return ret;
@@ -206,7 +206,7 @@ namespace kathryn{
                              resultNodeWrap->getForceExitNode()->get_md_describe());
         }
 
-        addMdLogRecur(mdLogVal);
+        add_md_log_recur(mdLogVal);
     }
 
     /**
@@ -228,12 +228,12 @@ namespace kathryn{
                 ){
             /////// syn reg needed
             int synSize = amt_block;
-            synNode = new SynNode(synSize, getClockMode());
-            addSysNode(synNode);
-            fillIntResetToNodeIfThere(synNode);
+            synNode = new SynNode(synSize, get_clock_mode());
+            add_sys_node(synNode);
+            fill_intr_reset_to_node_if_there(synNode);
             ///////[warning] this time we ensure that gensumforceExit is declared
-            if(_forceExitNode){
-                synNode->set_force_exit_event(_forceExitNode);
+            if(_force_exit_node){
+                synNode->set_force_exit_event(_force_exit_node);
             }
             synNode->set_internal_ident(
                     "parSynNode_" +
@@ -261,7 +261,7 @@ namespace kathryn{
         if (synNode != nullptr){
             resultNodeWrap->addExitNode(synNode);
         }else if (masterJoinFlowBlock != nullptr){ //// masterJoin is come from user declaration
-            NodeWrap* joinnerNodeWrap = masterJoinFlowBlock->sumarizeBlock();
+            NodeWrap* joinnerNodeWrap = masterJoinFlowBlock->sumarize_block();
             Node* exitNode = joinnerNodeWrap->getExitNode();
             assert(exitNode != nullptr);
             resultNodeWrap->addExitNode(exitNode);
@@ -309,7 +309,7 @@ namespace kathryn{
         }else{
             assert(amt_block > 1);
             pseudoExitNode = new PseudoNode(1, BITWISE_OR);
-            addSysNode(pseudoExitNode);
+            add_sys_node(pseudoExitNode);
             if (basicStNode != nullptr)
                 pseudoExitNode->add_depend_node(basicStNode, nullptr);
             for (auto nw : nodeWrapOfSubBlock){

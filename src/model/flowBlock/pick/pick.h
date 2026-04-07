@@ -36,20 +36,20 @@ namespace kathryn{
         explicit FlowBlockPick();
         ~FlowBlockPick() override;
 
-        void addElementInFlowBlock(Node* node) override;
-        void addSubFlowBlock(FlowBlockBase* subBlock) override;
-        void addConFlowBlock(FlowBlockBase* conBlock) override;
+        void add_basic_node(Node* node) override;
+        void add_sub_flow_block(FlowBlockBase* subBlock) override;
+        void add_con_flow_block(FlowBlockBase* conBlock) override;
 
         /** override flow block base*/
-        NodeWrap* sumarizeBlock() override; /// to interact from parrent block call
+        NodeWrap* sumarize_block() override; /// to interact from parrent block call
 
         /** on this block is start interact to controller*/
-        void onAttachBlock() override;
+        void on_attach_block() override;
         /** on leave this block*/
-        void onDetachBlock() override;
+        void on_detach_block() override;
 
         /** for module to build hardware component*/
-        void buildHwComponent() override;
+        void build_hw_component() override;
 
         /** Loop macro to notice position of system*/
         void doPreFunction() override;

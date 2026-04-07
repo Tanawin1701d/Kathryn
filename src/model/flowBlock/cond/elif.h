@@ -27,15 +27,15 @@ namespace kathryn{
         ~FlowBlockElif() override;
 
         /** for controller add the local element to this sub block*/
-        void addElementInFlowBlock(Node* node) override;
-        void addSubFlowBlock(FlowBlockBase* subBlock) override;
-        NodeWrap* sumarizeBlock() override;
+        void add_basic_node(Node* node) override;
+        void add_sub_flow_block(FlowBlockBase* subBlock) override;
+        NodeWrap* sumarize_block() override;
         /** on this block is start interact to controller*/
-        void onAttachBlock() override;
+        void on_attach_block() override;
         /** on leave this block*/
-        void onDetachBlock() override;
+        void on_detach_block() override;
         /** for module to build hardware component*/
-        void buildHwComponent() override;
+        void build_hw_component() override;
 
         std::string get_md_describe() override;
         void add_md_log(MdLogVal *mdLogVal) override;

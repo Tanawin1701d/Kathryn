@@ -72,7 +72,7 @@ namespace kathryn{
         /////// this cycle ident
         std::string         indentStr = genConString(' ', ident);
         std::string         showName  = fb->get_global_name();
-        FlowBaseSimEngine*  fbse      = fb->getSimEngine();
+        FlowBaseSimEngine*  fbse      = fb->get_sim_engine();
         ValRepBase&         repBase   = fbse->getProxyRep();
         ull                 cycle     = repBase.getVal();
 
@@ -86,14 +86,14 @@ namespace kathryn{
         addData(indentStr + showName + "    " +
             std::to_string(cycle) + trackName + "\n");
         /////// sub block Ident
-        for (FlowBlockBase* subBlock: fb->getSubBlocks()){
+        for (FlowBlockBase* subBlock: fb->get_sub_blocks_ref()){
             assert(subBlock != nullptr);
             startColFlowBlock(subBlock, ident + SUBFLOW_IDENT);
         }
-        if (!fb->getConBlocks().empty()){
+        if (!fb->get_con_blocks_ref().empty()){
             std::string conIdentStr = genConString(' ', ident + CONFLOW_IDENT);
             addData(conIdentStr + "-conBlock-\n");
-            for (FlowBlockBase* conBlock: fb->getConBlocks()){
+            for (FlowBlockBase* conBlock: fb->get_con_blocks_ref()){
                 assert(conBlock != nullptr);
                 startColFlowBlock(conBlock, ident + CONFLOW_IDENT);
             }

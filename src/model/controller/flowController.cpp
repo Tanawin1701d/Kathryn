@@ -34,7 +34,7 @@ namespace kathryn{
         assert(!_flow_block_stacks[FLOW_ST_BASE_STACK].empty());
         assert( _flow_block_stacks[FLOW_ST_BASE_STACK].top() == fb);
 
-        for (int st_idx: fb->getSelFbStack()){
+        for (int st_idx: fb->get_sel_fb_stack()){
             assert(st_idx < FLOW_ST_CNT);
             assert(!_flow_block_stacks[st_idx].empty());
             assert(_flow_block_stacks[st_idx].top() == fb);
@@ -45,7 +45,7 @@ namespace kathryn{
 
     void ModelController::push_flow_block(FlowBlockBase* fb) {
         assert(fb != nullptr);
-        for (int st_idx: fb->getSelFbStack()){
+        for (int st_idx: fb->get_sel_fb_stack()){
             logMF(fb, "push to stack " + std::to_string(st_idx));
             assert(st_idx < FLOW_ST_CNT);
             _flow_block_stacks[st_idx].push(fb);
@@ -68,24 +68,24 @@ namespace kathryn{
             logMF(top_fb, "addFlowBlock to module");
             Module* parent_mod = get_top_module_ptr();
             parent_mod->addFlowBlock(top_fb);
-        }else if (top_fb->getJoinFbPol() == FLOW_JO_CON_FLOW){
+        }else if (top_fb->get_join_fb_pol() == FLOW_JO_CON_FLOW){
             /**it is consecutive block*/
             logMF(top_fb, "addFlowBlock to be con module");
-            front_fb->addConFlowBlock(top_fb);
-        }else if (top_fb->getJoinFbPol() == FLOW_JO_SUB_FLOW){
+            front_fb->add_con_flow_block(top_fb);
+        }else if (top_fb->get_join_fb_pol() == FLOW_JO_SUB_FLOW){
             /**it is sub block*/
             logMF(top_fb, "addFlowBlock to be sub module");
-            front_fb->addSubFlowBlock(top_fb);
-        }else if (top_fb->getJoinFbPol() == FLOW_JO_EXT_FLOW){
+            front_fb->add_sub_flow_block(top_fb);
+        }else if (top_fb->get_join_fb_pol() == FLOW_JO_EXT_FLOW){
             logMF(top_fb, "extract flowblock and give it to basic asm");
             std::vector<AsmNode*> extracted_AsmNode = top_fb->extract();
             for (auto asmNode: extracted_AsmNode){
-                front_fb->addElementInFlowBlock(asmNode);
+                front_fb->add_basic_node(asmNode);
             }
             // for (auto basicNode: topFb->getBasicNode()){
             //     frontFb->addElementInFlowBlock(basicNode);
             // }
-            front_fb->addAbandonFlowBlock(top_fb);
+            front_fb->add_abandon_flow_block(top_fb);
             /***we must delete this due to*/
             ///// delete topFb;
         }else{
@@ -136,7 +136,7 @@ namespace kathryn{
     void ModelController::try_purify_flow_stack() {
         FlowBlockBase* fb = get_top_flow_block_base_ptr();
         if (fb == nullptr){return;}
-        if (fb->isLazyDelete()){
+        if (fb->is_lazy_delete()){
             logMF(fb, "strong purify stack");
             detach_top_flow_block();
         }
@@ -146,7 +146,7 @@ namespace kathryn{
         /*** check purify flow stack*/
         logMF(fb, "on_attach_flowBlock");
         assert(fb != nullptr);
-        if (fb->getPurifyReq()){
+        if (fb->get_purify_req()){
             logMF(fb, "try purify stack");
             try_purify_flow_stack();
         }
@@ -165,7 +165,7 @@ namespace kathryn{
         auto top_fb = get_top_flow_block_base_ptr();
         if (fb != top_fb){
             ////// it must be lazy delete block inside that it is not deleted yet
-            assert(top_fb->isLazyDelete());
+            assert(top_fb->is_lazy_delete());
             /////// delete it now
             try_purify_flow_stack();
         }
@@ -175,7 +175,7 @@ namespace kathryn{
 
         /** if current flowblock is lazy delete do not detach it*/
         assert(actual_detach_block == fb);
-        if (fb->isLazyDelete()){
+        if (fb->is_lazy_delete()){
             return;
         }else{
             detach_top_flow_block();
@@ -188,7 +188,7 @@ namespace kathryn{
         try_purify_flow_stack();
         mf_assert(is_top_fb_belong_to_top_module(), "There is no flow block to add intr signal");
         auto topFb = get_top_flow_block_base_ptr();
-        topFb->addIntSignal(intType, sig);
+        topFb->add_intr_signal(intType, sig);
 
     }
 
@@ -202,7 +202,7 @@ namespace kathryn{
         if (top_pattern_fb_belong_to_top_module){
             FlowBlockBase* fb = _flow_block_stacks[FLOW_ST_PATTERN_STACK].top();
             assert(fb != nullptr);
-            FLOW_BLOCK_TYPE fb_type = fb->getFlowType();
+            FLOW_BLOCK_TYPE fb_type = fb->get_flow_type();
             assert(fb_type >= SEQUENTIAL && fb_type <= PARALLEL_AUTO_SYNC);
             return fb_type;
         }

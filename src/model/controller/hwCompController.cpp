@@ -70,7 +70,7 @@ namespace kathryn{
         try_purify_flow_stack();
         if(is_top_fb_belong_to_top_module()){
             auto fb = get_top_flow_block_base_ptr();
-            fb->addElementInFlowBlock(asmNode);
+            fb->add_basic_node(asmNode);
             logMF(src_reg,
                   "user Reg is updating value @ fb block " + fb->get_md_ident_val());
         }else{
@@ -115,7 +115,7 @@ namespace kathryn{
         if (is_top_fb_belong_to_top_module()) {
             /**in flow block*/
             auto fb = get_top_flow_block_base_ptr();
-            fb->addElementInFlowBlock(asmNode);
+            fb->add_basic_node(asmNode);
             logMF(src_wire,
                   "user wire is updating @ fb " + fb->get_md_ident_val());
         }else{
@@ -164,7 +164,7 @@ namespace kathryn{
         try_purify_flow_stack();
         if(is_top_fb_belong_to_top_module()){
             auto fb = get_top_flow_block_base_ptr();
-            fb->addElementInFlowBlock(asm_node);
+            fb->add_basic_node(asm_node);
             logMF(src_holder,
                   "memBlk HOLDER is updating value @ fb block " + fb->get_md_ident_val());
         }else{
@@ -202,7 +202,7 @@ namespace kathryn{
         if (is_top_fb_belong_to_top_module()) {
             /**in flow block*/
             auto fb = get_top_flow_block_base_ptr();
-            fb->addElementInFlowBlock(asmNode);
+            fb->add_basic_node(asmNode);
             logMF(src_nest,
                   "user nest is updating @ fb " + fb->get_md_ident_val());
         }else{
@@ -280,7 +280,7 @@ namespace kathryn{
         if (is_top_fb_belong_to_top_module()) {
             /**in flow block*/
             auto fb = get_top_flow_block_base_ptr();
-            fb->addElementInFlowBlock(asmNode);
+            fb->add_basic_node(asmNode);
             logMF(srcBox,
                   "user nest is updating @ fb " + fb->get_md_ident_val());
         }else{

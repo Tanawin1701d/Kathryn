@@ -21,40 +21,40 @@ namespace kathryn{
         _basic_nodes.clear();
     }
 
-    void FlowBlockZCase::addElementInFlowBlock(Node* node){
+    void FlowBlockZCase::add_basic_node(Node* node){
         assert(node != nullptr);
         assert(node->get_node_type() == ASM_NODE);
         AsmNode* castedNode = (AsmNode*)node;
         /////// the class may not compatable with the other ASM
         tryAddOrCreateAsmMeta(castedNode, _assignMetas);
-        addAbandonNode(node);
+        add_abandon_node(node);
     }
 
 
-    void FlowBlockZCase::addSubFlowBlock(FlowBlockBase *subBlock) {
+    void FlowBlockZCase::add_sub_flow_block(FlowBlockBase *subBlock) {
         assert(false);
     }
 
-    void FlowBlockZCase::addConFlowBlock(FlowBlockBase *fb) {
+    void FlowBlockZCase::add_con_flow_block(FlowBlockBase *fb) {
         assert(false);
     }
 
-    void FlowBlockZCase::addIntSignal(INT_TYPE type, Operable* signal){
-        mf_assert(!isThereIntStart(), "start interrupt can start in zblock");
-        mf_assert(!isThereIntRst(), "start interrupt can reset in zblock");
+    void FlowBlockZCase::add_intr_signal(INT_TYPE type, Operable* signal){
+        mf_assert(!is_there_intr_start(), "start interrupt can start in zblock");
+        mf_assert(!is_there_intr_rst(), "start interrupt can reset in zblock");
     }
 
-    NodeWrap* FlowBlockZCase::sumarizeBlock() {assert(false);}
+    NodeWrap* FlowBlockZCase::sumarize_block() {assert(false);}
 
-    void FlowBlockZCase::onAttachBlock() {
-        ctrl->on_attach_flowBlock(this);
+    void FlowBlockZCase::on_attach_block() {
+        _ctrl->on_attach_flowBlock(this);
     }
 
-    void FlowBlockZCase::onDetachBlock() {
-        ctrl->on_detach_flowBlock(this);
+    void FlowBlockZCase::on_detach_block() {
+        _ctrl->on_detach_flowBlock(this);
     }
 
-    void FlowBlockZCase::buildHwComponent() {
+    void FlowBlockZCase::build_hw_component() {
         assert(false);
     }
 
@@ -67,11 +67,11 @@ namespace kathryn{
     }
 
     void FlowBlockZCase::doPreFunction() {
-        onAttachBlock();
+        on_attach_block();
     }
 
     void FlowBlockZCase::doPostFunction() {
-        onDetachBlock();
+        on_detach_block();
     }
 
     std::vector<ClassAssignMeta*> FlowBlockZCase::getClassAssMetas(){return _assignMetas;}

@@ -18,44 +18,44 @@ FlowBlockPseudo::FlowBlockPseudo(AsmNode* plainNode):
             _plainNode(plainNode){
 
         assert(plainNode != nullptr);
-        FlowBlockPseudo::onAttachBlock();
-        FlowBlockBase::addElementInFlowBlock(plainNode);
-        FlowBlockPseudo::onDetachBlock();
+        FlowBlockPseudo::on_attach_block();
+        FlowBlockBase::add_basic_node(plainNode);
+        FlowBlockPseudo::on_detach_block();
     }
 
     FlowBlockPseudo::~FlowBlockPseudo() {}
 
 
-    void FlowBlockPseudo::addElementInFlowBlock(Node* node) {
+    void FlowBlockPseudo::add_basic_node(Node* node) {
         assert(false);
     }
 
-    void FlowBlockPseudo::addSubFlowBlock(FlowBlockBase *subBlock) {
+    void FlowBlockPseudo::add_sub_flow_block(FlowBlockBase *subBlock) {
         assert(false);
     }
 
-    void FlowBlockPseudo::addConFlowBlock(FlowBlockBase *fb){
+    void FlowBlockPseudo::add_con_flow_block(FlowBlockBase *fb){
         assert(false);
     }
 
-    void FlowBlockPseudo::addIntSignal(INT_TYPE type, Operable* signal){
-        mf_assert(!isThereIntStart(), "start interrupt can start in Pseudo block");
-        mf_assert(!isThereIntRst(), "start interrupt can reset in Pseudo block");
+    void FlowBlockPseudo::add_intr_signal(INT_TYPE type, Operable* signal){
+        mf_assert(!is_there_intr_start(), "start interrupt can start in Pseudo block");
+        mf_assert(!is_there_intr_rst(), "start interrupt can reset in Pseudo block");
     }
 
-    NodeWrap *FlowBlockPseudo::sumarizeBlock() {
+    NodeWrap *FlowBlockPseudo::sumarize_block() {
         assert(false);
     }
 
-    void FlowBlockPseudo::onAttachBlock() {
-        ctrl->on_attach_flowBlock(this);
+    void FlowBlockPseudo::on_attach_block() {
+        _ctrl->on_attach_flowBlock(this);
     }
 
-    void FlowBlockPseudo::onDetachBlock() {
-        ctrl->on_detach_flowBlock(this);
+    void FlowBlockPseudo::on_detach_block() {
+        _ctrl->on_detach_flowBlock(this);
     }
 
-    void FlowBlockPseudo::buildHwComponent() {
+    void FlowBlockPseudo::build_hw_component() {
         assert(false);
     }
 

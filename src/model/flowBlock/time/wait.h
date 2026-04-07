@@ -36,10 +36,10 @@ namespace kathryn{
         explicit FlowBlockCondWait(Operable& exitCond);
         ~FlowBlockCondWait() override;
 
-        NodeWrap* sumarizeBlock() override;
-        void onAttachBlock() override;
-        void onDetachBlock() override;
-        void buildHwComponent() override;
+        NodeWrap* sumarize_block() override;
+        void on_attach_block() override;
+        void on_detach_block() override;
+        void build_hw_component() override;
         /** Loop macro to notice position of system*/
         void doPreFunction() override;
         void doPostFunction() override;
@@ -70,10 +70,10 @@ namespace kathryn{
         explicit FlowBlockCycleWait(Operable& opr1);
         ~FlowBlockCycleWait() override;
 
-        NodeWrap* sumarizeBlock() override;
-        void onAttachBlock() override;
-        void onDetachBlock() override;
-        void buildHwComponent() override;
+        NodeWrap* sumarize_block() override;
+        void on_attach_block() override;
+        void on_detach_block() override;
+        void build_hw_component() override;
         /** Loop macro to notice position of system*/
         void doPreFunction() override;
         void doPostFunction() override;

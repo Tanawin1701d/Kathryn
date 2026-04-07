@@ -19,15 +19,15 @@ FlowBlockZtate::FlowBlockZtate(Operable &identState):
     FlowBlockZtate::~FlowBlockZtate() {}
 
 
-    void FlowBlockZtate::addElementInFlowBlock(Node* node) {
+    void FlowBlockZtate::add_basic_node(Node* node) {
         assert(false);
     }
 
-    void FlowBlockZtate::addSubFlowBlock(FlowBlockBase *subBlock) {
+    void FlowBlockZtate::add_sub_flow_block(FlowBlockBase *subBlock) {
         assert(subBlock != nullptr);
-        assert(subBlock->getFlowType() == ZCASE_BLOCK);
+        assert(subBlock->get_flow_type() == ZCASE_BLOCK);
         /** call base function */
-        FlowBlockBase::addSubFlowBlock(subBlock);
+        FlowBlockBase::add_sub_flow_block(subBlock);
 
         auto* subBlockZcase = static_cast<FlowBlockZCase*>(subBlock);
 
@@ -56,30 +56,30 @@ FlowBlockZtate::FlowBlockZtate(Operable &identState):
 
     }
 
-    void FlowBlockZtate::addConFlowBlock(FlowBlockBase *fb){
+    void FlowBlockZtate::add_con_flow_block(FlowBlockBase *fb){
         assert(false);
 
     }
 
-    void FlowBlockZtate::addIntSignal(INT_TYPE type, Operable* signal){
-        mf_assert(!isThereIntStart(), "start interrupt can start in zblock");
-        mf_assert(!isThereIntRst(), "start interrupt can reset in zblock");
+    void FlowBlockZtate::add_intr_signal(INT_TYPE type, Operable* signal){
+        mf_assert(!is_there_intr_start(), "start interrupt can start in zblock");
+        mf_assert(!is_there_intr_rst(), "start interrupt can reset in zblock");
     }
 
-    NodeWrap *FlowBlockZtate::sumarizeBlock() {
+    NodeWrap *FlowBlockZtate::sumarize_block() {
         assert(false);
     }
 
-    void FlowBlockZtate::onAttachBlock() {
-        ctrl->on_attach_flowBlock(this);
+    void FlowBlockZtate::on_attach_block() {
+        _ctrl->on_attach_flowBlock(this);
     }
 
-    void FlowBlockZtate::onDetachBlock() {
-        setLazyDelete();
-        ctrl->on_detach_flowBlock(this);
+    void FlowBlockZtate::on_detach_block() {
+        set_lazy_delete();
+        _ctrl->on_detach_flowBlock(this);
     }
 
-    void FlowBlockZtate::buildHwComponent() {
+    void FlowBlockZtate::build_hw_component() {
         assert(false);
     }
 
@@ -92,11 +92,11 @@ FlowBlockZtate::FlowBlockZtate(Operable &identState):
     }
 
     void FlowBlockZtate::doPreFunction() {
-        onAttachBlock();
+        on_attach_block();
     }
 
     void FlowBlockZtate::doPostFunction() {
-        onDetachBlock();
+        on_detach_block();
     }
 
     std::vector<AsmNode*> FlowBlockZtate::extract(){

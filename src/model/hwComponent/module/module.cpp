@@ -181,12 +181,12 @@ namespace kathryn{
 
         for (auto fb: _flowBlockBases){
             assert(fb != nullptr);
-            switch (fb->getJoinFbPol()) {
+            switch (fb->get_join_fb_pol()) {
 
                 case FLOW_JO_SUB_FLOW:
                     /**in case it is normal flow block*/
-                    fb->buildHwMaster();
-                    frontNodeWrap.push_back(fb->sumarizeBlock());
+                    fb->build_hw_master();
+                    frontNodeWrap.push_back(fb->sumarize_block());
                     break;
                 case FLOW_JO_CON_FLOW:
                     mf_assert(false, "detect con bare block iteration");

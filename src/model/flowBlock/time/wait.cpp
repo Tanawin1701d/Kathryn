@@ -26,7 +26,7 @@ namespace kathryn{
                     }),
     _resultNodeWrap(nullptr),
     _exitCond(&exitCond),
-    _purifiedExitCond(purifyCondition(&exitCond)),
+    _purifiedExitCond(purify_condition(&exitCond)),
     _waitNode(nullptr)
     {
         //assert(exitCond != nullptr);
@@ -37,29 +37,29 @@ namespace kathryn{
         delete _resultNodeWrap;
     }
 
-    NodeWrap* FlowBlockCondWait::sumarizeBlock() {
+    NodeWrap* FlowBlockCondWait::sumarize_block() {
         assert(_resultNodeWrap != nullptr);
         return _resultNodeWrap;
     }
 
-    void FlowBlockCondWait::onAttachBlock() {
-        ctrl->on_attach_flowBlock(this);
+    void FlowBlockCondWait::on_attach_block() {
+        _ctrl->on_attach_flowBlock(this);
     }
 
-    void FlowBlockCondWait::onDetachBlock() {
-        ctrl->on_detach_flowBlock(this);
+    void FlowBlockCondWait::on_detach_block() {
+        _ctrl->on_detach_flowBlock(this);
     }
     /** buildHwComponent*/
-    void FlowBlockCondWait::buildHwComponent() {
+    void FlowBlockCondWait::build_hw_component() {
         assert(_con_blocks.empty());
-        assert(!isThereIntStart());
+        assert(!is_there_intr_start());
 
         /** build node*/
 
-        _waitNode = new WaitCondNode(_exitCond, getClockMode());
-        addSysNode(_waitNode);
-        fillIntResetToNodeIfThere(_waitNode);
-        fillHoldToNodeIfThere(_waitNode);
+        _waitNode = new WaitCondNode(_exitCond, get_clock_mode());
+        add_sys_node(_waitNode);
+        fill_intr_reset_to_node_if_there(_waitNode);
+        fill_hold_to_node_if_there(_waitNode);
         _waitNode->set_internal_ident("waitCond"+std::to_string(get_global_id()));
 
         /** result node wrap*/
@@ -70,11 +70,11 @@ namespace kathryn{
     }
 
     void FlowBlockCondWait::doPreFunction() {
-        onAttachBlock();
+        on_attach_block();
     }
 
     void FlowBlockCondWait::doPostFunction() {
-        onDetachBlock();
+        on_detach_block();
     }
 
     std::string FlowBlockCondWait::get_md_describe(){
@@ -134,33 +134,33 @@ namespace kathryn{
         delete _resultNodeWrap;
     }
 
-    NodeWrap* FlowBlockCycleWait::sumarizeBlock() {
+    NodeWrap* FlowBlockCycleWait::sumarize_block() {
         assert(_resultNodeWrap != nullptr);
         return _resultNodeWrap;
     }
 
-    void FlowBlockCycleWait::onAttachBlock() {
-        ctrl->on_attach_flowBlock(this);
+    void FlowBlockCycleWait::on_attach_block() {
+        _ctrl->on_attach_flowBlock(this);
     }
 
-    void FlowBlockCycleWait::onDetachBlock() {
-        ctrl->on_detach_flowBlock(this);
+    void FlowBlockCycleWait::on_detach_block() {
+        _ctrl->on_detach_flowBlock(this);
     }
 
-    void FlowBlockCycleWait::buildHwComponent() {
+    void FlowBlockCycleWait::build_hw_component() {
         assert(_con_blocks.empty());
-        assert(!isThereIntStart());
+        assert(!is_there_intr_start());
 
         /** build node*/
         if (cnt != nullptr) {
-            _waitNode = new WaitCycleNode(cnt, getClockMode());
+            _waitNode = new WaitCycleNode(cnt, get_clock_mode());
         }else {
             assert(cycle > 0);
-            _waitNode = new WaitCycleNode(cycle, getClockMode());
+            _waitNode = new WaitCycleNode(cycle, get_clock_mode());
         }
-        addSysNode(_waitNode);
-        fillIntResetToNodeIfThere(_waitNode);
-        fillHoldToNodeIfThere(_waitNode);
+        add_sys_node(_waitNode);
+        fill_intr_reset_to_node_if_there(_waitNode);
+        fill_hold_to_node_if_there(_waitNode);
         _waitNode->set_internal_ident("waitCycle"+std::to_string(get_global_id()));
 
         /** result node wrap*/
@@ -171,11 +171,11 @@ namespace kathryn{
     }
 
     void FlowBlockCycleWait::doPreFunction() {
-        onAttachBlock();
+        on_attach_block();
     }
 
     void FlowBlockCycleWait::doPostFunction() {
-        onDetachBlock();
+        on_detach_block();
     }
 
     std::string FlowBlockCycleWait::get_md_describe(){

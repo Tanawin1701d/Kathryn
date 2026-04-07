@@ -34,42 +34,42 @@ namespace kathryn{
         _syncMeta.setMasterReady(*ready2Sync);
     }
 
-    void FlowBlockZyncBase::addSubFlowBlock    (FlowBlockBase* subBlock){
+    void FlowBlockZyncBase::add_sub_flow_block    (FlowBlockBase* subBlock){
         assert(false);
     }
-    void FlowBlockZyncBase::addConFlowBlock    (FlowBlockBase* conBlock){
+    void FlowBlockZyncBase::add_con_flow_block    (FlowBlockBase* conBlock){
         assert(false);
     }
 
-    NodeWrap* FlowBlockZyncBase::sumarizeBlock(){
+    NodeWrap* FlowBlockZyncBase::sumarize_block(){
         assert(resultNodeWrap != nullptr);
         return resultNodeWrap;
     }
 
-    void FlowBlockZyncBase::onAttachBlock(){
-        ctrl->on_attach_flowBlock(this);
+    void FlowBlockZyncBase::on_attach_block(){
+        _ctrl->on_attach_flowBlock(this);
     }
 
-    void FlowBlockZyncBase::onDetachBlock(){
-        ctrl->on_detach_flowBlock(this);
+    void FlowBlockZyncBase::on_detach_block(){
+        _ctrl->on_detach_flowBlock(this);
     }
 
-    void FlowBlockZyncBase::buildHwMaster(){
+    void FlowBlockZyncBase::build_hw_master(){
 
-        addHoldSignal(&_syncMeta.holdMasterSignal);
-        addIntSignal(INT_RESET, &_syncMeta.killMasterSignal);
+        add_hold_signal(&_syncMeta.holdMasterSignal);
+        add_intr_signal(INT_RESET, &_syncMeta.killMasterSignal);
 
-        FlowBlockBase::buildHwMaster();
+        FlowBlockBase::build_hw_master();
     }
 
 
-    void FlowBlockZyncBase::buildHwComponent(){
+    void FlowBlockZyncBase::build_hw_component(){
         assert(_con_blocks.empty());
         assert(_sub_blocks.empty());
         //assert(_syncMeta->_syncMatched != nullptr);
 
         /** init all nodes and condition*/
-        prepSendNode = new StateNode(getClockMode());
+        prepSendNode = new StateNode(get_clock_mode());
         exitNode     = new PseudoNode(1, BITWISE_AND);
 
         ////// if it auto we have to build the auto trigger for
@@ -81,8 +81,8 @@ namespace kathryn{
         /** prepSendNode*/
         std::string debugName = "zyncBlk_" + _syncMeta.getName();
         prepSendNode->set_internal_ident("zyncBlk_" + debugName);
-        fillIntResetToNodeIfThere(prepSendNode);
-        fillHoldToNodeIfThere    (prepSendNode);
+        fill_intr_reset_to_node_if_there(prepSendNode);
+        fill_hold_to_node_if_there    (prepSendNode);
         /** assign assignment node*/
         Operable* readyFinal = nullptr;
         readyFinal = _acceptCond;
@@ -103,8 +103,8 @@ namespace kathryn{
         /** assign node*/
         exitNode->assign();
         /** add system node*/
-        addSysNode(prepSendNode);
-        addSysNode(exitNode);
+        add_sys_node(prepSendNode);
+        add_sys_node(exitNode);
         /** resultNode Wrap*/
         resultNodeWrap = new NodeWrap();
         resultNodeWrap->addEntraceNode(prepSendNode);
@@ -124,11 +124,11 @@ namespace kathryn{
     }
 
     void FlowBlockZyncBase::doPreFunction() {
-        onAttachBlock();
+        on_attach_block();
     }
 
     void FlowBlockZyncBase::doPostFunction(){
-        onDetachBlock();
+        on_detach_block();
     }
 
 }

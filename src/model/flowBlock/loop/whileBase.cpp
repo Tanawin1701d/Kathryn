@@ -10,7 +10,7 @@ namespace kathryn{
     FlowBlockWhile::FlowBlockWhile(Operable& condExpr,
                                    FLOW_BLOCK_TYPE fbt):
     _condExpr(&condExpr),
-    _purifiedCondExpr(purifyCondition(&condExpr)),
+    _purifiedCondExpr(purify_condition(&condExpr)),
     FlowBlockBase(fbt,
                     {
                             {FLOW_ST_BASE_STACK},
@@ -42,27 +42,27 @@ namespace kathryn{
     }
 
 
-    void FlowBlockWhile::buildHwComponent(){
+    void FlowBlockWhile::build_hw_component(){
         assert(_con_blocks.empty());
         assert(_sub_blocks.size() == 1);
-        subBlockNodeWrap = _sub_blocks[0]->sumarizeBlock();
+        subBlockNodeWrap = _sub_blocks[0]->sumarize_block();
         assert(subBlockNodeWrap != nullptr);
 
 
         //** initialize node*/
-        if (getFlowType() == CWHILE){
+        if (get_flow_type() == CWHILE){
             conditionNode = new PseudoNode(1, BITWISE_OR);
             conditionNode->set_internal_ident("cConNode" + std::to_string(get_global_id()));
         }else{////// SWHILE
-            conditionNode = new StateNode(getClockMode());
+            conditionNode = new StateNode(get_clock_mode());
             conditionNode->set_internal_ident("sConNode" + std::to_string(get_global_id()));
-            fillIntResetToNodeIfThere(conditionNode);
-            fillHoldToNodeIfThere(conditionNode);
+            fill_intr_reset_to_node_if_there(conditionNode);
+            fill_hold_to_node_if_there(conditionNode);
         }
-        addSysNode(conditionNode);
+        add_sys_node(conditionNode);
 
         exitNode          = new PseudoNode(1, BITWISE_OR);
-        addSysNode(exitNode);
+        add_sys_node(exitNode);
         resultNodeWrapper = new NodeWrap();
         ////////////////////////////////////////////////////////////////////
 
@@ -77,8 +77,8 @@ namespace kathryn{
                                         ( &(~(*subBlockNodeWrap->getForceExitNode()->get_exit_opr_ptr())) ):
                                         nullptr
                                      );
-        if(isThereIntStart()){
-            conditionNode->add_depend_node(intNodes[INT_START], nullptr);
+        if(is_there_intr_start()){
+            conditionNode->add_depend_node(_int_nodes[INT_START], nullptr);
         }
         /**do exit NOde Dep*/
         if (!_fallTrue) {
@@ -92,7 +92,7 @@ namespace kathryn{
             ///////// incase there is no exit source we warning user that there is infinite loop
             /////////// TODO warning
             exitDummy = new DummyNode(&makeOprVal("exitDummy",1, 0));
-            addSysNode(exitDummy);
+            add_sys_node(exitDummy);
             exitNode->add_depend_node(exitDummy, nullptr);
         }
 
@@ -106,44 +106,44 @@ namespace kathryn{
 
 
 
-    void FlowBlockWhile::addElementInFlowBlock(Node *node) {
+    void FlowBlockWhile::add_basic_node(Node *node) {
         assert(false);
         /** cwhile not not except simple node due to implict added flowblock inside*/
     }
 
-    void FlowBlockWhile::addSubFlowBlock(FlowBlockBase *subBlock) {
+    void FlowBlockWhile::add_sub_flow_block(FlowBlockBase *subBlock) {
         assert(subBlock != nullptr);
         assert(!isGetFlowBlockYet);
         isGetFlowBlockYet = true;
-        FlowBlockBase::addSubFlowBlock(subBlock);
+        FlowBlockBase::add_sub_flow_block(subBlock);
     }
 
-    NodeWrap* FlowBlockWhile::sumarizeBlock() {
+    NodeWrap* FlowBlockWhile::sumarize_block() {
         assert(resultNodeWrapper != nullptr);
         return resultNodeWrapper;
     }
 
-    void FlowBlockWhile::onAttachBlock() {
-        ctrl->on_attach_flowBlock(this);
+    void FlowBlockWhile::on_attach_block() {
+        _ctrl->on_attach_flowBlock(this);
         /** in cwhile we implcitcally add sub block to system*/
-        auto sb = genImplicitSubBlk(PARALLEL_NO_SYN);
+        auto sb = gen_implicit_sub_blk(PARALLEL_NO_SYN);
         implicitFlowBlock = sb;
-        sb->onAttachBlock();
+        sb->on_attach_block();
     }
 
-    void FlowBlockWhile::onDetachBlock() {
+    void FlowBlockWhile::on_detach_block() {
         assert(implicitFlowBlock != nullptr);
-        implicitFlowBlock->onDetachBlock();
+        implicitFlowBlock->on_detach_block();
         assert(isGetFlowBlockYet);
-        ctrl->on_detach_flowBlock(this);
+        _ctrl->on_detach_flowBlock(this);
     }
 
 
     void FlowBlockWhile::doPreFunction() {
-        onAttachBlock();
+        on_attach_block();
     }
     void FlowBlockWhile::doPostFunction() {
-        onDetachBlock();
+        on_detach_block();
     }
 
     void FlowBlockWhile::add_md_log(MdLogVal* mdLogVal){

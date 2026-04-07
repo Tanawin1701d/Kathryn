@@ -31,46 +31,46 @@ namespace kathryn{
         }
     }
 
-    void FlowBlockSeq::addElementInFlowBlock(Node* node) {
+    void FlowBlockSeq::add_basic_node(Node* node) {
         assert(node != nullptr);
         _subSeqMetas.push_back(new SequenceEleBasic(node));
         /** base function to notice existence of sub flow element*/
-        FlowBlockBase::addElementInFlowBlock(node);
+        FlowBlockBase::add_basic_node(node);
     }
 
-    void FlowBlockSeq::addSubFlowBlock(FlowBlockBase *subBlock) {
+    void FlowBlockSeq::add_sub_flow_block(FlowBlockBase *subBlock) {
         assert(subBlock != nullptr);
         _subSeqMetas.emplace_back(new SequenceEleFlowBlock(subBlock));
         /** base function to notice existence of sub flow block*/
-        FlowBlockBase::addSubFlowBlock(subBlock);
+        FlowBlockBase::add_sub_flow_block(subBlock);
     }
 
-    NodeWrap* FlowBlockSeq::sumarizeBlock() {
+    NodeWrap* FlowBlockSeq::sumarize_block() {
         assert(resultNodeWrap != nullptr);
         return resultNodeWrap;
     }
 
-    void FlowBlockSeq::onAttachBlock() {
-        ctrl->on_attach_flowBlock(this);
+    void FlowBlockSeq::on_attach_block() {
+        _ctrl->on_attach_flowBlock(this);
     }
 
-    void FlowBlockSeq::onDetachBlock() {
-        ctrl->on_detach_flowBlock(this);
+    void FlowBlockSeq::on_detach_block() {
+        _ctrl->on_detach_flowBlock(this);
     }
 
-    void FlowBlockSeq::buildHwComponent() {
+    void FlowBlockSeq::build_hw_component() {
         mf_assert(!_subSeqMetas.empty(), "seqBlock has no assignment");
         assert(_con_blocks.empty());
         NodeWrapCycleDet cycleDet;
         /** generate hardware*/
         int idx = 0;
         for (auto& seqMeta: _subSeqMetas) {
-            seqMeta->setIntReset(intNodes[INT_RESET]); //// set interrupt reset must be set before gennode
-            seqMeta->setHoldNode(holdNode);
-            seqMeta->genNode(getClockMode());
+            seqMeta->setIntReset(_int_nodes[INT_RESET]); //// set interrupt reset must be set before gennode
+            seqMeta->setHoldNode(_hold_node);
+            seqMeta->genNode(get_clock_mode());
             seqMeta->setIdentStateId(get_global_id(),idx++);
             seqMeta->addToCycleDet(cycleDet);
-            seqMeta->addToSystemNodes(_sysNodes);
+            seqMeta->addToSystemNodes(_sys_nodes);
         }
         /** generate forceExit Node*/
             /***check areThere forceExitNode*/
@@ -80,15 +80,15 @@ namespace kathryn{
                 allNw.push_back(seqEle->getNodeWrap());
             }
         }
-        genSumForceExitNode(allNw);
+        gen_sum_force_exit_node(allNw);
         /** connect depend node chain*/
         for (size_t idx = 0; (idx+1) < _subSeqMetas.size(); idx++){
             auto lhsNodeWrapper = _subSeqMetas[idx];
             auto rhsNodeWrapper = _subSeqMetas[idx+1];
             rhsNodeWrapper->assignDependDent(lhsNodeWrapper);
         }
-        if (isThereIntStart()){
-            _subSeqMetas[0]->assignIntStart(intNodes[INT_START]);
+        if (is_there_intr_start()){
+            _subSeqMetas[0]->assignIntStart(_int_nodes[INT_START]);
         }
 
         /** build new result NodeWrap*/
@@ -96,8 +96,8 @@ namespace kathryn{
         resultNodeWrap->addEntraceNodes((*_subSeqMetas.begin())->getEntranceNodes());
         resultNodeWrap->addExitNode((*_subSeqMetas.rbegin())->getStateFinishIden());
         resultNodeWrap->setCycleUsed(cycleDet.getCycleVertical());
-        if (_areThereForceExit)
-            resultNodeWrap->addForceExitNode(_forceExitNode);
+        if (_are_there_force_exit)
+            resultNodeWrap->addForceExitNode(_force_exit_node);
 
     }
 
@@ -112,7 +112,7 @@ namespace kathryn{
             ret += seqEle->getDescribe() + "\n";
             eleCnt++;
         }
-        ret += getMdDescribeRecur();
+        ret += get_md_describe_recur();
         return ret;
 
     }
@@ -129,16 +129,16 @@ namespace kathryn{
                                                    resultNodeWrap->getForceExitNode()->get_md_describe());
         }
 
-        addMdLogRecur(mdLogVal);
+        add_md_log_recur(mdLogVal);
 
     }
 
     void FlowBlockSeq::doPreFunction() {
-        onAttachBlock();
+        on_attach_block();
     }
 
     void FlowBlockSeq::doPostFunction() {
-        onDetachBlock();
+        on_detach_block();
     }
 
 }
