@@ -29,7 +29,7 @@ namespace kathryn{
     bool PipSimProbe::isWaiting(){
         checkSimEngineReady();
         StateNode* waitNode = flowBlockPipBase->getWaitNode();
-        StateReg&  stateReg = *waitNode->_stateReg;
+        StateReg&  stateReg = *waitNode->_state_reg;
         bool isWaiting  = static_cast<bool>((ull)stateReg);
         return isWaiting;
 
@@ -49,7 +49,7 @@ namespace kathryn{
 
     bool ZyncSimProb::getPrepSendNodeStatus(){
         StateNode* preSendNode = flowBlockZyncBase->getPreSendNode();
-        StateReg&  stateReg = *preSendNode->_stateReg;
+        StateReg&  stateReg = *preSendNode->_state_reg;
         bool isPrepSend = static_cast<bool>((ull)stateReg);
         return isPrepSend;
     }

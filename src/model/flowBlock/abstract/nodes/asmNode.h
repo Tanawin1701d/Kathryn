@@ -87,7 +87,7 @@ namespace kathryn {
                     /// assign from current dependency
                     assert(assign_meta->preUpdateElement != nullptr);
 
-                    /////// update new Condition
+                    /// update new Condition
                     UpdateEventCond* update_with_state = new UpdateEventCond();
                     update_with_state->addSubStmt(cond_event_ptr, assign_meta->getCurrentEvent());
                     assign_meta->setNewEditingEvent(update_with_state);

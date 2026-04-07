@@ -11,13 +11,13 @@
 namespace kathryn{
 
     struct PseudoNode : Node{
-        expression* _pseudoAssignMeta = nullptr;
-        LOGIC_OP    _joinOp;
+        expression* _pseudo_assign_meta = nullptr;
+        LOGIC_OP    _join_op;
 
         explicit PseudoNode(int expr_size, LOGIC_OP joinOp) :
                 Node(PSEUDO_NODE),
-                _pseudoAssignMeta(new expression(expr_size)),
-                _joinOp(joinOp){
+                _pseudo_assign_meta(new expression(expr_size)),
+                _join_op(joinOp){
 
             set_clock_mode(CM_CLK_FREE);
 
@@ -25,29 +25,29 @@ namespace kathryn{
 
         void assign() override{
             assert(!_node_srcs.empty());
-            Operable* finalOpr  = nullptr;
-            Operable* oprPerSrc = nullptr;
-            for (auto nodeSrc: _node_srcs){
-                assert(nodeSrc.depend_node != nullptr);
-                oprPerSrc = nodeSrc.depend_node->get_exit_opr_ptr();
-                if (nodeSrc.condition != nullptr){
-                    assert(nodeSrc.condition->getOperableSlice().getSize() == 1);
-                    add_logic(oprPerSrc, nodeSrc.condition, BITWISE_AND);
+            Operable* final_opr  = nullptr;
+            Operable* opr_per_src = nullptr;
+            for (auto node_src: _node_srcs){
+                assert(node_src.depend_node != nullptr);
+                opr_per_src = node_src.depend_node->get_exit_opr_ptr();
+                if (node_src.condition != nullptr){
+                    assert(node_src.condition->getOperableSlice().getSize() == 1);
+                    add_logic(opr_per_src, node_src.condition, BITWISE_AND);
                 }
-                assert(oprPerSrc != nullptr);
-                add_logic(finalOpr, oprPerSrc, _joinOp);
+                assert(opr_per_src != nullptr);
+                add_logic(final_opr, opr_per_src, _join_op);
             }
 
-            assert(finalOpr != nullptr);
-            *_pseudoAssignMeta = (*finalOpr);
-            assert(_pseudoAssignMeta != nullptr);
-            _pseudoAssignMeta->setVarName(_ident_name);
+            assert(final_opr != nullptr);
+            *_pseudo_assign_meta = (*final_opr);
+            assert(_pseudo_assign_meta != nullptr);
+            _pseudo_assign_meta->setVarName(_ident_name);
         }
-        int get_cycle_used() override { return 0; }
+        int       get_cycle_used() override { return 0; }
 
-        Operable* get_exit_opr_ptr() override{return _pseudoAssignMeta;}
+        Operable* get_exit_opr_ptr() override{return _pseudo_assign_meta;}
 
-        bool is_stateful_node() override{ return false; }
+        bool      is_stateful_node() override{ return false; }
 
     };
 
@@ -66,11 +66,11 @@ namespace kathryn{
             _value->setVarName(_ident_name);
         }
 
-        int get_cycle_used() override{ return 0; }
+        int       get_cycle_used() override{ return 0; }
 
         Operable* get_exit_opr_ptr() override{return _value;}
 
-        bool is_stateful_node() override{return false;}
+        bool      is_stateful_node() override{return false;}
 
     };
 
@@ -90,11 +90,11 @@ namespace kathryn{
             ////_value->setVarName(identName);
         }
 
-        int get_cycle_used() override{ return 0; }
+        int       get_cycle_used() override{ return 0; }
 
         Operable* get_exit_opr_ptr() override{return _value;}
 
-        bool is_stateful_node() override{return false;}
+        bool      is_stateful_node() override{return false;}
 
     };
 

@@ -18,60 +18,60 @@ namespace kathryn{
      * */
 
     struct StateNode : Node{
-        StateReg* _stateReg;
-        std::vector<AsmNode*> _dependSlaveAsmNode; /// the asignment node that depend on this stateNode
+        StateReg*             _state_reg;
+        std::vector<AsmNode*> _depend_slave_AsmNode; /// the asignment node that depend on this stateNode
 
         explicit StateNode(CLOCK_MODE clkMode) :
-            Node(STATE_NODE),
-            _stateReg(new StateReg()){
-            add_cycle_related_reg(_stateReg);
+            Node     (STATE_NODE),
+            _state_reg(new StateReg()){
+            add_cycle_related_reg(_state_reg);
             set_clock_mode(clkMode);
         }
 
         void make_unset_state_event() override{
-            assert(_stateReg != nullptr);
-            _stateReg->makeUnSetStateEvent(get_clock_mode());
+            assert(_state_reg != nullptr);
+            _state_reg->makeUnSetStateEvent(get_clock_mode());
         }
 
         Operable* get_exit_opr_ptr() override{
-            assert(_stateReg != nullptr);
+            assert(_state_reg != nullptr);
 
-            Operable* binedWithResetSignal =
-                bind_with_rst_out_put_if_reset(_stateReg->generateEndExpr());
+            Operable* bined_with_reset_signal =
+                bind_with_rst_output_if_reset(_state_reg->generateEndExpr());
             ///// hold mean the system is freeze it should not activate the system
             ////////// the systerm should still not unset
-            Operable* binedWithHoldSignal =
-                bind_with_hold_if_hold(binedWithResetSignal);
+            Operable* bined_with_hold_signal =
+                bind_with_hold_if_hold(bined_with_reset_signal);
 
-            return binedWithHoldSignal;
+            return bined_with_hold_signal;
         }
 
         ///// generate the end expression
         Operable* get_operating_state_ptr() override{
-            assert(_stateReg != nullptr);
-            return _stateReg->generateEndExpr();
+            assert(_state_reg != nullptr);
+            return _state_reg->generateEndExpr();
         }
 
-        void addSlaveAsmNode(AsmNode* asmNode, Operable* cond = nullptr){
+        void add_slave_asm_node(AsmNode* asmNode, Operable* cond = nullptr){
             assert(asmNode != nullptr);
             asmNode->add_depend_node(this, cond);
-            _dependSlaveAsmNode.push_back(asmNode);
+            _depend_slave_AsmNode.push_back(asmNode);
         }
 
         void assign() override{
-            _stateReg->setVarName(_ident_name);
+            _state_reg->setVarName(_ident_name);
             /*** set event*/
             for (auto nodeSrc: _node_srcs){
-                _stateReg->addDependState(nodeSrc.depend_node->get_exit_opr_ptr(), nodeSrc.condition, get_clock_mode());
+                _state_reg->addDependState(nodeSrc.depend_node->get_exit_opr_ptr(), nodeSrc.condition, get_clock_mode());
             }
             if (is_there_hold()){
-                _stateReg->addDependState(get_operating_state_ptr(), _hold_node->get_exit_opr_ptr(), get_clock_mode());
+                _state_reg->addDependState(get_operating_state_ptr(), _hold_node->get_exit_opr_ptr(), get_clock_mode());
             }
 
             /** unset event*/
             make_unset_state_event();
             /** slave event*/
-            for (AsmNode* asmNode: _dependSlaveAsmNode){
+            for (AsmNode* asmNode: _depend_slave_AsmNode){
                 Operable* holdSignal  = is_there_hold()      ? _hold_node->get_exit_opr_ptr()
                                                            : nullptr;
                 Operable* resetSignal = is_threre_int_reset() ? get_interrupt_reset_ptr()->get_exit_opr_ptr()
@@ -93,16 +93,16 @@ namespace kathryn{
 
     struct SynNode : Node{
         SyncReg* _synReg;
-        PseudoNode* _forceExitNode = nullptr;
+        PseudoNode* _force_exit_node = nullptr;
         ////// sync node not require the holdsignal
         ////// we realize that if the state is not activate SynNode the synNode will remain the same state
 
         /**in SynNode condition and dependState is disengage*/
-        explicit SynNode(int synSize, CLOCK_MODE clkMode) :
+        explicit SynNode(int syn_size, CLOCK_MODE clk_mode) :
             Node(SYN_NODE),
-            _synReg(new SyncReg(synSize)){
+            _synReg(new SyncReg(syn_size)){
             add_cycle_related_reg(_synReg);
-            set_clock_mode(clkMode);
+            set_clock_mode(clk_mode);
         }
 
         void make_unset_state_event() override{
@@ -114,28 +114,28 @@ namespace kathryn{
             if (is_threre_int_reset()) {
                 _synReg->makeUserRstEvent(_int_reset->get_exit_opr_ptr(), get_clock_mode());
             }
-            if (_forceExitNode != nullptr){
-                _synReg->makeUserRstEvent(_forceExitNode->get_exit_opr_ptr(), get_clock_mode());
+            if (_force_exit_node != nullptr){
+                _synReg->makeUserRstEvent(_force_exit_node->get_exit_opr_ptr(), get_clock_mode());
             }
         }
 
-        Operable* get_exit_opr_ptr() override{return bind_with_rst_out_put_if_reset(_synReg->generateEndExpr());}
+        Operable* get_exit_opr_ptr() override{return bind_with_rst_output_if_reset(_synReg->generateEndExpr());}
 
-        void setForceExitEvent(PseudoNode* nd){
+        void set_force_exit_event(PseudoNode* nd){
             assert(nd != nullptr);
-            _forceExitNode = nd;
+            _force_exit_node = nd;
         }
 
         void assign() override{
             _synReg->setVarName(_ident_name);
             /** make start event*/
-            Operable* notForceExit  = nullptr;
-            if (_forceExitNode){
-                notForceExit = &(~(*_forceExitNode->get_exit_opr_ptr()));
+            Operable* not_force_exit  = nullptr;
+            if (_force_exit_node){
+                not_force_exit = &(~(*_force_exit_node->get_exit_opr_ptr()));
             }
             for (auto dependNode : _node_srcs){
                 assert(dependNode.condition == nullptr);
-                _synReg->addDependState(dependNode.depend_node->get_exit_opr_ptr(), notForceExit, get_clock_mode());
+                _synReg->addDependState(dependNode.depend_node->get_exit_opr_ptr(), not_force_exit, get_clock_mode());
             }
             /** make unset event*/
             make_unset_state_event();

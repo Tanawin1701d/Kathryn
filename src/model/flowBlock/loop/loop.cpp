@@ -67,7 +67,7 @@ namespace kathryn{
 
         ////// counter Node
         _cntNode->add_depend_node(_entNode, nullptr);
-        _cntNode->makeIncCounterEvent(_subBlockNodeWrap->getExitNode());
+        _cntNode->make_inc_counter_event(_subBlockNodeWrap->getExitNode());
         _cntNode->assign();
 
         ////// exit node
@@ -90,7 +90,7 @@ namespace kathryn{
             _resultNodeWrapper->addForceExitNode(_subBlockNodeWrap->getForceExitNode());
         }
 
-        (*_loopId) = (*_cntNode->getCounter());
+        (*_loopId) = (*_cntNode->get_counter());
 
     }
 

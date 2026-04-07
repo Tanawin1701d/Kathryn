@@ -68,7 +68,7 @@ namespace kathryn{
             /** add basic assignment to depend on stateNode*/
             for (auto nd : _basicNodes){
                 assert(nd->get_node_type() == ASM_NODE);
-                basicStNode->addSlaveAsmNode((AsmNode*)nd);
+                basicStNode->add_slave_asm_node((AsmNode*)nd);
             }
         }
 
@@ -233,7 +233,7 @@ namespace kathryn{
             fillIntResetToNodeIfThere(synNode);
             ///////[warning] this time we ensure that gensumforceExit is declared
             if(_forceExitNode){
-                synNode->setForceExitEvent(_forceExitNode);
+                synNode->set_force_exit_event(_forceExitNode);
             }
             synNode->set_internal_ident(
                     "parSynNode_" +

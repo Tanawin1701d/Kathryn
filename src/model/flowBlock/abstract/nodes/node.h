@@ -153,7 +153,7 @@ namespace kathryn {
 
         Node* get_interrupt_reset_ptr() const{ return _int_reset; }
 
-        Operable* bind_with_rst_out_put_if_reset(Operable* raw_exit){
+        Operable* bind_with_rst_output_if_reset(Operable* raw_exit){
             assert(raw_exit != nullptr);
             assert(raw_exit->getOperableSlice().getSize() == 1);
             if (is_threre_int_reset()){

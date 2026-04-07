@@ -95,7 +95,7 @@ namespace kathryn{
             /** add slave assignment node*/
         for (auto nd : _basicNodes){
             assert(nd->get_node_type() == ASM_NODE);
-            prepSendNode->addSlaveAsmNode((AsmNode*)nd, readyFinal);
+            prepSendNode->add_slave_asm_node((AsmNode*)nd, readyFinal);
         }
 
         /** exit Node*/

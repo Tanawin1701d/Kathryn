@@ -13,17 +13,17 @@ namespace kathryn{
     struct StartNode : Node{
         makeVal(upState  , 1, 1);
 
-        expression* exitExpr  = nullptr;
-        StateReg* _startState = nullptr;
-        Operable* _rstSig     = nullptr;
+        expression* _exit_expr  = nullptr;
+        StateReg*   _startState = nullptr;
+        Operable*   _rstSig     = nullptr;
 
         explicit StartNode(Operable* rstSig):
                 Node(START_NODE),
                 _startState(new StateReg(false)),
-                _rstSig(rstSig){
-                assert(_rstSig != nullptr);
-                exitExpr = &(*_startState == upState);
-                set_clock_mode(CM_POSEDGE);
+                _rstSig    (rstSig){
+            assert     (_rstSig != nullptr);
+            _exit_expr = &(*_startState == upState);
+            set_clock_mode(CM_POSEDGE);
         }
 
         void make_unset_state_event() override{
@@ -33,15 +33,15 @@ namespace kathryn{
 
         Operable* get_exit_opr_ptr() override{
             assert(_rstSig != nullptr);
-            assert(exitExpr != nullptr);
-            return exitExpr;
+            assert(_exit_expr != nullptr);
+            return _exit_expr;
         }
 
         void assign() override{
             _startState->addDependState(_rstSig, nullptr, get_clock_mode());
             make_unset_state_event();
             _startState->setVarName("startNode");
-            exitExpr->setVarName("startExpr");
+            _exit_expr->setVarName("startExpr");
 
             /**no need to reset due to it used*/
         }

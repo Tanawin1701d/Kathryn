@@ -31,7 +31,7 @@ namespace kathryn{
     void SequenceEleBasic::genNode(CLOCK_MODE cm){
         assert(_asmNode != nullptr);
         _stateNode = new StateNode(cm);
-        _stateNode->addSlaveAsmNode(_asmNode);
+        _stateNode->add_slave_asm_node(_asmNode);
         if (_intRstNode != nullptr) {
             _stateNode->set_interrupt_reset(_intRstNode);
         }
