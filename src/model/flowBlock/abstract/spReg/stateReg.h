@@ -31,9 +31,9 @@ namespace kathryn {
             return *this;
         }
         /** add prior state that trigger this state*/
-        UpdateEventBase* addDependState(Operable* dependState, Operable* activateCond, CLOCK_MODE cm) override;
+        UpdateEventBase* add_depend_state(Operable* dependState, Operable* activateCond, CLOCK_MODE cm) override;
         /** reset event*/
-        void makeUnSetStateEvent(CLOCK_MODE cm) override;
+        void make_un_set_state_event(CLOCK_MODE cm) override;
         /** user reset event*/
         void makeUserRstEvent(Operable* rstWire, CLOCK_MODE cm) override { assert(false); /** it is single node; there is no neccessary for reset user event */};
         /** exit expression*/

@@ -23,9 +23,9 @@ namespace kathryn{
     class CounterReg : public CtrlFlowRegBase{
     private:
         /**wait cycle from use declare*/
-        int       _cntBitSz  = -1;
-        int       _lastCycle = -1;
-        Operable* _idleVal   = nullptr;
+        int       _cnt_bit_sz = -1;
+        int       _last_cycle = -1;
+        Operable* _idle_val   = nullptr;
 
     protected:
 
@@ -36,11 +36,11 @@ namespace kathryn{
         explicit CounterReg(int maxCycle);
 
         /** add prior state that trigger this state*/
-        UpdateEventBase* addDependState(Operable* dependState, Operable* activateCond, CLOCK_MODE cm) override;
+        UpdateEventBase* add_depend_state(Operable* dependState, Operable* activateCond, CLOCK_MODE cm) override;
         /** add Inc to count*/ /// hold signal is not used because it is only the counter
-        void makeIncEvent(Operable* upCountEvent, CLOCK_MODE cm);
+        void make_inc_event(Operable* upCountEvent, CLOCK_MODE cm);
         /** reset event*/
-        void makeUnSetStateEvent(CLOCK_MODE cm) override;
+        void make_un_set_state_event(CLOCK_MODE cm) override;
         /** make user reset event*/
         void  makeUserRstEvent(Operable* rst, CLOCK_MODE cm) override;
         /** generate out expression*/
@@ -50,7 +50,7 @@ namespace kathryn{
             std::cout << "we not support = operator in register";
             return *this;
         }
-        int getLoopCnt() const { return _lastCycle; }
+        int getLoopCnt() const { return _last_cycle; }
     };
 
     static int calBitUsedInCounter(int maxNumber){

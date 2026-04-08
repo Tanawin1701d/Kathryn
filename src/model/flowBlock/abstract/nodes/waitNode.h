@@ -24,7 +24,7 @@ namespace kathryn{
 
         void make_unset_state_event() override{
             assert(_cond_wait_state_reg != nullptr);
-            _cond_wait_state_reg->makeUnSetStateEvent(get_clock_mode());
+            _cond_wait_state_reg->make_un_set_state_event(get_clock_mode());
         }
 
         void make_user_reset_event() override{
@@ -51,10 +51,10 @@ namespace kathryn{
         void assign() override{
             assert(!_node_srcs.empty());
             for(auto node_src: _node_srcs){
-                _cond_wait_state_reg->addDependState(node_src.depend_node->get_exit_opr_ptr(), node_src.condition, get_clock_mode());
+                _cond_wait_state_reg->add_depend_state(node_src.depend_node->get_exit_opr_ptr(), node_src.condition, get_clock_mode());
             }
             if (is_there_hold()){
-                _cond_wait_state_reg->addDependState(get_operating_state_ptr(), _hold_node->get_exit_opr_ptr(), get_clock_mode());
+                _cond_wait_state_reg->add_depend_state(get_operating_state_ptr(), _hold_node->get_exit_opr_ptr(), get_clock_mode());
             }
 
             make_unset_state_event();
@@ -89,7 +89,7 @@ namespace kathryn{
 
         void make_unset_state_event() override{
             assert(_cycle_wait_state_reg != nullptr);
-            _cycle_wait_state_reg->makeUnSetStateEvent(get_clock_mode());
+            _cycle_wait_state_reg->make_un_set_state_event(get_clock_mode());
         }
 
         void make_user_reset_event() override{
@@ -112,7 +112,7 @@ namespace kathryn{
 
             /**normal start event*/
             for(auto node_src: _node_srcs){
-                _cycle_wait_state_reg->addDependState(node_src.depend_node->get_exit_opr_ptr(), node_src.condition, get_clock_mode());
+                _cycle_wait_state_reg->add_depend_state(node_src.depend_node->get_exit_opr_ptr(), node_src.condition, get_clock_mode());
             }
             /** inc event*/
             if (is_there_hold()){

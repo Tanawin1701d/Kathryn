@@ -21,9 +21,9 @@ namespace kathryn{
          TYPE_COUNTER_REG,
          false
      ),
-    _cntBitSz(calBitUsedInCounter(maxCycle)),
-    _lastCycle(maxCycle),
-    _idleVal(&makeOprVal("idleVal",_cntBitSz, 0))
+    _cnt_bit_sz(calBitUsedInCounter(maxCycle)),
+    _last_cycle(maxCycle),
+    _idle_val(&makeOprVal("idleVal",_cnt_bit_sz, 0))
      {
 
         /** TO FIX*/
@@ -32,13 +32,13 @@ namespace kathryn{
 
      }
 
-    UpdateEventBase* CounterReg::addDependState(Operable* dependState, Operable* activateCond, CLOCK_MODE cm){
+    UpdateEventBase* CounterReg::add_depend_state(Operable* dependState, Operable* activateCond, CLOCK_MODE cm){
         assert(dependState != nullptr);
 
         auto* event = createUE(activateCond,
                                dependState,
-                               _idleVal,
-                               Slice({0, _cntBitSz}),
+                               _idle_val,
+                               Slice({0, _cnt_bit_sz}),
                                DEFAULT_UE_PRI_INTERNAL_MAX,
                                cm
         );
@@ -47,7 +47,7 @@ namespace kathryn{
     }
 
 
-    void CounterReg::makeIncEvent(Operable* upCountEvent, CLOCK_MODE cm) {
+    void CounterReg::make_inc_event(Operable* upCountEvent, CLOCK_MODE cm) {
 
         if (upCountEvent != nullptr){
             assert(upCountEvent->getOperableSlice().getSize() == 1);
@@ -56,7 +56,7 @@ namespace kathryn{
             nullptr,
             upCountEvent,
             &((*this) + 1),
-            Slice({0, _cntBitSz}),
+            Slice({0, _cnt_bit_sz}),
             DEFAULT_UE_PRI_INTERNAL_MAX-1,
             cm
         );
@@ -67,7 +67,7 @@ namespace kathryn{
         _ctrl->on_sp_reg_init(this, SP_CYCLE_WAIT_REG);
     }
 
-    void CounterReg::makeUnSetStateEvent(CLOCK_MODE cm) {
+    void CounterReg::make_un_set_state_event(CLOCK_MODE cm) {
         assert(false); //// it is unused
     }
 
@@ -77,8 +77,8 @@ namespace kathryn{
         auto* resetEvent = createUE(
            nullptr,
            rst,
-           _idleVal,
-           Slice({0, _cntBitSz}),
+           _idle_val,
+           Slice({0, _cnt_bit_sz}),
            DEFAULT_UE_PRI_INTERNAL_MIN,
             cm);
         addUpdateMeta(resetEvent);
@@ -86,7 +86,7 @@ namespace kathryn{
     }
 
     Operable* CounterReg::generateEndExpr() {
-        return &(*this == (_lastCycle-1));
+        return &(*this == (_last_cycle-1));
     }
 
 

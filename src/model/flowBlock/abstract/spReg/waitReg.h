@@ -34,9 +34,9 @@ namespace kathryn{
         /** constructor*/
         explicit CondWaitStateReg(Operable* condOpr);
         /** add prior state that trigger this state*/
-        UpdateEventBase* addDependState(Operable* dependState, Operable* activateCond, CLOCK_MODE cm) override;
+        UpdateEventBase* add_depend_state(Operable* dependState, Operable* activateCond, CLOCK_MODE cm) override;
         /** generate reset event*/
-        void makeUnSetStateEvent(CLOCK_MODE cm) override;
+        void make_un_set_state_event(CLOCK_MODE cm) override;
         /** make user reset event*/
         void  makeUserRstEvent(Operable* rst, CLOCK_MODE cm) override;
         /** generate out expression*/
@@ -84,11 +84,11 @@ namespace kathryn{
         explicit CycleWaitStateReg(Operable* endCnt);
 
         /** add prior state that trigger this state*/
-        UpdateEventBase* addDependState(Operable* dependState, Operable* activateCond, CLOCK_MODE cm) override;
+        UpdateEventBase* add_depend_state(Operable* dependState, Operable* activateCond, CLOCK_MODE cm) override;
         /** add Inc to count*/
         void makeIncStateEvent(Operable* holdSignal, CLOCK_MODE cm);
         /** reset event*/
-        void makeUnSetStateEvent(CLOCK_MODE cm) override;
+        void make_un_set_state_event(CLOCK_MODE cm) override;
         /** make user reset event*/
         void  makeUserRstEvent(Operable* rst, CLOCK_MODE cm) override;
         /** generate out expression*/

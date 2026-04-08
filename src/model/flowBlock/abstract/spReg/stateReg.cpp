@@ -22,7 +22,7 @@ namespace kathryn {
         com_init();
     };
 
-    UpdateEventBase* StateReg::addDependState(Operable* dependState, Operable* activateCond, CLOCK_MODE cm){
+    UpdateEventBase* StateReg::add_depend_state(Operable* dependState, Operable* activateCond, CLOCK_MODE cm){
         assert(dependState != nullptr);
 
         // if (_globalId == 18){
@@ -50,7 +50,7 @@ namespace kathryn {
 
     }
 
-    void StateReg::makeUnSetStateEvent(CLOCK_MODE cm) {
+    void StateReg::make_un_set_state_event(CLOCK_MODE cm) {
 
          auto* event =   createUE(nullptr,
                          this,

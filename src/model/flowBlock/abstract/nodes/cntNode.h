@@ -34,7 +34,7 @@ namespace kathryn{
 
         void make_inc_counter_event(Node* inc_node){
             assert(inc_node != nullptr);
-            _counter->makeIncEvent(inc_node->get_exit_opr_ptr(), get_clock_mode());
+            _counter->make_inc_event(inc_node->get_exit_opr_ptr(), get_clock_mode());
         }
 
         Operable* get_exit_opr_ptr() override{
@@ -48,7 +48,7 @@ namespace kathryn{
             assert(_counter!= nullptr);
             /**normal start event*/
             for(auto node_src: _node_srcs){
-                _counter->addDependState(node_src.depend_node->get_exit_opr_ptr(),
+                _counter->add_depend_state(node_src.depend_node->get_exit_opr_ptr(),
                                          node_src.condition, get_clock_mode());
             }
             /** unset event*/

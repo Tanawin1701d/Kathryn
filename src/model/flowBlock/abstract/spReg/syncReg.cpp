@@ -27,7 +27,7 @@ namespace kathryn {
         assert(size > 0);
     };
 
-    UpdateEventBase* SyncReg::addDependState(Operable* dependState, Operable* activateCond, CLOCK_MODE cm){
+    UpdateEventBase* SyncReg::add_depend_state(Operable* dependState, Operable* activateCond, CLOCK_MODE cm){
         ///assert(activateCond == nullptr);
         assert(dependState != nullptr);
         Operable* actualCondition = endExprInv;
@@ -58,7 +58,7 @@ namespace kathryn {
         return event;
     }
 
-    void SyncReg::makeUnSetStateEvent(CLOCK_MODE cm) {
+    void SyncReg::make_un_set_state_event(CLOCK_MODE cm) {
 
         ////// unset also testExpr
         auto* event = createUE(

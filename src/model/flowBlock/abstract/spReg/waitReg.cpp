@@ -35,7 +35,7 @@ namespace kathryn{
         _ctrl->on_sp_reg_init(this, SP_COND_WAIT_REG);
     }
 
-    UpdateEventBase* CondWaitStateReg::addDependState(Operable* dependState, Operable* activateCond, CLOCK_MODE cm){
+    UpdateEventBase* CondWaitStateReg::add_depend_state(Operable* dependState, Operable* activateCond, CLOCK_MODE cm){
         assert(dependState != nullptr);
         auto* event = createUE(activateCond,
                                dependState,
@@ -48,7 +48,7 @@ namespace kathryn{
         return event;
     }
 
-    void CondWaitStateReg::makeUnSetStateEvent(CLOCK_MODE cm) {
+    void CondWaitStateReg::make_un_set_state_event(CLOCK_MODE cm) {
         auto* resetEvent = createUE(_condOpr,
                                     &((*this) == _upState),
                                     &_downState,
@@ -141,7 +141,7 @@ namespace kathryn{
         _ctrl->on_sp_reg_init(this, SP_CYCLE_WAIT_REG);
     }
 
-    UpdateEventBase* CycleWaitStateReg::addDependState(Operable* dependState, Operable* activateCond, CLOCK_MODE cm){
+    UpdateEventBase* CycleWaitStateReg::add_depend_state(Operable* dependState, Operable* activateCond, CLOCK_MODE cm){
         assert(dependState != nullptr);
         auto* event = createUE(activateCond,
                                dependState,
@@ -154,7 +154,7 @@ namespace kathryn{
         return event;
     }
 
-    void CycleWaitStateReg::makeUnSetStateEvent(CLOCK_MODE cm) {
+    void CycleWaitStateReg::make_un_set_state_event(CLOCK_MODE cm) {
         /**reset event*/
         auto* resetEvent = createUE(
             &((*this)(1, _totalBitSize) == (*_endCnt)),

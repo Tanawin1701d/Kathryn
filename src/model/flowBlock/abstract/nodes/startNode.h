@@ -28,7 +28,7 @@ namespace kathryn{
 
         void make_unset_state_event() override{
             assert(_startState != nullptr);
-            _startState->makeUnSetStateEvent(get_clock_mode());
+            _startState->make_un_set_state_event(get_clock_mode());
         }
 
         Operable* get_exit_opr_ptr() override{
@@ -38,7 +38,7 @@ namespace kathryn{
         }
 
         void assign() override{
-            _startState->addDependState(_rstSig, nullptr, get_clock_mode());
+            _startState->add_depend_state(_rstSig, nullptr, get_clock_mode());
             make_unset_state_event();
             _startState->setVarName("startNode");
             _exit_expr->setVarName("startExpr");

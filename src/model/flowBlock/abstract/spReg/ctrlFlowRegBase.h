@@ -47,9 +47,9 @@ namespace kathryn{
                                   CLOCK_MODE cm);
 
         /** add depend State register return update event*/
-        virtual UpdateEventBase* addDependState(Operable* dependState, Operable* activateCond, CLOCK_MODE cm) = 0;
+        virtual UpdateEventBase* add_depend_state(Operable* dependState, Operable* activateCond, CLOCK_MODE cm) = 0;
         /** build register representation when leaving this state */
-        virtual void      makeUnSetStateEvent(CLOCK_MODE cm) = 0;
+        virtual void      make_un_set_state_event(CLOCK_MODE cm) = 0;
         /***make reset Event */
         virtual void      makeUserRstEvent(Operable* rst, CLOCK_MODE cm) = 0;
         /***generate expression that represent state is finish*/
