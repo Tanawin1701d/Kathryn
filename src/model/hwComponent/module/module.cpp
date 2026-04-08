@@ -203,8 +203,8 @@ namespace kathryn{
         }
         for (auto nw: frontNodeWrap){
             /** we will have start wire node to start node*/
-            nw->addDependNodeToAllNode(startNode);
-            nw->assignAllNode();
+            nw->add_depend_node_to_all_node(startNode);
+            nw->assign_all_node();
             /** assume that node wrap that appear to module is not used anymore. */
         }
 

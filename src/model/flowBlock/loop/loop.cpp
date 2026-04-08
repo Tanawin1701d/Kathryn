@@ -61,33 +61,33 @@ namespace kathryn{
 
         ////// loop node
         _loopNode->add_depend_node(_entNode, nullptr);
-        _loopNode->add_depend_node(_subBlockNodeWrap->getExitNode(),
+        _loopNode->add_depend_node(_subBlockNodeWrap->get_exit_node(),
                                  &(~(*_cntNode->get_exit_opr_ptr())));
         _loopNode->assign();
 
         ////// counter Node
         _cntNode->add_depend_node(_entNode, nullptr);
-        _cntNode->make_inc_counter_event(_subBlockNodeWrap->getExitNode());
+        _cntNode->make_inc_counter_event(_subBlockNodeWrap->get_exit_node());
         _cntNode->assign();
 
         ////// exit node
-        _exitNode->add_depend_node(_subBlockNodeWrap->getExitNode(),
+        _exitNode->add_depend_node(_subBlockNodeWrap->get_exit_node(),
                                  _cntNode->get_exit_opr_ptr());
         _exitNode->assign();
 
         /////// sub block trigger
-        _subBlockNodeWrap->addDependNodeToAllNode(_loopNode, nullptr);
-        _subBlockNodeWrap->assignAllNode();
+        _subBlockNodeWrap->add_depend_node_to_all_node(_loopNode, nullptr);
+        _subBlockNodeWrap->assign_all_node();
 
 
         _resultNodeWrapper = new NodeWrap();
-        _resultNodeWrapper->addEntraceNode(_entNode);
-        _resultNodeWrapper->addExitNode(_exitNode);
-        if (_subBlockNodeWrap->getCycleUsed() != IN_CONSIST_CYCLE_USED){
-            _resultNodeWrapper->setCycleUsed(_subBlockNodeWrap->getCycleUsed() * _loopCount);
+        _resultNodeWrapper->add_entrace_node(_entNode);
+        _resultNodeWrapper->add_exit_node(_exitNode);
+        if (_subBlockNodeWrap->get_cycle_used() != IN_CONSIST_CYCLE_USED){
+            _resultNodeWrapper->set_cycle_used(_subBlockNodeWrap->get_cycle_used() * _loopCount);
         }
-        if (_subBlockNodeWrap->isThereForceExitNode()){
-            _resultNodeWrapper->addForceExitNode(_subBlockNodeWrap->getForceExitNode());
+        if (_subBlockNodeWrap->is_there_force_exit_node()){
+            _resultNodeWrapper->add_force_exit_node(_subBlockNodeWrap->get_force_exit_node());
         }
 
         (*_loopId) = (*_cntNode->get_counter());
@@ -129,10 +129,10 @@ namespace kathryn{
     }
 
 
-    void FlowBlockLoop::doPreFunction() {
+    void FlowBlockLoop::do_pre_function() {
         on_attach_block();
     }
-    void FlowBlockLoop::doPostFunction() {
+    void FlowBlockLoop::do_post_function() {
         on_detach_block();
     }
 

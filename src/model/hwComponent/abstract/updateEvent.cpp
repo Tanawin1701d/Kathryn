@@ -30,7 +30,7 @@ namespace kathryn{
                                     Operable*        state,
                                     UpdateEventBase* ueb){
         auto* conEvent = new UpdateEventCond();
-        Operable* condition = addLogicWithOutput(cond, state, BITWISE_AND);
+        Operable* condition = add_logic_with_output(cond, state, BITWISE_AND);
         conEvent->addSubStmt(condition, ueb);
         return conEvent;
     }

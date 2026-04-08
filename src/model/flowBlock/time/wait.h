@@ -41,8 +41,8 @@ namespace kathryn{
         void on_detach_block() override;
         void build_hw_component() override;
         /** Loop macro to notice position of system*/
-        void doPreFunction() override;
-        void doPostFunction() override;
+        void do_pre_function() override;
+        void do_post_function() override;
         /** debug method*/
         std::string get_md_describe() override;
         void add_md_log(MdLogVal* mdLogVal) override;
@@ -75,8 +75,8 @@ namespace kathryn{
         void on_detach_block() override;
         void build_hw_component() override;
         /** Loop macro to notice position of system*/
-        void doPreFunction() override;
-        void doPostFunction() override;
+        void do_pre_function() override;
+        void do_post_function() override;
         /** debugger*/
         std::string get_md_describe() override;
         void add_md_log(MdLogVal* mdLogVal) override;

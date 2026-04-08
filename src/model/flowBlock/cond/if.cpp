@@ -126,28 +126,28 @@ namespace kathryn{
         /**add condition to state*/
         Operable* prevFalse = &(~(*allPurifiedCondes[0]));
         /** assign first first if*/
-        allStatement[0]->addDependNodeToAllNode( condNode,allPurifiedCondes[0]);
-        allStatement[0]->assignAllNode();
-        exitNode->add_depend_node(allStatement[0]->getExitNode(), nullptr);
+        allStatement[0]->add_depend_node_to_all_node( condNode,allPurifiedCondes[0]);
+        allStatement[0]->assign_all_node();
+        exitNode->add_depend_node(allStatement[0]->get_exit_node(), nullptr);
 
 
         int statementId = 1;
         for (; statementId < allStatement.size(); statementId++){
             if (statementId < allPurifiedCondes.size()) {
-                allStatement[statementId]->addDependNodeToAllNode(
+                allStatement[statementId]->add_depend_node_to_all_node(
                         condNode,
                         &((*allPurifiedCondes[statementId]) & (*prevFalse)));
-                allStatement[statementId]->assignAllNode();
-                exitNode->add_depend_node(allStatement[statementId]->getExitNode(), nullptr);
+                allStatement[statementId]->assign_all_node();
+                exitNode->add_depend_node(allStatement[statementId]->get_exit_node(), nullptr);
                 prevFalse = &((*prevFalse) & ~(*allPurifiedCondes[statementId]));
             }else{
                 /** case else statement*/
                 assert(statementId == (allPurifiedCondes.size())); /// check no ambiguous statement
-                allStatement[statementId]->addDependNodeToAllNode(
+                allStatement[statementId]->add_depend_node_to_all_node(
                         condNode,
                         prevFalse);
-                allStatement[statementId]->assignAllNode();
-                exitNode->add_depend_node(allStatement[statementId]->getExitNode(), nullptr);
+                allStatement[statementId]->assign_all_node();
+                exitNode->add_depend_node(allStatement[statementId]->get_exit_node(), nullptr);
             }
         }
 
@@ -168,13 +168,13 @@ namespace kathryn{
          * */
 
 
-        resultNodeWrap->addEntraceNode(condNode);
-        resultNodeWrap->addExitNode(exitNode);
+        resultNodeWrap->add_entrace_node(condNode);
+        resultNodeWrap->add_exit_node(exitNode);
 
         /**force exit condition*/
         gen_sum_force_exit_node(allStatement);
         if (_are_there_force_exit)
-            resultNodeWrap->addForceExitNode(_force_exit_node);
+            resultNodeWrap->add_force_exit_node(_force_exit_node);
 
         /**
          *
@@ -184,20 +184,20 @@ namespace kathryn{
          *
          * */
         NodeWrapCycleDet deter;
-        deter.addToDet(allStatement);
+        deter.add_to_det(allStatement);
         if(allStatement.size() == allPurifiedCondes.size()){
             /** there is zero state node*/
-            deter.addToDet(0);
+            deter.add_to_det(0);
         }
 
         /**cycle determiner for node wrap*/
-        int cycleUsed = deter.getSameCycleHorizon();
+        int cycleUsed = deter.get_same_cycle_horizon();
         if (cycleUsed == IN_CONSIST_CYCLE_USED){
-            resultNodeWrap->setCycleUsed(IN_CONSIST_CYCLE_USED);
+            resultNodeWrap->set_cycle_used(IN_CONSIST_CYCLE_USED);
         }else if (get_flow_type() == CIF){
-            resultNodeWrap->setCycleUsed(cycleUsed);
+            resultNodeWrap->set_cycle_used(cycleUsed);
         }else if (get_flow_type() == SIF){
-            resultNodeWrap->setCycleUsed(cycleUsed+1);
+            resultNodeWrap->set_cycle_used(cycleUsed+1);
         }else{
             assert(false);
         }
@@ -217,10 +217,10 @@ namespace kathryn{
         assert(allCondes.size() == allPurifiedCondes.size());
         mdLogVal->addVal("[ " + FlowBlockBase::get_md_ident_val() +" ]");
         int cnt = 0;
-        if (resultNodeWrap->isThereForceExitNode()){
-            mdLogVal->addVal("forceExit is " + resultNodeWrap->getForceExitNode()->get_md_ident_val() +
+        if (resultNodeWrap->is_there_force_exit_node()){
+            mdLogVal->addVal("forceExit is " + resultNodeWrap->get_force_exit_node()->get_md_ident_val() +
                              "  " +
-                             resultNodeWrap->getForceExitNode()->get_md_describe());
+                             resultNodeWrap->get_force_exit_node()->get_md_describe());
         }
         for (auto sb : _sub_blocks){
             std::string subBlockHeaderDebug = "----> subblock " + std::to_string(cnt) + " condition ";
@@ -234,11 +234,11 @@ namespace kathryn{
         }
     }
 
-    void FlowBlockIf::doPreFunction() {
+    void FlowBlockIf::do_pre_function() {
         on_attach_block();
     }
 
-    void FlowBlockIf::doPostFunction() {
+    void FlowBlockIf::do_post_function() {
         on_detach_block();
     }
 

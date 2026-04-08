@@ -71,17 +71,17 @@ namespace kathryn{
 
         /**build resultNodeWrap*/
         resultNodeWrap = new NodeWrap();
-        resultNodeWrap->addEntraceNode(breakNode);
+        resultNodeWrap->add_entrace_node(breakNode);
         if (forceExitOpr == nullptr){
-            resultNodeWrap->addForceExitNode(breakNode);
+            resultNodeWrap->add_force_exit_node(breakNode);
         }else{
             breakCondNode = new PseudoNode(1, BITWISE_AND);
             breakCondNode->add_depend_node(breakNode, forceExitOpr);
             breakCondNode->assign();
             add_sys_node(breakCondNode);
-            resultNodeWrap->addForceExitNode(breakCondNode);
+            resultNodeWrap->add_force_exit_node(breakCondNode);
         }
-        resultNodeWrap->addExitNode(normExitNode);
+        resultNodeWrap->add_exit_node(normExitNode);
 
     }
 
@@ -97,11 +97,11 @@ namespace kathryn{
                              (breakNode != nullptr ? breakNode->get_md_describe() : ""));
     }
 
-    void FlowBlockSCBreak::doPreFunction() {
+    void FlowBlockSCBreak::do_pre_function() {
         on_attach_block();
     }
 
-    void FlowBlockSCBreak::doPostFunction() {
+    void FlowBlockSCBreak::do_post_function() {
         on_detach_block();
     }
 }

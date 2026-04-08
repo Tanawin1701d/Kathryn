@@ -10,24 +10,24 @@ namespace kathryn{
     class LoopStMacro{
 
     private:
-        bool isStartStage = true;
+        bool _is_start_stage = true;
 
     public:
 
         void step(){
             /** this is used when change start stage to finish State*/
-            isStartStage = false;
+            _is_start_stage = false;
         }
 
-        virtual void doPreFunction() = 0;
-        virtual void doPostFunction() = 0;
+        virtual void do_pre_function() = 0;
+        virtual void do_post_function() = 0;
 
-        bool doPrePostFunction(){
-            if (isStartStage){
-                doPreFunction();
+        bool do_pre_post_function(){
+            if (_is_start_stage){
+                do_pre_function();
                 return true;
             }else{
-                doPostFunction();
+                do_post_function();
                 return false;
             }
         }

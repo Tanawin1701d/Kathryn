@@ -64,16 +64,16 @@ namespace kathryn{
 
         /** result node wrap*/
         _resultNodeWrap = new NodeWrap();
-        _resultNodeWrap->addEntraceNode(_waitNode);
-        _resultNodeWrap->addExitNode(_waitNode);
+        _resultNodeWrap->add_entrace_node(_waitNode);
+        _resultNodeWrap->add_exit_node(_waitNode);
 
     }
 
-    void FlowBlockCondWait::doPreFunction() {
+    void FlowBlockCondWait::do_pre_function() {
         on_attach_block();
     }
 
-    void FlowBlockCondWait::doPostFunction() {
+    void FlowBlockCondWait::do_post_function() {
         on_detach_block();
     }
 
@@ -165,16 +165,16 @@ namespace kathryn{
 
         /** result node wrap*/
         _resultNodeWrap = new NodeWrap();
-        _resultNodeWrap->addEntraceNode(_waitNode);
-        _resultNodeWrap->addExitNode(_waitNode);
+        _resultNodeWrap->add_entrace_node(_waitNode);
+        _resultNodeWrap->add_exit_node(_waitNode);
 
     }
 
-    void FlowBlockCycleWait::doPreFunction() {
+    void FlowBlockCycleWait::do_pre_function() {
         on_attach_block();
     }
 
-    void FlowBlockCycleWait::doPostFunction() {
+    void FlowBlockCycleWait::do_post_function() {
         on_detach_block();
     }
 

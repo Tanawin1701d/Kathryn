@@ -50,7 +50,7 @@ namespace kathryn{
     }
 
     void SequenceEleBasic::addToCycleDet(NodeWrapCycleDet& deter) const{
-        deter.addToDet(_asmNode);
+        deter.add_to_det(_asmNode);
     }
     void SequenceEleBasic::assignDependDent(SequenceEle* predecessor) const{
         _stateNode->add_depend_node(predecessor->getStateFinishIden(), nullptr);
@@ -121,30 +121,30 @@ namespace kathryn{
     }
 
     void SequenceEleFlowBlock::addToCycleDet(NodeWrapCycleDet& deter) const{
-        deter.addToDet(_complexNode);
+        deter.add_to_det(_complexNode);
     }
     void SequenceEleFlowBlock::assignDependDent(SequenceEle* predecessor) const{
-        _complexNode->addDependNodeToAllNode(predecessor->getStateFinishIden());
-        _complexNode->assignAllNode();
+        _complexNode->add_depend_node_to_all_node(predecessor->getStateFinishIden());
+        _complexNode->assign_all_node();
     }
     void SequenceEleFlowBlock::assignIntStart(OprNode* intStartNode){
-        _complexNode->addDependNodeToAllNode(intStartNode);
+        _complexNode->add_depend_node_to_all_node(intStartNode);
     }
 
     Node* SequenceEleFlowBlock::getStateFinishIden() const{
-        return _complexNode->getExitNode();
+        return _complexNode->get_exit_node();
     }
     std::vector<Node*> SequenceEleFlowBlock::getEntranceNodes(){
-        return _complexNode->entranceNodes;
+        return _complexNode->_entrance_nodes;
 
     }
     bool SequenceEleFlowBlock::isThereForceExitNode() const{
         return (_complexNode != nullptr)  &&
-               (_complexNode->isThereForceExitNode());
+               (_complexNode->is_there_force_exit_node());
     }
     Node* SequenceEleFlowBlock::getForceExitNode() const{
         assert(isThereForceExitNode());
-        return _complexNode->getForceExitNode();
+        return _complexNode->get_force_exit_node();
 
     }
     bool SequenceEleFlowBlock::isNodeWrap() const{
@@ -167,8 +167,8 @@ namespace kathryn{
     void SequenceEleFlowBlock::addToSystemNodes(std::vector<Node*>& sysNode){}
 
     void SequenceEleFlowBlock::assignDependDent(Node* activatorNode) const{
-        _complexNode->addDependNodeToAllNode(activatorNode);
-        _complexNode->assignAllNode();
+        _complexNode->add_depend_node_to_all_node(activatorNode);
+        _complexNode->assign_all_node();
     }
 
 

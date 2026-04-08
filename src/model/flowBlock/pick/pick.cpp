@@ -73,8 +73,8 @@ namespace kathryn{
         add_sys_node(jointNode);
         for (int sid = 0; sid < nodeWrapOfPickCondBlocks.size(); sid++){
             nodeWrapOfPickCondBlocks[sid]
-            ->addDependNodeToAllNode(jointNode,pickCondBlocks[sid]->getCondition());
-            nodeWrapOfPickCondBlocks[sid]->assignAllNode();
+            ->add_depend_node_to_all_node(jointNode,pickCondBlocks[sid]->getCondition());
+            nodeWrapOfPickCondBlocks[sid]->assign_all_node();
         }
 
         ////// build auto exitNode if needed
@@ -103,7 +103,7 @@ namespace kathryn{
         ////// join all exit node
         for (auto & nodeWrapOfPickCondBlock : nodeWrapOfPickCondBlocks){
             exitNode->add_depend_node(
-                nodeWrapOfPickCondBlock->getExitNode(),
+                nodeWrapOfPickCondBlock->get_exit_node(),
                 nullptr);
         }
         if (autoExitNode != nullptr){
@@ -119,31 +119,31 @@ namespace kathryn{
         ///////
 
         resultNodeWrap = new NodeWrap();
-        resultNodeWrap->addEntraceNode(jointNode);
-        resultNodeWrap->addExitNode(exitNode);
+        resultNodeWrap->add_entrace_node(jointNode);
+        resultNodeWrap->add_exit_node(exitNode);
 
         //// do force exit node
         gen_sum_force_exit_node(nodeWrapOfPickCondBlocks);
         if (_are_there_force_exit){
-            resultNodeWrap->addForceExitNode(_force_exit_node);
+            resultNodeWrap->add_force_exit_node(_force_exit_node);
         }
 
         //// cycle determiner
         NodeWrapCycleDet deter;
-        deter.addToDet(nodeWrapOfPickCondBlocks);
+        deter.add_to_det(nodeWrapOfPickCondBlocks);
         if (reqAutoExit){
-            deter.addToDet(0);
+            deter.add_to_det(0);
         }
-        int cycleUsed = deter.getSameCycleHorizon();
-        resultNodeWrap->setCycleUsed(cycleUsed);
+        int cycleUsed = deter.get_same_cycle_horizon();
+        resultNodeWrap->set_cycle_used(cycleUsed);
     }
 
-    void FlowBlockPick::doPreFunction() {
+    void FlowBlockPick::do_pre_function() {
         on_attach_block();
     }
 
     void
-    FlowBlockPick::doPostFunction(){
+    FlowBlockPick::do_post_function(){
         on_detach_block();
     }
 

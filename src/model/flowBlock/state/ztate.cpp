@@ -91,11 +91,11 @@ FlowBlockZtate::FlowBlockZtate(Operable &identState):
         assert(false);
     }
 
-    void FlowBlockZtate::doPreFunction() {
+    void FlowBlockZtate::do_pre_function() {
         on_attach_block();
     }
 
-    void FlowBlockZtate::doPostFunction() {
+    void FlowBlockZtate::do_post_function() {
         on_detach_block();
     }
 

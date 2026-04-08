@@ -74,7 +74,7 @@ namespace kathryn {
     struct NodeExtractable{
         virtual ~NodeExtractable() = default;
 
-        virtual std::vector<AsmNode*> extract() { assert(false);};
+        virtual std::vector<AsmNode*> extract() { assert(false);}
 
     };
 

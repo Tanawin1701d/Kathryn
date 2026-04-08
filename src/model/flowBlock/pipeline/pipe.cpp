@@ -63,7 +63,7 @@ namespace kathryn{
         _syncMata.setSlaveReady(*entNode->get_exit_opr_ptr());
 
         //////// set when pipeline is success
-        Node* exitNode = subBlockNodeWrap->getExitNode();
+        Node* exitNode = subBlockNodeWrap->get_exit_node();
         _syncMata.setSlaveFinish(*exitNode->get_exit_opr_ptr());
     }
 
@@ -101,7 +101,7 @@ namespace kathryn{
         exitDummy     = new DummyNode(&makeOprVal("exitDummy",1, 0));
 
         ///////// add node dependency
-        entNode->add_depend_node(subBlockNodeWrap->getExitNode(), nullptr);
+        entNode->add_depend_node(subBlockNodeWrap->get_exit_node(), nullptr);
         entNode->add_depend_node(waitNode, nullptr);
         fill_intr_reset_to_node_if_there(waitNode);
         fill_hold_to_node_if_there(waitNode);
@@ -109,7 +109,7 @@ namespace kathryn{
             entNode->add_depend_node(_int_nodes[INT_START], nullptr);
         }
         waitNode->add_depend_node(entNode, &(~(*activateSignal)));
-        subBlockNodeWrap->addDependNodeToAllNode(entNode, activateSignal);
+        subBlockNodeWrap->add_depend_node_to_all_node(entNode, activateSignal);
 
         ////////// add system Node
         add_sys_node(entNode);
@@ -120,12 +120,12 @@ namespace kathryn{
                 ////// ent wait for outer  block assign or master
         waitNode->assign();
         exitDummy->assign();
-        subBlockNodeWrap->assignAllNode();
+        subBlockNodeWrap->assign_all_node();
 
         /////////// build resultNode Wrap
         resultNodeWrap = new NodeWrap();
-        resultNodeWrap->addEntraceNode(entNode);
-        resultNodeWrap->addExitNode(exitDummy);
+        resultNodeWrap->add_entrace_node(entNode);
+        resultNodeWrap->add_exit_node(exitDummy);
 
         //////////// build ready signal to tell that pipe line is ready
         assignReadySignal();
@@ -162,11 +162,11 @@ namespace kathryn{
         _ctrl->on_detach_flowBlock(this);
     }
 
-    void FlowBlockPipeBase::doPreFunction(){
+    void FlowBlockPipeBase::do_pre_function(){
         on_attach_block();
     }
 
-    void FlowBlockPipeBase::doPostFunction(){
+    void FlowBlockPipeBase::do_post_function(){
         on_detach_block();
     }
 

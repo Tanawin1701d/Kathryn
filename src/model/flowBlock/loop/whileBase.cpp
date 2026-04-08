@@ -67,14 +67,14 @@ namespace kathryn{
         ////////////////////////////////////////////////////////////////////
 
         /** do sub block dep init*/
-        subBlockNodeWrap->addDependNodeToAllNode(conditionNode, _purifiedCondExpr);
-        subBlockNodeWrap->assignAllNode();
+        subBlockNodeWrap->add_depend_node_to_all_node(conditionNode, _purifiedCondExpr);
+        subBlockNodeWrap->assign_all_node();
 
         /**do condition node Dep*/
             //// codition trigger from outside willbe trigger in upper node
-        conditionNode->add_depend_node(subBlockNodeWrap->getExitNode(),
-                                     subBlockNodeWrap->isThereForceExitNode()?
-                                        ( &(~(*subBlockNodeWrap->getForceExitNode()->get_exit_opr_ptr())) ):
+        conditionNode->add_depend_node(subBlockNodeWrap->get_exit_node(),
+                                     subBlockNodeWrap->is_there_force_exit_node()?
+                                        ( &(~(*subBlockNodeWrap->get_force_exit_node()->get_exit_opr_ptr())) ):
                                         nullptr
                                      );
         if(is_there_intr_start()){
@@ -84,11 +84,11 @@ namespace kathryn{
         if (!_fallTrue) {
             exitNode->add_depend_node(conditionNode, &(!(*_purifiedCondExpr)) );
         }
-        if (subBlockNodeWrap->isThereForceExitNode()){
-            exitNode->add_depend_node(subBlockNodeWrap->getForceExitNode(), nullptr);
+        if (subBlockNodeWrap->is_there_force_exit_node()){
+            exitNode->add_depend_node(subBlockNodeWrap->get_force_exit_node(), nullptr);
         }
 
-        if (_fallTrue && (!subBlockNodeWrap->isThereForceExitNode())){
+        if (_fallTrue && (!subBlockNodeWrap->is_there_force_exit_node())){
             ///////// incase there is no exit source we warning user that there is infinite loop
             /////////// TODO warning
             exitDummy = new DummyNode(&makeOprVal("exitDummy",1, 0));
@@ -99,8 +99,8 @@ namespace kathryn{
         exitNode->assign();
 
 
-        resultNodeWrapper->addEntraceNode(conditionNode);
-        resultNodeWrapper->addExitNode(exitNode);
+        resultNodeWrapper->add_entrace_node(conditionNode);
+        resultNodeWrapper->add_exit_node(exitNode);
 
     }
 
@@ -139,10 +139,10 @@ namespace kathryn{
     }
 
 
-    void FlowBlockWhile::doPreFunction() {
+    void FlowBlockWhile::do_pre_function() {
         on_attach_block();
     }
-    void FlowBlockWhile::doPostFunction() {
+    void FlowBlockWhile::do_post_function() {
         on_detach_block();
     }
 

@@ -77,9 +77,9 @@ namespace kathryn{
         ull                 cycle     = repBase.getVal();
 
         std::string         trackName; ///track name is user optional define trackerName
-        if (fb->isZepTrackNameSet()){
-            trackDatas.push_back({fb->getZepTrackName(), cycle});
-            trackName = " >>> " + fb->getZepTrackName();
+        if (fb->is_zep_track_name_set()){
+            trackDatas.push_back({fb->get_zep_track_name(), cycle});
+            trackName = " >>> " + fb->get_zep_track_name();
         }
 
 

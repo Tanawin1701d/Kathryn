@@ -90,8 +90,8 @@ namespace kathryn{
 
         /**result Node wrap*/
         _resultNodeWrap = new NodeWrap();
-        _resultNodeWrap->addEntraceNodes(allStartNodes);
-        _resultNodeWrap->addExitNode(_dummyNode);
+        _resultNodeWrap->add_entrace_nodes(allStartNodes);
+        _resultNodeWrap->add_exit_node(_dummyNode);
 
     }
 
@@ -127,11 +127,11 @@ namespace kathryn{
 
     }
 
-    void FlowBlockPipeStream::doPreFunction() {
+    void FlowBlockPipeStream::do_pre_function() {
         on_attach_block();
     }
 
-    void FlowBlockPipeStream::doPostFunction() {
+    void FlowBlockPipeStream::do_post_function() {
         on_detach_block();
     }
 

@@ -65,11 +65,11 @@ namespace kathryn{
         resultNodeWrapper = _sub_blocks[0]->sumarize_block();
     }
 
-    void FlowBlockElif::doPreFunction() {
+    void FlowBlockElif::do_pre_function() {
         on_attach_block();
     }
 
-    void FlowBlockElif::doPostFunction() {
+    void FlowBlockElif::do_post_function() {
         on_detach_block();
     }
 

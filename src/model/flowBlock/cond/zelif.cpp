@@ -86,11 +86,11 @@ namespace kathryn{
         assert(false);
     }
 
-    void FlowBlockZELIF::doPreFunction() {
+    void FlowBlockZELIF::do_pre_function() {
         on_attach_block();
     }
 
-    void FlowBlockZELIF::doPostFunction() {
+    void FlowBlockZELIF::do_post_function() {
         on_detach_block();
     }
 

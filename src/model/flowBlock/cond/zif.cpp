@@ -72,7 +72,7 @@ namespace kathryn{
                 }
             }
             if (!found){
-                slaveAsmMeta->condition = addLogicWithOutput(prevFalse, slaveAsmMeta->condition, BITWISE_AND);
+                slaveAsmMeta->condition = add_logic_with_output(prevFalse, slaveAsmMeta->condition, BITWISE_AND);
                 _assignMetas.push_back(slaveAsmMeta);
             }
         }
@@ -117,11 +117,11 @@ namespace kathryn{
         assert(false);
     }
 
-    void FlowBlockZIF::doPreFunction() {
+    void FlowBlockZIF::do_pre_function() {
         on_attach_block();
     }
 
-    void FlowBlockZIF::doPostFunction() {
+    void FlowBlockZIF::do_post_function() {
         on_detach_block();
     }
 

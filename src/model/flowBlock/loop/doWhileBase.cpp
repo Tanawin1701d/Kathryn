@@ -34,26 +34,26 @@ namespace kathryn {
         assert(subBlockNodeWrap != nullptr);
 
         /***sub block depend lower deck is assume condition or*/
-        subBlockNodeWrap->addDependNodeToAllNode(subBlockNodeWrap->getExitNode(),
-                                                 subBlockNodeWrap->isThereForceExitNode()
-                                                 ? &((*_purifiedCondExpr) & (~(*subBlockNodeWrap->getForceExitNode()->get_exit_opr_ptr())))
+        subBlockNodeWrap->add_depend_node_to_all_node(subBlockNodeWrap->get_exit_node(),
+                                                 subBlockNodeWrap->is_there_force_exit_node()
+                                                 ? &((*_purifiedCondExpr) & (~(*subBlockNodeWrap->get_force_exit_node()->get_exit_opr_ptr())))
                                                  : _purifiedCondExpr);
         if (is_there_intr_start()) {
-            subBlockNodeWrap->addDependNodeToAllNode(_int_nodes[INT_START], nullptr);
+            subBlockNodeWrap->add_depend_node_to_all_node(_int_nodes[INT_START], nullptr);
         }
         /** exit node*/
         //////// no need reset signal
         exitNode = new PseudoNode(1, BITWISE_OR);
-        exitNode->add_depend_node(subBlockNodeWrap->getExitNode(), &(!(*_purifiedCondExpr)));
-        if (subBlockNodeWrap->isThereForceExitNode()){
-            exitNode->add_depend_node(subBlockNodeWrap->getForceExitNode(), nullptr);
+        exitNode->add_depend_node(subBlockNodeWrap->get_exit_node(), &(!(*_purifiedCondExpr)));
+        if (subBlockNodeWrap->is_there_force_exit_node()){
+            exitNode->add_depend_node(subBlockNodeWrap->get_force_exit_node(), nullptr);
         }
         exitNode->assign();
         add_sys_node(exitNode);
         ////////////////////////////////////////////////////////////////////
         resultNodeWrapper = new NodeWrap();
-        resultNodeWrapper->transferEntNodeFrom(subBlockNodeWrap);
-        resultNodeWrapper->addExitNode(exitNode);
+        resultNodeWrapper->transfer_ent_node_from(subBlockNodeWrap);
+        resultNodeWrapper->add_exit_node(exitNode);
 
     }
 
@@ -91,11 +91,11 @@ namespace kathryn {
     }
 
 
-    void FlowBlockDowhile::doPreFunction() {
+    void FlowBlockDowhile::do_pre_function() {
         on_attach_block();
     }
 
-    void FlowBlockDowhile::doPostFunction() {
+    void FlowBlockDowhile::do_post_function() {
         on_detach_block();
     }
 

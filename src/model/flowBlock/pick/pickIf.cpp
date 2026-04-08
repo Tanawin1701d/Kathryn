@@ -64,11 +64,11 @@ namespace kathryn{
 
     }
 
-    void FlowBlockPickCond::doPreFunction(){
+    void FlowBlockPickCond::do_pre_function(){
         on_attach_block();
     }
 
-    void FlowBlockPickCond::doPostFunction(){
+    void FlowBlockPickCond::do_post_function(){
         on_detach_block();
     }
 

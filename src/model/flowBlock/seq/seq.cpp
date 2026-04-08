@@ -93,11 +93,11 @@ namespace kathryn{
 
         /** build new result NodeWrap*/
         resultNodeWrap = new NodeWrap();
-        resultNodeWrap->addEntraceNodes((*_subSeqMetas.begin())->getEntranceNodes());
-        resultNodeWrap->addExitNode((*_subSeqMetas.rbegin())->getStateFinishIden());
-        resultNodeWrap->setCycleUsed(cycleDet.getCycleVertical());
+        resultNodeWrap->add_entrace_nodes((*_subSeqMetas.begin())->getEntranceNodes());
+        resultNodeWrap->add_exit_node((*_subSeqMetas.rbegin())->getStateFinishIden());
+        resultNodeWrap->set_cycle_used(cycleDet.get_cycle_vertical());
         if (_are_there_force_exit)
-            resultNodeWrap->addForceExitNode(_force_exit_node);
+            resultNodeWrap->add_force_exit_node(_force_exit_node);
 
     }
 
@@ -123,21 +123,21 @@ namespace kathryn{
         for (auto seqEle: _subSeqMetas){
             mdLogVal->addVal(seqEle->getDescribe());
         }
-        if (resultNodeWrap->isThereForceExitNode()){
-            mdLogVal->addVal("forceExit is " + resultNodeWrap->getForceExitNode()->get_md_ident_val() +
+        if (resultNodeWrap->is_there_force_exit_node()){
+            mdLogVal->addVal("forceExit is " + resultNodeWrap->get_force_exit_node()->get_md_ident_val() +
                                                    "  " +
-                                                   resultNodeWrap->getForceExitNode()->get_md_describe());
+                                                   resultNodeWrap->get_force_exit_node()->get_md_describe());
         }
 
         add_md_log_recur(mdLogVal);
 
     }
 
-    void FlowBlockSeq::doPreFunction() {
+    void FlowBlockSeq::do_pre_function() {
         on_attach_block();
     }
 
-    void FlowBlockSeq::doPostFunction() {
+    void FlowBlockSeq::do_post_function() {
         on_detach_block();
     }
 

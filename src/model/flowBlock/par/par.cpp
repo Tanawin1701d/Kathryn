@@ -96,24 +96,24 @@ namespace kathryn{
          * */
         NodeWrapCycleDet cycleDet;
         if (basicStNode != nullptr)
-            cycleDet.addToDet(basicStNode);
-        cycleDet.addToDet(nodeWrapOfSubBlock);
-        cycleUsed = cycleDet.getMaxCycleHorizon();
+            cycleDet.add_to_det(basicStNode);
+        cycleDet.add_to_det(nodeWrapOfSubBlock);
+        cycleUsed = cycleDet.get_max_cycle_horizon();
         /**
          * build result node wrap entrance
          * */
         /*** entrance node management*/
         resultNodeWrap = new NodeWrap();
         if (basicStNode != nullptr) {
-            resultNodeWrap->addEntraceNode(basicStNode);
+            resultNodeWrap->add_entrace_node(basicStNode);
             if (is_there_intr_start()){
                 basicStNode->add_depend_node(_int_nodes[INT_START], nullptr);
             }
         }
         for (auto nw : nodeWrapOfSubBlock){
-            resultNodeWrap->transferEntNodeFrom(nw);
+            resultNodeWrap->transfer_ent_node_from(nw);
             if (is_there_intr_start()){
-                nw->addDependNodeToAllNode(_int_nodes[INT_START]);
+                nw->add_depend_node_to_all_node(_int_nodes[INT_START]);
             }
         }
         /** scan for master join block**/
@@ -129,22 +129,22 @@ namespace kathryn{
 
 
     void FlowBlockPar::assignCycleUsedToRnw(){
-        resultNodeWrap->setCycleUsed(cycleUsed);
+        resultNodeWrap->set_cycle_used(cycleUsed);
     }
 
     void FlowBlockPar::assignForceExitToRnw() {
         if (_are_there_force_exit){
-            resultNodeWrap->addForceExitNode(_force_exit_node);
+            resultNodeWrap->add_force_exit_node(_force_exit_node);
         }
     }
 
     void
-    FlowBlockPar::doPreFunction() {
+    FlowBlockPar::do_pre_function() {
         on_attach_block();
     }
 
     void
-    FlowBlockPar::doPostFunction(){
+    FlowBlockPar::do_post_function(){
         on_detach_block();
     }
 
@@ -194,16 +194,16 @@ namespace kathryn{
                           pseudoExitNode->get_md_ident_val() + "  " + pseudoExitNode->get_md_describe():
                           ""));
 
-        Node* exitNode = resultNodeWrap->getExitNode();
+        Node* exitNode = resultNodeWrap->get_exit_node();
         mdLogVal->addVal("exit node is " +
                         ( (exitNode != nullptr) ?
                             exitNode->get_md_ident_val() + "  " + exitNode->get_md_describe():
                             ""));
 
-        if (resultNodeWrap->isThereForceExitNode()){
-            mdLogVal->addVal("forceExit is " + resultNodeWrap->getForceExitNode()->get_md_ident_val() +
+        if (resultNodeWrap->is_there_force_exit_node()){
+            mdLogVal->addVal("forceExit is " + resultNodeWrap->get_force_exit_node()->get_md_ident_val() +
                              "  " +
-                             resultNodeWrap->getForceExitNode()->get_md_describe());
+                             resultNodeWrap->get_force_exit_node()->get_md_describe());
         }
 
         add_md_log_recur(mdLogVal);
@@ -244,7 +244,7 @@ namespace kathryn{
                 synNode->add_depend_node(basicStNode, nullptr);
             }
             for (auto nw : nodeWrapOfSubBlock){
-                synNode->add_depend_node(nw->getExitNode(), nullptr);
+                synNode->add_depend_node(nw->get_exit_node(), nullptr);
             }
             ////// assign sync reg and sync node don't have to set join op because
             /////////// sync register will handle it
@@ -259,26 +259,26 @@ namespace kathryn{
                         (int)(nodeWrapOfSubBlock.size());
 
         if (synNode != nullptr){
-            resultNodeWrap->addExitNode(synNode);
+            resultNodeWrap->add_exit_node(synNode);
         }else if (masterJoinFlowBlock != nullptr){ //// masterJoin is come from user declaration
             NodeWrap* joinnerNodeWrap = masterJoinFlowBlock->sumarize_block();
-            Node* exitNode = joinnerNodeWrap->getExitNode();
+            Node* exitNode = joinnerNodeWrap->get_exit_node();
             assert(exitNode != nullptr);
-            resultNodeWrap->addExitNode(exitNode);
+            resultNodeWrap->add_exit_node(exitNode);
         }else{
             /** get Match allow nullptr*/
             Node* exitNode = nullptr;
             if (cycleUsed >= 0){    /////// can determine cycle
-                exitNode = getMatchNodeFromNdsOrNws({basicStNode},
+                exitNode = get_match_node_from_nds_or_nws({basicStNode},
                                                     nodeWrapOfSubBlock,
                                                     cycleUsed);
             }else{ /////// cannot determine but have only one
                 assert(amt_block == 1); //// in > 1
-                exitNode = getAnyNodeFromNdsOrNws({basicStNode},
+                exitNode = get_any_node_from_nds_or_nws({basicStNode},
                                                   nodeWrapOfSubBlock);
             }
             assert(exitNode != nullptr);
-            resultNodeWrap->addExitNode(exitNode);
+            resultNodeWrap->add_exit_node(exitNode);
         }
 
     }
@@ -299,12 +299,12 @@ namespace kathryn{
         /** get Match allow nullptr*/
         Node* exitNode = nullptr;
         if (cycleUsed >= 0){
-            exitNode = getMatchNodeFromNdsOrNws({basicStNode},
+            exitNode = get_match_node_from_nds_or_nws({basicStNode},
                                                 nodeWrapOfSubBlock,
                                                 cycleUsed);
         }else if (amt_block == 1){
             assert(amt_block == 1);
-            exitNode = getAnyNodeFromNdsOrNws({basicStNode},
+            exitNode = get_any_node_from_nds_or_nws({basicStNode},
                                               nodeWrapOfSubBlock);
         }else{
             assert(amt_block > 1);
@@ -313,12 +313,12 @@ namespace kathryn{
             if (basicStNode != nullptr)
                 pseudoExitNode->add_depend_node(basicStNode, nullptr);
             for (auto nw : nodeWrapOfSubBlock){
-                pseudoExitNode->add_depend_node(nw->getExitNode(), nullptr);
+                pseudoExitNode->add_depend_node(nw->get_exit_node(), nullptr);
             }
             pseudoExitNode->assign();
             exitNode  = pseudoExitNode;
         }
         assert(exitNode != nullptr);
-        resultNodeWrap->addExitNode(exitNode);
+        resultNodeWrap->add_exit_node(exitNode);
     }
 }

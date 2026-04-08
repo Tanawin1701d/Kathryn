@@ -66,11 +66,11 @@ namespace kathryn{
         assert(false);
     }
 
-    void FlowBlockZCase::doPreFunction() {
+    void FlowBlockZCase::do_pre_function() {
         on_attach_block();
     }
 
-    void FlowBlockZCase::doPostFunction() {
+    void FlowBlockZCase::do_post_function() {
         on_detach_block();
     }
 

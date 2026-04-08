@@ -99,12 +99,12 @@ namespace kathryn{
         /** assign master module*/
         Module* parent_mod = get_target_module_ele().md;
         assert(parent_mod != nullptr);
-        fb->setParent(parent_mod);
+        fb->set_parent(parent_mod);
 
         /** assign master flow block*/
         if (is_top_fb_belong_to_top_module()){
             FlowBlockBase* top_fb = get_top_flow_block_base_ptr();
-            fb->setParent(top_fb);
+            fb->set_parent(top_fb);
         }
     }
 
@@ -129,7 +129,7 @@ namespace kathryn{
     bool ModelController::is_top_fb_belong_to_top_module(){
         assert(get_top_module_ptr() != nullptr);
         return (!_flow_block_stacks[FLOW_ST_BASE_STACK].empty()) &&
-                (_flow_block_stacks[FLOW_ST_BASE_STACK].top()->getModuleParent() == get_top_module_ptr());
+                (_flow_block_stacks[FLOW_ST_BASE_STACK].top()->get_module_parent_ptr() == get_top_module_ptr());
 
     }
 
@@ -196,7 +196,7 @@ namespace kathryn{
 
         bool top_pattern_fb_belong_to_top_module =
                   (!_flow_block_stacks[FLOW_ST_PATTERN_STACK].empty())
-                && (_flow_block_stacks[FLOW_ST_PATTERN_STACK].top()->getModuleParent() == get_top_module_ptr()
+                && (_flow_block_stacks[FLOW_ST_PATTERN_STACK].top()->get_module_parent_ptr() == get_top_module_ptr()
                 );
 
         if (top_pattern_fb_belong_to_top_module){
@@ -220,8 +220,8 @@ namespace kathryn{
         FlowBlockBase* flow_block_b = get_top_flow_block_base_ptr(b);
         assert(flow_block_a != nullptr && flow_block_b != nullptr);
 
-        Module* parent_a = flow_block_a->getModuleParent();
-        Module* parent_b = flow_block_b->getModuleParent();
+        Module* parent_a = flow_block_a->get_module_parent_ptr();
+        Module* parent_b = flow_block_b->get_module_parent_ptr();
 
         assert(parent_a != nullptr &&  parent_b != nullptr);
         return parent_a == parent_b;

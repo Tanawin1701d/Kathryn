@@ -43,8 +43,8 @@ namespace kathryn{
         void build_hw_component() override;
         /** get describe*/
         /** Loop macro to notice position of system*/
-        void doPreFunction() override;
-        void doPostFunction() override;
+        void do_pre_function() override;
+        void do_post_function() override;
 
         [[nodiscard]]
         Operable* getCondition() const{

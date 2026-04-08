@@ -30,7 +30,7 @@ namespace kathryn{
     void FlowBlockZyncBase::assignReadySignal(){
         assert(prepSendNode != nullptr);
         //_syncMeta->setMasterReady()
-        Operable* ready2Sync = addLogicWithOutput(prepSendNode->get_exit_opr_ptr(), _acceptCond, BITWISE_AND);
+        Operable* ready2Sync = add_logic_with_output(prepSendNode->get_exit_opr_ptr(), _acceptCond, BITWISE_AND);
         _syncMeta.setMasterReady(*ready2Sync);
     }
 
@@ -86,7 +86,7 @@ namespace kathryn{
         /** assign assignment node*/
         Operable* readyFinal = nullptr;
         readyFinal = _acceptCond;
-        readyFinal = addLogicWithOutput(&_syncMeta._syncSlaveReady, readyFinal, BITWISE_AND);
+        readyFinal = add_logic_with_output(&_syncMeta._syncSlaveReady, readyFinal, BITWISE_AND);
 
         assert(readyFinal != nullptr);
         Operable* notReadyFinal = &(~(*readyFinal));
@@ -107,8 +107,8 @@ namespace kathryn{
         add_sys_node(exitNode);
         /** resultNode Wrap*/
         resultNodeWrap = new NodeWrap();
-        resultNodeWrap->addEntraceNode(prepSendNode);
-        resultNodeWrap->addExitNode(exitNode);
+        resultNodeWrap->add_entrace_node(prepSendNode);
+        resultNodeWrap->add_exit_node(exitNode);
 
         /** assign the ready signal*/
         assignReadySignal();
@@ -123,11 +123,11 @@ namespace kathryn{
                          resultNodeWrap->get_md_ident_val() + " " + resultNodeWrap->get_md_describe());
     }
 
-    void FlowBlockZyncBase::doPreFunction() {
+    void FlowBlockZyncBase::do_pre_function() {
         on_attach_block();
     }
 
-    void FlowBlockZyncBase::doPostFunction(){
+    void FlowBlockZyncBase::do_post_function(){
         on_detach_block();
     }
 

@@ -11,127 +11,120 @@ namespace kathryn{
 
     static const int IN_CONSIST_CYCLE_USED = -1;
 
-    /* use for inner block return to outter block**/
+    /// use for inner block return to outter block
     struct NodeWrap : ModelDebuggable {
     public:
 
-        /** entrance represent UpdateEvent which refers to node that be head of the subblock*/
-        /** note that exprMetas must not be here due to the abstract of the system*/
-        std::vector<Node*> entranceNodes;
-        /** the exit condition that allow next building block run*/
-        Node* exitNode  = nullptr;
-        /** force exit Node is the node that indicate exit expression without concerning of flowBlock behaviour*/
-        Node* forceExitNode = nullptr;
-        /** number of cycle required in this subblock*/
-        int cycleUsed = IN_CONSIST_CYCLE_USED;
+        /// entrance represent UpdateEvent which refers to node that be head of the subblock
+        /// note that exprMetas must not be here due to the abstract of the system
+        std::vector<Node*> _entrance_nodes;
+        /// the exit condition that allow next building block run
+        Node* _exit_node  = nullptr;
+        /// force exit Node is the node that indicate exit expression without concerning of flowBlock behaviour
+        Node* _force_exit_node = nullptr;
+        /// number of cycle required in this subblock
+        int cycle_used = IN_CONSIST_CYCLE_USED;
 
         NodeWrap(const NodeWrap& rhs) {
-            ///// we don't support copy constructor anymore
-            ///// because it may cause error to asignment node formation and hard to debug
+            /// we don't support copy constructor anymore
+            /// because it may cause error to asignment node formation and hard to debug
             assert(false);
         }
 
         NodeWrap() = default;
 
         NodeWrap& operator=(const NodeWrap& rhs) {
-            ///// we don't support copy constructor anymore
-            ///// because it may cause error to asignment node formation and hard to debug
+            /// we don't support copy constructor anymore
+            /// because it may cause error to asignment node formation and hard to debug
             assert(false);
         }
 
-        void addEntraceNode(Node *nd) {
+        void add_entrace_node(Node *nd) {
             assert(nd != nullptr);
-            entranceNodes.push_back(nd);
+            _entrance_nodes.push_back(nd);
         }
 
-        void addEntraceNodes(const std::vector<Node*>& nds){
+        void add_entrace_nodes(const std::vector<Node*>& nds){
             for (auto nd : nds){
-                addEntraceNode(nd);
+                add_entrace_node(nd);
             }
         }
 
-        void addExitNode(Node* nd) {
+        void add_exit_node(Node* nd) {
             assert(nd != nullptr);
-            exitNode = nd;
+            _exit_node = nd;
         }
 
-        void addForceExitNode(Node* nd){
+        void add_force_exit_node(Node* nd){
             assert(nd != nullptr);
-            forceExitNode = nd;
+            _force_exit_node = nd;
         }
 
-        void addDependNodeToAllNode(Node* st, Operable* condition=nullptr) {
+        void add_depend_node_to_all_node(Node* st, Operable* condition=nullptr) {
             assert(st != nullptr);
-            for (auto node: entranceNodes) {
+            for (auto node: _entrance_nodes) {
                 node->add_depend_node(st, condition);
             }
         }
 
-        /** we force node to declare themselves*/
-//        void setAllDependNodeCond(LOGIC_OP op){
-//            for (auto node: entranceNodes){
-//                node->setDependStateJoinOp(op);
-//            }
-//        }
-
-        void assignAllNode() {
-            for (auto node: entranceNodes) {
+        void assign_all_node() {
+            for (auto node: _entrance_nodes) {
                 node->assign();
             }
         }
 
         /** copy node pointer to this wrap*/
         /// todo we will make it copy node if need but for now we don't
-        void transferEntNodeFrom(NodeWrap *nw) {
+        void transfer_ent_node_from(NodeWrap *nw) {
             assert(nw != nullptr);
-            for (auto node: nw->entranceNodes) {
-                entranceNodes.push_back(node);
+            for (auto node: nw->_entrance_nodes) {
+                _entrance_nodes.push_back(node);
             }
         }
 
-        void deleteNodesInWrap() {
-            for (auto nd: entranceNodes) {
+        void delete_nodes_in_wrap() {
+            for (auto nd: _entrance_nodes) {
                 delete nd;
             }
-            /**exit node and force exitNode will be not deleted because it is only pointer it will be not clone*/
+            /// exit node and force exitNode will be not deleted because it is only pointer it will be not clone
         }
 
-        Node* getExitNode () const {
-            assert(exitNode != nullptr);
-            return exitNode;
+        Node* get_exit_node () const {
+            assert(_exit_node != nullptr);
+            return _exit_node;
         }
-        bool  isThereForceExitNode() const {return forceExitNode != nullptr;}
-        Node* getForceExitNode() const {return forceExitNode;}
+        bool  is_there_force_exit_node() const {return _force_exit_node != nullptr;}
+        Node* get_force_exit_node() const {return _force_exit_node;}
 
-        void setCycleUsed(int cycle){
+        void set_cycle_used(int cycle){
             assert(cycle == -1 || cycle > 0);
-            cycleUsed = cycle;
+            cycle_used = cycle;
         }
 
-        int getCycleUsed() const{
-            assert(cycleUsed == -1 || cycleUsed > 0 );
-            return cycleUsed;
+        int get_cycle_used() const{
+            assert(cycle_used == -1 || cycle_used > 0 );
+            return cycle_used;
         }
 
         std::string get_md_describe() override{
             std::string ret;
             ret += "hasEntranceNode [";
-            for (auto entranceNode : entranceNodes){
+            for (auto entranceNode : _entrance_nodes){
                 ret += entranceNode->get_md_ident_val();
                 ret += ", ";
             }
 
             ret += "] has exitNode ";
-            ret += exitNode->get_md_ident_val();
+            ret += _exit_node->get_md_ident_val();
 
-            if (isThereForceExitNode()){
+            if (is_there_force_exit_node()){
                 ret += "has force exit Node ";
-                ret += forceExitNode->get_md_ident_val();
+                ret += _force_exit_node->get_md_ident_val();
             }
 
 
 
-            ret += " use cycle " + std::to_string(cycleUsed);
+            ret += " use cycle " + std::to_string(cycle_used);
 
             return ret;
         }
@@ -152,82 +145,81 @@ namespace kathryn{
      * */
 
     struct NodeWrapCycleDet{
-        std::vector<int> samplingVec;
+        std::vector<int> sampling_vec;
 
-        void addToDet(std::vector<Node*>& nodes){
+        void add_to_det(std::vector<Node*>& nodes){
             for (auto nd: nodes){
-                addToDet(nd);
+                add_to_det(nd);
             }
         }
 
-        void addToDet(std::vector<NodeWrap*>& nws){
+        void add_to_det(std::vector<NodeWrap*>& nws){
             for (auto nw: nws){
-                addToDet(nw);
+                add_to_det(nw);
             }
         }
 
-        void addToDet(int cycle){
-            samplingVec.push_back(cycle);
+        void add_to_det(int cycle){
+            sampling_vec.push_back(cycle);
         }
 
-        void addToDet(Node* nd){
+        void add_to_det(Node* nd){
             assert(nd != nullptr);
-            samplingVec.push_back(nd->get_cycle_used());
+            sampling_vec.push_back(nd->get_cycle_used());
         }
-        void addToDet(NodeWrap* nw){
+        void add_to_det(NodeWrap* nw){
             assert(nw != nullptr);
-            samplingVec.push_back(nw->getCycleUsed());
+            sampling_vec.push_back(nw->get_cycle_used());
         }
 
-        int getMaxCycleHorizon(){
-            assert(!samplingVec.empty());
-            int testVal = samplingVec[0];
+        int get_max_cycle_horizon(){
+            assert(!sampling_vec.empty());
+            int test_val = sampling_vec[0];
 
-            for (auto cycle: samplingVec){
-                /**case detect in consistent in sub block*/
+            for (auto cycle : sampling_vec){
+                /// case detect in consistent in sub block
                 if (cycle == IN_CONSIST_CYCLE_USED){
                     return IN_CONSIST_CYCLE_USED;
                 }
-                /** check that it is equal to other*/
+                /// check that it is equal to other
 
-                testVal = std::max(testVal, cycle);
+                test_val = std::max(test_val, cycle);
             }
-            assert(testVal >= 0);
-            /** return only when sampling is all equal*/
-            return testVal;
+            assert(test_val >= 0);
+            /// return only when sampling is all equal
+            return test_val;
         }
 
-        int getSameCycleHorizon(){
-            assert(!samplingVec.empty());
-            int testVal = samplingVec[0];
-            for (auto cycle: samplingVec){
+        int get_same_cycle_horizon(){
+            assert(!sampling_vec.empty());
+            int test_val = sampling_vec[0];
+            for (auto cycle : sampling_vec){
                 if (cycle == IN_CONSIST_CYCLE_USED){
                     return IN_CONSIST_CYCLE_USED;
                 }
-                if (testVal != cycle){
+                if (test_val != cycle){
                     return IN_CONSIST_CYCLE_USED;
                 }
             }
-            return testVal;
+            return test_val;
         }
 
-        int getCycleVertical(){
-            assert(!samplingVec.empty());
-            int cycleUsed = 0;
-            for (auto subCycle: samplingVec){
+        int get_cycle_vertical(){
+            assert(!sampling_vec.empty());
+            int cycle_used = 0;
+            for (auto subCycle : sampling_vec){
                 if (subCycle == IN_CONSIST_CYCLE_USED){
                     return IN_CONSIST_CYCLE_USED;
                 }
-                cycleUsed += subCycle;
-
+                cycle_used += subCycle;
             }
-            return cycleUsed;
+            return cycle_used;
         }
 
-        /** search for node that have match to input cycle skip if node is nullptr*/
-        static Node* getMatchNode(const std::vector<Node*>& nds, int cycle){
+        /// search for node that have match to input cycle skip if node is nullptr
+        static Node* get_match_node(const std::vector<Node*>& nds, int cycle){
             assert(cycle != IN_CONSIST_CYCLE_USED);
-            ////// we do not allow in consist cycle to be matched with node
+            /// we do not allow in consist cycle to be matched with node
             for (auto nd : nds){
                 if (nd == nullptr){
                     continue;
@@ -239,14 +231,14 @@ namespace kathryn{
             return nullptr;
         }
 
-        /** search for node wrap that have match to input cycle skip if node is nullptr*/
-        static NodeWrap* getMatchNodeWrap(const std::vector<NodeWrap*>& nws, int cycle){
+        /// search for node wrap that have match to input cycle skip if node is nullptr
+        static NodeWrap* get_match_node_wrap(const std::vector<NodeWrap*>& nws, int cycle){
             assert(cycle != IN_CONSIST_CYCLE_USED);
             for (auto nw: nws){
                 if (nw == nullptr){
                     continue;
                 }
-                if (cycle == nw->getCycleUsed()){
+                if (cycle == nw->get_cycle_used()){
                     return nw;
                 }
             }
@@ -255,32 +247,31 @@ namespace kathryn{
 
     };
 
-    /** get the exit node of matched node that got same cycle used*/
-    static Node* getMatchNodeFromNdsOrNws(const std::vector<Node*>& nds,
-                                          const std::vector<NodeWrap*>& nws,
-                                          int cycle
+    /// get the exit node of matched node that got same cycle used
+    static Node* get_match_node_from_nds_or_nws(const std::vector<Node*>& nds,
+                                                const std::vector<NodeWrap*>& nws,
+                                                int cycle
     ){
-
         assert(cycle >= 0);
 
-        Node* matchedNode = NodeWrapCycleDet::getMatchNode(nds, cycle);
+        Node* matched_node = NodeWrapCycleDet::get_match_node(nds, cycle);
 
-        if (matchedNode != nullptr){
-            return matchedNode;
+        if (matched_node != nullptr){
+            return matched_node;
         }
-        NodeWrap* matchedNodeWrap = NodeWrapCycleDet::getMatchNodeWrap(nws, cycle);
+        NodeWrap* matched_node_wrap = NodeWrapCycleDet::get_match_node_wrap(nws, cycle);
 
-        if (matchedNodeWrap != nullptr){
-            return matchedNodeWrap->getExitNode();
+        if (matched_node_wrap != nullptr){
+            return matched_node_wrap->get_exit_node();
         }
 
         return nullptr;
 
     }
 
-    /** get the any exit node that first*/
-    static Node* getAnyNodeFromNdsOrNws(const std::vector<Node*>& nds,
-                                        const std::vector<NodeWrap*>& nws){
+    /// get the any exit node that first
+    static Node* get_any_node_from_nds_or_nws(const std::vector<Node*>& nds,
+                                              const std::vector<NodeWrap*>& nws){
         for (auto nd : nds){
             if (nd != nullptr){
                 return nd;
@@ -288,7 +279,7 @@ namespace kathryn{
         }
         for (auto nw : nws){
             if (nw != nullptr){
-                return nw->getExitNode();
+                return nw->get_exit_node();
             }
         }
         return nullptr;

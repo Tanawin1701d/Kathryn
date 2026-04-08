@@ -14,31 +14,31 @@ namespace kathryn{
         _global_name = localName + std::to_string(_global_id);
     }
 
-    void FlowIdentifiable::setParent(FlowBlockBase *parentFlowBlock) {
-        assert(parentFlowBlock != nullptr);
-        _parentFb = parentFlowBlock;
+    void FlowIdentifiable::set_parent(FlowBlockBase *parent_flow_block) {
+        assert(parent_flow_block != nullptr);
+        _parent_fb = parent_flow_block;
     }
 
-    void FlowIdentifiable::setParent(Module* parentModule){
-        assert(parentModule != nullptr);
-        _parentMod = parentModule;
+    void FlowIdentifiable::set_parent(Module* parent_module){
+        assert(parent_module != nullptr);
+        _parent_mod = parent_module;
     }
 
-    void FlowIdentifiable::setZepTrackName(const std::string& zepTrackName){
-        _isZepTrackName = true;
-        _zepTrackName   = zepTrackName;
+    void FlowIdentifiable::set_zep_track_name(const std::string& zep_track_name){
+        _is_zep_track_name_set = true;
+        _user_zep_track_name   = zep_track_name;
     }
 
 
 
 
     void FlowIdentifiable::build_inherit_name() {
-        /** please remind that we need set Parent before use this function*/
-        if (_parentFb != nullptr){
-            _inherit_name = _parentFb->get_inherit_name();
+        /// please remind that we need set Parent before use this function
+        if (_parent_fb != nullptr){
+            _inherit_name = _parent_fb->get_inherit_name();
 
-        }else if (_parentMod != nullptr){
-            _inherit_name = _parentMod->get_inherit_name();
+        }else if (_parent_mod != nullptr){
+            _inherit_name = _parent_mod->get_inherit_name();
         }else{
             assert(false);
         }
@@ -47,23 +47,23 @@ namespace kathryn{
 
     }
 
-    FlowBlockBase* FlowIdentifiable::getFlowBlockParrent() {
-        return _parentFb;
+    FlowBlockBase* FlowIdentifiable::get_flow_block_parent_ptr() {
+        return _parent_fb;
     }
 
-    Module* FlowIdentifiable::getModuleParent() {
-        assert(_parentMod != nullptr);
-        return _parentMod;
+    Module* FlowIdentifiable::get_module_parent_ptr() {
+        assert(_parent_mod != nullptr);
+        return _parent_mod;
     }
 
-    bool FlowIdentifiable::isZepTrackNameSet(){
-        return _isZepTrackName;
+    bool FlowIdentifiable::is_zep_track_name_set(){
+        return _is_zep_track_name_set;
     }
 
 
-    std::string FlowIdentifiable::getZepTrackName(){
-        assert(_isZepTrackName);
-        return _zepTrackName;
+    std::string FlowIdentifiable::get_zep_track_name(){
+        assert(_is_zep_track_name_set);
+        return _user_zep_track_name;
     }
 
 
