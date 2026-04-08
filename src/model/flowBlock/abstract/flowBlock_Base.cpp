@@ -18,7 +18,7 @@ namespace kathryn{
             FlowIdentifiable(FBT_to_string(type)),
             /** flow element*/
             _type(type),
-            _ctrl(getControllerPtr()),
+            _ctrl(get_controller_ptr()),
             _lazy_deleted_required(false),
             _fb_id(nextFbIdx++),
             /** controller communication policy*/
@@ -138,7 +138,7 @@ namespace kathryn{
         }
         Operable* resultSignal = targetSignals[0];
         for (int idx = 1; idx < static_cast<int>(targetSignals.size()); idx++){
-            mfAssert(targetSignals[idx]->getOperableSlice().getSize() == 1, "interrupt signal size cannot more than one");
+            mf_assert(targetSignals[idx]->getOperableSlice().getSize() == 1, "interrupt signal size cannot more than one");
 
             resultSignal = is_and_cond ? &((*resultSignal) & (*targetSignals[idx]))
                                      : &((*resultSignal) | (*targetSignals[idx]));
@@ -194,7 +194,7 @@ namespace kathryn{
 
     void FlowBlockBase::set_clock_mode(CLOCK_MODE mode){
         _clk_mode = mode;
-        mfAssert((get_clock_mode() == CM_POSEDGE) ||
+        mf_assert((get_clock_mode() == CM_POSEDGE) ||
                       (get_clock_mode() == CM_NEGEDGE)
         , "clock mode in flow must be only CM_POSEDGE or CM_NEGEDGE");
     }
@@ -258,9 +258,9 @@ namespace kathryn{
         //////// the master join block must have only 1 sub block
         FlowBlockBase* resultFb = nullptr;
         for (FlowBlockBase* subFb: _sub_blocks){
-            mfAssert(subFb != nullptr, "subBlock cannot be nullptr");
+            mf_assert(subFb != nullptr, "subBlock cannot be nullptr");
             if (subFb->isJoinMaster()){
-                mfAssert(resultFb == nullptr, "duplicated master join block");
+                mf_assert(resultFb == nullptr, "duplicated master join block");
                 resultFb = subFb;
             }
         }
