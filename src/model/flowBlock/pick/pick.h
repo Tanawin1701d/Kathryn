@@ -13,8 +13,8 @@
 #include "pickIf.h"
 
 
-#define pick for(auto kathrynBlock = new FlowBlockPick(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
-#define pickDef kathrynBlock->setReqAutoExit();
+#define pick for(auto kathryn_block = new FlowBlockPick(); kathryn_block->do_pre_post_function(); kathryn_block->step())
+#define pickDef kathryn_block->setReqAutoExit();
 
 namespace kathryn{
 

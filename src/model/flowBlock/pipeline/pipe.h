@@ -15,8 +15,8 @@
 #include "sim/modelSimEngine/flowBlock/pipeline/flowBlockPipProber.h"
 
 
-#define pip(zyncMeta)       for(auto kathrynBlock = new FlowBlockPipeBase (zyncMeta); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
-#define autoSync kathrynBlock->setAutoActivatePipe();
+#define pip(zyncMeta)       for(auto kathryn_block = new FlowBlockPipeBase (zyncMeta); kathryn_block->do_pre_post_function(); kathryn_block->step())
+#define autoSync kathryn_block->setAutoActivatePipe();
 
 
 namespace kathryn{

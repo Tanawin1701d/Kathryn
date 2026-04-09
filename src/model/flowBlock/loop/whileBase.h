@@ -10,8 +10,8 @@
 #include "model/flowBlock/abstract/nodes/node.h"
 #include "model/flowBlock/abstract/nodes/stateNode.h"
 
-#define cwhile(expr) for(auto kathrynBlock = new FlowBlockWhile(expr, CWHILE); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
-#define swhile(expr) for(auto kathrynBlock = new FlowBlockWhile(expr, SWHILE); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define cwhile(expr) for(auto kathryn_block = new FlowBlockWhile(expr, CWHILE); kathryn_block->do_pre_post_function(); kathryn_block->step())
+#define swhile(expr) for(auto kathryn_block = new FlowBlockWhile(expr, SWHILE); kathryn_block->do_pre_post_function(); kathryn_block->step())
 
 namespace kathryn{
 

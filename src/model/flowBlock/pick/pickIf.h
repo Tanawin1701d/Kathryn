@@ -11,7 +11,7 @@
 #include "model/flowBlock/abstract/nodes/node.h"
 #include "model/flowBlock/abstract/nodes/stateNode.h"
 
-#define pif(expr) for(auto kathrynBlock = new FlowBlockPickCond(expr); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define pif(expr) for(auto kathryn_block = new FlowBlockPickCond(expr); kathryn_block->do_pre_post_function(); kathryn_block->step())
 
 namespace kathryn{
 

@@ -10,7 +10,7 @@
 #include "model/flowBlock/abstract/loopStMacro.h"
 #include "streamEle.h"
 
-#define pipStream for(auto kathrynBlock = new FlowBlockPipeStream(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define pipStream for(auto kathryn_block = new FlowBlockPipeStream(); kathryn_block->do_pre_post_function(); kathryn_block->step())
 
 namespace kathryn{
 

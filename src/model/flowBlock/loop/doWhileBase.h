@@ -11,7 +11,7 @@
 #include "model/flowBlock/abstract/nodes/node.h"
 #include "model/flowBlock/abstract/nodes/stateNode.h"
 
-#define cdowhile(expr) for(auto kathrynBlock = new FlowBlockDowhile(expr, DOWHILE); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define cdowhile(expr) for(auto kathryn_block = new FlowBlockDowhile(expr, DOWHILE); kathryn_block->do_pre_post_function(); kathryn_block->step())
 
 
 namespace kathryn{

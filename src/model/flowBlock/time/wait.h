@@ -10,8 +10,8 @@
 #include "model/flowBlock/abstract/nodes/waitNode.h"
 #include "model/flowBlock/abstract/loopStMacro.h"
 
-#define scWait( cond) for(auto kathrynBlock = new FlowBlockCondWait(cond)  ; kathrynBlock->doPrePostFunction(); kathrynBlock->step()){};
-#define syWait(cycle) for(auto kathrynBlock = new FlowBlockCycleWait(cycle); kathrynBlock->doPrePostFunction(); kathrynBlock->step()){};
+#define scWait( cond) for(auto kathryn_block = new FlowBlockCondWait(cond)  ; kathryn_block->do_pre_post_function(); kathryn_block->step()){};
+#define syWait(cycle) for(auto kathryn_block = new FlowBlockCycleWait(cycle); kathryn_block->do_pre_post_function(); kathryn_block->step()){};
 
 namespace kathryn{
 

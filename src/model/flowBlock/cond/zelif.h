@@ -12,8 +12,8 @@
 #include "zifClassAsm.h"
 
 
-#define zelif(expr) for(auto kathrynBlock = new FlowBlockZELIF(expr); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
-#define zelse       for(auto kathrynBlock = new FlowBlockZELIF();     kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define zelif(expr) for(auto kathryn_block = new FlowBlockZELIF(expr); kathryn_block->do_pre_post_function(); kathryn_block->step())
+#define zelse       for(auto kathryn_block = new FlowBlockZELIF();     kathryn_block->do_pre_post_function(); kathryn_block->step())
 
 namespace kathryn{
 

@@ -6,14 +6,14 @@
 #define KATHRYN_FLOWBLOCK_BASE_H
 
 
-#define intrReset( expr  )   kathrynBlock->add_intr_signal(INT_RESET, &expr);
-#define intrStart( expr  )   kathrynBlock->add_intr_signal(INT_START, &expr);
-#define holdBlk( expr  )     kathrynBlock->add_hold_signal(&expr);
+#define intrReset( expr  )   kathryn_block->add_intr_signal(INT_RESET, &expr);
+#define intrStart( expr  )   kathryn_block->add_intr_signal(INT_START, &expr);
+#define holdBlk( expr  )     kathryn_block->add_hold_signal(&expr);
 #define intrRstAndStart( expr ) intrReset(expr) intrStart(expr)
-#define exposeBlk( exVar )   exVar = kathrynBlock;
-#define track( name  )       kathrynBlock->set_zep_track_name(#name);
-#define strack( name )       kathrynBlock->set_zep_track_name(name);
-#define markJoinMaster       kathrynBlock->set_join_master();
+#define exposeBlk( exVar )   exVar = kathryn_block;
+#define track( name  )       kathryn_block->set_zep_track_name(#name);
+#define strack( name )       kathryn_block->set_zep_track_name(name);
+#define markJoinMaster       kathryn_block->set_join_master();
 
 #include<memory>
 #include<vector>

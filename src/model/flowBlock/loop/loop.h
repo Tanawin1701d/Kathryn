@@ -12,8 +12,8 @@
 
 
 #define cloop(kathrynLoopName, loopNumber) \
-    for(auto kathrynBlock = new FlowBlockLoop(loopNumber); kathrynBlock->doPrePostFunction(); kathrynBlock->step()) \
-        for (Operable& kathrynLoopName = kathrynBlock->getLoopId(); !kathrynBlock->isGottenLoopVar(); kathrynBlock->setGetLoopVar())
+    for(auto kathryn_block = new FlowBlockLoop(loopNumber); kathryn_block->do_pre_post_function(); kathryn_block->step()) \
+        for (Operable& kathrynLoopName = kathryn_block->getLoopId(); !kathryn_block->isGottenLoopVar(); kathryn_block->setGetLoopVar())
 
 namespace kathryn{
 

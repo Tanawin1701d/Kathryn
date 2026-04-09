@@ -12,10 +12,10 @@
 #include "model/flowBlock/abstract/nodes/node.h"
 #include "model/flowBlock/abstract/nodes/stateNode.h"
 
-#define zync(zyncMeta)        for(auto kathrynBlock = new FlowBlockZyncBase(zyncMeta, nullptr); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
-#define zyncc(zyncMeta, cond) for(auto kathrynBlock = new FlowBlockZyncBase(zyncMeta, &cond  ); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define zync(zyncMeta)        for(auto kathryn_block = new FlowBlockZyncBase(zyncMeta, nullptr); kathryn_block->do_pre_post_function(); kathryn_block->step())
+#define zyncc(zyncMeta, cond) for(auto kathryn_block = new FlowBlockZyncBase(zyncMeta, &cond  ); kathryn_block->do_pre_post_function(); kathryn_block->step())
 
-//#define zync_con(cond)        for(auto kathrynBlock = new FlowBlockZyncBase(&cond);             kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+//#define zync_con(cond)        for(auto kathryn_block = new FlowBlockZyncBase(&cond);             kathryn_block->do_pre_post_function(); kathryn_block->step())
 
 namespace kathryn{
 

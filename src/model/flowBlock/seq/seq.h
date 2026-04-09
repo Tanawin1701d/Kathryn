@@ -14,7 +14,7 @@
 #include "seqEle.h"
 
 
-#define seq for(auto kathrynBlock = new FlowBlockSeq(); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define seq for(auto kathryn_block = new FlowBlockSeq(); kathryn_block->do_pre_post_function(); kathryn_block->step())
 
 namespace kathryn {
 

@@ -13,7 +13,7 @@
 #include "model/flowBlock/abstract/nodes/stateNode.h"
 #include "model/flowBlock/abstract/loopStMacro.h"
 
-#define ztate(identState) for(auto kathrynBlock = new FlowBlockZtate(identState); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define ztate(identState) for(auto kathryn_block = new FlowBlockZtate(identState); kathryn_block->do_pre_post_function(); kathryn_block->step())
 
 namespace kathryn{
 

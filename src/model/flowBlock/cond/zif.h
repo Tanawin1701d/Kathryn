@@ -11,7 +11,7 @@
 #include "model/flowBlock/abstract/nodes/stateNode.h"
 #include "zifClassAsm.h"
 
-#define zif(expr) for(auto kathrynBlock = new FlowBlockZIF(expr); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define zif(expr) for(auto kathryn_block = new FlowBlockZIF(expr); kathryn_block->do_pre_post_function(); kathryn_block->step())
 
 namespace kathryn{
 

@@ -7,10 +7,10 @@
 #include "model/flowBlock/abstract/flowBlock_Base.h"
 #include "model/flowBlock/abstract/loopStMacro.h"
 
-#define celif(expr) for(auto kathrynBlock = new FlowBlockElif(expr); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
-#define selif(expr) for(auto kathrynBlock = new FlowBlockElif(expr); kathrynBlock->doPrePostFunction(); kathrynBlock->step())
-#define celse       for(auto kathrynBlock = new FlowBlockElif();     kathrynBlock->doPrePostFunction(); kathrynBlock->step())
-#define selse       for(auto kathrynBlock = new FlowBlockElif();     kathrynBlock->doPrePostFunction(); kathrynBlock->step())
+#define celif(expr) for(auto kathryn_block = new FlowBlockElif(expr); kathryn_block->do_pre_post_function(); kathryn_block->step())
+#define selif(expr) for(auto kathryn_block = new FlowBlockElif(expr); kathryn_block->do_pre_post_function(); kathryn_block->step())
+#define celse       for(auto kathryn_block = new FlowBlockElif();     kathryn_block->do_pre_post_function(); kathryn_block->step())
+#define selse       for(auto kathryn_block = new FlowBlockElif();     kathryn_block->do_pre_post_function(); kathryn_block->step())
 
 namespace kathryn{
 

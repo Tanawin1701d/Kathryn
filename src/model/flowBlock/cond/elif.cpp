@@ -28,12 +28,11 @@ namespace kathryn{
                   }) {}
 
     FlowBlockElif::~FlowBlockElif(){
-        //// delete resultNodeWrapper; it is derive from inside block do not delete
-
+        /// delete resultNodeWrapper; it is derive from inside block do not delete
     };
 
     void FlowBlockElif::add_basic_node(Node* node) {
-        assert(false); //// due to implicit sublock declaration
+        assert(false); /// due to implicit sublock declaration
     }
 
     void FlowBlockElif::add_sub_flow_block(FlowBlockBase* subBlock) {
@@ -47,9 +46,9 @@ namespace kathryn{
 
     void FlowBlockElif::on_attach_block() {
         _ctrl->on_attach_flowBlock(this);
-        auto sb = gen_implicit_sub_blk(PARALLEL_NO_SYN);
-        implicitSubBlock = sb;
-        sb->on_attach_block();
+        auto sub_block = gen_implicit_sub_blk(PARALLEL_NO_SYN);
+        implicitSubBlock = sub_block;
+        sub_block->on_attach_block();
     }
 
     void FlowBlockElif::on_detach_block() {
