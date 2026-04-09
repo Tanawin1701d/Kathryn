@@ -15,7 +15,7 @@ namespace kathryn{
                       true
                   }),
     _loopCount(loopCount),
-    _loopId(new expression(calBitUsedInCounter(_loopCount))){
+    _loopId(new expression(cal_bit_used_in_counter(_loopCount))){
 
 
     }

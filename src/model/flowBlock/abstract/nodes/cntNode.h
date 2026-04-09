@@ -59,7 +59,7 @@ namespace kathryn{
         int get_cycle_used() override{
             assert(_counter != nullptr);
             ///// hold should not be considered here
-            return _counter->getLoopCnt();
+            return _counter->get_loop_cnt();
         }
 
     };

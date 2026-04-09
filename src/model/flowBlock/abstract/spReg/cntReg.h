@@ -50,10 +50,10 @@ namespace kathryn{
             std::cout << "we not support = operator in register";
             return *this;
         }
-        int getLoopCnt() const { return _last_cycle; }
+        int get_loop_cnt() const { return _last_cycle; }
     };
 
-    static int calBitUsedInCounter(int maxNumber){
+    static int cal_bit_used_in_counter(int maxNumber){
         assert(maxNumber > 0);
         return (int) log2(maxNumber * 2 - 1);
     }

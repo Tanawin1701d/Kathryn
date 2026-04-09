@@ -1,33 +1,29 @@
-//
-// Created by tanawin on 3/1/2567.
-//
+///
+/// Created by tanawin on 3/1/2567.
+///
 
 #include "cntReg.h"
 #include "model/controller/controller.h"
 
 
 namespace kathryn{
+    ///
+    /// counter register
+    ///
 
-    /**
-     *
-     * counter register
-     *
-     * */
-
-    /** constructor for specific cycle*/
+    /// constructor for specific cycle
     CounterReg::CounterReg(int maxCycle):
-            CtrlFlowRegBase( calBitUsedInCounter(maxCycle),
+            CtrlFlowRegBase( cal_bit_used_in_counter(maxCycle),
          false,
          TYPE_COUNTER_REG,
          false
      ),
-    _cnt_bit_sz(calBitUsedInCounter(maxCycle)),
+    _cnt_bit_sz(cal_bit_used_in_counter(maxCycle)),
     _last_cycle(maxCycle),
     _idle_val(&makeOprVal("idleVal",_cnt_bit_sz, 0))
      {
-
-        /** TO FIX*/
-        com_init();
+         /// TO FIX
+         com_init();
         assert(maxCycle > 0);
 
      }
@@ -35,15 +31,15 @@ namespace kathryn{
     UpdateEventBase* CounterReg::add_depend_state(Operable* dependState, Operable* activateCond, CLOCK_MODE cm){
         assert(dependState != nullptr);
 
-        auto* event = createUE(activateCond,
-                               dependState,
-                               _idle_val,
-                               Slice({0, _cnt_bit_sz}),
-                               DEFAULT_UE_PRI_INTERNAL_MAX,
-                               cm
+        auto* update_event = createUE(activateCond,
+                                      dependState,
+                                      _idle_val,
+                                      Slice({0, _cnt_bit_sz}),
+                                      DEFAULT_UE_PRI_INTERNAL_MAX,
+                                      cm
         );
-        addUpdateMeta(event);
-        return event;
+        addUpdateMeta(update_event);
+        return update_event;
     }
 
 
@@ -52,15 +48,15 @@ namespace kathryn{
         if (upCountEvent != nullptr){
             assert(upCountEvent->getOperableSlice().getSize() == 1);
         }
-        auto* event = createUE(
+        auto* update_event = createUE(
             nullptr,
             upCountEvent,
             &((*this) + 1),
             Slice({0, _cnt_bit_sz}),
-            DEFAULT_UE_PRI_INTERNAL_MAX-1,
+            DEFAULT_UE_PRI_INTERNAL_MAX - 1,
             cm
         );
-        addUpdateMeta(event);
+        addUpdateMeta(update_event);
     }
 
     void CounterReg::com_init() {
@@ -68,21 +64,20 @@ namespace kathryn{
     }
 
     void CounterReg::make_un_set_state_event(CLOCK_MODE cm) {
-        assert(false); //// it is unused
+        assert(false); /// it is unused
     }
 
     void CounterReg::makeUserRstEvent(Operable* rst, CLOCK_MODE cm){
-        /**reset event*/
+        /// reset event
         assert(rst != nullptr);
-        auto* resetEvent = createUE(
-           nullptr,
-           rst,
-           _idle_val,
-           Slice({0, _cnt_bit_sz}),
-           DEFAULT_UE_PRI_INTERNAL_MIN,
+        auto* reset_event = createUE(
+            nullptr,
+            rst,
+            _idle_val,
+            Slice({0, _cnt_bit_sz}),
+            DEFAULT_UE_PRI_INTERNAL_MIN,
             cm);
-        addUpdateMeta(resetEvent);
-
+        addUpdateMeta(reset_event);
     }
 
     Operable* CounterReg::generateEndExpr() {
