@@ -22,7 +22,7 @@ namespace kathryn{
                     TYPE_COND_WAIT_STATE_REG,
                     false
     ),
-    _condOpr(condOpr)
+    _cond_opr(condOpr)
     {
         /** init comunication to system*/
         assert(condOpr != nullptr);
@@ -37,9 +37,9 @@ namespace kathryn{
 
     UpdateEventBase* CondWaitStateReg::add_depend_state(Operable* dependState, Operable* activateCond, CLOCK_MODE cm){
         assert(dependState != nullptr);
-        auto* event = createUE(activateCond,
+        auto* event = create_ue(activateCond,
                                dependState,
-                               &_upState,
+                               &_up_state,
                                Slice({0, 1}),
                                DEFAULT_UE_PRI_INTERNAL_MAX,
                                cm
@@ -49,20 +49,20 @@ namespace kathryn{
     }
 
     void CondWaitStateReg::make_un_set_state_event(CLOCK_MODE cm) {
-        auto* resetEvent = createUE(_condOpr,
-                                    &((*this) == _upState),
-                                    &_downState,
+        auto* resetEvent = create_ue(_cond_opr,
+                                    &((*this) == _up_state),
+                                    &_down_state,
                                     Slice({0,1}),
                                     DEFAULT_UE_PRI_INTERNAL_MIN,
                                     cm);
         addUpdateMeta(resetEvent);
     }
 
-    void CondWaitStateReg::makeUserRstEvent(Operable* rst, CLOCK_MODE cm){
+    void CondWaitStateReg::make_user_rst_event(Operable* rst, CLOCK_MODE cm){
         assert(rst != nullptr);
-        auto* resetEvent = createUE(nullptr,
+        auto* resetEvent = create_ue(nullptr,
                                     rst,
-                                    &_downState,
+                                    &_down_state,
                                     Slice({0,1}),
                                     DEFAULT_UE_PRI_INTERNAL_MIN,
                                     cm
@@ -70,8 +70,8 @@ namespace kathryn{
         addUpdateMeta(resetEvent);
     }
 
-    Operable* CondWaitStateReg::generateEndExpr() {
-        return &((*_condOpr) & ((*this) == _upState));
+    Operable* CondWaitStateReg::generate_end_expr() {
+        return &((*_cond_opr) & ((*this) == _up_state));
     }
 
     /**
@@ -82,22 +82,22 @@ namespace kathryn{
 
     /** constructor for specific cycle*/
     CycleWaitStateReg::CycleWaitStateReg(int waitCycle):
-            CtrlFlowRegBase( calBitUsed(waitCycle) + 1,
+            CtrlFlowRegBase( cal_bit_used(waitCycle) + 1,
          false,
          TYPE_CYCLE_WAIT_STATE_REG,
          false
      ),
-            _waitCycle(waitCycle),
-            _cntBitSz     (calBitUsed(waitCycle)),
-            _totalBitSize(_cntBitSz + 1),
-            IdleCnt    (&makeOprVal("IdleCnt",_totalBitSize, 0)),
-            _startCnt  (&makeOprVal("startCnt",_totalBitSize, startVal)),
-            _endCnt    (&makeOprVal("endCnt",_cntBitSz, waitCycle))
+            _wait_cycle(waitCycle),
+            _cnt_bit_sz     (cal_bit_used(waitCycle)),
+            TOTAL_BIT_SIZE(_cnt_bit_sz + 1),
+            _idle_cnt    (&makeOprVal("IdleCnt",TOTAL_BIT_SIZE, 0)),
+            _start_cnt  (&makeOprVal("startCnt",TOTAL_BIT_SIZE, START_VAL)),
+            _end_cnt    (&makeOprVal("endCnt",_cnt_bit_sz, waitCycle))
      {
 
         /** TO FIX*/
         com_init();
-        assert(_cntBitSz > 0);
+        assert(_cnt_bit_sz > 0);
      }
 
     CycleWaitStateReg::CycleWaitStateReg(Operable* endCnt):
@@ -107,30 +107,30 @@ namespace kathryn{
         TYPE_CYCLE_WAIT_STATE_REG,
         false
     ),
-            _cntBitSz     (endCnt->getOperableSlice().getSize()),
-            _totalBitSize(_cntBitSz + 1),
-            IdleCnt    (&makeOprVal("IdleCnt", _totalBitSize, 0)),
-            _startCnt  (&makeOprVal("startCnt", _totalBitSize, startVal)),
-            _endCnt    (endCnt)
+            _cnt_bit_sz     (endCnt->getOperableSlice().getSize()),
+            TOTAL_BIT_SIZE(_cnt_bit_sz + 1),
+            _idle_cnt    (&makeOprVal("IdleCnt", TOTAL_BIT_SIZE, 0)),
+            _start_cnt  (&makeOprVal("startCnt", TOTAL_BIT_SIZE, START_VAL)),
+            _end_cnt    (endCnt)
     {
         com_init();
-        assert(_cntBitSz > 0);
+        assert(_cnt_bit_sz > 0);
         /** generate update event for reset register*/
     }
 
 
-    void CycleWaitStateReg::makeIncStateEvent(Operable* holdSignal, CLOCK_MODE cm) {
+    void CycleWaitStateReg::make_inc_state_event(Operable* holdSignal, CLOCK_MODE cm) {
 
-        Operable* incCond = &((*this)(1, _totalBitSize) != (*_endCnt));
+        Operable* incCond = &((*this)(1, TOTAL_BIT_SIZE) != (*_end_cnt));
         if (holdSignal != nullptr){
             incCond = &((*holdSignal) & (*incCond));
         }
 
-        auto* event = createUE(
+        auto* event = create_ue(
             incCond,
             &((*this)(0)),
-            &((*this)(1, _totalBitSize) + 1),
-            Slice({1, _totalBitSize}),
+            &((*this)(1, TOTAL_BIT_SIZE) + 1),
+            Slice({1, TOTAL_BIT_SIZE}),
             DEFAULT_UE_PRI_INTERNAL_MAX-1,
             cm
         );
@@ -143,10 +143,10 @@ namespace kathryn{
 
     UpdateEventBase* CycleWaitStateReg::add_depend_state(Operable* dependState, Operable* activateCond, CLOCK_MODE cm){
         assert(dependState != nullptr);
-        auto* event = createUE(activateCond,
+        auto* event = create_ue(activateCond,
                                dependState,
-                               _startCnt,
-                               Slice({0, _totalBitSize}),
+                               _start_cnt,
+                               Slice({0, TOTAL_BIT_SIZE}),
                                DEFAULT_UE_PRI_INTERNAL_MAX,
                                cm
         );
@@ -156,33 +156,33 @@ namespace kathryn{
 
     void CycleWaitStateReg::make_un_set_state_event(CLOCK_MODE cm) {
         /**reset event*/
-        auto* resetEvent = createUE(
-            &((*this)(1, _totalBitSize) == (*_endCnt)),
+        auto* resetEvent = create_ue(
+            &((*this)(1, TOTAL_BIT_SIZE) == (*_end_cnt)),
             &(*this)(0),
-            IdleCnt,
-            Slice({0, _totalBitSize}),
+            _idle_cnt,
+            Slice({0, TOTAL_BIT_SIZE}),
             DEFAULT_UE_PRI_INTERNAL_MIN,
             cm);
         addUpdateMeta(resetEvent);
 
     }
 
-    void CycleWaitStateReg::makeUserRstEvent(Operable* rst, CLOCK_MODE cm){
+    void CycleWaitStateReg::make_user_rst_event(Operable* rst, CLOCK_MODE cm){
         /**reset event*/
         assert(rst != nullptr);
-        auto* resetEvent = createUE(
+        auto* resetEvent = create_ue(
            nullptr,
            rst,
-           IdleCnt,
-           Slice({0, _totalBitSize}),
+           _idle_cnt,
+           Slice({0, TOTAL_BIT_SIZE}),
            DEFAULT_UE_PRI_INTERNAL_MIN,
             cm);
         addUpdateMeta(resetEvent);
 
     }
 
-    Operable* CycleWaitStateReg::generateEndExpr() {
-        return &((*this)(0) & ((*this)(1, _totalBitSize) == (*_endCnt)));
+    Operable* CycleWaitStateReg::generate_end_expr() {
+        return &((*this)(0) & ((*this)(1, TOTAL_BIT_SIZE) == (*_end_cnt)));
     }
 
 

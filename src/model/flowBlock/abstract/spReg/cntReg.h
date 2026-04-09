@@ -42,9 +42,9 @@ namespace kathryn{
         /** reset event*/
         void make_un_set_state_event(CLOCK_MODE cm) override;
         /** make user reset event*/
-        void  makeUserRstEvent(Operable* rst, CLOCK_MODE cm) override;
+        void  make_user_rst_event(Operable* rst, CLOCK_MODE cm) override;
         /** generate out expression*/
-        Operable* generateEndExpr() override;
+        Operable* generate_end_expr() override;
         /** oevrride operator to prevent false input*/
         Reg& operator <<= (Operable& b) override {
             std::cout << "we not support = operator in register";

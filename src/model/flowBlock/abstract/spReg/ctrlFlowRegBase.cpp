@@ -1,6 +1,6 @@
-//
-// Created by tanawin on 14/1/2567.
-//
+///
+/// Created by tanawin on 14/1/2567.
+///
 
 
 #include"ctrlFlowRegBase.h"
@@ -21,16 +21,14 @@ namespace kathryn{
     }
 
 
-    UpdateEventBase* CtrlFlowRegBase::createUE(Operable* cond,
+    UpdateEventBase* CtrlFlowRegBase::create_ue(Operable* cond,
                                                Operable* state,
                                                Operable* value,
                                                Slice sl,
                                                int priority,
                                                CLOCK_MODE cm){
-
-        UpdateEventBase* conEvent = createUEHelper(cond, state, value, sl, priority, cm, false);
-        return conEvent;
-
+        UpdateEventBase* con_event = createUEHelper(cond, state, value, sl, priority, cm, false);
+        return con_event;
     }
 
 

@@ -35,11 +35,11 @@ namespace kathryn {
         /** reset event*/
         void make_un_set_state_event(CLOCK_MODE cm) override;
         /** user reset event*/
-        void makeUserRstEvent(Operable* rstWire, CLOCK_MODE cm) override { assert(false); /** it is single node; there is no neccessary for reset user event */};
+        void make_user_rst_event(Operable* rstWire, CLOCK_MODE cm) override { assert(false); /** it is single node; there is no neccessary for reset user event */};
         /** exit expression*/
-        Operable* generateEndExpr() override;
+        Operable* generate_end_expr() override;
         /***resetEvent Status*/
-        bool requireResetEvent() override{
+        bool require_reset_event() override{
             return _rstReq;
         }
     };

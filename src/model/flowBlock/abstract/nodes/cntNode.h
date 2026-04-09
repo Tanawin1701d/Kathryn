@@ -28,7 +28,7 @@ namespace kathryn{
 
         void make_user_reset_event() override{
             if(is_threre_int_reset()){
-                _counter->makeUserRstEvent(_int_reset->get_exit_opr_ptr(), get_clock_mode());
+                _counter->make_user_rst_event(_int_reset->get_exit_opr_ptr(), get_clock_mode());
             }
         }
 
@@ -39,7 +39,7 @@ namespace kathryn{
 
         Operable* get_exit_opr_ptr() override{
             assert(_counter != nullptr);
-            return _counter->generateEndExpr();
+            return _counter->generate_end_expr();
         }
 
         Operable* get_counter(){return _counter;}

@@ -22,9 +22,9 @@ namespace kathryn{
 
     class CondWaitStateReg : public CtrlFlowRegBase{
 
-        makeVal(_upState  ,1, 1);
-        makeVal(_downState,1, 0);
-        Operable* _condOpr = nullptr;
+        makeVal(_up_state  ,1, 1);
+        makeVal(_down_state,1, 0);
+        Operable* _cond_opr = nullptr;
 
     protected:
 
@@ -38,9 +38,9 @@ namespace kathryn{
         /** generate reset event*/
         void make_un_set_state_event(CLOCK_MODE cm) override;
         /** make user reset event*/
-        void  makeUserRstEvent(Operable* rst, CLOCK_MODE cm) override;
+        void  make_user_rst_event(Operable* rst, CLOCK_MODE cm) override;
         /** generate out expression*/
-        Operable* generateEndExpr() override;
+        Operable* generate_end_expr() override;
         /** oevrride operator to prevent false input*/
         Reg& operator <<= (Operable& b) override {
             std::cout << "we not support = operator in register";
@@ -65,15 +65,15 @@ namespace kathryn{
     private:
         /**wait cycle meta data*/
 
-        int               _waitCycle = -1;
-        int               _cntBitSz     = -1;
-        static const int  stateSize = 1;
-        const int         _totalBitSize = -1;
-        const int         startVal = 0b11;
+        int               _wait_cycle    = -1;
+        int               _cnt_bit_sz    = -1;
+        static const int  STATE_SIZE     = 1;
+        const int         TOTAL_BIT_SIZE = -1;
+        const int         START_VAL      = 0b11;
         /**when counter is reached exit expression will be set*/
-        Operable* IdleCnt     = nullptr;
-        Operable* _startCnt    = nullptr;
-        Operable* _endCnt      = nullptr;
+        Operable* _idle_cnt     = nullptr;
+        Operable* _start_cnt    = nullptr;
+        Operable* _end_cnt      = nullptr;
     protected:
 
         void com_init() override;
@@ -86,13 +86,13 @@ namespace kathryn{
         /** add prior state that trigger this state*/
         UpdateEventBase* add_depend_state(Operable* dependState, Operable* activateCond, CLOCK_MODE cm) override;
         /** add Inc to count*/
-        void makeIncStateEvent(Operable* holdSignal, CLOCK_MODE cm);
+        void make_inc_state_event(Operable* holdSignal, CLOCK_MODE cm);
         /** reset event*/
         void make_un_set_state_event(CLOCK_MODE cm) override;
         /** make user reset event*/
-        void  makeUserRstEvent(Operable* rst, CLOCK_MODE cm) override;
+        void  make_user_rst_event(Operable* rst, CLOCK_MODE cm) override;
         /** generate out expression*/
-        Operable* generateEndExpr() override;
+        Operable* generate_end_expr() override;
         /** oevrride operator to prevent false input*/
         Reg& operator <<= (Operable& b) override {
             std::cout << "we not support = operator in register";
@@ -100,7 +100,7 @@ namespace kathryn{
         }
     };
 
-    static int calBitUsed(int maxNumber){
+    static int cal_bit_used(int maxNumber){
         assert(maxNumber > 0);
         int amtNumberUsed = maxNumber + 1;
         /** time 2 and minus 1 to make ceiling of the number*/

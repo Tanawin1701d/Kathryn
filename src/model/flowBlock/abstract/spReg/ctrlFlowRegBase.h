@@ -39,23 +39,23 @@ namespace kathryn{
         }
 
 
-        UpdateEventBase* createUE(Operable* cond,
-                                  Operable* state,
-                                  Operable* value,
-                                  Slice sl,
-                                  int priority,
-                                  CLOCK_MODE cm);
+        UpdateEventBase* create_ue(Operable* cond,
+                                   Operable* state,
+                                   Operable* value,
+                                   Slice sl,
+                                   int priority,
+                                   CLOCK_MODE cm);
 
         /** add depend State register return update event*/
         virtual UpdateEventBase* add_depend_state(Operable* dependState, Operable* activateCond, CLOCK_MODE cm) = 0;
         /** build register representation when leaving this state */
         virtual void      make_un_set_state_event(CLOCK_MODE cm) = 0;
         /***make reset Event */
-        virtual void      makeUserRstEvent(Operable* rst, CLOCK_MODE cm) = 0;
+        virtual void      make_user_rst_event(Operable* rst, CLOCK_MODE cm) = 0;
         /***generate expression that represent state is finish*/
-        virtual Operable* generateEndExpr() = 0;
+        virtual Operable* generate_end_expr() = 0;
         /** to check that this register require reset event*/
-        virtual bool requireResetEvent(){
+        virtual bool require_reset_event(){
             return true;
         }
 

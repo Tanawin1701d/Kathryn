@@ -31,7 +31,7 @@ namespace kathryn{
     UpdateEventBase* CounterReg::add_depend_state(Operable* dependState, Operable* activateCond, CLOCK_MODE cm){
         assert(dependState != nullptr);
 
-        auto* update_event = createUE(activateCond,
+        auto* update_event = create_ue(activateCond,
                                       dependState,
                                       _idle_val,
                                       Slice({0, _cnt_bit_sz}),
@@ -48,7 +48,7 @@ namespace kathryn{
         if (upCountEvent != nullptr){
             assert(upCountEvent->getOperableSlice().getSize() == 1);
         }
-        auto* update_event = createUE(
+        auto* update_event = create_ue(
             nullptr,
             upCountEvent,
             &((*this) + 1),
@@ -67,10 +67,10 @@ namespace kathryn{
         assert(false); /// it is unused
     }
 
-    void CounterReg::makeUserRstEvent(Operable* rst, CLOCK_MODE cm){
+    void CounterReg::make_user_rst_event(Operable* rst, CLOCK_MODE cm){
         /// reset event
         assert(rst != nullptr);
-        auto* reset_event = createUE(
+        auto* reset_event = create_ue(
             nullptr,
             rst,
             _idle_val,
@@ -80,7 +80,7 @@ namespace kathryn{
         addUpdateMeta(reset_event);
     }
 
-    Operable* CounterReg::generateEndExpr() {
+    Operable* CounterReg::generate_end_expr() {
         return &(*this == (_last_cycle-1));
     }
 

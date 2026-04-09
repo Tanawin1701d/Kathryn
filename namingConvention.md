@@ -2,7 +2,7 @@
 
 1. filename and folder name should be the camelCase
 2. class name should be the PascalCase
-3. class memeber variable should be the _snake_case
+3. class memeber variable should be the _snake_case  (with _ leading)
 4. variable should be the snake_case
 5. class method should be the snake_case
 6. multiple line comment should be /***/

@@ -29,20 +29,20 @@ namespace kathryn{
 
         void make_user_reset_event() override{
             if (is_threre_int_reset()){
-                _cond_wait_state_reg->makeUserRstEvent(_int_reset->get_exit_opr_ptr(), get_clock_mode());
+                _cond_wait_state_reg->make_user_rst_event(_int_reset->get_exit_opr_ptr(), get_clock_mode());
             }
 
         }
 
         Operable* get_operating_state_ptr() override{
             assert(_cond_wait_state_reg != nullptr);
-            return _cond_wait_state_reg->generateEndExpr();
+            return _cond_wait_state_reg->generate_end_expr();
         }
 
         Operable* get_exit_opr_ptr() override{
             assert(_cond_wait_state_reg != nullptr);
             Operable* bined_with_reset_sig =
-                bind_with_rst_output_if_reset(_cond_wait_state_reg->generateEndExpr());
+                bind_with_rst_output_if_reset(_cond_wait_state_reg->generate_end_expr());
             Operable* bined_with_hold_sig =
                 bind_with_hold_if_hold(bined_with_reset_sig);
             return bined_with_hold_sig;
@@ -94,7 +94,7 @@ namespace kathryn{
 
         void make_user_reset_event() override{
             if(is_threre_int_reset()){
-                _cycle_wait_state_reg->makeUserRstEvent(_int_reset->get_exit_opr_ptr(), get_clock_mode());
+                _cycle_wait_state_reg->make_user_rst_event(_int_reset->get_exit_opr_ptr(), get_clock_mode());
             }
 
         }
@@ -102,7 +102,7 @@ namespace kathryn{
         Operable* get_exit_opr_ptr() override{
             assert(_cycle_wait_state_reg != nullptr);
             Operable* bined_with_reset_signal =
-                bind_with_rst_output_if_reset(_cycle_wait_state_reg->generateEndExpr());
+                bind_with_rst_output_if_reset(_cycle_wait_state_reg->generate_end_expr());
             Operable* bined_with_hold_signal =
                 bind_with_hold_if_hold(bined_with_reset_signal);
             return bined_with_hold_signal;
@@ -116,9 +116,9 @@ namespace kathryn{
             }
             /** inc event*/
             if (is_there_hold()){
-                _cycle_wait_state_reg->makeIncStateEvent(_hold_node->get_exit_opr_ptr(), get_clock_mode());
+                _cycle_wait_state_reg->make_inc_state_event(_hold_node->get_exit_opr_ptr(), get_clock_mode());
             }else{
-                _cycle_wait_state_reg->makeIncStateEvent(nullptr, get_clock_mode());
+                _cycle_wait_state_reg->make_inc_state_event(nullptr, get_clock_mode());
             }
             /** unset event*/
             make_unset_state_event();

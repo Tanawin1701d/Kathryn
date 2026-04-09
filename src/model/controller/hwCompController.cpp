@@ -33,7 +33,7 @@ namespace kathryn{
         target_module_ptr->addSpReg(ptr, spRegType);
         ptr->setParent(target_module_ptr);
         ptr->build_inherit_name(); //// build inherit name for that module
-        if (ptr->requireResetEvent())
+        if (ptr->require_reset_event())
             ptr->makeResetEvent();
         /** debug value*/
         logMF(ptr,

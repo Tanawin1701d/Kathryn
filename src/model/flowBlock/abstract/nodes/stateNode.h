@@ -37,7 +37,7 @@ namespace kathryn{
             assert(_state_reg != nullptr);
 
             Operable* bined_with_reset_signal =
-                bind_with_rst_output_if_reset(_state_reg->generateEndExpr());
+                bind_with_rst_output_if_reset(_state_reg->generate_end_expr());
             ///// hold mean the system is freeze it should not activate the system
             ////////// the systerm should still not unset
             Operable* bined_with_hold_signal =
@@ -49,7 +49,7 @@ namespace kathryn{
         ///// generate the end expression
         Operable* get_operating_state_ptr() override{
             assert(_state_reg != nullptr);
-            return _state_reg->generateEndExpr();
+            return _state_reg->generate_end_expr();
         }
 
         void add_slave_asm_node(AsmNode* asmNode, Operable* cond = nullptr){
@@ -112,14 +112,14 @@ namespace kathryn{
 
         void make_user_reset_event() override{
             if (is_threre_int_reset()) {
-                _synReg->makeUserRstEvent(_int_reset->get_exit_opr_ptr(), get_clock_mode());
+                _synReg->make_user_rst_event(_int_reset->get_exit_opr_ptr(), get_clock_mode());
             }
             if (_force_exit_node != nullptr){
-                _synReg->makeUserRstEvent(_force_exit_node->get_exit_opr_ptr(), get_clock_mode());
+                _synReg->make_user_rst_event(_force_exit_node->get_exit_opr_ptr(), get_clock_mode());
             }
         }
 
-        Operable* get_exit_opr_ptr() override{return bind_with_rst_output_if_reset(_synReg->generateEndExpr());}
+        Operable* get_exit_opr_ptr() override{return bind_with_rst_output_if_reset(_synReg->generate_end_expr());}
 
         void set_force_exit_event(PseudoNode* nd){
             assert(nd != nullptr);
