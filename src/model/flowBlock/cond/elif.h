@@ -16,9 +16,9 @@ namespace kathryn{
 
     class FlowBlockElif: public FlowBlockBase, public LoopStMacro{
     private:
-        FlowBlockBase* implicitSubBlock = nullptr;
-        NodeWrap* resultNodeWrapper = nullptr;
-        Operable* _cond = nullptr;
+        FlowBlockBase* _implicit_sub_block = nullptr;
+        NodeWrap*      _result_node_wrapper = nullptr;
+        Operable*      _cond = nullptr;
 
     public:
         explicit FlowBlockElif(Operable& cond);
@@ -28,7 +28,7 @@ namespace kathryn{
 
         /** for controller add the local element to this sub block*/
         void add_basic_node(Node* node) override;
-        void add_sub_flow_block(FlowBlockBase* subBlock) override;
+        void add_sub_flow_block(FlowBlockBase* sub_block) override;
         NodeWrap* sumarize_block() override;
         /** on this block is start interact to controller*/
         void on_attach_block() override;
@@ -38,13 +38,13 @@ namespace kathryn{
         void build_hw_component() override;
 
         std::string get_md_describe() override;
-        void add_md_log(MdLogVal *mdLogVal) override;
+        void add_md_log(MdLogVal *md_log_val) override;
         /** Loop macro to notice position of system*/
         void do_pre_function() override;
         void do_post_function() override;
 
         [[nodiscard]]
-        Operable* getCondition() const{
+        Operable* get_condition() const{
             return _cond;
         }
     };

@@ -47,10 +47,10 @@ namespace kathryn{
         FlowBlockBase::add_con_flow_block(elifBlock);
         /** push to if-else concern element*/
         /// allStatement.push_back(elifBlock->sumarizeBlock());
-        if (elifBlock->getCondition() != nullptr) {
-            allCondes.push_back(elifBlock->getCondition());
+        if (elifBlock->get_condition() != nullptr) {
+            allCondes.push_back(elifBlock->get_condition());
             allPurifiedCondes.push_back(
-                    purify_condition(elifBlock->getCondition())
+                    purify_condition(elifBlock->get_condition())
             );
         }
 
@@ -65,13 +65,13 @@ namespace kathryn{
     void FlowBlockIf::on_attach_block() {
         _ctrl->on_attach_flowBlock(this);
         auto sb = gen_implicit_sub_blk(PARALLEL_NO_SYN);
-        implicitFlowBlock = sb;
+        _implicit_flow_block = sb;
         sb->on_attach_block();
     }
 
     void FlowBlockIf::on_detach_block() {
-        assert(implicitFlowBlock != nullptr);
-        implicitFlowBlock->on_detach_block();
+        assert(_implicit_flow_block != nullptr);
+        _implicit_flow_block->on_detach_block();
         ////// we will hold this end block will handle it
         set_lazy_delete();
 
@@ -81,13 +81,13 @@ namespace kathryn{
     void FlowBlockIf::build_hw_component() {
         /**summarize all block*/
         assert(_sub_blocks.size() == 1);
-        allStatement.push_back(_sub_blocks[0]->sumarize_block());
+        _all_statement.push_back(_sub_blocks[0]->sumarize_block());
         for (auto conFlowBlock: _con_blocks){
-            allStatement.push_back(conFlowBlock->sumarize_block());
+            _all_statement.push_back(conFlowBlock->sumarize_block());
         }
         assert(!allCondes.empty());
         assert(allPurifiedCondes.size() == allCondes.size());
-        assert(!allStatement.empty());
+        assert(!_all_statement.empty());
 
         /***
          *
@@ -126,34 +126,34 @@ namespace kathryn{
         /**add condition to state*/
         Operable* prevFalse = &(~(*allPurifiedCondes[0]));
         /** assign first first if*/
-        allStatement[0]->add_depend_node_to_all_node( condNode,allPurifiedCondes[0]);
-        allStatement[0]->assign_all_node();
-        exitNode->add_depend_node(allStatement[0]->get_exit_node(), nullptr);
+        _all_statement[0]->add_depend_node_to_all_node( condNode,allPurifiedCondes[0]);
+        _all_statement[0]->assign_all_node();
+        exitNode->add_depend_node(_all_statement[0]->get_exit_node(), nullptr);
 
 
         int statementId = 1;
-        for (; statementId < allStatement.size(); statementId++){
+        for (; statementId < _all_statement.size(); statementId++){
             if (statementId < allPurifiedCondes.size()) {
-                allStatement[statementId]->add_depend_node_to_all_node(
+                _all_statement[statementId]->add_depend_node_to_all_node(
                         condNode,
                         &((*allPurifiedCondes[statementId]) & (*prevFalse)));
-                allStatement[statementId]->assign_all_node();
-                exitNode->add_depend_node(allStatement[statementId]->get_exit_node(), nullptr);
+                _all_statement[statementId]->assign_all_node();
+                exitNode->add_depend_node(_all_statement[statementId]->get_exit_node(), nullptr);
                 prevFalse = &((*prevFalse) & ~(*allPurifiedCondes[statementId]));
             }else{
                 /** case else statement*/
                 assert(statementId == (allPurifiedCondes.size())); /// check no ambiguous statement
-                allStatement[statementId]->add_depend_node_to_all_node(
+                _all_statement[statementId]->add_depend_node_to_all_node(
                         condNode,
                         prevFalse);
-                allStatement[statementId]->assign_all_node();
-                exitNode->add_depend_node(allStatement[statementId]->get_exit_node(), nullptr);
+                _all_statement[statementId]->assign_all_node();
+                exitNode->add_depend_node(_all_statement[statementId]->get_exit_node(), nullptr);
             }
         }
 
 
 
-        if (allStatement.size() == allPurifiedCondes.size()){
+        if (_all_statement.size() == allPurifiedCondes.size()){
             /** there is no else node*/
             /** prev false is ready*/
             exitNode->add_depend_node(condNode, prevFalse);
@@ -172,7 +172,7 @@ namespace kathryn{
         resultNodeWrap->add_exit_node(exitNode);
 
         /**force exit condition*/
-        gen_sum_force_exit_node(allStatement);
+        gen_sum_force_exit_node(_all_statement);
         if (_are_there_force_exit)
             resultNodeWrap->add_force_exit_node(_force_exit_node);
 
@@ -184,8 +184,8 @@ namespace kathryn{
          *
          * */
         NodeWrapCycleDet deter;
-        deter.add_to_det(allStatement);
-        if(allStatement.size() == allPurifiedCondes.size()){
+        deter.add_to_det(_all_statement);
+        if(_all_statement.size() == allPurifiedCondes.size()){
             /** there is zero state node*/
             deter.add_to_det(0);
         }
@@ -209,7 +209,7 @@ namespace kathryn{
         std::string ret;
         ret += "[ " + FlowBlockBase::get_md_ident_val() +" ]\n";
         ret += "exitNode is " + ((exitNode != nullptr) ? exitNode->get_md_ident_val()+ "  " + exitNode->get_md_describe(): "") + "\n";
-        ret += "[implicitFlowBlock]" + implicitFlowBlock->get_md_describe() + "\n";
+        ret += "[implicitFlowBlock]" + _implicit_flow_block->get_md_describe() + "\n";
         return ret;
     }
 
