@@ -4,3 +4,4 @@ mod slice;
 mod update_pool;
 mod assignable;
 mod assign_meta;
+mod identifiable;
