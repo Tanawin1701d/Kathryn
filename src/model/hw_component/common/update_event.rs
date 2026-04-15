@@ -6,6 +6,7 @@ pub const DEFAULT_UE_PRI_MIN           : i32 = 0;
 pub const DEFAULT_UE_SUB_PRIORITY_USER : u64 = 0;
 
 use std::rc::Rc;
+use crate::common::obj::SPTR;
 use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::hcp_read::Readable;
 use crate::model::hw_component::common::slice::Slice;
@@ -64,7 +65,7 @@ pub trait UpdatingEvent: HasUeCommon {
     /// ////////////////
     /// virtual function
     /// ////////////////
-    fn get_dep          (&self, result_dep: &mut Vec<Rc<dyn Readable>>);
+    fn get_dep          (&self, result_dep: &mut Vec<SPTR<dyn Readable>>);
     fn is_leaf          (&self) -> bool;
 }
 
@@ -84,12 +85,12 @@ impl Default for UeCommon {
 */
 pub struct UeBasic {
     ue_common: UeCommon,
-    src_val: Rc<dyn Readable>,
+    src_val: SPTR<dyn Readable>,
     des_slice: Slice,
 }
 
 impl UeBasic {
-    fn new(src_val: Rc<dyn Readable>, des_slice: Slice) -> Self {
+    pub(crate) fn new(src_val: SPTR<dyn Readable>, des_slice: Slice) -> Self {
         Self {
             ue_common: UeCommon {
                 ue_type: UeType::Basic,
@@ -101,7 +102,7 @@ impl UeBasic {
     }
 
     fn get_des_slice(&self) -> &Slice{&self.des_slice}
-    fn get_src_val(&self)   -> &Rc<dyn Readable>{&self.src_val}
+    fn get_src_val(&self)   -> &SPTR<dyn Readable>{&self.src_val}
 }
 
 impl HasUeCommon for UeBasic {
@@ -110,7 +111,7 @@ impl HasUeCommon for UeBasic {
 }
 
 impl UpdatingEvent for UeBasic{
-    fn get_dep(&self, result_dep: &mut Vec<Rc<dyn Readable>>) {
+    fn get_dep(&self, result_dep: &mut Vec<SPTR<dyn Readable>>) {
         result_dep.push(self.src_val.clone());
     }
     fn is_leaf(&self) -> bool{true}
@@ -120,9 +121,9 @@ impl UpdatingEvent for UeBasic{
 /*
     UPDATE EVENT GROUP
 */
-struct UeGrp {
+pub struct UeGrp {
     ue_common : UeCommon,
-    sub_stmts : Vec<Rc<dyn UpdatingEvent>>,
+    sub_stmts : Vec<SPTR<dyn UpdatingEvent>>,
 }
 
 impl UeGrp {
@@ -133,10 +134,10 @@ impl UeGrp {
         }
     }
 
-    fn add_sub_stmt(&mut self, stmt: Rc<dyn UpdatingEvent>) {
+    fn add_sub_stmt(&mut self, stmt: SPTR<dyn UpdatingEvent>) {
         if self.sub_stmts.is_empty() {
-            self.ue_common.priority = stmt.get_priority();
-            self.ue_common.clk_mode = stmt.get_clk_mode();
+            self.ue_common.priority = stmt.borrow().get_priority();
+            self.ue_common.clk_mode = stmt.borrow().get_clk_mode();
         }
         self.sub_stmts.push(stmt);
     }
@@ -148,9 +149,9 @@ impl HasUeCommon for UeGrp {
 }
 
 impl UpdatingEvent for UeGrp {
-    fn get_dep(&self, result_dep: &mut Vec<Rc<dyn Readable>>) {
+    fn get_dep(&self, result_dep: &mut Vec<SPTR<dyn Readable>>) {
         for stmt in &self.sub_stmts {
-            stmt.get_dep(result_dep);
+            stmt.borrow().get_dep(result_dep);
         }
     }
     fn is_leaf(&self) -> bool { false }
@@ -159,15 +160,15 @@ impl UpdatingEvent for UeGrp {
 /*
     UPDATE EVENT COND
 */
-struct UeCond {
+pub struct UeCond {
     ue_common      : UeCommon,
     is_last_occure : bool,
-    conditions     : Vec<Option<Rc<dyn Readable>>>,
-    sub_stmts      : Vec<Rc<dyn UpdatingEvent>>,
+    conditions     : Vec<Option<SPTR<dyn Readable>>>,
+    sub_stmts      : Vec<SPTR<dyn UpdatingEvent>>,
 }
 
 impl UeCond {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             ue_common      : UeCommon { ue_type: UeType::Cond, ..Default::default() },
             is_last_occure : false,
@@ -176,15 +177,15 @@ impl UeCond {
         }
     }
 
-    fn add_sub_stmt(&mut self, cond: Option<Rc<dyn Readable>>, stmt: Rc<dyn UpdatingEvent>) {
+    fn add_sub_stmt(&mut self, cond: Option<SPTR<dyn Readable>>, stmt: SPTR<dyn UpdatingEvent>) {
         assert!(!self.is_last_occure);
         if cond.is_none() {
             // it means thisd is "else" part
             self.is_last_occure = true;
         }
         if self.sub_stmts.is_empty() {
-            self.ue_common.priority = stmt.get_priority();
-            self.ue_common.clk_mode = stmt.get_clk_mode();
+            self.ue_common.priority = stmt.borrow().get_priority();
+            self.ue_common.clk_mode = stmt.borrow().get_clk_mode();
         }
         self.conditions.push(cond);
         self.sub_stmts .push(stmt);
@@ -197,14 +198,14 @@ impl HasUeCommon for UeCond {
 }
 
 impl UpdatingEvent for UeCond {
-    fn get_dep(&self, result_dep: &mut Vec<Rc<dyn Readable>>) {
+    fn get_dep(&self, result_dep: &mut Vec<SPTR<dyn Readable>>) {
         for cond in &self.conditions {
             if let Some(c) = cond {
                 result_dep.push(c.clone());
             }
         }
         for stmt in &self.sub_stmts {
-            stmt.get_dep(result_dep);
+            stmt.borrow().get_dep(result_dep);
         }
     }
     fn is_leaf(&self) -> bool { false }
@@ -216,13 +217,13 @@ impl UpdatingEvent for UeCond {
 struct UeSwitch {
     ue_common    : UeCommon,
     is_init_meta : bool,
-    state_iden   : Rc<dyn Readable>,
+    state_iden   : SPTR<dyn Readable>,
     sub_stmt_idxs: Vec<i32>,
-    sub_stmts    : Vec<Option<Rc<dyn UpdatingEvent>>>,
+    sub_stmts    : Vec<Option<SPTR<dyn UpdatingEvent>>>,
 }
 
 impl UeSwitch {
-    fn new(state_iden: Rc<dyn Readable>) -> Self {
+    fn new(state_iden: SPTR<dyn Readable>) -> Self {
         Self {
             ue_common    : UeCommon { ue_type: UeType::Switch, ..Default::default() },
             is_init_meta : false,
@@ -233,23 +234,23 @@ impl UeSwitch {
     }
 
     fn get_match_num(&self) -> usize { self.sub_stmts.len() }
-    fn get_state_iden(&self) -> &Rc<dyn Readable> { &self.state_iden }
+    fn get_state_iden(&self) -> &SPTR<dyn Readable> { &self.state_iden }
 
     fn get_sub_stmt_match_idx(&self, idx: usize) -> i32 {
         assert!(idx < self.sub_stmt_idxs.len());
         self.sub_stmt_idxs[idx]
     }
 
-    fn get_sub_stmt(&self, idx: usize) -> Option<&dyn UpdatingEvent> {
+    fn get_sub_stmt(&self, idx: usize) -> Option<SPTR<dyn UpdatingEvent>> {
         assert!(idx < self.sub_stmts.len());
-        self.sub_stmts[idx].as_deref()
+        self.sub_stmts[idx].clone()
     }
 
-    fn add_sub_stmt(&mut self, match_val: i32, stmt: Option<Rc<dyn UpdatingEvent>>) {
+    fn add_sub_stmt(&mut self, match_val: i32, stmt: Option<SPTR<dyn UpdatingEvent>>) {
         if !self.is_init_meta {
             if let Some(s) = &stmt {
-                self.ue_common.priority = s.get_priority();
-                self.ue_common.clk_mode = s.get_clk_mode();
+                self.ue_common.priority = s.borrow().get_priority();
+                self.ue_common.clk_mode = s.borrow().get_clk_mode();
                 self.is_init_meta = true;
             }
         }
@@ -264,11 +265,11 @@ impl HasUeCommon for UeSwitch {
 }
 
 impl UpdatingEvent for UeSwitch {
-    fn get_dep(&self, result_dep: &mut Vec<Rc<dyn Readable>>) {
+    fn get_dep(&self, result_dep: &mut Vec<SPTR<dyn Readable>>) {
         result_dep.push(self.state_iden.clone());
         for stmt in &self.sub_stmts {
             if let Some(s) = stmt {
-                s.get_dep(result_dep);
+                s.borrow().get_dep(result_dep);
             }
         }
     }
