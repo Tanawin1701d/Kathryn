@@ -3,7 +3,7 @@
 
 
 
-pub trait Operable {
+pub trait Readable {
 
     fn print(&self){
 

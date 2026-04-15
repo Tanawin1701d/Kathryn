@@ -1,7 +1,6 @@
-pub mod operable;
+pub mod hcp_read;
 pub mod update_event;
 mod slice;
 mod update_pool;
-mod assignable;
+mod hcp_assign;
 mod assign_meta;
-mod identifiable;
