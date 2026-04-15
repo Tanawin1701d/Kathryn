@@ -1,6 +1,7 @@
 
 
 use std::rc::Rc;
+use crate::common::obj::SPTR;
 use crate::model::hw_component::common::update_event::UpdatingEvent;
 use crate::model::hw_component::common::hcp_read::Readable;
 use crate::model::hw_component::common::slice::Slice;
@@ -28,6 +29,10 @@ pub trait Assignable {
     fn do_level_asm(&mut self, src_opr  : Rc<dyn Readable>,
                     des_slice: Slice
     );
+
+    fn add_update_event(&mut self, event: SPTR<dyn UpdatingEvent>){
+        self.get_hcp_assign_mut().update_pool.add_update_event(event);
+    }
 }
 
 /*
