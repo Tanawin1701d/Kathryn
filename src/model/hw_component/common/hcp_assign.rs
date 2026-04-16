@@ -33,6 +33,10 @@ pub trait Assignable {
     fn add_update_event(&mut self, event: SPTR<dyn UpdatingEvent>){
         self.get_hcp_assign_mut().update_pool.add_update_event(event);
     }
+    
+    fn get_update_pool(&self) -> &UpdatePool {
+        &self.get_hcp_assign().update_pool
+    }
 }
 
 /*

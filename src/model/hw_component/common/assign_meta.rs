@@ -5,6 +5,7 @@ use crate::common::obj::SPTR;
 use crate::model::hw_component::common::hcp_assign::Assignable;
 use crate::model::hw_component::common::hcp_read::Readable;
 use crate::model::hw_component::common::update_event::{UpdatingEvent, UeBasic};
+use crate::model::hw_component::common::update_event_helper::{create_ue_helper_add_dis, create_mux_ue_helper};
 
 static ASSIGN_CNT: AtomicU64 = AtomicU64::new(0);
 
@@ -25,8 +26,7 @@ impl AssignMeta {
         input_element.borrow_mut().set_sub_priority(cnt);
 
         // 👇 Coerce HERE (at the outer Rc level)
-        let pre_update_element: SPTR<dyn UpdatingEvent>> =
-            input_element.clone();
+        let pre_update_element: SPTR<dyn UpdatingEvent> = input_element.clone();
 
         Self {
             target_hwc,
@@ -70,11 +70,17 @@ impl AssignMeta {
         self.pre_update_event = event;
     }
 
-    pub fn add_specific_pre_condition(&mut self, _cond: Rc<dyn Readable>) {
-        todo!("createUEHelper not yet implemented")
+    pub fn add_specific_pre_condition(&mut self, cond: SPTR<dyn Readable>) {
+        self.pre_update_event =  create_ue_helper_add_dis(Some(cond), None, self.pre_update_event.clone());
     }
 
-    pub fn mux(&self, _right: &AssignMeta, _select_left: Rc<dyn Readable>) -> AssignMeta {
-        todo!("createMuxUEHelper not yet implemented")
+    pub fn mux(&self, right: &AssignMeta, select_left: SPTR<dyn Readable>) -> AssignMeta {
+        let mux_event = create_mux_ue_helper(
+            self.pre_update_event.clone(),
+            right.pre_update_event.clone(),
+            select_left,
+        );
+        let cnt = self.get_cur_assign_cnt();
+        AssignMeta::new_complex(self.target_hwc.clone(), mux_event, cnt)
     }
 }

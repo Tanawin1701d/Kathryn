@@ -4,7 +4,7 @@ use crate::common::obj::SPTR;
 use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::hcp_read::Readable;
 use crate::model::hw_component::common::slice::Slice;
-use crate::model::hw_component::common::update_event::{UeBasic, UpdatingEvent};
+use crate::model::hw_component::common::update_event::{UeBasic, UeCond, UpdatingEvent};
 use crate::model::hw_component::common::asm_mode::get_asm_pri_val;
 
 pub fn create_ue_helper_basic(
@@ -43,16 +43,30 @@ pub fn create_ue_helper_full(
     priority      : i32,
     cm            : ClockMode,
     auto_priority : bool
-){
+) -> SPTR<dyn UpdatingEvent> {
+
+    let basic_event = create_ue_helper_basic(value,sl,priority,cm,auto_priority);
+
     if cond.is_none() && state.is_none() {
-        return;
+        return basic_event;
     }
 
-    let basic_ue = create_ue_helper_basic(value, sl, priority, cm, auto_priority);
-    let add_ue   = create_ue_helper_add_dis(cond, state, basic_ue);
+    let add_ue   = create_ue_helper_add_dis(cond, state, basic_event);
 
-
-
+    add_ue
 }
 
-
+/// Mux helper: selects `left` when `select_left` is true (1-bit), otherwise `right`.
+/// Equivalent to C++ createMuxUEHelper.
+pub fn create_mux_ue_helper(
+    left        : SPTR<dyn UpdatingEvent>,
+    right       : SPTR<dyn UpdatingEvent>,
+    select_left : SPTR<dyn Readable>,
+) -> SPTR<dyn UpdatingEvent> {
+    // assert: select_left must be a 1-bit signal
+    // (full check requires Readable::get_slice — assert added when available)
+    let mut uec = UeCond::new();
+    uec.add_sub_stmt(Some(select_left), left);
+    uec.add_sub_stmt(None, right);
+    Rc::new(RefCell::new(uec))
+}

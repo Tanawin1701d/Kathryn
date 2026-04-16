@@ -7,8 +7,8 @@ pub fn get_last_ident_id() -> u64 {
 }
 
 pub struct IdentBase {
-    global_id    : u64,
-    global_name  : String,
+    global_id : u64,
+    name      : String,
 }
 
 /// Trait for types that embed `IdentBase` and implement the pure-virtual
@@ -16,22 +16,22 @@ pub struct IdentBase {
 pub trait HasIdentBase {
     fn get_ident_base    (&self)     -> &IdentBase;
     fn get_ident_base_mut(&mut self) -> &mut IdentBase;
-    fn build_inherit_name(&mut self);
+    fn build_unique_name(&mut self);
 
     // ---- forwarded accessors ------------------------------------------------
 
 
     fn get_global_id  (&self) -> u64    { self.get_ident_base().global_id }
 
-    fn get_global_name(&self) -> &str          { &self.get_ident_base().global_name }
-    fn set_global_name(&mut self, name: String) { self.get_ident_base_mut().global_name = name; }
+    fn get_global_name(&self) -> &str          { &self.get_ident_base().name }
+    fn set_global_name(&mut self, name: String) { self.get_ident_base_mut().name = name; }
 }
 
 impl IdentBase {
-    pub fn new() -> Self {
+    pub fn new(name: &str) -> Self {
         Self {
-            global_id    : GLOBAL_MODEL_ID.fetch_add(1, Ordering::Relaxed),
-            global_name  : String::new(),
+            global_id : GLOBAL_MODEL_ID.fetch_add(1, Ordering::Relaxed),
+            name: name.to_string(),
         }
     }
 
@@ -39,7 +39,17 @@ impl IdentBase {
     /// to the name/inherit list.  Not `Clone` because the result is not identical.
     pub fn assign_from(&mut self, rhs: &IdentBase) {
         if std::ptr::eq(self, rhs) { return; }
-        self.global_id    = GLOBAL_MODEL_ID.fetch_add(1, Ordering::Relaxed);
-        self.global_name  = format!("{}_CP", rhs.global_name);
+        self.global_id = GLOBAL_MODEL_ID.fetch_add(1, Ordering::Relaxed);
+        self.name      = format!("{}_CP", rhs.name);
+    }
+
+    pub fn get_global_id(&self) -> u64 { self.global_id }
+    pub fn get_name(&self) -> &str { &self.name }
+    
+}
+
+impl PartialEq for IdentBase {
+    fn eq(&self, other: &Self) -> bool {
+        self.global_id == other.global_id && self.name == other.name
     }
 }
