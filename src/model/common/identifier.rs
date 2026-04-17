@@ -6,6 +6,7 @@ pub fn get_last_ident_id() -> u64 {
     GLOBAL_MODEL_ID.load(Ordering::Relaxed)
 }
 
+#[derive(Clone, Debug, Eq)]
 pub struct IdentBase {
     global_id : u64,
     name      : String,
@@ -43,9 +44,10 @@ impl IdentBase {
         self.name      = format!("{}_CP", rhs.name);
     }
 
-    pub fn get_global_id(&self) -> u64 { self.global_id }
-    pub fn get_name(&self) -> &str { &self.name }
-    
+    pub fn get_global_id(&self)      -> u64         { self.global_id }
+    pub fn get_name     (&self)      -> &str        { &self.name }
+    pub fn get_name_mut (&mut self)  -> &mut String { &mut self.name }
+    pub fn set_name     (&mut self, name: &str)     { self.name = name.to_string(); }
 }
 
 impl PartialEq for IdentBase {

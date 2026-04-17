@@ -1,86 +1,70 @@
-use std::rc::Rc;
-use std::cell::RefCell;
 use std::sync::atomic::{AtomicU64, Ordering};
-use crate::common::obj::SPTR;
 use crate::model::hw_component::common::hcp_assign::HcpAssignable;
-use crate::model::hw_component::common::hcp_read::Readable;
+use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::update_event::{UpdatingEvent, UeBasic};
 use crate::model::hw_component::common::update_event_helper::{create_ue_helper_add_dis, create_mux_ue_helper};
 
 static ASSIGN_CNT: AtomicU64 = AtomicU64::new(0);
 
 pub struct AssignMeta {
-    target_hwc         : SPTR<dyn HcpAssignable>,
-    input_event        : Option<SPTR<UeBasic>>,
-    pre_update_event   : SPTR<dyn UpdatingEvent>,
+    target_hwc       : HcpIdent,
+    input_event      : Option<UeBasic>,
+    pre_update_event : Box<dyn UpdatingEvent>,
 }
 
 impl AssignMeta {
-    /// Primary constructor: takes a basic event, auto-increments ASSIGN_CNT.
-    pub fn new(
-        target_hwc    : SPTR<dyn HcpAssignable>,
-        input_element : SPTR<UeBasic>,
-    ) -> Self {
+    pub fn new(target_hwc: HcpIdent, mut input_element: UeBasic) -> Self {
         let cnt = ASSIGN_CNT.fetch_add(1, Ordering::Relaxed);
-
-        input_element.borrow_mut().set_sub_priority(cnt);
-
-        // 👇 Coerce HERE (at the outer Rc level)
-        let pre_update_element: SPTR<dyn UpdatingEvent> = input_element.clone();
-
+        input_element.set_sub_priority(cnt);
+        let pre: Box<dyn UpdatingEvent> = Box::new(input_element.clone());
         Self {
             target_hwc,
             input_event     : Some(input_element),
-            pre_update_event: pre_update_element,
+            pre_update_event: pre,
         }
     }
 
-    /// Secondary constructor: complex event with an explicit assign count, no input_element.
     pub fn new_complex(
-        target_hwc      : SPTR<dyn HcpAssignable>,
-        pre_update_event: SPTR<dyn UpdatingEvent>,
-        cur_assign_cnt: u64,
+        target_hwc      : HcpIdent,
+        pre_update_event: Box<dyn UpdatingEvent>,
+        cur_assign_cnt  : u64,
     ) -> Self {
-        pre_update_event.borrow_mut().set_sub_priority(cur_assign_cnt);
+        let mut event = pre_update_event;
+        event.set_sub_priority(cur_assign_cnt);
         Self {
             target_hwc,
             input_event: None,
-            pre_update_event,
+            pre_update_event: event,
         }
     }
 
     pub fn is_joinable(&self, rhs: &AssignMeta) -> bool {
-        Rc::ptr_eq(&self.target_hwc, &rhs.target_hwc) &&
-        self.pre_update_event.borrow().is_joinable(&*rhs.pre_update_event.borrow())
+        self.target_hwc == rhs.target_hwc &&
+        self.pre_update_event.is_joinable(&*rhs.pre_update_event)
     }
 
-    /// Moves pre_update_element into the pool.
-    pub fn final_update(&mut self) {
-            self.target_hwc.borrow_mut().
-                add_update_event(self.pre_update_event.clone());
-
+    pub fn final_update(self, target: &mut dyn HcpAssignable) {
+        target.add_update_event(self.pre_update_event);
     }
 
-    pub fn get_target_hw     (&self) -> SPTR<dyn HcpAssignable> {self.target_hwc.clone()}
-    pub fn get_cur_assign_cnt(&self) -> u64 {
-        self.pre_update_event.borrow().get_sub_priority()
-    }
+    pub fn get_target_hw     (&self) -> &HcpIdent { &self.target_hwc }
+    pub fn get_cur_assign_cnt(&self) -> u64       { self.pre_update_event.get_sub_priority() }
 
-    pub fn set_new_editing_event(&mut self, event: SPTR<dyn UpdatingEvent>) {
+    pub fn set_new_editing_event(&mut self, event: Box<dyn UpdatingEvent>) {
         self.pre_update_event = event;
     }
 
-    pub fn add_specific_pre_condition(&mut self, cond: SPTR<dyn Readable>) {
-        self.pre_update_event =  create_ue_helper_add_dis(Some(cond), None, self.pre_update_event.clone());
+    pub fn add_specific_pre_condition(&mut self, cond: HcpIdent) {
+        let old = self.pre_update_event.clone_box();
+        self.pre_update_event = create_ue_helper_add_dis(Some(cond), None, old);
     }
 
-    pub fn mux(&self, right: &AssignMeta, select_left: SPTR<dyn Readable>) -> AssignMeta {
+    pub fn mux(&self, right: &AssignMeta, select_left: HcpIdent) -> AssignMeta {
         let mux_event = create_mux_ue_helper(
-            self.pre_update_event.clone(),
-            right.pre_update_event.clone(),
+            self.pre_update_event.clone_box(),
+            right.pre_update_event.clone_box(),
             select_left,
         );
-        let cnt = self.get_cur_assign_cnt();
-        AssignMeta::new_complex(self.target_hwc.clone(), mux_event, cnt)
+        AssignMeta::new_complex(self.target_hwc.clone(), mux_event, self.get_cur_assign_cnt())
     }
 }

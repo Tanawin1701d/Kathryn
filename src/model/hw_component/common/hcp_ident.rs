@@ -15,14 +15,11 @@ pub enum HwComponentType {
     Val                = 8,
     MemBlock           = 9,
     MemBlockIndexer    = 10,
-    Box                = 11,
-    Intf               = 12,
-    PmVal              = 13,
-    CounterReg         = 14,
+    CounterReg         = 11,
 }
 
 impl HwComponentType {
-    pub const COUNT: usize = 15;
+    pub const COUNT: usize = 12;
 
     pub fn global_prefix(self) -> &'static str {
         match self {
@@ -37,9 +34,6 @@ impl HwComponentType {
             Self::Val               => "VAL",
             Self::MemBlock          => "MEM_BLOCK",
             Self::MemBlockIndexer   => "MEM_BLOCK_INDEXER",
-            Self::Box               => "BOX",
-            Self::Intf              => "ITF",
-            Self::PmVal             => "PMVAL",
             Self::CounterReg        => "CNT_REG",
         }
     }
@@ -51,26 +45,33 @@ impl fmt::Display for HwComponentType {
     }
 }
 
-pub trait HcpIdentifiable : Identifiable {
-    fn get_hcp_ident    (&self)     -> &HcpIdent    ;
-    fn get_hcp_ident_mut(&mut self) -> &mut HcpIdent;
-}
 
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HcpIdent {
     ident_base : IdentBase,
     hw_type    : HwComponentType,
+    mod_hirac  : Vec<u32>, // the index of module index in the hierarchy
+    hw_idx     : u32       // the index of hw component in the module in spepcific type
 }
 
 impl HcpIdent {
-    pub fn new(hw_type: HwComponentType, name: &str) -> Self {
-        let mut s = Self {
+    pub fn new(hw_type  : HwComponentType,
+               name     : &str,
+               mod_hirac: Vec<u32>,
+               hw_idx   : u32) -> Self {
+        Self {
             ident_base: IdentBase::new(name),
             hw_type,
-        };
-        s
+            mod_hirac,
+            hw_idx,
+        }
     }
-
-    pub fn get_hw_type(&self) -> HwComponentType { self.hw_type }
+    
+    pub fn get_ident_base(&self) -> &IdentBase      { &self.ident_base }
+    pub fn get_hw_type   (&self) -> HwComponentType { self.hw_type     }
+    pub fn get_mod_hirac (&self) -> &[u32]          { &self.mod_hirac  }
+    pub fn get_hw_idx    (&self) -> u32             { self.hw_idx      }
+    // ---- helpers ------------------------------------------------------------
 
     pub fn build_unique_hcp_name(&self) -> String {
         format!("{}_{}_{}", self.hw_type,

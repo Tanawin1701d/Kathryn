@@ -44,7 +44,7 @@ pub trait HcpAssignable {
     ) -> AssignMeta;
 
 
-    fn add_update_event(&mut self, event: SPTR<dyn UpdatingEvent>){
+    fn add_update_event(&mut self, event: Box<dyn UpdatingEvent>){
         self.get_hcp_assign_mut().update_pool.add_update_event(event);
     }
 
