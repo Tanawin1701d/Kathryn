@@ -1,5 +1,5 @@
 use std::fmt;
-use crate::model::common::identifier::{IdentBase, HasIdentBase};
+use crate::model::common::identifier::{IdentBase, Identifiable};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(usize)]
@@ -51,14 +51,9 @@ impl fmt::Display for HwComponentType {
     }
 }
 
-pub trait HcpIdentifiable : HasIdentBase   {
-    fn get_ident_base    (&self)     -> &IdentBase    ;
-    fn get_ident_base_mut(&mut self) -> &mut IdentBase;
-
-    fn build_unique_name(&mut self) {
-        let name = format!("{}_{}_{}", self.hw_type.global_prefix(), self.ident_base.name, self.get_global_id());
-        self.set_global_name(name);
-    }
+pub trait HcpIdentifiable : Identifiable {
+    fn get_hcp_ident    (&self)     -> &HcpIdent    ;
+    fn get_hcp_ident_mut(&mut self) -> &mut HcpIdent;
 }
 
 pub struct HcpIdent {
@@ -76,4 +71,10 @@ impl HcpIdent {
     }
 
     pub fn get_hw_type(&self) -> HwComponentType { self.hw_type }
+
+    pub fn build_unique_hcp_name(&self) -> String {
+        format!("{}_{}_{}", self.hw_type,
+                            self.ident_base.get_name(),
+                            self.ident_base.get_global_id())
+    }
 }

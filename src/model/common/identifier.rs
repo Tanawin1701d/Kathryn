@@ -13,10 +13,10 @@ pub struct IdentBase {
 
 /// Trait for types that embed `IdentBase` and implement the pure-virtual
 /// `build_inherit_name`.  Mirrors the C++ `IdentBase` abstract class.
-pub trait HasIdentBase {
+pub trait Identifiable {
     fn get_ident_base    (&self)     -> &IdentBase;
     fn get_ident_base_mut(&mut self) -> &mut IdentBase;
-    fn build_unique_name(&mut self);
+    fn build_unique_name(&mut self)  -> &str;
 
     // ---- forwarded accessors ------------------------------------------------
 

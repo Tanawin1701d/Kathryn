@@ -2,7 +2,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::sync::atomic::{AtomicU64, Ordering};
 use crate::common::obj::SPTR;
-use crate::model::hw_component::common::hcp_assign::Assignable;
+use crate::model::hw_component::common::hcp_assign::HcpAssignable;
 use crate::model::hw_component::common::hcp_read::Readable;
 use crate::model::hw_component::common::update_event::{UpdatingEvent, UeBasic};
 use crate::model::hw_component::common::update_event_helper::{create_ue_helper_add_dis, create_mux_ue_helper};
@@ -10,7 +10,7 @@ use crate::model::hw_component::common::update_event_helper::{create_ue_helper_a
 static ASSIGN_CNT: AtomicU64 = AtomicU64::new(0);
 
 pub struct AssignMeta {
-    target_hwc         : SPTR<dyn Assignable>,
+    target_hwc         : SPTR<dyn HcpAssignable>,
     input_event        : Option<SPTR<UeBasic>>,
     pre_update_event   : SPTR<dyn UpdatingEvent>,
 }
@@ -18,7 +18,7 @@ pub struct AssignMeta {
 impl AssignMeta {
     /// Primary constructor: takes a basic event, auto-increments ASSIGN_CNT.
     pub fn new(
-        target_hwc    : SPTR<dyn Assignable>,
+        target_hwc    : SPTR<dyn HcpAssignable>,
         input_element : SPTR<UeBasic>,
     ) -> Self {
         let cnt = ASSIGN_CNT.fetch_add(1, Ordering::Relaxed);
@@ -37,7 +37,7 @@ impl AssignMeta {
 
     /// Secondary constructor: complex event with an explicit assign count, no input_element.
     pub fn new_complex(
-        target_hwc      : SPTR<dyn Assignable>,
+        target_hwc      : SPTR<dyn HcpAssignable>,
         pre_update_event: SPTR<dyn UpdatingEvent>,
         cur_assign_cnt: u64,
     ) -> Self {
@@ -61,7 +61,7 @@ impl AssignMeta {
 
     }
 
-    pub fn get_target_hw     (&self) -> SPTR<dyn Assignable> {self.target_hwc.clone()}
+    pub fn get_target_hw     (&self) -> SPTR<dyn HcpAssignable> {self.target_hwc.clone()}
     pub fn get_cur_assign_cnt(&self) -> u64 {
         self.pre_update_event.borrow().get_sub_priority()
     }
