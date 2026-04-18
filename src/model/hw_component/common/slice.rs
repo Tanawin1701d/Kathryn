@@ -39,6 +39,8 @@ impl Slice {
         (self.start + bit) < self.stop
     }
 
+    pub fn is_size_in_range_rel(&self, sz: i32) -> bool {(self.start + sz) <= self.stop}
+
     /// Check if this slice contains another slice
     pub fn is_contain(&self, rhs: &Slice) -> bool {
         (self.start <= rhs.start) && (self.stop >= rhs.stop)
@@ -52,13 +54,27 @@ impl Slice {
 
     /// Get a sub-slice matching the size of another slice
     /// b is used to retrieve size only
+    /// v-----0
     /// |---------------- A ----------------|
     /// |--- SIZE_OF(B) ---|
     /// |-------- C -------|  <----- result
-    pub fn get_match_size_sub_slice(&self, b: Slice) -> Slice {
+    pub fn get_match_size_sub_slice_from_0(&self, b: &Slice) -> Slice {
         assert!(b.check_valid_slice());
         assert!(self.check_valid_slice());
-        self.get_sub_slice_with_shrink_msb(Slice::new(0, b.get_size()))
+        self.get_sub_slice_with_shrink_msb(&Slice::new(0, b.get_size()))
+    }
+
+    /// Get a sub-slice matching the size of another slice
+    /// b is used to retrieve size only
+    /// v----- start
+    /// |---------------- A ----------------|
+    /// |--- SIZE_OF(B) ---|
+    /// |-------- C -------|  <----- result
+
+
+    pub fn get_match_size_sub_slice(&self, b: &Slice) -> Slice {
+        assert!(self.is_size_in_range_rel(b.get_size()));
+        Slice::new(self.start, std::cmp::min(self.stop, self.start + b.get_size()))
     }
 
     /// Get a sub-slice with MSB shrinking
@@ -68,7 +84,7 @@ impl Slice {
     ///       |------- B -------|
     ///       |---- C ----|              <----- result
 
-    pub fn get_sub_slice_with_shrink_msb(&self, b_rel: Slice) -> Slice {
+    pub fn get_sub_slice_with_shrink_msb(&self, b_rel: &Slice) -> Slice {
         assert!(self.is_bit_in_range_rel(b_rel.start));
         assert!(b_rel.check_valid_slice());
         Slice::new(
@@ -77,9 +93,10 @@ impl Slice {
         )
     }
 
+
     /// Get a sub-slice using a relative indexer
     /// indexer is relative value
-    pub fn get_sub_slice(&self, indexer: Slice) -> Slice {
+    pub fn get_sub_slice(&self, indexer: &Slice) -> Slice {
         assert!(indexer.check_valid_slice());
         assert!((self.start + indexer.stop) <= self.stop);
         Slice::new(self.start + indexer.start, self.start + indexer.stop)

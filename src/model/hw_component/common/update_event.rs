@@ -21,12 +21,32 @@ pub enum UeType {
 }
 
 #[derive(Clone)]
-struct UeCommon {
+pub struct UeCommon {
     ue_type      : UeType,
     priority     : i32,
     sub_priority : u64,
     clk_mode     : ClockMode,
 }
+
+impl Default for UeCommon {
+    fn default() -> Self {
+        Self {
+            ue_type      : UeType::Untype,
+            priority     : DEFAULT_UE_PRI_USER,
+            sub_priority : DEFAULT_UE_SUB_PRIORITY_USER,
+            clk_mode     : ClockMode::ClkUnused,
+        }
+    }
+}
+
+impl UeCommon {
+    pub fn new(ue_type: UeType, 
+               priority: i32, 
+               clk_mode: ClockMode) -> Self {
+        Self { ue_type, priority, clk_mode, ..Default::default() }
+    }
+}
+
 
 trait HasUeCommon {
     fn get_ue_common    (&self)     -> &UeCommon;
@@ -56,16 +76,6 @@ pub trait UpdatingEvent: HasUeCommon {
     fn clone_box(&self) -> Box<dyn UpdatingEvent>;
 }
 
-impl Default for UeCommon {
-    fn default() -> Self {
-        Self {
-            ue_type      : UeType::Untype,
-            priority     : DEFAULT_UE_PRI_USER,
-            sub_priority : DEFAULT_UE_SUB_PRIORITY_USER,
-            clk_mode     : ClockMode::ClkUnused,
-        }
-    }
-}
 
 /*
     UPDATE EVENT BASIC
@@ -73,21 +83,28 @@ impl Default for UeCommon {
 #[derive(Clone)]
 pub struct UeBasic {
     ue_common: UeCommon,
-    srci_val : HcpIdent,
+    srci     : HcpIdent,
     des_slice: Slice,
+    src_slice: Slice,
 }
 
 impl UeBasic {
-    pub fn new(srci_val: HcpIdent, des_slice: Slice) -> Self {
+    pub fn new(
+               srci :  HcpIdent,
+               des_slice: Slice,
+               src_slice: Slice,
+               ) -> Self {
         Self {
-            ue_common: UeCommon { ue_type: UeType::Basic, ..Default::default() },
-            srci_val,
+            ue_common: Default::default(),
+
+            srci,
             des_slice,
+            src_slice,
         }
     }
 
     pub fn get_des_slice(&self) -> &Slice    { &self.des_slice }
-    pub fn get_srci_val (&self) -> &HcpIdent { &self.srci_val  }
+    pub fn get_srci_val (&self) -> &HcpIdent { &self.srci }
 }
 
 impl HasUeCommon for UeBasic {
@@ -96,7 +113,7 @@ impl HasUeCommon for UeBasic {
 }
 
 impl UpdatingEvent for UeBasic {
-    fn get_dep  (&self, result_dep: &mut Vec<HcpIdent>) { result_dep.push(self.srci_val.clone()); }
+    fn get_dep  (&self, result_dep: &mut Vec<HcpIdent>) { result_dep.push(self.srci.clone()); }
     fn is_leaf  (&self) -> bool                         { true }
     fn clone_box(&self) -> Box<dyn UpdatingEvent>       { Box::new(self.clone()) }
 }

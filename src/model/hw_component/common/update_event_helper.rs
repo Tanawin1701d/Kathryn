@@ -5,13 +5,14 @@ use crate::model::hw_component::common::update_event::{UeBasic, UeCond, Updating
 use crate::model::hw_component::common::asm_mode::get_asm_pri_val;
 
 pub fn create_ue_helper_basic(
-    value        : HcpIdent,
-    sl           : Slice,
+    srci: HcpIdent,
+    des_slice    : Slice,
+    src_slice    : Slice,
     priority     : i32,
     cm           : ClockMode,
     auto_priority: bool,
 ) -> UeBasic {
-    let mut event = UeBasic::new(value, sl);
+    let mut event = UeBasic::new(srci, des_slice, src_slice);
     event.set_priority(if auto_priority { get_asm_pri_val() } else { priority });
     event.set_clk_mode(cm);
     event
@@ -30,12 +31,13 @@ pub fn create_ue_helper_full(
     cond          : Option<HcpIdent>,
     state         : Option<HcpIdent>,
     value         : HcpIdent,
-    sl            : Slice,
+    des_slice     : Slice,
+    src_slice     : Slice,
     priority      : i32,
     cm            : ClockMode,
     auto_priority : bool
 ) -> Box<dyn UpdatingEvent> {
-    let basic_event = create_ue_helper_basic(value, sl, priority, cm, auto_priority);
+    let basic_event = create_ue_helper_basic(value, des_slice, src_slice, priority, cm, auto_priority);
 
     if cond.is_none() && state.is_none() {
         return Box::new(basic_event);

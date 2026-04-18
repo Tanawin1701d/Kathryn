@@ -7,3 +7,4 @@ pub mod assign_meta;
 pub mod update_event_helper;
 pub mod asm_mode;
 pub mod hcp_ident;
+pub mod arena;
