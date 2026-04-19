@@ -52,8 +52,9 @@ impl AssignMeta {
         target.add_update_event(self.pre_update_event);
     }
 
-    pub fn get_target_hw     (&self) -> &HcpIdent { &self.target_hwc }
-    pub fn get_cur_assign_cnt(&self) -> u64       { self.pre_update_event.get_sub_priority() }
+    pub fn get_target_hw      (&self) -> &HcpIdent { &self.target_hwc }
+    pub fn get_input_event_mut(&mut self) -> &mut Option<UeBasic> { &mut self.input_event }
+    pub fn get_cur_assign_cnt (&self) -> u64       { self.pre_update_event.get_sub_priority() }
 
     pub fn set_new_editing_event(&mut self, event: Box<dyn UpdatingEvent>) {
         self.pre_update_event = event;

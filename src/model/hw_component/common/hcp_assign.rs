@@ -22,18 +22,19 @@ pub trait HcpAssignable {
     fn get_hcp_assign(&self)         -> &    HcpAssign;
     fn get_hcp_assign_mut(&mut self) -> &mut HcpAssign;
 
-    fn get_hcp_ident(&self) -> HcpIdent;
+    fn get_hcp_asb_ident(&self) -> HcpIdent;
 
     // the global clock mode may not equal to the clock mode of this component
     fn retrieve_clk_mode(&self) -> ClockMode;
     ///fn get_ue_type(&self) -> UeType;
-    fn get_des_slice(&self) -> &Slice; /// typically it should start from 0
+    fn get_des_slice(&self) -> Slice; /// typically it should start from 0
     fn get_priority(&self) -> i32;
 
     fn do_asm(&self,
               srci     : & HcpIdent,
-              des_slice: & Slice,
-              clk_mode : & ClockMode) -> AssignMeta;
+              des_slice: & Option<Slice>,
+              src_slice: & Slice,
+              clk_mode : & Option<ClockMode>) -> AssignMeta;
 
     fn gen_update_event(&self,
                         srci     : & HcpIdent,
@@ -41,7 +42,8 @@ pub trait HcpAssignable {
                         src_slice: & Slice
     ) -> UeBasic {
 
-        let my_des_slice = des_slice.as_ref().unwrap_or(&self.get_des_slice());
+        let std_des_slice = self.get_des_slice();
+        let my_des_slice = des_slice.as_ref().unwrap_or(&std_des_slice);
         let my_src_slice = src_slice.clone();
 
         let resolved_des_slice = my_des_slice.get_match_size_sub_slice(&my_src_slice);
@@ -65,7 +67,7 @@ pub trait HcpAssignable {
             des_slice,
             src_slice
         );
-        AssignMeta::new(self.get_hcp_ident(), ueb)
+        AssignMeta::new(self.get_hcp_asb_ident(), ueb)
         
     }
 
