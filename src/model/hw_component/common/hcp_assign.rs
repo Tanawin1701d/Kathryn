@@ -88,3 +88,11 @@ pub trait HcpAssignable {
 pub struct HcpAssign{
     update_pool : UpdatePool
 }
+
+impl HcpAssign {
+    pub fn new() -> HcpAssign {
+        HcpAssign {
+            update_pool : UpdatePool::new()
+        }
+    }
+}

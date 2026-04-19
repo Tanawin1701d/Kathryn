@@ -50,27 +50,20 @@ impl fmt::Display for HwComponentType {
 pub struct HcpIdent {
     ident_base : IdentBase,
     hw_type    : HwComponentType,
-    mod_hirac  : Vec<u32>, // the index of module index in the hierarchy
-    hw_idx     : u32       // the index of hw component in the module in spepcific type
 }
 
 impl HcpIdent {
     pub fn new(hw_type  : HwComponentType,
-               name     : &str,
-               mod_hirac: Vec<u32>,
-               hw_idx   : u32) -> Self {
+               is_user_com: bool,
+               name     : &str) -> Self {
         Self {
-            ident_base: IdentBase::new(name),
+            ident_base: IdentBase::new(is_user_com, name),
             hw_type,
-            mod_hirac,
-            hw_idx,
         }
     }
     
     pub fn get_ident_base(&self) -> &IdentBase      { &self.ident_base }
     pub fn get_hw_type   (&self) -> HwComponentType { self.hw_type     }
-    pub fn get_mod_hirac (&self) -> &[u32]          { &self.mod_hirac  }
-    pub fn get_hw_idx    (&self) -> u32             { self.hw_idx      }
     // ---- helpers ------------------------------------------------------------
 
     pub fn build_unique_hcp_name(&self) -> String {

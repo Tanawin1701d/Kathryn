@@ -10,6 +10,7 @@ pub fn get_last_ident_id() -> u64 {
 #[derive(Clone, Debug, Eq)]
 pub struct IdentBase {
     global_id    : u64,
+    is_user_com  : bool,
     name         : String,
     arena_handle : ArenaHandle,
 
@@ -29,15 +30,18 @@ pub trait Identifiable {
 
     fn get_global_name(&self) -> &str          { &self.get_ident_base().name }
     fn set_global_name(&mut self, name: String) { self.get_ident_base_mut().name = name; }
+    
+    fn get_is_user_com(&self) -> bool { self.get_ident_base().is_user_com }
 
     fn get_arena_handle(&self) -> &ArenaHandle { &self.get_ident_base().arena_handle }
     fn set_arena_handle(&mut self, arena_handle: ArenaHandle) { self.get_ident_base_mut().arena_handle = arena_handle; }
 }
 
 impl IdentBase {
-    pub fn new(name: &str) -> Self {
+    pub fn new(is_user_com: bool, name: &str) -> Self {
         Self {
             global_id : GLOBAL_MODEL_ID.fetch_add(1, Ordering::Relaxed),
+            is_user_com: is_user_com,
             name: name.to_string(),
             arena_handle: ArenaHandle::default(),
         }
@@ -51,10 +55,11 @@ impl IdentBase {
         self.name      = format!("{}_CP", rhs.name);
     }
 
-    pub fn get_global_id(&self)      -> u64         { self.global_id }
-    pub fn get_name     (&self)      -> &str        { &self.name }
-    pub fn get_name_mut (&mut self)  -> &mut String { &mut self.name }
-    pub fn set_name     (&mut self, name: &str)     { self.name = name.to_string(); }
+    pub fn get_global_id  (&self)      -> u64         { self.global_id }
+    pub fn get_is_user_com(&self)      -> bool        { self.is_user_com }
+    pub fn get_name       (&self)      -> &str        { &self.name }
+    pub fn get_name_mut   (&mut self)  -> &mut String { &mut self.name }
+    pub fn set_name       (&mut self, name: &str)     { self.name = name.to_string(); }
 }
 
 impl PartialEq for IdentBase {

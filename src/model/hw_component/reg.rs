@@ -3,7 +3,7 @@ use crate::model::hw_component::common::asm_mode::get_asm_pri_val;
 use crate::model::hw_component::common::assign_meta::AssignMeta;
 use crate::model::hw_component::common::hcp_accesible::HcpAccessible;
 use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};
-use crate::model::hw_component::common::hcp_ident::HcpIdent;
+use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
 use crate::model::hw_component::common::hcp_read::HcpReadable;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::common::update_event::UpdatingEvent;
@@ -13,6 +13,26 @@ pub struct Reg {
     ident    : HcpIdent,
     bit_width: i32,
 }
+
+impl Reg {
+    // TODO : add to arena + add to IDEN and add to module Iden
+    pub fn new( is_user_com: bool, name: &str, bit_width: i32) -> Self {
+        Self {
+            assign: HcpAssign::new(),
+            ident : HcpIdent::new(HwComponentType::Reg,
+                                  is_user_com,
+                                  name
+            ),
+            bit_width,
+        }
+    }
+
+    pub fn mk(name: &str, bit_width: i32) -> Self {
+        Reg::new(true, name, bit_width)
+    }
+}
+
+
 
 impl HcpReadable for Reg {
     fn get_hcp_rdb_ident(&self) -> HcpIdent { self.ident.clone() }
