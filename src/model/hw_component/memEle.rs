@@ -8,18 +8,18 @@ use crate::model::hw_component::common::hcp_read::HcpReadable;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::common::update_event::UpdatingEvent;
 
-pub struct Reg {
+pub struct MemEle {
     assign    : HcpAssign,
     ident     : HcpIdent,
-    bit_width : i32,
+    bit_width : i32, // bit width should match the mem block
 }
 
-impl Reg {
+impl MemEle {
     // TODO : add to arena + add to IDEN and add to module Iden
-    pub fn new( is_user_com: bool, name: &str, bit_width: i32) -> Self {
+    pub fn new(is_user_com: bool, name: &str, bit_width: i32) -> Self {
         Self {
             assign: HcpAssign::new(),
-            ident : HcpIdent::new(HwComponentType::Reg,
+            ident : HcpIdent::new(HwComponentType::MemBlockIndexer,
                                   is_user_com,
                                   name
             ),
@@ -28,17 +28,15 @@ impl Reg {
     }
 
     pub fn mk(name: &str, bit_width: i32) -> Self {
-        Reg::new(true, name, bit_width)
+        MemEle::new(true, name, bit_width)
     }
 }
 
-
-
-impl HcpReadable for Reg {
+impl HcpReadable for MemEle {
     fn get_hcp_rdb_ident(&self) -> HcpIdent { self.ident.clone() }
 }
 
-impl HcpAssignable for Reg {
+impl HcpAssignable for MemEle {
     fn get_hcp_assign    (&self)     -> &    HcpAssign { &self.assign }
     fn get_hcp_assign_mut(&mut self) -> &mut HcpAssign { &mut self.assign }
 
@@ -55,7 +53,7 @@ impl HcpAssignable for Reg {
               des_slice: & Option<Slice>,
               src_slice: & Slice,
               clk_mode : & Option<ClockMode>) -> AssignMeta {
-        
+
         let mut asm = self.gen_asm_meta(&srci, des_slice, src_slice);
         if let Some(clk) = clk_mode {
             asm.get_input_event_mut().as_mut()
@@ -66,6 +64,6 @@ impl HcpAssignable for Reg {
 }
 
 
-impl HcpAccessible for Reg {
+impl HcpAccessible for MemEle {
     fn get_bit_width(&self) -> usize { self.bit_width as usize }
 }
