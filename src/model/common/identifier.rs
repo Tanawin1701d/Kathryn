@@ -1,4 +1,5 @@
 use std::sync::atomic::{AtomicU64, Ordering};
+use crate::common::arena_base::ArenaHandle;
 
 static GLOBAL_MODEL_ID: AtomicU64 = AtomicU64::new(0);
 
@@ -8,8 +9,10 @@ pub fn get_last_ident_id() -> u64 {
 
 #[derive(Clone, Debug, Eq)]
 pub struct IdentBase {
-    global_id : u64,
-    name      : String,
+    global_id    : u64,
+    name         : String,
+    arena_handle : ArenaHandle,
+
 }
 
 /// Trait for types that embed `IdentBase` and implement the pure-virtual
@@ -26,6 +29,9 @@ pub trait Identifiable {
 
     fn get_global_name(&self) -> &str          { &self.get_ident_base().name }
     fn set_global_name(&mut self, name: String) { self.get_ident_base_mut().name = name; }
+
+    fn get_arena_handle(&self) -> &ArenaHandle { &self.get_ident_base().arena_handle }
+    fn set_arena_handle(&mut self, arena_handle: ArenaHandle) { self.get_ident_base_mut().arena_handle = arena_handle; }
 }
 
 impl IdentBase {
@@ -33,6 +39,7 @@ impl IdentBase {
         Self {
             global_id : GLOBAL_MODEL_ID.fetch_add(1, Ordering::Relaxed),
             name: name.to_string(),
+            arena_handle: ArenaHandle::default(),
         }
     }
 

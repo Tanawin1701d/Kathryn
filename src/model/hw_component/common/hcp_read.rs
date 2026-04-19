@@ -3,7 +3,7 @@
 
 
 
-pub trait Readable {
+pub trait HcpReadable {
 
     fn print(&self){
 

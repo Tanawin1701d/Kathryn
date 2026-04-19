@@ -8,7 +8,6 @@ pub const DEFAULT_UE_SUB_PRIORITY_USER : u64 = 0;
 use crate::common::obj::SPTR;
 use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
-use crate::model::hw_component::common::hcp_read::Readable;
 use crate::model::hw_component::common::slice::Slice;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

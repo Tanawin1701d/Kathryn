@@ -3,7 +3,6 @@
 use std::rc::Rc;
 use crate::common::obj::SPTR;
 use crate::model::hw_component::common::update_event::{UeBasic, UeCommon, UeType, UpdatingEvent};
-use crate::model::hw_component::common::hcp_read::Readable;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::assign_meta::AssignMeta;
