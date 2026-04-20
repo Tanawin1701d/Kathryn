@@ -1,5 +1,4 @@
 use std::sync::atomic::{AtomicU64, Ordering};
-use crate::model::hw_component::common::arena::ModelArena;
 use crate::model::hw_component::common::hcp_assign::HcpAssignable;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::update_event::{UpdatingEvent, UeBasic};

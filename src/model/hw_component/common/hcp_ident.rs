@@ -1,4 +1,5 @@
 use std::fmt;
+use crate::common::arena_base::ArenaHandle;
 use crate::model::common::identifier::{IdentBase, Identifiable};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -45,6 +46,16 @@ impl fmt::Display for HwComponentType {
     }
 }
 
+trait HcpIdentifiable: Identifiable {
+
+    fn get_iden_base(&self) -> &IdentBase;
+    fn get_iden_base_mut(&mut self) -> &mut IdentBase;
+
+    fn set_arena_handler(&mut self, arena_handler: ArenaHandle){
+        self.set_arena_handle(arena_handler);
+    }
+}
+
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HcpIdent {
@@ -63,6 +74,7 @@ impl HcpIdent {
     }
     
     pub fn get_ident_base(&self) -> &IdentBase      { &self.ident_base }
+    pub fn get_ident_base_mut(&mut self) -> &mut IdentBase { &mut self.ident_base }
     pub fn get_hw_type   (&self) -> HwComponentType { self.hw_type     }
     // ---- helpers ------------------------------------------------------------
 
@@ -70,5 +82,15 @@ impl HcpIdent {
         format!("{}_{}_{}", self.hw_type,
                             self.ident_base.get_name(),
                             self.ident_base.get_global_id())
+    }
+}
+
+impl Identifiable for HcpIdent {
+    fn get_ident_base    (&self)     -> &IdentBase     { &self.ident_base }
+    fn get_ident_base_mut(&mut self) -> &mut IdentBase { &mut self.ident_base }
+    fn build_unique_name (&mut self) -> &str {
+        let name = self.build_unique_hcp_name();
+        self.ident_base.set_name(&name);
+        self.ident_base.get_name()
     }
 }

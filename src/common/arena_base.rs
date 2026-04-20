@@ -1,3 +1,5 @@
+use crate::model::common::identifier::Identifiable;
+
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct ArenaHandle {
     index      : usize,
@@ -10,25 +12,28 @@ impl Default for ArenaHandle {
     }
 }
 
-pub struct ArenaGroup<T> {
+pub struct ArenaGroup<T : Identifiable> {
     nodes      : Vec<ArenaNode<T>>,
     free_slots : Vec<usize>,
 }
 
-impl<T> ArenaGroup<T> {
+impl<T: Identifiable> ArenaGroup<T> {
     pub fn new() -> Self {
         Self { nodes: Vec::new(), free_slots: Vec::new() }
     }
 
     pub fn insert(&mut self, value: T) -> ArenaHandle {
-        if let Some(index) = self.free_slots.pop() {
-            self.nodes[index].replace(value);
-            ArenaHandle { index, generation: self.nodes[index].generation() }
+        let index = if let Some(i) = self.free_slots.pop() {
+            self.nodes[i].replace(value);
+            i
         } else {
-            let index = self.nodes.len();
+            let i = self.nodes.len();
             self.nodes.push(ArenaNode::new(value));
-            ArenaHandle { index, generation: 0 }
-        }
+            i
+        };
+        let h = ArenaHandle { index, generation: self.nodes[index].generation() };
+        self.nodes[index].get_mut().set_arena_handle(h);
+        h
     }
 
     pub fn is_valid(&self, handle: ArenaHandle) -> bool {
@@ -54,6 +59,21 @@ impl<T> ArenaGroup<T> {
     pub fn len(&self) -> usize   { self.nodes.len() - self.free_slots.len() }
     pub fn is_empty(&self) -> bool { self.len() == 0 }
 
+    pub fn get_last(&self) -> Option<&T> {
+        if self.nodes.is_empty() {
+            return None;
+        }
+        let index = self.nodes.len() - 1;
+        Some(self.nodes[index].get())
+    }
+
+    pub fn get_last_mut(&mut self) -> Option<&mut T> {
+        if self.nodes.is_empty() {
+            return None;
+        }
+        let index = self.nodes.len() - 1;
+        Some(self.nodes[index].get_mut())
+    }
 
     pub fn free(&mut self, handle: ArenaHandle) {
         self.nodes[handle.index].free();

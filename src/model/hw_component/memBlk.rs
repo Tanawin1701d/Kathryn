@@ -1,5 +1,6 @@
 use crate::model::hw_component::common::hcp_assign::HcpAssign;
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
+use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::hw_component::common::hcp_read::HcpReadable;
 use crate::model::hw_component::memEle::MemEle;
 
@@ -60,11 +61,12 @@ impl MemBlk {
         
         mem_ele.clone_hcp_rdb_ident()
     }
-
-
-
-
-
-
-
 }
+
+impl Identifiable for MemBlk {
+    fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
+    fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
+    fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
+}
+
+

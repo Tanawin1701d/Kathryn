@@ -4,6 +4,7 @@ use crate::model::hw_component::common::assign_meta::AssignMeta;
 use crate::model::hw_component::common::hcp_accesible::HcpAccessible;
 use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
+use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::hw_component::common::hcp_read::HcpReadable;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::common::update_event::UpdatingEvent;
@@ -79,4 +80,10 @@ impl HcpAssignable for MemEle {
 
 impl HcpAccessible for MemEle {
     fn get_bit_width(&self) -> usize { self.bit_width as usize }
+}
+
+impl Identifiable for MemEle {
+    fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
+    fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
+    fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
 }
