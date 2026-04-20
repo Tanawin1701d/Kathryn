@@ -15,12 +15,14 @@ pub struct MemBlk {
 
 impl MemBlk {
 
-    pub fn new(is_user_com: bool, name: &str, bit_width: i32, index_width: i32) -> Self {
+
+
+    pub fn new(is_user_com: bool, name: &str, bit_width: i32, index_width: i32) -> HcpIdent {
 
         assert!(bit_width   > 0, "bit_width must be positive, got {}"  , bit_width  );
         assert!(index_width > 0, "index_width must be positive, got {}", index_width);
         
-        MemBlk {
+        let r = MemBlk {
             assign : HcpAssign::new(),
             ident  : HcpIdent::new(HwComponentType::MemBlock,
                                   is_user_com,
@@ -29,13 +31,19 @@ impl MemBlk {
             bit_width,
             index_width,
             mem_ele_track_vec: Vec::new()
-        }
+        };
+
+        r.clone_ident()
+
+
     }
 
 
-    pub fn mk(name: &str, bit_width: i32, index_width: i32) -> Self {
+    pub fn mk(name: &str, bit_width: i32, index_width: i32) -> HcpIdent {
         MemBlk::new(true, name, bit_width, index_width)
     }
+
+    pub fn clone_ident(&self) -> HcpIdent { self.ident.clone() }
 
     pub fn create_op(&mut self,
                      is_user_com: bool,
@@ -48,9 +56,9 @@ impl MemBlk {
                                           index_ident,
                                           self.bit_width,
                                           is_read);
-        self.mem_ele_track_vec.push(mem_ele.get_hcp_rdb_ident());
+        self.mem_ele_track_vec.push(mem_ele.clone_hcp_rdb_ident());
         
-        mem_ele.get_hcp_rdb_ident()
+        mem_ele.clone_hcp_rdb_ident()
     }
 
 

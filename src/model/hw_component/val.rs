@@ -17,30 +17,31 @@ pub struct Val {
 }
 
 impl Val {
-    pub fn new(is_user_com: bool, name: &str, bit_width: i32) -> Self {
-        Self {
+    pub fn new(is_user_com: bool, name: &str, bit_width: i32) -> HcpIdent {
+        let v = Self {
             assign   : HcpAssign::new(),
             ident    : HcpIdent::new(HwComponentType::Val, is_user_com, name),
             bit_width,
             value    : VaryVal::new(bit_width as usize),
-        }
+        };
+        v.ident.clone()
     }
 
-    pub fn mk(name: &str, bit_width: i32) -> Self {
+    pub fn mk(name: &str, bit_width: i32) -> HcpIdent {
         Val::new(true, name, bit_width)
     }
 }
 
 
 impl HcpReadable for Val {
-    fn get_hcp_rdb_ident(&self) -> HcpIdent { self.ident.clone() }
+    fn clone_hcp_rdb_ident(&self) -> HcpIdent { self.ident.clone() }
 }
 
 impl HcpAssignable for Val {
     fn get_hcp_assign(&self) -> &HcpAssign { &self.assign }
     fn get_hcp_assign_mut(&mut self) -> &mut HcpAssign { &mut self.assign }
 
-    fn get_hcp_asb_ident(&self) -> HcpIdent { self.ident.clone() }
+    fn clone_hcp_asb_ident(&self) -> HcpIdent { self.ident.clone() }
 
     fn retrieve_clk_mode(&self) -> ClockMode { ClockMode::ClkFree }
 

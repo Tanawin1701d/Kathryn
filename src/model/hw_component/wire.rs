@@ -16,18 +16,19 @@ pub struct Wire {
 
 impl Wire {
     // TODO : add to arena + add to IDEN and add to module Iden
-    pub fn new( is_user_com: bool, name: &str, bit_width: i32) -> Self {
-        Self {
+    pub fn new(is_user_com: bool, name: &str, bit_width: i32) -> HcpIdent {
+        let w = Self {
             assign: HcpAssign::new(),
             ident : HcpIdent::new(HwComponentType::Wire,
                                   is_user_com,
                                   name
             ),
             bit_width,
-        }
+        };
+        w.ident.clone()
     }
 
-    pub fn mk(name: &str, bit_width: i32) -> Self {
+    pub fn mk(name: &str, bit_width: i32) -> HcpIdent {
         Wire::new(true, name, bit_width)
     }
 }
@@ -35,14 +36,14 @@ impl Wire {
 
 
 impl HcpReadable for Wire {
-    fn get_hcp_rdb_ident(&self) -> HcpIdent { self.ident.clone() }
+    fn clone_hcp_rdb_ident(&self) -> HcpIdent { self.ident.clone() }
 }
 
 impl HcpAssignable for Wire {
     fn get_hcp_assign    (&self)     -> &    HcpAssign { &self.assign }
     fn get_hcp_assign_mut(&mut self) -> &mut HcpAssign { &mut self.assign }
 
-    fn get_hcp_asb_ident(&self) -> HcpIdent { self.ident.clone() }
+    fn clone_hcp_asb_ident(&self) -> HcpIdent { self.ident.clone() }
 
     fn retrieve_clk_mode(&self) -> ClockMode { ClockMode::ClkFree }
 
