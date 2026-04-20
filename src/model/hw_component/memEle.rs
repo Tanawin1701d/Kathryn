@@ -9,26 +9,39 @@ use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::common::update_event::UpdatingEvent;
 
 pub struct MemEle {
-    assign    : HcpAssign,
-    ident     : HcpIdent,
-    bit_width : i32, // bit width should match the mem block
+    assign      : HcpAssign,
+    ident       : HcpIdent,
+    index_ident : HcpIdent,
+    bit_width   : i32, // bit width should match the mem block
+    is_read     : bool
 }
 
 impl MemEle {
     // TODO : add to arena + add to IDEN and add to module Iden
-    pub fn new(is_user_com: bool, name: &str, bit_width: i32) -> Self {
+    pub fn new(is_user_com: bool,
+               name       : &str,
+               index_ident: HcpIdent,
+               bit_width: i32,
+               is_read    : bool) -> Self {
+        assert!(bit_width   > 0, "bit_width must be positive, got {}"  , bit_width  );
         Self {
             assign: HcpAssign::new(),
             ident : HcpIdent::new(HwComponentType::MemBlockIndexer,
                                   is_user_com,
                                   name
             ),
+            index_ident,
             bit_width,
+            is_read
         }
     }
 
-    pub fn mk(name: &str, bit_width: i32) -> Self {
-        MemEle::new(true, name, bit_width)
+    pub fn mk(name       : &str,
+              bit_width  : i32,
+              index_ident: HcpIdent,
+              is_read    : bool) -> Self {
+
+        MemEle::new(true, name, index_ident, bit_width, is_read)
     }
 }
 
