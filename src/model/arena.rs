@@ -1,10 +1,29 @@
 use crate::common::arena_base::{ArenaGroup, ArenaHandle};
 use crate::model::common::identifier::Identifiable;
+use crate::model::hw_component::common::hcp_assign::HcpAssignable;
+use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
+use crate::model::hw_component::common::hcp_read::HcpReadable;
 use crate::model::hw_component::memBlk::MemBlk;
 use crate::model::hw_component::memEle::MemEle;
 use crate::model::hw_component::reg::Reg;
 use crate::model::hw_component::val::Val;
 use crate::model::hw_component::wire::Wire;
+
+macro_rules! dispatch_hcp {
+    ($self:expr, $ident:expr, $method:ident) => {{
+        // Get the arena handle from the identifier
+        let handle = *$ident.get_arena_handle();
+        
+        // Match on component type and call method on correct arena
+        match $ident.get_hw_type() {
+            HwComponentType::Reg             => $self.regs    .$method(handle),
+            HwComponentType::Wire            => $self.wires   .$method(handle),
+            HwComponentType::Val             => $self.vals    .$method(handle),
+            HwComponentType::MemBlockIndexer => $self.mem_eles.$method(handle),
+            t => panic!("HwComponentType {:?} is not HCP-accessible", t),
+        }
+    }};
+}
 
 pub struct Arena {
     regs     : ArenaGroup<Reg>,
@@ -44,4 +63,10 @@ impl Arena {
     pub fn get_val_mut    (&mut self, h: ArenaHandle) -> &mut Val      { self.vals    .get_mut(h) }
     pub fn get_mem_ele_mut(&mut self, h: ArenaHandle) -> &mut MemEle  { self.mem_eles.get_mut(h) }
     pub fn get_mem_blk_mut(&mut self, h: ArenaHandle) -> &mut MemBlk  { self.mem_blks.get_mut(h) }
+
+    pub fn get_hcp_assign    (&    self, ident: &HcpIdent) -> &    dyn HcpAssignable { dispatch_hcp!(self, ident, get    ) }
+    pub fn get_hcp_assign_mut(&mut self, ident: &HcpIdent) -> &mut dyn HcpAssignable { dispatch_hcp!(self, ident, get_mut) }
+    pub fn get_hcp_readable    (&    self, ident: &HcpIdent) -> &    dyn HcpReadable { dispatch_hcp!(self, ident, get    ) }
+    pub fn get_hcp_readable_mut(&mut self, ident: &HcpIdent) -> &mut dyn HcpReadable { dispatch_hcp!(self, ident, get_mut) }
+
 }
