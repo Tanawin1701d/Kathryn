@@ -52,7 +52,7 @@ trait HasUeCommon {
     fn get_ue_common_mut(&mut self) -> &mut UeCommon;
 }
 
-pub trait UpdatingEvent: HasUeCommon {
+pub trait UpdatingEvent: HasUeCommon + Send {
 
     /// retrival function
     fn get_type         (&self) -> UeType     { self.get_ue_common().ue_type      }
