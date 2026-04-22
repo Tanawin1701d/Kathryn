@@ -18,19 +18,20 @@ pub struct Val {
 }
 
 impl Val {
-    pub fn new(is_user_com: bool, name: &str, bit_width: i32) -> HcpIdent {
-        let v = Self {
+    pub fn new(is_user_com: bool, name: &str, bit_width: i32) -> Self {
+        Self {
             assign   : HcpAssign::new(),
             ident    : HcpIdent::new(HwComponentType::Val, is_user_com, name),
             bit_width,
             value    : VaryVal::new(bit_width as usize),
-        };
-        v.ident
+        }
     }
 
-    pub fn mk(name: &str, bit_width: i32) -> HcpIdent {
+    pub fn mk(name: &str, bit_width: i32) -> Self {
         Val::new(true, name, bit_width)
     }
+
+    pub fn get_ident(&self) -> HcpIdent { self.ident }
 }
 
 

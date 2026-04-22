@@ -27,8 +27,8 @@ impl Expression {
                op        : LogicOp,
                a         : HcpIdent,
                b         : HcpIdent,
-               bit_width : i32) -> HcpIdent {
-        let e = Self {
+               bit_width : i32) -> Self {
+        Self {
             assign        : HcpAssign::new(),
             ident         : HcpIdent::new(HwComponentType::Expression, is_user_com, name),
             bit_width,
@@ -36,13 +36,12 @@ impl Expression {
             operand_a     : Some(a),
             operand_b     : Some(b),
             value_assigned: true,
-        };
-        e.ident
+        }
     }
 
     /// Unassigned expression — operand will be supplied later via `assign_operand`.
-    pub fn new_empty(is_user_com: bool, name: &str, bit_width: i32) -> HcpIdent {
-        let e = Self {
+    pub fn new_empty(is_user_com: bool, name: &str, bit_width: i32) -> Self {
+        Self {
             assign        : HcpAssign::new(),
             ident         : HcpIdent::new(HwComponentType::Expression, is_user_com, name),
             bit_width,
@@ -50,17 +49,18 @@ impl Expression {
             operand_a     : None,
             operand_b     : None,
             value_assigned: false,
-        };
-        e.ident
+        }
     }
 
-    pub fn mk(name: &str, op: LogicOp, a: HcpIdent, b: HcpIdent, bit_width: i32) -> HcpIdent {
+    pub fn mk(name: &str, op: LogicOp, a: HcpIdent, b: HcpIdent, bit_width: i32) -> Self {
         Expression::new(true, name, op, a, b, bit_width)
     }
 
-    pub fn mk_empty(name: &str, bit_width: i32) -> HcpIdent {
+    pub fn mk_empty(name: &str, bit_width: i32) -> Self {
         Expression::new_empty(true, name, bit_width)
     }
+
+    pub fn get_ident(&self) -> HcpIdent { self.ident }
 
     pub fn get_op           (&self) -> LogicOp           { self.op }
     pub fn get_operand_a    (&self) -> Option<HcpIdent> { self.operand_a }

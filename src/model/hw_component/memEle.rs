@@ -22,28 +22,26 @@ impl MemEle {
     pub fn new(is_user_com: bool,
                name       : &str,
                index_ident: HcpIdent,
-               bit_width: i32,
+               bit_width  : i32,
                is_read    : bool) -> Self {
-        assert!(bit_width   > 0, "bit_width must be positive, got {}"  , bit_width  );
+        assert!(bit_width > 0, "bit_width must be positive, got {}", bit_width);
         Self {
-            assign: HcpAssign::new(),
-            ident : HcpIdent::new(HwComponentType::MemBlockIndexer,
-                                  is_user_com,
-                                  name
-            ),
+            assign      : HcpAssign::new(),
+            ident       : HcpIdent::new(HwComponentType::MemBlockIndexer, is_user_com, name),
             index_ident,
             bit_width,
-            is_read
+            is_read,
         }
     }
 
     pub fn mk(name       : &str,
-              bit_width  : i32,
               index_ident: HcpIdent,
+              bit_width  : i32,
               is_read    : bool) -> Self {
-
         MemEle::new(true, name, index_ident, bit_width, is_read)
     }
+
+    pub fn get_ident(&self) -> HcpIdent { self.ident }
 }
 
 impl HcpReadable for MemEle {

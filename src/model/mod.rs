@@ -2,4 +2,6 @@ pub mod hw_component;
 pub mod controller;
 pub mod common;
 pub mod model_arena;
+pub mod arena_impl;
+pub mod arena_factory;
 pub mod nodes;

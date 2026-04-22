@@ -16,22 +16,19 @@ pub struct Reg {
 }
 
 impl Reg {
-    // TODO : add to arena + add to IDEN and add to module Iden
-    pub fn new(is_user_com: bool, name: &str, bit_width: i32) -> HcpIdent {
-        let r = Self {
-            assign: HcpAssign::new(),
-            ident : HcpIdent::new(HwComponentType::Reg,
-                                  is_user_com,
-                                  name
-            ),
+    pub fn new(is_user_com: bool, name: &str, bit_width: i32) -> Self {
+        Self {
+            assign   : HcpAssign::new(),
+            ident    : HcpIdent::new(HwComponentType::Reg, is_user_com, name),
             bit_width,
-        };
-        r.ident
+        }
     }
 
-    pub fn mk(name: &str, bit_width: i32) -> HcpIdent {
+    pub fn mk(name: &str, bit_width: i32) -> Self {
         Reg::new(true, name, bit_width)
     }
+
+    pub fn get_ident(&self) -> HcpIdent { self.ident }
 }
 
 
@@ -57,7 +54,7 @@ impl HcpAssignable for Reg {
               des_slice: & Option<Slice>,
               src_slice: & Slice,
               clk_mode : & Option<ClockMode>) -> AssignMeta {
-        
+
         let mut asm = self.gen_asm_meta(&srci, des_slice, src_slice);
         if let Some(clk) = clk_mode {
             asm.get_input_event_mut().as_mut()
