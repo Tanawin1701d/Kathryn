@@ -19,7 +19,7 @@ pub enum UeType {
     Untype = 4,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct UeCommon {
     ue_type      : UeType,
     priority     : i32,
@@ -79,7 +79,7 @@ pub trait UpdatingEvent: HasUeCommon + Send {
 /*
     UPDATE EVENT BASIC
 */
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct UeBasic {
     ue_common: UeCommon,
     srci     : HcpIdent,

@@ -34,7 +34,7 @@ impl MemBlk {
             mem_ele_track_vec: Vec::new()
         };
 
-        r.clone_ident()
+        r.get_ident()
 
 
     }
@@ -44,7 +44,7 @@ impl MemBlk {
         MemBlk::new(true, name, bit_width, index_width)
     }
 
-    pub fn clone_ident(&self) -> HcpIdent { self.ident.clone() }
+    pub fn get_ident(&self) -> HcpIdent { self.ident }
 
     pub fn create_op(&mut self,
                      is_user_com: bool,
@@ -57,9 +57,9 @@ impl MemBlk {
                                           index_ident,
                                           self.bit_width,
                                           is_read);
-        self.mem_ele_track_vec.push(mem_ele.clone_hcp_rdb_ident());
+        self.mem_ele_track_vec.push(mem_ele.get_hcp_rdb_ident());
         
-        mem_ele.clone_hcp_rdb_ident()
+        mem_ele.get_hcp_rdb_ident()
     }
 }
 

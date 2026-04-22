@@ -26,7 +26,7 @@ impl Reg {
             ),
             bit_width,
         };
-        r.ident.clone()
+        r.ident
     }
 
     pub fn mk(name: &str, bit_width: i32) -> HcpIdent {
@@ -37,14 +37,14 @@ impl Reg {
 
 
 impl HcpReadable for Reg {
-    fn clone_hcp_rdb_ident(&self) -> HcpIdent { self.ident.clone() }
+    fn get_hcp_rdb_ident(&self) -> HcpIdent { self.ident }
 }
 
 impl HcpAssignable for Reg {
     fn get_hcp_assign    (&self)     -> &    HcpAssign { &self.assign }
     fn get_hcp_assign_mut(&mut self) -> &mut HcpAssign { &mut self.assign }
 
-    fn clone_hcp_asb_ident(&self) -> HcpIdent { self.ident.clone() }
+    fn get_hcp_asb_ident(&self) -> HcpIdent { self.ident }
 
     fn retrieve_clk_mode(&self) -> ClockMode { get_global_clk_mode() }
 

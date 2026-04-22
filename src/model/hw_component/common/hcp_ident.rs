@@ -57,7 +57,7 @@ trait HcpIdentifiable: Identifiable {
 }
 
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct HcpIdent {
     ident_base : IdentBase,
     hw_type    : HwComponentType,

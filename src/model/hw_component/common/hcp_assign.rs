@@ -22,7 +22,7 @@ pub trait HcpAssignable {
     fn get_hcp_assign(&self)         -> &    HcpAssign;
     fn get_hcp_assign_mut(&mut self) -> &mut HcpAssign;
 
-    fn clone_hcp_asb_ident(&self) -> HcpIdent;
+    fn get_hcp_asb_ident(&self) -> HcpIdent;
 
     // the global clock mode may not equal to the clock mode of this component
     fn retrieve_clk_mode(&self) -> ClockMode;
@@ -67,7 +67,7 @@ pub trait HcpAssignable {
             des_slice,
             src_slice
         );
-        AssignMeta::new(self.clone_hcp_asb_ident(), ueb)
+        AssignMeta::new(self.get_hcp_asb_ident(), ueb)
         
     }
 
