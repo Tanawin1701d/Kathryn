@@ -3,6 +3,7 @@ use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::common::update_event::{UeBasic, UeCond, UpdatingEvent};
 use crate::model::hw_component::common::asm_mode::get_asm_pri_val;
+use crate::model::model_arena::ModelArena;
 
 pub fn create_ue_helper_basic(
     srci: HcpIdent,
@@ -19,8 +20,8 @@ pub fn create_ue_helper_basic(
 }
 
 pub fn create_ue_helper_add_dis(
-    cond : Option<HcpIdent>,
-    state: Option<HcpIdent>,
+    cond_i : Option<HcpIdent>,
+    state_i: Option<HcpIdent>,
     ueb  : Box<dyn UpdatingEvent>
 ) -> Box<dyn UpdatingEvent> {
     // TODO wait for add logic function
@@ -35,7 +36,8 @@ pub fn create_ue_helper_full(
     src_slice     : Slice,
     priority      : i32,
     cm            : ClockMode,
-    auto_priority : bool
+    auto_priority : bool,
+    model_arena   : &mut ModelArena,
 ) -> Box<dyn UpdatingEvent> {
     let basic_event = create_ue_helper_basic(value, des_slice, src_slice, priority, cm, auto_priority);
 

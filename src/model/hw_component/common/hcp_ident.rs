@@ -9,18 +9,19 @@ pub enum HwComponentType {
     StateReg           = 1,
     CondWaitStateReg   = 2,
     CycleWaitStateReg  = 3,
-    Wire               = 4,
-    Expression         = 5,
-    Nest               = 6,
-    Module             = 7,
-    Val                = 8,
-    MemBlock           = 9,
-    MemBlockIndexer    = 10,
-    CounterReg         = 11,
+    CntReg             = 4,
+    Wire               = 5,
+    Expression         = 6,
+    Nest               = 7,
+    Module             = 8,
+    Val                = 9,
+    MemBlock           = 10,
+    MemBlockIndexer    = 11,
+    CounterReg         = 12,
 }
 
 impl HwComponentType {
-    pub const COUNT: usize = 12;
+    pub const COUNT: usize = 13;
 
     pub fn global_prefix(self) -> &'static str {
         match self {
@@ -28,6 +29,7 @@ impl HwComponentType {
             Self::StateReg          => "SR_ST",
             Self::CondWaitStateReg  => "SR_CDWT",
             Self::CycleWaitStateReg => "SR_CYWT",
+            Self::CntReg            => "CNT_REG",
             Self::Wire              => "WIRE",
             Self::Expression        => "EXPR",
             Self::Nest              => "NEST",

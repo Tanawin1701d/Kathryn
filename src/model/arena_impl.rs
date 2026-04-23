@@ -71,4 +71,8 @@ impl ModelArena {
     pub fn get_hcp_assign_mut  (&mut self, ident: &HcpIdent) -> &mut dyn HcpAssignable { dispatch_hcp!(self, ident, get_mut) }
     pub fn get_hcp_readable    (&self,     ident: &HcpIdent) -> &    dyn HcpReadable   { dispatch_hcp!(self, ident, get    ) }
     pub fn get_hcp_readable_mut(&mut self, ident: &HcpIdent) -> &mut dyn HcpReadable   { dispatch_hcp!(self, ident, get_mut) }
+
+    pub fn borrow_asb_mut(&mut self, ident: HcpIdent) -> &mut dyn HcpAssignable {
+        self.get_hcp_assign_mut(&ident)
+    }
 }

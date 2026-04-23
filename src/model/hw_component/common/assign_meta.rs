@@ -3,6 +3,7 @@ use crate::model::hw_component::common::hcp_assign::HcpAssignable;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::update_event::{UpdatingEvent, UeBasic};
 use crate::model::hw_component::common::update_event_helper::{create_ue_helper_add_dis, create_mux_ue_helper};
+use crate::model::model_arena::ModelArena;
 
 static ASSIGN_CNT: AtomicU64 = AtomicU64::new(0);
 
