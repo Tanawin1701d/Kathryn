@@ -9,6 +9,7 @@ use crate::model::hw_component::memEle::MemEle;
 use crate::model::hw_component::reg::Reg;
 use crate::model::hw_component::val::Val;
 use crate::model::hw_component::wire::Wire;
+use crate::model::hw_component::sp_reg::state_reg::StateReg;
 use crate::model::model_arena::ModelArena;
 
 macro_rules! dispatch_hcp {
@@ -34,6 +35,7 @@ impl ModelArena {
             mem_eles   : ArenaGroup::new(),
             mem_blks   : ArenaGroup::new(),
             expressions: ArenaGroup::new(),
+            state_regs : ArenaGroup::new(),
         }
     }
 
@@ -44,6 +46,7 @@ impl ModelArena {
         self.mem_eles    = ArenaGroup::new();
         self.mem_blks    = ArenaGroup::new();
         self.expressions = ArenaGroup::new();
+        self.state_regs  = ArenaGroup::new();
     }
 
     pub fn add_reg       (&mut self, r: Reg)        -> ArenaHandle { self.regs       .insert(r) }
@@ -52,6 +55,7 @@ impl ModelArena {
     pub fn add_mem_ele   (&mut self, e: MemEle)     -> ArenaHandle { self.mem_eles   .insert(e) }
     pub fn add_mem_blk   (&mut self, b: MemBlk)     -> ArenaHandle { self.mem_blks   .insert(b) }
     pub fn add_expression(&mut self, e: Expression) -> ArenaHandle { self.expressions.insert(e) }
+    pub fn add_state_reg (&mut self, s: StateReg)   -> ArenaHandle { self.state_regs .insert(s) }
 
     pub fn get_reg       (&self, h: ArenaHandle) -> &Reg        { self.regs       .get(h) }
     pub fn get_wire      (&self, h: ArenaHandle) -> &Wire       { self.wires      .get(h) }
@@ -59,6 +63,7 @@ impl ModelArena {
     pub fn get_mem_ele   (&self, h: ArenaHandle) -> &MemEle     { self.mem_eles   .get(h) }
     pub fn get_mem_blk   (&self, h: ArenaHandle) -> &MemBlk     { self.mem_blks   .get(h) }
     pub fn get_expression(&self, h: ArenaHandle) -> &Expression { self.expressions.get(h) }
+    pub fn get_state_reg (&self, h: ArenaHandle) -> &StateReg   { self.state_regs .get(h) }
 
     pub fn get_reg_mut       (&mut self, h: ArenaHandle) -> &mut Reg        { self.regs       .get_mut(h) }
     pub fn get_wire_mut      (&mut self, h: ArenaHandle) -> &mut Wire       { self.wires      .get_mut(h) }
@@ -66,6 +71,7 @@ impl ModelArena {
     pub fn get_mem_ele_mut   (&mut self, h: ArenaHandle) -> &mut MemEle     { self.mem_eles   .get_mut(h) }
     pub fn get_mem_blk_mut   (&mut self, h: ArenaHandle) -> &mut MemBlk     { self.mem_blks   .get_mut(h) }
     pub fn get_expression_mut(&mut self, h: ArenaHandle) -> &mut Expression { self.expressions.get_mut(h) }
+    pub fn get_state_reg_mut (&mut self, h: ArenaHandle) -> &mut StateReg   { self.state_regs .get_mut(h) }
 
     pub fn get_hcp_assign      (&self,     ident: &HcpIdent) -> &    dyn HcpAssignable { dispatch_hcp!(self, ident, get    ) }
     pub fn get_hcp_assign_mut  (&mut self, ident: &HcpIdent) -> &mut dyn HcpAssignable { dispatch_hcp!(self, ident, get_mut) }

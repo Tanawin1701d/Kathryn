@@ -7,16 +7,21 @@ use crate::model::hw_component::common::hcp_read::HcpReadable;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_INTERNAL_MIN, DEFAULT_UE_PRI_RST};
 use crate::model::hw_component::common::update_event_helper::create_ue_helper_full;
+use crate::model::hw_component::common::util::check_ident_bit_size;
 
 const DEFAULT_UE_PRI_SR_UNSET : i32 = DEFAULT_UE_PRI_INTERNAL_MIN;
 const DEFAULT_UE_PRI_SR_SET   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 1;
-const DEFAULT_UE_PRI_SR_RST   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 2;
-const DEFAULT_UE_PRI_SR_HOLD  : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 3;
+const DEFAULT_UE_PRI_SR_HOLD  : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 2;
+const DEFAULT_UE_PRI_SR_RST   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 3;
+const DEFAULT_UE_PRI_SR_INT   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 4;
 const DEFAULT_UE_PRI_SR_MRST  : i32 = DEFAULT_UE_PRI_RST;
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::model_arena::ModelArena;
 
 /// 1-bit state register.  Mirrors C++ `StateReg`.
+
+
+
 pub struct StateReg {
     assign       : HcpAssign,
     ident        : HcpIdent,
@@ -56,6 +61,8 @@ impl StateReg {
 
     pub fn get_ident(&self) -> HcpIdent { self.ident }
 
+
+
     // add the special signals
     pub fn set_hold_sig_i(&mut self, ident: HcpIdent) { self.hold_sig_i = Some(ident)}
     pub fn set_rst_sig_i(&mut self, ident: HcpIdent)  { self.rst_sig_i = Some(ident) }
@@ -65,23 +72,23 @@ impl StateReg {
         self.depend_nodes.push((srci, condi));
     }
 
-    pub fn build_update_event(&mut self, model_ar: &mut ModelArena) {
+    pub fn check_bit_size(&self, model_ar: &ModelArena) {
+        let name = self.ident.get_ident_base().get_name();
+        let chk = |i: &HcpIdent| check_ident_bit_size(i, 1, name, model_ar);
 
-        // create the update event for the set signal
-        let nodes: Vec<(HcpIdent, Option<HcpIdent>)> = self.depend_nodes.clone();
-        for (srci, condi) in nodes {
-            let des_slice = self.get_des_slice();
-            let src_slice = self.get_des_slice();
-            let priority = DEFAULT_UE_PRI_SR_SET;
-            let cm = self.retrieve_clk_mode();
-            let ue = create_ue_helper_full(
-                condi    , None     , srci,
-                des_slice, src_slice,
-                priority , cm       , false,
-                model_ar,
-            );
-            self.add_update_event(ue);
+        chk(&self.set_val_i);
+        chk(&self.unset_val_i);
+        if let Some(ref h) = self.hold_sig_i  { chk(h); }
+        if let Some(ref r) = self.rst_sig_i   { chk(r); }
+        if let Some(ref r) = self.mrst_sig_i  { chk(r); }
+        if let Some(ref i) = self.int_sig_i   { chk(i); }
+        for (srci, condi) in &self.depend_nodes {
+            chk(srci);
+            if let Some(ref c) = condi { chk(c); }
         }
+    }
+
+    pub fn build_update_event(&mut self, model_ar: &mut ModelArena) {
 
         // create the update event for the unset signal
         let ue = create_ue_helper_full(
@@ -92,12 +99,52 @@ impl StateReg {
         );
         self.add_update_event(ue);
 
+        // create the update event for the set signal
+        let nodes: Vec<(HcpIdent, Option<HcpIdent>)> = self.depend_nodes.clone();
+        for (srci, condi) in nodes {
+            let des_slice = self.get_des_slice();
+            let src_slice = self.get_des_slice();
+            let priority = DEFAULT_UE_PRI_SR_SET;
+            let cm = self.retrieve_clk_mode();
+            let ue = create_ue_helper_full(
+                condi    , Some(srci), self.set_val_i,
+                des_slice, src_slice ,
+                priority , cm        , false,
+                model_ar,
+            );
+            self.add_update_event(ue);
+        }
+
+
+
+        // create the update event for the hold signal
+        if let Some(hold_sig_i) = self.hold_sig_i.clone() {
+            let ue = create_ue_helper_full(
+                None                  , Some(hold_sig_i)        , self.set_val_i,
+                self.get_des_slice()  , self.get_des_slice()    ,
+                DEFAULT_UE_PRI_SR_HOLD, self.retrieve_clk_mode(), false,
+                model_ar
+            );
+            self.add_update_event(ue);
+        }
+
         // create the update event for the reset signal
         if let Some(rst_sig_i) = self.rst_sig_i.clone() {
             let ue = create_ue_helper_full(
-                None                , None                   , rst_sig_i,
-                self.get_des_slice(), self.get_des_slice()   ,
+                None                 , Some(rst_sig_i)                   , self.unset_val_i,
+                self.get_des_slice() , self.get_des_slice()    ,
                 DEFAULT_UE_PRI_SR_RST, self.retrieve_clk_mode(), false,
+                model_ar
+            );
+            self.add_update_event(ue);
+        }
+
+        // create the update event for the interrupt signal
+        if let Some(int_sig_i) = self.int_sig_i.clone() {
+            let ue = create_ue_helper_full(
+                None                 , Some(int_sig_i)                   , self.set_val_i,
+                self.get_des_slice() , self.get_des_slice()    ,
+                DEFAULT_UE_PRI_SR_INT, self.retrieve_clk_mode(), false,
                 model_ar
             );
             self.add_update_event(ue);
@@ -106,24 +153,14 @@ impl StateReg {
         // create the update event for the MASTER reset signal
         if let Some(mrst_sig_i) = self.mrst_sig_i.clone() {
             let ue = create_ue_helper_full(
-                None                , None                   , mrst_sig_i,
-                self.get_des_slice(), self.get_des_slice()   ,
+                None                  , Some(mrst_sig_i)        , self.unset_val_i,
+                self.get_des_slice()  , self.get_des_slice()    ,
                 DEFAULT_UE_PRI_SR_MRST, self.retrieve_clk_mode(), false,
                 model_ar
             );
             self.add_update_event(ue);
         }
 
-        // create the update event for the hold signal
-        if let Some(hold_sig_i) = self.hold_sig_i.clone() {
-            let ue = create_ue_helper_full(
-                None                                , None                    , hold_sig_i,
-                self.get_des_slice()                , self.get_des_slice()    ,
-                DEFAULT_UE_PRI_SR_HOLD, self.retrieve_clk_mode(), false,
-                model_ar
-            );
-            self.add_update_event(ue);
-        }
         
     }
 

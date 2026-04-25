@@ -4,4 +4,5 @@ pub mod common;
 pub mod model_arena;
 pub mod arena_impl;
 pub mod arena_factory;
+pub mod arena_factory_sp;
 pub mod nodes;

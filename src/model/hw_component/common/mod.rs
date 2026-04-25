@@ -9,3 +9,4 @@ pub mod asm_mode;
 pub mod hcp_ident;
 pub mod hcp_accesible;
 pub mod operation;
+pub mod util;
