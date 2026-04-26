@@ -1,5 +1,6 @@
 pub mod hcp_read;
 pub mod update_event;
+pub mod update_event_ident;
 pub mod slice;
 pub mod update_pool;
 pub mod hcp_assign;

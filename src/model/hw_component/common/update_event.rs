@@ -20,6 +20,18 @@ pub enum UeType {
     Untype = 4,
 }
 
+impl UeType {
+    pub fn prefix(self) -> &'static str {
+        match self {
+            UeType::Basic  => "UE_BASIC",
+            UeType::Grp    => "UE_GRP",
+            UeType::Cond   => "UE_COND",
+            UeType::Switch => "UE_SWITCH",
+            UeType::Untype => "UE_UNTYPE",
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct UeCommon {
     ue_type      : UeType,
