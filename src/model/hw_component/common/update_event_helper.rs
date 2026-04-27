@@ -23,10 +23,11 @@ pub fn create_ue_helper_basic(
 pub fn create_ue_helper_add_dis(
     _cond_i : Option<HcpIdent>,
     _state_i: Option<HcpIdent>,
-    _ueb    : Box<dyn UpdatingEvent>,
-) -> Box<dyn UpdatingEvent> {
+    _ueb    : UpdateEventIdent,
+    _arena  : &mut ModelArena,
+) -> UpdateEventIdent {
     // TODO wait for add logic function
-    unimplemented!()
+    // unimplemented!()
 }
 
 pub fn create_ue_helper_full(
@@ -42,25 +43,25 @@ pub fn create_ue_helper_full(
 ) -> UpdateEventIdent {
     let basic_event = create_ue_helper_basic(value, des_slice, src_slice, priority, cm, auto_priority);
 
-    let event: Box<dyn UpdatingEvent> = if cond.is_none() && state.is_none() {
-        Box::new(basic_event)
+    if cond.is_none() && state.is_none() {
+        model_arena.insert_ue_basic(basic_event)
     } else {
-        create_ue_helper_add_dis(cond, state, Box::new(basic_event))
-    };
-
-    model_arena.insert_update_event(event)
+        let basic_ident = model_arena.insert_ue_basic(basic_event);
+        create_ue_helper_add_dis(cond, state, basic_ident, model_arena)
+    }
 }
 
 /// Mux helper: selects `left` when `select_left` is true (1-bit), otherwise `right`.
-/// The caller passes the already-resolved events; this builds the UeCond and inserts it.
 pub fn create_mux_ue_helper(
-    left        : Box<dyn UpdatingEvent>,
-    right       : Box<dyn UpdatingEvent>,
+    left        : UpdateEventIdent,
+    right       : UpdateEventIdent,
     select_left : HcpIdent,
     model_arena : &mut ModelArena,
 ) -> UpdateEventIdent {
+    let left_priority  = model_arena.get_ue_common(&left).get_priority();
+    let left_clk_mode  = model_arena.get_ue_common(&left).get_clk_mode();
     let mut uec = UeCond::new();
-    uec.add_sub_stmt(Some(select_left), left);
-    uec.add_sub_stmt(None, right);
-    model_arena.insert_update_event(Box::new(uec))
+    uec.add_sub_stmt(Some(select_left), left,  left_priority, left_clk_mode);
+    uec.add_sub_stmt(None,              right, 0,             ClockMode::ClkUnused);
+    model_arena.insert_ue_cond(uec)
 }

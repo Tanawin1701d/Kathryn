@@ -5,11 +5,11 @@ pub const DEFAULT_UE_PRI_RST           : i32 = i32::MAX;
 pub const DEFAULT_UE_PRI_MIN           : i32 = 0;
 pub const DEFAULT_UE_SUB_PRIORITY_USER : u64 = 0;
 
-
-use crate::common::obj::SPTR;
+use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::slice::Slice;
+use crate::model::hw_component::common::update_event_ident::UpdateEventIdent;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum UeType {
@@ -52,48 +52,44 @@ impl Default for UeCommon {
 }
 
 impl UeCommon {
-    pub fn new(ue_type: UeType, 
-               priority: i32, 
-               clk_mode: ClockMode) -> Self {
+    pub fn new(ue_type: UeType, priority: i32, clk_mode: ClockMode) -> Self {
         Self { ue_type, priority, clk_mode, ..Default::default() }
     }
-}
 
+    pub fn get_priority    (&self) -> i32       { self.priority     }
+    pub fn get_sub_priority(&self) -> u64       { self.sub_priority }
+    pub fn get_clk_mode    (&self) -> ClockMode { self.clk_mode     }
+    pub fn get_ue_type     (&self) -> UeType    { self.ue_type      }
+}
 
 trait HasUeCommon {
     fn get_ue_common    (&self)     -> &UeCommon;
     fn get_ue_common_mut(&mut self) -> &mut UeCommon;
 }
 
-pub trait UpdatingEvent: HasUeCommon + Send {
-
-    /// retrival function
+pub trait UpdatingEvent: HasUeCommon {
     fn get_type         (&self) -> UeType     { self.get_ue_common().ue_type      }
     fn get_priority     (&self) -> i32        { self.get_ue_common().priority     }
     fn get_sub_priority (&self) -> u64        { self.get_ue_common().sub_priority }
     fn get_clk_mode     (&self) -> ClockMode  { self.get_ue_common().clk_mode     }
     fn is_joinable      (&self, rhs: &dyn UpdatingEvent) -> bool {
-        ( self.get_priority() == rhs.get_priority() ) &&
-        ( self.get_clk_mode() == rhs.get_clk_mode() )
+        (self.get_priority() == rhs.get_priority()) &&
+        (self.get_clk_mode() == rhs.get_clk_mode())
     }
+    fn set_priority    (&mut self, priority: i32)       { self.get_ue_common_mut().priority     = priority;     }
+    fn set_sub_priority(&mut self, sub_priority: u64)   { self.get_ue_common_mut().sub_priority = sub_priority; }
+    fn set_clk_mode    (&mut self, clk_mode: ClockMode) { self.get_ue_common_mut().clk_mode     = clk_mode;     }
 
-    /// assign function
-    fn set_priority    (&mut self, priority: i32)      { self.get_ue_common_mut().priority     = priority;     }
-    fn set_sub_priority(&mut self, sub_priority: u64)  { self.get_ue_common_mut().sub_priority = sub_priority; }
-    fn set_clk_mode    (&mut self, clk_mode: ClockMode){ self.get_ue_common_mut().clk_mode     = clk_mode;     }
-
-    /// virtual function
-    fn get_dep  (&self, result_dep: &mut Vec<HcpIdent>);
-    fn is_leaf  (&self) -> bool;
-    fn clone_box(&self) -> Box<dyn UpdatingEvent>;
+    fn is_leaf(&self) -> bool;
 }
 
 
 /*
     UPDATE EVENT BASIC
 */
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct UeBasic {
+    ident    : UpdateEventIdent,
     ue_common: UeCommon,
     srci     : HcpIdent,
     des_slice: Slice,
@@ -101,22 +97,20 @@ pub struct UeBasic {
 }
 
 impl UeBasic {
-    pub fn new(
-               srci :  HcpIdent,
-               des_slice: Slice,
-               src_slice: Slice,
-               ) -> Self {
+    pub fn new(srci: HcpIdent, des_slice: Slice, src_slice: Slice) -> Self {
         Self {
-            ue_common: Default::default(),
-
+            ident    : UpdateEventIdent::new(IdentBase::new(false, UeType::Basic.prefix()), UeType::Basic),
+            ue_common: UeCommon { ue_type: UeType::Basic, ..Default::default() },
             srci,
             des_slice,
             src_slice,
         }
     }
 
-    pub fn get_des_slice(&self) -> &Slice    { &self.des_slice }
-    pub fn get_srci_val (&self) -> &HcpIdent { &self.srci }
+    pub fn ident      (&self) -> UpdateEventIdent { self.ident      }
+    pub fn ue_common  (&self) -> &UeCommon        { &self.ue_common }
+    pub fn get_des_slice(&self) -> &Slice         { &self.des_slice }
+    pub fn get_srci_val (&self) -> &HcpIdent      { &self.srci      }
 }
 
 impl HasUeCommon for UeBasic {
@@ -125,9 +119,13 @@ impl HasUeCommon for UeBasic {
 }
 
 impl UpdatingEvent for UeBasic {
-    fn get_dep  (&self, result_dep: &mut Vec<HcpIdent>) { result_dep.push(self.srci.clone()); }
-    fn is_leaf  (&self) -> bool                         { true }
-    fn clone_box(&self) -> Box<dyn UpdatingEvent>       { Box::new(self.clone()) }
+    fn is_leaf(&self) -> bool { true }
+}
+
+impl Identifiable for UeBasic {
+    fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
+    fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
+    fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
 }
 
 
@@ -135,25 +133,32 @@ impl UpdatingEvent for UeBasic {
     UPDATE EVENT GROUP
 */
 pub struct UeGrp {
-    ue_common : UeCommon,
-    sub_stmts : Vec<Box<dyn UpdatingEvent>>,
+    ident    : UpdateEventIdent,
+    ue_common: UeCommon,
+    sub_stmts: Vec<UpdateEventIdent>,
 }
 
 impl UeGrp {
     pub fn new() -> Self {
         Self {
-            ue_common : UeCommon { ue_type: UeType::Grp, ..Default::default() },
-            sub_stmts : Vec::new(),
+            ident    : UpdateEventIdent::new(IdentBase::new(false, UeType::Grp.prefix()), UeType::Grp),
+            ue_common: UeCommon { ue_type: UeType::Grp, ..Default::default() },
+            sub_stmts: Vec::new(),
         }
     }
 
-    pub fn add_sub_stmt(&mut self, stmt: Box<dyn UpdatingEvent>) {
+    pub fn ident    (&self) -> UpdateEventIdent   { self.ident      }
+    pub fn ue_common(&self) -> &UeCommon          { &self.ue_common }
+
+    pub fn add_sub_stmt(&mut self, stmt: UpdateEventIdent, priority: i32, clk_mode: ClockMode) {
         if self.sub_stmts.is_empty() {
-            self.ue_common.priority = stmt.get_priority();
-            self.ue_common.clk_mode = stmt.get_clk_mode();
+            self.ue_common.priority = priority;
+            self.ue_common.clk_mode = clk_mode;
         }
         self.sub_stmts.push(stmt);
     }
+
+    pub fn get_sub_stmts(&self) -> &[UpdateEventIdent] { &self.sub_stmts }
 }
 
 impl HasUeCommon for UeGrp {
@@ -162,48 +167,54 @@ impl HasUeCommon for UeGrp {
 }
 
 impl UpdatingEvent for UeGrp {
-    fn get_dep(&self, result_dep: &mut Vec<HcpIdent>) {
-        for stmt in &self.sub_stmts { stmt.get_dep(result_dep); }
-    }
-    fn is_leaf  (&self) -> bool                   { false }
-    fn clone_box(&self) -> Box<dyn UpdatingEvent> {
-        Box::new(UeGrp {
-            ue_common : self.ue_common.clone(),
-            sub_stmts : self.sub_stmts.iter().map(|s| s.clone_box()).collect(),
-        })
-    }
+    fn is_leaf(&self) -> bool { false }
 }
+
+impl Identifiable for UeGrp {
+    fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
+    fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
+    fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
+}
+
 
 /*
     UPDATE EVENT COND
 */
 pub struct UeCond {
-    ue_common      : UeCommon,
-    is_last_occure : bool,
-    conditions     : Vec<Option<HcpIdent>>,
-    sub_stmts      : Vec<Box<dyn UpdatingEvent>>,
+    ident         : UpdateEventIdent,
+    ue_common     : UeCommon,
+    is_last_occure: bool,
+    conditions    : Vec<Option<HcpIdent>>,
+    sub_stmts     : Vec<UpdateEventIdent>,
 }
 
 impl UeCond {
     pub fn new() -> Self {
         Self {
-            ue_common      : UeCommon { ue_type: UeType::Cond, ..Default::default() },
-            is_last_occure : false,
-            conditions     : Vec::new(),
-            sub_stmts      : Vec::new(),
+            ident         : UpdateEventIdent::new(IdentBase::new(false, UeType::Cond.prefix()), UeType::Cond),
+            ue_common     : UeCommon { ue_type: UeType::Cond, ..Default::default() },
+            is_last_occure: false,
+            conditions    : Vec::new(),
+            sub_stmts     : Vec::new(),
         }
     }
 
-    pub fn add_sub_stmt(&mut self, cond: Option<HcpIdent>, stmt: Box<dyn UpdatingEvent>) {
+    pub fn ident    (&self) -> UpdateEventIdent { self.ident      }
+    pub fn ue_common(&self) -> &UeCommon        { &self.ue_common }
+
+    pub fn add_sub_stmt(&mut self, cond: Option<HcpIdent>, stmt: UpdateEventIdent, priority: i32, clk_mode: ClockMode) {
         assert!(!self.is_last_occure);
         if cond.is_none() { self.is_last_occure = true; }
         if self.sub_stmts.is_empty() {
-            self.ue_common.priority = stmt.get_priority();
-            self.ue_common.clk_mode = stmt.get_clk_mode();
+            self.ue_common.priority = priority;
+            self.ue_common.clk_mode = clk_mode;
         }
         self.conditions.push(cond);
         self.sub_stmts .push(stmt);
     }
+
+    pub fn get_conditions(&self) -> &[Option<HcpIdent>] { &self.conditions }
+    pub fn get_sub_stmts (&self) -> &[UpdateEventIdent] { &self.sub_stmts  }
 }
 
 impl HasUeCommon for UeCond {
@@ -212,37 +223,32 @@ impl HasUeCommon for UeCond {
 }
 
 impl UpdatingEvent for UeCond {
-    fn get_dep(&self, result_dep: &mut Vec<HcpIdent>) {
-        for cond in &self.conditions {
-            if let Some(c) = cond { result_dep.push(c.clone()); }
-        }
-        for stmt in &self.sub_stmts { stmt.get_dep(result_dep); }
-    }
-    fn is_leaf  (&self) -> bool                   { false }
-    fn clone_box(&self) -> Box<dyn UpdatingEvent> {
-        Box::new(UeCond {
-            ue_common      : self.ue_common.clone(),
-            is_last_occure : self.is_last_occure,
-            conditions     : self.conditions.clone(),
-            sub_stmts      : self.sub_stmts.iter().map(|s| s.clone_box()).collect(),
-        })
-    }
+    fn is_leaf(&self) -> bool { false }
 }
+
+impl Identifiable for UeCond {
+    fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
+    fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
+    fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
+}
+
 
 /*
     UPDATE EVENT SWITCH
 */
 pub struct UeSwitch {
+    ident        : UpdateEventIdent,
     ue_common    : UeCommon,
     is_init_meta : bool,
     state_iden   : HcpIdent,
     sub_stmt_idxs: Vec<i32>,
-    sub_stmts    : Vec<Option<Box<dyn UpdatingEvent>>>,
+    sub_stmts    : Vec<Option<UpdateEventIdent>>,
 }
 
 impl UeSwitch {
     pub fn new(state_iden: HcpIdent) -> Self {
         Self {
+            ident        : UpdateEventIdent::new(IdentBase::new(false, UeType::Switch.prefix()), UeType::Switch),
             ue_common    : UeCommon { ue_type: UeType::Switch, ..Default::default() },
             is_init_meta : false,
             state_iden,
@@ -250,6 +256,9 @@ impl UeSwitch {
             sub_stmts    : Vec::new(),
         }
     }
+
+    pub fn ident    (&self) -> UpdateEventIdent { self.ident      }
+    pub fn ue_common(&self) -> &UeCommon        { &self.ue_common }
 
     pub fn get_match_num  (&self) -> usize     { self.sub_stmts.len() }
     pub fn get_state_iden (&self) -> &HcpIdent { &self.state_iden }
@@ -259,16 +268,16 @@ impl UeSwitch {
         self.sub_stmt_idxs[idx]
     }
 
-    pub fn get_sub_stmt(&self, idx: usize) -> Option<&dyn UpdatingEvent> {
+    pub fn get_sub_stmt(&self, idx: usize) -> Option<UpdateEventIdent> {
         assert!(idx < self.sub_stmts.len());
-        self.sub_stmts[idx].as_deref()
+        self.sub_stmts[idx]
     }
 
-    pub fn add_sub_stmt(&mut self, match_val: i32, stmt: Option<Box<dyn UpdatingEvent>>) {
+    pub fn add_sub_stmt(&mut self, match_val: i32, stmt: Option<UpdateEventIdent>, priority: i32, clk_mode: ClockMode) {
         if !self.is_init_meta {
-            if let Some(s) = &stmt {
-                self.ue_common.priority = s.get_priority();
-                self.ue_common.clk_mode = s.get_clk_mode();
+            if stmt.is_some() {
+                self.ue_common.priority = priority;
+                self.ue_common.clk_mode = clk_mode;
                 self.is_init_meta = true;
             }
         }
@@ -283,20 +292,11 @@ impl HasUeCommon for UeSwitch {
 }
 
 impl UpdatingEvent for UeSwitch {
-    fn get_dep(&self, result_dep: &mut Vec<HcpIdent>) {
-        result_dep.push(self.state_iden.clone());
-        for stmt in &self.sub_stmts {
-            if let Some(s) = stmt { s.get_dep(result_dep); }
-        }
-    }
-    fn is_leaf  (&self) -> bool                   { false }
-    fn clone_box(&self) -> Box<dyn UpdatingEvent> {
-        Box::new(UeSwitch {
-            ue_common    : self.ue_common.clone(),
-            is_init_meta : self.is_init_meta,
-            state_iden   : self.state_iden.clone(),
-            sub_stmt_idxs: self.sub_stmt_idxs.clone(),
-            sub_stmts    : self.sub_stmts.iter().map(|s| s.as_ref().map(|e| e.clone_box())).collect(),
-        })
-    }
+    fn is_leaf(&self) -> bool { false }
+}
+
+impl Identifiable for UeSwitch {
+    fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
+    fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
+    fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
 }
