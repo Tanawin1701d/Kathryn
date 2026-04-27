@@ -23,13 +23,16 @@ use crate::model::model_arena::ModelArena;
 
 
 pub struct StateReg {
+    // hcp ident
     assign       : HcpAssign,
     ident        : HcpIdent,
+    // trigger signals
     hold_sig_i   : Option<HcpIdent>,
     rst_sig_i    : Option<HcpIdent>,
     mrst_sig_i   : Option<HcpIdent>,
     int_sig_i    : Option<HcpIdent>, // int is interrupt node
     depend_nodes : Vec<(HcpIdent, Option<HcpIdent>)>,
+    // set/unset signals
     set_val_i    : HcpIdent,
     unset_val_i  : HcpIdent,
     // bitwidth is set to 1

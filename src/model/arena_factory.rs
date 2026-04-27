@@ -26,11 +26,11 @@ impl ModelArena {
         let w = Wire::new(true, name, bit_width); let i = w.get_ident(); self.add_wire(w); i
     }
 
-    pub fn make_val(&mut self, name: &str, bit_width: i32) -> HcpIdent {
-        let v = Val::new(false, name, bit_width); let i = v.get_ident(); self.add_val(v); i
+    pub fn make_val(&mut self, name: &str, bit_width: i32, init_val: u64) -> HcpIdent {
+        let v = Val::new(false, name, bit_width, init_val); let i = v.get_ident(); self.add_val(v); i
     }
-    pub fn mk_val(&mut self, name: &str, bit_width: i32) -> HcpIdent {
-        let v = Val::new(true, name, bit_width); let i = v.get_ident(); self.add_val(v); i
+    pub fn mk_val(&mut self, name: &str, bit_width: i32, init_val: u64) -> HcpIdent {
+        let v = Val::new(true, name, bit_width, init_val); let i = v.get_ident(); self.add_val(v); i
     }
 
     pub fn make_mem_ele(&mut self, name: &str, index_ident: HcpIdent, bit_width: i32, is_read: bool) -> HcpIdent {
