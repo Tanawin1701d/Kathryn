@@ -17,7 +17,7 @@ pub enum HwComponentType {
     Val                = 9,
     MemBlock           = 10,
     MemBlockIndexer    = 11,
-    CounterReg         = 12,
+    SyncReg            = 12,
 }
 
 impl HwComponentType {
@@ -37,7 +37,7 @@ impl HwComponentType {
             Self::Val               => "VAL",
             Self::MemBlock          => "MEM_BLOCK",
             Self::MemBlockIndexer   => "MEM_BLOCK_INDEXER",
-            Self::CounterReg        => "CNT_REG",
+            Self::SyncReg           => "SR_SY",
         }
     }
 }
