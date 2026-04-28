@@ -6,7 +6,6 @@ use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
 use crate::model::hw_component::common::hcp_read::HcpReadable;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_INTERNAL_MIN, DEFAULT_UE_PRI_RST};
-use crate::model::hw_component::common::update_event_helper::create_ue_helper_full;
 use crate::model::hw_component::common::util::check_ident_bit_size;
 
 const DEFAULT_UE_PRI_SR_UNSET : i32 = DEFAULT_UE_PRI_INTERNAL_MIN;
@@ -94,7 +93,7 @@ impl StateReg {
     pub fn build_update_event(&mut self, model_ar: &mut ModelArena) {
 
         // create the update event for the unset signal
-        let ue = create_ue_helper_full(
+        let ue = model_ar.make_ue_full(
             None                , None                   , self.unset_val_i,
             self.get_des_slice(), self.get_des_slice()   ,
             DEFAULT_UE_PRI_SR_UNSET, self.retrieve_clk_mode(), false,
@@ -109,7 +108,7 @@ impl StateReg {
             let src_slice = self.get_des_slice();
             let priority = DEFAULT_UE_PRI_SR_SET;
             let cm = self.retrieve_clk_mode();
-            let ue = create_ue_helper_full(
+            let ue = model_ar.make_ue_full(
                 condi    , Some(srci), self.set_val_i,
                 des_slice, src_slice ,
                 priority , cm        , false,
@@ -122,7 +121,7 @@ impl StateReg {
 
         // create the update event for the hold signal
         if let Some(hold_sig_i) = self.hold_sig_i.clone() {
-            let ue = create_ue_helper_full(
+            let ue = model_ar.make_ue_full(
                 None                  , Some(hold_sig_i)        , self.set_val_i,
                 self.get_des_slice()  , self.get_des_slice()    ,
                 DEFAULT_UE_PRI_SR_HOLD, self.retrieve_clk_mode(), false,
@@ -133,7 +132,7 @@ impl StateReg {
 
         // create the update event for the reset signal
         if let Some(rst_sig_i) = self.rst_sig_i.clone() {
-            let ue = create_ue_helper_full(
+            let ue = model_ar.make_ue_full(
                 None                 , Some(rst_sig_i)                   , self.unset_val_i,
                 self.get_des_slice() , self.get_des_slice()    ,
                 DEFAULT_UE_PRI_SR_RST, self.retrieve_clk_mode(), false,
@@ -144,7 +143,7 @@ impl StateReg {
 
         // create the update event for the interrupt signal
         if let Some(int_sig_i) = self.int_sig_i.clone() {
-            let ue = create_ue_helper_full(
+            let ue = model_ar.make_ue_full(
                 None                 , Some(int_sig_i)                   , self.set_val_i,
                 self.get_des_slice() , self.get_des_slice()    ,
                 DEFAULT_UE_PRI_SR_INT, self.retrieve_clk_mode(), false,
@@ -155,7 +154,7 @@ impl StateReg {
 
         // create the update event for the MASTER reset signal
         if let Some(mrst_sig_i) = self.mrst_sig_i.clone() {
-            let ue = create_ue_helper_full(
+            let ue = model_ar.make_ue_full(
                 None                  , Some(mrst_sig_i)        , self.unset_val_i,
                 self.get_des_slice()  , self.get_des_slice()    ,
                 DEFAULT_UE_PRI_SR_MRST, self.retrieve_clk_mode(), false,
