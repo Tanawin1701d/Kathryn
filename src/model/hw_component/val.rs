@@ -60,17 +60,19 @@ impl HcpAssignable for Val {
     }
 
     fn gen_update_event(&self,
-                        srci: &HcpIdent,
+                        srci     : &HcpIdent,
                         des_slice: &Option<Slice>,
                         src_slice: &Slice,
-    ) -> UeBasic {
+                        _arena   : &mut crate::model::model_arena::ModelArena,
+    ) -> crate::model::hw_component::common::update_event_ident::UpdateEventIdent {
         panic!("Val::gen_update_event should not be called")
     }
 
     fn gen_asm_meta(&self,
-                    srci: &HcpIdent,
+                    srci     : &HcpIdent,
                     des_slice: &Option<Slice>,
                     src_slice: &Slice,
+                    _arena   : &mut crate::model::model_arena::ModelArena,
     ) -> AssignMeta {
         panic!("Val::gen_asm_meta should not be called")
     }

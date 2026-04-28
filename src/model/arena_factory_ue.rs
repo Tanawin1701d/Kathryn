@@ -1,6 +1,7 @@
 use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::asm_mode::get_asm_pri_val;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
+use crate::model::hw_component::common::operation::{LogicOp, LOGICAL_SIZE};
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::common::update_event::{UeBasic, UeCond, UpdatingEvent};
 use crate::model::hw_component::common::update_event_ident::UpdateEventIdent;
@@ -28,8 +29,20 @@ impl ModelArena {
         _state_i: Option<HcpIdent>,
         _ueb    : UpdateEventIdent,
     ) -> UpdateEventIdent {
-        // TODO wait for add logic function
-        unimplemented!()
+        let cond_hcp = match (_cond_i, _state_i) {
+            (Some(cond), Some(state)) => {
+                let expr = self.make_expression("cond_dis_expr", LogicOp::BitwiseAnd, cond, state, LOGICAL_SIZE as i32);
+                Some(expr)
+            },
+            (Some(cond),  None      ) => Some(cond),
+            (None,        Some(state)) => Some(state),
+            (None,        None       ) => unreachable!(),
+        };
+        let priority = self.get_ue_common(&_ueb).get_priority();
+        let clk_mode = self.get_ue_common(&_ueb).get_clk_mode();
+        let mut uec = UeCond::new();
+        uec.add_sub_stmt(cond_hcp, _ueb, priority, clk_mode);
+        self.insert_ue_cond(uec)
     }
 
     pub fn make_ue_full(

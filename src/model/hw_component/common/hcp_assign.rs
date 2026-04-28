@@ -1,13 +1,12 @@
 
 
-use std::rc::Rc;
-use crate::common::obj::SPTR;
-use crate::model::hw_component::common::update_event::{UeBasic, UeCommon, UeType, UpdatingEvent};
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::assign_meta::AssignMeta;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
+use crate::model::hw_component::common::update_event_ident::UpdateEventIdent;
 use crate::model::hw_component::common::update_pool::UpdatePool;
+use crate::model::model_arena::ModelArena;
 
 pub trait HcpAssignable {
 
@@ -37,42 +36,33 @@ pub trait HcpAssignable {
               clk_mode : & Option<ClockMode>) -> AssignMeta;
 
     fn gen_update_event(&self,
-                        srci     : & HcpIdent,
-                        des_slice: & Option<Slice>,
-                        src_slice: & Slice
-    ) -> UeBasic {
-
+                        srci     : &HcpIdent,
+                        des_slice: &Option<Slice>,
+                        src_slice: &Slice,
+                        arena    : &mut ModelArena,
+    ) -> UpdateEventIdent {
         let std_des_slice = self.get_des_slice();
         let my_des_slice = des_slice.as_ref().unwrap_or(&std_des_slice);
         let my_src_slice = src_slice.clone();
 
         let resolved_des_slice = my_des_slice.get_match_size_sub_slice(&my_src_slice);
-        let resolved_src_slice = my_src_slice.get_match_size_sub_slice(&my_des_slice);
+        let resolved_src_slice = my_src_slice.get_match_size_sub_slice(my_des_slice);
 
-
-        let mut ueb = UeBasic::new(srci.clone(), resolved_des_slice, resolved_src_slice);
-        ueb.set_priority(self.get_priority());
-        ueb.set_clk_mode(self.retrieve_clk_mode());
-        return ueb;
+        arena.make_ue_basic(*srci, resolved_des_slice, resolved_src_slice, self.get_priority(), self.retrieve_clk_mode(), false)
     }
 
     fn gen_asm_meta(&self,
-                    srci     : & HcpIdent,
-                    des_slice: & Option<Slice>,
-                    src_slice: & Slice,
-    ) -> AssignMeta{
-        
-        let ueb = self.gen_update_event(
-            srci,
-            des_slice,
-            src_slice
-        );
-        AssignMeta::new(self.get_hcp_asb_ident(), ueb)
-        
+                    srci     : &HcpIdent,
+                    des_slice: &Option<Slice>,
+                    src_slice: &Slice,
+                    arena    : &mut ModelArena,
+    ) -> AssignMeta {
+        let uei = self.gen_update_event(srci, des_slice, src_slice, arena);
+        AssignMeta::new(self.get_hcp_asb_ident(), uei)
     }
 
 
-    fn add_update_event(&mut self, event: Box<dyn UpdatingEvent>){
+    fn add_update_event(&mut self, event: UpdateEventIdent) {
         self.get_hcp_assign_mut().update_pool.add_update_event(event);
     }
 

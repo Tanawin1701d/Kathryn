@@ -6,7 +6,6 @@ use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
 use crate::model::hw_component::common::hcp_read::HcpReadable;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_INTERNAL_MIN, UpdatingEvent};
-use crate::model::hw_component::sp_reg::ctrl_flow_reg_base::CtrlFlowRegBase;
 use crate::model::common::identifier::{IdentBase, Identifiable};
 
 /// n-bit synchronisation register: raised bit-by-bit as dependent states
@@ -76,32 +75,4 @@ impl Identifiable for SyncReg {
     fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
 }
 
-impl CtrlFlowRegBase for SyncReg {
-    fn get_ctrl_ident(&self) -> HcpIdent { self.ident }
 
-    fn add_depend_state(&mut self,
-                        _depend_state  : HcpIdent,
-                        _activate_cond : Option<HcpIdent>,
-                        _cm            : ClockMode) {
-        // Sets bit [next_fill_activate_id] to 1 when depend_state is active
-        // and endExprInv holds; also updates testWire.
-        // Increments next_fill_activate_id after each call.
-        todo!("requires arena for expression/value/wire creation")
-    }
-
-    fn make_unset_state_event(&mut self, _cm: ClockMode) {
-        // Clears all bits when (self | testWire) == upFullState
-        todo!("requires arena for expression/value creation")
-    }
-
-    fn make_user_rst_event(&mut self, _rst: HcpIdent, _cm: ClockMode) {
-        // Clears all bits unconditionally when rst fires
-        todo!("requires arena for expression/value creation")
-    }
-
-    fn generate_end_expr(&self) -> HcpIdent {
-        assert_eq!(self.next_fill_activate_id, self.bit_width,
-            "not all SyncReg bits have been assigned a depend state");
-        self.end_expr.expect("end_expr not set — call set_end_expr after arena setup")
-    }
-}
