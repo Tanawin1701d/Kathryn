@@ -7,7 +7,7 @@ use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::hw_component::common::hcp_read::HcpReadable;
 use crate::model::hw_component::common::slice::Slice;
-use crate::model::hw_component::common::update_event::{UeBasic, UpdatingEvent};
+use crate::model::model_arena::ModelArena;
 use crate::util::math::vary_val::VaryVal;
 
 pub struct Val {
@@ -52,27 +52,27 @@ impl HcpAssignable for Val {
     fn get_priority(&self) -> i32 { get_asm_pri_val() }
 
     fn do_asm(&self,
-              srci: &HcpIdent,
-              des_slice: &Option<Slice>,
-              src_slice: &Slice,
-              clk_mode: &Option<ClockMode>) -> AssignMeta {
+              _srci     : &HcpIdent,
+              _des_slice: &Option<Slice>,
+              _src_slice: &Slice,
+              _arena    : &mut ModelArena) -> AssignMeta {
         panic!("Val::do_asm should not be called")
     }
 
     fn gen_update_event(&self,
-                        srci     : &HcpIdent,
-                        des_slice: &Option<Slice>,
-                        src_slice: &Slice,
-                        _arena   : &mut crate::model::model_arena::ModelArena,
+                        _srci     : &HcpIdent,
+                        _des_slice: &Option<Slice>,
+                        _src_slice: &Slice,
+                        _arena    : &mut ModelArena,
     ) -> crate::model::hw_component::common::update_event_ident::UpdateEventIdent {
         panic!("Val::gen_update_event should not be called")
     }
 
     fn gen_asm_meta(&self,
-                    srci     : &HcpIdent,
-                    des_slice: &Option<Slice>,
-                    src_slice: &Slice,
-                    _arena   : &mut crate::model::model_arena::ModelArena,
+                    _srci     : &HcpIdent,
+                    _des_slice: &Option<Slice>,
+                    _src_slice: &Slice,
+                    _arena    : &mut ModelArena,
     ) -> AssignMeta {
         panic!("Val::gen_asm_meta should not be called")
     }

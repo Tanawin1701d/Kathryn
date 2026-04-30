@@ -1,4 +1,5 @@
 use crate::common::arena_base::ArenaHandle;
+use crate::model::common::identifier::Identifiable;
 use crate::model::hw_component::common::update_event::{UeBasic, UeCond, UeCommon, UeGrp, UeSwitch, UeType};
 use crate::model::hw_component::common::update_event_ident::UpdateEventIdent;
 use crate::model::model_arena::ModelArena;

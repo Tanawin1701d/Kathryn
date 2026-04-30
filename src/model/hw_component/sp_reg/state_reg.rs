@@ -3,6 +3,7 @@ use crate::model::hw_component::common::assign_meta::AssignMeta;
 use crate::model::hw_component::common::hcp_accesible::HcpAccessible;
 use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
+use crate::model::hw_component::sp_reg::trigger_sig::{HasTriggerSig, TriggerSig};
 use crate::model::hw_component::common::hcp_read::HcpReadable;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_INTERNAL_MIN, DEFAULT_UE_PRI_RST};
@@ -19,21 +20,15 @@ use crate::model::model_arena::ModelArena;
 
 /// 1-bit state register.  Mirrors C++ `StateReg`.
 
-
-
 pub struct StateReg {
     // hcp ident
-    assign       : HcpAssign,
-    ident        : HcpIdent,
+    assign      : HcpAssign,
+    ident       : HcpIdent,
     // trigger signals
-    hold_sig_i   : Option<HcpIdent>,
-    rst_sig_i    : Option<HcpIdent>,
-    mrst_sig_i   : Option<HcpIdent>,
-    int_sig_i    : Option<HcpIdent>, // int is interrupt node
-    depend_nodes : Vec<(HcpIdent, Option<HcpIdent>)>,
+    triggers    : TriggerSig,
     // set/unset signals
-    set_val_i    : HcpIdent,
-    unset_val_i  : HcpIdent,
+    set_val_i   : HcpIdent,
+    unset_val_i : HcpIdent,
     // bitwidth is set to 1
 }
 
@@ -43,13 +38,9 @@ impl StateReg {
                set_val_i  : HcpIdent,
                unset_val_i: HcpIdent) -> Self {
         Self {
-            assign       : HcpAssign::new(),
-            ident        : HcpIdent::new(HwComponentType::StateReg, is_user_com, name),
-            hold_sig_i   : None,
-            rst_sig_i    : None,
-            mrst_sig_i   : None,
-            int_sig_i    : None,
-            depend_nodes : Vec::new(),
+            assign      : HcpAssign::new(),
+            ident       : HcpIdent::new(HwComponentType::StateReg, is_user_com, name),
+            triggers    : TriggerSig::new(),
             set_val_i,
             unset_val_i
         }
@@ -63,30 +54,19 @@ impl StateReg {
 
     pub fn get_ident(&self) -> HcpIdent { self.ident }
 
-
-
-    // add the special signals
-    pub fn set_hold_sig_i(&mut self, ident: HcpIdent) { self.hold_sig_i = Some(ident)}
-    pub fn set_rst_sig_i(&mut self, ident: HcpIdent)  { self.rst_sig_i = Some(ident) }
-    pub fn set_int_sig_i(&mut self, ident: HcpIdent)  { self.int_sig_i = Some(ident) }
-
-    pub fn add_depend_node(&mut self, srci: HcpIdent, condi: Option<HcpIdent>) {
-        self.depend_nodes.push((srci, condi));
-    }
-
     pub fn check_bit_size(&self, model_ar: &ModelArena) {
         let name = self.ident.get_ident_base().get_name();
         let chk = |i: &HcpIdent| check_ident_bit_size(i, 1, name, model_ar);
 
         chk(&self.set_val_i);
         chk(&self.unset_val_i);
-        if let Some(ref h) = self.hold_sig_i  { chk(h); }
-        if let Some(ref r) = self.rst_sig_i   { chk(r); }
-        if let Some(ref r) = self.mrst_sig_i  { chk(r); }
-        if let Some(ref i) = self.int_sig_i   { chk(i); }
-        for (srci, condi) in &self.depend_nodes {
-            chk(srci);
-            if let Some(ref c) = condi { chk(c); }
+        if let Some(ref h) = self.get_hold_sig_i()  { chk(h); }
+        if let Some(ref r) = self.get_rst_sig_i()   { chk(r); }
+        if let Some(ref r) = self.get_mrst_sig_i()  { chk(r); }
+        if let Some(ref i) = self.get_int_sig_i()   { chk(i); }
+        for (srci, condi) in self.triggers.iter_depend_nodes() {
+            chk(&srci);
+            if let Some(c) = condi { chk(&c); }
         }
     }
 
@@ -101,8 +81,8 @@ impl StateReg {
         self.add_update_event(ue);
 
         // create the update event for the set signal
-        let nodes: Vec<(HcpIdent, Option<HcpIdent>)> = self.depend_nodes.clone();
-        for (srci, condi) in nodes {
+        let nodes = self.triggers;
+        for (srci, condi) in nodes.iter_depend_nodes() {
             let des_slice = self.get_des_slice();
             let src_slice = self.get_des_slice();
             let priority = DEFAULT_UE_PRI_SR_SET;
@@ -115,10 +95,8 @@ impl StateReg {
             self.add_update_event(ue);
         }
 
-
-
         // create the update event for the hold signal
-        if let Some(hold_sig_i) = self.hold_sig_i {
+        if let Some(hold_sig_i) = self.get_hold_sig_i() {
             let ue = model_ar.make_ue_full(
                 None                  , Some(hold_sig_i)        , self.set_val_i,
                 self.get_des_slice()  , self.get_des_slice()    ,
@@ -128,38 +106,40 @@ impl StateReg {
         }
 
         // create the update event for the reset signal
-        if let Some(rst_sig_i) = self.rst_sig_i {
+        if let Some(rst_sig_i) = self.get_rst_sig_i() {
             let ue = model_ar.make_ue_full(
-                None                 , Some(rst_sig_i)                   , self.unset_val_i,
-                self.get_des_slice() , self.get_des_slice()    ,
-                DEFAULT_UE_PRI_SR_RST, self.retrieve_clk_mode(), false
+                None                 , Some(rst_sig_i)          , self.unset_val_i,
+                self.get_des_slice() , self.get_des_slice()      ,
+                DEFAULT_UE_PRI_SR_RST, self.retrieve_clk_mode() , false
             );
             self.add_update_event(ue);
         }
 
         // create the update event for the interrupt signal
-        if let Some(int_sig_i) = self.int_sig_i {
+        if let Some(int_sig_i) = self.get_int_sig_i() {
             let ue = model_ar.make_ue_full(
-                None                 , Some(int_sig_i)                   , self.set_val_i,
-                self.get_des_slice() , self.get_des_slice()    ,
-                DEFAULT_UE_PRI_SR_INT, self.retrieve_clk_mode(), false
+                None                 , Some(int_sig_i)          , self.set_val_i,
+                self.get_des_slice() , self.get_des_slice()      ,
+                DEFAULT_UE_PRI_SR_INT, self.retrieve_clk_mode() , false
             );
             self.add_update_event(ue);
         }
 
         // create the update event for the MASTER reset signal
-        if let Some(mrst_sig_i) = self.mrst_sig_i {
+        if let Some(mrst_sig_i) = self.get_mrst_sig_i() {
             let ue = model_ar.make_ue_full(
-                None                  , Some(mrst_sig_i)        , self.unset_val_i,
-                self.get_des_slice()  , self.get_des_slice()    ,
-                DEFAULT_UE_PRI_SR_MRST, self.retrieve_clk_mode(), false
+                None                  , Some(mrst_sig_i)         , self.unset_val_i,
+                self.get_des_slice()  , self.get_des_slice()      ,
+                DEFAULT_UE_PRI_SR_MRST, self.retrieve_clk_mode() , false
             );
             self.add_update_event(ue);
         }
-
-        
     }
+}
 
+impl HasTriggerSig for StateReg {
+    fn get_triggers    (&self)     -> &TriggerSig     { &self.triggers     }
+    fn get_triggers_mut(&mut self) -> &mut TriggerSig { &mut self.triggers }
 }
 
 impl HcpReadable for StateReg {
@@ -171,16 +151,16 @@ impl HcpAssignable for StateReg {
     fn get_hcp_assign_mut(&mut self) -> &mut HcpAssign { &mut self.assign }
 
     fn get_hcp_asb_ident(&self) -> HcpIdent { self.ident }
-    fn retrieve_clk_mode(&self) -> ClockMode { ClockMode::ClkFree }
+    fn retrieve_clk_mode(&self) -> ClockMode { ClockMode::PosEdge }
     fn get_des_slice    (&self) -> Slice     { Slice::new(0, 1) }
     fn get_priority     (&self) -> i32       { DEFAULT_UE_PRI_SR_UNSET }
 
     fn do_asm(&self,
-              srci     : &HcpIdent,
-              des_slice: &Option<Slice>,
-              src_slice: &Slice,
-              clk_mode : &Option<ClockMode>) -> AssignMeta {
-        panic!("StateReg::do_asm() is not implemented");
+              _srci     : &HcpIdent,
+              _des_slice: &Option<Slice>,
+              _src_slice: &Slice,
+              _arena    : &mut ModelArena) -> AssignMeta {
+        panic!("StateReg::do_asm() is not supported; use build_update_event()")
     }
 }
 

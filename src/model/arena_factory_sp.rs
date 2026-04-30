@@ -7,8 +7,8 @@ use crate::model::model_arena::ModelArena;
 
 impl ModelArena {
     pub fn make_state_reg(&mut self, name: &str) -> HcpIdent {
-        let set_val_i   = self.make_val_init(&format!("{}_SET",   name), 1, 1);
-        let unset_val_i = self.make_val_init(&format!("{}_UNSET", name), 1, 0);
+        let set_val_i   = self.make_val(&format!("{}_SET",   name), 1, 1);
+        let unset_val_i = self.make_val(&format!("{}_UNSET", name), 1, 0);
         let s = StateReg::new(false, name, set_val_i, unset_val_i);
         let i = s.get_ident();
         self.add_state_reg(s);

@@ -30,10 +30,10 @@ pub trait HcpAssignable {
     fn get_priority(&self) -> i32;
 
     fn do_asm(&self,
-              srci     : & HcpIdent,
-              des_slice: & Option<Slice>,
-              src_slice: & Slice,
-              clk_mode : & Option<ClockMode>) -> AssignMeta;
+              srci       : & HcpIdent,
+              des_slice  : & Option<Slice>,
+              src_slice  : & Slice,
+              arena      : &mut ModelArena) -> AssignMeta;
 
     fn gen_update_event(&self,
                         srci     : &HcpIdent,

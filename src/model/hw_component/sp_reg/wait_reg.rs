@@ -5,7 +5,8 @@ use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
 use crate::model::hw_component::common::hcp_read::HcpReadable;
 use crate::model::hw_component::common::slice::Slice;
-use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_INTERNAL_MIN, UpdatingEvent};
+use crate::model::hw_component::common::update_event::DEFAULT_UE_PRI_INTERNAL_MIN;
+use crate::model::model_arena::ModelArena;
 use crate::model::hw_component::sp_reg::ctrl_flow_reg_base::CtrlFlowRegBase;
 use crate::model::common::identifier::{IdentBase, Identifiable};
 
@@ -61,12 +62,8 @@ impl HcpAssignable for CondWaitStateReg {
               srci     : &HcpIdent,
               des_slice: &Option<Slice>,
               src_slice: &Slice,
-              clk_mode : &Option<ClockMode>) -> AssignMeta {
-        let mut asm = self.gen_asm_meta(srci, des_slice, src_slice);
-        if let Some(clk) = clk_mode {
-            asm.get_input_event_mut().as_mut().unwrap().set_clk_mode(*clk);
-        }
-        asm
+              arena    : &mut ModelArena) -> AssignMeta {
+        self.gen_asm_meta(srci, des_slice, src_slice, arena)
     }
 }
 
@@ -187,12 +184,8 @@ impl HcpAssignable for CycleWaitStateReg {
               srci     : &HcpIdent,
               des_slice: &Option<Slice>,
               src_slice: &Slice,
-              clk_mode : &Option<ClockMode>) -> AssignMeta {
-        let mut asm = self.gen_asm_meta(srci, des_slice, src_slice);
-        if let Some(clk) = clk_mode {
-            asm.get_input_event_mut().as_mut().unwrap().set_clk_mode(*clk);
-        }
-        asm
+              arena    : &mut ModelArena) -> AssignMeta {
+        self.gen_asm_meta(srci, des_slice, src_slice, arena)
     }
 }
 

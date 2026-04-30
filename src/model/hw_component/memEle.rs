@@ -7,7 +7,7 @@ use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::hw_component::common::hcp_read::HcpReadable;
 use crate::model::hw_component::common::slice::Slice;
-use crate::model::hw_component::common::update_event::UpdatingEvent;
+use crate::model::model_arena::ModelArena;
 
 pub struct MemEle {
     assign      : HcpAssign,
@@ -61,17 +61,11 @@ impl HcpAssignable for MemEle {
     fn get_priority(&self) -> i32 { get_asm_pri_val() }
 
     fn do_asm(&self,
-              srci     : & HcpIdent,
-              des_slice: & Option<Slice>,
-              src_slice: & Slice,
-              clk_mode : & Option<ClockMode>) -> AssignMeta {
-
-        let mut asm = self.gen_asm_meta(&srci, des_slice, src_slice);
-        if let Some(clk) = clk_mode {
-            asm.get_input_event_mut().as_mut()
-                      .unwrap().set_clk_mode(*clk);
-        }
-        asm
+              srci     : &HcpIdent,
+              des_slice: &Option<Slice>,
+              src_slice: &Slice,
+              arena    : &mut ModelArena) -> AssignMeta {
+        self.gen_asm_meta(srci, des_slice, src_slice, arena)
     }
 }
 
