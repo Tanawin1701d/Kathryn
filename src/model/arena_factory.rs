@@ -47,10 +47,10 @@ impl ModelArena {
         let b = MemBlk::new(true, name, bit_width, index_width); let i = b.get_ident(); self.add_mem_blk(b); i
     }
 
-    pub fn make_expression(&mut self, name: &str, op: LogicOp, a: HcpIdent, b: HcpIdent, bit_width: i32) -> HcpIdent {
+    pub fn make_expression(&mut self, name: &str, op: LogicOp, a: HcpIdent, b: HcpIdent) -> HcpIdent {
         let e = Expression::new(false, name, op, a, b, bit_width); let i = e.get_ident(); self.add_expression(e); i
     }
-    pub fn mk_expression(&mut self, name: &str, op: LogicOp, a: HcpIdent, b: HcpIdent, bit_width: i32) -> HcpIdent {
+    pub fn mk_expression(&mut self, name: &str, op: LogicOp, a: HcpIdent, b: HcpIdent) -> HcpIdent {
         let e = Expression::new(true, name, op, a, b, bit_width); let i = e.get_ident(); self.add_expression(e); i
     }
     pub fn make_expression_empty(&mut self, name: &str, bit_width: i32) -> HcpIdent {

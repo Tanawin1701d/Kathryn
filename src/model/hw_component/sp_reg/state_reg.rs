@@ -72,6 +72,8 @@ impl StateReg {
 
     pub fn build_update_event(&mut self, model_ar: &mut ModelArena) {
 
+        // in source side, we also use get_des_slice because it is only 1 bit assignment
+
         // create the update event for the unset signal
         let ue = model_ar.make_ue_full(
             None                , None                   , self.unset_val_i,
