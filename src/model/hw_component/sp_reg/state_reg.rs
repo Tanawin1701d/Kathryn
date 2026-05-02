@@ -54,30 +54,17 @@ impl StateReg {
 
     pub fn get_ident(&self) -> HcpIdent { self.ident }
 
-    pub fn check_bit_size(&self, model_ar: &ModelArena) {
-        let name = self.ident.get_ident_base().get_name();
-        let chk = |i: &HcpIdent| check_ident_bit_size(i, 1, name, model_ar);
-
-        chk(&self.set_val_i);
-        chk(&self.unset_val_i);
-        if let Some(ref h) = self.get_hold_sig_i()  { chk(h); }
-        if let Some(ref r) = self.get_rst_sig_i()   { chk(r); }
-        if let Some(ref r) = self.get_mrst_sig_i()  { chk(r); }
-        if let Some(ref i) = self.get_int_sig_i()   { chk(i); }
-        for (srci, condi) in self.triggers.iter_depend_nodes() {
-            chk(&srci);
-            if let Some(c) = condi { chk(&c); }
-        }
-    }
-
     pub fn build_update_event(&mut self, model_ar: &mut ModelArena) {
 
+        self.triggers.integrity_check(self.build_unique_name(), model_ar);
+
         // in source side, we also use get_des_slice because it is only 1 bit assignment
+        let src_sl = Slice::new(0, 1);
 
         // create the update event for the unset signal
         let ue = model_ar.make_ue_full(
-            None                , None                   , self.unset_val_i,
-            self.get_des_slice(), self.get_des_slice()   ,
+            None                   , None                    , self.unset_val_i,
+            self.get_des_slice()   , src_sl                  ,
             DEFAULT_UE_PRI_SR_UNSET, self.retrieve_clk_mode(), false
         );
         self.add_update_event(ue);
@@ -86,7 +73,7 @@ impl StateReg {
         let nodes = self.triggers;
         for (srci, condi) in nodes.iter_depend_nodes() {
             let des_slice = self.get_des_slice();
-            let src_slice = self.get_des_slice();
+            let src_slice = src_sl;
             let priority = DEFAULT_UE_PRI_SR_SET;
             let cm = self.retrieve_clk_mode();
             let ue = model_ar.make_ue_full(
@@ -101,7 +88,7 @@ impl StateReg {
         if let Some(hold_sig_i) = self.get_hold_sig_i() {
             let ue = model_ar.make_ue_full(
                 None                  , Some(hold_sig_i)        , self.set_val_i,
-                self.get_des_slice()  , self.get_des_slice()    ,
+                self.get_des_slice()  , src_sl                  ,
                 DEFAULT_UE_PRI_SR_HOLD, self.retrieve_clk_mode(), false
             );
             self.add_update_event(ue);
@@ -111,7 +98,7 @@ impl StateReg {
         if let Some(rst_sig_i) = self.get_rst_sig_i() {
             let ue = model_ar.make_ue_full(
                 None                 , Some(rst_sig_i)          , self.unset_val_i,
-                self.get_des_slice() , self.get_des_slice()      ,
+                self.get_des_slice() , src_sl                   ,
                 DEFAULT_UE_PRI_SR_RST, self.retrieve_clk_mode() , false
             );
             self.add_update_event(ue);
@@ -121,7 +108,7 @@ impl StateReg {
         if let Some(int_sig_i) = self.get_int_sig_i() {
             let ue = model_ar.make_ue_full(
                 None                 , Some(int_sig_i)          , self.set_val_i,
-                self.get_des_slice() , self.get_des_slice()      ,
+                self.get_des_slice() , src_sl                   ,
                 DEFAULT_UE_PRI_SR_INT, self.retrieve_clk_mode() , false
             );
             self.add_update_event(ue);
@@ -131,7 +118,7 @@ impl StateReg {
         if let Some(mrst_sig_i) = self.get_mrst_sig_i() {
             let ue = model_ar.make_ue_full(
                 None                  , Some(mrst_sig_i)         , self.unset_val_i,
-                self.get_des_slice()  , self.get_des_slice()      ,
+                self.get_des_slice()  , src_sl                   ,
                 DEFAULT_UE_PRI_SR_MRST, self.retrieve_clk_mode() , false
             );
             self.add_update_event(ue);

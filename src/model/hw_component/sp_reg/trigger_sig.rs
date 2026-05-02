@@ -1,6 +1,7 @@
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
-
-pub const MAX_DEPEND_NODES: usize = 16;
+use crate::model::hw_component::common::util::check_ident_bit_size;
+use crate::model::model_arena::ModelArena;
+use crate::params::MAX_DEPEND_NODES;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct TriggerSig {
@@ -33,6 +34,18 @@ impl TriggerSig {
     pub fn iter_depend_nodes(&self) -> impl Iterator<Item = (HcpIdent, Option<HcpIdent>)> + '_ {
         self.depend_nodes[..self.depend_count].iter().map(|n| n.unwrap())
     }
+
+    pub fn integrity_check(&self, owner_name: &str, arena: &ModelArena) {
+        for sig in [self.hold_sig_i, self.rst_sig_i, self.int_sig_i, self.mrst_sig_i].iter().flatten() {
+            check_ident_bit_size(sig, 1, owner_name, arena);
+        }
+        for (src, cond) in self.iter_depend_nodes() {
+            check_ident_bit_size(&src, 1, owner_name, arena);
+            if let Some(c) = cond {
+                check_ident_bit_size(&c, 1, owner_name, arena);
+            }
+        }
+    }
 }
 
 pub trait HasTriggerSig {
@@ -50,5 +63,9 @@ pub trait HasTriggerSig {
 
     fn add_depend_node(&mut self, srci: HcpIdent, condi: Option<HcpIdent>) {
         self.get_triggers_mut().push_depend_node(srci, condi);
+    }
+
+    fn check_all_sigs_1bit(&self, owner_name: &str, arena: &ModelArena) {
+        self.get_triggers().integrity_check(owner_name, arena);
     }
 }

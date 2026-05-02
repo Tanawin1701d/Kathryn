@@ -6,10 +6,16 @@ use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
 use crate::model::hw_component::common::hcp_read::HcpReadable;
 use crate::model::hw_component::common::operation::{LogicOp, LOGICAL_SIZE};
 use crate::model::hw_component::common::slice::Slice;
-use crate::model::hw_component::common::update_event::DEFAULT_UE_PRI_INTERNAL_MIN;
+use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_INTERNAL_MIN, DEFAULT_UE_PRI_RST};
 use crate::model::model_arena::ModelArena;
 use crate::model::common::identifier::{IdentBase, Identifiable};
-use crate::model::hw_component::sp_reg::trigger_sig::TriggerSig;
+use crate::model::hw_component::sp_reg::trigger_sig::{HasTriggerSig, TriggerSig};
+
+const DEFAULT_UE_PRI_CNT_INC  : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 1;
+const DEFAULT_UE_PRI_CNT_HOLD : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 2;
+const DEFAULT_UE_PRI_CNT_RST  : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 3;
+const DEFAULT_UE_PRI_CNT_INT  : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 4;
+const DEFAULT_UE_PRI_CNT_MRST : i32 = DEFAULT_UE_PRI_RST;
 
 /// Number of bits needed to count up to `max_number` (exclusive).
 /// Mirrors C++ `calBitUsedInCounter`.
@@ -29,10 +35,10 @@ pub struct CntReg {
     inc_val    : i32,
     last_cycle : i32,
     // val
-    last_Cycle_val: Option<HcpIdent>,
-    at_last_expr: Option<HcpIdent>,
-    zero_val    : Option<HcpIdent>,
-    inc_expr    : Option<HcpIdent>,
+    last_cycle_val: Option<HcpIdent>,
+    zero_val      : Option<HcpIdent>,
+    at_last_expr  : Option<HcpIdent>,
+    inc_expr      : Option<HcpIdent>,
 
 
 
@@ -55,7 +61,7 @@ impl CntReg {
             cnt_bit_sz,
             inc_val,
             last_cycle,
-            last_Cycle_val : None,
+            last_cycle_val: None,
             at_last_expr   : None,
             zero_val       : None,
             inc_expr       : None,
@@ -65,13 +71,14 @@ impl CntReg {
     pub fn mk(name: &str, max_cycle: i32) -> Self { Self::new(false, name, 1, max_cycle) }
 
     pub fn build_support_signal(&mut self, model_ar: &mut ModelArena) {
+        
         let name = self.ident.get_ident_base().get_name().to_string();
 
         // constant: last_cycle - 1 (the maximum value the counter reaches before wrap)
         let last_cycle_val = model_ar.make_val(&format!("{}_LAST_CYCLE", name),
             self.cnt_bit_sz, (self.last_cycle - 1) as u64,
         );
-        self.last_Cycle_val = Some(last_cycle_val);
+        self.last_cycle_val = Some(last_cycle_val);
 
         // constant: 0 (the reset/wrap-back value)
         let zero_val = model_ar.make_val(&format!("{}_ZERO", name),
@@ -98,11 +105,74 @@ impl CntReg {
 
     pub fn build_update_event(&mut self, model_ar: &mut ModelArena) {
 
+        self.triggers.integrity_check(self.build_unique_name(), model_ar);
+
+        let cnt_val_sl = Slice::new(0, self.cnt_bit_sz);
+
+        let zero_val = self.zero_val.expect("build_support_signal must be called first");
+        let inc_expr = self.inc_expr.expect("build_support_signal must be called first");
 
 
+        // increment signal
+        let nodes = self.triggers;
+        for (srci, condi) in nodes.iter_depend_nodes() {
+            let priority = DEFAULT_UE_PRI_CNT_INC;
+            let cm = self.retrieve_clk_mode();
+            let ue = model_ar.make_ue_full(
+                condi      , Some(srci), inc_expr,
+                cnt_val_sl , cnt_val_sl ,
+                priority   , cm        , false
+            );
+            self.add_update_event(ue);
+        }
+
+        // create the update event for the hold signal
+        if let Some(hold_sig_i) = self.get_hold_sig_i() {
+            let ue = model_ar.make_ue_full(
+                None                   , Some(hold_sig_i)        , self.ident,
+                cnt_val_sl             , cnt_val_sl              ,
+                DEFAULT_UE_PRI_CNT_HOLD, self.retrieve_clk_mode(), false
+            );
+            self.add_update_event(ue);
+        }
+
+        // create the update event for the reset signal
+        if let Some(rst_sig_i) = self.get_rst_sig_i() {
+            let ue = model_ar.make_ue_full(
+                None                  , Some(rst_sig_i)          , zero_val,
+                cnt_val_sl            , cnt_val_sl                ,
+                DEFAULT_UE_PRI_CNT_RST, self.retrieve_clk_mode() , false
+            );
+            self.add_update_event(ue);
+        }
+
+        // create the update event for the interrupt signal
+        if let Some(int_sig_i) = self.get_int_sig_i() {
+            let ue = model_ar.make_ue_full(
+                None                  , Some(int_sig_i)          , inc_expr,
+                cnt_val_sl            , cnt_val_sl                ,
+                DEFAULT_UE_PRI_CNT_INT, self.retrieve_clk_mode() , false
+            );
+            self.add_update_event(ue);
+        }
+
+        // create the update event for the MASTER reset signal
+        if let Some(mrst_sig_i) = self.get_mrst_sig_i() {
+            let ue = model_ar.make_ue_full(
+                None                   , Some(mrst_sig_i)         , zero_val,
+                cnt_val_sl             , cnt_val_sl                ,
+                DEFAULT_UE_PRI_CNT_MRST, self.retrieve_clk_mode() , false
+            );
+            self.add_update_event(ue);
+        }
     }
 
 
+}
+
+impl HasTriggerSig for CntReg {
+    fn get_triggers    (&self)     -> &TriggerSig     { &self.triggers     }
+    fn get_triggers_mut(&mut self) -> &mut TriggerSig { &mut self.triggers }
 }
 
 impl HcpReadable for CntReg {
