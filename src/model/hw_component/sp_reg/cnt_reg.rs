@@ -105,6 +105,8 @@ impl CntReg {
 
     pub fn build_update_event(&mut self, model_ar: &mut ModelArena) {
 
+
+
         self.triggers.integrity_check(self.build_unique_name(), model_ar);
 
         let cnt_val_sl = Slice::new(0, self.cnt_bit_sz);
