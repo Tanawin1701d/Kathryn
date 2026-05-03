@@ -13,50 +13,64 @@ use crate::model::model_arena::ModelArena;
 
 impl ModelArena {
     pub fn make_reg(&mut self, name: &str, bit_width: i32) -> HcpIdent {
-        let r = Reg::new(false, name, bit_width); let i = r.get_ident(); self.add_reg(r); i
+        let h = self.add_reg(Reg::new(false, name, bit_width));
+        self.get_reg(h).get_ident()
     }
     pub fn mk_reg(&mut self, name: &str, bit_width: i32) -> HcpIdent {
-        let r = Reg::new(true, name, bit_width); let i = r.get_ident(); self.add_reg(r); i
+        let h = self.add_reg(Reg::new(true, name, bit_width));
+        self.get_reg(h).get_ident()
     }
 
     pub fn make_wire(&mut self, name: &str, bit_width: i32) -> HcpIdent {
-        let w = Wire::new(false, name, bit_width); let i = w.get_ident(); self.add_wire(w); i
+        let h = self.add_wire(Wire::new(false, name, bit_width));
+        self.get_wire(h).get_ident()
     }
     pub fn mk_wire(&mut self, name: &str, bit_width: i32) -> HcpIdent {
-        let w = Wire::new(true, name, bit_width); let i = w.get_ident(); self.add_wire(w); i
+        let h = self.add_wire(Wire::new(true, name, bit_width));
+        self.get_wire(h).get_ident()
     }
 
     pub fn make_val(&mut self, name: &str, bit_width: i32, init_val: u64) -> HcpIdent {
-        let v = Val::new(false, name, bit_width, init_val); let i = v.get_ident(); self.add_val(v); i
+        let h = self.add_val(Val::new(false, name, bit_width, init_val));
+        self.get_val(h).get_ident()
     }
     pub fn mk_val(&mut self, name: &str, bit_width: i32, init_val: u64) -> HcpIdent {
-        let v = Val::new(true, name, bit_width, init_val); let i = v.get_ident(); self.add_val(v); i
+        let h = self.add_val(Val::new(true, name, bit_width, init_val));
+        self.get_val(h).get_ident()
     }
 
     pub fn make_mem_ele(&mut self, name: &str, index_ident: HcpIdent, bit_width: i32, is_read: bool) -> HcpIdent {
-        let e = MemEle::new(false, name, index_ident, bit_width, is_read); let i = e.get_ident(); self.add_mem_ele(e); i
+        let h = self.add_mem_ele(MemEle::new(false, name, index_ident, bit_width, is_read));
+        self.get_mem_ele(h).get_ident()
     }
     pub fn mk_mem_ele(&mut self, name: &str, index_ident: HcpIdent, bit_width: i32, is_read: bool) -> HcpIdent {
-        let e = MemEle::new(true, name, index_ident, bit_width, is_read); let i = e.get_ident(); self.add_mem_ele(e); i
+        let h = self.add_mem_ele(MemEle::new(true, name, index_ident, bit_width, is_read));
+        self.get_mem_ele(h).get_ident()
     }
 
     pub fn make_mem_blk(&mut self, name: &str, bit_width: i32, index_width: i32) -> HcpIdent {
-        let b = MemBlk::new(false, name, bit_width, index_width); let i = b.get_ident(); self.add_mem_blk(b); i
+        let h = self.add_mem_blk(MemBlk::new(false, name, bit_width, index_width));
+        self.get_mem_blk(h).get_ident()
     }
     pub fn mk_mem_blk(&mut self, name: &str, bit_width: i32, index_width: i32) -> HcpIdent {
-        let b = MemBlk::new(true, name, bit_width, index_width); let i = b.get_ident(); self.add_mem_blk(b); i
+        let h = self.add_mem_blk(MemBlk::new(true, name, bit_width, index_width));
+        self.get_mem_blk(h).get_ident()
     }
 
     pub fn make_expression(&mut self, name: &str, op: LogicOp, a: HcpIdent, b: HcpIdent) -> HcpIdent {
-        let e = Expression::new(false, name, op, a, b, self); let i = e.get_ident(); self.add_expression(e); i
+        let h = self.add_expression(Expression::new(false, name, op, a, b, self));
+        self.get_expression(h).get_ident()
     }
     pub fn mk_expression(&mut self, name: &str, op: LogicOp, a: HcpIdent, b: HcpIdent) -> HcpIdent {
-        let e = Expression::new(true, name, op, a, b, self); let i = e.get_ident(); self.add_expression(e); i
+        let h = self.add_expression(Expression::new(true, name, op, a, b, self));
+        self.get_expression(h).get_ident()
     }
     pub fn make_expression_empty(&mut self, name: &str, bit_width: i32) -> HcpIdent {
-        let e = Expression::new_empty(false, name, bit_width); let i = e.get_ident(); self.add_expression(e); i
+        let h = self.add_expression(Expression::new_empty(false, name, bit_width));
+        self.get_expression(h).get_ident()
     }
     pub fn mk_expression_empty(&mut self, name: &str, bit_width: i32) -> HcpIdent {
-        let e = Expression::new_empty(true, name, bit_width); let i = e.get_ident(); self.add_expression(e); i
+        let h = self.add_expression(Expression::new_empty(true, name, bit_width));
+        self.get_expression(h).get_ident()
     }
 }

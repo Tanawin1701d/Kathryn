@@ -46,6 +46,21 @@ pub struct CondWaitStateReg {
     end_expr_i   : Option<HcpIdent>,
 }
 
+impl Default for CondWaitStateReg {
+    fn default() -> Self {
+        Self {
+            assign       : HcpAssign::new(),
+            ident        : HcpIdent::default(),
+            triggers     : TriggerSig::new(),
+            cond_opr     : HcpIdent::default(),
+            up_state_i   : None,
+            down_state_i : None,
+            self_is_up_i : None,
+            end_expr_i   : None,
+        }
+    }
+}
+
 impl CondWaitStateReg {
     pub fn new(is_user_com: bool, name: &str, cond_opr: HcpIdent) -> Self {
         Self {
@@ -219,6 +234,30 @@ pub struct CycleWaitStateReg {
     inc_cond_expr_i : Option<HcpIdent>,
     inc_expr_i      : Option<HcpIdent>,
     end_expr_i      : Option<HcpIdent>,
+}
+
+impl Default for CycleWaitStateReg {
+    fn default() -> Self {
+        Self {
+            assign          : HcpAssign::new(),
+            ident           : HcpIdent::default(),
+            triggers        : TriggerSig::new(),
+            wait_cycle      : Some(1),
+            cnt_bit_sz      : 1,
+            total_bit_size  : 2,
+            end_cnt         : HcpIdent::default(),
+            idle_cnt_i      : None,
+            start_cnt_i     : None,
+            inc_step_i      : None,
+            end_full_i      : None,
+            is_active_expr_i: None,
+            is_end_expr_i   : None,
+            is_not_end_expr_i: None,
+            inc_cond_expr_i : None,
+            inc_expr_i      : None,
+            end_expr_i      : None,
+        }
+    }
 }
 
 impl CycleWaitStateReg {

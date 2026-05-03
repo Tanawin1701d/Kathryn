@@ -33,6 +33,23 @@ pub struct SyncReg {
     end_expr_inv_i    : Option<HcpIdent>,  // ~endExpr
 }
 
+impl Default for SyncReg {
+    fn default() -> Self {
+        Self {
+            assign            : HcpAssign::new(),
+            ident             : HcpIdent::default(),
+            bit_width         : 1,
+            triggers          : TriggerSig::new(),
+            up_state_i        : None,
+            up_full_state_i   : None,
+            down_full_state_i : None,
+            test_wire_i       : None,
+            end_expr_i        : None,
+            end_expr_inv_i    : None,
+        }
+    }
+}
+
 impl SyncReg {
     pub fn new(is_user_com: bool, name: &str, size: i32) -> Self {
         assert!(size > 0, "SyncReg size must be positive");

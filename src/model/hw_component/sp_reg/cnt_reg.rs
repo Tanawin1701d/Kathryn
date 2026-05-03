@@ -70,6 +70,12 @@ impl CntReg {
 
     pub fn mk(name: &str, max_cycle: i32) -> Self { Self::new(false, name, 1, max_cycle) }
 
+    pub fn get_ident(&self) -> HcpIdent { self.ident }
+    pub fn get_loop_cnt(&self) -> i32 { self.last_cycle }
+    pub fn generate_end_expr(&self) -> HcpIdent {
+        self.at_last_expr.expect("build_support_signal must be called before generate_end_expr")
+    }
+
     pub fn build_support_signal(&mut self, model_ar: &mut ModelArena) {
         
         let name = self.ident.get_ident_base().get_name().to_string();
@@ -171,6 +177,23 @@ impl CntReg {
     }
 
 
+}
+
+impl Default for CntReg {
+    fn default() -> Self {
+        Self {
+            assign         : HcpAssign::new(),
+            ident          : HcpIdent::default(),
+            triggers       : TriggerSig::new(),
+            cnt_bit_sz     : 1,
+            inc_val        : 1,
+            last_cycle     : 1,
+            last_cycle_val : None,
+            zero_val       : None,
+            at_last_expr   : None,
+            inc_expr       : None,
+        }
+    }
 }
 
 impl HasTriggerSig for CntReg {

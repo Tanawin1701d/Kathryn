@@ -4,6 +4,7 @@ use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
+use crate::model::model_arena::ModelArena;
 
 // ---- compile-time capacity knobs --------------------------------------------
 pub const MAX_NODE_SRCS : usize = 16;
@@ -20,22 +21,26 @@ impl NodeTrigger {
         Self { srci_node, srci_cond }
     }
 
-    pub fn get_trigger_signal(&self) -> Option<HcpIdent> {
-        // TODO: implement
-        None
+    pub fn get_src_node(&self) -> Option<NcpIdent> { self.srci_node }
+    pub fn get_condition(&self) -> Option<HcpIdent> { self.srci_cond }
+
+    pub fn get_trigger_signal(&self, model_ar: &mut ModelArena) -> Option<HcpIdent> {
+        let src = self.srci_node?;
+        let src_exit = model_ar.get_node_exit_opr(src)?;
+        NcpNodeBase::add_logic_with_output(model_ar, Some(src_exit), self.srci_cond, LogicOp::BitwiseAnd)
     }
 }
 
 #[derive(Clone, Copy)]
 pub struct NcpNodeBase {
-    ncp_ident                : NcpIdent,
-    node_srcs                : [NodeTrigger; MAX_NODE_SRCS],
-    node_srcs_len            : usize,
-    int_reset                : Option<NcpIdent>,
-    hold_node                : Option<NcpIdent>,
-    clk_mode                 : ClockMode,
-    related_cycle_consume_reg: [MaybeUninit<HcpIdent>; MAX_CYCLE_REGS],
-    reg_len                  : usize,
+    pub(crate) ncp_ident                : NcpIdent,
+    pub(crate) node_srcs                : [NodeTrigger; MAX_NODE_SRCS],
+    pub(crate) node_srcs_len            : usize,
+    pub(crate) int_reset                : Option<NcpIdent>,
+    pub(crate) hold_node                : Option<NcpIdent>,
+    pub(crate) clk_mode                 : ClockMode,
+    pub(crate) related_cycle_consume_reg: [MaybeUninit<HcpIdent>; MAX_CYCLE_REGS],
+    pub(crate) reg_len                  : usize,
 }
 
 impl NcpNodeBase {
@@ -116,19 +121,21 @@ impl NcpNodeBase {
     /// Combine `des_logic` with `opr1` using `op` (BitwiseAnd / BitwiseOr).
     /// If `des_logic` is `None`, it is set to `opr1`; otherwise a new combined
     /// ident handle must be created by the caller via the arena.
-    pub fn add_logic(des_logic: &mut Option<HcpIdent>, opr1: HcpIdent, op: LogicOp) {
+    pub fn add_logic(model_ar: &mut ModelArena, des_logic: &mut Option<HcpIdent>, opr1: HcpIdent, op: LogicOp) {
         assert!(op == LogicOp::BitwiseAnd || op == LogicOp::BitwiseOr);
         if des_logic.is_none() {
             *des_logic = Some(opr1);
         } else {
-            // Arena-backed expression creation is handled at call sites.
-            todo!("combine expressions through arena")
+            let lhs = des_logic.expect("checked above");
+            let expr = model_ar.make_expression("node_logic_expr", op, lhs, opr1);
+            *des_logic = Some(expr);
         }
     }
 
     /// Return a combined ident handle for `opr1 op opr2`.
     /// If both are `None` returns `None`; if one side is `None` returns the other.
     pub fn add_logic_with_output(
+        model_ar: &mut ModelArena,
         opr1: Option<HcpIdent>,
         opr2: Option<HcpIdent>,
         op  : LogicOp,
@@ -138,7 +145,7 @@ impl NcpNodeBase {
             (None,    None   ) => None,
             (Some(a), None   ) => Some(a),
             (None,    Some(b)) => Some(b),
-            (Some(_), Some(_)) => todo!("combine expressions through arena"),
+            (Some(a), Some(b)) => Some(model_ar.make_expression("node_logic_expr", op, a, b)),
         }
     }
 }

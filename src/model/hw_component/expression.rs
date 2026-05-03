@@ -30,7 +30,20 @@ impl Expression {
                b          : HcpIdent,
                model_arena: &ModelArena) -> Self {
         
-        let bit_width = model_arena.get_hw_bit_sz(&a);
+        let bit_width = match op {
+            LogicOp::LogicalAnd
+            | LogicOp::LogicalOr
+            | LogicOp::LogicalNot
+            | LogicOp::RelationEq
+            | LogicOp::RelationNeq
+            | LogicOp::RelationLe
+            | LogicOp::RelationLeq
+            | LogicOp::RelationGe
+            | LogicOp::RelationGeq
+            | LogicOp::RelationSlt
+            | LogicOp::RelationSgt => 1,
+            _ => model_arena.get_hw_bit_sz(&a),
+        };
         
         Self {
             assign        : HcpAssign::new(),
