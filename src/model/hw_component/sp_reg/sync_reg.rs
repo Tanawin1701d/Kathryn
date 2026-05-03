@@ -6,23 +6,24 @@ use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
 use crate::model::hw_component::common::hcp_read::HcpReadable;
 use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::hw_component::common::slice::Slice;
-use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_INTERNAL_MAX, DEFAULT_UE_PRI_INTERNAL_MIN};
+use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_INTERNAL_MAX, DEFAULT_UE_PRI_INTERNAL_MIN, DEFAULT_UE_PRI_RST};
 use crate::model::hw_component::sp_reg::trigger_sig::{HasTriggerSig, TriggerSig};
 use crate::model::model_arena::ModelArena;
 use crate::model::common::identifier::{IdentBase, Identifiable};
 
-const DEFAULT_UE_PRI_SY_ACTIVATE : i32 = DEFAULT_UE_PRI_INTERNAL_MAX;
 const DEFAULT_UE_PRI_SY_UNSET    : i32 = DEFAULT_UE_PRI_INTERNAL_MIN;
-const DEFAULT_UE_PRI_SY_RST      : i32 = DEFAULT_UE_PRI_INTERNAL_MIN;
+const DEFAULT_UE_PRI_SY_ACTIVATE : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 1;
+const DEFAULT_UE_PRI_SY_HOLD     : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 2;
+const DEFAULT_UE_PRI_SY_RST      : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 3;
+// INTERRUPT is not supported, so we use the same priority as RST
+const DEFAULT_UE_PRI_SY_MRST     : i32 = DEFAULT_UE_PRI_RST;
 
 /// n-bit synchronisation register: raised bit-by-bit as dependent states
-/// activate; fully raised when all bits are 1.  Mirrors C++ `SyncReg`.
 pub struct SyncReg {
     assign            : HcpAssign,
     ident             : HcpIdent,
     bit_width         : i32,
     triggers          : TriggerSig,
-    next_fill_bit_id  : i32,
     // support signals (populated by build_support_signal)
     up_state_i        : Option<HcpIdent>,  // 1-bit Val = 1
     up_full_state_i   : Option<HcpIdent>,  // n-bit Val = all 1s
@@ -40,7 +41,6 @@ impl SyncReg {
             ident             : HcpIdent::new(HwComponentType::SyncReg, is_user_com, name),
             bit_width         : size,
             triggers          : TriggerSig::new(),
-            next_fill_bit_id  : 0,
             up_state_i        : None,
             up_full_state_i   : None,
             down_full_state_i : None,
@@ -53,7 +53,6 @@ impl SyncReg {
     pub fn mk(name: &str, size: i32) -> Self { Self::new(false, name, size) }
 
     pub fn get_ident       (&self) -> HcpIdent        { self.ident             }
-    pub fn get_next_bit_id (&self) -> i32              { self.next_fill_bit_id  }
     pub fn get_end_expr_i  (&self) -> Option<HcpIdent> { self.end_expr_i        }
 
     /// Creates all internal support signals in the arena.
@@ -64,7 +63,7 @@ impl SyncReg {
 
         let up_state_i = model_ar.make_val(&format!("{}_UP_STATE",   name), 1, 1);
         self.up_state_i = Some(up_state_i);
-
+        // right now, we only support 64-bit registers, so we can use a single Val for both
         let up_full_val = if size < 64 { (1u64 << size) - 1 } else { u64::MAX };
         let up_full_state_i = model_ar.make_val(&format!("{}_UP_FULL",   name), size, up_full_val);
         self.up_full_state_i = Some(up_full_state_i);
@@ -108,22 +107,32 @@ impl SyncReg {
         let bit_sl  = Slice::new(0, 1);
         let cm      = self.retrieve_clk_mode();
 
-        // one UE per depend node: fills a single bit slot
+        // create the update event for the unset signal
+        let ue_unset = model_ar.make_ue_full(
+            None, Some(end_expr_i), down_full_state_i,
+            full_sl, full_sl,
+            DEFAULT_UE_PRI_SY_UNSET, cm, false,
+        );
+        self.add_update_event(ue_unset);
+
+        // create the update event for the set signal
+        let mut fill_bit_idx: i32 = 0;
         let nodes = self.triggers;
         for (srci, condi) in nodes.iter_depend_nodes() {
-            let des_sl = Slice::new(self.next_fill_bit_id, self.next_fill_bit_id + 1);
+            let des_sl = Slice::new(fill_bit_idx, fill_bit_idx + 1);
 
-            // actual condition = endExprInv (AND condi if present)
-            let actual_cond = match condi {
-                Some(ci) => {
-                    let combined = model_ar.make_expression(
-                        &format!("{}_ACT_COND_{}", self.ident.get_ident_base().get_name(), self.next_fill_bit_id),
-                        LogicOp::BitwiseAnd, end_expr_inv_i, ci,
-                    );
-                    Some(combined)
-                }
-                None => Some(end_expr_inv_i),
-            };
+            // actual condition = should we update this bit into register?
+            let actual_cond = 
+                match condi {
+                    Some(ci) => {
+                        let combined = model_ar.make_expression(
+                            &format!("{}_ACT_COND_{}", self.ident.get_ident_base().get_name(), fill_bit_idx),
+                            LogicOp::BitwiseAnd, end_expr_inv_i, ci,
+                        );
+                        Some(combined)
+                    }
+                    None => Some(end_expr_inv_i),
+                };
 
             // main UE on self: guarded by endExprInv so we never re-fill an already-full reg
             let ue = model_ar.make_ue_full(
@@ -141,31 +150,43 @@ impl SyncReg {
             );
             model_ar.get_hcp_assign_mut(&test_wire_i).add_update_event(test_ue);
 
-            self.next_fill_bit_id += 1;
+            fill_bit_idx += 1;
         }
 
         assert_eq!(
-            self.next_fill_bit_id, self.bit_width,
+            fill_bit_idx, self.bit_width,
             "SyncReg '{}': {} of {} bit slots filled",
-            self.ident.get_ident_base().get_name(), self.next_fill_bit_id, self.bit_width
+            self.ident.get_ident_base().get_name(), fill_bit_idx, self.bit_width
         );
 
-        // auto-unset: when all bits are raised (endExpr), clear all bits
-        let ue_unset = model_ar.make_ue_full(
-            None, Some(end_expr_i), down_full_state_i,
-            full_sl, full_sl,
-            DEFAULT_UE_PRI_SY_UNSET, cm, false,
-        );
-        self.add_update_event(ue_unset);
-
-        // user reset
-        if let Some(rst_sig_i) = self.get_rst_sig_i() {
-            let ue_rst = model_ar.make_ue_full(
-                None, Some(rst_sig_i), down_full_state_i,
+        // create the update event for the hold signal
+        if let Some(hold_sig_i) = self.get_hold_sig_i() {
+            let ue = model_ar.make_ue_full(
+                None, Some(hold_sig_i), self.ident,
                 full_sl, full_sl,
-                DEFAULT_UE_PRI_SY_RST, cm, false,
+                DEFAULT_UE_PRI_SY_HOLD, self.retrieve_clk_mode(), false
             );
-            self.add_update_event(ue_rst);
+            self.add_update_event(ue);
+        }
+
+        // create the update event for the reset signal
+        if let Some(rst_sig_i) = self.get_rst_sig_i() {
+            let ue = model_ar.make_ue_full(
+                None                 , Some(rst_sig_i)         , down_full_state_i,
+                full_sl              , full_sl                 ,
+                DEFAULT_UE_PRI_SY_RST, self.retrieve_clk_mode(), false
+            );
+            self.add_update_event(ue);
+        }
+
+        // create the update event for the MASTER reset signal
+        if let Some(mrst_sig_i) = self.get_mrst_sig_i() {
+            let ue = model_ar.make_ue_full(
+                None                  , Some(mrst_sig_i)        , down_full_state_i,
+                full_sl               , full_sl                 ,
+                DEFAULT_UE_PRI_SY_MRST, self.retrieve_clk_mode(), false
+            );
+            self.add_update_event(ue);
         }
     }
 }
