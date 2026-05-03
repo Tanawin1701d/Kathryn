@@ -1,7 +1,7 @@
 use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::asm_mode::get_asm_pri_val;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
-use crate::model::hw_component::common::operation::{LogicOp, LOGICAL_SIZE};
+use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::common::update_event::{UeBasic, UeCond, UpdatingEvent};
 use crate::model::hw_component::common::update_event_ident::UpdateEventIdent;
@@ -31,7 +31,7 @@ impl ModelArena {
     ) -> UpdateEventIdent {
         let cond_hcp = match (_cond_i, _state_i) {
             (Some(cond), Some(state)) => {
-                let expr = self.make_expression("cond_dis_expr", LogicOp::BitwiseAnd, cond, state, LOGICAL_SIZE as i32);
+                let expr = self.make_expression("cond_dis_expr", LogicOp::BitwiseAnd, cond, state);
                 Some(expr)
             },
             (Some(cond),  None      ) => Some(cond),

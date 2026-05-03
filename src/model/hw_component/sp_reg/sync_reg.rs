@@ -6,7 +6,7 @@ use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
 use crate::model::hw_component::common::hcp_read::HcpReadable;
 use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::hw_component::common::slice::Slice;
-use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_INTERNAL_MAX, DEFAULT_UE_PRI_INTERNAL_MIN, DEFAULT_UE_PRI_RST};
+use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_INTERNAL_MIN, DEFAULT_UE_PRI_RST};
 use crate::model::hw_component::sp_reg::trigger_sig::{HasTriggerSig, TriggerSig};
 use crate::model::model_arena::ModelArena;
 use crate::model::common::identifier::{IdentBase, Identifiable};
@@ -95,7 +95,8 @@ impl SyncReg {
     /// `build_support_signal` must be called first.
     pub fn build_update_event(&mut self, model_ar: &mut ModelArena) {
 
-        self.triggers.integrity_check(self.build_unique_name(), model_ar);
+        let owner_name = self.build_unique_name().to_string();
+        self.triggers.integrity_check(&owner_name, model_ar);
 
         let up_state_i        = self.up_state_i       .expect("build_support_signal must be called first");
         let down_full_state_i = self.down_full_state_i.expect("build_support_signal must be called first");

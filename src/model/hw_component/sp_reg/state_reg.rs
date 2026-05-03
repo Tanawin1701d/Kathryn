@@ -7,7 +7,6 @@ use crate::model::hw_component::sp_reg::trigger_sig::{HasTriggerSig, TriggerSig}
 use crate::model::hw_component::common::hcp_read::HcpReadable;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_INTERNAL_MIN, DEFAULT_UE_PRI_RST};
-use crate::model::hw_component::common::util::check_ident_bit_size;
 
 const DEFAULT_UE_PRI_SR_UNSET : i32 = DEFAULT_UE_PRI_INTERNAL_MIN;
 const DEFAULT_UE_PRI_SR_SET   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 1;
@@ -57,7 +56,8 @@ impl StateReg {
 
     pub fn build_update_event(&mut self, model_ar: &mut ModelArena) {
 
-        self.triggers.integrity_check(self.build_unique_name(), model_ar);
+        let owner_name = self.build_unique_name().to_string();
+        self.triggers.integrity_check(&owner_name, model_ar);
 
         // in source side, we also use get_des_slice because it is only 1 bit assignment
         let src_sl = Slice::new(0, 1);

@@ -4,7 +4,7 @@ use crate::model::hw_component::common::hcp_accesible::HcpAccessible;
 use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
 use crate::model::hw_component::common::hcp_read::HcpReadable;
-use crate::model::hw_component::common::operation::{LogicOp, LOGICAL_SIZE};
+use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_INTERNAL_MIN, DEFAULT_UE_PRI_RST};
 use crate::model::model_arena::ModelArena;
@@ -107,7 +107,8 @@ impl CntReg {
 
 
 
-        self.triggers.integrity_check(self.build_unique_name(), model_ar);
+        let owner_name = self.build_unique_name().to_string();
+        self.triggers.integrity_check(&owner_name, model_ar);
 
         let cnt_val_sl = Slice::new(0, self.cnt_bit_sz);
 

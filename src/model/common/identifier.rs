@@ -9,13 +9,25 @@ pub fn get_last_ident_id() -> u64 {
     GLOBAL_MODEL_ID.load(Ordering::Relaxed)
 }
 
-#[derive(Clone, Copy, Debug, Eq, Default)]
+#[derive(Clone, Copy, Debug, Eq)]
 pub struct IdentBase {
     global_id   : u64,
     is_user_com : bool,
     name_buf    : [u8; MAX_NAME_LEN],
     name_len    : u8,
     arena_handle: ArenaHandle,
+}
+
+impl Default for IdentBase {
+    fn default() -> Self {
+        Self {
+            global_id   : 0,
+            is_user_com : false,
+            name_buf    : [0u8; MAX_NAME_LEN],
+            name_len    : 0,
+            arena_handle: ArenaHandle::default(),
+        }
+    }
 }
 
 /// Trait for types that embed `IdentBase` and implement the pure-virtual

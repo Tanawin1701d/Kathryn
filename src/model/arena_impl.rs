@@ -101,7 +101,7 @@ impl ModelArena {
     }
 
     pub fn get_hw_bit_sz(&self, ident: &HcpIdent) -> i32 {
-        self.get_hcp_assign(ident).get_bit_width()
+        self.get_hcp_assign(ident).get_des_slice().get_size()
     }
 
     // -----------------------------------------------------------------------
