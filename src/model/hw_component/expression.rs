@@ -23,11 +23,14 @@ pub struct Expression {
 impl Expression {
     /// Expression with a fully defined operation and both operands.
     pub fn new(is_user_com: bool,
-               name      : &str,
-               op        : LogicOp,
-               a         : HcpIdent,
-               b         : HcpIdent,
-               bit_width : i32) -> Self {
+               name       : &str,
+               op         : LogicOp,
+               a          : HcpIdent,
+               b          : HcpIdent,
+               model_arena: &ModelArena) -> Self {
+        
+        let bit_width = model_arena.get_hw_bit_sz(&a);
+        
         Self {
             assign        : HcpAssign::new(),
             ident         : HcpIdent::new(HwComponentType::Expression, is_user_com, name),
@@ -52,8 +55,8 @@ impl Expression {
         }
     }
 
-    pub fn mk(name: &str, op: LogicOp, a: HcpIdent, b: HcpIdent, bit_width: i32) -> Self {
-        Expression::new(true, name, op, a, b, bit_width)
+    pub fn mk(name: &str, op: LogicOp, a: HcpIdent, b: HcpIdent, model_arena: &ModelArena) -> Self {
+        Expression::new(true, name, op, a, b, model_arena)
     }
 
     pub fn mk_empty(name: &str, bit_width: i32) -> Self {

@@ -99,4 +99,8 @@ impl ModelArena {
     pub fn borrow_asb_mut(&mut self, ident: HcpIdent) -> &mut dyn HcpAssignable {
         self.get_hcp_assign_mut(&ident)
     }
+
+    pub fn get_hw_bit_sz(&self, ident: &HcpIdent) -> i32 {
+        self.get_hcp_assign(ident).get_bit_width()
+    }
 }

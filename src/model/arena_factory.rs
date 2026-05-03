@@ -48,10 +48,10 @@ impl ModelArena {
     }
 
     pub fn make_expression(&mut self, name: &str, op: LogicOp, a: HcpIdent, b: HcpIdent) -> HcpIdent {
-        let e = Expression::new(false, name, op, a, b, bit_width); let i = e.get_ident(); self.add_expression(e); i
+        let e = Expression::new(false, name, op, a, b, self); let i = e.get_ident(); self.add_expression(e); i
     }
     pub fn mk_expression(&mut self, name: &str, op: LogicOp, a: HcpIdent, b: HcpIdent) -> HcpIdent {
-        let e = Expression::new(true, name, op, a, b, bit_width); let i = e.get_ident(); self.add_expression(e); i
+        let e = Expression::new(true, name, op, a, b, self); let i = e.get_ident(); self.add_expression(e); i
     }
     pub fn make_expression_empty(&mut self, name: &str, bit_width: i32) -> HcpIdent {
         let e = Expression::new_empty(false, name, bit_width); let i = e.get_ident(); self.add_expression(e); i
