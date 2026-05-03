@@ -10,6 +10,7 @@ use crate::model::hw_component::common::slice::Slice;
 use crate::model::model_arena::ModelArena;
 use crate::util::math::vary_val::VaryVal;
 
+#[derive(Default)]
 pub struct Val {
     assign   : HcpAssign,
     ident    : HcpIdent,

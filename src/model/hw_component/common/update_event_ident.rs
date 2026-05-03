@@ -7,7 +7,7 @@ use crate::model::hw_component::common::update_event::UeType;
 // in ModelArena; ue_type selects which field to look in.
 // ---------------------------------------------------------------------------
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct UpdateEventIdent {
     ident_base : IdentBase,
     ue_type    : UeType,

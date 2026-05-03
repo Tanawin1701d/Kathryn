@@ -11,12 +11,13 @@ use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::common::update_event_ident::UpdateEventIdent;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum UeType {
     Basic  = 0,
     Grp    = 1,
     Cond   = 2,
     Switch = 3,
+    #[default]
     Untype = 4,
 }
 

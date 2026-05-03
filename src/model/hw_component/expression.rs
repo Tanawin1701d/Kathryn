@@ -10,6 +10,7 @@ use crate::model::hw_component::common::slice::Slice;
 use crate::model::model_arena::ModelArena;
 use crate::model::common::identifier::{IdentBase, Identifiable};
 
+#[derive(Default)]
 pub struct Expression {
     assign        : HcpAssign,
     ident         : HcpIdent,

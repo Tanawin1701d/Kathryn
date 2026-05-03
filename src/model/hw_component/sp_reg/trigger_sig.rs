@@ -3,7 +3,7 @@ use crate::model::hw_component::common::util::check_ident_bit_size;
 use crate::model::model_arena::ModelArena;
 use crate::params::MAX_DEPEND_NODES;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct TriggerSig {
     pub hold_sig_i  : Option<HcpIdent>,
     pub rst_sig_i   : Option<HcpIdent>,

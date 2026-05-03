@@ -103,4 +103,23 @@ impl ModelArena {
     pub fn get_hw_bit_sz(&self, ident: &HcpIdent) -> i32 {
         self.get_hcp_assign(ident).get_bit_width()
     }
+
+    // -----------------------------------------------------------------------
+    // Temp-take / replace-back (for mut self + &mut self re-borrow pattern)
+    // -----------------------------------------------------------------------
+    pub fn take_reg      (&mut self, h: ArenaHandle) -> Reg        { self.regs       .take(h) }
+    pub fn take_wire     (&mut self, h: ArenaHandle) -> Wire       { self.wires      .take(h) }
+    pub fn take_val      (&mut self, h: ArenaHandle) -> Val        { self.vals       .take(h) }
+    pub fn take_mem_ele  (&mut self, h: ArenaHandle) -> MemEle     { self.mem_eles   .take(h) }
+    pub fn take_mem_blk  (&mut self, h: ArenaHandle) -> MemBlk     { self.mem_blks   .take(h) }
+    pub fn take_expression(&mut self, h: ArenaHandle) -> Expression { self.expressions.take(h) }
+    pub fn take_state_reg(&mut self, h: ArenaHandle) -> StateReg   { self.state_regs .take(h) }
+
+    pub fn replace_back_reg      (&mut self, h: ArenaHandle, v: Reg)        { self.regs       .replace_back(h, v) }
+    pub fn replace_back_wire     (&mut self, h: ArenaHandle, v: Wire)       { self.wires      .replace_back(h, v) }
+    pub fn replace_back_val      (&mut self, h: ArenaHandle, v: Val)        { self.vals       .replace_back(h, v) }
+    pub fn replace_back_mem_ele  (&mut self, h: ArenaHandle, v: MemEle)     { self.mem_eles   .replace_back(h, v) }
+    pub fn replace_back_mem_blk  (&mut self, h: ArenaHandle, v: MemBlk)     { self.mem_blks   .replace_back(h, v) }
+    pub fn replace_back_expression(&mut self, h: ArenaHandle, v: Expression) { self.expressions.replace_back(h, v) }
+    pub fn replace_back_state_reg(&mut self, h: ArenaHandle, v: StateReg)   { self.state_regs .replace_back(h, v) }
 }

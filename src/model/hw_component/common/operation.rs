@@ -1,8 +1,9 @@
 pub const LOGICAL_SIZE: usize = 1;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum LogicOp {
     // bitwise
+    #[default]
     BitwiseAnd,  // &
     BitwiseOr,   // |
     BitwiseXor,  // ^

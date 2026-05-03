@@ -9,6 +9,7 @@ use crate::model::hw_component::common::hcp_read::HcpReadable;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::model_arena::ModelArena;
 
+#[derive(Default)]
 pub struct MemEle {
     assign      : HcpAssign,
     ident       : HcpIdent,

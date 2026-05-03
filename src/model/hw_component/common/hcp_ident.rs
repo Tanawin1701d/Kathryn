@@ -2,9 +2,10 @@ use std::fmt;
 use crate::common::arena_base::ArenaHandle;
 use crate::model::common::identifier::{IdentBase, Identifiable};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 #[repr(usize)]
 pub enum HwComponentType {
+    #[default]
     Reg                = 0,
     StateReg           = 1,
     CondWaitStateReg   = 2,
@@ -59,7 +60,7 @@ trait HcpIdentifiable: Identifiable {
 }
 
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct HcpIdent {
     ident_base : IdentBase,
     hw_type    : HwComponentType,

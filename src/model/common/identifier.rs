@@ -9,7 +9,7 @@ pub fn get_last_ident_id() -> u64 {
     GLOBAL_MODEL_ID.load(Ordering::Relaxed)
 }
 
-#[derive(Clone, Copy, Debug, Eq)]
+#[derive(Clone, Copy, Debug, Eq, Default)]
 pub struct IdentBase {
     global_id   : u64,
     is_user_com : bool,

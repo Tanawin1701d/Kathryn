@@ -2,6 +2,7 @@ use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::update_event_ident::UpdateEventIdent;
 use crate::model::model_arena::ModelArena;
 
+#[derive(Default)]
 pub struct UpdatePool {
     events: Vec<UpdateEventIdent>,
 }

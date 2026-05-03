@@ -5,6 +5,7 @@ mod div;
 
 /// Arbitrary-width integer value stored as little-endian u64 limbs.
 /// limbs[0] holds bits 0..63, limbs[1] holds bits 64..127, etc.
+#[derive(Default)]
 pub struct VaryVal {
     limbs    : Vec<u64>,
     bit_width: usize,

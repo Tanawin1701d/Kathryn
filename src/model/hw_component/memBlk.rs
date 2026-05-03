@@ -4,6 +4,7 @@ use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::hw_component::common::hcp_read::HcpReadable;
 use crate::model::hw_component::memEle::MemEle;
 
+#[derive(Default)]
 pub struct MemBlk {
 
     assign            : HcpAssign,

@@ -75,6 +75,7 @@ pub trait HcpAssignable {
    Hcp = Hw Component Property
 */
 
+#[derive(Default)]
 pub struct HcpAssign{
     update_pool : UpdatePool
 }

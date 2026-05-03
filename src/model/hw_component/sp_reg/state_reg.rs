@@ -20,6 +20,7 @@ use crate::model::model_arena::ModelArena;
 
 /// 1-bit state register.  Mirrors C++ `StateReg`.
 
+#[derive(Default)]
 pub struct StateReg {
     // hcp ident
     assign      : HcpAssign,
