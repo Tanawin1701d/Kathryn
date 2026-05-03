@@ -14,7 +14,6 @@ use crate::model::hw_component::sp_reg::sync_reg::SyncReg;
 use crate::model::hw_component::sp_reg::state_reg::StateReg;
 use crate::model::hw_component::sp_reg::wait_reg::{CondWaitStateReg, CycleWaitStateReg};
 use crate::model::model_arena::ModelArena;
-use crate::model::nodes::node::NcpNodeEntry;
 
 macro_rules! dispatch_hcp {
     ($self:expr, $hcpIdent:expr, $method:ident) => {{
@@ -50,7 +49,6 @@ impl ModelArena {
             cnt_regs   : ArenaGroup::new(),
             cond_wait_regs : ArenaGroup::new(),
             cycle_wait_regs: ArenaGroup::new(),
-            nodes      : ArenaGroup::new(),
             ue_basics  : ArenaGroup::new(),
             ue_grps    : ArenaGroup::new(),
             ue_conds   : ArenaGroup::new(),
@@ -70,7 +68,6 @@ impl ModelArena {
         self.cnt_regs    = ArenaGroup::new();
         self.cond_wait_regs  = ArenaGroup::new();
         self.cycle_wait_regs = ArenaGroup::new();
-        self.nodes       = ArenaGroup::new();
         self.ue_basics   = ArenaGroup::new();
         self.ue_grps     = ArenaGroup::new();
         self.ue_conds    = ArenaGroup::new();
@@ -91,7 +88,6 @@ impl ModelArena {
     pub fn add_cnt_reg  (&mut self, c: CntReg)    -> ArenaHandle { self.cnt_regs   .insert(c) }
     pub fn add_cond_wait_reg (&mut self, c: CondWaitStateReg) -> ArenaHandle { self.cond_wait_regs .insert(c) }
     pub fn add_cycle_wait_reg(&mut self, c: CycleWaitStateReg) -> ArenaHandle { self.cycle_wait_regs.insert(c) }
-    pub fn add_node     (&mut self, n: NcpNodeEntry) -> ArenaHandle { self.nodes.insert(n) }
 
     // -----------------------------------------------------------------------
     // HCP getters
@@ -107,7 +103,6 @@ impl ModelArena {
     pub fn get_cnt_reg  (&self, h: ArenaHandle) -> &CntReg     { self.cnt_regs   .get(h) }
     pub fn get_cond_wait_reg (&self, h: ArenaHandle) -> &CondWaitStateReg  { self.cond_wait_regs .get(h) }
     pub fn get_cycle_wait_reg(&self, h: ArenaHandle) -> &CycleWaitStateReg { self.cycle_wait_regs.get(h) }
-    pub fn get_node     (&self, h: ArenaHandle) -> &NcpNodeEntry { self.nodes.get(h) }
 
     pub fn get_reg_mut      (&mut self, h: ArenaHandle) -> &mut Reg        { self.regs       .get_mut(h) }
     pub fn get_wire_mut     (&mut self, h: ArenaHandle) -> &mut Wire       { self.wires      .get_mut(h) }
@@ -120,7 +115,6 @@ impl ModelArena {
     pub fn get_cnt_reg_mut  (&mut self, h: ArenaHandle) -> &mut CntReg     { self.cnt_regs   .get_mut(h) }
     pub fn get_cond_wait_reg_mut (&mut self, h: ArenaHandle) -> &mut CondWaitStateReg  { self.cond_wait_regs .get_mut(h) }
     pub fn get_cycle_wait_reg_mut(&mut self, h: ArenaHandle) -> &mut CycleWaitStateReg { self.cycle_wait_regs.get_mut(h) }
-    pub fn get_node_mut     (&mut self, h: ArenaHandle) -> &mut NcpNodeEntry { self.nodes.get_mut(h) }
 
     // -----------------------------------------------------------------------
     // HCP trait-object dispatch
@@ -152,7 +146,6 @@ impl ModelArena {
     pub fn take_cnt_reg  (&mut self, h: ArenaHandle) -> CntReg     { self.cnt_regs   .take(h) }
     pub fn take_cond_wait_reg (&mut self, h: ArenaHandle) -> CondWaitStateReg  { self.cond_wait_regs .take(h) }
     pub fn take_cycle_wait_reg(&mut self, h: ArenaHandle) -> CycleWaitStateReg { self.cycle_wait_regs.take(h) }
-    pub fn take_node     (&mut self, h: ArenaHandle) -> NcpNodeEntry { self.nodes.take(h) }
 
     pub fn replace_back_reg      (&mut self, h: ArenaHandle, v: Reg)        { self.regs       .replace_back(h, v) }
     pub fn replace_back_wire     (&mut self, h: ArenaHandle, v: Wire)       { self.wires      .replace_back(h, v) }
@@ -165,5 +158,4 @@ impl ModelArena {
     pub fn replace_back_cnt_reg  (&mut self, h: ArenaHandle, v: CntReg)     { self.cnt_regs   .replace_back(h, v) }
     pub fn replace_back_cond_wait_reg (&mut self, h: ArenaHandle, v: CondWaitStateReg)  { self.cond_wait_regs .replace_back(h, v) }
     pub fn replace_back_cycle_wait_reg(&mut self, h: ArenaHandle, v: CycleWaitStateReg) { self.cycle_wait_regs.replace_back(h, v) }
-    pub fn replace_back_node     (&mut self, h: ArenaHandle, v: NcpNodeEntry) { self.nodes.replace_back(h, v) }
 }

@@ -24,11 +24,6 @@ impl NodeTrigger {
     pub fn get_src_node(&self) -> Option<NcpIdent> { self.srci_node }
     pub fn get_condition(&self) -> Option<HcpIdent> { self.srci_cond }
 
-    pub fn get_trigger_signal(&self, model_ar: &mut ModelArena) -> Option<HcpIdent> {
-        let src = self.srci_node?;
-        let src_exit = model_ar.get_node_exit_opr(src)?;
-        NcpNodeBase::add_logic_with_output(model_ar, Some(src_exit), self.srci_cond, LogicOp::BitwiseAnd)
-    }
 }
 
 #[derive(Clone, Copy)]
