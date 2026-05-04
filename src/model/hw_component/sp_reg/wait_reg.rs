@@ -6,20 +6,24 @@ use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
 use crate::model::hw_component::common::hcp_read::HcpReadable;
 use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::hw_component::common::slice::Slice;
-use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_INTERNAL_MAX, DEFAULT_UE_PRI_INTERNAL_MIN};
+use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_INTERNAL_MAX, DEFAULT_UE_PRI_INTERNAL_MIN, DEFAULT_UE_PRI_RST};
 use crate::model::hw_component::common::util::check_ident_bit_size;
 use crate::model::model_arena::ModelArena;
 use crate::model::hw_component::sp_reg::trigger_sig::{HasTriggerSig, TriggerSig};
 use crate::model::common::identifier::{IdentBase, Identifiable};
 
-const DEFAULT_UE_PRI_CW_ACTIVATE: i32 = DEFAULT_UE_PRI_INTERNAL_MAX;
-const DEFAULT_UE_PRI_CW_UNSET   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN;
-const DEFAULT_UE_PRI_CW_RST     : i32 = DEFAULT_UE_PRI_INTERNAL_MIN;
+const DEFAULT_UE_PRI_CW_UNSET : i32 = DEFAULT_UE_PRI_INTERNAL_MIN;
+const DEFAULT_UE_PRI_CW_SET   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 1;
+const DEFAULT_UE_PRI_CW_HOLD  : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 2;
+const DEFAULT_UE_PRI_CW_RST   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 3;
+const DEFAULT_UE_PRI_CW_MRST  : i32 = DEFAULT_UE_PRI_RST;
 
-const DEFAULT_UE_PRI_CY_ACTIVATE: i32 = DEFAULT_UE_PRI_INTERNAL_MAX;
-const DEFAULT_UE_PRI_CY_INC     : i32 = DEFAULT_UE_PRI_INTERNAL_MAX - 1;
-const DEFAULT_UE_PRI_CY_UNSET   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN;
-const DEFAULT_UE_PRI_CY_RST     : i32 = DEFAULT_UE_PRI_INTERNAL_MIN;
+const DEFAULT_UE_PRI_CY_UNSET : i32 = DEFAULT_UE_PRI_INTERNAL_MIN;
+const DEFAULT_UE_PRI_CY_SET   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 1;
+const DEFAULT_UE_PRI_CY_INC   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 2;
+const DEFAULT_UE_PRI_CY_HOLD  : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 3;
+const DEFAULT_UE_PRI_CY_RST   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 4;
+const DEFAULT_UE_PRI_CY_MRST  : i32 = DEFAULT_UE_PRI_RST;
 
 // ---- helpers ----------------------------------------------------------------
 
@@ -40,6 +44,7 @@ pub struct CondWaitStateReg {
     ident        : HcpIdent,
     triggers     : TriggerSig,
     cond_opr     : HcpIdent,
+    cond_opr_sl  : Slice,
     up_state_i   : Option<HcpIdent>,
     down_state_i : Option<HcpIdent>,
     self_is_up_i : Option<HcpIdent>,
@@ -53,6 +58,7 @@ impl Default for CondWaitStateReg {
             ident        : HcpIdent::default(),
             triggers     : TriggerSig::new(),
             cond_opr     : HcpIdent::default(),
+            cond_opr_sl  : Slice::default(),
             up_state_i   : None,
             down_state_i : None,
             self_is_up_i : None,
@@ -62,12 +68,13 @@ impl Default for CondWaitStateReg {
 }
 
 impl CondWaitStateReg {
-    pub fn new(is_user_com: bool, name: &str, cond_opr: HcpIdent) -> Self {
+    pub fn new(is_user_com: bool, name: &str, cond_opr: HcpIdent, cond_opr_sl: Slice) -> Self {
         Self {
             assign       : HcpAssign::new(),
             ident        : HcpIdent::new(HwComponentType::CondWaitStateReg, is_user_com, name),
             triggers     : TriggerSig::new(),
             cond_opr,
+            cond_opr_sl,
             up_state_i   : None,
             down_state_i : None,
             self_is_up_i : None,
@@ -75,7 +82,9 @@ impl CondWaitStateReg {
         }
     }
 
-    pub fn mk(name: &str, cond_opr: HcpIdent) -> Self { Self::new(false, name, cond_opr) }
+    pub fn mk(name: &str, cond_opr: HcpIdent, cond_opr_sl: Slice) -> Self {
+        Self::new(false, name, cond_opr, cond_opr_sl)
+    }
 
     pub fn get_ident   (&self) -> HcpIdent { self.ident }
     pub fn get_cond_opr(&self) -> HcpIdent { self.cond_opr }
@@ -91,21 +100,16 @@ impl CondWaitStateReg {
         let down_state_i = model_ar.make_val(&format!("{}_DOWN_STATE", name), 1, 0);
         self.down_state_i = Some(down_state_i);
 
-        let self_is_up_i = model_ar.make_expression(
-            &format!("{}_IS_UP", name), LogicOp::RelationEq, self.ident, up_state_i
-        );
-        self.self_is_up_i = Some(self_is_up_i);
-
-        // C++: cond_opr & (self == upState)
         let end_expr_i = model_ar.make_expression(
-            &format!("{}_END_EXPR", name), LogicOp::BitwiseAnd, self.cond_opr, self_is_up_i
+            &format!("{}_END_EXPR", name), LogicOp::BitwiseAnd, self.ident, self.cond_opr,
+            None, None,
         );
         self.end_expr_i = Some(end_expr_i);
     }
 
     /// Generates all update events.
     /// `build_support_signal` must be called first.
-    pub fn build_update_event(&mut self, model_ar: &mut ModelArena, cm: ClockMode) {
+    pub fn build_update_event(&mut self, model_ar: &mut ModelArena) {
         let owner_name = self.build_unique_name().to_string();
         self.triggers.integrity_check(&owner_name, model_ar);
         check_ident_bit_size(&self.cond_opr, 1, &owner_name, model_ar);
@@ -116,33 +120,53 @@ impl CondWaitStateReg {
 
         let bit_sl = Slice::new(0, 1);
 
+        // unset: createUE(cond_opr, self == upState, downState, {0,1}, MIN, cm)
+        let ue_unset = model_ar.make_ue_full(
+            Some(self.cond_opr)    , Some(self_is_up_i)      , down_state_i,
+            bit_sl                 , bit_sl                  ,
+            DEFAULT_UE_PRI_CW_UNSET, self.retrieve_clk_mode(), false
+        );
+        self.add_update_event(ue_unset);
+
         // activate: createUE(activateCond, dependState, upState, {0,1}, MAX, cm)
         let nodes = self.triggers;
         for (srci, condi) in nodes.iter_depend_nodes() {
             let ue = model_ar.make_ue_full(
-                condi, Some(srci), up_state_i,
-                bit_sl, bit_sl,
-                DEFAULT_UE_PRI_CW_ACTIVATE, cm, false
+                condi                , Some(srci)              , up_state_i,
+                bit_sl               , bit_sl        ,
+                DEFAULT_UE_PRI_CW_SET, self.retrieve_clk_mode(), false
             );
             self.add_update_event(ue);
         }
 
-        // unset: createUE(cond_opr, self == upState, downState, {0,1}, MIN, cm)
-        let ue_unset = model_ar.make_ue_full(
-            Some(self.cond_opr), Some(self_is_up_i), down_state_i,
-            bit_sl, bit_sl,
-            DEFAULT_UE_PRI_CW_UNSET, cm, false
-        );
-        self.add_update_event(ue_unset);
-
         // user reset: createUE(None, rst, downState, {0,1}, MIN, cm)
         if let Some(rst_sig_i) = self.get_rst_sig_i() {
             let ue_rst = model_ar.make_ue_full(
-                None, Some(rst_sig_i), down_state_i,
-                bit_sl, bit_sl,
-                DEFAULT_UE_PRI_CW_RST, cm, false
+                None                 , Some(rst_sig_i)         , down_state_i,
+                bit_sl               , bit_sl                  ,
+                DEFAULT_UE_PRI_CW_RST, self.retrieve_clk_mode(), false
             );
             self.add_update_event(ue_rst);
+        }
+
+        // hold: rewrite self with self when hold_sig fires (suppresses lower-priority UEs)
+        if let Some(hold_sig_i) = self.get_hold_sig_i() {
+            let ue_hold = model_ar.make_ue_full(
+                None                  , Some(hold_sig_i)        , self.ident,
+                bit_sl                , bit_sl                  ,
+                DEFAULT_UE_PRI_CW_HOLD, self.retrieve_clk_mode(), false
+            );
+            self.add_update_event(ue_hold);
+        }
+
+        // master reset: createUE(None, mrst, downState, {0,1}, MRST, cm)
+        if let Some(mrst_sig_i) = self.get_mrst_sig_i() {
+            let ue_mrst = model_ar.make_ue_full(
+                None                  , Some(mrst_sig_i)        , down_state_i,
+                bit_sl                , bit_sl                  ,
+                DEFAULT_UE_PRI_CW_MRST, self.retrieve_clk_mode(), false
+            );
+            self.add_update_event(ue_mrst);
         }
     }
 
@@ -224,16 +248,15 @@ pub struct CycleWaitStateReg {
     /// In `new_with_expr`, this is expected to be a full-width end marker.
     end_cnt         : HcpIdent,
 
-    idle_cnt_i      : Option<HcpIdent>,
-    start_cnt_i     : Option<HcpIdent>,
-    inc_step_i      : Option<HcpIdent>,
-    end_full_i      : Option<HcpIdent>,
-    is_active_expr_i: Option<HcpIdent>,
-    is_end_expr_i   : Option<HcpIdent>,
-    is_not_end_expr_i: Option<HcpIdent>,
-    inc_cond_expr_i : Option<HcpIdent>,
-    inc_expr_i      : Option<HcpIdent>,
-    end_expr_i      : Option<HcpIdent>,
+    idle_cnt_i       : Option<HcpIdent>, // const 0: value when idle/inactive
+    start_cnt_i      : Option<HcpIdent>, // const 0b11: initial value on activate (state bit set, counter=1)
+    inc_step_i       : Option<HcpIdent>, // const 0b10: added each cycle to increment counter without touching bit 0
+    end_full_i       : Option<HcpIdent>, // const (end_cnt<<1)|1: full-width terminal value
+    is_active_expr_i : Option<HcpIdent>, // expr: self != idle_cnt
+    is_end_expr_i    : Option<HcpIdent>, // expr: self == end_full
+    is_not_end_expr_i: Option<HcpIdent>, // expr: self != end_full
+    inc_cond_expr_i  : Option<HcpIdent>, // expr: is_active && is_not_end (increment gate)
+    inc_expr_i       : Option<HcpIdent>, // expr: self + inc_step (next counter value)
 }
 
 impl Default for CycleWaitStateReg {
@@ -255,7 +278,6 @@ impl Default for CycleWaitStateReg {
             is_not_end_expr_i: None,
             inc_cond_expr_i : None,
             inc_expr_i      : None,
-            end_expr_i      : None,
         }
     }
 }
@@ -283,7 +305,6 @@ impl CycleWaitStateReg {
             is_not_end_expr_i: None,
             inc_cond_expr_i : None,
             inc_expr_i      : None,
-            end_expr_i      : None,
         }
     }
 
@@ -307,7 +328,6 @@ impl CycleWaitStateReg {
             is_not_end_expr_i: None,
             inc_cond_expr_i : None,
             inc_expr_i      : None,
-            end_expr_i      : None,
         }
     }
 
@@ -316,7 +336,7 @@ impl CycleWaitStateReg {
     pub fn get_cnt_bit_sz    (&self) -> i32         { self.cnt_bit_sz }
     pub fn get_total_bit_size(&self) -> i32         { self.total_bit_size }
     pub fn get_end_cnt       (&self) -> HcpIdent    { self.end_cnt }
-    pub fn get_end_expr_i    (&self) -> Option<HcpIdent> { self.end_expr_i }
+    pub fn get_end_expr_i    (&self) -> Option<HcpIdent> { self.is_end_expr_i }
 
     /// Creates internal support constants/expressions used by update events.
     pub fn build_support_signal(&mut self, model_ar: &mut ModelArena) {
@@ -349,32 +369,34 @@ impl CycleWaitStateReg {
         self.end_full_i = Some(end_full_i);
 
         let is_active_expr_i = model_ar.make_expression(
-            &format!("{}_IS_ACTIVE", name), LogicOp::RelationNeq, self.ident, idle_cnt_i
+            &format!("{}_IS_ACTIVE", name), LogicOp::RelationNeq, self.ident, idle_cnt_i,
+            None, None,
         );
         self.is_active_expr_i = Some(is_active_expr_i);
 
         let is_end_expr_i = model_ar.make_expression(
-            &format!("{}_IS_END", name), LogicOp::RelationEq, self.ident, end_full_i
+            &format!("{}_IS_END", name), LogicOp::RelationEq, self.ident, end_full_i,
+            None, None,
         );
         self.is_end_expr_i = Some(is_end_expr_i);
 
         let is_not_end_expr_i = model_ar.make_expression(
-            &format!("{}_IS_NOT_END", name), LogicOp::RelationNeq, self.ident, end_full_i
+            &format!("{}_IS_NOT_END", name), LogicOp::RelationNeq, self.ident, end_full_i,
+            None, None,
         );
         self.is_not_end_expr_i = Some(is_not_end_expr_i);
 
         let inc_cond_expr_i = model_ar.make_expression(
-            &format!("{}_INC_COND", name), LogicOp::BitwiseAnd, is_active_expr_i, is_not_end_expr_i
+            &format!("{}_INC_COND", name), LogicOp::BitwiseAnd, is_active_expr_i, is_not_end_expr_i,
+            None, None,
         );
         self.inc_cond_expr_i = Some(inc_cond_expr_i);
 
         let inc_expr_i = model_ar.make_expression(
-            &format!("{}_INC_EXPR", name), LogicOp::ArithPlus, self.ident, inc_step_i
+            &format!("{}_INC_EXPR", name), LogicOp::ArithPlus, self.ident, inc_step_i,
+            None, None,
         );
         self.inc_expr_i = Some(inc_expr_i);
-
-        // Equivalent to C++ `self[0] & (self[1..total] == end_cnt)` in full-width form.
-        self.end_expr_i = Some(is_end_expr_i);
     }
 
     /// Generates all update events.
@@ -392,36 +414,7 @@ impl CycleWaitStateReg {
         let full_sl = Slice::new(0, self.total_bit_size);
         let cnt_sl = Slice::new(1, self.total_bit_size);
 
-        // activate: createUE(activateCond, dependState, startCnt, {0,total}, MAX, cm)
-        let nodes = self.triggers;
-        for (srci, condi) in nodes.iter_depend_nodes() {
-            let ue = model_ar.make_ue_full(
-                condi, Some(srci), start_cnt_i,
-                full_sl, full_sl,
-                DEFAULT_UE_PRI_CY_ACTIVATE, cm, false
-            );
-            self.add_update_event(ue);
-        }
-
-        // increment: createUE(incCond, self[0], self[1..total]+1, {1,total}, MAX-1, cm)
-        let inc_cond_i = match self.get_hold_sig_i() {
-            Some(hold_sig_i) => model_ar.make_expression(
-                &format!("{}_INC_COND_HOLD", self.ident.get_ident_base().get_name()),
-                LogicOp::BitwiseAnd,
-                hold_sig_i,
-                inc_cond_expr_i
-            ),
-            None => inc_cond_expr_i,
-        };
-        let ue_inc = model_ar.make_ue_full(
-            Some(inc_cond_i), None, inc_expr_i,
-            cnt_sl, cnt_sl,
-            DEFAULT_UE_PRI_CY_INC, cm, false
-        );
-        self.add_update_event(ue_inc);
-
-        // unset: createUE(self[1..total]==endCnt, self[0], idleCnt, {0,total}, MIN, cm)
-        // Implemented through a full-width end marker condition.
+        // unset: when end reached, reset to idle
         let ue_unset = model_ar.make_ue_full(
             Some(is_end_expr_i), None, idle_cnt_i,
             full_sl, full_sl,
@@ -429,7 +422,36 @@ impl CycleWaitStateReg {
         );
         self.add_update_event(ue_unset);
 
-        // user reset: createUE(None, rst, idleCnt, {0,total}, MIN, cm)
+        // set/activate: on trigger, load start_cnt
+        let nodes = self.triggers;
+        for (srci, condi) in nodes.iter_depend_nodes() {
+            let ue = model_ar.make_ue_full(
+                condi, Some(srci), start_cnt_i,
+                full_sl, full_sl,
+                DEFAULT_UE_PRI_CY_SET, cm, false
+            );
+            self.add_update_event(ue);
+        }
+
+        // increment: while active and not at end, increment counter
+        let ue_inc = model_ar.make_ue_full(
+            Some(inc_cond_expr_i), None, inc_expr_i,
+            cnt_sl, cnt_sl,
+            DEFAULT_UE_PRI_CY_INC, cm, false
+        );
+        self.add_update_event(ue_inc);
+
+        // hold: rewrite self with self when hold_sig fires (suppresses lower-priority UEs)
+        if let Some(hold_sig_i) = self.get_hold_sig_i() {
+            let ue_hold = model_ar.make_ue_full(
+                None, Some(hold_sig_i), self.ident,
+                full_sl, full_sl,
+                DEFAULT_UE_PRI_CY_HOLD, cm, false
+            );
+            self.add_update_event(ue_hold);
+        }
+
+        // user reset
         if let Some(rst_sig_i) = self.get_rst_sig_i() {
             let ue_rst = model_ar.make_ue_full(
                 None, Some(rst_sig_i), idle_cnt_i,
@@ -438,32 +460,20 @@ impl CycleWaitStateReg {
             );
             self.add_update_event(ue_rst);
         }
-    }
 
-    // Compatibility wrappers that mirror C++ method names.
-    pub fn add_depend_state(&mut self,
-                            depend_state : HcpIdent,
-                            activate_cond: Option<HcpIdent>,
-                            _cm          : ClockMode) {
-        self.add_depend_node(depend_state, activate_cond);
-    }
-
-    pub fn make_inc_state_event(&mut self, hold_signal: Option<HcpIdent>, _cm: ClockMode) {
-        if let Some(hold_sig_i) = hold_signal {
-            self.set_hold_sig_i(hold_sig_i);
+        // master reset
+        if let Some(mrst_sig_i) = self.get_mrst_sig_i() {
+            let ue_mrst = model_ar.make_ue_full(
+                None, Some(mrst_sig_i), idle_cnt_i,
+                full_sl, full_sl,
+                DEFAULT_UE_PRI_CY_MRST, cm, false
+            );
+            self.add_update_event(ue_mrst);
         }
     }
 
-    pub fn make_unset_state_event(&mut self, _cm: ClockMode) {
-        // Included in build_update_event() in the Rust implementation.
-    }
-
-    pub fn make_user_rst_event(&mut self, rst: HcpIdent, _cm: ClockMode) {
-        self.set_rst_sig_i(rst);
-    }
-
     pub fn generate_end_expr(&self) -> HcpIdent {
-        self.end_expr_i.expect("build_support_signal must be called before generate_end_expr")
+        self.is_end_expr_i.expect("build_support_signal must be called before generate_end_expr")
     }
 }
 

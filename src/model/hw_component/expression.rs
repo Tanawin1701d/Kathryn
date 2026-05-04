@@ -18,6 +18,8 @@ pub struct Expression {
     op            : LogicOp,
     operand_a     : Option<HcpIdent>,
     operand_b     : Option<HcpIdent>,
+    operand_a_slice: Option<Slice>,
+    operand_b_slice: Option<Slice>,
     value_assigned: bool,
 }
 
@@ -28,8 +30,10 @@ impl Expression {
                op         : LogicOp,
                a          : HcpIdent,
                b          : HcpIdent,
+               a_slice    : Slice,
+               b_slice    : Slice,
                model_arena: &ModelArena) -> Self {
-        
+
         let bit_width = match op {
             LogicOp::LogicalAnd
             | LogicOp::LogicalOr
@@ -44,33 +48,37 @@ impl Expression {
             | LogicOp::RelationSgt => 1,
             _ => model_arena.get_hw_bit_sz(&a),
         };
-        
+
         Self {
-            assign        : HcpAssign::new(),
-            ident         : HcpIdent::new(HwComponentType::Expression, is_user_com, name),
+            assign         : HcpAssign::new(),
+            ident          : HcpIdent::new(HwComponentType::Expression, is_user_com, name),
             bit_width,
             op,
-            operand_a     : Some(a),
-            operand_b     : Some(b),
-            value_assigned: true,
+            operand_a      : Some(a),
+            operand_b      : Some(b),
+            operand_a_slice: Some(a_slice),
+            operand_b_slice: Some(b_slice),
+            value_assigned : true,
         }
     }
 
     /// Unassigned expression — operand will be supplied later via `assign_operand`.
     pub fn new_empty(is_user_com: bool, name: &str, bit_width: i32) -> Self {
         Self {
-            assign        : HcpAssign::new(),
-            ident         : HcpIdent::new(HwComponentType::Expression, is_user_com, name),
+            assign         : HcpAssign::new(),
+            ident          : HcpIdent::new(HwComponentType::Expression, is_user_com, name),
             bit_width,
-            op            : LogicOp::Assign,
-            operand_a     : None,
-            operand_b     : None,
-            value_assigned: false,
+            op             : LogicOp::Assign,
+            operand_a      : None,
+            operand_b      : None,
+            operand_a_slice: None,
+            operand_b_slice: None,
+            value_assigned : false,
         }
     }
 
-    pub fn mk(name: &str, op: LogicOp, a: HcpIdent, b: HcpIdent, model_arena: &ModelArena) -> Self {
-        Expression::new(true, name, op, a, b, model_arena)
+    pub fn mk(name: &str, op: LogicOp, a: HcpIdent, b: HcpIdent, a_slice: Slice, b_slice: Slice, model_arena: &ModelArena) -> Self {
+        Expression::new(true, name, op, a, b, a_slice, b_slice, model_arena)
     }
 
     pub fn mk_empty(name: &str, bit_width: i32) -> Self {
@@ -79,10 +87,12 @@ impl Expression {
 
     pub fn get_ident(&self) -> HcpIdent { self.ident }
 
-    pub fn get_op           (&self) -> LogicOp           { self.op }
-    pub fn get_operand_a    (&self) -> Option<HcpIdent> { self.operand_a }
-    pub fn get_operand_b    (&self) -> Option<HcpIdent> { self.operand_b }
-    pub fn is_value_assigned(&self) -> bool             { self.value_assigned }
+    pub fn get_op             (&self) -> LogicOp         { self.op }
+    pub fn get_operand_a      (&self) -> Option<HcpIdent> { self.operand_a }
+    pub fn get_operand_b      (&self) -> Option<HcpIdent> { self.operand_b }
+    pub fn get_operand_a_slice(&self) -> Option<Slice>    { self.operand_a_slice }
+    pub fn get_operand_b_slice(&self) -> Option<Slice>    { self.operand_b_slice }
+    pub fn is_value_assigned  (&self) -> bool             { self.value_assigned }
 
     /// Provide the source operand for an unassigned expression (non-block assign).
     /// Panics if the expression was already assigned or the slice sizes don't match.
@@ -92,8 +102,9 @@ impl Expression {
             src_slice.get_size(), self.bit_width,
             "src expression assign wrapper doesn't cover entire expression"
         );
-        self.operand_a     = Some(src);
-        self.value_assigned = true;
+        self.operand_a       = Some(src);
+        self.operand_a_slice = Some(src_slice);
+        self.value_assigned  = true;
     }
 }
 

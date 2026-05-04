@@ -94,7 +94,7 @@ impl CntReg {
 
         // expression: self == last_cycle_val  (1-bit; true when counter is at last cycle)
         let at_last_expr = model_ar.make_expression(&format!("{}_AT_LAST", name),
-            LogicOp::RelationEq, self.ident, last_cycle_val);
+            LogicOp::RelationEq, self.ident, last_cycle_val, None, None);
         self.at_last_expr = Some(at_last_expr);
 
         // constant: inc_val (needed as the RHS of the add expression)
@@ -104,7 +104,7 @@ impl CntReg {
 
         // expression: self + inc_val  (next counter value)
         let inc_expr = model_ar.make_expression(&format!("{}_INC", name),
-            LogicOp::ArithPlus, self.ident, inc_val_val
+            LogicOp::ArithPlus, self.ident, inc_val_val, None, None,
         );
         self.inc_expr = Some(inc_expr);
     }

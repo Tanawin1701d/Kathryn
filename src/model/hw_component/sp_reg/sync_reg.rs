@@ -94,16 +94,19 @@ impl SyncReg {
         // (self | testWire)
         let or_expr = model_ar.make_expression(
             &format!("{}_OR_TEST",      name), LogicOp::BitwiseOr,  self.ident,    test_wire_i,
+            None, None,
         );
         // (self | testWire) == upFullState
         let end_expr = model_ar.make_expression(
             &format!("{}_END_EXPR",     name), LogicOp::RelationEq, or_expr,       up_full_state_i,
+            None, None,
         );
         self.end_expr_i = Some(end_expr);
 
         // ~endExpr  (unary — b operand is ignored)
         let end_expr_inv = model_ar.make_expression(
             &format!("{}_END_EXPR_INV", name), LogicOp::BitwiseInvr, end_expr, end_expr,
+            None, None,
         );
         self.end_expr_inv_i = Some(end_expr_inv);
     }
@@ -146,6 +149,7 @@ impl SyncReg {
                         let combined = model_ar.make_expression(
                             &format!("{}_ACT_COND_{}", self.ident.get_ident_base().get_name(), fill_bit_idx),
                             LogicOp::BitwiseAnd, end_expr_inv_i, ci,
+                            None, None,
                         );
                         Some(combined)
                     }
