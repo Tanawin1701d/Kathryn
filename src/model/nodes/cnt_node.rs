@@ -1,0 +1,93 @@
+use crate::model::common::identifier::{IdentBase, Identifiable};
+use crate::model::controller::clock_mode::ClockMode;
+use crate::model::hw_component::common::hcp_ident::HcpIdent;
+use crate::model::hw_component::sp_reg::trigger_sig::HasTriggerSig;
+use crate::model::model_arena::ModelArena;
+use crate::model::nodes::ncp_base::{HasNodeTriggerSig, NcpNode, NodeTriggerSig};
+use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
+
+/// Cycle-counting node: wraps a `CntReg` that wraps once `last_loop_cnt` is
+/// reached.  `get_exit_opr` returns the counter's `at_last` expression after
+/// `assign` has been invoked.
+pub struct CounterNode {
+    ident      : NcpIdent,
+    clk_mode   : ClockMode,
+    triggers   : NodeTriggerSig,
+    cnt_reg_i  : HcpIdent,
+    last_loop  : i32,
+    end_expr_i : Option<HcpIdent>,
+}
+
+impl Default for CounterNode {
+    fn default() -> Self {
+        Self {
+            ident     : NcpIdent::new(NodeType::Counter, false, ""),
+            clk_mode  : ClockMode::PosEdge,
+            triggers  : NodeTriggerSig::new(),
+            cnt_reg_i : HcpIdent::default(),
+            last_loop : 1,
+            end_expr_i: None,
+        }
+    }
+}
+
+impl CounterNode {
+    pub fn new(is_user_com: bool, name: &str, last_loop_cnt: i32, clk_mode: ClockMode, arena: &mut ModelArena) -> Self {
+        assert!(last_loop_cnt > 0);
+        let cnt_reg_i = arena.make_cnt_reg(&format!("{}_CNT", name), 1, last_loop_cnt);
+        Self {
+            ident     : NcpIdent::new(NodeType::Counter, is_user_com, name),
+            clk_mode,
+            triggers  : NodeTriggerSig::new(),
+            cnt_reg_i,
+            last_loop : last_loop_cnt,
+            end_expr_i: None,
+        }
+    }
+
+    pub fn get_cnt_reg_i(&self) -> HcpIdent { self.cnt_reg_i }
+}
+
+impl HasNodeTriggerSig for CounterNode {
+    fn get_node_triggers    (&self)     -> &NodeTriggerSig     { &self.triggers     }
+    fn get_node_triggers_mut(&mut self) -> &mut NodeTriggerSig { &mut self.triggers }
+}
+
+impl NcpNode for CounterNode {
+    fn get_ncp_ident    (&self)     -> &NcpIdent     { &self.ident }
+    fn get_ncp_ident_mut(&mut self) -> &mut NcpIdent { &mut self.ident }
+    fn get_clock_mode   (&self)     -> ClockMode     { self.clk_mode }
+    fn set_clock_mode   (&mut self, cm: ClockMode)   { self.clk_mode = cm; }
+
+    fn assign(&mut self, arena: &mut ModelArena) {
+        let cnt_h = *self.cnt_reg_i.get_arena_handle();
+
+        let dep_list: Vec<(NcpIdent, Option<HcpIdent>)> =
+            self.triggers.iter_depend_nodes().collect();
+        let int_rst_exit = self.get_int_reset()
+            .and_then(|ir| arena.get_node_exit_opr(&ir));
+
+        let mut cr = arena.take_cnt_reg(cnt_h);
+        for (src_node, condition) in dep_list {
+            let src_exit = arena.get_node_exit_opr(&src_node)
+                .expect("CounterNode dep must have exit_opr");
+            cr.add_depend_node(src_exit, condition);
+        }
+        if let Some(rst_exit) = int_rst_exit { cr.set_rst_sig_i(rst_exit); }
+
+        cr.build_support_signal(arena);
+        cr.build_update_event(arena);
+        let end_expr = cr.generate_end_expr();
+        arena.replace_back_cnt_reg(cnt_h, cr);
+        self.end_expr_i = Some(end_expr);
+    }
+
+    fn get_exit_opr  (&self) -> Option<HcpIdent> { self.end_expr_i }
+    fn get_cycle_used(&self) -> i32              { self.last_loop }
+}
+
+impl Identifiable for CounterNode {
+    fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
+    fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
+    fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
+}

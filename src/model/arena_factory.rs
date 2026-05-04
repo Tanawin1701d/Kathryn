@@ -1,5 +1,6 @@
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::operation::LogicOp;
+use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::expression::Expression;
 use crate::model::hw_component::memBlk::MemBlk;
 use crate::model::hw_component::memEle::MemEle;
@@ -57,12 +58,16 @@ impl ModelArena {
         self.get_mem_blk(h).get_ident()
     }
 
-    pub fn make_expression(&mut self, name: &str, op: LogicOp, a: HcpIdent, b: HcpIdent) -> HcpIdent {
-        let h = self.add_expression(Expression::new(false, name, op, a, b, self));
+    pub fn make_expression(&mut self, name: &str, op: LogicOp, a: HcpIdent, b: HcpIdent, a_slice: Option<Slice>, b_slice: Option<Slice>) -> HcpIdent {
+        let a_slice = a_slice.unwrap_or_else(|| Slice::new(0, self.get_hw_bit_sz(&a)));
+        let b_slice = b_slice.unwrap_or_else(|| Slice::new(0, self.get_hw_bit_sz(&b)));
+        let h = self.add_expression(Expression::new(false, name, op, a, b, a_slice, b_slice, self));
         self.get_expression(h).get_ident()
     }
-    pub fn mk_expression(&mut self, name: &str, op: LogicOp, a: HcpIdent, b: HcpIdent) -> HcpIdent {
-        let h = self.add_expression(Expression::new(true, name, op, a, b, self));
+    pub fn mk_expression(&mut self, name: &str, op: LogicOp, a: HcpIdent, b: HcpIdent, a_slice: Option<Slice>, b_slice: Option<Slice>) -> HcpIdent {
+        let a_slice = a_slice.unwrap_or_else(|| Slice::new(0, self.get_hw_bit_sz(&a)));
+        let b_slice = b_slice.unwrap_or_else(|| Slice::new(0, self.get_hw_bit_sz(&b)));
+        let h = self.add_expression(Expression::new(true, name, op, a, b, a_slice, b_slice, self));
         self.get_expression(h).get_ident()
     }
     pub fn make_expression_empty(&mut self, name: &str, bit_width: i32) -> HcpIdent {

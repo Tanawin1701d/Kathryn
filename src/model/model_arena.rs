@@ -10,6 +10,12 @@ use crate::model::hw_component::sp_reg::cnt_reg::CntReg;
 use crate::model::hw_component::sp_reg::sync_reg::SyncReg;
 use crate::model::hw_component::sp_reg::state_reg::StateReg;
 use crate::model::hw_component::sp_reg::wait_reg::{CondWaitStateReg, CycleWaitStateReg};
+use crate::model::nodes::asm_node::AsmNode;
+use crate::model::nodes::cnt_node::CounterNode;
+use crate::model::nodes::logic_node::{DummyNode, OprNode, PseudoNode};
+use crate::model::nodes::start_node::StartNode;
+use crate::model::nodes::state_node::{StateNode, SynNode};
+use crate::model::nodes::wait_node::{WaitCondNode, WaitCycleNode};
 
 pub struct ModelArena {
 
@@ -31,4 +37,16 @@ pub struct ModelArena {
     pub(super) ue_grps    : ArenaGroup<UeGrp>,
     pub(super) ue_conds   : ArenaGroup<UeCond>,
     pub(super) ue_switches: ArenaGroup<UeSwitch>,
+
+    // node arenas
+    pub(super) asm_nodes        : ArenaGroup<AsmNode>,
+    pub(super) state_nodes      : ArenaGroup<StateNode>,
+    pub(super) syn_nodes        : ArenaGroup<SynNode>,
+    pub(super) wait_cond_nodes  : ArenaGroup<WaitCondNode>,
+    pub(super) wait_cycle_nodes : ArenaGroup<WaitCycleNode>,
+    pub(super) start_nodes      : ArenaGroup<StartNode>,
+    pub(super) counter_nodes    : ArenaGroup<CounterNode>,
+    pub(super) pseudo_nodes     : ArenaGroup<PseudoNode>,
+    pub(super) dummy_nodes      : ArenaGroup<DummyNode>,
+    pub(super) opr_nodes        : ArenaGroup<OprNode>,
 }

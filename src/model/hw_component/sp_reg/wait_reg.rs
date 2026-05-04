@@ -170,22 +170,6 @@ impl CondWaitStateReg {
         }
     }
 
-    // Compatibility wrappers that mirror C++ method names.
-    pub fn add_depend_state(&mut self,
-                            depend_state : HcpIdent,
-                            activate_cond: Option<HcpIdent>,
-                            _cm          : ClockMode) {
-        self.add_depend_node(depend_state, activate_cond);
-    }
-
-    pub fn make_unset_state_event(&mut self, _cm: ClockMode) {
-        // Included in build_update_event() in the Rust implementation.
-    }
-
-    pub fn make_user_rst_event(&mut self, rst: HcpIdent, _cm: ClockMode) {
-        self.set_rst_sig_i(rst);
-    }
-
     pub fn generate_end_expr(&self) -> HcpIdent {
         self.end_expr_i.expect("build_support_signal must be called before generate_end_expr")
     }
@@ -401,7 +385,8 @@ impl CycleWaitStateReg {
 
     /// Generates all update events.
     /// `build_support_signal` must be called first.
-    pub fn build_update_event(&mut self, model_ar: &mut ModelArena, cm: ClockMode) {
+    pub fn build_update_event(&mut self, model_ar: &mut ModelArena) {
+        let cm = self.retrieve_clk_mode();
         let owner_name = self.build_unique_name().to_string();
         self.triggers.integrity_check(&owner_name, model_ar);
 
