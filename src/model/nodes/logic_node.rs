@@ -4,7 +4,7 @@ use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_base::{
-    add_logic, HasNodeTriggerSig, NcpNode, NodeTriggerSig,
+    add_logic, HasNodeTriggerSig, NcpNode, NodeTrigger,
 };
 use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
 
@@ -16,7 +16,7 @@ use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
 pub struct PseudoNode {
     ident       : NcpIdent,
     clk_mode    : ClockMode,
-    triggers    : NodeTriggerSig,
+    triggers    : NodeTrigger,
     bit_width   : i32,
     join_op     : LogicOp,
     exit_expr_i : Option<HcpIdent>,
@@ -27,7 +27,7 @@ impl Default for PseudoNode {
         Self {
             ident      : NcpIdent::new(NodeType::Pseudo, false, ""),
             clk_mode   : ClockMode::ClkFree,
-            triggers   : NodeTriggerSig::new(),
+            triggers   : NodeTrigger::new(),
             bit_width  : 1,
             join_op    : LogicOp::BitwiseAnd,
             exit_expr_i: None,
@@ -41,7 +41,7 @@ impl PseudoNode {
         Self {
             ident      : NcpIdent::new(NodeType::Pseudo, is_user_com, name),
             clk_mode   : ClockMode::ClkFree,
-            triggers   : NodeTriggerSig::new(),
+            triggers   : NodeTrigger::new(),
             bit_width,
             join_op,
             exit_expr_i: None,
@@ -52,13 +52,12 @@ impl PseudoNode {
 }
 
 impl HasNodeTriggerSig for PseudoNode {
-    fn get_node_triggers    (&self)     -> &NodeTriggerSig     { &self.triggers     }
-    fn get_node_triggers_mut(&mut self) -> &mut NodeTriggerSig { &mut self.triggers }
+    fn get_node_triggers    (&self)     -> &NodeTrigger { &self.triggers     }
+    fn get_node_triggers_mut(&mut self) -> &mut NodeTrigger { &mut self.triggers }
 }
 
 impl NcpNode for PseudoNode {
-    fn get_ncp_ident    (&self)     -> &NcpIdent     { &self.ident }
-    fn get_ncp_ident_mut(&mut self) -> &mut NcpIdent { &mut self.ident }
+    fn get_ncp_ident    (&self)     -> NcpIdent     { self.ident }
     fn get_clock_mode   (&self)     -> ClockMode     { self.clk_mode }
     fn set_clock_mode   (&mut self, cm: ClockMode)   { self.clk_mode = cm; }
 
@@ -71,8 +70,7 @@ impl NcpNode for PseudoNode {
 
         let mut final_opr: Option<HcpIdent> = None;
         for (src_node, condition) in dep_list {
-            let src_exit = arena.get_node_exit_opr(&src_node)
-                .expect("PseudoNode dep must have exit_opr");
+            let src_exit = arena.get_node_exit_opr(&src_node);
             let mut opr_per_src = Some(src_exit);
             if let Some(c) = condition {
                 add_logic(arena, &mut opr_per_src, c, LogicOp::BitwiseAnd);
@@ -83,8 +81,7 @@ impl NcpNode for PseudoNode {
         self.exit_expr_i = final_opr;
     }
 
-    fn get_exit_opr     (&self) -> Option<HcpIdent> { self.exit_expr_i }
-    fn get_cycle_used   (&self) -> i32              { 0 }
+    fn get_exit_opr     (&self) -> HcpIdent { self.exit_expr_i.unwrap_or_default() }
     fn is_state_full_node(&self) -> bool            { false }
 }
 
@@ -100,7 +97,7 @@ impl Identifiable for PseudoNode {
 pub struct DummyNode {
     ident    : NcpIdent,
     clk_mode : ClockMode,
-    triggers : NodeTriggerSig,
+    triggers : NodeTrigger,
     value_i  : HcpIdent,
 }
 
@@ -109,7 +106,7 @@ impl Default for DummyNode {
         Self {
             ident   : NcpIdent::new(NodeType::Dummy, false, ""),
             clk_mode: ClockMode::ClkFree,
-            triggers: NodeTriggerSig::new(),
+            triggers: NodeTrigger::new(),
             value_i : HcpIdent::default(),
         }
     }
@@ -120,7 +117,7 @@ impl DummyNode {
         Self {
             ident   : NcpIdent::new(NodeType::Dummy, is_user_com, name),
             clk_mode: ClockMode::ClkFree,
-            triggers: NodeTriggerSig::new(),
+            triggers: NodeTrigger::new(),
             value_i,
         }
     }
@@ -128,13 +125,12 @@ impl DummyNode {
 }
 
 impl HasNodeTriggerSig for DummyNode {
-    fn get_node_triggers    (&self)     -> &NodeTriggerSig     { &self.triggers     }
-    fn get_node_triggers_mut(&mut self) -> &mut NodeTriggerSig { &mut self.triggers }
+    fn get_node_triggers    (&self)     -> &NodeTrigger { &self.triggers     }
+    fn get_node_triggers_mut(&mut self) -> &mut NodeTrigger { &mut self.triggers }
 }
 
 impl NcpNode for DummyNode {
-    fn get_ncp_ident    (&self)     -> &NcpIdent     { &self.ident }
-    fn get_ncp_ident_mut(&mut self) -> &mut NcpIdent { &mut self.ident }
+    fn get_ncp_ident    (&self)     -> NcpIdent     { self.ident }
     fn get_clock_mode   (&self)     -> ClockMode     { self.clk_mode }
     fn set_clock_mode   (&mut self, cm: ClockMode)   { self.clk_mode = cm; }
 
@@ -142,8 +138,7 @@ impl NcpNode for DummyNode {
         assert_eq!(self.triggers.depend_count(), 0, "DummyNode does not accept depend nodes");
     }
 
-    fn get_exit_opr      (&self) -> Option<HcpIdent> { Some(self.value_i) }
-    fn get_cycle_used    (&self) -> i32              { 0 }
+    fn get_exit_opr     (&self) -> HcpIdent { self.value_i }
     fn is_state_full_node(&self) -> bool             { false }
 }
 
@@ -159,7 +154,7 @@ impl Identifiable for DummyNode {
 pub struct OprNode {
     ident    : NcpIdent,
     clk_mode : ClockMode,
-    triggers : NodeTriggerSig,
+    triggers : NodeTrigger,
     value_i  : HcpIdent,
 }
 
@@ -168,7 +163,7 @@ impl Default for OprNode {
         Self {
             ident   : NcpIdent::new(NodeType::Opr, false, ""),
             clk_mode: ClockMode::ClkFree,
-            triggers: NodeTriggerSig::new(),
+            triggers: NodeTrigger::new(),
             value_i : HcpIdent::default(),
         }
     }
@@ -179,7 +174,7 @@ impl OprNode {
         Self {
             ident   : NcpIdent::new(NodeType::Opr, is_user_com, name),
             clk_mode: ClockMode::ClkFree,
-            triggers: NodeTriggerSig::new(),
+            triggers: NodeTrigger::new(),
             value_i,
         }
     }
@@ -187,13 +182,12 @@ impl OprNode {
 }
 
 impl HasNodeTriggerSig for OprNode {
-    fn get_node_triggers    (&self)     -> &NodeTriggerSig     { &self.triggers     }
-    fn get_node_triggers_mut(&mut self) -> &mut NodeTriggerSig { &mut self.triggers }
+    fn get_node_triggers    (&self)     -> &NodeTrigger { &self.triggers     }
+    fn get_node_triggers_mut(&mut self) -> &mut NodeTrigger { &mut self.triggers }
 }
 
 impl NcpNode for OprNode {
-    fn get_ncp_ident    (&self)     -> &NcpIdent     { &self.ident }
-    fn get_ncp_ident_mut(&mut self) -> &mut NcpIdent { &mut self.ident }
+    fn get_ncp_ident    (&self)     -> NcpIdent     { self.ident }
     fn get_clock_mode   (&self)     -> ClockMode     { self.clk_mode }
     fn set_clock_mode   (&mut self, cm: ClockMode)   { self.clk_mode = cm; }
 
@@ -201,8 +195,7 @@ impl NcpNode for OprNode {
         assert_eq!(self.triggers.depend_count(), 0, "OprNode does not accept depend nodes");
     }
 
-    fn get_exit_opr      (&self) -> Option<HcpIdent> { Some(self.value_i) }
-    fn get_cycle_used    (&self) -> i32              { 0 }
+    fn get_exit_opr     (&self) -> HcpIdent { self.value_i }
     fn is_state_full_node(&self) -> bool             { false }
 }
 

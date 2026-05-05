@@ -5,7 +5,7 @@ use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::hw_component::sp_reg::trigger_sig::HasTriggerSig;
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_base::{
-    HasNodeTriggerSig, NcpNode, NodeTriggerSig, NODE_CYCLE_USED_UNKNOWN,
+    HasNodeTriggerSig, NcpNode, NodeTrigger, NODE_CYCLE_USED_UNKNOWN,
 };
 use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
 use crate::params::MAX_DEPEND_NODES;
@@ -15,7 +15,7 @@ use crate::params::MAX_DEPEND_NODES;
 pub struct StateNode {
     ident           : NcpIdent,
     clk_mode        : ClockMode,
-    triggers        : NodeTriggerSig,
+    triggers        : NodeTrigger,
     state_reg_i     : HcpIdent,
     state_op_i      : Option<HcpIdent>,
     bound_exit_i    : Option<HcpIdent>,
@@ -30,7 +30,7 @@ impl Default for StateNode {
         Self {
             ident          : NcpIdent::new(NodeType::State, false, ""),
             clk_mode       : ClockMode::PosEdge,
-            triggers       : NodeTriggerSig::new(),
+            triggers       : NodeTrigger::new(),
             state_reg_i    : HcpIdent::default(),
             state_op_i     : None,
             bound_exit_i   : None,
@@ -47,7 +47,7 @@ impl StateNode {
         Self {
             ident          : NcpIdent::new(NodeType::State, is_user_com, name),
             clk_mode,
-            triggers       : NodeTriggerSig::new(),
+            triggers       : NodeTrigger::new(),
             state_reg_i,
             state_op_i     : None,
             bound_exit_i   : None,
@@ -68,13 +68,12 @@ impl StateNode {
 }
 
 impl HasNodeTriggerSig for StateNode {
-    fn get_node_triggers    (&self)     -> &NodeTriggerSig     { &self.triggers     }
-    fn get_node_triggers_mut(&mut self) -> &mut NodeTriggerSig { &mut self.triggers }
+    fn get_node_triggers    (&self)     -> &NodeTrigger { &self.triggers     }
+    fn get_node_triggers_mut(&mut self) -> &mut NodeTrigger { &mut self.triggers }
 }
 
 impl NcpNode for StateNode {
-    fn get_ncp_ident    (&self)     -> &NcpIdent     { &self.ident }
-    fn get_ncp_ident_mut(&mut self) -> &mut NcpIdent { &mut self.ident }
+    fn get_ncp_ident    (&self)     -> NcpIdent     { self.ident }
     fn get_clock_mode   (&self)     -> ClockMode     { self.clk_mode }
     fn set_clock_mode   (&mut self, cm: ClockMode)   { self.clk_mode = cm; }
 
@@ -83,13 +82,12 @@ impl NcpNode for StateNode {
 
         let dep_list: Vec<(NcpIdent, Option<HcpIdent>)> =
             self.triggers.iter_depend_nodes().collect();
-        let hold_sig    = self.get_hold_node().and_then(|h| arena.get_node_exit_opr(&h));
-        let int_rst_sig = self.get_int_reset().and_then(|h| arena.get_node_exit_opr(&h));
+        let hold_sig    = self.get_hold_node().map(|h| arena.get_node_exit_opr(&h));
+        let int_rst_sig = self.get_int_reset_node().map(|h| arena.get_node_exit_opr(&h));
 
         let mut sr = arena.take_state_reg(h);
         for (src_node, condition) in dep_list {
-            let src_exit = arena.get_node_exit_opr(&src_node)
-                .expect("StateNode dep must have exit_opr");
+            let src_exit = arena.get_node_exit_opr(&src_node);
             sr.add_depend_node(src_exit, condition);
         }
         if let Some(hs) = hold_sig    { sr.set_hold_sig_i(hs); }
@@ -104,11 +102,8 @@ impl NcpNode for StateNode {
         self.bound_exit_i = Some(bound_all);
     }
 
-    fn get_exit_opr       (&self) -> Option<HcpIdent> { self.bound_exit_i.or(self.state_op_i) }
-    fn get_state_operating(&self) -> Option<HcpIdent> { self.state_op_i }
-    fn get_cycle_used     (&self) -> i32 {
-        if self.is_there_hold() { NODE_CYCLE_USED_UNKNOWN } else { 1 }
-    }
+    fn get_exit_opr       (&self) -> HcpIdent { self.bound_exit_i.or(self.state_op_i).unwrap_or_default() }
+    fn get_state_operating(&self) -> HcpIdent { self.state_op_i.unwrap_or_default() }
 }
 
 impl Identifiable for StateNode {
@@ -122,7 +117,7 @@ impl Identifiable for StateNode {
 pub struct SynNode {
     ident           : NcpIdent,
     clk_mode        : ClockMode,
-    triggers        : NodeTriggerSig,
+    triggers        : NodeTrigger,
     sync_reg_i      : HcpIdent,
     syn_size        : i32,
     force_exit_node : Option<NcpIdent>,
@@ -135,7 +130,7 @@ impl Default for SynNode {
         Self {
             ident          : NcpIdent::new(NodeType::Syn, false, ""),
             clk_mode       : ClockMode::PosEdge,
-            triggers       : NodeTriggerSig::new(),
+            triggers       : NodeTrigger::new(),
             sync_reg_i     : HcpIdent::default(),
             syn_size       : 1,
             force_exit_node: None,
@@ -152,7 +147,7 @@ impl SynNode {
         Self {
             ident          : NcpIdent::new(NodeType::Syn, is_user_com, name),
             clk_mode,
-            triggers       : NodeTriggerSig::new(),
+            triggers       : NodeTrigger::new(),
             sync_reg_i,
             syn_size,
             force_exit_node: None,
@@ -167,20 +162,19 @@ impl SynNode {
 }
 
 impl HasNodeTriggerSig for SynNode {
-    fn get_node_triggers    (&self)     -> &NodeTriggerSig     { &self.triggers     }
-    fn get_node_triggers_mut(&mut self) -> &mut NodeTriggerSig { &mut self.triggers }
+    fn get_node_triggers    (&self)     -> &NodeTrigger { &self.triggers     }
+    fn get_node_triggers_mut(&mut self) -> &mut NodeTrigger { &mut self.triggers }
 }
 
 impl NcpNode for SynNode {
-    fn get_ncp_ident    (&self)     -> &NcpIdent     { &self.ident }
-    fn get_ncp_ident_mut(&mut self) -> &mut NcpIdent { &mut self.ident }
+    fn get_ncp_ident    (&self)     -> NcpIdent     { self.ident }
     fn get_clock_mode   (&self)     -> ClockMode     { self.clk_mode }
     fn set_clock_mode   (&mut self, cm: ClockMode)   { self.clk_mode = cm; }
 
     fn assign(&mut self, arena: &mut ModelArena) {
         // pre-compute force-exit inverter (sense: "not force-exit")
         let force_exit_inv: Option<HcpIdent> = if let Some(fe) = self.force_exit_node {
-            let fe_exit = arena.get_node_exit_opr(&fe).expect("force exit node must have exit_opr");
+            let fe_exit = arena.get_node_exit_opr(&fe);
             Some(arena.make_expression(
                 &format!("{}_FE_INV", self.ident.get_ident_base().get_name()),
                 LogicOp::BitwiseInvr, fe_exit, fe_exit,
@@ -190,17 +184,16 @@ impl NcpNode for SynNode {
 
         let dep_list: Vec<(NcpIdent, Option<HcpIdent>)> =
             self.triggers.iter_depend_nodes().collect();
-        let int_rst_sig = self.get_int_reset()
-            .and_then(|h| arena.get_node_exit_opr(&h));
+        let int_rst_sig = self.get_int_reset_node()
+            .map(|h| arena.get_node_exit_opr(&h));
         let force_exit_exit = self.force_exit_node
-            .and_then(|h| arena.get_node_exit_opr(&h));
+            .map(|h| arena.get_node_exit_opr(&h));
 
         let h = *self.sync_reg_i.get_arena_handle();
         let mut sy = arena.take_sync_reg(h);
         for (src_node, cond) in dep_list {
             assert!(cond.is_none(), "SynNode dep nodes must not carry condition");
-            let src_exit = arena.get_node_exit_opr(&src_node)
-                .expect("SynNode dep must have exit_opr");
+            let src_exit = arena.get_node_exit_opr(&src_node);
             sy.add_depend_node(src_exit, force_exit_inv);
         }
         if let Some(rs) = int_rst_sig    { sy.set_rst_sig_i(rs); }
@@ -216,8 +209,7 @@ impl NcpNode for SynNode {
         self.bound_exit_i = Some(bound);
     }
 
-    fn get_exit_opr      (&self) -> Option<HcpIdent> { self.bound_exit_i.or(self.end_expr_i) }
-    fn get_cycle_used    (&self) -> i32              { 1 }
+    fn get_exit_opr  (&self) -> HcpIdent { self.bound_exit_i.or(self.end_expr_i).unwrap_or_default() }
     fn is_state_full_node(&self) -> bool             { false }
 }
 

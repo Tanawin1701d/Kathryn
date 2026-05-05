@@ -5,7 +5,7 @@ use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_base::{
-    add_logic_with_output, HasNodeTriggerSig, NcpNode, NodeTriggerSig,
+    add_logic_with_output, HasNodeTriggerSig, NcpNode, NodeTrigger,
 };
 use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
 use crate::params::MAX_DEPEND_NODES;
@@ -19,7 +19,7 @@ pub const MAX_ASSIGN_METAS: usize = MAX_DEPEND_NODES;
 pub struct AsmNode {
     ident         : NcpIdent,
     clk_mode      : ClockMode,
-    triggers      : NodeTriggerSig,
+    triggers      : NodeTrigger,
     asm_metas     : [Option<AssignMeta>; MAX_ASSIGN_METAS],
     asm_metas_len : usize,
 }
@@ -29,7 +29,7 @@ impl Default for AsmNode {
         Self {
             ident        : NcpIdent::new(NodeType::Asm, false, ""),
             clk_mode     : ClockMode::ClkUnused,
-            triggers     : NodeTriggerSig::new(),
+            triggers     : NodeTrigger::new(),
             asm_metas    : [None; MAX_ASSIGN_METAS],
             asm_metas_len: 0,
         }
@@ -41,7 +41,7 @@ impl AsmNode {
         let mut node = Self {
             ident        : NcpIdent::new(NodeType::Asm, is_user_com, name),
             clk_mode     : ClockMode::ClkUnused,
-            triggers     : NodeTriggerSig::new(),
+            triggers     : NodeTrigger::new(),
             asm_metas    : [None; MAX_ASSIGN_METAS],
             asm_metas_len: 0,
         };
@@ -55,7 +55,7 @@ impl AsmNode {
         let mut node = Self {
             ident        : NcpIdent::new(NodeType::Asm, is_user_com, name),
             clk_mode     : ClockMode::ClkUnused,
-            triggers     : NodeTriggerSig::new(),
+            triggers     : NodeTrigger::new(),
             asm_metas    : [None; MAX_ASSIGN_METAS],
             asm_metas_len: 0,
         };
@@ -94,7 +94,7 @@ impl AsmNode {
         assert!(self.asm_metas_len > 0);
 
         let (parent, condition) = self.triggers.iter_depend_nodes().next().unwrap();
-        let parent_state_op = arena.get_node_state_operating(&parent);
+        let parent_state_op = Some(arena.get_node_state_operating(&parent));
 
         let mut cond_event: Option<HcpIdent> = condition;
         if let Some(hs) = hold_signal {
@@ -119,13 +119,12 @@ impl AsmNode {
 }
 
 impl HasNodeTriggerSig for AsmNode {
-    fn get_node_triggers    (&self)     -> &NodeTriggerSig     { &self.triggers     }
-    fn get_node_triggers_mut(&mut self) -> &mut NodeTriggerSig { &mut self.triggers }
+    fn get_node_triggers    (&self)     -> &NodeTrigger { &self.triggers     }
+    fn get_node_triggers_mut(&mut self) -> &mut NodeTrigger { &mut self.triggers }
 }
 
 impl NcpNode for AsmNode {
-    fn get_ncp_ident    (&self)     -> &NcpIdent     { &self.ident }
-    fn get_ncp_ident_mut(&mut self) -> &mut NcpIdent { &mut self.ident }
+    fn get_ncp_ident    (&self)     -> NcpIdent     { self.ident }
     fn get_clock_mode   (&self)     -> ClockMode     { self.clk_mode }
     fn set_clock_mode   (&mut self, cm: ClockMode)   { self.clk_mode = cm; }
 
@@ -146,7 +145,6 @@ impl NcpNode for AsmNode {
         }
     }
 
-    fn get_cycle_used(&self) -> i32 { 1 }
 }
 
 impl Identifiable for AsmNode {

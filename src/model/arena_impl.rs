@@ -58,7 +58,6 @@ impl ModelArena {
             syn_nodes        : ArenaGroup::new(),
             wait_cond_nodes  : ArenaGroup::new(),
             wait_cycle_nodes : ArenaGroup::new(),
-            start_nodes      : ArenaGroup::new(),
             counter_nodes    : ArenaGroup::new(),
             pseudo_nodes     : ArenaGroup::new(),
             dummy_nodes      : ArenaGroup::new(),
@@ -87,7 +86,6 @@ impl ModelArena {
         self.syn_nodes        = ArenaGroup::new();
         self.wait_cond_nodes  = ArenaGroup::new();
         self.wait_cycle_nodes = ArenaGroup::new();
-        self.start_nodes      = ArenaGroup::new();
         self.counter_nodes    = ArenaGroup::new();
         self.pseudo_nodes     = ArenaGroup::new();
         self.dummy_nodes      = ArenaGroup::new();

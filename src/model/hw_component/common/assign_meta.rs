@@ -6,8 +6,8 @@ use crate::model::model_arena::ModelArena;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct AssignMeta {
     target_hwc      : HcpIdent,
-    input_event_i   : Option<UpdateEventIdent>,
-    pre_update_event: UpdateEventIdent,
+    input_event_i   : Option<UpdateEventIdent>, // the basicUpdateEvent of the target HWC, if tehre is complex assignment if () {...} this value should be None
+    pre_update_event: UpdateEventIdent,         // the latest update event that has been assigned to the target HWC
     finished        : bool,
 }
 

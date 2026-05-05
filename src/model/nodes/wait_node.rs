@@ -4,7 +4,7 @@ use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::sp_reg::trigger_sig::HasTriggerSig;
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_base::{
-    HasNodeTriggerSig, NcpNode, NodeTriggerSig,
+    HasNodeTriggerSig, NcpNode, NodeTrigger,
     IN_CONSIST_CYCLE_USED, NODE_CYCLE_USED_UNKNOWN,
 };
 use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
@@ -14,7 +14,7 @@ use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
 pub struct WaitCondNode {
     ident            : NcpIdent,
     clk_mode         : ClockMode,
-    triggers         : NodeTriggerSig,
+    triggers         : NodeTrigger,
     cond_wait_reg_i  : HcpIdent,
     end_expr_i       : Option<HcpIdent>,
     raw_state_op_i   : Option<HcpIdent>,
@@ -26,7 +26,7 @@ impl Default for WaitCondNode {
         Self {
             ident          : NcpIdent::new(NodeType::WaitCond, false, ""),
             clk_mode       : ClockMode::PosEdge,
-            triggers       : NodeTriggerSig::new(),
+            triggers       : NodeTrigger::new(),
             cond_wait_reg_i: HcpIdent::default(),
             end_expr_i     : None,
             raw_state_op_i : None,
@@ -41,7 +41,7 @@ impl WaitCondNode {
         Self {
             ident          : NcpIdent::new(NodeType::WaitCond, is_user_com, name),
             clk_mode,
-            triggers       : NodeTriggerSig::new(),
+            triggers       : NodeTrigger::new(),
             cond_wait_reg_i,
             end_expr_i     : None,
             raw_state_op_i : None,
@@ -53,13 +53,12 @@ impl WaitCondNode {
 }
 
 impl HasNodeTriggerSig for WaitCondNode {
-    fn get_node_triggers    (&self)     -> &NodeTriggerSig     { &self.triggers     }
-    fn get_node_triggers_mut(&mut self) -> &mut NodeTriggerSig { &mut self.triggers }
+    fn get_node_triggers    (&self)     -> &NodeTrigger { &self.triggers     }
+    fn get_node_triggers_mut(&mut self) -> &mut NodeTrigger { &mut self.triggers }
 }
 
 impl NcpNode for WaitCondNode {
-    fn get_ncp_ident    (&self)     -> &NcpIdent     { &self.ident }
-    fn get_ncp_ident_mut(&mut self) -> &mut NcpIdent { &mut self.ident }
+    fn get_ncp_ident    (&self)     -> NcpIdent     { self.ident }
     fn get_clock_mode   (&self)     -> ClockMode     { self.clk_mode }
     fn set_clock_mode   (&mut self, cm: ClockMode)   { self.clk_mode = cm; }
 
@@ -71,13 +70,12 @@ impl NcpNode for WaitCondNode {
 
         let dep_list: Vec<(NcpIdent, Option<HcpIdent>)> =
             self.triggers.iter_depend_nodes().collect();
-        let int_rst_exit = self.get_int_reset()
-            .and_then(|ir| arena.get_node_exit_opr(&ir));
+        let int_rst_exit = self.get_int_reset_node()
+            .map(|ir| arena.get_node_exit_opr(&ir));
 
         let mut cw = arena.take_cond_wait_reg(h);
         for (src_node, condition) in dep_list {
-            let src_exit = arena.get_node_exit_opr(&src_node)
-                .expect("WaitCondNode dep must have exit_opr");
+            let src_exit = arena.get_node_exit_opr(&src_node);
             cw.add_depend_node(src_exit, condition);
         }
         if let Some(rst_exit) = int_rst_exit { cw.set_rst_sig_i(rst_exit); }
@@ -93,9 +91,8 @@ impl NcpNode for WaitCondNode {
         self.bound_exit_i   = Some(bound_all);
     }
 
-    fn get_exit_opr       (&self) -> Option<HcpIdent> { self.bound_exit_i.or(self.end_expr_i) }
-    fn get_state_operating(&self) -> Option<HcpIdent> { self.raw_state_op_i }
-    fn get_cycle_used     (&self) -> i32              { NODE_CYCLE_USED_UNKNOWN }
+    fn get_exit_opr  (&self) -> HcpIdent { self.bound_exit_i.or(self.end_expr_i).unwrap_or_default() }
+    fn get_state_operating(&self) -> HcpIdent { self.raw_state_op_i.unwrap_or_default() }
 }
 
 impl Identifiable for WaitCondNode {
@@ -109,7 +106,7 @@ impl Identifiable for WaitCondNode {
 pub struct WaitCycleNode {
     ident            : NcpIdent,
     clk_mode         : ClockMode,
-    triggers         : NodeTriggerSig,
+    triggers         : NodeTrigger,
     cycle_wait_reg_i : HcpIdent,
     cycle            : Option<i32>,
     end_expr_i       : Option<HcpIdent>,
@@ -121,7 +118,7 @@ impl Default for WaitCycleNode {
         Self {
             ident           : NcpIdent::new(NodeType::WaitCycle, false, ""),
             clk_mode        : ClockMode::PosEdge,
-            triggers        : NodeTriggerSig::new(),
+            triggers        : NodeTrigger::new(),
             cycle_wait_reg_i: HcpIdent::default(),
             cycle           : None,
             end_expr_i      : None,
@@ -137,7 +134,7 @@ impl WaitCycleNode {
         Self {
             ident           : NcpIdent::new(NodeType::WaitCycle, is_user_com, name),
             clk_mode,
-            triggers        : NodeTriggerSig::new(),
+            triggers        : NodeTrigger::new(),
             cycle_wait_reg_i: reg_i,
             cycle           : Some(cycle),
             end_expr_i      : None,
@@ -150,7 +147,7 @@ impl WaitCycleNode {
         Self {
             ident           : NcpIdent::new(NodeType::WaitCycle, is_user_com, name),
             clk_mode,
-            triggers        : NodeTriggerSig::new(),
+            triggers        : NodeTrigger::new(),
             cycle_wait_reg_i: reg_i,
             cycle           : None,
             end_expr_i      : None,
@@ -162,13 +159,12 @@ impl WaitCycleNode {
 }
 
 impl HasNodeTriggerSig for WaitCycleNode {
-    fn get_node_triggers    (&self)     -> &NodeTriggerSig     { &self.triggers     }
-    fn get_node_triggers_mut(&mut self) -> &mut NodeTriggerSig { &mut self.triggers }
+    fn get_node_triggers    (&self)     -> &NodeTrigger { &self.triggers     }
+    fn get_node_triggers_mut(&mut self) -> &mut NodeTrigger { &mut self.triggers }
 }
 
 impl NcpNode for WaitCycleNode {
-    fn get_ncp_ident    (&self)     -> &NcpIdent     { &self.ident }
-    fn get_ncp_ident_mut(&mut self) -> &mut NcpIdent { &mut self.ident }
+    fn get_ncp_ident    (&self)     -> NcpIdent     { self.ident }
     fn get_clock_mode   (&self)     -> ClockMode     { self.clk_mode }
     fn set_clock_mode   (&mut self, cm: ClockMode)   { self.clk_mode = cm; }
 
@@ -178,13 +174,12 @@ impl NcpNode for WaitCycleNode {
 
         let dep_list: Vec<(NcpIdent, Option<HcpIdent>)> =
             self.triggers.iter_depend_nodes().collect();
-        let hold_sig_i  = self.get_hold_node().and_then(|h| arena.get_node_exit_opr(&h));
-        let int_rst_sig = self.get_int_reset().and_then(|h| arena.get_node_exit_opr(&h));
+        let hold_sig_i  = self.get_hold_node().map(|h| arena.get_node_exit_opr(&h));
+        let int_rst_sig = self.get_int_reset_node().map(|h| arena.get_node_exit_opr(&h));
 
         let mut cw = arena.take_cycle_wait_reg(h);
         for (src_node, condition) in dep_list {
-            let src_exit = arena.get_node_exit_opr(&src_node)
-                .expect("WaitCycleNode dep must have exit_opr");
+            let src_exit = arena.get_node_exit_opr(&src_node);
             cw.add_depend_node(src_exit, condition);
         }
         if let Some(hs) = hold_sig_i  { cw.set_hold_sig_i(hs); }
@@ -201,11 +196,7 @@ impl NcpNode for WaitCycleNode {
         self.bound_exit_i = Some(bound_all);
     }
 
-    fn get_exit_opr  (&self) -> Option<HcpIdent> { self.bound_exit_i.or(self.end_expr_i) }
-    fn get_cycle_used(&self) -> i32 {
-        if self.is_there_hold() { return IN_CONSIST_CYCLE_USED; }
-        self.cycle.unwrap_or(NODE_CYCLE_USED_UNKNOWN)
-    }
+    fn get_exit_opr  (&self) -> HcpIdent { self.bound_exit_i.or(self.end_expr_i).unwrap_or_default() }
 }
 
 impl Identifiable for WaitCycleNode {

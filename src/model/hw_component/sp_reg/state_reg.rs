@@ -71,8 +71,8 @@ impl StateReg {
         self.add_update_event(ue);
 
         // create the update event for the set signal
-        let nodes = self.triggers;
-        for (srci, condi) in nodes.iter_depend_nodes() {
+        let nodes: Vec<_> = self.triggers.iter_depend_nodes().collect();
+        for (srci, condi) in nodes {
             let des_slice = self.get_des_slice();
             let src_slice = src_sl;
             let priority = DEFAULT_UE_PRI_SR_SET;

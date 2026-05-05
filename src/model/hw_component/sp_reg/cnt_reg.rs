@@ -123,8 +123,8 @@ impl CntReg {
 
 
         // increment signal
-        let nodes = self.triggers;
-        for (srci, condi) in nodes.iter_depend_nodes() {
+        let nodes: Vec<_> = self.triggers.iter_depend_nodes().collect();
+        for (srci, condi) in nodes {
             let priority = DEFAULT_UE_PRI_CNT_INC;
             let cm = self.retrieve_clk_mode();
             let ue = model_ar.make_ue_full(

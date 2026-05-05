@@ -138,8 +138,8 @@ impl SyncReg {
 
         // create the update event for the set signal
         let mut fill_bit_idx: i32 = 0;
-        let nodes = self.triggers;
-        for (srci, condi) in nodes.iter_depend_nodes() {
+        let nodes: Vec<_> = self.triggers.iter_depend_nodes().collect();
+        for (srci, condi) in nodes {
             let des_sl = Slice::new(fill_bit_idx, fill_bit_idx + 1);
 
             // actual condition = should we update this bit into register?

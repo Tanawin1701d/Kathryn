@@ -129,8 +129,8 @@ impl CondWaitStateReg {
         self.add_update_event(ue_unset);
 
         // activate: createUE(activateCond, dependState, upState, {0,1}, MAX, cm)
-        let nodes = self.triggers;
-        for (srci, condi) in nodes.iter_depend_nodes() {
+        let nodes: Vec<_> = self.triggers.iter_depend_nodes().collect();
+        for (srci, condi) in nodes {
             let ue = model_ar.make_ue_full(
                 condi                , Some(srci)              , up_state_i,
                 bit_sl               , bit_sl        ,
@@ -408,8 +408,8 @@ impl CycleWaitStateReg {
         self.add_update_event(ue_unset);
 
         // set/activate: on trigger, load start_cnt
-        let nodes = self.triggers;
-        for (srci, condi) in nodes.iter_depend_nodes() {
+        let nodes: Vec<_> = self.triggers.iter_depend_nodes().collect();
+        for (srci, condi) in nodes {
             let ue = model_ar.make_ue_full(
                 condi, Some(srci), start_cnt_i,
                 full_sl, full_sl,

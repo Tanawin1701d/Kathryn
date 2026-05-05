@@ -3,7 +3,7 @@ use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::sp_reg::trigger_sig::HasTriggerSig;
 use crate::model::model_arena::ModelArena;
-use crate::model::nodes::ncp_base::{HasNodeTriggerSig, NcpNode, NodeTriggerSig};
+use crate::model::nodes::ncp_base::{HasNodeTriggerSig, NcpNode, NodeTrigger};
 use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
 
 /// Cycle-counting node: wraps a `CntReg` that wraps once `last_loop_cnt` is
@@ -12,7 +12,7 @@ use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
 pub struct CounterNode {
     ident      : NcpIdent,
     clk_mode   : ClockMode,
-    triggers   : NodeTriggerSig,
+    triggers   : NodeTrigger,
     cnt_reg_i  : HcpIdent,
     last_loop  : i32,
     end_expr_i : Option<HcpIdent>,
@@ -23,7 +23,7 @@ impl Default for CounterNode {
         Self {
             ident     : NcpIdent::new(NodeType::Counter, false, ""),
             clk_mode  : ClockMode::PosEdge,
-            triggers  : NodeTriggerSig::new(),
+            triggers  : NodeTrigger::new(),
             cnt_reg_i : HcpIdent::default(),
             last_loop : 1,
             end_expr_i: None,
@@ -38,7 +38,7 @@ impl CounterNode {
         Self {
             ident     : NcpIdent::new(NodeType::Counter, is_user_com, name),
             clk_mode,
-            triggers  : NodeTriggerSig::new(),
+            triggers  : NodeTrigger::new(),
             cnt_reg_i,
             last_loop : last_loop_cnt,
             end_expr_i: None,
@@ -49,13 +49,12 @@ impl CounterNode {
 }
 
 impl HasNodeTriggerSig for CounterNode {
-    fn get_node_triggers    (&self)     -> &NodeTriggerSig     { &self.triggers     }
-    fn get_node_triggers_mut(&mut self) -> &mut NodeTriggerSig { &mut self.triggers }
+    fn get_node_triggers    (&self)     -> &NodeTrigger { &self.triggers     }
+    fn get_node_triggers_mut(&mut self) -> &mut NodeTrigger { &mut self.triggers }
 }
 
 impl NcpNode for CounterNode {
-    fn get_ncp_ident    (&self)     -> &NcpIdent     { &self.ident }
-    fn get_ncp_ident_mut(&mut self) -> &mut NcpIdent { &mut self.ident }
+    fn get_ncp_ident    (&self)     -> NcpIdent     { self.ident }
     fn get_clock_mode   (&self)     -> ClockMode     { self.clk_mode }
     fn set_clock_mode   (&mut self, cm: ClockMode)   { self.clk_mode = cm; }
 
@@ -64,13 +63,12 @@ impl NcpNode for CounterNode {
 
         let dep_list: Vec<(NcpIdent, Option<HcpIdent>)> =
             self.triggers.iter_depend_nodes().collect();
-        let int_rst_exit = self.get_int_reset()
-            .and_then(|ir| arena.get_node_exit_opr(&ir));
+        let int_rst_exit = self.get_int_reset_node()
+            .map(|ir| arena.get_node_exit_opr(&ir));
 
         let mut cr = arena.take_cnt_reg(cnt_h);
         for (src_node, condition) in dep_list {
-            let src_exit = arena.get_node_exit_opr(&src_node)
-                .expect("CounterNode dep must have exit_opr");
+            let src_exit = arena.get_node_exit_opr(&src_node);
             cr.add_depend_node(src_exit, condition);
         }
         if let Some(rst_exit) = int_rst_exit { cr.set_rst_sig_i(rst_exit); }
@@ -82,8 +80,7 @@ impl NcpNode for CounterNode {
         self.end_expr_i = Some(end_expr);
     }
 
-    fn get_exit_opr  (&self) -> Option<HcpIdent> { self.end_expr_i }
-    fn get_cycle_used(&self) -> i32              { self.last_loop }
+    fn get_exit_opr  (&self) -> HcpIdent { self.end_expr_i.unwrap_or_default() }
 }
 
 impl Identifiable for CounterNode {
