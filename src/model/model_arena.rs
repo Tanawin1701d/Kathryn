@@ -15,6 +15,7 @@ use crate::model::nodes::cnt_node::CounterNode;
 use crate::model::nodes::logic_node::{DummyNode, OprNode, PseudoNode};
 use crate::model::nodes::state_node::{StateNode, SynNode};
 use crate::model::nodes::wait_node::{WaitCondNode, WaitCycleNode};
+use crate::model::module::module::Module;
 
 pub struct ModelArena {
 
@@ -47,4 +48,7 @@ pub struct ModelArena {
     pub(super) pseudo_nodes     : ArenaGroup<PseudoNode>,
     pub(super) dummy_nodes      : ArenaGroup<DummyNode>,
     pub(super) opr_nodes        : ArenaGroup<OprNode>,
+
+    // module arena
+    pub(super) modules          : ArenaGroup<Module>,
 }

@@ -14,6 +14,8 @@ use crate::model::hw_component::sp_reg::sync_reg::SyncReg;
 use crate::model::hw_component::sp_reg::state_reg::StateReg;
 use crate::model::hw_component::sp_reg::wait_reg::{CondWaitStateReg, CycleWaitStateReg};
 use crate::model::model_arena::ModelArena;
+use crate::model::module::module::Module;
+use crate::model::module::module_ident::ModuleIdent;
 
 macro_rules! dispatch_hcp {
     ($self:expr, $hcpIdent:expr, $method:ident) => {{
@@ -62,6 +64,7 @@ impl ModelArena {
             pseudo_nodes     : ArenaGroup::new(),
             dummy_nodes      : ArenaGroup::new(),
             opr_nodes        : ArenaGroup::new(),
+            modules          : ArenaGroup::new(),
         }
     }
 
@@ -90,6 +93,7 @@ impl ModelArena {
         self.pseudo_nodes     = ArenaGroup::new();
         self.dummy_nodes      = ArenaGroup::new();
         self.opr_nodes        = ArenaGroup::new();
+        self.modules          = ArenaGroup::new();
     }
 
     // -----------------------------------------------------------------------
@@ -176,4 +180,18 @@ impl ModelArena {
     pub fn replace_back_cnt_reg  (&mut self, h: HcpIdent, v: CntReg)     { self.cnt_regs   .replace_back(*h.get_arena_handle(), v) }
     pub fn replace_back_cond_wait_reg (&mut self, h: HcpIdent, v: CondWaitStateReg)  { self.cond_wait_regs .replace_back(*h.get_arena_handle(), v) }
     pub fn replace_back_cycle_wait_reg(&mut self, h: HcpIdent, v: CycleWaitStateReg) { self.cycle_wait_regs.replace_back(*h.get_arena_handle(), v) }
+
+    // -----------------------------------------------------------------------
+    // Module insert / get / take / replace_back
+    // -----------------------------------------------------------------------
+    pub fn add_module(&mut self, m: Module) -> ModuleIdent {
+        let h = self.modules.insert(m);
+        self.modules.get(h).get_ident()
+    }
+
+    pub fn get_module     (&self,     i: ModuleIdent) -> &Module     { self.modules.get    (*i.get_arena_handle()) }
+    pub fn get_module_mut (&mut self, i: ModuleIdent) -> &mut Module { self.modules.get_mut(*i.get_arena_handle()) }
+
+    pub fn take_module        (&mut self, i: ModuleIdent)         -> Module { self.modules.take(*i.get_arena_handle()) }
+    pub fn replace_back_module(&mut self, i: ModuleIdent, v: Module)        { self.modules.replace_back(*i.get_arena_handle(), v) }
 }
