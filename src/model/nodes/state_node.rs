@@ -78,14 +78,12 @@ impl NcpNode for StateNode {
     fn set_clock_mode   (&mut self, cm: ClockMode)   { self.clk_mode = cm; }
 
     fn assign(&mut self, arena: &mut ModelArena) {
-        let h = *self.state_reg_i.get_arena_handle();
-
         let dep_list: Vec<(NcpIdent, Option<HcpIdent>)> =
             self.triggers.iter_depend_nodes().collect();
         let hold_sig    = self.get_hold_node().map(|h| arena.get_node_exit_opr(&h));
         let int_rst_sig = self.get_int_reset_node().map(|h| arena.get_node_exit_opr(&h));
 
-        let mut sr = arena.take_state_reg(h);
+        let mut sr = arena.take_state_reg(self.state_reg_i);
         for (src_node, condition) in dep_list {
             let src_exit = arena.get_node_exit_opr(&src_node);
             sr.add_depend_node(src_exit, condition);
@@ -94,7 +92,7 @@ impl NcpNode for StateNode {
         if let Some(rs) = int_rst_sig { sr.set_rst_sig_i(rs);  }
         sr.build_update_event(arena);
         let raw_state_op = sr.get_ident();
-        arena.replace_back_state_reg(h, sr);
+        arena.replace_back_state_reg(self.state_reg_i, sr);
 
         let bound_rst = self.bind_with_rst_output_if_reset(arena, raw_state_op);
         let bound_all = self.bind_with_hold_if_hold(arena, bound_rst);
@@ -189,8 +187,7 @@ impl NcpNode for SynNode {
         let force_exit_exit = self.force_exit_node
             .map(|h| arena.get_node_exit_opr(&h));
 
-        let h = *self.sync_reg_i.get_arena_handle();
-        let mut sy = arena.take_sync_reg(h);
+        let mut sy = arena.take_sync_reg(self.sync_reg_i);
         for (src_node, cond) in dep_list {
             assert!(cond.is_none(), "SynNode dep nodes must not carry condition");
             let src_exit = arena.get_node_exit_opr(&src_node);
@@ -202,7 +199,7 @@ impl NcpNode for SynNode {
         sy.build_support_signal(arena);
         sy.build_update_event(arena);
         let end_expr = sy.get_end_expr_i().expect("end_expr after build");
-        arena.replace_back_sync_reg(h, sy);
+        arena.replace_back_sync_reg(self.sync_reg_i, sy);
 
         let bound = self.bind_with_rst_output_if_reset(arena, end_expr);
         self.end_expr_i   = Some(end_expr);

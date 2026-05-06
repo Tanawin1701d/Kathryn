@@ -65,7 +65,6 @@ impl NcpNode for WaitCondNode {
     fn assign(&mut self, arena: &mut ModelArena) {
         assert!(self.triggers.depend_count() > 0, "WaitCondNode requires at least one depend node");
 
-        let h = *self.cond_wait_reg_i.get_arena_handle();
         let cm = self.clk_mode;
 
         let dep_list: Vec<(NcpIdent, Option<HcpIdent>)> =
@@ -73,7 +72,7 @@ impl NcpNode for WaitCondNode {
         let int_rst_exit = self.get_int_reset_node()
             .map(|ir| arena.get_node_exit_opr(&ir));
 
-        let mut cw = arena.take_cond_wait_reg(h);
+        let mut cw = arena.take_cond_wait_reg(self.cond_wait_reg_i);
         for (src_node, condition) in dep_list {
             let src_exit = arena.get_node_exit_opr(&src_node);
             cw.add_depend_node(src_exit, condition);
@@ -82,7 +81,7 @@ impl NcpNode for WaitCondNode {
         cw.build_support_signal(arena);
         cw.build_update_event(arena, cm);
         let end_expr = cw.generate_end_expr();
-        arena.replace_back_cond_wait_reg(h, cw);
+        arena.replace_back_cond_wait_reg(self.cond_wait_reg_i, cw);
 
         let bound_rst = self.bind_with_rst_output_if_reset(arena, end_expr);
         let bound_all = self.bind_with_hold_if_hold(arena, bound_rst);
@@ -169,7 +168,6 @@ impl NcpNode for WaitCycleNode {
     fn set_clock_mode   (&mut self, cm: ClockMode)   { self.clk_mode = cm; }
 
     fn assign(&mut self, arena: &mut ModelArena) {
-        let h = *self.cycle_wait_reg_i.get_arena_handle();
         let cm = self.clk_mode;
 
         let dep_list: Vec<(NcpIdent, Option<HcpIdent>)> =
@@ -177,7 +175,7 @@ impl NcpNode for WaitCycleNode {
         let hold_sig_i  = self.get_hold_node().map(|h| arena.get_node_exit_opr(&h));
         let int_rst_sig = self.get_int_reset_node().map(|h| arena.get_node_exit_opr(&h));
 
-        let mut cw = arena.take_cycle_wait_reg(h);
+        let mut cw = arena.take_cycle_wait_reg(self.cycle_wait_reg_i);
         for (src_node, condition) in dep_list {
             let src_exit = arena.get_node_exit_opr(&src_node);
             cw.add_depend_node(src_exit, condition);
@@ -188,7 +186,7 @@ impl NcpNode for WaitCycleNode {
         cw.build_support_signal(arena);
         cw.build_update_event(arena);
         let end_expr = cw.generate_end_expr();
-        arena.replace_back_cycle_wait_reg(h, cw);
+        arena.replace_back_cycle_wait_reg(self.cycle_wait_reg_i, cw);
 
         let bound_rst = self.bind_with_rst_output_if_reset(arena, end_expr);
         let bound_all = self.bind_with_hold_if_hold(arena, bound_rst);

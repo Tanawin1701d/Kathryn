@@ -2,6 +2,7 @@ use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::operation::LogicOp;
+use crate::model::hw_component::common::slice::Slice;
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_base::{
     add_logic, HasNodeTriggerSig, NcpNode, NodeTrigger,
@@ -15,36 +16,34 @@ use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
 /// in the arena during `assign` and exposed via `get_exit_opr`.
 pub struct PseudoNode {
     ident       : NcpIdent,
-    clk_mode    : ClockMode,
     triggers    : NodeTrigger,
     bit_width   : i32,
     join_op     : LogicOp,
-    exit_expr_i : Option<HcpIdent>,
+    exit_expr_i : HcpIdent,
 }
 
 impl Default for PseudoNode {
     fn default() -> Self {
         Self {
             ident      : NcpIdent::new(NodeType::Pseudo, false, ""),
-            clk_mode   : ClockMode::ClkFree,
             triggers   : NodeTrigger::new(),
             bit_width  : 1,
             join_op    : LogicOp::BitwiseAnd,
-            exit_expr_i: None,
+            exit_expr_i: HcpIdent::default(),
         }
     }
 }
 
 impl PseudoNode {
-    pub fn new(is_user_com: bool, name: &str, bit_width: i32, join_op: LogicOp) -> Self {
+    pub fn new(is_user_com: bool, name: &str, bit_width: i32, join_op: LogicOp, arena: &mut ModelArena) -> Self {
         assert!(matches!(join_op, LogicOp::BitwiseAnd | LogicOp::BitwiseOr));
+        let init_expr = arena.make_expression_empty("pseudo_init_expr", bit_width);
         Self {
             ident      : NcpIdent::new(NodeType::Pseudo, is_user_com, name),
-            clk_mode   : ClockMode::ClkFree,
             triggers   : NodeTrigger::new(),
             bit_width,
             join_op,
-            exit_expr_i: None,
+            exit_expr_i: init_expr,
         }
     }
     pub fn get_bit_width(&self) -> i32     { self.bit_width }
@@ -58,8 +57,8 @@ impl HasNodeTriggerSig for PseudoNode {
 
 impl NcpNode for PseudoNode {
     fn get_ncp_ident    (&self)     -> NcpIdent     { self.ident }
-    fn get_clock_mode   (&self)     -> ClockMode     { self.clk_mode }
-    fn set_clock_mode   (&mut self, cm: ClockMode)   { self.clk_mode = cm; }
+    fn get_clock_mode   (&self)     -> ClockMode     { ClockMode::ClkFree }
+    fn set_clock_mode   (&mut self, _cm: ClockMode)  { panic!("PseudoNode: clock mode is fixed to ClkFree") }
 
     fn assign(&mut self, arena: &mut ModelArena) {
         let depend_count = self.triggers.depend_count();
@@ -78,11 +77,12 @@ impl NcpNode for PseudoNode {
             let opr = opr_per_src.expect("checked above");
             add_logic(arena, &mut final_opr, opr, self.join_op);
         }
-        self.exit_expr_i = final_opr;
+        let src = final_opr.expect("depend_count > 0 asserted above");
+        arena.get_expression_mut(self.exit_expr_i).assign_operand(src, Slice::new(0, self.bit_width));
     }
 
-    fn get_exit_opr     (&self) -> HcpIdent { self.exit_expr_i.unwrap_or_default() }
-    fn is_state_full_node(&self) -> bool            { false }
+    fn get_exit_opr     (&self) -> HcpIdent { self.exit_expr_i }
+    fn is_state_full_node(&self) -> bool    { false }
 }
 
 impl Identifiable for PseudoNode {

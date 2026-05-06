@@ -71,7 +71,8 @@ impl ModelArena {
 
     // ---- PseudoNode --------------------------------------------------------
     pub fn make_pseudo_node(&mut self, name: &str, bit_width: i32, join_op: LogicOp) -> NcpIdent {
-        let h = self.add_pseudo_node(PseudoNode::new(false, name, bit_width, join_op));
+        let node = PseudoNode::new(false, name, bit_width, join_op, self);
+        let h = self.add_pseudo_node(node);
         self.get_pseudo_node(h).get_ncp_ident()
     }
 

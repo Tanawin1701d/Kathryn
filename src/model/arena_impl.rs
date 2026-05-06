@@ -1,4 +1,4 @@
-use crate::common::arena_base::{ArenaGroup, ArenaHandle};
+use crate::common::arena_base::ArenaGroup;
 use crate::model::common::identifier::Identifiable;
 use crate::model::hw_component::common::hcp_assign::HcpAssignable;
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
@@ -95,44 +95,44 @@ impl ModelArena {
     // -----------------------------------------------------------------------
     // HCP inserts (return raw ArenaHandle for use by make_* factory methods)
     // -----------------------------------------------------------------------
-    pub fn add_reg      (&mut self, r: Reg)       -> ArenaHandle { self.regs       .insert(r) }
-    pub fn add_wire     (&mut self, w: Wire)      -> ArenaHandle { self.wires      .insert(w) }
-    pub fn add_val      (&mut self, v: Val)       -> ArenaHandle { self.vals       .insert(v) }
-    pub fn add_mem_ele  (&mut self, e: MemEle)    -> ArenaHandle { self.mem_eles   .insert(e) }
-    pub fn add_mem_blk  (&mut self, b: MemBlk)    -> ArenaHandle { self.mem_blks   .insert(b) }
-    pub fn add_expression(&mut self, e: Expression) -> ArenaHandle { self.expressions.insert(e) }
-    pub fn add_state_reg(&mut self, s: StateReg)  -> ArenaHandle { self.state_regs .insert(s) }
-    pub fn add_sync_reg (&mut self, s: SyncReg)   -> ArenaHandle { self.sync_regs  .insert(s) }
-    pub fn add_cnt_reg  (&mut self, c: CntReg)    -> ArenaHandle { self.cnt_regs   .insert(c) }
-    pub fn add_cond_wait_reg (&mut self, c: CondWaitStateReg) -> ArenaHandle { self.cond_wait_regs .insert(c) }
-    pub fn add_cycle_wait_reg(&mut self, c: CycleWaitStateReg) -> ArenaHandle { self.cycle_wait_regs.insert(c) }
+    pub fn add_reg      (&mut self, r: Reg)        -> HcpIdent { let h = self.regs       .insert(r); self.regs       .get(h).get_ident() }
+    pub fn add_wire     (&mut self, w: Wire)       -> HcpIdent { let h = self.wires      .insert(w); self.wires      .get(h).get_ident() }
+    pub fn add_val      (&mut self, v: Val)        -> HcpIdent { let h = self.vals       .insert(v); self.vals       .get(h).get_ident() }
+    pub fn add_mem_ele  (&mut self, e: MemEle)     -> HcpIdent { let h = self.mem_eles   .insert(e); self.mem_eles   .get(h).get_ident() }
+    pub fn add_mem_blk  (&mut self, b: MemBlk)     -> HcpIdent { let h = self.mem_blks   .insert(b); self.mem_blks   .get(h).get_ident() }
+    pub fn add_expression(&mut self, e: Expression) -> HcpIdent { let h = self.expressions.insert(e); self.expressions.get(h).get_ident() }
+    pub fn add_state_reg(&mut self, s: StateReg)   -> HcpIdent { let h = self.state_regs .insert(s); self.state_regs .get(h).get_ident() }
+    pub fn add_sync_reg (&mut self, s: SyncReg)    -> HcpIdent { let h = self.sync_regs  .insert(s); self.sync_regs  .get(h).get_ident() }
+    pub fn add_cnt_reg  (&mut self, c: CntReg)     -> HcpIdent { let h = self.cnt_regs   .insert(c); self.cnt_regs   .get(h).get_ident() }
+    pub fn add_cond_wait_reg (&mut self, c: CondWaitStateReg)  -> HcpIdent { let h = self.cond_wait_regs .insert(c); self.cond_wait_regs .get(h).get_ident() }
+    pub fn add_cycle_wait_reg(&mut self, c: CycleWaitStateReg) -> HcpIdent { let h = self.cycle_wait_regs.insert(c); self.cycle_wait_regs.get(h).get_ident() }
 
     // -----------------------------------------------------------------------
     // HCP getters
     // -----------------------------------------------------------------------
-    pub fn get_reg      (&self, h: ArenaHandle) -> &Reg        { self.regs       .get(h) }
-    pub fn get_wire     (&self, h: ArenaHandle) -> &Wire       { self.wires      .get(h) }
-    pub fn get_val      (&self, h: ArenaHandle) -> &Val        { self.vals       .get(h) }
-    pub fn get_mem_ele  (&self, h: ArenaHandle) -> &MemEle     { self.mem_eles   .get(h) }
-    pub fn get_mem_blk  (&self, h: ArenaHandle) -> &MemBlk     { self.mem_blks   .get(h) }
-    pub fn get_expression(&self, h: ArenaHandle) -> &Expression { self.expressions.get(h) }
-    pub fn get_state_reg(&self, h: ArenaHandle) -> &StateReg   { self.state_regs .get(h) }
-    pub fn get_sync_reg (&self, h: ArenaHandle) -> &SyncReg    { self.sync_regs  .get(h) }
-    pub fn get_cnt_reg  (&self, h: ArenaHandle) -> &CntReg     { self.cnt_regs   .get(h) }
-    pub fn get_cond_wait_reg (&self, h: ArenaHandle) -> &CondWaitStateReg  { self.cond_wait_regs .get(h) }
-    pub fn get_cycle_wait_reg(&self, h: ArenaHandle) -> &CycleWaitStateReg { self.cycle_wait_regs.get(h) }
+    pub fn get_reg      (&self, h: HcpIdent) -> &Reg        { self.regs       .get(*h.get_arena_handle()) }
+    pub fn get_wire     (&self, h: HcpIdent) -> &Wire       { self.wires      .get(*h.get_arena_handle()) }
+    pub fn get_val      (&self, h: HcpIdent) -> &Val        { self.vals       .get(*h.get_arena_handle()) }
+    pub fn get_mem_ele  (&self, h: HcpIdent) -> &MemEle     { self.mem_eles   .get(*h.get_arena_handle()) }
+    pub fn get_mem_blk  (&self, h: HcpIdent) -> &MemBlk     { self.mem_blks   .get(*h.get_arena_handle()) }
+    pub fn get_expression(&self, h: HcpIdent) -> &Expression { self.expressions.get(*h.get_arena_handle()) }
+    pub fn get_state_reg(&self, h: HcpIdent) -> &StateReg   { self.state_regs .get(*h.get_arena_handle()) }
+    pub fn get_sync_reg (&self, h: HcpIdent) -> &SyncReg    { self.sync_regs  .get(*h.get_arena_handle()) }
+    pub fn get_cnt_reg  (&self, h: HcpIdent) -> &CntReg     { self.cnt_regs   .get(*h.get_arena_handle()) }
+    pub fn get_cond_wait_reg (&self, h: HcpIdent) -> &CondWaitStateReg  { self.cond_wait_regs .get(*h.get_arena_handle()) }
+    pub fn get_cycle_wait_reg(&self, h: HcpIdent) -> &CycleWaitStateReg { self.cycle_wait_regs.get(*h.get_arena_handle()) }
 
-    pub fn get_reg_mut      (&mut self, h: ArenaHandle) -> &mut Reg        { self.regs       .get_mut(h) }
-    pub fn get_wire_mut     (&mut self, h: ArenaHandle) -> &mut Wire       { self.wires      .get_mut(h) }
-    pub fn get_val_mut      (&mut self, h: ArenaHandle) -> &mut Val        { self.vals       .get_mut(h) }
-    pub fn get_mem_ele_mut  (&mut self, h: ArenaHandle) -> &mut MemEle     { self.mem_eles   .get_mut(h) }
-    pub fn get_mem_blk_mut  (&mut self, h: ArenaHandle) -> &mut MemBlk     { self.mem_blks   .get_mut(h) }
-    pub fn get_expression_mut(&mut self, h: ArenaHandle) -> &mut Expression { self.expressions.get_mut(h) }
-    pub fn get_state_reg_mut(&mut self, h: ArenaHandle) -> &mut StateReg   { self.state_regs .get_mut(h) }
-    pub fn get_sync_reg_mut (&mut self, h: ArenaHandle) -> &mut SyncReg    { self.sync_regs  .get_mut(h) }
-    pub fn get_cnt_reg_mut  (&mut self, h: ArenaHandle) -> &mut CntReg     { self.cnt_regs   .get_mut(h) }
-    pub fn get_cond_wait_reg_mut (&mut self, h: ArenaHandle) -> &mut CondWaitStateReg  { self.cond_wait_regs .get_mut(h) }
-    pub fn get_cycle_wait_reg_mut(&mut self, h: ArenaHandle) -> &mut CycleWaitStateReg { self.cycle_wait_regs.get_mut(h) }
+    pub fn get_reg_mut      (&mut self, h: HcpIdent) -> &mut Reg        { self.regs       .get_mut(*h.get_arena_handle()) }
+    pub fn get_wire_mut     (&mut self, h: HcpIdent) -> &mut Wire       { self.wires      .get_mut(*h.get_arena_handle()) }
+    pub fn get_val_mut      (&mut self, h: HcpIdent) -> &mut Val        { self.vals       .get_mut(*h.get_arena_handle()) }
+    pub fn get_mem_ele_mut  (&mut self, h: HcpIdent) -> &mut MemEle     { self.mem_eles   .get_mut(*h.get_arena_handle()) }
+    pub fn get_mem_blk_mut  (&mut self, h: HcpIdent) -> &mut MemBlk     { self.mem_blks   .get_mut(*h.get_arena_handle()) }
+    pub fn get_expression_mut(&mut self, h: HcpIdent) -> &mut Expression { self.expressions.get_mut(*h.get_arena_handle()) }
+    pub fn get_state_reg_mut(&mut self, h: HcpIdent) -> &mut StateReg   { self.state_regs .get_mut(*h.get_arena_handle()) }
+    pub fn get_sync_reg_mut (&mut self, h: HcpIdent) -> &mut SyncReg    { self.sync_regs  .get_mut(*h.get_arena_handle()) }
+    pub fn get_cnt_reg_mut  (&mut self, h: HcpIdent) -> &mut CntReg     { self.cnt_regs   .get_mut(*h.get_arena_handle()) }
+    pub fn get_cond_wait_reg_mut (&mut self, h: HcpIdent) -> &mut CondWaitStateReg  { self.cond_wait_regs .get_mut(*h.get_arena_handle()) }
+    pub fn get_cycle_wait_reg_mut(&mut self, h: HcpIdent) -> &mut CycleWaitStateReg { self.cycle_wait_regs.get_mut(*h.get_arena_handle()) }
 
     // -----------------------------------------------------------------------
     // HCP trait-object dispatch
@@ -153,27 +153,27 @@ impl ModelArena {
     // -----------------------------------------------------------------------
     // Temp-take / replace-back (for mut self + &mut self re-borrow pattern)
     // -----------------------------------------------------------------------
-    pub fn take_reg      (&mut self, h: ArenaHandle) -> Reg        { self.regs       .take(h) }
-    pub fn take_wire     (&mut self, h: ArenaHandle) -> Wire       { self.wires      .take(h) }
-    pub fn take_val      (&mut self, h: ArenaHandle) -> Val        { self.vals       .take(h) }
-    pub fn take_mem_ele  (&mut self, h: ArenaHandle) -> MemEle     { self.mem_eles   .take(h) }
-    pub fn take_mem_blk  (&mut self, h: ArenaHandle) -> MemBlk     { self.mem_blks   .take(h) }
-    pub fn take_expression(&mut self, h: ArenaHandle) -> Expression { self.expressions.take(h) }
-    pub fn take_state_reg(&mut self, h: ArenaHandle) -> StateReg   { self.state_regs .take(h) }
-    pub fn take_sync_reg (&mut self, h: ArenaHandle) -> SyncReg    { self.sync_regs  .take(h) }
-    pub fn take_cnt_reg  (&mut self, h: ArenaHandle) -> CntReg     { self.cnt_regs   .take(h) }
-    pub fn take_cond_wait_reg (&mut self, h: ArenaHandle) -> CondWaitStateReg  { self.cond_wait_regs .take(h) }
-    pub fn take_cycle_wait_reg(&mut self, h: ArenaHandle) -> CycleWaitStateReg { self.cycle_wait_regs.take(h) }
+    pub fn take_reg      (&mut self, h: HcpIdent) -> Reg        { self.regs       .take(*h.get_arena_handle()) }
+    pub fn take_wire     (&mut self, h: HcpIdent) -> Wire       { self.wires      .take(*h.get_arena_handle()) }
+    pub fn take_val      (&mut self, h: HcpIdent) -> Val        { self.vals       .take(*h.get_arena_handle()) }
+    pub fn take_mem_ele  (&mut self, h: HcpIdent) -> MemEle     { self.mem_eles   .take(*h.get_arena_handle()) }
+    pub fn take_mem_blk  (&mut self, h: HcpIdent) -> MemBlk     { self.mem_blks   .take(*h.get_arena_handle()) }
+    pub fn take_expression(&mut self, h: HcpIdent) -> Expression { self.expressions.take(*h.get_arena_handle()) }
+    pub fn take_state_reg(&mut self, h: HcpIdent) -> StateReg   { self.state_regs .take(*h.get_arena_handle()) }
+    pub fn take_sync_reg (&mut self, h: HcpIdent) -> SyncReg    { self.sync_regs  .take(*h.get_arena_handle()) }
+    pub fn take_cnt_reg  (&mut self, h: HcpIdent) -> CntReg     { self.cnt_regs   .take(*h.get_arena_handle()) }
+    pub fn take_cond_wait_reg (&mut self, h: HcpIdent) -> CondWaitStateReg  { self.cond_wait_regs .take(*h.get_arena_handle()) }
+    pub fn take_cycle_wait_reg(&mut self, h: HcpIdent) -> CycleWaitStateReg { self.cycle_wait_regs.take(*h.get_arena_handle()) }
 
-    pub fn replace_back_reg      (&mut self, h: ArenaHandle, v: Reg)        { self.regs       .replace_back(h, v) }
-    pub fn replace_back_wire     (&mut self, h: ArenaHandle, v: Wire)       { self.wires      .replace_back(h, v) }
-    pub fn replace_back_val      (&mut self, h: ArenaHandle, v: Val)        { self.vals       .replace_back(h, v) }
-    pub fn replace_back_mem_ele  (&mut self, h: ArenaHandle, v: MemEle)     { self.mem_eles   .replace_back(h, v) }
-    pub fn replace_back_mem_blk  (&mut self, h: ArenaHandle, v: MemBlk)     { self.mem_blks   .replace_back(h, v) }
-    pub fn replace_back_expression(&mut self, h: ArenaHandle, v: Expression) { self.expressions.replace_back(h, v) }
-    pub fn replace_back_state_reg(&mut self, h: ArenaHandle, v: StateReg)   { self.state_regs .replace_back(h, v) }
-    pub fn replace_back_sync_reg (&mut self, h: ArenaHandle, v: SyncReg)    { self.sync_regs  .replace_back(h, v) }
-    pub fn replace_back_cnt_reg  (&mut self, h: ArenaHandle, v: CntReg)     { self.cnt_regs   .replace_back(h, v) }
-    pub fn replace_back_cond_wait_reg (&mut self, h: ArenaHandle, v: CondWaitStateReg)  { self.cond_wait_regs .replace_back(h, v) }
-    pub fn replace_back_cycle_wait_reg(&mut self, h: ArenaHandle, v: CycleWaitStateReg) { self.cycle_wait_regs.replace_back(h, v) }
+    pub fn replace_back_reg      (&mut self, h: HcpIdent, v: Reg)        { self.regs       .replace_back(*h.get_arena_handle(), v) }
+    pub fn replace_back_wire     (&mut self, h: HcpIdent, v: Wire)       { self.wires      .replace_back(*h.get_arena_handle(), v) }
+    pub fn replace_back_val      (&mut self, h: HcpIdent, v: Val)        { self.vals       .replace_back(*h.get_arena_handle(), v) }
+    pub fn replace_back_mem_ele  (&mut self, h: HcpIdent, v: MemEle)     { self.mem_eles   .replace_back(*h.get_arena_handle(), v) }
+    pub fn replace_back_mem_blk  (&mut self, h: HcpIdent, v: MemBlk)     { self.mem_blks   .replace_back(*h.get_arena_handle(), v) }
+    pub fn replace_back_expression(&mut self, h: HcpIdent, v: Expression) { self.expressions.replace_back(*h.get_arena_handle(), v) }
+    pub fn replace_back_state_reg(&mut self, h: HcpIdent, v: StateReg)   { self.state_regs .replace_back(*h.get_arena_handle(), v) }
+    pub fn replace_back_sync_reg (&mut self, h: HcpIdent, v: SyncReg)    { self.sync_regs  .replace_back(*h.get_arena_handle(), v) }
+    pub fn replace_back_cnt_reg  (&mut self, h: HcpIdent, v: CntReg)     { self.cnt_regs   .replace_back(*h.get_arena_handle(), v) }
+    pub fn replace_back_cond_wait_reg (&mut self, h: HcpIdent, v: CondWaitStateReg)  { self.cond_wait_regs .replace_back(*h.get_arena_handle(), v) }
+    pub fn replace_back_cycle_wait_reg(&mut self, h: HcpIdent, v: CycleWaitStateReg) { self.cycle_wait_regs.replace_back(*h.get_arena_handle(), v) }
 }

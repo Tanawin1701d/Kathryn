@@ -1,4 +1,5 @@
 pub mod ncp_ident;
+pub mod node_trigger;
 #[macro_use]
 pub mod ncp_base;
 pub mod logic_node;
