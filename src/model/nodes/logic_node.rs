@@ -78,7 +78,9 @@ impl NcpNode for PseudoNode {
             add_logic(arena, &mut final_opr, opr, self.join_op);
         }
         let src = final_opr.expect("depend_count > 0 asserted above");
-        arena.get_expression_mut(self.exit_expr_i).assign_operand(src, Slice::new(0, self.bit_width));
+        let mut expr = arena.take_expression(self.exit_expr_i);
+        expr.assign_operand(src, Slice::new(0, self.bit_width));
+        arena.replace_back_expression(self.exit_expr_i, expr);
     }
 
     fn get_exit_opr     (&self) -> HcpIdent { self.exit_expr_i }

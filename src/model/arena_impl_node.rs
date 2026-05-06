@@ -39,28 +39,7 @@ impl ModelArena {
     pub fn add_dummy_node     (&mut self, n: DummyNode)      -> ArenaHandle { self.dummy_nodes     .insert(n) }
     pub fn add_opr_node       (&mut self, n: OprNode)        -> ArenaHandle { self.opr_nodes       .insert(n) }
 
-    // ----- getters ---------------------------------------------------------
-    pub fn get_asm_node       (&self, h: ArenaHandle) -> &AsmNode        { self.asm_nodes       .get(h) }
-    pub fn get_state_node     (&self, h: ArenaHandle) -> &StateNode      { self.state_nodes     .get(h) }
-    pub fn get_syn_node       (&self, h: ArenaHandle) -> &SynNode        { self.syn_nodes       .get(h) }
-    pub fn get_wait_cond_node (&self, h: ArenaHandle) -> &WaitCondNode   { self.wait_cond_nodes .get(h) }
-    pub fn get_wait_cycle_node(&self, h: ArenaHandle) -> &WaitCycleNode  { self.wait_cycle_nodes.get(h) }
-    pub fn get_counter_node   (&self, h: ArenaHandle) -> &CounterNode    { self.counter_nodes   .get(h) }
-    pub fn get_pseudo_node    (&self, h: ArenaHandle) -> &PseudoNode     { self.pseudo_nodes    .get(h) }
-    pub fn get_dummy_node     (&self, h: ArenaHandle) -> &DummyNode      { self.dummy_nodes     .get(h) }
-    pub fn get_opr_node       (&self, h: ArenaHandle) -> &OprNode        { self.opr_nodes       .get(h) }
-
-    pub fn get_asm_node_mut       (&mut self, h: ArenaHandle) -> &mut AsmNode        { self.asm_nodes       .get_mut(h) }
-    pub fn get_state_node_mut     (&mut self, h: ArenaHandle) -> &mut StateNode      { self.state_nodes     .get_mut(h) }
-    pub fn get_syn_node_mut       (&mut self, h: ArenaHandle) -> &mut SynNode        { self.syn_nodes       .get_mut(h) }
-    pub fn get_wait_cond_node_mut (&mut self, h: ArenaHandle) -> &mut WaitCondNode   { self.wait_cond_nodes .get_mut(h) }
-    pub fn get_wait_cycle_node_mut(&mut self, h: ArenaHandle) -> &mut WaitCycleNode  { self.wait_cycle_nodes.get_mut(h) }
-    pub fn get_counter_node_mut   (&mut self, h: ArenaHandle) -> &mut CounterNode    { self.counter_nodes   .get_mut(h) }
-    pub fn get_pseudo_node_mut    (&mut self, h: ArenaHandle) -> &mut PseudoNode     { self.pseudo_nodes    .get_mut(h) }
-    pub fn get_dummy_node_mut     (&mut self, h: ArenaHandle) -> &mut DummyNode      { self.dummy_nodes     .get_mut(h) }
-    pub fn get_opr_node_mut       (&mut self, h: ArenaHandle) -> &mut OprNode        { self.opr_nodes       .get_mut(h) }
-
-    // ----- take / replace_back --------------------------------------------
+    // ----- take / replace_back (use these instead of typed get/get_mut) ----
     pub fn take_asm_node       (&mut self, h: ArenaHandle) -> AsmNode        { self.asm_nodes       .take(h) }
     pub fn take_state_node     (&mut self, h: ArenaHandle) -> StateNode      { self.state_nodes     .take(h) }
     pub fn take_syn_node       (&mut self, h: ArenaHandle) -> SynNode        { self.syn_nodes       .take(h) }
@@ -81,7 +60,7 @@ impl ModelArena {
     pub fn replace_back_dummy_node     (&mut self, h: ArenaHandle, v: DummyNode    ) { self.dummy_nodes     .replace_back(h, v) }
     pub fn replace_back_opr_node       (&mut self, h: ArenaHandle, v: OprNode      ) { self.opr_nodes       .replace_back(h, v) }
 
-    // ----- trait-object dispatch ------------------------------------------
+    // ----- trait-object dispatch (cannot be expressed via take/replace) ----
     pub fn get_ncp_node    (&self,     ident: &NcpIdent) -> &    dyn NcpNode { dispatch_ncp!(self, ident, get    ) }
     pub fn get_ncp_node_mut(&mut self, ident: &NcpIdent) -> &mut dyn NcpNode { dispatch_ncp!(self, ident, get_mut) }
 

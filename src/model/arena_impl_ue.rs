@@ -1,4 +1,3 @@
-use crate::common::arena_base::ArenaHandle;
 use crate::model::common::identifier::Identifiable;
 use crate::model::hw_component::common::update_event::{UeBasic, UeCond, UeCommon, UeGrp, UeSwitch, UeType};
 use crate::model::hw_component::common::update_event_ident::UpdateEventIdent;
@@ -41,20 +40,14 @@ impl ModelArena {
         self.ue_switches.get(h).ident()
     }
 
-    // -----------------------------------------------------------------------
-    // Update-event typed getters
-    // -----------------------------------------------------------------------
-    pub fn get_ue_basic  (&self, h: ArenaHandle) -> &UeBasic   { self.ue_basics  .get(h) }
-    pub fn get_ue_grp    (&self, h: ArenaHandle) -> &UeGrp     { self.ue_grps    .get(h) }
-    pub fn get_ue_cond   (&self, h: ArenaHandle) -> &UeCond    { self.ue_conds   .get(h) }
-    pub fn get_ue_switch (&self, h: ArenaHandle) -> &UeSwitch  { self.ue_switches.get(h) }
-
-    pub fn get_ue_basic_mut  (&mut self, h: ArenaHandle) -> &mut UeBasic   { self.ue_basics  .get_mut(h) }
-    pub fn get_ue_grp_mut    (&mut self, h: ArenaHandle) -> &mut UeGrp     { self.ue_grps    .get_mut(h) }
-    pub fn get_ue_cond_mut   (&mut self, h: ArenaHandle) -> &mut UeCond    { self.ue_conds   .get_mut(h) }
-    pub fn get_ue_switch_mut (&mut self, h: ArenaHandle) -> &mut UeSwitch  { self.ue_switches.get_mut(h) }
+    // NOTE: typed get/get_mut for UEs intentionally removed. take/replace_back
+    // for UEs are not provided yet because UE structs do not implement
+    // Default (which `ArenaGroup::take` requires). Add Default impls and
+    // take_ue_*/replace_back_ue_* together when an owned-mutation path is
+    // first needed.
 
     /// Resolve an `UpdateEventIdent` to its `UeCommon` (priority, clk_mode, etc.)
+    /// Trait-/shared-view accessor; cannot be expressed via take/replace.
     pub fn get_ue_common(&self, ident: &UpdateEventIdent) -> &UeCommon {
         dispatch_ue_common!(self, ident)
     }
