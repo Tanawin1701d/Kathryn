@@ -83,15 +83,15 @@ impl ModelArena {
     pub fn take_cond_wait_reg (&mut self, h: HcpIdent) -> CondWaitStateReg  { self.cond_wait_regs .take(*h.get_arena_handle()) }
     pub fn take_cycle_wait_reg(&mut self, h: HcpIdent) -> CycleWaitStateReg { self.cycle_wait_regs.take(*h.get_arena_handle()) }
 
-    pub fn replace_back_reg      (&mut self, h: HcpIdent, v: Reg)        { self.regs       .replace_back(*h.get_arena_handle(), v) }
-    pub fn replace_back_wire     (&mut self, h: HcpIdent, v: Wire)       { self.wires      .replace_back(*h.get_arena_handle(), v) }
-    pub fn replace_back_val      (&mut self, h: HcpIdent, v: Val)        { self.vals       .replace_back(*h.get_arena_handle(), v) }
-    pub fn replace_back_mem_ele  (&mut self, h: HcpIdent, v: MemEle)     { self.mem_eles   .replace_back(*h.get_arena_handle(), v) }
-    pub fn replace_back_mem_blk  (&mut self, h: HcpIdent, v: MemBlk)     { self.mem_blks   .replace_back(*h.get_arena_handle(), v) }
-    pub fn replace_back_expression(&mut self, h: HcpIdent, v: Expression) { self.expressions.replace_back(*h.get_arena_handle(), v) }
-    pub fn replace_back_state_reg(&mut self, h: HcpIdent, v: StateReg)   { self.state_regs .replace_back(*h.get_arena_handle(), v) }
-    pub fn replace_back_sync_reg (&mut self, h: HcpIdent, v: SyncReg)    { self.sync_regs  .replace_back(*h.get_arena_handle(), v) }
-    pub fn replace_back_cnt_reg  (&mut self, h: HcpIdent, v: CntReg)     { self.cnt_regs   .replace_back(*h.get_arena_handle(), v) }
-    pub fn replace_back_cond_wait_reg (&mut self, h: HcpIdent, v: CondWaitStateReg)  { self.cond_wait_regs .replace_back(*h.get_arena_handle(), v) }
-    pub fn replace_back_cycle_wait_reg(&mut self, h: HcpIdent, v: CycleWaitStateReg) { self.cycle_wait_regs.replace_back(*h.get_arena_handle(), v) }
+    pub fn replace_back_reg      (&mut self, v: Reg)        { let h = *v.get_arena_handle(); self.regs       .replace_back(h, v) }
+    pub fn replace_back_wire     (&mut self, v: Wire)       { let h = *v.get_arena_handle(); self.wires      .replace_back(h, v) }
+    pub fn replace_back_val      (&mut self, v: Val)        { let h = *v.get_arena_handle(); self.vals       .replace_back(h, v) }
+    pub fn replace_back_mem_ele  (&mut self, v: MemEle)     { let h = *v.get_arena_handle(); self.mem_eles   .replace_back(h, v) }
+    pub fn replace_back_mem_blk  (&mut self, v: MemBlk)     { let h = *v.get_arena_handle(); self.mem_blks   .replace_back(h, v) }
+    pub fn replace_back_expression(&mut self, v: Expression) { let h = *v.get_arena_handle(); self.expressions.replace_back(h, v) }
+    pub fn replace_back_state_reg(&mut self, v: StateReg)   { let h = *v.get_arena_handle(); self.state_regs .replace_back(h, v) }
+    pub fn replace_back_sync_reg (&mut self, v: SyncReg)    { let h = *v.get_arena_handle(); self.sync_regs  .replace_back(h, v) }
+    pub fn replace_back_cnt_reg  (&mut self, v: CntReg)     { let h = *v.get_arena_handle(); self.cnt_regs   .replace_back(h, v) }
+    pub fn replace_back_cond_wait_reg (&mut self, v: CondWaitStateReg)  { let h = *v.get_arena_handle(); self.cond_wait_regs .replace_back(h, v) }
+    pub fn replace_back_cycle_wait_reg(&mut self, v: CycleWaitStateReg) { let h = *v.get_arena_handle(); self.cycle_wait_regs.replace_back(h, v) }
 }

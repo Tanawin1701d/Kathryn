@@ -4,7 +4,7 @@ use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::asm_node::AsmNode;
 use crate::model::nodes::cnt_node::CounterNode;
-use crate::model::nodes::logic_node::{DummyNode, OprNode, PseudoNode};
+use crate::model::nodes::logic_node::{OprNode, PseudoNode};
 use crate::model::nodes::ncp_base::NcpNode;
 use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
 use crate::model::nodes::state_node::{StateNode, SynNode};
@@ -21,7 +21,6 @@ macro_rules! dispatch_ncp {
             NodeType::WaitCycle => $self.wait_cycle_nodes.$method(handle) as _,
             NodeType::Counter   => $self.counter_nodes   .$method(handle) as _,
             NodeType::Pseudo    => $self.pseudo_nodes    .$method(handle) as _,
-            NodeType::Dummy     => $self.dummy_nodes     .$method(handle) as _,
             NodeType::Opr       => $self.opr_nodes       .$method(handle) as _,
         }
     }};
@@ -36,7 +35,6 @@ impl ModelArena {
     pub fn add_wait_cycle_node(&mut self, n: WaitCycleNode)  -> ArenaHandle { self.wait_cycle_nodes.insert(n) }
     pub fn add_counter_node   (&mut self, n: CounterNode)    -> ArenaHandle { self.counter_nodes   .insert(n) }
     pub fn add_pseudo_node    (&mut self, n: PseudoNode)     -> ArenaHandle { self.pseudo_nodes    .insert(n) }
-    pub fn add_dummy_node     (&mut self, n: DummyNode)      -> ArenaHandle { self.dummy_nodes     .insert(n) }
     pub fn add_opr_node       (&mut self, n: OprNode)        -> ArenaHandle { self.opr_nodes       .insert(n) }
 
     // ----- take / replace_back (use these instead of typed get/get_mut) ----
@@ -47,7 +45,6 @@ impl ModelArena {
     pub fn take_wait_cycle_node(&mut self, h: ArenaHandle) -> WaitCycleNode  { self.wait_cycle_nodes.take(h) }
     pub fn take_counter_node   (&mut self, h: ArenaHandle) -> CounterNode    { self.counter_nodes   .take(h) }
     pub fn take_pseudo_node    (&mut self, h: ArenaHandle) -> PseudoNode     { self.pseudo_nodes    .take(h) }
-    pub fn take_dummy_node     (&mut self, h: ArenaHandle) -> DummyNode      { self.dummy_nodes     .take(h) }
     pub fn take_opr_node       (&mut self, h: ArenaHandle) -> OprNode        { self.opr_nodes       .take(h) }
 
     pub fn replace_back_asm_node       (&mut self, h: ArenaHandle, v: AsmNode      ) { self.asm_nodes       .replace_back(h, v) }
@@ -57,7 +54,6 @@ impl ModelArena {
     pub fn replace_back_wait_cycle_node(&mut self, h: ArenaHandle, v: WaitCycleNode) { self.wait_cycle_nodes.replace_back(h, v) }
     pub fn replace_back_counter_node   (&mut self, h: ArenaHandle, v: CounterNode  ) { self.counter_nodes   .replace_back(h, v) }
     pub fn replace_back_pseudo_node    (&mut self, h: ArenaHandle, v: PseudoNode   ) { self.pseudo_nodes    .replace_back(h, v) }
-    pub fn replace_back_dummy_node     (&mut self, h: ArenaHandle, v: DummyNode    ) { self.dummy_nodes     .replace_back(h, v) }
     pub fn replace_back_opr_node       (&mut self, h: ArenaHandle, v: OprNode      ) { self.opr_nodes       .replace_back(h, v) }
 
     // ----- trait-object dispatch (cannot be expressed via take/replace) ----

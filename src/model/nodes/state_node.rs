@@ -92,7 +92,7 @@ impl NcpNode for StateNode {
         if let Some(rs) = int_rst_sig { sr.set_rst_sig_i(rs);  }
         sr.build_update_event(arena);
         let raw_state_op = sr.get_ident();
-        arena.replace_back_state_reg(self.state_reg_i, sr);
+        arena.replace_back_state_reg(sr);
 
         let bound_rst = self.bind_with_rst_output_if_reset(arena, raw_state_op);
         let bound_all = self.bind_with_hold_if_hold(arena, bound_rst);
@@ -199,7 +199,7 @@ impl NcpNode for SynNode {
         sy.build_support_signal(arena);
         sy.build_update_event(arena);
         let end_expr = sy.get_end_expr_i().expect("end_expr after build");
-        arena.replace_back_sync_reg(self.sync_reg_i, sy);
+        arena.replace_back_sync_reg(sy);
 
         let bound = self.bind_with_rst_output_if_reset(arena, end_expr);
         self.end_expr_i   = Some(end_expr);

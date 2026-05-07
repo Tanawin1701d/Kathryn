@@ -79,9 +79,9 @@ impl NcpNode for WaitCondNode {
         }
         if let Some(rst_exit) = int_rst_exit { cw.set_rst_sig_i(rst_exit); }
         cw.build_support_signal(arena);
-        cw.build_update_event(arena, cm);
+        cw.build_update_event(arena);
         let end_expr = cw.generate_end_expr();
-        arena.replace_back_cond_wait_reg(self.cond_wait_reg_i, cw);
+        arena.replace_back_cond_wait_reg(cw);
 
         let bound_rst = self.bind_with_rst_output_if_reset(arena, end_expr);
         let bound_all = self.bind_with_hold_if_hold(arena, bound_rst);
@@ -186,7 +186,7 @@ impl NcpNode for WaitCycleNode {
         cw.build_support_signal(arena);
         cw.build_update_event(arena);
         let end_expr = cw.generate_end_expr();
-        arena.replace_back_cycle_wait_reg(self.cycle_wait_reg_i, cw);
+        arena.replace_back_cycle_wait_reg(cw);
 
         let bound_rst = self.bind_with_rst_output_if_reset(arena, end_expr);
         let bound_all = self.bind_with_hold_if_hold(arena, bound_rst);

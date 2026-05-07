@@ -37,7 +37,6 @@ impl ModelArena {
             wait_cycle_nodes : ArenaGroup::new(),
             counter_nodes    : ArenaGroup::new(),
             pseudo_nodes     : ArenaGroup::new(),
-            dummy_nodes      : ArenaGroup::new(),
             opr_nodes        : ArenaGroup::new(),
             modules          : ArenaGroup::new(),
         }
@@ -66,7 +65,6 @@ impl ModelArena {
         self.wait_cycle_nodes = ArenaGroup::new();
         self.counter_nodes    = ArenaGroup::new();
         self.pseudo_nodes     = ArenaGroup::new();
-        self.dummy_nodes      = ArenaGroup::new();
         self.opr_nodes        = ArenaGroup::new();
         self.modules          = ArenaGroup::new();
     }

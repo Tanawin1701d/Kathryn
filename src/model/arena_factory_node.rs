@@ -5,7 +5,7 @@ use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::asm_node::AsmNode;
 use crate::model::nodes::cnt_node::CounterNode;
-use crate::model::nodes::logic_node::{DummyNode, OprNode, PseudoNode};
+use crate::model::nodes::logic_node::{OprNode, PseudoNode};
 use crate::model::nodes::ncp_base::NcpNode;
 use crate::model::nodes::ncp_ident::NcpIdent;
 use crate::model::nodes::state_node::{StateNode, SynNode};
@@ -74,12 +74,6 @@ impl ModelArena {
         let node = PseudoNode::new(false, name, bit_width, join_op, self);
         let h = self.add_pseudo_node(node);
         self.pseudo_nodes.get(h).get_ncp_ident()
-    }
-
-    // ---- DummyNode ---------------------------------------------------------
-    pub fn make_dummy_node(&mut self, name: &str, value_i: HcpIdent) -> NcpIdent {
-        let h = self.add_dummy_node(DummyNode::new(false, name, value_i));
-        self.dummy_nodes.get(h).get_ncp_ident()
     }
 
     // ---- OprNode -----------------------------------------------------------

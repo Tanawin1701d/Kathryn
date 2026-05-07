@@ -123,6 +123,18 @@ impl UpdatingEvent for UeBasic {
     fn is_leaf(&self) -> bool { true }
 }
 
+impl Default for UeBasic {
+    fn default() -> Self {
+        Self {
+            ident    : UpdateEventIdent::default(),
+            ue_common: UeCommon::default(),
+            srci     : HcpIdent::default(),
+            des_slice: Slice::default(),
+            src_slice: Slice::default(),
+        }
+    }
+}
+
 impl Identifiable for UeBasic {
     fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
@@ -169,6 +181,16 @@ impl HasUeCommon for UeGrp {
 
 impl UpdatingEvent for UeGrp {
     fn is_leaf(&self) -> bool { false }
+}
+
+impl Default for UeGrp {
+    fn default() -> Self {
+        Self {
+            ident    : UpdateEventIdent::default(),
+            ue_common: UeCommon::default(),
+            sub_stmts: Vec::new(),
+        }
+    }
 }
 
 impl Identifiable for UeGrp {
@@ -225,6 +247,18 @@ impl HasUeCommon for UeCond {
 
 impl UpdatingEvent for UeCond {
     fn is_leaf(&self) -> bool { false }
+}
+
+impl Default for UeCond {
+    fn default() -> Self {
+        Self {
+            ident         : UpdateEventIdent::default(),
+            ue_common     : UeCommon::default(),
+            is_last_occure: false,
+            conditions    : Vec::new(),
+            sub_stmts     : Vec::new(),
+        }
+    }
 }
 
 impl Identifiable for UeCond {
@@ -294,6 +328,19 @@ impl HasUeCommon for UeSwitch {
 
 impl UpdatingEvent for UeSwitch {
     fn is_leaf(&self) -> bool { false }
+}
+
+impl Default for UeSwitch {
+    fn default() -> Self {
+        Self {
+            ident        : UpdateEventIdent::default(),
+            ue_common    : UeCommon::default(),
+            is_init_meta : false,
+            state_iden   : HcpIdent::default(),
+            sub_stmt_idxs: Vec::new(),
+            sub_stmts    : Vec::new(),
+        }
+    }
 }
 
 impl Identifiable for UeSwitch {

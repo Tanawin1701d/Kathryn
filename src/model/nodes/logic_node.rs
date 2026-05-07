@@ -80,7 +80,7 @@ impl NcpNode for PseudoNode {
         let src = final_opr.expect("depend_count > 0 asserted above");
         let mut expr = arena.take_expression(self.exit_expr_i);
         expr.assign_operand(src, Slice::new(0, self.bit_width));
-        arena.replace_back_expression(self.exit_expr_i, expr);
+        arena.replace_back_expression(expr);
     }
 
     fn get_exit_opr     (&self) -> HcpIdent { self.exit_expr_i }
@@ -93,70 +93,11 @@ impl Identifiable for PseudoNode {
     fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
 }
 
-// ---- DummyNode --------------------------------------------------------------
-
-/// Wraps a constant `Val` so it can stand in as a node.
-pub struct DummyNode {
-    ident    : NcpIdent,
-    clk_mode : ClockMode,
-    triggers : NodeTrigger,
-    value_i  : HcpIdent,
-}
-
-impl Default for DummyNode {
-    fn default() -> Self {
-        Self {
-            ident   : NcpIdent::new(NodeType::Dummy, false, ""),
-            clk_mode: ClockMode::ClkFree,
-            triggers: NodeTrigger::new(),
-            value_i : HcpIdent::default(),
-        }
-    }
-}
-
-impl DummyNode {
-    pub fn new(is_user_com: bool, name: &str, value_i: HcpIdent) -> Self {
-        Self {
-            ident   : NcpIdent::new(NodeType::Dummy, is_user_com, name),
-            clk_mode: ClockMode::ClkFree,
-            triggers: NodeTrigger::new(),
-            value_i,
-        }
-    }
-    pub fn get_value_i(&self) -> HcpIdent { self.value_i }
-}
-
-impl HasNodeTriggerSig for DummyNode {
-    fn get_node_triggers    (&self)     -> &NodeTrigger { &self.triggers     }
-    fn get_node_triggers_mut(&mut self) -> &mut NodeTrigger { &mut self.triggers }
-}
-
-impl NcpNode for DummyNode {
-    fn get_ncp_ident    (&self)     -> NcpIdent     { self.ident }
-    fn get_clock_mode   (&self)     -> ClockMode     { self.clk_mode }
-    fn set_clock_mode   (&mut self, cm: ClockMode)   { self.clk_mode = cm; }
-
-    fn assign(&mut self, _arena: &mut ModelArena) {
-        assert_eq!(self.triggers.depend_count(), 0, "DummyNode does not accept depend nodes");
-    }
-
-    fn get_exit_opr     (&self) -> HcpIdent { self.value_i }
-    fn is_state_full_node(&self) -> bool             { false }
-}
-
-impl Identifiable for DummyNode {
-    fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
-    fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
-    fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
-}
-
 // ---- OprNode ----------------------------------------------------------------
 
 /// Wraps an arbitrary operand (any HCP) so it can be used as a node output.
 pub struct OprNode {
     ident    : NcpIdent,
-    clk_mode : ClockMode,
-    triggers : NodeTrigger,
     value_i  : HcpIdent,
 }
 
@@ -164,8 +105,6 @@ impl Default for OprNode {
     fn default() -> Self {
         Self {
             ident   : NcpIdent::new(NodeType::Opr, false, ""),
-            clk_mode: ClockMode::ClkFree,
-            triggers: NodeTrigger::new(),
             value_i : HcpIdent::default(),
         }
     }
@@ -175,8 +114,6 @@ impl OprNode {
     pub fn new(is_user_com: bool, name: &str, value_i: HcpIdent) -> Self {
         Self {
             ident   : NcpIdent::new(NodeType::Opr, is_user_com, name),
-            clk_mode: ClockMode::ClkFree,
-            triggers: NodeTrigger::new(),
             value_i,
         }
     }
@@ -184,21 +121,21 @@ impl OprNode {
 }
 
 impl HasNodeTriggerSig for OprNode {
-    fn get_node_triggers    (&self)     -> &NodeTrigger { &self.triggers     }
-    fn get_node_triggers_mut(&mut self) -> &mut NodeTrigger { &mut self.triggers }
+    fn get_node_triggers    (&self)     -> &NodeTrigger     { panic!("OprNode has no triggers") }
+    fn get_node_triggers_mut(&mut self) -> &mut NodeTrigger { panic!("OprNode has no triggers") }
 }
 
 impl NcpNode for OprNode {
     fn get_ncp_ident    (&self)     -> NcpIdent     { self.ident }
-    fn get_clock_mode   (&self)     -> ClockMode     { self.clk_mode }
-    fn set_clock_mode   (&mut self, cm: ClockMode)   { self.clk_mode = cm; }
+    fn get_clock_mode   (&self)     -> ClockMode     { ClockMode::ClkFree }
+    fn set_clock_mode   (&mut self, cm: ClockMode)   { panic!("OprNode: clock mode is fixed to ClkFree") }
 
     fn assign(&mut self, _arena: &mut ModelArena) {
-        assert_eq!(self.triggers.depend_count(), 0, "OprNode does not accept depend nodes");
+        panic!("OprNode: assign() is not implemented");
     }
 
     fn get_exit_opr     (&self) -> HcpIdent { self.value_i }
-    fn is_state_full_node(&self) -> bool             { false }
+    fn is_state_full_node(&self) -> bool    { false }
 }
 
 impl Identifiable for OprNode {

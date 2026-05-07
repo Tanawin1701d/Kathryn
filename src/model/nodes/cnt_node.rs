@@ -74,7 +74,7 @@ impl NcpNode for CounterNode {
         cr.build_support_signal(arena);
         cr.build_update_event(arena);
         let end_expr = cr.generate_end_expr();
-        arena.replace_back_cnt_reg(self.cnt_reg_i, cr);
+        arena.replace_back_cnt_reg(cr);
         self.end_expr_i = Some(end_expr);
     }
 
