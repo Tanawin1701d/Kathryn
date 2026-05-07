@@ -13,7 +13,8 @@ use crate::model::hw_component::sp_reg::wait_reg::{CondWaitStateReg, CycleWaitSt
 use crate::model::nodes::asm_node::AsmNode;
 use crate::model::nodes::cnt_node::CounterNode;
 use crate::model::nodes::logic_node::{OprNode, PseudoNode};
-use crate::model::nodes::state_node::{StateNode, SynNode};
+use crate::model::nodes::state_node::StateNode;
+use crate::model::nodes::syn_node::SynNode;
 use crate::model::nodes::wait_node::{WaitCondNode, WaitCycleNode};
 use crate::model::module::module::Module;
 

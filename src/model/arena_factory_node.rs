@@ -2,13 +2,15 @@ use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::assign_meta::AssignMeta;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::operation::LogicOp;
+use crate::model::hw_component::common::slice::Slice;
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::asm_node::AsmNode;
 use crate::model::nodes::cnt_node::CounterNode;
 use crate::model::nodes::logic_node::{OprNode, PseudoNode};
 use crate::model::nodes::ncp_base::NcpNode;
 use crate::model::nodes::ncp_ident::NcpIdent;
-use crate::model::nodes::state_node::{StateNode, SynNode};
+use crate::model::nodes::state_node::StateNode;
+use crate::model::nodes::syn_node::SynNode;
 use crate::model::nodes::wait_node::{WaitCondNode, WaitCycleNode};
 
 // make_* → is_user_com = false (internal/system)
@@ -44,8 +46,8 @@ impl ModelArena {
     }
 
     // ---- WaitCondNode ------------------------------------------------------
-    pub fn make_wait_cond_node(&mut self, name: &str, wait_cond: HcpIdent, clk_mode: ClockMode) -> NcpIdent {
-        let n = WaitCondNode::new(false, name, wait_cond, clk_mode, self);
+    pub fn make_wait_cond_node(&mut self, name: &str, wait_cond: HcpIdent, wait_con_sl: Slice, clk_mode: ClockMode) -> NcpIdent {
+        let n = WaitCondNode::new(false, name, wait_cond, wait_con_sl, clk_mode, self);
         let h = self.add_wait_cond_node(n);
         self.wait_cond_nodes.get(h).get_ncp_ident()
     }

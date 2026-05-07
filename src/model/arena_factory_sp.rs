@@ -2,6 +2,7 @@ use crate::model::hw_component::sp_reg::state_reg::StateReg;
 use crate::model::hw_component::sp_reg::sync_reg::SyncReg;
 use crate::model::hw_component::sp_reg::cnt_reg::CntReg;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
+use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::sp_reg::wait_reg::{CondWaitStateReg, CycleWaitStateReg};
 use crate::model::model_arena::ModelArena;
 
@@ -23,8 +24,8 @@ impl ModelArena {
         self.add_cnt_reg(CntReg::new(false, name, inc_val, last_cycle))
     }
 
-    pub fn make_cond_wait_state_reg(&mut self, name: &str, cond_opr: HcpIdent) -> HcpIdent {
-        self.add_cond_wait_reg(CondWaitStateReg::new(false, name, cond_opr))
+    pub fn make_cond_wait_state_reg(&mut self, name: &str, cond_opr: HcpIdent, cond_sl: Slice) -> HcpIdent {
+        self.add_cond_wait_reg(CondWaitStateReg::new(false, name, cond_opr, cond_sl))
     }
 
     pub fn make_cycle_wait_state_reg(&mut self, name: &str, wait_cycle: i32) -> HcpIdent {

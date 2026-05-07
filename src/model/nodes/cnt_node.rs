@@ -59,17 +59,9 @@ impl NcpNode for CounterNode {
     fn set_clock_mode   (&mut self, cm: ClockMode)   { self.clk_mode = cm; }
 
     fn assign(&mut self, arena: &mut ModelArena) {
-        let dep_list: Vec<(NcpIdent, Option<HcpIdent>)> =
-            self.triggers.iter_depend_nodes().collect();
-        let int_rst_exit = self.get_int_reset_node()
-            .map(|ir| arena.get_node_exit_opr(&ir));
-
+        let sig = self.triggers.to_trigger_sig(arena);
         let mut cr = arena.take_cnt_reg(self.cnt_reg_i);
-        for (src_node, condition) in dep_list {
-            let src_exit = arena.get_node_exit_opr(&src_node);
-            cr.add_depend_node(src_exit, condition);
-        }
-        if let Some(rst_exit) = int_rst_exit { cr.set_rst_sig_i(rst_exit); }
+        *cr.get_triggers_mut() = sig;
 
         cr.build_support_signal(arena);
         cr.build_update_event(arena);

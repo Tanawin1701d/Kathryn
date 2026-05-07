@@ -1,6 +1,7 @@
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
+use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::sp_reg::trigger_sig::HasTriggerSig;
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_base::{
@@ -16,7 +17,6 @@ pub struct WaitCondNode {
     clk_mode         : ClockMode,
     triggers         : NodeTrigger,
     cond_wait_reg_i  : HcpIdent,
-    end_expr_i       : Option<HcpIdent>,
     raw_state_op_i   : Option<HcpIdent>,
     bound_exit_i     : Option<HcpIdent>,
 }
@@ -28,7 +28,6 @@ impl Default for WaitCondNode {
             clk_mode       : ClockMode::PosEdge,
             triggers       : NodeTrigger::new(),
             cond_wait_reg_i: HcpIdent::default(),
-            end_expr_i     : None,
             raw_state_op_i : None,
             bound_exit_i   : None,
         }
@@ -36,14 +35,13 @@ impl Default for WaitCondNode {
 }
 
 impl WaitCondNode {
-    pub fn new(is_user_com: bool, name: &str, wait_cond: HcpIdent, clk_mode: ClockMode, arena: &mut ModelArena) -> Self {
-        let cond_wait_reg_i = arena.make_cond_wait_state_reg(&format!("{}_CW", name), wait_cond);
+    pub fn new(is_user_com: bool, name: &str, wait_cond: HcpIdent, wait_cond_sl: Slice, clk_mode: ClockMode, arena: &mut ModelArena) -> Self {
+        let cond_wait_reg_i = arena.make_cond_wait_state_reg(&format!("{}_CW", name), wait_cond, wait_cond_sl);
         Self {
             ident          : NcpIdent::new(NodeType::WaitCond, is_user_com, name),
             clk_mode,
             triggers       : NodeTrigger::new(),
             cond_wait_reg_i,
-            end_expr_i     : None,
             raw_state_op_i : None,
             bound_exit_i   : None,
         }
@@ -64,20 +62,9 @@ impl NcpNode for WaitCondNode {
 
     fn assign(&mut self, arena: &mut ModelArena) {
         assert!(self.triggers.depend_count() > 0, "WaitCondNode requires at least one depend node");
-
-        let cm = self.clk_mode;
-
-        let dep_list: Vec<(NcpIdent, Option<HcpIdent>)> =
-            self.triggers.iter_depend_nodes().collect();
-        let int_rst_exit = self.get_int_reset_node()
-            .map(|ir| arena.get_node_exit_opr(&ir));
-
+        let sig = self.triggers.to_trigger_sig(arena);
         let mut cw = arena.take_cond_wait_reg(self.cond_wait_reg_i);
-        for (src_node, condition) in dep_list {
-            let src_exit = arena.get_node_exit_opr(&src_node);
-            cw.add_depend_node(src_exit, condition);
-        }
-        if let Some(rst_exit) = int_rst_exit { cw.set_rst_sig_i(rst_exit); }
+        *cw.get_triggers_mut() = sig;
         cw.build_support_signal(arena);
         cw.build_update_event(arena);
         let end_expr = cw.generate_end_expr();
@@ -86,12 +73,11 @@ impl NcpNode for WaitCondNode {
         let bound_rst = self.bind_with_rst_output_if_reset(arena, end_expr);
         let bound_all = self.bind_with_hold_if_hold(arena, bound_rst);
         self.raw_state_op_i = Some(end_expr);
-        self.end_expr_i     = Some(end_expr);
         self.bound_exit_i   = Some(bound_all);
     }
 
-    fn get_exit_opr  (&self) -> HcpIdent { self.bound_exit_i.or(self.end_expr_i).unwrap_or_default() }
-    fn get_state_operating(&self) -> HcpIdent { self.raw_state_op_i.unwrap_or_default() }
+    fn get_exit_opr  (&self) -> HcpIdent { self.bound_exit_i.unwrap() }
+    fn get_state_operating(&self) -> HcpIdent { self.raw_state_op_i.unwrap() }
 }
 
 impl Identifiable for WaitCondNode {
@@ -168,21 +154,9 @@ impl NcpNode for WaitCycleNode {
     fn set_clock_mode   (&mut self, cm: ClockMode)   { self.clk_mode = cm; }
 
     fn assign(&mut self, arena: &mut ModelArena) {
-        let cm = self.clk_mode;
-
-        let dep_list: Vec<(NcpIdent, Option<HcpIdent>)> =
-            self.triggers.iter_depend_nodes().collect();
-        let hold_sig_i  = self.get_hold_node().map(|h| arena.get_node_exit_opr(&h));
-        let int_rst_sig = self.get_int_reset_node().map(|h| arena.get_node_exit_opr(&h));
-
+        let sig = self.triggers.to_trigger_sig(arena);
         let mut cw = arena.take_cycle_wait_reg(self.cycle_wait_reg_i);
-        for (src_node, condition) in dep_list {
-            let src_exit = arena.get_node_exit_opr(&src_node);
-            cw.add_depend_node(src_exit, condition);
-        }
-        if let Some(hs) = hold_sig_i  { cw.set_hold_sig_i(hs); }
-        if let Some(rs) = int_rst_sig { cw.set_rst_sig_i(rs); }
-
+        *cw.get_triggers_mut() = sig;
         cw.build_support_signal(arena);
         cw.build_update_event(arena);
         let end_expr = cw.generate_end_expr();
@@ -194,7 +168,7 @@ impl NcpNode for WaitCycleNode {
         self.bound_exit_i = Some(bound_all);
     }
 
-    fn get_exit_opr  (&self) -> HcpIdent { self.bound_exit_i.or(self.end_expr_i).unwrap_or_default() }
+    fn get_exit_opr  (&self) -> HcpIdent { self.bound_exit_i.unwrap() }
 }
 
 impl Identifiable for WaitCycleNode {
