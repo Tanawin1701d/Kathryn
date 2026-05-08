@@ -27,6 +27,7 @@ pub trait NcpNode: HasNodeTriggerSig {
     // ---- virtual with defaults --------------------------------------------
     fn get_exit_opr       (&self) -> HcpIdent { panic!("get_exit_opr: not implemented") }
     fn get_state_operating(&self) -> HcpIdent { panic!("get_state_operating: not implemented") }
+    fn get_cycle_used     (&self) -> i32      { NODE_CYCLE_USED_UNKNOWN }
     fn dry_assign(&mut self, _arena: &mut ModelArena) { panic!("dry_assign: not implemented") }
     fn is_state_full_node(&self) -> bool { true }
 
