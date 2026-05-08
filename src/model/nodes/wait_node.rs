@@ -78,6 +78,7 @@ impl NcpNode for WaitCondNode {
 
     fn get_exit_opr  (&self) -> HcpIdent { self.bound_exit_i.unwrap() }
     fn get_state_operating(&self) -> HcpIdent { self.raw_state_op_i.unwrap() }
+    fn get_cycle_used(&self) -> i32 { NODE_CYCLE_USED_UNKNOWN }
 }
 
 impl Identifiable for WaitCondNode {
@@ -169,6 +170,13 @@ impl NcpNode for WaitCycleNode {
     }
 
     fn get_exit_opr  (&self) -> HcpIdent { self.bound_exit_i.unwrap() }
+    fn get_cycle_used(&self) -> i32 {
+        if self.get_node_triggers().is_unpred_cycle_usage() {
+            NODE_CYCLE_USED_UNKNOWN
+        } else {
+            self.cycle.unwrap_or(NODE_CYCLE_USED_UNKNOWN)
+        }
+    }
 }
 
 impl Identifiable for WaitCycleNode {

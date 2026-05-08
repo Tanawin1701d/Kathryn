@@ -92,6 +92,9 @@ impl NcpNode for StateNode {
 
     fn get_exit_opr       (&self) -> HcpIdent { self.bound_exit_i.or(self.state_op_i).unwrap_or_default() }
     fn get_state_operating(&self) -> HcpIdent { self.state_op_i.unwrap_or_default() }
+    fn get_cycle_used     (&self) -> i32      {
+        if self.get_node_triggers().is_unpred_cycle_usage() { NODE_CYCLE_USED_UNKNOWN } else { 1 }
+    }
 }
 
 impl Identifiable for StateNode {
@@ -99,4 +102,3 @@ impl Identifiable for StateNode {
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
     fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
 }
-

@@ -75,7 +75,8 @@ impl NcpNode for SynNode {
     }
 
     fn get_exit_opr      (&self) -> HcpIdent { self.bound_exit_i.unwrap() }
-    fn is_state_full_node(&self) -> bool      { false }
+    fn get_cycle_used    (&self) -> i32      { 0 }
+    fn is_state_full_node(&self) -> bool     { false }
 }
 
 impl Identifiable for SynNode {

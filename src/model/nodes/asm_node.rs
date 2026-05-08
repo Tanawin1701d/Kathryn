@@ -120,6 +120,8 @@ impl NcpNode for AsmNode {
             am.final_update(arena);
         }
     }
+
+    fn get_cycle_used(&self) -> i32 { 1 }
 }
 
 impl Identifiable for AsmNode {

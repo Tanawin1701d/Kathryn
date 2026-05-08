@@ -46,6 +46,12 @@ impl NodeTrigger {
         }
         sig
     }
+
+    pub fn is_unpred_cycle_usage(&self) -> bool {
+        self.hold_node_i.is_some() ||
+        self.int_reset_node_i.is_some() ||
+        self.int_start_node_i.is_some()
+    }
 }
 
 pub trait HasNodeTriggerSig {
