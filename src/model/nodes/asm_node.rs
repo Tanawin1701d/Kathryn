@@ -14,7 +14,7 @@ use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
 /// `assign_from_state_node` to gate their pre-update events with the state.
 pub struct AsmNode {
     ident    : NcpIdent,
-    clk_mode : ClockMode,
+    clk_mode : ClockMode, /// TODO now clock mode is reduntdant
     triggers : NodeTrigger,
     asm_metas: Vec<AssignMeta>,
 }

@@ -46,7 +46,11 @@ pub trait NcpNode: HasNodeTriggerSig {
 
     /// `raw_exit & ~hold.exit_opr` if a hold node is set.
     fn bind_with_hold_if_hold(&self, arena: &mut ModelArena, raw_exit: HcpIdent) -> HcpIdent {
-        let Some(hold_id) = self.get_hold_node() else { return raw_exit };
+        let Some(hold_id) = self.get_hold_node()
+        else {
+            return raw_exit
+        };
+
         let hold_exit = arena.get_node_exit_opr(&hold_id);
         let inv = arena.make_expression("node_hold_inv", LogicOp::BitwiseInvr, hold_exit, HcpIdent::default(), None, None);
         arena.make_expression("node_bind_hold", LogicOp::BitwiseAnd, raw_exit, inv, None, None)
