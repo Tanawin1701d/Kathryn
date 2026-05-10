@@ -63,4 +63,75 @@ impl ModelArena {
 
     pub fn get_node_exit_opr       (&self, ident: &NcpIdent) -> HcpIdent { self.get_ncp_node(ident).get_exit_opr() }
     pub fn get_node_state_operating(&self, ident: &NcpIdent) -> HcpIdent { self.get_ncp_node(ident).get_state_operating() }
+    pub fn get_node_cycle_used     (&self, ident: &NcpIdent) -> i32      { self.get_ncp_node(ident).get_cycle_used() }
+
+    pub fn add_depend_node_to_ncp(&mut self, ident: NcpIdent, src: NcpIdent, cond: Option<HcpIdent>) {
+        self.get_ncp_node_mut(&ident).add_depend_node(src, cond);
+    }
+
+    pub fn set_ncp_int_reset_node(&mut self, ident: NcpIdent, rst: NcpIdent) {
+        self.get_ncp_node_mut(&ident).set_int_reset_node(rst);
+    }
+
+    pub fn set_ncp_hold_node(&mut self, ident: NcpIdent, hold: NcpIdent) {
+        self.get_ncp_node_mut(&ident).set_hold_node(hold);
+    }
+
+    pub fn add_slave_asm_to_state_node(&mut self, state: NcpIdent, asm: NcpIdent, cond: Option<HcpIdent>) {
+        assert_eq!(state.get_node_type(), NodeType::State);
+        assert_eq!(asm.get_node_type(), NodeType::Asm);
+        let handle = *state.get_arena_handle();
+        self.state_nodes.get_mut(handle).add_slave_asm_node(asm, cond);
+        self.add_depend_node_to_ncp(asm, state, cond);
+    }
+
+    pub fn assign_asm_from_state_node(&mut self, ident: NcpIdent) {
+        assert_eq!(ident.get_node_type(), NodeType::Asm);
+        let handle = *ident.get_arena_handle();
+        let mut node = self.take_asm_node(handle);
+        node.assign_from_state_node(self);
+        self.replace_back_asm_node(handle, node);
+    }
+
+    pub fn assign_ncp_node(&mut self, ident: NcpIdent) {
+        let handle = *ident.get_arena_handle();
+        match ident.get_node_type() {
+            NodeType::Asm => {
+                let mut node = self.take_asm_node(handle);
+                node.assign(self);
+                self.replace_back_asm_node(handle, node);
+            }
+            NodeType::State => {
+                let mut node = self.take_state_node(handle);
+                node.assign(self);
+                self.replace_back_state_node(handle, node);
+            }
+            NodeType::Syn => {
+                let mut node = self.take_syn_node(handle);
+                node.assign(self);
+                self.replace_back_syn_node(handle, node);
+            }
+            NodeType::WaitCond => {
+                let mut node = self.take_wait_cond_node(handle);
+                node.assign(self);
+                self.replace_back_wait_cond_node(handle, node);
+            }
+            NodeType::WaitCycle => {
+                let mut node = self.take_wait_cycle_node(handle);
+                node.assign(self);
+                self.replace_back_wait_cycle_node(handle, node);
+            }
+            NodeType::Counter => {
+                let mut node = self.take_counter_node(handle);
+                node.assign(self);
+                self.replace_back_counter_node(handle, node);
+            }
+            NodeType::Pseudo => {
+                let mut node = self.take_pseudo_node(handle);
+                node.assign(self);
+                self.replace_back_pseudo_node(handle, node);
+            }
+            NodeType::Opr => panic!("OprNode does not support assign"),
+        }
+    }
 }

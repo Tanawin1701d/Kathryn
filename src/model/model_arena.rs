@@ -17,6 +17,8 @@ use crate::model::nodes::state_node::StateNode;
 use crate::model::nodes::syn_node::SynNode;
 use crate::model::nodes::wait_node::{WaitCondNode, WaitCycleNode};
 use crate::model::module::module::Module;
+use crate::model::flow_block::flow_block_par::{FlowBlockParAuto, FlowBlockParNoSync};
+use crate::model::flow_block::flow_block_seq::FlowBlockSeq;
 
 pub struct ModelArena {
 
@@ -51,4 +53,9 @@ pub struct ModelArena {
 
     // module arena
     pub(super) modules          : ArenaGroup<Module>,
+
+    // flow-block arenas
+    pub(super) flow_block_seqs         : ArenaGroup<FlowBlockSeq>,
+    pub(super) flow_block_par_autos    : ArenaGroup<FlowBlockParAuto>,
+    pub(super) flow_block_par_no_syncs : ArenaGroup<FlowBlockParNoSync>,
 }

@@ -11,5 +11,8 @@ pub mod arena_factory_ue;
 pub mod arena_impl_node;
 pub mod arena_factory_node;
 pub mod arena_factory_module;
+pub mod arena_impl_flow_block;
+pub mod arena_factory_flow_block;
 pub mod nodes;
 pub mod module;
+pub mod flow_block;
