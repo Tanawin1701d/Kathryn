@@ -8,8 +8,12 @@ use crate::model::nodes::ncp_ident::NcpIdent;
 
 #[derive(Clone, Debug)]
 enum SequenceEle {
-    Basic   { asm_node: NcpIdent,    state_node: Option<NcpIdent> },
-    SubBlock { block: FlowBlockIdent, node_wrap:  Option<NodeWrap>  },
+    Basic    { asm_node  : NcpIdent      ,  // the assignment node to variable a |= b
+               state_node: Option<NcpIdent> // the state of this phrase
+    },
+
+    SubBlock { block     : FlowBlockIdent,
+               node_wrap : Option<NodeWrap> },
 }
 
 impl SequenceEle {
@@ -22,7 +26,7 @@ impl SequenceEle {
                 if let Some(rst)  = base.get_int_node(ExtSigType::Reset) { arena.set_ncp_int_reset_node(state, rst); }
                 if let Some(hold) = base.get_hold_node()                 { arena.set_ncp_hold_node(state, hold);     }
                 arena.add_slave_asm_to_state_node(state, *asm_node, None);
-                base.add_sys_node(state);
+                base .add_sys_node(state);
                 *state_node = Some(state);
             }
             Self::SubBlock { block, node_wrap } => {
@@ -109,23 +113,13 @@ impl SeqSchematic {
             ele.add_to_cycle_det(&mut cycle_det, arena);
         }
 
-        let mut requires_assign: Vec<bool> = self.elements.iter()
-            .map(|ele| matches!(ele, SequenceEle::Basic { .. }))
-            .collect();
-
         for idx in 0..self.elements.len().saturating_sub(1) {
             let src = self.elements[idx].finish_node();
             self.elements[idx + 1].add_depend_node(src, None, arena);
-            requires_assign[idx + 1] = true;
         }
 
-        if let Some(int_start) = base.get_int_node(ExtSigType::Start) {
-            self.elements[0].add_depend_node(int_start, None, arena);
-            requires_assign[0] = true;
-        }
-
-        for (ele, req) in self.elements.iter().zip(requires_assign) {
-            ele.assign_entrance_nodes(arena, req);
+        for ele in &self.elements {
+            ele.assign_entrance_nodes(arena, true);
         }
 
         let mut result = NodeWrap::new();
