@@ -5,16 +5,14 @@ use crate::model::common::identifier::{IdentBase, Identifiable};
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FlowBlockType {
     Sequential,
-    ParallelAutoSync,
-    ParallelNoSync,
+    Parallel,
 }
 
 impl FlowBlockType {
     pub fn as_str(self) -> &'static str {
         match self {
-            Self::Sequential      => "SEQUENTIAL",
-            Self::ParallelAutoSync => "PARALLEL_AUTO_SYNC",
-            Self::ParallelNoSync   => "PARALLEL_NO_SYNC",
+            Self::Sequential => "SEQUENTIAL",
+            Self::Parallel   => "PARALLEL",
         }
     }
 }

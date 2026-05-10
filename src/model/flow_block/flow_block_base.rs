@@ -63,13 +63,15 @@ impl FlowBlockBase {
 
     // get function
 
-    pub fn get_ident(&self) -> FlowBlockIdent { self.ident }
-    pub fn get_sub_blocks_i(&self) -> &[FlowBlockIdent] { &self.sub_blocks_i  }
-    pub fn get_con_blocks_i(&self) -> &[FlowBlockIdent] { &self.con_blocks_i  }
-    pub fn get_basic_nodes_i(&self) -> &[NcpIdent]      { &self.basic_nodes_i }
-    pub fn get_sys_nodes(&self) -> &[NcpIdent] {
-        &self.sys_nodes
-    }
+    pub fn get_ident    (&self)     -> FlowBlockIdent    { self.ident }
+    pub fn get_ident_ref(&self)     -> &FlowBlockIdent   { &self.ident }
+    pub fn get_ident_mut(&mut self) -> &mut FlowBlockIdent { &mut self.ident }
+    pub fn get_clock_mode(&self)    -> ClockMode         { get_global_clk_mode() }
+
+    pub fn get_sub_blocks_i (&self) -> &[FlowBlockIdent] { &self.sub_blocks_i  }
+    pub fn get_con_blocks_i (&self) -> &[FlowBlockIdent] { &self.con_blocks_i  }
+    pub fn get_basic_nodes_i(&self) -> &[NcpIdent]       { &self.basic_nodes_i }
+    pub fn get_sys_nodes    (&self) -> &[NcpIdent]       { &self.sys_nodes }
 
     // add block and node
     pub fn add_basic_node(&mut self, node: NcpIdent) {

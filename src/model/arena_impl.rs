@@ -39,9 +39,8 @@ impl ModelArena {
             pseudo_nodes     : ArenaGroup::new(),
             opr_nodes        : ArenaGroup::new(),
             modules          : ArenaGroup::new(),
-            flow_block_seqs         : ArenaGroup::new(),
-            flow_block_par_autos    : ArenaGroup::new(),
-            flow_block_par_no_syncs : ArenaGroup::new(),
+            flow_block_seqs : ArenaGroup::new(),
+            flow_block_pars : ArenaGroup::new(),
         }
     }
 
@@ -70,9 +69,8 @@ impl ModelArena {
         self.pseudo_nodes     = ArenaGroup::new();
         self.opr_nodes        = ArenaGroup::new();
         self.modules          = ArenaGroup::new();
-        self.flow_block_seqs         = ArenaGroup::new();
-        self.flow_block_par_autos    = ArenaGroup::new();
-        self.flow_block_par_no_syncs = ArenaGroup::new();
+        self.flow_block_seqs = ArenaGroup::new();
+        self.flow_block_pars = ArenaGroup::new();
     }
 
     // -----------------------------------------------------------------------
