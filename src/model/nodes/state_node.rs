@@ -13,7 +13,6 @@ use crate::params::MAX_DEPEND_NODES;
 
 pub struct StateNode {
     ident           : NcpIdent,
-    clk_mode        : ClockMode,
     triggers        : NodeTrigger,
     state_reg_i     : HcpIdent,
     state_op_i      : Option<HcpIdent>,
@@ -28,7 +27,6 @@ impl Default for StateNode {
     fn default() -> Self {
         Self {
             ident          : NcpIdent::new(NodeType::State, false, ""),
-            clk_mode       : ClockMode::PosEdge,
             triggers       : NodeTrigger::new(),
             state_reg_i    : HcpIdent::default(),
             state_op_i     : None,
@@ -41,11 +39,10 @@ impl Default for StateNode {
 }
 
 impl StateNode {
-    pub fn new(is_user_com: bool, name: &str, clk_mode: ClockMode, arena: &mut ModelArena) -> Self {
+    pub fn new(is_user_com: bool, name: &str, arena: &mut ModelArena) -> Self {
         let state_reg_i = arena.make_state_reg(&format!("{}_ST", name));
         Self {
             ident          : NcpIdent::new(NodeType::State, is_user_com, name),
-            clk_mode,
             triggers       : NodeTrigger::new(),
             state_reg_i,
             state_op_i     : None,
@@ -72,9 +69,8 @@ impl HasNodeTriggerSig for StateNode {
 }
 
 impl NcpNode for StateNode {
-    fn get_ncp_ident    (&self)     -> NcpIdent     { self.ident }
-    fn get_clock_mode   (&self)     -> ClockMode     { self.clk_mode }
-    fn set_clock_mode   (&mut self, cm: ClockMode)   { self.clk_mode = cm; }
+    fn get_ncp_ident  (&self) -> NcpIdent  { self.ident }
+    fn get_clock_mode (&self) -> ClockMode { ClockMode::PosEdge }
 
     fn assign(&mut self, arena: &mut ModelArena) {
         let sig = self.triggers.to_trigger_sig(arena);

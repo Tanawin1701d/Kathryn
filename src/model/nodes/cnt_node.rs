@@ -11,7 +11,6 @@ use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
 /// `assign` has been invoked.
 pub struct CounterNode {
     ident      : NcpIdent,
-    clk_mode   : ClockMode,
     triggers   : NodeTrigger,
     cnt_reg_i  : HcpIdent,
     last_loop  : i32,
@@ -22,7 +21,6 @@ impl Default for CounterNode {
     fn default() -> Self {
         Self {
             ident     : NcpIdent::new(NodeType::Counter, false, ""),
-            clk_mode  : ClockMode::PosEdge,
             triggers  : NodeTrigger::new(),
             cnt_reg_i : HcpIdent::default(),
             last_loop : 1,
@@ -32,12 +30,11 @@ impl Default for CounterNode {
 }
 
 impl CounterNode {
-    pub fn new(is_user_com: bool, name: &str, last_loop_cnt: i32, clk_mode: ClockMode, arena: &mut ModelArena) -> Self {
+    pub fn new(is_user_com: bool, name: &str, last_loop_cnt: i32, arena: &mut ModelArena) -> Self {
         assert!(last_loop_cnt > 0);
         let cnt_reg_i = arena.make_cnt_reg(&format!("{}_CNT", name), 1, last_loop_cnt);
         Self {
             ident     : NcpIdent::new(NodeType::Counter, is_user_com, name),
-            clk_mode,
             triggers  : NodeTrigger::new(),
             cnt_reg_i,
             last_loop : last_loop_cnt,
@@ -54,9 +51,8 @@ impl HasNodeTriggerSig for CounterNode {
 }
 
 impl NcpNode for CounterNode {
-    fn get_ncp_ident    (&self)     -> NcpIdent     { self.ident }
-    fn get_clock_mode   (&self)     -> ClockMode     { self.clk_mode }
-    fn set_clock_mode   (&mut self, cm: ClockMode)   { self.clk_mode = cm; }
+    fn get_ncp_ident  (&self) -> NcpIdent  { self.ident }
+    fn get_clock_mode (&self) -> ClockMode { ClockMode::PosEdge }
 
     fn assign(&mut self, arena: &mut ModelArena) {
         let sig = self.triggers.to_trigger_sig(arena);

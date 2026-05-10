@@ -15,9 +15,8 @@ pub const IN_CONSIST_CYCLE_USED  : i32 = -2;
 /// surface, with the per-node-base data inlined into each concrete struct.
 pub trait NcpNode: HasNodeTriggerSig {
     // ---- ident / clock-mode accessors --------------------------------------
-    fn get_ncp_ident    (&self)     -> NcpIdent;
-    fn get_clock_mode   (&self)     -> ClockMode;
-    fn set_clock_mode   (&mut self, cm: ClockMode);
+    fn get_ncp_ident  (&self) -> NcpIdent;
+    fn get_clock_mode (&self) -> ClockMode;
 
     fn get_node_type(&self) -> NodeType { self.get_ncp_ident().get_node_type() }
 

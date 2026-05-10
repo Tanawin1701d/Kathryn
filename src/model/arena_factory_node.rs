@@ -1,4 +1,3 @@
-use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::assign_meta::AssignMeta;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::operation::LogicOp;
@@ -32,41 +31,41 @@ impl ModelArena {
     }
 
     // ---- StateNode ---------------------------------------------------------
-    pub fn make_state_node(&mut self, name: &str, clk_mode: ClockMode) -> NcpIdent {
-        let n = StateNode::new(false, name, clk_mode, self);
+    pub fn make_state_node(&mut self, name: &str) -> NcpIdent {
+        let n = StateNode::new(false, name, self);
         let h = self.add_state_node(n);
         self.state_nodes.get(h).get_ncp_ident()
     }
 
     // ---- SynNode -----------------------------------------------------------
-    pub fn make_syn_node(&mut self, name: &str, syn_size: i32, clk_mode: ClockMode) -> NcpIdent {
-        let n = SynNode::new(false, name, syn_size, clk_mode, self);
+    pub fn make_syn_node(&mut self, name: &str, syn_size: i32) -> NcpIdent {
+        let n = SynNode::new(false, name, syn_size, self);
         let h = self.add_syn_node(n);
         self.syn_nodes.get(h).get_ncp_ident()
     }
 
     // ---- WaitCondNode ------------------------------------------------------
-    pub fn make_wait_cond_node(&mut self, name: &str, wait_cond: HcpIdent, wait_con_sl: Slice, clk_mode: ClockMode) -> NcpIdent {
-        let n = WaitCondNode::new(false, name, wait_cond, wait_con_sl, clk_mode, self);
+    pub fn make_wait_cond_node(&mut self, name: &str, wait_cond: HcpIdent, wait_con_sl: Slice) -> NcpIdent {
+        let n = WaitCondNode::new(false, name, wait_cond, wait_con_sl, self);
         let h = self.add_wait_cond_node(n);
         self.wait_cond_nodes.get(h).get_ncp_ident()
     }
 
     // ---- WaitCycleNode -----------------------------------------------------
-    pub fn make_wait_cycle_node(&mut self, name: &str, cycle: i32, clk_mode: ClockMode) -> NcpIdent {
-        let n = WaitCycleNode::new_with_cycle(false, name, cycle, clk_mode, self);
+    pub fn make_wait_cycle_node(&mut self, name: &str, cycle: i32) -> NcpIdent {
+        let n = WaitCycleNode::new_with_cycle(false, name, cycle, self);
         let h = self.add_wait_cycle_node(n);
         self.wait_cycle_nodes.get(h).get_ncp_ident()
     }
-    pub fn make_wait_cycle_node_with_expr(&mut self, name: &str, cnt_bit_sz: i32, end_cnt_i: HcpIdent, clk_mode: ClockMode) -> NcpIdent {
-        let n = WaitCycleNode::new_with_expr(false, name, cnt_bit_sz, end_cnt_i, clk_mode, self);
+    pub fn make_wait_cycle_node_with_expr(&mut self, name: &str, cnt_bit_sz: i32, end_cnt_i: HcpIdent) -> NcpIdent {
+        let n = WaitCycleNode::new_with_expr(false, name, cnt_bit_sz, end_cnt_i, self);
         let h = self.add_wait_cycle_node(n);
         self.wait_cycle_nodes.get(h).get_ncp_ident()
     }
 
     // ---- CounterNode -------------------------------------------------------
-    pub fn make_counter_node(&mut self, name: &str, last_loop_cnt: i32, clk_mode: ClockMode) -> NcpIdent {
-        let n = CounterNode::new(false, name, last_loop_cnt, clk_mode, self);
+    pub fn make_counter_node(&mut self, name: &str, last_loop_cnt: i32) -> NcpIdent {
+        let n = CounterNode::new(false, name, last_loop_cnt, self);
         let h = self.add_counter_node(n);
         self.counter_nodes.get(h).get_ncp_ident()
     }

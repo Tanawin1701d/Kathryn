@@ -53,7 +53,6 @@ impl ParSchematic {
         if !base.get_basic_nodes_i().is_empty() {
             let state = arena.make_state_node(
                 &format!("par_state_{}", base.get_ident().get_global_id()),
-                base.get_clock_mode(),
             );
             if let Some(rst)  = base.get_int_node(ExtSigType::Reset) { arena.set_ncp_int_reset_node(state, rst); }
             if let Some(hold) = base.get_hold_node()                  { arena.set_ncp_hold_node(state, hold); }
@@ -67,7 +66,6 @@ impl ParSchematic {
         self.node_wraps_of_sub_blocks = base.get_sub_blocks_i().iter()
             .map(|block| arena.summarize_flow_block(*block))
             .collect();
-        base.gen_sum_force_exit_node(&self.node_wraps_of_sub_blocks, arena);
 
         let mut cycle_det = NodeWrapCycleDet::new();
         if let Some(state) = self.basic_state_node {
@@ -135,7 +133,6 @@ impl ParSchematic {
             let syn = arena.make_syn_node(
                 &format!("par_syn_{}", base.get_ident().get_global_id()),
                 self.amount_of_paths() as i32,
-                base.get_clock_mode(),
             );
             if let Some(rst) = base.get_int_node(ExtSigType::Reset) {
                 arena.set_ncp_int_reset_node(syn, rst);
@@ -186,9 +183,6 @@ impl ParSchematic {
         }
         result.set_exit_node_i(exit);
         result.set_cycle_used(self.cycle_used);
-        if let Some(force) = base.get_force_exit_node() {
-            result.set_force_exit_node(force);
-        }
         result
     }
 }

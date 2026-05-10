@@ -58,7 +58,7 @@ pub trait HcpAssignable {
                     arena    : &mut ModelArena,
     ) -> AssignMeta {
         let uei = self.gen_update_event(srci, des_slice, src_slice, arena);
-        AssignMeta::new(self.get_hcp_asb_ident(), uei)
+        AssignMeta::new(self.get_hcp_asb_ident(), uei, self.retrieve_clk_mode())
     }
 
 

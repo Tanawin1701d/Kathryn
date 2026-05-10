@@ -56,9 +56,8 @@ impl HasNodeTriggerSig for PseudoNode {
 }
 
 impl NcpNode for PseudoNode {
-    fn get_ncp_ident    (&self)     -> NcpIdent     { self.ident }
-    fn get_clock_mode   (&self)     -> ClockMode     { ClockMode::ClkFree }
-    fn set_clock_mode   (&mut self, _cm: ClockMode)  { panic!("PseudoNode: clock mode is fixed to ClkFree") }
+    fn get_ncp_ident  (&self) -> NcpIdent  { self.ident }
+    fn get_clock_mode (&self) -> ClockMode { ClockMode::ClkFree }
 
     fn assign(&mut self, arena: &mut ModelArena) {
         let depend_count = self.triggers.depend_count();
@@ -127,9 +126,8 @@ impl HasNodeTriggerSig for OprNode {
 }
 
 impl NcpNode for OprNode {
-    fn get_ncp_ident    (&self)     -> NcpIdent     { self.ident }
-    fn get_clock_mode   (&self)     -> ClockMode     { ClockMode::ClkFree }
-    fn set_clock_mode   (&mut self, cm: ClockMode)   { panic!("OprNode: clock mode is fixed to ClkFree") }
+    fn get_ncp_ident  (&self) -> NcpIdent  { self.ident }
+    fn get_clock_mode (&self) -> ClockMode { ClockMode::ClkFree }
 
     fn assign(&mut self, _arena: &mut ModelArena) {
         panic!("OprNode: assign() is not implemented");

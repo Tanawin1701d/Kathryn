@@ -14,7 +14,6 @@ use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
 /// `assign_from_state_node` to gate their pre-update events with the state.
 pub struct AsmNode {
     ident    : NcpIdent,
-    clk_mode : ClockMode, /// TODO now clock mode is reduntdant
     triggers : NodeTrigger,
     asm_metas: Vec<AssignMeta>,
 }
@@ -23,7 +22,6 @@ impl Default for AsmNode {
     fn default() -> Self {
         Self {
             ident    : NcpIdent::new(NodeType::Asm, false, ""),
-            clk_mode : ClockMode::ClkUnused,
             triggers : NodeTrigger::new(),
             asm_metas: Vec::new(),
         }
@@ -34,7 +32,6 @@ impl AsmNode {
     pub fn new(is_user_com: bool, name: &str, am: AssignMeta) -> Self {
         Self {
             ident    : NcpIdent::new(NodeType::Asm, is_user_com, name),
-            clk_mode : ClockMode::ClkUnused,
             triggers : NodeTrigger::new(),
             asm_metas: vec![am],
         }
@@ -44,7 +41,6 @@ impl AsmNode {
         assert!(!metas.is_empty());
         Self {
             ident    : NcpIdent::new(NodeType::Asm, is_user_com, name),
-            clk_mode : ClockMode::ClkUnused,
             triggers : NodeTrigger::new(),
             asm_metas: metas.to_vec(),
         }
@@ -102,9 +98,10 @@ impl HasNodeTriggerSig for AsmNode {
 }
 
 impl NcpNode for AsmNode {
-    fn get_ncp_ident    (&self)     -> NcpIdent     { self.ident }
-    fn get_clock_mode   (&self)     -> ClockMode     { self.clk_mode }
-    fn set_clock_mode   (&mut self, cm: ClockMode)   { self.clk_mode = cm; }
+    fn get_ncp_ident  (&self) -> NcpIdent  { self.ident }
+    fn get_clock_mode (&self) -> ClockMode {
+        self.asm_metas.first().map(|m| m.get_clk_mode()).unwrap_or(ClockMode::ClkUnused)
+    }
 
     /// Direct `assign()` is unsupported — AsmNodes are wired through their
     /// parent StateNode via `assign_from_state_node` (or via `dry_assign` for

@@ -18,10 +18,9 @@ impl SequenceEle {
             Self::Basic { asm_node, state_node } => {
                 let state = arena.make_state_node(
                     &format!("seq_state_{}_{}", block_id, idx),
-                    base.get_clock_mode(),
                 );
                 if let Some(rst)  = base.get_int_node(ExtSigType::Reset) { arena.set_ncp_int_reset_node(state, rst); }
-                if let Some(hold) = base.get_hold_node()                  { arena.set_ncp_hold_node(state, hold); }
+                if let Some(hold) = base.get_hold_node()                 { arena.set_ncp_hold_node(state, hold);     }
                 arena.add_slave_asm_to_state_node(state, *asm_node, None);
                 base.add_sys_node(state);
                 *state_node = Some(state);
@@ -50,13 +49,6 @@ impl SequenceEle {
         match self {
             Self::Basic    { state_node, .. } => vec![state_node.expect("not generated")],
             Self::SubBlock { node_wrap, .. }  => node_wrap.as_ref().expect("not generated").get_entrance_nodes_i().to_vec(),
-        }
-    }
-
-    fn force_exit_node(&self) -> Option<NcpIdent> {
-        match self {
-            Self::Basic    { .. }            => None,
-            Self::SubBlock { node_wrap, .. } => node_wrap.as_ref().expect("not generated").get_force_exit_node(),
         }
     }
 
@@ -117,15 +109,6 @@ impl SeqSchematic {
             ele.add_to_cycle_det(&mut cycle_det, arena);
         }
 
-        let force_wraps: Vec<NodeWrap> = self.elements.iter().filter_map(|ele| {
-            ele.force_exit_node().map(|force| {
-                let mut wrap = NodeWrap::new();
-                wrap.set_force_exit_node(force);
-                wrap
-            })
-        }).collect();
-        base.gen_sum_force_exit_node(&force_wraps, arena);
-
         let mut requires_assign: Vec<bool> = self.elements.iter()
             .map(|ele| matches!(ele, SequenceEle::Basic { .. }))
             .collect();
@@ -149,9 +132,6 @@ impl SeqSchematic {
         result.add_entrance_nodes_i(&self.elements[0].entrance_nodes());
         result.set_exit_node_i(self.elements.last().expect("checked above").finish_node());
         result.set_cycle_used(cycle_det.get_cycle_vertical());
-        if let Some(force) = base.get_force_exit_node() {
-            result.set_force_exit_node(force);
-        }
         result
     }
 }

@@ -30,7 +30,7 @@ impl Default for SynNode {
 }
 
 impl SynNode {
-    pub fn new(is_user_com: bool, name: &str, syn_size: i32, clk_mode: ClockMode, arena: &mut ModelArena) -> Self {
+    pub fn new(is_user_com: bool, name: &str, syn_size: i32, arena: &mut ModelArena) -> Self {
         assert!(syn_size > 0);
         let sync_reg_i = arena.make_sync_reg(&format!("{}_SY", name), syn_size);
         Self {
@@ -53,9 +53,8 @@ impl HasNodeTriggerSig for SynNode {
 }
 
 impl NcpNode for SynNode {
-    fn get_ncp_ident    (&self)     -> NcpIdent    { self.ident }
-    fn get_clock_mode   (&self)     -> ClockMode   { ClockMode::PosEdge }
-    fn set_clock_mode   (&mut self, cm: ClockMode) { panic!("synnode's clock can not be reconfigure")}
+    fn get_ncp_ident  (&self) -> NcpIdent  { self.ident }
+    fn get_clock_mode (&self) -> ClockMode { ClockMode::PosEdge }
 
     fn assign(&mut self, arena: &mut ModelArena) {
 

@@ -14,7 +14,6 @@ use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
 
 pub struct WaitCondNode {
     ident            : NcpIdent,
-    clk_mode         : ClockMode,
     triggers         : NodeTrigger,
     cond_wait_reg_i  : HcpIdent,
     raw_state_op_i   : Option<HcpIdent>,
@@ -25,7 +24,6 @@ impl Default for WaitCondNode {
     fn default() -> Self {
         Self {
             ident          : NcpIdent::new(NodeType::WaitCond, false, ""),
-            clk_mode       : ClockMode::PosEdge,
             triggers       : NodeTrigger::new(),
             cond_wait_reg_i: HcpIdent::default(),
             raw_state_op_i : None,
@@ -35,11 +33,10 @@ impl Default for WaitCondNode {
 }
 
 impl WaitCondNode {
-    pub fn new(is_user_com: bool, name: &str, wait_cond: HcpIdent, wait_cond_sl: Slice, clk_mode: ClockMode, arena: &mut ModelArena) -> Self {
+    pub fn new(is_user_com: bool, name: &str, wait_cond: HcpIdent, wait_cond_sl: Slice, arena: &mut ModelArena) -> Self {
         let cond_wait_reg_i = arena.make_cond_wait_state_reg(&format!("{}_CW", name), wait_cond, wait_cond_sl);
         Self {
             ident          : NcpIdent::new(NodeType::WaitCond, is_user_com, name),
-            clk_mode,
             triggers       : NodeTrigger::new(),
             cond_wait_reg_i,
             raw_state_op_i : None,
@@ -56,9 +53,8 @@ impl HasNodeTriggerSig for WaitCondNode {
 }
 
 impl NcpNode for WaitCondNode {
-    fn get_ncp_ident    (&self)     -> NcpIdent     { self.ident }
-    fn get_clock_mode   (&self)     -> ClockMode     { self.clk_mode }
-    fn set_clock_mode   (&mut self, cm: ClockMode)   { self.clk_mode = cm; }
+    fn get_ncp_ident  (&self) -> NcpIdent  { self.ident }
+    fn get_clock_mode (&self) -> ClockMode { ClockMode::PosEdge }
 
     fn assign(&mut self, arena: &mut ModelArena) {
         assert!(self.triggers.depend_count() > 0, "WaitCondNode requires at least one depend node");
@@ -91,7 +87,6 @@ impl Identifiable for WaitCondNode {
 
 pub struct WaitCycleNode {
     ident            : NcpIdent,
-    clk_mode         : ClockMode,
     triggers         : NodeTrigger,
     cycle_wait_reg_i : HcpIdent,
     cycle            : Option<i32>,
@@ -103,7 +98,6 @@ impl Default for WaitCycleNode {
     fn default() -> Self {
         Self {
             ident           : NcpIdent::new(NodeType::WaitCycle, false, ""),
-            clk_mode        : ClockMode::PosEdge,
             triggers        : NodeTrigger::new(),
             cycle_wait_reg_i: HcpIdent::default(),
             cycle           : None,
@@ -114,12 +108,11 @@ impl Default for WaitCycleNode {
 }
 
 impl WaitCycleNode {
-    pub fn new_with_cycle(is_user_com: bool, name: &str, cycle: i32, clk_mode: ClockMode, arena: &mut ModelArena) -> Self {
+    pub fn new_with_cycle(is_user_com: bool, name: &str, cycle: i32, arena: &mut ModelArena) -> Self {
         assert!(cycle > 0);
         let reg_i = arena.make_cycle_wait_state_reg(&format!("{}_CY", name), cycle);
         Self {
             ident           : NcpIdent::new(NodeType::WaitCycle, is_user_com, name),
-            clk_mode,
             triggers        : NodeTrigger::new(),
             cycle_wait_reg_i: reg_i,
             cycle           : Some(cycle),
@@ -128,11 +121,10 @@ impl WaitCycleNode {
         }
     }
 
-    pub fn new_with_expr(is_user_com: bool, name: &str, cnt_bit_sz: i32, end_cnt_i: HcpIdent, clk_mode: ClockMode, arena: &mut ModelArena) -> Self {
+    pub fn new_with_expr(is_user_com: bool, name: &str, cnt_bit_sz: i32, end_cnt_i: HcpIdent, arena: &mut ModelArena) -> Self {
         let reg_i = arena.make_cycle_wait_state_reg_with_expr(&format!("{}_CY", name), cnt_bit_sz, end_cnt_i);
         Self {
             ident           : NcpIdent::new(NodeType::WaitCycle, is_user_com, name),
-            clk_mode,
             triggers        : NodeTrigger::new(),
             cycle_wait_reg_i: reg_i,
             cycle           : None,
@@ -150,9 +142,8 @@ impl HasNodeTriggerSig for WaitCycleNode {
 }
 
 impl NcpNode for WaitCycleNode {
-    fn get_ncp_ident    (&self)     -> NcpIdent     { self.ident }
-    fn get_clock_mode   (&self)     -> ClockMode     { self.clk_mode }
-    fn set_clock_mode   (&mut self, cm: ClockMode)   { self.clk_mode = cm; }
+    fn get_ncp_ident  (&self) -> NcpIdent  { self.ident }
+    fn get_clock_mode (&self) -> ClockMode { ClockMode::PosEdge }
 
     fn assign(&mut self, arena: &mut ModelArena) {
         let sig = self.triggers.to_trigger_sig(arena);
