@@ -75,6 +75,10 @@ impl NcpNode for WaitCondNode {
     fn get_exit_opr  (&self) -> HcpIdent { self.bound_exit_i.unwrap() }
     fn get_state_operating(&self) -> HcpIdent { self.raw_state_op_i.unwrap() }
     fn get_cycle_used(&self) -> i32 { NODE_CYCLE_USED_UNKNOWN }
+
+    fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) {
+        arena.replace_back_wait_cond_node(*self);
+    }
 }
 
 impl Identifiable for WaitCondNode {
@@ -167,6 +171,10 @@ impl NcpNode for WaitCycleNode {
         } else {
             self.cycle.unwrap_or(NODE_CYCLE_USED_UNKNOWN)
         }
+    }
+
+    fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) {
+        arena.replace_back_wait_cycle_node(*self);
     }
 }
 

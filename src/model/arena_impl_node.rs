@@ -42,25 +42,44 @@ impl ModelArena {
     pub fn add_opr_node       (&mut self, n: OprNode)        -> ArenaHandle { self.opr_nodes       .insert(n) }
 
     // ----- take / replace_back (use these instead of typed get/get_mut) ----
-    pub fn take_asm_node       (&mut self, h: ArenaHandle) -> AsmNode        { self.asm_nodes       .take(h) }
-    pub fn take_start_node     (&mut self, h: ArenaHandle) -> StartNode      { self.start_nodes     .take(h) }
-    pub fn take_state_node     (&mut self, h: ArenaHandle) -> StateNode      { self.state_nodes     .take(h) }
-    pub fn take_syn_node       (&mut self, h: ArenaHandle) -> SynNode        { self.syn_nodes       .take(h) }
-    pub fn take_wait_cond_node (&mut self, h: ArenaHandle) -> WaitCondNode   { self.wait_cond_nodes .take(h) }
-    pub fn take_wait_cycle_node(&mut self, h: ArenaHandle) -> WaitCycleNode  { self.wait_cycle_nodes.take(h) }
-    pub fn take_counter_node   (&mut self, h: ArenaHandle) -> CounterNode    { self.counter_nodes   .take(h) }
-    pub fn take_pseudo_node    (&mut self, h: ArenaHandle) -> PseudoNode     { self.pseudo_nodes    .take(h) }
-    pub fn take_opr_node       (&mut self, h: ArenaHandle) -> OprNode        { self.opr_nodes       .take(h) }
+    pub fn take_asm_node       (&mut self, i: NcpIdent) -> AsmNode        { self.asm_nodes       .take(*i.get_arena_handle()) }
+    pub fn take_start_node     (&mut self, i: NcpIdent) -> StartNode      { self.start_nodes     .take(*i.get_arena_handle()) }
+    pub fn take_state_node     (&mut self, i: NcpIdent) -> StateNode      { self.state_nodes     .take(*i.get_arena_handle()) }
+    pub fn take_syn_node       (&mut self, i: NcpIdent) -> SynNode        { self.syn_nodes       .take(*i.get_arena_handle()) }
+    pub fn take_wait_cond_node (&mut self, i: NcpIdent) -> WaitCondNode   { self.wait_cond_nodes .take(*i.get_arena_handle()) }
+    pub fn take_wait_cycle_node(&mut self, i: NcpIdent) -> WaitCycleNode  { self.wait_cycle_nodes.take(*i.get_arena_handle()) }
+    pub fn take_counter_node   (&mut self, i: NcpIdent) -> CounterNode    { self.counter_nodes   .take(*i.get_arena_handle()) }
+    pub fn take_pseudo_node    (&mut self, i: NcpIdent) -> PseudoNode     { self.pseudo_nodes    .take(*i.get_arena_handle()) }
+    pub fn take_opr_node       (&mut self, i: NcpIdent) -> OprNode        { self.opr_nodes       .take(*i.get_arena_handle()) }
 
-    pub fn replace_back_asm_node       (&mut self, h: ArenaHandle, v: AsmNode      ) { self.asm_nodes       .replace_back(h, v) }
-    pub fn replace_back_start_node     (&mut self, h: ArenaHandle, v: StartNode    ) { self.start_nodes     .replace_back(h, v) }
-    pub fn replace_back_state_node     (&mut self, h: ArenaHandle, v: StateNode    ) { self.state_nodes     .replace_back(h, v) }
-    pub fn replace_back_syn_node       (&mut self, h: ArenaHandle, v: SynNode      ) { self.syn_nodes       .replace_back(h, v) }
-    pub fn replace_back_wait_cond_node (&mut self, h: ArenaHandle, v: WaitCondNode ) { self.wait_cond_nodes .replace_back(h, v) }
-    pub fn replace_back_wait_cycle_node(&mut self, h: ArenaHandle, v: WaitCycleNode) { self.wait_cycle_nodes.replace_back(h, v) }
-    pub fn replace_back_counter_node   (&mut self, h: ArenaHandle, v: CounterNode  ) { self.counter_nodes   .replace_back(h, v) }
-    pub fn replace_back_pseudo_node    (&mut self, h: ArenaHandle, v: PseudoNode   ) { self.pseudo_nodes    .replace_back(h, v) }
-    pub fn replace_back_opr_node       (&mut self, h: ArenaHandle, v: OprNode      ) { self.opr_nodes       .replace_back(h, v) }
+    pub fn replace_back_asm_node       (&mut self, v: AsmNode      ) { let h = *v.get_arena_handle(); self.asm_nodes       .replace_back(h, v) }
+    pub fn replace_back_start_node     (&mut self, v: StartNode    ) { let h = *v.get_arena_handle(); self.start_nodes     .replace_back(h, v) }
+    pub fn replace_back_state_node     (&mut self, v: StateNode    ) { let h = *v.get_arena_handle(); self.state_nodes     .replace_back(h, v) }
+    pub fn replace_back_syn_node       (&mut self, v: SynNode      ) { let h = *v.get_arena_handle(); self.syn_nodes       .replace_back(h, v) }
+    pub fn replace_back_wait_cond_node (&mut self, v: WaitCondNode ) { let h = *v.get_arena_handle(); self.wait_cond_nodes .replace_back(h, v) }
+    pub fn replace_back_wait_cycle_node(&mut self, v: WaitCycleNode) { let h = *v.get_arena_handle(); self.wait_cycle_nodes.replace_back(h, v) }
+    pub fn replace_back_counter_node   (&mut self, v: CounterNode  ) { let h = *v.get_arena_handle(); self.counter_nodes   .replace_back(h, v) }
+    pub fn replace_back_pseudo_node    (&mut self, v: PseudoNode   ) { let h = *v.get_arena_handle(); self.pseudo_nodes    .replace_back(h, v) }
+    pub fn replace_back_opr_node       (&mut self, v: OprNode      ) { let h = *v.get_arena_handle(); self.opr_nodes       .replace_back(h, v) }
+
+    // ----- polymorphic take / replace_back -----------------------------------
+    pub fn take_ncp_node(&mut self, ident: NcpIdent) -> Box<dyn NcpNode> {
+        match ident.get_node_type() {
+            NodeType::Asm       => Box::new(self.take_asm_node       (ident)),
+            NodeType::Start     => Box::new(self.take_start_node     (ident)),
+            NodeType::State     => Box::new(self.take_state_node     (ident)),
+            NodeType::Syn       => Box::new(self.take_syn_node       (ident)),
+            NodeType::WaitCond  => Box::new(self.take_wait_cond_node (ident)),
+            NodeType::WaitCycle => Box::new(self.take_wait_cycle_node(ident)),
+            NodeType::Counter   => Box::new(self.take_counter_node   (ident)),
+            NodeType::Pseudo    => Box::new(self.take_pseudo_node    (ident)),
+            NodeType::Opr       => Box::new(self.take_opr_node       (ident)),
+        }
+    }
+
+    pub fn replace_back_ncp_node(&mut self, node: Box<dyn NcpNode>) {
+        node.replace_back_into_arena(self);
+    }
 
     // ----- trait-object dispatch (cannot be expressed via take/replace) ----
     pub fn get_ncp_node    (&self,     ident: &NcpIdent) -> &    dyn NcpNode { dispatch_ncp!(self, ident, get    ) }
@@ -92,56 +111,14 @@ impl ModelArena {
 
     pub fn assign_asm_from_state_node(&mut self, ident: NcpIdent) {
         assert_eq!(ident.get_node_type(), NodeType::Asm);
-        let handle = *ident.get_arena_handle();
-        let mut node = self.take_asm_node(handle);
+        let mut node = self.take_asm_node(ident);
         node.assign_from_state_node(self);
-        self.replace_back_asm_node(handle, node);
+        self.replace_back_asm_node(node);
     }
 
     pub fn assign_ncp_node(&mut self, ident: NcpIdent) {
-        let handle = *ident.get_arena_handle();
-        match ident.get_node_type() {
-            NodeType::Asm => {
-                let mut node = self.take_asm_node(handle);
-                node.assign(self);
-                self.replace_back_asm_node(handle, node);
-            }
-            NodeType::Start => {
-                let mut node = self.take_start_node(handle);
-                node.assign(self);
-                self.replace_back_start_node(handle, node);
-            }
-            NodeType::State => {
-                let mut node = self.take_state_node(handle);
-                node.assign(self);
-                self.replace_back_state_node(handle, node);
-            }
-            NodeType::Syn => {
-                let mut node = self.take_syn_node(handle);
-                node.assign(self);
-                self.replace_back_syn_node(handle, node);
-            }
-            NodeType::WaitCond => {
-                let mut node = self.take_wait_cond_node(handle);
-                node.assign(self);
-                self.replace_back_wait_cond_node(handle, node);
-            }
-            NodeType::WaitCycle => {
-                let mut node = self.take_wait_cycle_node(handle);
-                node.assign(self);
-                self.replace_back_wait_cycle_node(handle, node);
-            }
-            NodeType::Counter => {
-                let mut node = self.take_counter_node(handle);
-                node.assign(self);
-                self.replace_back_counter_node(handle, node);
-            }
-            NodeType::Pseudo => {
-                let mut node = self.take_pseudo_node(handle);
-                node.assign(self);
-                self.replace_back_pseudo_node(handle, node);
-            }
-            NodeType::Opr => panic!("OprNode does not support assign"),
-        }
+        let mut node = self.take_ncp_node(ident);
+        node.assign(self);
+        self.replace_back_ncp_node(node);
     }
 }

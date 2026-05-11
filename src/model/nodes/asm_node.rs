@@ -119,6 +119,10 @@ impl NcpNode for AsmNode {
     }
 
     fn get_cycle_used(&self) -> i32 { 1 }
+
+    fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) {
+        arena.replace_back_asm_node(*self);
+    }
 }
 
 impl Identifiable for AsmNode {

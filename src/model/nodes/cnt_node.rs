@@ -68,6 +68,10 @@ impl NcpNode for CounterNode {
 
     fn get_exit_opr  (&self) -> HcpIdent { self.end_expr_i.unwrap_or_default() }
     fn get_cycle_used(&self) -> i32      { self.last_loop }
+
+    fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) {
+        arena.replace_back_counter_node(*self);
+    }
 }
 
 impl Identifiable for CounterNode {

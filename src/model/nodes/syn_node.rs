@@ -76,6 +76,10 @@ impl NcpNode for SynNode {
     fn get_exit_opr      (&self) -> HcpIdent { self.bound_exit_i.unwrap() }
     fn get_cycle_used    (&self) -> i32      { 0 }
     fn is_state_full_node(&self) -> bool     { false }
+
+    fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) {
+        arena.replace_back_syn_node(*self);
+    }
 }
 
 impl Identifiable for SynNode {

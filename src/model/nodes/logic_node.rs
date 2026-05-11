@@ -85,6 +85,10 @@ impl NcpNode for PseudoNode {
     fn get_exit_opr     (&self) -> HcpIdent { self.exit_expr_i }
     fn get_cycle_used   (&self) -> i32      { 0 }
     fn is_state_full_node(&self) -> bool    { false }
+
+    fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) {
+        arena.replace_back_pseudo_node(*self);
+    }
 }
 
 impl Identifiable for PseudoNode {
@@ -136,6 +140,10 @@ impl NcpNode for OprNode {
     fn get_exit_opr     (&self) -> HcpIdent { self.value_i }
     fn get_cycle_used   (&self) -> i32      { 0 }
     fn is_state_full_node(&self) -> bool    { false }
+
+    fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) {
+        arena.replace_back_opr_node(*self);
+    }
 }
 
 impl Identifiable for OprNode {

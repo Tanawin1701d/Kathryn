@@ -91,6 +91,10 @@ impl NcpNode for StateNode {
     fn get_cycle_used     (&self) -> i32      {
         if self.get_node_triggers().is_unpred_cycle_usage() { NODE_CYCLE_USED_UNKNOWN } else { 1 }
     }
+
+    fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) {
+        arena.replace_back_state_node(*self);
+    }
 }
 
 impl Identifiable for StateNode {

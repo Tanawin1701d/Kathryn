@@ -62,6 +62,10 @@ impl NcpNode for StartNode {
 
     fn get_exit_opr  (&self) -> HcpIdent { self.exit_expr_i.unwrap_or_default() }
     fn get_cycle_used(&self) -> i32      { 1 }
+
+    fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) {
+        arena.replace_back_start_node(*self);
+    }
 }
 
 impl Identifiable for StartNode {

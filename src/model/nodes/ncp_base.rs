@@ -21,7 +21,8 @@ pub trait NcpNode: HasNodeTriggerSig {
     fn get_node_type(&self) -> NodeType { self.get_ncp_ident().get_node_type() }
 
     // ---- pure virtual ------------------------------------------------------
-    fn assign        (&mut self, arena: &mut ModelArena);
+    fn assign                (&mut self, arena: &mut ModelArena);
+    fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena);
 
     // ---- virtual with defaults --------------------------------------------
     fn get_exit_opr       (&self) -> HcpIdent { panic!("get_exit_opr: not implemented") }
