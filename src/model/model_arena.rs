@@ -13,6 +13,7 @@ use crate::model::hw_component::sp_reg::wait_reg::{CondWaitStateReg, CycleWaitSt
 use crate::model::nodes::asm_node::AsmNode;
 use crate::model::nodes::cnt_node::CounterNode;
 use crate::model::nodes::logic_node::{OprNode, PseudoNode};
+use crate::model::nodes::start_node::StartNode;
 use crate::model::nodes::state_node::StateNode;
 use crate::model::nodes::syn_node::SynNode;
 use crate::model::nodes::wait_node::{WaitCondNode, WaitCycleNode};
@@ -43,6 +44,7 @@ pub struct ModelArena {
 
     // node arenas
     pub(super) asm_nodes        : ArenaGroup<AsmNode>,
+    pub(super) start_nodes      : ArenaGroup<StartNode>,
     pub(super) state_nodes      : ArenaGroup<StateNode>,
     pub(super) syn_nodes        : ArenaGroup<SynNode>,
     pub(super) wait_cond_nodes  : ArenaGroup<WaitCondNode>,

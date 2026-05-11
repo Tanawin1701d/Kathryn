@@ -31,6 +31,7 @@ impl ModelArena {
             ue_conds   : ArenaGroup::new(),
             ue_switches: ArenaGroup::new(),
             asm_nodes        : ArenaGroup::new(),
+            start_nodes      : ArenaGroup::new(),
             state_nodes      : ArenaGroup::new(),
             syn_nodes        : ArenaGroup::new(),
             wait_cond_nodes  : ArenaGroup::new(),
@@ -61,6 +62,7 @@ impl ModelArena {
         self.ue_conds    = ArenaGroup::new();
         self.ue_switches = ArenaGroup::new();
         self.asm_nodes        = ArenaGroup::new();
+        self.start_nodes      = ArenaGroup::new();
         self.state_nodes      = ArenaGroup::new();
         self.syn_nodes        = ArenaGroup::new();
         self.wait_cond_nodes  = ArenaGroup::new();

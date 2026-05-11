@@ -8,3 +8,4 @@ pub mod wait_node;
 pub mod state_node;
 pub mod syn_node;
 pub mod asm_node;
+pub mod start_node;

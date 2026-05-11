@@ -8,6 +8,7 @@ use crate::model::nodes::cnt_node::CounterNode;
 use crate::model::nodes::logic_node::{OprNode, PseudoNode};
 use crate::model::nodes::ncp_base::NcpNode;
 use crate::model::nodes::ncp_ident::NcpIdent;
+use crate::model::nodes::start_node::StartNode;
 use crate::model::nodes::state_node::StateNode;
 use crate::model::nodes::syn_node::SynNode;
 use crate::model::nodes::wait_node::{WaitCondNode, WaitCycleNode};
@@ -16,6 +17,13 @@ use crate::model::nodes::wait_node::{WaitCondNode, WaitCycleNode};
 // mk_*   → is_user_com = true  (user-defined)
 
 impl ModelArena {
+    // ---- StartNode ---------------------------------------------------------
+    pub fn make_start_node(&mut self, name: &str, rst_sig_i: HcpIdent) -> NcpIdent {
+        let n = StartNode::new(name, rst_sig_i, self);
+        let h = self.add_start_node(n);
+        self.start_nodes.get(h).get_ncp_ident()
+    }
+
     // ---- AsmNode -----------------------------------------------------------
     pub fn make_asm_node(&mut self, name: &str, am: AssignMeta) -> NcpIdent {
         let h = self.add_asm_node(AsmNode::new(false, name, am));

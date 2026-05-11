@@ -8,9 +8,9 @@ use crate::model::nodes::ncp_ident::NcpIdent;
 
 #[derive(Clone, Debug)]
 pub struct FlowBlockPar {
-    base:      FlowBlockBase,
+    base     : FlowBlockBase,
     schematic: ParSchematic,
-    result:    Option<NodeWrap>,
+    result   : Option<NodeWrap>,
 }
 
 impl Default for FlowBlockPar {

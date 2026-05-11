@@ -11,6 +11,7 @@ pub enum NodeType {
     WaitCond,
     WaitCycle,
     Counter,
+    Start,
 }
 
 impl NodeType {
@@ -24,6 +25,7 @@ impl NodeType {
             NodeType::WaitCond  => "WAITCOND_NODE",
             NodeType::WaitCycle => "WAITCYCLE_NODE",
             NodeType::Counter   => "COUNTER_NODE",
+            NodeType::Start     => "START_NODE",
         }
     }
 }

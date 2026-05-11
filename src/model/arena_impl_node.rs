@@ -7,6 +7,7 @@ use crate::model::nodes::cnt_node::CounterNode;
 use crate::model::nodes::logic_node::{OprNode, PseudoNode};
 use crate::model::nodes::ncp_base::NcpNode;
 use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
+use crate::model::nodes::start_node::StartNode;
 use crate::model::nodes::state_node::StateNode;
 use crate::model::nodes::syn_node::SynNode;
 use crate::model::nodes::wait_node::{WaitCondNode, WaitCycleNode};
@@ -16,6 +17,7 @@ macro_rules! dispatch_ncp {
         let handle = *$ident.get_arena_handle();
         match $ident.get_node_type() {
             NodeType::Asm       => $self.asm_nodes       .$method(handle) as _,
+            NodeType::Start     => $self.start_nodes     .$method(handle) as _,
             NodeType::State     => $self.state_nodes     .$method(handle) as _,
             NodeType::Syn       => $self.syn_nodes       .$method(handle) as _,
             NodeType::WaitCond  => $self.wait_cond_nodes .$method(handle) as _,
@@ -30,6 +32,7 @@ macro_rules! dispatch_ncp {
 impl ModelArena {
     // ----- inserts ---------------------------------------------------------
     pub fn add_asm_node       (&mut self, n: AsmNode)        -> ArenaHandle { self.asm_nodes       .insert(n) }
+    pub fn add_start_node     (&mut self, n: StartNode)      -> ArenaHandle { self.start_nodes     .insert(n) }
     pub fn add_state_node     (&mut self, n: StateNode)      -> ArenaHandle { self.state_nodes     .insert(n) }
     pub fn add_syn_node       (&mut self, n: SynNode)        -> ArenaHandle { self.syn_nodes       .insert(n) }
     pub fn add_wait_cond_node (&mut self, n: WaitCondNode)   -> ArenaHandle { self.wait_cond_nodes .insert(n) }
@@ -40,6 +43,7 @@ impl ModelArena {
 
     // ----- take / replace_back (use these instead of typed get/get_mut) ----
     pub fn take_asm_node       (&mut self, h: ArenaHandle) -> AsmNode        { self.asm_nodes       .take(h) }
+    pub fn take_start_node     (&mut self, h: ArenaHandle) -> StartNode      { self.start_nodes     .take(h) }
     pub fn take_state_node     (&mut self, h: ArenaHandle) -> StateNode      { self.state_nodes     .take(h) }
     pub fn take_syn_node       (&mut self, h: ArenaHandle) -> SynNode        { self.syn_nodes       .take(h) }
     pub fn take_wait_cond_node (&mut self, h: ArenaHandle) -> WaitCondNode   { self.wait_cond_nodes .take(h) }
@@ -49,6 +53,7 @@ impl ModelArena {
     pub fn take_opr_node       (&mut self, h: ArenaHandle) -> OprNode        { self.opr_nodes       .take(h) }
 
     pub fn replace_back_asm_node       (&mut self, h: ArenaHandle, v: AsmNode      ) { self.asm_nodes       .replace_back(h, v) }
+    pub fn replace_back_start_node     (&mut self, h: ArenaHandle, v: StartNode    ) { self.start_nodes     .replace_back(h, v) }
     pub fn replace_back_state_node     (&mut self, h: ArenaHandle, v: StateNode    ) { self.state_nodes     .replace_back(h, v) }
     pub fn replace_back_syn_node       (&mut self, h: ArenaHandle, v: SynNode      ) { self.syn_nodes       .replace_back(h, v) }
     pub fn replace_back_wait_cond_node (&mut self, h: ArenaHandle, v: WaitCondNode ) { self.wait_cond_nodes .replace_back(h, v) }
@@ -100,6 +105,11 @@ impl ModelArena {
                 let mut node = self.take_asm_node(handle);
                 node.assign(self);
                 self.replace_back_asm_node(handle, node);
+            }
+            NodeType::Start => {
+                let mut node = self.take_start_node(handle);
+                node.assign(self);
+                self.replace_back_start_node(handle, node);
             }
             NodeType::State => {
                 let mut node = self.take_state_node(handle);
