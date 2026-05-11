@@ -1,0 +1,68 @@
+use crate::model::common::identifier::{IdentBase, Identifiable};
+use crate::model::flow_block::flow_block_base::{FlowBlock, FlowBlockBase};
+use crate::model::flow_block::flow_block_ident::{FlowBlockIdent, FlowBlockType};
+use crate::model::flow_block::node_wrap::NodeWrap;
+use crate::model::hw_component::common::hcp_ident::HcpIdent;
+use crate::model::model_arena::ModelArena;
+use crate::model::nodes::ncp_ident::NcpIdent;
+
+/// ZIF — zero-cycle conditional block (stub).
+/// Hardware build is not implemented here; these are extracted at a higher
+/// controller level before any hardware generation occurs.
+#[derive(Clone, Debug)]
+pub struct FlowBlockZeroCond {
+    base     : FlowBlockBase,
+    condition: HcpIdent,
+}
+
+impl Default for FlowBlockZeroCond {
+    fn default() -> Self { Self::new_zif("", HcpIdent::default()) }
+}
+
+impl FlowBlockZeroCond {
+    pub fn new_zif(name: &str, cond_i: HcpIdent) -> Self {
+        Self {
+            base:      FlowBlockBase::new(FlowBlockType::ZeroCond, name),
+            condition: cond_i,
+        }
+    }
+}
+
+impl FlowBlock for FlowBlockZeroCond {
+    fn get_base    (&self)     -> &FlowBlockBase     { &self.base }
+    fn get_base_mut(&mut self) -> &mut FlowBlockBase { &mut self.base }
+
+    fn add_element_in_flow_block(&mut self, _node: NcpIdent) {
+        panic!("zero-cond block does not accept direct asm nodes; use a sub-block")
+    }
+
+    fn add_sub_flow_block(&mut self, block: FlowBlockIdent) {
+        self.base.add_sub_flow_block(block);
+    }
+
+    fn add_con_flow_block(&mut self, block: FlowBlockIdent) {
+        self.base.add_con_flow_block(block);
+    }
+
+    fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) {
+        arena.replace_back_flow_block_zero_cond(*self);
+    }
+
+    fn build_hw_master(&mut self, _arena: &mut ModelArena) {
+        todo!("ZIF hardware build not implemented — requires controller-level extraction before synthesis")
+    }
+
+    fn build_hw_component(&mut self, _arena: &mut ModelArena) {
+        unreachable!("build_hw_master prevents reaching build_hw_component")
+    }
+
+    fn summarize_block(&self) -> NodeWrap {
+        todo!("ZIF summarize not implemented — requires controller-level extraction before synthesis")
+    }
+}
+
+impl Identifiable for FlowBlockZeroCond {
+    fn get_ident_base    (&self)     -> &IdentBase     { self.base.get_ident_ref().get_ident_base() }
+    fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.base.get_ident_mut().get_ident_base_mut() }
+    fn build_unique_name (&mut self) -> &str           { self.base.get_ident_mut().build_unique_name() }
+}

@@ -177,6 +177,16 @@ pub trait FlowBlock: Identifiable {
     // add element
     fn add_element_in_flow_block(&mut self, node: NcpIdent);
     fn add_sub_flow_block(&mut self, block: FlowBlockIdent);
+    fn add_con_flow_block(&mut self, _block: FlowBlockIdent) {
+        panic!("add_con_flow_block: not supported by this block type")
+    }
+    // conditional / loop queries
+    fn get_con_condition(&self) -> Option<HcpIdent> {
+        panic!("get_con_condition: not supported by this block type")
+    }
+    fn get_loop_id_expr_i(&self) -> HcpIdent {
+        panic!("get_loop_id_expr_i: not supported by this block type")
+    }
     // summarize for next synthesis
     fn summarize_block(&self) -> NodeWrap;
     // main build core

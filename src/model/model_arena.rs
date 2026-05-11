@@ -20,6 +20,13 @@ use crate::model::nodes::wait_node::{WaitCondNode, WaitCycleNode};
 use crate::model::module::module::Module;
 use crate::model::flow_block::flow_block_par::FlowBlockPar;
 use crate::model::flow_block::flow_block_seq::FlowBlockSeq;
+use crate::model::flow_block::flow_block_cond::FlowBlockCond;
+use crate::model::flow_block::flow_block_cond_elif::FlowBlockCondElif;
+use crate::model::flow_block::flow_block_zero_cond::FlowBlockZeroCond;
+use crate::model::flow_block::flow_block_zero_cond_elif::FlowBlockZeroCondElif;
+use crate::model::flow_block::flow_block_while::FlowBlockWhile;
+use crate::model::flow_block::flow_block_do_while::FlowBlockDoWhile;
+use crate::model::flow_block::flow_block_counter_loop::FlowBlockCounterLoop;
 
 pub struct ModelArena {
 
@@ -57,6 +64,13 @@ pub struct ModelArena {
     pub(super) modules          : ArenaGroup<Module>,
 
     // flow-block arenas
-    pub(super) flow_block_seqs : ArenaGroup<FlowBlockSeq>,
-    pub(super) flow_block_pars : ArenaGroup<FlowBlockPar>,
+    pub(super) flow_block_seqs           : ArenaGroup<FlowBlockSeq>,
+    pub(super) flow_block_pars           : ArenaGroup<FlowBlockPar>,
+    pub(super) flow_block_conds          : ArenaGroup<FlowBlockCond>,
+    pub(super) flow_block_cond_elifs     : ArenaGroup<FlowBlockCondElif>,
+    pub(super) flow_block_zero_conds     : ArenaGroup<FlowBlockZeroCond>,
+    pub(super) flow_block_zero_cond_elifs: ArenaGroup<FlowBlockZeroCondElif>,
+    pub(super) flow_block_whiles         : ArenaGroup<FlowBlockWhile>,
+    pub(super) flow_block_do_whiles      : ArenaGroup<FlowBlockDoWhile>,
+    pub(super) flow_block_counter_loops  : ArenaGroup<FlowBlockCounterLoop>,
 }

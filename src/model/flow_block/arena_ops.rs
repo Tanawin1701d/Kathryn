@@ -20,6 +20,16 @@ impl ModelArena {
         self.replace_back_flow_block(block);
     }
 
+    pub fn add_con_flow_block_to_flow_block(
+        &mut self,
+        parent: FlowBlockIdent,
+        child: FlowBlockIdent,
+    ) {
+        let mut block = self.take_flow_block(parent);
+        block.add_con_flow_block(child);
+        self.replace_back_flow_block(block);
+    }
+
     pub fn add_ext_signal_to_flow_block(
         &mut self,
         block_ident: FlowBlockIdent,

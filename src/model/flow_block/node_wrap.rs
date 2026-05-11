@@ -75,4 +75,20 @@ impl NodeWrapCycleDet {
         }
         cycle_used
     }
+
+    pub fn get_same_cycle_horizon(&self) -> i32 {
+        assert!(!self.samples.is_empty());
+        let mut common: Option<i32> = None;
+        for &cycle in &self.samples {
+            if cycle == IN_CONSIST_CYCLE_USED {
+                return IN_CONSIST_CYCLE_USED;
+            }
+            match common {
+                None           => common = Some(cycle),
+                Some(c) if c == cycle => {}
+                Some(_) => return IN_CONSIST_CYCLE_USED,
+            }
+        }
+        common.unwrap_or(0)
+    }
 }

@@ -6,13 +6,27 @@ use crate::model::common::identifier::{IdentBase, Identifiable};
 pub enum FlowBlockType {
     Sequential,
     Parallel,
+    CondIf,
+    CondElif,
+    ZeroCond,
+    ZeroCondElif,
+    WhileLoop,
+    DoWhile,
+    CounterLoop,
 }
 
 impl FlowBlockType {
     pub fn as_str(self) -> &'static str {
         match self {
-            Self::Sequential => "SEQUENTIAL",
-            Self::Parallel   => "PARALLEL",
+            Self::Sequential   => "SEQUENTIAL",
+            Self::Parallel     => "PARALLEL",
+            Self::CondIf       => "COND_IF",
+            Self::CondElif     => "COND_ELIF",
+            Self::ZeroCond     => "ZERO_COND",
+            Self::ZeroCondElif => "ZERO_COND_ELIF",
+            Self::WhileLoop    => "WHILE_LOOP",
+            Self::DoWhile      => "DO_WHILE",
+            Self::CounterLoop  => "COUNTER_LOOP",
         }
     }
 }

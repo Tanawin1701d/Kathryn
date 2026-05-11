@@ -40,8 +40,15 @@ impl ModelArena {
             pseudo_nodes     : ArenaGroup::new(),
             opr_nodes        : ArenaGroup::new(),
             modules          : ArenaGroup::new(),
-            flow_block_seqs : ArenaGroup::new(),
-            flow_block_pars : ArenaGroup::new(),
+            flow_block_seqs           : ArenaGroup::new(),
+            flow_block_pars           : ArenaGroup::new(),
+            flow_block_conds          : ArenaGroup::new(),
+            flow_block_cond_elifs     : ArenaGroup::new(),
+            flow_block_zero_conds     : ArenaGroup::new(),
+            flow_block_zero_cond_elifs: ArenaGroup::new(),
+            flow_block_whiles         : ArenaGroup::new(),
+            flow_block_do_whiles      : ArenaGroup::new(),
+            flow_block_counter_loops  : ArenaGroup::new(),
         }
     }
 
@@ -71,8 +78,15 @@ impl ModelArena {
         self.pseudo_nodes     = ArenaGroup::new();
         self.opr_nodes        = ArenaGroup::new();
         self.modules          = ArenaGroup::new();
-        self.flow_block_seqs = ArenaGroup::new();
-        self.flow_block_pars = ArenaGroup::new();
+        self.flow_block_seqs           = ArenaGroup::new();
+        self.flow_block_pars           = ArenaGroup::new();
+        self.flow_block_conds          = ArenaGroup::new();
+        self.flow_block_cond_elifs     = ArenaGroup::new();
+        self.flow_block_zero_conds     = ArenaGroup::new();
+        self.flow_block_zero_cond_elifs = ArenaGroup::new();
+        self.flow_block_whiles         = ArenaGroup::new();
+        self.flow_block_do_whiles      = ArenaGroup::new();
+        self.flow_block_counter_loops  = ArenaGroup::new();
     }
 
     // -----------------------------------------------------------------------
