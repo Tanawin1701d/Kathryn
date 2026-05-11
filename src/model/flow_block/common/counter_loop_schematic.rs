@@ -79,9 +79,7 @@ impl CounterLoopSchematic {
         arena.add_depend_node_to_ncp(loop_node_i, body_exit_i, Some(not_at_last_i));
 
         // Body enters when loop_node fires
-        for &entrance_i in body_wrap.get_entrance_nodes_i() {
-            arena.add_depend_node_to_ncp(entrance_i, loop_node_i, None);
-        }
+        body_wrap.add_dep_to_entrances(arena, loop_node_i, None);
 
         // 4. Create exit_node — fires when body_exit AND cnt_at_last
         let exit_i = arena.make_pseudo_node(&format!("cloop_exit_{}", id), 1, LogicOp::BitwiseOr);
@@ -103,10 +101,6 @@ impl CounterLoopSchematic {
         };
 
         // 7. Build result
-        let mut result = NodeWrap::new();
-        result.add_entrance_node_i(loop_node_i);
-        result.set_exit_node_i(exit_i);
-        result.set_cycle_used(cycle_used);
-        result
+        NodeWrap::with_single_entrance(loop_node_i, exit_i, cycle_used)
     }
 }

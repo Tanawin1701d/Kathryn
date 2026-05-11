@@ -49,9 +49,7 @@ impl WhileSchematic {
         arena.add_depend_node_to_ncp(cond_node_i, body_exit_i, None);
 
         // Body enters when condition is true
-        for &entrance_i in body_wrap.get_entrance_nodes_i() {
-            arena.add_depend_node_to_ncp(entrance_i, cond_node_i, Some(self.cond_i));
-        }
+        body_wrap.add_dep_to_entrances(arena, cond_node_i, Some(self.cond_i));
 
         // 3. Create exit_node — fires when condition is false
         let not_cond_i = arena.make_expression(
@@ -72,10 +70,6 @@ impl WhileSchematic {
         body_wrap.assign_entrance_nodes(arena);
 
         // 5. Build result — cycle_used is always inconsistent due to feedback
-        let mut result = NodeWrap::new();
-        result.add_entrance_node_i(cond_node_i);
-        result.set_exit_node_i(exit_i);
-        result.set_cycle_used(IN_CONSIST_CYCLE_USED);
-        result
+        NodeWrap::with_single_entrance(cond_node_i, exit_i, IN_CONSIST_CYCLE_USED)
     }
 }

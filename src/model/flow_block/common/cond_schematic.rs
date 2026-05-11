@@ -26,7 +26,9 @@ impl CondSchematic {
     pub fn build(&mut self, base: &mut FlowBlockBase, arena: &mut ModelArena) -> NodeWrap {
         assert!(!base.get_sub_blocks_i().is_empty(), "cond block must have at least one body block");
 
+        // init id and cycle deteminer
         let id = base.get_ident().get_global_id();
+        let mut cycle_det = NodeWrapCycleDet::new();
 
         // 1. Create cond_node — entry point that evaluates the condition
         let cond_node_i = match self.mode {
@@ -42,9 +44,8 @@ impl CondSchematic {
         // 2. Summarize the main body (sub_blocks[0]) and gate it behind cond_i
         let main_block_i = base.get_sub_blocks_i()[0];
         let main_wrap = arena.summarize_flow_block(main_block_i);
-        for &entrance_i in main_wrap.get_entrance_nodes_i() {
-            arena.add_depend_node_to_ncp(entrance_i, cond_node_i, Some(self.cond_i));
-        }
+        main_wrap.add_dep_to_entrances(arena, cond_node_i, Some(self.cond_i));
+        cycle_det.add_cycle(main_wrap.get_cycle_used());
 
         // 3. Mutual-exclusion chain: prev_false = ~cond_i
         let inv_main = arena.make_expression(
@@ -57,8 +58,6 @@ impl CondSchematic {
         let mut prev_false: Option<HcpIdent> = Some(inv_main);
 
         // 4. Process con_blocks (elif / else)
-        let mut cycle_det = NodeWrapCycleDet::new();
-        cycle_det.add_cycle(main_wrap.get_cycle_used());
 
         let con_block_ids: Vec<_> = base.get_con_blocks_i().to_vec();
         let mut con_wraps: Vec<NodeWrap> = Vec::new();
@@ -87,15 +86,13 @@ impl CondSchematic {
                 }
             };
 
-            for &entrance_i in con_wrap.get_entrance_nodes_i() {
-                arena.add_depend_node_to_ncp(entrance_i, cond_node_i, gated_cond);
-            }
+            con_wrap.add_dep_to_entrances(arena, cond_node_i, gated_cond);
 
             cycle_det.add_cycle(con_wrap.get_cycle_used());
             con_wraps.push(con_wrap);
         }
 
-        // 5. Create exit_node (OR pseudo) collecting all path exits
+        // 5. Create exit_node (OR pseudo) collecting all path exits // pick one!
         let exit_i = arena.make_pseudo_node(&format!("cif_exit_{}", id), 1, LogicOp::BitwiseOr);
         arena.init_node_trigger(exit_i, base.get_ext_trigger_node(), false);
         base.add_sys_node(exit_i);
@@ -123,10 +120,6 @@ impl CondSchematic {
         }
 
         // 7. Build result
-        let mut result = NodeWrap::new();
-        result.add_entrance_node_i(cond_node_i);
-        result.set_exit_node_i(exit_i);
-        result.set_cycle_used(cycle_det.get_same_cycle_horizon());
-        result
+        NodeWrap::with_single_entrance(cond_node_i, exit_i, cycle_det.get_same_cycle_horizon())
     }
 }

@@ -93,9 +93,7 @@ impl ParSchematic {
                 arena.add_depend_node_to_ncp(state_i, int_start_i, None);
             }
             for wrap in &self.node_wraps_of_sub_blocks {
-                for entrance_i in wrap.get_entrance_nodes_i() {
-                    arena.add_depend_node_to_ncp(*entrance_i, int_start_i, None);
-                }
+                wrap.add_dep_to_entrances(arena, int_start_i, None);
             }
             cycle_det.add_cycle(IN_CONSIST_CYCLE_USED);
         }

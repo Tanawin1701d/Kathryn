@@ -30,14 +30,10 @@ impl DoWhileSchematic {
         // 2. Wire body entrance triggers
         // Optional initial trigger from int_start (for interrupt-driven re-entry)
         if let Some(start_i) = base.get_int_node(ExtSigType::Start) {
-            for &entrance_i in body_wrap.get_entrance_nodes_i() {
-                arena.add_depend_node_to_ncp(entrance_i, start_i, None);
-            }
+            body_wrap.add_dep_to_entrances(arena, start_i, None);
         }
         // Loop-back: body_exit (with cond_i) feeds back to body entrance
-        for &entrance_i in body_wrap.get_entrance_nodes_i() {
-            arena.add_depend_node_to_ncp(entrance_i, body_exit_i, Some(self.cond_i));
-        }
+        body_wrap.add_dep_to_entrances(arena, body_exit_i, Some(self.cond_i));
 
         // 3. Create exit_node — fires when body exits with condition false
         let not_cond_i = arena.make_expression(
@@ -56,10 +52,6 @@ impl DoWhileSchematic {
         arena.assign_ncp_node(exit_i);
 
         // 5. Build result — body's entrances become the do-while entrances
-        let mut result = NodeWrap::new();
-        result.add_entrance_nodes_i(body_wrap.get_entrance_nodes_i());
-        result.set_exit_node_i(exit_i);
-        result.set_cycle_used(IN_CONSIST_CYCLE_USED);
-        result
+        NodeWrap::with_entrances(body_wrap.get_entrance_nodes_i(), exit_i, IN_CONSIST_CYCLE_USED)
     }
 }

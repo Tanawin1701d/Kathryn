@@ -91,8 +91,8 @@ impl ModelArena {
     pub fn get_node_cycle_used     (&self, ident: &NcpIdent) -> i32         { self.get_ncp_node(ident).get_cycle_used() }
     pub fn get_ncp_trigger_clone   (&self, ident: &NcpIdent) -> NodeTrigger { self.get_ncp_node(ident).get_node_triggers().clone() }
 
-    pub fn add_depend_node_to_ncp(&mut self, ident: NcpIdent, src: NcpIdent, cond: Option<HcpIdent>) {
-        self.get_ncp_node_mut(&ident).add_depend_node(src, cond);
+    pub fn add_depend_node_to_ncp(&mut self, des_node_i: NcpIdent, src_node_i: NcpIdent, cond: Option<HcpIdent>) {
+        self.get_ncp_node_mut(&des_node_i).add_depend_node(src_node_i, cond);
     }
 
     pub fn set_ncp_int_reset_node(&mut self, ident: NcpIdent, rst: NcpIdent) {

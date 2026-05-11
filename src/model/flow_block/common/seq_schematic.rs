@@ -127,10 +127,10 @@ impl SeqSchematic {
             ele.assign_block(arena, idx == 0);
         }
 
-        let mut result = NodeWrap::new();
-        result.add_entrance_nodes_i(&self.elements[0].entrance_nodes());
-        result.set_exit_node_i(self.elements.last().expect("checked above").finish_node());
-        result.set_cycle_used(cycle_det.get_cycle_vertical());
-        result
+        NodeWrap::with_entrances(
+            &self.elements[0].entrance_nodes(),
+            self.elements.last().expect("checked above").finish_node(),
+            cycle_det.get_cycle_vertical(),
+        )
     }
 }

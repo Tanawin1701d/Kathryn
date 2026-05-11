@@ -1,3 +1,4 @@
+use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_base::IN_CONSIST_CYCLE_USED;
 use crate::model::nodes::ncp_ident::NcpIdent;
@@ -18,6 +19,22 @@ impl NodeWrap {
         }
     }
 
+    pub fn with_entrances(entrances_i: &[NcpIdent], exit_i: NcpIdent, cycle_used: i32) -> Self {
+        let mut w = Self::new();
+        w.add_entrance_nodes_i(entrances_i);
+        w.set_exit_node_i(exit_i);
+        w.set_cycle_used(cycle_used);
+        w
+    }
+
+    pub fn with_single_entrance(entrance_i: NcpIdent, exit_i: NcpIdent, cycle_used: i32) -> Self {
+        let mut w = Self::new();
+        w.add_entrance_node_i(entrance_i);
+        w.set_exit_node_i(exit_i);
+        w.set_cycle_used(cycle_used);
+        w
+    }
+
     pub fn add_entrance_node_i      (&mut self, node : NcpIdent   ) { self.entrance_nodes_i.push(node); }
     pub fn add_entrance_nodes_i     (&mut self, nodes: &[NcpIdent]) { self.entrance_nodes_i.extend_from_slice(nodes);}
     pub fn get_entrance_nodes_i_from(&mut self, other: &NodeWrap  ) { self.add_entrance_nodes_i(other.get_entrance_nodes_i());}
@@ -35,6 +52,12 @@ impl NodeWrap {
     pub fn assign_entrance_nodes(&self, arena: &mut ModelArena) {
         for entrance_i in &self.entrance_nodes_i {
             arena.assign_ncp_node(*entrance_i);
+        }
+    }
+
+    pub fn add_dep_to_entrances(&self, arena: &mut ModelArena, dep_i: NcpIdent, cond_i: Option<HcpIdent>) {
+        for &entrance_i in &self.entrance_nodes_i {
+            arena.add_depend_node_to_ncp(entrance_i, dep_i, cond_i);
         }
     }
 }
