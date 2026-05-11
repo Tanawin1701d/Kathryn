@@ -56,7 +56,7 @@ impl FlowBlockBase {
             next_input_order : 0,
             // external signal
             sys_nodes        : Vec::new(),
-            ext_signals: [Vec::new(), Vec::new(), Vec::new(), Vec::new()],
+            ext_signals      : [Vec::new(), Vec::new(), Vec::new(), Vec::new()],
             ext_trigger_node : NodeTrigger::default(),
         }
     }
@@ -105,10 +105,6 @@ impl FlowBlockBase {
         self.ext_signals[int_type as usize].push(signal);
     }
 
-    pub fn add_hold_signal(&mut self, signal: HcpIdent) {
-        self.ext_signals[ExtSigType::Hold as usize].push(signal);
-    }
-
     // --- ext_trigger_node getters ---
 
     pub fn get_hold_node     (&self) -> Option<NcpIdent> { self.ext_trigger_node.hold_node_i }
@@ -116,6 +112,8 @@ impl FlowBlockBase {
     pub fn get_int_start_node(&self) -> Option<NcpIdent> { self.ext_trigger_node.int_start_node_i }
     pub fn get_mrst_node     (&self) -> Option<NcpIdent> { self.ext_trigger_node.mrst_node_i }
     pub fn has_int_start     (&self) -> bool             { self.ext_trigger_node.int_start_node_i.is_some() }
+
+    pub fn get_ext_trigger_node(&self) -> &NodeTrigger { &self.ext_trigger_node }
 
     pub fn get_int_node(&self, sig_type: ExtSigType) -> Option<NcpIdent> {
         match sig_type {
@@ -149,6 +147,7 @@ impl FlowBlockBase {
     pub fn build_common_hw(&mut self, arena: &mut ModelArena) {
         self.fill_int_reset_signal_to_child(arena);
         self.fill_hold_signal_to_child(arena);
+        self.fill_mrst_signal_to_child(arena);
         self.build_sub_hw_component(arena);
         self.gen_trigger_node(arena);
     }
@@ -156,7 +155,7 @@ impl FlowBlockBase {
     fn fill_int_reset_signal_to_child(&self, arena: &mut ModelArena) {
         for signal in &self.ext_signals[ExtSigType::Reset as usize] {
             for child in self.sub_blocks_i.iter().chain(self.con_blocks_i.iter()) {
-                arena.add_int_signal_to_flow_block(*child, ExtSigType::Reset, *signal);
+                arena.add_ext_signal_to_flow_block(*child, ExtSigType::Reset, *signal);
             }
         }
     }
@@ -164,7 +163,15 @@ impl FlowBlockBase {
     fn fill_hold_signal_to_child(&self, arena: &mut ModelArena) {
         for signal in &self.ext_signals[ExtSigType::Hold as usize] {
             for child in self.sub_blocks_i.iter().chain(self.con_blocks_i.iter()) {
-                arena.add_hold_signal_to_flow_block(*child, *signal);
+                arena.add_ext_signal_to_flow_block(*child, ExtSigType::Hold, *signal);
+            }
+        }
+    }
+
+    fn fill_mrst_signal_to_child(&self, arena: &mut ModelArena) {
+        for signal in &self.ext_signals[ExtSigType::MReset as usize] {
+            for child in self.sub_blocks_i.iter().chain(self.con_blocks_i.iter()) {
+                arena.add_ext_signal_to_flow_block(*child, ExtSigType::MReset, *signal);
             }
         }
     }

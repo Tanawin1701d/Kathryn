@@ -35,6 +35,17 @@ impl NodeTrigger {
 
     pub fn depend_count(&self) -> usize { self.depend_nodes.len() }
 
+    /// Copy control fields from a flow-block's NodeTrigger into this node's
+    /// NodeTrigger.  Pass `with_int_start: true` for nodes that propagate it.
+    pub fn fill_ext_node(&mut self, src: &NodeTrigger, with_int_start: bool) {
+        self.hold_node_i      = src.hold_node_i;
+        self.int_reset_node_i = src.int_reset_node_i;
+        self.mrst_node_i      = src.mrst_node_i;
+        if with_int_start {
+            self.int_start_node_i = src.int_start_node_i;
+        }
+    }
+
     /// Initialise hold / int-reset / master-reset fields of a TriggerSig from
     /// this NodeTrigger.  int-start is intentionally excluded — call
     /// `init_int_start_sig` explicitly for nodes that need it.

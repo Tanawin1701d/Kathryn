@@ -20,7 +20,7 @@ impl ModelArena {
         self.replace_back_flow_block(block);
     }
 
-    pub fn add_int_signal_to_flow_block(
+    pub fn add_ext_signal_to_flow_block(
         &mut self,
         block_ident: FlowBlockIdent,
         int_type: ExtSigType,
@@ -28,12 +28,6 @@ impl ModelArena {
     ) {
         let mut block = self.take_flow_block(block_ident);
         block.get_base_mut().add_int_signal(int_type, signal);
-        self.replace_back_flow_block(block);
-    }
-
-    pub fn add_hold_signal_to_flow_block(&mut self, block_ident: FlowBlockIdent, signal: HcpIdent) {
-        let mut block = self.take_flow_block(block_ident);
-        block.get_base_mut().add_hold_signal(signal);
         self.replace_back_flow_block(block);
     }
 

@@ -5,7 +5,8 @@ use crate::model::model_arena::ModelArena;
 use crate::model::nodes::asm_node::AsmNode;
 use crate::model::nodes::cnt_node::CounterNode;
 use crate::model::nodes::logic_node::{OprNode, PseudoNode};
-use crate::model::nodes::ncp_base::NcpNode;
+use crate::model::nodes::ncp_base::{HasNodeTriggerSig, NcpNode};
+use crate::model::nodes::node_trigger::NodeTrigger;
 use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
 use crate::model::nodes::start_node::StartNode;
 use crate::model::nodes::state_node::StateNode;
@@ -85,9 +86,10 @@ impl ModelArena {
     pub fn get_ncp_node    (&self,     ident: &NcpIdent) -> &    dyn NcpNode { dispatch_ncp!(self, ident, get    ) }
     pub fn get_ncp_node_mut(&mut self, ident: &NcpIdent) -> &mut dyn NcpNode { dispatch_ncp!(self, ident, get_mut) }
 
-    pub fn get_node_exit_opr       (&self, ident: &NcpIdent) -> HcpIdent { self.get_ncp_node(ident).get_exit_opr() }
-    pub fn get_node_state_operating(&self, ident: &NcpIdent) -> HcpIdent { self.get_ncp_node(ident).get_state_operating() }
-    pub fn get_node_cycle_used     (&self, ident: &NcpIdent) -> i32      { self.get_ncp_node(ident).get_cycle_used() }
+    pub fn get_node_exit_opr       (&self, ident: &NcpIdent) -> HcpIdent    { self.get_ncp_node(ident).get_exit_opr() }
+    pub fn get_node_state_operating(&self, ident: &NcpIdent) -> HcpIdent    { self.get_ncp_node(ident).get_state_operating() }
+    pub fn get_node_cycle_used     (&self, ident: &NcpIdent) -> i32         { self.get_ncp_node(ident).get_cycle_used() }
+    pub fn get_ncp_trigger_clone   (&self, ident: &NcpIdent) -> NodeTrigger { self.get_ncp_node(ident).get_node_triggers().clone() }
 
     pub fn add_depend_node_to_ncp(&mut self, ident: NcpIdent, src: NcpIdent, cond: Option<HcpIdent>) {
         self.get_ncp_node_mut(&ident).add_depend_node(src, cond);
@@ -101,12 +103,22 @@ impl ModelArena {
         self.get_ncp_node_mut(&ident).set_hold_node(hold);
     }
 
-    pub fn add_slave_asm_to_state_node(&mut self, state: NcpIdent, asm: NcpIdent, cond: Option<HcpIdent>) {
-        assert_eq!(state.get_node_type(), NodeType::State);
-        assert_eq!(asm.get_node_type(), NodeType::Asm);
-        let handle = *state.get_arena_handle();
-        self.state_nodes.get_mut(handle).add_slave_asm_node(asm, cond);
-        self.add_depend_node_to_ncp(asm, state, cond);
+    pub fn init_node_trigger(&mut self, ident: NcpIdent, trigger: &NodeTrigger, with_int_start: bool) {
+        self.get_ncp_node_mut(&ident).get_node_triggers_mut().fill_ext_node(trigger, with_int_start);
+    }
+
+    pub fn add_slave_asm_to_state_node(&mut self, state_node_i: NcpIdent, asm_node_i: NcpIdent, cond: Option<HcpIdent>) {
+        assert_eq!(state_node_i.get_node_type(), NodeType::State);
+        assert_eq!(asm_node_i.get_node_type(), NodeType::Asm);
+        // get the state node
+        let mut state_node = self.take_state_node(state_node_i);
+        state_node.add_slave_asm_node(asm_node_i, cond);
+        let state_trigger = state_node.get_node_triggers().clone();
+        self.replace_back_state_node(state_node);
+
+        // add depend node in asm
+        self.add_depend_node_to_ncp(asm_node_i, state_node_i, cond);
+        self.init_node_trigger     (asm_node_i, &state_trigger, false);
     }
 
     pub fn assign_asm_from_state_node(&mut self, ident: NcpIdent) {

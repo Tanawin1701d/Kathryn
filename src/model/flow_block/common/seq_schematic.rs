@@ -24,8 +24,7 @@ impl SequenceEle {
                 let state_i = arena.make_state_node(
                     &format!("seq_state_{}_{}", block_id, idx),
                 );
-                if let Some(rst_i)  = base.get_int_node(ExtSigType::Reset) { arena.set_ncp_int_reset_node(state_i, rst_i); }
-                if let Some(hold_i) = base.get_hold_node()                  { arena.set_ncp_hold_node(state_i, hold_i);     }
+                arena.init_node_trigger(state_i, base.get_ext_trigger_node(), false);
                 arena.add_slave_asm_to_state_node(state_i, *asm_node_i, None);
                 base.add_sys_node(state_i);
                 *state_node_i = Some(state_i);

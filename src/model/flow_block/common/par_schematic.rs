@@ -65,8 +65,7 @@ impl ParSchematic {
             let state_i = arena.make_state_node(
                 &format!("par_state_{}", base.get_ident().get_global_id()),
             );
-            if let Some(rst_i)  = base.get_int_node(ExtSigType::Reset) { arena.set_ncp_int_reset_node(state_i, rst_i); }
-            if let Some(hold_i) = base.get_hold_node()                 { arena.set_ncp_hold_node(state_i, hold_i); }
+            arena.init_node_trigger(state_i, base.get_ext_trigger_node(), false);
             for asm_i in base.get_basic_nodes_i() {
                 arena.add_slave_asm_to_state_node(state_i, *asm_i, None);
             }
@@ -132,9 +131,7 @@ impl ParSchematic {
                 &format!("par_syn_{}", base.get_ident().get_global_id()),
                 self.amount_of_paths() as i32,
             );
-            if let Some(rst_i) = base.get_int_node(ExtSigType::Reset) {
-                arena.set_ncp_int_reset_node(syn_i, rst_i);
-            }
+            arena.init_node_trigger(syn_i, base.get_ext_trigger_node(), false);
             for (exit_i, _) in self.path_exit_nodes() {
                 arena.add_depend_node_to_ncp(syn_i, exit_i, None);
             }
@@ -160,6 +157,7 @@ impl ParSchematic {
             self.any_exit().expect("parallel block exit node was not found")
         } else {
             let pseudo_i = arena.make_pseudo_node("par_no_sync_exit", 1, LogicOp::BitwiseOr);
+            arena.init_node_trigger(pseudo_i, base.get_ext_trigger_node(), false);
             for (exit_i, _) in self.path_exit_nodes() {
                 arena.add_depend_node_to_ncp(pseudo_i, exit_i, None);
             }
