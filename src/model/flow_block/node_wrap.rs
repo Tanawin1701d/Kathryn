@@ -1,3 +1,4 @@
+use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_base::IN_CONSIST_CYCLE_USED;
 use crate::model::nodes::ncp_ident::NcpIdent;
 
@@ -30,6 +31,12 @@ impl NodeWrap {
     pub fn get_entrance_nodes_i(&self) -> &[NcpIdent] { &self.entrance_nodes_i }
     pub fn get_exit_node_i     (&self) -> NcpIdent    { self.exit_node.expect("NodeWrap exit node is not set") }
     pub fn get_cycle_used      (&self) -> i32         { self.cycle_used }
+
+    pub fn assign_entrance_nodes(&self, arena: &mut ModelArena) {
+        for entrance_i in &self.entrance_nodes_i {
+            arena.assign_ncp_node(*entrance_i);
+        }
+    }
 }
 
 #[derive(Default)]

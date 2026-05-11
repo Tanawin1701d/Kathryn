@@ -14,33 +14,40 @@ pub enum ParSyncMode {
 
 #[derive(Clone, Debug)]
 pub struct ParSchematic {
-    sync_mode:                ParSyncMode,
-    basic_state_node:         Option<NcpIdent>,
+    sync_mode               : ParSyncMode,
+    // main block
+    basic_state_node_i      : Option<NcpIdent>, // use to build state (incase no subblock/ only pure assignment)
     node_wraps_of_sub_blocks: Vec<NodeWrap>,
-    syn_node:                 Option<NcpIdent>,
-    pseudo_exit_node:         Option<NcpIdent>,
-    cycle_used:               i32,
+    // syncer
+    syn_node_i              : Option<NcpIdent>,
+    pseudo_exit_node_i      : Option<NcpIdent>,
+    cycle_used              : i32,
 }
 
 impl ParSchematic {
     pub fn new(sync_mode: ParSyncMode) -> Self {
         Self {
             sync_mode,
-            basic_state_node:         None,
+            // main block
+            basic_state_node_i      : None,
             node_wraps_of_sub_blocks: Vec::new(),
-            syn_node:                 None,
-            pseudo_exit_node:         None,
-            cycle_used:               IN_CONSIST_CYCLE_USED,
+            // syncer
+            syn_node_i              : None,
+            pseudo_exit_node_i      : None,
+            cycle_used              : IN_CONSIST_CYCLE_USED,
         }
     }
 
     pub fn build(&mut self, base: &mut FlowBlockBase, arena: &mut ModelArena) -> NodeWrap {
+        // manage the new assign block and simple state
         self.build_common(base, arena);
-        let exit = match self.sync_mode {
+        // make sync logic
+        let exit_i = match self.sync_mode {
             ParSyncMode::AutoSync => self.build_auto_sync_exit(base, arena),
             ParSyncMode::NoSync   => self.build_no_sync_exit(base, arena),
         };
-        self.build_result(base, exit)
+        // build result node wrap
+        self.build_result(base, exit_i)
     }
 
     fn build_common(&mut self, base: &mut FlowBlockBase, arena: &mut ModelArena) {
@@ -50,67 +57,59 @@ impl ParSchematic {
         );
         assert!(base.get_con_blocks_i().is_empty(), "parallel flow block does not support con blocks");
 
+        // intialize cycle determiner
+        let mut cycle_det = NodeWrapCycleDet::new();
+
+        // If there are direct asm nodes, group them under one shared StateNode.
         if !base.get_basic_nodes_i().is_empty() {
-            let state = arena.make_state_node(
+            let state_i = arena.make_state_node(
                 &format!("par_state_{}", base.get_ident().get_global_id()),
             );
-            if let Some(rst)  = base.get_int_node(ExtSigType::Reset) { arena.set_ncp_int_reset_node(state, rst); }
-            if let Some(hold) = base.get_hold_node()                  { arena.set_ncp_hold_node(state, hold); }
-            for asm in base.get_basic_nodes_i() {
-                arena.add_slave_asm_to_state_node(state, *asm, None);
+            if let Some(rst_i)  = base.get_int_node(ExtSigType::Reset) { arena.set_ncp_int_reset_node(state_i, rst_i); }
+            if let Some(hold_i) = base.get_hold_node()                 { arena.set_ncp_hold_node(state_i, hold_i); }
+            for asm_i in base.get_basic_nodes_i() {
+                arena.add_slave_asm_to_state_node(state_i, *asm_i, None);
             }
-            base.add_sys_node(state);
-            self.basic_state_node = Some(state);
+            base.add_sys_node(state_i);
+            self.basic_state_node_i = Some(state_i);
+            cycle_det.add_cycle(arena.get_node_cycle_used(&state_i));
         }
 
+        // Resolve each sub-block into a NodeWrap so we have its entrance/exit
+        // nodes and cycle count available for wiring and cycle detection below.
         self.node_wraps_of_sub_blocks = base.get_sub_blocks_i().iter()
-            .map(|block| arena.summarize_flow_block(*block))
+            .map(|block_i| arena.summarize_flow_block(*block_i))
             .collect();
 
-        let mut cycle_det = NodeWrapCycleDet::new();
-        if let Some(state) = self.basic_state_node {
-            cycle_det.add_cycle(arena.get_node_cycle_used(&state));
-        }
+        // Determine the maximum cycle depth across all parallel paths.
         for wrap in &self.node_wraps_of_sub_blocks {
             cycle_det.add_cycle(wrap.get_cycle_used());
         }
         self.cycle_used = cycle_det.get_max_cycle_horizon();
 
-        if let Some(int_start) = base.get_int_node(ExtSigType::Start) {
-            if let Some(state) = self.basic_state_node {
-                arena.add_depend_node_to_ncp(state, int_start, None);
+        // If an external start signal exists, wire it as a depend into every
+        // parallel entrance so all paths are gated behind the same trigger.
+        if let Some(int_start_i) = base.get_int_node(ExtSigType::Start) {
+            if let Some(state_i) = self.basic_state_node_i {
+                arena.add_depend_node_to_ncp(state_i, int_start_i, None);
             }
             for wrap in &self.node_wraps_of_sub_blocks {
-                for entrance in wrap.get_entrance_nodes_i() {
-                    arena.add_depend_node_to_ncp(*entrance, int_start, None);
+                for entrance_i in wrap.get_entrance_nodes_i() {
+                    arena.add_depend_node_to_ncp(*entrance_i, int_start_i, None);
                 }
             }
-        }
-    }
-
-    fn assign_entrance_nodes(&self, base: &FlowBlockBase, arena: &mut ModelArena, assign_sub: bool) {
-        if let Some(state) = self.basic_state_node {
-            arena.assign_ncp_node(state);
-            for asm in base.get_basic_nodes_i() {
-                arena.assign_asm_from_state_node(*asm);
-            }
-        }
-        if !assign_sub { return; }
-        for wrap in &self.node_wraps_of_sub_blocks {
-            for entrance in wrap.get_entrance_nodes_i() {
-                arena.assign_ncp_node(*entrance);
-            }
+            cycle_det.add_cycle(IN_CONSIST_CYCLE_USED);
         }
     }
 
     fn amount_of_paths(&self) -> usize {
-        usize::from(self.basic_state_node.is_some()) + self.node_wraps_of_sub_blocks.len()
+        usize::from(self.basic_state_node_i.is_some()) + self.node_wraps_of_sub_blocks.len()
     }
 
     fn path_exit_nodes(&self) -> Vec<(NcpIdent, i32)> {
         let mut nodes: Vec<(NcpIdent, i32)> = Vec::new();
-        if let Some(state) = self.basic_state_node {
-            nodes.push((state, 1));
+        if let Some(state_i) = self.basic_state_node_i {
+            nodes.push((state_i, 1));
         }
         nodes.extend(self.node_wraps_of_sub_blocks.iter().map(|w| (w.get_exit_node_i(), w.get_cycle_used())));
         nodes
@@ -119,33 +118,32 @@ impl ParSchematic {
     fn exit_matching_cycle(&self) -> Option<NcpIdent> {
         if self.cycle_used < 0 { return None; }
         self.path_exit_nodes().into_iter()
-            .find_map(|(node, cycle)| if cycle == self.cycle_used { Some(node) } else { None })
+            .find_map(|(node_i, cycle)| if cycle == self.cycle_used { Some(node_i) } else { None })
     }
 
     fn any_exit(&self) -> Option<NcpIdent> {
-        self.path_exit_nodes().into_iter().map(|(node, _)| node).next()
+        self.path_exit_nodes().into_iter().map(|(node_i, _)| node_i).next()
     }
 
     fn build_auto_sync_exit(&mut self, base: &mut FlowBlockBase, arena: &mut ModelArena) -> NcpIdent {
-        self.assign_entrance_nodes(base, arena, base.has_int_start());
 
         if self.cycle_used == IN_CONSIST_CYCLE_USED && self.amount_of_paths() > 1 {
-            let syn = arena.make_syn_node(
+            let syn_i = arena.make_syn_node(
                 &format!("par_syn_{}", base.get_ident().get_global_id()),
                 self.amount_of_paths() as i32,
             );
-            if let Some(rst) = base.get_int_node(ExtSigType::Reset) {
-                arena.set_ncp_int_reset_node(syn, rst);
+            if let Some(rst_i) = base.get_int_node(ExtSigType::Reset) {
+                arena.set_ncp_int_reset_node(syn_i, rst_i);
             }
-            for (exit, _) in self.path_exit_nodes() {
-                arena.add_depend_node_to_ncp(syn, exit, None);
+            for (exit_i, _) in self.path_exit_nodes() {
+                arena.add_depend_node_to_ncp(syn_i, exit_i, None);
             }
-            base.add_sys_node(syn);
-            arena.assign_ncp_node(syn);
-            self.syn_node = Some(syn);
+            base.add_sys_node(syn_i);
+            arena.assign_ncp_node(syn_i);
+            self.syn_node_i = Some(syn_i);
         }
 
-        self.syn_node
+        self.syn_node_i
             .or_else(|| self.exit_matching_cycle())
             .or_else(|| {
                 assert_eq!(self.amount_of_paths(), 1, "parallel auto-sync cannot choose exit node");
@@ -155,33 +153,32 @@ impl ParSchematic {
     }
 
     fn build_no_sync_exit(&mut self, base: &mut FlowBlockBase, arena: &mut ModelArena) -> NcpIdent {
-        self.assign_entrance_nodes(base, arena, base.has_int_start());
 
-        if let Some(exit) = self.exit_matching_cycle() {
-            exit
+        if let Some(exit_i) = self.exit_matching_cycle() {
+            exit_i
         } else if self.amount_of_paths() == 1 {
             self.any_exit().expect("parallel block exit node was not found")
         } else {
-            let pseudo = arena.make_pseudo_node("par_no_sync_exit", 1, LogicOp::BitwiseOr);
-            for (exit, _) in self.path_exit_nodes() {
-                arena.add_depend_node_to_ncp(pseudo, exit, None);
+            let pseudo_i = arena.make_pseudo_node("par_no_sync_exit", 1, LogicOp::BitwiseOr);
+            for (exit_i, _) in self.path_exit_nodes() {
+                arena.add_depend_node_to_ncp(pseudo_i, exit_i, None);
             }
-            base.add_sys_node(pseudo);
-            arena.assign_ncp_node(pseudo);
-            self.pseudo_exit_node = Some(pseudo);
-            pseudo
+            base.add_sys_node(pseudo_i);
+            arena.assign_ncp_node(pseudo_i);
+            self.pseudo_exit_node_i = Some(pseudo_i);
+            pseudo_i
         }
     }
 
-    fn build_result(&self, base: &FlowBlockBase, exit: NcpIdent) -> NodeWrap {
+    fn build_result(&self, base: &FlowBlockBase, exit_i: NcpIdent) -> NodeWrap {
         let mut result = NodeWrap::new();
-        if let Some(state) = self.basic_state_node {
-            result.add_entrance_node_i(state);
+        if let Some(state_i) = self.basic_state_node_i {
+            result.add_entrance_node_i(state_i);
         }
         for wrap in &self.node_wraps_of_sub_blocks {
             result.get_entrance_nodes_i_from(wrap);
         }
-        result.set_exit_node_i(exit);
+        result.set_exit_node_i(exit_i);
         result.set_cycle_used(self.cycle_used);
         result
     }
