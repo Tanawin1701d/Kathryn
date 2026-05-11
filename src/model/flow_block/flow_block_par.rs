@@ -14,21 +14,21 @@ pub struct FlowBlockPar {
 }
 
 impl Default for FlowBlockPar {
-    fn default() -> Self { Self::new_auto_sync(false, "") }
+    fn default() -> Self { Self::new_auto_sync("") }
 }
 
 impl FlowBlockPar {
-    pub fn new_auto_sync(is_user_com: bool, name: &str) -> Self {
+    pub fn new_auto_sync(name: &str) -> Self {
         Self {
-            base:      FlowBlockBase::new(FlowBlockType::Parallel, is_user_com, name),
+            base:      FlowBlockBase::new(FlowBlockType::Parallel, name),
             schematic: ParSchematic::new(ParSyncMode::AutoSync),
             result:    None,
         }
     }
 
-    pub fn new_no_sync(is_user_com: bool, name: &str) -> Self {
+    pub fn new_no_sync(name: &str) -> Self {
         Self {
-            base:      FlowBlockBase::new(FlowBlockType::Parallel, is_user_com, name),
+            base:      FlowBlockBase::new(FlowBlockType::Parallel, name),
             schematic: ParSchematic::new(ParSyncMode::NoSync),
             result:    None,
         }

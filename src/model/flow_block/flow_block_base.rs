@@ -35,17 +35,17 @@ pub struct FlowBlockBase {
     next_input_order  : usize,
     // external signal
     sys_nodes         : Vec<NcpIdent>,
-    ext_signals: [Vec<HcpIdent>; ExtSigType::COUNT],
+    ext_signals       : [Vec<HcpIdent>; ExtSigType::COUNT],
     ext_trigger_node  : NodeTrigger,
 
 
 }
 
 impl FlowBlockBase {
-    pub fn new(block_type: FlowBlockType, is_user_com: bool, name: &str) -> Self {
+    pub fn new(block_type: FlowBlockType, name: &str) -> Self {
         Self {
             // identifier
-            ident            : FlowBlockIdent::new(block_type, is_user_com, name),
+            ident            : FlowBlockIdent::new(block_type, name),
             // blocks
             sub_blocks_i     : Vec::new(),
             sub_block_orders : Vec::new(),

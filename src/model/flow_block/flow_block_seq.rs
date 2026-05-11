@@ -8,19 +8,19 @@ use crate::model::nodes::ncp_ident::NcpIdent;
 
 #[derive(Clone, Debug)]
 pub struct FlowBlockSeq {
-    base:      FlowBlockBase,
+    base     : FlowBlockBase,
     schematic: SeqSchematic,
-    result:    Option<NodeWrap>,
+    result   : Option<NodeWrap>,
 }
 
 impl Default for FlowBlockSeq {
-    fn default() -> Self { Self::new(false, "") }
+    fn default() -> Self { Self::new("") }
 }
 
 impl FlowBlockSeq {
-    pub fn new(is_user_com: bool, name: &str) -> Self {
+    pub fn new(name: &str) -> Self {
         Self {
-            base:      FlowBlockBase::new(FlowBlockType::Sequential, is_user_com, name),
+            base:      FlowBlockBase::new(FlowBlockType::Sequential, name),
             schematic: SeqSchematic::new(),
             result:    None,
         }

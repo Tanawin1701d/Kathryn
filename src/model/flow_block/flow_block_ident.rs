@@ -30,9 +30,9 @@ pub struct FlowBlockIdent {
 }
 
 impl FlowBlockIdent {
-    pub fn new(block_type: FlowBlockType, is_user_com: bool, name: &str) -> Self {
+    pub fn new(block_type: FlowBlockType, name: &str) -> Self {
         Self {
-            ident_base: IdentBase::new(is_user_com, name),
+            ident_base: IdentBase::new(false, name),
             block_type,
         }
     }
@@ -52,7 +52,7 @@ impl FlowBlockIdent {
 }
 
 impl Default for FlowBlockIdent {
-    fn default() -> Self { Self::new(FlowBlockType::Sequential, false, "")}
+    fn default() -> Self { Self::new(FlowBlockType::Sequential, "") }
 }
 
 impl Identifiable for FlowBlockIdent {
