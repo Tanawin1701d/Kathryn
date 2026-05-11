@@ -145,33 +145,17 @@ impl FlowBlockBase {
 
     // pre build hardware function
     pub fn build_common_hw(&mut self, arena: &mut ModelArena) {
-        self.fill_int_reset_signal_to_child(arena);
-        self.fill_hold_signal_to_child(arena);
-        self.fill_mrst_signal_to_child(arena);
+        for sig_type in [ExtSigType::Reset, ExtSigType::Hold, ExtSigType::MReset] {
+            self.fill_ext_signal_to_child(arena, sig_type);
+        }
         self.build_sub_hw_component(arena);
         self.gen_trigger_node(arena);
     }
 
-    fn fill_int_reset_signal_to_child(&self, arena: &mut ModelArena) {
-        for signal in &self.ext_signals[ExtSigType::Reset as usize] {
+    fn fill_ext_signal_to_child(&self, arena: &mut ModelArena, sig_type: ExtSigType) {
+        for signal in &self.ext_signals[sig_type as usize] {
             for child in self.sub_blocks_i.iter().chain(self.con_blocks_i.iter()) {
-                arena.add_ext_signal_to_flow_block(*child, ExtSigType::Reset, *signal);
-            }
-        }
-    }
-
-    fn fill_hold_signal_to_child(&self, arena: &mut ModelArena) {
-        for signal in &self.ext_signals[ExtSigType::Hold as usize] {
-            for child in self.sub_blocks_i.iter().chain(self.con_blocks_i.iter()) {
-                arena.add_ext_signal_to_flow_block(*child, ExtSigType::Hold, *signal);
-            }
-        }
-    }
-
-    fn fill_mrst_signal_to_child(&self, arena: &mut ModelArena) {
-        for signal in &self.ext_signals[ExtSigType::MReset as usize] {
-            for child in self.sub_blocks_i.iter().chain(self.con_blocks_i.iter()) {
-                arena.add_ext_signal_to_flow_block(*child, ExtSigType::MReset, *signal);
+                arena.add_ext_signal_to_flow_block(*child, sig_type, *signal);
             }
         }
     }
