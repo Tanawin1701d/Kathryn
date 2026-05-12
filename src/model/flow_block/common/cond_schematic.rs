@@ -111,8 +111,8 @@ impl CondSchematic {
             cycle_det.add_cycle(IN_CONSIST_CYCLE_USED);
         }
 
-        // 6. Assign internal nodes; cond_node is the entrance and assigned by the parent
-        arena.assign_ncp_node(cond_node_i);
+        // 6. Assign internal nodes — do NOT assign cond_node_i; it is the result entrance,
+        //    the parent is responsible for assigning it
         arena.assign_ncp_node(exit_i);
         main_wrap.assign_entrance_nodes(arena);
         for con_wrap in &con_wraps {

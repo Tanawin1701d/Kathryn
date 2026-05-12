@@ -19,6 +19,10 @@ impl NodeWrap {
         }
     }
 
+    // WARNING: entrance nodes placed into NodeWrap must NOT be assigned by the schematic that
+    // builds the result. They are handed to the parent level, which assigns them. Only internal
+    // nodes (exit, intermediates, sub-wrap entrances already consumed into the block) may be
+    // assigned before returning.
     pub fn with_entrances(entrances_i: &[NcpIdent], exit_i: NcpIdent, cycle_used: i32) -> Self {
         let mut w = Self::new();
         w.add_entrance_nodes_i(entrances_i);

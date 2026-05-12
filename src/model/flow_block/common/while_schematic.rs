@@ -64,8 +64,8 @@ impl WhileSchematic {
         base.add_sys_node(exit_i);
         arena.add_depend_node_to_ncp(exit_i, cond_node_i, Some(not_cond_i));
 
-        // 4. Assign internal nodes; cond_node is the entrance and assigned by the parent
-        arena.assign_ncp_node(cond_node_i);
+        // 4. Assign internal nodes — do NOT assign cond_node_i; it is the result entrance,
+        //    the parent is responsible for assigning it
         arena.assign_ncp_node(exit_i);
         body_wrap.assign_entrance_nodes(arena);
 

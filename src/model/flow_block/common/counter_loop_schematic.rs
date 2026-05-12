@@ -87,8 +87,8 @@ impl CounterLoopSchematic {
         base.add_sys_node(exit_i);
         arena.add_depend_node_to_ncp(exit_i, body_exit_i, Some(cnt_at_last_i));
 
-        // 5. Assign remaining internal nodes; body entrances assigned by parent
-        arena.assign_ncp_node(loop_node_i);
+        // 5. Assign remaining internal nodes — do NOT assign loop_node_i; it is the result entrance,
+        //    the parent is responsible for assigning it
         arena.assign_ncp_node(exit_i);
         body_wrap.assign_entrance_nodes(arena);
 
