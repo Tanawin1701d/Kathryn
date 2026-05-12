@@ -18,15 +18,15 @@ use crate::model::nodes::state_node::StateNode;
 use crate::model::nodes::syn_node::SynNode;
 use crate::model::nodes::wait_node::{WaitCondNode, WaitCycleNode};
 use crate::model::module::module::Module;
-use crate::model::flow_block::flow_block_par::FlowBlockPar;
-use crate::model::flow_block::flow_block_seq::FlowBlockSeq;
-use crate::model::flow_block::flow_block_cond::FlowBlockCond;
-use crate::model::flow_block::flow_block_cond_elif::FlowBlockCondElif;
-use crate::model::flow_block::flow_block_zero_cond::FlowBlockZeroCond;
-use crate::model::flow_block::flow_block_zero_cond_elif::FlowBlockZeroCondElif;
-use crate::model::flow_block::flow_block_while::FlowBlockWhile;
-use crate::model::flow_block::flow_block_do_while::FlowBlockDoWhile;
-use crate::model::flow_block::flow_block_counter_loop::FlowBlockCounterLoop;
+use crate::model::flow_block::par::flow_block_par::FlowBlockPar;
+use crate::model::flow_block::seq::flow_block_seq::FlowBlockSeq;
+use crate::model::flow_block::cond::flow_block_cond::FlowBlockCond;
+use crate::model::flow_block::cond::flow_block_cond_elif::FlowBlockCondElif;
+use crate::model::flow_block::cond::flow_block_zero_cond::FlowBlockZeroCond;
+use crate::model::flow_block::cond::flow_block_zero_cond_elif::FlowBlockZeroCondElif;
+use crate::model::flow_block::loops::flow_block_while::FlowBlockWhile;
+use crate::model::flow_block::loops::flow_block_do_while::FlowBlockDoWhile;
+use crate::model::flow_block::loops::flow_block_counter_loop::FlowBlockCounterLoop;
 
 pub struct ModelArena {
 
