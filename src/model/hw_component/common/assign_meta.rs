@@ -29,10 +29,11 @@ impl AssignMeta {
         target.add_update_event(self.pre_update_event);
     }
 
-    pub fn get_target_hw        (&self)     -> HcpIdent                       { self.target_hwc        }
-    pub fn get_clk_mode         (&self)     -> ClockMode                      { self.clk_mode          }
-    pub fn get_input_event_i    (&self)     -> Option<UpdateEventIdent>       { self.input_event_i     }
+    pub fn get_target_hw        (&self)     -> HcpIdent                       { self.target_hwc         }
+    pub fn get_clk_mode         (&self)     -> ClockMode                      { self.clk_mode           }
+    pub fn get_input_event_i    (&self)     -> Option<UpdateEventIdent>       { self.input_event_i      }
     pub fn get_input_event_i_mut(&mut self) -> &mut Option<UpdateEventIdent>  { &mut self.input_event_i }
+    pub fn get_pre_update_event (&self)     -> UpdateEventIdent               { self.pre_update_event   }
 
     pub fn set_pre_update_event(&mut self, event: UpdateEventIdent) {
         self.pre_update_event = event;

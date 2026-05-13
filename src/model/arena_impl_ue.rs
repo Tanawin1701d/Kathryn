@@ -1,5 +1,5 @@
 use crate::model::common::identifier::Identifiable;
-use crate::model::hw_component::common::update_event::{UeBasic, UeCond, UeCommon, UeGrp, UeSwitch, UeType};
+use crate::model::hw_component::common::update_event::{UeBasic, UeCond, UeCommon, UeGrp, UeSwitch, UeType, UpdatingEvent};
 use crate::model::hw_component::common::update_event_ident::UpdateEventIdent;
 use crate::model::model_arena::ModelArena;
 
@@ -57,5 +57,29 @@ impl ModelArena {
     /// Trait-/shared-view accessor; cannot be expressed via take/replace.
     pub fn get_ue_common(&self, ident: &UpdateEventIdent) -> &UeCommon {
         dispatch_ue_common!(self, ident)
+    }
+
+    pub fn take_ue(&mut self, ident: UpdateEventIdent) -> Box<dyn UpdatingEvent> {
+        let h = *ident.get_arena_handle();
+        match ident.get_ue_type() {
+            UeType::Basic  => Box::new(self.ue_basics  .take(h)),
+            UeType::Grp    => Box::new(self.ue_grps    .take(h)),
+            UeType::Cond   => Box::new(self.ue_conds   .take(h)),
+            UeType::Switch => Box::new(self.ue_switches.take(h)),
+            UeType::Untype => panic!("UpdateEventIdent has UeType::Untype"),
+        }
+    }
+
+    pub fn replace_back_ue(&mut self, v: Box<dyn UpdatingEvent>) {
+        v.replace_back_into_arena(self);
+    }
+
+    pub fn is_ue_joinable(&mut self, ue_1: UpdateEventIdent, ue_2: UpdateEventIdent) -> bool {
+        let v1 = self.take_ue(ue_1);
+        let v2 = self.take_ue(ue_2);
+        let result = v1.is_joinable(v2.as_ref());
+        self.replace_back_ue(v1);
+        self.replace_back_ue(v2);
+        result
     }
 }

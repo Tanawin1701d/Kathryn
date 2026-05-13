@@ -10,6 +10,7 @@ use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::common::update_event_ident::UpdateEventIdent;
+use crate::model::model_arena::ModelArena;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum UeType {
@@ -63,7 +64,7 @@ impl UeCommon {
     pub fn get_ue_type     (&self) -> UeType    { self.ue_type      }
 }
 
-trait HasUeCommon {
+pub trait HasUeCommon {
     fn get_ue_common    (&self)     -> &UeCommon;
     fn get_ue_common_mut(&mut self) -> &mut UeCommon;
 }
@@ -82,6 +83,7 @@ pub trait UpdatingEvent: HasUeCommon {
     fn set_clk_mode    (&mut self, clk_mode: ClockMode) { self.get_ue_common_mut().clk_mode     = clk_mode;     }
 
     fn is_leaf(&self) -> bool;
+    fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena);
 }
 
 
@@ -121,6 +123,9 @@ impl HasUeCommon for UeBasic {
 
 impl UpdatingEvent for UeBasic {
     fn is_leaf(&self) -> bool { true }
+    fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) {
+        arena.replace_back_ue_basic(*self);
+    }
 }
 
 impl Default for UeBasic {
@@ -181,6 +186,9 @@ impl HasUeCommon for UeGrp {
 
 impl UpdatingEvent for UeGrp {
     fn is_leaf(&self) -> bool { false }
+    fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) {
+        arena.replace_back_ue_grp(*self);
+    }
 }
 
 impl Default for UeGrp {
@@ -247,6 +255,9 @@ impl HasUeCommon for UeCond {
 
 impl UpdatingEvent for UeCond {
     fn is_leaf(&self) -> bool { false }
+    fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) {
+        arena.replace_back_ue_cond(*self);
+    }
 }
 
 impl Default for UeCond {
@@ -328,6 +339,9 @@ impl HasUeCommon for UeSwitch {
 
 impl UpdatingEvent for UeSwitch {
     fn is_leaf(&self) -> bool { false }
+    fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) {
+        arena.replace_back_ue_switch(*self);
+    }
 }
 
 impl Default for UeSwitch {
