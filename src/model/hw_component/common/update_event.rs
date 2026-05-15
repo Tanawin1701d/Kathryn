@@ -216,7 +216,7 @@ pub struct UeCond {
     ue_common     : UeCommon,
     is_last_occure: bool,
     conditions    : Vec<Option<HcpIdent>>,
-    sub_stmts     : Vec<UpdateEventIdent>,
+    sub_stmts     : Vec<Option<UpdateEventIdent>>,
 }
 
 impl UeCond {
@@ -233,7 +233,7 @@ impl UeCond {
     pub fn ident    (&self) -> UpdateEventIdent { self.ident      }
     pub fn ue_common(&self) -> &UeCommon        { &self.ue_common }
 
-    pub fn add_sub_stmt(&mut self, cond: Option<HcpIdent>, stmt: UpdateEventIdent, priority: i32, clk_mode: ClockMode) {
+    pub fn add_sub_stmt(&mut self, cond: Option<HcpIdent>, stmt: Option<UpdateEventIdent>, priority: i32, clk_mode: ClockMode) {
         assert!(!self.is_last_occure);
         if cond.is_none() { self.is_last_occure = true; }
         if self.sub_stmts.is_empty() {
@@ -244,8 +244,8 @@ impl UeCond {
         self.sub_stmts .push(stmt);
     }
 
-    pub fn get_conditions(&self) -> &[Option<HcpIdent>] { &self.conditions }
-    pub fn get_sub_stmts (&self) -> &[UpdateEventIdent] { &self.sub_stmts  }
+    pub fn get_conditions(&self) -> &[Option<HcpIdent>]         { &self.conditions }
+    pub fn get_sub_stmts (&self) -> &[Option<UpdateEventIdent>] { &self.sub_stmts  }
 }
 
 impl HasUeCommon for UeCond {
@@ -321,11 +321,10 @@ impl UeSwitch {
 
     pub fn add_sub_stmt(&mut self, match_val: i32, stmt: Option<UpdateEventIdent>, priority: i32, clk_mode: ClockMode) {
         if !self.is_init_meta {
-            if stmt.is_some() {
-                self.ue_common.priority = priority;
-                self.ue_common.clk_mode = clk_mode;
-                self.is_init_meta = true;
-            }
+            self.ue_common.priority = priority;
+            self.ue_common.clk_mode = clk_mode;
+            self.is_init_meta = true;
+            
         }
         self.sub_stmt_idxs.push(match_val);
         self.sub_stmts.push(stmt);

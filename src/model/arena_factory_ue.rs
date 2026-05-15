@@ -41,7 +41,7 @@ impl ModelArena {
         let priority = self.get_ue_common(&_ueb).get_priority();
         let clk_mode = self.get_ue_common(&_ueb).get_clk_mode();
         let mut uec = UeCond::new();
-        uec.add_sub_stmt(cond_hcp, _ueb, priority, clk_mode);
+        uec.add_sub_stmt(cond_hcp, Some(_ueb), priority, clk_mode);
         self.insert_ue_cond(uec)
     }
 
@@ -73,8 +73,8 @@ impl ModelArena {
         let left_priority = self.get_ue_common(&left).get_priority();
         let left_clk_mode = self.get_ue_common(&left).get_clk_mode();
         let mut uec = UeCond::new();
-        uec.add_sub_stmt(Some(select_left), left,  left_priority, left_clk_mode);
-        uec.add_sub_stmt(None,              right, 0,             ClockMode::ClkUnused);
+        uec.add_sub_stmt(Some(select_left), Some(left),  left_priority, left_clk_mode);
+        uec.add_sub_stmt(None,              Some(right), 0,             ClockMode::ClkUnused);
         self.insert_ue_cond(uec)
     }
 }
