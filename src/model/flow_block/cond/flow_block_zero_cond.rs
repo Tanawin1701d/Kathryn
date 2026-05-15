@@ -12,8 +12,9 @@ use crate::model::nodes::ncp_ident::NcpIdent;
 /// controller level before any hardware generation occurs.
 #[derive(Clone, Debug)]
 pub struct FlowBlockZeroCond {
-    base     : FlowBlockBase,
-    condition: Option<HcpIdent>,
+    base           : FlowBlockBase,
+    condition      : Option<HcpIdent>,
+    master_of_chain: bool,
 }
 
 impl Default for FlowBlockZeroCond {
@@ -23,22 +24,25 @@ impl Default for FlowBlockZeroCond {
 impl FlowBlockZeroCond {
     pub fn new_zif(name: &str, cond_i: HcpIdent) -> Self {
         Self {
-            base:      FlowBlockBase::new(FlowBlockType::ZeroCond, name),
-            condition: Some(cond_i),
+            base           :      FlowBlockBase::new(FlowBlockType::ZeroCond, name),
+            condition      : Some(cond_i),
+            master_of_chain: true,
         }
     }
 
     pub fn new_zelif(name: &str, cond_i: HcpIdent) -> Self {
         Self {
-            base:      FlowBlockBase::new(FlowBlockType::ZeroCond, name),
-            condition: Some(cond_i),
+            base           : FlowBlockBase::new(FlowBlockType::ZeroCond, name),
+            condition      : Some(cond_i),
+            master_of_chain: false,
         }
     }
 
     pub fn new_zelse(name: &str) -> Self {
         Self {
-            base:      FlowBlockBase::new(FlowBlockType::ZeroCond, name),
-            condition: None,
+            base           : FlowBlockBase::new(FlowBlockType::ZeroCond, name),
+            condition      : None,
+            master_of_chain: false,
         }
     }
 }
@@ -63,12 +67,12 @@ impl FlowBlock for FlowBlockZeroCond {
         arena.replace_back_flow_block_zero_cond(*self);
     }
 
-    fn build_hw_master(&mut self, _arena: &mut ModelArena) {
-        todo!("ZIF/ZELIF/ZELSE hardware build not implemented — requires controller-level extraction before synthesis")
-    }
-
     fn build_hw_component(&mut self, _arena: &mut ModelArena) {
         unreachable!("build_hw_master prevents reaching build_hw_component")
+    }
+
+    fn build_hw_master(&mut self, _arena: &mut ModelArena) {
+        
     }
 
     fn summarize_block(&self) -> NodeWrap {
@@ -78,6 +82,11 @@ impl FlowBlock for FlowBlockZeroCond {
     fn get_con_condition(&self) -> Option<HcpIdent> {
         self.condition
     }
+    
+    fn get_unified_node(&self) -> NcpIdent{
+        
+    }
+    
 }
 
 impl Identifiable for FlowBlockZeroCond {

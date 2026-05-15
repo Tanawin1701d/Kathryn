@@ -81,14 +81,18 @@ pub struct AssignMetaGrpPool {
     asm_pool: Vec<AssignMetaGrpGroup>,
 }
 
+impl Default for AssignMetaGrpPool {
+    fn default() -> Self { Self { asm_pool: Vec::new() } }
+}
+
 impl AssignMetaGrpPool {
     pub fn add_new_group(&mut self, asm: &AssignMeta) {
         let group = AssignMetaGrpGroup::new(asm.get_target_hw(), asm.get_pre_update_event());
         self.asm_pool.push(group);
     }
 
-    pub fn insert_asms(&mut self, arena: &mut ModelArena, asm_candidates: &Vec<AssignMeta>) {
-        let mut candidates_copy = asm_candidates.clone();
+    pub fn insert_asms(&mut self, arena: &mut ModelArena, asm_candidates: &[AssignMeta]) {
+        let mut candidates_copy = asm_candidates.to_vec();
         for group in &mut self.asm_pool {
             group.try_push_event(arena, &mut candidates_copy);
         }

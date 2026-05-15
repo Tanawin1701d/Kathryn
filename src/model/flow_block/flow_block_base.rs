@@ -2,6 +2,8 @@ use crate::model::common::identifier::Identifiable;
 use crate::model::controller::clock_mode::{ClockMode, get_global_clk_mode};
 use crate::model::flow_block::flow_block_ident::{FlowBlockIdent, FlowBlockType};
 use crate::model::flow_block::node_wrap::NodeWrap;
+use crate::model::hw_component::common::assign_meta::AssignMeta;
+use crate::model::hw_component::common::asm_meta_helper::AssignMetaGrpPool;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::model_arena::ModelArena;
@@ -166,6 +168,19 @@ impl FlowBlockBase {
         }
     }
 
+    /// Collect every `AssignMeta` from all `basic_nodes_i` and merge them by
+    /// target HWC using `AssignMetaGrpPool`.  Each node is taken from the
+    /// arena, queried, then replaced back so the arena stays consistent.
+    pub fn gen_unified_asm_meta_from_all_basic_nodes(&self, arena: &mut ModelArena) -> Vec<AssignMeta> {
+        let mut pool = AssignMetaGrpPool::default();
+        for &node_i in &self.basic_nodes_i {
+            let node = arena.take_asm_node(node_i);
+            pool.insert_asms(arena, node.get_assign_metas());
+            arena.replace_back_asm_node(node);
+        }
+        pool.gen_assign_metas(arena)
+    }
+
 }
 
 pub trait FlowBlock: Identifiable {
@@ -195,4 +210,5 @@ pub trait FlowBlock: Identifiable {
         self.get_base_mut().build_common_hw(arena);
         self.build_hw_component(arena);
     }
+    fn get_unified_node(&self) -> NcpIdent;
 }
