@@ -44,8 +44,7 @@ impl ModelArena {
             flow_block_pars           : ArenaGroup::new(),
             flow_block_conds          : ArenaGroup::new(),
             flow_block_cond_elifs     : ArenaGroup::new(),
-            flow_block_zero_conds     : ArenaGroup::new(),
-            flow_block_zero_cond_elifs: ArenaGroup::new(),
+            flow_block_zero_conds: ArenaGroup::new(),
             flow_block_whiles         : ArenaGroup::new(),
             flow_block_do_whiles      : ArenaGroup::new(),
             flow_block_counter_loops  : ArenaGroup::new(),
@@ -82,8 +81,7 @@ impl ModelArena {
         self.flow_block_pars           = ArenaGroup::new();
         self.flow_block_conds          = ArenaGroup::new();
         self.flow_block_cond_elifs     = ArenaGroup::new();
-        self.flow_block_zero_conds     = ArenaGroup::new();
-        self.flow_block_zero_cond_elifs = ArenaGroup::new();
+        self.flow_block_zero_conds = ArenaGroup::new();
         self.flow_block_whiles         = ArenaGroup::new();
         self.flow_block_do_whiles      = ArenaGroup::new();
         self.flow_block_counter_loops  = ArenaGroup::new();

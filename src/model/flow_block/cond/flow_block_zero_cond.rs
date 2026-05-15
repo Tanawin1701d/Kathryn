@@ -6,24 +6,39 @@ use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_ident::NcpIdent;
 
-/// ZIF — zero-cycle conditional block (stub).
+/// Zero-cycle conditional block covering ZIF (Some cond, no prior branch),
+/// ZELIF (Some cond, chained branch), and ZELSE (None).
 /// Hardware build is not implemented here; these are extracted at a higher
 /// controller level before any hardware generation occurs.
 #[derive(Clone, Debug)]
 pub struct FlowBlockZeroCond {
     base     : FlowBlockBase,
-    condition: HcpIdent,
+    condition: Option<HcpIdent>,
 }
 
 impl Default for FlowBlockZeroCond {
-    fn default() -> Self { Self::new_zif("", HcpIdent::default()) }
+    fn default() -> Self { Self::new_zelse("") }
 }
 
 impl FlowBlockZeroCond {
     pub fn new_zif(name: &str, cond_i: HcpIdent) -> Self {
         Self {
             base:      FlowBlockBase::new(FlowBlockType::ZeroCond, name),
-            condition: cond_i,
+            condition: Some(cond_i),
+        }
+    }
+
+    pub fn new_zelif(name: &str, cond_i: HcpIdent) -> Self {
+        Self {
+            base:      FlowBlockBase::new(FlowBlockType::ZeroCond, name),
+            condition: Some(cond_i),
+        }
+    }
+
+    pub fn new_zelse(name: &str) -> Self {
+        Self {
+            base:      FlowBlockBase::new(FlowBlockType::ZeroCond, name),
+            condition: None,
         }
     }
 }
@@ -49,7 +64,7 @@ impl FlowBlock for FlowBlockZeroCond {
     }
 
     fn build_hw_master(&mut self, _arena: &mut ModelArena) {
-        todo!("ZIF hardware build not implemented — requires controller-level extraction before synthesis")
+        todo!("ZIF/ZELIF/ZELSE hardware build not implemented — requires controller-level extraction before synthesis")
     }
 
     fn build_hw_component(&mut self, _arena: &mut ModelArena) {
@@ -57,7 +72,11 @@ impl FlowBlock for FlowBlockZeroCond {
     }
 
     fn summarize_block(&self) -> NodeWrap {
-        todo!("ZIF summarize not implemented — requires controller-level extraction before synthesis")
+        todo!("ZIF/ZELIF/ZELSE summarize not implemented — requires controller-level extraction before synthesis")
+    }
+
+    fn get_con_condition(&self) -> Option<HcpIdent> {
+        self.condition
     }
 }
 
