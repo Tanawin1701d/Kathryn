@@ -2,7 +2,7 @@ use crate::model::flow_block::{
     FlowBlockIdent,
     FlowBlockSeq, FlowBlockPar,
     FlowBlockCond, FlowBlockCondElif,
-    FlowBlockZeroCond,
+    FlowBlockZeroCondIf, FlowBlockZeroCondElif,
     FlowBlockWhile, FlowBlockDoWhile, FlowBlockCounterLoop,
 };
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
@@ -70,31 +70,31 @@ impl ModelArena {
         self.add_flow_block_cond_elif(FlowBlockCondElif::new_else(name))
     }
 
-    // ---- zero_cond: ZIF -----------------------------------------------------
+    // ---- zero_cond_if: ZIF --------------------------------------------------
 
     pub fn make_flow_block_zif(&mut self, name: &str, cond_i: HcpIdent) -> FlowBlockIdent {
-        self.add_flow_block_zero_cond(FlowBlockZeroCond::new_zif(name, cond_i))
+        self.add_flow_block_zero_cond_if(FlowBlockZeroCondIf::new(name, cond_i))
     }
     pub fn mk_flow_block_zif(&mut self, name: &str, cond_i: HcpIdent) -> FlowBlockIdent {
-        self.add_flow_block_zero_cond(FlowBlockZeroCond::new_zif(name, cond_i))
+        self.add_flow_block_zero_cond_if(FlowBlockZeroCondIf::new(name, cond_i))
     }
 
-    // ---- zero_cond: ZELIF ---------------------------------------------------
+    // ---- zero_cond_elif: ZELIF ----------------------------------------------
 
     pub fn make_flow_block_zelif(&mut self, name: &str, cond_i: HcpIdent) -> FlowBlockIdent {
-        self.add_flow_block_zero_cond(FlowBlockZeroCond::new_zelif(name, cond_i))
+        self.add_flow_block_zero_cond_elif(FlowBlockZeroCondElif::new_zelif(name, cond_i))
     }
     pub fn mk_flow_block_zelif(&mut self, name: &str, cond_i: HcpIdent) -> FlowBlockIdent {
-        self.add_flow_block_zero_cond(FlowBlockZeroCond::new_zelif(name, cond_i))
+        self.add_flow_block_zero_cond_elif(FlowBlockZeroCondElif::new_zelif(name, cond_i))
     }
 
-    // ---- zero_cond: ZELSE ---------------------------------------------------
+    // ---- zero_cond_elif: ZELSE ----------------------------------------------
 
     pub fn make_flow_block_zelse(&mut self, name: &str) -> FlowBlockIdent {
-        self.add_flow_block_zero_cond(FlowBlockZeroCond::new_zelse(name))
+        self.add_flow_block_zero_cond_elif(FlowBlockZeroCondElif::new_zelse(name))
     }
     pub fn mk_flow_block_zelse(&mut self, name: &str) -> FlowBlockIdent {
-        self.add_flow_block_zero_cond(FlowBlockZeroCond::new_zelse(name))
+        self.add_flow_block_zero_cond_elif(FlowBlockZeroCondElif::new_zelse(name))
     }
 
     // ---- while: CWHILE ------------------------------------------------------

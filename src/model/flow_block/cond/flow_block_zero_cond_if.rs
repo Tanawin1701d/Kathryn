@@ -10,57 +10,36 @@ use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_base::add_logic_with_output;
 use crate::model::nodes::ncp_ident::NcpIdent;
 
-/// Zero-cycle conditional block covering ZIF (Some cond, no prior branch),
-/// ZELIF (Some cond, chained branch), and ZELSE (None).
-/// Hardware build is not implemented here; these are extracted at a higher
-/// controller level before any hardware generation occurs.
+/// Master ZIF branch — owns the chained zelif / zelse `con_blocks`.
+/// Runs both the per-branch GRP pass on its own basic nodes and the
+/// cross-branch merge across all continuation blocks.
 #[derive(Clone, Debug)]
-pub struct FlowBlockZeroCond {
-    base            : FlowBlockBase,
-    condition       : Option<HcpIdent>,
-    master_of_chain : bool,
-    grp_asms        : Vec<AssignMeta>
+pub struct FlowBlockZeroCondIf {
+    base      : FlowBlockBase,
+    condition : HcpIdent,
+    grp_asms  : Vec<AssignMeta>,
 }
 
-impl Default for FlowBlockZeroCond {
-    fn default() -> Self { Self::new_zelse("") }
+impl Default for FlowBlockZeroCondIf {
+    fn default() -> Self { Self::new("", HcpIdent::default()) }
 }
 
-impl FlowBlockZeroCond {
-    pub fn new_zif(name: &str, cond_i: HcpIdent) -> Self {
+impl FlowBlockZeroCondIf {
+    pub fn new(name: &str, cond_i: HcpIdent) -> Self {
         Self {
-            base           :      FlowBlockBase::new(FlowBlockType::ZeroCond, FlowBlockJoinPolicy::ExtFlow, name),
-            condition      : Some(cond_i),
-            master_of_chain: true,
-            grp_asms       : Vec::new(),
-        }
-    }
-
-    pub fn new_zelif(name: &str, cond_i: HcpIdent) -> Self {
-        Self {
-            base           : FlowBlockBase::new(FlowBlockType::ZeroCond, FlowBlockJoinPolicy::ConFlow, name),
-            condition      : Some(cond_i),
-            master_of_chain: false,
-            grp_asms       : Vec::new(),
-        }
-    }
-
-    pub fn new_zelse(name: &str) -> Self {
-        Self {
-            base           : FlowBlockBase::new(FlowBlockType::ZeroCond, FlowBlockJoinPolicy::ConFlow, name),
-            condition      : None,
-            master_of_chain: false,
-            grp_asms       : Vec::new(),
+            base     : FlowBlockBase::new(FlowBlockType::ZeroCondIf, FlowBlockJoinPolicy::ExtFlow, name),
+            condition: cond_i,
+            grp_asms : Vec::new(),
         }
     }
 }
 
-impl FlowBlock for FlowBlockZeroCond {
+impl FlowBlock for FlowBlockZeroCondIf {
     fn get_base    (&self)     -> &FlowBlockBase     { &self.base }
     fn get_base_mut(&mut self) -> &mut FlowBlockBase { &mut self.base }
 
     fn add_element_in_flow_block(&mut self, _node: NcpIdent) {
-        panic!("zero-cond block does not accept direct asm nodes; use a sub-block")
+        panic!("zero-cond-if block does not accept direct asm nodes; use a sub-block")
     }
 
     fn add_sub_flow_block(&mut self, block: FlowBlockIdent) {
@@ -72,17 +51,16 @@ impl FlowBlock for FlowBlockZeroCond {
     }
 
     fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) {
-        arena.replace_back_flow_block_zero_cond(*self);
+        arena.replace_back_flow_block_zero_cond_if(*self);
     }
 
     fn build_hw_component(&mut self, arena: &mut ModelArena) {
-        // Per-branch GRP pass: merge basic-node assign metas within this block.
+        // Per-branch GRP pass on the master's own basic nodes.
         self.grp_asms = self.base.gen_unified_asm_meta_from_all_basic_nodes(arena);
-        if !self.master_of_chain { return; }
 
-        // Master (zif) only: cross-branch merge via AssignMetaIfPool.
+        // Cross-branch merge via AssignMetaIfPool.
         let id        = self.base.get_ident().get_global_id();
-        let self_cond = self.condition.expect("master zif block must have a condition");
+        let self_cond = self.condition;
         let mut pool  = AssignMetaIfPool::default();
         pool.insert_asms(arena, Some(self_cond), self_cond, &self.grp_asms);
 
@@ -95,9 +73,8 @@ impl FlowBlock for FlowBlockZeroCond {
 
         let con_blocks_i: Vec<FlowBlockIdent> = self.base.get_con_blocks_i().to_vec();
         for (i, con_block_i) in con_blocks_i.into_iter().enumerate() {
-            let mut con = arena.take_flow_block_zero_cond(con_block_i);
-            assert!(!con.master_of_chain, "con_block must be a zelif/zelse (master_of_chain=false)");
-            let con_cond = con.condition;
+            let con = arena.take_flow_block_zero_cond_elif(con_block_i);
+            let con_cond = con.get_condition();
 
             let con_cond_abs = match con_cond {
                 Some(elif_cond) => {
@@ -116,28 +93,27 @@ impl FlowBlock for FlowBlockZeroCond {
                 }
             };
 
-            pool.insert_asms(arena, con_cond, con_cond_abs, &con.grp_asms);
-            arena.replace_back_flow_block_zero_cond(con);
+            pool.insert_asms(arena, con_cond, con_cond_abs, con.get_grp_asms());
+            arena.replace_back_flow_block_zero_cond_elif(con);
         }
 
         self.grp_asms = pool.gen_assign_metas(arena);
     }
 
     fn summarize_block(&self) -> NodeWrap {
-        todo!("ZIF/ZELIF/ZELSE summarize not implemented — requires controller-level extraction before synthesis")
+        todo!("ZIF summarize not implemented — requires controller-level extraction before synthesis")
     }
 
     fn get_con_condition(&self) -> Option<HcpIdent> {
-        self.condition
+        Some(self.condition)
     }
 
     fn get_extract_node(&self) -> NcpIdent {
-        todo!("get_unified_node for ZeroCond — requires controller-level extraction")
+        todo!("get_unified_node for ZeroCondIf — requires controller-level extraction")
     }
-
 }
 
-impl Identifiable for FlowBlockZeroCond {
+impl Identifiable for FlowBlockZeroCondIf {
     fn get_ident_base    (&self)     -> &IdentBase     { self.base.get_ident_ref().get_ident_base() }
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.base.get_ident_mut().get_ident_base_mut() }
     fn build_unique_name (&mut self) -> &str           { self.base.get_ident_mut().build_unique_name() }

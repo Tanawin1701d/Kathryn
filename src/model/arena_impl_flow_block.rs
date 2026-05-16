@@ -3,7 +3,7 @@ use crate::model::flow_block::{
     FlowBlock, FlowBlockIdent, FlowBlockType,
     FlowBlockSeq, FlowBlockPar,
     FlowBlockCond, FlowBlockCondElif,
-    FlowBlockZeroCond,
+    FlowBlockZeroCondIf, FlowBlockZeroCondElif,
     FlowBlockWhile, FlowBlockDoWhile, FlowBlockCounterLoop,
 };
 use crate::model::model_arena::ModelArena;
@@ -77,21 +77,38 @@ impl ModelArena {
         self.flow_block_cond_elifs.replace_back(h, block);
     }
 
-    // --- zero_cond (ZIF) ---
+    // --- zero_cond_if (ZIF master) ---
 
-    pub fn add_flow_block_zero_cond(&mut self, block: FlowBlockZeroCond) -> FlowBlockIdent {
-        let h = self.flow_block_zero_conds.insert(block);
-        self.flow_block_zero_conds.get(h).get_base().get_ident()
+    pub fn add_flow_block_zero_cond_if(&mut self, block: FlowBlockZeroCondIf) -> FlowBlockIdent {
+        let h = self.flow_block_zero_cond_ifs.insert(block);
+        self.flow_block_zero_cond_ifs.get(h).get_base().get_ident()
     }
 
-    pub fn take_flow_block_zero_cond(&mut self, ident: FlowBlockIdent) -> FlowBlockZeroCond {
-        assert_eq!(ident.get_block_type(), FlowBlockType::ZeroCond);
-        self.flow_block_zero_conds.take(*ident.get_arena_handle())
+    pub fn take_flow_block_zero_cond_if(&mut self, ident: FlowBlockIdent) -> FlowBlockZeroCondIf {
+        assert_eq!(ident.get_block_type(), FlowBlockType::ZeroCondIf);
+        self.flow_block_zero_cond_ifs.take(*ident.get_arena_handle())
     }
 
-    pub fn replace_back_flow_block_zero_cond(&mut self, block: FlowBlockZeroCond) {
+    pub fn replace_back_flow_block_zero_cond_if(&mut self, block: FlowBlockZeroCondIf) {
         let h = *block.get_arena_handle();
-        self.flow_block_zero_conds.replace_back(h, block);
+        self.flow_block_zero_cond_ifs.replace_back(h, block);
+    }
+
+    // --- zero_cond_elif (ZELIF / ZELSE) ---
+
+    pub fn add_flow_block_zero_cond_elif(&mut self, block: FlowBlockZeroCondElif) -> FlowBlockIdent {
+        let h = self.flow_block_zero_cond_elifs.insert(block);
+        self.flow_block_zero_cond_elifs.get(h).get_base().get_ident()
+    }
+
+    pub fn take_flow_block_zero_cond_elif(&mut self, ident: FlowBlockIdent) -> FlowBlockZeroCondElif {
+        assert_eq!(ident.get_block_type(), FlowBlockType::ZeroCondElif);
+        self.flow_block_zero_cond_elifs.take(*ident.get_arena_handle())
+    }
+
+    pub fn replace_back_flow_block_zero_cond_elif(&mut self, block: FlowBlockZeroCondElif) {
+        let h = *block.get_arena_handle();
+        self.flow_block_zero_cond_elifs.replace_back(h, block);
     }
 
     // --- while (CWHILE / SWHILE) ---
@@ -153,7 +170,8 @@ impl ModelArena {
             FlowBlockType::Parallel     => Box::new(self.take_flow_block_par       (ident)),
             FlowBlockType::CondIf       => Box::new(self.take_flow_block_cond      (ident)),
             FlowBlockType::CondElif     => Box::new(self.take_flow_block_cond_elif (ident)),
-            FlowBlockType::ZeroCond     => Box::new(self.take_flow_block_zero_cond(ident)),
+            FlowBlockType::ZeroCondIf   => Box::new(self.take_flow_block_zero_cond_if  (ident)),
+            FlowBlockType::ZeroCondElif => Box::new(self.take_flow_block_zero_cond_elif(ident)),
             FlowBlockType::WhileLoop    => Box::new(self.take_flow_block_while     (ident)),
             FlowBlockType::DoWhile      => Box::new(self.take_flow_block_do_while  (ident)),
             FlowBlockType::CounterLoop  => Box::new(self.take_flow_block_counter_loop(ident)),
@@ -170,7 +188,8 @@ impl ModelArena {
             FlowBlockType::Parallel     => self.flow_block_pars          .get(*ident.get_arena_handle()),
             FlowBlockType::CondIf       => self.flow_block_conds         .get(*ident.get_arena_handle()),
             FlowBlockType::CondElif     => self.flow_block_cond_elifs    .get(*ident.get_arena_handle()),
-            FlowBlockType::ZeroCond     => self.flow_block_zero_conds.get(*ident.get_arena_handle()),
+            FlowBlockType::ZeroCondIf   => self.flow_block_zero_cond_ifs  .get(*ident.get_arena_handle()),
+            FlowBlockType::ZeroCondElif => self.flow_block_zero_cond_elifs.get(*ident.get_arena_handle()),
             FlowBlockType::WhileLoop    => self.flow_block_whiles        .get(*ident.get_arena_handle()),
             FlowBlockType::DoWhile      => self.flow_block_do_whiles     .get(*ident.get_arena_handle()),
             FlowBlockType::CounterLoop  => self.flow_block_counter_loops .get(*ident.get_arena_handle()),
