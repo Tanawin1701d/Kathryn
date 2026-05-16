@@ -168,12 +168,20 @@ impl FlowBlockBase {
         }
     }
 
-    /// Collect every `AssignMeta` from all `basic_nodes_i` and merge them by
-    /// target HWC using `AssignMetaGrpPool`.  Each node is taken from the
-    /// arena, queried, then replaced back so the arena stays consistent.
+    /// Collect every `AssignMeta` from all `basic_nodes_i` and from any
+    /// `sub_blocks_i` whose join policy is `BasicNodeFlow` (those expose a
+    /// single result asm node via `summarize_as_node`).  Metas are merged by
+    /// target HWC using `AssignMetaGrpPool`.
     pub fn gen_unified_asm_meta_from_all_basic_nodes(&self, arena: &mut ModelArena) -> Vec<AssignMeta> {
         let mut pool = AssignMetaGrpPool::default();
         for &node_i in &self.basic_nodes_i {
+            let node = arena.take_asm_node(node_i);
+            pool.insert_asms(arena, node.get_assign_metas());
+            arena.replace_back_asm_node(node);
+        }
+        for &block_i in &self.sub_blocks_i {
+            if block_i.get_join_policy() != FlowBlockJoinPolicy::BasicNodeFlow { continue; }
+            let node_i = arena.get_flow_block(block_i).summarize_as_node();
             let node = arena.take_asm_node(node_i);
             pool.insert_asms(arena, node.get_assign_metas());
             arena.replace_back_asm_node(node);
