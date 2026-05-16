@@ -60,7 +60,7 @@ impl FlowBlock for FlowBlockCondElif {
         self.result = Some(arena.summarize_flow_block(self.base.get_sub_blocks_i()[0]));
     }
 
-    fn summarize_block(&self) -> NodeWrap {
+    fn summarize_as_block(&self) -> NodeWrap {
         self.result.clone().expect("cond elif/else block has not been built")
     }
 

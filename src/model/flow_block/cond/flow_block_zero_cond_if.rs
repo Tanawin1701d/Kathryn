@@ -1,7 +1,6 @@
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::flow_block::flow_block_base::{FlowBlock, FlowBlockBase};
 use crate::model::flow_block::flow_block_ident::{FlowBlockIdent, FlowBlockJoinPolicy, FlowBlockType};
-use crate::model::flow_block::node_wrap::NodeWrap;
 use crate::model::hw_component::common::assign_meta::AssignMeta;
 use crate::model::hw_component::common::asm_meta_helper::AssignMetaIfPool;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
@@ -15,9 +14,10 @@ use crate::model::nodes::ncp_ident::NcpIdent;
 /// cross-branch merge across all continuation blocks.
 #[derive(Clone, Debug)]
 pub struct FlowBlockZeroCondIf {
-    base      : FlowBlockBase,
-    condition : HcpIdent,
-    grp_asms  : Vec<AssignMeta>,
+    base             : FlowBlockBase,
+    cond_i           : HcpIdent,
+    grp_asms         : Vec<AssignMeta>, ///// the assignment for the group
+    result_basic_node: Option<NcpIdent>,
 }
 
 impl Default for FlowBlockZeroCondIf {
@@ -27,9 +27,10 @@ impl Default for FlowBlockZeroCondIf {
 impl FlowBlockZeroCondIf {
     pub fn new(name: &str, cond_i: HcpIdent) -> Self {
         Self {
-            base     : FlowBlockBase::new(FlowBlockType::ZeroCondIf, FlowBlockJoinPolicy::ExtFlow, name),
-            condition: cond_i,
-            grp_asms : Vec::new(),
+            base     : FlowBlockBase::new(FlowBlockType::ZeroCondIf, FlowBlockJoinPolicy::BasicNodeFlow, name),
+            cond_i: cond_i,
+            grp_asms         : Vec::new(),
+            result_basic_node: None,
         }
     }
 }
@@ -39,14 +40,18 @@ impl FlowBlock for FlowBlockZeroCondIf {
     fn get_base_mut(&mut self) -> &mut FlowBlockBase { &mut self.base }
 
     fn add_element_in_flow_block(&mut self, _node: NcpIdent) {
-        panic!("zero-cond-if block does not accept direct asm nodes; use a sub-block")
+        self.base.add_basic_node(_node);
     }
 
     fn add_sub_flow_block(&mut self, block: FlowBlockIdent) {
+        assert_eq!(block.get_join_policy(), FlowBlockJoinPolicy::BasicNodeFlow,
+            "zero-cond-if sub blocks must have BasicNodeFlow join policy");
         self.base.add_sub_flow_block(block);
     }
 
     fn add_con_flow_block(&mut self, block: FlowBlockIdent) {
+        assert_eq!(block.get_block_type(), FlowBlockType::ZeroCondElif,
+            "zero-cond-if con blocks must be ZeroCondElif");
         self.base.add_con_flow_block(block);
     }
 
@@ -59,8 +64,10 @@ impl FlowBlock for FlowBlockZeroCondIf {
         self.grp_asms = self.base.gen_unified_asm_meta_from_all_basic_nodes(arena);
 
         // Cross-branch merge via AssignMetaIfPool.
+
+        // master chain block
         let id        = self.base.get_ident().get_global_id();
-        let self_cond = self.condition;
+        let self_cond = self.cond_i;
         let mut pool  = AssignMetaIfPool::default();
         pool.insert_asms(arena, Some(self_cond), self_cond, &self.grp_asms);
 
@@ -71,6 +78,7 @@ impl FlowBlock for FlowBlockZeroCondIf {
         );
         let mut prev_false: Option<HcpIdent> = Some(inv_self);
 
+        // cond block join
         let con_blocks_i: Vec<FlowBlockIdent> = self.base.get_con_blocks_i().to_vec();
         for (i, con_block_i) in con_blocks_i.into_iter().enumerate() {
             let con = arena.take_flow_block_zero_cond_elif(con_block_i);
@@ -97,20 +105,16 @@ impl FlowBlock for FlowBlockZeroCondIf {
             arena.replace_back_flow_block_zero_cond_elif(con);
         }
 
-        self.grp_asms = pool.gen_assign_metas(arena);
+        // convert result asms to a single asm node
+        let result_asms = pool.gen_assign_metas(arena);
+        self.result_basic_node = Some(arena.make_asm_node_many(
+            &format!("zcif_result_{}", id),
+            &result_asms,
+        ));
     }
 
-    fn summarize_block(&self) -> NodeWrap {
-        todo!("ZIF summarize not implemented — requires controller-level extraction before synthesis")
-    }
-
-    fn get_con_condition(&self) -> Option<HcpIdent> {
-        Some(self.condition)
-    }
-
-    fn get_extract_node(&self) -> NcpIdent {
-        todo!("get_unified_node for ZeroCondIf — requires controller-level extraction")
-    }
+    fn get_con_condition(&self) -> Option<HcpIdent> { Some(self.cond_i) }
+    fn summarize_as_node(&self) -> NcpIdent { self.result_basic_node.expect("it has not generated yet")}
 }
 
 impl Identifiable for FlowBlockZeroCondIf {

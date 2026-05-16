@@ -203,14 +203,13 @@ pub trait FlowBlock: Identifiable {
         panic!("get_loop_id_expr_i: not supported by this block type")
     }
     // summarize for next synthesis
-    fn summarize_block(&self) -> NodeWrap;
+    fn summarize_as_block(&self)     -> NodeWrap{ panic!("summarize_as_block: not supported by this block type") }
+    fn summarize_as_node (&self) -> NcpIdent{ panic!("summarize_as_node: not supported by this block type") }
+
     // main build core
     fn build_hw_component(&mut self, arena: &mut ModelArena);
     fn build_hw_master(&mut self, arena: &mut ModelArena) {
         self.get_base_mut().build_common_hw(arena);
         self.build_hw_component(arena);
-    }
-    fn get_extract_node(&self) -> NcpIdent {
-        todo!("get_unified_node not implemented for this block type")
     }
 }

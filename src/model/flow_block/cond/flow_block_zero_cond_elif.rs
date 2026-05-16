@@ -63,18 +63,11 @@ impl FlowBlock for FlowBlockZeroCondElif {
         // Per-branch GRP pass: merge basic-node assign metas within this block.
         self.grp_asms = self.base.gen_unified_asm_meta_from_all_basic_nodes(arena);
     }
-
-    fn summarize_block(&self) -> NodeWrap {
-        todo!("ZELIF/ZELSE summarize not implemented — requires controller-level extraction before synthesis")
-    }
-
+    
     fn get_con_condition(&self) -> Option<HcpIdent> {
         self.condition
     }
 
-    fn get_extract_node(&self) -> NcpIdent {
-        todo!("get_unified_node for ZeroCondElif — requires controller-level extraction")
-    }
 }
 
 impl Identifiable for FlowBlockZeroCondElif {

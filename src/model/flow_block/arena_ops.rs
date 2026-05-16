@@ -48,6 +48,6 @@ impl ModelArena {
     }
 
     pub fn summarize_flow_block(&self, ident: FlowBlockIdent) -> NodeWrap {
-        self.get_flow_block(ident).summarize_block()
+        self.get_flow_block(ident).summarize_as_block()
     }
 }

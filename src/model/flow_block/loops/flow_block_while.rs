@@ -57,7 +57,7 @@ impl FlowBlock for FlowBlockWhile {
         self.result = Some(self.schematic.build(&mut self.base, arena));
     }
 
-    fn summarize_block(&self) -> NodeWrap {
+    fn summarize_as_block(&self) -> NodeWrap {
         self.result.clone().expect("while block has not been built")
     }
 
