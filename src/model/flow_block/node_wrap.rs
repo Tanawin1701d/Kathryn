@@ -5,6 +5,7 @@ use crate::model::nodes::ncp_ident::NcpIdent;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct NodeWrap {
+
     entrance_nodes_i: Vec<NcpIdent>,
     exit_node       : Option<NcpIdent>,
     cycle_used      : i32,

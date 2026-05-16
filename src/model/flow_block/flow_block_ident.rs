@@ -3,6 +3,16 @@ use std::fmt;
 use crate::model::common::identifier::{IdentBase, Identifiable};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FlowBlockJoinPolicy {
+    /// Regular child block nested inside a parent flow.
+    SubFlow,
+    /// Continuation branch of a conditional chain (elif / else / zelif / zelse).
+    ConFlow,
+    /// Block extracted and lowered to a single basic asm node.
+    ExtFlow,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FlowBlockType {
     Sequential,
     Parallel,
@@ -27,6 +37,7 @@ impl FlowBlockType {
             Self::CounterLoop  => "COUNTER_LOOP",
         }
     }
+
 }
 
 impl fmt::Display for FlowBlockType {
@@ -37,21 +48,24 @@ impl fmt::Display for FlowBlockType {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct FlowBlockIdent {
-    ident_base: IdentBase,
-    block_type: FlowBlockType,
+    ident_base  : IdentBase,
+    block_type  : FlowBlockType,
+    join_policy : FlowBlockJoinPolicy,
 }
 
 impl FlowBlockIdent {
-    pub fn new(block_type: FlowBlockType, name: &str) -> Self {
+    pub fn new(block_type: FlowBlockType, join_policy: FlowBlockJoinPolicy, name: &str) -> Self {
         Self {
             ident_base: IdentBase::new(false, name),
             block_type,
+            join_policy,
         }
     }
 
-    pub fn get_ident_base     (&self)     -> &IdentBase     { &self.ident_base }
-    pub fn get_ident_base_mut (&mut self) -> &mut IdentBase { &mut self.ident_base }
-    pub fn get_block_type     (&self)     -> FlowBlockType  { self.block_type }
+    pub fn get_ident_base     (&self)     -> &IdentBase          { &self.ident_base }
+    pub fn get_ident_base_mut (&mut self) -> &mut IdentBase      { &mut self.ident_base }
+    pub fn get_block_type     (&self)     -> FlowBlockType        { self.block_type }
+    pub fn get_join_policy    (&self)     -> FlowBlockJoinPolicy  { self.join_policy }
 
     pub fn build_unique_flow_block_name(&self) -> String {
         format!(
@@ -64,7 +78,7 @@ impl FlowBlockIdent {
 }
 
 impl Default for FlowBlockIdent {
-    fn default() -> Self { Self::new(FlowBlockType::Sequential, "") }
+    fn default() -> Self { Self::new(FlowBlockType::Sequential, FlowBlockJoinPolicy::SubFlow, "") }
 }
 
 impl Identifiable for FlowBlockIdent {

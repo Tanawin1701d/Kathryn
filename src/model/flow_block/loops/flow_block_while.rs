@@ -1,7 +1,7 @@
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::flow_block::common::{LoopMode, WhileSchematic};
 use crate::model::flow_block::flow_block_base::{FlowBlock, FlowBlockBase};
-use crate::model::flow_block::flow_block_ident::{FlowBlockIdent, FlowBlockType};
+use crate::model::flow_block::flow_block_ident::{FlowBlockIdent, FlowBlockJoinPolicy, FlowBlockType};
 use crate::model::flow_block::node_wrap::NodeWrap;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::model_arena::ModelArena;
@@ -21,7 +21,7 @@ impl Default for FlowBlockWhile {
 impl FlowBlockWhile {
     pub fn new_cwhile(name: &str, cond_i: HcpIdent) -> Self {
         Self {
-            base:      FlowBlockBase::new(FlowBlockType::WhileLoop, name),
+            base:      FlowBlockBase::new(FlowBlockType::WhileLoop, FlowBlockJoinPolicy::SubFlow, name),
             schematic: WhileSchematic::new(LoopMode::Combinatorial, cond_i),
             result:    None,
         }
@@ -29,7 +29,7 @@ impl FlowBlockWhile {
 
     pub fn new_swhile(name: &str, cond_i: HcpIdent) -> Self {
         Self {
-            base:      FlowBlockBase::new(FlowBlockType::WhileLoop, name),
+            base:      FlowBlockBase::new(FlowBlockType::WhileLoop, FlowBlockJoinPolicy::SubFlow, name),
             schematic: WhileSchematic::new(LoopMode::Sequential, cond_i),
             result:    None,
         }
@@ -60,6 +60,7 @@ impl FlowBlock for FlowBlockWhile {
     fn summarize_block(&self) -> NodeWrap {
         self.result.clone().expect("while block has not been built")
     }
+
 }
 
 impl Identifiable for FlowBlockWhile {

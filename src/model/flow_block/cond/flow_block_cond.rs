@@ -1,7 +1,7 @@
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::flow_block::common::{CondMode, CondSchematic};
 use crate::model::flow_block::flow_block_base::{FlowBlock, FlowBlockBase};
-use crate::model::flow_block::flow_block_ident::{FlowBlockIdent, FlowBlockType};
+use crate::model::flow_block::flow_block_ident::{FlowBlockIdent, FlowBlockJoinPolicy, FlowBlockType};
 use crate::model::flow_block::node_wrap::NodeWrap;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::model_arena::ModelArena;
@@ -21,7 +21,7 @@ impl Default for FlowBlockCond {
 impl FlowBlockCond {
     pub fn new_cif(name: &str, cond_i: HcpIdent) -> Self {
         Self {
-            base:      FlowBlockBase::new(FlowBlockType::CondIf, name),
+            base:      FlowBlockBase::new(FlowBlockType::CondIf, FlowBlockJoinPolicy::SubFlow, name),
             schematic: CondSchematic::new(CondMode::Combinatorial, cond_i),
             result:    None,
         }
@@ -29,7 +29,7 @@ impl FlowBlockCond {
 
     pub fn new_sif(name: &str, cond_i: HcpIdent) -> Self {
         Self {
-            base:      FlowBlockBase::new(FlowBlockType::CondIf, name),
+            base:      FlowBlockBase::new(FlowBlockType::CondIf, FlowBlockJoinPolicy::SubFlow, name),
             schematic: CondSchematic::new(CondMode::Sequential, cond_i),
             result:    None,
         }
@@ -64,6 +64,7 @@ impl FlowBlock for FlowBlockCond {
     fn summarize_block(&self) -> NodeWrap {
         self.result.clone().expect("cond block has not been built")
     }
+
 }
 
 impl Identifiable for FlowBlockCond {

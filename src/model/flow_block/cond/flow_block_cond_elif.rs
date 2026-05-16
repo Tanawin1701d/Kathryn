@@ -1,6 +1,6 @@
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::flow_block::flow_block_base::{FlowBlock, FlowBlockBase};
-use crate::model::flow_block::flow_block_ident::{FlowBlockIdent, FlowBlockType};
+use crate::model::flow_block::flow_block_ident::{FlowBlockIdent, FlowBlockJoinPolicy, FlowBlockType};
 use crate::model::flow_block::node_wrap::NodeWrap;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::model_arena::ModelArena;
@@ -22,7 +22,7 @@ impl Default for FlowBlockCondElif {
 impl FlowBlockCondElif {
     pub fn new_elif(name: &str, cond_i: HcpIdent) -> Self {
         Self {
-            base:      FlowBlockBase::new(FlowBlockType::CondElif, name),
+            base:      FlowBlockBase::new(FlowBlockType::CondElif, FlowBlockJoinPolicy::ConFlow, name),
             condition: Some(cond_i),
             result:    None,
         }
@@ -30,7 +30,7 @@ impl FlowBlockCondElif {
 
     pub fn new_else(name: &str) -> Self {
         Self {
-            base:      FlowBlockBase::new(FlowBlockType::CondElif, name),
+            base:      FlowBlockBase::new(FlowBlockType::CondElif, FlowBlockJoinPolicy::ConFlow, name),
             condition: None,
             result:    None,
         }
@@ -67,6 +67,7 @@ impl FlowBlock for FlowBlockCondElif {
     fn get_con_condition(&self) -> Option<HcpIdent> {
         self.condition
     }
+
 }
 
 impl Identifiable for FlowBlockCondElif {

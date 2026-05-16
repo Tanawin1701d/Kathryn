@@ -1,7 +1,7 @@
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::flow_block::common::DoWhileSchematic;
 use crate::model::flow_block::flow_block_base::{FlowBlock, FlowBlockBase};
-use crate::model::flow_block::flow_block_ident::{FlowBlockIdent, FlowBlockType};
+use crate::model::flow_block::flow_block_ident::{FlowBlockIdent, FlowBlockJoinPolicy, FlowBlockType};
 use crate::model::flow_block::node_wrap::NodeWrap;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::model_arena::ModelArena;
@@ -21,7 +21,7 @@ impl Default for FlowBlockDoWhile {
 impl FlowBlockDoWhile {
     pub fn new(name: &str, cond_i: HcpIdent) -> Self {
         Self {
-            base:      FlowBlockBase::new(FlowBlockType::DoWhile, name),
+            base:      FlowBlockBase::new(FlowBlockType::DoWhile, FlowBlockJoinPolicy::SubFlow, name),
             schematic: DoWhileSchematic::new(cond_i),
             result:    None,
         }
@@ -52,6 +52,7 @@ impl FlowBlock for FlowBlockDoWhile {
     fn summarize_block(&self) -> NodeWrap {
         self.result.clone().expect("do-while block has not been built")
     }
+
 }
 
 impl Identifiable for FlowBlockDoWhile {

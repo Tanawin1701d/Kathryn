@@ -110,12 +110,15 @@ impl Default for AssignMetaIfGroup{
     }
 }
 
-pub struct AssignMetaIfPool{
-    asm_pool: Vec<AssignMetaIfGroup>
+pub struct AssignMetaIfPool {
+    asm_pool: Vec<AssignMetaIfGroup>,
 }
 
-impl AssignMetaIfPool{
+impl Default for AssignMetaIfPool {
+    fn default() -> Self { Self { asm_pool: Vec::new() } }
+}
 
+impl AssignMetaIfPool {
     pub fn add_new_group(&mut self, asm: &AssignMeta, cond_abs_i: HcpIdent) {
         let group = AssignMetaIfGroup::new(
             asm.get_target_hw(),
@@ -125,13 +128,12 @@ impl AssignMetaIfPool{
         self.asm_pool.push(group);
     }
 
-    pub fn insert_asms(&mut self, arena         : &mut ModelArena,
-                                 cond_rel_i    : Option<HcpIdent>,
-                                 cond_abs_i    : HcpIdent,
-                                 asm_candidates: &Vec<AssignMeta>) {
-        let mut candidates_copy = asm_candidates.clone();
-
-
+    pub fn insert_asms(&mut self,
+                       arena         : &mut ModelArena,
+                       cond_rel_i    : Option<HcpIdent>,
+                       cond_abs_i    : HcpIdent,
+                       asm_candidates: &[AssignMeta]) {
+        let mut candidates_copy = asm_candidates.to_vec();
         for group in &mut self.asm_pool {
             group.try_push_event(arena, cond_rel_i, cond_abs_i, &mut candidates_copy);
         }
@@ -143,7 +145,4 @@ impl AssignMetaIfPool{
             .map(|group| group.gen_assign_meta(arena))
             .collect()
     }
-
-
-
 }

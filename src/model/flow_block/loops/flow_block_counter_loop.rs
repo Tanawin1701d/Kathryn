@@ -1,7 +1,7 @@
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::flow_block::common::CounterLoopSchematic;
 use crate::model::flow_block::flow_block_base::{FlowBlock, FlowBlockBase};
-use crate::model::flow_block::flow_block_ident::{FlowBlockIdent, FlowBlockType};
+use crate::model::flow_block::flow_block_ident::{FlowBlockIdent, FlowBlockJoinPolicy, FlowBlockType};
 use crate::model::flow_block::node_wrap::NodeWrap;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::model_arena::ModelArena;
@@ -21,7 +21,7 @@ impl Default for FlowBlockCounterLoop {
 impl FlowBlockCounterLoop {
     pub fn new(name: &str, last_loop_cnt: i32) -> Self {
         Self {
-            base:      FlowBlockBase::new(FlowBlockType::CounterLoop, name),
+            base:      FlowBlockBase::new(FlowBlockType::CounterLoop, FlowBlockJoinPolicy::SubFlow, name),
             schematic: CounterLoopSchematic::new(last_loop_cnt),
             result:    None,
         }
@@ -56,6 +56,7 @@ impl FlowBlock for FlowBlockCounterLoop {
     fn get_loop_id_expr_i(&self) -> HcpIdent {
         self.schematic.get_loop_id_expr_i()
     }
+
 }
 
 impl Identifiable for FlowBlockCounterLoop {

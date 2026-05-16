@@ -1,7 +1,7 @@
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::flow_block::common::{ParSchematic, ParSyncMode};
 use crate::model::flow_block::flow_block_base::{FlowBlock, FlowBlockBase};
-use crate::model::flow_block::flow_block_ident::{FlowBlockIdent, FlowBlockType};
+use crate::model::flow_block::flow_block_ident::{FlowBlockIdent, FlowBlockJoinPolicy, FlowBlockType};
 use crate::model::flow_block::node_wrap::NodeWrap;
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_ident::NcpIdent;
@@ -20,7 +20,7 @@ impl Default for FlowBlockPar {
 impl FlowBlockPar {
     pub fn new_auto_sync(name: &str) -> Self {
         Self {
-            base:      FlowBlockBase::new(FlowBlockType::Parallel, name),
+            base:      FlowBlockBase::new(FlowBlockType::Parallel, FlowBlockJoinPolicy::SubFlow, name),
             schematic: ParSchematic::new(ParSyncMode::AutoSync),
             result:    None,
         }
@@ -28,7 +28,7 @@ impl FlowBlockPar {
 
     pub fn new_no_sync(name: &str) -> Self {
         Self {
-            base:      FlowBlockBase::new(FlowBlockType::Parallel, name),
+            base:      FlowBlockBase::new(FlowBlockType::Parallel, FlowBlockJoinPolicy::SubFlow, name),
             schematic: ParSchematic::new(ParSyncMode::NoSync),
             result:    None,
         }
@@ -58,6 +58,7 @@ impl FlowBlock for FlowBlockPar {
     fn summarize_block(&self) -> NodeWrap {
         self.result.clone().expect("flow block has not been built")
     }
+
 }
 
 impl Identifiable for FlowBlockPar {

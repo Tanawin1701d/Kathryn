@@ -1,7 +1,7 @@
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::flow_block::common::SeqSchematic;
 use crate::model::flow_block::flow_block_base::{FlowBlock, FlowBlockBase};
-use crate::model::flow_block::flow_block_ident::{FlowBlockIdent, FlowBlockType};
+use crate::model::flow_block::flow_block_ident::{FlowBlockIdent, FlowBlockJoinPolicy, FlowBlockType};
 use crate::model::flow_block::node_wrap::NodeWrap;
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_ident::NcpIdent;
@@ -20,7 +20,7 @@ impl Default for FlowBlockSeq {
 impl FlowBlockSeq {
     pub fn new(name: &str) -> Self {
         Self {
-            base:      FlowBlockBase::new(FlowBlockType::Sequential, name),
+            base:      FlowBlockBase::new(FlowBlockType::Sequential, FlowBlockJoinPolicy::SubFlow, name),
             schematic: SeqSchematic::new(),
             result:    None,
         }
@@ -52,6 +52,7 @@ impl FlowBlock for FlowBlockSeq {
     fn summarize_block(&self) -> NodeWrap {
         self.result.clone().expect("flow block has not been built")
     }
+
 }
 
 impl Identifiable for FlowBlockSeq {

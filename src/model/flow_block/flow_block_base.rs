@@ -1,6 +1,6 @@
 use crate::model::common::identifier::Identifiable;
 use crate::model::controller::clock_mode::{ClockMode, get_global_clk_mode};
-use crate::model::flow_block::flow_block_ident::{FlowBlockIdent, FlowBlockType};
+use crate::model::flow_block::flow_block_ident::{FlowBlockIdent, FlowBlockJoinPolicy, FlowBlockType};
 use crate::model::flow_block::node_wrap::NodeWrap;
 use crate::model::hw_component::common::assign_meta::AssignMeta;
 use crate::model::hw_component::common::asm_meta_helper::AssignMetaGrpPool;
@@ -44,10 +44,10 @@ pub struct FlowBlockBase {
 }
 
 impl FlowBlockBase {
-    pub fn new(block_type: FlowBlockType, name: &str) -> Self {
+    pub fn new(block_type: FlowBlockType, join_policy: FlowBlockJoinPolicy, name: &str) -> Self {
         Self {
             // identifier
-            ident            : FlowBlockIdent::new(block_type, name),
+            ident            : FlowBlockIdent::new(block_type, join_policy, name),
             // blocks
             sub_blocks_i     : Vec::new(),
             sub_block_orders : Vec::new(),
@@ -210,5 +210,7 @@ pub trait FlowBlock: Identifiable {
         self.get_base_mut().build_common_hw(arena);
         self.build_hw_component(arena);
     }
-    fn get_unified_node(&self) -> NcpIdent;
+    fn get_extract_node(&self) -> NcpIdent {
+        todo!("get_unified_node not implemented for this block type")
+    }
 }
