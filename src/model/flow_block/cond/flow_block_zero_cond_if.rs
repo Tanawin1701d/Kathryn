@@ -1,12 +1,11 @@
 use crate::model::common::identifier::{IdentBase, Identifiable};
+use crate::model::flow_block::common::CondChain;
 use crate::model::flow_block::flow_block_base::{FlowBlock, FlowBlockBase};
 use crate::model::flow_block::flow_block_ident::{FlowBlockIdent, FlowBlockJoinPolicy, FlowBlockType};
 use crate::model::hw_component::common::assign_meta::AssignMeta;
 use crate::model::hw_component::common::asm_meta_helper::AssignMetaIfPool;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
-use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::model_arena::ModelArena;
-use crate::model::nodes::ncp_base::add_logic_with_output;
 use crate::model::nodes::ncp_ident::NcpIdent;
 
 /// Master ZIF branch — owns the chained zelif / zelse `con_blocks`.
@@ -71,12 +70,8 @@ impl FlowBlock for FlowBlockZeroCondIf {
         let mut pool  = AssignMetaIfPool::default();
         pool.insert_asms(arena, Some(self_cond), self_cond, &self.grp_asms);
 
-        // prev_false = ~self_cond  (same pattern as cond_schematic.rs)
-        let inv_self = arena.make_expression(
-            &format!("zcif_not_cond_{}", id),
-            LogicOp::BitwiseInvr, self_cond, HcpIdent::default(), None, None,
-        );
-        let mut prev_false: Option<HcpIdent> = Some(inv_self);
+        // prev_false = ~self_cond
+        let mut chain = CondChain::new_inv(arena, "zcif", id, self_cond);
 
         // cond block join
         let con_blocks_i: Vec<FlowBlockIdent> = self.base.get_con_blocks_i().to_vec();
@@ -84,22 +79,7 @@ impl FlowBlock for FlowBlockZeroCondIf {
             let con = arena.take_flow_block_zero_cond_elif(con_block_i);
             let con_cond = con.get_condition();
 
-            let con_cond_abs = match con_cond {
-                Some(elif_cond) => {
-                    // zelif: abs = elif_cond & prev_false; advance prev_false
-                    let gated    = add_logic_with_output(arena, Some(elif_cond), prev_false, LogicOp::BitwiseAnd);
-                    let inv_elif = arena.make_expression(
-                        &format!("zcif_not_elif_{}_{}", id, i),
-                        LogicOp::BitwiseInvr, elif_cond, HcpIdent::default(), None, None,
-                    );
-                    prev_false = add_logic_with_output(arena, prev_false, Some(inv_elif), LogicOp::BitwiseAnd);
-                    gated.unwrap_or_default()
-                }
-                None => {
-                    // zelse: abs = prev_false (consume)
-                    prev_false.take().unwrap_or_default()
-                }
-            };
+            let con_cond_abs = chain.step(arena, "zcif", id, i, con_cond).unwrap_or_default();
 
             pool.insert_asms(arena, con_cond, con_cond_abs, con.get_grp_asms());
             arena.replace_back_flow_block_zero_cond_elif(con);
@@ -114,6 +94,8 @@ impl FlowBlock for FlowBlockZeroCondIf {
     }
 
     fn get_con_condition(&self) -> Option<HcpIdent> { Some(self.cond_i) }
+
+    /// block summarization
     fn summarize_as_node(&self) -> NcpIdent { self.result_basic_node.expect("it has not generated yet")}
 }
 

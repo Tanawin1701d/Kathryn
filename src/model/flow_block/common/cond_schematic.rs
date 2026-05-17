@@ -1,10 +1,11 @@
 use crate::model::common::identifier::Identifiable;
+use crate::model::flow_block::common::cond_chain::CondChain;
 use crate::model::flow_block::flow_block_base::{ExtSigType, FlowBlockBase};
 use crate::model::flow_block::node_wrap::{NodeWrap, NodeWrapCycleDet};
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::model_arena::ModelArena;
-use crate::model::nodes::ncp_base::{add_logic_with_output, IN_CONSIST_CYCLE_USED};
+use crate::model::nodes::ncp_base::IN_CONSIST_CYCLE_USED;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CondMode {
@@ -48,14 +49,7 @@ impl CondSchematic {
         cycle_det.add_cycle(main_wrap.get_cycle_used());
 
         // 3. Mutual-exclusion chain: prev_false = ~cond_i
-        let inv_main = arena.make_expression(
-            &format!("cif_not_cond_{}", id),
-            LogicOp::BitwiseInvr,
-            self.cond_i,
-            HcpIdent::default(),
-            None, None,
-        );
-        let mut prev_false: Option<HcpIdent> = Some(inv_main);
+        let mut chain = CondChain::new_inv(arena, "cif", id, self.cond_i);
 
         // 4. Process con_blocks (elif / else)
 
@@ -66,25 +60,7 @@ impl CondSchematic {
             let con_condition = arena.get_flow_block(con_i).get_con_condition();
             let con_wrap = arena.summarize_flow_block(con_i);
 
-            let gated_cond: Option<HcpIdent> = match con_condition {
-                Some(elif_cond) => {
-                    // elif: gate = elif_cond & prev_false; advance prev_false
-                    let gated = add_logic_with_output(arena, Some(elif_cond), prev_false, LogicOp::BitwiseAnd);
-                    let inv_elif = arena.make_expression(
-                        &format!("cif_not_elif_{}_{}", id, i),
-                        LogicOp::BitwiseInvr,
-                        elif_cond,
-                        HcpIdent::default(),
-                        None, None,
-                    );
-                    prev_false = add_logic_with_output(arena, prev_false, Some(inv_elif), LogicOp::BitwiseAnd);
-                    gated
-                }
-                None => {
-                    // else: gate = prev_false (consume — else is always last)
-                    prev_false.take()
-                }
-            };
+            let gated_cond = chain.step(arena, "cif", id, i, con_condition);
 
             con_wrap.add_dep_to_entrances(arena, cond_node_i, gated_cond);
 
@@ -103,7 +79,7 @@ impl CondSchematic {
         }
 
         // Fall-through: when no else branch, cond_node exits directly when all conditions false
-        if let Some(fall_cond) = prev_false {
+        if let Some(fall_cond) = chain.remaining_false() {
             arena.add_depend_node_to_ncp(exit_i, cond_node_i, Some(fall_cond));
         }
 

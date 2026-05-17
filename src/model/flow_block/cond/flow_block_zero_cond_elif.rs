@@ -48,12 +48,19 @@ impl FlowBlock for FlowBlockZeroCondElif {
     fn get_base_mut(&mut self) -> &mut FlowBlockBase { &mut self.base }
 
     fn add_element_in_flow_block(&mut self, _node: NcpIdent) {
-        panic!("zero-cond-elif block does not accept direct asm nodes; use a sub-block")
+        self.base.add_basic_node(_node);
     }
 
     fn add_sub_flow_block(&mut self, block: FlowBlockIdent) {
+        assert_eq!(block.get_join_policy(), FlowBlockJoinPolicy::BasicNodeFlow,
+                   "zero-cond-if sub blocks must have BasicNodeFlow join policy");
         self.base.add_sub_flow_block(block);
     }
+
+    fn add_con_flow_block(&mut self, block: FlowBlockIdent) {
+        panic!("zlif not supported con flow blocks");
+    }
+
 
     fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) {
         arena.replace_back_flow_block_zero_cond_elif(*self);
@@ -67,6 +74,8 @@ impl FlowBlock for FlowBlockZeroCondElif {
     fn get_con_condition(&self) -> Option<HcpIdent> {
         self.condition
     }
+
+    // no block summarization
 
 }
 
