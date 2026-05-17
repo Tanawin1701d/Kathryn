@@ -68,7 +68,7 @@ impl FlowBlock for FlowBlockZeroCondElif {
 
     fn build_hw_component(&mut self, arena: &mut ModelArena) {
         // Per-branch GRP pass: merge basic-node assign metas within this block.
-        self.grp_asms = self.base.gen_unified_asm_meta_from_all_basic_nodes(arena);
+        self.grp_asms = self.base.gen_unified_asm_meta_flat(arena);
     }
     
     fn get_con_condition(&self) -> Option<HcpIdent> {

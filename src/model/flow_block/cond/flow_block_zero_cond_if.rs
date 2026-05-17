@@ -60,7 +60,7 @@ impl FlowBlock for FlowBlockZeroCondIf {
 
     fn build_hw_component(&mut self, arena: &mut ModelArena) {
         // Per-branch GRP pass on the master's own basic nodes.
-        self.grp_asms = self.base.gen_unified_asm_meta_from_all_basic_nodes(arena);
+        self.grp_asms = self.base.gen_unified_asm_meta_flat(arena);
 
         // Cross-branch merge via AssignMetaIfPool.
 

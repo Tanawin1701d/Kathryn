@@ -171,20 +171,37 @@ impl FlowBlockBase {
     /// Collect every `AssignMeta` from all `basic_nodes_i` and from any
     /// `sub_blocks_i` whose join policy is `BasicNodeFlow` (those expose a
     /// single result asm node via `summarize_as_node`).  Metas are merged by
-    /// target HWC using `AssignMetaGrpPool`.
-    pub fn gen_unified_asm_meta_from_all_basic_nodes(&self, arena: &mut ModelArena) -> Vec<AssignMeta> {
-        let mut pool = AssignMetaGrpPool::default();
-        for &node_i in &self.basic_nodes_i {
-            let node = arena.take_asm_node(node_i);
-            pool.insert_asms(arena, node.get_assign_metas());
-            arena.replace_back_asm_node(node);
+    /// target HWC using `AssignMetaGrpPool`, in the original insertion order
+    /// shared by `basic_node_orders` and `sub_block_orders`.
+    pub fn gen_unified_asm_meta_flat(&self, arena: &mut ModelArena) -> Vec<AssignMeta> {
+        enum Item { BasicNode(NcpIdent), SubBlock(FlowBlockIdent) }
+
+        let mut items: Vec<(usize, Item)> = Vec::new();
+        for (&node_i, &ord) in self.basic_nodes_i.iter().zip(self.basic_node_orders.iter()) {
+            items.push((ord, Item::BasicNode(node_i)));
         }
-        for &block_i in &self.sub_blocks_i {
-            if block_i.get_join_policy() != FlowBlockJoinPolicy::BasicNodeFlow { continue; }
-            let node_i = arena.get_flow_block(block_i).summarize_as_node();
-            let node = arena.take_asm_node(node_i);
-            pool.insert_asms(arena, node.get_assign_metas());
-            arena.replace_back_asm_node(node);
+        for (&block_i, &ord) in self.sub_blocks_i.iter().zip(self.sub_block_orders.iter()) {
+            if block_i.get_join_policy() == FlowBlockJoinPolicy::BasicNodeFlow {
+                items.push((ord, Item::SubBlock(block_i)));
+            }
+        }
+        items.sort_by_key(|&(ord, _)| ord);
+
+        let mut pool = AssignMetaGrpPool::default();
+        for (_, item) in items {
+            match item {
+                Item::BasicNode(node_i) => {
+                    let node = arena.take_asm_node(node_i);
+                    pool.insert_asms(arena, node.get_assign_metas());
+                    arena.replace_back_asm_node(node);
+                }
+                Item::SubBlock(block_i) => {
+                    let node_i = arena.get_flow_block(block_i).summarize_as_node();
+                    let node = arena.take_asm_node(node_i);
+                    pool.insert_asms(arena, node.get_assign_metas());
+                    arena.replace_back_asm_node(node);
+                }
+            }
         }
         pool.gen_assign_metas(arena)
     }

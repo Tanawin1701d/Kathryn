@@ -97,6 +97,10 @@ pub struct AssignMetaSwitchPool {
     asm_pool: Vec<AssignMetaSwitchGroup>,
 }
 
+impl Default for AssignMetaSwitchPool {
+    fn default() -> Self { Self { asm_pool: Vec::new() } }
+}
+
 impl AssignMetaSwitchPool {
     pub fn add_new_group(&mut self, asm: &AssignMeta, state_i: HcpIdent, match_val: i32) {
         let group = AssignMetaSwitchGroup::new(
