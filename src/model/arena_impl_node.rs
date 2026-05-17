@@ -128,6 +128,13 @@ impl ModelArena {
         self.replace_back_asm_node(node);
     }
 
+    pub fn dry_assign_asm_node(&mut self, ident: NcpIdent) {
+        assert_eq!(ident.get_node_type(), NodeType::Asm);
+        let mut node = self.take_asm_node(ident);
+        node.dry_assign(self);
+        self.replace_back_asm_node(node);
+    }
+
     pub fn assign_ncp_node(&mut self, ident: NcpIdent) {
         let mut node = self.take_ncp_node(ident);
         node.assign(self);
