@@ -3,6 +3,7 @@ use crate::model::common::identifier::Identifiable;
 use crate::model::model_arena::ModelArena;
 use crate::model::module::module::Module;
 use crate::model::module::module_ident::ModuleIdent;
+use crate::model::flow_block::{FlowBlockIdent, FlowBlockJoinPolicy};
 
 // ---------------------------------------------------------------------------
 // ModelArena::new / reset live here. Per-category CRUD lives in:
@@ -41,8 +42,10 @@ impl ModelArena {
             pseudo_nodes     : ArenaGroup::new(),
             opr_nodes        : ArenaGroup::new(),
             modules          : ArenaGroup::new(),
-            module_comp_init_stack: Vec::new(),
-            module_flow_init_track: None,
+            top_module              : None,
+            module_comp_init_stack  : Vec::new(),
+            module_flow_init_track  : None,
+            flow_block_init_stack   : Vec::new(),
             flow_block_seqs           : ArenaGroup::new(),
             flow_block_pars           : ArenaGroup::new(),
             flow_block_conds          : ArenaGroup::new(),
@@ -84,7 +87,9 @@ impl ModelArena {
         self.pseudo_nodes     = ArenaGroup::new();
         self.opr_nodes        = ArenaGroup::new();
         self.modules          = ArenaGroup::new();
+        self.top_module             = None;
         self.module_comp_init_stack = Vec::new();
+        self.flow_block_init_stack  = Vec::new();
         self.flow_block_seqs           = ArenaGroup::new();
         self.flow_block_pars           = ArenaGroup::new();
         self.flow_block_conds          = ArenaGroup::new();
@@ -110,6 +115,15 @@ impl ModelArena {
     pub fn replace_back_module(&mut self, i: ModuleIdent, v: Module)        { self.modules.replace_back(*i.get_arena_handle(), v) }
 
     // -----------------------------------------------------------------------
+    // Top module
+    // -----------------------------------------------------------------------
+    pub fn set_top_module(&mut self, i: ModuleIdent) {
+        assert!(self.top_module.is_none(), "top_module is already set");
+        self.top_module = Some(i);
+    }
+    pub fn get_top_module(&self) -> Option<ModuleIdent> { self.top_module }
+
+    // -----------------------------------------------------------------------
     // Module stack — tracks the active module during build traversal
     // -----------------------------------------------------------------------
     pub fn push_module_comp_init_stack(&mut self, i: ModuleIdent)  { self.module_comp_init_stack.push(i); }
@@ -119,4 +133,34 @@ impl ModelArena {
     pub fn set_module_flow_init_track  (&mut self, i: ModuleIdent) { self.module_flow_init_track = Some(i); }
     pub fn clear_module_flow_init_track(&mut self)                 { self.module_flow_init_track = None; }
     pub fn get_module_flow_init_track  (&self) -> Option<ModuleIdent> { self.module_flow_init_track }
+
+    // -----------------------------------------------------------------------
+    // Flow-block stack — tracks the active flow block during build traversal
+    // -----------------------------------------------------------------------
+    pub fn push_flow_block_init_stack(&mut self, i: FlowBlockIdent) { self.flow_block_init_stack.push(i); }
+    pub fn pop_flow_block_init_stack (&mut self) -> FlowBlockIdent  { self.flow_block_init_stack.pop().expect("flow block stack is empty") }
+    pub fn peek_flow_block_init_stack(&self)     -> FlowBlockIdent  { *self.flow_block_init_stack.last().expect("flow block stack is empty") }
+
+    /// Pop the top flow block, assert it matches `expected`, then attach it:
+    /// - to the new stack top as a sub-flow-block, if the stack is non-empty, or
+    /// - to the module tracked by `module_flow_init_track` as a top flow block.
+    pub fn finalize_flow_block(&mut self, expected: FlowBlockIdent) {
+        let popped = self.pop_flow_block_init_stack();
+        assert_eq!(popped, expected, "finalize_flow_block: ident mismatch — wrong block finalized");
+
+        if let Some(&parent_i) = self.flow_block_init_stack.last() {
+            match popped.get_join_policy() {
+                FlowBlockJoinPolicy::SubFlow | FlowBlockJoinPolicy::BasicNodeFlow =>
+                    self.add_sub_flow_block_to_flow_block(parent_i, popped),
+                FlowBlockJoinPolicy::ConFlow =>
+                    self.add_con_flow_block_to_flow_block(parent_i, popped),
+            }
+        } else {
+            let module_i = self.module_flow_init_track
+                .expect("finalize_flow_block: stack is empty but module_flow_init_track is not set");
+            let mut m = self.take_module(module_i);
+            m.add_top_flow_block(popped);
+            self.replace_back_module(module_i, m);
+        }
+    }
 }
