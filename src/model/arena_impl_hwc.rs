@@ -8,6 +8,7 @@ use crate::model::hw_component::memEle::MemEle;
 use crate::model::hw_component::reg::Reg;
 use crate::model::hw_component::val::Val;
 use crate::model::hw_component::wire::Wire;
+use crate::model::hw_component::io_wire::IoWire;
 use crate::model::hw_component::sp_reg::cnt_reg::CntReg;
 use crate::model::hw_component::sp_reg::sync_reg::SyncReg;
 use crate::model::hw_component::sp_reg::state_reg::StateReg;
@@ -20,6 +21,7 @@ macro_rules! dispatch_hcp {
         match $hcpIdent.get_hw_type() {
             HwComponentType::Reg             => $self.regs       .$method(handle),
             HwComponentType::Wire            => $self.wires      .$method(handle),
+            HwComponentType::IoWire          => $self.io_wires   .$method(handle),
             HwComponentType::Val             => $self.vals       .$method(handle),
             HwComponentType::MemBlockIndexer => $self.mem_eles   .$method(handle),
             HwComponentType::Expression      => $self.expressions.$method(handle),
@@ -40,6 +42,7 @@ impl ModelArena {
     // -----------------------------------------------------------------------
     pub fn add_reg      (&mut self, r: Reg)         -> HcpIdent { let h = self.regs       .insert(r); self.regs       .get(h).get_ident() }
     pub fn add_wire     (&mut self, w: Wire)        -> HcpIdent { let h = self.wires      .insert(w); self.wires      .get(h).get_ident() }
+    pub fn add_io_wire  (&mut self, w: IoWire)      -> HcpIdent { let h = self.io_wires   .insert(w); self.io_wires   .get(h).get_ident() }
     pub fn add_val      (&mut self, v: Val)         -> HcpIdent { let h = self.vals       .insert(v); self.vals       .get(h).get_ident() }
     pub fn add_mem_ele  (&mut self, e: MemEle)      -> HcpIdent { let h = self.mem_eles   .insert(e); self.mem_eles   .get(h).get_ident() }
     pub fn add_mem_blk  (&mut self, b: MemBlk)      -> HcpIdent { let h = self.mem_blks   .insert(b); self.mem_blks   .get(h).get_ident() }
@@ -73,6 +76,7 @@ impl ModelArena {
     // -----------------------------------------------------------------------
     pub fn take_reg      (&mut self, h: HcpIdent) -> Reg        { self.regs       .take(*h.get_arena_handle()) }
     pub fn take_wire     (&mut self, h: HcpIdent) -> Wire       { self.wires      .take(*h.get_arena_handle()) }
+    pub fn take_io_wire  (&mut self, h: HcpIdent) -> IoWire     { self.io_wires   .take(*h.get_arena_handle()) }
     pub fn take_val      (&mut self, h: HcpIdent) -> Val        { self.vals       .take(*h.get_arena_handle()) }
     pub fn take_mem_ele  (&mut self, h: HcpIdent) -> MemEle     { self.mem_eles   .take(*h.get_arena_handle()) }
     pub fn take_mem_blk  (&mut self, h: HcpIdent) -> MemBlk     { self.mem_blks   .take(*h.get_arena_handle()) }
@@ -85,6 +89,7 @@ impl ModelArena {
 
     pub fn replace_back_reg      (&mut self, v: Reg)        { let h = *v.get_arena_handle(); self.regs       .replace_back(h, v) }
     pub fn replace_back_wire     (&mut self, v: Wire)       { let h = *v.get_arena_handle(); self.wires      .replace_back(h, v) }
+    pub fn replace_back_io_wire  (&mut self, v: IoWire)    { let h = *v.get_arena_handle(); self.io_wires   .replace_back(h, v) }
     pub fn replace_back_val      (&mut self, v: Val)        { let h = *v.get_arena_handle(); self.vals       .replace_back(h, v) }
     pub fn replace_back_mem_ele  (&mut self, v: MemEle)     { let h = *v.get_arena_handle(); self.mem_eles   .replace_back(h, v) }
     pub fn replace_back_mem_blk  (&mut self, v: MemBlk)     { let h = *v.get_arena_handle(); self.mem_blks   .replace_back(h, v) }

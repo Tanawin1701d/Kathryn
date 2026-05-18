@@ -17,6 +17,7 @@ impl ModelArena {
         Self {
             regs       : ArenaGroup::new(),
             wires      : ArenaGroup::new(),
+            io_wires   : ArenaGroup::new(),
             vals       : ArenaGroup::new(),
             mem_eles   : ArenaGroup::new(),
             mem_blks   : ArenaGroup::new(),
@@ -59,6 +60,7 @@ impl ModelArena {
     pub fn reset(&mut self) {
         self.regs        = ArenaGroup::new();
         self.wires       = ArenaGroup::new();
+        self.io_wires    = ArenaGroup::new();
         self.vals        = ArenaGroup::new();
         self.mem_eles    = ArenaGroup::new();
         self.mem_blks    = ArenaGroup::new();

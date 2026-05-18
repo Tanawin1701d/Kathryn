@@ -7,6 +7,7 @@ use crate::model::hw_component::memEle::MemEle;
 use crate::model::hw_component::reg::Reg;
 use crate::model::hw_component::val::Val;
 use crate::model::hw_component::wire::Wire;
+use crate::model::hw_component::io_wire::IoWire;
 use crate::model::model_arena::ModelArena;
 
 // make_* → is_user_com = false (internal/system)
@@ -25,6 +26,13 @@ impl ModelArena {
     }
     pub fn mk_wire(&mut self, name: &str, bit_width: i32) -> HcpIdent {
         self.add_wire(Wire::new(true, name, bit_width))
+    }
+
+    pub fn make_io_wire(&mut self, name: &str, bit_width: i32) -> HcpIdent {
+        self.add_io_wire(IoWire::new(false, name, bit_width))
+    }
+    pub fn mk_io_wire(&mut self, name: &str, bit_width: i32) -> HcpIdent {
+        self.add_io_wire(IoWire::new(true, name, bit_width))
     }
 
     pub fn make_val(&mut self, name: &str, bit_width: i32, init_val: u64) -> HcpIdent {

@@ -10,23 +10,23 @@ use crate::model::hw_component::common::slice::Slice;
 use crate::model::model_arena::ModelArena;
 
 #[derive(Default)]
-pub struct Wire {
+pub struct IoWire {
     assign   : HcpAssign,
     ident    : HcpIdent,
     bit_width: i32,
 }
 
-impl Wire {
+impl IoWire {
     pub fn new(is_user_com: bool, name: &str, bit_width: i32) -> Self {
         Self {
             assign   : HcpAssign::new(),
-            ident    : HcpIdent::new(HwComponentType::Wire, is_user_com, name),
+            ident    : HcpIdent::new(HwComponentType::IoWire, is_user_com, name),
             bit_width,
         }
     }
 
     pub fn mk(name: &str, bit_width: i32) -> Self {
-        Wire::new(true, name, bit_width)
+        IoWire::new(true, name, bit_width)
     }
 
     pub fn get_ident(&self) -> HcpIdent { self.ident }
@@ -34,11 +34,11 @@ impl Wire {
 
 
 
-impl HcpReadable for Wire {
+impl HcpReadable for IoWire {
     fn get_hcp_rdb_ident(&self) -> HcpIdent { self.ident }
 }
 
-impl HcpAssignable for Wire {
+impl HcpAssignable for IoWire {
     fn get_hcp_assign    (&self)     -> &    HcpAssign { &self.assign }
     fn get_hcp_assign_mut(&mut self) -> &mut HcpAssign { &mut self.assign }
 
@@ -55,16 +55,16 @@ impl HcpAssignable for Wire {
               des_slice: &Option<Slice>,
               src_slice: &Slice,
               arena    : &mut ModelArena) -> AssignMeta {
-        self.gen_asm_meta(srci, des_slice, src_slice, arena)
+        panic!("the io wire cannot be do_asm")
     }
 }
 
 
-impl HcpAccessible for Wire {
+impl HcpAccessible for IoWire {
     fn get_bit_width(&self) -> usize { self.bit_width as usize }
 }
 
-impl Identifiable for Wire {
+impl Identifiable for IoWire {
     fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
     fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }

@@ -19,10 +19,11 @@ pub enum HwComponentType {
     MemBlock           = 10,
     MemBlockIndexer    = 11,
     SyncReg            = 12,
+    IoWire             = 13,
 }
 
 impl HwComponentType {
-    pub const COUNT: usize = 13;
+    pub const COUNT: usize = 14;
 
     pub fn global_prefix(self) -> &'static str {
         match self {
@@ -39,6 +40,7 @@ impl HwComponentType {
             Self::MemBlock          => "MEM_BLOCK",
             Self::MemBlockIndexer   => "MEM_BLOCK_INDEXER",
             Self::SyncReg           => "SR_SY",
+            Self::IoWire            => "IO_WIRE",
         }
     }
 }
