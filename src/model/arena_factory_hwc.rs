@@ -8,28 +8,44 @@ use crate::model::hw_component::reg::Reg;
 use crate::model::hw_component::val::Val;
 use crate::model::hw_component::wire::Wire;
 use crate::model::hw_component::io_wire::IoWire;
-use crate::model::model_arena::ModelArena;
+use crate::model::model_arena::{ModelArena, ModuleInitStage};
 
 // make_* → is_user_com = false (internal/system)
 // mk_*   → is_user_com = true  (user-defined)
 
 impl ModelArena {
     // -----------------------------------------------------------------------
-    // Private helpers: register a freshly created HCP into the module that
-    // sits on top of module_comp_init_stack (no-op if the stack is empty).
+    // Private helpers: register a freshly created HCP into the module on top
+    // of module_trace_stack, routing by stage:
+    //   CompInit / FlowBlockInit  → add directly to module
+    //   FlowBlockBuild            → buffer in hcp_pending_buffer for later
     // -----------------------------------------------------------------------
     pub(super) fn reg_internal_hw_to_top_module(&mut self, i: HcpIdent) {
-        let module_i = self.peek_module_comp_init_stack();
-        let mut m = self.take_module(module_i);
-        m.add_internal_hw(i);
-        self.replace_back_module(module_i, m);
+        let (module_i, stage) = self.peek_module_trace_stack();
+        match stage {
+            ModuleInitStage::CompInit | ModuleInitStage::FlowBlockInit => {
+                let mut m = self.take_module(module_i);
+                m.add_internal_hw(i);
+                self.replace_back_module(module_i, m);
+            }
+            ModuleInitStage::FlowBlockBuild => {
+                self.hcp_pending_buffer.push((i, false));
+            }
+        }
     }
 
     pub(super) fn reg_user_hw_to_top_module(&mut self, i: HcpIdent) {
-        let module_i = self.peek_module_comp_init_stack();
-        let mut m = self.take_module(module_i);
-        m.add_user_hws(i);
-        self.replace_back_module(module_i, m);
+        let (module_i, stage) = self.peek_module_trace_stack();
+        match stage {
+            ModuleInitStage::CompInit | ModuleInitStage::FlowBlockInit => {
+                let mut m = self.take_module(module_i);
+                m.add_user_hws(i);
+                self.replace_back_module(module_i, m);
+            }
+            ModuleInitStage::FlowBlockBuild => {
+                self.hcp_pending_buffer.push((i, true));
+            }
+        }
     }
 
     // -----------------------------------------------------------------------

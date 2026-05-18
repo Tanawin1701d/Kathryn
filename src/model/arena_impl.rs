@@ -1,6 +1,7 @@
 use crate::common::arena_base::ArenaGroup;
 use crate::model::common::identifier::Identifiable;
-use crate::model::model_arena::ModelArena;
+use crate::model::model_arena::{ModelArena, ModuleInitStage};
+use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::module::module::Module;
 use crate::model::module::module_ident::ModuleIdent;
 use crate::model::flow_block::{FlowBlockIdent, FlowBlockJoinPolicy};
@@ -43,7 +44,8 @@ impl ModelArena {
             opr_nodes        : ArenaGroup::new(),
             modules          : ArenaGroup::new(),
             top_module              : None,
-            module_comp_init_stack  : Vec::new(),
+            module_trace_stack      : Vec::new(),
+            hcp_pending_buffer      : Vec::new(),
             module_flow_init_track  : None,
             flow_block_init_stack   : Vec::new(),
             flow_block_seqs           : ArenaGroup::new(),
@@ -88,7 +90,8 @@ impl ModelArena {
         self.opr_nodes        = ArenaGroup::new();
         self.modules          = ArenaGroup::new();
         self.top_module             = None;
-        self.module_comp_init_stack = Vec::new();
+        self.module_trace_stack     = Vec::new();
+        self.hcp_pending_buffer     = Vec::new();
         self.flow_block_init_stack  = Vec::new();
         self.flow_block_seqs           = ArenaGroup::new();
         self.flow_block_pars           = ArenaGroup::new();
@@ -124,11 +127,25 @@ impl ModelArena {
     pub fn get_top_module(&self) -> Option<ModuleIdent> { self.top_module }
 
     // -----------------------------------------------------------------------
-    // Module stack — tracks the active module during build traversal
+    // Module trace stack — (ModuleIdent, ModuleInitStage) pairs
     // -----------------------------------------------------------------------
-    pub fn push_module_comp_init_stack(&mut self, i: ModuleIdent)  { self.module_comp_init_stack.push(i); }
-    pub fn pop_module_comp_init_stack (&mut self) -> ModuleIdent   { self.module_comp_init_stack.pop().expect("module stack is empty") }
-    pub fn peek_module_comp_init_stack(&self)     -> ModuleIdent   { *self.module_comp_init_stack.last().expect("module stack is empty") }
+    pub fn push_module_trace_stack(&mut self, i: ModuleIdent, stage: ModuleInitStage) {
+        self.module_trace_stack.push((i, stage));
+    }
+    pub fn pop_module_trace_stack(&mut self) -> (ModuleIdent, ModuleInitStage) {
+        self.module_trace_stack.pop().expect("module trace stack is empty")
+    }
+    pub fn peek_module_trace_stack(&self) -> (ModuleIdent, ModuleInitStage) {
+        *self.module_trace_stack.last().expect("module trace stack is empty")
+    }
+
+    // -----------------------------------------------------------------------
+    // HCP pending buffer — holds HCPs created during FlowBlockBuild stage;
+    // the owning module drains and registers them itself.
+    // -----------------------------------------------------------------------
+    pub fn drain_hcp_pending_buffer(&mut self) -> Vec<(HcpIdent, bool)> {
+        std::mem::take(&mut self.hcp_pending_buffer)
+    }
 
     pub fn set_module_flow_init_track  (&mut self, i: ModuleIdent) { self.module_flow_init_track = Some(i); }
     pub fn clear_module_flow_init_track(&mut self)                 { self.module_flow_init_track = None; }
@@ -156,8 +173,9 @@ impl ModelArena {
                     self.add_con_flow_block_to_flow_block(parent_i, popped),
             }
         } else {
-            let module_i = self.module_flow_init_track
-                .expect("finalize_flow_block: stack is empty but module_flow_init_track is not set");
+            let (module_i, stage) = self.peek_module_trace_stack();
+            assert_eq!(stage, ModuleInitStage::FlowBlockInit,
+                "finalize_flow_block: expected FlowBlockInit stage on module trace stack, got {:?}", stage);
             let mut m = self.take_module(module_i);
             m.add_top_flow_block(popped);
             self.replace_back_module(module_i, m);

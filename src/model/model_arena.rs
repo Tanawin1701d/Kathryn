@@ -20,6 +20,7 @@ use crate::model::nodes::syn_node::SynNode;
 use crate::model::nodes::wait_node::{WaitCondNode, WaitCycleNode};
 use crate::model::module::module::Module;
 use crate::model::module::module_ident::ModuleIdent;
+use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::flow_block::FlowBlockIdent;
 use crate::model::flow_block::par::flow_block_par::FlowBlockPar;
 use crate::model::flow_block::seq::flow_block_seq::FlowBlockSeq;
@@ -32,6 +33,13 @@ use crate::model::flow_block::cond::flow_block_zero_switch_case::FlowBlockZeroSw
 use crate::model::flow_block::loops::flow_block_while::FlowBlockWhile;
 use crate::model::flow_block::loops::flow_block_do_while::FlowBlockDoWhile;
 use crate::model::flow_block::loops::flow_block_counter_loop::FlowBlockCounterLoop;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ModuleInitStage {
+    CompInit,
+    FlowBlockInit,
+    FlowBlockBuild,
+}
 
 pub struct ModelArena {
 
@@ -71,22 +79,23 @@ pub struct ModelArena {
 
 
     pub(super) top_module              : Option<ModuleIdent>,
-    pub(super) module_comp_init_stack  : Vec<ModuleIdent>,   // tracks active module during hw component init
+    pub(super) module_trace_stack      : Vec<(ModuleIdent, ModuleInitStage)>, // (module, stage) during init traversal
+    pub(super) hcp_pending_buffer      : Vec<(HcpIdent, bool)>,               // buffered HCPs during FlowBlockBuild (bool = is_user_hw)
     pub(super) module_flow_init_track  : Option<ModuleIdent>,
     pub(super) flow_block_init_stack   : Vec<FlowBlockIdent>, // tracks active flow block during build traversal
 
     // flow-block arenas
-    pub(super) flow_block_seqs           : ArenaGroup<FlowBlockSeq>,
-    pub(super) flow_block_pars           : ArenaGroup<FlowBlockPar>,
-    pub(super) flow_block_conds          : ArenaGroup<FlowBlockCond>,
-    pub(super) flow_block_cond_elifs     : ArenaGroup<FlowBlockCondElif>,
-    pub(super) flow_block_zero_cond_ifs   : ArenaGroup<FlowBlockZeroCondIf>,
-    pub(super) flow_block_zero_cond_elifs : ArenaGroup<FlowBlockZeroCondElif>,
-    pub(super) flow_block_zero_switches   : ArenaGroup<FlowBlockZeroSwitch>,
+    pub(super) flow_block_seqs             : ArenaGroup<FlowBlockSeq>,
+    pub(super) flow_block_pars             : ArenaGroup<FlowBlockPar>,
+    pub(super) flow_block_conds            : ArenaGroup<FlowBlockCond>,
+    pub(super) flow_block_cond_elifs       : ArenaGroup<FlowBlockCondElif>,
+    pub(super) flow_block_zero_cond_ifs    : ArenaGroup<FlowBlockZeroCondIf>,
+    pub(super) flow_block_zero_cond_elifs  : ArenaGroup<FlowBlockZeroCondElif>,
+    pub(super) flow_block_zero_switches    : ArenaGroup<FlowBlockZeroSwitch>,
     pub(super) flow_block_zero_switch_cases: ArenaGroup<FlowBlockZeroSwitchCase>,
-    pub(super) flow_block_whiles         : ArenaGroup<FlowBlockWhile>,
-    pub(super) flow_block_do_whiles      : ArenaGroup<FlowBlockDoWhile>,
-    pub(super) flow_block_counter_loops  : ArenaGroup<FlowBlockCounterLoop>,
+    pub(super) flow_block_whiles           : ArenaGroup<FlowBlockWhile>,
+    pub(super) flow_block_do_whiles        : ArenaGroup<FlowBlockDoWhile>,
+    pub(super) flow_block_counter_loops    : ArenaGroup<FlowBlockCounterLoop>,
 
 
 }
