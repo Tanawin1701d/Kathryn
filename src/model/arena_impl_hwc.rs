@@ -2,6 +2,7 @@ use crate::model::common::identifier::Identifiable;
 use crate::model::hw_component::common::hcp_assign::HcpAssignable;
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
 use crate::model::hw_component::common::hcp_read::HcpReadable;
+use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::expression::Expression;
 use crate::model::hw_component::memBlk::MemBlk;
 use crate::model::hw_component::memEle::MemEle;
@@ -67,7 +68,11 @@ impl ModelArena {
     }
 
     pub fn get_hw_bit_sz(&self, ident: &HcpIdent) -> i32 {
-        self.get_hcp_assign(ident).get_des_slice().get_size()
+        self.get_hw_slice(ident).get_size()
+    }
+
+    pub fn get_hw_slice(&self, ident: &HcpIdent) -> Slice {
+        self.get_hcp_assign(ident).get_des_slice()
     }
 
     // -----------------------------------------------------------------------

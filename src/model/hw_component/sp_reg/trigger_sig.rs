@@ -1,7 +1,6 @@
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::util::check_ident_bit_size;
 use crate::model::model_arena::ModelArena;
-use crate::params::MAX_DEPEND_NODES;
 
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
 pub struct TriggerSig {
@@ -24,7 +23,6 @@ impl TriggerSig {
     }
 
     pub fn push_depend_node(&mut self, srci: HcpIdent, condi: Option<HcpIdent>) {
-        assert!(self.depend_sig_i.len() < MAX_DEPEND_NODES, "depend_nodes capacity exceeded");
         self.depend_sig_i.push((srci, condi));
     }
 

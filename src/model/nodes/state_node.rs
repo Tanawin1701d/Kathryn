@@ -7,8 +7,6 @@ use crate::model::nodes::ncp_base::{
     HasNodeTriggerSig, NcpNode, NodeTrigger, NODE_CYCLE_USED_UNKNOWN,
 };
 use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
-use crate::params::MAX_DEPEND_NODES;
-
 // ---- StateNode --------------------------------------------------------------
 
 pub struct StateNode {
@@ -18,9 +16,8 @@ pub struct StateNode {
     state_op_i      : Option<HcpIdent>,
     bound_exit_i    : Option<HcpIdent>,
     /// Slave AsmNodes (referenced by NcpIdent).  See `assignFromStateNode` in C++.
-    slave_asm_nodes : [Option<NcpIdent>; MAX_DEPEND_NODES],
-    slave_conds     : [Option<HcpIdent>; MAX_DEPEND_NODES],
-    slave_asm_count : usize,
+    slave_asm_nodes : Vec<NcpIdent>,
+    slave_conds     : Vec<Option<HcpIdent>>,
 }
 
 impl Default for StateNode {
@@ -31,9 +28,8 @@ impl Default for StateNode {
             state_reg_i    : HcpIdent::default(),
             state_op_i     : None,
             bound_exit_i   : None,
-            slave_asm_nodes: [None; MAX_DEPEND_NODES],
-            slave_conds    : [None; MAX_DEPEND_NODES],
-            slave_asm_count: 0,
+            slave_asm_nodes: Vec::new(),
+            slave_conds    : Vec::new(),
         }
     }
 }
@@ -47,17 +43,14 @@ impl StateNode {
             state_reg_i,
             state_op_i     : None,
             bound_exit_i   : None,
-            slave_asm_nodes: [None; MAX_DEPEND_NODES],
-            slave_conds    : [None; MAX_DEPEND_NODES],
-            slave_asm_count: 0,
+            slave_asm_nodes: Vec::new(),
+            slave_conds    : Vec::new(),
         }
     }
 
     pub fn add_slave_asm_node(&mut self, asm_node: NcpIdent, cond: Option<HcpIdent>) {
-        assert!(self.slave_asm_count < MAX_DEPEND_NODES, "slave asm capacity exceeded");
-        self.slave_asm_nodes[self.slave_asm_count] = Some(asm_node);
-        self.slave_conds    [self.slave_asm_count] = cond;
-        self.slave_asm_count += 1;
+        self.slave_asm_nodes.push(asm_node);
+        self.slave_conds.push(cond);
     }
 
     pub fn get_state_reg_i(&self) -> HcpIdent { self.state_reg_i }

@@ -14,22 +14,36 @@ pub struct IoWire {
     assign   : HcpAssign,
     ident    : HcpIdent,
     bit_width: i32,
+    is_input : bool,
 }
 
 impl IoWire {
-    pub fn new(is_user_com: bool, name: &str, bit_width: i32) -> Self {
-        Self {
+    pub fn new(is_user_com: bool, name    : &str,
+               is_input   : bool, src_i   : HcpIdent,
+               arena      : &mut ModelArena) -> Self {
+
+        let bit_width = arena.get_hw_bit_sz(&src_i);
+        let src_slice = arena.get_hw_slice(&src_i);
+        let des_slice = Some(src_slice);
+
+        let mut io_wire = IoWire {
             assign   : HcpAssign::new(),
             ident    : HcpIdent::new(HwComponentType::IoWire, is_user_com, name),
             bit_width,
-        }
-    }
+            is_input,
+        };
 
-    pub fn mk(name: &str, bit_width: i32) -> Self {
-        IoWire::new(true, name, bit_width)
+        io_wire.bind_src(&src_i, &des_slice, &src_slice, arena);
+
+        io_wire
     }
 
     pub fn get_ident(&self) -> HcpIdent { self.ident }
+
+    pub fn bind_src(&mut self, src_i: &HcpIdent, des_slice: &Option<Slice>, src_slice: &Slice, arena: &mut ModelArena) {
+        let ue = self.gen_update_event(src_i, des_slice, src_slice, arena);
+        self.add_update_event(ue);
+    }
 }
 
 

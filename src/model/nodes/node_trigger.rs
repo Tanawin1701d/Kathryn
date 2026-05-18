@@ -2,7 +2,6 @@ use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::sp_reg::trigger_sig::TriggerSig;
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_ident::NcpIdent;
-use crate::params::MAX_DEPEND_NODES;
 
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
 pub struct NodeTrigger {
@@ -25,7 +24,6 @@ impl NodeTrigger {
     }
 
     pub fn push_depend_node(&mut self, srci: NcpIdent, condi: Option<HcpIdent>) {
-        assert!(self.depend_nodes.len() < MAX_DEPEND_NODES, "depend_nodes capacity exceeded");
         self.depend_nodes.push((srci, condi));
     }
 

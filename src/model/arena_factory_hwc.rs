@@ -64,13 +64,15 @@ impl ModelArena {
 
     // ---- IoWire -------------------------------------------------------------
 
-    pub fn make_io_wire(&mut self, name: &str, bit_width: i32) -> HcpIdent {
-        let i = self.add_io_wire(IoWire::new(false, name, bit_width));
+    pub fn make_io_wire(&mut self, name: &str, is_input: bool, src_i: HcpIdent) -> HcpIdent {
+        let w = IoWire::new(false, name, is_input, src_i, self);
+        let i = self.add_io_wire(w);
         self.reg_internal_hw_to_top_module(i);
         i
     }
-    pub fn mk_io_wire(&mut self, name: &str, bit_width: i32) -> HcpIdent {
-        let i = self.add_io_wire(IoWire::new(true, name, bit_width));
+    pub fn mk_io_wire(&mut self, name: &str, is_input: bool, src_i: HcpIdent) -> HcpIdent {
+        let w = IoWire::new(true, name, is_input, src_i, self);
+        let i = self.add_io_wire(w);
         self.reg_user_hw_to_top_module(i);
         i
     }
