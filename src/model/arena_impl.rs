@@ -40,6 +40,8 @@ impl ModelArena {
             pseudo_nodes     : ArenaGroup::new(),
             opr_nodes        : ArenaGroup::new(),
             modules          : ArenaGroup::new(),
+            module_comp_init_stack: Vec::new(),
+            module_flow_init_track: None,
             flow_block_seqs           : ArenaGroup::new(),
             flow_block_pars           : ArenaGroup::new(),
             flow_block_conds          : ArenaGroup::new(),
@@ -80,6 +82,7 @@ impl ModelArena {
         self.pseudo_nodes     = ArenaGroup::new();
         self.opr_nodes        = ArenaGroup::new();
         self.modules          = ArenaGroup::new();
+        self.module_comp_init_stack = Vec::new();
         self.flow_block_seqs           = ArenaGroup::new();
         self.flow_block_pars           = ArenaGroup::new();
         self.flow_block_conds          = ArenaGroup::new();
@@ -103,4 +106,15 @@ impl ModelArena {
 
     pub fn take_module        (&mut self, i: ModuleIdent)         -> Module { self.modules.take(*i.get_arena_handle()) }
     pub fn replace_back_module(&mut self, i: ModuleIdent, v: Module)        { self.modules.replace_back(*i.get_arena_handle(), v) }
+
+    // -----------------------------------------------------------------------
+    // Module stack — tracks the active module during build traversal
+    // -----------------------------------------------------------------------
+    pub fn push_module_comp_init_stack(&mut self, i: ModuleIdent)  { self.module_comp_init_stack.push(i); }
+    pub fn pop_module_comp_init_stack (&mut self) -> ModuleIdent   { self.module_comp_init_stack.pop().expect("module stack is empty") }
+    pub fn peek_module_comp_init_stack(&self)     -> ModuleIdent   { *self.module_comp_init_stack.last().expect("module stack is empty") }
+
+    pub fn set_module_flow_init_track  (&mut self, i: ModuleIdent) { self.module_flow_init_track = Some(i); }
+    pub fn clear_module_flow_init_track(&mut self)                 { self.module_flow_init_track = None; }
+    pub fn get_module_flow_init_track  (&self) -> Option<ModuleIdent> { self.module_flow_init_track }
 }

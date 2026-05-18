@@ -18,6 +18,7 @@ use crate::model::nodes::state_node::StateNode;
 use crate::model::nodes::syn_node::SynNode;
 use crate::model::nodes::wait_node::{WaitCondNode, WaitCycleNode};
 use crate::model::module::module::Module;
+use crate::model::module::module_ident::ModuleIdent;
 use crate::model::flow_block::par::flow_block_par::FlowBlockPar;
 use crate::model::flow_block::seq::flow_block_seq::FlowBlockSeq;
 use crate::model::flow_block::cond::flow_block_cond::FlowBlockCond;
@@ -63,7 +64,9 @@ pub struct ModelArena {
     pub(super) opr_nodes        : ArenaGroup<OprNode>,
 
     // module arena
-    pub(super) modules          : ArenaGroup<Module>,
+    pub(super) modules               : ArenaGroup<Module>,
+    pub(super) module_comp_init_stack: Vec<ModuleIdent>, // used to track the module's hw component ownership
+    pub(super) module_flow_init_track: Option<ModuleIdent>,
 
     // flow-block arenas
     pub(super) flow_block_seqs           : ArenaGroup<FlowBlockSeq>,
@@ -77,4 +80,6 @@ pub struct ModelArena {
     pub(super) flow_block_whiles         : ArenaGroup<FlowBlockWhile>,
     pub(super) flow_block_do_whiles      : ArenaGroup<FlowBlockDoWhile>,
     pub(super) flow_block_counter_loops  : ArenaGroup<FlowBlockCounterLoop>,
+
+
 }
