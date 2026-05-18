@@ -46,7 +46,6 @@ impl ModelArena {
             top_module              : None,
             module_trace_stack      : Vec::new(),
             hcp_pending_buffer      : Vec::new(),
-            module_flow_init_track  : None,
             flow_block_init_stack   : Vec::new(),
             flow_block_seqs           : ArenaGroup::new(),
             flow_block_pars           : ArenaGroup::new(),
@@ -147,9 +146,6 @@ impl ModelArena {
         std::mem::take(&mut self.hcp_pending_buffer)
     }
 
-    pub fn set_module_flow_init_track  (&mut self, i: ModuleIdent) { self.module_flow_init_track = Some(i); }
-    pub fn clear_module_flow_init_track(&mut self)                 { self.module_flow_init_track = None; }
-    pub fn get_module_flow_init_track  (&self) -> Option<ModuleIdent> { self.module_flow_init_track }
 
     // -----------------------------------------------------------------------
     // Flow-block stack — tracks the active flow block during build traversal
@@ -160,7 +156,7 @@ impl ModelArena {
 
     /// Pop the top flow block, assert it matches `expected`, then attach it:
     /// - to the new stack top as a sub-flow-block, if the stack is non-empty, or
-    /// - to the module tracked by `module_flow_init_track` as a top flow block.
+    /// - to the module on the trace stack (must be in FlowBlockInit stage) as a top flow block.
     pub fn finalize_flow_block(&mut self, expected: FlowBlockIdent) {
         let popped = self.pop_flow_block_init_stack();
         assert_eq!(popped, expected, "finalize_flow_block: ident mismatch — wrong block finalized");

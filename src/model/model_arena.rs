@@ -81,7 +81,6 @@ pub struct ModelArena {
     pub(super) top_module              : Option<ModuleIdent>,
     pub(super) module_trace_stack      : Vec<(ModuleIdent, ModuleInitStage)>, // (module, stage) during init traversal
     pub(super) hcp_pending_buffer      : Vec<(HcpIdent, bool)>,               // buffered HCPs during FlowBlockBuild (bool = is_user_hw)
-    pub(super) module_flow_init_track  : Option<ModuleIdent>,
     pub(super) flow_block_init_stack   : Vec<FlowBlockIdent>, // tracks active flow block during build traversal
 
     // flow-block arenas
