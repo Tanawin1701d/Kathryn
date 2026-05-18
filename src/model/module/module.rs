@@ -1,6 +1,6 @@
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::flow_block::flow_block_ident::{FlowBlockIdent, FlowBlockJoinPolicy};
-use crate::model::model_arena::ModelArena;
+use crate::model::model_arena::{ModelArena, ModuleInitStage};
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
 use crate::model::module::module_ident::ModuleIdent;
 use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
@@ -96,6 +96,9 @@ impl Module {
     }
 
     fn build_flow_base(&mut self, arena: &mut ModelArena, start_node_i: NcpIdent) {
+        // push this module to flow stack
+        arena.push_module_trace_stack(self.ident, ModuleInitStage::FlowBlockBuild);
+
         // Top flow blocks: build, then wire or assign depending on join policy.
         for &block_i in &self.top_flow_blocks_i {
             arena.build_flow_block(block_i);
@@ -118,6 +121,14 @@ impl Module {
             assert_eq!(node_i.get_node_type(), NodeType::Asm,
                 "basic_nodes_i must contain only AsmNodes");
             arena.dry_assign_asm_node(node_i);
+        }
+
+        // pop this module from flow stack
+        arena.pop_module_trace_stack();
+
+        // register HCPs that were created during FlowBlockBuild, we do this because ownership issue
+        for (hcp_i, is_user) in arena.drain_hcp_pending_buffer() {
+            if is_user { self.add_user_hws(hcp_i); } else { self.add_internal_hw(hcp_i); }
         }
 
         // Sub-modules: pass start_node_i down.
