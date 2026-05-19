@@ -70,7 +70,7 @@ impl CounterLoopSchematic {
 
         // Loop-back: (body_exit, ~cnt_at_last) → loop_node
         let not_at_last_i = arena.make_expression(
-            &format!("cloop_not_last_{}", id),
+            false, &format!("cloop_not_last_{}", id),
             LogicOp::BitwiseInvr,
             cnt_at_last_i,
             HcpIdent::default(),

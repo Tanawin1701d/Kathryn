@@ -1,6 +1,7 @@
 use crate::model::common::identifier::Identifiable;
 use crate::model::hw_component::common::hcp_assign::HcpAssignable;
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
+use crate::model::hw_component::common::hcp_ident_mut::HcpIdentMutable;
 use crate::model::hw_component::common::hcp_read::HcpReadable;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::expression::Expression;
@@ -16,22 +17,45 @@ use crate::model::hw_component::sp_reg::state_reg::StateReg;
 use crate::model::hw_component::sp_reg::wait_reg::{CondWaitStateReg, CycleWaitStateReg};
 use crate::model::model_arena::ModelArena;
 
+// dispatch_hcp!: assign/readable traits — all types except MemBlock
 macro_rules! dispatch_hcp {
     ($self:expr, $hcpIdent:expr, $method:ident) => {{
         let handle = *$hcpIdent.get_arena_handle();
         match $hcpIdent.get_hw_type() {
-            HwComponentType::Reg             => $self.regs       .$method(handle),
-            HwComponentType::Wire            => $self.wires      .$method(handle),
-            HwComponentType::IoWire          => $self.io_wires   .$method(handle),
-            HwComponentType::Val             => $self.vals       .$method(handle),
-            HwComponentType::MemBlockIndexer => $self.mem_eles   .$method(handle),
-            HwComponentType::Expression      => $self.expressions.$method(handle),
-            HwComponentType::StateReg        => $self.state_regs .$method(handle),
-            HwComponentType::SyncReg         => $self.sync_regs  .$method(handle),
-            HwComponentType::CntReg          => $self.cnt_regs   .$method(handle),
-            HwComponentType::CondWaitStateReg   => $self.cond_wait_regs .$method(handle),
-            HwComponentType::CycleWaitStateReg  => $self.cycle_wait_regs.$method(handle),
+            HwComponentType::Reg               => $self.regs            .$method(handle),
+            HwComponentType::Wire              => $self.wires           .$method(handle),
+            HwComponentType::IoWire            => $self.io_wires        .$method(handle),
+            HwComponentType::Val               => $self.vals            .$method(handle),
+            HwComponentType::MemBlockIndexer   => $self.mem_eles        .$method(handle),
+            HwComponentType::Expression        => $self.expressions     .$method(handle),
+            HwComponentType::StateReg          => $self.state_regs      .$method(handle),
+            HwComponentType::SyncReg           => $self.sync_regs       .$method(handle),
+            HwComponentType::CntReg            => $self.cnt_regs        .$method(handle),
+            HwComponentType::CondWaitStateReg  => $self.cond_wait_regs  .$method(handle),
+            HwComponentType::CycleWaitStateReg => $self.cycle_wait_regs .$method(handle),
             t => panic!("HwComponentType {:?} is not HCP-accessible", t),
+        }
+    }};
+}
+
+// dispatch_hcp_ident!: HcpIdentMutable only — all types including MemBlock
+macro_rules! dispatch_hcp_ident {
+    ($self:expr, $hcpIdent:expr, $method:ident) => {{
+        let handle = *$hcpIdent.get_arena_handle();
+        match $hcpIdent.get_hw_type() {
+            HwComponentType::Reg               => $self.regs            .$method(handle),
+            HwComponentType::Wire              => $self.wires           .$method(handle),
+            HwComponentType::IoWire            => $self.io_wires        .$method(handle),
+            HwComponentType::Val               => $self.vals            .$method(handle),
+            HwComponentType::MemBlockIndexer   => $self.mem_eles        .$method(handle),
+            HwComponentType::MemBlock          => $self.mem_blks        .$method(handle),
+            HwComponentType::Expression        => $self.expressions     .$method(handle),
+            HwComponentType::StateReg          => $self.state_regs      .$method(handle),
+            HwComponentType::SyncReg           => $self.sync_regs       .$method(handle),
+            HwComponentType::CntReg            => $self.cnt_regs        .$method(handle),
+            HwComponentType::CondWaitStateReg  => $self.cond_wait_regs  .$method(handle),
+            HwComponentType::CycleWaitStateReg => $self.cycle_wait_regs .$method(handle),
+            t => panic!("HwComponentType {:?} is not a known HCP type", t),
         }
     }};
 }
@@ -62,6 +86,8 @@ impl ModelArena {
     pub fn get_hcp_assign_mut  (&mut self, ident: &HcpIdent) -> &mut dyn HcpAssignable { dispatch_hcp!(self, ident, get_mut) }
     pub fn get_hcp_readable    (&self,     ident: &HcpIdent) -> &    dyn HcpReadable   { dispatch_hcp!(self, ident, get    ) }
     pub fn get_hcp_readable_mut(&mut self, ident: &HcpIdent) -> &mut dyn HcpReadable   { dispatch_hcp!(self, ident, get_mut) }
+
+    pub fn get_hcp_ident_mut(&mut self, ident: &HcpIdent) -> &mut dyn HcpIdentMutable { dispatch_hcp_ident!(self, ident, get_mut) }
 
     pub fn borrow_asb_mut(&mut self, ident: HcpIdent) -> &mut dyn HcpAssignable {
         self.get_hcp_assign_mut(&ident)

@@ -16,6 +16,7 @@ const DEFAULT_UE_PRI_SR_INT   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 4;
 const DEFAULT_UE_PRI_SR_MRST  : i32 = DEFAULT_UE_PRI_RST;
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::model_arena::ModelArena;
+use crate::model::hw_component::common::hcp_ident_mut::HcpIdentMutable;
 
 /// 1-bit state register.  Mirrors C++ `StateReg`.
 
@@ -53,6 +54,7 @@ impl StateReg {
     }
 
     pub fn get_ident(&self) -> HcpIdent { self.ident }
+    pub fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
 
     pub fn build_update_event(&mut self, model_ar: &mut ModelArena) {
 
@@ -162,4 +164,8 @@ impl Identifiable for StateReg {
     fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
     fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
+}
+
+impl HcpIdentMutable for StateReg {
+    fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
 }

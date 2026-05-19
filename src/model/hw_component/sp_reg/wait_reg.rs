@@ -11,6 +11,7 @@ use crate::model::hw_component::common::util::check_ident_bit_size;
 use crate::model::model_arena::ModelArena;
 use crate::model::hw_component::sp_reg::trigger_sig::{HasTriggerSig, TriggerSig};
 use crate::model::common::identifier::{IdentBase, Identifiable};
+use crate::model::hw_component::common::hcp_ident_mut::HcpIdentMutable;
 
 const DEFAULT_UE_PRI_CW_UNSET : i32 = DEFAULT_UE_PRI_INTERNAL_MIN;
 const DEFAULT_UE_PRI_CW_SET   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 1;
@@ -86,7 +87,8 @@ impl CondWaitStateReg {
         Self::new(false, name, cond_opr, cond_opr_sl)
     }
 
-    pub fn get_ident   (&self) -> HcpIdent { self.ident }
+    pub fn get_ident       (&self)     -> HcpIdent       { self.ident }
+    pub fn get_ident_mut   (&mut self) -> &mut HcpIdent  { &mut self.ident }
     pub fn get_cond_opr(&self) -> HcpIdent { self.cond_opr }
     pub fn get_end_expr_i(&self) -> Option<HcpIdent> { self.end_expr_i }
 
@@ -94,14 +96,14 @@ impl CondWaitStateReg {
     pub fn build_support_signal(&mut self, model_ar: &mut ModelArena) {
         let name = self.ident.get_ident_base().get_name().to_string();
 
-        let up_state_i = model_ar.make_val(&format!("{}_UP_STATE", name), 1, 1);
+        let up_state_i = model_ar.make_val(false, &format!("{}_UP_STATE", name), 1, 1);
         self.up_state_i = Some(up_state_i);
 
-        let down_state_i = model_ar.make_val(&format!("{}_DOWN_STATE", name), 1, 0);
+        let down_state_i = model_ar.make_val(false, &format!("{}_DOWN_STATE", name), 1, 0);
         self.down_state_i = Some(down_state_i);
 
         let end_expr_i = model_ar.make_expression(
-            &format!("{}_END_EXPR", name), LogicOp::BitwiseAnd, self.ident, self.cond_opr,
+            false, &format!("{}_END_EXPR", name), LogicOp::BitwiseAnd, self.ident, self.cond_opr,
             None, None,
         );
         self.end_expr_i = Some(end_expr_i);
@@ -212,6 +214,10 @@ impl Identifiable for CondWaitStateReg {
     fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
 }
 
+impl HcpIdentMutable for CondWaitStateReg {
+    fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
+}
+
 // ---- CycleWaitStateReg ------------------------------------------------------
 
 /// Cycle-count wait register: holds a state bit (bit 0) and a counter
@@ -315,7 +321,8 @@ impl CycleWaitStateReg {
         }
     }
 
-    pub fn get_ident         (&self) -> HcpIdent    { self.ident }
+    pub fn get_ident         (&self)     -> HcpIdent       { self.ident }
+    pub fn get_ident_mut     (&mut self) -> &mut HcpIdent  { &mut self.ident }
     pub fn get_wait_cycle    (&self) -> Option<i32> { self.wait_cycle }
     pub fn get_cnt_bit_sz    (&self) -> i32         { self.cnt_bit_sz }
     pub fn get_total_bit_size(&self) -> i32         { self.total_bit_size }
@@ -326,20 +333,20 @@ impl CycleWaitStateReg {
     pub fn build_support_signal(&mut self, model_ar: &mut ModelArena) {
         let name = self.ident.get_ident_base().get_name().to_string();
 
-        let idle_cnt_i = model_ar.make_val(&format!("{}_IDLE_CNT", name), self.total_bit_size, 0);
+        let idle_cnt_i = model_ar.make_val(false, &format!("{}_IDLE_CNT", name), self.total_bit_size, 0);
         self.idle_cnt_i = Some(idle_cnt_i);
 
         // C++ startVal = 0b11 (state bit high, counter starts at 1)
-        let start_cnt_i = model_ar.make_val(&format!("{}_START_CNT", name), self.total_bit_size, 0b11);
+        let start_cnt_i = model_ar.make_val(false, &format!("{}_START_CNT", name), self.total_bit_size, 0b11);
         self.start_cnt_i = Some(start_cnt_i);
 
         // full-width +2 keeps state bit untouched while incrementing counter bits.
-        let inc_step_i = model_ar.make_val(&format!("{}_INC_STEP", name), self.total_bit_size, 0b10);
+        let inc_step_i = model_ar.make_val(false, &format!("{}_INC_STEP", name), self.total_bit_size, 0b10);
         self.inc_step_i = Some(inc_step_i);
 
         let end_full_i = if let Some(wait_cycle) = self.wait_cycle {
             let end_full = ((wait_cycle as u64) << 1) | 1;
-            model_ar.make_val(&format!("{}_END_FULL", name), self.total_bit_size, end_full)
+            model_ar.make_val(false, &format!("{}_END_FULL", name), self.total_bit_size, end_full)
         } else {
             // external end marker should be full-width, e.g. (end_cnt << 1) | 1
             let end_sz = model_ar.get_hcp_assign(&self.end_cnt).get_des_slice().get_size();
@@ -353,31 +360,31 @@ impl CycleWaitStateReg {
         self.end_full_i = Some(end_full_i);
 
         let is_active_expr_i = model_ar.make_expression(
-            &format!("{}_IS_ACTIVE", name), LogicOp::RelationNeq, self.ident, idle_cnt_i,
+            false, &format!("{}_IS_ACTIVE", name), LogicOp::RelationNeq, self.ident, idle_cnt_i,
             None, None,
         );
         self.is_active_expr_i = Some(is_active_expr_i);
 
         let is_end_expr_i = model_ar.make_expression(
-            &format!("{}_IS_END", name), LogicOp::RelationEq, self.ident, end_full_i,
+            false, &format!("{}_IS_END", name), LogicOp::RelationEq, self.ident, end_full_i,
             None, None,
         );
         self.is_end_expr_i = Some(is_end_expr_i);
 
         let is_not_end_expr_i = model_ar.make_expression(
-            &format!("{}_IS_NOT_END", name), LogicOp::RelationNeq, self.ident, end_full_i,
+            false, &format!("{}_IS_NOT_END", name), LogicOp::RelationNeq, self.ident, end_full_i,
             None, None,
         );
         self.is_not_end_expr_i = Some(is_not_end_expr_i);
 
         let inc_cond_expr_i = model_ar.make_expression(
-            &format!("{}_INC_COND", name), LogicOp::BitwiseAnd, is_active_expr_i, is_not_end_expr_i,
+            false, &format!("{}_INC_COND", name), LogicOp::BitwiseAnd, is_active_expr_i, is_not_end_expr_i,
             None, None,
         );
         self.inc_cond_expr_i = Some(inc_cond_expr_i);
 
         let inc_expr_i = model_ar.make_expression(
-            &format!("{}_INC_EXPR", name), LogicOp::ArithPlus, self.ident, inc_step_i,
+            false, &format!("{}_INC_EXPR", name), LogicOp::ArithPlus, self.ident, inc_step_i,
             None, None,
         );
         self.inc_expr_i = Some(inc_expr_i);
@@ -497,4 +504,9 @@ impl Identifiable for CycleWaitStateReg {
     fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
     fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
+}
+
+
+impl HcpIdentMutable for CycleWaitStateReg {
+    fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
 }

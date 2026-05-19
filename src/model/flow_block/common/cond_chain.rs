@@ -15,7 +15,7 @@ impl CondChain {
     /// `prefix` is prepended to generated expression names (e.g. `"cif"`, `"zcif"`).
     pub fn new_inv(arena: &mut ModelArena, prefix: &str, id: u64, cond_i: HcpIdent) -> Self {
         let inv = arena.make_expression(
-            &format!("{}_not_cond_{}", prefix, id),
+            false, &format!("{}_not_cond_{}", prefix, id),
             LogicOp::BitwiseInvr, cond_i, HcpIdent::default(), None, None,
         );
         Self { prev_false: Some(inv) }
@@ -38,7 +38,7 @@ impl CondChain {
             Some(c) => {
                 let gated = add_logic_with_output(arena, Some(c), self.prev_false, LogicOp::BitwiseAnd);
                 let inv_elif = arena.make_expression(
-                    &format!("{}_not_elif_{}_{}", prefix, id, i),
+                    false, &format!("{}_not_elif_{}_{}", prefix, id, i),
                     LogicOp::BitwiseInvr, c, HcpIdent::default(), None, None,
                 );
                 self.prev_false = add_logic_with_output(arena, self.prev_false, Some(inv_elif), LogicOp::BitwiseAnd);

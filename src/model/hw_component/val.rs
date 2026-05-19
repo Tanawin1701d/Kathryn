@@ -9,6 +9,7 @@ use crate::model::hw_component::common::hcp_read::HcpReadable;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::model_arena::ModelArena;
 use crate::util::math::vary_val::VaryVal;
+use crate::model::hw_component::common::hcp_ident_mut::HcpIdentMutable;
 
 #[derive(Default)]
 pub struct Val {
@@ -33,6 +34,7 @@ impl Val {
     }
 
     pub fn get_ident(&self) -> HcpIdent { self.ident }
+    pub fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
 }
 
 
@@ -88,4 +90,8 @@ impl Identifiable for Val {
     fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
     fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
+}
+
+impl HcpIdentMutable for Val {
+    fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
 }

@@ -1,3 +1,4 @@
+use crate::common::arena_base::ArenaHandle;
 use crate::model::common::identifier::{IdentBase, Identifiable};
 
 // ---------------------------------------------------------------------------
@@ -7,16 +8,20 @@ use crate::model::common::identifier::{IdentBase, Identifiable};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct ModuleIdent {
-    ident_base : IdentBase,
+    ident_base           : IdentBase,
+    // ArenaHandle of the parent module; default() means "no parent" (top module).
+    master_module_handle : ArenaHandle,
 }
 
 impl ModuleIdent {
     pub fn new(is_user_com: bool, name: &str) -> Self {
-        Self { ident_base: IdentBase::new(is_user_com, name) }
+        Self { ident_base: IdentBase::new(is_user_com, name), master_module_handle: ArenaHandle::default() }
     }
 
     pub fn get_ident_base    (&self)     -> &IdentBase     { &self.ident_base }
     pub fn get_ident_base_mut(&mut self) -> &mut IdentBase { &mut self.ident_base }
+    pub fn get_master_module_handle(&self) -> ArenaHandle                { self.master_module_handle }
+    pub fn set_master_module_i     (&mut self, parent: ModuleIdent)      { self.master_module_handle = *parent.get_arena_handle(); }
 
     pub fn build_unique_module_name(&self) -> String {
         format!("MODULE_{}_{}",

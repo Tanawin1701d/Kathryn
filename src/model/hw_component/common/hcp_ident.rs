@@ -1,6 +1,7 @@
 use std::fmt;
 use crate::common::arena_base::ArenaHandle;
 use crate::model::common::identifier::{IdentBase, Identifiable};
+use crate::model::module::module_ident::ModuleIdent;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 #[repr(usize)]
@@ -64,8 +65,9 @@ trait HcpIdentifiable: Identifiable {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct HcpIdent {
-    ident_base : IdentBase,
-    hw_type    : HwComponentType,
+    ident_base       : IdentBase,
+    hw_type          : HwComponentType,
+    master_module_i  : ModuleIdent,
 }
 
 impl HcpIdent {
@@ -75,12 +77,15 @@ impl HcpIdent {
         Self {
             ident_base: IdentBase::new(is_user_com, name),
             hw_type,
+            master_module_i: ModuleIdent::default(),
         }
     }
-    
+
     pub fn get_ident_base(&self) -> &IdentBase      { &self.ident_base }
     pub fn get_ident_base_mut(&mut self) -> &mut IdentBase { &mut self.ident_base }
     pub fn get_hw_type   (&self) -> HwComponentType { self.hw_type     }
+    pub fn get_master_module_i(&self) -> ModuleIdent { self.master_module_i }
+    pub fn set_master_module_i(&mut self, m: ModuleIdent) { self.master_module_i = m; }
     // ---- helpers ------------------------------------------------------------
 
     pub fn build_unique_hcp_name(&self) -> String {

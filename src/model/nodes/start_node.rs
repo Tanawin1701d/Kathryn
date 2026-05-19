@@ -30,9 +30,9 @@ impl Default for StartNode {
 impl StartNode {
     pub fn new(name: &str, rst_sig_i: HcpIdent, arena: &mut ModelArena) -> Self {
         let state_reg_i = arena.make_state_reg(&format!("{}_ST", name));
-        let up_state_i  = arena.make_val("upState", 1, 1);
+        let up_state_i  = arena.make_val(false, "upState", 1, 1);
         let exit_expr_i = arena.make_expression(
-            "startExpr", LogicOp::RelationEq, state_reg_i, up_state_i, None, None,
+            false, "startExpr", LogicOp::RelationEq, state_reg_i, up_state_i, None, None,
         );
         Self {
             ident       : NcpIdent::new(NodeType::Start, false, name),

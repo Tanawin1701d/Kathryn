@@ -140,7 +140,7 @@ impl FlowBlockBase {
         let mut iter = signals.iter().copied();
         let mut sig = iter.next()?;
         for rhs in iter {
-            sig = arena.make_expression(name, LogicOp::BitwiseOr, sig, rhs, None, None);
+            sig = arena.make_expression(false, name, LogicOp::BitwiseOr, sig, rhs, None, None);
         }
         Some(arena.make_opr_node(name, sig))
     }

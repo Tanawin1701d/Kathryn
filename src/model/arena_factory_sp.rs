@@ -6,46 +6,37 @@ use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::sp_reg::wait_reg::{CondWaitStateReg, CycleWaitStateReg};
 use crate::model::model_arena::ModelArena;
 
-// make_* → is_user_com = false (internal/system)
-// mk_*   → is_user_com = true  (user-defined)
-
 impl ModelArena {
     pub fn make_state_reg(&mut self, name: &str) -> HcpIdent {
-        let set_val_i   = self.make_val(&format!("{}_SET",   name), 1, 1);
-        let unset_val_i = self.make_val(&format!("{}_UNSET", name), 1, 0);
+        let set_val_i   = self.make_val(false, &format!("{}_SET",   name), 1, 1);
+        let unset_val_i = self.make_val(false, &format!("{}_UNSET", name), 1, 0);
         let i = self.add_state_reg(StateReg::new(false, name, set_val_i, unset_val_i));
-        self.reg_internal_hw_to_top_module(i);
-        i
+        self.stamp_hw_to_parent_module(i, false)
     }
 
     pub fn make_sync_reg(&mut self, name: &str, size: i32) -> HcpIdent {
         let i = self.add_sync_reg(SyncReg::new(false, name, size));
-        self.reg_internal_hw_to_top_module(i);
-        i
+        self.stamp_hw_to_parent_module(i, false)
     }
 
     pub fn make_cnt_reg(&mut self, name: &str, inc_val: i32, last_cycle: i32) -> HcpIdent {
         let i = self.add_cnt_reg(CntReg::new(false, name, inc_val, last_cycle));
-        self.reg_internal_hw_to_top_module(i);
-        i
+        self.stamp_hw_to_parent_module(i, false)
     }
 
     pub fn make_cond_wait_state_reg(&mut self, name: &str, cond_opr: HcpIdent, cond_sl: Slice) -> HcpIdent {
         let i = self.add_cond_wait_reg(CondWaitStateReg::new(false, name, cond_opr, cond_sl));
-        self.reg_internal_hw_to_top_module(i);
-        i
+        self.stamp_hw_to_parent_module(i, false)
     }
 
     pub fn make_cycle_wait_state_reg(&mut self, name: &str, wait_cycle: i32) -> HcpIdent {
-        let end_cnt_i = self.make_val(&format!("{}_END_CNT", name), 1, wait_cycle as u64);
+        let end_cnt_i = self.make_val(false, &format!("{}_END_CNT", name), 1, wait_cycle as u64);
         let i = self.add_cycle_wait_reg(CycleWaitStateReg::new_with_cycle(false, name, wait_cycle, end_cnt_i));
-        self.reg_internal_hw_to_top_module(i);
-        i
+        self.stamp_hw_to_parent_module(i, false)
     }
 
     pub fn make_cycle_wait_state_reg_with_expr(&mut self, name: &str, cnt_bit_sz: i32, end_cnt_i: HcpIdent) -> HcpIdent {
         let i = self.add_cycle_wait_reg(CycleWaitStateReg::new_with_expr(false, name, cnt_bit_sz, end_cnt_i));
-        self.reg_internal_hw_to_top_module(i);
-        i
+        self.stamp_hw_to_parent_module(i, false)
     }
 }

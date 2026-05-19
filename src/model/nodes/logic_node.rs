@@ -37,7 +37,7 @@ impl Default for PseudoNode {
 impl PseudoNode {
     pub fn new(is_user_com: bool, name: &str, bit_width: i32, join_op: LogicOp, arena: &mut ModelArena) -> Self {
         assert!(matches!(join_op, LogicOp::BitwiseAnd | LogicOp::BitwiseOr));
-        let init_expr = arena.make_expression_empty("pseudo_init_expr", bit_width);
+        let init_expr = arena.make_expression_empty(false, "pseudo_init_expr", bit_width);
         Self {
             ident      : NcpIdent::new(NodeType::Pseudo, is_user_com, name),
             triggers   : NodeTrigger::new(),

@@ -41,8 +41,8 @@ pub trait NcpNode: HasNodeTriggerSig {
     fn bind_with_rst_output_if_reset(&self, arena: &mut ModelArena, raw_exit: HcpIdent) -> HcpIdent {
         let Some(int_rst_id) = self.get_int_reset_node() else { return raw_exit };
         let int_exit = arena.get_node_exit_opr(&int_rst_id);
-        let inv = arena.make_expression("node_int_inv", LogicOp::BitwiseInvr, int_exit, HcpIdent::default(), None, None);
-        arena.make_expression("node_bind_rst", LogicOp::BitwiseAnd, raw_exit, inv, None, None)
+        let inv = arena.make_expression(false, "node_int_inv", LogicOp::BitwiseInvr, int_exit, HcpIdent::default(), None, None);
+        arena.make_expression(false, "node_bind_rst", LogicOp::BitwiseAnd, raw_exit, inv, None, None)
     }
 
     /// `raw_exit & ~hold.exit_opr` if a hold node is set.
@@ -53,8 +53,8 @@ pub trait NcpNode: HasNodeTriggerSig {
         };
 
         let hold_exit = arena.get_node_exit_opr(&hold_id);
-        let inv = arena.make_expression("node_hold_inv", LogicOp::BitwiseInvr, hold_exit, HcpIdent::default(), None, None);
-        arena.make_expression("node_bind_hold", LogicOp::BitwiseAnd, raw_exit, inv, None, None)
+        let inv = arena.make_expression(false, "node_hold_inv", LogicOp::BitwiseInvr, hold_exit, HcpIdent::default(), None, None);
+        arena.make_expression(false, "node_bind_hold", LogicOp::BitwiseAnd, raw_exit, inv, None, None)
     }
 }
 
@@ -69,7 +69,7 @@ pub fn add_logic(model_ar: &mut ModelArena, des_logic: &mut Option<HcpIdent>, op
         *des_logic = Some(opr1);
     } else {
         let lhs = des_logic.expect("checked above");
-        let expr = model_ar.make_expression("node_logic_expr", op, lhs, opr1, None, None);
+        let expr = model_ar.make_expression(false, "node_logic_expr", op, lhs, opr1, None, None);
         *des_logic = Some(expr);
     }
 }
@@ -85,6 +85,6 @@ pub fn add_logic_with_output(
         (None,    None   ) => None,
         (Some(a), None   ) => Some(a),
         (None,    Some(b)) => Some(b),
-        (Some(a), Some(b)) => Some(model_ar.make_expression("node_logic_expr", op, a, b, None, None)),
+        (Some(a), Some(b)) => Some(model_ar.make_expression(false, "node_logic_expr", op, a, b, None, None)),
     }
 }

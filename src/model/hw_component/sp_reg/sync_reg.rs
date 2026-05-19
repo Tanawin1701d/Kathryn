@@ -10,6 +10,7 @@ use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_INTERNAL_M
 use crate::model::hw_component::sp_reg::trigger_sig::{HasTriggerSig, TriggerSig};
 use crate::model::model_arena::ModelArena;
 use crate::model::common::identifier::{IdentBase, Identifiable};
+use crate::model::hw_component::common::hcp_ident_mut::HcpIdentMutable;
 
 const DEFAULT_UE_PRI_SY_UNSET    : i32 = DEFAULT_UE_PRI_INTERNAL_MIN;
 const DEFAULT_UE_PRI_SY_ACTIVATE : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 1;
@@ -69,7 +70,8 @@ impl SyncReg {
 
     pub fn mk(name: &str, size: i32) -> Self { Self::new(false, name, size) }
 
-    pub fn get_ident       (&self) -> HcpIdent        { self.ident             }
+    pub fn get_ident       (&self)     -> HcpIdent        { self.ident             }
+    pub fn get_ident_mut   (&mut self) -> &mut HcpIdent  { &mut self.ident        }
     pub fn get_end_expr_i  (&self) -> Option<HcpIdent> { self.end_expr_i        }
 
     /// Creates all internal support signals in the arena.
@@ -78,34 +80,34 @@ impl SyncReg {
         let name = self.ident.get_ident_base().get_name().to_string();
         let size = self.bit_width;
 
-        let up_state_i = model_ar.make_val(&format!("{}_UP_STATE",   name), 1, 1);
+        let up_state_i = model_ar.make_val(false, &format!("{}_UP_STATE",   name), 1, 1);
         self.up_state_i = Some(up_state_i);
         // right now, we only support 64-bit registers, so we can use a single Val for both
         let up_full_val = if size < 64 { (1u64 << size) - 1 } else { u64::MAX };
-        let up_full_state_i = model_ar.make_val(&format!("{}_UP_FULL",   name), size, up_full_val);
+        let up_full_state_i = model_ar.make_val(false, &format!("{}_UP_FULL",   name), size, up_full_val);
         self.up_full_state_i = Some(up_full_state_i);
 
-        let down_full_state_i = model_ar.make_val(&format!("{}_DOWN_FULL", name), size, 0);
+        let down_full_state_i = model_ar.make_val(false, &format!("{}_DOWN_FULL", name), size, 0);
         self.down_full_state_i = Some(down_full_state_i);
 
-        let test_wire_i = model_ar.make_wire(&format!("{}_TEST_WIRE", name), size);
+        let test_wire_i = model_ar.make_wire(false, &format!("{}_TEST_WIRE", name), size);
         self.test_wire_i = Some(test_wire_i);
 
         // (self | testWire)
         let or_expr = model_ar.make_expression(
-            &format!("{}_OR_TEST",      name), LogicOp::BitwiseOr,  self.ident,    test_wire_i,
+            false, &format!("{}_OR_TEST",      name), LogicOp::BitwiseOr,  self.ident,    test_wire_i,
             None, None,
         );
         // (self | testWire) == upFullState
         let end_expr = model_ar.make_expression(
-            &format!("{}_END_EXPR",     name), LogicOp::RelationEq, or_expr,       up_full_state_i,
+            false, &format!("{}_END_EXPR",     name), LogicOp::RelationEq, or_expr,       up_full_state_i,
             None, None,
         );
         self.end_expr_i = Some(end_expr);
 
         // ~endExpr  (unary — b operand is ignored)
         let end_expr_inv = model_ar.make_expression(
-            &format!("{}_END_EXPR_INV", name), LogicOp::BitwiseInvr, end_expr, end_expr,
+            false, &format!("{}_END_EXPR_INV", name), LogicOp::BitwiseInvr, end_expr, end_expr,
             None, None,
         );
         self.end_expr_inv_i = Some(end_expr_inv);
@@ -147,6 +149,7 @@ impl SyncReg {
                 match condi {
                     Some(ci) => {
                         let combined = model_ar.make_expression(
+                            false,
                             &format!("{}_ACT_COND_{}", self.ident.get_ident_base().get_name(), fill_bit_idx),
                             LogicOp::BitwiseAnd, end_expr_inv_i, ci,
                             None, None,
@@ -248,4 +251,8 @@ impl Identifiable for SyncReg {
     fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
     fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
+}
+
+impl HcpIdentMutable for SyncReg {
+    fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
 }

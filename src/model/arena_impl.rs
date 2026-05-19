@@ -137,6 +137,9 @@ impl ModelArena {
     pub fn peek_module_trace_stack(&self) -> (ModuleIdent, ModuleInitStage) {
         *self.module_trace_stack.last().expect("module trace stack is empty")
     }
+    pub fn try_peek_module_trace_stack(&self) -> Option<(ModuleIdent, ModuleInitStage)> {
+        self.module_trace_stack.last().copied()
+    }
 
     // -----------------------------------------------------------------------
     // HCP pending buffer — holds HCPs created during FlowBlockBuild stage;

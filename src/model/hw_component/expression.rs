@@ -9,6 +9,7 @@ use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::model_arena::ModelArena;
 use crate::model::common::identifier::{IdentBase, Identifiable};
+use crate::model::hw_component::common::hcp_ident_mut::HcpIdentMutable;
 
 #[derive(Default)]
 pub struct Expression {
@@ -86,6 +87,7 @@ impl Expression {
     }
 
     pub fn get_ident(&self) -> HcpIdent { self.ident }
+    pub fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
 
     pub fn get_op             (&self) -> LogicOp         { self.op }
     pub fn get_operand_a      (&self) -> Option<HcpIdent> { self.operand_a }
@@ -141,4 +143,8 @@ impl Identifiable for Expression {
     fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
     fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
+}
+
+impl HcpIdentMutable for Expression {
+    fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
 }

@@ -53,7 +53,7 @@ impl WhileSchematic {
 
         // 3. Create exit_node — fires when condition is false
         let not_cond_i = arena.make_expression(
-            &format!("cwhile_not_cond_{}", id),
+            false, &format!("cwhile_not_cond_{}", id),
             LogicOp::BitwiseInvr,
             self.cond_i,
             HcpIdent::default(),

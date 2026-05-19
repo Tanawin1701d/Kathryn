@@ -1,4 +1,5 @@
 pub mod hcp_read;
+pub mod hcp_ident_mut;
 pub mod update_event;
 pub mod update_event_ident;
 pub mod slice;

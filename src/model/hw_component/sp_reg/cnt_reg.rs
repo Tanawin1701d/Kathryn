@@ -10,6 +10,7 @@ use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_INTERNAL_M
 use crate::model::model_arena::ModelArena;
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::hw_component::sp_reg::trigger_sig::{HasTriggerSig, TriggerSig};
+use crate::model::hw_component::common::hcp_ident_mut::HcpIdentMutable;
 
 const DEFAULT_UE_PRI_CNT_INC  : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 1;
 const DEFAULT_UE_PRI_CNT_HOLD : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 2;
@@ -71,6 +72,7 @@ impl CntReg {
     pub fn mk(name: &str, max_cycle: i32) -> Self { Self::new(false, name, 1, max_cycle) }
 
     pub fn get_ident(&self) -> HcpIdent { self.ident }
+    pub fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
     pub fn get_loop_cnt(&self) -> i32 { self.last_cycle }
     pub fn generate_end_expr(&self) -> HcpIdent {
         self.at_last_expr.expect("build_support_signal must be called before generate_end_expr")
@@ -81,29 +83,29 @@ impl CntReg {
         let name = self.ident.get_ident_base().get_name().to_string();
 
         // constant: last_cycle - 1 (the maximum value the counter reaches before wrap)
-        let last_cycle_val = model_ar.make_val(&format!("{}_LAST_CYCLE", name),
+        let last_cycle_val = model_ar.make_val(false, &format!("{}_LAST_CYCLE", name),
             self.cnt_bit_sz, (self.last_cycle - 1) as u64,
         );
         self.last_cycle_val = Some(last_cycle_val);
 
         // constant: 0 (the reset/wrap-back value)
-        let zero_val = model_ar.make_val(&format!("{}_ZERO", name),
+        let zero_val = model_ar.make_val(false, &format!("{}_ZERO", name),
             self.cnt_bit_sz, 0,
         );
         self.zero_val = Some(zero_val);
 
         // expression: self == last_cycle_val  (1-bit; true when counter is at last cycle)
-        let at_last_expr = model_ar.make_expression(&format!("{}_AT_LAST", name),
+        let at_last_expr = model_ar.make_expression(false, &format!("{}_AT_LAST", name),
             LogicOp::RelationEq, self.ident, last_cycle_val, None, None);
         self.at_last_expr = Some(at_last_expr);
 
         // constant: inc_val (needed as the RHS of the add expression)
-        let inc_val_val = model_ar.make_val(&format!("{}_INC_VAL", name),
+        let inc_val_val = model_ar.make_val(false, &format!("{}_INC_VAL", name),
             self.cnt_bit_sz, self.inc_val as u64,
         );
 
         // expression: self + inc_val  (next counter value)
-        let inc_expr = model_ar.make_expression(&format!("{}_INC", name),
+        let inc_expr = model_ar.make_expression(false, &format!("{}_INC", name),
             LogicOp::ArithPlus, self.ident, inc_val_val, None, None,
         );
         self.inc_expr = Some(inc_expr);
@@ -231,4 +233,8 @@ impl Identifiable for CntReg {
     fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
     fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
+}
+
+impl HcpIdentMutable for CntReg {
+    fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
 }

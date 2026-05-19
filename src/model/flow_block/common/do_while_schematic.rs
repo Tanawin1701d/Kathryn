@@ -37,7 +37,7 @@ impl DoWhileSchematic {
 
         // 3. Create exit_node — fires when body exits with condition false
         let not_cond_i = arena.make_expression(
-            &format!("dowhile_not_cond_{}", id),
+            false, &format!("dowhile_not_cond_{}", id),
             LogicOp::BitwiseInvr,
             self.cond_i,
             HcpIdent::default(),
