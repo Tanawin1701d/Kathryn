@@ -41,7 +41,8 @@ impl Module {
 
     pub fn mk(name: &str) -> Self { Self::new(true, false, name) }
 
-    pub fn get_ident(&self) -> ModuleIdent { self.ident }
+    pub fn get_ident    (&self)              -> ModuleIdent { self.ident }
+    pub fn set_ident    (&mut self, i: ModuleIdent)        { self.ident = i; }
 
     // -- top module flag --
     pub fn is_top_module(&self) -> bool { self.is_top_module }

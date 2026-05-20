@@ -115,6 +115,7 @@ impl ModelArena {
 
     pub fn take_module        (&mut self, i: ModuleIdent)         -> Module { self.modules.take(*i.get_arena_handle()) }
     pub fn replace_back_module(&mut self, i: ModuleIdent, v: Module)        { self.modules.replace_back(*i.get_arena_handle(), v) }
+    pub(crate) fn get_module_ident_by_handle(&self, h: crate::common::arena_base::ArenaHandle) -> ModuleIdent { self.modules.get(h).get_ident() }
 
     // -----------------------------------------------------------------------
     // Top module
