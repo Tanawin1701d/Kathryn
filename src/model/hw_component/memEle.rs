@@ -1,14 +1,12 @@
 use crate::model::controller::clock_mode::{ClockMode, get_global_clk_mode};
 use crate::model::hw_component::common::asm_mode::get_asm_pri_val;
 use crate::model::hw_component::common::assign_meta::AssignMeta;
-use crate::model::hw_component::common::hcp_accesible::HcpAccessible;
+use crate::model::hw_component::common::hcp_base::HcpBase;
 use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};
-use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
+use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HwComponentType};
 use crate::model::common::identifier::{IdentBase, Identifiable};
-use crate::model::hw_component::common::hcp_read::HcpReadable;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::model_arena::ModelArena;
-use crate::model::hw_component::common::hcp_ident_mut::HcpIdentMutable;
 
 #[derive(Default)]
 pub struct MemEle {
@@ -47,15 +45,9 @@ impl MemEle {
     pub fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
 }
 
-impl HcpReadable for MemEle {
-    fn get_hcp_rdb_ident(&self) -> HcpIdent { self.ident }
-}
-
 impl HcpAssignable for MemEle {
     fn get_hcp_assign    (&self)     -> &    HcpAssign { &self.assign }
     fn get_hcp_assign_mut(&mut self) -> &mut HcpAssign { &mut self.assign }
-
-    fn get_hcp_asb_ident(&self) -> HcpIdent { self.ident }
 
     fn retrieve_clk_mode(&self) -> ClockMode { get_global_clk_mode() }
 
@@ -68,14 +60,10 @@ impl HcpAssignable for MemEle {
               des_slice: &Option<Slice>,
               src_slice: &Slice,
               arena    : &mut ModelArena) -> AssignMeta {
-        self.gen_asm_meta(srci, des_slice, src_slice, arena)
+        self.gen_asm_meta(self.ident, srci, des_slice, src_slice, arena)
     }
 }
 
-
-impl HcpAccessible for MemEle {
-    fn get_bit_width(&self) -> usize { self.bit_width as usize }
-}
 
 impl Identifiable for MemEle {
     fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
@@ -83,6 +71,10 @@ impl Identifiable for MemEle {
     fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
 }
 
-impl HcpIdentMutable for MemEle {
+impl HcpIdentifiable for MemEle {
     fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
+}
+
+impl HcpBase for MemEle {
+    fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) { arena.replace_back_mem_ele(*self); }
 }

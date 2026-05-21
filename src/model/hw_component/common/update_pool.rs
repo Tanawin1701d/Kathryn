@@ -1,4 +1,7 @@
+use std::collections::{HashMap, HashSet};
 use crate::model::controller::clock_mode::ClockMode;
+use crate::model::hw_component::common::hcp_ident::HcpIdent;
+use crate::model::hw_component::common::update_event::UpdatingEvent;
 use crate::model::hw_component::common::update_event_ident::UpdateEventIdent;
 use crate::model::model_arena::ModelArena;
 
@@ -43,5 +46,23 @@ impl UpdatePool {
 
     pub fn clean(&mut self) {
         self.events.clear();
+    }
+
+    pub fn remap_dep_hcps(&self, map: &HashMap<HcpIdent, HcpIdent>, arena: &mut ModelArena) {
+        let ue_idents: Vec<UpdateEventIdent> = self.events.clone();
+        for ue_i in ue_idents {
+            let mut ue = arena.take_ue(ue_i);
+            ue.remap_dep_hcps(map, arena);
+            arena.replace_back_ue(ue);
+        }
+    }
+
+    pub fn gather_dep_hcps(&self, arena: &mut ModelArena, out: &mut HashSet<HcpIdent>) {
+        let ue_idents: Vec<UpdateEventIdent> = self.events.clone();
+        for ue_i in ue_idents {
+            let ue = arena.take_ue(ue_i);
+            ue.gather_dep_hcps(arena, out);
+            arena.replace_back_ue(ue);
+        }
     }
 }

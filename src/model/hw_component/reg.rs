@@ -1,14 +1,12 @@
 use crate::model::controller::clock_mode::{ClockMode, get_global_clk_mode};
 use crate::model::hw_component::common::asm_mode::get_asm_pri_val;
 use crate::model::hw_component::common::assign_meta::AssignMeta;
-use crate::model::hw_component::common::hcp_accesible::HcpAccessible;
+use crate::model::hw_component::common::hcp_base::HcpBase;
 use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};
-use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
+use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HwComponentType};
 use crate::model::common::identifier::{IdentBase, Identifiable};
-use crate::model::hw_component::common::hcp_read::HcpReadable;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::model_arena::ModelArena;
-use crate::model::hw_component::common::hcp_ident_mut::HcpIdentMutable;
 
 #[derive(Default)]
 pub struct Reg {
@@ -36,15 +34,9 @@ impl Reg {
 
 
 
-impl HcpReadable for Reg {
-    fn get_hcp_rdb_ident(&self) -> HcpIdent { self.ident }
-}
-
 impl HcpAssignable for Reg {
     fn get_hcp_assign    (&self)     -> &    HcpAssign { &self.assign }
     fn get_hcp_assign_mut(&mut self) -> &mut HcpAssign { &mut self.assign }
-
-    fn get_hcp_asb_ident(&self) -> HcpIdent { self.ident }
 
     fn retrieve_clk_mode(&self) -> ClockMode { get_global_clk_mode() }
 
@@ -59,15 +51,10 @@ impl HcpAssignable for Reg {
               arena      : &mut ModelArena,
     ) -> AssignMeta {
 
-        let mut asm = self.gen_asm_meta(&srci, des_slice, src_slice, arena);
-        asm
+        self.gen_asm_meta(self.ident, srci, des_slice, src_slice, arena)
     }
 }
 
-
-impl HcpAccessible for Reg {
-    fn get_bit_width(&self) -> usize { self.bit_width as usize }
-}
 
 impl Identifiable for Reg {
     fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
@@ -75,6 +62,10 @@ impl Identifiable for Reg {
     fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
 }
 
-impl HcpIdentMutable for Reg {
+impl HcpIdentifiable for Reg {
     fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
+}
+
+impl HcpBase for Reg {
+    fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) { arena.replace_back_reg(*self); }
 }

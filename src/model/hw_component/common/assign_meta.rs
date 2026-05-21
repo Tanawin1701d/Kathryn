@@ -25,8 +25,9 @@ impl AssignMeta {
     }
 
     pub fn final_update(self, model_arena: &mut ModelArena) {
-        let target = model_arena.borrow_asb_mut(self.target_hwc);
-        target.add_update_event(self.pre_update_event);
+        let mut hcp = model_arena.take_hcp(self.target_hwc);
+        hcp.add_update_event(self.pre_update_event);
+        model_arena.replace_back_hcp(hcp);
     }
 
     pub fn get_target_hw        (&self)     -> HcpIdent                       { self.target_hwc         }

@@ -1,8 +1,7 @@
 use crate::model::common::identifier::Identifiable;
 use crate::model::hw_component::common::hcp_assign::HcpAssignable;
+use crate::model::hw_component::common::hcp_base::HcpBase;
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
-use crate::model::hw_component::common::hcp_ident_mut::HcpIdentMutable;
-use crate::model::hw_component::common::hcp_read::HcpReadable;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::expression::Expression;
 use crate::model::hw_component::memBlk::MemBlk;
@@ -17,7 +16,11 @@ use crate::model::hw_component::sp_reg::state_reg::StateReg;
 use crate::model::hw_component::sp_reg::wait_reg::{CondWaitStateReg, CycleWaitStateReg};
 use crate::model::model_arena::ModelArena;
 
-// dispatch_hcp!: assign/readable traits — all types except MemBlock
+// dispatch_hcp!: two forms.
+//   dispatch_hcp!(self, ident, method) — 11 HCP-assignable types (MemBlock excluded);
+//                                        returns &dyn / &mut dyn HcpAssignable.
+//   dispatch_hcp!(take self, ident)    — all 12 HcpBase types incl. MemBlock;
+//                                        returns Box<dyn HcpBase> (owned).
 macro_rules! dispatch_hcp {
     ($self:expr, $hcpIdent:expr, $method:ident) => {{
         let handle = *$hcpIdent.get_arena_handle();
@@ -33,29 +36,26 @@ macro_rules! dispatch_hcp {
             HwComponentType::CntReg            => $self.cnt_regs        .$method(handle),
             HwComponentType::CondWaitStateReg  => $self.cond_wait_regs  .$method(handle),
             HwComponentType::CycleWaitStateReg => $self.cycle_wait_regs .$method(handle),
-            t => panic!("HwComponentType {:?} is not HCP-accessible", t),
+            HwComponentType::MemBlock          => $self.mem_blks        .$method(handle),
+            t => panic!("HwComponentType {:?} is not HCP-assignable", t),
         }
     }};
-}
-
-// dispatch_hcp_ident!: HcpIdentMutable only — all types including MemBlock
-macro_rules! dispatch_hcp_ident {
-    ($self:expr, $hcpIdent:expr, $method:ident) => {{
+    (take $self:expr, $hcpIdent:expr) => {{
         let handle = *$hcpIdent.get_arena_handle();
         match $hcpIdent.get_hw_type() {
-            HwComponentType::Reg               => $self.regs            .$method(handle),
-            HwComponentType::Wire              => $self.wires           .$method(handle),
-            HwComponentType::IoWire            => $self.io_wires        .$method(handle),
-            HwComponentType::Val               => $self.vals            .$method(handle),
-            HwComponentType::MemBlockIndexer   => $self.mem_eles        .$method(handle),
-            HwComponentType::MemBlock          => $self.mem_blks        .$method(handle),
-            HwComponentType::Expression        => $self.expressions     .$method(handle),
-            HwComponentType::StateReg          => $self.state_regs      .$method(handle),
-            HwComponentType::SyncReg           => $self.sync_regs       .$method(handle),
-            HwComponentType::CntReg            => $self.cnt_regs        .$method(handle),
-            HwComponentType::CondWaitStateReg  => $self.cond_wait_regs  .$method(handle),
-            HwComponentType::CycleWaitStateReg => $self.cycle_wait_regs .$method(handle),
-            t => panic!("HwComponentType {:?} is not a known HCP type", t),
+            HwComponentType::Reg               => Box::new($self.regs            .take(handle)) as Box<dyn HcpBase>,
+            HwComponentType::Wire              => Box::new($self.wires           .take(handle)) as Box<dyn HcpBase>,
+            HwComponentType::IoWire            => Box::new($self.io_wires        .take(handle)) as Box<dyn HcpBase>,
+            HwComponentType::Val               => Box::new($self.vals            .take(handle)) as Box<dyn HcpBase>,
+            HwComponentType::MemBlockIndexer   => Box::new($self.mem_eles        .take(handle)) as Box<dyn HcpBase>,
+            HwComponentType::Expression        => Box::new($self.expressions     .take(handle)) as Box<dyn HcpBase>,
+            HwComponentType::StateReg          => Box::new($self.state_regs      .take(handle)) as Box<dyn HcpBase>,
+            HwComponentType::SyncReg           => Box::new($self.sync_regs       .take(handle)) as Box<dyn HcpBase>,
+            HwComponentType::CntReg            => Box::new($self.cnt_regs        .take(handle)) as Box<dyn HcpBase>,
+            HwComponentType::CondWaitStateReg  => Box::new($self.cond_wait_regs  .take(handle)) as Box<dyn HcpBase>,
+            HwComponentType::CycleWaitStateReg => Box::new($self.cycle_wait_regs .take(handle)) as Box<dyn HcpBase>,
+            HwComponentType::MemBlock          => Box::new($self.mem_blks        .take(handle)) as Box<dyn HcpBase>,
+            t => panic!("HwComponentType {:?} is not HcpBase", t),
         }
     }};
 }
@@ -82,16 +82,7 @@ impl ModelArena {
     // HCP trait-object dispatch (cannot be expressed via take/replace_back
     // because the borrow targets a trait object inside the arena)
     // -----------------------------------------------------------------------
-    pub fn get_hcp_assign      (&self,     ident: &HcpIdent) -> &    dyn HcpAssignable { dispatch_hcp!(self, ident, get    ) }
-    pub fn get_hcp_assign_mut  (&mut self, ident: &HcpIdent) -> &mut dyn HcpAssignable { dispatch_hcp!(self, ident, get_mut) }
-    pub fn get_hcp_readable    (&self,     ident: &HcpIdent) -> &    dyn HcpReadable   { dispatch_hcp!(self, ident, get    ) }
-    pub fn get_hcp_readable_mut(&mut self, ident: &HcpIdent) -> &mut dyn HcpReadable   { dispatch_hcp!(self, ident, get_mut) }
-
-    pub fn get_hcp_ident_mut(&mut self, ident: &HcpIdent) -> &mut dyn HcpIdentMutable { dispatch_hcp_ident!(self, ident, get_mut) }
-
-    pub fn borrow_asb_mut(&mut self, ident: HcpIdent) -> &mut dyn HcpAssignable {
-        self.get_hcp_assign_mut(&ident)
-    }
+    pub fn get_hcp_assign(&self, ident: &HcpIdent) -> &dyn HcpAssignable { dispatch_hcp!(self, ident, get) }
 
     pub fn get_hw_bit_sz(&self, ident: &HcpIdent) -> i32 {
         self.get_hw_slice(ident).get_size()
@@ -130,4 +121,11 @@ impl ModelArena {
     pub fn replace_back_cnt_reg  (&mut self, v: CntReg)     { let h = *v.get_arena_handle(); self.cnt_regs   .replace_back(h, v) }
     pub fn replace_back_cond_wait_reg (&mut self, v: CondWaitStateReg)  { let h = *v.get_arena_handle(); self.cond_wait_regs .replace_back(h, v) }
     pub fn replace_back_cycle_wait_reg(&mut self, v: CycleWaitStateReg) { let h = *v.get_arena_handle(); self.cycle_wait_regs.replace_back(h, v) }
+
+    // -----------------------------------------------------------------------
+    // Polymorphic take/replace_back — take uses the macro (ONE match location);
+    // replace_back is zero-match via HcpBase::replace_back_into_arena.
+    // -----------------------------------------------------------------------
+    pub fn take_hcp    (&mut self, hcp_i: HcpIdent) -> Box<dyn HcpBase> { dispatch_hcp!(take self, hcp_i) }
+    pub fn replace_back_hcp(&mut self, v: Box<dyn HcpBase>)              { v.replace_back_into_arena(self); }
 }

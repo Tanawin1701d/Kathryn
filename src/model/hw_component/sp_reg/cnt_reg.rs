@@ -1,16 +1,14 @@
 use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::assign_meta::AssignMeta;
-use crate::model::hw_component::common::hcp_accesible::HcpAccessible;
+use crate::model::hw_component::common::hcp_base::HcpBase;
 use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};
-use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
-use crate::model::hw_component::common::hcp_read::HcpReadable;
+use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HwComponentType};
 use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_INTERNAL_MIN, DEFAULT_UE_PRI_RST};
 use crate::model::model_arena::ModelArena;
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::hw_component::sp_reg::trigger_sig::{HasTriggerSig, TriggerSig};
-use crate::model::hw_component::common::hcp_ident_mut::HcpIdentMutable;
 
 const DEFAULT_UE_PRI_CNT_INC  : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 1;
 const DEFAULT_UE_PRI_CNT_HOLD : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 2;
@@ -203,15 +201,10 @@ impl HasTriggerSig for CntReg {
     fn get_triggers_mut(&mut self) -> &mut TriggerSig { &mut self.triggers }
 }
 
-impl HcpReadable for CntReg {
-    fn get_hcp_rdb_ident(&self) -> HcpIdent { self.ident }
-}
-
 impl HcpAssignable for CntReg {
     fn get_hcp_assign    (&self)     -> &    HcpAssign { &self.assign }
     fn get_hcp_assign_mut(&mut self) -> &mut HcpAssign { &mut self.assign }
 
-    fn get_hcp_asb_ident(&self) -> HcpIdent { self.ident }
     fn retrieve_clk_mode(&self) -> ClockMode { ClockMode::PosEdge }
     fn get_des_slice    (&self) -> Slice     { Slice::new(0, self.cnt_bit_sz) }
     fn get_priority     (&self) -> i32       { DEFAULT_UE_PRI_INTERNAL_MIN }
@@ -221,12 +214,8 @@ impl HcpAssignable for CntReg {
               des_slice: &Option<Slice>,
               src_slice: &Slice,
               arena    : &mut ModelArena) -> AssignMeta {
-        self.gen_asm_meta(srci, des_slice, src_slice, arena)
+        self.gen_asm_meta(self.ident, srci, des_slice, src_slice, arena)
     }
-}
-
-impl HcpAccessible for CntReg {
-    fn get_bit_width(&self) -> usize { self.cnt_bit_sz as usize }
 }
 
 impl Identifiable for CntReg {
@@ -235,6 +224,10 @@ impl Identifiable for CntReg {
     fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
 }
 
-impl HcpIdentMutable for CntReg {
+impl HcpIdentifiable for CntReg {
     fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
+}
+
+impl HcpBase for CntReg {
+    fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) { arena.replace_back_cnt_reg(*self); }
 }

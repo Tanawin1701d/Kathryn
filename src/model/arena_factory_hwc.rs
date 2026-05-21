@@ -1,4 +1,4 @@
-use crate::model::hw_component::common::hcp_ident::HcpIdent;
+use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
 use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::expression::Expression;
@@ -24,7 +24,9 @@ impl ModelArena {
     pub(super) fn stamp_hw_to_parent_module(&mut self, mut i: HcpIdent, is_user: bool) -> HcpIdent {
         let (module_i, stage) = self.peek_module_trace_stack();
         i.set_master_module_i(module_i);
-        *self.get_hcp_ident_mut(&i).get_ident_mut() = i;
+        let mut hcp = self.take_hcp(i);
+        *hcp.get_ident_mut() = i;
+        self.replace_back_hcp(hcp);
         match stage {
             ModuleInitStage::CompInit | ModuleInitStage::FlowBlockInit => {
                 let mut m = self.take_module(module_i);

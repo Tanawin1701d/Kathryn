@@ -1,10 +1,9 @@
 use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::assign_meta::AssignMeta;
-use crate::model::hw_component::common::hcp_accesible::HcpAccessible;
+use crate::model::hw_component::common::hcp_base::HcpBase;
 use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};
-use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
+use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HwComponentType};
 use crate::model::hw_component::sp_reg::trigger_sig::{HasTriggerSig, TriggerSig};
-use crate::model::hw_component::common::hcp_read::HcpReadable;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_INTERNAL_MIN, DEFAULT_UE_PRI_RST};
 
@@ -16,7 +15,6 @@ const DEFAULT_UE_PRI_SR_INT   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 4;
 const DEFAULT_UE_PRI_SR_MRST  : i32 = DEFAULT_UE_PRI_RST;
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::model_arena::ModelArena;
-use crate::model::hw_component::common::hcp_ident_mut::HcpIdentMutable;
 
 /// 1-bit state register.  Mirrors C++ `StateReg`.
 
@@ -134,15 +132,10 @@ impl HasTriggerSig for StateReg {
     fn get_triggers_mut(&mut self) -> &mut TriggerSig { &mut self.triggers }
 }
 
-impl HcpReadable for StateReg {
-    fn get_hcp_rdb_ident(&self) -> HcpIdent { self.ident }
-}
-
 impl HcpAssignable for StateReg {
     fn get_hcp_assign    (&self)     -> &    HcpAssign { &self.assign }
     fn get_hcp_assign_mut(&mut self) -> &mut HcpAssign { &mut self.assign }
 
-    fn get_hcp_asb_ident(&self) -> HcpIdent { self.ident }
     fn retrieve_clk_mode(&self) -> ClockMode { ClockMode::PosEdge }
     fn get_des_slice    (&self) -> Slice     { Slice::new(0, 1) }
     fn get_priority     (&self) -> i32       { DEFAULT_UE_PRI_SR_UNSET }
@@ -156,16 +149,16 @@ impl HcpAssignable for StateReg {
     }
 }
 
-impl HcpAccessible for StateReg {
-    fn get_bit_width(&self) -> usize { 1 }
-}
-
 impl Identifiable for StateReg {
     fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
     fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
 }
 
-impl HcpIdentMutable for StateReg {
+impl HcpIdentifiable for StateReg {
     fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
+}
+
+impl HcpBase for StateReg {
+    fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) { arena.replace_back_state_reg(*self); }
 }

@@ -1,5 +1,3 @@
-pub mod hcp_read;
-pub mod hcp_ident_mut;
 pub mod update_event;
 pub mod update_event_ident;
 pub mod slice;
@@ -8,7 +6,7 @@ pub mod hcp_assign;
 pub mod assign_meta;
 pub mod asm_mode;
 pub mod hcp_ident;
-pub mod hcp_accesible;
+pub mod hcp_base;
 pub mod operation;
 pub mod util;
 pub mod asm_meta_helper;

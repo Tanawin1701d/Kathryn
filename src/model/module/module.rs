@@ -1,7 +1,8 @@
+use std::collections::{HashMap, HashSet};
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::flow_block::flow_block_ident::{FlowBlockIdent, FlowBlockJoinPolicy};
+use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType, HW_TYPES_WITH_UE};
 use crate::model::model_arena::{ModelArena, ModuleInitStage};
-use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
 use crate::model::module::module_ident::ModuleIdent;
 use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
 
@@ -80,6 +81,37 @@ impl Module {
     // -- basic nodes --
     pub fn add_basic_node(&mut self, i: NcpIdent)       { self.basic_nodes_i.push(i); }
     pub fn get_basic_nodes_i(&self) -> &Vec<NcpIdent>   { &self.basic_nodes_i }
+
+    // -- dependency gathering --
+
+    /// Collect all HcpIdents depended on by every HCP registered in this module
+    /// (both internal and user), traversing the full UpdateEvent tree of each pool.
+    /// `self` must already be taken out of the arena so arena is free for HCP access.
+    pub fn gather_dep_hcps(&self, arena: &mut ModelArena, out: &mut HashSet<HcpIdent>) {
+        for &hw_type in HW_TYPES_WITH_UE {
+            for &hcp_i in self.get_internal_hws(hw_type).iter()
+                              .chain(self.get_user_hws(hw_type).iter())
+            {
+                let hcp = arena.take_hcp(hcp_i);
+                hcp.get_update_pool().gather_dep_hcps(arena, out);
+                arena.replace_back_hcp(hcp);
+            }
+        }
+    }
+
+    /// Rewrite every HcpIdent dependency in this module's UpdateEvents according to `map`.
+    /// `self` must already be taken out of the arena so arena is free for HCP access.
+    pub fn remap_dep_hcps(&self, map: &HashMap<HcpIdent, HcpIdent>, arena: &mut ModelArena) {
+        for &hw_type in HW_TYPES_WITH_UE {
+            for &hcp_i in self.get_internal_hws(hw_type).iter()
+                              .chain(self.get_user_hws(hw_type).iter())
+            {
+                let hcp = arena.take_hcp(hcp_i);
+                hcp.get_update_pool().remap_dep_hcps(map, arena);
+                arena.replace_back_hcp(hcp);
+            }
+        }
+    }
 
     // -- build --
 

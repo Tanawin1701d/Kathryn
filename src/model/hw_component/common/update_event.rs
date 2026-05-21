@@ -5,6 +5,7 @@ pub const DEFAULT_UE_PRI_RST           : i32 = i32::MAX;
 pub const DEFAULT_UE_PRI_MIN           : i32 = 0;
 pub const DEFAULT_UE_SUB_PRIORITY_USER : u64 = 0;
 
+use std::collections::{HashMap, HashSet};
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
@@ -84,6 +85,9 @@ pub trait UpdatingEvent: HasUeCommon {
 
     fn is_leaf(&self) -> bool;
     fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena);
+
+    fn gather_dep_hcps(&self, arena: &mut ModelArena, out: &mut HashSet<HcpIdent>);
+    fn remap_dep_hcps (&mut self, map: &HashMap<HcpIdent, HcpIdent>, arena: &mut ModelArena);
 }
 
 
@@ -125,6 +129,12 @@ impl UpdatingEvent for UeBasic {
     fn is_leaf(&self) -> bool { true }
     fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) {
         arena.replace_back_ue_basic(*self);
+    }
+    fn gather_dep_hcps(&self, _arena: &mut ModelArena, out: &mut HashSet<HcpIdent>) {
+        out.insert(*self.get_srci_val());
+    }
+    fn remap_dep_hcps(&mut self, map: &HashMap<HcpIdent, HcpIdent>, _arena: &mut ModelArena) {
+        if let Some(&new_src) = map.get(&self.srci) { self.srci = new_src; }
     }
 }
 
@@ -188,6 +198,20 @@ impl UpdatingEvent for UeGrp {
     fn is_leaf(&self) -> bool { false }
     fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) {
         arena.replace_back_ue_grp(*self);
+    }
+    fn gather_dep_hcps(&self, arena: &mut ModelArena, out: &mut HashSet<HcpIdent>) {
+        for &sub_i in self.get_sub_stmts() {
+            let ue = arena.take_ue(sub_i);
+            ue.gather_dep_hcps(arena, out);
+            arena.replace_back_ue(ue);
+        }
+    }
+    fn remap_dep_hcps(&mut self, map: &HashMap<HcpIdent, HcpIdent>, arena: &mut ModelArena) {
+        for &sub_i in self.get_sub_stmts() {
+            let mut ue = arena.take_ue(sub_i);
+            ue.remap_dep_hcps(map, arena);
+            arena.replace_back_ue(ue);
+        }
     }
 }
 
@@ -257,6 +281,32 @@ impl UpdatingEvent for UeCond {
     fn is_leaf(&self) -> bool { false }
     fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) {
         arena.replace_back_ue_cond(*self);
+    }
+    fn gather_dep_hcps(&self, arena: &mut ModelArena, out: &mut HashSet<HcpIdent>) {
+        for &cond in self.get_conditions() {
+            if let Some(c) = cond { out.insert(c); }
+        }
+        for &sub in self.get_sub_stmts() {
+            if let Some(sub_i) = sub {
+                let ue = arena.take_ue(sub_i);
+                ue.gather_dep_hcps(arena, out);
+                arena.replace_back_ue(ue);
+            }
+        }
+    }
+    fn remap_dep_hcps(&mut self, map: &HashMap<HcpIdent, HcpIdent>, arena: &mut ModelArena) {
+        for cond in self.conditions.iter_mut() {
+            if let Some(c) = cond {
+                if let Some(&new_c) = map.get(c) { *c = new_c; }
+            }
+        }
+        for &sub in self.get_sub_stmts() {
+            if let Some(sub_i) = sub {
+                let mut ue = arena.take_ue(sub_i);
+                ue.remap_dep_hcps(map, arena);
+                arena.replace_back_ue(ue);
+            }
+        }
     }
 }
 
@@ -340,6 +390,26 @@ impl UpdatingEvent for UeSwitch {
     fn is_leaf(&self) -> bool { false }
     fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) {
         arena.replace_back_ue_switch(*self);
+    }
+    fn gather_dep_hcps(&self, arena: &mut ModelArena, out: &mut HashSet<HcpIdent>) {
+        out.insert(*self.get_state_iden());
+        for idx in 0..self.get_match_num() {
+            if let Some(sub_i) = self.get_sub_stmt(idx) {
+                let ue = arena.take_ue(sub_i);
+                ue.gather_dep_hcps(arena, out);
+                arena.replace_back_ue(ue);
+            }
+        }
+    }
+    fn remap_dep_hcps(&mut self, map: &HashMap<HcpIdent, HcpIdent>, arena: &mut ModelArena) {
+        if let Some(&new_state) = map.get(&self.state_iden) { self.state_iden = new_state; }
+        for idx in 0..self.get_match_num() {
+            if let Some(sub_i) = self.get_sub_stmt(idx) {
+                let mut ue = arena.take_ue(sub_i);
+                ue.remap_dep_hcps(map, arena);
+                arena.replace_back_ue(ue);
+            }
+        }
     }
 }
 

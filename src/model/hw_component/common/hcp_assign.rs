@@ -18,10 +18,8 @@ pub trait HcpAssignable {
     /// virtual function
     /// ////////////////
 
-    fn get_hcp_assign(&self)         -> &    HcpAssign;
+    fn get_hcp_assign    (&self)     -> &    HcpAssign;
     fn get_hcp_assign_mut(&mut self) -> &mut HcpAssign;
-
-    fn get_hcp_asb_ident(&self) -> HcpIdent;
 
     // the global clock mode may not equal to the clock mode of this component
     fn retrieve_clk_mode(&self) -> ClockMode;
@@ -52,13 +50,14 @@ pub trait HcpAssignable {
     }
 
     fn gen_asm_meta(&self,
+                    des_i    : HcpIdent,
                     srci     : &HcpIdent,
                     des_slice: &Option<Slice>,
                     src_slice: &Slice,
                     arena    : &mut ModelArena,
     ) -> AssignMeta {
         let uei = self.gen_update_event(srci, des_slice, src_slice, arena);
-        AssignMeta::new(self.get_hcp_asb_ident(), uei, self.retrieve_clk_mode())
+        AssignMeta::new(des_i, uei, self.retrieve_clk_mode())
     }
 
 

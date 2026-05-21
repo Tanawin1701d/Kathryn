@@ -1,4 +1,5 @@
 use std::fmt;
+use std::hash::{Hash, Hasher};
 use crate::common::arena_base::ArenaHandle;
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::module::module_ident::ModuleIdent;
@@ -52,12 +53,24 @@ impl fmt::Display for HwComponentType {
     }
 }
 
-trait HcpIdentifiable: Identifiable {
+// HW types whose HCPs carry an UpdatePool. Module, Nest, and MemBlock are
+// excluded because they are not dispatchable via take_hcp as HcpAssignable.
+pub const HW_TYPES_WITH_UE: &[HwComponentType] = &[
+    HwComponentType::Reg,              HwComponentType::StateReg,
+    HwComponentType::CondWaitStateReg, HwComponentType::CycleWaitStateReg,
+    HwComponentType::CntReg,          HwComponentType::Wire,
+    HwComponentType::Expression,      HwComponentType::Val,
+    HwComponentType::MemBlockIndexer, HwComponentType::SyncReg,
+    HwComponentType::IoWire,
+];
 
-    fn get_iden_base(&self) -> &IdentBase;
-    fn get_iden_base_mut(&mut self) -> &mut IdentBase;
+pub trait HcpIdentifiable: Identifiable {
 
-    fn set_arena_handler(&mut self, arena_handler: ArenaHandle){
+    fn get_iden_base    (&self)     -> &IdentBase     { self.get_ident_base()     }
+    fn get_iden_base_mut(&mut self) -> &mut IdentBase { self.get_ident_base_mut() }
+    fn get_ident_mut    (&mut self) -> &mut HcpIdent;
+
+    fn set_arena_handler(&mut self, arena_handler: ArenaHandle) {
         self.set_arena_handle(arena_handler);
     }
 }
@@ -92,6 +105,12 @@ impl HcpIdent {
         format!("{}_{}_{}", self.hw_type,
                             self.ident_base.get_name(),
                             self.ident_base.get_global_id())
+    }
+}
+
+impl Hash for HcpIdent {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.get_global_id().hash(state);
     }
 }
 

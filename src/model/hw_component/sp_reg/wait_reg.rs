@@ -1,9 +1,8 @@
 use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::assign_meta::AssignMeta;
-use crate::model::hw_component::common::hcp_accesible::HcpAccessible;
+use crate::model::hw_component::common::hcp_base::HcpBase;
 use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};
-use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
-use crate::model::hw_component::common::hcp_read::HcpReadable;
+use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HwComponentType};
 use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_INTERNAL_MAX, DEFAULT_UE_PRI_INTERNAL_MIN, DEFAULT_UE_PRI_RST};
@@ -11,7 +10,6 @@ use crate::model::hw_component::common::util::check_ident_bit_size;
 use crate::model::model_arena::ModelArena;
 use crate::model::hw_component::sp_reg::trigger_sig::{HasTriggerSig, TriggerSig};
 use crate::model::common::identifier::{IdentBase, Identifiable};
-use crate::model::hw_component::common::hcp_ident_mut::HcpIdentMutable;
 
 const DEFAULT_UE_PRI_CW_UNSET : i32 = DEFAULT_UE_PRI_INTERNAL_MIN;
 const DEFAULT_UE_PRI_CW_SET   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 1;
@@ -182,15 +180,10 @@ impl HasTriggerSig for CondWaitStateReg {
     fn get_triggers_mut(&mut self) -> &mut TriggerSig { &mut self.triggers }
 }
 
-impl HcpReadable for CondWaitStateReg {
-    fn get_hcp_rdb_ident(&self) -> HcpIdent { self.ident }
-}
-
 impl HcpAssignable for CondWaitStateReg {
     fn get_hcp_assign    (&self)     -> &    HcpAssign { &self.assign }
     fn get_hcp_assign_mut(&mut self) -> &mut HcpAssign { &mut self.assign }
 
-    fn get_hcp_asb_ident(&self) -> HcpIdent { self.ident }
     fn retrieve_clk_mode(&self) -> ClockMode { ClockMode::ClkFree }
     fn get_des_slice    (&self) -> Slice     { Slice::new(0, 1) }
     fn get_priority     (&self) -> i32       { DEFAULT_UE_PRI_INTERNAL_MIN }
@@ -204,18 +197,18 @@ impl HcpAssignable for CondWaitStateReg {
     }
 }
 
-impl HcpAccessible for CondWaitStateReg {
-    fn get_bit_width(&self) -> usize { 1 }
-}
-
 impl Identifiable for CondWaitStateReg {
     fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
     fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
 }
 
-impl HcpIdentMutable for CondWaitStateReg {
+impl HcpIdentifiable for CondWaitStateReg {
     fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
+}
+
+impl HcpBase for CondWaitStateReg {
+    fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) { arena.replace_back_cond_wait_reg(*self); }
 }
 
 // ---- CycleWaitStateReg ------------------------------------------------------
@@ -474,15 +467,10 @@ impl HasTriggerSig for CycleWaitStateReg {
     fn get_triggers_mut(&mut self) -> &mut TriggerSig { &mut self.triggers }
 }
 
-impl HcpReadable for CycleWaitStateReg {
-    fn get_hcp_rdb_ident(&self) -> HcpIdent { self.ident }
-}
-
 impl HcpAssignable for CycleWaitStateReg {
     fn get_hcp_assign    (&self)     -> &    HcpAssign { &self.assign }
     fn get_hcp_assign_mut(&mut self) -> &mut HcpAssign { &mut self.assign }
 
-    fn get_hcp_asb_ident(&self) -> HcpIdent { self.ident }
     fn retrieve_clk_mode(&self) -> ClockMode { ClockMode::ClkFree }
     fn get_des_slice    (&self) -> Slice     { Slice::new(0, self.total_bit_size) }
     fn get_priority     (&self) -> i32       { DEFAULT_UE_PRI_INTERNAL_MIN }
@@ -496,17 +484,16 @@ impl HcpAssignable for CycleWaitStateReg {
     }
 }
 
-impl HcpAccessible for CycleWaitStateReg {
-    fn get_bit_width(&self) -> usize { self.total_bit_size as usize }
-}
-
 impl Identifiable for CycleWaitStateReg {
     fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
     fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
 }
 
-
-impl HcpIdentMutable for CycleWaitStateReg {
+impl HcpIdentifiable for CycleWaitStateReg {
     fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
+}
+
+impl HcpBase for CycleWaitStateReg {
+    fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) { arena.replace_back_cycle_wait_reg(*self); }
 }

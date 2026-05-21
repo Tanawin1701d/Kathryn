@@ -1,8 +1,12 @@
-use crate::model::hw_component::common::hcp_assign::HcpAssign;
-use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
-use crate::model::hw_component::common::hcp_ident_mut::HcpIdentMutable;
+use crate::model::controller::clock_mode::ClockMode;
+use crate::model::hw_component::common::assign_meta::AssignMeta;
+use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};
+use crate::model::hw_component::common::hcp_base::HcpBase;
+use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HwComponentType};
+use crate::model::hw_component::common::slice::Slice;
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::hw_component::memEle::MemEle;
+use crate::model::model_arena::ModelArena;
 
 #[derive(Default)]
 pub struct MemBlk {
@@ -57,6 +61,21 @@ impl Identifiable for MemBlk {
     fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
 }
 
-impl HcpIdentMutable for MemBlk {
+impl HcpAssignable for MemBlk {
+    fn get_hcp_assign    (&self)     -> &    HcpAssign { panic!("MemBlk is not HcpAssignable") }
+    fn get_hcp_assign_mut(&mut self) -> &mut HcpAssign { panic!("MemBlk is not HcpAssignable") }
+    fn retrieve_clk_mode (&self)     -> ClockMode       { panic!("MemBlk is not HcpAssignable") }
+    fn get_des_slice     (&self)     -> Slice            { panic!("MemBlk is not HcpAssignable") }
+    fn get_priority      (&self)     -> i32              { panic!("MemBlk is not HcpAssignable") }
+    fn do_asm(&self, _: &HcpIdent, _: &Option<Slice>, _: &Slice, _: &mut ModelArena) -> AssignMeta {
+        panic!("MemBlk is not HcpAssignable")
+    }
+}
+
+impl HcpIdentifiable for MemBlk {
     fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
+}
+
+impl HcpBase for MemBlk {
+    fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) { arena.replace_back_mem_blk(*self); }
 }
