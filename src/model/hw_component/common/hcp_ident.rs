@@ -8,24 +8,33 @@ use crate::model::module::module_ident::ModuleIdent;
 #[repr(usize)]
 pub enum HwComponentType {
     #[default]
+    // hw component that UE fully support
     Reg                = 0,
     StateReg           = 1,
     CondWaitStateReg   = 2,
     CycleWaitStateReg  = 3,
     CntReg             = 4,
-    Wire               = 5,
-    Expression         = 6,
+    SyncReg            = 5,
+    Wire               = 6,
     Nest               = 7,
-    Module             = 8,
-    Val                = 9,
-    MemBlock           = 10,
-    MemBlockIndexer    = 11,
-    SyncReg            = 12,
-    IoWire             = 13,
+    Val                = 8,
+    MemBlockIndexer    = 9,
+    // hw component that require manual src check
+    Expression         = 10,
+    // io wire static
+    IoWire             = 11,
+    // no ue support (MemBlockIndexer handles them all)
+    MemBlock           = 12,
 }
 
 impl HwComponentType {
-    pub const COUNT: usize = 14;
+    pub const COUNT          : usize = 13;
+    // First discriminant outside the "UE fully support" group.
+    // All variants with discriminant < UE_BOUNDARY carry an UpdatePool.
+    // To add a new UE type: insert it in the enum before Expression and increment this.
+    pub const UE_BOUNDARY    : usize = 10;
+    // To add a new manual-dep type: append to HW_TYPES_WITH_MAN_DEP and increment this.
+    pub const MAN_DEP_COUNT  : usize = 1;
 
     pub fn global_prefix(self) -> &'static str {
         match self {
@@ -34,15 +43,14 @@ impl HwComponentType {
             Self::CondWaitStateReg  => "SR_CDWT",
             Self::CycleWaitStateReg => "SR_CYWT",
             Self::CntReg            => "CNT_REG",
-            Self::Wire              => "WIRE",
-            Self::Expression        => "EXPR",
-            Self::Nest              => "NEST",
-            Self::Module            => "MODULE",
-            Self::Val               => "VAL",
-            Self::MemBlock          => "MEM_BLOCK",
-            Self::MemBlockIndexer   => "MEM_BLOCK_INDEXER",
             Self::SyncReg           => "SR_SY",
+            Self::Wire              => "WIRE",
+            Self::Nest              => "NEST",
+            Self::Val               => "VAL",
+            Self::MemBlockIndexer   => "MEM_BLOCK_INDEXER",
+            Self::Expression        => "EXPR",
             Self::IoWire            => "IO_WIRE",
+            Self::MemBlock          => "MEM_BLOCK",
         }
     }
 }
@@ -53,15 +61,19 @@ impl fmt::Display for HwComponentType {
     }
 }
 
-// HW types whose HCPs carry an UpdatePool. Module, Nest, and MemBlock are
-// excluded because they are not dispatchable via take_hcp as HcpAssignable.
-pub const HW_TYPES_WITH_UE: &[HwComponentType] = &[
+// Length is enforced to equal UE_BOUNDARY at compile time — if you add a new
+// UE type, bump UE_BOUNDARY and append the variant here; a mismatch won't compile.
+pub const HW_TYPES_WITH_UE: [HwComponentType; HwComponentType::UE_BOUNDARY] = [
     HwComponentType::Reg,              HwComponentType::StateReg,
     HwComponentType::CondWaitStateReg, HwComponentType::CycleWaitStateReg,
-    HwComponentType::CntReg,          HwComponentType::Wire,
-    HwComponentType::Expression,      HwComponentType::Val,
-    HwComponentType::MemBlockIndexer, HwComponentType::SyncReg,
-    HwComponentType::IoWire,
+    HwComponentType::CntReg,          HwComponentType::SyncReg,
+    HwComponentType::Wire,            HwComponentType::Nest,
+    HwComponentType::Val,             HwComponentType::MemBlockIndexer,
+];
+
+// Length enforced at compile time — add a new manual-dep type here and bump MAN_DEP_COUNT.
+pub const HW_TYPES_WITH_MAN_DEP: [HwComponentType; HwComponentType::MAN_DEP_COUNT] = [
+    HwComponentType::Expression,
 ];
 
 pub trait HcpIdentifiable: Identifiable {

@@ -88,7 +88,7 @@ impl Module {
     /// (both internal and user), traversing the full UpdateEvent tree of each pool.
     /// `self` must already be taken out of the arena so arena is free for HCP access.
     pub fn gather_dep_hcps(&self, arena: &mut ModelArena, out: &mut HashSet<HcpIdent>) {
-        for &hw_type in HW_TYPES_WITH_UE {
+        for &hw_type in &HW_TYPES_WITH_UE {
             for &hcp_i in self.get_internal_hws(hw_type).iter()
                               .chain(self.get_user_hws(hw_type).iter())
             {
@@ -102,7 +102,7 @@ impl Module {
     /// Rewrite every HcpIdent dependency in this module's UpdateEvents according to `map`.
     /// `self` must already be taken out of the arena so arena is free for HCP access.
     pub fn remap_dep_hcps(&self, map: &HashMap<HcpIdent, HcpIdent>, arena: &mut ModelArena) {
-        for &hw_type in HW_TYPES_WITH_UE {
+        for &hw_type in &HW_TYPES_WITH_UE {
             for &hcp_i in self.get_internal_hws(hw_type).iter()
                               .chain(self.get_user_hws(hw_type).iter())
             {
