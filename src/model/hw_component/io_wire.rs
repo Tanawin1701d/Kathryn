@@ -12,35 +12,51 @@ use crate::model::hw_component::common::hcp_ident_mut::HcpIdentMutable;
 
 #[derive(Default)]
 pub struct IoWire {
-    assign   : HcpAssign,
-    ident    : HcpIdent,
-    bit_width: i32,
-    is_input : bool,
+    assign             : HcpAssign,
+    ident              : HcpIdent,
+    bit_width          : i32,
+    is_input           : bool,
+    // The logical signal this IoWire represents (used for reuse checks).
+    actual_src_signal_i: HcpIdent,
+    // The signal actually wired in bind_src (may differ, e.g. a boundary proxy).
+    agent_src_signal_i : HcpIdent,
 }
 
 impl IoWire {
-    pub fn new(is_user_com: bool, name    : &str,
-               is_input   : bool, src_i   : HcpIdent,
-               arena      : &mut ModelArena) -> Self {
+    pub fn new(is_user_com      : bool,
+               name             : &str,
+               is_input         : bool,
+               actual_src_i     : HcpIdent,
+               agent_src_i      : HcpIdent,
+               arena            : &mut ModelArena) -> Self {
 
-        let bit_width = arena.get_hw_bit_sz(&src_i);
-        let src_slice = arena.get_hw_slice(&src_i);
+        let bit_width = arena.get_hw_bit_sz(&agent_src_i);
+        let src_slice = arena.get_hw_slice(&agent_src_i);
         let des_slice = Some(src_slice);
 
         let mut io_wire = IoWire {
-            assign   : HcpAssign::new(),
-            ident    : HcpIdent::new(HwComponentType::IoWire, is_user_com, name),
+            assign             : HcpAssign::new(),
+            ident              : HcpIdent::new(HwComponentType::IoWire, is_user_com, name),
             bit_width,
             is_input,
+            actual_src_signal_i: actual_src_i,
+            agent_src_signal_i : agent_src_i,
         };
 
-        io_wire.bind_src(&src_i, &des_slice, &src_slice, arena);
+        io_wire.bind_src(&agent_src_i, &des_slice, &src_slice, arena);
 
         io_wire
     }
 
-    pub fn get_ident(&self) -> HcpIdent { self.ident }
-    pub fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
+    pub fn get_ident               (&self)     -> HcpIdent      { self.ident }
+    pub fn get_ident_mut           (&mut self) -> &mut HcpIdent { &mut self.ident }
+    pub fn get_is_input            (&self)     -> bool           { self.is_input }
+    pub fn get_actual_src_signal_i (&self)     -> HcpIdent      { self.actual_src_signal_i }
+    pub fn get_agent_src_signal_i  (&self)     -> HcpIdent      { self.agent_src_signal_i }
+
+    pub fn matches_signal(&self, actual_src_signal: HcpIdent, is_input: bool) -> bool {
+        self.is_input == is_input && self.actual_src_signal_i == actual_src_signal
+    }
 
     pub fn bind_src(&mut self, src_i: &HcpIdent, des_slice: &Option<Slice>, src_slice: &Slice, arena: &mut ModelArena) {
         let ue = self.gen_update_event(src_i, des_slice, src_slice, arena);

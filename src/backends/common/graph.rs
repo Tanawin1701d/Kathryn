@@ -1,3 +1,4 @@
+use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::model_arena::ModelArena;
 use crate::model::module::module_ident::ModuleIdent;
 
@@ -39,4 +40,14 @@ pub fn find_common_ancestor_module_paths(
 
 
     (path_a, path_b)
+}
+
+/// Convenience wrapper: resolves the master module of each HcpIdent, then
+/// delegates to `find_common_ancestor_module_paths`.
+pub fn find_common_ancestor_module_paths_from_hcp(
+    arena : &ModelArena,
+    a     : HcpIdent,
+    b     : HcpIdent,
+) -> (Vec<ModuleIdent>, Vec<ModuleIdent>) {
+    find_common_ancestor_module_paths(arena, a.get_master_module_i(), b.get_master_module_i())
 }

@@ -58,8 +58,8 @@ impl ModelArena {
 
     // ---- IoWire -------------------------------------------------------------
 
-    pub fn make_io_wire(&mut self, is_user_com: bool, name: &str, is_input: bool, src_i: HcpIdent) -> HcpIdent {
-        let w = IoWire::new(is_user_com, name, is_input, src_i, self);
+    pub fn make_io_wire(&mut self, is_user_com: bool, name: &str, is_input: bool, actual_src_i: HcpIdent, agent_src_i: HcpIdent) -> HcpIdent {
+        let w = IoWire::new(is_user_com, name, is_input, actual_src_i, agent_src_i, self);
         let i = self.add_io_wire(w);
         self.stamp_hw_to_parent_module(i, is_user_com)
     }
