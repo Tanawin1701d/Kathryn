@@ -2,6 +2,42 @@ use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::model_arena::ModelArena;
 use crate::model::module::module_ident::ModuleIdent;
 
+// ---- Module-tree traversal ----
+
+/// Lazy DFS iterator over the module subtree rooted at `root_i`.
+/// Yields each `ModuleIdent` in pre-order (parent before children,
+/// siblings in declaration order).
+///
+/// The arena is **not** stored inside the struct — it is passed in on each
+/// `next_module` call.  This means the arena borrow is held only for the
+/// duration of one step, leaving it free for callers to use between steps.
+///
+/// ```ignore
+/// let mut iter = DfsModuleIter::new(top_i);
+/// while let Some(module_i) = iter.next_module(arena) {
+///     do_work(module_i, arena);   // arena is free here
+/// }
+/// ```
+pub struct DfsModuleIter {
+    stack : Vec<ModuleIdent>,
+}
+
+impl DfsModuleIter {
+    pub fn new(root_i: ModuleIdent) -> Self {
+        Self { stack: vec![root_i] }
+    }
+
+    /// Advance one step; returns the next module or `None` when exhausted.
+    pub fn next_module(&mut self, arena: &mut ModelArena) -> Option<ModuleIdent> {
+        let cur_i  = self.stack.pop()?;
+        let module = arena.take_module(cur_i);
+        let children : Vec<ModuleIdent> = module.get_user_sub_modules().clone();
+        arena.replace_back_module(cur_i, module);
+        for &child_i in children.iter().rev() { self.stack.push(child_i); }
+        Some(cur_i)
+    }
+}
+
 fn get_parent_module_ident(arena: &ModelArena, i: ModuleIdent) -> ModuleIdent {
     arena.get_module_ident_by_handle(i.get_master_module_handle())
 }
@@ -51,3 +87,4 @@ pub fn find_common_ancestor_module_paths_from_hcp(
 ) -> (Vec<ModuleIdent>, Vec<ModuleIdent>) {
     find_common_ancestor_module_paths(arena, a.get_master_module_i(), b.get_master_module_i())
 }
+

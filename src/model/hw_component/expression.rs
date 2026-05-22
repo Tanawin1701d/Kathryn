@@ -1,3 +1,4 @@
+use std::collections::{HashMap, HashSet};
 use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::asm_mode::get_asm_pri_val;
 use crate::model::hw_component::common::assign_meta::AssignMeta;
@@ -123,7 +124,7 @@ impl HcpAssignable for Expression {
               des_slice: &Option<Slice>,
               src_slice: &Slice,
               arena    : &mut ModelArena) -> AssignMeta {
-        self.gen_asm_meta(self.ident, srci, des_slice, src_slice, arena)
+        panic!("Expression::do_asm — not implemented")
     }
 }
 
@@ -139,4 +140,21 @@ impl HcpIdentifiable for Expression {
 
 impl HcpBase for Expression {
     fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) { arena.replace_back_expression(*self); }
+
+    /// Expressions depend on their operands directly, not on UEs in the update pool.
+    fn gather_dep_hcps(&self, _arena: &mut ModelArena, out: &mut HashSet<HcpIdent>) {
+        if let Some(a_i) = self.operand_a { out.insert(a_i); }
+        if let Some(b_i) = self.operand_b { out.insert(b_i); }
+    }
+
+    /// Remap operand handles according to `map`.
+    fn remap_dep_hcps(&mut self, map: &HashMap<HcpIdent, HcpIdent>, _arena: &mut ModelArena) {
+        for opt in [&mut self.operand_a, &mut self.operand_b] {
+            if let Some(des_opr_i) = opt {
+                if let Some(&src_opr_i) = map.get(des_opr_i) {
+                    *des_opr_i = src_opr_i;
+                }
+            }
+        }
+    }
 }

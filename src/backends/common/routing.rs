@@ -1,3 +1,5 @@
+use std::collections::{HashMap, HashSet};
+use crate::backends::common::graph::{find_common_ancestor_module_paths, DfsModuleIter};
 use crate::backends::common::io_op::{build_io_wire, find_reusable_io_wire};
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::model_arena::ModelArena;
@@ -9,7 +11,6 @@ use crate::model::module::module_ident::ModuleIdent;
 fn route_io_base(
     input_paths      : &mut Vec<ModuleIdent>,
     output_paths     : &mut Vec<ModuleIdent>,
-    des_i            : HcpIdent,
     actual_src_i     : HcpIdent,
     model_arena      :  &mut ModelArena,
 ) -> HcpIdent {
@@ -47,11 +48,52 @@ fn route_io_base(
     input_agent_wire_i
 }
 
+fn route_io_hw_comp(
+    actual_src_i : HcpIdent,
+    des_mod_i    : ModuleIdent,
+    model_arena  : &mut ModelArena,
+) -> HcpIdent {
+    let src_mod_i = actual_src_i.get_master_module_i();
+    let (mut input_paths, mut output_paths) =
+        find_common_ancestor_module_paths(model_arena, des_mod_i, src_mod_i);
+    // new input io for the des module
+    let new_des_io_i = route_io_base(&mut input_paths, &mut output_paths, actual_src_i, model_arena);
+    new_des_io_i
+}
 
-fn route_io_module(
-    module_i   : ModuleIdent,
-    model_arena:  &mut ModelArena
 
-){
+fn route_and_remap_io_module(
+    module_i    : ModuleIdent,
+    model_arena : &mut ModelArena,
+) {
+    let module = model_arena.take_module(module_i);
 
+    // 1. gather all deps from every HCP in this module
+    let mut deps: HashSet<HcpIdent> = HashSet::new();
+    module.gather_dep_hcps(model_arena, &mut deps);
+
+    // 2. route each cross-module dep; build old → new-io-wire map
+    let mut remap: HashMap<HcpIdent, HcpIdent> = HashMap::new();
+    for dep_i in deps {
+        if dep_i.get_master_module_i() != module_i {
+            let io_wire_i = route_io_hw_comp(dep_i, module_i, model_arena);
+            remap.insert(dep_i, io_wire_i);
+        }
+    }
+
+    // 3. rewrite all dep handles inside the module to point at the new IoWires
+    module.remap_dep_hcps(&remap, model_arena);
+
+    model_arena.replace_back_module(module_i, module);
+}
+
+
+fn route_and_remap_io_model(model_arena: &mut ModelArena) {
+    let top_i = model_arena.get_top_module()
+        .expect("route_and_remap_io_model: no top module set");
+
+    let mut iter = DfsModuleIter::new(top_i);
+    while let Some(module_i) = iter.next_module(model_arena) {
+        route_and_remap_io_module(module_i, model_arena);
+    }
 }

@@ -93,7 +93,7 @@ impl Module {
                               .chain(self.get_user_hws(hw_type).iter())
             {
                 let hcp = arena.take_hcp(hcp_i);
-                hcp.get_update_pool().gather_dep_hcps(arena, out);
+                hcp.gather_dep_hcps(arena, out);
                 arena.replace_back_hcp(hcp);
             }
         }
@@ -106,8 +106,8 @@ impl Module {
             for &hcp_i in self.get_internal_hws(hw_type).iter()
                               .chain(self.get_user_hws(hw_type).iter())
             {
-                let hcp = arena.take_hcp(hcp_i);
-                hcp.get_update_pool().remap_dep_hcps(map, arena);
+                let mut hcp = arena.take_hcp(hcp_i);
+                hcp.remap_dep_hcps(map, arena);
                 arena.replace_back_hcp(hcp);
             }
         }
