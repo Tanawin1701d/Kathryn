@@ -116,8 +116,9 @@ impl UeBasic {
 
     pub fn ident      (&self) -> UpdateEventIdent { self.ident      }
     pub fn ue_common  (&self) -> &UeCommon        { &self.ue_common }
-    pub fn get_des_slice(&self) -> &Slice         { &self.des_slice }
-    pub fn get_srci_val (&self) -> &HcpIdent      { &self.srci      }
+    pub fn get_des_slice(&self) -> &Slice    { &self.des_slice }
+    pub fn get_src_slice(&self) -> &Slice    { &self.src_slice }
+    pub fn get_srci_val (&self) -> &HcpIdent { &self.srci      }
 }
 
 impl HasUeCommon for UeBasic {

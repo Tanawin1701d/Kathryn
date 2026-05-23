@@ -71,7 +71,8 @@ impl CntReg {
 
     pub fn get_ident(&self) -> HcpIdent { self.ident }
     pub fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
-    pub fn get_loop_cnt(&self) -> i32 { self.last_cycle }
+    pub fn get_loop_cnt  (&self) -> i32 { self.last_cycle }
+    pub fn get_cnt_bit_sz(&self) -> i32 { self.cnt_bit_sz }
     pub fn generate_end_expr(&self) -> HcpIdent {
         self.at_last_expr.expect("build_support_signal must be called before generate_end_expr")
     }

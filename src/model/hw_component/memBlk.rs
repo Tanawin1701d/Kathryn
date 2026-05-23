@@ -39,8 +39,10 @@ impl MemBlk {
         MemBlk::new(true, name, bit_width, index_width)
     }
 
-    pub fn get_ident(&self) -> HcpIdent { self.ident }
-    pub fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
+    pub fn get_ident      (&self)     -> HcpIdent      { self.ident }
+    pub fn get_ident_mut  (&mut self) -> &mut HcpIdent { &mut self.ident }
+    pub fn get_bit_width  (&self)     -> i32            { self.bit_width   }
+    pub fn get_index_width(&self)     -> i32            { self.index_width }
 
     pub fn create_op(&mut self,
                      is_user_com: bool,
