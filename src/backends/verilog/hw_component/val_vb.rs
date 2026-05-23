@@ -16,4 +16,6 @@ impl HcpBaseVb for Val {
         // TODO: emit constant value inline (Val has no UE pool)
         String::new()
     }
+
+    fn replace_back_into_arena_vb(self: Box<Self>, arena: &mut ModelArena) { arena.replace_back_val(*self); }
 }

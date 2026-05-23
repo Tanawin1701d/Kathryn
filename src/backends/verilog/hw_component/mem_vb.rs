@@ -25,6 +25,8 @@ impl HcpBaseVb for MemBlk {
         // TODO: transpile memory UpdatePool UEs into an always block
         String::new()
     }
+
+    fn replace_back_into_arena_vb(self: Box<Self>, arena: &mut ModelArena) { arena.replace_back_mem_blk(*self); }
 }
 
 // ---- MemEle (MemBlockIndexer) ----
@@ -40,4 +42,6 @@ impl HcpBaseVb for MemEle {
         // TODO: emit assign mem[index] for the indexed read/write accessor
         String::new()
     }
+
+    fn replace_back_into_arena_vb(self: Box<Self>, arena: &mut ModelArena) { arena.replace_back_mem_ele(*self); }
 }

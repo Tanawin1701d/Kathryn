@@ -30,4 +30,6 @@ impl HcpBaseVb for Reg {
 
         format!("always @({}) begin\n{}end\n", sens, body)
     }
+
+    fn replace_back_into_arena_vb(self: Box<Self>, arena: &mut ModelArena) { arena.replace_back_reg(*self); }
 }

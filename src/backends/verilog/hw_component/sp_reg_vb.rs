@@ -23,6 +23,8 @@ impl HcpBaseVb for StateReg {
     fn gen_procedure_blk(&self, _idx: u32, arena: &mut ModelArena) -> String {
         gen_clocked_blk(self, arena)
     }
+
+    fn replace_back_into_arena_vb(self: Box<Self>, arena: &mut ModelArena) { arena.replace_back_state_reg(*self); }
 }
 
 // ---- SyncReg ----
@@ -38,6 +40,8 @@ impl HcpBaseVb for SyncReg {
     fn gen_procedure_blk(&self, _idx: u32, arena: &mut ModelArena) -> String {
         gen_clocked_blk(self, arena)
     }
+
+    fn replace_back_into_arena_vb(self: Box<Self>, arena: &mut ModelArena) { arena.replace_back_sync_reg(*self); }
 }
 
 // ---- CntReg ----
@@ -53,6 +57,8 @@ impl HcpBaseVb for CntReg {
     fn gen_procedure_blk(&self, _idx: u32, arena: &mut ModelArena) -> String {
         gen_clocked_blk(self, arena)
     }
+
+    fn replace_back_into_arena_vb(self: Box<Self>, arena: &mut ModelArena) { arena.replace_back_cnt_reg(*self); }
 }
 
 // ---- CondWaitStateReg (1-bit) ----
@@ -68,6 +74,8 @@ impl HcpBaseVb for CondWaitStateReg {
     fn gen_procedure_blk(&self, _idx: u32, arena: &mut ModelArena) -> String {
         gen_clocked_blk(self, arena)
     }
+
+    fn replace_back_into_arena_vb(self: Box<Self>, arena: &mut ModelArena) { arena.replace_back_cond_wait_reg(*self); }
 }
 
 // ---- CycleWaitStateReg ----
@@ -83,6 +91,8 @@ impl HcpBaseVb for CycleWaitStateReg {
     fn gen_procedure_blk(&self, _idx: u32, arena: &mut ModelArena) -> String {
         gen_clocked_blk(self, arena)
     }
+
+    fn replace_back_into_arena_vb(self: Box<Self>, arena: &mut ModelArena) { arena.replace_back_cycle_wait_reg(*self); }
 }
 
 // ---- Shared helper ----
