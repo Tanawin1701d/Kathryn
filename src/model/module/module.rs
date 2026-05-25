@@ -40,8 +40,6 @@ impl Module {
         }
     }
 
-    pub fn mk(name: &str) -> Self { Self::new(true, false, name) }
-
     pub fn get_ident    (&self)              -> ModuleIdent { self.ident }
     pub fn set_ident    (&mut self, i: ModuleIdent)        { self.ident = i; }
 
@@ -94,6 +92,20 @@ impl Module {
             {
                 let hcp = arena.take_hcp(hcp_i);
                 hcp.gather_dep_hcps(arena, out);
+                arena.replace_back_hcp(hcp);
+            }
+        }
+    }
+
+    /// Sort the UpdatePool of every HCP in this module by priority then sub-priority.
+    /// `self` must already be taken out of the arena so arena is free for HCP access.
+    pub fn sort_update_event_pool(&self, arena: &mut ModelArena) {
+        for &hw_type in &HW_TYPES_WITH_UE {
+            for &hcp_i in self.get_internal_hws(hw_type).iter()
+                              .chain(self.get_user_hws(hw_type).iter())
+            {
+                let mut hcp = arena.take_hcp(hcp_i);
+                hcp.sort_events(arena);
                 arena.replace_back_hcp(hcp);
             }
         }

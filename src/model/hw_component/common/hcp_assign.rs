@@ -68,6 +68,13 @@ pub trait HcpAssignable {
     fn get_update_pool(&self) -> &UpdatePool {
         &self.get_hcp_assign().update_pool
     }
+
+    // Sort the update pool by priority then sub-priority using the arena for key lookup.
+    fn sort_events(&mut self, arena: &ModelArena) {
+        self.get_hcp_assign_mut().update_pool.sort_events(arena);
+    }
+
+
 }
 
 /*
