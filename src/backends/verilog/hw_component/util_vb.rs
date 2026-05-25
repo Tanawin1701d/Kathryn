@@ -7,6 +7,7 @@ use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::model_arena::ModelArena;
+use crate::util::file::file_writer::FileWriter;
 
 // ---- Width / Slice helpers ----
 
@@ -106,7 +107,7 @@ pub fn sensitivity_list(clk_mode: ClockMode) -> String {
 
 // ---- Clocked always-block builder ----
 
-/// Build an `always @(sensitivity) begin … end` block from an HCP's UE pool.
+/// Write an `always @(sensitivity) begin … end` block from an HCP's UE pool into fw.
 /// Shared by `Reg`, all sp_reg types, and any other clocked HCP that uses the
 /// standard `{DES_SLICE} <= {SRC}` assignment template.
 ///
@@ -116,19 +117,19 @@ pub fn gen_procedure_blk(
     hcp      : &(impl HcpBaseVb + HcpAssignable),
     active_i : HcpIdent,
     arena    : &mut ModelArena,
-) -> String {
+    fw       : &mut FileWriter,
+) {
     let pool = hcp.get_update_pool();
-    if pool.get_update_events().is_empty() { return String::new(); }
+    if pool.get_update_events().is_empty() { return; }
 
     let active_name = hcp.gen_var_name();
     let clk_mode    = pool.get_clock_mode(arena).unwrap_or(ClockMode::ClkFree);
     let sens        = sensitivity_list(clk_mode);
     let tmpl        = format!("{active_name}{{DES_SLICE}} <= {{SRC}};");
-    let mut body    = String::new();
 
+    fw.write(&format!("always @({sens}) begin\n"));
     for &ue_i in pool.get_update_events() {
-        body += &transpile_ue(ue_i, vec![tmpl.clone()], 4, arena, active_i, &active_name);
+        transpile_ue(ue_i, vec![tmpl.clone()], 4, arena, active_i, &active_name, fw);
     }
-
-    format!("always @({sens}) begin\n{body}end\n")
+    fw.write("end\n");
 }

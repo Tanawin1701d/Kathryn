@@ -1,9 +1,10 @@
-use crate::backends::verilog::hw_component::util_vb::signal_width;
 use crate::backends::verilog::hw_component::common::hcp_base_vb::HcpBaseVb;
+use crate::backends::verilog::hw_component::util_vb::signal_width;
 use crate::model::common::identifier::Identifiable;
 use crate::model::hw_component::common::hcp_assign::HcpAssignable;
 use crate::model::hw_component::val::Val;
 use crate::model::model_arena::ModelArena;
+use crate::util::file::file_writer::FileWriter;
 use crate::util::math::vary_val::VaryVal;
 
 // ---- literal formatter ----
@@ -37,11 +38,11 @@ impl HcpBaseVb for Val {
     fn amt_init_line(&self) -> u32   { 1 }
 
     /// Full declaration line: `localparam [N-1:0] NAME = VALUE;`
-    fn gen_init_line(&self, _idx: u32, _arena: &mut ModelArena) -> String {
-        let t   = self.gen_type();
+    fn gen_init_line(&self, _idx: u32, _arena: &mut ModelArena, fw: &mut FileWriter) {
+        let t    = self.gen_type();
         let name = self.gen_var_name();
         let val  = vary_val_to_verilog(self.get_value());
-        format!("{t} {name} = {val};")
+        fw.write(&format!("{t} {name} = {val};"));
     }
 
     fn replace_back_into_arena_vb(self: Box<Self>, arena: &mut ModelArena) { arena.replace_back_val(*self); }

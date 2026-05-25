@@ -8,6 +8,7 @@ use crate::model::hw_component::sp_reg::state_reg::StateReg;
 use crate::model::hw_component::sp_reg::sync_reg::SyncReg;
 use crate::model::hw_component::sp_reg::wait_reg::{CondWaitStateReg, CycleWaitStateReg};
 use crate::model::model_arena::ModelArena;
+use crate::util::file::file_writer::FileWriter;
 
 // All register-family types share the same HcpBaseVb shape:
 //   - gen_type   : "reg [N-1:0] " from get_des_slice().get_size()
@@ -22,9 +23,9 @@ macro_rules! impl_reg_vb {
             fn amt_init_line    (&self) -> u32    { 1 }
             fn amt_precedure_blk(&self) -> u32    { 1 }
 
-            fn gen_init_line    (&self, _idx: u32, _arena: &mut ModelArena) -> String { String::new() }
-            fn gen_procedure_blk(&self, _idx: u32,  arena: &mut ModelArena) -> String {
-                gen_procedure_blk(self, self.get_ident(), arena)
+            fn gen_init_line    (&self, _idx: u32, _arena: &mut ModelArena, _fw: &mut FileWriter) { /* regs need no init declaration */ }
+            fn gen_procedure_blk(&self, _idx: u32,  arena: &mut ModelArena,  fw: &mut FileWriter) {
+                gen_procedure_blk(self, self.get_ident(), arena, fw)
             }
 
             fn replace_back_into_arena_vb(self: Box<Self>, arena: &mut ModelArena) { arena.$replace_back(*self); }
