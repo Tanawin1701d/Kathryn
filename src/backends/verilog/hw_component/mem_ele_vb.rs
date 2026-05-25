@@ -9,12 +9,12 @@ use crate::model::model_arena::ModelArena;
 use crate::util::file::file_writer::FileWriter;
 
 impl HcpBaseVb for MemEle {
-    fn gen_type         (&self) -> String { let w = signal_width(self.get_des_slice().get_size()); format!("wire {w}") }
-    fn gen_var_name     (&self) -> String { self.get_global_name().to_string() }
-    fn amt_precedure_blk(&self) -> u32    { 1 }
+    fn gen_type_vb         (&self) -> String { let w = signal_width(self.get_des_slice().get_size()); format!("wire {w}") }
+    fn gen_var_name_vb     (&self) -> String { self.get_global_name().to_string() }
+    fn amt_precedure_blk_vb(&self) -> u32    { 1 }
 
-    fn gen_procedure_blk(&self, _idx: u32, arena: &mut ModelArena, fw: &mut FileWriter) {
-        let name        = self.gen_var_name();
+    fn gen_procedure_blk_vb(&self, _idx: u32, arena: &mut ModelArena, fw: &mut FileWriter) {
+        let name        = self.gen_var_name_vb();
         let master_name = self.get_master_mem_blk_i().get_global_name().to_string();
         let index_name  = self.get_index_ident().get_global_name().to_string();
 
@@ -29,7 +29,7 @@ impl HcpBaseVb for MemEle {
         if pool.get_update_events().is_empty() { return; }
 
         let active_i    = self.get_ident();
-        let active_name = self.gen_var_name();
+        let active_name = self.gen_var_name_vb();
         let clk_mode    = pool.get_clock_mode(arena).unwrap_or(ClockMode::ClkFree);
         let sens        = sensitivity_list(clk_mode);
 

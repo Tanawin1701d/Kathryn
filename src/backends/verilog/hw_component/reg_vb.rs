@@ -11,20 +11,20 @@ use crate::model::model_arena::ModelArena;
 use crate::util::file::file_writer::FileWriter;
 
 // All register-family types share the same HcpBaseVb shape:
-//   - gen_type   : "reg [N-1:0] " from get_des_slice().get_size()
-//   - gen_var_name: plain global name
+//   - gen_type_vb   : "reg [N-1:0] " from get_des_slice().get_size()
+//   - gen_var_name_vb: plain global name
 //   - 1 init line (empty), 1 procedure block (clocked)
 //   - replace_back varies per concrete type → macro injects the one differing call
 macro_rules! impl_reg_vb {
     ($T:ty, $replace_back:ident) => {
         impl HcpBaseVb for $T {
-            fn gen_type         (&self) -> String { let w = signal_width(self.get_des_slice().get_size()); format!("reg {w}") }
-            fn gen_var_name     (&self) -> String { self.get_global_name().to_string() }
-            fn amt_init_line    (&self) -> u32    { 1 }
-            fn amt_precedure_blk(&self) -> u32    { 1 }
+            fn gen_type_vb         (&self) -> String { let w = signal_width(self.get_des_slice().get_size()); format!("reg {w}") }
+            fn gen_var_name_vb     (&self) -> String { self.get_global_name().to_string() }
+            fn amt_init_line_vb    (&self) -> u32    { 1 }
+            fn amt_precedure_blk_vb(&self) -> u32    { 1 }
 
-            fn gen_init_line    (&self, _idx: u32, _arena: &mut ModelArena, _fw: &mut FileWriter) { /* regs need no init declaration */ }
-            fn gen_procedure_blk(&self, _idx: u32,  arena: &mut ModelArena,  fw: &mut FileWriter) {
+            fn gen_init_line_vb    (&self, _idx: u32, _arena: &mut ModelArena, _fw: &mut FileWriter) { /* regs need no init declaration */ }
+            fn gen_procedure_blk_vb(&self, _idx: u32,  arena: &mut ModelArena,  fw: &mut FileWriter) {
                 gen_procedure_blk(self, self.get_ident(), arena, fw)
             }
 

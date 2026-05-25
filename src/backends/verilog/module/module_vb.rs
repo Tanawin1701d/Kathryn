@@ -50,9 +50,9 @@ impl Module {
 
         for &io_i in &self.collect_hcp_idents(HwComponentType::IoWire) {
             let vb = arena.take_hcp_vb(io_i);
-            for idx in 0..vb.amt_io_line() {
+            for idx in 0..vb.amt_io_line_vb() {
                 fw.write("    ");
-                vb.gen_io_line(idx, arena, fw);
+                vb.gen_io_line_vb(idx, arena, fw);
                 fw.write(",\n");
             }
             arena.replace_back_hcp_vb(vb);
@@ -67,8 +67,8 @@ impl Module {
             if hw_type == HwComponentType::IoWire { continue; }
             for &hcp_i in &self.collect_hcp_idents(hw_type) {
                 let vb = arena.take_hcp_vb(hcp_i);
-                for idx in 0..vb.amt_init_line() {
-                    vb.gen_init_line(idx, arena, fw);
+                for idx in 0..vb.amt_init_line_vb() {
+                    vb.gen_init_line_vb(idx, arena, fw);
                     fw.write("\n");
                 }
                 arena.replace_back_hcp_vb(vb);
@@ -82,8 +82,8 @@ impl Module {
         for hw_type in all_hw_types() {
             for &hcp_i in &self.collect_hcp_idents(hw_type) {
                 let vb = arena.take_hcp_vb(hcp_i);
-                for idx in 0..vb.amt_precedure_blk() {
-                    vb.gen_procedure_blk(idx, arena, fw);
+                for idx in 0..vb.amt_precedure_blk_vb() {
+                    vb.gen_procedure_blk_vb(idx, arena, fw);
                     fw.write("\n");
                 }
                 arena.replace_back_hcp_vb(vb);

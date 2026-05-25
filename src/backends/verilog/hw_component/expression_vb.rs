@@ -8,23 +8,23 @@ use crate::model::model_arena::ModelArena;
 use crate::util::file::file_writer::FileWriter;
 
 impl HcpBaseVb for Expression {
-    fn gen_type         (&self) -> String { format!("wire {}", signal_width(self.get_des_slice().get_size())) }
-    fn gen_var_name     (&self) -> String { self.get_global_name().to_string() }
-    fn amt_init_line    (&self) -> u32    { 1 }
-    fn amt_precedure_blk(&self) -> u32    { 1 }
+    fn gen_type_vb         (&self) -> String { format!("wire {}", signal_width(self.get_des_slice().get_size())) }
+    fn gen_var_name_vb     (&self) -> String { self.get_global_name().to_string() }
+    fn amt_init_line_vb    (&self) -> u32    { 1 }
+    fn amt_precedure_blk_vb(&self) -> u32    { 1 }
 
-    fn gen_init_line(&self, _idx: u32, _arena: &mut ModelArena, fw: &mut FileWriter) {
-        let ty   = self.gen_type();
-        let name = self.gen_var_name();
+    fn gen_init_line_vb(&self, _idx: u32, _arena: &mut ModelArena, fw: &mut FileWriter) {
+        let ty   = self.gen_type_vb();
+        let name = self.gen_var_name_vb();
         fw.write(&format!("{ty} {name};"));
     }
 
-    fn gen_procedure_blk(&self, _idx: u32, arena: &mut ModelArena, fw: &mut FileWriter) {
+    fn gen_procedure_blk_vb(&self, _idx: u32, arena: &mut ModelArena, fw: &mut FileWriter) {
         if !self.is_value_assigned() { return; }
 
         // Hoist once — all fmt_operand calls in this block share the same active context.
         let active_i    = self.get_ident();
-        let active_name = self.gen_var_name();
+        let active_name = self.gen_var_name_vb();
 
         let a_i   = match self.get_operand_a() { Some(x) => x, None => return };
         let a_str = fmt_operand(a_i, self.get_operand_a_slice(), arena, active_i, &active_name);
@@ -81,7 +81,7 @@ impl HcpBaseVb for Expression {
             }
         };
 
-        let name = self.gen_var_name();
+        let name = self.gen_var_name_vb();
         fw.write(&format!("assign {name} = {rhs};\n"));
     }
 

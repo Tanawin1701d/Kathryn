@@ -85,7 +85,7 @@ pub fn fmt_operand(
         active_name.to_string()
     } else {
         let vb   = arena.take_hcp_vb(opr);
-        let name = vb.gen_var_name();
+        let name = vb.gen_var_name_vb();
         arena.replace_back_hcp_vb(vb);
         name
     };
@@ -122,7 +122,7 @@ pub fn gen_procedure_blk(
     let pool = hcp.get_update_pool();
     if pool.get_update_events().is_empty() { return; }
 
-    let active_name = hcp.gen_var_name();
+    let active_name = hcp.gen_var_name_vb();
     let clk_mode    = pool.get_clock_mode(arena).unwrap_or(ClockMode::ClkFree);
     let sens        = sensitivity_list(clk_mode);
     let tmpl        = format!("{active_name}{{DES_SLICE}} <= {{SRC}};");
