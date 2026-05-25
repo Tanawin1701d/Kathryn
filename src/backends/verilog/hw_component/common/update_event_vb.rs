@@ -1,5 +1,5 @@
-use crate::backends::verilog::hw_component::util_vb::slice_to_verilog;
-use crate::model::common::identifier::Identifiable;
+use crate::backends::verilog::hw_component::util_vb::{fmt_operand, slice_to_verilog};
+use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::update_event::{UeBasic, UeCond, UeGrp, UeSwitch};
 use crate::model::hw_component::common::update_event_ident::UpdateEventIdent;
 use crate::model::model_arena::ModelArena;
@@ -8,14 +8,16 @@ use crate::model::model_arena::ModelArena;
 
 pub trait VerilogUpdateEvent {
 
-    // op_template is the template string used to placed as main operation in update event
-    // it may have many pattern such as des_val{DES_SLICE} <= {SRC_VAL}{SRC_SLICE};
-    // the transpile will build the precedure block and fill DES_SLICE pattern
+    // op_template contains the destination lvalue with placeholders:
+    //   `des_val{DES_SLICE} <= {SRC};`
+    // transpile fills {DES_SLICE} from the UE's des_slice and {SRC} from fmt_operand.
     fn transpile(
         &self,
         op_templates: Vec<String>,
         front_space : u32,
         arena       : &mut ModelArena,
+        active_i    : HcpIdent, // HCP currently taken from arena by the caller
+        active_name : &str,     // gen_var_name() of active_i (can't re-take it)
     ) -> String;
 
     // Each concrete type puts itself back into the correct typed arena slot.
@@ -31,9 +33,11 @@ pub fn transpile_ue(
     op_templates: Vec<String>,
     front_space : u32,
     arena       : &mut ModelArena,
+    active_i    : HcpIdent,
+    active_name : &str,
 ) -> String {
     let ue = arena.take_ue_vb(ue_i);
-    let s  = ue.transpile(op_templates, front_space, arena);
+    let s  = ue.transpile(op_templates, front_space, arena, active_i, active_name);
     ue.replace_back_into_arena_vb(arena);
     s
 }
@@ -46,19 +50,22 @@ impl VerilogUpdateEvent for UeBasic {
         &self,
         op_templates: Vec<String>,
         front_space : u32,
-        _arena      : &mut ModelArena,
+        arena       : &mut ModelArena,
+        active_i    : HcpIdent,
+        active_name : &str,
     ) -> String {
         let sp        = " ".repeat(front_space as usize);
         let des_slice = slice_to_verilog(self.get_des_slice());
-        let src_slice = slice_to_verilog(self.get_src_slice());
-        let src_name  = self.get_srci_val().get_global_name();
+        // Resolve the source name via gen_var_name() — respects per-type name overrides.
+        let src_str   = fmt_operand(
+            *self.get_srci_val(), Some(*self.get_src_slice()), arena, active_i, active_name,
+        );
 
         let mut out = String::new();
         for tmpl in &op_templates {
             let line = tmpl.replace("{DES_SLICE}", &des_slice)
-                           .replace("{SRC_VAL}",   src_name)
-                           .replace("{SRC_SLICE}", &src_slice);
-            out += &format!("{}{}\n", sp, line);
+                           .replace("{SRC}",       &src_str);
+            out += &format!("{sp}{line}\n");
         }
         out
     }
@@ -78,9 +85,11 @@ impl VerilogUpdateEvent for UeGrp {
         op_templates: Vec<String>,
         front_space : u32,
         arena       : &mut ModelArena,
+        active_i    : HcpIdent,
+        active_name : &str,
     ) -> String {
         self.get_sub_stmts().iter().map(|&sub_i| {
-            transpile_ue(sub_i, op_templates.clone(), front_space, arena)
+            transpile_ue(sub_i, op_templates.clone(), front_space, arena, active_i, active_name)
         }).collect()
     }
 
@@ -100,6 +109,8 @@ impl VerilogUpdateEvent for UeCond {
         op_templates: Vec<String>,
         front_space : u32,
         arena       : &mut ModelArena,
+        active_i    : HcpIdent,
+        active_name : &str,
     ) -> String {
         let sp      = " ".repeat(front_space as usize);
         let n       = self.get_conditions().len();
@@ -112,26 +123,32 @@ impl VerilogUpdateEvent for UeCond {
             // ---- open branch ----
             if i == 0 {
                 match cond_opt {
-                    Some(c) => out += &format!("{}if ({}) begin\n", sp, c.get_global_name()),
-                    None    => out += &format!("{}begin\n", sp),
+                    Some(c) => {
+                        let c_str = fmt_operand(*c, None, arena, active_i, active_name);
+                        out += &format!("{sp}if ({c_str}) begin\n");
+                    }
+                    None    => out += &format!("{sp}begin\n"),
                 }
             } else {
                 match cond_opt {
-                    Some(c) => out += &format!(" else if ({}) begin\n", c.get_global_name()),
+                    Some(c) => {
+                        let c_str = fmt_operand(*c, None, arena, active_i, active_name);
+                        out += &format!(" else if ({c_str}) begin\n");
+                    }
                     None    => out += " else begin\n",
                 }
             }
 
             // ---- body ----
             if let Some(sub_i) = stmt_opt {
-                out += &transpile_ue(*sub_i, op_templates.clone(), front_space + 4, arena);
+                out += &transpile_ue(*sub_i, op_templates.clone(), front_space + 4, arena, active_i, active_name);
             }
 
             // ---- close branch ----
             if i < n - 1 {
-                out += &format!("{}end", sp); // no newline — next iter prepends " else"
+                out += &format!("{sp}end"); // no newline — next iter prepends " else"
             } else {
-                out += &format!("{}end\n", sp);
+                out += &format!("{sp}end\n");
             }
         }
 
@@ -153,22 +170,24 @@ impl VerilogUpdateEvent for UeSwitch {
         op_templates: Vec<String>,
         front_space : u32,
         arena       : &mut ModelArena,
+        active_i    : HcpIdent,
+        active_name : &str,
     ) -> String {
         let sp      = " ".repeat(front_space as usize);
         let case_sp = " ".repeat((front_space + 4) as usize);
-        let state   = self.get_state_iden().get_global_name();
-        let mut out = format!("{}case ({})\n", sp, state);
+        let state   = fmt_operand(*self.get_state_iden(), None, arena, active_i, active_name);
+        let mut out = format!("{sp}case ({state})\n");
 
         for i in 0..self.get_match_num() {
             let val = self.get_sub_stmt_match_idx(i);
-            out += &format!("{}{}: begin\n", case_sp, val);
+            out += &format!("{case_sp}{val}: begin\n");
             if let Some(sub_i) = self.get_sub_stmt(i) {
-                out += &transpile_ue(sub_i, op_templates.clone(), front_space + 8, arena);
+                out += &transpile_ue(sub_i, op_templates.clone(), front_space + 8, arena, active_i, active_name);
             }
-            out += &format!("{}end\n", case_sp);
+            out += &format!("{case_sp}end\n");
         }
 
-        out += &format!("{}endcase\n", sp);
+        out += &format!("{sp}endcase\n");
         out
     }
 

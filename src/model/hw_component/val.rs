@@ -31,8 +31,9 @@ impl Val {
         Val::new(true, name, bit_width, 0)
     }
 
-    pub fn get_ident(&self) -> HcpIdent { self.ident }
-    pub fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
+    pub fn get_ident    (&self)     -> HcpIdent       { self.ident }
+    pub fn get_ident_mut(&mut self) -> &mut HcpIdent  { &mut self.ident }
+    pub fn get_value    (&self)     -> &VaryVal        { &self.value }
 }
 
 

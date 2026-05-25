@@ -1,35 +1,40 @@
 use crate::backends::verilog::hw_component::common::hcp_base_vb::HcpBaseVb;
-use crate::backends::verilog::hw_component::common::update_event_vb::transpile_ue;
-use crate::backends::verilog::hw_component::util_vb::{reg_width, sensitivity_list};
+use crate::backends::verilog::hw_component::util_vb::{gen_procedure_blk, signal_width};
 use crate::model::common::identifier::Identifiable;
-use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::hcp_assign::HcpAssignable;
 use crate::model::hw_component::reg::Reg;
+use crate::model::hw_component::sp_reg::cnt_reg::CntReg;
+use crate::model::hw_component::sp_reg::state_reg::StateReg;
+use crate::model::hw_component::sp_reg::sync_reg::SyncReg;
+use crate::model::hw_component::sp_reg::wait_reg::{CondWaitStateReg, CycleWaitStateReg};
 use crate::model::model_arena::ModelArena;
 
-impl HcpBaseVb for Reg {
-    fn gen_type         (&self) -> String { format!("reg {}", reg_width(self.get_des_slice().get_size())) }
-    fn gen_var_name     (&self) -> String { self.get_global_name().to_string() }
-    fn amt_init_line    (&self) -> u32    { 1 }
-    fn amt_precedure_blk(&self) -> u32    { 1 }
+// All register-family types share the same HcpBaseVb shape:
+//   - gen_type   : "reg [N-1:0] " from get_des_slice().get_size()
+//   - gen_var_name: plain global name
+//   - 1 init line (empty), 1 procedure block (clocked)
+//   - replace_back varies per concrete type → macro injects the one differing call
+macro_rules! impl_reg_vb {
+    ($T:ty, $replace_back:ident) => {
+        impl HcpBaseVb for $T {
+            fn gen_type         (&self) -> String { let w = signal_width(self.get_des_slice().get_size()); format!("reg {w}") }
+            fn gen_var_name     (&self) -> String { self.get_global_name().to_string() }
+            fn amt_init_line    (&self) -> u32    { 1 }
+            fn amt_precedure_blk(&self) -> u32    { 1 }
 
-    fn gen_init_line    (&self, _idx: u32, _arena: &mut ModelArena) -> String { String::new() }
+            fn gen_init_line    (&self, _idx: u32, _arena: &mut ModelArena) -> String { String::new() }
+            fn gen_procedure_blk(&self, _idx: u32,  arena: &mut ModelArena) -> String {
+                gen_procedure_blk(self, self.get_ident(), arena)
+            }
 
-    fn gen_procedure_blk(&self, _idx: u32, arena: &mut ModelArena) -> String {
-        let pool = self.get_update_pool();
-        if pool.get_update_events().is_empty() { return String::new(); }
-
-        let clk_mode  = pool.get_clock_mode(arena).unwrap_or(ClockMode::ClkFree);
-        let sens      = sensitivity_list(clk_mode);
-        let tmpl      = format!("{}{}", self.gen_var_name(), "{DES_SLICE} <= {SRC_VAL}{SRC_SLICE};");
-        let mut body  = String::new();
-
-        for &ue_i in pool.get_update_events() {
-            body += &transpile_ue(ue_i, vec![tmpl.clone()], 4, arena);
+            fn replace_back_into_arena_vb(self: Box<Self>, arena: &mut ModelArena) { arena.$replace_back(*self); }
         }
-
-        format!("always @({}) begin\n{}end\n", sens, body)
-    }
-
-    fn replace_back_into_arena_vb(self: Box<Self>, arena: &mut ModelArena) { arena.replace_back_reg(*self); }
+    };
 }
+
+impl_reg_vb!(Reg,               replace_back_reg           );
+impl_reg_vb!(StateReg,          replace_back_state_reg     );
+impl_reg_vb!(SyncReg,           replace_back_sync_reg      );
+impl_reg_vb!(CntReg,            replace_back_cnt_reg       );
+impl_reg_vb!(CondWaitStateReg,  replace_back_cond_wait_reg );
+impl_reg_vb!(CycleWaitStateReg, replace_back_cycle_wait_reg);

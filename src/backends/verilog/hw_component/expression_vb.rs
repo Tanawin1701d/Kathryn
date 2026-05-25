@@ -1,5 +1,5 @@
+use crate::backends::verilog::hw_component::util_vb::{fmt_operand, logic_op_to_verilog, signal_width};
 use crate::backends::verilog::hw_component::common::hcp_base_vb::HcpBaseVb;
-use crate::backends::verilog::hw_component::util_vb::{reg_width, slice_to_verilog};
 use crate::model::common::identifier::Identifiable;
 use crate::model::hw_component::common::hcp_assign::HcpAssignable;
 use crate::model::hw_component::common::operation::LogicOp;
@@ -7,37 +7,81 @@ use crate::model::hw_component::expression::Expression;
 use crate::model::model_arena::ModelArena;
 
 impl HcpBaseVb for Expression {
-    fn gen_type         (&self) -> String { format!("wire {}", reg_width(self.get_des_slice().get_size())) }
+    fn gen_type         (&self) -> String { format!("wire {}", signal_width(self.get_des_slice().get_size())) }
     fn gen_var_name     (&self) -> String { self.get_global_name().to_string() }
     fn amt_init_line    (&self) -> u32    { 1 }
     fn amt_precedure_blk(&self) -> u32    { 1 }
 
-    fn gen_init_line    (&self, _idx: u32, _arena: &mut ModelArena) -> String {
-        format!("{} {};", self.gen_type(), self.gen_var_name())
+    fn gen_init_line(&self, _idx: u32, _arena: &mut ModelArena) -> String {
+        let ty   = self.gen_type();
+        let name = self.gen_var_name();
+        format!("{ty} {name};")
     }
 
-    fn gen_procedure_blk(&self, _idx: u32, _arena: &mut ModelArena) -> String {
+    fn gen_procedure_blk(&self, _idx: u32, arena: &mut ModelArena) -> String {
         if !self.is_value_assigned() { return String::new(); }
 
-        let a_i     = match self.get_operand_a() { Some(x) => x, None => return String::new() };
-        let a_slice = self.get_operand_a_slice().unwrap_or_default();
-        let a_str   = format!("{}{}", a_i.get_global_name(), slice_to_verilog(&a_slice));
+        // Hoist once — all fmt_operand calls in this block share the same active context.
+        let active_i    = self.get_ident();
+        let active_name = self.gen_var_name();
 
-        let rhs = if self.get_op() == LogicOp::Assign {
-            // simple wire-through — no operator
-            a_str
-        } else if self.get_op().is_single_opr() {
-            // prefix unary: ~a, !a
-            format!("{}{}", self.get_op().to_op_str(), a_str)
-        } else {
-            // binary: a OP b
-            let b_i     = match self.get_operand_b() { Some(x) => x, None => return String::new() };
-            let b_slice = self.get_operand_b_slice().unwrap_or_default();
-            let b_str   = format!("{}{}", b_i.get_global_name(), slice_to_verilog(&b_slice));
-            format!("{} {} {}", a_str, self.get_op().to_op_str(), b_str)
+        let a_i   = match self.get_operand_a() { Some(x) => x, None => return String::new() };
+        let a_str = fmt_operand(a_i, self.get_operand_a_slice(), arena, active_i, &active_name);
+
+        let rhs = match self.get_op() {
+
+            // ---- wire-through: no operator token ----
+            LogicOp::Assign => a_str,
+
+            // ---- prefix unary: ~a, !a ----
+            op if op.is_single_opr() => {
+                let op_tok = logic_op_to_verilog(op);
+                format!("{op_tok}{a_str}")
+            }
+
+            // ---- signed relational: $signed(a) < $signed(b) ----
+            LogicOp::RelationSlt | LogicOp::RelationSgt => {
+                let b_i    = match self.get_operand_b() { Some(x) => x, None => return String::new() };
+                let b_str  = fmt_operand(b_i, self.get_operand_b_slice(), arena, active_i, &active_name);
+                let op_tok = logic_op_to_verilog(self.get_op());
+                format!("$signed({a_str}) {op_tok} $signed({b_str})")
+            }
+
+            // ---- bit extension: {{ext_count{fill}}, a[slice]} ----
+            // operand_b is the fill bit (e.g. sign bit); defaults to 1'b0 for zero extension.
+            // ext_count = result width − source slice width.
+            LogicOp::ExtendBit => {
+                let bit_width    = self.get_des_slice().get_size();
+                let a_slice_size = self.get_operand_a_slice()
+                                       .map_or(bit_width, |s| s.get_size());
+                let ext_count    = bit_width - a_slice_size;
+
+                if ext_count <= 0 {
+                    // source already covers the full width — no padding needed
+                    a_str
+                } else {
+                    let fill = match self.get_operand_b() {
+                        Some(b_i) => fmt_operand(b_i, self.get_operand_b_slice(), arena, active_i, &active_name),
+                        None      => "1'b0".to_string(),
+                    };
+                    // Verilog: {{ext_count{fill}}, a_str}
+                    // Two-step to sidestep Rust's brace-escape rules.
+                    let repl = format!("{ext_count}{{{fill}}}");  // e.g. "3{1'b0}"
+                    format!("{{{{{repl}}}, {a_str}}}")            // e.g. "{{3{1'b0}}, sig[3:0]}"
+                }
+            }
+
+            // ---- generic binary: a OP b ----
+            op => {
+                let b_i    = match self.get_operand_b() { Some(x) => x, None => return String::new() };
+                let b_str  = fmt_operand(b_i, self.get_operand_b_slice(), arena, active_i, &active_name);
+                let op_tok = logic_op_to_verilog(op);
+                format!("{a_str} {op_tok} {b_str}")
+            }
         };
 
-        format!("assign {} = {};\n", self.gen_var_name(), rhs)
+        let name = self.gen_var_name();
+        format!("assign {name} = {rhs};\n")
     }
 
     fn replace_back_into_arena_vb(self: Box<Self>, arena: &mut ModelArena) { arena.replace_back_expression(*self); }

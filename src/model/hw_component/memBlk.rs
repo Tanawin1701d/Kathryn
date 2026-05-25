@@ -50,7 +50,7 @@ impl MemBlk {
                      index_ident: HcpIdent,
                      is_read    : bool) -> HcpIdent {
         // TODO add to arena
-        let mem_ele = MemEle::new(is_user_com, name, index_ident, self.bit_width, is_read);
+        let mem_ele = MemEle::new(is_user_com, name, self.ident, index_ident, self.bit_width, is_read);
         let ident   = mem_ele.get_ident();
         self.mem_ele_track_vec.push(ident);
         ident

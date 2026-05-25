@@ -75,8 +75,8 @@ impl ModelArena {
 
     // ---- MemEle -------------------------------------------------------------
 
-    pub fn make_mem_ele(&mut self, is_user_com: bool, name: &str, index_ident: HcpIdent, bit_width: i32, is_read: bool) -> HcpIdent {
-        let i = self.add_mem_ele(MemEle::new(is_user_com, name, index_ident, bit_width, is_read));
+    pub fn make_mem_ele(&mut self, is_user_com: bool, name: &str, master_mem_blk_i: HcpIdent, index_ident: HcpIdent, bit_width: i32, is_read: bool) -> HcpIdent {
+        let i = self.add_mem_ele(MemEle::new(is_user_com, name, master_mem_blk_i, index_ident, bit_width, is_read));
         self.stamp_hw_to_parent_module(i, is_user_com)
     }
 
