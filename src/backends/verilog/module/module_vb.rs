@@ -24,14 +24,15 @@ impl Module {
 
     // ---- Verilog module file generation — master ----
 
-    // Master emitter: glues all five phases into a complete `module … endmodule` block.
+    // Master emitter: glues all phases into a complete `module … endmodule` block.
     // `self` must already be taken from the arena so arena is free for HCP access.
     pub fn gen_module_blk(&self, arena: &mut ModelArena, fw: &mut FileWriter) {
-        self.gen_module_header   (arena, fw);
-        self.gen_var_declarations(arena, fw);
-        self.gen_procedure_blks  (arena, fw);
-        self.gen_sub_module_insts(arena, fw);
-        self.gen_module_footer   (       fw);
+        self.gen_module_header        (arena, fw);
+        self.gen_var_declarations     (arena, fw);
+        self.gen_var_sub_mod_decls    (arena, fw);
+        self.gen_procedure_blks       (arena, fw);
+        self.gen_sub_module_insts     (arena, fw);
+        self.gen_module_footer        (       fw);
     }
 
     // ---- Verilog module file generation — per-phase helpers ----
@@ -52,16 +53,16 @@ impl Module {
         // Emits:  "    portA,\n    portB,\n    portC\n);\n"
         let mut need_comma = false;
         for &io_i in &self.collect_hcp_idents(HwComponentType::IoWire) {
-            let vb = arena.take_hcp_vb(io_i);                          // take → arena is free
+            let vb = arena.take_hcp_vb(io_i);  // take → arena is free
             for idx in 0..vb.amt_io_line_vb() {
-                if need_comma { fw.write(",\n"); }                      // finish previous line
+                if need_comma { fw.write(",\n"); }            // finish previous line
                 fw.write("    ");
-                vb.gen_io_line_vb(idx, arena, fw);                     // write port (no newline yet)
+                vb.gen_io_line_vb(idx, arena, fw);                      // write port (no newline yet)
                 need_comma = true;
             }
-            arena.replace_back_hcp_vb(vb);                             // return to arena
+            arena.replace_back_hcp_vb(vb);                       // return to arena
         }
-        if need_comma { fw.write("\n"); }                               // close last port (no comma)
+        if need_comma { fw.write("\n"); }                     // close last port (no comma)
         fw.write(");\n\n");
     }
 
@@ -80,8 +81,18 @@ impl Module {
                 arena.replace_back_hcp_vb(vb);
             }
         }
-        self.gen_for_master_module_output_wire(arena, fw);
         fw.write("\n");
+    }
+
+    // Phase 2.5 — wire declarations for every sub-module's output ports.
+    // Each sub-module is taken from the arena so arena is free inside gen_var_sub_mod_declaration.
+    fn gen_var_sub_mod_decls(&self, arena: &mut ModelArena, fw: &mut FileWriter) {
+        let sub_ids = self.get_user_sub_modules().clone();
+        for sub_i in sub_ids {
+            let sub_module = arena.take_module(sub_i);
+            sub_module.gen_var_sub_mod_declaration(arena, fw);
+            arena.replace_back_module(sub_i, sub_module);
+        }
     }
 
     // Phase 3 — always blocks and assign statements for every HCP.
@@ -103,7 +114,7 @@ impl Module {
         let sub_ids = self.get_user_sub_modules().clone();
         for sub_i in sub_ids {
             let sub_module = arena.take_module(sub_i);
-            sub_module.gen_as_sub_module_dec(arena, fw);
+            sub_module.gen_inst_sub_module_declaration(arena, fw);
             arena.replace_back_module(sub_i, sub_module);
         }
     }
@@ -132,10 +143,11 @@ impl Module {
     // Emit the named-port instantiation block for this module inside its parent.
     // Input ports wire to their agent_src (already in parent scope via routing);
     // output ports drive an implicit wire in the parent whose name matches the port.
-    pub fn gen_as_sub_module_dec(&self, arena: &mut ModelArena, fw: &mut FileWriter) {
+    pub fn gen_inst_sub_module_declaration(&self, arena: &mut ModelArena, fw: &mut FileWriter) {
         let mod_name = self.get_mod_name();
         fw.write(&format!("{mod_name}  {mod_name} (\n"));
 
+        let mut need_comma = false;
         for &io_i in &self.collect_hcp_idents(HwComponentType::IoWire) {
             let io_wire   = arena.take_io_wire(io_i);
             let port_name = io_wire.gen_var_name_vb();
@@ -144,17 +156,20 @@ impl Module {
             } else {
                 io_wire.gen_var_name_vb()               // output: port name IS the wire in parent scope
             };
-            fw.write(&format!("    .{port_name}({connected}),\n"));
+            if need_comma { fw.write(",\n"); }
+            fw.write(&format!("    .{port_name}({connected})"));
             arena.replace_back_io_wire(io_wire);
+            need_comma = true;
         }
+        if need_comma { fw.write("\n"); }
         fw.write(");\n");
     }
 
-    // Declare sub-module output ports as wires in the parent scope.
-    // Output ports are driven by the child; the parent only needs the net name for
+    // Declare this module's output ports as wires in the parent scope.
+    // Output ports are driven by this child; the parent only needs the net name for
     // connectivity.  Input ports are omitted — they are driven by parent signals
-    // that are already declared in the parent's own var-declaration block.
-    fn gen_for_master_module_output_wire(&self, arena: &mut ModelArena, fw: &mut FileWriter) {
+    // already declared in the parent's own var-declaration block.
+    fn gen_var_sub_mod_declaration(&self, arena: &mut ModelArena, fw: &mut FileWriter) {
         // The routing pass already registered each sub-module output as an IoWire
         // on *this* (the master) module — no need to dive into sub-modules.
         let io_idents = self.collect_hcp_idents(HwComponentType::IoWire);
