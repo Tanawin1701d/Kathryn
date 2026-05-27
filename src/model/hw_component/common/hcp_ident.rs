@@ -28,13 +28,19 @@ pub enum HwComponentType {
 }
 
 impl HwComponentType {
-    pub const COUNT          : usize = 13;
-    // First discriminant outside the "UE fully support" group.
-    // All variants with discriminant < UE_BOUNDARY carry an UpdatePool.
     // To add a new UE type: insert it in the enum before Expression and increment this.
     pub const UE_BOUNDARY    : usize = 10;
     // To add a new manual-dep type: append to HW_TYPES_WITH_MAN_DEP and increment this.
     pub const MAN_DEP_COUNT  : usize = 1;
+    // To add a new IO wire type: append to HW_TYPES_IO_WIRE and increment this.
+    pub const IO_WIRE_COUNT  : usize = 1;
+    // To add a new memory block type: append to HW_TYPES_MEM_BLK and increment this.
+    pub const MEM_BLK_COUNT  : usize = 1;
+    // Derived — never edit directly; bump the group count above instead.
+    pub const COUNT          : usize = Self::UE_BOUNDARY
+                                     + Self::MAN_DEP_COUNT
+                                     + Self::IO_WIRE_COUNT
+                                     + Self::MEM_BLK_COUNT;
 
     pub fn global_prefix(self) -> &'static str {
         match self {
@@ -64,17 +70,53 @@ impl fmt::Display for HwComponentType {
 // Length is enforced to equal UE_BOUNDARY at compile time — if you add a new
 // UE type, bump UE_BOUNDARY and append the variant here; a mismatch won't compile.
 pub const HW_TYPES_WITH_UE: [HwComponentType; HwComponentType::UE_BOUNDARY] = [
-    HwComponentType::Reg,              HwComponentType::StateReg,
+    HwComponentType::Reg             , HwComponentType::StateReg,
     HwComponentType::CondWaitStateReg, HwComponentType::CycleWaitStateReg,
-    HwComponentType::CntReg,          HwComponentType::SyncReg,
-    HwComponentType::Wire,            HwComponentType::Nest,
-    HwComponentType::Val,             HwComponentType::MemBlockIndexer,
+    HwComponentType::CntReg          , HwComponentType::SyncReg,
+    HwComponentType::Wire            , HwComponentType::Nest,
+    HwComponentType::Val             , HwComponentType::MemBlockIndexer,
 ];
 
 // Length enforced at compile time — add a new manual-dep type here and bump MAN_DEP_COUNT.
 pub const HW_TYPES_WITH_MAN_DEP: [HwComponentType; HwComponentType::MAN_DEP_COUNT] = [
     HwComponentType::Expression,
 ];
+
+// Length enforced at compile time — add a new IO wire type here and bump IO_WIRE_COUNT.
+pub const HW_TYPES_IO_WIRE: [HwComponentType; HwComponentType::IO_WIRE_COUNT] = [
+    HwComponentType::IoWire,
+];
+
+// Length enforced at compile time — add a new memory block type here and bump MEM_BLK_COUNT.
+pub const HW_TYPES_MEM_BLK: [HwComponentType; HwComponentType::MEM_BLK_COUNT] = [
+    HwComponentType::MemBlock,
+];
+
+// Every variant in discriminant order.
+// Length == COUNT is enforced at compile time; COUNT itself is derived from the group counts,
+// so adding a variant to any group and bumping its count automatically tightens this check.
+// Array concatenation (concat4 etc.) requires generic_const_exprs (nightly-only), so the
+// entries are listed manually — but COUNT can no longer silently lie.
+pub const ALL_HW_TYPES: [HwComponentType; HwComponentType::COUNT] = [
+    // UE group (UE_BOUNDARY entries)
+    HwComponentType::Reg,               HwComponentType::StateReg,
+    HwComponentType::CondWaitStateReg,  HwComponentType::CycleWaitStateReg,
+    HwComponentType::CntReg,            HwComponentType::SyncReg,
+    HwComponentType::Wire,              HwComponentType::Nest,
+    HwComponentType::Val,               HwComponentType::MemBlockIndexer,
+    // manual-dep group (MAN_DEP_COUNT entries)
+    HwComponentType::Expression,
+    // IO wire group (IO_WIRE_COUNT entries)
+    HwComponentType::IoWire,
+    // memory block group (MEM_BLK_COUNT entries)
+    HwComponentType::MemBlock,
+];
+
+pub fn all_hw_types() -> impl Iterator<Item = HwComponentType> {
+    ALL_HW_TYPES.iter().copied()
+}
+
+
 
 pub trait HcpIdentifiable: Identifiable {
 

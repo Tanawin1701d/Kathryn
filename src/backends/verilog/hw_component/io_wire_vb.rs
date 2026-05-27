@@ -10,6 +10,7 @@ impl HcpBaseVb for IoWire {
     fn gen_type_vb         (&self) -> String { let w = signal_width(self.get_des_slice().get_size()); format!("wire {w}") }
     fn gen_var_name_vb     (&self) -> String { self.get_global_name().to_string() }
     fn amt_io_line_vb      (&self) -> u32    { 1 }
+    fn amt_init_line_vb(&self)     -> u32    { 1 }
     fn amt_precedure_blk_vb(&self) -> u32    { if self.get_is_input() { 0 } else { 1 } }
 
     // Emit the Verilog port direction + type, e.g. `output wire [7:0] foo_out`.
@@ -20,7 +21,11 @@ impl HcpBaseVb for IoWire {
         fw.write(&format!("{dir} wire {w}{name}"));
     }
 
-    fn gen_init_line_vb(&self, _idx: u32, _arena: &mut ModelArena, _fw: &mut FileWriter) { /* IO wires have no internal init declaration */ }
+    fn gen_init_line_vb(&self, _idx: u32, _arena: &mut ModelArena, _fw: &mut FileWriter) {
+        let t = self.gen_type_vb();
+        let n = self.gen_var_name_vb();
+        _fw.write(&format!("{t} {n};"));
+    }
 
     // Input ports are driven externally — no always block.
     // Output ports emit a combinational always block that routes agent_src_signal.
@@ -30,4 +35,18 @@ impl HcpBaseVb for IoWire {
     }
 
     fn replace_back_into_arena_vb(self: Box<Self>, arena: &mut ModelArena) { arena.replace_back_io_wire(*self); }
+}
+
+
+impl IoWire {
+
+    pub(crate) fn gen_agent_input_vb(&self, arena: &mut ModelArena) -> String {
+        assert!(self.get_is_input(), "gen_agent_input_vb called on output IoWire");
+        let agent_i = self.get_agent_src_signal_i();
+        let vb      = arena.take_hcp_vb(agent_i);
+        let name    = vb.gen_var_name_vb();
+        arena.replace_back_hcp_vb(vb);
+        name
+    }
+
 }
