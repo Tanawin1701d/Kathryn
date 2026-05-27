@@ -11,13 +11,13 @@ impl Module {
 
     // Sort every HCP's UpdatePool in this module and recurse into sub-modules.
     // `self` must already be taken from the arena so arena is free for sub-module access.
-    pub fn init_hw_component_vb(&self, arena: &mut ModelArena) {
+    pub fn init_module_vb(&self, arena: &mut ModelArena) {
         self.sort_update_event_pool(arena);
 
         let sub_module_ids = self.get_user_sub_modules().clone();
         for sub_module_i in sub_module_ids {
             let sub_module = arena.take_module(sub_module_i);
-            sub_module.init_hw_component_vb(arena);
+            sub_module.init_module_vb(arena);
             arena.replace_back_module(sub_module_i, sub_module);
         }
     }

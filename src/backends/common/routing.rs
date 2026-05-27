@@ -88,7 +88,7 @@ fn route_and_remap_io_module(
 }
 
 
-fn route_and_remap_io_model(model_arena: &mut ModelArena) {
+pub(crate) fn route_and_remap_io_model(model_arena: &mut ModelArena) {
     let top_i = model_arena.get_top_module()
         .expect("route_and_remap_io_model: no top module set");
 
