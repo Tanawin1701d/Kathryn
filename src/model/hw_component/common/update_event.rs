@@ -41,6 +41,7 @@ pub struct UeCommon {
     priority     : i32,
     sub_priority : u64,
     clk_mode     : ClockMode,
+    clk_src_i    : HcpIdent,
 }
 
 impl Default for UeCommon {
@@ -50,6 +51,7 @@ impl Default for UeCommon {
             priority     : DEFAULT_UE_PRI_USER,
             sub_priority : DEFAULT_UE_SUB_PRIORITY_USER,
             clk_mode     : ClockMode::ClkUnused,
+            clk_src_i    : HcpIdent::default(),
         }
     }
 }
@@ -63,6 +65,13 @@ impl UeCommon {
     pub fn get_sub_priority(&self) -> u64       { self.sub_priority }
     pub fn get_clk_mode    (&self) -> ClockMode { self.clk_mode     }
     pub fn get_ue_type     (&self) -> UeType    { self.ue_type      }
+    pub fn get_clk_src_i   (&self) -> HcpIdent  { self.clk_src_i    }
+
+    pub fn init_meta(&mut self, priority: i32, clk_mode: ClockMode, clk_src: HcpIdent) {
+        self.priority  = priority;
+        self.clk_mode  = clk_mode;
+        self.clk_src_i = clk_src;
+    }
 }
 
 pub trait HasUeCommon {
@@ -76,18 +85,27 @@ pub trait UpdatingEvent: HasUeCommon {
     fn get_sub_priority (&self) -> u64        { self.get_ue_common().sub_priority }
     fn get_clk_mode     (&self) -> ClockMode  { self.get_ue_common().clk_mode     }
     fn is_joinable      (&self, rhs: &dyn UpdatingEvent) -> bool {
-        (self.get_priority() == rhs.get_priority()) &&
-        (self.get_clk_mode() == rhs.get_clk_mode())
+        (self.get_priority()  == rhs.get_priority()) &&
+        (self.get_clk_mode()  == rhs.get_clk_mode()) &&
+        (self.get_clk_src_i() == rhs.get_clk_src_i())
     }
-    fn set_priority    (&mut self, priority: i32)       { self.get_ue_common_mut().priority     = priority;     }
+    fn set_priority    (&mut self, priority: i32)        { self.get_ue_common_mut().priority     = priority;     }
     fn set_sub_priority(&mut self, sub_priority: u64)   { self.get_ue_common_mut().sub_priority = sub_priority; }
-    fn set_clk_mode    (&mut self, clk_mode: ClockMode) { self.get_ue_common_mut().clk_mode     = clk_mode;     }
+    fn set_clk_mode    (&mut self, clk_mode: ClockMode)  { self.get_ue_common_mut().clk_mode     = clk_mode;     }
+    fn get_clk_src_i   (&self)                -> HcpIdent { self.get_ue_common().clk_src_i                       }
+    fn set_clk_src_i   (&mut self, i: HcpIdent)           { self.get_ue_common_mut().clk_src_i   = i;            }
 
     fn is_leaf(&self) -> bool;
     fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena);
 
     fn gather_dep_hcps(&self, arena: &mut ModelArena, out: &mut HashSet<HcpIdent>);
     fn remap_dep_hcps (&mut self, map: &HashMap<HcpIdent, HcpIdent>, arena: &mut ModelArena);
+
+    // Remap clk_src_i via map; container types override to recurse into sub-statements.
+    fn remap_clk_src(&mut self, map: &HashMap<HcpIdent, HcpIdent>, _arena: &mut ModelArena) {
+        let cur = self.get_clk_src_i();
+        if let Some(&new_clk) = map.get(&cur) { self.set_clk_src_i(new_clk); }
+    }
 }
 
 
@@ -114,11 +132,11 @@ impl UeBasic {
         }
     }
 
-    pub fn ident      (&self) -> UpdateEventIdent { self.ident      }
-    pub fn ue_common  (&self) -> &UeCommon        { &self.ue_common }
-    pub fn get_des_slice(&self) -> &Slice    { &self.des_slice }
-    pub fn get_src_slice(&self) -> &Slice    { &self.src_slice }
-    pub fn get_srci_val (&self) -> &HcpIdent { &self.srci      }
+    pub fn ident      (&self)   -> UpdateEventIdent{ self.ident      }
+    pub fn ue_common  (&self)   -> &UeCommon       { &self.ue_common }
+    pub fn get_des_slice(&self) -> Slice           { self.des_slice }
+    pub fn get_src_slice(&self) -> Slice           { self.src_slice }
+    pub fn get_srci_val (&self) -> HcpIdent        { self.srci      }
 }
 
 impl HasUeCommon for UeBasic {
@@ -132,10 +150,12 @@ impl UpdatingEvent for UeBasic {
         arena.replace_back_ue_basic(*self);
     }
     fn gather_dep_hcps(&self, _arena: &mut ModelArena, out: &mut HashSet<HcpIdent>) {
-        out.insert(*self.get_srci_val());
+        out.insert(self.get_srci_val());
+        out.insert(self.get_clk_src_i());
     }
     fn remap_dep_hcps(&mut self, map: &HashMap<HcpIdent, HcpIdent>, _arena: &mut ModelArena) {
         if let Some(&new_src) = map.get(&self.srci) { self.srci = new_src; }
+        self.remap_clk_src(map, _arena);
     }
 }
 
@@ -179,10 +199,9 @@ impl UeGrp {
     pub fn ident    (&self) -> UpdateEventIdent   { self.ident      }
     pub fn ue_common(&self) -> &UeCommon          { &self.ue_common }
 
-    pub fn add_sub_stmt(&mut self, stmt: UpdateEventIdent, priority: i32, clk_mode: ClockMode) {
+    pub fn add_sub_stmt(&mut self, stmt: UpdateEventIdent, priority: i32, clk_mode: ClockMode, clk_src: HcpIdent) {
         if self.sub_stmts.is_empty() {
-            self.ue_common.priority = priority;
-            self.ue_common.clk_mode = clk_mode;
+            self.ue_common.init_meta(priority, clk_mode, clk_src);
         }
         self.sub_stmts.push(stmt);
     }
@@ -213,6 +232,7 @@ impl UpdatingEvent for UeGrp {
             ue.remap_dep_hcps(map, arena);
             arena.replace_back_ue(ue);
         }
+        self.remap_clk_src(map, arena);
     }
 }
 
@@ -258,12 +278,11 @@ impl UeCond {
     pub fn ident    (&self) -> UpdateEventIdent { self.ident      }
     pub fn ue_common(&self) -> &UeCommon        { &self.ue_common }
 
-    pub fn add_sub_stmt(&mut self, cond: Option<HcpIdent>, stmt: Option<UpdateEventIdent>, priority: i32, clk_mode: ClockMode) {
+    pub fn add_sub_stmt(&mut self, cond: Option<HcpIdent>, stmt: Option<UpdateEventIdent>, priority: i32, clk_mode: ClockMode, clk_src: HcpIdent) {
         assert!(!self.is_last_occure);
         if cond.is_none() { self.is_last_occure = true; }
         if self.sub_stmts.is_empty() {
-            self.ue_common.priority = priority;
-            self.ue_common.clk_mode = clk_mode;
+            self.ue_common.init_meta(priority, clk_mode, clk_src);
         }
         self.conditions.push(cond);
         self.sub_stmts .push(stmt);
@@ -308,6 +327,7 @@ impl UpdatingEvent for UeCond {
                 arena.replace_back_ue(ue);
             }
         }
+        self.remap_clk_src(map, arena);
     }
 }
 
@@ -370,10 +390,9 @@ impl UeSwitch {
         self.sub_stmts[idx]
     }
 
-    pub fn add_sub_stmt(&mut self, match_val: i32, stmt: Option<UpdateEventIdent>, priority: i32, clk_mode: ClockMode) {
+    pub fn add_sub_stmt(&mut self, match_val: i32, stmt: Option<UpdateEventIdent>, priority: i32, clk_mode: ClockMode, clk_src: HcpIdent) {
         if !self.is_init_meta {
-            self.ue_common.priority = priority;
-            self.ue_common.clk_mode = clk_mode;
+            self.ue_common.init_meta(priority, clk_mode, clk_src);
             self.is_init_meta = true;
             
         }
@@ -411,6 +430,7 @@ impl UpdatingEvent for UeSwitch {
                 arena.replace_back_ue(ue);
             }
         }
+        self.remap_clk_src(map, arena);
     }
 }
 
