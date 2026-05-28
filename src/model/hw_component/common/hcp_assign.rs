@@ -28,32 +28,32 @@ pub trait HcpAssignable {
     fn get_priority(&self) -> i32;
 
     fn do_asm(&self,
-              srci       : & HcpIdent,
-              des_slice  : & Option<Slice>,
-              src_slice  : & Slice,
+              srci       : HcpIdent,
+              des_slice  : Option<Slice>,
+              src_slice  : Slice,
               arena      : &mut ModelArena) -> AssignMeta;
 
     fn gen_update_event(&self,
-                        srci     : &HcpIdent,
-                        des_slice: &Option<Slice>,
-                        src_slice: &Slice,
+                        srci     : HcpIdent,
+                        des_slice: Option<Slice>,
+                        src_slice: Slice,
                         arena    : &mut ModelArena,
     ) -> UpdateEventIdent {
         let std_des_slice = self.get_des_slice();
         let my_des_slice = des_slice.as_ref().unwrap_or(&std_des_slice);
-        let my_src_slice = src_slice.clone();
+        let my_src_slice = src_slice;
 
         let resolved_des_slice = my_des_slice.get_match_size_sub_slice(&my_src_slice);
         let resolved_src_slice = my_src_slice.get_match_size_sub_slice(my_des_slice);
 
-        arena.make_ue_basic(*srci, resolved_des_slice, resolved_src_slice, self.get_priority(), self.retrieve_clk_mode(), false)
+        arena.make_ue_basic(srci, resolved_des_slice, resolved_src_slice, self.get_priority(), self.retrieve_clk_mode(), false)
     }
 
     fn gen_asm_meta(&self,
                     des_i    : HcpIdent,
-                    srci     : &HcpIdent,
-                    des_slice: &Option<Slice>,
-                    src_slice: &Slice,
+                    srci     : HcpIdent,
+                    des_slice: Option<Slice>,
+                    src_slice: Slice,
                     arena    : &mut ModelArena,
     ) -> AssignMeta {
         let uei = self.gen_update_event(srci, des_slice, src_slice, arena);

@@ -48,17 +48,17 @@ impl HcpAssignable for Val {
     fn get_priority(&self) -> i32 { get_asm_pri_val() }
 
     fn do_asm(&self,
-              _srci     : &HcpIdent,
-              _des_slice: &Option<Slice>,
-              _src_slice: &Slice,
+              _srci: HcpIdent,
+              _des_slice: Option<Slice>,
+              _src_slice: Slice,
               _arena    : &mut ModelArena) -> AssignMeta {
         panic!("Val::do_asm should not be called")
     }
 
     fn gen_update_event(&self,
-                        _srci     : &HcpIdent,
-                        _des_slice: &Option<Slice>,
-                        _src_slice: &Slice,
+                        _srci: HcpIdent,
+                        _des_slice: Option<Slice>,
+                        _src_slice: Slice,
                         _arena    : &mut ModelArena,
     ) -> crate::model::hw_component::common::update_event_ident::UpdateEventIdent {
         panic!("Val::gen_update_event should not be called")
@@ -66,9 +66,9 @@ impl HcpAssignable for Val {
 
     fn gen_asm_meta(&self,
                     _des_i    : HcpIdent,
-                    _srci     : &HcpIdent,
-                    _des_slice: &Option<Slice>,
-                    _src_slice: &Slice,
+                    _srci: HcpIdent,
+                    _des_slice: Option<Slice>,
+                    _src_slice: Slice,
                     _arena    : &mut ModelArena,
     ) -> AssignMeta {
         panic!("Val::gen_asm_meta should not be called")

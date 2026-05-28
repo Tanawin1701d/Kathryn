@@ -189,9 +189,9 @@ impl HcpAssignable for CondWaitStateReg {
     fn get_priority     (&self) -> i32       { DEFAULT_UE_PRI_INTERNAL_MIN }
 
     fn do_asm(&self,
-              _srci     : &HcpIdent,
-              _des_slice: &Option<Slice>,
-              _src_slice: &Slice,
+              _srci: HcpIdent,
+              _des_slice: Option<Slice>,
+              _src_slice: Slice,
               _arena    : &mut ModelArena) -> AssignMeta {
         panic!("CondWaitStateReg::do_asm() is not supported; use build_update_event()")
     }
@@ -476,9 +476,9 @@ impl HcpAssignable for CycleWaitStateReg {
     fn get_priority     (&self) -> i32       { DEFAULT_UE_PRI_INTERNAL_MIN }
 
     fn do_asm(&self,
-              _srci     : &HcpIdent,
-              _des_slice: &Option<Slice>,
-              _src_slice: &Slice,
+              _srci: HcpIdent,
+              _des_slice: Option<Slice>,
+              _src_slice: Slice,
               _arena    : &mut ModelArena) -> AssignMeta {
         panic!("CycleWaitStateReg::do_asm() is not supported; use build_update_event()")
     }

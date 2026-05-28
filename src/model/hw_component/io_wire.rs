@@ -41,7 +41,7 @@ impl IoWire {
             agent_src_signal_i : agent_src_i,
         };
 
-        io_wire.bind_src(&agent_src_i, &des_slice, &src_slice, arena);
+        io_wire.bind_src(agent_src_i, des_slice, src_slice, arena);
 
         io_wire
     }
@@ -56,7 +56,7 @@ impl IoWire {
         self.is_input == is_input && self.actual_src_signal_i == actual_src_signal
     }
 
-    pub fn bind_src(&mut self, src_i: &HcpIdent, des_slice: &Option<Slice>, src_slice: &Slice, arena: &mut ModelArena) {
+    pub fn bind_src(&mut self, src_i: HcpIdent, des_slice: Option<Slice>, src_slice: Slice, arena: &mut ModelArena) {
         let ue = self.gen_update_event(src_i, des_slice, src_slice, arena);
         self.add_update_event(ue);
     }
@@ -75,9 +75,9 @@ impl HcpAssignable for IoWire {
     fn get_priority(&self) -> i32 { get_asm_pri_val() }
 
     fn do_asm(&self,
-              srci     : &HcpIdent,
-              des_slice: &Option<Slice>,
-              src_slice: &Slice,
+              srci: HcpIdent,
+              des_slice: Option<Slice>,
+              src_slice: Slice,
               arena    : &mut ModelArena) -> AssignMeta {
         panic!("the io wire cannot be do_asm")
     }

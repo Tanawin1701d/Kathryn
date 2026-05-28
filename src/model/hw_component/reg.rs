@@ -45,9 +45,9 @@ impl HcpAssignable for Reg {
     fn get_priority(&self) -> i32 { get_asm_pri_val() }
 
     fn do_asm(&self,
-              srci       : & HcpIdent,
-              des_slice  : & Option<Slice>,
-              src_slice  : & Slice,
+              srci       : HcpIdent,
+              des_slice  : Option<Slice>,
+              src_slice  : Slice,
               arena      : &mut ModelArena,
     ) -> AssignMeta {
 

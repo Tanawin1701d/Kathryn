@@ -65,9 +65,9 @@ impl HcpAssignable for MemEle {
     fn get_priority(&self) -> i32 { get_asm_pri_val() }
 
     fn do_asm(&self,
-              srci     : &HcpIdent,
-              des_slice: &Option<Slice>,
-              src_slice: &Slice,
+              srci: HcpIdent,
+              des_slice: Option<Slice>,
+              src_slice: Slice,
               arena    : &mut ModelArena) -> AssignMeta {
         self.gen_asm_meta(self.ident, srci, des_slice, src_slice, arena)
     }

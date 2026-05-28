@@ -10,7 +10,6 @@ pub struct AssignMeta {
     clk_mode        : ClockMode,
     input_event_i   : Option<UpdateEventIdent>, // the basicUpdateEvent of the target HWC, if tehre is complex assignment if () {...} this value should be None
     pre_update_event: UpdateEventIdent,         // the latest update event that has been assigned to the target HWC
-    finished        : bool,
 }
 
 impl AssignMeta {
@@ -20,7 +19,6 @@ impl AssignMeta {
             clk_mode,
             input_event_i   : Some(ue),
             pre_update_event: ue,
-            finished        : false,
         }
     }
 
@@ -46,11 +44,6 @@ impl AssignMeta {
 
     pub fn mux(&mut self, right: &mut AssignMeta, select_left: HcpIdent, arena: &mut ModelArena) -> AssignMeta {
         let mux_event = arena.make_ue_mux(self.pre_update_event, right.pre_update_event, select_left);
-        self.set_finished();
-        right.set_finished();
         AssignMeta::new(self.target_hwc, mux_event, self.clk_mode)
     }
-
-    pub fn is_finished (&self)     -> bool { self.finished      }
-    pub fn set_finished(&mut self)         { self.finished = true; }
 }

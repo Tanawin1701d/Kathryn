@@ -211,9 +211,9 @@ impl HcpAssignable for CntReg {
     fn get_priority     (&self) -> i32       { DEFAULT_UE_PRI_INTERNAL_MIN }
 
     fn do_asm(&self,
-              srci     : &HcpIdent,
-              des_slice: &Option<Slice>,
-              src_slice: &Slice,
+              srci: HcpIdent,
+              des_slice: Option<Slice>,
+              src_slice: Slice,
               arena    : &mut ModelArena) -> AssignMeta {
         self.gen_asm_meta(self.ident, srci, des_slice, src_slice, arena)
     }

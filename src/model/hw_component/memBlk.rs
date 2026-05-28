@@ -69,7 +69,7 @@ impl HcpAssignable for MemBlk {
     fn retrieve_clk_mode (&self)     -> ClockMode       { panic!("MemBlk is not HcpAssignable") }
     fn get_des_slice     (&self)     -> Slice            { panic!("MemBlk is not HcpAssignable") }
     fn get_priority      (&self)     -> i32              { panic!("MemBlk is not HcpAssignable") }
-    fn do_asm(&self, _: &HcpIdent, _: &Option<Slice>, _: &Slice, _: &mut ModelArena) -> AssignMeta {
+    fn do_asm(&self, _: HcpIdent, _: Option<Slice>, _: Slice, _: &mut ModelArena) -> AssignMeta {
         panic!("MemBlk is not HcpAssignable")
     }
 }

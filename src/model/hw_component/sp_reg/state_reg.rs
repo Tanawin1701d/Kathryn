@@ -141,9 +141,9 @@ impl HcpAssignable for StateReg {
     fn get_priority     (&self) -> i32       { DEFAULT_UE_PRI_SR_UNSET }
 
     fn do_asm(&self,
-              _srci     : &HcpIdent,
-              _des_slice: &Option<Slice>,
-              _src_slice: &Slice,
+              _srci: HcpIdent,
+              _des_slice: Option<Slice>,
+              _src_slice: Slice,
               _arena    : &mut ModelArena) -> AssignMeta {
         panic!("StateReg::do_asm() is not supported; use build_update_event()")
     }
