@@ -45,11 +45,12 @@ impl UpdatePool {
     }
 
     pub fn get_clk_src_i(&self, arena: &ModelArena) -> Option<HcpIdent> {
-        self.events.first().map(|i| arena.get_ue_common(i).get_clk_src_i())
+        self.events.first().and_then(|i| arena.get_ue_common(i).get_clk_src_i())
     }
 
     pub fn is_clk_src_consistent(&self, arena: &ModelArena) -> bool {
-        let Some(first_src) = self.get_clk_src_i(arena) else { return true; };
+        let first_src = self.events.first().map(|i| arena.get_ue_common(i).get_clk_src_i());
+        let Some(first_src) = first_src else { return true; };
         self.events.iter().all(|i| arena.get_ue_common(i).get_clk_src_i() == first_src)
     }
 
