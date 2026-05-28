@@ -4,7 +4,7 @@ use crate::backends::verilog::hw_component::util_vb::{sensitivity_list, signal_w
 use crate::model::common::identifier::Identifiable;
 use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::hcp_assign::HcpAssignable;
-use crate::model::hw_component::memEle::MemEle;
+use crate::model::hw_component::mem_ele::MemEle;
 use crate::model::model_arena::ModelArena;
 use crate::util::file::file_writer::FileWriter;
 

@@ -1,8 +1,8 @@
 use crate::common::arena_base::ArenaGroup;
 use crate::model::hw_component::common::update_event::{UeBasic, UeCond, UeGrp, UeSwitch};
 use crate::model::hw_component::expression::Expression;
-use crate::model::hw_component::memBlk::MemBlk;
-use crate::model::hw_component::memEle::MemEle;
+use crate::model::hw_component::mem_blk::MemBlk;
+use crate::model::hw_component::mem_ele::MemEle;
 use crate::model::hw_component::reg::Reg;
 use crate::model::hw_component::val::Val;
 use crate::model::hw_component::wire::Wire;

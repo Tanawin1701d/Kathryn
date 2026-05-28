@@ -5,7 +5,7 @@ use crate::model::hw_component::common::hcp_base::HcpBase;
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HwComponentType};
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::common::identifier::{IdentBase, Identifiable};
-use crate::model::hw_component::memEle::MemEle;
+use crate::model::hw_component::mem_ele::MemEle;
 use crate::model::model_arena::ModelArena;
 
 #[derive(Default)]

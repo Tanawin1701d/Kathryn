@@ -1,7 +1,7 @@
 use crate::backends::verilog::hw_component::common::hcp_base_vb::HcpBaseVb;
 use crate::backends::verilog::hw_component::util_vb::signal_width;
 use crate::model::common::identifier::Identifiable;
-use crate::model::hw_component::memBlk::MemBlk;
+use crate::model::hw_component::mem_blk::MemBlk;
 use crate::model::model_arena::ModelArena;
 use crate::util::file::file_writer::FileWriter;
 
