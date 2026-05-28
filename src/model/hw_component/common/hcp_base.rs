@@ -4,6 +4,9 @@ use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable};
 use crate::model::model_arena::ModelArena;
 
 pub trait HcpBase: HcpAssignable + HcpIdentifiable {
+
+
+    // Each concrete HCP type routes itself back to the correct typed arena slot — callers use zero match.
     fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena);
 
     /// Collect all HcpIdents this component depends on.

@@ -25,8 +25,9 @@ impl Identifiable for UpdateEventIdent {
     fn get_ident_base    (&self)     -> &IdentBase     { &self.ident_base }
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { &mut self.ident_base }
     fn build_unique_name (&mut self) -> &str {
+        let pre  = self.ue_type.prefix();
         let id   = self.ident_base.get_global_id();
-        let name = format!("{}_{}", self.ue_type.prefix(), id);
+        let name = format!("{pre}_{id}");
         self.ident_base.set_name(&name);
         self.ident_base.get_name()
     }

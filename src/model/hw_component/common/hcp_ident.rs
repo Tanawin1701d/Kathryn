@@ -23,7 +23,7 @@ pub enum HwComponentType {
     Expression         = 10,
     // io wire static
     IoWire             = 11,
-    // no ue support (MemBlockIndexer handles them all)
+    // no ue support (MemBlockIndexer handles them all, it is only a agent and grouper for )
     MemBlock           = 12,
 }
 
@@ -99,11 +99,11 @@ pub const HW_TYPES_MEM_BLK: [HwComponentType; HwComponentType::MEM_BLK_COUNT] = 
 // entries are listed manually — but COUNT can no longer silently lie.
 pub const ALL_HW_TYPES: [HwComponentType; HwComponentType::COUNT] = [
     // UE group (UE_BOUNDARY entries)
-    HwComponentType::Reg,               HwComponentType::StateReg,
-    HwComponentType::CondWaitStateReg,  HwComponentType::CycleWaitStateReg,
-    HwComponentType::CntReg,            HwComponentType::SyncReg,
-    HwComponentType::Wire,              HwComponentType::Nest,
-    HwComponentType::Val,               HwComponentType::MemBlockIndexer,
+    HwComponentType::Reg             , HwComponentType::StateReg,
+    HwComponentType::CondWaitStateReg, HwComponentType::CycleWaitStateReg,
+    HwComponentType::CntReg          , HwComponentType::SyncReg,
+    HwComponentType::Wire            , HwComponentType::Nest,
+    HwComponentType::Val             , HwComponentType::MemBlockIndexer,
     // manual-dep group (MAN_DEP_COUNT entries)
     HwComponentType::Expression,
     // IO wire group (IO_WIRE_COUNT entries)
@@ -116,11 +116,9 @@ pub fn all_hw_types() -> impl Iterator<Item = HwComponentType> {
     ALL_HW_TYPES.iter().copied()
 }
 
-
-
 pub trait HcpIdentifiable: Identifiable {
 
-    fn get_iden_base    (&self)     -> &IdentBase     { self.get_ident_base()     }
+    fn get_iden_base    (&self)     -> &    IdentBase { self.get_ident_base()            }
     fn get_iden_base_mut(&mut self) -> &mut IdentBase { self.get_ident_base_mut() }
     fn get_ident_mut    (&mut self) -> &mut HcpIdent;
 
@@ -128,7 +126,6 @@ pub trait HcpIdentifiable: Identifiable {
         self.set_arena_handle(arena_handler);
     }
 }
-
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct HcpIdent {
