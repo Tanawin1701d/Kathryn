@@ -8,28 +8,32 @@ use std::fmt;
 #[repr(usize)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DebugFlag {
-    Arena     = 0,   // arena insert / take / replace operations
-    Factory   = 1,   // make_* / mk_* factory calls
-    Module    = 2,   // module creation and trace-stack management
-    Routing   = 3,   // cross-module IO routing + remap passes
-    FlowBlock = 4,   // flow-block build and node wiring
-    Verilog   = 5,   // Verilog backend emit
-    Io        = 6,   // IoWire construction and reuse
+    ArenaFactory   = 0,   // make_* / mk_* factory calls
+    ArenaImpl      = 1,   // arena insert / take / replace operations
+    ModelHwc       = 2,   // hardware component construction and mutation
+    ModelModule    = 3,   // module creation and trace-stack management
+    ModelFlowBlock = 4,   // flow-block build and node wiring
+    ModelNode      = 5,   // node construction and linking
+    BackendBase    = 6,   // shared backend utilities (routing, IO wires, graph)
+    BackendVerilog = 7,   // Verilog emit pipeline
+    Miscellaneous  = 8,   // one-off diagnostics that don't fit elsewhere
 }
 
 impl DebugFlag {
     // Must stay in sync with the number of enum variants above.
-    pub const COUNT: usize = 7;
+    pub const COUNT: usize = 9;
 
     // All variants in declaration order; used by DebugBuilder::all_flags().
     pub const ALL: [DebugFlag; Self::COUNT] = [
-        DebugFlag::Arena,
-        DebugFlag::Factory,
-        DebugFlag::Module,
-        DebugFlag::Routing,
-        DebugFlag::FlowBlock,
-        DebugFlag::Verilog,
-        DebugFlag::Io,
+        DebugFlag::ArenaFactory,
+        DebugFlag::ArenaImpl,
+        DebugFlag::ModelHwc,
+        DebugFlag::ModelModule,
+        DebugFlag::ModelFlowBlock,
+        DebugFlag::ModelNode,
+        DebugFlag::BackendBase,
+        DebugFlag::BackendVerilog,
+        DebugFlag::Miscellaneous,
     ];
 }
 
@@ -37,13 +41,15 @@ impl fmt::Display for DebugFlag {
     // Fixed-width uppercase tags keep output columns aligned.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let tag = match self {
-            DebugFlag::Arena     => "ARENA    ",
-            DebugFlag::Factory   => "FACTORY  ",
-            DebugFlag::Module    => "MODULE   ",
-            DebugFlag::Routing   => "ROUTING  ",
-            DebugFlag::FlowBlock => "FLOWBLOCK",
-            DebugFlag::Verilog   => "VERILOG  ",
-            DebugFlag::Io        => "IO       ",
+            DebugFlag::ArenaFactory   => "ARENA_FACTORY  ",
+            DebugFlag::ArenaImpl      => "ARENA_IMPL     ",
+            DebugFlag::ModelHwc       => "MODEL_HWC      ",
+            DebugFlag::ModelModule    => "MODEL_MODULE   ",
+            DebugFlag::ModelFlowBlock => "MODEL_FLOWBLOCK",
+            DebugFlag::ModelNode      => "MODEL_NODE     ",
+            DebugFlag::BackendBase    => "BACKEND_BASE   ",
+            DebugFlag::BackendVerilog => "BACKEND_VERILOG",
+            DebugFlag::Miscellaneous  => "MISC           ",
         };
         write!(f, "{}", tag)
     }

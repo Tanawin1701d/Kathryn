@@ -54,7 +54,7 @@ impl BackendVerilog {
         let mut iter = DfsModuleIter::new(top_i);
         while let Some(module_i) = iter.next_module(&mut self.model_arena) {
             let module = self.model_arena.take_module(module_i);
-            let path   = format!("{}/{}.v", output_dir, module.get_global_name());
+            let path   = format!("{}/{}.v", output_dir, module.get_mod_name_vb());
             println!("[BackendVerilog] Phase 3:   writing {path}");
             let mut fw = FileWriter::new(&path, 4096)
                 .unwrap_or_else(|e| panic!("BackendVerilog::phase_emit — cannot open {path}: {e}"));

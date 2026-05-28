@@ -127,7 +127,7 @@ impl Module {
     // ---- Private utilities ----
 
     // Canonical module name used in Verilog output.
-    fn get_mod_name_vb(&self) -> String { self.get_global_name().to_string() }
+    pub(crate) fn get_mod_name_vb(&self) -> String { self.get_global_name().to_string() }
 
     // Collect all HCP idents of `hw_type` from both internal and user pools.
     fn collect_hcp_idents_vb(&self, hw_type: HwComponentType) -> Vec<HcpIdent> {
