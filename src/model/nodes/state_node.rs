@@ -66,6 +66,7 @@ impl NcpNode for StateNode {
     fn get_clock_mode (&self) -> ClockMode { ClockMode::PosEdge }
 
     fn assign(&mut self, arena: &mut ModelArena) {
+
         let sig = self.triggers.to_trigger_sig(arena);
         let mut sr = arena.take_state_reg(self.state_reg_i);
         *sr.get_triggers_mut() = sig;
@@ -79,8 +80,8 @@ impl NcpNode for StateNode {
         self.bound_exit_i = Some(bound_all);
     }
 
-    fn get_exit_opr       (&self) -> HcpIdent { self.bound_exit_i.or(self.state_op_i).unwrap_or_default() }
-    fn get_state_operating(&self) -> HcpIdent { self.state_op_i.unwrap_or_default() }
+    fn get_exit_opr       (&self) -> HcpIdent { self.bound_exit_i.expect("exit opr is not set yet") }
+    fn get_state_operating(&self) -> HcpIdent { self.state_op_i.expect("state operating is not set yet") }
     fn get_cycle_used     (&self) -> i32      {
         if self.get_node_triggers().is_unpred_cycle_usage() { NODE_CYCLE_USED_UNKNOWN } else { 1 }
     }
