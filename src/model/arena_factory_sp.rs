@@ -8,9 +8,8 @@ use crate::model::model_arena::ModelArena;
 
 impl ModelArena {
     pub fn make_state_reg(&mut self, name: &str) -> HcpIdent {
-        let set_val_i   = self.make_val(false, &format!("{}_SET",   name), 1, 1);
-        let unset_val_i = self.make_val(false, &format!("{}_UNSET", name), 1, 0);
-        let i = self.add_state_reg(StateReg::new(false, name, set_val_i, unset_val_i));
+        let sr = StateReg::new(false, name, self);
+        let i  = self.add_state_reg(sr);
         self.stamp_hw_to_parent_module(i, false)
     }
 

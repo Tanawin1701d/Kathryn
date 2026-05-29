@@ -18,8 +18,8 @@ const DEFAULT_UE_PRI_CW_RST   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 3;
 const DEFAULT_UE_PRI_CW_MRST  : i32 = DEFAULT_UE_PRI_RST;
 
 const DEFAULT_UE_PRI_CY_UNSET : i32 = DEFAULT_UE_PRI_INTERNAL_MIN;
-const DEFAULT_UE_PRI_CY_SET   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 1;
-const DEFAULT_UE_PRI_CY_INC   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 2;
+const DEFAULT_UE_PRI_CY_INC   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 1;
+const DEFAULT_UE_PRI_CY_SET   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 2;
 const DEFAULT_UE_PRI_CY_HOLD  : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 3;
 const DEFAULT_UE_PRI_CY_RST   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 4;
 const DEFAULT_UE_PRI_CY_MRST  : i32 = DEFAULT_UE_PRI_RST;
@@ -81,14 +81,10 @@ impl CondWaitStateReg {
         }
     }
 
-    pub fn mk(name: &str, cond_opr: HcpIdent, cond_opr_sl: Slice) -> Self {
-        Self::new(false, name, cond_opr, cond_opr_sl)
-    }
-
-    pub fn get_ident       (&self)     -> HcpIdent       { self.ident }
-    pub fn get_ident_mut   (&mut self) -> &mut HcpIdent  { &mut self.ident }
-    pub fn get_cond_opr(&self) -> HcpIdent { self.cond_opr }
-    pub fn get_end_expr_i(&self) -> Option<HcpIdent> { self.end_expr_i }
+    pub fn get_ident      (&    self) -> HcpIdent         { self.ident      }
+    pub fn get_ident_mut  (&mut self) -> &mut HcpIdent    { &mut self.ident }
+    pub fn get_cond_opr   (&    self) -> HcpIdent         { self.cond_opr   }
+    pub fn get_end_expr_i (&    self) -> Option<HcpIdent> { self.end_expr_i }
 
     /// Creates internal support constants/expressions used by update events.
     pub fn build_support_signal(&mut self, model_ar: &mut ModelArena) {
@@ -118,13 +114,14 @@ impl CondWaitStateReg {
         let down_state_i = self.down_state_i.expect("build_support_signal must be called first");
         let self_is_up_i = self.self_is_up_i.expect("build_support_signal must be called first");
 
-        let bit_sl = Slice::new(0, 1);
+        let bit_sl  = Slice::new(0, 1);
+        let clk_src = self.get_clk_sig_i();
 
         // unset: createUE(cond_opr, self == upState, downState, {0,1}, MIN, cm)
         let ue_unset = model_ar.make_ue_full(
             Some(self.cond_opr)    , Some(self_is_up_i)      , down_state_i,
             bit_sl                 , bit_sl                  ,
-            DEFAULT_UE_PRI_CW_UNSET, self.retrieve_clk_mode(), false
+            DEFAULT_UE_PRI_CW_UNSET, self.retrieve_clk_mode(), false, clk_src
         );
         self.add_update_event(ue_unset);
 
@@ -134,7 +131,7 @@ impl CondWaitStateReg {
             let ue = model_ar.make_ue_full(
                 condi                , Some(srci)              , up_state_i,
                 bit_sl               , bit_sl        ,
-                DEFAULT_UE_PRI_CW_SET, self.retrieve_clk_mode(), false
+                DEFAULT_UE_PRI_CW_SET, self.retrieve_clk_mode(), false, clk_src
             );
             self.add_update_event(ue);
         }
@@ -144,7 +141,7 @@ impl CondWaitStateReg {
             let ue_rst = model_ar.make_ue_full(
                 None                 , Some(rst_sig_i)         , down_state_i,
                 bit_sl               , bit_sl                  ,
-                DEFAULT_UE_PRI_CW_RST, self.retrieve_clk_mode(), false
+                DEFAULT_UE_PRI_CW_RST, self.retrieve_clk_mode(), false, clk_src
             );
             self.add_update_event(ue_rst);
         }
@@ -154,7 +151,7 @@ impl CondWaitStateReg {
             let ue_hold = model_ar.make_ue_full(
                 None                  , Some(hold_sig_i)        , self.ident,
                 bit_sl                , bit_sl                  ,
-                DEFAULT_UE_PRI_CW_HOLD, self.retrieve_clk_mode(), false
+                DEFAULT_UE_PRI_CW_HOLD, self.retrieve_clk_mode(), false, clk_src
             );
             self.add_update_event(ue_hold);
         }
@@ -164,7 +161,7 @@ impl CondWaitStateReg {
             let ue_mrst = model_ar.make_ue_full(
                 None                  , Some(mrst_sig_i)        , down_state_i,
                 bit_sl                , bit_sl                  ,
-                DEFAULT_UE_PRI_CW_MRST, self.retrieve_clk_mode(), false
+                DEFAULT_UE_PRI_CW_MRST, self.retrieve_clk_mode(), false, clk_src
             );
             self.add_update_event(ue_mrst);
         }
@@ -399,13 +396,23 @@ impl CycleWaitStateReg {
         let full_sl = Slice::new(0, self.total_bit_size);
         let cnt_sl = Slice::new(1, self.total_bit_size);
 
+        let clk_src = self.get_clk_sig_i();
+
         // unset: when end reached, reset to idle
         let ue_unset = model_ar.make_ue_full(
             Some(is_end_expr_i), None, idle_cnt_i,
             full_sl, full_sl,
-            DEFAULT_UE_PRI_CY_UNSET, cm, false
+            DEFAULT_UE_PRI_CY_UNSET, cm, false, clk_src
         );
         self.add_update_event(ue_unset);
+
+        // increment: while active and not at end, increment counter
+        let ue_inc = model_ar.make_ue_full(
+            Some(inc_cond_expr_i), None, inc_expr_i,
+            cnt_sl, cnt_sl,
+            DEFAULT_UE_PRI_CY_INC, cm, false, clk_src
+        );
+        self.add_update_event(ue_inc);
 
         // set/activate: on trigger, load start_cnt
         let nodes: Vec<_> = self.triggers.iter_depend_nodes().collect();
@@ -413,25 +420,17 @@ impl CycleWaitStateReg {
             let ue = model_ar.make_ue_full(
                 condi, Some(srci), start_cnt_i,
                 full_sl, full_sl,
-                DEFAULT_UE_PRI_CY_SET, cm, false
+                DEFAULT_UE_PRI_CY_SET, cm, false, clk_src
             );
             self.add_update_event(ue);
         }
-
-        // increment: while active and not at end, increment counter
-        let ue_inc = model_ar.make_ue_full(
-            Some(inc_cond_expr_i), None, inc_expr_i,
-            cnt_sl, cnt_sl,
-            DEFAULT_UE_PRI_CY_INC, cm, false
-        );
-        self.add_update_event(ue_inc);
 
         // hold: rewrite self with self when hold_sig fires (suppresses lower-priority UEs)
         if let Some(hold_sig_i) = self.get_hold_sig_i() {
             let ue_hold = model_ar.make_ue_full(
                 None, Some(hold_sig_i), self.ident,
                 full_sl, full_sl,
-                DEFAULT_UE_PRI_CY_HOLD, cm, false
+                DEFAULT_UE_PRI_CY_HOLD, cm, false, clk_src
             );
             self.add_update_event(ue_hold);
         }
@@ -441,7 +440,7 @@ impl CycleWaitStateReg {
             let ue_rst = model_ar.make_ue_full(
                 None, Some(rst_sig_i), idle_cnt_i,
                 full_sl, full_sl,
-                DEFAULT_UE_PRI_CY_RST, cm, false
+                DEFAULT_UE_PRI_CY_RST, cm, false, clk_src
             );
             self.add_update_event(ue_rst);
         }
@@ -451,7 +450,7 @@ impl CycleWaitStateReg {
             let ue_mrst = model_ar.make_ue_full(
                 None, Some(mrst_sig_i), idle_cnt_i,
                 full_sl, full_sl,
-                DEFAULT_UE_PRI_CY_MRST, cm, false
+                DEFAULT_UE_PRI_CY_MRST, cm, false, clk_src
             );
             self.add_update_event(ue_mrst);
         }

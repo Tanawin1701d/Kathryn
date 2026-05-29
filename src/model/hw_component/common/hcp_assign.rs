@@ -46,7 +46,7 @@ pub trait HcpAssignable {
         let resolved_des_slice = my_des_slice.get_match_size_sub_slice(&my_src_slice);
         let resolved_src_slice = my_src_slice.get_match_size_sub_slice(my_des_slice);
 
-        arena.make_ue_basic(srci, resolved_des_slice, resolved_src_slice, self.get_priority(), self.retrieve_clk_mode(), false)
+        arena.make_ue_basic(srci, resolved_des_slice, resolved_src_slice, self.get_priority(), self.retrieve_clk_mode(), false, None)
     }
 
     fn gen_asm_meta(&self,

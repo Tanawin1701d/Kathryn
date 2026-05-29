@@ -37,7 +37,7 @@ pub struct CntReg {
     last_cycle_val: Option<HcpIdent>,
     zero_val      : Option<HcpIdent>,
     at_last_expr  : Option<HcpIdent>,
-    inc_expr      : Option<HcpIdent>,
+    inced_expr: Option<HcpIdent>,
 
 
 
@@ -63,17 +63,15 @@ impl CntReg {
             last_cycle_val: None,
             at_last_expr   : None,
             zero_val       : None,
-            inc_expr       : None,
+            inced_expr: None,
         }
     }
 
-    pub fn mk(name: &str, max_cycle: i32) -> Self { Self::new(false, name, 1, max_cycle) }
-
-    pub fn get_ident(&self) -> HcpIdent { self.ident }
-    pub fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
-    pub fn get_loop_cnt  (&self) -> i32 { self.last_cycle }
-    pub fn get_cnt_bit_sz(&self) -> i32 { self.cnt_bit_sz }
-    pub fn generate_end_expr(&self) -> HcpIdent {
+    pub fn get_ident            (&    self) ->      HcpIdent { self.ident }
+    pub fn get_ident_mut        (&mut self) -> &mut HcpIdent { &mut self.ident }
+    pub fn get_loop_cnt         (&    self) -> i32           { self.last_cycle }
+    pub fn get_cnt_bit_sz       (&    self) -> i32           { self.cnt_bit_sz }
+    pub fn generate_end_expr    (&    self) -> HcpIdent {
         self.at_last_expr.expect("build_support_signal must be called before generate_end_expr")
     }
 
@@ -104,10 +102,10 @@ impl CntReg {
         );
 
         // expression: self + inc_val  (next counter value)
-        let inc_expr = model_ar.make_expression(false, &format!("{}_INC", name),
-            LogicOp::ArithPlus, self.ident, inc_val_val, None, None,
+        let inced_expr = model_ar.make_expression(false, &format!("{}_INC", name),
+                                                  LogicOp::ArithPlus, self.ident, inc_val_val, None, None,
         );
-        self.inc_expr = Some(inc_expr);
+        self.inced_expr = Some(inced_expr);
     }
 
     pub fn build_update_event(&mut self, model_ar: &mut ModelArena) {
@@ -120,7 +118,8 @@ impl CntReg {
         let cnt_val_sl = Slice::new(0, self.cnt_bit_sz);
 
         let zero_val = self.zero_val.expect("build_support_signal must be called first");
-        let inc_expr = self.inc_expr.expect("build_support_signal must be called first");
+        let inced_expr = self.inced_expr.expect("build_support_signal must be called first");
+        let clk_src  = self.get_clk_sig_i();
 
 
         // increment signal
@@ -129,9 +128,9 @@ impl CntReg {
             let priority = DEFAULT_UE_PRI_CNT_INC;
             let cm = self.retrieve_clk_mode();
             let ue = model_ar.make_ue_full(
-                condi      , Some(srci), inc_expr,
-                cnt_val_sl , cnt_val_sl ,
-                priority   , cm        , false
+                condi, Some(srci), inced_expr,
+                cnt_val_sl, cnt_val_sl,
+                priority, cm, false, clk_src
             );
             self.add_update_event(ue);
         }
@@ -141,7 +140,7 @@ impl CntReg {
             let ue = model_ar.make_ue_full(
                 None                   , Some(hold_sig_i)        , self.ident,
                 cnt_val_sl             , cnt_val_sl              ,
-                DEFAULT_UE_PRI_CNT_HOLD, self.retrieve_clk_mode(), false
+                DEFAULT_UE_PRI_CNT_HOLD, self.retrieve_clk_mode(), false, clk_src
             );
             self.add_update_event(ue);
         }
@@ -151,7 +150,7 @@ impl CntReg {
             let ue = model_ar.make_ue_full(
                 None                  , Some(rst_sig_i)          , zero_val,
                 cnt_val_sl            , cnt_val_sl                ,
-                DEFAULT_UE_PRI_CNT_RST, self.retrieve_clk_mode() , false
+                DEFAULT_UE_PRI_CNT_RST, self.retrieve_clk_mode() , false, clk_src
             );
             self.add_update_event(ue);
         }
@@ -159,9 +158,9 @@ impl CntReg {
         // create the update event for the interrupt signal
         if let Some(int_sig_i) = self.get_int_sig_i() {
             let ue = model_ar.make_ue_full(
-                None                  , Some(int_sig_i)          , inc_expr,
-                cnt_val_sl            , cnt_val_sl                ,
-                DEFAULT_UE_PRI_CNT_INT, self.retrieve_clk_mode() , false
+                None, Some(int_sig_i), inced_expr,
+                cnt_val_sl, cnt_val_sl,
+                DEFAULT_UE_PRI_CNT_INT, self.retrieve_clk_mode(), false, clk_src
             );
             self.add_update_event(ue);
         }
@@ -171,7 +170,7 @@ impl CntReg {
             let ue = model_ar.make_ue_full(
                 None                   , Some(mrst_sig_i)         , zero_val,
                 cnt_val_sl             , cnt_val_sl                ,
-                DEFAULT_UE_PRI_CNT_MRST, self.retrieve_clk_mode() , false
+                DEFAULT_UE_PRI_CNT_MRST, self.retrieve_clk_mode() , false, clk_src
             );
             self.add_update_event(ue);
         }
@@ -192,7 +191,7 @@ impl Default for CntReg {
             last_cycle_val : None,
             zero_val       : None,
             at_last_expr   : None,
-            inc_expr       : None,
+            inced_expr: None,
         }
     }
 }
