@@ -9,6 +9,7 @@ use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_INTERNAL_M
 use crate::model::hw_component::sp_reg::trigger_sig::{HasTriggerSig, TriggerSig};
 use crate::model::model_arena::ModelArena;
 use crate::model::common::identifier::{IdentBase, Identifiable};
+use crate::util::math::vary_val::VaryVal;
 
 // ---- UE priority ladder: higher value wins; MRST sits at the global RST band ----
 const DEFAULT_UE_PRI_SY_UNSET    : i32 = DEFAULT_UE_PRI_INTERNAL_MIN;     // clear-on-full, lowest
@@ -86,11 +87,13 @@ impl SyncReg {
         let name = self.ident.get_ident_base().get_name().to_string();
         let size = self.bit_width;
 
-        let up_state_i = model_ar.make_val(false, &format!("{}_UP_STATE",   name), 1, 1);
+        let up_state_i = model_ar.make_val(false, &format!("{}_UP_STATE", name), 1, 1);
         self.up_state_i = Some(up_state_i);
-        // right now, we only support 64-bit registers, so we can use a single Val for both
-        let up_full_val = if size < 64 { (1u64 << size) - 1 } else { u64::MAX };
-        let up_full_state_i = model_ar.make_val(false, &format!("{}_UP_FULL",   name), size, up_full_val);
+
+        let up_full_state_i = model_ar.make_val_vv(
+            false, &format!("{}_UP_FULL", name), size,
+            VaryVal::all_ones(size as usize),
+        );
         self.up_full_state_i = Some(up_full_state_i);
 
         let down_full_state_i = model_ar.make_val(false, &format!("{}_DOWN_FULL", name), size, 0);

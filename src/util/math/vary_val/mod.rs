@@ -27,6 +27,14 @@ impl VaryVal {
         v
     }
 
+    /// Returns a VaryVal with every bit set to 1.
+    pub fn all_ones(bit_width: usize) -> Self {
+        let words   = (bit_width + 63) / 64;
+        let mut v   = Self { limbs: vec![u64::MAX; words], bit_width };
+        v.apply_mask();
+        v
+    }
+
     pub fn bit_width(&self) -> usize { self.bit_width }
     pub fn limbs    (&self) -> &[u64] { &self.limbs }
 

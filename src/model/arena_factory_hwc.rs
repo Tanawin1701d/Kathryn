@@ -9,6 +9,7 @@ use crate::model::hw_component::val::Val;
 use crate::model::hw_component::wire::Wire;
 use crate::model::hw_component::io_wire::IoWire;
 use crate::model::model_arena::{ModelArena, ModuleInitStage};
+use crate::util::math::vary_val::VaryVal;
 
 // make_* → is_user_com = false (internal/system)
 // mk_*   → is_user_com = true  (user-defined)
@@ -70,6 +71,12 @@ impl ModelArena {
 
     pub fn make_val(&mut self, is_user_com: bool, name: &str, bit_width: i32, init_val: u64) -> HcpIdent {
         let i = self.add_val(Val::new(is_user_com, name, bit_width, init_val));
+        self.stamp_hw_to_parent_module(i, is_user_com)
+    }
+
+    /// Variant for values wider than 64 bits; caller constructs the `VaryVal` directly.
+    pub fn make_val_vv(&mut self, is_user_com: bool, name: &str, bit_width: i32, value: VaryVal) -> HcpIdent {
+        let i = self.add_val(Val::new_vv(is_user_com, name, bit_width, value));
         self.stamp_hw_to_parent_module(i, is_user_com)
     }
 

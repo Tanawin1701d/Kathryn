@@ -33,6 +33,17 @@ impl Val {
         }
     }
 
+    /// Variant that accepts an arbitrary-width `VaryVal` directly (for values > 64 bits).
+    pub fn new_vv(is_user_com: bool, name: &str, bit_width: i32, value: VaryVal) -> Self {
+        debug_assert_eq!(value.bit_width(), bit_width as usize, "VaryVal width mismatch");
+        Self {
+            assign   : HcpAssign::new(),
+            ident    : HcpIdent::new(HwComponentType::Val, is_user_com, name),
+            bit_width,
+            value,
+        }
+    }
+
     // ---- accessors ----
 
     pub fn get_ident    (&    self) -> HcpIdent       {      self.ident }
