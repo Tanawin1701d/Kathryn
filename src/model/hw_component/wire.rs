@@ -8,14 +8,18 @@ use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::model_arena::ModelArena;
 
+// Combinational wire; always ClkFree, no state.
 #[derive(Default)]
 pub struct Wire {
-    assign   : HcpAssign,
-    ident    : HcpIdent,
-    bit_width: i32,
+    assign   : HcpAssign,  // update-event pool and assignable dispatch
+    ident    : HcpIdent,   // arena handle + HW type tag
+    bit_width: i32,        // signal width in bits
 }
 
 impl Wire {
+    // ---- constructors ----
+
+    /// Full constructor; `is_user_com` false for system-generated wires.
     pub fn new(is_user_com: bool, name: &str, bit_width: i32) -> Self {
         Self {
             assign   : HcpAssign::new(),
@@ -24,28 +28,34 @@ impl Wire {
         }
     }
 
-    pub fn mk(name: &str, bit_width: i32) -> Self {
-        Wire::new(true, name, bit_width)
-    }
+    // ---- accessors ----
 
-    pub fn get_ident(&self) -> HcpIdent { self.ident }
+    pub fn get_ident    (&    self) ->      HcpIdent { self.ident }
     pub fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
 }
 
 
 
 impl HcpAssignable for Wire {
+    // ---- pool accessors ----
+
     fn get_hcp_assign    (&self)     -> &    HcpAssign { &self.assign }
     fn get_hcp_assign_mut(&mut self) -> &mut HcpAssign { &mut self.assign }
 
+    // ---- Wire-specific overrides ----
+
+    // Wires are always combinational; the Verilog backend relies on ClkFree to
+    // emit a continuous assign rather than a clocked always-block.
     fn retrieve_clk_mode(&self) -> ClockMode { ClockMode::ClkFree }
 
+    // Full-width destination slice — wires have no sub-field partial writes.
     fn get_des_slice(&self) -> Slice { Slice::new(0, self.bit_width) }
 
     fn get_priority(&self) -> i32 { get_asm_pri_val() }
 
+    // Delegates to the shared helper; self.ident is passed as the destination handle.
     fn do_asm(&self,
-              srci: HcpIdent,
+              srci     : HcpIdent,
               des_slice: Option<Slice>,
               src_slice: Slice,
               arena    : &mut ModelArena) -> AssignMeta {
@@ -54,6 +64,7 @@ impl HcpAssignable for Wire {
 }
 
 
+// All three delegate to the inner HcpIdent, which forwards to its IdentBase.
 impl Identifiable for Wire {
     fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
@@ -65,5 +76,6 @@ impl HcpIdentifiable for Wire {
 }
 
 impl HcpBase for Wire {
+    // Each concrete type knows its own arena slot, so callers use zero match.
     fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) { arena.replace_back_wire(*self); }
 }

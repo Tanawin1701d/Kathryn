@@ -8,18 +8,22 @@ use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::model_arena::ModelArena;
 
+// Memory element: a single indexed access (read or write) into a MemBlk.
+// Acts as a proxy signal — its name in Verilog is derived from the parent MemBlk's name.
 #[derive(Default)]
 pub struct MemEle {
     assign           : HcpAssign,
     ident            : HcpIdent,
     master_mem_blk_i : HcpIdent, // owning MemBlk (name needed for Verilog emission)
-    index_ident      : HcpIdent,
+    index_ident      : HcpIdent, // the address/index signal driving this access
     bit_width        : i32,      // must match the owning MemBlk's bit_width
-    is_read          : bool,
+    is_read          : bool,     // true = read port, false = write port
 }
 
 impl MemEle {
-    // TODO : add to arena + add to IDEN and add to module Iden
+    // ---- constructors ----
+
+    /// Full constructor; `master_mem_blk_i` links this element back to its owning block.
     pub fn new(is_user_com      : bool,
                name             : &str,
                master_mem_blk_i : HcpIdent,
@@ -38,20 +42,13 @@ impl MemEle {
         }
     }
 
-    pub fn mk(name             : &str,
-              master_mem_blk_i : HcpIdent,
-              index_ident      : HcpIdent,
-              bit_width        : i32,
-              is_read          : bool,
-    ) -> Self {
-        MemEle::new(true, name, master_mem_blk_i, index_ident, bit_width, is_read)
-    }
+    // ---- accessors ----
 
-    pub fn get_ident            (&self)     -> HcpIdent       { self.ident            }
-    pub fn get_ident_mut        (&mut self) -> &mut HcpIdent  { &mut self.ident       }
-    pub fn get_master_mem_blk_i (&self)     -> HcpIdent       { self.master_mem_blk_i }
-    pub fn get_index_ident      (&self)     -> HcpIdent       { self.index_ident      }
-    pub fn is_read              (&self)     -> bool           { self.is_read          }
+    pub fn get_ident            (&    self) ->      HcpIdent { self.ident            }
+    pub fn get_ident_mut        (&mut self) -> &mut HcpIdent { &mut self.ident       }
+    pub fn get_master_mem_blk_i (&    self) ->      HcpIdent { self.master_mem_blk_i }
+    pub fn get_index_ident      (&    self) ->      HcpIdent { self.index_ident      }
+    pub fn is_read              (&    self) ->      bool     { self.is_read          }
 }
 
 impl HcpAssignable for MemEle {
@@ -85,5 +82,6 @@ impl HcpIdentifiable for MemEle {
 }
 
 impl HcpBase for MemEle {
+    // Each concrete type knows its own arena slot, so callers use zero match.
     fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) { arena.replace_back_mem_ele(*self); }
 }

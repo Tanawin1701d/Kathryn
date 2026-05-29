@@ -8,6 +8,7 @@ use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::model_arena::ModelArena;
 
+// General-purpose clocked register; the most common HCP type.
 #[derive(Default)]
 pub struct Reg {
     assign    : HcpAssign,
@@ -16,6 +17,9 @@ pub struct Reg {
 }
 
 impl Reg {
+    // ---- constructors ----
+
+    /// Full constructor; `is_user_com` false for system-generated regs.
     pub fn new(is_user_com: bool, name: &str, bit_width: i32) -> Self {
         Self {
             assign   : HcpAssign::new(),
@@ -24,9 +28,12 @@ impl Reg {
         }
     }
 
+    /// Shorthand for user-declared regs (`is_user_com = true`).
     pub fn mk(name: &str, bit_width: i32) -> Self {
         Reg::new(true, name, bit_width)
     }
+
+    // ---- accessors ----
 
     pub fn get_ident(&self) -> HcpIdent { self.ident }
     pub fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
@@ -67,5 +74,6 @@ impl HcpIdentifiable for Reg {
 }
 
 impl HcpBase for Reg {
+    // Each concrete type knows its own arena slot, so callers use zero match.
     fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) { arena.replace_back_reg(*self); }
 }

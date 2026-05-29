@@ -46,14 +46,14 @@ impl IoWire {
         io_wire
     }
 
-    pub fn get_ident               (&self)     -> HcpIdent      { self.ident }
-    pub fn get_ident_mut           (&mut self) -> &mut HcpIdent { &mut self.ident }
-    pub fn get_is_input            (&self)     -> bool           { self.is_input }
+    pub fn get_ident               (&self)     -> HcpIdent      { self.ident               }
+    pub fn get_ident_mut           (&mut self) -> &mut HcpIdent { &mut self.ident          }
+    pub fn get_is_input            (&self)     -> bool          { self.is_input            }
     pub fn get_actual_src_signal_i (&self)     -> HcpIdent      { self.actual_src_signal_i }
-    pub fn get_agent_src_signal_i  (&self)     -> HcpIdent      { self.agent_src_signal_i }
+    pub fn get_agent_src_signal_i  (&self)     -> HcpIdent      { self.agent_src_signal_i  }
 
     pub fn matches_signal(&self, actual_src_signal: HcpIdent, is_input: bool) -> bool {
-        self.is_input == is_input && self.actual_src_signal_i == actual_src_signal
+        (self.is_input == is_input) && (self.actual_src_signal_i == actual_src_signal)
     }
 
     pub fn bind_src(&mut self, src_i: HcpIdent, des_slice: Option<Slice>, src_slice: Slice, arena: &mut ModelArena) {
