@@ -9,9 +9,14 @@ use crate::model::model_arena::ModelArena;
 
 // Combinational UEs (ClkFree) must not carry a clock source — that combination is meaningless
 // and would make is_joinable() produce false positives across unrelated clock domains.
-fn assert_clk_src_consistent(cm: ClockMode, clk_src: Option<HcpIdent>) {
+pub fn assert_clk_src_consistent(cm: ClockMode, clk_src: Option<HcpIdent>, lazy_edge_clk: bool) {
     if cm == ClockMode::ClkFree && clk_src.is_some() {
         panic!("make_ue_*: clk_src must be None when clk_mode is ClkFree");
+    }
+
+    if (cm == ClockMode::PosEdge || cm == ClockMode::NegEdge) &&
+       (!lazy_edge_clk) && (!clk_src.is_some()) {
+        panic!("make_ue_*: clk_src must be assigned when clk_mode is Posedge or NegEdge");
     }
 }
 
@@ -26,7 +31,7 @@ impl ModelArena {
         auto_priority: bool,
         clk_src      : Option<HcpIdent>,
     ) -> UpdateEventIdent {
-        assert_clk_src_consistent(cm, clk_src);
+        assert_clk_src_consistent(cm, clk_src, true);
         let mut event = UeBasic::new(srci, des_slice, src_slice);
         event.set_priority(if auto_priority { get_asm_pri_val() } else { priority });
         event.set_clk_mode(cm);
@@ -54,7 +59,7 @@ impl ModelArena {
         let priority = self.get_ue_common(&_ueb_i).get_priority();
         let clk_mode = self.get_ue_common(&_ueb_i).get_clk_mode();
         let clk_src  = self.get_ue_common(&_ueb_i).get_clk_src_i();
-        assert_clk_src_consistent(clk_mode, clk_src);
+        assert_clk_src_consistent(clk_mode, clk_src, true);
         let mut uec = UeCond::new();
         uec.add_sub_stmt(cond_hcp, Some(_ueb_i), priority, clk_mode, clk_src);
         let cond_i = self.insert_ue_cond(uec);
@@ -78,7 +83,7 @@ impl ModelArena {
         auto_priority: bool,
         clk_src      : Option<HcpIdent>,
     ) -> UpdateEventIdent {
-        assert_clk_src_consistent(cm, clk_src);
+        assert_clk_src_consistent(cm, clk_src, true);
         let basic_ident = self.make_ue_basic(value, des_slice, src_slice, priority, cm, auto_priority, clk_src);
         if cond.is_none() && state.is_none() {
             basic_ident

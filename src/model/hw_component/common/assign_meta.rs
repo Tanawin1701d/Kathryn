@@ -1,3 +1,4 @@
+use crate::model::arena_factory_ue::assert_clk_src_consistent;
 use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::hcp_assign::HcpAssignable;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
@@ -34,12 +35,22 @@ impl AssignMeta {
     pub fn get_input_event_i_mut(&mut self) -> &mut Option<UpdateEventIdent>  { &mut self.input_event_i }
     pub fn get_pre_update_event (&self)     -> UpdateEventIdent               { self.pre_update_event   }
 
-    pub fn set_pre_update_event(&mut self, event: UpdateEventIdent) {
-        self.pre_update_event = event;
+    pub fn add_specific_pre_condition(&mut self, cond: HcpIdent, arena: &mut ModelArena) {
+        let cm      = arena.get_ue_common(&self.pre_update_event).get_clk_mode();
+        let clk_src = arena.get_ue_common(&self.pre_update_event).get_clk_src_i();
+        assert_clk_src_consistent(cm, clk_src, false);
+        self.pre_update_event = arena.make_ue_add_dis(Some(cond), None, self.pre_update_event);
     }
 
-    pub fn add_specific_pre_condition(&mut self, cond: HcpIdent, arena: &mut ModelArena) {
-        self.pre_update_event = arena.make_ue_add_dis(Some(cond), None, self.pre_update_event);
+    /// Set the clock source on `input_event_i`.  No-op if input_event_i is None
+    /// (complex-assignment path where no single basic UE was recorded).
+    /// Panics via assert_clk_src_consistent if clk_src conflicts with the UE's clock mode.
+    pub fn set_clk_src(&mut self, clk_src: HcpIdent, arena: &mut ModelArena) {
+        if let Some(ue_i) = self.input_event_i {
+            let mut ue = arena.take_ue(ue_i);
+            ue.set_clk_src_i(Some(clk_src));
+            arena.replace_back_ue(ue);
+        }
     }
 
     pub fn mux(&mut self, right: &mut AssignMeta, select_left: HcpIdent, arena: &mut ModelArena) -> AssignMeta {

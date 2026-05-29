@@ -14,7 +14,6 @@ use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
 /// `assign_from_state_node` to gate their pre-update events with the state.
 pub struct AsmNode {
     ident    : NcpIdent,
-    /// TODO youo have to remove this in the future
     triggers : NodeTrigger,
     asm_metas: Vec<AssignMeta>,
 }
@@ -59,20 +58,34 @@ impl AsmNode {
         assert!(des_idx < self.asm_metas.len());
         self.asm_metas[des_idx].add_specific_pre_condition(cond, arena);
     }
+    
+    /// Propagate the trigger's clock source to every AssignMeta's input UE.
+    /// No-op if no clock node is wired to this trigger group.
+    pub fn set_clk_src(&mut self, arena: &mut ModelArena) {
+        let Some(clk_node_i) = self.triggers.clk_node_i else { return };
+        // Resolve the clock node's exit operand — the actual HCP signal that
+        // downstream UEs reference as their clock source.
+        let clk_src = arena.get_node_exit_opr(&clk_node_i);
+        for am in &mut self.asm_metas {
+            am.set_clk_src(clk_src, arena);
+        }
+    }
 
-    /// Slaved variant: attach this AsmNode to a parent `StateNode`.  Walks the
-    /// (single) depend node and gates each AssignMeta's pre-update event with
-    /// the parent's state-operating expression and the supplied hold/reset
-    /// signals.  Mirrors C++ `assignFromStateNode`.
+    /// Gate each AssignMeta's pre-update event with the parent StateNode's
+    /// state-operating signal, hold inverse, and reset inverse, then finalise.
+    /// Requires exactly one depend node (the parent StateNode).
     pub fn assign_from_state_node(&mut self, arena: &mut ModelArena) {
         assert_eq!(self.triggers.depend_count(), 1, "AsmNode must have exactly one parent depend");
         assert!(!self.asm_metas.is_empty());
 
+        // Resolve all gating signals from the trigger group up front.
         let (parent, condition) = self.triggers.iter_depend_nodes().next().unwrap();
-        let hold_signal  = self.triggers.hold_node_i     .map(|n| arena.get_node_exit_opr(&n));
-        let reset_signal = self.triggers.int_reset_node_i.map(|n| arena.get_node_exit_opr(&n));
+        let hold_signal     = self.triggers.hold_node_i     .map(|n| arena.get_node_exit_opr(&n));
+        let reset_signal    = self.triggers.int_reset_node_i.map(|n| arena.get_node_exit_opr(&n));
         let parent_state_op = Some(arena.get_node_state_operating(&parent));
 
+        // Build the combined gate: condition & ~hold & ~reset & parent_state_op.
+        // Each term is ANDed in only when the corresponding trigger field is set.
         let mut cond_event: Option<HcpIdent> = condition;
         if let Some(hs) = hold_signal {
             let inv = arena.make_expression(false, "asm_hold_inv", LogicOp::BitwiseInvr, hs, HcpIdent::default(), None, None);
@@ -84,6 +97,7 @@ impl AsmNode {
         }
         cond_event = add_logic_with_output(arena, cond_event, parent_state_op, LogicOp::BitwiseAnd);
 
+        // Apply the combined gate as a pre-condition on every meta, then commit.
         for am in &mut self.asm_metas {
             if let Some(c) = cond_event {
                 am.add_specific_pre_condition(c, arena);
