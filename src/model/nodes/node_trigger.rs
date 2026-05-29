@@ -1,6 +1,4 @@
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
-use crate::model::hw_component::sp_reg::trigger_sig::TriggerSig;
-use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_ident::NcpIdent;
 
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
@@ -45,31 +43,6 @@ impl NodeTrigger {
         if with_int_start {
             self.int_start_node_i = src.int_start_node_i;
         }
-    }
-
-    /// Initialise hold / int-reset / master-reset fields of a TriggerSig from
-    /// this NodeTrigger.  int-start is intentionally excluded — call
-    /// `init_int_start_sig` explicitly for nodes that need it.
-    pub fn init_ctrl_sigs(&self, sig: &mut TriggerSig, arena: &ModelArena) {
-        sig.hold_sig_i    = self.hold_node_i     .map(|n| arena.get_node_exit_opr(&n));
-        sig.int_rst_sig_i = self.int_reset_node_i.map(|n| arena.get_node_exit_opr(&n));
-        sig.mrst_sig_i    = self.mrst_node_i     .map(|n| arena.get_node_exit_opr(&n));
-        sig.clk_sig_i     = self.clk_node_i      .map(|n| arena.get_node_exit_opr(&n));
-    }
-
-    /// Opt-in initialisation of int_start_sig_i for nodes that use it.
-    pub fn init_int_start_sig(&self, sig: &mut TriggerSig, arena: &ModelArena) {
-        sig.int_start_sig_i = self.int_start_node_i.map(|n| arena.get_node_exit_opr(&n));
-    }
-
-    pub fn to_trigger_sig(&self, arena: &ModelArena) -> TriggerSig {
-        let mut sig = TriggerSig::new();
-        self.init_ctrl_sigs(&mut sig, arena);
-        self.init_int_start_sig(&mut sig, arena);
-        for (srci, condi) in self.iter_depend_nodes() {
-            sig.push_depend_node(arena.get_node_exit_opr(&srci), condi);
-        }
-        sig
     }
 
     pub fn is_unpred_cycle_usage(&self) -> bool {

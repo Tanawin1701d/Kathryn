@@ -67,7 +67,7 @@ impl NcpNode for StateNode {
 
     fn assign(&mut self, arena: &mut ModelArena) {
 
-        let sig = self.triggers.to_trigger_sig(arena);
+        let sig = self.to_trigger_sig(arena);
         let mut sr = arena.take_state_reg(self.state_reg_i);
         *sr.get_triggers_mut() = sig;
         sr.build_update_event(arena);

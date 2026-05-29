@@ -58,7 +58,7 @@ impl NcpNode for WaitCondNode {
 
     fn assign(&mut self, arena: &mut ModelArena) {
         assert!(self.triggers.depend_count() > 0, "WaitCondNode requires at least one depend node");
-        let sig = self.triggers.to_trigger_sig(arena);
+        let sig = self.to_trigger_sig(arena);
         let mut cw = arena.take_cond_wait_reg(self.cond_wait_reg_i);
         *cw.get_triggers_mut() = sig;
         cw.build_support_signal(arena);
@@ -150,7 +150,7 @@ impl NcpNode for WaitCycleNode {
     fn get_clock_mode (&self) -> ClockMode { ClockMode::PosEdge }
 
     fn assign(&mut self, arena: &mut ModelArena) {
-        let sig = self.triggers.to_trigger_sig(arena);
+        let sig = self.to_trigger_sig(arena);
         let mut cw = arena.take_cycle_wait_reg(self.cycle_wait_reg_i);
         *cw.get_triggers_mut() = sig;
         cw.build_support_signal(arena);

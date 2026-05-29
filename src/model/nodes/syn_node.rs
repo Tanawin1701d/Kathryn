@@ -58,7 +58,7 @@ impl NcpNode for SynNode {
 
     fn assign(&mut self, arena: &mut ModelArena) {
 
-        let sig = self.triggers.to_trigger_sig(arena);
+        let sig = self.to_trigger_sig(arena);
 
         let mut sy = arena.take_sync_reg(self.sync_reg_i);
         *sy.get_triggers_mut() = sig;

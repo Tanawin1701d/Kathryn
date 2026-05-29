@@ -1,6 +1,7 @@
 use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::operation::LogicOp;
+use crate::model::hw_component::sp_reg::trigger_sig::TriggerSig;
 use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
 use crate::model::model_arena::ModelArena;
 
@@ -33,6 +34,35 @@ pub trait NcpNode: HasNodeTriggerSig {
 
     fn get_md_ident_val(&self) -> String {
         format!("{} @ {:p}", self.get_ncp_ident().get_node_type(), self as *const _ as *const ())
+    }
+
+    // ---- TriggerSig builders ----------------------------------------------
+
+    /// Initialise hold / int-reset / master-reset / clk fields of a TriggerSig
+    /// from this node's NodeTrigger.  int-start is intentionally excluded —
+    /// call `init_int_start_sig` explicitly for nodes that need it.
+    fn init_ctrl_sigs(&self, sig: &mut TriggerSig, arena: &ModelArena) {
+        let nt = self.get_node_triggers();
+        sig.hold_sig_i    = nt.hold_node_i     .map(|n| arena.get_node_exit_opr(&n));
+        sig.int_rst_sig_i = nt.int_reset_node_i.map(|n| arena.get_node_exit_opr(&n));
+        sig.mrst_sig_i    = nt.mrst_node_i     .map(|n| arena.get_node_exit_opr(&n));
+        sig.clk_sig_i     = nt.clk_node_i      .map(|n| arena.get_node_exit_opr(&n));
+    }
+
+    /// Opt-in initialisation of int_start_sig_i for nodes that use it.
+    fn init_int_start_sig(&self, sig: &mut TriggerSig, arena: &ModelArena) {
+        sig.int_start_sig_i = self.get_node_triggers().int_start_node_i
+            .map(|n| arena.get_node_exit_opr(&n));
+    }
+
+    fn to_trigger_sig(&self, arena: &ModelArena) -> TriggerSig {
+        let mut sig = TriggerSig::new();
+        self.init_ctrl_sigs    (&mut sig, arena);
+        self.init_int_start_sig(&mut sig, arena);
+        for (srci, condi) in self.get_node_triggers().iter_depend_nodes() {
+            sig.push_depend_node(arena.get_node_exit_opr(&srci), condi);
+        }
+        sig
     }
 
     // ---- gating helpers (logic combinators) -------------------------------
