@@ -38,21 +38,29 @@ pub trait NcpNode: HasNodeTriggerSig {
 
     // ---- TriggerSig builders ----------------------------------------------
 
+    /// Resolve a referenced node's exit-opr safely.  If the target is *this*
+    /// node, the arena slot is currently taken (self-loopback) so calling
+    /// `arena.get_node_exit_opr` would panic — fall back to `self.get_exit_opr()`.
+    fn resolve_node_exit_opr(&self, arena: &ModelArena, n: NcpIdent) -> HcpIdent {
+        if n == self.get_ncp_ident() { self.get_exit_opr() }
+        else                         { arena.get_node_exit_opr(&n) }
+    }
+
     /// Initialise hold / int-reset / master-reset / clk fields of a TriggerSig
     /// from this node's NodeTrigger.  int-start is intentionally excluded —
     /// call `init_int_start_sig` explicitly for nodes that need it.
     fn init_ctrl_sigs(&self, sig: &mut TriggerSig, arena: &ModelArena) {
         let nt = self.get_node_triggers();
-        sig.hold_sig_i    = nt.hold_node_i     .map(|n| arena.get_node_exit_opr(&n));
-        sig.int_rst_sig_i = nt.int_reset_node_i.map(|n| arena.get_node_exit_opr(&n));
-        sig.mrst_sig_i    = nt.mrst_node_i     .map(|n| arena.get_node_exit_opr(&n));
-        sig.clk_sig_i     = nt.clk_node_i      .map(|n| arena.get_node_exit_opr(&n));
+        sig.hold_sig_i    = nt.hold_node_i     .map(|n| self.resolve_node_exit_opr(arena, n));
+        sig.int_rst_sig_i = nt.int_reset_node_i.map(|n| self.resolve_node_exit_opr(arena, n));
+        sig.mrst_sig_i    = nt.mrst_node_i     .map(|n| self.resolve_node_exit_opr(arena, n));
+        sig.clk_sig_i     = nt.clk_node_i      .map(|n| self.resolve_node_exit_opr(arena, n));
     }
 
     /// Opt-in initialisation of int_start_sig_i for nodes that use it.
     fn init_int_start_sig(&self, sig: &mut TriggerSig, arena: &ModelArena) {
         sig.int_start_sig_i = self.get_node_triggers().int_start_node_i
-            .map(|n| arena.get_node_exit_opr(&n));
+            .map(|n| self.resolve_node_exit_opr(arena, n));
     }
 
     fn to_trigger_sig(&self, arena: &ModelArena) -> TriggerSig {
@@ -60,7 +68,7 @@ pub trait NcpNode: HasNodeTriggerSig {
         self.init_ctrl_sigs    (&mut sig, arena);
         self.init_int_start_sig(&mut sig, arena);
         for (srci, condi) in self.get_node_triggers().iter_depend_nodes() {
-            sig.push_depend_node(arena.get_node_exit_opr(&srci), condi);
+            sig.push_depend_node(self.resolve_node_exit_opr(arena, srci), condi);
         }
         sig
     }
