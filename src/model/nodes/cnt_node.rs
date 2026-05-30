@@ -54,21 +54,23 @@ impl NcpNode for CounterNode {
     fn get_ncp_ident  (&self) -> NcpIdent  { self.ident }
     fn get_clock_mode (&self) -> ClockMode { ClockMode::PosEdge }
 
-    fn assign_prelim(&mut self, _arena: &mut ModelArena) {}
-
-    fn assign_final(&mut self, arena: &mut ModelArena) {
-        let sig = self.to_trigger_sig(arena);
+    fn assign_prelim(&mut self, arena: &mut ModelArena) {
         let mut cr = arena.take_cnt_reg(self.cnt_reg_i);
-        cr.set_triggers(sig);
-
         cr.build_support_signal(arena);
-        cr.build_update_event(arena);
         let end_expr = cr.generate_end_expr();
         arena.replace_back_cnt_reg(cr);
         self.end_expr_i = Some(end_expr);
     }
 
-    fn get_exit_opr  (&self) -> HcpIdent { self.end_expr_i.unwrap_or_default() }
+    fn assign_final(&mut self, arena: &mut ModelArena) {
+        let sig = self.to_trigger_sig(arena);
+        let mut cr = arena.take_cnt_reg(self.cnt_reg_i);
+        cr.set_triggers(sig);
+        cr.build_update_event(arena);
+        arena.replace_back_cnt_reg(cr);
+    }
+
+    fn get_exit_opr  (&self) -> HcpIdent { self.end_expr_i.expect("CounterNode::get_exit_opr: end_expr_i not set — call assign_prelim first") }
     fn get_cycle_used(&self) -> i32      { self.last_loop }
 
     fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) {

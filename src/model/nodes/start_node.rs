@@ -53,6 +53,7 @@ impl NcpNode for StartNode {
     fn get_ncp_ident  (&self) -> NcpIdent  { self.ident }
     fn get_clock_mode (&self) -> ClockMode { ClockMode::PosEdge }
 
+    // exit_expr_i is materialised in `new`, so there is no graph-wire work for prelim.
     fn assign_prelim(&mut self, _arena: &mut ModelArena) {}
 
     fn assign_final(&mut self, arena: &mut ModelArena) {

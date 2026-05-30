@@ -61,26 +61,36 @@ impl NcpNode for PseudoNode {
 
     fn assign_prelim(&mut self, _arena: &mut ModelArena) {}
 
+    // Deferred to assign_final so every dependent node's exit_opr is already
+    // bound (set in their assign_prelim) before we fold it into exit_expr_i.
     fn assign_final(&mut self, arena: &mut ModelArena) {
         let depend_count = self.triggers.depend_count();
         assert!(depend_count > 0, "PseudoNode requires at least one depend node");
 
+        // Snapshot the dep list so we drop the borrow on self.triggers before mutating arena.
         let dep_list: Vec<(NcpIdent, Option<HcpIdent>)> =
             self.triggers.iter_depend_nodes().collect();
 
-        let mut final_opr: Option<HcpIdent> = None;
+        // Fold each dep's (cond-gated) exit_opr into final_opr_i via join_op.
+        let mut final_opr_i: Option<HcpIdent> = None;
         for (src_node, condition) in dep_list {
-            let src_exit = arena.get_node_exit_opr(&src_node);
-            let mut opr_per_src = Some(src_exit);
+            // resolve_node_exit_opr handles self-loopback safely (slot may be taken).
+            let src_exit_i = self.resolve_node_exit_opr(arena, src_node);
+            let mut opr_per_src_i = Some(src_exit_i);
             if let Some(c) = condition {
-                add_logic(arena, &mut opr_per_src, c, LogicOp::BitwiseAnd);
+                // AND-gate this dep's exit with the per-edge condition signal.
+                add_logic(arena, &mut opr_per_src_i, c, LogicOp::BitwiseAnd);
             }
-            let opr = opr_per_src.expect("checked above");
-            add_logic(arena, &mut final_opr, opr, self.join_op);
+            add_logic(arena,
+                      &mut final_opr_i,
+                      opr_per_src_i.expect("checked above"),
+                      self.join_op);
         }
-        let src = final_opr.expect("depend_count > 0 asserted above");
+
+        // Materialise the folded operand into the pre-allocated exit_expr placeholder.
         let mut expr = arena.take_expression(self.exit_expr_i);
-        expr.assign_operand(src, Slice::new(0, self.bit_width));
+        expr.assign_operand(final_opr_i.expect("depend_count > 0 asserted above"),
+                            Slice::new(0, self.bit_width));
         arena.replace_back_expression(expr);
     }
 

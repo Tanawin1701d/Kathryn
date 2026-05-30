@@ -56,26 +56,29 @@ impl NcpNode for WaitCondNode {
     fn get_ncp_ident  (&self) -> NcpIdent  { self.ident }
     fn get_clock_mode (&self) -> ClockMode { ClockMode::PosEdge }
 
-    fn assign_prelim(&mut self, _arena: &mut ModelArena) {}
+    fn assign_prelim(&mut self, arena: &mut ModelArena) {
+        let mut cw = arena.take_cond_wait_reg(self.cond_wait_reg_i);
+        cw.build_support_signal(arena);
+        let end_expr = cw.generate_end_expr();
+        arena.replace_back_cond_wait_reg(cw);
+
+        let bound_rst = self.bind_with_rst_output_if_reset(arena, end_expr);
+        let bound_all = self.bind_with_hold_if_hold       (arena, bound_rst);
+        self.raw_state_op_i = Some(end_expr);
+        self.bound_exit_i   = Some(bound_all);
+    }
 
     fn assign_final(&mut self, arena: &mut ModelArena) {
         assert!(self.triggers.depend_count() > 0, "WaitCondNode requires at least one depend node");
         let sig = self.to_trigger_sig(arena);
         let mut cw = arena.take_cond_wait_reg(self.cond_wait_reg_i);
         cw.set_triggers(sig);
-        cw.build_support_signal(arena);
         cw.build_update_event(arena);
-        let end_expr = cw.generate_end_expr();
         arena.replace_back_cond_wait_reg(cw);
-
-        let bound_rst = self.bind_with_rst_output_if_reset(arena, end_expr);
-        let bound_all = self.bind_with_hold_if_hold(arena, bound_rst);
-        self.raw_state_op_i = Some(end_expr);
-        self.bound_exit_i   = Some(bound_all);
     }
 
-    fn get_exit_opr  (&self) -> HcpIdent { self.bound_exit_i.unwrap() }
-    fn get_state_operating(&self) -> HcpIdent { self.raw_state_op_i.unwrap() }
+    fn get_exit_opr  (&self) -> HcpIdent { self.bound_exit_i.expect("WaitCondNode::get_exit_opr: bound_exit_i not set — call assign_prelim first") }
+    fn get_state_operating(&self) -> HcpIdent { self.raw_state_op_i.expect("WaitCondNode::get_state_operating: raw_state_op_i not set — call assign_prelim first") }
     fn get_cycle_used(&self) -> i32 { NODE_CYCLE_USED_UNKNOWN }
 
     fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) {
@@ -151,24 +154,27 @@ impl NcpNode for WaitCycleNode {
     fn get_ncp_ident  (&self) -> NcpIdent  { self.ident }
     fn get_clock_mode (&self) -> ClockMode { ClockMode::PosEdge }
 
-    fn assign_prelim(&mut self, _arena: &mut ModelArena) {}
+    fn assign_prelim(&mut self, arena: &mut ModelArena) {
+        let mut cw = arena.take_cycle_wait_reg(self.cycle_wait_reg_i);
+        cw.build_support_signal(arena);
+        let end_expr = cw.generate_end_expr();
+        arena.replace_back_cycle_wait_reg(cw);
+
+        let bound_rst = self.bind_with_rst_output_if_reset(arena, end_expr);
+        let bound_all = self.bind_with_hold_if_hold       (arena, bound_rst);
+        self.end_expr_i   = Some(end_expr);
+        self.bound_exit_i = Some(bound_all);
+    }
 
     fn assign_final(&mut self, arena: &mut ModelArena) {
         let sig = self.to_trigger_sig(arena);
         let mut cw = arena.take_cycle_wait_reg(self.cycle_wait_reg_i);
         cw.set_triggers(sig);
-        cw.build_support_signal(arena);
         cw.build_update_event(arena);
-        let end_expr = cw.generate_end_expr();
         arena.replace_back_cycle_wait_reg(cw);
-
-        let bound_rst = self.bind_with_rst_output_if_reset(arena, end_expr);
-        let bound_all = self.bind_with_hold_if_hold(arena, bound_rst);
-        self.end_expr_i   = Some(end_expr);
-        self.bound_exit_i = Some(bound_all);
     }
 
-    fn get_exit_opr  (&self) -> HcpIdent { self.bound_exit_i.unwrap() }
+    fn get_exit_opr  (&self) -> HcpIdent { self.bound_exit_i.expect("WaitCycleNode::get_exit_opr: bound_exit_i not set — call assign_prelim first") }
     fn get_cycle_used(&self) -> i32 {
         if self.get_node_triggers().is_unpred_cycle_usage() {
             NODE_CYCLE_USED_UNKNOWN
