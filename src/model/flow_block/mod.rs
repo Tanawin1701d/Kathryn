@@ -6,7 +6,6 @@ pub mod par;
 pub mod cond;
 pub mod loops;
 pub mod node_wrap;
-pub mod arena_ops;
 
 pub use common::{CondMode, LoopMode, ParSyncMode};
 pub use flow_block_base::{FlowBlock, FlowBlockBase, ExtSigType};

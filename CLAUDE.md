@@ -125,7 +125,7 @@ CRUD on the arena is split by category:
 | `arena_impl_ue.rs`     | update events                              |
 | `arena_impl_node.rs`   | flow nodes                                 |
 | `arena_impl_flow_block.rs` | flow-block primitive CRUD + ONE polymorphic match |
-| `flow_block/arena_ops.rs`  | higher-level flow-block operations (zero match) |
+| `arena_impl_flow_block.rs` (second `impl` block) | higher-level flow-block operations (zero match) |
 
 The public surface for each arena type is **only**:
 
@@ -196,7 +196,7 @@ Flow blocks (`src/model/flow_block/`) use a specialised dispatch pattern that
   Every concrete impl (`FlowBlockSeq`, `FlowBlockPar`) calls the matching
   typed `replace_back_flow_block_seq` / `replace_back_flow_block_par`.
 
-- `flow_block/arena_ops.rs` provides all higher-level operations
+- `arena_impl_flow_block.rs` provides all higher-level operations (in its second `impl ModelArena` block)
   (`add_node_to_flow_block`, `add_sub_flow_block_to_flow_block`,
   `build_flow_block`, `summarize_flow_block`). They use take/replace_back
   with `Box<dyn FlowBlock>` — **zero match, zero macro**.

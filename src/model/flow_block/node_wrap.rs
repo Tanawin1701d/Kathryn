@@ -27,16 +27,16 @@ impl NodeWrap {
     pub fn with_entrances(entrances_i: &[NcpIdent], exit_i: NcpIdent, cycle_used: i32) -> Self {
         let mut w = Self::new();
         w.add_entrance_nodes_i(entrances_i);
-        w.set_exit_node_i(exit_i);
-        w.set_cycle_used(cycle_used);
+        w.set_exit_node_i     (exit_i);
+        w.set_cycle_used      (cycle_used);
         w
     }
 
     pub fn with_single_entrance(entrance_i: NcpIdent, exit_i: NcpIdent, cycle_used: i32) -> Self {
         let mut w = Self::new();
         w.add_entrance_node_i(entrance_i);
-        w.set_exit_node_i(exit_i);
-        w.set_cycle_used(cycle_used);
+        w.set_exit_node_i    (exit_i);
+        w.set_cycle_used     (cycle_used);
         w
     }
 
@@ -80,18 +80,6 @@ impl NodeWrapCycleDet {
     }
     pub fn add_cycle(&mut self, cycle: i32) { self.samples.push(cycle); }
 
-    pub fn get_max_cycle_horizon(&self) -> i32 {
-        assert!(!self.samples.is_empty());
-        let mut max_cycle = 0;
-        for cycle in &self.samples {
-            if *cycle == IN_CONSIST_CYCLE_USED {
-                return IN_CONSIST_CYCLE_USED;
-            }
-            max_cycle = max_cycle.max(*cycle);
-        }
-        max_cycle
-    }
-
     pub fn get_cycle_vertical(&self) -> i32 {
         assert!(!self.samples.is_empty());
         let mut cycle_used = 0;
@@ -102,6 +90,18 @@ impl NodeWrapCycleDet {
             cycle_used += *cycle;
         }
         cycle_used
+    }
+
+    pub fn get_max_cycle_horizon(&self) -> i32 {
+        assert!(!self.samples.is_empty());
+        let mut max_cycle = 0;
+        for cycle in &self.samples {
+            if *cycle == IN_CONSIST_CYCLE_USED {
+                return IN_CONSIST_CYCLE_USED;
+            }
+            max_cycle = max_cycle.max(*cycle);
+        }
+        max_cycle
     }
 
     pub fn get_same_cycle_horizon(&self) -> i32 {

@@ -30,17 +30,17 @@ pub enum FlowBlockType {
 impl FlowBlockType {
     pub fn as_str(self) -> &'static str {
         match self {
-            Self::Sequential   => "SEQUENTIAL",
-            Self::Parallel     => "PARALLEL",
-            Self::CondIf       => "COND_IF",
-            Self::CondElif     => "COND_ELIF",
-            Self::ZeroCondIf   => "ZERO_COND_IF",
-            Self::ZeroCondElif => "ZERO_COND_ELIF",
-            Self::ZeroSwitch   => "ZERO_SWITCH",
+            Self::Sequential     => "SEQUENTIAL",
+            Self::Parallel       => "PARALLEL",
+            Self::CondIf         => "COND_IF",
+            Self::CondElif       => "COND_ELIF",
+            Self::ZeroCondIf     => "ZERO_COND_IF",
+            Self::ZeroCondElif   => "ZERO_COND_ELIF",
+            Self::ZeroSwitch     => "ZERO_SWITCH",
             Self::ZeroSwitchCase => "ZERO_SWITCH_CASE",
-            Self::WhileLoop    => "WHILE_LOOP",
-            Self::DoWhile      => "DO_WHILE",
-            Self::CounterLoop  => "COUNTER_LOOP",
+            Self::WhileLoop      => "WHILE_LOOP",
+            Self::DoWhile        => "DO_WHILE",
+            Self::CounterLoop    => "COUNTER_LOOP",
         }
     }
 
