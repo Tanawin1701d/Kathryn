@@ -13,14 +13,15 @@ use crate::model::nodes::node_trigger::NodeTrigger;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(usize)]
 pub enum ExtSigType {
-    Hold  = 0,
-    Reset = 1,
-    Start = 2,
-    MReset  = 3,
+    Hold   = 0,
+    Reset  = 1,
+    Start  = 2,
+    MReset = 3,
+    Clk    = 4,
 }
 
 impl ExtSigType {
-    pub const COUNT: usize = 4;
+    pub const COUNT: usize = 5;
 }
 
 #[derive(Clone, Debug)]
@@ -58,7 +59,7 @@ impl FlowBlockBase {
             next_input_order : 0,
             // external signal
             sys_nodes        : Vec::new(),
-            ext_signals      : [Vec::new(), Vec::new(), Vec::new(), Vec::new()],
+            ext_signals      : std::array::from_fn(|_| Vec::new()),
             ext_trigger_node : NodeTrigger::default(),
         }
     }
@@ -113,6 +114,7 @@ impl FlowBlockBase {
     pub fn get_int_reset_node(&self) -> Option<NcpIdent> { self.ext_trigger_node.int_reset_node_i }
     pub fn get_int_start_node(&self) -> Option<NcpIdent> { self.ext_trigger_node.int_start_node_i }
     pub fn get_mrst_node     (&self) -> Option<NcpIdent> { self.ext_trigger_node.mrst_node_i }
+    pub fn get_clk_node      (&self) -> Option<NcpIdent> { self.ext_trigger_node.clk_node_i }
     pub fn has_int_start     (&self) -> bool             { self.ext_trigger_node.int_start_node_i.is_some() }
 
     pub fn get_ext_trigger_node(&self) -> &NodeTrigger { &self.ext_trigger_node }
@@ -123,6 +125,7 @@ impl FlowBlockBase {
             ExtSigType::Reset  => self.ext_trigger_node.int_reset_node_i,
             ExtSigType::Start  => self.ext_trigger_node.int_start_node_i,
             ExtSigType::MReset => self.ext_trigger_node.mrst_node_i,
+            ExtSigType::Clk    => self.ext_trigger_node.clk_node_i,
         }
     }
 
@@ -134,6 +137,18 @@ impl FlowBlockBase {
         self.ext_trigger_node.int_reset_node_i = Self::gen_signal_node(&format!("flow_rst_{}", id),   &self.ext_signals[ExtSigType::Reset  as usize], arena);
         self.ext_trigger_node.int_start_node_i = Self::gen_signal_node(&format!("flow_start_{}", id), &self.ext_signals[ExtSigType::Start  as usize], arena);
         self.ext_trigger_node.mrst_node_i      = Self::gen_signal_node(&format!("flow_mrst_{}", id),  &self.ext_signals[ExtSigType::MReset as usize], arena);
+        self.ext_trigger_node.clk_node_i       = Self::gen_clk_node   (&format!("flow_clk_{}", id),   &self.ext_signals[ExtSigType::Clk    as usize], arena);
+    }
+
+    /// Clk has exactly-one-source semantics: no OR fan-in is allowed.  Asserts
+    /// `signals.len() == 1` (or returns None when no clk is forwarded at all)
+    /// and wraps that single signal in an OprNode so it can be used as the
+    /// trigger group's `clk_node_i`.
+    fn gen_clk_node(name: &str, signals: &[HcpIdent], arena: &mut ModelArena) -> Option<NcpIdent> {
+        if signals.is_empty() { return None; }
+        assert_eq!(signals.len(), 1,
+                   "ExtSigType::Clk supports exactly one signal, got {} for {}", signals.len(), name);
+        Some(arena.make_opr_node(name, signals[0]))
     }
 
     fn gen_signal_node(name: &str, signals: &[HcpIdent], arena: &mut ModelArena) -> Option<NcpIdent> {
@@ -147,7 +162,7 @@ impl FlowBlockBase {
 
     // pre build hardware function
     pub fn build_common_hw(&mut self, arena: &mut ModelArena) {
-        for sig_type in [ExtSigType::Reset, ExtSigType::Hold, ExtSigType::MReset] {
+        for sig_type in [ExtSigType::Reset, ExtSigType::Hold, ExtSigType::MReset, ExtSigType::Clk] {
             self.fill_ext_signal_to_child(arena, sig_type);
         }
         self.build_sub_hw_component(arena);
@@ -176,6 +191,7 @@ impl FlowBlockBase {
     pub fn gen_unified_asm_meta_flat(&self, arena: &mut ModelArena) -> Vec<AssignMeta> {
         enum Item { BasicNode(NcpIdent), SubBlock(FlowBlockIdent) }
 
+        /// phase 1: collect phase
         let mut items: Vec<(usize, Item)> = Vec::new();
         for (&node_i, &ord) in self.basic_nodes_i.iter().zip(self.basic_node_orders.iter()) {
             items.push((ord, Item::BasicNode(node_i)));
@@ -187,6 +203,7 @@ impl FlowBlockBase {
         }
         items.sort_by_key(|&(ord, _)| ord);
 
+        /// phase 2: build new assign meta group pool
         let mut pool = AssignMetaGrpPool::default();
         for (_, item) in items {
             match item {
