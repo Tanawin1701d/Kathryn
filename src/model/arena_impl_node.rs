@@ -107,6 +107,15 @@ impl ModelArena {
         self.get_ncp_node_mut(&ident).fill_ext_node(trigger, with_int_start);
     }
 
+    /// Propagate the AsmNode's wired clock source onto each of its AssignMeta UEs.
+    /// No-op if the AsmNode's trigger has no clk_node_i set.
+    pub fn init_asm_node_clk_src(&mut self, ident: NcpIdent) {
+        assert_eq!(ident.get_node_type(), NodeType::Asm);
+        let mut asm = self.take_asm_node(ident);
+        asm.set_clk_src(self);
+        self.replace_back_asm_node(asm);
+    }
+
     pub fn add_slave_asm_to_state_node(&mut self, state_node_i: NcpIdent, asm_node_i: NcpIdent, cond: Option<HcpIdent>) {
         assert_eq!(state_node_i.get_node_type(), NodeType::State);
         assert_eq!(asm_node_i.get_node_type(), NodeType::Asm);

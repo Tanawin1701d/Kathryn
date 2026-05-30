@@ -167,6 +167,25 @@ impl FlowBlockBase {
         }
         self.build_sub_hw_component(arena);
         self.gen_trigger_node(arena);
+
+    }
+
+    /// Push this block's `ext_trigger_node` (hold / int-reset / mrst / clk) onto
+    /// every basic AsmNode so their trigger context matches the enclosing block
+    /// before `assign_prelim` runs.  int-start is not propagated to basic nodes.
+    pub fn init_node_trigger_for_basic_node(&self, arena: &mut ModelArena) {
+        for &node_i in self.basic_nodes_i.iter() {
+            arena.init_node_trigger(node_i, &self.ext_trigger_node, false);
+        }
+    }
+
+    /// Push the wired clock source from each basic AsmNode's trigger onto its
+    /// AssignMeta UEs.  Must run after `init_node_trigger_for_basic_node` so
+    /// that `clk_node_i` is in place.
+    pub fn set_clk_src_for_basic_node(&self, arena: &mut ModelArena) {
+        for &node_i in self.basic_nodes_i.iter() {
+            arena.init_asm_node_clk_src(node_i);
+        }
     }
 
     fn fill_ext_signal_to_child(&self, arena: &mut ModelArena, sig_type: ExtSigType) {
