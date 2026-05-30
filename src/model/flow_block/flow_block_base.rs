@@ -232,7 +232,9 @@ impl FlowBlockBase {
                     arena.replace_back_asm_node(node);
                 }
                 Item::SubBlock(block_i) => {
-                    let node_i = arena.get_flow_block(block_i).summarize_as_node();
+                    let block  = arena.take_flow_block(block_i);
+                    let node_i = block.summarize_as_node();
+                    arena.replace_back_flow_block(block);
                     let node = arena.take_asm_node(node_i);
                     pool.insert_asms(arena, node.get_assign_metas());
                     arena.replace_back_asm_node(node);

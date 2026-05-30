@@ -57,7 +57,9 @@ impl CondSchematic {
         let mut con_wraps: Vec<NodeWrap> = Vec::new();
 
         for (i, &con_i) in con_block_ids.iter().enumerate() {
-            let con_condition = arena.get_flow_block(con_i).get_con_condition();
+            let con_block     = arena.take_flow_block(con_i);
+            let con_condition = con_block.get_con_condition();
+            arena.replace_back_flow_block(con_block);
             let con_wrap = arena.summarize_flow_block(con_i);
 
             let gated_cond = chain.step(arena, "cif", id, i, con_condition);

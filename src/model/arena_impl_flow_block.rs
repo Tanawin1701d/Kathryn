@@ -221,21 +221,6 @@ impl ModelArena {
         block.replace_back_into_arena(self);
     }
 
-    pub fn get_flow_block(&self, ident: FlowBlockIdent) -> &dyn FlowBlock {
-        match ident.get_block_type() {
-            FlowBlockType::Sequential   => self.flow_block_seqs          .get(*ident.get_arena_handle()),
-            FlowBlockType::Parallel     => self.flow_block_pars          .get(*ident.get_arena_handle()),
-            FlowBlockType::CondIf       => self.flow_block_conds         .get(*ident.get_arena_handle()),
-            FlowBlockType::CondElif     => self.flow_block_cond_elifs    .get(*ident.get_arena_handle()),
-            FlowBlockType::ZeroCondIf   => self.flow_block_zero_cond_ifs  .get(*ident.get_arena_handle()),
-            FlowBlockType::ZeroCondElif => self.flow_block_zero_cond_elifs.get(*ident.get_arena_handle()),
-            FlowBlockType::ZeroSwitch     => self.flow_block_zero_switches    .get(*ident.get_arena_handle()),
-            FlowBlockType::ZeroSwitchCase => self.flow_block_zero_switch_cases.get(*ident.get_arena_handle()),
-            FlowBlockType::WhileLoop    => self.flow_block_whiles        .get(*ident.get_arena_handle()),
-            FlowBlockType::DoWhile      => self.flow_block_do_whiles     .get(*ident.get_arena_handle()),
-            FlowBlockType::CounterLoop  => self.flow_block_counter_loops .get(*ident.get_arena_handle()),
-        }
-    }
 }
 
 // ---- higher-level flow-block operations (formerly flow_block/arena_ops.rs) ----
@@ -284,7 +269,10 @@ impl ModelArena {
         self.replace_back_flow_block(block);
     }
 
-    pub fn summarize_flow_block(&self, ident: FlowBlockIdent) -> NodeWrap {
-        self.get_flow_block(ident).summarize_as_block()
+    pub fn summarize_flow_block(&mut self, ident: FlowBlockIdent) -> NodeWrap {
+        let block = self.take_flow_block(ident);
+        let wrap  = block.summarize_as_block();
+        self.replace_back_flow_block(block);
+        wrap
     }
 }

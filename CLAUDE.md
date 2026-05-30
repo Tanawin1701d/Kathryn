@@ -178,7 +178,7 @@ Flow blocks (`src/model/flow_block/`) use a specialised dispatch pattern that
 **eliminates per-variant match cases** from all higher-level code:
 
 - `arena_impl_flow_block.rs` holds the ONE permitted match inside
-  `take_flow_block` / `get_flow_block`. `replace_back_flow_block` needs
+  `take_flow_block`. `replace_back_flow_block` needs
   **no match** — it delegates to the trait method:
 
   ```rust
@@ -204,7 +204,7 @@ Flow blocks (`src/model/flow_block/`) use a specialised dispatch pattern that
 - `FlowBlockIdent` carries `FlowBlockType` (`Sequential` | `Parallel`).
   Adding a new block type requires: (1) new variant in `FlowBlockType`,
   (2) new `ArenaGroup` field + CRUD in `arena_impl_flow_block.rs`,
-  (3) new arm in the ONE match inside `take_flow_block`/`get_flow_block`,
+  (3) new arm in the ONE match inside `take_flow_block`,
   (4) `impl FlowBlock` on the new type — nothing else changes.
 
 `NodeWrap` is a by-value summary of node idents, not an owned model object.

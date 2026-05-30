@@ -32,12 +32,20 @@ impl FlowBlock for FlowBlockSeq {
     fn get_base_mut(&mut self) -> &mut FlowBlockBase { &mut self.base }
 
     fn add_element_in_flow_block(&mut self, node: NcpIdent) {
-        self.schematic.add_node(node);
+        self.schematic.add_asm_node(node);
         self.base.add_basic_node(node);
     }
 
     fn add_sub_flow_block(&mut self, block: FlowBlockIdent) {
-        self.schematic.add_sub_block(block);
+        // BasicNodeFlow children expose a single summary AsmNode — wrap them
+        // as a Basic element so they slot into the seq chain like a node.
+        // SubFlow children expose a full NodeWrap and become a SubBlock element.
+        match block.get_join_policy() {
+            FlowBlockJoinPolicy::BasicNodeFlow => self.schematic.add_basic_block(block),
+            FlowBlockJoinPolicy::SubFlow       => self.schematic.add_sub_block  (block),
+            FlowBlockJoinPolicy::ConFlow       =>
+                panic!("FlowBlockSeq::add_sub_flow_block: ConFlow children are not allowed as sub-blocks of a seq"),
+        }
         self.base.add_sub_flow_block(block);
     }
 

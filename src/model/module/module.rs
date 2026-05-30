@@ -149,7 +149,9 @@ impl Module {
             arena.build_flow_block(block_i);
             if block_i.get_join_policy() == FlowBlockJoinPolicy::BasicNodeFlow {
                 // BasicNodeFlow blocks expose a single asm node — dry-assign it.
-                let node_i = arena.get_flow_block(block_i).summarize_as_node();
+                let block  = arena.take_flow_block(block_i);
+                let node_i = block.summarize_as_node();
+                arena.replace_back_flow_block(block);
                 assert_eq!(node_i.get_node_type(), NodeType::Asm,
                     "BasicNodeFlow summarize_as_node must return an AsmNode");
                 arena.dry_assign_asm_node(node_i);

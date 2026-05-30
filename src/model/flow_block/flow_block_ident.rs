@@ -8,7 +8,7 @@ pub enum FlowBlockJoinPolicy {
     SubFlow,
     /// Continuation branch of a conditional chain (elif / else / zelif / zelse).
     ConFlow,
-    /// Block extracted and lowered to a single basic asm node.
+    /// Block extracted and lowered to a single basic asm node but use same entrance as SubFlow
     BasicNodeFlow,
 }
 
