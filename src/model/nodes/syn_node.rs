@@ -56,26 +56,27 @@ impl NcpNode for SynNode {
     fn get_ncp_ident  (&self) -> NcpIdent  { self.ident }
     fn get_clock_mode (&self) -> ClockMode { ClockMode::PosEdge }
 
-    fn assign_prelim(&mut self, _arena: &mut ModelArena) {}
-
-    fn assign_final(&mut self, arena: &mut ModelArena) {
-
-        let sig = self.to_trigger_sig(arena);
-
+    fn assign_prelim(&mut self, arena: &mut ModelArena) {
         let mut sy = arena.take_sync_reg(self.sync_reg_i);
-        sy.set_triggers(sig);
         sy.build_support_signal(arena);
-        sy.build_update_event(arena);
-        let end_expr = sy.get_end_expr_i().expect("end_expr after build");
+        let end_expr = sy.get_end_expr_i().expect("end_expr after build_support_signal");
         arena.replace_back_sync_reg(sy);
 
         let bound_reset = self.bind_with_rst_output_if_reset(arena, end_expr);
-        let bound_all = self.bind_with_hold_if_hold(arena, bound_reset);
+        let bound_all   = self.bind_with_hold_if_hold       (arena, bound_reset);
         self.end_expr_i   = Some(end_expr);
         self.bound_exit_i = Some(bound_all);
     }
 
-    fn get_exit_opr      (&self) -> HcpIdent { self.bound_exit_i.unwrap() }
+    fn assign_final(&mut self, arena: &mut ModelArena) {
+        let sig = self.to_trigger_sig(arena);
+        let mut sy = arena.take_sync_reg(self.sync_reg_i);
+        sy.set_triggers(sig);
+        sy.build_update_event(arena);
+        arena.replace_back_sync_reg(sy);
+    }
+
+    fn get_exit_opr      (&self) -> HcpIdent { self.bound_exit_i.expect("SynNode::get_exit_opr: bound_exit_i not set — call assign_prelim before reading exit_opr") }
     fn get_cycle_used    (&self) -> i32      { 0 }
     fn is_state_full_node(&self) -> bool     { false }
 
