@@ -57,7 +57,7 @@ impl NcpNode for CounterNode {
     fn assign(&mut self, arena: &mut ModelArena) {
         let sig = self.to_trigger_sig(arena);
         let mut cr = arena.take_cnt_reg(self.cnt_reg_i);
-        *cr.get_triggers_mut() = sig;
+        cr.set_triggers(sig);
 
         cr.build_support_signal(arena);
         cr.build_update_event(arena);

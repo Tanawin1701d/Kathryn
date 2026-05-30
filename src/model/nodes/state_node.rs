@@ -69,7 +69,7 @@ impl NcpNode for StateNode {
 
         let sig = self.to_trigger_sig(arena);
         let mut sr = arena.take_state_reg(self.state_reg_i);
-        *sr.get_triggers_mut() = sig;
+        sr.set_triggers(sig);
         sr.build_update_event(arena);
         let raw_state_op = sr.get_ident();
         arena.replace_back_state_reg(sr);

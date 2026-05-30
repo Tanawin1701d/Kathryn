@@ -51,6 +51,10 @@ pub trait HasTriggerSig {
     fn get_triggers    (&self)     -> &TriggerSig;
     fn get_triggers_mut(&mut self) -> &mut TriggerSig;
 
+    /// Replace this sp_reg's TriggerSig wholesale.  Used by node `assign`
+    /// flows that build a complete TriggerSig from the node's NodeTrigger.
+    fn set_triggers(&mut self, sig: TriggerSig) { *self.get_triggers_mut() = sig; }
+
     fn get_hold_sig_i(&self) -> Option<HcpIdent> { self.get_triggers().hold_sig_i }
     fn get_rst_sig_i (&self) -> Option<HcpIdent> { self.get_triggers().int_rst_sig_i }
     fn get_int_sig_i (&self) -> Option<HcpIdent> { self.get_triggers().int_start_sig_i }
