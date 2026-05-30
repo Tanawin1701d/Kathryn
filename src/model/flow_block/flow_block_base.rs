@@ -162,11 +162,19 @@ impl FlowBlockBase {
 
     // pre build hardware function
     pub fn build_common_hw(&mut self, arena: &mut ModelArena) {
+        
+        /// 1. mange the sub/con block
         for sig_type in [ExtSigType::Reset, ExtSigType::Hold, ExtSigType::MReset, ExtSigType::Clk] {
             self.fill_ext_signal_to_child(arena, sig_type);
         }
         self.build_sub_hw_component(arena);
+        
+        /// 2. manage trigger Node (base)
         self.gen_trigger_node(arena);
+        
+        /// 3. manage clock source for basic node
+        self.init_node_trigger_for_basic_node(arena);
+        self.set_clk_src_for_basic_node(arena);
 
     }
 

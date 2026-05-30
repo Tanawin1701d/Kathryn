@@ -245,6 +245,30 @@ When a struct holds multiple categorized lists of the same handle type, prefer
 single `add_*` that reads the type off the ident. See `Module::sp_regs` /
 `Module::user_hw` for the canonical example. Avoid one field per HW type.
 
+### 1.8 Clock-signal policy
+
+Source of truth: `src/model/controller/clock_mode.rs` (top-of-file block).
+Summary of how a clock source gets onto an `UpdateEvent`:
+
+- **`ClockMode::ClkFree`** — no clk wiring. The event lives combinationally;
+  `UeBasic::clk_signal_i` stays `None` and Verilog emits an `always @(*)`.
+
+- **`ClockMode::PosEdge` / `NegEdge`** — clk must be a concrete signal:
+
+  1. **User-level assignment** — `AssignMeta` and its `UpdateEvent` are built
+     with `clk_signal = None`.  The clk is filled in during the enclosing
+     flow block's build phase via `FlowBlockBase::build_common_hw`, drawn
+     from the block's `ext_trigger_node.clk_node_i` (forwarded through
+     `init_node_trigger_for_basic_node` → `set_clk_src_for_basic_node`).
+
+  2. **Flow-block internal registers** (no `AssignMeta`, only `UpdateEvent`)
+     — the clk is wired when the owning node asks the register to build its
+     update event, again sourced from that node's `NodeTrigger::clk_node_i`.
+
+`ExtSigType::Clk` is the single-source variant in `FlowBlockBase` (asserted by
+`gen_clk_node` — no OR fan-in like the other ExtSigType slots).  Each flow
+block carries exactly one Clk source per `ext_signals` slot.
+
 ---
 
 ## 2. Memory management mechanism
