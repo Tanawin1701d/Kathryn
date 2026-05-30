@@ -4,7 +4,7 @@ use crate::model::flow_block::node_wrap::{NodeWrap, NodeWrapCycleDet};
 use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_base::IN_CONSIST_CYCLE_USED;
-use crate::model::nodes::ncp_ident::NcpIdent;
+use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ParSyncMode {
@@ -57,16 +57,33 @@ impl ParSchematic {
         );
         assert!(base.get_con_blocks_i().is_empty(), "parallel flow block does not support con blocks");
 
+        // Split sub-blocks by join policy: BasicNodeFlow children act as inline
+        // AsmNodes (their summary is an AsmNode), SubFlow children become NodeWraps.
+        let (basic_node_flow_sub_blocks_i, sub_flow_sub_blocks_i) = base.scan_sub_blocks_by_policy();
+
+        // Collect every AsmNode that should hang off the shared StateNode:
+        //   - direct basic_nodes_i (already AsmNodes)
+        //   - BasicNodeFlow sub-blocks resolved via summarize_as_node
+        let mut basic_asm_nodes_i: Vec<NcpIdent> = base.get_basic_nodes_i().to_vec();
+        for &block_i in &basic_node_flow_sub_blocks_i {
+            let sub_block = arena.take_flow_block(block_i);
+            let asm_i     = sub_block.summarize_as_node();
+            arena.replace_back_flow_block(sub_block);
+            assert_eq!(asm_i.get_node_type(), NodeType::Asm,
+                       "ParSchematic: BasicNodeFlow sub-block must summarise as an AsmNode");
+            basic_asm_nodes_i.push(asm_i);
+        }
+
         // intialize cycle determiner
         let mut cycle_det = NodeWrapCycleDet::new();
 
-        // If there are direct asm nodes, group them under one shared StateNode.
-        if !base.get_basic_nodes_i().is_empty() {
+        // Group all collected AsmNodes under one shared StateNode (skip if none).
+        if !basic_asm_nodes_i.is_empty() {
             let state_i = arena.make_state_node(
                 &format!("par_state_{}", base.get_ident().get_global_id()),
             );
             arena.init_node_trigger(state_i, base.get_ext_trigger_node(), false);
-            for asm_i in base.get_basic_nodes_i() {
+            for asm_i in &basic_asm_nodes_i {
                 arena.add_slave_asm_to_state_node(state_i, *asm_i, None);
             }
             base.add_sys_node(state_i);
@@ -74,9 +91,11 @@ impl ParSchematic {
             cycle_det.add_cycle(arena.get_node_cycle_used(&state_i));
         }
 
-        // Resolve each sub-block into a NodeWrap so we have its entrance/exit
-        // nodes and cycle count available for wiring and cycle detection below.
-        self.node_wraps_of_sub_blocks = base.get_sub_blocks_i().iter()
+        // Resolve each SubFlow sub-block into a NodeWrap so we have its
+        // entrance/exit nodes and cycle count available for wiring and cycle
+        // detection below.  BasicNodeFlow children are NOT walked here — they
+        // were already folded into basic_state_node_i above.
+        self.node_wraps_of_sub_blocks = sub_flow_sub_blocks_i.iter()
             .map(|block_i| arena.summarize_flow_block(*block_i))
             .collect();
 
@@ -103,15 +122,29 @@ impl ParSchematic {
         usize::from(self.basic_state_node_i.is_some()) + self.node_wraps_of_sub_blocks.len()
     }
 
+    /// Every parallel path's `(exit_node, cycle_cost)` in one flat list:
+    ///   - the shared basic_state_node (cycle = 1, since a StateNode advances one cycle)
+    ///   - every SubFlow sub-block's NodeWrap (exit + reported cycle count)
+    /// Used by both auto-sync and no-sync to drive sync-node fan-in and to pick
+    /// a single exit node when one path's cycle equals the block's max cycle.
     fn path_exit_nodes(&self) -> Vec<(NcpIdent, i32)> {
         let mut nodes: Vec<(NcpIdent, i32)> = Vec::new();
         if let Some(state_i) = self.basic_state_node_i {
             nodes.push((state_i, 1));
         }
-        nodes.extend(self.node_wraps_of_sub_blocks.iter().map(|w| (w.get_exit_node_i(), w.get_cycle_used())));
+        nodes.extend(
+            self.node_wraps_of_sub_blocks.iter()
+                .map(|w| (w.get_exit_node_i(), w.get_cycle_used())));
         nodes
     }
 
+    /////////////////////////////
+    /// static exit decision ////
+    /////////////////////////////
+
+    /// Pick a single path-exit whose cycle count equals this block's overall
+    /// `cycle_used`.  Returns None when `cycle_used` is inconsistent
+    /// (negative sentinel) — caller must fall back to an explicit sync node.
     fn exit_matching_cycle(&self) -> Option<NcpIdent> {
         if self.cycle_used < 0 { return None; }
         self.path_exit_nodes().into_iter()
@@ -124,6 +157,7 @@ impl ParSchematic {
 
     fn build_auto_sync_exit(&mut self, base: &mut FlowBlockBase, arena: &mut ModelArena) -> NcpIdent {
 
+        ///// in this case we cannot statically determine the number of cycle usage
         if self.cycle_used == IN_CONSIST_CYCLE_USED && self.amount_of_paths() > 1 {
             let syn_i = arena.make_syn_node(
                 &format!("par_syn_{}", base.get_ident().get_global_id()),

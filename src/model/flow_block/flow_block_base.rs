@@ -76,6 +76,25 @@ impl FlowBlockBase {
     pub fn get_basic_nodes_i(&self) -> &[NcpIdent]       { &self.basic_nodes_i }
     pub fn get_sys_nodes    (&self) -> &[NcpIdent]       { &self.sys_nodes }
 
+    /// Partition `sub_blocks_i` by join policy.  Returns
+    /// `(basic_node_flow_sub_blocks_i, sub_flow_sub_blocks_i)`.  Schematics
+    /// use this to treat BasicNodeFlow children as inline AsmNodes (their
+    /// summary is an AsmNode) while SubFlow children become full NodeWraps.
+    /// ConFlow entries are not expected here and trigger a panic.
+    pub fn scan_sub_blocks_by_policy(&self) -> (Vec<FlowBlockIdent>, Vec<FlowBlockIdent>) {
+        let mut basic_node_flow_i = Vec::new();
+        let mut sub_flow_i        = Vec::new();
+        for &b in &self.sub_blocks_i {
+            match b.get_join_policy() {
+                FlowBlockJoinPolicy::BasicNodeFlow => basic_node_flow_i.push(b),
+                FlowBlockJoinPolicy::SubFlow       => sub_flow_i       .push(b),
+                FlowBlockJoinPolicy::ConFlow       =>
+                    panic!("scan_sub_blocks_by_policy: ConFlow not allowed in sub_blocks_i"),
+            }
+        }
+        (basic_node_flow_i, sub_flow_i)
+    }
+
     // add block and node
     pub fn add_basic_node(&mut self, node: NcpIdent) {
         assert_eq!(
