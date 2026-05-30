@@ -121,8 +121,12 @@ impl NcpNode for AsmNode {
     /// Direct `assign()` is unsupported — AsmNodes are wired through their
     /// parent StateNode via `assign_from_state_node` (or via `dry_assign` for
     /// flow-block-less binding).  Mirrors C++ `AsmNode::assign() { assert(false) }`.
-    fn assign(&mut self, _arena: &mut ModelArena) {
-        panic!("AsmNode::assign(): use assign_from_state_node or dry_assign");
+    fn assign_prelim(&mut self, _arena: &mut ModelArena) {
+        panic!("AsmNode::assign_prelim(): is not support in AsmNode")
+    }
+
+    fn assign_final(&mut self, _arena: &mut ModelArena) {
+        panic!("AsmNode::assign_final(): use assign_from_state_node or dry_assign");
     }
 
     fn dry_assign(&mut self, arena: &mut ModelArena) {

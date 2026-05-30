@@ -65,19 +65,20 @@ impl NcpNode for StateNode {
     fn get_ncp_ident  (&self) -> NcpIdent  { self.ident }
     fn get_clock_mode (&self) -> ClockMode { ClockMode::PosEdge }
 
-    fn assign(&mut self, arena: &mut ModelArena) {
+    fn assign_prelim(&mut self, arena: &mut ModelArena) {
+        let raw_state_op = self.state_reg_i;
+        let bound_rst    = self.bind_with_rst_output_if_reset(arena, raw_state_op);
+        let bound_all    = self.bind_with_hold_if_hold       (arena, bound_rst);
+        self.state_op_i   = Some(raw_state_op);
+        self.bound_exit_i = Some(bound_all);
+    }
 
+    fn assign_final(&mut self, arena: &mut ModelArena) {
         let sig = self.to_trigger_sig(arena);
         let mut sr = arena.take_state_reg(self.state_reg_i);
         sr.set_triggers(sig);
         sr.build_update_event(arena);
-        let raw_state_op = sr.get_ident();
         arena.replace_back_state_reg(sr);
-
-        let bound_rst = self.bind_with_rst_output_if_reset(arena, raw_state_op);
-        let bound_all = self.bind_with_hold_if_hold(arena, bound_rst);
-        self.state_op_i   = Some(raw_state_op);
-        self.bound_exit_i = Some(bound_all);
     }
 
     fn get_exit_opr       (&self) -> HcpIdent { self.bound_exit_i.expect("exit opr is not set yet") }

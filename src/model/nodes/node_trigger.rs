@@ -71,4 +71,10 @@ pub trait HasNodeTriggerSig {
     fn add_depend_node(&mut self, srci: NcpIdent, condi: Option<HcpIdent>) {
         self.get_node_triggers_mut().push_depend_node(srci, condi);
     }
+
+    /// Copy hold / int-reset / mrst / clk (and optionally int-start) from the
+    /// flow-block's NodeTrigger onto this node's NodeTrigger.
+    fn fill_ext_node(&mut self, src: &NodeTrigger, with_int_start: bool) {
+        self.get_node_triggers_mut().fill_ext_node(src, with_int_start);
+    }
 }

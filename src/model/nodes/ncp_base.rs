@@ -22,7 +22,8 @@ pub trait NcpNode: HasNodeTriggerSig {
     fn get_node_type(&self) -> NodeType { self.get_ncp_ident().get_node_type() }
 
     // ---- pure virtual ------------------------------------------------------
-    fn assign                (&mut self, arena: &mut ModelArena);
+    fn assign_prelim(&mut self, arena: &mut ModelArena); /// the assign the signal only enough for graph connection, it should be use after fill_ext_node is assigned
+    fn assign_final (&mut self, arena: &mut ModelArena); /// the assign when all internal register's dependency is connected
     fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena);
 
     // ---- virtual with defaults --------------------------------------------

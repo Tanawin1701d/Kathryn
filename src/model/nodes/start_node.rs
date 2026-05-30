@@ -53,7 +53,9 @@ impl NcpNode for StartNode {
     fn get_ncp_ident  (&self) -> NcpIdent  { self.ident }
     fn get_clock_mode (&self) -> ClockMode { ClockMode::PosEdge }
 
-    fn assign(&mut self, arena: &mut ModelArena) {
+    fn assign_prelim(&mut self, _arena: &mut ModelArena) {}
+
+    fn assign_final(&mut self, arena: &mut ModelArena) {
         let mut sr = arena.take_state_reg(self.state_reg_i);
         sr.add_depend_node(self.rst_sig_i, None);
         sr.build_update_event(arena);

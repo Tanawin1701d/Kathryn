@@ -56,7 +56,9 @@ impl NcpNode for WaitCondNode {
     fn get_ncp_ident  (&self) -> NcpIdent  { self.ident }
     fn get_clock_mode (&self) -> ClockMode { ClockMode::PosEdge }
 
-    fn assign(&mut self, arena: &mut ModelArena) {
+    fn assign_prelim(&mut self, _arena: &mut ModelArena) {}
+
+    fn assign_final(&mut self, arena: &mut ModelArena) {
         assert!(self.triggers.depend_count() > 0, "WaitCondNode requires at least one depend node");
         let sig = self.to_trigger_sig(arena);
         let mut cw = arena.take_cond_wait_reg(self.cond_wait_reg_i);
@@ -149,7 +151,9 @@ impl NcpNode for WaitCycleNode {
     fn get_ncp_ident  (&self) -> NcpIdent  { self.ident }
     fn get_clock_mode (&self) -> ClockMode { ClockMode::PosEdge }
 
-    fn assign(&mut self, arena: &mut ModelArena) {
+    fn assign_prelim(&mut self, _arena: &mut ModelArena) {}
+
+    fn assign_final(&mut self, arena: &mut ModelArena) {
         let sig = self.to_trigger_sig(arena);
         let mut cw = arena.take_cycle_wait_reg(self.cycle_wait_reg_i);
         cw.set_triggers(sig);

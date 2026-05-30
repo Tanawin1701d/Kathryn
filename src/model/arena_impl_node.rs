@@ -104,7 +104,7 @@ impl ModelArena {
     }
 
     pub fn init_node_trigger(&mut self, ident: NcpIdent, trigger: &NodeTrigger, with_int_start: bool) {
-        self.get_ncp_node_mut(&ident).get_node_triggers_mut().fill_ext_node(trigger, with_int_start);
+        self.get_ncp_node_mut(&ident).fill_ext_node(trigger, with_int_start);
     }
 
     pub fn add_slave_asm_to_state_node(&mut self, state_node_i: NcpIdent, asm_node_i: NcpIdent, cond: Option<HcpIdent>) {
@@ -137,7 +137,7 @@ impl ModelArena {
 
     pub fn assign_ncp_node(&mut self, ident: NcpIdent) {
         let mut node = self.take_ncp_node(ident);
-        node.assign(self);
+        node.assign_final(self);
         self.replace_back_ncp_node(node);
     }
 }

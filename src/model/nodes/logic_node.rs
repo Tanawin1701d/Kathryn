@@ -59,7 +59,9 @@ impl NcpNode for PseudoNode {
     fn get_ncp_ident  (&self) -> NcpIdent  { self.ident }
     fn get_clock_mode (&self) -> ClockMode { ClockMode::ClkFree }
 
-    fn assign(&mut self, arena: &mut ModelArena) {
+    fn assign_prelim(&mut self, _arena: &mut ModelArena) {}
+
+    fn assign_final(&mut self, arena: &mut ModelArena) {
         let depend_count = self.triggers.depend_count();
         assert!(depend_count > 0, "PseudoNode requires at least one depend node");
 
@@ -133,7 +135,9 @@ impl NcpNode for OprNode {
     fn get_ncp_ident  (&self) -> NcpIdent  { self.ident }
     fn get_clock_mode (&self) -> ClockMode { ClockMode::ClkFree }
 
-    fn assign(&mut self, _arena: &mut ModelArena) {
+    fn assign_prelim(&mut self, _arena: &mut ModelArena) {}
+
+    fn assign_final(&mut self, _arena: &mut ModelArena) {
         panic!("OprNode: assign() is not implemented");
     }
 

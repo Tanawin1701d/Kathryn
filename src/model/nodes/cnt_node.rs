@@ -54,7 +54,9 @@ impl NcpNode for CounterNode {
     fn get_ncp_ident  (&self) -> NcpIdent  { self.ident }
     fn get_clock_mode (&self) -> ClockMode { ClockMode::PosEdge }
 
-    fn assign(&mut self, arena: &mut ModelArena) {
+    fn assign_prelim(&mut self, _arena: &mut ModelArena) {}
+
+    fn assign_final(&mut self, arena: &mut ModelArena) {
         let sig = self.to_trigger_sig(arena);
         let mut cr = arena.take_cnt_reg(self.cnt_reg_i);
         cr.set_triggers(sig);
