@@ -20,12 +20,12 @@ impl ModuleIdent {
         Self { ident_base: IdentBase::new(is_user_com, name), master_module_handle: ArenaHandle::default(), depth_level: 0 }
     }
 
-    pub fn get_ident_base    (&self)     -> &IdentBase     { &self.ident_base }
-    pub fn get_ident_base_mut(&mut self) -> &mut IdentBase { &mut self.ident_base }
-    pub fn get_master_module_handle(&self) -> ArenaHandle                { self.master_module_handle }
-    pub fn set_master_module_i     (&mut self, parent: ModuleIdent)      { self.master_module_handle = *parent.get_arena_handle(); }
-    pub fn get_depth_level         (&self) -> u32                        { self.depth_level }
-    pub fn set_depth_level         (&mut self, level: u32)               { self.depth_level = level; }
+    pub fn get_ident_base          (&    self                     ) -> &IdentBase     { &self.ident_base                                        }
+    pub fn get_ident_base_mut      (&mut self                     ) -> &mut IdentBase { &mut self.ident_base                                    }
+    pub fn get_master_module_handle(&    self                     ) -> ArenaHandle    { self.master_module_handle                               }
+    pub fn set_master_module_i     (&mut self, parent: ModuleIdent)                   { self.master_module_handle = *parent.get_arena_handle(); }
+    pub fn get_depth_level         (&    self                     ) -> u32            { self.depth_level                                        }
+    pub fn set_depth_level         (&mut self, level: u32         )                   { self.depth_level = level;                               }
 
     pub fn build_unique_module_name(&self) -> String {
         format!("MODULE_{}_{}",
