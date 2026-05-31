@@ -71,10 +71,6 @@ impl FlowBlock for FlowBlockZeroCondElif {
         self.grp_asms = self.base.gen_unified_asm_meta_flat(arena);
     }
     
-    fn get_con_condition(&self) -> Option<HcpIdent> {
-        self.condition
-    }
-
     // no block summarization
 
 }

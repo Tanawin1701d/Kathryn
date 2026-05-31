@@ -286,9 +286,6 @@ pub trait FlowBlock: Identifiable {
         panic!("add_con_flow_block: not supported by this block type")
     }
     // conditional / loop queries
-    fn get_con_condition(&self) -> Option<HcpIdent> {
-        panic!("get_con_condition: not supported by this block type")
-    }
     fn get_loop_id_expr_i(&self) -> HcpIdent {
         panic!("get_loop_id_expr_i: not supported by this block type")
     }

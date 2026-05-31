@@ -35,6 +35,8 @@ impl FlowBlockCondElif {
             result:    None,
         }
     }
+
+    pub fn get_con_condition(&self) -> Option<HcpIdent> { self.condition }
 }
 
 impl FlowBlock for FlowBlockCondElif {
@@ -64,11 +66,8 @@ impl FlowBlock for FlowBlockCondElif {
         self.result.clone().expect("cond elif/else block has not been built")
     }
 
-    fn get_con_condition(&self) -> Option<HcpIdent> {
-        self.condition
-    }
-
 }
+
 
 impl Identifiable for FlowBlockCondElif {
     fn get_ident_base    (&self)     -> &IdentBase     { self.base.get_ident_ref().get_ident_base() }

@@ -28,10 +28,10 @@ impl CondChain {
     /// - `None` — else branch: consumes and returns `prev_false` (always the last step).
     pub fn step(
         &mut self,
-        arena : &mut ModelArena,
-        prefix: &str,
-        id    : u64,
-        i     : usize,
+        arena    : &mut ModelArena,
+        prefix   : &str,
+        id       : u64,
+        i        : usize,
         elif_cond: Option<HcpIdent>,
     ) -> Option<HcpIdent> {
         match elif_cond {

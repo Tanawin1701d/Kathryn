@@ -26,8 +26,8 @@ impl Default for FlowBlockZeroCondIf {
 impl FlowBlockZeroCondIf {
     pub fn new(name: &str, cond_i: HcpIdent) -> Self {
         Self {
-            base     : FlowBlockBase::new(FlowBlockType::ZeroCondIf, FlowBlockJoinPolicy::BasicNodeFlow, name),
-            cond_i: cond_i,
+            base             : FlowBlockBase::new(FlowBlockType::ZeroCondIf, FlowBlockJoinPolicy::BasicNodeFlow, name),
+            cond_i           : cond_i,
             grp_asms         : Vec::new(),
             result_basic_node: None,
         }
@@ -92,8 +92,6 @@ impl FlowBlock for FlowBlockZeroCondIf {
             &result_asms,
         ));
     }
-
-    fn get_con_condition(&self) -> Option<HcpIdent> { Some(self.cond_i) }
 
     /// block summarization
     fn summarize_as_node(&self) -> NcpIdent { self.result_basic_node.expect("it has not generated yet")}

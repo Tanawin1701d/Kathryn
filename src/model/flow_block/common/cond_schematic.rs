@@ -1,4 +1,5 @@
 use crate::model::common::identifier::Identifiable;
+use crate::model::flow_block::cond::FlowBlockCondElif;
 use crate::model::flow_block::common::cond_chain::CondChain;
 use crate::model::flow_block::flow_block_base::{ExtSigType, FlowBlockBase};
 use crate::model::flow_block::node_wrap::{NodeWrap, NodeWrapCycleDet};
@@ -56,11 +57,11 @@ impl CondSchematic {
         let con_block_ids: Vec<_> = base.get_con_blocks_i().to_vec();
         let mut con_wraps: Vec<NodeWrap> = Vec::new();
 
-        for (i, &con_i) in con_block_ids.iter().enumerate() {
-            let con_block     = arena.take_flow_block(con_i);
+        for (i, &elif_blk_i) in con_block_ids.iter().enumerate() {
+            let con_block     = arena.take_flow_block_cond_elif(elif_blk_i);
             let con_condition = con_block.get_con_condition();
-            arena.replace_back_flow_block(con_block);
-            let con_wrap = arena.summarize_flow_block(con_i);
+            arena.replace_back_flow_block_cond_elif(con_block);
+            let con_wrap = arena.summarize_flow_block(elif_blk_i);
 
             let gated_cond = chain.step(arena, "cif", id, i, con_condition);
 
