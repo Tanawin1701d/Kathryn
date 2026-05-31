@@ -21,9 +21,9 @@ impl Default for FlowBlockCounterLoop {
 impl FlowBlockCounterLoop {
     pub fn new(name: &str, last_loop_cnt: i32) -> Self {
         Self {
-            base:      FlowBlockBase::new(FlowBlockType::CounterLoop, FlowBlockJoinPolicy::SubFlow, name),
+            base     : FlowBlockBase::new(FlowBlockType::CounterLoop, FlowBlockJoinPolicy::SubFlow, name),
             schematic: CounterLoopSchematic::new(last_loop_cnt),
-            result:    None,
+            result   :    None,
         }
     }
 }
