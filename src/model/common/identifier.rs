@@ -35,13 +35,13 @@ impl Default for IdentBase {
 pub trait Identifiable {
     fn get_ident_base    (&self)     -> &IdentBase;
     fn get_ident_base_mut(&mut self) -> &mut IdentBase;
-    fn build_unique_name(&mut self)  -> &str;
+    fn build_unique_name (&mut self) -> &str;
 
-    fn get_global_id  (&self) -> u64  { self.get_ident_base().global_id }
-    fn get_global_name(&self) -> &str { self.get_ident_base().get_name() }
-    fn set_global_name(&mut self, name: &str) { self.get_ident_base_mut().set_name(name); }
-    fn get_is_user_com(&self) -> bool { self.get_ident_base().is_user_com }
-    fn get_arena_handle(&self) -> &ArenaHandle { &self.get_ident_base().arena_handle }
+    fn get_global_id  (&self)                 -> u64  { self.get_ident_base().global_id  }
+    fn get_global_name(&self)                 -> &str { self.get_ident_base().get_name() }
+    fn set_global_name(&mut self, name: &str)         { self.get_ident_base_mut().set_name(name); }
+    fn get_is_user_com(&self) -> bool                 { self.get_ident_base().is_user_com }
+    fn get_arena_handle(&self) -> &ArenaHandle        { &self.get_ident_base().arena_handle }
     fn set_arena_handle(&mut self, arena_handle: ArenaHandle) {
         self.get_ident_base_mut().arena_handle = arena_handle;
     }
