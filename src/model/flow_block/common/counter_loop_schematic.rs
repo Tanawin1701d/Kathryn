@@ -26,7 +26,7 @@ impl CounterLoopSchematic {
     }
 
     pub fn build(&mut self, base: &mut FlowBlockBase, arena: &mut ModelArena) -> NodeWrap {
-        assert!(!base.get_sub_blocks_i().is_empty(), "counter loop must have one body block");
+        assert_eq!(base.get_sub_blocks_i().len(), 1, "counter loop must have exactly one body block");
         assert!(base.get_con_blocks_i().is_empty(), "counter loop does not support con blocks");
 
         let id = base.get_ident().get_global_id();
@@ -95,6 +95,7 @@ impl CounterLoopSchematic {
         // 6. Cycle count: body_cycle * iterations (or inconsistent)
         let body_cycle = body_wrap.get_cycle_used();
         let cycle_used = if body_cycle == IN_CONSIST_CYCLE_USED {
+            //// no need to consider the amount node in counter node
             IN_CONSIST_CYCLE_USED
         } else {
             self.last_loop_cnt * body_cycle

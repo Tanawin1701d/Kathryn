@@ -6,7 +6,7 @@ use crate::model::hw_component::sp_reg::trigger_sig::HasTriggerSig;
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_base::{
     HasNodeTriggerSig, NcpNode, NodeTrigger,
-    IN_CONSIST_CYCLE_USED, NODE_CYCLE_USED_UNKNOWN,
+    IN_CONSIST_CYCLE_USED,
 };
 use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
 
@@ -79,7 +79,7 @@ impl NcpNode for WaitCondNode {
 
     fn get_exit_opr  (&self) -> HcpIdent { self.bound_exit_i.expect("WaitCondNode::get_exit_opr: bound_exit_i not set — call assign_prelim first") }
     fn get_state_operating(&self) -> HcpIdent { self.raw_state_op_i.expect("WaitCondNode::get_state_operating: raw_state_op_i not set — call assign_prelim first") }
-    fn get_cycle_used(&self) -> i32 { NODE_CYCLE_USED_UNKNOWN }
+    fn get_cycle_used(&self) -> i32 { IN_CONSIST_CYCLE_USED }
 
     fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) {
         arena.replace_back_wait_cond_node(*self);
@@ -177,9 +177,9 @@ impl NcpNode for WaitCycleNode {
     fn get_exit_opr  (&self) -> HcpIdent { self.bound_exit_i.expect("WaitCycleNode::get_exit_opr: bound_exit_i not set — call assign_prelim first") }
     fn get_cycle_used(&self) -> i32 {
         if self.get_node_triggers().is_unpred_cycle_usage() {
-            NODE_CYCLE_USED_UNKNOWN
+            IN_CONSIST_CYCLE_USED
         } else {
-            self.cycle.unwrap_or(NODE_CYCLE_USED_UNKNOWN)
+            self.cycle.unwrap_or(IN_CONSIST_CYCLE_USED)
         }
     }
 

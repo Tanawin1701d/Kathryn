@@ -7,8 +7,7 @@ use crate::model::model_arena::ModelArena;
 
 pub use crate::model::nodes::node_trigger::{HasNodeTriggerSig, NodeTrigger};
 
-pub const NODE_CYCLE_USED_UNKNOWN: i32 = -1;
-pub const IN_CONSIST_CYCLE_USED  : i32 = -2;
+pub const IN_CONSIST_CYCLE_USED: i32 = -1;
 
 // ---- NcpNode trait ----------------------------------------------------------
 
@@ -29,7 +28,7 @@ pub trait NcpNode: HasNodeTriggerSig {
     // ---- virtual with defaults --------------------------------------------
     fn get_exit_opr       (&self) -> HcpIdent { panic!("get_exit_opr: not implemented") }
     fn get_state_operating(&self) -> HcpIdent { panic!("get_state_operating: not implemented") }
-    fn get_cycle_used     (&self) -> i32      { NODE_CYCLE_USED_UNKNOWN }
+    fn get_cycle_used     (&self) -> i32      { IN_CONSIST_CYCLE_USED }
     fn dry_assign(&mut self, _arena: &mut ModelArena) { panic!("dry_assign: not implemented") }
     fn is_state_full_node(&self) -> bool { true }
 

@@ -4,7 +4,7 @@ use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::sp_reg::trigger_sig::HasTriggerSig;
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_base::{
-    HasNodeTriggerSig, NcpNode, NodeTrigger, NODE_CYCLE_USED_UNKNOWN,
+    HasNodeTriggerSig, IN_CONSIST_CYCLE_USED, NcpNode, NodeTrigger,
 };
 use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
 // ---- StateNode --------------------------------------------------------------
@@ -84,7 +84,7 @@ impl NcpNode for StateNode {
     fn get_exit_opr       (&self) -> HcpIdent { self.bound_exit_i.expect("exit opr is not set yet") }
     fn get_state_operating(&self) -> HcpIdent { self.state_op_i.expect("state operating is not set yet") }
     fn get_cycle_used     (&self) -> i32      {
-        if self.get_node_triggers().is_unpred_cycle_usage() { NODE_CYCLE_USED_UNKNOWN } else { 1 }
+        if self.get_node_triggers().is_unpred_cycle_usage() { IN_CONSIST_CYCLE_USED } else { 1 }
     }
 
     fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) {

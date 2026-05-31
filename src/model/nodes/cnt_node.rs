@@ -3,7 +3,7 @@ use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::sp_reg::trigger_sig::HasTriggerSig;
 use crate::model::model_arena::ModelArena;
-use crate::model::nodes::ncp_base::{HasNodeTriggerSig, NcpNode, NodeTrigger};
+use crate::model::nodes::ncp_base::{HasNodeTriggerSig, NcpNode, NodeTrigger, IN_CONSIST_CYCLE_USED};
 use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
 
 /// Cycle-counting node: wraps a `CntReg` that wraps once `last_loop_cnt` is
@@ -13,7 +13,7 @@ pub struct CounterNode {
     ident      : NcpIdent,
     triggers   : NodeTrigger,
     cnt_reg_i  : HcpIdent,
-    last_loop  : i32,
+    last_loop  : i32, /// TODO add support for 64 bit loop system
     end_expr_i : Option<HcpIdent>,
 }
 
@@ -71,7 +71,9 @@ impl NcpNode for CounterNode {
     }
 
     fn get_exit_opr  (&self) -> HcpIdent { self.end_expr_i.expect("CounterNode::get_exit_opr: end_expr_i not set — call assign_prelim first") }
-    fn get_cycle_used(&self) -> i32      { self.last_loop }
+    fn get_cycle_used(&self) -> i32 {
+        if self.get_node_triggers().is_unpred_cycle_usage() { IN_CONSIST_CYCLE_USED } else { self.last_loop + 1 }
+    }
 
     fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) {
         arena.replace_back_counter_node(*self);
