@@ -40,7 +40,7 @@ impl Module {
         }
     }
 
-    pub fn get_ident    (&self)              -> ModuleIdent { self.ident }
+    pub fn get_ident    (&self)             -> ModuleIdent { self.ident }
     pub fn set_ident    (&mut self, i: ModuleIdent)        { self.ident = i; }
 
     // -- top module flag --
