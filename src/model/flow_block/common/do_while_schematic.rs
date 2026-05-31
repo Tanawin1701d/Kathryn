@@ -17,7 +17,7 @@ impl DoWhileSchematic {
     }
 
     pub fn build(&mut self, base: &mut FlowBlockBase, arena: &mut ModelArena) -> NodeWrap {
-        assert!(!base.get_sub_blocks_i().is_empty(), "do-while block must have one body block");
+        assert_eq!(base.get_sub_blocks_i().len(), 1, "do-while block must have exactly one body block");
         assert!(base.get_con_blocks_i().is_empty(), "do-while block does not support con blocks");
 
         let id = base.get_ident().get_global_id();
