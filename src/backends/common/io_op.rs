@@ -8,11 +8,11 @@ use crate::model::module::module_ident::ModuleIdent;
 /// Pushes `src_module` onto the trace stack so the wire is stamped and
 /// registered to the correct module, then pops on return.
 pub fn build_io_wire(
-    arena           : &mut ModelArena,
-    target_module: ModuleIdent,
+    arena            : &mut ModelArena,
+    target_module    : ModuleIdent,
     actual_src_signal: HcpIdent,
     agent_src_signal : HcpIdent,
-    is_input        : bool,
+    is_input         : bool,
 ) -> HcpIdent {
     let dir  = if is_input { "IN" } else { "OUT" };
     let name = format!("IO_{}_{}", dir, actual_src_signal.get_ident_base().get_name());
