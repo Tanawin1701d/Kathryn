@@ -9,7 +9,7 @@ use crate::model::module::module_ident::ModuleIdent;
 /// registered to the correct module, then pops on return.
 pub fn build_io_wire(
     arena           : &mut ModelArena,
-    src_module      : ModuleIdent,
+    target_module: ModuleIdent,
     actual_src_signal: HcpIdent,
     agent_src_signal : HcpIdent,
     is_input        : bool,
@@ -17,7 +17,7 @@ pub fn build_io_wire(
     let dir  = if is_input { "IN" } else { "OUT" };
     let name = format!("IO_{}_{}", dir, actual_src_signal.get_ident_base().get_name());
 
-    arena.push_module_trace_stack(src_module, ModuleInitStage::CompInit);
+    arena.push_module_trace_stack(target_module, ModuleInitStage::CompInit);
     let io_wire_i = arena.make_io_wire(false, &name, is_input, actual_src_signal, agent_src_signal);
     arena.pop_module_trace_stack();
 

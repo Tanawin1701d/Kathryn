@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::flow_block::flow_block_ident::{FlowBlockIdent, FlowBlockJoinPolicy};
-use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType, HW_TYPES_WITH_UE};
+use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType, HW_TYPES_WITH_UE, HW_TYPES_WITH_MAN_DEP};
 use crate::model::model_arena::{ModelArena, ModuleInitStage};
 use crate::model::module::module_ident::ModuleIdent;
 use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
@@ -86,7 +86,7 @@ impl Module {
     /// (both internal and user), traversing the full UpdateEvent tree of each pool.
     /// `self` must already be taken out of the arena so arena is free for HCP access.
     pub fn gather_dep_hcps(&self, arena: &mut ModelArena, out: &mut HashSet<HcpIdent>) {
-        for &hw_type in &HW_TYPES_WITH_UE {
+        for &hw_type in HW_TYPES_WITH_UE.iter().chain(HW_TYPES_WITH_MAN_DEP.iter()) {
             for &hcp_i in self.get_internal_hws(hw_type).iter()
                               .chain(self.get_user_hws(hw_type).iter())
             {
@@ -95,6 +95,7 @@ impl Module {
                 arena.replace_back_hcp(hcp);
             }
         }
+
     }
 
     /// Sort the UpdatePool of every HCP in this module by priority then sub-priority.
