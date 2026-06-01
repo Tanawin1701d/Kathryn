@@ -59,10 +59,10 @@ impl VerilogUpdateEvent for UeBasic {
         fw          : &mut FileWriter,
     ) {
         let sp        = " ".repeat(front_space as usize);
-        let des_slice = slice_to_verilog(self.get_des_slice());
+        let des_slice = slice_to_verilog(&self.get_des_slice());
         // Resolve the source name via gen_var_name() — respects per-type name overrides.
         let src_str   = fmt_operand(
-            *self.get_srci_val(), Some(*self.get_src_slice()), arena, active_i, active_name,
+            self.get_srci_val(), Some(self.get_src_slice()), arena, active_i, active_name,
         );
 
         for tmpl in &op_templates {
