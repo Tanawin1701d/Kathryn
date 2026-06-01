@@ -116,19 +116,7 @@ impl ModelArena {
         self.replace_back_asm_node(asm);
     }
 
-    pub fn add_slave_asm_to_state_node(&mut self, state_node_i: NcpIdent, asm_node_i: NcpIdent, cond: Option<HcpIdent>) {
-        assert_eq!(state_node_i.get_node_type(), NodeType::State);
-        assert_eq!(asm_node_i.get_node_type(), NodeType::Asm);
-        // get the state node
-        let mut state_node = self.take_state_node(state_node_i);
-        state_node.add_slave_asm_node(asm_node_i, cond);
-        let state_trigger = state_node.get_node_triggers().clone();
-        self.replace_back_state_node(state_node);
-
-        // add depend node in asm
-        self.add_depend_node_to_ncp(asm_node_i, state_node_i, cond);
-        self.init_node_trigger     (asm_node_i, &state_trigger, false);
-    }
+    // assign for asm node
 
     pub fn assign_asm_from_state_node(&mut self, ident: NcpIdent) {
         assert_eq!(ident.get_node_type(), NodeType::Asm);
@@ -143,6 +131,8 @@ impl ModelArena {
         node.dry_assign(self);
         self.replace_back_asm_node(node);
     }
+
+    // assign the node
 
     pub fn assign_ncp_node(&mut self, ident: NcpIdent) {
         let mut node = self.take_ncp_node(ident);

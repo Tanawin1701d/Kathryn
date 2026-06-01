@@ -84,7 +84,8 @@ impl ParSchematic {
             );
             arena.init_node_trigger(state_i, base.get_ext_trigger_node(), false);
             for asm_i in &basic_asm_nodes_i {
-                arena.add_slave_asm_to_state_node(state_i, *asm_i, None);
+                arena.add_depend_node_to_ncp(*asm_i, state_i, None);
+                arena.assign_asm_from_state_node(*asm_i);
             }
             base.add_sys_node(state_i);
             self.basic_state_node_i = Some(state_i);

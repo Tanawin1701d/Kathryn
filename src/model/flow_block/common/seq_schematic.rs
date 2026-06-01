@@ -42,7 +42,7 @@ impl SequenceEle {
                     &format!("seq_state_{}_{}", block_id, idx),
                 );
                 arena.init_node_trigger(state_i, base.get_ext_trigger_node(), false);
-                arena.add_slave_asm_to_state_node(state_i, asm_i, None);
+                arena.add_depend_node_to_ncp(asm_i, state_i, None);
                 base.add_sys_node(state_i);
                 *state_node_i = Some(state_i);
             }
