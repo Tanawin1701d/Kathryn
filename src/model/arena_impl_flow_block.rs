@@ -203,17 +203,17 @@ impl ModelArena {
 
     pub fn take_flow_block(&mut self, ident: FlowBlockIdent) -> Box<dyn FlowBlock> {
         match ident.get_block_type() {
-            FlowBlockType::Sequential   => Box::new(self.take_flow_block_seq       (ident)),
-            FlowBlockType::Parallel     => Box::new(self.take_flow_block_par       (ident)),
-            FlowBlockType::CondIf       => Box::new(self.take_flow_block_cond      (ident)),
-            FlowBlockType::CondElif     => Box::new(self.take_flow_block_cond_elif (ident)),
-            FlowBlockType::ZeroCondIf   => Box::new(self.take_flow_block_zero_cond_if  (ident)),
-            FlowBlockType::ZeroCondElif => Box::new(self.take_flow_block_zero_cond_elif(ident)),
-            FlowBlockType::ZeroSwitch     => Box::new(self.take_flow_block_zero_switch     (ident)),
-            FlowBlockType::ZeroSwitchCase => Box::new(self.take_flow_block_zero_switch_case(ident)),
-            FlowBlockType::WhileLoop    => Box::new(self.take_flow_block_while     (ident)),
-            FlowBlockType::DoWhile      => Box::new(self.take_flow_block_do_while  (ident)),
-            FlowBlockType::CounterLoop  => Box::new(self.take_flow_block_counter_loop(ident)),
+            FlowBlockType::Sequential     => Box::new(self.take_flow_block_seq              (ident)),
+            FlowBlockType::Parallel       => Box::new(self.take_flow_block_par              (ident)),
+            FlowBlockType::CondIf         => Box::new(self.take_flow_block_cond             (ident)),
+            FlowBlockType::CondElif       => Box::new(self.take_flow_block_cond_elif        (ident)),
+            FlowBlockType::ZeroCondIf     => Box::new(self.take_flow_block_zero_cond_if     (ident)),
+            FlowBlockType::ZeroCondElif   => Box::new(self.take_flow_block_zero_cond_elif   (ident)),
+            FlowBlockType::ZeroSwitch     => Box::new(self.take_flow_block_zero_switch      (ident)),
+            FlowBlockType::ZeroSwitchCase => Box::new(self.take_flow_block_zero_switch_case (ident)),
+            FlowBlockType::WhileLoop      => Box::new(self.take_flow_block_while            (ident)),
+            FlowBlockType::DoWhile        => Box::new(self.take_flow_block_do_while         (ident)),
+            FlowBlockType::CounterLoop    => Box::new(self.take_flow_block_counter_loop     (ident)),
         }
     }
 
