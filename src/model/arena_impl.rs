@@ -8,101 +8,112 @@ use crate::model::flow_block::{FlowBlockIdent, FlowBlockJoinPolicy};
 
 // ---------------------------------------------------------------------------
 // ModelArena::new / reset live here. Per-category CRUD lives in:
-//   - arena_impl_hwc.rs   (hardware components: Reg/Wire/Val/.../sp_regs)
-//   - arena_impl_ue.rs    (update events)
-//   - arena_impl_node.rs  (flow nodes)
+//   - arena_impl_hwc.rs        (hardware components: Reg/Wire/Val/.../sp_regs)
+//   - arena_impl_ue.rs         (update events)
+//   - arena_impl_node.rs       (flow nodes)
+//   - arena_impl_flow_block.rs (flow blocks)
 // Module CRUD lives at the bottom of this file.
 // ---------------------------------------------------------------------------
 
 impl ModelArena {
     pub fn new() -> Self {
         Self {
-            regs       : ArenaGroup::new(),
-            wires      : ArenaGroup::new(),
-            io_wires   : ArenaGroup::new(),
-            vals       : ArenaGroup::new(),
-            mem_eles   : ArenaGroup::new(),
-            mem_blks   : ArenaGroup::new(),
-            expressions: ArenaGroup::new(),
-            state_regs : ArenaGroup::new(),
-            sync_regs  : ArenaGroup::new(),
-            cnt_regs   : ArenaGroup::new(),
-            cond_wait_regs : ArenaGroup::new(),
-            cycle_wait_regs: ArenaGroup::new(),
-            ue_basics  : ArenaGroup::new(),
-            ue_grps    : ArenaGroup::new(),
-            ue_conds   : ArenaGroup::new(),
-            ue_switches: ArenaGroup::new(),
-            asm_nodes        : ArenaGroup::new(),
-            start_nodes      : ArenaGroup::new(),
-            state_nodes      : ArenaGroup::new(),
-            syn_nodes        : ArenaGroup::new(),
-            wait_cond_nodes  : ArenaGroup::new(),
-            wait_cycle_nodes : ArenaGroup::new(),
-            counter_nodes    : ArenaGroup::new(),
-            pseudo_nodes     : ArenaGroup::new(),
-            opr_nodes        : ArenaGroup::new(),
-            modules          : ArenaGroup::new(),
-            top_module              : None,
-            module_trace_stack      : Vec::new(),
-            hcp_pending_buffer      : Vec::new(),
-            flow_block_init_stack   : Vec::new(),
-            flow_block_seqs           : ArenaGroup::new(),
-            flow_block_pars           : ArenaGroup::new(),
-            flow_block_conds          : ArenaGroup::new(),
-            flow_block_cond_elifs     : ArenaGroup::new(),
-            flow_block_zero_cond_ifs  : ArenaGroup::new(),
-            flow_block_zero_cond_elifs: ArenaGroup::new(),
-            flow_block_zero_switches    : ArenaGroup::new(),
-            flow_block_zero_switch_cases: ArenaGroup::new(),
-            flow_block_whiles         : ArenaGroup::new(),
-            flow_block_do_whiles      : ArenaGroup::new(),
-            flow_block_counter_loops  : ArenaGroup::new(),
+            // ---- hardware components ----
+            regs                         : ArenaGroup::new(),
+            wires                        : ArenaGroup::new(),
+            io_wires                     : ArenaGroup::new(),
+            vals                         : ArenaGroup::new(),
+            mem_eles                     : ArenaGroup::new(),
+            mem_blks                     : ArenaGroup::new(),
+            expressions                  : ArenaGroup::new(),
+            state_regs                   : ArenaGroup::new(),
+            sync_regs                    : ArenaGroup::new(),
+            cnt_regs                     : ArenaGroup::new(),
+            cond_wait_regs               : ArenaGroup::new(),
+            cycle_wait_regs              : ArenaGroup::new(),
+            // ---- update events ----
+            ue_basics                    : ArenaGroup::new(),
+            ue_grps                      : ArenaGroup::new(),
+            ue_conds                     : ArenaGroup::new(),
+            ue_switches                  : ArenaGroup::new(),
+            // ---- flow nodes ----
+            asm_nodes                    : ArenaGroup::new(),
+            start_nodes                  : ArenaGroup::new(),
+            state_nodes                  : ArenaGroup::new(),
+            syn_nodes                    : ArenaGroup::new(),
+            wait_cond_nodes              : ArenaGroup::new(),
+            wait_cycle_nodes             : ArenaGroup::new(),
+            counter_nodes                : ArenaGroup::new(),
+            pseudo_nodes                 : ArenaGroup::new(),
+            opr_nodes                    : ArenaGroup::new(),
+            // ---- modules & trace state ----
+            modules                      : ArenaGroup::new(),
+            top_module                   : None,
+            module_trace_stack           : Vec::new(),
+            hcp_pending_buffer           : Vec::new(),
+            flow_block_init_stack        : Vec::new(),
+            // ---- flow blocks ----
+            flow_block_seqs              : ArenaGroup::new(),
+            flow_block_pars              : ArenaGroup::new(),
+            flow_block_conds             : ArenaGroup::new(),
+            flow_block_cond_elifs        : ArenaGroup::new(),
+            flow_block_zero_cond_ifs     : ArenaGroup::new(),
+            flow_block_zero_cond_elifs   : ArenaGroup::new(),
+            flow_block_zero_switches     : ArenaGroup::new(),
+            flow_block_zero_switch_cases : ArenaGroup::new(),
+            flow_block_whiles            : ArenaGroup::new(),
+            flow_block_do_whiles         : ArenaGroup::new(),
+            flow_block_counter_loops     : ArenaGroup::new(),
         }
     }
 
     pub fn reset(&mut self) {
-        self.regs        = ArenaGroup::new();
-        self.wires       = ArenaGroup::new();
-        self.io_wires    = ArenaGroup::new();
-        self.vals        = ArenaGroup::new();
-        self.mem_eles    = ArenaGroup::new();
-        self.mem_blks    = ArenaGroup::new();
-        self.expressions = ArenaGroup::new();
-        self.state_regs  = ArenaGroup::new();
-        self.sync_regs   = ArenaGroup::new();
-        self.cnt_regs    = ArenaGroup::new();
-        self.cond_wait_regs  = ArenaGroup::new();
-        self.cycle_wait_regs = ArenaGroup::new();
-        self.ue_basics   = ArenaGroup::new();
-        self.ue_grps     = ArenaGroup::new();
-        self.ue_conds    = ArenaGroup::new();
-        self.ue_switches = ArenaGroup::new();
-        self.asm_nodes        = ArenaGroup::new();
-        self.start_nodes      = ArenaGroup::new();
-        self.state_nodes      = ArenaGroup::new();
-        self.syn_nodes        = ArenaGroup::new();
-        self.wait_cond_nodes  = ArenaGroup::new();
-        self.wait_cycle_nodes = ArenaGroup::new();
-        self.counter_nodes    = ArenaGroup::new();
-        self.pseudo_nodes     = ArenaGroup::new();
-        self.opr_nodes        = ArenaGroup::new();
-        self.modules          = ArenaGroup::new();
-        self.top_module             = None;
-        self.module_trace_stack     = Vec::new();
-        self.hcp_pending_buffer     = Vec::new();
-        self.flow_block_init_stack  = Vec::new();
-        self.flow_block_seqs           = ArenaGroup::new();
-        self.flow_block_pars           = ArenaGroup::new();
-        self.flow_block_conds          = ArenaGroup::new();
-        self.flow_block_cond_elifs     = ArenaGroup::new();
-        self.flow_block_zero_cond_ifs   = ArenaGroup::new();
-        self.flow_block_zero_cond_elifs = ArenaGroup::new();
+        // ---- hardware components ----
+        self.regs                         = ArenaGroup::new();
+        self.wires                        = ArenaGroup::new();
+        self.io_wires                     = ArenaGroup::new();
+        self.vals                         = ArenaGroup::new();
+        self.mem_eles                     = ArenaGroup::new();
+        self.mem_blks                     = ArenaGroup::new();
+        self.expressions                  = ArenaGroup::new();
+        self.state_regs                   = ArenaGroup::new();
+        self.sync_regs                    = ArenaGroup::new();
+        self.cnt_regs                     = ArenaGroup::new();
+        self.cond_wait_regs               = ArenaGroup::new();
+        self.cycle_wait_regs              = ArenaGroup::new();
+        // ---- update events ----
+        self.ue_basics                    = ArenaGroup::new();
+        self.ue_grps                      = ArenaGroup::new();
+        self.ue_conds                     = ArenaGroup::new();
+        self.ue_switches                  = ArenaGroup::new();
+        // ---- flow nodes ----
+        self.asm_nodes                    = ArenaGroup::new();
+        self.start_nodes                  = ArenaGroup::new();
+        self.state_nodes                  = ArenaGroup::new();
+        self.syn_nodes                    = ArenaGroup::new();
+        self.wait_cond_nodes              = ArenaGroup::new();
+        self.wait_cycle_nodes             = ArenaGroup::new();
+        self.counter_nodes                = ArenaGroup::new();
+        self.pseudo_nodes                 = ArenaGroup::new();
+        self.opr_nodes                    = ArenaGroup::new();
+        // ---- modules & trace state ----
+        self.modules                      = ArenaGroup::new();
+        self.top_module                   = None;
+        self.module_trace_stack           = Vec::new();
+        self.hcp_pending_buffer           = Vec::new();
+        self.flow_block_init_stack        = Vec::new();
+        // ---- flow blocks ----
+        self.flow_block_seqs              = ArenaGroup::new();
+        self.flow_block_pars              = ArenaGroup::new();
+        self.flow_block_conds             = ArenaGroup::new();
+        self.flow_block_cond_elifs        = ArenaGroup::new();
+        self.flow_block_zero_cond_ifs     = ArenaGroup::new();
+        self.flow_block_zero_cond_elifs   = ArenaGroup::new();
         self.flow_block_zero_switches     = ArenaGroup::new();
         self.flow_block_zero_switch_cases = ArenaGroup::new();
-        self.flow_block_whiles         = ArenaGroup::new();
-        self.flow_block_do_whiles      = ArenaGroup::new();
-        self.flow_block_counter_loops  = ArenaGroup::new();
+        self.flow_block_whiles            = ArenaGroup::new();
+        self.flow_block_do_whiles         = ArenaGroup::new();
+        self.flow_block_counter_loops     = ArenaGroup::new();
     }
 
     // -----------------------------------------------------------------------

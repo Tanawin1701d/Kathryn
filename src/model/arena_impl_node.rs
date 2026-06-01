@@ -83,8 +83,8 @@ impl ModelArena {
     }
 
     // ----- trait-object dispatch (cannot be expressed via take/replace) ----
-    pub fn get_ncp_node    (&self,     ident: &NcpIdent) -> &    dyn NcpNode { dispatch_ncp!(self, ident, get    ) }
-    pub fn get_ncp_node_mut(&mut self, ident: &NcpIdent) -> &mut dyn NcpNode { dispatch_ncp!(self, ident, get_mut) }
+    fn get_ncp_node    (&self,     ident: &NcpIdent) -> &    dyn NcpNode { dispatch_ncp!(self, ident, get    ) }
+    fn get_ncp_node_mut(&mut self, ident: &NcpIdent) -> &mut dyn NcpNode { dispatch_ncp!(self, ident, get_mut) }
 
     pub fn get_node_exit_opr       (&self, ident: &NcpIdent) -> HcpIdent    { self.get_ncp_node(ident).get_exit_opr() }
     pub fn get_node_state_operating(&self, ident: &NcpIdent) -> HcpIdent    { self.get_ncp_node(ident).get_state_operating() }
