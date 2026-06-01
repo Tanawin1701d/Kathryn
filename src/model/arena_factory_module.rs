@@ -19,10 +19,9 @@ impl ModelArena {
         i
     }
 
-    pub fn mk_module(&mut self, name: &str, stage: ModuleInitStage) -> ModuleIdent {
+    pub fn mk_module(&mut self, name: &str) -> ModuleIdent {
         let i = self.add_module(Module::new(true, false, name));
         let i = self.stamp_module_to_parent_module(i);
-        self.push_module_trace_stack(i, stage);
         i
     }
     pub fn mk_top_module(&mut self, name: &str) -> ModuleIdent {

@@ -31,7 +31,8 @@ impl ModelArena {
         auto_priority: bool,
         clk_src      : Option<HcpIdent>,
     ) -> UpdateEventIdent {
-        assert_clk_src_consistent(cm, clk_src, true);
+        /// check constrain
+        assert_clk_src_consistent(cm, clk_src, true);   // for clk, it may right now not ready for clk signal
         let mut event = UeBasic::new(srci, des_slice, src_slice);
         event.set_priority(if auto_priority { get_asm_pri_val() } else { priority });
         event.set_clk_mode(cm);
@@ -62,13 +63,7 @@ impl ModelArena {
         assert_clk_src_consistent(clk_mode, clk_src, true);
         let mut uec = UeCond::new();
         uec.add_sub_stmt(cond_hcp, Some(_ueb_i), priority, clk_mode, clk_src);
-        let cond_i = self.insert_ue_cond(uec);
-        // add_sub_stmt initialises clk_src_i to None via its init_meta path;
-        // set it after insertion so the UeCond's clk_src matches the wrapped UE's.
-        let mut cond_v = self.take_ue_cond(cond_i);
-        cond_v.set_clk_src_i(clk_src);
-        self.replace_back_ue_cond(cond_v);
-        cond_i
+        self.insert_ue_cond(uec)
     }
 
     pub fn make_ue_full(
@@ -98,12 +93,21 @@ impl ModelArena {
         right       : UpdateEventIdent,
         select_left : HcpIdent,
     ) -> UpdateEventIdent {
-        let left_priority = self.get_ue_common(&left).get_priority();
-        let left_clk_mode = self.get_ue_common(&left).get_clk_mode();
+        let left_priority  = self.get_ue_common(&left ).get_priority();
+        let right_priority = self.get_ue_common(&right).get_priority();
+        let left_clk_mode  = self.get_ue_common(&left ).get_clk_mode();
+        let right_clk_mode = self.get_ue_common(&right).get_clk_mode();
+        // mux operands must be combinational — a clocked operand would make the wrapping
+        // UeCond carry an ambiguous clock domain.
+        assert_eq!(left_clk_mode,  ClockMode::ClkUnused, "make_ue_mux: left  operand must be ClkUnused");
+        assert_eq!(right_clk_mode, ClockMode::ClkUnused, "make_ue_mux: right operand must be ClkUnused");
+        // belt-and-braces: both operands must share the same clock mode and priority so
+        // the mux is unambiguously single-domain and joinable with sibling UEs.
+        assert_eq!(left_priority,  right_priority,  "make_ue_mux: left/right operands must share priority");
 
         let mut uec = UeCond::new();
-        uec.add_sub_stmt(Some(select_left), Some(left),  left_priority, left_clk_mode, None);
-        uec.add_sub_stmt(None,              Some(right), 0,             ClockMode::ClkUnused, None);
+        uec.add_sub_stmt(Some(select_left), Some(left),  left_priority, ClockMode::ClkUnused, None);
+        uec.add_sub_stmt(None,              Some(right), left_priority, ClockMode::ClkUnused, None);
         self.insert_ue_cond(uec)
     }
 }

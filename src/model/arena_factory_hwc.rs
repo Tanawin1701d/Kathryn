@@ -26,7 +26,7 @@ impl ModelArena {
         let (module_i, stage) = self.peek_module_trace_stack();
         i.set_master_module_i(module_i);
         let mut hcp = self.take_hcp(i);
-        *hcp.get_ident_mut() = i;
+        *hcp.get_ident_mut() = i; /// i must be set back to host hardware component
         self.replace_back_hcp(hcp);
         match stage {
             ModuleInitStage::CompInit | ModuleInitStage::FlowBlockInit => {
