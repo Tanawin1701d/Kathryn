@@ -1,4 +1,3 @@
-use crate::common::arena_base::ArenaHandle;
 use crate::model::common::identifier::Identifiable;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::model_arena::ModelArena;
@@ -32,15 +31,15 @@ macro_rules! dispatch_ncp {
 
 impl ModelArena {
     // ----- inserts ---------------------------------------------------------
-    pub fn add_asm_node       (&mut self, n: AsmNode)        -> ArenaHandle { self.asm_nodes       .insert(n) }
-    pub fn add_start_node     (&mut self, n: StartNode)      -> ArenaHandle { self.start_nodes     .insert(n) }
-    pub fn add_state_node     (&mut self, n: StateNode)      -> ArenaHandle { self.state_nodes     .insert(n) }
-    pub fn add_syn_node       (&mut self, n: SynNode)        -> ArenaHandle { self.syn_nodes       .insert(n) }
-    pub fn add_wait_cond_node (&mut self, n: WaitCondNode)   -> ArenaHandle { self.wait_cond_nodes .insert(n) }
-    pub fn add_wait_cycle_node(&mut self, n: WaitCycleNode)  -> ArenaHandle { self.wait_cycle_nodes.insert(n) }
-    pub fn add_counter_node   (&mut self, n: CounterNode)    -> ArenaHandle { self.counter_nodes   .insert(n) }
-    pub fn add_pseudo_node    (&mut self, n: PseudoNode)     -> ArenaHandle { self.pseudo_nodes    .insert(n) }
-    pub fn add_opr_node       (&mut self, n: OprNode)        -> ArenaHandle { self.opr_nodes       .insert(n) }
+    pub fn add_asm_node       (&mut self, n: AsmNode)       -> NcpIdent { let h = self.asm_nodes       .insert(n); self.asm_nodes       .get(h).get_ncp_ident() }
+    pub fn add_start_node     (&mut self, n: StartNode)     -> NcpIdent { let h = self.start_nodes     .insert(n); self.start_nodes     .get(h).get_ncp_ident() }
+    pub fn add_state_node     (&mut self, n: StateNode)     -> NcpIdent { let h = self.state_nodes     .insert(n); self.state_nodes     .get(h).get_ncp_ident() }
+    pub fn add_syn_node       (&mut self, n: SynNode)       -> NcpIdent { let h = self.syn_nodes       .insert(n); self.syn_nodes       .get(h).get_ncp_ident() }
+    pub fn add_wait_cond_node (&mut self, n: WaitCondNode)  -> NcpIdent { let h = self.wait_cond_nodes .insert(n); self.wait_cond_nodes .get(h).get_ncp_ident() }
+    pub fn add_wait_cycle_node(&mut self, n: WaitCycleNode) -> NcpIdent { let h = self.wait_cycle_nodes.insert(n); self.wait_cycle_nodes.get(h).get_ncp_ident() }
+    pub fn add_counter_node   (&mut self, n: CounterNode)   -> NcpIdent { let h = self.counter_nodes   .insert(n); self.counter_nodes   .get(h).get_ncp_ident() }
+    pub fn add_pseudo_node    (&mut self, n: PseudoNode)    -> NcpIdent { let h = self.pseudo_nodes    .insert(n); self.pseudo_nodes    .get(h).get_ncp_ident() }
+    pub fn add_opr_node       (&mut self, n: OprNode)       -> NcpIdent { let h = self.opr_nodes       .insert(n); self.opr_nodes       .get(h).get_ncp_ident() }
 
     // ----- take / replace_back (use these instead of typed get/get_mut) ----
     pub fn take_asm_node       (&mut self, i: NcpIdent) -> AsmNode        { self.asm_nodes       .take(*i.get_arena_handle()) }

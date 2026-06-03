@@ -6,7 +6,6 @@ use crate::model::model_arena::ModelArena;
 use crate::model::nodes::asm_node::AsmNode;
 use crate::model::nodes::cnt_node::CounterNode;
 use crate::model::nodes::logic_node::{OprNode, PseudoNode};
-use crate::model::nodes::ncp_base::NcpNode;
 use crate::model::nodes::ncp_ident::NcpIdent;
 use crate::model::nodes::start_node::StartNode;
 use crate::model::nodes::state_node::StateNode;
@@ -20,74 +19,59 @@ impl ModelArena {
     // ---- StartNode ---------------------------------------------------------
     pub fn make_start_node(&mut self, name: &str, rst_sig_i: HcpIdent) -> NcpIdent {
         let n = StartNode::new(name, rst_sig_i, self);
-        let h = self.add_start_node(n);
-        self.start_nodes.get(h).get_ncp_ident()
+        self.add_start_node(n)
     }
 
     // ---- AsmNode -----------------------------------------------------------
-    pub fn make_asm_node(&mut self, name: &str, am: AssignMeta) -> NcpIdent {
-        let h = self.add_asm_node(AsmNode::new(false, name, am));
-        self.asm_nodes.get(h).get_ncp_ident()
-    }
-    pub fn mk_asm_node(&mut self, name: &str, am: AssignMeta) -> NcpIdent {
-        let h = self.add_asm_node(AsmNode::new(true, name, am));
-        self.asm_nodes.get(h).get_ncp_ident()
+    pub fn make_asm_node(&mut self, is_user_com: bool, name: &str, am: AssignMeta) -> NcpIdent {
+        self.add_asm_node(AsmNode::new(is_user_com, name, am))
     }
     pub fn make_asm_node_many(&mut self, name: &str, ams: &[AssignMeta]) -> NcpIdent {
-        let h = self.add_asm_node(AsmNode::new_many(false, name, ams));
-        self.asm_nodes.get(h).get_ncp_ident()
+        self.add_asm_node(AsmNode::new_many(false, name, ams))
     }
 
     // ---- StateNode ---------------------------------------------------------
     pub fn make_state_node(&mut self, name: &str) -> NcpIdent {
         let n = StateNode::new(false, name, self);
-        let h = self.add_state_node(n);
-        self.state_nodes.get(h).get_ncp_ident()
+        self.add_state_node(n)
     }
 
     // ---- SynNode -----------------------------------------------------------
     pub fn make_syn_node(&mut self, name: &str, syn_size: i32) -> NcpIdent {
         let n = SynNode::new(false, name, syn_size, self);
-        let h = self.add_syn_node(n);
-        self.syn_nodes.get(h).get_ncp_ident()
+        self.add_syn_node(n)
     }
 
     // ---- WaitCondNode ------------------------------------------------------
     pub fn make_wait_cond_node(&mut self, name: &str, wait_cond: HcpIdent, wait_con_sl: Slice) -> NcpIdent {
         let n = WaitCondNode::new(false, name, wait_cond, wait_con_sl, self);
-        let h = self.add_wait_cond_node(n);
-        self.wait_cond_nodes.get(h).get_ncp_ident()
+        self.add_wait_cond_node(n)
     }
 
     // ---- WaitCycleNode -----------------------------------------------------
     pub fn make_wait_cycle_node(&mut self, name: &str, cycle: i32) -> NcpIdent {
         let n = WaitCycleNode::new_with_cycle(false, name, cycle, self);
-        let h = self.add_wait_cycle_node(n);
-        self.wait_cycle_nodes.get(h).get_ncp_ident()
+        self.add_wait_cycle_node(n)
     }
     pub fn make_wait_cycle_node_with_expr(&mut self, name: &str, cnt_bit_sz: i32, end_cnt_i: HcpIdent) -> NcpIdent {
         let n = WaitCycleNode::new_with_expr(false, name, cnt_bit_sz, end_cnt_i, self);
-        let h = self.add_wait_cycle_node(n);
-        self.wait_cycle_nodes.get(h).get_ncp_ident()
+        self.add_wait_cycle_node(n)
     }
 
     // ---- CounterNode -------------------------------------------------------
     pub fn make_counter_node(&mut self, name: &str, last_loop_cnt: i32) -> NcpIdent {
         let n = CounterNode::new(false, name, last_loop_cnt, self);
-        let h = self.add_counter_node(n);
-        self.counter_nodes.get(h).get_ncp_ident()
+        self.add_counter_node(n)
     }
 
     // ---- PseudoNode --------------------------------------------------------
     pub fn make_pseudo_node(&mut self, name: &str, bit_width: i32, join_op: LogicOp) -> NcpIdent {
         let node = PseudoNode::new(false, name, bit_width, join_op, self);
-        let h = self.add_pseudo_node(node);
-        self.pseudo_nodes.get(h).get_ncp_ident()
+        self.add_pseudo_node(node)
     }
 
     // ---- OprNode -----------------------------------------------------------
     pub fn make_opr_node(&mut self, name: &str, value_i: HcpIdent) -> NcpIdent {
-        let h = self.add_opr_node(OprNode::new(false, name, value_i));
-        self.opr_nodes.get(h).get_ncp_ident()
+        self.add_opr_node(OprNode::new(false, name, value_i))
     }
 }

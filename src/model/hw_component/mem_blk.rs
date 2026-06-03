@@ -1,5 +1,4 @@
 use crate::model::controller::clock_mode::ClockMode;
-use crate::model::hw_component::common::assign_meta::AssignMeta;
 use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};
 use crate::model::hw_component::common::hcp_base::HcpBase;
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HwComponentType};
@@ -7,6 +6,7 @@ use crate::model::hw_component::common::slice::Slice;
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::hw_component::mem_ele::MemEle;
 use crate::model::model_arena::ModelArena;
+use crate::model::nodes::ncp_ident::NcpIdent;
 
 // Memory block: a 2-D array of `bit_width`-wide words addressed by an `index_width`-bit index.
 // MemBlk is a grouper/container — it is never assigned to directly; all assignments flow
@@ -77,7 +77,7 @@ impl HcpAssignable for MemBlk {
     fn retrieve_clk_mode (&    self) -> ClockMode      { panic!("MemBlk is not HcpAssignable") }
     fn get_des_slice     (&    self) -> Slice          { panic!("MemBlk is not HcpAssignable") }
     fn get_priority      (&    self) -> i32            { panic!("MemBlk is not HcpAssignable") }
-    fn do_asm(&self, _: HcpIdent, _: Option<Slice>, _: Slice, _: &mut ModelArena) -> AssignMeta {
+    fn do_asm(&self, _: HcpIdent, _: Option<Slice>, _: Slice, _: &mut ModelArena) -> NcpIdent {
         panic!("MemBlk is not HcpAssignable")
     }
 }

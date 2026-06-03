@@ -7,6 +7,8 @@ use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::update_event_ident::UpdateEventIdent;
 use crate::model::hw_component::common::update_pool::UpdatePool;
 use crate::model::model_arena::ModelArena;
+use crate::model::nodes::ncp_ident::NcpIdent;
+use crate::model::common::identifier::Identifiable;
 
 pub trait HcpAssignable {
 
@@ -31,7 +33,7 @@ pub trait HcpAssignable {
               srci       : HcpIdent,
               des_slice  : Option<Slice>,
               src_slice  : Slice,
-              arena      : &mut ModelArena) -> AssignMeta;
+              arena      : &mut ModelArena) -> NcpIdent;
 
     fn gen_update_event(&self,
                         srci     : HcpIdent,
@@ -59,6 +61,20 @@ pub trait HcpAssignable {
         let uei = self.gen_update_event(srci, des_slice, src_slice, arena);
         AssignMeta::new(des_i, uei, self.retrieve_clk_mode())
     }
+
+    fn gen_asm_node(&self,
+                    des_i    : HcpIdent,
+                    srci     : HcpIdent,
+                    des_slice: Option<Slice>,
+                    src_slice: Slice,
+                    arena    : &mut ModelArena,
+    ) -> NcpIdent {
+        let name = format!("{}_asm", des_i.get_global_name());
+        let am   = self.gen_asm_meta(des_i, srci, des_slice, src_slice, arena);
+        arena.make_asm_node(false, &name, am)   // system-generated assignment node
+    }
+
+
 
 
     fn add_update_event(&mut self, event: UpdateEventIdent) {

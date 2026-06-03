@@ -1,12 +1,12 @@
 use crate::model::controller::clock_mode::{ClockMode, get_global_clk_mode};
 use crate::model::hw_component::common::asm_mode::get_asm_pri_val;
-use crate::model::hw_component::common::assign_meta::AssignMeta;
 use crate::model::hw_component::common::hcp_base::HcpBase;
 use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HwComponentType};
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::model_arena::ModelArena;
+use crate::model::nodes::ncp_ident::NcpIdent;
 
 // General-purpose clocked register; the most common HCP type.
 #[derive(Default)]
@@ -56,9 +56,9 @@ impl HcpAssignable for Reg {
               des_slice  : Option<Slice>,
               src_slice  : Slice,
               arena      : &mut ModelArena,
-    ) -> AssignMeta {
+    ) -> NcpIdent {
 
-        self.gen_asm_meta(self.ident, srci, des_slice, src_slice, arena)
+        self.gen_asm_node(self.ident, srci, des_slice, src_slice, arena)
     }
 }
 

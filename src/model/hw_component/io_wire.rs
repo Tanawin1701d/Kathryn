@@ -1,12 +1,12 @@
 use crate::model::controller::clock_mode::{ClockMode, get_global_clk_mode};
 use crate::model::hw_component::common::asm_mode::get_asm_pri_val;
-use crate::model::hw_component::common::assign_meta::AssignMeta;
 use crate::model::hw_component::common::hcp_base::HcpBase;
 use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HwComponentType};
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::model_arena::ModelArena;
+use crate::model::nodes::ncp_ident::NcpIdent;
 
 #[derive(Default)]
 pub struct IoWire {
@@ -78,7 +78,7 @@ impl HcpAssignable for IoWire {
               srci: HcpIdent,
               des_slice: Option<Slice>,
               src_slice: Slice,
-              arena    : &mut ModelArena) -> AssignMeta {
+              arena    : &mut ModelArena) -> NcpIdent {
         panic!("the io wire cannot be do_asm")
     }
 }

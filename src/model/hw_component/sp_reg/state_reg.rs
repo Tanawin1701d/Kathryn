@@ -1,5 +1,4 @@
 use crate::model::controller::clock_mode::ClockMode;
-use crate::model::hw_component::common::assign_meta::AssignMeta;
 use crate::model::hw_component::common::hcp_base::HcpBase;
 use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HwComponentType};
@@ -16,6 +15,7 @@ const DEFAULT_UE_PRI_SR_INT   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 4; // interr
 const DEFAULT_UE_PRI_SR_MRST  : i32 = DEFAULT_UE_PRI_RST;              // master reset wins over all
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::model_arena::ModelArena;
+use crate::model::nodes::ncp_ident::NcpIdent;
 
 /// 1-bit state register.  Mirrors C++ `StateReg`.
 
@@ -155,7 +155,7 @@ impl HcpAssignable for StateReg {
               _srci     : HcpIdent,
               _des_slice: Option<Slice>,
               _src_slice: Slice,
-              _arena    : &mut ModelArena) -> AssignMeta {
+              _arena    : &mut ModelArena) -> NcpIdent {
         panic!("StateReg::do_asm() is not supported; use build_update_event()")
     }
 }

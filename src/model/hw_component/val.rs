@@ -8,6 +8,7 @@ use crate::model::hw_component::common::update_event_ident::UpdateEventIdent;
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::model_arena::ModelArena;
+use crate::model::nodes::ncp_ident::NcpIdent;
 use crate::util::math::vary_val::VaryVal;
 
 // Constant-value HCP; holds a fixed bit pattern and is never the destination of an assignment.
@@ -68,7 +69,7 @@ impl HcpAssignable for Val {
               _srci     : HcpIdent,
               _des_slice: Option<Slice>,
               _src_slice: Slice,
-              _arena    : &mut ModelArena) -> AssignMeta {
+              _arena    : &mut ModelArena) -> NcpIdent {
         panic!("Val::do_asm should not be called")
     }
 
