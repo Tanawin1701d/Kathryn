@@ -7,7 +7,7 @@ use crate::model::hw_component::common::hcp_ident::HcpIdent;
 
 // Opaque handle to a model component. Carries identity only — every operation
 // goes back through `PyModelArena`, never through this object directly.
-#[pyclass(name = "HcpIdent")]
+#[pyclass(name = "HcpIdent", from_py_object)]
 #[derive(Clone, Copy)]
 pub struct PyHcpIdent {
     pub(crate) inner: HcpIdent,
