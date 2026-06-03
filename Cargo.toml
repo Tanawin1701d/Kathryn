@@ -3,4 +3,21 @@ name = "Kathryn2"
 version = "0.1.0"
 edition = "2024"
 
+# Library target drives both the normal build and the maturin/PyO3 cdylib.
+# `kathryn` is also the imported Python module name.
+[lib]
+name       = "kathryn"
+crate-type = ["cdylib", "rlib"]
+
+# Native binary entry point.
+[[bin]]
+name = "kathryn_cli"
+path = "src/main.rs"
+
 [dependencies]
+# Python bindings only — pulled in behind the `python` feature so the default
+# build (and the 0-error baseline) never compiles any PyO3 macros.
+pyo3 = { version = "0.28", optional = true, features = ["extension-module", "multiple-pymethods"] }
+
+[features]
+python = ["dep:pyo3"]
