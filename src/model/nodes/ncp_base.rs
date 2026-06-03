@@ -79,7 +79,7 @@ pub trait NcpNode: HasNodeTriggerSig {
     fn bind_with_rst_output_if_reset(&self, arena: &mut ModelArena, raw_exit: HcpIdent) -> HcpIdent {
         let Some(int_rst_id) = self.get_int_reset_node() else { return raw_exit };
         let int_exit = arena.get_node_exit_opr(&int_rst_id);
-        let inv = arena.make_expression(false, "node_int_inv", LogicOp::BitwiseInvr, int_exit, HcpIdent::default(), None, None);
+        let inv = arena.make_expression_single(false, "node_int_inv", LogicOp::BitwiseInvr, int_exit, None);
         arena.make_expression(false, "node_bind_rst", LogicOp::BitwiseAnd, raw_exit, inv, None, None)
     }
 
@@ -91,7 +91,7 @@ pub trait NcpNode: HasNodeTriggerSig {
         };
 
         let hold_exit = arena.get_node_exit_opr(&hold_id);
-        let inv = arena.make_expression(false, "node_hold_inv", LogicOp::BitwiseInvr, hold_exit, HcpIdent::default(), None, None);
+        let inv = arena.make_expression_single(false, "node_hold_inv", LogicOp::BitwiseInvr, hold_exit, None);
         arena.make_expression(false, "node_bind_hold", LogicOp::BitwiseAnd, raw_exit, inv, None, None)
     }
 }

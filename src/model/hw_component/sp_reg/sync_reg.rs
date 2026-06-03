@@ -116,10 +116,10 @@ impl SyncReg {
         );
         self.end_expr_i = Some(end_expr);
 
-        // ~endExpr  (unary — b operand is ignored)
-        let end_expr_inv = model_ar.make_expression(
-            false, &format!("{}_END_EXPR_INV", name), LogicOp::BitwiseInvr, end_expr, end_expr,
-            None, None,
+        // ~endExpr  (unary)
+        let end_expr_inv = model_ar.make_expression_single(
+            false, &format!("{}_END_EXPR_INV", name), LogicOp::BitwiseInvr, end_expr,
+            None,
         );
         self.end_expr_inv_i = Some(end_expr_inv);
     }

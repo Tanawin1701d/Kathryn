@@ -69,12 +69,11 @@ impl CounterLoopSchematic {
         }
 
         // Loop-back: (body_exit, ~cnt_at_last) → loop_node
-        let not_at_last_i = arena.make_expression(
+        let not_at_last_i = arena.make_expression_single(
             false, &format!("cloop_not_last_{}", id),
             LogicOp::BitwiseInvr,
             cnt_at_last_i,
-            HcpIdent::default(),
-            None, None,
+            None,
         );
         arena.add_depend_node_to_ncp(loop_node_i, body_exit_i, Some(not_at_last_i));
 

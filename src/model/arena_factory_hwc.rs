@@ -107,6 +107,13 @@ impl ModelArena {
         self.stamp_hw_to_parent_module(i, is_user_com)
     }
 
+    /// Single-operand expression (unary ops: `BitwiseInvr`, `LogicalNot`).
+    pub fn make_expression_single(&mut self, is_user_com: bool, name: &str, op: LogicOp, a: HcpIdent, a_slice: Option<Slice>) -> HcpIdent {
+        let a_slice = a_slice.unwrap_or_else(|| Slice::new(0, self.get_hw_bit_sz(&a)));
+        let i = self.add_expression(Expression::new_single_operand(is_user_com, name, op, a, a_slice, self));
+        self.stamp_hw_to_parent_module(i, is_user_com)
+    }
+
     /// Expression whose right operand is a literal `c` instead of a signal (e.g. `ExtendBit`).
     pub fn make_expression_constant(&mut self, is_user_com: bool, name: &str, op: LogicOp, a: HcpIdent, c: i32, a_slice: Option<Slice>) -> HcpIdent {
         let a_slice = a_slice.unwrap_or_else(|| Slice::new(0, self.get_hw_bit_sz(&a)));

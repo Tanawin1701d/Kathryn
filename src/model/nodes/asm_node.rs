@@ -88,11 +88,11 @@ impl AsmNode {
         // Each term is ANDed in only when the corresponding trigger field is set.
         let mut cond_event: Option<HcpIdent> = condition;
         if let Some(hs) = hold_signal {
-            let inv = arena.make_expression(false, "asm_hold_inv", LogicOp::BitwiseInvr, hs, HcpIdent::default(), None, None);
+            let inv = arena.make_expression_single(false, "asm_hold_inv", LogicOp::BitwiseInvr, hs, None);
             cond_event = add_logic_with_output(arena, cond_event, Some(inv), LogicOp::BitwiseAnd);
         }
         if let Some(rs) = reset_signal {
-            let inv = arena.make_expression(false, "asm_rst_inv", LogicOp::BitwiseInvr, rs, HcpIdent::default(), None, None);
+            let inv = arena.make_expression_single(false, "asm_rst_inv", LogicOp::BitwiseInvr, rs, None);
             cond_event = add_logic_with_output(arena, cond_event, Some(inv), LogicOp::BitwiseAnd);
         }
         cond_event = add_logic_with_output(arena, cond_event, parent_state_op, LogicOp::BitwiseAnd);

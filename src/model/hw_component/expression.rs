@@ -45,7 +45,6 @@ impl Expression {
             // result 1 bit length
             LogicOp::LogicalAnd
             | LogicOp::LogicalOr
-            | LogicOp::LogicalNot
             | LogicOp::RelationEq
             | LogicOp::RelationNeq
             | LogicOp::RelationLe
@@ -58,7 +57,6 @@ impl Expression {
             LogicOp::BitwiseAnd
             | LogicOp::BitwiseOr
             | LogicOp::BitwiseXor
-            | LogicOp::BitwiseInvr
             | LogicOp::BitwiseShl
             | LogicOp::BitwiseShr
             | LogicOp::ArithPlus
@@ -79,6 +77,38 @@ impl Expression {
             operand_b      : Some(b),
             operand_a_slice: Some(a_slice),
             operand_b_slice: Some(b_slice),
+            operand_c      : None,
+            value_assigned : true,
+        }
+    }
+
+
+
+    /// Expression with a single operand (unary ops: `BitwiseInvr`, `LogicalNot`).
+    /// `operand_b` and `operand_c` stay None.
+    pub fn new_single_operand(is_user_com: bool,
+                              name       : &str,
+                              op         : LogicOp,
+                              a          : HcpIdent,
+                              a_slice    : Slice,
+                              model_arena: &ModelArena) -> Self {
+        let bit_width = match op {
+            // result 1 bit length
+            LogicOp::LogicalNot  => 1,
+            // result len(a) width length
+            LogicOp::BitwiseInvr => model_arena.get_hw_bit_sz(&a),
+            // other not support for this constructor
+            _ => panic!("Expression::new_single_operand — unsupported op {:?} for this constructor", op),
+        };
+        Self {
+            assign         : HcpAssign::new(),
+            ident          : HcpIdent::new(HwComponentType::Expression, is_user_com, name),
+            bit_width,
+            op,
+            operand_a      : Some(a),
+            operand_b      : None,
+            operand_a_slice: Some(a_slice),
+            operand_b_slice: None,
             operand_c      : None,
             value_assigned : true,
         }

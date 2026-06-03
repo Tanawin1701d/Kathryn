@@ -52,12 +52,11 @@ impl WhileSchematic {
         body_wrap.add_dep_to_entrances(arena, cond_node_i, Some(self.cond_i));
 
         // 3. Create exit_node — fires when condition is false
-        let not_cond_i = arena.make_expression(
+        let not_cond_i = arena.make_expression_single(
             false, &format!("cwhile_not_cond_{}", id),
             LogicOp::BitwiseInvr,
             self.cond_i,
-            HcpIdent::default(),
-            None, None,
+            None,
         );
         let exit_i = arena.make_pseudo_node(&format!("cwhile_exit_{}", id), 1, LogicOp::BitwiseOr);
         arena.init_node_trigger(exit_i, base.get_ext_trigger_node(), false);
