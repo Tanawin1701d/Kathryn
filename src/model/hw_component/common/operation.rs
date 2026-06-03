@@ -67,6 +67,73 @@ impl LogicOp {
         }
     }
 
+    /// Stable variant name (used to surface ops to other languages). Exhaustive,
+    /// so a new `LogicOp` variant fails to compile until it is named here.
+    pub fn variant_name(self) -> &'static str {
+        match self {
+            LogicOp::BitwiseAnd  => "BitwiseAnd",
+            LogicOp::BitwiseOr   => "BitwiseOr",
+            LogicOp::BitwiseXor  => "BitwiseXor",
+            LogicOp::BitwiseInvr => "BitwiseInvr",
+            LogicOp::BitwiseShl  => "BitwiseShl",
+            LogicOp::BitwiseShr  => "BitwiseShr",
+            LogicOp::LogicalAnd  => "LogicalAnd",
+            LogicOp::LogicalOr   => "LogicalOr",
+            LogicOp::LogicalNot  => "LogicalNot",
+            LogicOp::RelationEq  => "RelationEq",
+            LogicOp::RelationNeq => "RelationNeq",
+            LogicOp::RelationLe  => "RelationLe",
+            LogicOp::RelationLeq => "RelationLeq",
+            LogicOp::RelationGe  => "RelationGe",
+            LogicOp::RelationGeq => "RelationGeq",
+            LogicOp::RelationSlt => "RelationSlt",
+            LogicOp::RelationSgt => "RelationSgt",
+            LogicOp::ArithPlus   => "ArithPlus",
+            LogicOp::ArithMinus  => "ArithMinus",
+            LogicOp::ArithMul    => "ArithMul",
+            LogicOp::ArithDiv    => "ArithDiv",
+            LogicOp::ArithDivr   => "ArithDivr",
+            LogicOp::ExtendBit   => "ExtendBit",
+            LogicOp::Assign      => "Assign",
+            LogicOp::Dummy       => "Dummy",
+        }
+    }
+
+    /// Map a 0-based index (variant declaration order) to its `LogicOp` — the
+    /// inverse of the variant order. `None` only when `idx` is past the last
+    /// variant.
+    pub fn from_index(idx: u32) -> Option<LogicOp> {
+        let op = match idx {
+            0  => LogicOp::BitwiseAnd,
+            1  => LogicOp::BitwiseOr,
+            2  => LogicOp::BitwiseXor,
+            3  => LogicOp::BitwiseInvr,
+            4  => LogicOp::BitwiseShl,
+            5  => LogicOp::BitwiseShr,
+            6  => LogicOp::LogicalAnd,
+            7  => LogicOp::LogicalOr,
+            8  => LogicOp::LogicalNot,
+            9  => LogicOp::RelationEq,
+            10 => LogicOp::RelationNeq,
+            11 => LogicOp::RelationLe,
+            12 => LogicOp::RelationLeq,
+            13 => LogicOp::RelationGe,
+            14 => LogicOp::RelationGeq,
+            15 => LogicOp::RelationSlt,
+            16 => LogicOp::RelationSgt,
+            17 => LogicOp::ArithPlus,
+            18 => LogicOp::ArithMinus,
+            19 => LogicOp::ArithMul,
+            20 => LogicOp::ArithDiv,
+            21 => LogicOp::ArithDivr,
+            22 => LogicOp::ExtendBit,
+            23 => LogicOp::Assign,
+            24 => LogicOp::Dummy,
+            _  => return None,
+        };
+        Some(op)
+    }
+
     pub fn is_single_opr(self) -> bool {
         matches!(self, LogicOp::Assign | LogicOp::BitwiseInvr | LogicOp::LogicalNot)
     }
