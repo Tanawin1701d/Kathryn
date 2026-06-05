@@ -7,6 +7,14 @@ start. Read it before making changes. The Rust port of Kathryn lives on the
 not a pattern source. Rust patterns deliberately diverge from C++ where pointer
 ownership or inheritance does not map cleanly.
 
+**Crate layout.** All code lives in the library crate (`src/lib.rs`); the native
+binary (`src/main.rs`, bin name `kathryn_cli`) is a thin shell over it, and the
+PyO3 extension (lib name `kathryn`, `crate-type = ["cdylib", "rlib"]`) is built
+from the same library via maturin. PyO3 is an **optional** dependency behind the
+`python` Cargo feature, so the default build compiles **zero** PyO3 macros. The
+entire Python layer lives under `src/applications/` and is `#[cfg(feature =
+"python")]`-gated in `lib.rs`. See §7.
+
 ---
 
 ## 1. Architectural patterns
@@ -201,7 +209,17 @@ Flow blocks (`src/model/flow_block/`) use a specialised dispatch pattern that
   `build_flow_block`, `summarize_flow_block`). They use take/replace_back
   with `Box<dyn FlowBlock>` — **zero match, zero macro**.
 
-- `FlowBlockIdent` carries `FlowBlockType` (`Sequential` | `Parallel`).
+- `FlowBlockIdent` carries `FlowBlockType` **and** `FlowBlockJoinPolicy`
+  (both in `flow_block_ident.rs`).
+  `FlowBlockType` now has 11 variants: `Sequential`, `Parallel`, `CondIf`,
+  `CondElif`, `ZeroCondIf`, `ZeroCondElif`, `ZeroSwitch`, `ZeroSwitchCase`,
+  `WhileLoop`, `DoWhile`, `CounterLoop`. They live in three sub-directories:
+  `seq/`, `par/`, `cond/` (the six conditional/switch blocks), and `loops/`
+  (`FlowBlockWhile`, `FlowBlockDoWhile`, `FlowBlockCounterLoop`).
+  `FlowBlockJoinPolicy` is `SubFlow` (a nested child block), `ConFlow` (a
+  continuation branch of a conditional chain — elif/else/zelif/zelse), or
+  `BasicNodeFlow` (block lowered to a single basic asm node, same entrance as
+  `SubFlow`).
   Adding a new block type requires: (1) new variant in `FlowBlockType`,
   (2) new `ArenaGroup` field + CRUD in `arena_impl_flow_block.rs`,
   (3) new arm in the ONE match inside `take_flow_block`,
@@ -212,17 +230,23 @@ Store concrete block types in `ModelArena` and pass `FlowBlockIdent` handles.
 
 #### Flow-block schematics (`flow_block/common/`)
 
-`SeqSchematic` and `ParSchematic`/`ParSyncMode` are reusable node-wiring
-helpers in `src/model/flow_block/common/`. They are **not** arena-stored;
-they live by value inside `FlowBlockSeq` / `FlowBlockPar` and own all the
-logic for wiring sequential or parallel node graphs.
+Schematics are reusable node-wiring helpers in `src/model/flow_block/common/`.
+They are **not** arena-stored; they live by value inside the matching
+`FlowBlock*` struct and own all the logic for wiring that block's node graph.
+Each exposes a `build(&mut base, arena) -> NodeWrap`.
 
-- `SeqSchematic::build(&mut base, arena) -> NodeWrap` — wires a linear
-  sequence of `SequenceEle` (Basic asm-node or SubBlock).
-- `ParSchematic::build(&mut base, arena) -> NodeWrap` — wires a parallel
-  fan-out/fan-in; `mode: ParSyncMode` selects `AutoSync` vs. `NoSync`.
+| Schematic | Mode enum | Drives |
+| --------- | --------- | ------ |
+| `SeqSchematic`         | —              | linear sequence of `SequenceEle` (Basic asm-node or SubBlock) |
+| `ParSchematic`         | `ParSyncMode` (`AutoSync` / `NoSync`) | parallel fan-out/fan-in |
+| `CondSchematic`        | `CondMode`     | conditional / switch branch wiring |
+| `CondChain`            | —              | shared elif/else chain bookkeeping for cond blocks |
+| `WhileSchematic`       | `LoopMode`     | `while` loop topology (combinational vs sequential) |
+| `DoWhileSchematic`     | `LoopMode`     | `do { } while` (body runs at least once) |
+| `CounterLoopSchematic` | —              | fixed-count loop |
 
-Use these when implementing new block types that share seq or par topology.
+Re-exported from `flow_block/mod.rs`: `CondMode`, `LoopMode`, `ParSyncMode`.
+Use these when implementing new block types that share an existing topology.
 
 `FlowBlockPar` is one unified struct (one `ArenaGroup<FlowBlockPar>`, one
 `FlowBlockType::Parallel` variant). The auto-sync / no-sync choice lives
@@ -377,7 +401,8 @@ unique names — do not invent new ones.
 ### 4.1 Pre-existing build errors
 
 The current baseline is **0 errors**. `cargo build` should complete cleanly
-(warnings are acceptable). Any new error you introduce is yours to fix.
+(warnings are acceptable). The Python build, `cargo build --features python`,
+must also stay at 0 errors. Any new error you introduce is yours to fix.
 
 ### 4.2 What is *not yet* ported from C++
 
@@ -670,3 +695,85 @@ defined in `~/.claude/skills/codestyle-skill/SKILL.md`. Key rules:
 - **Multi-line signatures** when 3+ parameters: one param per line, closing delimiter on its own line, trailing comma.
 - **`_i` suffix** on any variable or field whose type is a `*Ident` handle.
 - **Brief comments** — one sentence, explain why not what; no multi-paragraph docstrings.
+
+---
+
+## 7. Python bindings (`src/applications/py/`)
+
+The Python frontend (PyO3 + maturin) is the only place in the crate that
+contains PyO3 macros. It is `#[cfg(feature = "python")]`-gated, so the default
+build never compiles it. Build/install with maturin (`pyproject.toml` sets
+`features = ["python"]`, `module-name = "kathryn"`); the imported Python module
+is `kathryn`.
+
+### 7.1 Golden rule — the core stays PyO3-free
+
+Core model types (`HcpIdent`, `Slice`, `FlowBlockIdent`, `ModelArena`, …) carry
+**no** PyO3 macros. For each one exposed to Python there is a thin newtype
+wrapper under `py/` (`PyHcpIdent`, `PySlice`, `PyFlowBlockIdent`,
+`PyModelArena`) that is the *only* Python-visible face. Wrappers hold the core
+value in a `pub(crate) inner` field and provide `From<Core> for PyWrapper` **and**
+`From<PyWrapper> for Core` so factory bodies read
+`self.arena.make_x(...).into()` and accept `arg.into()`. Ident/value wrappers
+are `#[pyclass(..., from_py_object)]` + `#[derive(Clone, Copy)]` so they pass
+by value as arguments.
+
+### 7.2 Module tree mirrors `src/model/`
+
+```
+src/applications/py/
+  mod.rs                      — #[pymodule] kathryn(); registers classes + LogicOp enum
+  model/
+    mod.rs
+    model_arena.rs            — #[pyclass(unsendable)] PyModelArena { arena: ModelArena }
+    arena_factory_hwc_py.rs        — mk_reg / mk_wire / mk_io_wire / mk_val / mk_mem_blk / mk_mem_ele
+    arena_factory_hwc_expr_py.rs   — mk_expression (binary op via LogicOp int) / mk_extend_bit
+    arena_impl_hwc_py.rs           — gen_basic_assign and other higher-level HWC ops
+    arena_factory_flow_block_py.rs — mk_flow_block_* (seq/par/cond/zero/while/do_while/counter)
+    arena_impl_flow_block_py.rs    — initialize_flow_block / finalize_flow_block / build_flow_block
+    arena_factory_module_py.rs     — mk_module (sub-module; top is made in PyModelArena::new)
+    arena_impl_module_py.rs        — initialize_module / finalize_module
+    hw_component/common/{hcp_ident.rs, slice.rs}   — PyHcpIdent, PySlice
+    flow_block/flow_block_ident.rs                 — PyFlowBlockIdent
+    module/module_ident.rs                         — PyModuleIdent
+```
+
+The file split mirrors the host `arena_factory_*` / `arena_impl_*` split. PyO3's
+`multiple-pymethods` feature lets every file add its own `#[pymethods] impl
+PyModelArena` block. Add a new Python file under the mirror path that matches
+the host file you are wrapping; do not pile everything into one block.
+
+### 7.3 Conventions
+
+- **`PyModelArena` is `unsendable`** — single-threaded by design, mirroring the
+  arena being the sole Rust-side owner. Its `#[new]` pushes a top module up
+  front (`mk_top_module`) so component factories always have a module on the
+  trace stack to attach to.
+- **Every wrapper method is user-declared**: HWC factories pass
+  `is_user_com = true` (i.e. they wrap the host `make_*`/`mk_*` user path).
+- **`_py` file suffix** distinguishes the Python mirror from the host file.
+- **Naming**: host `make_x` → Python `mk_x` (Python is always the user surface).
+- **Flow-block lifecycle** is driven explicitly from Python:
+  `initialize_flow_block` (push onto the init stack) → build contents →
+  `finalize_flow_block` (pop + attach to parent/module) → `build_flow_block`.
+- **Module lifecycle** mirrors the flow-block one against the *module trace
+  stack*: `mk_module` (create + stamp parent) → `initialize_module` (push so
+  components/flow-blocks attach) → build contents → `finalize_module` (pop +
+  register with the enclosing module via `add_user_sub_module`).
+  `PyModelArena::new` opens the top module up front. The entire Python
+  construction phase runs the active module at `ModuleInitStage::FlowBlockInit`
+  (both HW declaration and top-flow-block finalize work there; the C++
+  component/flow two-phase split is unused while controller hooks are unported).
+  `finalize_module` **must** call `add_user_sub_module` — `mk_module` only
+  stamps the parent handle, so without it the build DFS never descends into the
+  sub-module (a known host gotcha).
+
+### 7.4 Enums — single source of truth
+
+`LogicOp` is exposed as a Python `IntEnum` built at module-init by walking the
+core `LogicOp::from_index` / `variant_name` (see `add_logic_op_enum` in
+`mod.rs`). Python never hardcodes op ints, and `mk_expression` decodes the int
+back through the *same* `from_index`, so the two sides cannot drift. Follow this
+pattern for any new enum crossing the boundary — never duplicate variant lists
+in Python. `mk_expression` rejects `ExtendBit` / `Assign` / `Dummy` (use
+`mk_extend_bit` or the assign path instead).
