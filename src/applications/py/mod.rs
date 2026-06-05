@@ -9,6 +9,7 @@ pub mod model;
 use model::model_arena::PyModelArena;
 use model::hw_component::common::hcp_ident::PyHcpIdent;
 use model::hw_component::common::slice::PySlice;
+use model::flow_block::flow_block_ident::PyFlowBlockIdent;
 use crate::model::hw_component::common::operation::LogicOp;
 
 // Build `kathryn.LogicOp` as a Python IntEnum sourced entirely from the core
@@ -36,6 +37,7 @@ fn kathryn(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyModelArena>()?;
     m.add_class::<PyHcpIdent>()?;
     m.add_class::<PySlice>()?;
+    m.add_class::<PyFlowBlockIdent>()?;
     add_logic_op_enum(m)?;
     Ok(())
 }
