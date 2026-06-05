@@ -4,8 +4,8 @@
 
 use pyo3::prelude::*;
 use super::model_arena::PyModelArena;
-use super::hw_component::common::hcp_ident::PyHcpIdent;
-use super::hw_component::common::slice::PySlice;
+use super::hw_component::common::hcp_ident_py::PyHcpIdent;
+use super::hw_component::common::slice_py::PySlice;
 
 #[pymethods]
 impl PyModelArena {

@@ -5,8 +5,8 @@
 
 use pyo3::prelude::*;
 use super::model_arena::PyModelArena;
-use super::flow_block::flow_block_ident::PyFlowBlockIdent;
-use super::hw_component::common::hcp_ident::PyHcpIdent;
+use super::flow_block::flow_block_ident_py::PyFlowBlockIdent;
+use super::hw_component::common::hcp_ident_py::PyHcpIdent;
 
 #[pymethods]
 impl PyModelArena {

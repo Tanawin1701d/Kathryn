@@ -5,7 +5,7 @@
 
 use pyo3::prelude::*;
 use super::model_arena::PyModelArena;
-use super::hw_component::common::hcp_ident::PyHcpIdent;
+use super::hw_component::common::hcp_ident_py::PyHcpIdent;
 
 #[pymethods]
 impl PyModelArena {

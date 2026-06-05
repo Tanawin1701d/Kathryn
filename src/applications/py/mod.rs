@@ -7,10 +7,10 @@ use pyo3::types::PyDict;
 pub mod model;
 
 use model::model_arena::PyModelArena;
-use model::hw_component::common::hcp_ident::PyHcpIdent;
-use model::hw_component::common::slice::PySlice;
-use model::flow_block::flow_block_ident::PyFlowBlockIdent;
-use model::module::module_ident::PyModuleIdent;
+use model::hw_component::common::hcp_ident_py::PyHcpIdent;
+use model::hw_component::common::slice_py::PySlice;
+use model::flow_block::flow_block_ident_py::PyFlowBlockIdent;
+use model::module::module_ident_py::PyModuleIdent;
 use crate::model::hw_component::common::operation::LogicOp;
 
 // Build `kathryn.LogicOp` as a Python IntEnum sourced entirely from the core

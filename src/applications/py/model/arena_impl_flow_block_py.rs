@@ -5,7 +5,7 @@
 
 use pyo3::prelude::*;
 use super::model_arena::PyModelArena;
-use super::flow_block::flow_block_ident::PyFlowBlockIdent;
+use super::flow_block::flow_block_ident_py::PyFlowBlockIdent;
 
 #[pymethods]
 impl PyModelArena {

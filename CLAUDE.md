@@ -733,9 +733,9 @@ src/applications/py/
     arena_impl_flow_block_py.rs    — initialize_flow_block / finalize_flow_block / build_flow_block
     arena_factory_module_py.rs     — mk_module (sub-module; top is made in PyModelArena::new)
     arena_impl_module_py.rs        — initialize_module / finalize_module
-    hw_component/common/{hcp_ident.rs, slice.rs}   — PyHcpIdent, PySlice
-    flow_block/flow_block_ident.rs                 — PyFlowBlockIdent
-    module/module_ident.rs                         — PyModuleIdent
+    hw_component/common/{hcp_ident_py.rs, slice_py.rs} — PyHcpIdent, PySlice
+    flow_block/flow_block_ident_py.rs              — PyFlowBlockIdent
+    module/module_ident_py.rs                      — PyModuleIdent
 ```
 
 The file split mirrors the host `arena_factory_*` / `arena_impl_*` split. PyO3's

@@ -5,7 +5,7 @@
 
 use pyo3::prelude::*;
 use super::model_arena::PyModelArena;
-use super::module::module_ident::PyModuleIdent;
+use super::module::module_ident_py::PyModuleIdent;
 
 #[pymethods]
 impl PyModelArena {
