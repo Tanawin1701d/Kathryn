@@ -15,6 +15,7 @@ use crate::model::hw_component::sp_reg::sync_reg::SyncReg;
 use crate::model::hw_component::sp_reg::state_reg::StateReg;
 use crate::model::hw_component::sp_reg::wait_reg::{CondWaitStateReg, CycleWaitStateReg};
 use crate::model::model_arena::ModelArena;
+use crate::model::nodes::ncp_ident::NcpIdent;
 
 // dispatch_hcp!: two forms.
 //   dispatch_hcp!(self, ident, method) — 11 HCP-assignable types (MemBlock excluded);
@@ -130,5 +131,14 @@ impl ModelArena {
     pub fn replace_back_hcp(&mut self, v: Box<dyn HcpBase>)              { v.replace_back_into_arena(self); }
 
 
-
+    // Generate an assignment node writing src_i into des_i: take the destination
+    // HCP out (freeing the arena for do_asm), let it build its own asm node, put it back.
+    pub fn gen_asm_node(&mut self, des_i    : HcpIdent     , src_i    : HcpIdent,
+                                   des_slice: Option<Slice>, src_slice: Slice   ,
+    ) -> NcpIdent {
+        let des= self.take_hcp(des_i);
+        let node_i = des.do_asm(src_i, des_slice, src_slice, self);
+        self.replace_back_hcp(des);
+        node_i
+    }
 }
