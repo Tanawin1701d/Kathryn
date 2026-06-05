@@ -141,4 +141,13 @@ impl ModelArena {
         self.replace_back_hcp(des);
         node_i
     }
+
+    // Build a basic assignment node and attach it where the build is currently
+    // pointing (active flow block, or the top module if no block is building).
+    pub fn gen_basic_assign(&mut self, des_i    : HcpIdent     , src_i    : HcpIdent,
+                                       des_slice: Option<Slice>, src_slice: Slice   ,
+    ) {
+        let node_i = self.gen_asm_node(des_i, src_i, des_slice, src_slice);
+        self.attach_basic_node_to_current_scope(node_i);
+    }
 }

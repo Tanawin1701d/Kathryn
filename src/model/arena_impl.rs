@@ -4,6 +4,7 @@ use crate::model::model_arena::{ModelArena, ModuleInitStage};
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::module::module::Module;
 use crate::model::module::module_ident::ModuleIdent;
+use crate::model::nodes::ncp_ident::NcpIdent;
 use crate::model::flow_block::{FlowBlockIdent, FlowBlockJoinPolicy};
 
 // ---------------------------------------------------------------------------
@@ -168,6 +169,24 @@ impl ModelArena {
     pub fn push_flow_block_init_stack(&mut self, i: FlowBlockIdent) { self.flow_block_init_stack.push(i); }
     pub fn pop_flow_block_init_stack (&mut self) -> FlowBlockIdent  { self.flow_block_init_stack.pop().expect("flow block stack is empty") }
     pub fn peek_flow_block_init_stack(&self)     -> FlowBlockIdent  { *self.flow_block_init_stack.last().expect("flow block stack is empty") }
+
+    /// Attach a basic node to wherever the build is currently pointing: the active
+    /// flow block on top of the init stack, or the top module if no block is building.
+    pub fn attach_basic_node_to_current_scope(&mut self, node_i: NcpIdent) {
+        if let Some(&block_i) = self.flow_block_init_stack.last() {
+            self.add_node_to_flow_block(block_i, node_i);
+        } else {
+            self.add_basic_node_to_top_module(node_i);
+        }
+    }
+
+    /// Push a basic node onto the top module's basic-node list.
+    pub fn add_basic_node_to_top_module(&mut self, node_i: NcpIdent) {
+        let module_i = self.get_top_module().expect("add_basic_node_to_top_module: no top module set");
+        let mut m = self.take_module(module_i);
+        m.add_basic_node(node_i);
+        self.replace_back_module(module_i, m);
+    }
 
     /// Pop the top flow block, assert it matches `expected`, then attach it:
     /// - to the new stack top as a sub-flow-block, if the stack is non-empty, or
