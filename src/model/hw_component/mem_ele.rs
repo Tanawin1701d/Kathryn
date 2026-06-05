@@ -66,7 +66,7 @@ impl HcpAssignable for MemEle {
               des_slice: Option<Slice>,
               src_slice: Slice,
               arena    : &mut ModelArena) -> NcpIdent {
-        self.gen_asm_node(self.ident, srci, des_slice, src_slice, arena)
+        self.gen_asm_node(srci, des_slice, src_slice, arena)
     }
 }
 
@@ -78,6 +78,7 @@ impl Identifiable for MemEle {
 }
 
 impl HcpIdentifiable for MemEle {
+    fn get_ident    (&    self) ->      HcpIdent { self.ident      }
     fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
 }
 

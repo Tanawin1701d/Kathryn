@@ -53,13 +53,13 @@ impl HcpAssignable for Wire {
 
     fn get_priority(&self) -> i32 { get_asm_pri_val() }
 
-    // Delegates to the shared helper; self.ident is passed as the destination handle.
+    // Delegates to the shared helper; the destination is self (read via get_ident).
     fn do_asm(&self,
               srci     : HcpIdent,
               des_slice: Option<Slice>,
               src_slice: Slice,
               arena    : &mut ModelArena) -> NcpIdent {
-        self.gen_asm_node(self.ident, srci, des_slice, src_slice, arena)
+        self.gen_asm_node(srci, des_slice, src_slice, arena)
     }
 }
 
@@ -72,6 +72,7 @@ impl Identifiable for Wire {
 }
 
 impl HcpIdentifiable for Wire {
+    fn get_ident    (&    self) ->      HcpIdent { self.ident      }
     fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
 }
 

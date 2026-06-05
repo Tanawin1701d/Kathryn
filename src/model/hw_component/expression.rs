@@ -212,6 +212,7 @@ impl Identifiable for Expression {
 }
 
 impl HcpIdentifiable for Expression {
+    fn get_ident    (&    self) ->      HcpIdent { self.ident      }
     fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
 }
 

@@ -167,6 +167,7 @@ impl Identifiable for StateReg {
 }
 
 impl HcpIdentifiable for StateReg {
+    fn get_ident    (&    self) ->      HcpIdent { self.ident      }
     fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
 }
 

@@ -19,8 +19,10 @@ fn add_logic_op_enum(m: &Bound<'_, PyModule>) -> PyResult<()> {
     let py      = m.py();
     let members = PyDict::new(py);
     let mut idx = 0u32;
+    // Walk every LogicOp by index until from_index runs out, mirroring each
+    // variant name → int into the dict that backs the Python IntEnum.
     while let Some(op) = LogicOp::from_index(idx) {
-        members.set_item(op.variant_name(), idx)?;
+        members.set_item(op.variant_name(), idx)?;  // enum member: name = idx
         idx += 1;
     }
     let int_enum = py.import("enum")?.getattr("IntEnum")?;

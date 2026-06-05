@@ -83,6 +83,7 @@ impl HcpAssignable for MemBlk {
 }
 
 impl HcpIdentifiable for MemBlk {
+    fn get_ident    (&    self) ->      HcpIdent { self.ident      }
     fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
 }
 

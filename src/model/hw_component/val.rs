@@ -83,7 +83,6 @@ impl HcpAssignable for Val {
     }
 
     fn gen_asm_meta(&self,
-                    _des_i    : HcpIdent,
                     _srci     : HcpIdent,
                     _des_slice: Option<Slice>,
                     _src_slice: Slice,
@@ -101,6 +100,7 @@ impl Identifiable for Val {
 }
 
 impl HcpIdentifiable for Val {
+    fn get_ident    (&    self) ->      HcpIdent { self.ident      }
     fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
 }
 

@@ -3,14 +3,16 @@
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::assign_meta::AssignMeta;
-use crate::model::hw_component::common::hcp_ident::HcpIdent;
+use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable};
 use crate::model::hw_component::common::update_event_ident::UpdateEventIdent;
 use crate::model::hw_component::common::update_pool::UpdatePool;
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_ident::NcpIdent;
 use crate::model::common::identifier::Identifiable;
 
-pub trait HcpAssignable {
+// HcpIdentifiable supertrait lets the asm helpers read the destination ident
+// (always `self`) directly, so callers never pass it in.
+pub trait HcpAssignable: HcpIdentifiable {
 
     /// ///////////////
     /// common function
@@ -52,25 +54,23 @@ pub trait HcpAssignable {
     }
 
     fn gen_asm_meta(&self,
-                    des_i    : HcpIdent,
                     srci     : HcpIdent,
                     des_slice: Option<Slice>,
                     src_slice: Slice,
                     arena    : &mut ModelArena,
     ) -> AssignMeta {
         let uei = self.gen_update_event(srci, des_slice, src_slice, arena);
-        AssignMeta::new(des_i, uei, self.retrieve_clk_mode())
+        AssignMeta::new(self.get_ident(), uei, self.retrieve_clk_mode())
     }
 
     fn gen_asm_node(&self,
-                    des_i    : HcpIdent,
                     srci     : HcpIdent,
                     des_slice: Option<Slice>,
                     src_slice: Slice,
                     arena    : &mut ModelArena,
     ) -> NcpIdent {
-        let name = format!("{}_asm", des_i.get_global_name());
-        let am   = self.gen_asm_meta(des_i, srci, des_slice, src_slice, arena);
+        let name = format!("{}_asm", self.get_ident().get_global_name());
+        let am   = self.gen_asm_meta(srci, des_slice, src_slice, arena);
         arena.make_asm_node(false, &name, am)   // system-generated assignment node
     }
 

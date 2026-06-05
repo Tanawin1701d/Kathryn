@@ -120,6 +120,7 @@ pub trait HcpIdentifiable: Identifiable {
 
     fn get_iden_base    (&self)     -> &    IdentBase { self.get_ident_base()            }
     fn get_iden_base_mut(&mut self) -> &mut IdentBase { self.get_ident_base_mut() }
+    fn get_ident        (&self)     ->      HcpIdent;
     fn get_ident_mut    (&mut self) -> &mut HcpIdent;
 
     fn set_arena_handler(&mut self, arena_handler: ArenaHandle) {

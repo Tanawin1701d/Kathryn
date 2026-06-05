@@ -201,6 +201,7 @@ impl Identifiable for CondWaitStateReg {
 }
 
 impl HcpIdentifiable for CondWaitStateReg {
+    fn get_ident    (&    self) ->      HcpIdent { self.ident      }
     fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
 }
 
@@ -490,6 +491,7 @@ impl Identifiable for CycleWaitStateReg {
 }
 
 impl HcpIdentifiable for CycleWaitStateReg {
+    fn get_ident    (&    self) ->      HcpIdent { self.ident      }
     fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
 }
 
