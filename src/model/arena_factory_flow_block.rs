@@ -3,6 +3,7 @@ use crate::model::flow_block::{
     FlowBlockSeq, FlowBlockPar,
     FlowBlockCond, FlowBlockCondElif,
     FlowBlockZeroCondIf, FlowBlockZeroCondElif,
+    FlowBlockZeroSwitch, FlowBlockZeroSwitchCase,
     FlowBlockWhile, FlowBlockDoWhile, FlowBlockCounterLoop,
 };
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
@@ -74,6 +75,20 @@ impl ModelArena {
 
     pub fn make_flow_block_zelse(&mut self, name: &str) -> FlowBlockIdent {
         let i = self.add_flow_block_zero_cond_elif(FlowBlockZeroCondElif::new_zelse(name));
+        i
+    }
+
+    // ---- zero_switch: ZSTATE ------------------------------------------------
+
+    pub fn make_flow_block_zstate(&mut self, name: &str, state_i: HcpIdent) -> FlowBlockIdent {
+        let i = self.add_flow_block_zero_switch(FlowBlockZeroSwitch::new(name, state_i));
+        i
+    }
+
+    // ---- zero_switch_case: ZCASE --------------------------------------------
+
+    pub fn make_flow_block_zcase(&mut self, name: &str, match_val: i32) -> FlowBlockIdent {
+        let i = self.add_flow_block_zero_switch_case(FlowBlockZeroSwitchCase::new(name, match_val));
         i
     }
 

@@ -12,6 +12,7 @@ from .flow_block import (
     seq, par_auto, par_no_sync,
     cif, sif, cselif, cselse,
     zif, zelif, zelse,
+    zstate, zcase,
     cwhile, swhile, do_while, counter_loop,
 )
 from .module import module
@@ -26,6 +27,7 @@ __all__ = [
     "seq", "par_auto", "par_no_sync",
     "cif", "sif", "cselif", "cselse",
     "zif", "zelif", "zelse",
+    "zstate", "zcase",
     "cwhile", "swhile", "do_while", "counter_loop",
     # module scope + session
     "module", "arena", "reset",

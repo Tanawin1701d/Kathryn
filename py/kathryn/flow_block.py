@@ -48,8 +48,12 @@ def zif   (cond, name=None): return _block("zif",    _session.arena().mk_flow_bl
 def zelif (cond, name=None): return _block("zelif",  _session.arena().mk_flow_block_zelif,  name, to_ref(cond)._ident)
 def zelse (      name=None): return _block("zelse",  _session.arena().mk_flow_block_zelse,  name)
 
+# ---- zero-cycle switch ------------------------------------------------------
+def zstate(state,     name=None): return _block("zstate", _session.arena().mk_flow_block_zstate, name, to_ref(state)._ident)
+def zcase (match_val, name=None): return _block("zcase",  _session.arena().mk_flow_block_zcase,  name, int(match_val))
+
 # ---- loops ------------------------------------------------------------------
-def cwhile      (cond,          name=None): return _block("cwhile",  _session.arena().mk_flow_block_cwhile,       name, to_ref(cond)._ident)
-def swhile      (cond,          name=None): return _block("swhile",  _session.arena().mk_flow_block_swhile,       name, to_ref(cond)._ident)
-def do_while    (cond,          name=None): return _block("do_while", _session.arena().mk_flow_block_do_while,    name, to_ref(cond)._ident)
-def counter_loop(last_loop_cnt, name=None): return _block("counter_loop", _session.arena().mk_flow_block_counter_loop, name, int(last_loop_cnt))
+def cwhile  (cond,          name=None): return _block("cwhile",  _session.arena().mk_flow_block_cwhile,       name, to_ref(cond)._ident)
+def swhile  (cond,          name=None): return _block("swhile",  _session.arena().mk_flow_block_swhile,       name, to_ref(cond)._ident)
+def cdowhile(cond,          name=None): return _block("cdowhile", _session.arena().mk_flow_block_do_while,    name, to_ref(cond)._ident)
+def cloop   (last_loop_cnt, name=None): return _block("cloop", _session.arena().mk_flow_block_counter_loop, name, int(last_loop_cnt))

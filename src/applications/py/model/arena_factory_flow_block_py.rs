@@ -70,6 +70,18 @@ impl PyModelArena {
         self.arena.make_flow_block_zelse(name).into()
     }
 
+    // ---- zero_switch: ZSTATE / ZCASE ----------------------------------------
+
+    // Zero-cycle switch over the `state_i` variable.
+    fn mk_flow_block_zstate(&mut self, name: &str, state_i: PyHcpIdent) -> PyFlowBlockIdent {
+        self.arena.make_flow_block_zstate(name, state_i.into()).into()
+    }
+
+    // One `case` arm of a zero-cycle switch, selected when state == `match_val`.
+    fn mk_flow_block_zcase(&mut self, name: &str, match_val: i32) -> PyFlowBlockIdent {
+        self.arena.make_flow_block_zcase(name, match_val).into()
+    }
+
     // ---- while: CWHILE / SWHILE ---------------------------------------------
 
     // Combinational `while` gated by `cond_i`.
