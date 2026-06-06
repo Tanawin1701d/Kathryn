@@ -1,0 +1,58 @@
+# One lowercase class per user-constructible hardware component. Each constructor
+# calls the matching arena `mk_*` and keeps only the returned ident. `name` is
+# always optional and last; the |= vs *= guard is derived from the ident's own
+# sensitivity class (see SignalRef._clocked), not passed in here.
+
+from . import _session
+from .signal import SignalRef, to_ref
+
+
+class reg(SignalRef):
+    __slots__ = ()
+    def __init__(self, bit_width, name=None):
+        name  = name or _session.auto_name("reg")
+        ident = _session.arena().mk_reg(name, int(bit_width))
+        super().__init__(ident)
+
+
+class wire(SignalRef):
+    __slots__ = ()
+    def __init__(self, bit_width, name=None):
+        name  = name or _session.auto_name("wire")
+        ident = _session.arena().mk_wire(name, int(bit_width))
+        super().__init__(ident)
+
+
+class val(SignalRef):
+    __slots__ = ()
+    def __init__(self, bit_width, init_val, name=None):
+        name  = name or _session.auto_name("val")
+        ident = _session.arena().mk_val(name, int(bit_width), int(init_val))
+        super().__init__(ident)  # constant: not assignable (read-only ident)
+
+
+class io_wire(SignalRef):
+    __slots__ = ()
+    def __init__(self, is_input, actual_src, agent_src, name=None):
+        name  = name or _session.auto_name("io_wire")
+        ident = _session.arena().mk_io_wire(
+            name, bool(is_input), to_ref(actual_src)._ident, to_ref(agent_src)._ident)
+        super().__init__(ident)
+
+
+class mem_blk(SignalRef):
+    __slots__ = ()
+    def __init__(self, bit_width, index_width, name=None):
+        name  = name or _session.auto_name("mem_blk")
+        ident = _session.arena().mk_mem_blk(name, int(bit_width), int(index_width))
+        super().__init__(ident)
+
+
+class mem_ele(SignalRef):
+    __slots__ = ()
+    def __init__(self, master_mem_blk, index, bit_width, is_read, name=None):
+        name  = name or _session.auto_name("mem_ele")
+        ident = _session.arena().mk_mem_ele(
+            name, to_ref(master_mem_blk)._ident, to_ref(index)._ident,
+            int(bit_width), bool(is_read))
+        super().__init__(ident)
