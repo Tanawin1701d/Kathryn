@@ -17,6 +17,54 @@ entire Python layer lives under `src/applications/` and is `#[cfg(feature =
 
 ---
 
+## Table of contents
+
+- [1. Architectural patterns](#1-architectural-patterns)
+  - [1.1 ModelArena — central object store](#11-modelarena--central-object-store)
+  - [1.2 Ident pattern — lightweight Copy handles](#12-ident-pattern--lightweight-copy-handles)
+  - [1.3 Identifiable trait](#13-identifiable-trait)
+  - [1.4 Arena factory pattern](#14-arena-factory-pattern)
+  - [1.5 arena_impl files — per-category CRUD](#15-arena_impl-files--per-category-crud)
+  - [1.6 Trait-object dispatch (the get-style exception)](#16-trait-object-dispatch-the-get-style-exception)
+    - [1.6.1 UE take/replace_back](#161-ue-takereplace_back)
+  - [1.7 Grouped index arrays](#17-grouped-index-arrays)
+  - [1.8 Clock-signal policy](#18-clock-signal-policy)
+- [2. Memory management mechanism](#2-memory-management-mechanism)
+  - [2.1 Ownership rules](#21-ownership-rules)
+  - [2.2 Lifetime / re-borrow pattern](#22-lifetime--re-borrow-pattern)
+  - [2.3 Generation safety](#23-generation-safety)
+  - [2.4 Reset](#24-reset)
+  - [2.5 Global ID](#25-global-id)
+- [3. Naming conventions](#3-naming-conventions)
+  - [3.1 Files and modules](#31-files-and-modules)
+  - [3.2 Types](#32-types)
+    - [3.2.1 Ident variable naming — `_i` suffix](#321-ident-variable-naming--_i-suffix)
+  - [3.3 Functions](#33-functions)
+  - [3.4 Constants](#34-constants)
+  - [3.5 Identifier prefixes (in `build_unique_name`)](#35-identifier-prefixes-in-build_unique_name)
+- [4. Other things that are relevant](#4-other-things-that-are-relevant)
+  - [4.1 Pre-existing build errors](#41-pre-existing-build-errors)
+  - [4.2 What is *not yet* ported from C++](#42-what-is-not-yet-ported-from-c)
+  - [4.3 Workflow expectations](#43-workflow-expectations)
+  - [4.4 C++ reference](#44-c-reference)
+  - [4.5 Memory notes](#45-memory-notes)
+- [5. Backends (`src/backends/`)](#5-backends-srcbackends)
+  - [5.1 Module tree](#51-module-tree)
+  - [5.2 `graph.rs` — module iterator and ancestor utilities](#52-graphrs--module-iterator-and-ancestor-utilities)
+  - [5.3 `io_op.rs` — IoWire helpers](#53-io_oprs--iowire-helpers)
+  - [5.4 Verilog backend — `HcpBaseVb` trait](#54-verilog-backend--hcpbasevb-trait)
+  - [5.5 Verilog backend — scalable dispatch in `arena_ext_vb.rs`](#55-verilog-backend--scalable-dispatch-in-arena_ext_vbrs)
+  - [5.6 `routing.rs` — cross-module IO routing](#56-routingrs--cross-module-io-routing)
+- [6. Code style](#6-code-style)
+- [7. Python bindings (`src/applications/py/`)](#7-python-bindings-srcapplicationspy)
+  - [7.1 Golden rule — the core stays PyO3-free](#71-golden-rule--the-core-stays-pyo3-free)
+  - [7.2 Module tree mirrors `src/model/`](#72-module-tree-mirrors-srcmodel)
+  - [7.3 Conventions](#73-conventions)
+  - [7.4 Enums — single source of truth](#74-enums--single-source-of-truth)
+  - [7.5 Pure-Python DSL (`py/kathryn/`)](#75-pure-python-dsl-pykathryn)
+
+---
+
 ## 1. Architectural patterns
 
 ### 1.1 ModelArena — central object store
