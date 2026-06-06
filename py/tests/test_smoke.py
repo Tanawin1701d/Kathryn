@@ -5,7 +5,8 @@ import pytest
 import kathryn as k
 from kathryn import (
     reset, reg, wire, val, io_wire, mem_blk, mem_ele,
-    seq, sif, module, expr,
+    seq, sif, expr,
+    Module, init, flow, gen_flow,
 )
 
 
@@ -95,10 +96,80 @@ def test_sliced_assignment():
 
 
 def test_nested_module_and_flow_scopes():
-    a, b, c = reg(8), wire(8), reg(8)
-    with module("sub"):
-        with seq():
-            c |= a + b
-        with sif(a == b):
-            with seq():            # cond blocks hold sub-blocks, not direct nodes
-                b *= a
+    class sub(Module):
+        @flow
+        def f(self):
+            a, b, c = reg(8), wire(8), reg(8)
+            with seq():
+                c |= a + b
+            with sif(a == b):
+                with seq():        # cond blocks hold sub-blocks, not direct nodes
+                    b *= a
+
+    sub()
+    gen_flow()
+
+
+def test_class_based_module_runs_init_eager_flow_deferred():
+    order = []
+
+    class my_module(Module):
+        @init
+        def my_init(self):
+            order.append("init")
+            self.x = reg(5)         # hardware declared into this module's scope
+
+        @flow
+        def my_flow(self):
+            order.append("flow")
+            with seq():             # flow block attached to this module's scope
+                pass
+
+    m = my_module()
+    assert order == ["init"]                   # @init eager; @flow deferred
+    assert m.ident.global_id > 0
+    assert m.x.hw_type == "REG"
+    gen_flow()                               # global build drains the pool
+    assert order == ["init", "flow"]
+    gen_flow()                               # pool is non-consuming, re-runnable
+    assert order == ["init", "flow", "flow"]
+
+
+def test_gen_flow_builds_all_modules_from_one_pool():
+    order = []
+
+    class mod_a(Module):
+        @flow
+        def f(self):
+            order.append("a")
+            with seq():
+                pass
+
+    class mod_b(Module):
+        @flow
+        def f(self):
+            order.append("b")
+            with seq():
+                pass
+
+    mod_a(); mod_b()
+    assert order == []                         # both deferred into the one pool
+    gen_flow()                               # single build covers every module
+    assert order == ["a", "b"]
+
+
+def test_class_module_phase_inheritance_runs_base_first():
+    order = []
+
+    class base(Module):
+        @init
+        def base_init(self):
+            order.append("base")
+
+    class derived(base):
+        @init
+        def derived_init(self):
+            order.append("derived")
+
+    derived()
+    assert order == ["base", "derived"]       # inherited @init runs before derived

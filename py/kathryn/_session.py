@@ -6,8 +6,12 @@ from ._kathryn import ModelArena
 
 _DEFAULT_TOP = "top"
 
-_arena    = ModelArena(_DEFAULT_TOP)
-_counters = {}
+_arena     = ModelArena(_DEFAULT_TOP)
+_counters  = {}
+# Process-wide deferred-flow pool: every Module's @flow methods register here as
+# (module_ident, bound_method) so a single gen_flow() can build them all. (See
+# module.py — flow construction is deferred, not run at instantiation.)
+_flow_pool = []
 
 
 def arena():
@@ -16,11 +20,36 @@ def arena():
 
 
 def reset(top_name=_DEFAULT_TOP):
-    # Rebuild the arena from scratch (mainly for tests); clears auto-name counters.
-    global _arena, _counters
-    _arena    = ModelArena(top_name)
-    _counters = {}
+    # Rebuild the arena from scratch (mainly for tests); clears auto-name counters
+    # and the deferred-flow pool.
+    global _arena, _counters, _flow_pool
+    _arena     = ModelArena(top_name)
+    _counters  = {}
+    _flow_pool = []
     return _arena
+
+
+def register_flow(module_i, fn):
+    # Append one module's deferred @flow method to the global pool.
+    _flow_pool.append((module_i, fn))
+
+
+def flow_pool():
+    # The global (module_ident, bound_method) pool, in registration order.
+    return _flow_pool
+
+
+def gen_flow():
+    # Build EVERY module's deferred @flow methods from the one global pool, in
+    # registration order. Each call re-opens its own module scope (so
+    # initialize_module / finalize_module are paired per flow call and run many
+    # times across modules). Non-consuming: safe to invoke more than once.
+    for module_i, fn in _flow_pool:
+        _arena.initialize_module(module_i)
+        try:
+            fn()
+        finally:
+            _arena.finalize_module(module_i)
 
 
 def auto_name(prefix):

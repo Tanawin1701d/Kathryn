@@ -5,7 +5,7 @@
 
 from . import _session                                          # creates the singleton arena
 from ._kathryn import LogicOp, FlowBlockType, Slice, HcpIdent, FlowBlockIdent, ModuleIdent
-from ._session import arena, reset
+from ._session import arena, reset, gen_flow
 from .signal import SignalRef, expr
 from .hw_component import reg, wire, val, io_wire, mem_blk, mem_ele
 from .flow_block import (
@@ -15,7 +15,7 @@ from .flow_block import (
     zstate, zcase,
     cwhile, swhile, cdowhile, cloop,
 )
-from .module import module
+from .module import Module, init, flow
 
 __all__ = [
     # rust enums / idents
@@ -30,5 +30,5 @@ __all__ = [
     "zstate", "zcase",
     "cwhile", "swhile", "cdowhile", "cloop",
     # module scope + session
-    "module", "arena", "reset",
+    "Module", "init", "flow", "arena", "reset", "gen_flow",
 ]

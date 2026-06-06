@@ -70,7 +70,7 @@ class SignalRef:
         return SignalRef(self._ident, _inclusive_slice(key))
 
     # ---- expression building ----------------------------------------------
-    def _binop(self, other, op):
+    def _binop(self, other, op): # two op
         other = to_ref(other)
         out = _session.arena().mk_expression(
             _session.auto_name("expr"), int(op),
@@ -78,7 +78,7 @@ class SignalRef:
         )
         return expr(out)
 
-    def _unop(self, op):
+    def _unop(self, op): # uni-op
         out = _session.arena().mk_expression_single(
             _session.auto_name("expr"), int(op), self._ident, self._slice,
         )

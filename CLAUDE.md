@@ -869,9 +869,30 @@ operation routes through one process-wide `ModelArena`.
   `expr(SignalRef)` is the result type (not assignable).
 - `hw_component.py` — lowercase classes `reg/wire/val/io_wire/mem_blk/mem_ele`;
   `name` optional+last (auto-named when omitted).
-- `flow_block.py` / `module.py` — context managers: `with seq(): …`,
-  `with sif(cond): …`, `with module(): …`. `__enter__` opens the scope
-  (initialize), `__exit__` finalizes. There is no block-build hook (see below).
+- `flow_block.py` — flow blocks are context managers: `with seq(): …`,
+  `with sif(cond): …`. `__enter__` opens the scope (initialize), `__exit__`
+  finalizes. There is no block-build hook (see below).
+- `module.py` — modules use a **class form**: extend `Module` and decorate methods
+  with `@init` (hardware declaration) and `@flow` (flow-block construction).
+  Construction is **two-phase**:
+  - `@init` runs **eagerly** in `__init__`, once, inside a single
+    `initialize_module`/`finalize_module` scope, so `self.x = reg(...)` is
+    declared into the module up front.
+  - `@flow` is **deferred** (lazy): the bound flow methods are not called at
+    construction; each registers into ONE process-wide pool
+    (`_session.flow_pool`, keyed by module ident) via `_session.register_flow`.
+    The top-level `_session.gen_flow()` (exported from the package) builds
+    **every** module's flows from that single pool — there is no per-instance
+    build. Each flow call **re-opens its own module scope** (its own
+    `initialize_module`/`finalize_module` pair), so those two calls fire many
+    times across modules. The pool is non-consuming, so `gen_flow()` is safely
+    re-runnable; `_session.reset()` clears it.
+
+  Phase methods run in definition order, base classes first
+  (`Module._phase_methods` walks the reversed MRO), so an inherited `@init` runs
+  before a derived one; each name runs once via the most-derived binding. The
+  decorators don't wrap the method — they tag the function with `_kathryn_phase`.
+  (There is no context-manager `module()` form — modules are always classes.)
 - `__init__.py` — defines `__all__` so `from kathryn import *` exposes the whole DSL.
 
 **Operands must be signals** — int literals aren't auto-wrapped (`a >> val(8,2)`,
