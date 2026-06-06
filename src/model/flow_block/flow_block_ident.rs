@@ -44,6 +44,60 @@ impl FlowBlockType {
         }
     }
 
+    /// Stable variant name (PascalCase) — backs the Python `FlowBlockType`
+    /// IntEnum. Exhaustive, so a new variant fails to compile until named here.
+    pub fn variant_name(self) -> &'static str {
+        match self {
+            Self::Sequential     => "Sequential",
+            Self::Parallel       => "Parallel",
+            Self::CondIf         => "CondIf",
+            Self::CondElif       => "CondElif",
+            Self::ZeroCondIf     => "ZeroCondIf",
+            Self::ZeroCondElif   => "ZeroCondElif",
+            Self::ZeroSwitch     => "ZeroSwitch",
+            Self::ZeroSwitchCase => "ZeroSwitchCase",
+            Self::WhileLoop      => "WhileLoop",
+            Self::DoWhile        => "DoWhile",
+            Self::CounterLoop    => "CounterLoop",
+        }
+    }
+
+    /// Variant → 0-based declaration-order index (inverse of `from_index`).
+    pub fn to_index(self) -> u32 {
+        match self {
+            Self::Sequential     => 0,
+            Self::Parallel       => 1,
+            Self::CondIf         => 2,
+            Self::CondElif       => 3,
+            Self::ZeroCondIf     => 4,
+            Self::ZeroCondElif   => 5,
+            Self::ZeroSwitch     => 6,
+            Self::ZeroSwitchCase => 7,
+            Self::WhileLoop      => 8,
+            Self::DoWhile        => 9,
+            Self::CounterLoop    => 10,
+        }
+    }
+
+    /// Map a 0-based index (variant declaration order) to its `FlowBlockType`.
+    /// `None` only when `idx` is past the last variant.
+    pub fn from_index(idx: u32) -> Option<FlowBlockType> {
+        let t = match idx {
+            0  => Self::Sequential,
+            1  => Self::Parallel,
+            2  => Self::CondIf,
+            3  => Self::CondElif,
+            4  => Self::ZeroCondIf,
+            5  => Self::ZeroCondElif,
+            6  => Self::ZeroSwitch,
+            7  => Self::ZeroSwitchCase,
+            8  => Self::WhileLoop,
+            9  => Self::DoWhile,
+            10 => Self::CounterLoop,
+            _  => return None,
+        };
+        Some(t)
+    }
 }
 
 impl fmt::Display for FlowBlockType {

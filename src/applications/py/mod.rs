@@ -12,6 +12,7 @@ use model::hw_component::common::slice_py::PySlice;
 use model::flow_block::flow_block_ident_py::PyFlowBlockIdent;
 use model::module::module_ident_py::PyModuleIdent;
 use crate::model::hw_component::common::operation::LogicOp;
+use crate::model::flow_block::FlowBlockType;
 
 // Build `kathryn.LogicOp` as a Python IntEnum sourced entirely from the core
 // `LogicOp` via `from_index` / `variant_name`. Python never hardcodes op ints,
@@ -32,6 +33,23 @@ fn add_logic_op_enum(m: &Bound<'_, PyModule>) -> PyResult<()> {
     Ok(())
 }
 
+// Build `kathryn.FlowBlockType` as a Python IntEnum sourced entirely from the
+// core `FlowBlockType` via `from_index` / `variant_name`. Bindings that cross
+// the boundary (e.g. get_last_skeleton_flow_block_type) emit the same `to_index`,
+// so the two sides share one source of truth and cannot misalign.
+fn add_flow_block_type_enum(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    let py      = m.py();
+    let members = PyDict::new(py);
+    let mut idx = 0u32;
+    while let Some(t) = FlowBlockType::from_index(idx) {
+        members.set_item(t.variant_name(), idx)?;  // enum member: name = idx
+        idx += 1;
+    }
+    let int_enum = py.import("enum")?.getattr("IntEnum")?;
+    m.add("FlowBlockType", int_enum.call1(("FlowBlockType", &members))?)?;
+    Ok(())
+}
+
 // Native extension module `_kathryn` — the pure-Python `kathryn` package
 // (py/kathryn/) re-exports it. Registers every wrapper class + the LogicOp enum.
 #[pymodule]
@@ -42,5 +60,6 @@ fn _kathryn(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyFlowBlockIdent>()?;
     m.add_class::<PyModuleIdent>()?;
     add_logic_op_enum(m)?;
+    add_flow_block_type_enum(m)?;
     Ok(())
 }

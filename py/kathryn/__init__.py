@@ -4,7 +4,7 @@
 # all model objects stays in Rust and is reached only through opaque idents.
 
 from . import _session                                          # creates the singleton arena
-from ._kathryn import LogicOp, Slice, HcpIdent, FlowBlockIdent, ModuleIdent
+from ._kathryn import LogicOp, FlowBlockType, Slice, HcpIdent, FlowBlockIdent, ModuleIdent
 from ._session import arena, reset
 from .signal import SignalRef, expr
 from .hw_component import reg, wire, val, io_wire, mem_blk, mem_ele
@@ -13,13 +13,13 @@ from .flow_block import (
     cif, sif, cselif, cselse,
     zif, zelif, zelse,
     zstate, zcase,
-    cwhile, swhile, do_while, counter_loop,
+    cwhile, swhile, cdowhile, cloop,
 )
 from .module import module
 
 __all__ = [
     # rust enums / idents
-    "LogicOp", "Slice", "HcpIdent", "FlowBlockIdent", "ModuleIdent",
+    "LogicOp", "FlowBlockType", "Slice", "HcpIdent", "FlowBlockIdent", "ModuleIdent",
     # signals
     "SignalRef", "expr",
     "reg", "wire", "val", "io_wire", "mem_blk", "mem_ele",
@@ -28,7 +28,7 @@ __all__ = [
     "cif", "sif", "cselif", "cselse",
     "zif", "zelif", "zelse",
     "zstate", "zcase",
-    "cwhile", "swhile", "do_while", "counter_loop",
+    "cwhile", "swhile", "cdowhile", "cloop",
     # module scope + session
     "module", "arena", "reset",
 ]

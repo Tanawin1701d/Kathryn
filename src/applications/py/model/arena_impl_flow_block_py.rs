@@ -20,4 +20,11 @@ impl PyModelArena {
     fn finalize_flow_block(&mut self, block_i: PyFlowBlockIdent) {
         self.arena.finalize_flow_block(block_i.into());
     }
+
+    // Type of the nearest enclosing skeleton block (seq/par) on the init stack,
+    // as a `FlowBlockType` IntEnum index (Parallel when none is found). The DSL
+    // uses it to auto-open a matching skeleton inside complex blocks.
+    fn get_last_skeleton_flow_block_type(&self) -> u32 {
+        self.arena.get_last_skeleton_flow_block_type().to_index()
+    }
 }
