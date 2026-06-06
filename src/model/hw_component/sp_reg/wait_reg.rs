@@ -1,7 +1,7 @@
 use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::hcp_base::HcpBase;
 use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};
-use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HwComponentType};
+use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HcpSensitiveType, HwComponentType};
 use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_INTERNAL_MAX, DEFAULT_UE_PRI_INTERNAL_MIN, DEFAULT_UE_PRI_RST};
@@ -70,7 +70,7 @@ impl CondWaitStateReg {
     pub fn new(is_user_com: bool, name: &str, cond_opr: HcpIdent, cond_opr_sl: Slice) -> Self {
         Self {
             assign       : HcpAssign::new(),
-            ident        : HcpIdent::new(HwComponentType::CondWaitStateReg, is_user_com, name),
+            ident        : HcpIdent::new(HwComponentType::CondWaitStateReg, HcpSensitiveType::Clocked, is_user_com, name),
             triggers     : TriggerSig::new(),
             cond_opr,
             cond_opr_sl,
@@ -271,7 +271,7 @@ impl CycleWaitStateReg {
         let total_bit_size = cnt_bit_sz + 1;
         Self {
             assign          : HcpAssign::new(),
-            ident           : HcpIdent::new(HwComponentType::CycleWaitStateReg, is_user_com, name),
+            ident           : HcpIdent::new(HwComponentType::CycleWaitStateReg, HcpSensitiveType::Clocked, is_user_com, name),
             triggers        : TriggerSig::new(),
             wait_cycle      : Some(wait_cycle),
             cnt_bit_sz,
@@ -294,7 +294,7 @@ impl CycleWaitStateReg {
         assert!(cnt_bit_sz > 0, "cnt_bit_sz must be positive");
         Self {
             assign          : HcpAssign::new(),
-            ident           : HcpIdent::new(HwComponentType::CycleWaitStateReg, is_user_com, name),
+            ident           : HcpIdent::new(HwComponentType::CycleWaitStateReg, HcpSensitiveType::Clocked, is_user_com, name),
             triggers        : TriggerSig::new(),
             wait_cycle      : None,
             cnt_bit_sz,

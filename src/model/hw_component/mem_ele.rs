@@ -2,7 +2,7 @@ use crate::model::controller::clock_mode::{ClockMode, get_global_clk_mode};
 use crate::model::hw_component::common::asm_mode::get_asm_pri_val;
 use crate::model::hw_component::common::hcp_base::HcpBase;
 use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};
-use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HwComponentType};
+use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HcpSensitiveType, HwComponentType};
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::model_arena::ModelArena;
@@ -34,7 +34,7 @@ impl MemEle {
         assert!(bit_width > 0, "bit_width must be positive, got {}", bit_width);
         Self {
             assign          : HcpAssign::new(),
-            ident           : HcpIdent::new(HwComponentType::MemBlockIndexer, is_user_com, name),
+            ident           : HcpIdent::new(HwComponentType::MemBlockIndexer, HcpSensitiveType::Clocked, is_user_com, name),
             master_mem_blk_i,
             index_ident,
             bit_width,

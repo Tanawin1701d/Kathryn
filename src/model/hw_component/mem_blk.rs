@@ -1,7 +1,7 @@
 use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};
 use crate::model::hw_component::common::hcp_base::HcpBase;
-use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HwComponentType};
+use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HcpSensitiveType, HwComponentType};
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::hw_component::mem_ele::MemEle;
@@ -32,7 +32,7 @@ impl MemBlk {
         assert!(index_width > 0, "index_width must be positive, got {}", index_width);
         Self {
             assign           : HcpAssign::new(),
-            ident            : HcpIdent::new(HwComponentType::MemBlock, is_user_com, name),
+            ident            : HcpIdent::new(HwComponentType::MemBlock, HcpSensitiveType::Clocked, is_user_com, name),
             bit_width,
             index_width,
             mem_ele_track_vec: Vec::new(),

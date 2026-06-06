@@ -47,7 +47,7 @@ hold. The ident embeds an `IdentBase` which carries `global_id`, name, and the
 
 | Ident type           | Wraps                                                   | Located in                                                  |
 | -------------------- | ------------------------------------------------------- | ----------------------------------------------------------- |
-| `HcpIdent`           | `IdentBase` + `HwComponentType`                         | `model/hw_component/common/hcp_ident.rs`                    |
+| `HcpIdent`           | `IdentBase` + `HwComponentType` + `HcpSensitiveType`    | `model/hw_component/common/hcp_ident.rs`                    |
 | `NcpIdent`           | `IdentBase` + node type                                 | `model/nodes/ncp_ident.rs`                                  |
 | `UpdateEventIdent`   | `IdentBase` + `UeType`                                  | `model/hw_component/common/update_event_ident.rs`           |
 | `ModuleIdent`        | `IdentBase` + `master_module_handle` + `depth_level`    | `model/module/module_ident.rs`                              |
@@ -60,6 +60,19 @@ hold. The ident embeds an `IdentBase` which carries `global_id`, name, and the
 
 Idents are `Clone + Copy + Default + PartialEq + Eq` and implement
 `Identifiable`. They are passed by value, never by reference where avoidable.
+
+**Don't centralize per-type properties into a match — let each type declare its
+own.** `HcpIdent` carries an `HcpSensitiveType` (`Clocked` / `Combinational` /
+`ReadOnly`) telling how the component is driven and therefore how it may be
+assigned. This is **not** derived by a central `match hw_type { … }`; each HW
+component passes its own value at its `HcpIdent::new(hw_type, sensitive_type,
+…)` call site (`Reg`/sp-regs/mem → `Clocked`, `Wire`/`IoWire` → `Combinational`,
+`Val`/`Expression` → `ReadOnly`). A central switch is a maintenance trap — a new
+component type silently lands in the wrong arm. Prefer the constructor-declares-
+its-own-trait pattern over a re-derivation match wherever a property is intrinsic
+to the type. (Python reads it via `PyHcpIdent.clocked: bool` /
+`PyHcpIdent.sensitive_type: str`; `HcpSensitiveType::is_clocked()` is the single
+source for the boolean.)
 
 ### 1.3 Identifiable trait
 
@@ -702,9 +715,16 @@ defined in `~/.claude/skills/codestyle-skill/SKILL.md`. Key rules:
 
 The Python frontend (PyO3 + maturin) is the only place in the crate that
 contains PyO3 macros. It is `#[cfg(feature = "python")]`-gated, so the default
-build never compiles it. Build/install with maturin (`pyproject.toml` sets
-`features = ["python"]`, `module-name = "kathryn"`); the imported Python module
-is `kathryn`.
+build never compiles it. This `src/applications/py/` layer is the **low-level**
+binding (`PyModelArena` + ident wrappers); a separate **pure-Python DSL** wraps
+it in `py/kathryn/` (see §7.5).
+
+Packaging is a maturin **mixed project** (`pyproject.toml`): `python-source = "py"`,
+`module-name = "kathryn._kathryn"`, `features = ["python"]`. The native extension
+is built as `kathryn._kathryn` and dropped inside the pure-Python package
+`py/kathryn/`, whose `__init__.py` re-exports it. Users `import kathryn`.
+The `#[pymodule]` fn is therefore named `_kathryn` (its name must match the last
+`module-name` component).
 
 ### 7.1 Golden rule — the core stays PyO3-free
 
@@ -722,15 +742,15 @@ by value as arguments.
 
 ```
 src/applications/py/
-  mod.rs                      — #[pymodule] kathryn(); registers classes + LogicOp enum
+  mod.rs                      — #[pymodule] _kathryn(); registers classes + LogicOp enum
   model/
     mod.rs
     model_arena.rs            — #[pyclass(unsendable)] PyModelArena { arena: ModelArena }
     arena_factory_hwc_py.rs        — mk_reg / mk_wire / mk_io_wire / mk_val / mk_mem_blk / mk_mem_ele
-    arena_factory_hwc_expr_py.rs   — mk_expression (binary op via LogicOp int) / mk_extend_bit
+    arena_factory_hwc_expr_py.rs   — mk_expression (binary) / mk_expression_single (unary ~,!) / mk_extend_bit
     arena_impl_hwc_py.rs           — gen_basic_assign and other higher-level HWC ops
     arena_factory_flow_block_py.rs — mk_flow_block_* (seq/par/cond/zero/while/do_while/counter)
-    arena_impl_flow_block_py.rs    — initialize_flow_block / finalize_flow_block / build_flow_block
+    arena_impl_flow_block_py.rs    — initialize_flow_block / finalize_flow_block
     arena_factory_module_py.rs     — mk_module (sub-module; top is made in PyModelArena::new)
     arena_impl_module_py.rs        — initialize_module / finalize_module
     hw_component/common/{hcp_ident_py.rs, slice_py.rs} — PyHcpIdent, PySlice
@@ -755,7 +775,8 @@ the host file you are wrapping; do not pile everything into one block.
 - **Naming**: host `make_x` → Python `mk_x` (Python is always the user surface).
 - **Flow-block lifecycle** is driven explicitly from Python:
   `initialize_flow_block` (push onto the init stack) → build contents →
-  `finalize_flow_block` (pop + attach to parent/module) → `build_flow_block`.
+  `finalize_flow_block` (pop + attach to parent/module). The construction phase
+  stops at finalize; there is no Python-side hardware-build hook (see §7.5).
 - **Module lifecycle** mirrors the flow-block one against the *module trace
   stack*: `mk_module` (create + stamp parent) → `initialize_module` (push so
   components/flow-blocks attach) → build contents → `finalize_module` (pop +
@@ -775,5 +796,57 @@ core `LogicOp::from_index` / `variant_name` (see `add_logic_op_enum` in
 `mod.rs`). Python never hardcodes op ints, and `mk_expression` decodes the int
 back through the *same* `from_index`, so the two sides cannot drift. Follow this
 pattern for any new enum crossing the boundary — never duplicate variant lists
-in Python. `mk_expression` rejects `ExtendBit` / `Assign` / `Dummy` (use
-`mk_extend_bit` or the assign path instead).
+in Python. `mk_expression` is binary-only — it rejects single-operand ops
+(`is_single_opr`: `~`, `!`, `Assign`) plus `ExtendBit` / `Dummy`; unary `~`/`!`
+go through `mk_expression_single`, bit-extend through `mk_extend_bit`, assignment
+through `gen_basic_assign`.
+
+### 7.5 Pure-Python DSL (`py/kathryn/`)
+
+A thin pure-Python package wraps the low-level binding into an HDL-like DSL.
+Every wrapper holds **only** the Rust ident (ownership stays in Rust); every
+operation routes through one process-wide `ModelArena`.
+
+- `_session.py` — builds the singleton `ModelArena("top")` **at import**
+  (`sys.modules` caching makes repeated `import kathryn` reuse it); `arena()`
+  accessor, `reset()`, and the per-prefix auto-name counter.
+- `signal.py` — `SignalRef` (ident + optional `Slice`) with operator overloading:
+  binary `+ - * / % & | ^ << >> < <= > >= == !=` → `mk_expression`; unary `~` →
+  `mk_expression_single`; `.land/.lor/.lnot/.slt/.sgt/.extend` for ops with no
+  Python operator. `==`/`!=` return an expr (not bool), so `__hash__ = None`.
+  **Inclusive slicing**: `sig[hi, lo]` → `Slice(lo, hi+1)`, `sig[i]` → single bit.
+  Assignment via augmented ops: `|=` (clocked: reg/mem) and `*=` (comb:
+  wire/io_wire), both → `gen_basic_assign` with a destination-type guard; sliced
+  assignment (`a[7,0] |= b`) works via a `_ASSIGNED` sentinel + `__setitem__`.
+  `expr(SignalRef)` is the result type (not assignable).
+- `hw_component.py` — lowercase classes `reg/wire/val/io_wire/mem_blk/mem_ele`;
+  `name` optional+last (auto-named when omitted).
+- `flow_block.py` / `module.py` — context managers: `with seq(): …`,
+  `with sif(cond): …`, `with module(): …`. `__enter__` opens the scope
+  (initialize), `__exit__` finalizes. There is no block-build hook (see below).
+- `__init__.py` — defines `__all__` so `from kathryn import *` exposes the whole DSL.
+
+**Operands must be signals** — int literals aren't auto-wrapped (`a >> val(8,2)`,
+not `a >> 2`). **Conditional blocks hold sub-blocks, not direct nodes** — put a
+`with seq():` inside an `if`/`while` body (a model constraint).
+
+**Construction only — no build path.** `__exit__` only finalizes; the DSL covers
+**construction**, which is what the binding fully supports. There is deliberately
+no Python-side hardware-build hook: the binding exposes no `build_flow_block`, and
+the DSL context manager has no `.build()`. The schematic build/assign pass needs
+an enclosing-module start-node context that is not yet ported (the first state
+node's `assign_prelim` is meant to be supplied by the enclosing scope; a
+standalone/top-level build panics with "state operating is not set yet"). When
+that path lands, re-add a `build_flow_block` binding in
+`arena_impl_flow_block_py.rs` and a matching `ctx.build()` in `flow_block.py`.
+
+Tests: `py/tests/test_smoke.py` (run `PYTHONPATH=py pytest py/tests` after the
+extension is built). Without maturin, `cargo build --features python` then copy
+`target/debug/libkathryn.so` → `py/kathryn/_kathryn.so` (the `PyInit__kathryn`
+symbol makes it importable as `kathryn._kathryn`).
+
+**Model fix made for the DSL:** `HcpAssignable::gen_update_event`
+(`hcp_assign.rs`) now resolves a default/invalid `src_slice` to the source's full
+slice via `arena.get_hw_slice(&srci)` — mirroring how `des_slice` falls back to
+`get_des_slice()`. Previously a full-width source (`Slice::default()` = `(-1,-1)`)
+hit the `get_match_size_sub_slice` validity assert.

@@ -3,7 +3,7 @@ use crate::model::hw_component::common::asm_mode::get_asm_pri_val;
 use crate::model::hw_component::common::assign_meta::AssignMeta;
 use crate::model::hw_component::common::hcp_base::HcpBase;
 use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};
-use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HwComponentType};
+use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HcpSensitiveType, HwComponentType};
 use crate::model::hw_component::common::update_event_ident::UpdateEventIdent;
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::hw_component::common::slice::Slice;
@@ -28,7 +28,7 @@ impl Val {
     pub fn new(is_user_com: bool, name: &str, bit_width: i32, init_val: u64) -> Self {
         Self {
             assign   : HcpAssign::new(),
-            ident    : HcpIdent::new(HwComponentType::Val, is_user_com, name),
+            ident    : HcpIdent::new(HwComponentType::Val, HcpSensitiveType::ReadOnly, is_user_com, name),
             bit_width,
             value    : VaryVal::from_u64(init_val, bit_width as usize),
         }
@@ -39,7 +39,7 @@ impl Val {
         debug_assert_eq!(value.bit_width(), bit_width as usize, "VaryVal width mismatch");
         Self {
             assign   : HcpAssign::new(),
-            ident    : HcpIdent::new(HwComponentType::Val, is_user_com, name),
+            ident    : HcpIdent::new(HwComponentType::Val, HcpSensitiveType::ReadOnly, is_user_com, name),
             bit_width,
             value,
         }

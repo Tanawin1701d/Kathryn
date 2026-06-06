@@ -3,7 +3,7 @@ use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::asm_mode::get_asm_pri_val;
 use crate::model::hw_component::common::hcp_base::HcpBase;
 use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};
-use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HwComponentType};
+use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HcpSensitiveType, HwComponentType};
 use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::model_arena::ModelArena;
@@ -70,7 +70,7 @@ impl Expression {
 
         Self {
             assign         : HcpAssign::new(),
-            ident          : HcpIdent::new(HwComponentType::Expression, is_user_com, name),
+            ident          : HcpIdent::new(HwComponentType::Expression, HcpSensitiveType::ReadOnly, is_user_com, name),
             bit_width,
             op,
             operand_a      : Some(a),
@@ -102,7 +102,7 @@ impl Expression {
         };
         Self {
             assign         : HcpAssign::new(),
-            ident          : HcpIdent::new(HwComponentType::Expression, is_user_com, name),
+            ident          : HcpIdent::new(HwComponentType::Expression, HcpSensitiveType::ReadOnly, is_user_com, name),
             bit_width,
             op,
             operand_a      : Some(a),
@@ -129,7 +129,7 @@ impl Expression {
         };
         Self {
             assign         : HcpAssign::new(),
-            ident          : HcpIdent::new(HwComponentType::Expression, is_user_com, name),
+            ident          : HcpIdent::new(HwComponentType::Expression, HcpSensitiveType::ReadOnly, is_user_com, name),
             bit_width,
             op,
             operand_a      : Some(a),
@@ -145,7 +145,7 @@ impl Expression {
     pub fn new_empty(is_user_com: bool, name: &str, bit_width: i32) -> Self {
         Self {
             assign         : HcpAssign::new(),
-            ident          : HcpIdent::new(HwComponentType::Expression, is_user_com, name),
+            ident          : HcpIdent::new(HwComponentType::Expression, HcpSensitiveType::ReadOnly, is_user_com, name),
             bit_width,
             op             : LogicOp::Assign,
             operand_a      : None,

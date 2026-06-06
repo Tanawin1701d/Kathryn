@@ -32,9 +32,10 @@ fn add_logic_op_enum(m: &Bound<'_, PyModule>) -> PyResult<()> {
     Ok(())
 }
 
-// `import kathryn` — registers the wrappers exposed so far (phase 1).
+// Native extension module `_kathryn` — the pure-Python `kathryn` package
+// (py/kathryn/) re-exports it. Registers every wrapper class + the LogicOp enum.
 #[pymodule]
-fn kathryn(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn _kathryn(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyModelArena>()?;
     m.add_class::<PyHcpIdent>()?;
     m.add_class::<PySlice>()?;

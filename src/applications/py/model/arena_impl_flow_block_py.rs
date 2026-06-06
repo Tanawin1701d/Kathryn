@@ -20,9 +20,4 @@ impl PyModelArena {
     fn finalize_flow_block(&mut self, block_i: PyFlowBlockIdent) {
         self.arena.finalize_flow_block(block_i.into());
     }
-
-    // Build the block's master hardware once its contents are finalized.
-    fn build_flow_block(&mut self, block_i: PyFlowBlockIdent) {
-        self.arena.build_flow_block(block_i.into());
-    }
 }

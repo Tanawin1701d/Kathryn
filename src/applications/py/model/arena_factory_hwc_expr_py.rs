@@ -2,7 +2,8 @@
 // single function — Python passes the op as its `LogicOp` discriminant (the
 // variant's declaration order, 0-based). `ExtendBit` takes a literal width
 // instead of a second signal, so it stays its own `mk_extend_bit` method.
-// `Assign` and `Dummy` are unsupported here; `make_expression` would panic.
+// Single-operand ops (`~`, `!`) go through `mk_expression_single`. `Assign` and
+// `Dummy` are unsupported here; `make_expression` would panic.
 
 use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
@@ -19,10 +20,23 @@ impl PyModelArena {
     #[pyo3(signature = (name, op, a, b, a_slice=None, b_slice=None))]
     fn mk_expression(&mut self, name: &str, op: u32, a: PyHcpIdent, b: PyHcpIdent, a_slice: Option<PySlice>, b_slice: Option<PySlice>) -> PyResult<PyHcpIdent> {
         let op = LogicOp::from_index(op).ok_or_else(|| PyValueError::new_err(format!("LogicOp index out of range: {op}")))?;
-        if matches!(op, LogicOp::ExtendBit | LogicOp::Assign | LogicOp::Dummy) {
-            return Err(PyValueError::new_err(format!("{op:?} is not a binary expression op (use mk_extend_bit / the assign path)")));
+        if op.is_single_opr() || matches!(op, LogicOp::ExtendBit | LogicOp::Dummy) {
+            return Err(PyValueError::new_err(format!("{op:?} is not a binary expression op (use mk_expression_single / mk_extend_bit / the assign path)")));
         }
         Ok(self.arena.make_expression(true, name, op, a.into(), b.into(), a_slice.map(Into::into), b_slice.map(Into::into)).into())
+    }
+
+    // ---- single-operand (`~`, `!`) ------------------------------------------
+
+    // Build a unary user expression `op(a)` — `BitwiseInvr` (`~`) or `LogicalNot`
+    // (`!`). `Assign` is single-operand too but goes through gen_basic_assign.
+    #[pyo3(signature = (name, op, a, a_slice=None))]
+    fn mk_expression_single(&mut self, name: &str, op: u32, a: PyHcpIdent, a_slice: Option<PySlice>) -> PyResult<PyHcpIdent> {
+        let op = LogicOp::from_index(op).ok_or_else(|| PyValueError::new_err(format!("LogicOp index out of range: {op}")))?;
+        if !matches!(op, LogicOp::BitwiseInvr | LogicOp::LogicalNot) {
+            return Err(PyValueError::new_err(format!("{op:?} is not a unary expression op (use mk_expression / the assign path)")));
+        }
+        Ok(self.arena.make_expression_single(true, name, op, a.into(), a_slice.map(Into::into)).into())
     }
 
     // ---- ExtendBit (const-operand) ------------------------------------------

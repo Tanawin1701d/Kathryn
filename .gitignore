@@ -2,6 +2,12 @@
 /.codex
 /CLAUDE.md
 
+# Python build artifacts (compiled extension placed by cargo/maturin, caches)
+py/kathryn/_kathryn*.so
+__pycache__/
+*.pyc
+.pytest_cache/
+
 
 # Tech report build artifacts
 docs/

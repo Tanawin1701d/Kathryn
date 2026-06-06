@@ -23,6 +23,14 @@ impl PyHcpIdent {
     #[getter]
     fn hw_type(&self) -> String { self.inner.get_hw_type().to_string() }
 
+    // Sensitivity class: "clocked" / "combinational" / "read_only".
+    #[getter]
+    fn sensitive_type(&self) -> String { self.inner.get_sensitive_type().name().to_string() }
+
+    // True only for clocked elements (driven on a clock edge); False otherwise.
+    #[getter]
+    fn clocked(&self) -> bool { self.inner.get_sensitive_type().is_clocked() }
+
     fn __repr__(&self) -> String {
         format!("HcpIdent(global_id={}, hw_type={})",
                 self.inner.get_global_id(),

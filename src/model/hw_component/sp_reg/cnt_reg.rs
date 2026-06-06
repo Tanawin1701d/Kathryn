@@ -1,7 +1,7 @@
 use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::hcp_base::HcpBase;
 use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};
-use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HwComponentType};
+use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HcpSensitiveType, HwComponentType};
 use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_INTERNAL_MIN, DEFAULT_UE_PRI_RST};
@@ -55,7 +55,7 @@ impl CntReg {
 
         Self {
             assign         : HcpAssign::new(),
-            ident          : HcpIdent::new(HwComponentType::CntReg, is_user_com, name),
+            ident          : HcpIdent::new(HwComponentType::CntReg, HcpSensitiveType::Clocked, is_user_com, name),
             triggers       : TriggerSig::new(),
             cnt_bit_sz,
             inc_val,

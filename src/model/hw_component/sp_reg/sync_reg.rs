@@ -1,7 +1,7 @@
 use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::hcp_base::HcpBase;
 use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};
-use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HwComponentType};
+use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HcpSensitiveType, HwComponentType};
 use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_INTERNAL_MIN, DEFAULT_UE_PRI_RST};
@@ -61,7 +61,7 @@ impl SyncReg {
         assert!(size > 0, "SyncReg size must be positive");
         Self {
             assign            : HcpAssign::new(),
-            ident             : HcpIdent::new(HwComponentType::SyncReg, is_user_com, name),
+            ident             : HcpIdent::new(HwComponentType::SyncReg, HcpSensitiveType::Clocked, is_user_com, name),
             bit_width         : size,
             triggers          : TriggerSig::new(),
             up_state_i        : None,

@@ -11,4 +11,8 @@ classifiers     = ["Programming Language :: Rust"]
 [tool.maturin]
 # Build the PyO3 layer; the binding is gated behind this Cargo feature.
 features    = ["python"]
-module-name = "kathryn"
+# Mixed Rust/Python project: pure-Python package lives under py/, the compiled
+# native extension is placed inside it as kathryn._kathryn, and py/kathryn/__init__.py
+# re-exports it as the public DSL.
+python-source = "py"
+module-name   = "kathryn._kathryn"

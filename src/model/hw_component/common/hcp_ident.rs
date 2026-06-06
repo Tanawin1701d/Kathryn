@@ -27,6 +27,31 @@ pub enum HwComponentType {
     MemBlock           = 12,
 }
 
+// Sensitivity class of a component — how it is driven, and therefore how it may
+// be assigned. Derived purely from `HwComponentType` (see `sensitive_type`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum HcpSensitiveType {
+    #[default]
+    Clocked,        // sequential element written on a clock edge (reg / mem / sp_reg)
+    Combinational,  // combinational driver (wire / io_wire)
+    ReadOnly,       // not an assignment destination (val / expression result)
+}
+
+impl HcpSensitiveType {
+    // Only a clocked element is driven on a clock edge; everything else is not.
+    pub fn is_clocked(self) -> bool {
+        matches!(self, Self::Clocked)
+    }
+
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::Clocked       => "clocked",
+            Self::Combinational => "combinational",
+            Self::ReadOnly      => "read_only",
+        }
+    }
+}
+
 impl HwComponentType {
     // To add a new UE type: insert it in the enum before Expression and increment this.
     pub const UE_BOUNDARY    : usize = 10;
@@ -59,6 +84,7 @@ impl HwComponentType {
             Self::MemBlock          => "MEM_BLOCK",
         }
     }
+
 }
 
 impl fmt::Display for HwComponentType {
@@ -132,23 +158,27 @@ pub trait HcpIdentifiable: Identifiable {
 pub struct HcpIdent {
     ident_base       : IdentBase,
     hw_type          : HwComponentType,
+    sensitive_type   : HcpSensitiveType,
     master_module_i  : ModuleIdent,
 }
 
 impl HcpIdent {
-    pub fn new(hw_type  : HwComponentType,
-               is_user_com: bool,
-               name     : &str) -> Self {
+    pub fn new(hw_type       : HwComponentType,
+               sensitive_type: HcpSensitiveType,
+               is_user_com   : bool,
+               name          : &str) -> Self {
         Self {
-            ident_base: IdentBase::new(is_user_com, name),
+            ident_base     : IdentBase::new(is_user_com, name),
             hw_type,
+            sensitive_type,
             master_module_i: ModuleIdent::default(),
         }
     }
 
     pub fn get_ident_base(&self) -> &IdentBase      { &self.ident_base }
     pub fn get_ident_base_mut(&mut self) -> &mut IdentBase { &mut self.ident_base }
-    pub fn get_hw_type   (&self) -> HwComponentType { self.hw_type     }
+    pub fn get_hw_type        (&self) -> HwComponentType  { self.hw_type        }
+    pub fn get_sensitive_type (&self) -> HcpSensitiveType { self.sensitive_type }
     pub fn get_master_module_i(&self) -> ModuleIdent { self.master_module_i }
     pub fn set_master_module_i(&mut self, m: ModuleIdent) { self.master_module_i = m; }
     // ---- helpers ------------------------------------------------------------

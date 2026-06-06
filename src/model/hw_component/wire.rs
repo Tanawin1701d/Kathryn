@@ -2,7 +2,7 @@ use crate::model::controller::clock_mode::{ClockMode, get_global_clk_mode};
 use crate::model::hw_component::common::asm_mode::get_asm_pri_val;
 use crate::model::hw_component::common::hcp_base::HcpBase;
 use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};
-use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HwComponentType};
+use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HcpSensitiveType, HwComponentType};
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::model_arena::ModelArena;
@@ -23,7 +23,7 @@ impl Wire {
     pub fn new(is_user_com: bool, name: &str, bit_width: i32) -> Self {
         Self {
             assign   : HcpAssign::new(),
-            ident    : HcpIdent::new(HwComponentType::Wire, is_user_com, name),
+            ident    : HcpIdent::new(HwComponentType::Wire, HcpSensitiveType::Combinational, is_user_com, name),
             bit_width,
         }
     }

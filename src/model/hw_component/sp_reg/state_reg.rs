@@ -1,7 +1,7 @@
 use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::hcp_base::HcpBase;
 use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};
-use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HwComponentType};
+use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HcpSensitiveType, HwComponentType};
 use crate::model::hw_component::sp_reg::trigger_sig::{HasTriggerSig, TriggerSig};
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_INTERNAL_MIN, DEFAULT_UE_PRI_RST};
@@ -44,7 +44,7 @@ impl StateReg {
         let unset_val_i = arena.make_val(false, &format!("{}_UNSET", name), 1, 0);
         Self {
             assign      : HcpAssign::new(),
-            ident       : HcpIdent::new(HwComponentType::StateReg, is_user_com, name),
+            ident       : HcpIdent::new(HwComponentType::StateReg, HcpSensitiveType::Clocked, is_user_com, name),
             triggers    : TriggerSig::new(),
             set_val_i,
             unset_val_i
