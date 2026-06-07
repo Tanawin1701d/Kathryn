@@ -1,5 +1,5 @@
 use crate::model::common::identifier::Identifiable;
-use crate::model::hw_component::common::hcp_assign::HcpAssignable;
+use crate::model::hw_component::common::hcp_assign::{HcpAssignable, HcpIoMark};
 use crate::model::hw_component::common::hcp_base::HcpBase;
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
 use crate::model::hw_component::common::slice::Slice;
@@ -150,4 +150,28 @@ impl ModelArena {
         let node_i = self.gen_asm_node(des_i, src_i, des_slice, src_slice);
         self.attach_basic_node_to_current_scope(node_i);
     }
+
+    // ---- IO mark ----
+
+    // Stamp an HCP as an IO port (direction + user-facing name). Take/replace_back
+    // because mark_as_io needs &mut and the dispatch borrow targets a trait object.
+    pub fn mark_as_io(&mut self, hcp_i: HcpIdent, is_input: bool, io_name: String) {
+        let mut hcp = self.take_hcp(hcp_i);
+        hcp.mark_as_io(is_input, io_name);
+        self.replace_back_hcp(hcp);
+    }
+
+    // True if the HCP has been marked as an IO port.
+    pub fn is_marked_as_io(&self, hcp_i: &HcpIdent) -> bool {
+        self.get_hcp_assign(hcp_i).is_marked_as_io()
+    }
+
+    // Read the HCP's IO mark (direction + name); None if not marked as IO.
+    pub fn get_io_mark(&self, hcp_i: &HcpIdent) -> Option<&HcpIoMark> {
+        self.get_hcp_assign(hcp_i).get_io_mark()
+    }
+
+
+
+
 }

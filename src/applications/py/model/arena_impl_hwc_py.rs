@@ -27,4 +27,14 @@ impl PyModelArena {
             src_slice.map(Into::into).unwrap_or_default(),
         );
     }
+
+    // Stamp an HCP as an IO port (direction + user-facing name).
+    fn mark_as_io(&mut self, hcp_i: PyHcpIdent, is_input: bool, io_name: String) {
+        self.arena.mark_as_io(hcp_i.into(), is_input, io_name);
+    }
+
+    // True if the HCP has been marked as an IO port.
+    fn is_marked_as_io(&self, hcp_i: PyHcpIdent) -> bool {
+        self.arena.is_marked_as_io(&hcp_i.into())
+    }
 }

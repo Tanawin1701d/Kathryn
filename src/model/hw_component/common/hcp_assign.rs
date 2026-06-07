@@ -90,6 +90,10 @@ pub trait HcpAssignable: HcpIdentifiable {
         self.get_hcp_assign_mut().update_pool.sort_events(arena);
     }
 
+    // ---- IO mark (delegates to the stored HcpAssign) ----
+    fn mark_as_io      (&mut self, is_input: bool, io_name: String) { self.get_hcp_assign_mut().mark_as_io(is_input, io_name); }
+    fn is_marked_as_io (&self) -> bool                              { self.get_hcp_assign().is_marked_as_io() }
+    fn get_io_mark     (&self) -> Option<&HcpIoMark>                { self.get_hcp_assign().get_io_mark() }
 
 }
 
@@ -99,13 +103,32 @@ pub trait HcpAssignable: HcpIdentifiable {
 
 #[derive(Default)]
 pub struct HcpAssign{
-    update_pool : UpdatePool
+    update_pool : UpdatePool,
+    io_mark     : Option<HcpIoMark>,
 }
 
 impl HcpAssign {
     pub fn new() -> HcpAssign {
         HcpAssign {
-            update_pool : UpdatePool::new()
+            update_pool : UpdatePool::new(),
+            io_mark     : None,
         }
     }
+    // ---- IO mark ----
+    pub fn mark_as_io      (&mut self, is_input: bool, io_name: String) { self.io_mark = Some(HcpIoMark { is_input, io_name }); }
+    pub fn is_marked_as_io (&self) -> bool                              { self.io_mark.is_some() }
+    pub fn get_io_mark     (&self) -> Option<&HcpIoMark>                { self.io_mark.as_ref() }
+}
+
+// IO designation stamped onto an HcpAssign: the user-facing port name and its
+// direction. `None` on HcpAssign means the component is not an IO port.
+#[derive(Clone)]
+pub struct HcpIoMark {
+    is_input : bool,
+    io_name  : String,
+}
+
+impl HcpIoMark {
+    pub fn is_input(&self) -> bool  { self.is_input }
+    pub fn io_name (&self) -> &str  { &self.io_name }
 }

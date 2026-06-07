@@ -119,6 +119,17 @@ class SignalRef:
     # == returns an expr, so SignalRef cannot be a usable hash key; use `is`.
     __hash__ = None
 
+    # ---- IO marking --------------------------------------------------------
+    def mark_as_io(self, is_input, io_name):
+        # Stamp the underlying component as an IO port (direction + name).
+        _session.arena().mark_as_io(self._ident, bool(is_input), str(io_name))
+        return self
+
+    @property
+    def is_io(self):
+        # True if this signal's component has been marked as an IO port.
+        return _session.arena().is_marked_as_io(self._ident)
+
     # ---- assignment --------------------------------------------------------
     def _do_assign(self, src):
         src = to_ref(src)
