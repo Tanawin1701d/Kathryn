@@ -138,6 +138,14 @@ impl ModelArena {
     }
     pub fn get_top_module(&self) -> Option<ModuleIdent> { self.top_module }
 
+    /// Build the whole model starting from the top module's flow.
+    pub fn build_flow(&mut self) {
+        let top_i = self.top_module.expect("build_flow: no top module set");
+        let mut top = self.take_module(top_i);
+        top.build_flow_as_top_module(self);
+        self.replace_back_module(top_i, top);
+    }
+
     // -----------------------------------------------------------------------
     // Module trace stack — (ModuleIdent, ModuleInitStage) pairs
     // -----------------------------------------------------------------------
