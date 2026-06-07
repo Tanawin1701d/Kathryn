@@ -1,4 +1,4 @@
-use crate::model::model_arena::{ModelArena, ModuleInitStage};
+use crate::model::model_arena::ModelArena;
 use crate::model::module::module::Module;
 use crate::model::module::module_ident::ModuleIdent;
 
@@ -20,13 +20,8 @@ impl ModelArena {
     }
 
     pub fn mk_module(&mut self, name: &str) -> ModuleIdent {
-        let i = self.add_module(Module::new(true, false, name));
+        let i = self.add_module(Module::new(true, name));
         let i = self.stamp_module_to_parent_module(i);
-        i
-    }
-    pub fn mk_top_module(&mut self, name: &str) -> ModuleIdent {
-        let i = self.add_module(Module::new(true, true, name));
-        self.push_module_trace_stack(i, ModuleInitStage::CompInit);
         i
     }
 }

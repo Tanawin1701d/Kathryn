@@ -135,6 +135,10 @@ impl ModelArena {
     pub fn set_top_module(&mut self, i: ModuleIdent) {
         assert!(self.top_module.is_none(), "top_module is already set");
         self.top_module = Some(i);
+        // Flag the module itself so module-side queries agree with the arena.
+        let mut m = self.take_module(i);
+        m.set_is_top_module(true);
+        self.replace_back_module(i, m);
     }
     pub fn get_top_module(&self) -> Option<ModuleIdent> { self.top_module }
 

@@ -32,11 +32,10 @@ pub struct Module {
 }
 
 impl Module {
-    pub fn new(is_user_com: bool, is_top_module: bool, name: &str) -> Self {
+    pub fn new(is_user_com: bool, name: &str) -> Self {
         Self {
             ident        : ModuleIdent::new(is_user_com, name),
-            is_top_module,
-            ..Default::default()
+            ..Default::default()   // is_top_module defaults to false; set via set_is_top_module
         }
     }
 
@@ -44,7 +43,8 @@ impl Module {
     pub fn set_ident    (&mut self, i: ModuleIdent)        { self.ident = i; }
 
     // -- top module flag --
-    pub fn is_top_module(&self) -> bool { self.is_top_module }
+    pub fn is_top_module    (&self)               -> bool { self.is_top_module }
+    pub fn set_is_top_module(&mut self, v: bool)          { self.is_top_module = v; }
 
     // -- sp_reg accessors (implicit, indexed by HwComponentType) --
     pub fn add_internal_hw(&mut self, i: HcpIdent) {

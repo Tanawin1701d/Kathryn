@@ -1,7 +1,7 @@
 // Python-facing module factories. Mirrors the host `arena_factory_module.rs`.
-// The top module is created up front by `PyModelArena::new`, so only the
-// user-declared sub-module constructor is exposed here. All wrappers are
-// user-declared, so they go through the host `mk_*` (is_user_com = true) path.
+// `mk_module` builds any module (top or sub); the caller registers a top module
+// via `set_top_module`. All wrappers are user-declared, so they go through the
+// host `mk_*` (is_user_com = true) path.
 
 use pyo3::prelude::*;
 use super::model_arena::PyModelArena;

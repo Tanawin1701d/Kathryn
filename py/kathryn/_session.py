@@ -6,7 +6,20 @@ from ._kathryn import ModelArena
 
 _DEFAULT_TOP = "top"
 
-_arena     = ModelArena(_DEFAULT_TOP)
+
+def _make_arena(top_name):
+    # Build an empty arena, then create + register the top module and open it so
+    # component factories always have a module on the trace stack to attach to.
+    # `mk_module` reads its parent off the trace-stack top — empty here, so the
+    # top module gets no parent. `initialize_module` pushes it at FlowBlockInit.
+    a = ModelArena()
+    top_i = a.mk_module(top_name)
+    a.set_top_module(top_i)
+    a.initialize_module(top_i)
+    return a
+
+
+_arena     = _make_arena(_DEFAULT_TOP)
 _counters  = {}
 # Process-wide deferred-flow pool: every Module's @flow methods register here as
 # (module_ident, bound_method) so a single gen_flow() can build them all. (See
@@ -23,7 +36,7 @@ def reset(top_name=_DEFAULT_TOP):
     # Rebuild the arena from scratch (mainly for tests); clears auto-name counters
     # and the deferred-flow pool.
     global _arena, _counters, _flow_pool
-    _arena     = ModelArena(top_name)
+    _arena     = _make_arena(top_name)
     _counters  = {}
     _flow_pool = []
     return _arena
