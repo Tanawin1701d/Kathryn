@@ -5,8 +5,10 @@ use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
 pub mod model;
+pub mod backends;
 
 use model::model_arena::PyModelArena;
+use backends::verilog::backend_py::PyBackendVerilog;
 use model::hw_component::common::hcp_ident_py::PyHcpIdent;
 use model::hw_component::common::slice_py::PySlice;
 use model::flow_block::flow_block_ident_py::PyFlowBlockIdent;
@@ -59,6 +61,7 @@ fn _kathryn(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PySlice>()?;
     m.add_class::<PyFlowBlockIdent>()?;
     m.add_class::<PyModuleIdent>()?;
+    m.add_class::<PyBackendVerilog>()?;
     add_logic_op_enum(m)?;
     add_flow_block_type_enum(m)?;
     Ok(())
