@@ -11,3 +11,4 @@ __pycache__/
 
 # Tech report build artifacts
 docs/
+/.idea/misc.xml
