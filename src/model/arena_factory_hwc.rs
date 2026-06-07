@@ -67,6 +67,22 @@ impl ModelArena {
         self.stamp_hw_to_parent_module(i, is_user_com)
     }
 
+    // Like make_io_wire, but with optional source signals and an explicit
+    // bit_width (the wire is left unbound when no agent source is given).
+    pub fn make_io_wire_opt_src(
+        &mut self,
+        is_user_com  : bool,
+        name         : &str,
+        is_input     : bool,
+        bit_width    : i32,
+        actual_src_i : Option<HcpIdent>,
+        agent_src_i  : Option<HcpIdent>,
+    ) -> HcpIdent {
+        let io_wire = IoWire::new_opt_src(is_user_com, name, is_input, bit_width, actual_src_i, agent_src_i, self);
+        let ident = self.add_io_wire(io_wire);
+        self.stamp_hw_to_parent_module(ident, is_user_com)
+    }
+
     // ---- Val ----------------------------------------------------------------
 
     pub fn make_val(&mut self, is_user_com: bool, name: &str, bit_width: i32, init_val: u64) -> HcpIdent {

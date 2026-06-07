@@ -24,6 +24,34 @@ pub fn build_io_wire(
     io_wire_i
 }
 
+/// Like `build_io_wire`, but the source signals are optional and `bit_width` is
+/// given explicitly (the wire is left unbound when no agent source is present).
+/// Constraint: an `actual_src_signal` may not be present without an
+/// `agent_src_signal` — the actual source must always be reachable via an agent.
+pub fn build_io_wire_opt_src(
+    arena            : &mut ModelArena,
+    target_module    : ModuleIdent,
+    bit_width        : i32,
+    actual_src_signal: Option<HcpIdent>,
+    agent_src_signal : Option<HcpIdent>,
+    is_input         : bool,
+) -> HcpIdent {
+    assert!(!(actual_src_signal.is_some() && agent_src_signal.is_none()),
+            "build_io_wire_opt_src: actual_src_signal present but agent_src_signal missing");
+
+    let dir  = if is_input { "IN" } else { "OUT" };
+    let base = actual_src_signal
+        .map        (|s| s.get_ident_base().get_name().to_string())
+        .unwrap_or_else(|| "anon".to_string());
+    let name = format!("IO_{}_{}", dir, base);
+
+    arena.push_module_trace_stack(target_module, ModuleInitStage::CompInit);
+    let io_wire_i = arena.make_io_wire_opt_src(false, &name, is_input, bit_width, actual_src_signal, agent_src_signal);
+    arena.pop_module_trace_stack();
+
+    io_wire_i
+}
+
 /// Searches all IoWires registered on `module` (both user and internal) for one
 /// that already binds `src_signal` in the requested direction.  Returns the
 /// matching `HcpIdent` if found, `None` otherwise.
