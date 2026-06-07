@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::flow_block::flow_block_ident::{FlowBlockIdent, FlowBlockJoinPolicy};
-use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType, HW_TYPES_WITH_UE, HW_TYPES_WITH_MAN_DEP};
+use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType, HW_TYPES_WITH_UE, HW_TYPES_WITH_MAN_DEP, ALL_HW_TYPES};
 use crate::model::model_arena::{ModelArena, ModuleInitStage};
 use crate::model::module::module_ident::ModuleIdent;
 use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
@@ -96,6 +96,20 @@ impl Module {
             }
         }
 
+    }
+
+    /// Collect every HCP in this module (internal + user) that carries an IO mark.
+    /// `self` must already be taken out of the arena so arena is free for HCP access.
+    pub fn gather_io_marked_hcps(&self, arena: &ModelArena, out: &mut Vec<HcpIdent>) {
+        for hw_type in ALL_HW_TYPES {
+            for &hcp_i in self.get_internal_hws(hw_type).iter()
+                              .chain(self.get_user_hws(hw_type).iter())
+            {
+                if arena.get_io_mark(&hcp_i).is_some() {
+                    out.push(hcp_i);
+                }
+            }
+        }
     }
 
     /// Sort the UpdatePool of every HCP in this module by priority then sub-priority.

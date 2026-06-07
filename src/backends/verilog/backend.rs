@@ -1,6 +1,6 @@
 use crate::backends::common::graph::DfsModuleIter;
+use crate::backends::common::glob_routing::route_glob_io_model;
 use crate::backends::common::internal_routing::route_and_remap_io_model;
-use crate::model::common::identifier::Identifiable;
 use crate::model::model_arena::ModelArena;
 use crate::util::file::file_writer::FileWriter;
 
@@ -30,6 +30,7 @@ impl BackendVerilog {
     fn phase_route(&mut self) {
         println!("[BackendVerilog] Phase 1: routing cross-module IO dependencies");
         route_and_remap_io_model(&mut self.model_arena);
+        route_glob_io_model(&mut self.model_arena);
         println!("[BackendVerilog] Phase 1: done");
     }
 

@@ -5,9 +5,8 @@
 // Uses `graph::find_module_path_to_top` / `find_module_path_to_top_from_hcp`
 // to obtain the full module path from an HCP's owning module up to the top.
 
-use crate::backends::common::graph::find_module_path_to_top_from_hcp;
+use crate::backends::common::graph::{find_module_path_to_top_from_hcp, DfsModuleIter};
 use crate::backends::common::io_op::{build_io_wire, build_io_wire_opt_src};
-use crate::model::hw_component::common::hcp_assign::HcpAssignable;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::model_arena::ModelArena;
 use crate::model::module::module_ident::ModuleIdent;
@@ -110,4 +109,25 @@ fn route_glob_input(
     model_arena.replace_back_hcp(target);
 
     (nearest_io_i, top_io_i)
+}
+
+
+// Top-level entry point: DFS the full module tree and route every IO-marked HCP
+// up to the top module. Requires a top module to be set on the arena.
+pub(crate) fn route_glob_io_model(model_arena: &mut ModelArena) {
+    let top_i = model_arena.get_top_module()
+        .expect("route_glob_io_model: no top module set");
+
+    let mut iter = DfsModuleIter::new(top_i);
+    while let Some(module_i) = iter.next_module(model_arena) {
+        // Collect this module's IO-marked HCPs, then route each to the top.
+        let module = model_arena.take_module(module_i);
+        let mut io_marked_i: Vec<HcpIdent> = Vec::new();
+        module.gather_io_marked_hcps(model_arena, &mut io_marked_i);
+        model_arena.replace_back_module(module_i, module);
+
+        for target_i in io_marked_i {
+            route_glob_io_hw_comp(target_i, model_arena);
+        }
+    }
 }
