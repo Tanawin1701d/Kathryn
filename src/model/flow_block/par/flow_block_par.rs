@@ -55,6 +55,16 @@ impl FlowBlock for FlowBlockPar {
         self.result = Some(self.schematic.build(&mut self.base, arena));
     }
 
+    fn check_prefinalize(&self) -> Result<(), String> {
+        if self.base.get_basic_nodes_i().is_empty() && self.base.get_sub_blocks_i().is_empty() {
+            return Err("parallel flow block has no element".to_string());
+        }
+        if !self.base.get_con_blocks_i().is_empty() {
+            return Err("parallel flow block does not support con blocks".to_string());
+        }
+        Ok(())
+    }
+
     fn summarize_as_block(&self) -> NodeWrap {
         self.result.clone().expect("flow block has not been built")
     }

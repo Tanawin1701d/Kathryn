@@ -57,6 +57,16 @@ impl FlowBlock for FlowBlockWhile {
         self.result = Some(self.schematic.build(&mut self.base, arena));
     }
 
+    fn check_prefinalize(&self) -> Result<(), String> {
+        if self.base.get_sub_blocks_i().is_empty() {
+            return Err("while block must have one body block".to_string());
+        }
+        if !self.base.get_con_blocks_i().is_empty() {
+            return Err("while block does not support con blocks".to_string());
+        }
+        Ok(())
+    }
+
     fn summarize_as_block(&self) -> NodeWrap {
         self.result.clone().expect("while block has not been built")
     }

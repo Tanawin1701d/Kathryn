@@ -293,6 +293,11 @@ pub trait FlowBlock: Identifiable {
     fn summarize_as_block(&self)     -> NodeWrap{ panic!("summarize_as_block: not supported by this block type") }
     fn summarize_as_node (&self) -> NcpIdent{ panic!("summarize_as_node: not supported by this block type") }
 
+    // pre-finalize validation — mirrors the constraints asserted in this block's
+    // `build` so they can be reported as a recoverable error (e.g. to Python)
+    // before the irrecoverable build-time panic. Default: no constraints.
+    fn check_prefinalize(&self) -> Result<(), String> { Ok(()) }
+
     // main build core
     fn build_hw_component(&mut self, arena: &mut ModelArena);
     fn build_hw_master(&mut self, arena: &mut ModelArena) {

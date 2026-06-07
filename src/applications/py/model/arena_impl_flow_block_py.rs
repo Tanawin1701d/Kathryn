@@ -4,6 +4,7 @@
 // its parent (or the module), and build its hardware.
 
 use pyo3::prelude::*;
+use pyo3::exceptions::PyValueError;
 use super::model_arena::PyModelArena;
 use super::flow_block::flow_block_ident_py::PyFlowBlockIdent;
 
@@ -13,6 +14,14 @@ impl PyModelArena {
     // construction attaches to it.
     fn initialize_flow_block(&mut self, block_i: PyFlowBlockIdent) {
         self.arena.push_flow_block_init_stack(block_i.into());
+    }
+
+    // Validate a flow block against the constraints its build would otherwise
+    // assert, raising a precise ValueError instead of an opaque build-time panic.
+    // Call before `finalize_flow_block` to surface the error at construction time.
+    fn check_flow_block_prefinalize(&mut self, block_i: PyFlowBlockIdent) -> PyResult<()> {
+        self.arena.check_flow_block_prefinalize(block_i.into())
+            .map_err(PyValueError::new_err)
     }
 
     // Close the active flow block: pop it (asserting it matches `block_i`) and

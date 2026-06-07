@@ -27,6 +27,8 @@ class _FlowBlockCtx:
     def __enter__(self):
         arena = _session.arena()
         arena.initialize_flow_block(self._ident)
+
+        # automatic subblock creation
         if self._is_req_auto_sub_blk:
             # Mirror the enclosing skeleton: par → par_auto, seq (or none) → seq.
             if arena.get_last_skeleton_flow_block_type() == FlowBlockType.Parallel:
@@ -41,8 +43,14 @@ class _FlowBlockCtx:
         if exc_type is not None:
             return False
         arena = _session.arena()
+
+        # automatic subblock check and finalize
         if self._inner_i is not None:
+            arena.check_flow_block_prefinalize(self._inner_i)
             arena.finalize_flow_block(self._inner_i)
+
+        # main block check and finalize
+        arena.check_flow_block_prefinalize(self._ident)
         arena.finalize_flow_block(self._ident)
         return False
 

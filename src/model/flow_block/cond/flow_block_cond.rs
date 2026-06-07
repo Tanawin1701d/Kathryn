@@ -61,6 +61,13 @@ impl FlowBlock for FlowBlockCond {
         self.result = Some(self.schematic.build(&mut self.base, arena));
     }
 
+    fn check_prefinalize(&self) -> Result<(), String> {
+        if self.base.get_sub_blocks_i().is_empty() {
+            return Err("cond block must have at least one body block".to_string());
+        }
+        Ok(())
+    }
+
     fn summarize_as_block(&self) -> NodeWrap {
         self.result.clone().expect("cond block has not been built")
     }

@@ -5,7 +5,7 @@ use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::module::module::Module;
 use crate::model::module::module_ident::ModuleIdent;
 use crate::model::nodes::ncp_ident::NcpIdent;
-use crate::model::flow_block::{FlowBlockIdent, FlowBlockJoinPolicy, FlowBlockType};
+use crate::model::flow_block::{FlowBlock, FlowBlockIdent, FlowBlockJoinPolicy, FlowBlockType};
 
 // ---------------------------------------------------------------------------
 // ModelArena::new / reset live here. Per-category CRUD lives in:
@@ -195,6 +195,17 @@ impl ModelArena {
     }
 
 
+
+    /// Validate a flow block against the constraints its `build` would otherwise
+    /// assert (e.g. "cond block must have at least one body block"). Returns the
+    /// constraint message as `Err` instead of panicking, so callers (notably the
+    /// Python binding) can raise a precise, recoverable error before finalize.
+    pub fn check_flow_block_prefinalize(&mut self, ident: FlowBlockIdent) -> Result<(), String> {
+        let block = self.take_flow_block(ident);
+        let res   = block.check_prefinalize();
+        self.replace_back_flow_block(block);
+        res
+    }
 
     /// Pop the top flow block, assert it matches `expected`, then attach it:
     /// - to the new stack top as a sub-flow-block, if the stack is non-empty, or
