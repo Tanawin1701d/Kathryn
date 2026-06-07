@@ -77,11 +77,6 @@ impl IoWire {
     pub fn matches_signal(&self, actual_src_signal: HcpIdent, is_input: bool) -> bool {
         (self.is_input == is_input) && (self.get_actual_src_signal_i() == actual_src_signal)
     }
-
-    pub fn bind_src(&mut self, src_i: HcpIdent, des_slice: Option<Slice>, src_slice: Slice, arena: &mut ModelArena) {
-        let ue = self.gen_update_event(src_i, des_slice, src_slice, arena);
-        self.add_update_event(ue);
-    }
 }
 
 

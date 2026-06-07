@@ -4,6 +4,7 @@ use crate::model::hw_component::common::slice::Slice;
 use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::assign_meta::AssignMeta;
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable};
+use crate::model::hw_component::common::update_event::DEFAULT_UE_PRI_INTERNAL_MIN;
 use crate::model::hw_component::common::update_event_ident::UpdateEventIdent;
 use crate::model::hw_component::common::update_pool::UpdatePool;
 use crate::model::model_arena::ModelArena;
@@ -43,6 +44,17 @@ pub trait HcpAssignable: HcpIdentifiable {
                         src_slice: Slice,
                         arena    : &mut ModelArena,
     ) -> UpdateEventIdent {
+        self.gen_update_event_with_pri(srci, des_slice, src_slice, self.get_priority(), arena)
+    }
+
+    // Like `gen_update_event` but with an explicit priority instead of `get_priority`.
+    fn gen_update_event_with_pri(&self,
+                                 srci     : HcpIdent,
+                                 des_slice: Option<Slice>,
+                                 src_slice: Slice,
+                                 priority : i32,
+                                 arena    : &mut ModelArena,
+    ) -> UpdateEventIdent {
         let std_des_slice = self.get_des_slice();
         let my_des_slice = des_slice.as_ref().unwrap_or(&std_des_slice);
         let my_src_slice = src_slice;
@@ -50,7 +62,7 @@ pub trait HcpAssignable: HcpIdentifiable {
         let resolved_des_slice = my_des_slice.get_match_size_sub_slice(&my_src_slice);
         let resolved_src_slice = my_src_slice.get_match_size_sub_slice(my_des_slice);
 
-        arena.make_ue_basic(srci, resolved_des_slice, resolved_src_slice, self.get_priority(), self.retrieve_clk_mode(), false, None)
+        arena.make_ue_basic(srci, resolved_des_slice, resolved_src_slice, priority, self.retrieve_clk_mode(), false, None)
     }
 
     fn gen_asm_meta(&self,
@@ -79,6 +91,18 @@ pub trait HcpAssignable: HcpIdentifiable {
 
     fn add_update_event(&mut self, event: UpdateEventIdent) {
         self.get_hcp_assign_mut().update_pool.add_update_event(event);
+    }
+
+    // Generate an update event driving this HCP from `srci` and push it into the pool.
+    // Bound at the internal-min priority so it always loses to any user assignment.
+    fn bind_src(&mut self,
+                srci     : HcpIdent,
+                des_slice: Option<Slice>,
+                src_slice: Slice,
+                arena    : &mut ModelArena,
+    ) {
+        let ue_i = self.gen_update_event_with_pri(srci, des_slice, src_slice, DEFAULT_UE_PRI_INTERNAL_MIN, arena);
+        self.add_update_event(ue_i);
     }
 
     fn get_update_pool(&self) -> &UpdatePool {
