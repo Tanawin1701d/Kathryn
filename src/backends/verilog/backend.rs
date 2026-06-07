@@ -1,5 +1,5 @@
 use crate::backends::common::graph::DfsModuleIter;
-use crate::backends::common::routing::route_and_remap_io_model;
+use crate::backends::common::internal_routing::route_and_remap_io_model;
 use crate::model::common::identifier::Identifiable;
 use crate::model::model_arena::ModelArena;
 use crate::util::file::file_writer::FileWriter;

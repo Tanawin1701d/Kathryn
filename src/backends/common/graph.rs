@@ -78,6 +78,22 @@ pub fn find_common_ancestor_module_paths(
     (path_a, path_b)
 }
 
+/// Walk from `module_i` up to the top module (inclusive), returning the path
+/// ordered from the input module up to the top. The top module has
+/// `depth_level == 0` (no parent), so it is the last element.
+pub fn find_module_path_to_top(
+    arena    : &ModelArena,
+    module_i : ModuleIdent,
+) -> Vec<ModuleIdent> {
+    let mut cur_i = module_i;
+    let mut path  = vec![cur_i];
+    while cur_i.get_depth_level() > 0 {
+        cur_i = get_parent_module_ident(arena, cur_i);
+        path.push(cur_i);
+    }
+    path
+}
+
 /// Convenience wrapper: resolves the master module of each HcpIdent, then
 /// delegates to `find_common_ancestor_module_paths`.
 pub fn find_common_ancestor_module_paths_from_hcp(
@@ -88,3 +104,11 @@ pub fn find_common_ancestor_module_paths_from_hcp(
     find_common_ancestor_module_paths(arena, a.get_master_module_i(), b.get_master_module_i())
 }
 
+/// Convenience wrapper: resolves the master module of `hcp_i`, then delegates
+/// to `find_module_path_to_top`.
+pub fn find_module_path_to_top_from_hcp(
+    arena : &ModelArena,
+    hcp_i : HcpIdent,
+) -> Vec<ModuleIdent> {
+    find_module_path_to_top(arena, hcp_i.get_master_module_i())
+}
