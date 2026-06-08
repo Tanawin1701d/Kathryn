@@ -73,12 +73,12 @@ class Module:
         arena       = _session.arena()
 
         # ---- init phase: eager, one scope -----------------------------------
-        arena.initialize_module(self._ident)
+        arena.track_module_at_com_init(self._ident)
         try:
             for m in _phase_methods(type(self), _INIT_PHASE):
                 getattr(self, m)()
         finally:
-            arena.finalize_module(self._ident)
+            arena.untrack_module_at_com_init(self._ident)
 
         # ---- flow phase: deferred — register into the global pool -----------
         for m in _phase_methods(type(self), _FLOW_PHASE):
@@ -87,3 +87,10 @@ class Module:
     @property
     def ident(self):
         return self._ident
+
+
+def set_top(module):
+    # Public entry: hand a user-built Module to the session to register as the
+    # design's top (delegates to the private _session plumbing). Call once, after
+    # constructing the top Module, before gen_flow / build_flow.
+    return _session._set_top(module)

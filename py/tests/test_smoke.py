@@ -4,14 +4,15 @@
 import pytest
 import kathryn as k
 from kathryn import (
-    reset, reg, wire, val, io_wire, mem_blk, mem_ele,
+    reset, set_top, reg, wire, val, io_wire, mem_blk, mem_ele,
     seq, sif, expr,
-    Module, init, flow, gen_flow,
+    Module, init, flow, gen_flow, build_flow,
 )
 
 
 def setup_function(_):
     reset()
+    set_top(Module("top"))   # top is explicit — user provides the Module to set as top
 
 
 def test_singleton_survives_double_import():
@@ -173,3 +174,19 @@ def test_class_module_phase_inheritance_runs_base_first():
 
     derived()
     assert order == ["base", "derived"]       # inherited @init runs before derived
+
+
+def test_build_flow_runs_end_to_end():
+    # gen_flow constructs the deferred flow blocks; build_flow then runs the host
+    # build pass (schematics, update events, clk / master-reset wiring) over the
+    # whole module tree, starting from the explicit top set in setup_function.
+    class worker(Module):
+        @flow
+        def f(self):
+            a, b, c = reg(8), wire(8), reg(8)
+            with seq():
+                c |= a + b
+
+    worker()
+    gen_flow()             # construct flow blocks across every module
+    build_flow()           # host build pass from the top module

@@ -855,9 +855,14 @@ A thin pure-Python package wraps the low-level binding into an HDL-like DSL.
 Every wrapper holds **only** the Rust ident (ownership stays in Rust); every
 operation routes through one process-wide `ModelArena`.
 
-- `_session.py` — builds the singleton `ModelArena("top")` **at import**
-  (`sys.modules` caching makes repeated `import kathryn` reuse it); `arena()`
-  accessor, `reset()`, and the per-prefix auto-name counter.
+- `_session.py` — builds the singleton **empty** `ModelArena` **at import**
+  (`sys.modules` caching makes repeated `import kathryn` reuse it). **The top
+  module is explicit**: no top is created at import or by `reset()`; the user
+  builds a `Module` and registers it via `set_top(module)` (public entry in
+  `module.py`, delegating to the private `_session._set_top`), which calls
+  `set_top_module` and re-opens the top's `com_init` scope so top-level
+  components / flow blocks attach to it. Also holds the `arena()` accessor,
+  `reset()`, the per-prefix auto-name counter, `gen_flow()`, and `build_flow()`.
 - `signal.py` — `SignalRef` (ident + optional `Slice`) with operator overloading:
   binary `+ - * / % & | ^ << >> < <= > >= == !=` → `mk_expression`; unary `~` →
   `mk_expression_single`; `.land/.lor/.lnot/.slt/.sgt/.extend` for ops with no
@@ -876,17 +881,17 @@ operation routes through one process-wide `ModelArena`.
   with `@init` (hardware declaration) and `@flow` (flow-block construction).
   Construction is **two-phase**:
   - `@init` runs **eagerly** in `__init__`, once, inside a single
-    `initialize_module`/`finalize_module` scope, so `self.x = reg(...)` is
-    declared into the module up front.
+    `track_module_at_com_init`/`untrack_module_at_com_init` scope, so
+    `self.x = reg(...)` is declared into the module up front.
   - `@flow` is **deferred** (lazy): the bound flow methods are not called at
     construction; each registers into ONE process-wide pool
     (`_session.flow_pool`, keyed by module ident) via `_session.register_flow`.
     The top-level `_session.gen_flow()` (exported from the package) builds
     **every** module's flows from that single pool — there is no per-instance
     build. Each flow call **re-opens its own module scope** (its own
-    `initialize_module`/`finalize_module` pair), so those two calls fire many
-    times across modules. The pool is non-consuming, so `gen_flow()` is safely
-    re-runnable; `_session.reset()` clears it.
+    `track_module_at_flow_init`/`untrack_module_at_flow_init` pair), so those two
+    calls fire many times across modules. The pool is non-consuming, so
+    `gen_flow()` is safely re-runnable; `_session.reset()` clears it.
 
   Phase methods run in definition order, base classes first
   (`Module._phase_methods` walks the reversed MRO), so an inherited `@init` runs
@@ -899,15 +904,23 @@ operation routes through one process-wide `ModelArena`.
 not `a >> 2`). **Conditional blocks hold sub-blocks, not direct nodes** — put a
 `with seq():` inside an `if`/`while` body (a model constraint).
 
-**Construction only — no build path.** `__exit__` only finalizes; the DSL covers
-**construction**, which is what the binding fully supports. There is deliberately
-no Python-side hardware-build hook: the binding exposes no `build_flow_block`, and
-the DSL context manager has no `.build()`. The schematic build/assign pass needs
-an enclosing-module start-node context that is not yet ported (the first state
-node's `assign_prelim` is meant to be supplied by the enclosing scope; a
-standalone/top-level build panics with "state operating is not set yet"). When
-that path lands, re-add a `build_flow_block` binding in
-`arena_impl_flow_block_py.rs` and a matching `ctx.build()` in `flow_block.py`.
+**Construct then build.** The full pipeline is now:
+
+```python
+set_top(Top())   # register the user's top Module
+gen_flow()       # construct every module's deferred @flow blocks (re-runnable)
+build_flow()     # host build pass over the whole module tree (run once)
+```
+
+`build_flow()` (`_session.build_flow` → `PyModelArena::build_flow` →
+`ModelArena::build_flow`) starts from the top module: `build_flow_as_top_module`
+creates the primitive `clk` / master-reset (`mrst`) input wires and the start
+node itself (it **asserts the top start node is unset** beforehand), then
+forwards clk + master-reset down to every sub-module. It is **not re-runnable**
+(the second call would hit the fresh-start-node assert). The flow-block-level
+`build_flow_block` binding is still intentionally absent; the build is driven at
+the model/top level, not per block. `__exit__` on a flow-block context manager
+still only finalizes — there is no `ctx.build()`.
 
 Tests: `py/tests/test_smoke.py` (run `PYTHONPATH=py pytest py/tests` after the
 extension is built). Without maturin, `cargo build --features python` then copy

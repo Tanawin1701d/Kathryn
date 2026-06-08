@@ -4,22 +4,35 @@
 
 from ._kathryn import ModelArena
 
-_DEFAULT_TOP = "top"
+
+def _make_arena():
+    # Build an empty arena with NO module open. The top module is explicit: the
+    # user must call `set_top(...)` before declaring any hardware so component
+    # factories have a module on the trace stack to attach to.
+    return ModelArena()
+
+def auto_name(prefix):
+    # Per-prefix monotonic name (reg0, reg1, ...) used when the user omits a name.
+    # Rust still appends the global_id, so collisions are impossible regardless.
+    n = _counters.get(prefix, 0)
+    _counters[prefix] = n + 1
+    return f"{prefix}{n}"
 
 
-def _make_arena(top_name):
-    # Build an empty arena, then create + register the top module and open it so
-    # component factories always have a module on the trace stack to attach to.
-    # `mk_module` reads its parent off the trace-stack top — empty here, so the
-    # top module gets no parent. `initialize_module` pushes it at FlowBlockInit.
-    a = ModelArena()
-    top_i = a.mk_module(top_name)
+def _set_top(module):
+    # Register a user-built `Module` (see module.py) as the design's top, then
+    # re-open its scope so subsequent top-level components / flow blocks attach to
+    # it. The module's `@init` hardware is declared by its own constructor; this
+    # only records its ident as top (the build DFS starts there) and keeps the
+    # top scope active. Call once, after constructing the top Module.
+    top_i = module.ident
+    a     = arena()
     a.set_top_module(top_i)
-    a.initialize_module(top_i)
-    return a
+    a.track_module_at_com_init(top_i)
+    return module
 
 
-_arena     = _make_arena(_DEFAULT_TOP)
+_arena     = _make_arena()
 _counters  = {}
 # Process-wide deferred-flow pool: every Module's @flow methods register here as
 # (module_ident, bound_method) so a single gen_flow() can build them all. (See
@@ -32,11 +45,11 @@ def arena():
     return _arena
 
 
-def reset(top_name=_DEFAULT_TOP):
-    # Rebuild the arena from scratch (mainly for tests); clears auto-name counters
-    # and the deferred-flow pool.
+def reset():
+    # Rebuild the arena from scratch with NO top module (call `set_top` after);
+    # mainly for tests. Clears auto-name counters and the deferred-flow pool.
     global _arena, _counters, _flow_pool
-    _arena     = _make_arena(top_name)
+    _arena     = _make_arena()
     _counters  = {}
     _flow_pool = []
     return _arena
@@ -55,19 +68,30 @@ def flow_pool():
 def gen_flow():
     # Build EVERY module's deferred @flow methods from the one global pool, in
     # registration order. Each call re-opens its own module scope (so
-    # initialize_module / finalize_module are paired per flow call and run many
-    # times across modules). Non-consuming: safe to invoke more than once.
-    for module_i, fn in _flow_pool:
-        _arena.initialize_module(module_i)
+    # track_module_at_flow_init / untrack_module_at_flow_init are paired per flow
+    # call and run many times across modules). Non-consuming: safe to invoke more
+    # than once.
+    for module_i, flow_fun in _flow_pool:
+        _arena.track_module_at_flow_init(module_i)
         try:
-            fn()
+            flow_fun()
         finally:
-            _arena.finalize_module(module_i)
+            _arena.untrack_module_at_flow_init(module_i)
 
 
-def auto_name(prefix):
-    # Per-prefix monotonic name (reg0, reg1, ...) used when the user omits a name.
-    # Rust still appends the global_id, so collisions are impossible regardless.
-    n = _counters.get(prefix, 0)
-    _counters[prefix] = n + 1
-    return f"{prefix}{n}"
+def build_flow():
+    # Run the host build pass: starting from the top module, build the hardware
+    # for every flow block across the module tree (schematics, update events,
+    # clk / master-reset wiring). Call once, AFTER `gen_flow` has constructed all
+    # flow blocks. Not re-runnable — the top build asserts a fresh start node.
+    arena().build_flow()
+
+
+def build_model(module):
+    # One-shot convenience: register `module` as the top, construct every module's
+    # deferred @flow blocks, then run the host build pass. Equivalent to
+    # `set_top(module); gen_flow(); build_flow()`. Not re-runnable (see build_flow).
+    _set_top(module)
+    gen_flow()
+    build_flow()
+    return module
