@@ -4,7 +4,12 @@
 # methods (both inside the scope, so `self.x = reg(...)` and the flow blocks
 # attach to this module), then finalizes it. The top module is the arena itself.
 
+from __future__ import annotations
+
+from typing import Callable, Optional
+
 from . import _session
+from ._kathryn import ModuleIdent
 
 
 _INIT_PHASE = "init"
@@ -14,19 +19,19 @@ _FLOW_PHASE = "flow"
 # The @init / @flow decorators don't wrap the method — they just *tag* the
 # function object with a `_kathryn_phase` attribute (a plain string). The tag is
 # what _phase_methods() below looks for to decide which methods to call, and when.
-def init(fn):
+def init(fn: Callable[..., object]) -> Callable[..., object]:
     # Mark a method as a hardware-declaration phase method (runs first, inside scope).
     fn._kathryn_phase = _INIT_PHASE
     return fn
 
 
-def flow(fn):
+def flow(fn: Callable[..., object]) -> Callable[..., object]:
     # Mark a method as a flow-block construction phase method (runs after @init).
     fn._kathryn_phase = _FLOW_PHASE
     return fn
 
 
-def _phase_methods(cls, phase):
+def _phase_methods(cls: type, phase: str) -> list[str]:
     # Return the *names* of methods tagged with this phase (see @init / @flow),
     # ordered so that base-class methods come before derived ones and each name
     # appears once. `Module.__init__` then calls them via getattr(self, name)().
@@ -67,7 +72,7 @@ class Module:
     #     each registers into ONE process-wide pool (_session.flow_pool) keyed by
     #     this module's ident. A single top-level _session.gen_flow() then builds
     #     every module's flows from that pool — there is no per-instance build.
-    def __init__(self, name=None):
+    def __init__(self, name: Optional[str] = None) -> None:
         name        = name or _session.auto_name(type(self).__name__)
         self._ident = _session.arena().mk_module(name)
         arena       = _session.arena()
@@ -85,11 +90,11 @@ class Module:
             _session.register_flow(self._ident, getattr(self, m))
 
     @property
-    def ident(self):
+    def ident(self) -> ModuleIdent:
         return self._ident
 
 
-def set_top(module):
+def set_top(module: Module) -> Module:
     # Public entry: hand a user-built Module to the session to register as the
     # design's top (delegates to the private _session plumbing). Call once, after
     # constructing the top Module, before gen_flow / build_flow.

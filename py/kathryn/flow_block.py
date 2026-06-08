@@ -2,9 +2,14 @@
 # components/sub-blocks created inside attach to it; `__exit__` finalizes and
 # builds it. Nesting is tracked by the arena's internal stacks, not here.
 
+from __future__ import annotations
+
+from types import TracebackType
+from typing import Callable, Optional
+
 from . import _session
-from ._kathryn import FlowBlockType
-from .signal import to_ref
+from ._kathryn import FlowBlockType, FlowBlockIdent
+from .signal import SignalRef, to_ref
 
 
 class _FlowBlockCtx:
@@ -15,16 +20,16 @@ class _FlowBlockCtx:
     # that inner skeleton first on exit.
     __slots__ = ("_ident", "_is_req_auto_sub_blk", "_inner_i")
 
-    def __init__(self, ident, is_req_auto_sub_blk=False):
+    def __init__(self, ident: FlowBlockIdent, is_req_auto_sub_blk: bool = False) -> None:
         self._ident              = ident
         self._is_req_auto_sub_blk = is_req_auto_sub_blk
         self._inner_i            = None
 
     @property
-    def ident(self):
+    def ident(self) -> FlowBlockIdent:
         return self._ident
 
-    def __enter__(self):
+    def __enter__(self) -> _FlowBlockCtx:
         arena = _session.arena()
         arena.initialize_flow_block(self._ident)
 
@@ -38,7 +43,12 @@ class _FlowBlockCtx:
             arena.initialize_flow_block(self._inner_i)
         return self
 
-    def __exit__(self, exc_type, exc, tb):
+    def __exit__(
+        self,
+        exc_type: Optional[type[BaseException]],
+        exc     : Optional[BaseException],
+        tb      : Optional[TracebackType],
+    ) -> bool:
         # Leave the half-built block(s) alone if the body raised.
         if exc_type is not None:
             return False
@@ -55,36 +65,46 @@ class _FlowBlockCtx:
         return False
 
 
-def _block(prefix, make, name, *args):
+def _block(
+    prefix: str,
+    make  : Callable[..., FlowBlockIdent],
+    name  : Optional[str],
+    *args : object,
+) -> _FlowBlockCtx:
     return _FlowBlockCtx(make(name or _session.auto_name(prefix), *args))
 
-def _complex_block(prefix, make, name, *args):
+def _complex_block(
+    prefix: str,
+    make  : Callable[..., FlowBlockIdent],
+    name  : Optional[str],
+    *args : object,
+) -> _FlowBlockCtx:
     return _FlowBlockCtx(make(name or _session.auto_name(prefix), *args), is_req_auto_sub_blk=True)
 
 
 # ---- sequential / parallel --------------------------------------------------
-def seq        (name=None): return _block("seq",        _session.arena().mk_flow_block_seq,         name)
-def par_auto   (name=None): return _block("par",        _session.arena().mk_flow_block_par_auto,    name)
-def par_no_sync(name=None): return _block("par",        _session.arena().mk_flow_block_par_no_sync, name)
+def seq        (name: Optional[str] = None) -> _FlowBlockCtx: return _block("seq", _session.arena().mk_flow_block_seq,         name)
+def par_auto   (name: Optional[str] = None) -> _FlowBlockCtx: return _block("par", _session.arena().mk_flow_block_par_auto,    name)
+def par_no_sync(name: Optional[str] = None) -> _FlowBlockCtx: return _block("par", _session.arena().mk_flow_block_par_no_sync, name)
 
 # ---- conditional (combinational / sequential if-elif-else) ------------------
 # Complex blocks — an inner skeleton (seq/par) is auto-opened (is_req_auto_sub_blk).
-def cif   (cond, name=None): return _complex_block("cif",    _session.arena().mk_flow_block_cif,    name, to_ref(cond)._ident)
-def sif   (cond, name=None): return _complex_block("sif",    _session.arena().mk_flow_block_sif,    name, to_ref(cond)._ident)
-def cselif(cond, name=None): return _complex_block("cselif", _session.arena().mk_flow_block_cselif, name, to_ref(cond)._ident)
-def cselse(      name=None): return _complex_block("cselse", _session.arena().mk_flow_block_cselse, name)
+def cif   (cond: SignalRef, name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cif",    _session.arena().mk_flow_block_cif,    name, to_ref(cond)._ident)
+def sif   (cond: SignalRef, name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("sif",    _session.arena().mk_flow_block_sif,    name, to_ref(cond)._ident)
+def cselif(cond: SignalRef, name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cselif", _session.arena().mk_flow_block_cselif, name, to_ref(cond)._ident)
+def cselse(                 name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cselse", _session.arena().mk_flow_block_cselse, name)
 
 # ---- zero-cycle conditional -------------------------------------------------
-def zif   (cond, name=None): return _block("zif",    _session.arena().mk_flow_block_zif,    name, to_ref(cond)._ident)
-def zelif (cond, name=None): return _block("zelif",  _session.arena().mk_flow_block_zelif,  name, to_ref(cond)._ident)
-def zelse (      name=None): return _block("zelse",  _session.arena().mk_flow_block_zelse,  name)
+def zif   (cond: SignalRef, name: Optional[str] = None) -> _FlowBlockCtx: return _block("zif",   _session.arena().mk_flow_block_zif,   name, to_ref(cond)._ident)
+def zelif (cond: SignalRef, name: Optional[str] = None) -> _FlowBlockCtx: return _block("zelif", _session.arena().mk_flow_block_zelif, name, to_ref(cond)._ident)
+def zelse (                 name: Optional[str] = None) -> _FlowBlockCtx: return _block("zelse", _session.arena().mk_flow_block_zelse, name)
 
 # ---- zero-cycle switch ------------------------------------------------------
-def zstate(state,     name=None): return _block("zstate", _session.arena().mk_flow_block_zstate, name, to_ref(state)._ident)
-def zcase (match_val, name=None): return _block("zcase",  _session.arena().mk_flow_block_zcase,  name, int(match_val))
+def zstate(state: SignalRef,   name: Optional[str] = None) -> _FlowBlockCtx: return _block("zstate", _session.arena().mk_flow_block_zstate, name, to_ref(state)._ident)
+def zcase (match_val: int,     name: Optional[str] = None) -> _FlowBlockCtx: return _block("zcase",  _session.arena().mk_flow_block_zcase,  name, int(match_val))
 
 # ---- loops (complex blocks — inner skeleton auto-opened) --------------------
-def cwhile  (cond,          name=None): return _complex_block("cwhile",   _session.arena().mk_flow_block_cwhile,        name, to_ref(cond)._ident)
-def swhile  (cond,          name=None): return _complex_block("swhile",   _session.arena().mk_flow_block_swhile,        name, to_ref(cond)._ident)
-def cdowhile(cond,          name=None): return _complex_block("cdowhile", _session.arena().mk_flow_block_do_while,      name, to_ref(cond)._ident)
-def cloop   (last_loop_cnt, name=None): return _complex_block("cloop",    _session.arena().mk_flow_block_counter_loop,  name, int(last_loop_cnt))
+def cwhile  (cond: SignalRef,      name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cwhile",   _session.arena().mk_flow_block_cwhile,       name, to_ref(cond)._ident)
+def swhile  (cond: SignalRef,      name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("swhile",   _session.arena().mk_flow_block_swhile,       name, to_ref(cond)._ident)
+def cdowhile(cond: SignalRef,      name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cdowhile", _session.arena().mk_flow_block_do_while,     name, to_ref(cond)._ident)
+def cloop   (last_loop_cnt: int,   name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cloop",    _session.arena().mk_flow_block_counter_loop, name, int(last_loop_cnt))
