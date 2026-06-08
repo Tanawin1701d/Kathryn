@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::flow_block::flow_block_ident::{FlowBlockIdent, FlowBlockJoinPolicy};
+use crate::model::flow_block::ExtSigType;
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType, HW_TYPES_WITH_UE, HW_TYPES_WITH_MAN_DEP, ALL_HW_TYPES};
 use crate::model::model_arena::{ModelArena, ModuleInitStage};
 use crate::model::module::module_ident::ModuleIdent;
@@ -142,25 +143,62 @@ impl Module {
 
     // -- build --
 
-    /// Build all flow blocks and nodes for a top-level module.
-    /// Uses `start_node_i` stored on `self`.
+    /// Build all flow blocks and nodes for a top-level module. The top module
+    /// owns the primitive `clk` / master-reset inputs and the start node; both
+    /// reset signal and clock are forwarded down to every sub-module from here.
     pub fn build_flow_as_top_module(&mut self, arena: &mut ModelArena) {
-        let start_node_i = self.start_node_i.expect("top module must have a start node set before build_flow");
-        self.build_flow_base(arena, start_node_i);
+        // The start node is built here, not supplied — it must not exist yet.
+        assert!(self.start_node_i.is_none(),
+                "top module start node must not be set before build_flow");
+
+        // Create the top-level HCPs in this module's FlowBlockBuild scope so they
+        // land in the pending buffer and get registered by build_flow_base's drain.
+        arena.push_module_trace_stack(self.ident, ModuleInitStage::FlowBlockBuild);
+
+        // clk + master-reset wires, marked as top-level primitive inputs.
+        let clk_i = arena.make_wire(false, "clk", 1);
+        arena.mark_as_io(clk_i, true, "clk".to_string());
+        let mreset_i = arena.make_wire(false, "mrst", 1);
+        arena.mark_as_io(mreset_i, true, "mrst".to_string());
+
+        // Start node, reset by the master-reset wire.
+        let start_node_i = arena.make_start_node("start", mreset_i);
+        self.set_start_node(start_node_i);
+
+        arena.pop_module_trace_stack();
+
+        self.build_flow_base(arena, start_node_i, clk_i, mreset_i);
     }
 
-    /// Build all flow blocks and nodes for a sub-module.
-    /// `start_node_i` is provided by the parent (not stored on self).
-    pub fn build_flow_as_sub_module(&mut self, arena: &mut ModelArena, start_node_i: NcpIdent) {
-        self.build_flow_base(arena, start_node_i);
+    /// Build all flow blocks and nodes for a sub-module. `start_node_i`, `clk_i`
+    /// and `mreset_i` are forwarded by the parent (not owned by this module).
+    pub fn build_flow_as_sub_module(
+        &mut self,
+        arena       : &mut ModelArena,
+        start_node_i: NcpIdent,
+        clk_i       : HcpIdent,
+        mreset_i    : HcpIdent,
+    ) {
+        self.build_flow_base(arena, start_node_i, clk_i, mreset_i);
     }
 
-    fn build_flow_base(&mut self, arena: &mut ModelArena, start_node_i: NcpIdent) {
+    fn build_flow_base(
+        &mut self,
+        arena       : &mut ModelArena,
+        start_node_i: NcpIdent,
+        clk_i       : HcpIdent,
+        mreset_i    : HcpIdent,
+    ) {
         // push this module to flow stack
         arena.push_module_trace_stack(self.ident, ModuleInitStage::FlowBlockBuild);
 
         // Top flow blocks: build, then wire or assign depending on join policy.
         for &block_i in &self.top_flow_blocks_i {
+            // Forward the module-wide clk / master-reset as int signals before the
+            // build so build_common_hw wires them and propagates to nested blocks.
+            arena.add_ext_signal_to_flow_block(block_i, ExtSigType::Clk, clk_i);
+            arena.add_ext_signal_to_flow_block(block_i, ExtSigType::MReset, mreset_i);
+
             arena.build_flow_block(block_i);
             if block_i.get_join_policy() == FlowBlockJoinPolicy::BasicNodeFlow {
                 // BasicNodeFlow blocks expose a single asm node — dry-assign it.
@@ -193,11 +231,11 @@ impl Module {
             if is_user { self.add_user_hws(hcp_i); } else { self.add_internal_hw(hcp_i); }
         }
 
-        // Sub-modules: pass start_node_i down.
+        // Sub-modules: send the start / clk / master-reset signals down to slaves.
         let sub_module_ids: Vec<ModuleIdent> = self.user_sub_modules.clone();
         for sub_module_i in sub_module_ids {
             let mut sub_module = arena.take_module(sub_module_i);
-            sub_module.build_flow_as_sub_module(arena, start_node_i);
+            sub_module.build_flow_as_sub_module(arena, start_node_i, clk_i, mreset_i);
             arena.replace_back_module(sub_module_i, sub_module);
         }
     }
