@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="MaturinSettings">
+    <option name="tasks">
+      <map>
+        <entry key="$PROJECT_DIR$">
+          <value>
+            <TaskState />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
