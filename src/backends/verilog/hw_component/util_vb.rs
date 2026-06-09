@@ -96,11 +96,15 @@ pub fn fmt_operand(
 // ---- Sensitivity list ----
 
 /// Content string for `always @(...)`.
-/// PosEdge → "posedge clk", NegEdge → "negedge clk", everything else → "*".
-pub fn sensitivity_list(clk_mode: ClockMode) -> String {
+/// PosEdge → "posedge <clk>", NegEdge → "negedge <clk>", everything else → "*".
+/// `clk_name` is the per-module Verilog name of the event's clock source (resolved
+/// from `UpdatePool::get_clk_src_i`); it falls back to `"clk"` only if an edge mode
+/// somehow carries no source — every sub-module sees the clock via its own IoWire
+/// (e.g. `IO_IN_clk`), so the literal `"clk"` must never be assumed here.
+pub fn sensitivity_list(clk_mode: ClockMode, clk_name: Option<&str>) -> String {
     match clk_mode {
-        ClockMode::PosEdge => "posedge clk".to_string(),
-        ClockMode::NegEdge => "negedge clk".to_string(),
+        ClockMode::PosEdge => format!("posedge {}", clk_name.unwrap_or("clk")),
+        ClockMode::NegEdge => format!("negedge {}", clk_name.unwrap_or("clk")),
         _                  => "*".to_string(),
     }
 }
@@ -124,7 +128,10 @@ pub fn gen_procedure_blk(
 
     let active_name = hcp.gen_var_name_vb();
     let clk_mode    = pool.get_clock_mode(arena).unwrap_or(ClockMode::ClkFree);
-    let sens        = sensitivity_list(clk_mode);
+    // Resolve the real per-module clock source name; fmt_operand guards self-reference.
+    let clk_name    = pool.get_clk_src_i(arena)
+                          .map(|clk_i| fmt_operand(clk_i, None, arena, active_i, &active_name));
+    let sens        = sensitivity_list(clk_mode, clk_name.as_deref());
     let tmpl        = format!("{active_name}{{DES_SLICE}} <= {{SRC}};");
 
     fw.write(&format!("always @({sens}) begin\n"));

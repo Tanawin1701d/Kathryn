@@ -1,6 +1,6 @@
 use crate::backends::verilog::hw_component::common::hcp_base_vb::HcpBaseVb;
 use crate::backends::verilog::hw_component::common::update_event_vb::transpile_ue;
-use crate::backends::verilog::hw_component::util_vb::{sensitivity_list, signal_width};
+use crate::backends::verilog::hw_component::util_vb::{fmt_operand, sensitivity_list, signal_width};
 use crate::model::common::identifier::Identifiable;
 use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::hcp_assign::HcpAssignable;
@@ -31,7 +31,10 @@ impl HcpBaseVb for MemEle {
         let active_i    = self.get_ident();
         let active_name = self.gen_var_name_vb();
         let clk_mode    = pool.get_clock_mode(arena).unwrap_or(ClockMode::ClkFree);
-        let sens        = sensitivity_list(clk_mode);
+        // Resolve the real per-module clock source name; fmt_operand guards self-reference.
+        let clk_name    = pool.get_clk_src_i(arena)
+                              .map(|clk_i| fmt_operand(clk_i, None, arena, active_i, &active_name));
+        let sens        = sensitivity_list(clk_mode, clk_name.as_deref());
 
         // {DES_SLICE} always resolves to "" (full-word write); {SRC} filled by transpile_ue.
         let tmpl = format!("{master_name}[{index_name}]{{DES_SLICE}} <= {{SRC}};");
