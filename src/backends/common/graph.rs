@@ -1,3 +1,5 @@
+use crate::common::arena_base::ArenaHandle;
+use crate::model::common::identifier::Identifiable;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::model_arena::ModelArena;
 use crate::model::module::module_ident::ModuleIdent;
@@ -39,7 +41,17 @@ impl DfsModuleIter {
 }
 
 fn get_parent_module_ident(arena: &ModelArena, i: ModuleIdent) -> ModuleIdent {
-    arena.get_module_ident_by_handle(i.get_master_module_handle())
+    let parent_handle = i.get_master_module_handle();
+    // A top module carries the default handle; resolving it would deref the sentinel
+    // ArenaHandle { 0, u32::MAX } and trip an opaque generation assert.  Fail loudly
+    // here instead — this catches a stale depth_level whose parent handle is unset.
+    assert_ne!(
+        parent_handle, ArenaHandle::default(),
+        "get_parent_module_ident: module \"{}\" (id {}) is a top module and has no \
+         parent — module tree / depth_level is inconsistent",
+        i.get_global_name(), i.get_global_id(),
+    );
+    arena.get_module_ident_by_handle(parent_handle)
 }
 
 /// Returns `(path_a, path_b)` where each path walks from the given module up
@@ -68,6 +80,17 @@ pub fn find_common_ancestor_module_paths(
 
     // Walk both up together until they meet at the common ancestor.
     while cur_a != cur_b {
+        // The balance loops left both sides at equal depth, and each step keeps them
+        // level.  Reaching a top module (depth 0) while still unequal means the two
+        // modules live in different trees — no common ancestor exists, and stepping
+        // further would deref the default parent handle.
+        assert!(
+            cur_a.get_depth_level() > 0,
+            "find_common_ancestor_module_paths: modules \"{}\" (id {}) and \"{}\" (id {}) \
+             share no common ancestor — they are in different module trees",
+            a.get_global_name(), a.get_global_id(),
+            b.get_global_name(), b.get_global_id(),
+        );
         cur_a = get_parent_module_ident(arena, cur_a);
         cur_b = get_parent_module_ident(arena, cur_b);
         path_a.push(cur_a);
