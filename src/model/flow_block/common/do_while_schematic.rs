@@ -48,7 +48,7 @@ impl DoWhileSchematic {
         arena.add_depend_node_to_ncp(exit_i, body_exit_i, Some(not_cond_i));
 
         // 4. Assign exit_node; body entrance nodes are returned to parent for assignment
-        arena.assign_ncp_node(exit_i);
+        arena.assign_ncp_node(exit_i, true, true);
 
         // 5. Build result — body's entrances become the do-while entrances
         NodeWrap::with_entrances(body_wrap.get_entrance_nodes_i(), exit_i, IN_CONSIST_CYCLE_USED)

@@ -56,7 +56,8 @@ impl NodeWrap {
 
     pub fn assign_entrance_nodes(&self, arena: &mut ModelArena) {
         for entrance_i in &self.entrance_nodes_i {
-            arena.assign_ncp_node(*entrance_i);
+            // do not assign prelim because the host is prelim_assign already
+            arena.assign_ncp_node(*entrance_i, false, true);
         }
     }
 

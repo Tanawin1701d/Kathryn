@@ -92,7 +92,7 @@ impl CondSchematic {
 
         // 6. Assign internal nodes — do NOT assign cond_node_i; it is the result entrance,
         //    the parent is responsible for assigning it
-        arena.assign_ncp_node(exit_i);
+        arena.assign_ncp_node(exit_i, true, true);
         main_wrap.assign_entrance_nodes(arena);
         for con_wrap in &con_wraps {
             con_wrap.assign_entrance_nodes(arena);

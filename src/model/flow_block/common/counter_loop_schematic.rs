@@ -55,7 +55,7 @@ impl CounterLoopSchematic {
 
         // Wire increment trigger and assign to materialise cnt_at_last
         arena.add_depend_node_to_ncp(counter_node_i, body_exit_i, None);
-        arena.assign_ncp_node(counter_node_i);
+        arena.assign_ncp_node(counter_node_i, true, true);
         let cnt_at_last_i = arena.get_node_exit_opr(&counter_node_i);
 
         // 3. Create loop_node — fires to start each iteration
@@ -88,7 +88,7 @@ impl CounterLoopSchematic {
 
         // 5. Assign remaining internal nodes — do NOT assign loop_node_i; it is the result entrance,
         //    the parent is responsible for assigning it
-        arena.assign_ncp_node(exit_i);
+        arena.assign_ncp_node(exit_i, true, true);
         body_wrap.assign_entrance_nodes(arena);
 
         // 6. Cycle count: body_cycle * iterations (or inconsistent)

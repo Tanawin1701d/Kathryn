@@ -133,9 +133,16 @@ impl ModelArena {
 
     // assign the node
 
-    pub fn assign_ncp_node(&mut self, ident: NcpIdent) {
+    pub fn assign_ncp_node(&mut self, ident: NcpIdent, prelim_assign: bool, final_assign: bool) {
         let mut node = self.take_ncp_node(ident);
-        node.assign_final(self);
+        if prelim_assign {
+            node.assign_prelim(self);
+        }
+        if final_assign {
+            node.assign_final(self);
+        }
+
+
         self.replace_back_ncp_node(node);
     }
 }

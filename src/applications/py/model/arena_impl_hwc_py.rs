@@ -6,26 +6,35 @@ use pyo3::prelude::*;
 use super::model_arena::PyModelArena;
 use super::hw_component::common::hcp_ident_py::PyHcpIdent;
 use super::hw_component::common::slice_py::PySlice;
+use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
 
 #[pymethods]
 impl PyModelArena {
     // Build a basic assignment node `des_i <= src_i` and attach it to the active
     // flow block (or the top module if none is building). Slices optional
     // (default = full signal); returns nothing, mirroring the host signature.
-    #[pyo3(signature = (des_i, src_i, des_slice=None, src_slice=None))]
+    #[pyo3(signature = (des_i, src_i, src_slice, des_slice=None))]
     fn gen_basic_assign(
         &mut self,
         des_i    : PyHcpIdent,
         src_i    : PyHcpIdent,
+        src_slice: PySlice,
         des_slice: Option<PySlice>,
-        src_slice: Option<PySlice>,
     ) {
         self.arena.gen_basic_assign(
             des_i.into(),
             src_i.into(),
             des_slice.map(Into::into),
-            src_slice.map(Into::into).unwrap_or_default(),
+            src_slice.into(),
         );
+    }
+
+    // Full bit-width of the component, used to seed a SignalRef's full slice.
+    // A MemBlk has no scalar slice (its HcpAssignable methods panic), so read its
+    // per-word width directly; every other type goes through the arena slice size.
+    fn get_hw_bit_sz(&mut self, hcp_i: PyHcpIdent) -> i32 {
+        let ident: HcpIdent = hcp_i.into();
+        self.arena.get_hw_bit_sz(&ident)
     }
 
     // Stamp an HCP as an IO port (direction + user-facing name).

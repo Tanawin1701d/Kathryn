@@ -169,7 +169,7 @@ impl ParSchematic {
                 arena.add_depend_node_to_ncp(syn_i, exit_i, None);
             }
             base.add_sys_node(syn_i);
-            arena.assign_ncp_node(syn_i);
+            arena.assign_ncp_node(syn_i, true, true);
             self.syn_node_i = Some(syn_i);
         }
 
@@ -195,7 +195,7 @@ impl ParSchematic {
                 arena.add_depend_node_to_ncp(pseudo_i, exit_i, None);
             }
             base.add_sys_node(pseudo_i);
-            arena.assign_ncp_node(pseudo_i);
+            arena.assign_ncp_node(pseudo_i, true, true);
             self.pseudo_exit_node_i = Some(pseudo_i);
             pseudo_i
         }

@@ -65,7 +65,7 @@ impl WhileSchematic {
 
         // 4. Assign internal nodes — do NOT assign cond_node_i; it is the result entrance,
         //    the parent is responsible for assigning it
-        arena.assign_ncp_node(exit_i);
+        arena.assign_ncp_node(exit_i, true, true);
         body_wrap.assign_entrance_nodes(arena);
 
         // 5. Build result — cycle_used is always inconsistent due to feedback

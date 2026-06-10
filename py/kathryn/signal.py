@@ -17,8 +17,6 @@ SliceKey = Union[int, tuple]
 # implicit __setitem__ that Python emits can recognise the work is already done.
 class _Assigned:
     __slots__ = ()
-
-
 _ASSIGNED = _Assigned()
 
 
@@ -47,11 +45,16 @@ def _inclusive_slice(key: SliceKey) -> Slice:
 class SignalRef:
     """A signal handle plus optional bit-slice. Holds only the Rust HcpIdent."""
 
-    __slots__ = ("_ident", "_slice")
+    __slots__ = ("_ident", "_slice", "_is_user_assigned")
 
     def __init__(self, ident: HcpIdent, slc: Optional[Slice] = None) -> None:
         self._ident = ident
-        self._slice = slc
+        # A bare signal (slc=None) is the whole component; seed its slice to the
+        # full width [0, bitwidth) read from the arena. An explicit slc marks a
+        # slice *view* (`a[hi, lo]`), tracked separately so assignment can tell a
+        # whole-signal rebind from a sliced write.
+        self._is_user_assigned = slc is not None
+        self._slice            = slc if slc is not None else Slice(0, _session.arena().get_hw_bit_sz(ident))
 
     # Assignability is a property of the underlying component, read straight off
     # the Rust ident: True = reg/mem (assign with |=), False = wire/io_wire
@@ -68,7 +71,7 @@ class SignalRef:
     def hw_type  (self) -> str:      return self._ident.hw_type
 
     def __repr__(self) -> str:
-        sl = "" if self._slice is None else f"[{self._slice.start},{self._slice.stop})"
+        sl = f"[{self._slice.start},{self._slice.stop})" if self._is_user_assigned else ""
         return f"{type(self).__name__}({self._ident!r}{sl})"
 
     # ---- inclusive slicing -------------------------------------------------
@@ -141,10 +144,10 @@ class SignalRef:
     def _do_assign(self, src: SignalRef) -> Union[SignalRef, _Assigned]:
         src = to_ref(src)
         _session.arena().gen_basic_assign(
-            self._ident, src._ident, self._slice, src._slice)
+            self._ident, src._ident, src._slice, self._slice)
         # Whole-signal `a |= x` rebinds name a -> return self (no-op rebind).
         # Sliced `a[h,l] |= x` is desugared to a __setitem__ -> return sentinel.
-        return _ASSIGNED if self._slice is not None else self
+        return _ASSIGNED if self._is_user_assigned else self
 
     def __ior__(self, src: SignalRef) -> Union[SignalRef, _Assigned]:
         if self._clocked is not True:
@@ -165,7 +168,7 @@ class SignalRef:
             raise TypeError(f"{type(self).__name__} is not an assignment destination")
         rhs = to_ref(value)
         _session.arena().gen_basic_assign(
-            self._ident, rhs._ident, _inclusive_slice(key), rhs._slice)
+            self._ident, rhs._ident, rhs._slice, _inclusive_slice(key))
 
 
 class expr(SignalRef):

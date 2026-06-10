@@ -107,9 +107,8 @@ impl SequenceEle {
     fn assign_block(&self, arena: &mut ModelArena, is_first_block: bool) {
         match self {
             Self::Basic { asm_node_i, state_node_i, .. } => {
-                if !is_first_block {
-                    arena.assign_ncp_node(state_node_i.expect("not generated"));
-                }
+                arena.assign_ncp_node(state_node_i.expect("not generated"), true, !is_first_block);
+
                 arena.assign_asm_from_state_node(asm_node_i.expect("asm_node_i unresolved"));
             }
             Self::SubBlock { node_wrap, .. } => {
