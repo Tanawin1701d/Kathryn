@@ -4,8 +4,8 @@
 # all model objects stays in Rust and is reached only through opaque idents.
 
 from . import _session                                          # creates the singleton arena
-from ._kathryn import LogicOp, FlowBlockType, Slice, HcpIdent, FlowBlockIdent, ModuleIdent
-from ._session import arena, reset, gen_flow, build_flow, build_model
+from ._kathryn import LogicOp, FlowBlockType, Slice, HcpIdent, FlowBlockIdent, ModuleIdent, BackendVerilog
+from ._session import arena, reset, gen_flow, build_flow, build_model, emit_verilog
 from .signal import SignalRef, expr
 from .hw_component import reg, wire, val, io_wire, mem_blk, mem_ele
 from .flow_block import (
@@ -20,6 +20,8 @@ from .module import Module, init, flow, set_top
 __all__ = [
     # rust enums / idents
     "LogicOp", "FlowBlockType", "Slice", "HcpIdent", "FlowBlockIdent", "ModuleIdent",
+    # backends
+    "BackendVerilog",
     # signals
     "SignalRef", "expr",
     "reg", "wire", "val", "io_wire", "mem_blk", "mem_ele",
@@ -31,5 +33,5 @@ __all__ = [
     "cwhile", "swhile", "cdowhile", "cloop",
     # module scope + session
     "Module", "init", "flow", "arena", "reset",
-    "gen_flow", "build_flow", "build_model", "set_top",
+    "gen_flow", "build_flow", "build_model", "set_top", "emit_verilog",
 ]

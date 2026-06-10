@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Callable
 
-from ._kathryn import ModelArena, ModuleIdent
+from ._kathryn import ModelArena, ModuleIdent, BackendVerilog
 
 if TYPE_CHECKING:
     from .module import Module
@@ -102,3 +102,12 @@ def build_model(module: Module) -> Module:
     gen_flow()
     build_flow()
     return module
+
+
+def emit_verilog(output_dir: str) -> None:
+    # Final consumer: run the Verilog backend over the built model. Constructing
+    # the backend MOVES the singleton arena into it, so the session arena is left
+    # EMPTY afterwards (call `reset` + rebuild to run again). `output_dir` must
+    # already exist; one `<output_dir>/<module>.v` is written per module. Call
+    # after `build_flow` / `build_model`.
+    BackendVerilog(arena()).emit(output_dir)
