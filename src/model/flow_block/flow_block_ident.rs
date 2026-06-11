@@ -131,7 +131,7 @@ impl FlowBlockIdent {
         format!(
             "{}_{}_{}",
             self.block_type,
-            self.ident_base.get_name(),
+            self.ident_base.get_abs_name(),
             self.ident_base.get_global_id()
         )
     }
@@ -147,7 +147,7 @@ impl Identifiable for FlowBlockIdent {
 
     fn build_unique_name(&mut self) -> &str {
         let name = self.build_unique_flow_block_name();
-        self.ident_base.set_name(&name);
-        self.ident_base.get_name()
+        self.ident_base.set_abs_name(&name);
+        self.ident_base.get_abs_name()
     }
 }

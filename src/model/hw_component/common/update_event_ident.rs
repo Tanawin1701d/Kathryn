@@ -28,7 +28,7 @@ impl Identifiable for UpdateEventIdent {
         let pre  = self.ue_type.prefix();
         let id   = self.ident_base.get_global_id();
         let name = format!("{pre}_{id}");
-        self.ident_base.set_name(&name);
-        self.ident_base.get_name()
+        self.ident_base.set_abs_name(&name);
+        self.ident_base.get_abs_name()
     }
 }

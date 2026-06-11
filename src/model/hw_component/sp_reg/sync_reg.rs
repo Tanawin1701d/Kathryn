@@ -84,7 +84,7 @@ impl SyncReg {
     /// Creates all internal support signals in the arena.
     /// Must be called before `build_update_event`.
     pub fn build_support_signal(&mut self, model_ar: &mut ModelArena) {
-        let name = self.ident.get_ident_base().get_name().to_string();
+        let name = self.ident.get_ident_base().get_abs_name().to_string();
         let size = self.bit_width;
 
         let up_state_i = model_ar.make_val(false, &format!("{}_UP_STATE", name), 1, 1);
@@ -168,7 +168,7 @@ impl SyncReg {
                     Some(ci) => {
                         let combined = model_ar.make_expression(
                             false,
-                            &format!("{}_ACT_COND_{}", self.ident.get_ident_base().get_name(), fill_bit_idx),
+                            &format!("{}_ACT_COND_{}", self.ident.get_ident_base().get_abs_name(), fill_bit_idx),
                             LogicOp::BitwiseAnd, end_expr_inv_i, ci,
                             None, None,
                         );
@@ -205,7 +205,7 @@ impl SyncReg {
         assert_eq!(
             fill_bit_idx, self.bit_width,
             "SyncReg '{}': {} of {} bit slots filled",
-            self.ident.get_ident_base().get_name(), fill_bit_idx, self.bit_width
+            self.ident.get_ident_base().get_abs_name(), fill_bit_idx, self.bit_width
         );
 
         // create the update event for the hold signal

@@ -185,8 +185,8 @@ impl HcpIdent {
 
     pub fn build_unique_hcp_name(&self) -> String {
         format!("{}_{}_{}", self.hw_type,
-                            self.ident_base.get_name(),
-                            self.ident_base.get_global_id())
+                self.ident_base.get_abs_name(),
+                self.ident_base.get_global_id())
     }
 }
 
@@ -201,7 +201,7 @@ impl Identifiable for HcpIdent {
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { &mut self.ident_base }
     fn build_unique_name (&mut self) -> &str {
         let name = self.build_unique_hcp_name();
-        self.ident_base.set_name(&name);
-        self.ident_base.get_name()
+        self.ident_base.set_abs_name(&name);
+        self.ident_base.get_abs_name()
     }
 }

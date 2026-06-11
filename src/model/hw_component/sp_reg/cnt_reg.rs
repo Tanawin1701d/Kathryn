@@ -77,7 +77,7 @@ impl CntReg {
 
     pub fn build_support_signal(&mut self, model_ar: &mut ModelArena) {
         
-        let name = self.ident.get_ident_base().get_name().to_string();
+        let name = self.ident.get_ident_base().get_abs_name().to_string();
 
         // constant: last_cycle - 1 (the maximum value the counter reaches before wrap)
         let last_cycle_val = model_ar.make_val(false, &format!("{}_LAST_CYCLE", name),

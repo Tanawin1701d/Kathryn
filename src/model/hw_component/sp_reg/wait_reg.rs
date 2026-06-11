@@ -88,7 +88,7 @@ impl CondWaitStateReg {
 
     /// Creates internal support constants/expressions used by update events.
     pub fn build_support_signal(&mut self, model_ar: &mut ModelArena) {
-        let name = self.ident.get_ident_base().get_name().to_string();
+        let name = self.ident.get_ident_base().get_abs_name().to_string();
 
         let up_state_i = model_ar.make_val(false, &format!("{}_UP_STATE", name), 1, 1);
         self.up_state_i = Some(up_state_i);
@@ -322,7 +322,7 @@ impl CycleWaitStateReg {
 
     /// Creates internal support constants/expressions used by update events.
     pub fn build_support_signal(&mut self, model_ar: &mut ModelArena) {
-        let name = self.ident.get_ident_base().get_name().to_string();
+        let name = self.ident.get_ident_base().get_abs_name().to_string();
 
         let idle_cnt_i = model_ar.make_val(false, &format!("{}_IDLE_CNT", name), self.total_bit_size, 0);
         self.idle_cnt_i = Some(idle_cnt_i);

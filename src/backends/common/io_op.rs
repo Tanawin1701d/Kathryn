@@ -15,7 +15,7 @@ pub fn build_io_wire(
     is_input         : bool,
 ) -> HcpIdent {
     let dir  = if is_input { "IN" } else { "OUT" };
-    let name = format!("IO_{}_{}", dir, actual_src_signal.get_ident_base().get_name());
+    let name = format!("IO_{}_{}", dir, actual_src_signal.get_ident_base().get_abs_name());
 
     arena.push_module_trace_stack(target_module, ModuleInitStage::CompInit);
     let io_wire_i = arena.make_io_wire(false, &name, is_input, actual_src_signal, agent_src_signal);
@@ -41,7 +41,7 @@ pub fn build_io_wire_opt_src(
 
     let dir  = if is_input { "IN" } else { "OUT" };
     let base = actual_src_signal
-        .map        (|s| s.get_ident_base().get_name().to_string())
+        .map        (|s| s.get_ident_base().get_abs_name().to_string())
         .unwrap_or_else(|| "anon".to_string());
     let name = format!("IO_{}_{}", dir, base);
 
