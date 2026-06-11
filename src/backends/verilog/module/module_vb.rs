@@ -41,6 +41,7 @@ impl Module {
     fn gen_module_header_vb(&self, arena: &mut ModelArena, fw: &mut FileWriter) {
         let mod_name = self.get_mod_name_vb();
         fw.write("////////////////////////////////////////////////////////////////////////////////\n");
+        fw.write("// Phase 1 : module header & IO ports\n");
         fw.write(&format!("module {mod_name}(\n"));
 
         // Each IoWire is taken from the arena so `arena` stays free for recursive access
@@ -70,6 +71,7 @@ impl Module {
     // IoWire is skipped for *this* module — its signals are already declared as ports in phase 1.
     // Sub-module output IoWires are declared here as plain wires (child drives; parent just names them).
     fn gen_var_declarations_vb(&self, arena: &mut ModelArena, fw: &mut FileWriter) {
+        self.gen_phase_banner_vb(fw, "Phase 2 : signal declarations (reg / wire / localparam / mem)");
         for hw_type in all_hw_types() {
             if hw_type == HwComponentType::IoWire { continue; }
             for &hcp_i in &self.collect_hcp_idents_vb(hw_type) {
@@ -87,6 +89,7 @@ impl Module {
     // Phase 2.5 — wire declarations for every sub-module's output ports.
     // Each sub-module is taken from the arena so arena is free inside gen_var_sub_mod_declaration.
     fn gen_var_sub_mod_declarations_vb(&self, arena: &mut ModelArena, fw: &mut FileWriter) {
+        self.gen_phase_banner_vb(fw, "Phase 2.5 : sub-module output wire declarations");
         let sub_ids = self.get_user_sub_modules().clone();
         for sub_i in sub_ids {
             let sub_module = arena.take_module(sub_i);
@@ -97,6 +100,7 @@ impl Module {
 
     // Phase 3 — always blocks and assign statements for every HCP.
     fn gen_procedure_blks_vb(&self, arena: &mut ModelArena, fw: &mut FileWriter) {
+        self.gen_phase_banner_vb(fw, "Phase 3 : always blocks & continuous assignments");
         for hw_type in all_hw_types() {
             for &hcp_i in &self.collect_hcp_idents_vb(hw_type) {
                 let vb = arena.take_hcp_vb(hcp_i);
@@ -111,6 +115,7 @@ impl Module {
 
     // Phase 4 — instantiate every child module inside this module's body.
     fn gen_sub_module_insts_vb(&self, arena: &mut ModelArena, fw: &mut FileWriter) {
+        self.gen_phase_banner_vb(fw, "Phase 4 : sub-module instantiations");
         let sub_ids = self.get_user_sub_modules().clone();
         for sub_i in sub_ids {
             let sub_module = arena.take_module(sub_i);
@@ -121,10 +126,17 @@ impl Module {
 
     // Phase 5 — `endmodule`.
     fn gen_module_footer_vb(&self, fw: &mut FileWriter) {
+        self.gen_phase_banner_vb(fw, "Phase 5 : endmodule");
         fw.write("\nendmodule\n\n");
     }
 
     // ---- Private utilities ----
+
+    // Emit a Verilog section banner comment so each generation phase is
+    // identifiable in the produced file.
+    fn gen_phase_banner_vb(&self, fw: &mut FileWriter, text: &str) {
+        fw.write(&format!("    // ---- {text} ----\n"));
+    }
 
     // Canonical module name used in Verilog output.
     pub(crate) fn get_mod_name_vb(&self) -> String { self.get_global_name().to_string() }

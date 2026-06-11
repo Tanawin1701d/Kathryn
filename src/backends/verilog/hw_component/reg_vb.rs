@@ -13,7 +13,7 @@ use crate::util::file::file_writer::FileWriter;
 // All register-family types share the same HcpBaseVb shape:
 //   - gen_type_vb   : "reg [N-1:0] " from get_des_slice().get_size()
 //   - gen_var_name_vb: plain global name
-//   - 1 init line (empty), 1 procedure block (clocked)
+//   - 1 init line ("reg [N-1:0] name;"), 1 procedure block (clocked)
 //   - replace_back varies per concrete type → macro injects the one differing call
 macro_rules! impl_reg_vb {
     ($T:ty, $replace_back:ident) => {
@@ -23,7 +23,12 @@ macro_rules! impl_reg_vb {
             fn amt_init_line_vb    (&self) -> u32    { 1 }
             fn amt_precedure_blk_vb(&self) -> u32    { 1 }
 
-            fn gen_init_line_vb    (&self, _idx: u32, _arena: &mut ModelArena, _fw: &mut FileWriter) { /* regs need no init declaration */ }
+            /// Full declaration: `reg [N-1:0] name;`
+            fn gen_init_line_vb    (&self, _idx: u32, _arena: &mut ModelArena, fw: &mut FileWriter) {
+                let t = self.gen_type_vb();
+                let n = self.gen_var_name_vb();
+                fw.write(&format!("{t} {n};"));
+            }
             fn gen_procedure_blk_vb(&self, _idx: u32,  arena: &mut ModelArena,  fw: &mut FileWriter) {
                 gen_procedure_blk(self, self.get_ident(), arena, fw)
             }
