@@ -63,7 +63,7 @@ impl StateReg {
     /// share the same clock domain and are joinable in the update pool.
     pub fn build_update_event(&mut self, model_ar: &mut ModelArena) {
 
-        let owner_name = self.build_unique_name().to_string();
+        let owner_name = self.get_global_name().to_string();
         self.triggers.integrity_check(&owner_name, model_ar);
 
         // in source side, we also use get_des_slice because it is only 1 bit assignment
@@ -163,7 +163,6 @@ impl HcpAssignable for StateReg {
 impl Identifiable for StateReg {
     fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
-    fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
 }
 
 impl HcpIdentifiable for StateReg {

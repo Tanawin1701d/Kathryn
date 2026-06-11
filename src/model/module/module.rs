@@ -244,5 +244,4 @@ impl Module {
 impl Identifiable for Module {
     fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
-    fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
 }

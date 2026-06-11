@@ -131,7 +131,7 @@ impl SyncReg {
     /// `build_support_signal` must be called first.
     pub fn build_update_event(&mut self, model_ar: &mut ModelArena) {
 
-        let owner_name = self.build_unique_name().to_string();
+        let owner_name = self.get_global_name().to_string();
         self.triggers.integrity_check(&owner_name, model_ar);
 
         let up_state_i        = self.up_state_i       .expect("build_support_signal must be called first");
@@ -267,7 +267,6 @@ impl HcpAssignable for SyncReg {
 impl Identifiable for SyncReg {
     fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
-    fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
 }
 
 impl HcpIdentifiable for SyncReg {

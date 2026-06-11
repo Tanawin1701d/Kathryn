@@ -17,7 +17,11 @@ pub struct ModuleIdent {
 
 impl ModuleIdent {
     pub fn new(is_user_com: bool, name: &str) -> Self {
-        Self { ident_base: IdentBase::new(is_user_com, name), master_module_handle: ArenaHandle::default(), depth_level: 0 }
+        let mut s = Self { ident_base: IdentBase::new(is_user_com), master_module_handle: ArenaHandle::default(), depth_level: 0 };
+        s.ident_base.set_rel_name(name);
+        let abs = s.build_unique_module_name();
+        s.ident_base.set_abs_name(&abs);
+        s
     }
 
     pub fn get_ident_base          (&    self                     ) -> &IdentBase     { &self.ident_base                                        }
@@ -29,7 +33,7 @@ impl ModuleIdent {
 
     pub fn build_unique_module_name(&self) -> String {
         format!("MODULE_{}_{}",
-                self.ident_base.get_abs_name(),
+                self.ident_base.get_rel_name(),
                 self.ident_base.get_global_id())
     }
 }
@@ -37,9 +41,4 @@ impl ModuleIdent {
 impl Identifiable for ModuleIdent {
     fn get_ident_base    (&self)     -> &IdentBase     { &self.ident_base }
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { &mut self.ident_base }
-    fn build_unique_name (&mut self) -> &str {
-        let name = self.build_unique_module_name();
-        self.ident_base.set_abs_name(&name);
-        self.ident_base.get_abs_name()
-    }
 }

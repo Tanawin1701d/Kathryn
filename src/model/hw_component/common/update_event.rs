@@ -125,7 +125,7 @@ pub struct UeBasic {
 impl UeBasic {
     pub fn new(srci: HcpIdent, des_slice: Slice, src_slice: Slice) -> Self {
         Self {
-            ident    : UpdateEventIdent::new(IdentBase::new(false, UeType::Basic.prefix()), UeType::Basic),
+            ident    : UpdateEventIdent::new(IdentBase::new(false), UeType::Basic),
             ue_common: UeCommon { ue_type: UeType::Basic, ..Default::default() },
             srci,
             des_slice,
@@ -175,7 +175,6 @@ impl Default for UeBasic {
 impl Identifiable for UeBasic {
     fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
-    fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
 }
 
 
@@ -191,7 +190,7 @@ pub struct UeGrp {
 impl UeGrp {
     pub fn new() -> Self {
         Self {
-            ident    : UpdateEventIdent::new(IdentBase::new(false, UeType::Grp.prefix()), UeType::Grp),
+            ident    : UpdateEventIdent::new(IdentBase::new(false), UeType::Grp),
             ue_common: UeCommon { ue_type: UeType::Grp, ..Default::default() },
             sub_stmts: Vec::new(),
         }
@@ -250,7 +249,6 @@ impl Default for UeGrp {
 impl Identifiable for UeGrp {
     fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
-    fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
 }
 
 
@@ -268,7 +266,7 @@ pub struct UeCond {
 impl UeCond {
     pub fn new() -> Self {
         Self {
-            ident         : UpdateEventIdent::new(IdentBase::new(false, UeType::Cond.prefix()), UeType::Cond),
+            ident         : UpdateEventIdent::new(IdentBase::new(false), UeType::Cond),
             ue_common     : UeCommon { ue_type: UeType::Cond, ..Default::default() },
             is_last_occure: false,
             conditions    : Vec::new(),
@@ -347,7 +345,6 @@ impl Default for UeCond {
 impl Identifiable for UeCond {
     fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
-    fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
 }
 
 
@@ -366,7 +363,7 @@ pub struct UeSwitch {
 impl UeSwitch {
     pub fn new(state_iden: HcpIdent) -> Self {
         Self {
-            ident        : UpdateEventIdent::new(IdentBase::new(false, UeType::Switch.prefix()), UeType::Switch),
+            ident        : UpdateEventIdent::new(IdentBase::new(false), UeType::Switch),
             ue_common    : UeCommon { ue_type: UeType::Switch, ..Default::default() },
             is_init_meta : false,
             state_iden,
@@ -451,5 +448,4 @@ impl Default for UeSwitch {
 impl Identifiable for UeSwitch {
     fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
-    fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
 }

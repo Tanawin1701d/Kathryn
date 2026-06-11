@@ -39,7 +39,6 @@ impl Default for IdentBase {
 pub trait Identifiable {
     fn get_ident_base    (&self)     -> &IdentBase;
     fn get_ident_base_mut(&mut self) -> &mut IdentBase;
-    fn build_unique_name (&mut self) -> &str;
 
     fn get_global_id  (&self)                 -> u64  { self.get_ident_base().global_id  }
     fn get_global_name(&self)                 -> &str { self.get_ident_base().get_abs_name() }
@@ -56,8 +55,8 @@ pub trait Identifiable {
 }
 
 impl IdentBase {
-    pub fn new(is_user_com: bool, name: &str) -> Self {
-        let mut base = Self {
+    pub fn new(is_user_com: bool) -> Self {
+        Self {
             global_id   : GLOBAL_MODEL_ID.fetch_add(1, Ordering::Relaxed),
             is_user_com,
             abs_name_buf: [0u8; MAX_NAME_LEN],
@@ -65,8 +64,7 @@ impl IdentBase {
             rel_name_buf: [0u8; MAX_NAME_LEN],
             rel_name_len: 0,
             arena_handle: ArenaHandle::default(),
-        };
-        base
+        }
     }
 
     /// Gets a fresh global ID and appends "_CP" to the name.

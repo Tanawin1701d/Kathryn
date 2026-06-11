@@ -115,11 +115,15 @@ pub struct FlowBlockIdent {
 
 impl FlowBlockIdent {
     pub fn new(block_type: FlowBlockType, join_policy: FlowBlockJoinPolicy, name: &str) -> Self {
-        Self {
-            ident_base: IdentBase::new(false, name),
+        let mut s = Self {
+            ident_base: IdentBase::new(false),
             block_type,
             join_policy,
-        }
+        };
+        s.ident_base.set_rel_name(name);
+        let abs = s.build_unique_flow_block_name();
+        s.ident_base.set_abs_name(&abs);
+        s
     }
 
     pub fn get_ident_base     (&self)     -> &IdentBase          { &self.ident_base }
@@ -131,7 +135,7 @@ impl FlowBlockIdent {
         format!(
             "{}_{}_{}",
             self.block_type,
-            self.ident_base.get_abs_name(),
+            self.ident_base.get_rel_name(),
             self.ident_base.get_global_id()
         )
     }
@@ -144,10 +148,4 @@ impl Default for FlowBlockIdent {
 impl Identifiable for FlowBlockIdent {
     fn get_ident_base(&self) -> &IdentBase { &self.ident_base }
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { &mut self.ident_base }
-
-    fn build_unique_name(&mut self) -> &str {
-        let name = self.build_unique_flow_block_name();
-        self.ident_base.set_abs_name(&name);
-        self.ident_base.get_abs_name()
-    }
 }

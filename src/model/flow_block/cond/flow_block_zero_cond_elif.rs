@@ -78,5 +78,4 @@ impl FlowBlock for FlowBlockZeroCondElif {
 impl Identifiable for FlowBlockZeroCondElif {
     fn get_ident_base    (&self)     -> &IdentBase     { self.base.get_ident_ref().get_ident_base() }
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.base.get_ident_mut().get_ident_base_mut() }
-    fn build_unique_name (&mut self) -> &str           { self.base.get_ident_mut().build_unique_name() }
 }

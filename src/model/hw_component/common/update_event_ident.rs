@@ -15,20 +15,21 @@ pub struct UpdateEventIdent {
 
 impl UpdateEventIdent {
     pub fn new(ident_base: IdentBase, ue_type: UeType) -> Self {
-        Self { ident_base, ue_type }
+        let mut s = Self { ident_base, ue_type };
+        let abs = s.build_unique_ue_name();
+        s.ident_base.set_abs_name(&abs);
+        s
     }
 
     pub fn get_ue_type(&self) -> UeType { self.ue_type }
+
+    // UE name is fully derived from its type prefix + global id (no user nickname).
+    pub fn build_unique_ue_name(&self) -> String {
+        format!("{}_{}", self.ue_type.prefix(), self.ident_base.get_global_id())
+    }
 }
 
 impl Identifiable for UpdateEventIdent {
     fn get_ident_base    (&self)     -> &IdentBase     { &self.ident_base }
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { &mut self.ident_base }
-    fn build_unique_name (&mut self) -> &str {
-        let pre  = self.ue_type.prefix();
-        let id   = self.ident_base.get_global_id();
-        let name = format!("{pre}_{id}");
-        self.ident_base.set_abs_name(&name);
-        self.ident_base.get_abs_name()
-    }
 }

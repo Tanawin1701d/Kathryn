@@ -112,7 +112,7 @@ impl CntReg {
 
 
 
-        let owner_name = self.build_unique_name().to_string();
+        let owner_name = self.get_global_name().to_string();
         self.triggers.integrity_check(&owner_name, model_ar);
 
         let cnt_val_sl = Slice::new(0, self.cnt_bit_sz);
@@ -221,7 +221,6 @@ impl HcpAssignable for CntReg {
 impl Identifiable for CntReg {
     fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
-    fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
 }
 
 impl HcpIdentifiable for CntReg {

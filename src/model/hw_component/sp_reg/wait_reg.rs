@@ -106,7 +106,7 @@ impl CondWaitStateReg {
     /// Generates all update events.
     /// `build_support_signal` must be called first.
     pub fn build_update_event(&mut self, model_ar: &mut ModelArena) {
-        let owner_name = self.build_unique_name().to_string();
+        let owner_name = self.get_global_name().to_string();
         self.triggers.integrity_check(&owner_name, model_ar);
         check_ident_bit_size(&self.cond_opr, 1, &owner_name, model_ar);
 
@@ -197,7 +197,6 @@ impl HcpAssignable for CondWaitStateReg {
 impl Identifiable for CondWaitStateReg {
     fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
-    fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
 }
 
 impl HcpIdentifiable for CondWaitStateReg {
@@ -385,7 +384,7 @@ impl CycleWaitStateReg {
     /// `build_support_signal` must be called first.
     pub fn build_update_event(&mut self, model_ar: &mut ModelArena) {
         let cm = self.retrieve_clk_mode();
-        let owner_name = self.build_unique_name().to_string();
+        let owner_name = self.get_global_name().to_string();
         self.triggers.integrity_check(&owner_name, model_ar);
 
         let idle_cnt_i = self.idle_cnt_i.expect("build_support_signal must be called first");
@@ -487,7 +486,6 @@ impl HcpAssignable for CycleWaitStateReg {
 impl Identifiable for CycleWaitStateReg {
     fn get_ident_base    (&self)     -> &IdentBase     { self.ident.get_ident_base()     }
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
-    fn build_unique_name (&mut self) -> &str           { self.ident.build_unique_name()  }
 }
 
 impl HcpIdentifiable for CycleWaitStateReg {
