@@ -12,3 +12,6 @@ __pycache__/
 # Tech report build artifacts
 docs/
 /.idea/misc.xml
+
+# Generated test model output
+/test/.model_output/
