@@ -35,7 +35,6 @@ def _set_top(module: Module) -> Module:
     top_i = module.ident
     a     = arena()
     a.set_top_module(top_i)
-    a.track_module_at_com_init(top_i)
     return module
 
 
@@ -104,10 +103,11 @@ def build_model(module: Module) -> Module:
     return module
 
 
-def emit_verilog(output_dir: str) -> None:
+def emit_verilog(output_dir: str, top_file_name: str = "top") -> None:
     # Final consumer: run the Verilog backend over the built model. Constructing
     # the backend MOVES the singleton arena into it, so the session arena is left
     # EMPTY afterwards (call `reset` + rebuild to run again). `output_dir` must
-    # already exist; one `<output_dir>/<module>.v` is written per module. Call
+    # already exist; one `<output_dir>/<module>.v` is written per module, except
+    # the top module which is written to `<output_dir>/<top_file_name>.v`. Call
     # after `build_flow` / `build_model`.
-    BackendVerilog(arena()).emit(output_dir)
+    BackendVerilog(arena()).emit(output_dir, top_file_name)

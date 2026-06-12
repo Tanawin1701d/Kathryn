@@ -135,6 +135,14 @@ class SignalRef:
         _session.arena().mark_as_io(self._ident, bool(is_input), str(io_name))
         return self
 
+    def mark_input(self, io_name: str) -> SignalRef:
+        # Mark this signal as an input port named `io_name`.
+        return self.mark_as_io(True, io_name)
+
+    def mark_output(self, io_name: str) -> SignalRef:
+        # Mark this signal as an output port named `io_name`.
+        return self.mark_as_io(False, io_name)
+
     @property
     def is_io(self) -> bool:
         # True if this signal's component has been marked as an IO port.

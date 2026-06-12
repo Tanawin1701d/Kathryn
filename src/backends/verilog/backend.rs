@@ -17,11 +17,12 @@ impl BackendVerilog {
     }
 
     // Top-level entry point: run all three phases in order.
-    // output_dir must already exist; each module produces <output_dir>/<name>.v.
-    pub fn emit(&mut self, output_dir: &str) {
+    // output_dir must already exist; each module produces <output_dir>/<name>.v,
+    // except the top module which is written to <output_dir>/<top_file_name>.v.
+    pub fn emit(&mut self, output_dir: &str, top_file_name: &str) {
         self.phase_route();
         self.phase_init();
-        self.phase_emit(output_dir);
+        self.phase_emit(output_dir, top_file_name);
     }
 
     // ---- Phases ----
@@ -47,15 +48,18 @@ impl BackendVerilog {
     }
 
     // Phase 3 — DFS over the module tree; emit one .v file per module.
-    fn phase_emit(&mut self, output_dir: &str) {
+    // The top module is written to <top_file_name>.v; all others use their module name.
+    fn phase_emit(&mut self, output_dir: &str, top_file_name: &str) {
         println!("[BackendVerilog] Phase 3: emitting Verilog to '{output_dir}'");
         let top_i = self.model_arena
             .get_top_module()
             .expect("BackendVerilog::phase_emit — no top module set on arena");
         let mut iter = DfsModuleIter::new(top_i);
         while let Some(module_i) = iter.next_module(&mut self.model_arena) {
-            let module = self.model_arena.take_module(module_i);
-            let path   = format!("{}/{}.v", output_dir, module.get_mod_name_vb());
+            let module    = self.model_arena.take_module(module_i);
+            let file_stem = if module_i == top_i { top_file_name.to_string() }
+                            else                 { module.get_mod_name_vb() };
+            let path      = format!("{}/{}.v", output_dir, file_stem);
             println!("[BackendVerilog] Phase 3:   writing {path}");
             let mut fw = FileWriter::new(&path, 4096)
                 .unwrap_or_else(|e| panic!("BackendVerilog::phase_emit — cannot open {path}: {e}"));

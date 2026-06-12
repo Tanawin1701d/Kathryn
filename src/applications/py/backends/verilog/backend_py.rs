@@ -22,7 +22,8 @@ impl PyBackendVerilog {
     }
 
     // Run all three backend phases; output_dir must already exist.
-    fn emit(&mut self, output_dir: &str) {
-        self.inner.emit(output_dir);
+    // The top module is written to <output_dir>/<top_file_name>.v.
+    fn emit(&mut self, output_dir: &str, top_file_name: &str) {
+        self.inner.emit(output_dir, top_file_name);
     }
 }
