@@ -163,6 +163,7 @@ impl Module {
 
         // Start node, reset by the master-reset wire.
         let start_node_i = arena.make_start_node("start", mreset_i);
+        arena.assign_ncp_node(start_node_i, true, true);
         self.set_start_node(start_node_i);
 
         arena.pop_module_trace_stack();
