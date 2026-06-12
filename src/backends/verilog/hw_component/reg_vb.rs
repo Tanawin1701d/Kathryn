@@ -18,7 +18,7 @@ use crate::util::file::file_writer::FileWriter;
 macro_rules! impl_reg_vb {
     ($T:ty, $replace_back:ident) => {
         impl HcpBaseVb for $T {
-            fn gen_type_vb         (&self) -> String { let w = signal_width(self.get_des_slice().get_size()); format!("reg {w}") }
+            fn gen_type_vb         (&self) -> String { let w = signal_width(self.get_des_slice().get_size()); format!("reg  {w}") }
             fn gen_var_name_vb     (&self) -> String { self.get_global_name().to_string() }
             fn amt_init_line_vb    (&self) -> u32    { 1 }
             fn amt_precedure_blk_vb(&self) -> u32    { 1 }

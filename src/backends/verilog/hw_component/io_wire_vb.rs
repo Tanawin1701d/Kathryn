@@ -7,7 +7,7 @@ use crate::model::model_arena::ModelArena;
 use crate::util::file::file_writer::FileWriter;
 
 impl HcpBaseVb for IoWire {
-    fn gen_type_vb         (&self) -> String { let w = signal_width(self.get_des_slice().get_size()); format!("wire {w}") }
+    fn gen_type_vb         (&self) -> String { let w = signal_width(self.get_des_slice().get_size()); format!("reg  {w}") }
     fn gen_var_name_vb     (&self) -> String {
         self.get_explicit_name()
             .unwrap_or_else(|| self.get_global_name()).to_string()
@@ -19,9 +19,10 @@ impl HcpBaseVb for IoWire {
     // Emit the Verilog port direction + type, e.g. `output wire [7:0] foo_out`.
     fn gen_io_line_vb(&self, _idx: u32, _arena: &mut ModelArena, fw: &mut FileWriter) {
         let dir  = if self.get_is_input() { "input" } else { "output" };
+        let kind = if self.get_is_input() { "wire" } else { "reg " };
         let w    = signal_width(self.get_des_slice().get_size());
         let name = self.gen_var_name_vb();
-        fw.write(&format!("{dir} wire {w}{name}"));
+        fw.write(&format!("{dir} {kind} {w}{name}"));
     }
 
     fn gen_init_line_vb(&self, _idx: u32, _arena: &mut ModelArena, _fw: &mut FileWriter) {

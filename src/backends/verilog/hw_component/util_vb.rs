@@ -13,7 +13,8 @@ use crate::util::file::file_writer::FileWriter;
 
 /// "[N-1:0] " for multi-bit, "" for 1-bit (caller appends signal name).
 pub fn signal_width(size: i32) -> String {
-    if size <= 1 { String::new() } else { let n = size - 1; format!("[{n}:0] ") }
+    let n = size - 1; 
+    format!("[{n}:0] ")
 }
 
 /// "[stop-1:start]" for an explicit Slice, "" for the default {-1,-1} (full width).
