@@ -74,7 +74,10 @@ impl Module {
         self.gen_phase_banner_vb(fw, "Phase 2 : signal declarations (reg / wire / localparam / mem)");
         for hw_type in all_hw_types() {
             if hw_type == HwComponentType::IoWire { continue; }
-            for &hcp_i in &self.collect_hcp_idents_vb(hw_type) {
+            let hcp_idents = self.collect_hcp_idents_vb(hw_type);
+            if hcp_idents.is_empty() { continue; }   // no banner for types this module never uses
+            self.gen_phase_banner_vb(fw, &format!("{} declarations", hw_type.global_prefix()));
+            for &hcp_i in &hcp_idents {
                 let vb = arena.take_hcp_vb(hcp_i);
                 for idx in 0..vb.amt_init_line_vb() {
                     vb.gen_init_line_vb(idx, arena, fw);
