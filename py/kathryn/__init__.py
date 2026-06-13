@@ -9,7 +9,7 @@ from ._session import arena, reset, gen_flow, build_flow, build_model, emit_veri
 from .signal import SignalRef, expr
 from .hw_component import reg, wire, val, io_wire, mem_blk, mem_ele
 from .flow_block import (
-    seq, par_auto, par_no_sync,
+    seq, par, par_auto, par_no_sync,
     cif, sif, cselif, cselse,
     zif, zelif, zelse,
     zstate, zcase,
@@ -26,7 +26,7 @@ __all__ = [
     "SignalRef", "expr",
     "reg", "wire", "val", "io_wire", "mem_blk", "mem_ele",
     # flow blocks
-    "seq", "par_auto", "par_no_sync",
+    "seq", "par", "par_auto", "par_no_sync",
     "cif", "sif", "cselif", "cselse",
     "zif", "zelif", "zelse",
     "zstate", "zcase",

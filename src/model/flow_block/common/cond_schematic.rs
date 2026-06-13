@@ -42,6 +42,7 @@ impl CondSchematic {
             arena.add_depend_node_to_ncp(cond_node_i, start_i, None);
         }
         base.add_sys_node(cond_node_i);
+        arena.assign_ncp_node(cond_node_i, true, false);
 
         // 2. Summarize the main body (sub_blocks[0]) and gate it behind cond_i
         let main_block_i = base.get_sub_blocks_i()[0];

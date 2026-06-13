@@ -84,6 +84,7 @@ def _complex_block(
 
 # ---- sequential / parallel --------------------------------------------------
 def seq        (name: Optional[str] = None) -> _FlowBlockCtx: return _block("seq", _session.arena().mk_flow_block_seq,         name)
+def par        (name: Optional[str] = None) -> _FlowBlockCtx: return _block("par", _session.arena().mk_flow_block_par_auto,    name)
 def par_auto   (name: Optional[str] = None) -> _FlowBlockCtx: return _block("par", _session.arena().mk_flow_block_par_auto,    name)
 def par_no_sync(name: Optional[str] = None) -> _FlowBlockCtx: return _block("par", _session.arena().mk_flow_block_par_no_sync, name)
 
