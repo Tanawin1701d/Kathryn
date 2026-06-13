@@ -6,7 +6,8 @@
         <entry key="$PROJECT_DIR$">
           <value>
             <TaskState>
-              <option name="startFile" value="$PROJECT_DIR$/test/model/tc1_seq_simple.py" />
+              <option name="debugArg" value="icarus" />
+              <option name="startFile" value="$PROJECT_DIR$/test/run_cocotb.py" />
             </TaskState>
           </value>
         </entry>
