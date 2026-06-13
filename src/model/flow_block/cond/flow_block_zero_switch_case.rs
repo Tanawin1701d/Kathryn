@@ -22,7 +22,7 @@ impl Default for FlowBlockZeroSwitchCase {
 impl FlowBlockZeroSwitchCase {
     pub fn new(name: &str, match_val: i32) -> Self {
         Self {
-            base     : FlowBlockBase::new(FlowBlockType::ZeroSwitchCase, FlowBlockJoinPolicy::SubFlow, name),
+            base     : FlowBlockBase::new(FlowBlockType::ZeroSwitchCase, FlowBlockJoinPolicy::SubFlow, name, false),
             match_val,
             grp_asms : Vec::new(),
         }

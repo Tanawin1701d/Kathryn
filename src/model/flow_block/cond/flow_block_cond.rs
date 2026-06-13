@@ -21,7 +21,7 @@ impl Default for FlowBlockCond {
 impl FlowBlockCond {
     pub fn new_cif(name: &str, cond_i: HcpIdent) -> Self {
         Self {
-            base:      FlowBlockBase::new(FlowBlockType::CondIf, FlowBlockJoinPolicy::SubFlow, name),
+            base:      FlowBlockBase::new(FlowBlockType::CondIf, FlowBlockJoinPolicy::SubFlow, name, true),
             schematic: CondSchematic::new(CondMode::Combinatorial, cond_i),
             result:    None,
         }
@@ -29,7 +29,7 @@ impl FlowBlockCond {
 
     pub fn new_sif(name: &str, cond_i: HcpIdent) -> Self {
         Self {
-            base:      FlowBlockBase::new(FlowBlockType::CondIf, FlowBlockJoinPolicy::SubFlow, name),
+            base:      FlowBlockBase::new(FlowBlockType::CondIf, FlowBlockJoinPolicy::SubFlow, name, true),
             schematic: CondSchematic::new(CondMode::Sequential, cond_i),
             result:    None,
         }

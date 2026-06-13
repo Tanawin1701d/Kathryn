@@ -20,7 +20,7 @@ impl Default for FlowBlockSeq {
 impl FlowBlockSeq {
     pub fn new(name: &str) -> Self {
         Self {
-            base:      FlowBlockBase::new(FlowBlockType::Sequential, FlowBlockJoinPolicy::SubFlow, name),
+            base:      FlowBlockBase::new(FlowBlockType::Sequential, FlowBlockJoinPolicy::SubFlow, name, false),
             schematic: SeqSchematic::new(),
             result:    None,
         }

@@ -22,7 +22,7 @@ impl Default for FlowBlockCondElif {
 impl FlowBlockCondElif {
     pub fn new_elif(name: &str, cond_i: HcpIdent) -> Self {
         Self {
-            base:      FlowBlockBase::new(FlowBlockType::CondElif, FlowBlockJoinPolicy::ConFlow, name),
+            base:      FlowBlockBase::new(FlowBlockType::CondElif, FlowBlockJoinPolicy::ConFlow, name, false),
             condition: Some(cond_i),
             result:    None,
         }
@@ -30,7 +30,7 @@ impl FlowBlockCondElif {
 
     pub fn new_else(name: &str) -> Self {
         Self {
-            base:      FlowBlockBase::new(FlowBlockType::CondElif, FlowBlockJoinPolicy::ConFlow, name),
+            base:      FlowBlockBase::new(FlowBlockType::CondElif, FlowBlockJoinPolicy::ConFlow, name, false),
             condition: None,
             result:    None,
         }

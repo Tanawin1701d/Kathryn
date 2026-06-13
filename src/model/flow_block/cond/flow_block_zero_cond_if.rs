@@ -26,7 +26,7 @@ impl Default for FlowBlockZeroCondIf {
 impl FlowBlockZeroCondIf {
     pub fn new(name: &str, cond_i: HcpIdent) -> Self {
         Self {
-            base             : FlowBlockBase::new(FlowBlockType::ZeroCondIf, FlowBlockJoinPolicy::BasicNodeFlow, name),
+            base             : FlowBlockBase::new(FlowBlockType::ZeroCondIf, FlowBlockJoinPolicy::BasicNodeFlow, name, true),
             cond_i           : cond_i,
             grp_asms         : Vec::new(),
             result_basic_node: None,

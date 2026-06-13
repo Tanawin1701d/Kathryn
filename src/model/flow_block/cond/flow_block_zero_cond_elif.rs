@@ -25,7 +25,7 @@ impl Default for FlowBlockZeroCondElif {
 impl FlowBlockZeroCondElif {
     pub fn new_zelif(name: &str, cond_i: HcpIdent) -> Self {
         Self {
-            base     : FlowBlockBase::new(FlowBlockType::ZeroCondElif, FlowBlockJoinPolicy::ConFlow, name),
+            base     : FlowBlockBase::new(FlowBlockType::ZeroCondElif, FlowBlockJoinPolicy::ConFlow, name, false),
             condition: Some(cond_i),
             grp_asms : Vec::new(),
         }
@@ -33,7 +33,7 @@ impl FlowBlockZeroCondElif {
 
     pub fn new_zelse(name: &str) -> Self {
         Self {
-            base     : FlowBlockBase::new(FlowBlockType::ZeroCondElif, FlowBlockJoinPolicy::ConFlow, name),
+            base     : FlowBlockBase::new(FlowBlockType::ZeroCondElif, FlowBlockJoinPolicy::ConFlow, name, false),
             condition: None,
             grp_asms : Vec::new(),
         }

@@ -21,7 +21,7 @@ impl Default for FlowBlockWhile {
 impl FlowBlockWhile {
     pub fn new_cwhile(name: &str, cond_i: HcpIdent) -> Self {
         Self {
-            base:      FlowBlockBase::new(FlowBlockType::WhileLoop, FlowBlockJoinPolicy::SubFlow, name),
+            base:      FlowBlockBase::new(FlowBlockType::WhileLoop, FlowBlockJoinPolicy::SubFlow, name, false),
             schematic: WhileSchematic::new(LoopMode::Combinatorial, cond_i),
             result:    None,
         }
@@ -29,7 +29,7 @@ impl FlowBlockWhile {
 
     pub fn new_swhile(name: &str, cond_i: HcpIdent) -> Self {
         Self {
-            base:      FlowBlockBase::new(FlowBlockType::WhileLoop, FlowBlockJoinPolicy::SubFlow, name),
+            base:      FlowBlockBase::new(FlowBlockType::WhileLoop, FlowBlockJoinPolicy::SubFlow, name, false),
             schematic: WhileSchematic::new(LoopMode::Sequential, cond_i),
             result:    None,
         }

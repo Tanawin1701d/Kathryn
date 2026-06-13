@@ -21,7 +21,7 @@ impl Default for FlowBlockDoWhile {
 impl FlowBlockDoWhile {
     pub fn new(name: &str, cond_i: HcpIdent) -> Self {
         Self {
-            base:      FlowBlockBase::new(FlowBlockType::DoWhile, FlowBlockJoinPolicy::SubFlow, name),
+            base:      FlowBlockBase::new(FlowBlockType::DoWhile, FlowBlockJoinPolicy::SubFlow, name, false),
             schematic: DoWhileSchematic::new(cond_i),
             result:    None,
         }

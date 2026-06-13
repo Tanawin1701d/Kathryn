@@ -24,7 +24,7 @@ impl Default for FlowBlockZeroSwitch {
 impl FlowBlockZeroSwitch {
     pub fn new(name: &str, state_i: HcpIdent) -> Self {
         Self {
-            base             : FlowBlockBase::new(FlowBlockType::ZeroSwitch, FlowBlockJoinPolicy::BasicNodeFlow, name),
+            base             : FlowBlockBase::new(FlowBlockType::ZeroSwitch, FlowBlockJoinPolicy::BasicNodeFlow, name, false),
             state_i,
             result_basic_node: None,
         }

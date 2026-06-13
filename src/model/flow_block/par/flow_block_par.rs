@@ -20,7 +20,7 @@ impl Default for FlowBlockPar {
 impl FlowBlockPar {
     pub fn new_auto_sync(name: &str) -> Self {
         Self {
-            base:      FlowBlockBase::new(FlowBlockType::Parallel, FlowBlockJoinPolicy::SubFlow, name),
+            base:      FlowBlockBase::new(FlowBlockType::Parallel, FlowBlockJoinPolicy::SubFlow, name, false),
             schematic: ParSchematic::new(ParSyncMode::AutoSync),
             result:    None,
         }
@@ -28,7 +28,7 @@ impl FlowBlockPar {
 
     pub fn new_no_sync(name: &str) -> Self {
         Self {
-            base:      FlowBlockBase::new(FlowBlockType::Parallel, FlowBlockJoinPolicy::SubFlow, name),
+            base:      FlowBlockBase::new(FlowBlockType::Parallel, FlowBlockJoinPolicy::SubFlow, name, false),
             schematic: ParSchematic::new(ParSyncMode::NoSync),
             result:    None,
         }
