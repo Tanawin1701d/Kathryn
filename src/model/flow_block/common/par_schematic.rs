@@ -83,13 +83,15 @@ impl ParSchematic {
                 &format!("par_state_{}", base.get_ident().get_global_id()),
             );
             arena.init_node_trigger(state_i, base.get_ext_trigger_node(), false);
+            base.add_sys_node(state_i);
+            self.basic_state_node_i = Some(state_i);
+            cycle_det.add_cycle(arena.get_node_cycle_used(&state_i));
+            arena.assign_ncp_node(state_i, true, false);
+            // assign slave asm node to it
             for asm_i in &basic_asm_nodes_i {
                 arena.add_depend_node_to_ncp(*asm_i, state_i, None);
                 arena.assign_asm_from_state_node(*asm_i);
             }
-            base.add_sys_node(state_i);
-            self.basic_state_node_i = Some(state_i);
-            cycle_det.add_cycle(arena.get_node_cycle_used(&state_i));
         }
 
         // Resolve each SubFlow sub-block into a NodeWrap so we have its

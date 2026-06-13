@@ -95,7 +95,18 @@ def _make_runner(simulator: str):
 
 
 def run_all(simulator: str = "icarus") -> None:
-    # Build + simulate every registered case. Each case writes its VCD under
+    _run_cases(pool(), simulator)
+
+
+def run_selected(names: list[str], simulator: str = "icarus") -> None:
+    cases = [tc for tc in pool() if tc.name in names]
+    if not cases:
+        raise RuntimeError(f"no registered cases matched: {names!r} — registered: {[tc.name for tc in pool()]}")
+    _run_cases(cases, simulator)
+
+
+def _run_cases(cases: list[TestCase], simulator: str) -> None:
+    # Build + simulate the given cases. Each case writes its VCD under
     # <OUT_ROOT>/<name>/sim_build/<toplevel>.vcd.
 
     # The sim subprocess imports both kathryn and the tc module — make both findable.
@@ -103,7 +114,6 @@ def run_all(simulator: str = "icarus") -> None:
     os.environ["PYTHONPATH"] = os.pathsep.join(
         p for p in (extra_path, os.environ.get("PYTHONPATH", "")) if p)
 
-    cases = pool()
     if not cases:
         raise RuntimeError("no test cases registered — import the tc* modules first")
 
@@ -135,8 +145,10 @@ def run_all(simulator: str = "icarus") -> None:
         )
 
 
-def discover_and_run(simulator: str = "icarus") -> None:
+def discover_and_run(simulator: str = "icarus", names: list[str] | None = None) -> None:
     # Import every tc*.py under test/model (registering each), then run the pool.
+    # If `names` is given, only simulate those cases (all are still imported so
+    # their @cocotb.test() coroutines are available to the sim subprocess).
     import importlib
     import sys
 
@@ -148,4 +160,7 @@ def discover_and_run(simulator: str = "icarus") -> None:
     for f in sorted(_MODEL.glob("tc*.py")):
         importlib.import_module(f.stem)
 
-    run_all(simulator)
+    if names:
+        run_selected(names, simulator)
+    else:
+        run_all(simulator)
