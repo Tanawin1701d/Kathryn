@@ -927,6 +927,21 @@ extension is built). Without maturin, `cargo build --features python` then copy
 `target/debug/libkathryn.so` → `py/kathryn/_kathryn.so` (the `PyInit__kathryn`
 symbol makes it importable as `kathryn._kathryn`).
 
+**Gotcha — copy to the ABI-tagged name, not just `_kathryn.so`.** If a previous
+maturin/`pip install` left an ABI-tagged extension in the package (e.g.
+`py/kathryn/_kathryn.cpython-313-x86_64-linux-gnu.so`), CPython loads *that* in
+preference to the bare `_kathryn.so`, so copying only to `_kathryn.so` silently
+runs the **stale** build. Overwrite the ABI-tagged file too (copy to both):
+
+```sh
+cargo build --features python
+cp target/debug/libkathryn.so py/kathryn/_kathryn.cpython-313-x86_64-linux-gnu.so   # the one actually loaded
+cp target/debug/libkathryn.so py/kathryn/_kathryn.so                                # fallback name
+```
+
+To see which file is actually imported: `PYTHONPATH=py python3 -c "import
+kathryn._kathryn as k; print(k.__file__)"`.
+
 **Model fix made for the DSL:** `HcpAssignable::gen_update_event`
 (`hcp_assign.rs`) now resolves a default/invalid `src_slice` to the source's full
 slice via `arena.get_hw_slice(&srci)` — mirroring how `des_slice` falls back to
