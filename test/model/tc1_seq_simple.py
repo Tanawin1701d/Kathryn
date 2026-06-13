@@ -42,7 +42,7 @@ def build(output_folder: str) -> None:
     reset()
     module = tc1_seq_simple()
     build_model(module)
-    #emit_verilog(output_folder)
+    emit_verilog(output_folder)
 
 
 # ---- simulation (cocotb) -----------------------------------------------------
@@ -52,19 +52,28 @@ async def check_seq(dut):
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
     dut.mrst.value = 1
-    await RisingEdge(dut.clk)
-    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)            # E1: start <= 1 (s0 held 0 by mrst)
+    await RisingEdge(dut.clk)            # E2: start stays 1 (s0 still held 0 by mrst)
     await Timer(1, unit="ns")
     dut.mrst.value = 0
 
-    # Sequence: start -> state0 (x<=48) -> state1 (y<=x). A handful of clocks
-    # is plenty; give margin then check the outputs settled.
-    for _ in range(8):
-        await RisingEdge(dut.clk)
+    # Sequence after mrst deasserts: E3 sets seq_state0, E4 latches x, E5 latches y.
+    # x/y have no reset, so they read X (uninitialized) until first latched —
+    # use `!= 48` (X-safe) for the "not yet" guards, not `== 0`.
+    await RisingEdge(dut.clk)            # E3: seq_state0 <= 1
     await Timer(1, unit="ns")
+    assert dut.my_x.value != 48, f"my_x latched too early = {dut.my_x.value!s}"
+    assert dut.my_y.value != 48, f"my_y latched too early = {dut.my_y.value!s}"
 
-    assert dut.my_x.value == 48, f"my_x = {int(dut.my_x.value)} (expected 48)"
-    assert dut.my_y.value == 48, f"my_y = {int(dut.my_y.value)} (expected 48)"
+    await RisingEdge(dut.clk)            # E4: x <= 48 — first cycle my_x is asserted
+    await Timer(1, unit="ns")
+    assert dut.my_x.value == 48, f"my_x at first assert = {dut.my_x.value!s} (expected 48)"
+    assert dut.my_y.value != 48, f"my_y latched too early = {dut.my_y.value!s}"
+
+    await RisingEdge(dut.clk)            # E5: y <= x — first cycle my_y is asserted
+    await Timer(1, unit="ns")
+    assert dut.my_y.value == 48, f"my_y at first assert = {dut.my_y.value!s} (expected 48)"
+    assert dut.my_x.value == 48, f"my_x held = {dut.my_x.value!s} (expected 48)"
 
 
 # ---- register into the shared pool ------------------------------------------

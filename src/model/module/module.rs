@@ -163,6 +163,10 @@ impl Module {
 
         // Start node, reset by the master-reset wire.
         let start_node_i = arena.make_start_node("start", mreset_i);
+        // Wire the start node's clock to the same top-level clk the flow blocks
+        // receive, so its state reg shares one clock net (else its clk is never set).
+        let clk_node_i = arena.make_opr_node("start_clk", clk_i);
+        arena.set_ncp_clk_node(start_node_i, clk_node_i);
         arena.assign_ncp_node(start_node_i, true, true);
         self.set_start_node(start_node_i);
 

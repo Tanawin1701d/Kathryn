@@ -102,6 +102,10 @@ impl ModelArena {
         self.get_ncp_node_mut(&ident).set_hold_node(hold);
     }
 
+    pub fn set_ncp_clk_node(&mut self, ident: NcpIdent, clk_i: NcpIdent) {
+        self.get_ncp_node_mut(&ident).set_clk_node(clk_i);
+    }
+
     pub fn init_node_trigger(&mut self, ident: NcpIdent, trigger: &NodeTrigger, with_int_start: bool) {
         self.get_ncp_node_mut(&ident).fill_ext_node(trigger, with_int_start);
     }

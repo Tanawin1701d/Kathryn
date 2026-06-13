@@ -99,13 +99,16 @@ pub fn fmt_operand(
 /// Content string for `always @(...)`.
 /// PosEdge → "posedge <clk>", NegEdge → "negedge <clk>", everything else → "*".
 /// `clk_name` is the per-module Verilog name of the event's clock source (resolved
-/// from `UpdatePool::get_clk_src_i`); it falls back to `"clk"` only if an edge mode
-/// somehow carries no source — every sub-module sees the clock via its own IoWire
-/// (e.g. `IO_IN_clk`), so the literal `"clk"` must never be assumed here.
+/// from `UpdatePool::get_clk_src_i`). There is **no** `"clk"` fallback: every
+/// clocked event sees its clock via its own IoWire (e.g. `IO_IN_clk`), so an edge
+/// mode with `clk_name == None` is a wiring bug and panics rather than guessing.
 pub fn sensitivity_list(clk_mode: ClockMode, clk_name: Option<&str>) -> String {
+    // No default clk: an edge mode with no resolved clk source is a wiring bug
+    // (e.g. a clocked HCP whose clk_node_i was never assigned) — fail loudly
+    // rather than silently emit a bare `clk` that may not be the right net.
     match clk_mode {
-        ClockMode::PosEdge => format!("posedge {}", clk_name.unwrap_or("clk")),
-        ClockMode::NegEdge => format!("negedge {}", clk_name.unwrap_or("clk")),
+        ClockMode::PosEdge => format!("posedge {}", clk_name.expect("sensitivity_list: PosEdge with no clk source")),
+        ClockMode::NegEdge => format!("negedge {}", clk_name.expect("sensitivity_list: NegEdge with no clk source")),
         _                  => "*".to_string(),
     }
 }

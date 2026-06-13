@@ -69,7 +69,12 @@ impl StateReg {
         // in source side, we also use get_des_slice because it is only 1 bit assignment
         let src_sl = Slice::new(0, 1);
 
-        let clk_src = self.get_clk_sig_i();
+        // A StateReg is always PosEdge (see retrieve_clk_mode), so its clk source
+        // must be wired by build time — a None here is an unassigned-clk wiring bug.
+        let clk_src = Some(
+            self.get_clk_sig_i()
+                .expect("StateReg::build_update_event: clk_sig_i not assigned"),
+        );
 
         // create the update event for the unset signal
         let ue = model_ar.make_ue_full(

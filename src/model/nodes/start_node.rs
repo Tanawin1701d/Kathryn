@@ -57,7 +57,11 @@ impl NcpNode for StartNode {
     fn assign_prelim(&mut self, _arena: &mut ModelArena) {}
 
     fn assign_final(&mut self, arena: &mut ModelArena) {
+        // to_trigger_sig carries the clk from this node's clk_node_i onto the reg;
+        // the rst is then added as the (set) depend node.
+        let sig    = self.to_trigger_sig(arena);
         let mut sr = arena.take_state_reg(self.state_reg_i);
+        sr.set_triggers(sig);
         sr.add_depend_node(self.rst_sig_i, None);
         sr.build_update_event(arena);
         arena.replace_back_state_reg(sr);
