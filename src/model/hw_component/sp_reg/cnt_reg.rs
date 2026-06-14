@@ -115,7 +115,7 @@ impl CntReg {
 
 
         let owner_name = self.get_global_name().to_string();
-        self.triggers.integrity_check(&owner_name, model_ar);
+        self.triggers.integrity_check(&owner_name, model_ar, Some(self.ident), self.get_des_slice().get_size());
 
         let cnt_val_sl = Slice::new(0, self.cnt_bit_sz);
 

@@ -22,12 +22,14 @@ class tc9_cdowhile(Module):
         self.x     = reg(8, "x")
         self.limit = val(8, 3, "limit")
         self.one   = val(8, 1, "one")
+        self.zero  = val(8, 0, "zero")
 
         self.x.mark_output("my_x")
 
     @flow
     def my_flow(self):
         with seq():
+            self.x |= self.zero
             with cdowhile(self.x < self.limit):
                 self.x |= self.x + self.one
 
@@ -52,11 +54,14 @@ async def check_cdowhile(dut):
     dut.mrst.value = 0
 
     # Body fires at least once; 3 iterations bring x from 0 to 3, then loop exits.
-    for _ in range(12):
+    for _ in range(2):
         await RisingEdge(dut.clk)
-    await Timer(1, unit="ns")
+    for i in range(1, 5):
+        await RisingEdge(dut.clk)
+        await Timer(1, unit="ns")
+        assert dut.my_x.value == i, f"my_x = {dut.my_x.value!s} (expected {i})"
 
-    assert dut.my_x.value == 4, f"my_x = {dut.my_x.value!s} (expected 4)"
+    await RisingEdge(dut.clk)
 
 
 # ---- register into the shared pool ------------------------------------------

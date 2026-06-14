@@ -33,14 +33,23 @@ impl TriggerSig {
         self.depend_sig_i.iter().copied()
     }
 
-    pub fn integrity_check(&self, owner_name: &str, arena: &ModelArena) {
+    // taken_ident / taken_size: the HCP the caller has taken from the arena and its
+    // known bit width. Signals matching taken_ident use taken_size instead of an
+    // arena lookup so the assertion still runs against the correct value.
+    pub fn integrity_check(
+        &self,
+        owner_name  : &str,
+        arena       : &ModelArena,
+        taken_ident : Option<HcpIdent>,
+        taken_size  : i32,
+    ) {
         for sig in [self.hold_sig_i, self.int_rst_sig_i, self.int_start_sig_i, self.mrst_sig_i, self.clk_sig_i].iter().flatten() {
-            check_ident_bit_size(sig, 1, owner_name, arena);
+            check_ident_bit_size(sig, 1, owner_name, arena, taken_ident, taken_size);
         }
         for (src, cond) in self.iter_depend_nodes() {
-            check_ident_bit_size(&src, 1, owner_name, arena);
+            check_ident_bit_size(&src, 1, owner_name, arena, taken_ident, taken_size);
             if let Some(c) = cond {
-                check_ident_bit_size(&c, 1, owner_name, arena);
+                check_ident_bit_size(&c, 1, owner_name, arena, taken_ident, taken_size);
             }
         }
     }
@@ -70,7 +79,13 @@ pub trait HasTriggerSig {
         self.get_triggers_mut().push_depend_node(srci, condi);
     }
 
-    fn check_all_sigs_1bit(&self, owner_name: &str, arena: &ModelArena) {
-        self.get_triggers().integrity_check(owner_name, arena);
+    fn check_all_sigs_1bit(
+        &self,
+        owner_name  : &str,
+        arena       : &ModelArena,
+        taken_ident : Option<HcpIdent>,
+        taken_size  : i32,
+    ) {
+        self.get_triggers().integrity_check(owner_name, arena, taken_ident, taken_size);
     }
 }

@@ -48,7 +48,10 @@ impl ModelArena {
     ) -> UpdateEventIdent {
         let cond_hcp = match (_cond_i, _state_i) {
             (Some(cond), Some(state)) => {
-                let expr = self.make_expression(false, "cond_dis_expr", LogicOp::BitwiseAnd, cond, state, None, None);
+                let expr = self.make_expression(false, "cond_dis_expr", LogicOp::BitwiseAnd,
+                                                cond, state,
+                                                Some(Slice::new(0, 1)),
+                                                Some(Slice::new(0, 1)));
                 Some(expr)
             },
             (Some(cond),  None      ) => Some(cond),

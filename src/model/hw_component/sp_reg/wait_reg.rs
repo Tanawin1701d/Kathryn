@@ -107,8 +107,9 @@ impl CondWaitStateReg {
     /// `build_support_signal` must be called first.
     pub fn build_update_event(&mut self, model_ar: &mut ModelArena) {
         let owner_name = self.get_global_name().to_string();
-        self.triggers.integrity_check(&owner_name, model_ar);
-        check_ident_bit_size(&self.cond_opr, 1, &owner_name, model_ar);
+        let taken_sz = self.get_des_slice().get_size();
+        self.triggers.integrity_check(&owner_name, model_ar, Some(self.ident), taken_sz);
+        check_ident_bit_size(&self.cond_opr, 1, &owner_name, model_ar, Some(self.ident), taken_sz);
 
         let up_state_i = self.up_state_i.expect("build_support_signal must be called first");
         let down_state_i = self.down_state_i.expect("build_support_signal must be called first");
@@ -387,7 +388,7 @@ impl CycleWaitStateReg {
     pub fn build_update_event(&mut self, model_ar: &mut ModelArena) {
         let cm = self.retrieve_clk_mode();
         let owner_name = self.get_global_name().to_string();
-        self.triggers.integrity_check(&owner_name, model_ar);
+        self.triggers.integrity_check(&owner_name, model_ar, Some(self.ident), self.get_des_slice().get_size());
 
         let idle_cnt_i = self.idle_cnt_i.expect("build_support_signal must be called first");
         let start_cnt_i = self.start_cnt_i.expect("build_support_signal must be called first");

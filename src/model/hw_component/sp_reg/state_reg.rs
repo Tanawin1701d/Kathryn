@@ -64,7 +64,7 @@ impl StateReg {
     pub fn build_update_event(&mut self, model_ar: &mut ModelArena) {
 
         let owner_name = self.get_global_name().to_string();
-        self.triggers.integrity_check(&owner_name, model_ar);
+        self.triggers.integrity_check(&owner_name, model_ar, Some(self.ident), self.get_des_slice().get_size());
 
         // in source side, we also use get_des_slice because it is only 1 bit assignment
         let src_sl = Slice::new(0, 1);

@@ -134,7 +134,7 @@ impl SyncReg {
     pub fn build_update_event(&mut self, model_ar: &mut ModelArena) {
 
         let owner_name = self.get_global_name().to_string();
-        self.triggers.integrity_check(&owner_name, model_ar);
+        self.triggers.integrity_check(&owner_name, model_ar, Some(self.ident), self.get_des_slice().get_size());
 
         let up_state_i        = self.up_state_i       .expect("build_support_signal must be called first");
         let down_full_state_i = self.down_full_state_i.expect("build_support_signal must be called first");
