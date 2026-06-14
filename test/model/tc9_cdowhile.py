@@ -56,7 +56,7 @@ async def check_cdowhile(dut):
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
 
-    assert dut.my_x.value == 3, f"my_x = {dut.my_x.value!s} (expected 3)"
+    assert dut.my_x.value == 4, f"my_x = {dut.my_x.value!s} (expected 4)"
 
 
 # ---- register into the shared pool ------------------------------------------
