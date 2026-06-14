@@ -98,7 +98,7 @@ impl CondWaitStateReg {
 
         let end_expr_i = model_ar.make_expression(
             false, &format!("{}_END_EXPR", name), LogicOp::BitwiseAnd, self.ident, self.cond_opr,
-            None, None,
+            Some(Slice::new(0, 1)), Some(self.cond_opr_sl),
         );
         self.end_expr_i = Some(end_expr_i);
     }
@@ -349,21 +349,23 @@ impl CycleWaitStateReg {
         };
         self.end_full_i = Some(end_full_i);
 
+        let self_sl = Slice::new(0, self.total_bit_size);
+
         let is_active_expr_i = model_ar.make_expression(
             false, &format!("{}_IS_ACTIVE", name), LogicOp::RelationNeq, self.ident, idle_cnt_i,
-            None, None,
+            Some(self_sl), Some(self_sl),
         );
         self.is_active_expr_i = Some(is_active_expr_i);
 
         let is_end_expr_i = model_ar.make_expression(
             false, &format!("{}_IS_END", name), LogicOp::RelationEq, self.ident, end_full_i,
-            None, None,
+            Some(self_sl), Some(self_sl),
         );
         self.is_end_expr_i = Some(is_end_expr_i);
 
         let is_not_end_expr_i = model_ar.make_expression(
             false, &format!("{}_IS_NOT_END", name), LogicOp::RelationNeq, self.ident, end_full_i,
-            None, None,
+            Some(self_sl), Some(self_sl),
         );
         self.is_not_end_expr_i = Some(is_not_end_expr_i);
 
@@ -375,7 +377,7 @@ impl CycleWaitStateReg {
 
         let inc_expr_i = model_ar.make_expression(
             false, &format!("{}_INC_EXPR", name), LogicOp::ArithPlus, self.ident, inc_step_i,
-            None, None,
+            Some(self_sl), Some(self_sl),
         );
         self.inc_expr_i = Some(inc_expr_i);
     }

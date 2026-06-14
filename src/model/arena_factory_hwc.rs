@@ -115,7 +115,7 @@ impl ModelArena {
     pub fn make_expression(&mut self, is_user_com: bool, name: &str, op: LogicOp, a: HcpIdent, b: HcpIdent, a_slice: Option<Slice>, b_slice: Option<Slice>) -> HcpIdent {
         let a_slice = a_slice.unwrap_or_else(|| Slice::new(0, self.get_hw_bit_sz(&a)));
         let b_slice = b_slice.unwrap_or_else(|| Slice::new(0, self.get_hw_bit_sz(&b)));
-        let i = self.add_expression(Expression::new(is_user_com, name, op, a, b, a_slice, b_slice, self));
+        let i = self.add_expression(Expression::new(is_user_com, name, op, a, b, a_slice, b_slice));
         self.stamp_hw_to_parent_module(i, is_user_com)
     }
     pub fn make_expression_empty(&mut self, is_user_com: bool, name: &str, bit_width: i32) -> HcpIdent {
@@ -126,14 +126,14 @@ impl ModelArena {
     /// Single-operand expression (unary ops: `BitwiseInvr`, `LogicalNot`).
     pub fn make_expression_single(&mut self, is_user_com: bool, name: &str, op: LogicOp, a: HcpIdent, a_slice: Option<Slice>) -> HcpIdent {
         let a_slice = a_slice.unwrap_or_else(|| Slice::new(0, self.get_hw_bit_sz(&a)));
-        let i = self.add_expression(Expression::new_single_operand(is_user_com, name, op, a, a_slice, self));
+        let i = self.add_expression(Expression::new_single_operand(is_user_com, name, op, a, a_slice));
         self.stamp_hw_to_parent_module(i, is_user_com)
     }
 
     /// Expression whose right operand is a literal `c` instead of a signal (e.g. `ExtendBit`).
     pub fn make_expression_constant(&mut self, is_user_com: bool, name: &str, op: LogicOp, a: HcpIdent, c: i32, a_slice: Option<Slice>) -> HcpIdent {
         let a_slice = a_slice.unwrap_or_else(|| Slice::new(0, self.get_hw_bit_sz(&a)));
-        let i = self.add_expression(Expression::new_with_const(is_user_com, name, op, a, c, a_slice, self));
+        let i = self.add_expression(Expression::new_with_const(is_user_com, name, op, a, c, a_slice));
         self.stamp_hw_to_parent_module(i, is_user_com)
     }
 }

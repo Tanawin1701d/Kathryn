@@ -104,10 +104,12 @@ impl SyncReg {
         let test_wire_i = model_ar.make_wire(false, &format!("{}_TEST_WIRE", name), size);
         self.test_wire_i = Some(test_wire_i);
 
+        let self_sl = Slice::new(0, size);
+
         // (self | testWire)
         let or_expr = model_ar.make_expression(
             false, &format!("{}_OR_TEST",      name), LogicOp::BitwiseOr,  self.ident,    test_wire_i,
-            None, None,
+            Some(self_sl), Some(self_sl),
         );
         // (self | testWire) == upFullState
         let end_expr = model_ar.make_expression(

@@ -38,8 +38,7 @@ impl Expression {
                a          : HcpIdent,
                b          : HcpIdent,
                a_slice    : Slice,
-               b_slice    : Slice,
-               model_arena: &ModelArena) -> Self {
+               b_slice    : Slice) -> Self {
 
         let bit_width = match op {
             // result 1 bit length
@@ -53,7 +52,7 @@ impl Expression {
             | LogicOp::RelationGeq
             | LogicOp::RelationSlt
             | LogicOp::RelationSgt => 1,
-            // result len(a) width length
+            // result is same width as a_slice
             LogicOp::BitwiseAnd
             | LogicOp::BitwiseOr
             | LogicOp::BitwiseXor
@@ -63,7 +62,7 @@ impl Expression {
             | LogicOp::ArithMinus
             | LogicOp::ArithMul
             | LogicOp::ArithDiv
-            | LogicOp::ArithDivr => model_arena.get_hw_bit_sz(&a),
+            | LogicOp::ArithDivr => a_slice.get_size(),
             // other not support for this constructor
             _ => panic!("Expression::new — unsupported op {:?} for this constructor", op),
         };
@@ -90,13 +89,12 @@ impl Expression {
                               name       : &str,
                               op         : LogicOp,
                               a          : HcpIdent,
-                              a_slice    : Slice,
-                              model_arena: &ModelArena) -> Self {
+                              a_slice    : Slice) -> Self {
         let bit_width = match op {
             // result 1 bit length
             LogicOp::LogicalNot  => 1,
-            // result len(a) width length
-            LogicOp::BitwiseInvr => model_arena.get_hw_bit_sz(&a),
+            // result is same width as a_slice
+            LogicOp::BitwiseInvr => a_slice.get_size(),
             // other not support for this constructor
             _ => panic!("Expression::new_single_operand — unsupported op {:?} for this constructor", op),
         };
@@ -121,8 +119,7 @@ impl Expression {
                           op          : LogicOp,
                           a           : HcpIdent,
                           c           : i32,
-                          a_slice     : Slice,
-                          model_arena : &ModelArena) -> Self {
+                          a_slice     : Slice) -> Self {
         let bit_width = match op {
             LogicOp::ExtendBit => c,
             _ => panic!("Expression::new_with_const — unsupported op {:?} for this constructor", op),

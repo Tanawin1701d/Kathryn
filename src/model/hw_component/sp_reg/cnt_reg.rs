@@ -91,9 +91,11 @@ impl CntReg {
         );
         self.zero_val = Some(zero_val);
 
+        let self_sl = Slice::new(0, self.cnt_bit_sz);
+
         // expression: self == last_cycle_val  (1-bit; true when counter is at last cycle)
         let at_last_expr = model_ar.make_expression(false, &format!("{}_AT_LAST", name),
-            LogicOp::RelationEq, self.ident, last_cycle_val, None, None);
+            LogicOp::RelationEq, self.ident, last_cycle_val, Some(self_sl), Some(self_sl));
         self.at_last_expr = Some(at_last_expr);
 
         // constant: inc_val (needed as the RHS of the add expression)
@@ -103,7 +105,7 @@ impl CntReg {
 
         // expression: self + inc_val  (next counter value)
         let inced_expr = model_ar.make_expression(false, &format!("{}_INC", name),
-                                                  LogicOp::ArithPlus, self.ident, inc_val_val, None, None,
+            LogicOp::ArithPlus, self.ident, inc_val_val, Some(self_sl), Some(self_sl),
         );
         self.inced_expr = Some(inced_expr);
     }
