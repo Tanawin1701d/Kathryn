@@ -7,13 +7,14 @@ use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
 use super::model_arena::PyModelArena;
 use super::flow_block::flow_block_ident_py::PyFlowBlockIdent;
+use crate::model::flow_block::BlockTrackStatus;
 
 #[pymethods]
 impl PyModelArena {
     // Open a flow block: push it onto the init stack so subsequent node/sub-block
     // construction attaches to it.
     fn initialize_flow_block(&mut self, block_i: PyFlowBlockIdent) {
-        self.arena.push_flow_block_init_stack(block_i.into());
+        self.arena.initialize_flow_block(block_i.into());
     }
 
     // Validate a flow block against the constraints its build would otherwise
@@ -27,7 +28,13 @@ impl PyModelArena {
     // Close the active flow block: pop it (asserting it matches `block_i`) and
     // attach it to the new stack top, or to the enclosing module if none.
     fn finalize_flow_block(&mut self, block_i: PyFlowBlockIdent) {
-        self.arena.finalize_flow_block(block_i.into());
+        self.arena.finalize_flow_block(block_i.into(),false);
+    }
+
+    // Finalize the whole module flow: assert the init stack is drained (0 or 1
+    // element) and retire any lingering lazy-closed chain master.
+    fn finalize_flow_procedure(&mut self) {
+        self.arena.finalize_flow_procedure();
     }
 
     // Type of the nearest enclosing skeleton block (seq/par) on the init stack,

@@ -45,10 +45,10 @@ pub struct FlowBlockBase {
 }
 
 impl FlowBlockBase {
-    pub fn new(block_type: FlowBlockType, join_policy: FlowBlockJoinPolicy, name: &str, lazy_untrack: bool) -> Self {
+    pub fn new(block_type: FlowBlockType, join_policy: FlowBlockJoinPolicy, name: &str, chain_master: bool) -> Self {
         Self {
             // identifier
-            ident            : FlowBlockIdent::new(block_type, join_policy, name, lazy_untrack),
+            ident            : FlowBlockIdent::new(block_type, join_policy, name, chain_master),
             // blocks
             sub_blocks_i     : Vec::new(),
             sub_block_orders : Vec::new(),

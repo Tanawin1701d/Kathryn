@@ -81,6 +81,7 @@ def gen_flow() -> None:
         _arena.track_module_at_flow_init(module_i)
         try:
             flow_fun()
+            _arena.finalize_flow_procedure()
         finally:
             _arena.untrack_module_at_flow_init(module_i)
 

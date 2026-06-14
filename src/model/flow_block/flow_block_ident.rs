@@ -12,6 +12,18 @@ pub enum FlowBlockJoinPolicy {
     BasicNodeFlow,
 }
 
+/// Tracking state of a flow block while it sits on the init stack.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BlockTrackStatus {
+    /// Block is active and still accepts new sub-blocks / nodes.
+    OpenForSubBlock,
+    /// Block has been logically closed but is kept on the stack so a following
+    /// chain branch (elif / else / zelif / zelse) can still attach to it.
+    LazyClosed,
+    /// Block is fully closed — no further attachment is allowed.
+    FullyClosed,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FlowBlockType {
     Sequential,
@@ -111,16 +123,16 @@ pub struct FlowBlockIdent {
     ident_base  : IdentBase,
     block_type  : FlowBlockType,
     join_policy : FlowBlockJoinPolicy,
-    lazy_untrack: bool,
+    chain_master: bool,
 }
 
 impl FlowBlockIdent {
-    pub fn new(block_type: FlowBlockType, join_policy: FlowBlockJoinPolicy, name: &str, lazy_untrack: bool) -> Self {
+    pub fn new(block_type: FlowBlockType, join_policy: FlowBlockJoinPolicy, name: &str, chain_master: bool) -> Self {
         let mut s = Self {
             ident_base: IdentBase::new(false),
             block_type,
             join_policy,
-            lazy_untrack,
+            chain_master,
         };
         s.ident_base.set_rel_name(name);
         let abs = s.build_unique_flow_block_name();
@@ -132,7 +144,7 @@ impl FlowBlockIdent {
     pub fn get_ident_base_mut (&mut self) -> &mut IdentBase      { &mut self.ident_base }
     pub fn get_block_type     (&self)     -> FlowBlockType        { self.block_type }
     pub fn get_join_policy    (&self)     -> FlowBlockJoinPolicy  { self.join_policy }
-    pub fn get_lazy_untrack   (&self)     -> bool                 { self.lazy_untrack }
+    pub fn get_chain_master   (&self)     -> bool                 { self.chain_master }
 
     pub fn build_unique_flow_block_name(&self) -> String {
         format!(

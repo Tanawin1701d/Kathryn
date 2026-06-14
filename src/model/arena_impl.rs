@@ -5,8 +5,8 @@ use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::module::module::Module;
 use crate::model::module::module_ident::ModuleIdent;
 use crate::model::nodes::ncp_ident::NcpIdent;
-use crate::model::flow_block::{FlowBlock, FlowBlockIdent, FlowBlockJoinPolicy, FlowBlockType};
-
+use crate::model::flow_block::{BlockTrackStatus, FlowBlock, FlowBlockIdent, FlowBlockJoinPolicy, FlowBlockType};
+use crate::model::flow_block::FlowBlockJoinPolicy::{ConFlow, SubFlow};
 // ---------------------------------------------------------------------------
 // ModelArena::new / reset live here. Per-category CRUD lives in:
 //   - arena_impl_hwc.rs        (hardware components: Reg/Wire/Val/.../sp_regs)
@@ -178,9 +178,11 @@ impl ModelArena {
     // -----------------------------------------------------------------------
     // Flow-block stack — tracks the active flow block during build traversal
     // -----------------------------------------------------------------------
-    pub fn push_flow_block_init_stack(&mut self, i: FlowBlockIdent) { self.flow_block_init_stack.push(i); }
-    pub fn pop_flow_block_init_stack (&mut self) -> FlowBlockIdent  { self.flow_block_init_stack.pop().expect("flow block stack is empty") }
-    pub fn peek_flow_block_init_stack(&self)     -> FlowBlockIdent  { *self.flow_block_init_stack.last().expect("flow block stack is empty") }
+    pub fn push_flow_block_init_stack(&mut self, i: FlowBlockIdent, status: BlockTrackStatus) { self.flow_block_init_stack.push((i, status)); }
+    pub fn pop_flow_block_init_stack (&mut self) -> FlowBlockIdent  { self.flow_block_init_stack.pop().expect("flow block stack is empty").0 }
+    pub fn peek_flow_block_init_stack(&self)     -> FlowBlockIdent  { self.flow_block_init_stack.last().expect("flow block stack is empty").0 }
+
+    pub fn peek_flow_block_init_status(&self)    -> BlockTrackStatus { self.flow_block_init_stack.last().expect("flow block stack is empty").1 }
 
     /// Walk the init stack from the top down and return the type of the most
     /// recent skeleton block (Sequential or Parallel). Cond / loop blocks are
@@ -189,7 +191,7 @@ impl ModelArena {
         self.flow_block_init_stack
             .iter()
             .rev()
-            .map        (|b| b.get_block_type())
+            .map        (|(b, _)| b.get_block_type())
             .find       (|t| matches!(t, FlowBlockType::Sequential | FlowBlockType::Parallel))
             .unwrap_or  (FlowBlockType::Parallel)
     }
@@ -207,36 +209,86 @@ impl ModelArena {
         res
     }
 
+    pub fn try_clean_lazy_closed_in_flow_block_stack(&mut self){
+        // a lazy-closed chain master lingers on the stack only to catch a following
+        // continuation branch; once the caller knows none will follow it retires it.
+        if !self.flow_block_init_stack.is_empty()
+            && self.peek_flow_block_init_status() == BlockTrackStatus::LazyClosed {
+            self.finalize_flow_block(self.peek_flow_block_init_stack(), false);
+        }
+    }
+
+    pub fn initialize_flow_block(&mut self, fb_ident: FlowBlockIdent) {
+
+        if fb_ident.get_join_policy() != ConFlow {
+            self.try_clean_lazy_closed_in_flow_block_stack()
+        }
+        self.push_flow_block_init_stack(fb_ident, BlockTrackStatus::OpenForSubBlock);
+
+    }
+
     /// Pop the top flow block, assert it matches `expected`, then attach it:
     /// - to the new stack top as a sub-flow-block, if the stack is non-empty, or
     /// - to the module on the trace stack (must be in FlowBlockInit stage) as a top flow block.
-    pub fn finalize_flow_block(&mut self, expected: FlowBlockIdent) {
-        let popped = self.pop_flow_block_init_stack();
-        assert_eq!(popped, expected, "finalize_flow_block: ident mismatch — wrong block finalized");
+    pub fn finalize_flow_block(&mut self, expected: FlowBlockIdent, is_recur: bool) {
 
-        if let Some(&parent_i) = self.flow_block_init_stack.last() {
-            match popped.get_join_policy() {
+        // The only legal mismatch is a single lazy-closed chain master lingering above
+        // `expected` (its continuation chain ended without a trailing sibling). The model
+        // constraint that a conditional always wraps a seq sub-block guarantees no two
+        // chain masters are ever adjacent, so one recursion level always resolves it.
+        if self.peek_flow_block_init_stack() != expected {
+            assert!(!is_recur, "finalize_flow_block: recursive finalize must not mismatch the expected block");
+            self.finalize_flow_block(self.peek_flow_block_init_stack(), true);
+        }
+
+        let popped_status = self.peek_flow_block_init_status();
+        let popped_fb = self.pop_flow_block_init_stack();
+        assert_eq!(popped_fb, expected, "finalize_flow_block: ident mismatch — wrong block finalized");
+
+        // a chain master that is still open keeps lingering on the stack (now lazy-closed)
+        // so a following continuation branch can attach to it; defer its real finalize.
+        if popped_status == BlockTrackStatus::OpenForSubBlock && popped_fb.get_chain_master() {
+            self.push_flow_block_init_stack(popped_fb, BlockTrackStatus::LazyClosed);
+            return;
+        }
+
+        // right now it is not open for sub block or not chain master
+        if let Some(&(parent_i, _)) = self.flow_block_init_stack.last() {
+            match popped_fb.get_join_policy() {
                 FlowBlockJoinPolicy::SubFlow | FlowBlockJoinPolicy::BasicNodeFlow =>
-                    self.add_sub_flow_block_to_flow_block(parent_i, popped),
+                    self.add_sub_flow_block_to_flow_block(parent_i, popped_fb),
                 FlowBlockJoinPolicy::ConFlow =>
-                    self.add_con_flow_block_to_flow_block(parent_i, popped),
+                    self.add_con_flow_block_to_flow_block(parent_i, popped_fb),
             }
         } else {
             let (module_i, stage) = self.peek_module_trace_stack();
             assert_eq!(stage, ModuleInitStage::FlowBlockInit,
                        "finalize_flow_block: expected FlowBlockInit stage on module trace stack, got {:?}", stage);
             let mut m = self.take_module(module_i);
-            m.add_top_flow_block(popped);
+            m.add_top_flow_block(popped_fb);
             self.replace_back_module(module_i, m);
         }
     }
 
+    /// used when we want to finalize all flow in the module's flow
+    pub fn finalize_flow_procedure(&mut self) {
+        assert!(self.flow_block_init_stack.len() <= 1,
+                "finalize_flow_procedure: flow block stack must have 0 or 1 element, got {}",
+                self.flow_block_init_stack.len());
+        // the only legal leftover is a lingering lazy-closed chain master; a still-open
+        // block here means an unbalanced flow that try_clean would silently drop.
+        assert!(self.flow_block_init_stack.is_empty()
+                || self.peek_flow_block_init_status() == BlockTrackStatus::LazyClosed,
+                "finalize_flow_procedure: leftover flow block must be lazy-closed, not still open");
+        self.try_clean_lazy_closed_in_flow_block_stack();
+    }
 
 
     /// Attach a basic node to wherever the build is currently pointing: the active
     /// flow block on top of the init stack, or the top module if no block is building.
     pub fn attach_basic_node_to_current_scope(&mut self, node_i: NcpIdent) {
-        if let Some(&block_i) = self.flow_block_init_stack.last() {
+        self.try_clean_lazy_closed_in_flow_block_stack();
+        if let Some(&(block_i, _)) = self.flow_block_init_stack.last() {
             self.add_node_to_flow_block(block_i, node_i);
         } else {
             self.add_basic_node_to_top_module(node_i);

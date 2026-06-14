@@ -21,7 +21,7 @@ use crate::model::nodes::wait_node::{WaitCondNode, WaitCycleNode};
 use crate::model::module::module::Module;
 use crate::model::module::module_ident::ModuleIdent;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
-use crate::model::flow_block::FlowBlockIdent;
+use crate::model::flow_block::{BlockTrackStatus, FlowBlockIdent};
 use crate::model::flow_block::par::flow_block_par::FlowBlockPar;
 use crate::model::flow_block::seq::flow_block_seq::FlowBlockSeq;
 use crate::model::flow_block::cond::flow_block_cond::FlowBlockCond;
@@ -81,7 +81,7 @@ pub struct ModelArena {
     pub(super) top_module              : Option<ModuleIdent>,
     pub(super) module_trace_stack      : Vec<(ModuleIdent, ModuleInitStage)>, // (module, stage) during init traversal
     pub(super) hcp_pending_buffer      : Vec<(HcpIdent, bool)>,               // buffered HCPs during FlowBlockBuild (bool = is_user_hw)
-    pub(super) flow_block_init_stack   : Vec<FlowBlockIdent>, // tracks active flow block during build traversal
+    pub(super) flow_block_init_stack   : Vec<(FlowBlockIdent, BlockTrackStatus)>, // tracks active flow block + its track status during build traversal
 
     // flow-block arenas
     pub(super) flow_block_seqs             : ArenaGroup<FlowBlockSeq>,
