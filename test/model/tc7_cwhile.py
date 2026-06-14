@@ -20,6 +20,7 @@ class tc7_cwhile(Module):
     @init
     def com_declare(self):
         self.x     = reg(8, "x")
+        self.zero  = val(8, 0, "zero")
         self.limit = val(8, 3, "limit")
         self.one   = val(8, 1, "one")
 
@@ -28,6 +29,8 @@ class tc7_cwhile(Module):
     @flow
     def my_flow(self):
         with seq():
+            self.x |= self.zero
+            self.x |= self.zero
             with cwhile(self.x < self.limit):
                 self.x |= self.x + self.one
 
@@ -52,11 +55,15 @@ async def check_cwhile(dut):
     dut.mrst.value = 0
 
     # Give enough cycles for 3 iterations plus margin.
-    for _ in range(12):
+    for _ in range(3):
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
+    assert dut.my_x.value == 0, f"my_x = {dut.my_x.value!s}"
 
-    assert dut.my_x.value == 3, f"my_x = {dut.my_x.value!s} (expected 3)"
+    for i in range(1, 5):
+        await RisingEdge(dut.clk)
+        await Timer(1, unit="ns")
+        assert dut.my_x.value == i, f"my_x = {dut.my_x.value!s} (expected {i})"
 
 
 # ---- register into the shared pool ------------------------------------------
