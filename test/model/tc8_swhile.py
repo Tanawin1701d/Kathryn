@@ -1,5 +1,5 @@
-# tc8 — sequential while: same body as tc7 but condition is sampled sequentially
-# (one extra clock per iteration vs cwhile). Same final value, different timing.
+# tc8 — sequential while: two explicit x=0 resets then x incremented while x < 3.
+# swhile samples condition sequentially (one extra clock per iteration vs cwhile).
 
 from __future__ import annotations
 
@@ -20,6 +20,7 @@ class tc8_swhile(Module):
     @init
     def com_declare(self):
         self.x     = reg(8, "x")
+        self.zero  = val(8, 0, "zero")
         self.limit = val(8, 3, "limit")
         self.one   = val(8, 1, "one")
 
@@ -28,6 +29,8 @@ class tc8_swhile(Module):
     @flow
     def my_flow(self):
         with seq():
+            self.x |= self.zero
+            self.x |= self.zero
             with swhile(self.x < self.limit):
                 self.x |= self.x + self.one
 
@@ -51,12 +54,18 @@ async def check_swhile(dut):
     await Timer(1, unit="ns")
     dut.mrst.value = 0
 
-    # swhile costs one extra clock per iteration vs cwhile — give extra margin.
-    for _ in range(16):
+    # E3-E5: seq advances through two x<=0 resets; x stays 0.
+    for _ in range(3):
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
+    assert dut.my_x.value == 0, f"my_x = {dut.my_x.value!s}"
 
-    assert dut.my_x.value == 3, f"my_x = {dut.my_x.value!s} (expected 3)"
+    # swhile: condition sampled sequentially → 2 clocks per iteration.
+    for i in range(1, 5):
+        await RisingEdge(dut.clk)
+        await RisingEdge(dut.clk)
+        await Timer(1, unit="ns")
+        assert dut.my_x.value == i, f"my_x = {dut.my_x.value!s} (expected {i})"
 
 
 # ---- register into the shared pool ------------------------------------------
