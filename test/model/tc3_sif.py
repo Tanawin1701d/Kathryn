@@ -80,6 +80,8 @@ async def check_sif_taken(dut):
     await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
     assert dut.my_x.value == 42, f"my_x = {dut.my_x.value!s} (expected 42)"
+    await RisingEdge(dut.clk)
+
 
 
 @cocotb.test()
@@ -113,6 +115,8 @@ async def check_sif_not_taken(dut):
     await Timer(1, unit="ns")
     assert dut.my_x.value == 48, f"my_x = {dut.my_x.value!s} (expected 48)"
     assert dut.my_x.value == 48, f"my_x = {dut.my_x.value!s} (expected 48)"
+    await RisingEdge(dut.clk)
+
 
 # ---- register into the shared pool ------------------------------------------
 cocotb_pool.register(NAME, build, __name__)

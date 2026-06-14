@@ -5,8 +5,8 @@
 #
 #   PYTHONPATH=py .venv/bin/python test/run_cocotb.py [simulator [tc_name ...]]
 #
-# `simulator` defaults to "icarus" (iverilog). VCDs land in
-# test/.model_output/<case>/sim_build/.
+# `simulator` defaults to "icarus" (iverilog). One VCD per `@cocotb.test()`
+# coroutine lands in test/.model_output/<case>/<testcase>.vcd.
 #
 # Examples:
 #   python test/run_cocotb.py                         # run all

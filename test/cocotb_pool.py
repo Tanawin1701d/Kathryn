@@ -11,7 +11,9 @@ from __future__ import annotations
 
 import os
 import re
+import shutil
 import pathlib
+import importlib
 from dataclasses import dataclass
 from typing import Callable
 
@@ -85,6 +87,17 @@ def _toplevel_from_verilog(top_v: pathlib.Path) -> str:
     return m.group(1)
 
 
+def _discover_testcases(test_module: str) -> list[str]:
+    # A `@cocotb.test()`-decorated coroutine becomes a `cocotb._decorators.Test`
+    # instance carrying a `.name`. Return those names in definition order so each
+    # can be simulated on its own and dump a separate VCD.
+    from cocotb._decorators import Test
+
+    mod   = importlib.import_module(test_module)
+    tests = [obj for obj in vars(mod).values() if isinstance(obj, Test)]
+    return [t.name for t in tests]
+
+
 def _make_runner(simulator: str):
     # icarus is the default; we use a VCD-emitting subclass (cocotb 2.x defaults
     # icarus waves to FST). Any other simulator falls back to cocotb's stock runner.
@@ -106,8 +119,9 @@ def run_selected(names: list[str], simulator: str = "icarus") -> None:
 
 
 def _run_cases(cases: list[TestCase], simulator: str) -> None:
-    # Build + simulate the given cases. Each case writes its VCD under
-    # <OUT_ROOT>/<name>/sim_build/<toplevel>.vcd.
+    # Build + simulate the given cases. A tc module may hold several
+    # `@cocotb.test()` coroutines; each is simulated in its own run so it dumps
+    # its own VCD under <OUT_ROOT>/<name>/<testcase>.vcd.
 
     # The sim subprocess imports both kathryn and the tc module — make both findable.
     extra_path = os.pathsep.join([str(_PY_DIR), str(_MODEL)])
@@ -126,23 +140,34 @@ def _run_cases(cases: list[TestCase], simulator: str) -> None:
         sources  = sorted(str(p) for p in out.glob("*.v"))
         toplevel = _toplevel_from_verilog(out / "top.v")
 
-        # 2. cocotb runner: compile + simulate, waves=True → VCD.
+        # 2. cocotb runner: compile once, then simulate each testcase separately so
+        #    every coroutine produces its own VCD (one shared sim would overwrite it).
         runner = _make_runner(simulator)
+        build_dir = out / "sim_build"
         runner.build(
             verilog_sources = sources,
             hdl_toplevel    = toplevel,
-            build_dir       = str(out / "sim_build"),
+            build_dir       = str(build_dir),
             always          = True,
             waves           = True,
             timescale       = ("1ns", "1ps"),
         )
-        runner.test(
-            hdl_toplevel = toplevel,
-            test_module  = tc.test_module,
-            build_dir    = str(out / "sim_build"),
-            waves        = True,
-            timescale    = ("1ns", "1ps"),
-        )
+
+        testcases = _discover_testcases(tc.test_module)
+        for testcase in testcases:
+            runner.test(
+                hdl_toplevel = toplevel,
+                test_module  = tc.test_module,
+                testcase     = testcase,
+                build_dir    = str(build_dir),
+                waves        = True,
+                timescale    = ("1ns", "1ps"),
+            )
+            # The dump path is baked into the compiled sim, so each run rewrites the
+            # same VCD; copy it out under the testcase name before the next run.
+            produced = build_dir / f"{toplevel}.vcd"
+            if produced.exists():
+                shutil.copyfile(produced, out / f"{testcase}.vcd")
 
 
 def discover_and_run(simulator: str = "icarus", names: list[str] | None = None) -> None:
