@@ -4,7 +4,7 @@
 import pytest
 import kathryn as k
 from kathryn import (
-    reset, set_top, reg, wire, val, io_wire, mem_blk, mem_ele,
+    reset, set_top, reg, wire, val, mem_blk, mem_ele,
     seq, sif, expr,
     Module, init, flow, gen_flow, build_flow,
 )
@@ -30,9 +30,9 @@ def test_hw_constructors_and_types():
     idx = val(4, 0)
     ele = mem_ele(blk, idx, 8, True)          # read element
     assert ele.global_id > 0
-    src = reg(8)
-    iow = io_wire(True, src, src)
-    assert iow.hw_type == "IO_WIRE"
+    iow = wire(1)
+    iow.mark_input("test_in")
+    assert iow.is_io
 
 
 def test_optional_names_autogenerate():

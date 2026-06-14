@@ -45,7 +45,9 @@ impl AssignMeta {
     /// Set the clock source on `input_event_i`.  No-op if input_event_i is None
     /// (complex-assignment path where no single basic UE was recorded).
     /// Panics via assert_clk_src_consistent if clk_src conflicts with the UE's clock mode.
-    pub fn set_clk_src(&mut self, clk_src: HcpIdent, arena: &mut ModelArena) {
+    pub fn try_set_clk_src(&mut self, clk_src: HcpIdent, arena: &mut ModelArena) {
+
+        if !matches!(self.clk_mode, ClockMode::PosEdge | ClockMode::NegEdge) { return; }
         if let Some(ue_i) = self.input_event_i {
             let mut ue = arena.take_ue(ue_i);
             ue.set_clk_src_i(Some(clk_src));

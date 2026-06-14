@@ -23,21 +23,6 @@ impl PyModelArena {
         self.arena.make_wire(true, name, bit_width).into()
     }
 
-    // ---- IoWire -------------------------------------------------------------
-
-    // Declare a user IO wire bound to `actual_src_i`, driven by `agent_src_i`.
-    fn mk_io_wire(
-        &mut self,
-        name        : &str,
-        is_input    : bool,
-        actual_src_i: PyHcpIdent,
-        agent_src_i : PyHcpIdent,
-    ) -> PyHcpIdent {
-        self.arena
-            .make_io_wire(true, name, is_input, actual_src_i.into(), agent_src_i.into())
-            .into()
-    }
-
     // ---- Val ----------------------------------------------------------------
 
     // Declare a user constant value (≤64 bits) with literal `init_val`.

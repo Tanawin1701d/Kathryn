@@ -7,7 +7,7 @@ from . import _session                                          # creates the si
 from ._kathryn import LogicOp, FlowBlockType, Slice, HcpIdent, FlowBlockIdent, ModuleIdent, BackendVerilog
 from ._session import arena, reset, gen_flow, build_flow, build_model, emit_verilog
 from .signal import SignalRef, expr
-from .hw_component import reg, wire, val, io_wire, mem_blk, mem_ele
+from .hw_component import reg, wire, val, mem_blk, mem_ele
 from .flow_block import (
     seq, par, par_auto, par_no_sync,
     cif, sif, cselif, cselse,
@@ -24,7 +24,7 @@ __all__ = [
     "BackendVerilog",
     # signals
     "SignalRef", "expr",
-    "reg", "wire", "val", "io_wire", "mem_blk", "mem_ele",
+    "reg", "wire", "val", "mem_blk", "mem_ele",
     # flow blocks
     "seq", "par", "par_auto", "par_no_sync",
     "cif", "sif", "cselif", "cselse",

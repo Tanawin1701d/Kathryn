@@ -1,5 +1,5 @@
-# tc5 — zero-cycle if: wire x driven combinationally when cond_in is high.
-# zif holds no state — x reflects src_val the very cycle cond_in goes high.
+# tc5 — zero-cycle if: wires x and y driven combinationally based on conditions.
+# zif holds no state — outputs reflect src values the very cycle conditions go high.
 
 from __future__ import annotations
 
@@ -19,17 +19,27 @@ NAME = "tc5_zif"
 class tc5_zif(Module):
     @init
     def com_declare(self):
-        self.x        = wire(8, "x")
-        self.cond_in  = io_wire(1, True,  "cond_in")
-        self.src_val  = val(8, 99, "src_val")
+        self.x         = wire(8, "x")
+        self.y         = wire(8, "y")
+        self.cond_in   = wire(1, "cond")
+        self.cond_in2  = wire(1, "cond_in2")
+        self.src_val   = val (8, 24, "src_val")
+        self.src_val2  = val (8, 48, "src_val2")
+
+        self.cond_in .mark_input("cond_in")
+        self.cond_in2.mark_input("cond_in2")
 
         self.x.mark_output("my_x")
+        self.y.mark_output("my_y")
 
     @flow
     def my_flow(self):
         with seq():
             with zif(self.cond_in):
-                self.x *= self.src_val   # *= is combinational assign for wire
+                self.x *= self.src_val
+            with zelif(self.cond_in2):
+                self.x *= self.src_val2
+                self.y *= self.src_val2
 
 
 # ---- build -------------------------------------------------------------------
@@ -42,34 +52,69 @@ def build(output_folder: str) -> None:
 
 # ---- simulation (cocotb) -----------------------------------------------------
 @cocotb.test()
-async def check_zif(dut):
+async def check_zif_taken(dut):
+    # zif branch: cond_in=1 -> x reflects 24 combinationally; drop -> x stops.
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
-    dut.mrst.value    = 1
-    dut.cond_in.value = 0
+    dut.mrst.value     = 1
+    dut.cond_in .value = 1
+    dut.cond_in2.value = 0
     await RisingEdge(dut.clk)            # E1
     await RisingEdge(dut.clk)            # E2
     await Timer(1, unit="ns")
     dut.mrst.value = 0
 
-    # Give the sequence a few cycles to settle past start state.
-    for _ in range(4):
-        await RisingEdge(dut.clk)
-    await Timer(1, unit="ns")
-    assert dut.my_x.value != 99, f"my_x driven while cond_in=0: {dut.my_x.value!s}"
-
-    # Drive cond_in high; zif is combinational so x should reflect src_val
-    # within the same delta, visible 1ns after the next rising edge.
-    dut.cond_in.value = 1
+    # Settle past start state with no conditions active.
     await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_x.value == 99, f"my_x = {dut.my_x.value!s} (expected 99)"
+    assert dut.my_x.value == 24, f"my_x is not set to correct value: {dut.my_x.value!s}"
+    assert dut.my_y.value != 48, f"my_y should not be set"
+    await RisingEdge(dut.clk)
 
-    # Drop cond_in — x should stop being 99 immediately.
-    dut.cond_in.value = 0
+
+@cocotb.test()
+async def check_zif_not_taken(dut):
+    # Neither branch active: outputs stay at default (0) the whole time.
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+
+    dut.mrst.value     = 1
+    dut.cond_in .value = 0
+    dut.cond_in2.value = 0
+    await RisingEdge(dut.clk)
     await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_x.value != 99, f"my_x still 99 after cond_in=0: {dut.my_x.value!s}"
+    dut.mrst.value = 0
+
+    # Settle past start state with no conditions active.
+    await RisingEdge(dut.clk)
+    await Timer(1, unit="ns")
+    assert dut.my_x.value != 24, f"my_x should not be set"
+    assert dut.my_y.value != 48, f"my_y should not be set"
+    await RisingEdge(dut.clk)
+
+
+
+@cocotb.test()
+async def check_zelif_taken(dut):
+    # zelif branch: cond_in=0, cond_in2=1 -> x and y reflect 48 combinationally.
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+
+    dut.mrst.value     = 1
+    dut.cond_in .value = 0
+    dut.cond_in2.value = 1
+    await RisingEdge(dut.clk)            # E1
+    await RisingEdge(dut.clk)            # E2
+    await Timer(1, unit="ns")
+    dut.mrst.value = 0
+
+    # Settle past start state with no conditions active.
+    await RisingEdge(dut.clk)
+    await Timer(1, unit="ns")
+    assert dut.my_x.value == 48, f"my_x is not set to correct value: {dut.my_x.value!s}"
+    assert dut.my_y.value == 48, f"my_y should not be set"
+    await RisingEdge(dut.clk)
+
+
 
 
 # ---- register into the shared pool ------------------------------------------

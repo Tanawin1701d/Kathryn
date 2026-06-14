@@ -67,7 +67,7 @@ impl AsmNode {
         // downstream UEs reference as their clock source.
         let clk_src = arena.get_node_exit_opr(&clk_node_i);
         for am in &mut self.asm_metas {
-            am.set_clk_src(clk_src, arena);
+            am.try_set_clk_src(clk_src, arena);
         }
     }
 

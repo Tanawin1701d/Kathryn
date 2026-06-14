@@ -164,7 +164,7 @@ class SignalRef:
 
     def __imul__(self, src: SignalRef) -> Union[SignalRef, _Assigned]:
         if self._clocked is not False:
-            raise TypeError("`*=` (combinational assign) requires a wire / io_wire destination")
+            raise TypeError("`*=` (combinational assign) requires a wire destination")
         return self._do_assign(src)
 
     def __setitem__(self, key: SliceKey, value: Union[SignalRef, _Assigned]) -> None:

@@ -35,21 +35,6 @@ class val(SignalRef):
         super().__init__(ident)  # constant: not assignable (read-only ident)
 
 
-class io_wire(SignalRef):
-    __slots__ = ()
-    def __init__(
-        self,
-        is_input  : bool,
-        actual_src: SignalRef,
-        agent_src : SignalRef,
-        name      : Optional[str] = None,
-    ) -> None:
-        name  = name or _session.auto_name("io_wire")
-        ident = _session.arena().mk_io_wire(
-            name, bool(is_input), to_ref(actual_src)._ident, to_ref(agent_src)._ident)
-        super().__init__(ident)
-
-
 class mem_blk(SignalRef):
     __slots__ = ()
     def __init__(self, bit_width: int, index_width: int, name: Optional[str] = None) -> None:
