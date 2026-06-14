@@ -54,14 +54,19 @@ class _FlowBlockCtx:
             return False
         arena = _session.arena()
 
-        # automatic subblock check and finalize
-        if self._inner_i is not None:
-            arena.check_flow_block_prefinalize(self._inner_i)
-            arena.finalize_flow_block(self._inner_i)
+        # finalize first, then check: finalize_flow_block folds in any lingering
+        # lazy-closed child (a trailing if/elif chain) via its recursion, so the
+        # block is complete when validated instead of appearing empty. Finalize only
+        # attaches (no build), so it never panics on the constraint we are checking.
 
-        # main block check and finalize
-        arena.check_flow_block_prefinalize(self._ident)
+        # automatic subblock finalize and check
+        if self._inner_i is not None:
+            arena.finalize_flow_block(self._inner_i)
+            arena.check_flow_block_prefinalize(self._inner_i)
+
+        # main block finalize and check
         arena.finalize_flow_block(self._ident)
+        arena.check_flow_block_prefinalize(self._ident)
         return False
 
 

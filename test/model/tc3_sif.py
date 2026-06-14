@@ -37,7 +37,7 @@ class tc3_sif(Module):
         with seq():
             with sif(self.cond_in):
                 self.x |= self.val_42
-            with cselif(self.cond_in):
+            with cselif(self.cond_in2):
                 with par():
                     self.x |= self.val_48
                     self.y |= self.val_48
