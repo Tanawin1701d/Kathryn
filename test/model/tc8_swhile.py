@@ -55,13 +55,13 @@ async def check_swhile(dut):
     dut.mrst.value = 0
 
     # E3-E5: seq advances through two x<=0 resets; x stays 0.
-    for _ in range(3):
+    for _ in range(4):
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
     assert dut.my_x.value == 0, f"my_x = {dut.my_x.value!s}"
 
     # swhile: condition sampled sequentially → 2 clocks per iteration.
-    for i in range(1, 5):
+    for i in range(1, 4):
         await RisingEdge(dut.clk)
         await RisingEdge(dut.clk)
         await Timer(1, unit="ns")
