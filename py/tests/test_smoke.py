@@ -1,12 +1,17 @@
 # Smoke tests for the Kathryn Python DSL. Each test resets the singleton arena
 # first for isolation. Run with: pytest py/tests  (after `maturin develop`).
 
+import os
+import tempfile
+
 import pytest
 import kathryn as k
 from kathryn import (
     reset, set_top, reg, wire, val, mem_blk, mem_ele,
-    seq, sif, expr,
-    Module, init, flow, gen_flow, build_flow,
+    seq, sif, par, expr,
+    Module, init, flow, gen_flow, build_flow, emit_verilog,
+    priority, set_priority, set_priority_auto, get_priority, get_priority_mode,
+    DEFAULT_UE_PRI_USER, DEFAULT_UE_PRI_RST, DEFAULT_UE_PRI_MIN,
 )
 
 
@@ -174,6 +179,70 @@ def test_class_module_phase_inheritance_runs_base_first():
 
     derived()
     assert order == ["base", "derived"]       # inherited @init runs before derived
+
+
+def test_asm_priority_constants_exposed():
+    # The DEFAULT_UE_PRI_* constants are sourced straight from the host consts.
+    assert DEFAULT_UE_PRI_USER == 10
+    assert DEFAULT_UE_PRI_RST  == 2147483647
+    assert DEFAULT_UE_PRI_MIN  == 0
+
+
+def test_asm_priority_get_set_and_scope():
+    # Default mode is Auto at the host's user priority.
+    set_priority_auto()
+    assert get_priority_mode() == "Auto"
+    assert get_priority()      == DEFAULT_UE_PRI_USER
+
+    # Manual setter pins the value.
+    set_priority(77)
+    assert get_priority_mode() == "Manual"
+    assert get_priority()      == 77
+
+    # The context manager overrides then restores the previous mode/value.
+    with priority(123):
+        assert get_priority_mode() == "Manual"
+        assert get_priority()      == 123
+    assert get_priority_mode() == "Manual"     # restored to the manual 77
+    assert get_priority()      == 77
+
+    set_priority_auto()                          # leave the global clean for others
+    assert get_priority_mode() == "Auto"
+
+
+def test_par_same_reg_different_priority_orders_writes():
+    # Two parallel writes to the SAME register, each at a different priority. The
+    # higher-priority write must be emitted LAST inside the reg's always block, so
+    # under non-blocking semantics it dominates the lower-priority one.
+    reset()
+
+    class worker(Module):
+        @flow
+        def f(self):
+            r       = reg(8)            # REG_reg0  — the shared destination
+            hi, lo  = wire(8), wire(8)  # WIRE_wire0 (hi-pri src), WIRE_wire1 (lo-pri src)
+            with par():
+                with priority(100):
+                    r |= hi
+                with priority(50):
+                    r |= lo
+
+    set_top(worker())
+    gen_flow()
+    build_flow()
+
+    out_dir = tempfile.mkdtemp()
+    emit_verilog(out_dir, "top")       # destructive: moves the arena out
+    text = open(os.path.join(out_dir, "top.v")).read()
+
+    # Both assignments target the same reg; the priority-100 source (wire0) must
+    # appear after the priority-50 source (wire1) so the higher priority wins.
+    reg_writes = [ln for ln in text.splitlines() if "REG_reg0" in ln and "<=" in ln]
+    assert len(reg_writes) == 2
+    assert "WIRE_wire1" in reg_writes[0]   # priority 50 first
+    assert "WIRE_wire0" in reg_writes[1]   # priority 100 last (dominates)
+
+    set_priority_auto()                     # reset global state for later tests
 
 
 def test_build_flow_runs_end_to_end():

@@ -27,11 +27,12 @@ def auto_name(prefix: str) -> str:
 
 
 def _set_top(module: Module) -> Module:
-    # Register a user-built `Module` (see module.py) as the design's top, then
-    # re-open its scope so subsequent top-level components / flow blocks attach to
-    # it. The module's `@init` hardware is declared by its own constructor; this
-    # only records its ident as top (the build DFS starts there) and keeps the
-    # top scope active. Call once, after constructing the top Module.
+    # Register a user-built `Module` (see module.py) as the design's top. This only
+    # records its ident as top (the build DFS starts there); it does NOT re-open a
+    # module scope. All hardware/flow must be declared inside the Module's own
+    # `@init` / `@flow` methods — a bare top-level declaration outside a class has no
+    # open module on the trace stack and is meant to panic. Call once, after
+    # constructing the top Module.
     top_i = module.ident
     a     = arena()
     a.set_top_module(top_i)

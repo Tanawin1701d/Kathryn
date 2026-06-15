@@ -860,9 +860,12 @@ operation routes through one process-wide `ModelArena`.
   module is explicit**: no top is created at import or by `reset()`; the user
   builds a `Module` and registers it via `set_top(module)` (public entry in
   `module.py`, delegating to the private `_session._set_top`), which calls
-  `set_top_module` and re-opens the top's `com_init` scope so top-level
-  components / flow blocks attach to it. Also holds the `arena()` accessor,
-  `reset()`, the per-prefix auto-name counter, `gen_flow()`, and `build_flow()`.
+  `set_top_module` only — it records the top ident but does **not** re-open a
+  module scope. All hardware/flow must be declared inside the top `Module`'s own
+  `@init` / `@flow` methods; a bare top-level declaration outside a class finds no
+  open module on the trace stack and **panics by design**. Also holds the
+  `arena()` accessor, `reset()`, the per-prefix auto-name counter, `gen_flow()`,
+  and `build_flow()`.
 - `signal.py` — `SignalRef` (ident + optional `Slice`) with operator overloading:
   binary `+ - * / % & | ^ << >> < <= > >= == !=` → `mk_expression`; unary `~` →
   `mk_expression_single`; `.land/.lor/.lnot/.slt/.sgt/.extend` for ops with no

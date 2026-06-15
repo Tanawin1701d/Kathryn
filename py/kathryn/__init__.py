@@ -17,6 +17,13 @@ from .flow_block import (
     scwait, sywait,
 )
 from .module import Module, init, flow, set_top
+from . import priority as _priority
+from .priority import (
+    priority, set_priority, set_priority_auto, get_priority, get_priority_mode,
+)
+# Re-export every UE-priority constant by the name list the Rust source publishes,
+# so the constants stay in lockstep with the host with nothing hardcoded here.
+globals().update({n: getattr(_priority, n) for n in _priority.PRIORITY_CONST_NAMES})
 
 __all__ = [
     # rust enums / idents
@@ -36,4 +43,7 @@ __all__ = [
     # module scope + session
     "Module", "init", "flow", "arena", "reset",
     "gen_flow", "build_flow", "build_model", "set_top", "emit_verilog",
+    # asm-node priority
+    "priority", "set_priority", "set_priority_auto", "get_priority", "get_priority_mode",
+    *_priority.PRIORITY_CONST_NAMES,
 ]

@@ -12,3 +12,4 @@ pub mod arena_impl_flow_block_py;
 pub mod module;
 pub mod arena_factory_module_py;
 pub mod arena_impl_module_py;
+pub mod controller;

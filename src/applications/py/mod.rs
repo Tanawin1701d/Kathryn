@@ -13,6 +13,7 @@ use model::hw_component::common::hcp_ident_py::PyHcpIdent;
 use model::hw_component::common::slice_py::PySlice;
 use model::flow_block::flow_block_ident_py::PyFlowBlockIdent;
 use model::module::module_ident_py::PyModuleIdent;
+use model::controller::asm_mode_py::add_asm_priority_consts;
 use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::flow_block::FlowBlockType;
 
@@ -64,5 +65,6 @@ fn _kathryn(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyBackendVerilog>()?;
     add_logic_op_enum(m)?;
     add_flow_block_type_enum(m)?;
+    add_asm_priority_consts(m)?;
     Ok(())
 }

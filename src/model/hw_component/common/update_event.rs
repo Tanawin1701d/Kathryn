@@ -1,9 +1,27 @@
-pub const DEFAULT_UE_PRI_USER          : i32 = 10;
-pub const DEFAULT_UE_PRI_INTERNAL_MAX  : i32 = 100;
-pub const DEFAULT_UE_PRI_INTERNAL_MIN  : i32 = 50;
-pub const DEFAULT_UE_PRI_RST           : i32 = i32::MAX;
-pub const DEFAULT_UE_PRI_MIN           : i32 = 0;
-pub const DEFAULT_UE_SUB_PRIORITY_USER : u64 = 0;
+// Single source of truth for the UE-priority constants. The macro both DEFINES
+// each `pub const` and emits `asm_priority_consts()` — a (name, value) table the
+// Python binding walks verbatim, so adding a row here auto-propagates the name
+// and value to Python with zero duplicated lists.
+macro_rules! define_asm_priority_consts {
+    ( $( $name:ident : $ty:ty = $val:expr ),* $(,)? ) => {
+        $( pub const $name : $ty = $val; )*
+
+        // (name, value) view used by the Python layer to register module-level
+        // attributes. Values widen to i64 (all current priorities fit).
+        pub fn asm_priority_consts() -> &'static [(&'static str, i64)] {
+            &[ $( (stringify!($name), $name as i64) ),* ]
+        }
+    };
+}
+
+define_asm_priority_consts! {
+    DEFAULT_UE_PRI_USER          : i32 = 10,
+    DEFAULT_UE_PRI_INTERNAL_MAX  : i32 = 100,
+    DEFAULT_UE_PRI_INTERNAL_MIN  : i32 = 50,
+    DEFAULT_UE_PRI_RST           : i32 = i32::MAX,
+    DEFAULT_UE_PRI_MIN           : i32 = 0,
+    DEFAULT_UE_SUB_PRIORITY_USER : u64 = 0,
+}
 
 use std::collections::{HashMap, HashSet};
 use crate::model::common::identifier::{IdentBase, Identifiable};
