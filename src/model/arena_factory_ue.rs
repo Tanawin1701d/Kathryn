@@ -51,7 +51,7 @@ impl ModelArena {
                 let expr = self.make_expression(false, "cond_dis_expr", LogicOp::BitwiseAnd,
                                                 cond, state,
                                                 Some(Slice::new(0, 1)),
-                                                Some(Slice::new(0, 1)));
+                                                Some(Slice::new(0, 1)));   // it is lock to (0, 1)
                 Some(expr)
             },
             (Some(cond),  None      ) => Some(cond),
