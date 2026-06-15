@@ -93,16 +93,23 @@ def par        (name: Optional[str] = None) -> _FlowBlockCtx: return _block("par
 def par_auto   (name: Optional[str] = None) -> _FlowBlockCtx: return _block("par", _session.arena().mk_flow_block_par_auto,    name)
 def par_no_sync(name: Optional[str] = None) -> _FlowBlockCtx: return _block("par", _session.arena().mk_flow_block_par_no_sync, name)
 
+# Thread a condition signal through as (ident, slice): a sliced SignalRef (e.g.
+# cond[3, 0]) carries the partial range, which the host wraps in a SliceBit
+# expression when it doesn't cover the whole variable.
+def _cond_args(cond: SignalRef) -> tuple:
+    r = to_ref(cond)
+    return (r._ident, r._slice)
+
 # ---- conditional (combinational / sequential if-elif-else) ------------------
 # Complex blocks — an inner skeleton (seq/par) is auto-opened (is_req_auto_sub_blk).
-def cif   (cond: SignalRef, name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cif",    _session.arena().mk_flow_block_cif,    name, to_ref(cond)._ident)
-def sif   (cond: SignalRef, name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("sif",    _session.arena().mk_flow_block_sif,    name, to_ref(cond)._ident)
-def cselif(cond: SignalRef, name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cselif", _session.arena().mk_flow_block_cselif, name, to_ref(cond)._ident)
+def cif   (cond: SignalRef, name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cif",    _session.arena().mk_flow_block_cif,    name, *_cond_args(cond))
+def sif   (cond: SignalRef, name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("sif",    _session.arena().mk_flow_block_sif,    name, *_cond_args(cond))
+def cselif(cond: SignalRef, name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cselif", _session.arena().mk_flow_block_cselif, name, *_cond_args(cond))
 def cselse(                 name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cselse", _session.arena().mk_flow_block_cselse, name)
 
 # ---- zero-cycle conditional -------------------------------------------------
-def zif   (cond: SignalRef, name: Optional[str] = None) -> _FlowBlockCtx: return _block("zif",   _session.arena().mk_flow_block_zif,   name, to_ref(cond)._ident)
-def zelif (cond: SignalRef, name: Optional[str] = None) -> _FlowBlockCtx: return _block("zelif", _session.arena().mk_flow_block_zelif, name, to_ref(cond)._ident)
+def zif   (cond: SignalRef, name: Optional[str] = None) -> _FlowBlockCtx: return _block("zif",   _session.arena().mk_flow_block_zif,   name, *_cond_args(cond))
+def zelif (cond: SignalRef, name: Optional[str] = None) -> _FlowBlockCtx: return _block("zelif", _session.arena().mk_flow_block_zelif, name, *_cond_args(cond))
 def zelse (                 name: Optional[str] = None) -> _FlowBlockCtx: return _block("zelse", _session.arena().mk_flow_block_zelse, name)
 
 # ---- zero-cycle switch ------------------------------------------------------
@@ -110,7 +117,7 @@ def zstate(state: SignalRef,   name: Optional[str] = None) -> _FlowBlockCtx: ret
 def zcase (match_val: int,     name: Optional[str] = None) -> _FlowBlockCtx: return _block("zcase",  _session.arena().mk_flow_block_zcase,  name, int(match_val))
 
 # ---- loops (complex blocks — inner skeleton auto-opened) --------------------
-def cwhile  (cond: SignalRef,      name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cwhile",   _session.arena().mk_flow_block_cwhile,       name, to_ref(cond)._ident)
-def swhile  (cond: SignalRef,      name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("swhile",   _session.arena().mk_flow_block_swhile,       name, to_ref(cond)._ident)
-def cdowhile(cond: SignalRef,      name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cdowhile", _session.arena().mk_flow_block_do_while,     name, to_ref(cond)._ident)
+def cwhile  (cond: SignalRef,      name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cwhile",   _session.arena().mk_flow_block_cwhile,       name, *_cond_args(cond))
+def swhile  (cond: SignalRef,      name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("swhile",   _session.arena().mk_flow_block_swhile,       name, *_cond_args(cond))
+def cdowhile(cond: SignalRef,      name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cdowhile", _session.arena().mk_flow_block_do_while,     name, *_cond_args(cond))
 def cloop   (last_loop_cnt: int,   name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cloop",    _session.arena().mk_flow_block_counter_loop, name, int(last_loop_cnt))

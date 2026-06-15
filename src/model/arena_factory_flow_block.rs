@@ -7,9 +7,32 @@ use crate::model::flow_block::{
     FlowBlockWhile, FlowBlockDoWhile, FlowBlockCounterLoop,
 };
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
+use crate::model::hw_component::common::operation::LogicOp;
+use crate::model::hw_component::common::slice::Slice;
 use crate::model::model_arena::ModelArena;
 
 impl ModelArena {
+    // ---- cond-slice resolution ----------------------------------------------
+
+    /// True when `slice` covers the entire bit-width of HW component `ident`.
+    /// A default/invalid slice ({-1,-1}) is treated as "entire".
+    pub fn is_slice_cover_entire_hw(&self, ident: &HcpIdent, slice: &Slice) -> bool {
+        if !slice.check_valid_slice() { return true; }   // default {-1,-1} = whole signal
+        slice.is_contain(&self.get_hw_slice(ident))
+    }
+
+    /// Resolve a `(cond_i, slice)` pair to the signal a flow block should gate on.
+    /// When `slice` covers `cond_i` entirely (or is absent), `cond_i` is used as-is;
+    /// a partial slice is wrapped in a `SliceBit` expression `cond_i[slice]` so the
+    /// block gates on exactly the requested bits.
+    fn resolve_cond_slice(&mut self, name: &str, cond_i: HcpIdent, cond_slice: Option<Slice>) -> HcpIdent {
+        match cond_slice {
+            Some(s) if !self.is_slice_cover_entire_hw(&cond_i, &s) =>
+                self.make_expression_single(false, &format!("{name}_CONDSLICE"), LogicOp::SliceBit, cond_i, Some(s)),
+            _ => cond_i,
+        }
+    }
+
     // ---- seq ----------------------------------------------------------------
 
     pub fn make_flow_block_seq(&mut self, name: &str) -> FlowBlockIdent {
@@ -31,21 +54,24 @@ impl ModelArena {
 
     // ---- cond: CIF ----------------------------------------------------------
 
-    pub fn make_flow_block_cif(&mut self, name: &str, cond_i: HcpIdent) -> FlowBlockIdent {
+    pub fn make_flow_block_cif(&mut self, name: &str, cond_i: HcpIdent, cond_slice: Option<Slice>) -> FlowBlockIdent {
+        let cond_i = self.resolve_cond_slice(name, cond_i, cond_slice);
         let i = self.add_flow_block_cond(FlowBlockCond::new_cif(name, cond_i));
         i
     }
 
     // ---- cond: SIF ----------------------------------------------------------
 
-    pub fn make_flow_block_sif(&mut self, name: &str, cond_i: HcpIdent) -> FlowBlockIdent {
+    pub fn make_flow_block_sif(&mut self, name: &str, cond_i: HcpIdent, cond_slice: Option<Slice>) -> FlowBlockIdent {
+        let cond_i = self.resolve_cond_slice(name, cond_i, cond_slice);
         let i = self.add_flow_block_cond(FlowBlockCond::new_sif(name, cond_i));
         i
     }
 
     // ---- cond_elif: CSELIF --------------------------------------------------
 
-    pub fn make_flow_block_cselif(&mut self, name: &str, cond_i: HcpIdent) -> FlowBlockIdent {
+    pub fn make_flow_block_cselif(&mut self, name: &str, cond_i: HcpIdent, cond_slice: Option<Slice>) -> FlowBlockIdent {
+        let cond_i = self.resolve_cond_slice(name, cond_i, cond_slice);
         let i = self.add_flow_block_cond_elif(FlowBlockCondElif::new_elif(name, cond_i));
         i
     }
@@ -59,14 +85,16 @@ impl ModelArena {
 
     // ---- zero_cond_if: ZIF --------------------------------------------------
 
-    pub fn make_flow_block_zif(&mut self, name: &str, cond_i: HcpIdent) -> FlowBlockIdent {
+    pub fn make_flow_block_zif(&mut self, name: &str, cond_i: HcpIdent, cond_slice: Option<Slice>) -> FlowBlockIdent {
+        let cond_i = self.resolve_cond_slice(name, cond_i, cond_slice);
         let i = self.add_flow_block_zero_cond_if(FlowBlockZeroCondIf::new(name, cond_i));
         i
     }
 
     // ---- zero_cond_elif: ZELIF ----------------------------------------------
 
-    pub fn make_flow_block_zelif(&mut self, name: &str, cond_i: HcpIdent) -> FlowBlockIdent {
+    pub fn make_flow_block_zelif(&mut self, name: &str, cond_i: HcpIdent, cond_slice: Option<Slice>) -> FlowBlockIdent {
+        let cond_i = self.resolve_cond_slice(name, cond_i, cond_slice);
         let i = self.add_flow_block_zero_cond_elif(FlowBlockZeroCondElif::new_zelif(name, cond_i));
         i
     }
@@ -94,21 +122,24 @@ impl ModelArena {
 
     // ---- while: CWHILE ------------------------------------------------------
 
-    pub fn make_flow_block_cwhile(&mut self, name: &str, cond_i: HcpIdent) -> FlowBlockIdent {
+    pub fn make_flow_block_cwhile(&mut self, name: &str, cond_i: HcpIdent, cond_slice: Option<Slice>) -> FlowBlockIdent {
+        let cond_i = self.resolve_cond_slice(name, cond_i, cond_slice);
         let i = self.add_flow_block_while(FlowBlockWhile::new_cwhile(name, cond_i));
         i
     }
 
     // ---- while: SWHILE ------------------------------------------------------
 
-    pub fn make_flow_block_swhile(&mut self, name: &str, cond_i: HcpIdent) -> FlowBlockIdent {
+    pub fn make_flow_block_swhile(&mut self, name: &str, cond_i: HcpIdent, cond_slice: Option<Slice>) -> FlowBlockIdent {
+        let cond_i = self.resolve_cond_slice(name, cond_i, cond_slice);
         let i = self.add_flow_block_while(FlowBlockWhile::new_swhile(name, cond_i));
         i
     }
 
     // ---- do_while -----------------------------------------------------------
 
-    pub fn make_flow_block_do_while(&mut self, name: &str, cond_i: HcpIdent) -> FlowBlockIdent {
+    pub fn make_flow_block_do_while(&mut self, name: &str, cond_i: HcpIdent, cond_slice: Option<Slice>) -> FlowBlockIdent {
+        let cond_i = self.resolve_cond_slice(name, cond_i, cond_slice);
         let i = self.add_flow_block_do_while(FlowBlockDoWhile::new(name, cond_i));
         i
     }
