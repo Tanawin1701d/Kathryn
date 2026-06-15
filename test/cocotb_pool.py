@@ -182,7 +182,13 @@ def discover_and_run(simulator: str = "icarus", names: list[str] | None = None) 
     if str(_PY_DIR) not in sys.path:
         sys.path.insert(0, str(_PY_DIR))
 
-    for f in sorted(_MODEL.glob("tc*.py")):
+    # Natural sort: order by the numeric index in `tcN_...` so tc2 precedes tc10
+    # (plain lexicographic sort would yield tc1, tc10, tc2, ...).
+    def _tc_index(f: pathlib.Path) -> tuple[int, str]:
+        m = re.match(r"tc(\d+)", f.stem)
+        return (int(m.group(1)) if m else 1 << 30, f.stem)
+
+    for f in sorted(_MODEL.glob("tc*.py"), key=_tc_index):
         importlib.import_module(f.stem)
 
     if names:

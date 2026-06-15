@@ -30,6 +30,7 @@ pub enum LogicOp {
     ArithDiv,    // /
     ArithDivr,   // %
     ExtendBit,   // bit extender
+    SliceBit,    // a[slice] bit/slice selector (single operand)
     // assign
     Assign,      // =
     // other
@@ -62,6 +63,7 @@ impl LogicOp {
             LogicOp::ArithDiv    => "/",
             LogicOp::ArithDivr   => "%",
             LogicOp::ExtendBit   => "ext",
+            LogicOp::SliceBit    => "slice",
             LogicOp::Assign      => "=",
             LogicOp::Dummy       => "DUMMYOP",
         }
@@ -94,6 +96,7 @@ impl LogicOp {
             LogicOp::ArithDiv    => "ArithDiv",
             LogicOp::ArithDivr   => "ArithDivr",
             LogicOp::ExtendBit   => "ExtendBit",
+            LogicOp::SliceBit    => "SliceBit",
             LogicOp::Assign      => "Assign",
             LogicOp::Dummy       => "Dummy",
         }
@@ -127,15 +130,16 @@ impl LogicOp {
             20 => LogicOp::ArithDiv,
             21 => LogicOp::ArithDivr,
             22 => LogicOp::ExtendBit,
-            23 => LogicOp::Assign,
-            24 => LogicOp::Dummy,
+            23 => LogicOp::SliceBit,
+            24 => LogicOp::Assign,
+            25 => LogicOp::Dummy,
             _  => return None,
         };
         Some(op)
     }
 
     pub fn is_single_opr(self) -> bool {
-        matches!(self, LogicOp::Assign | LogicOp::BitwiseInvr | LogicOp::LogicalNot)
+        matches!(self, LogicOp::Assign | LogicOp::BitwiseInvr | LogicOp::LogicalNot | LogicOp::SliceBit)
     }
 
     pub fn is_double_opr(self) -> bool {

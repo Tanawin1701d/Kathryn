@@ -32,7 +32,8 @@ impl HcpBaseVb for Expression {
         let rhs = match self.get_op() {
 
             // ---- wire-through: no operator token ----
-            LogicOp::Assign => a_str,
+            // SliceBit emits `a[slice]`; fmt_operand already appended the slice to a_str.
+            LogicOp::Assign | LogicOp::SliceBit => a_str,
 
             // ---- prefix unary: ~a, !a ----
             op if op.is_single_opr() => {

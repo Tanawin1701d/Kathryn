@@ -83,7 +83,7 @@ impl Expression {
 
 
 
-    /// Expression with a single operand (unary ops: `BitwiseInvr`, `LogicalNot`).
+    /// Expression with a single operand (unary ops: `BitwiseInvr`, `LogicalNot`, `SliceBit`).
     /// `operand_b` and `operand_c` stay None.
     pub fn new_single_operand(is_user_com: bool,
                               name       : &str,
@@ -95,6 +95,7 @@ impl Expression {
             LogicOp::LogicalNot  => 1,
             // result is same width as a_slice
             LogicOp::BitwiseInvr => a_slice.get_size(),
+            LogicOp::SliceBit    => a_slice.get_size(),
             // other not support for this constructor
             _ => panic!("Expression::new_single_operand — unsupported op {:?} for this constructor", op),
         };
