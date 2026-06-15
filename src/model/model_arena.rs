@@ -33,6 +33,7 @@ use crate::model::flow_block::cond::flow_block_zero_switch_case::FlowBlockZeroSw
 use crate::model::flow_block::loops::flow_block_while::FlowBlockWhile;
 use crate::model::flow_block::loops::flow_block_do_while::FlowBlockDoWhile;
 use crate::model::flow_block::loops::flow_block_counter_loop::FlowBlockCounterLoop;
+use crate::model::flow_block::wait::flow_block_wait::FlowBlockWait;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ModuleInitStage {
@@ -95,6 +96,7 @@ pub struct ModelArena {
     pub(super) flow_block_whiles           : ArenaGroup<FlowBlockWhile>,
     pub(super) flow_block_do_whiles        : ArenaGroup<FlowBlockDoWhile>,
     pub(super) flow_block_counter_loops    : ArenaGroup<FlowBlockCounterLoop>,
+    pub(super) flow_block_waits            : ArenaGroup<FlowBlockWait>,
 
 
 }

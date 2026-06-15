@@ -14,6 +14,7 @@ from .flow_block import (
     zif, zelif, zelse,
     zstate, zcase,
     cwhile, swhile, cdowhile, cloop,
+    scwait, sywait,
 )
 from .module import Module, init, flow, set_top
 
@@ -31,6 +32,7 @@ __all__ = [
     "zif", "zelif", "zelse",
     "zstate", "zcase",
     "cwhile", "swhile", "cdowhile", "cloop",
+    "scwait", "sywait",
     # module scope + session
     "Module", "init", "flow", "arena", "reset",
     "gen_flow", "build_flow", "build_model", "set_top", "emit_verilog",

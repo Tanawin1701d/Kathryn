@@ -5,13 +5,15 @@ pub mod seq;
 pub mod par;
 pub mod cond;
 pub mod loops;
+pub mod wait;
 pub mod node_wrap;
 
-pub use common::{CondMode, LoopMode, ParSyncMode};
+pub use common::{CondMode, LoopMode, ParSyncMode, WaitMode};
 pub use flow_block_base::{FlowBlock, FlowBlockBase, ExtSigType};
 pub use flow_block_ident::{BlockTrackStatus, FlowBlockIdent, FlowBlockJoinPolicy, FlowBlockType};
 pub use seq::FlowBlockSeq;
 pub use par::FlowBlockPar;
 pub use cond::{FlowBlockCond, FlowBlockCondElif, FlowBlockZeroCondIf, FlowBlockZeroCondElif, FlowBlockZeroSwitch, FlowBlockZeroSwitchCase};
 pub use loops::{FlowBlockWhile, FlowBlockDoWhile, FlowBlockCounterLoop};
+pub use wait::FlowBlockWait;
 pub use node_wrap::{NodeWrap, NodeWrapCycleDet};

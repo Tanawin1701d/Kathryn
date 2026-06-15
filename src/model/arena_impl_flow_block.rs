@@ -6,6 +6,7 @@ use crate::model::flow_block::{
     FlowBlockZeroCondIf, FlowBlockZeroCondElif,
     FlowBlockZeroSwitch, FlowBlockZeroSwitchCase,
     FlowBlockWhile, FlowBlockDoWhile, FlowBlockCounterLoop,
+    FlowBlockWait,
 };
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::model_arena::ModelArena;
@@ -199,6 +200,23 @@ impl ModelArena {
         self.flow_block_counter_loops.replace_back(h, block);
     }
 
+    // --- wait (SCWAIT / SYWAIT) ---
+
+    pub fn add_flow_block_wait(&mut self, block: FlowBlockWait) -> FlowBlockIdent {
+        let h = self.flow_block_waits.insert(block);
+        self.flow_block_waits.get(h).get_base().get_ident()
+    }
+
+    pub fn take_flow_block_wait(&mut self, ident: FlowBlockIdent) -> FlowBlockWait {
+        assert_eq!(ident.get_block_type(), FlowBlockType::Wait);
+        self.flow_block_waits.take(*ident.get_arena_handle())
+    }
+
+    pub fn replace_back_flow_block_wait(&mut self, block: FlowBlockWait) {
+        let h = *block.get_arena_handle();
+        self.flow_block_waits.replace_back(h, block);
+    }
+
     // --- polymorphic take / replace / get ---
 
     pub fn take_flow_block(&mut self, ident: FlowBlockIdent) -> Box<dyn FlowBlock> {
@@ -214,6 +232,7 @@ impl ModelArena {
             FlowBlockType::WhileLoop      => Box::new(self.take_flow_block_while            (ident)),
             FlowBlockType::DoWhile        => Box::new(self.take_flow_block_do_while         (ident)),
             FlowBlockType::CounterLoop    => Box::new(self.take_flow_block_counter_loop     (ident)),
+            FlowBlockType::Wait           => Box::new(self.take_flow_block_wait             (ident)),
         }
     }
 

@@ -5,6 +5,7 @@ use crate::model::flow_block::{
     FlowBlockZeroCondIf, FlowBlockZeroCondElif,
     FlowBlockZeroSwitch, FlowBlockZeroSwitchCase,
     FlowBlockWhile, FlowBlockDoWhile, FlowBlockCounterLoop,
+    FlowBlockWait,
 };
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::operation::LogicOp;
@@ -148,6 +149,26 @@ impl ModelArena {
 
     pub fn make_flow_block_counter_loop(&mut self, name: &str, last_loop_cnt: i32) -> FlowBlockIdent {
         let i = self.add_flow_block_counter_loop(FlowBlockCounterLoop::new(name, last_loop_cnt));
+        i
+    }
+
+    // ---- wait: SCWAIT -------------------------------------------------------
+
+    // Stall the flow until `cond_i[cond_slice]` fires (WaitCondNode). The slice
+    // is passed straight to the wait node — the cond-wait register slices the
+    // condition natively, so no SliceBit expression is needed here. Defaults to
+    // the whole variable when no slice is given.
+    pub fn make_flow_block_scwait(&mut self, name: &str, cond_i: HcpIdent, cond_slice: Option<Slice>) -> FlowBlockIdent {
+        let cond_sl = cond_slice.unwrap_or_else(|| Slice::new(0, self.get_hw_bit_sz(&cond_i)));
+        let i = self.add_flow_block_wait(FlowBlockWait::new_cond_wait(name, cond_i, cond_sl));
+        i
+    }
+
+    // ---- wait: SYWAIT -------------------------------------------------------
+
+    // Stall the flow for a fixed `cycle` clock count (WaitCycleNode).
+    pub fn make_flow_block_sywait(&mut self, name: &str, cycle: i32) -> FlowBlockIdent {
+        let i = self.add_flow_block_wait(FlowBlockWait::new_cycle_wait(name, cycle));
         i
     }
 }

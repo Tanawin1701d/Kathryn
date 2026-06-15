@@ -96,6 +96,13 @@ impl CondWaitStateReg {
         let down_state_i = model_ar.make_val(false, &format!("{}_DOWN_STATE", name), 1, 0);
         self.down_state_i = Some(down_state_i);
 
+        // self == up_state — the "still waiting" guard reused by the unset UE.
+        let self_is_up_i = model_ar.make_expression(
+            false, &format!("{}_SELF_IS_UP", name), LogicOp::RelationEq, self.ident, up_state_i,
+            Some(Slice::new(0, 1)), Some(Slice::new(0, 1)),
+        );
+        self.self_is_up_i = Some(self_is_up_i);
+
         let end_expr_i = model_ar.make_expression(
             false, &format!("{}_END_EXPR", name), LogicOp::BitwiseAnd, self.ident, self.cond_opr,
             Some(Slice::new(0, 1)), Some(self.cond_opr_sl),
@@ -182,7 +189,7 @@ impl HcpAssignable for CondWaitStateReg {
     fn get_hcp_assign    (&self)     -> &    HcpAssign { &self.assign }
     fn get_hcp_assign_mut(&mut self) -> &mut HcpAssign { &mut self.assign }
 
-    fn retrieve_clk_mode(&self) -> ClockMode { ClockMode::ClkFree }
+    fn retrieve_clk_mode(&self) -> ClockMode { ClockMode::PosEdge }
     fn get_des_slice    (&self) -> Slice     { Slice::new(0, 1) }
     fn get_priority     (&self) -> i32       { DEFAULT_UE_PRI_INTERNAL_MIN }
 
@@ -473,7 +480,7 @@ impl HcpAssignable for CycleWaitStateReg {
     fn get_hcp_assign    (&self)     -> &    HcpAssign { &self.assign }
     fn get_hcp_assign_mut(&mut self) -> &mut HcpAssign { &mut self.assign }
 
-    fn retrieve_clk_mode(&self) -> ClockMode { ClockMode::ClkFree }
+    fn retrieve_clk_mode(&self) -> ClockMode { ClockMode::PosEdge }
     fn get_des_slice    (&self) -> Slice     { Slice::new(0, self.total_bit_size) }
     fn get_priority     (&self) -> i32       { DEFAULT_UE_PRI_INTERNAL_MIN }
 

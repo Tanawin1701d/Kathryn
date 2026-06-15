@@ -171,4 +171,24 @@ impl PyModelArena {
     fn mk_flow_block_counter_loop(&mut self, name: &str, last_loop_cnt: i32) -> PyFlowBlockIdent {
         self.arena.make_flow_block_counter_loop(name, last_loop_cnt).into()
     }
+
+    // ---- wait: SCWAIT / SYWAIT ----------------------------------------------
+
+    // Stall until `cond_i[cond_slice]` fires. The condition must resolve to one
+    // bit (same check as the cond blocks); the slice is handled natively by the
+    // wait register, not via a SliceBit expression.
+    #[pyo3(signature = (name, cond_i, cond_slice=None))]
+    fn mk_flow_block_scwait(&mut self, name: &str, cond_i: PyHcpIdent, cond_slice: Option<PySlice>) -> PyResult<PyFlowBlockIdent> {
+        let cond_i: HcpIdent = cond_i.into();
+        self.check_cond_slice_match(cond_i, cond_slice)?;
+        Ok(self.arena.make_flow_block_scwait(name, cond_i, cond_slice.map(Into::into)).into())
+    }
+
+    // Stall for a fixed `cycle` clock count.
+    fn mk_flow_block_sywait(&mut self, name: &str, cycle: i32) -> PyResult<PyFlowBlockIdent> {
+        if cycle <= 0 {
+            return Err(PyValueError::new_err(format!("sywait cycle must be positive, got {cycle}")));
+        }
+        Ok(self.arena.make_flow_block_sywait(name, cycle).into())
+    }
 }

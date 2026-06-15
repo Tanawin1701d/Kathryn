@@ -65,6 +65,7 @@ impl ModelArena {
             flow_block_whiles            : ArenaGroup::new(),
             flow_block_do_whiles         : ArenaGroup::new(),
             flow_block_counter_loops     : ArenaGroup::new(),
+            flow_block_waits             : ArenaGroup::new(),
         }
     }
 
@@ -115,6 +116,7 @@ impl ModelArena {
         self.flow_block_whiles            = ArenaGroup::new();
         self.flow_block_do_whiles         = ArenaGroup::new();
         self.flow_block_counter_loops     = ArenaGroup::new();
+        self.flow_block_waits             = ArenaGroup::new();
     }
 
     // -----------------------------------------------------------------------

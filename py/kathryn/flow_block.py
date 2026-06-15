@@ -86,6 +86,22 @@ def _complex_block(
 ) -> _FlowBlockCtx:
     return _FlowBlockCtx(make(name or _session.auto_name(prefix), *args), is_req_auto_sub_blk=True)
 
+def _leaf_block(
+    prefix: str,
+    make  : Callable[..., FlowBlockIdent],
+    name  : Optional[str],
+    *args : object,
+) -> FlowBlockIdent:
+    # Leaf blocks (wait) own no body, so they are not context managers: create,
+    # open, validate, and immediately close so the block attaches to the
+    # enclosing scope as a single statement.
+    arena   = _session.arena()
+    block_i = make(name or _session.auto_name(prefix), *args)
+    arena.initialize_flow_block(block_i)
+    arena.check_flow_block_prefinalize(block_i)
+    arena.finalize_flow_block(block_i)
+    return block_i
+
 
 # ---- sequential / parallel --------------------------------------------------
 def seq        (name: Optional[str] = None) -> _FlowBlockCtx: return _block("seq", _session.arena().mk_flow_block_seq,         name)
@@ -121,3 +137,7 @@ def cwhile  (cond: SignalRef,      name: Optional[str] = None) -> _FlowBlockCtx:
 def swhile  (cond: SignalRef,      name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("swhile",   _session.arena().mk_flow_block_swhile,       name, *_cond_args(cond))
 def cdowhile(cond: SignalRef,      name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cdowhile", _session.arena().mk_flow_block_do_while,     name, *_cond_args(cond))
 def cloop   (last_loop_cnt: int,   name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cloop",    _session.arena().mk_flow_block_counter_loop, name, int(last_loop_cnt))
+
+# ---- waits (leaf blocks — no body, run as a statement) ----------------------
+def scwait(cond: SignalRef,    name: Optional[str] = None) -> FlowBlockIdent: return _leaf_block("scwait", _session.arena().mk_flow_block_scwait, name, *_cond_args(cond))
+def sywait(cycle: int,         name: Optional[str] = None) -> FlowBlockIdent: return _leaf_block("sywait", _session.arena().mk_flow_block_sywait, name, int(cycle))
