@@ -1,5 +1,5 @@
 use crate::model::controller::clock_mode::ClockMode;
-use crate::model::hw_component::common::asm_mode::get_asm_pri_val;
+use crate::model::controller::asm_mode::get_asm_pri_val;
 use crate::model::hw_component::common::assign_meta::AssignMeta;
 use crate::model::hw_component::common::hcp_base::HcpBase;
 use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};

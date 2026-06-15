@@ -11,11 +11,13 @@ from __future__ import annotations
 
 import os
 import re
+import sys
 import shutil
 import pathlib
 import importlib
 from dataclasses import dataclass
 from typing import Callable
+from xml.etree import ElementTree
 
 # ---- paths -------------------------------------------------------------------
 _HERE     = pathlib.Path(__file__).resolve().parent          # .../Kathryn2/test
@@ -87,15 +89,70 @@ def _toplevel_from_verilog(top_v: pathlib.Path) -> str:
     return m.group(1)
 
 
-def _discover_testcases(test_module: str) -> list[str]:
+@dataclass
+class DiscoveredCase:
+    name        : str    # the @cocotb.test() coroutine name
+    description : str     # per-test docstring, else the module's leading comment
+    skip        : bool    # cocotb @test(skip=True)
+
+
+def _module_description(test_module: str) -> str:
+    # Best-effort one-line description: the first non-empty line of the module's
+    # leading `#` comment block (tc files document themselves there).
+    path = _MODEL / f"{test_module}.py"
+    try:
+        for line in path.read_text().splitlines():
+            s = line.strip()
+            if s.startswith("#!"):              # shebang
+                continue
+            if s.startswith("#"):
+                text = s.lstrip("#").strip()
+                if text:
+                    return text
+            elif s == "":
+                continue
+            else:                               # first real code line — stop
+                break
+    except OSError:
+        pass
+    return ""
+
+
+def _discover_testcases(test_module: str) -> list[DiscoveredCase]:
     # A `@cocotb.test()`-decorated coroutine becomes a `cocotb._decorators.Test`
-    # instance carrying a `.name`. Return those names in definition order so each
-    # can be simulated on its own and dump a separate VCD.
+    # instance carrying a `.name`. Return them in definition order so each can be
+    # simulated on its own and dump a separate VCD, each tagged with a description.
     from cocotb._decorators import Test
 
-    mod   = importlib.import_module(test_module)
-    tests = [obj for obj in vars(mod).values() if isinstance(obj, Test)]
-    return [t.name for t in tests]
+    mod      = importlib.import_module(test_module)
+    mod_desc = _module_description(test_module)
+    out: list[DiscoveredCase] = []
+    for obj in vars(mod).values():
+        if not isinstance(obj, Test):
+            continue
+        doc  = (getattr(obj.func, "__doc__", None) or getattr(obj, "doc", None) or "").strip()
+        desc = doc.splitlines()[0].strip() if doc else mod_desc
+        out.append(DiscoveredCase(obj.name, desc, bool(getattr(obj, "skip", False))))
+    return out
+
+
+def _status_from_results(results_xml: pathlib.Path) -> str:
+    # Classify a single-testcase JUnit results file: PASS, FAIL, or NO_RESULT
+    # (file missing / unparsable → the sim crashed before writing results).
+    if not results_xml.is_file():
+        return "NO_RESULT"
+    try:
+        tree = ElementTree.parse(results_xml)
+    except ElementTree.ParseError:
+        return "NO_RESULT"
+    n_tc = n_bad = 0
+    for tc in tree.iter("testcase"):
+        n_tc += 1
+        if any(True for _ in tc.iter("failure")) or any(True for _ in tc.iter("error")):
+            n_bad += 1
+    if n_tc == 0:
+        return "NO_RESULT"
+    return "FAIL" if n_bad else "PASS"
 
 
 def _make_runner(simulator: str):
@@ -107,21 +164,42 @@ def _make_runner(simulator: str):
     return get_runner(simulator)
 
 
-def run_all(simulator: str = "icarus") -> None:
-    _run_cases(pool(), simulator)
+@dataclass
+class CaseResult:
+    case        : str    # "<tc>.<testcase>" identifier
+    description : str
+    status      : str     # PASS / FAIL / COMPILE / NO_RESULT / SKIP
+    detail      : str = ""  # error message for COMPILE / NO_RESULT rows
 
 
-def run_selected(names: list[str], simulator: str = "icarus") -> None:
+# Status → (symbol, ANSI colour) for the summary table.
+_STATUS_STYLE = {
+    "PASS"     : ("PASS",       "\033[32m"),  # green
+    "FAIL"     : ("FAIL",       "\033[31m"),  # red
+    "COMPILE"  : ("COMPILE-ERR", "\033[35m"),  # magenta
+    "NO_RESULT": ("NO-RESULT",  "\033[33m"),  # yellow
+    "SKIP"     : ("SKIP",       "\033[90m"),  # grey
+}
+_RESET = "\033[0m"
+
+
+def run_all(simulator: str = "icarus") -> list["CaseResult"]:
+    return _run_cases(pool(), simulator)
+
+
+def run_selected(names: list[str], simulator: str = "icarus") -> list["CaseResult"]:
     cases = [tc for tc in pool() if tc.name in names]
     if not cases:
         raise RuntimeError(f"no registered cases matched: {names!r} — registered: {[tc.name for tc in pool()]}")
-    _run_cases(cases, simulator)
+    return _run_cases(cases, simulator)
 
 
-def _run_cases(cases: list[TestCase], simulator: str) -> None:
+def _run_cases(cases: list[TestCase], simulator: str) -> list[CaseResult]:
     # Build + simulate the given cases. A tc module may hold several
     # `@cocotb.test()` coroutines; each is simulated in its own run so it dumps
-    # its own VCD under <OUT_ROOT>/<name>/<testcase>.vcd.
+    # its own VCD under <OUT_ROOT>/<name>/<testcase>.vcd. Build and simulation
+    # failures are captured (not raised) so every case runs and the run ends with
+    # one summary table.
 
     # The sim subprocess imports both kathryn and the tc module — make both findable.
     extra_path = os.pathsep.join([str(_PY_DIR), str(_MODEL)])
@@ -131,46 +209,123 @@ def _run_cases(cases: list[TestCase], simulator: str) -> None:
     if not cases:
         raise RuntimeError("no test cases registered — import the tc* modules first")
 
+    results: list[CaseResult] = []
+
     for tc in cases:
         out = OUT_ROOT / tc.name
         out.mkdir(parents=True, exist_ok=True)
+        discovered = _discover_testcases(tc.test_module)
 
-        # 1. kathryn: build model + emit verilog (top.v + any sub-module .v files).
-        tc.build_fn(str(out))
-        sources  = sorted(str(p) for p in out.glob("*.v"))
-        toplevel = _toplevel_from_verilog(out / "top.v")
-
-        # 2. cocotb runner: compile once, then simulate each testcase separately so
-        #    every coroutine produces its own VCD (one shared sim would overwrite it).
-        runner = _make_runner(simulator)
-        build_dir = out / "sim_build"
-        runner.build(
-            verilog_sources = sources,
-            hdl_toplevel    = toplevel,
-            build_dir       = str(build_dir),
-            always          = True,
-            waves           = True,
-            timescale       = ("1ns", "1ps"),
-        )
-
-        testcases = _discover_testcases(tc.test_module)
-        for testcase in testcases:
-            runner.test(
-                hdl_toplevel = toplevel,
-                test_module  = tc.test_module,
-                testcase     = testcase,
-                build_dir    = str(build_dir),
-                waves        = True,
-                timescale    = ("1ns", "1ps"),
+        # 1. kathryn model build + verilog emit, then cocotb compile. Any failure
+        #    here (model panic or iverilog error) marks the whole case COMPILE.
+        try:
+            tc.build_fn(str(out))
+            sources   = sorted(str(p) for p in out.glob("*.v"))
+            toplevel  = _toplevel_from_verilog(out / "top.v")
+            runner    = _make_runner(simulator)
+            build_dir = out / "sim_build"
+            runner.build(
+                verilog_sources = sources,
+                hdl_toplevel    = toplevel,
+                build_dir       = str(build_dir),
+                always          = True,
+                waves           = True,
+                timescale       = ("1ns", "1ps"),
             )
+        except Exception as e:                       # noqa: BLE001 — report any build failure
+            detail = f"{type(e).__name__}: {e}".splitlines()[0]
+            print(f"[{tc.name}] build/compile failed: {detail}", file=sys.stderr)
+            rows = discovered or [DiscoveredCase(tc.name, _module_description(tc.test_module), False)]
+            for dc in rows:
+                results.append(CaseResult(f"{tc.name}.{dc.name}", dc.description, "COMPILE", detail))
+            continue
+
+        # 2. simulate each testcase on its own so each dumps a separate VCD.
+        for dc in discovered:
+            ident = f"{tc.name}.{dc.name}"
+            if dc.skip:
+                results.append(CaseResult(ident, dc.description, "SKIP"))
+                continue
+
+            # absolute results file so we can classify pass/fail regardless of cwd.
+            rxml = (build_dir / f"{dc.name}.results.xml").resolve()
+            try:
+                rxml.unlink()
+            except OSError:
+                pass
+
+            try:
+                runner.test(
+                    hdl_toplevel = toplevel,
+                    test_module  = tc.test_module,
+                    testcase     = dc.name,
+                    build_dir    = str(build_dir),
+                    results_xml  = str(rxml),
+                    waves        = True,
+                    timescale    = ("1ns", "1ps"),
+                )
+            except SystemExit:
+                pass    # cocotb exits non-zero on a failing test; status comes from the xml
+            except Exception as e:                   # noqa: BLE001 — unexpected harness error
+                print(f"[{ident}] test harness error: {e}", file=sys.stderr)
+
+            results.append(CaseResult(ident, dc.description, _status_from_results(rxml)))
+
             # The dump path is baked into the compiled sim, so each run rewrites the
             # same VCD; copy it out under the testcase name before the next run.
             produced = build_dir / f"{toplevel}.vcd"
             if produced.exists():
-                shutil.copyfile(produced, out / f"{testcase}.vcd")
+                shutil.copyfile(produced, out / f"{dc.name}.vcd")
+
+    _print_summary(results)
+    return results
 
 
-def discover_and_run(simulator: str = "icarus", names: list[str] | None = None) -> None:
+def _print_summary(results: list[CaseResult]) -> None:
+    use_color = sys.stdout.isatty()
+
+    def styled(status: str) -> tuple[str, str]:
+        label, color = _STATUS_STYLE.get(status, (status, ""))
+        return label, (color if use_color else "")
+
+    # column widths (status uses the plain label width, colour codes excluded)
+    status_w = max([len("STATUS")] + [len(styled(r.status)[0]) for r in results] or [len("STATUS")])
+    case_w   = max([len("TEST CASE")] + [len(r.case) for r in results])
+    desc_w   = min(60, max([len("DESCRIPTION")] + [len(r.description) for r in results]))
+
+    def trunc(s: str, w: int) -> str:
+        return s if len(s) <= w else s[: w - 1] + "…"
+
+    sep  = f"+-{'-'*status_w}-+-{'-'*case_w}-+-{'-'*desc_w}-+"
+    head = f"| {'STATUS':<{status_w}} | {'TEST CASE':<{case_w}} | {'DESCRIPTION':<{desc_w}} |"
+
+    print()
+    print("=" * len(sep))
+    print(" TEST SUMMARY")
+    print(sep)
+    print(head)
+    print(sep)
+    for r in results:
+        label, color = styled(r.status)
+        status_cell = f"{color}{label:<{status_w}}{_RESET if color else ''}"
+        desc = trunc(r.description, desc_w)
+        print(f"| {status_cell} | {r.case:<{case_w}} | {desc:<{desc_w}} |")
+        if r.detail:
+            print(f"| {'':<{status_w}} | {'└─ ' + trunc(r.detail, case_w + desc_w):<{case_w + desc_w + 3}} |")
+    print(sep)
+
+    counts = {k: sum(1 for r in results if r.status == k) for k in _STATUS_STYLE}
+    total  = len(results)
+    summary = (
+        f" {counts['PASS']} passed, {counts['FAIL']} failed, "
+        f"{counts['COMPILE']} compile-err, {counts['NO_RESULT']} no-result, "
+        f"{counts['SKIP']} skipped   ({total} total)"
+    )
+    print(summary)
+    print("=" * len(sep))
+
+
+def discover_and_run(simulator: str = "icarus", names: list[str] | None = None) -> list[CaseResult]:
     # Import every tc*.py under test/model (registering each), then run the pool.
     # If `names` is given, only simulate those cases (all are still imported so
     # their @cocotb.test() coroutines are available to the sim subprocess).
@@ -192,6 +347,5 @@ def discover_and_run(simulator: str = "icarus", names: list[str] | None = None) 
         importlib.import_module(f.stem)
 
     if names:
-        run_selected(names, simulator)
-    else:
-        run_all(simulator)
+        return run_selected(names, simulator)
+    return run_all(simulator)

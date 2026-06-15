@@ -4,7 +4,6 @@ pub mod slice;
 pub mod update_pool;
 pub mod hcp_assign;
 pub mod assign_meta;
-pub mod asm_mode;
 pub mod hcp_ident;
 pub mod hcp_base;
 pub mod operation;

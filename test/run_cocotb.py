@@ -24,4 +24,7 @@ import cocotb_pool
 if __name__ == "__main__":
     sim    = sys.argv[1] if len(sys.argv) > 1 else "icarus"
     filter = sys.argv[2:] if len(sys.argv) > 2 else []
-    cocotb_pool.discover_and_run(sim, filter or None)
+    results = cocotb_pool.discover_and_run(sim, filter or None)
+    # Non-zero exit when anything did not pass (skips are OK), so CI can gate on it.
+    if any(r.status not in ("PASS", "SKIP") for r in results):
+        sys.exit(1)

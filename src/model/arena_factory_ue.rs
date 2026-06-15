@@ -1,5 +1,5 @@
 use crate::model::controller::clock_mode::ClockMode;
-use crate::model::hw_component::common::asm_mode::get_asm_pri_val;
+use crate::model::controller::asm_mode::get_asm_pri_val;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::hw_component::common::slice::Slice;
