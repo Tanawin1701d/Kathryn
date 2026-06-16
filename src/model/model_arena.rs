@@ -15,6 +15,7 @@ use crate::model::nodes::asm_node::AsmNode;
 use crate::model::nodes::cnt_node::CounterNode;
 use crate::model::nodes::logic_node::{OprNode, PseudoNode};
 use crate::model::nodes::start_node::StartNode;
+use crate::model::complex_hardware::arb::Arb;
 use crate::model::nodes::state_node::StateNode;
 use crate::model::nodes::syn_node::SynNode;
 use crate::model::nodes::wait_node::{WaitCondNode, WaitCycleNode};
@@ -74,6 +75,9 @@ pub struct ModelArena {
     pub(super) counter_nodes    : ArenaGroup<CounterNode>,
     pub(super) pseudo_nodes     : ArenaGroup<PseudoNode>,
     pub(super) opr_nodes        : ArenaGroup<OprNode>,
+
+    // complex-hardware (CCP) arenas
+    pub(super) arbs             : ArenaGroup<Arb>,
 
     // module arena
     pub(super) modules               : ArenaGroup<Module>,

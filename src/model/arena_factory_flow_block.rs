@@ -26,7 +26,7 @@ impl ModelArena {
     /// When `slice` covers `cond_i` entirely (or is absent), `cond_i` is used as-is;
     /// a partial slice is wrapped in a `SliceBit` expression `cond_i[slice]` so the
     /// block gates on exactly the requested bits.
-    fn resolve_cond_slice(&mut self, name: &str, cond_i: HcpIdent, cond_slice: Option<Slice>) -> HcpIdent {
+    pub(crate) fn resolve_cond_slice(&mut self, name: &str, cond_i: HcpIdent, cond_slice: Option<Slice>) -> HcpIdent {
         match cond_slice {
             Some(s) if !self.is_slice_cover_entire_hw(&cond_i, &s) =>
                 self.make_expression_single(false, &format!("{name}_CONDSLICE"), LogicOp::SliceBit, cond_i, Some(s)),

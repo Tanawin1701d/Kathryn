@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet};
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::flow_block::flow_block_ident::{FlowBlockIdent, FlowBlockJoinPolicy};
 use crate::model::flow_block::ExtSigType;
+use crate::model::complex_hardware::common::ccp_ident::CcpIdent;
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType, HW_TYPES_WITH_UE, HW_TYPES_WITH_MAN_DEP, ALL_HW_TYPES};
 use crate::model::model_arena::{ModelArena, ModuleInitStage};
 use crate::model::module::module_ident::ModuleIdent;
@@ -25,6 +26,8 @@ pub struct Module {
     user_hws             : [Vec<HcpIdent>; HwComponentType::COUNT],
     // user-declared sub module components
     user_sub_modules     : Vec<ModuleIdent>,
+    // complex component properties (CCPs) stamped into this module
+    ccps_i               : Vec<CcpIdent>,
     // top flow blocks
     top_flow_blocks_i    : Vec<FlowBlockIdent>,
     // basic nodes
@@ -68,6 +71,10 @@ impl Module {
     // -- sub-modules --
     pub fn add_user_sub_module(&mut self, i: ModuleIdent)   { self.user_sub_modules.push(i); }
     pub fn get_user_sub_modules(&self) -> &Vec<ModuleIdent> { &self.user_sub_modules }
+
+    // -- complex component properties (CCPs) --
+    pub fn add_ccp(&mut self, i: CcpIdent)        { self.ccps_i.push(i); }
+    pub fn get_ccps(&self) -> &Vec<CcpIdent>      { &self.ccps_i }
 
     // -- start node --
     pub fn set_start_node(&mut self, i: NcpIdent)       { self.start_node_i = Some(i); }
@@ -226,6 +233,15 @@ impl Module {
             assert_eq!(node_i.get_node_type(), NodeType::Asm,
                 "basic_nodes_i must contain only AsmNodes");
             arena.dry_assign_asm_node(node_i);
+        }
+
+        // Build every CCP stamped into this module while still in the FlowBlockBuild
+        // scope, so the expressions each build creates land in the HCP pending buffer
+        // (drained below). CCPs are only ever created during the construction phase,
+        // so the list is final here.
+        let ccp_ids: Vec<CcpIdent> = self.ccps_i.clone();
+        for ccp_i in ccp_ids {
+            arena.build_ccp(ccp_i);
         }
 
         // pop this module from flow stack

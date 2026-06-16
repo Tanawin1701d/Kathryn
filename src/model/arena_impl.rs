@@ -47,6 +47,8 @@ impl ModelArena {
             counter_nodes                : ArenaGroup::new(),
             pseudo_nodes                 : ArenaGroup::new(),
             opr_nodes                    : ArenaGroup::new(),
+            // ---- complex hardware (CCP) ----
+            arbs                         : ArenaGroup::new(),
             // ---- modules & trace state ----
             modules                      : ArenaGroup::new(),
             top_module                   : None,
@@ -98,6 +100,8 @@ impl ModelArena {
         self.counter_nodes                = ArenaGroup::new();
         self.pseudo_nodes                 = ArenaGroup::new();
         self.opr_nodes                    = ArenaGroup::new();
+        // ---- complex hardware (CCP) ----
+        self.arbs                         = ArenaGroup::new();
         // ---- modules & trace state ----
         self.modules                      = ArenaGroup::new();
         self.top_module                   = None;
