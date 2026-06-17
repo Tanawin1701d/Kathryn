@@ -129,6 +129,34 @@ class SignalRef:
     # == returns an expr, so SignalRef cannot be a usable hash key; use `is`.
     __hash__ = None
 
+    # ---- reset / default fallback values -----------------------------------
+    def _coerce_value(self, value: Union[SignalRef, int]) -> SignalRef:
+        # A SignalRef passes through; a Python int (any width) is wrapped into a
+        # val sized to this destination — so `r.reset(0)` and big literals "just work".
+        if isinstance(value, SignalRef):
+            return value
+        if isinstance(value, int):
+            from .hw_component import val            # lazy: avoid import cycle
+            width = _session.arena().get_hw_bit_sz(self._ident)
+            return val(width, value)
+        raise TypeError(f"expected a kathryn signal or an int, got {type(value).__name__}")
+
+    def reset(self, value: Union[SignalRef, int]) -> SignalRef:
+        # Record a clocked reset value for a reg (highest priority, dominates every
+        # other write). Accepts a signal or a raw int. Built during build_flow.
+        if self._ident.hw_type != "REG":
+            raise TypeError("reset(...) requires a reg destination")
+        _session.arena().set_reg_reset(self._ident, self._coerce_value(value)._ident)
+        return self
+
+    def default(self, value: Union[SignalRef, int]) -> SignalRef:
+        # Record a combinational default value for a wire (internal-low priority, so
+        # any real assignment overrides it). Accepts a signal or a raw int.
+        if self._ident.hw_type != "WIRE":
+            raise TypeError("default(...) requires a wire destination")
+        _session.arena().set_wire_default(self._ident, self._coerce_value(value)._ident)
+        return self
+
     # ---- IO marking --------------------------------------------------------
     def mark_as_io(self, is_input: bool, io_name: str) -> SignalRef:
         # Stamp the underlying component as an IO port (direction + name).

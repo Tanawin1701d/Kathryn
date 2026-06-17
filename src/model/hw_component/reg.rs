@@ -5,6 +5,7 @@ use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HcpSensitiveType, HwComponentType};
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::hw_component::common::slice::Slice;
+use crate::model::hw_component::common::update_event::DEFAULT_UE_PRI_RST;
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_ident::NcpIdent;
 
@@ -14,6 +15,9 @@ pub struct Reg {
     assign    : HcpAssign,
     ident     : HcpIdent,
     bit_width : i32,
+
+    reset_val     : Option<HcpIdent>,
+    reset_clk_mode: Option<ClockMode>,
 }
 
 impl Reg {
@@ -22,9 +26,11 @@ impl Reg {
     /// Full constructor; `is_user_com` false for system-generated regs.
     pub fn new(is_user_com: bool, name: &str, bit_width: i32) -> Self {
         Self {
-            assign   : HcpAssign::new(),
-            ident    : HcpIdent::new(HwComponentType::Reg, HcpSensitiveType::Clocked, is_user_com, name),
+            assign        : HcpAssign::new(),
+            ident         : HcpIdent::new(HwComponentType::Reg, HcpSensitiveType::Clocked, is_user_com, name),
             bit_width,
+            reset_val     : None,
+            reset_clk_mode: None
         }
     }
 
@@ -37,6 +43,27 @@ impl Reg {
 
     pub fn get_ident(&self) -> HcpIdent { self.ident }
     pub fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
+
+    pub fn set_reset_val(&mut self, reset_val: HcpIdent, reset_clk_mode: ClockMode) {
+        // the caller is responsed to give the match value, we cannot check because arena is not used here
+        if (self.reset_val.is_some()){ panic!("reset_val is set already")}
+        self.reset_val      = Some(reset_val);
+        self.reset_clk_mode = Some(reset_clk_mode)
+    }
+
+    pub fn try_build_reset(&mut self, clk_src: HcpIdent, arena: &mut ModelArena){
+        if self.reset_val.is_none(){return}
+        let src_sl = arena.get_hw_slice(self.reset_val.as_ref().unwrap());
+        self.bind_src(
+            self.reset_val.unwrap(),
+            None, src_sl,
+            Some(DEFAULT_UE_PRI_RST),
+            self.reset_clk_mode,
+            Some(clk_src),
+            arena);
+    }
+
+
 }
 
 

@@ -105,7 +105,7 @@ fn route_glob_input(
     // destination, so generate an update event into its update pool.
     let src_slice  = model_arena.get_hw_slice(&nearest_io_i);
     let mut target = model_arena.take_hcp(actual_src_i);
-    target.bind_src(nearest_io_i, None, src_slice, model_arena);
+    target.bind_src(nearest_io_i, None, src_slice, None, None, None, model_arena);
     model_arena.replace_back_hcp(target);
 
     (nearest_io_i, top_io_i)

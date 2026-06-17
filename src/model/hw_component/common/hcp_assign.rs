@@ -44,7 +44,7 @@ pub trait HcpAssignable: HcpIdentifiable {
                         src_slice: Slice,
                         arena    : &mut ModelArena,
     ) -> UpdateEventIdent {
-        self.gen_update_event_with_pri(srci, des_slice, src_slice, self.get_priority(), arena)
+        self.gen_update_event_with_pri(srci, des_slice, src_slice, self.get_priority(), self.retrieve_clk_mode(), arena)
     }
 
     // Like `gen_update_event` but with an explicit priority instead of `get_priority`.
@@ -53,6 +53,7 @@ pub trait HcpAssignable: HcpIdentifiable {
                                  des_slice: Option<Slice>,
                                  src_slice: Slice,
                                  priority : i32,
+                                 clk_mode : ClockMode,
                                  arena    : &mut ModelArena,
     ) -> UpdateEventIdent {
         let std_des_slice = self.get_des_slice();
@@ -62,7 +63,7 @@ pub trait HcpAssignable: HcpIdentifiable {
         let resolved_des_slice = my_des_slice.get_match_size_sub_slice(&my_src_slice);
         let resolved_src_slice = my_src_slice.get_match_size_sub_slice(my_des_slice);
 
-        arena.make_ue_basic(srci, resolved_des_slice, resolved_src_slice, priority, self.retrieve_clk_mode(), false, None)
+        arena.make_ue_basic(srci, resolved_des_slice, resolved_src_slice, priority, clk_mode, false, None)
     }
 
     fn gen_asm_meta(&self,
@@ -99,9 +100,31 @@ pub trait HcpAssignable: HcpIdentifiable {
                 srci     : HcpIdent,
                 des_slice: Option<Slice>,
                 src_slice: Slice,
+                priority : Option<i32>,
+                clk_mode : Option<ClockMode>,
+                clk_src  : Option<HcpIdent>,
                 arena    : &mut ModelArena,
     ) {
-        let ue_i = self.gen_update_event_with_pri(srci, des_slice, src_slice, DEFAULT_UE_PRI_INTERNAL_MIN, arena);
+        let clk_mode_upwrap = clk_mode.unwrap_or(ClockMode::ClkFree);
+        let is_clk_sen = clk_mode_upwrap == ClockMode::PosEdge || clk_mode_upwrap == ClockMode::NegEdge;
+
+        if is_clk_sen {
+            if clk_src.is_none(){
+                panic!("no clk_src specified for binded source with posedge or negedge clk");
+            }
+        }
+
+        let ue_i = self.gen_update_event_with_pri(srci, des_slice, src_slice,
+                                                  priority.unwrap_or(DEFAULT_UE_PRI_INTERNAL_MIN),
+                                                  clk_mode_upwrap,
+                                                  arena);
+
+        if is_clk_sen {
+            let mut ue = arena.take_ue(ue_i);
+            ue.set_clk_src_i(clk_src);
+            arena.replace_back_ue(ue);
+        }
+
         self.add_update_event(ue_i);
     }
 

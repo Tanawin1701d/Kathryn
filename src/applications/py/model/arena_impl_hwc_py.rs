@@ -6,6 +6,7 @@ use pyo3::prelude::*;
 use super::model_arena::PyModelArena;
 use super::hw_component::common::hcp_ident_py::PyHcpIdent;
 use super::hw_component::common::slice_py::PySlice;
+use crate::model::controller::clock_mode::get_global_clk_mode;
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
 
 #[pymethods]
@@ -35,6 +36,17 @@ impl PyModelArena {
     fn get_hw_bit_sz(&mut self, hcp_i: PyHcpIdent) -> i32 {
         let ident: HcpIdent = hcp_i.into();
         self.arena.get_hw_bit_sz(&ident)
+    }
+
+    // Record a reg's reset value; the reset event clocks off the global clk mode
+    // (the reg's own sensitivity) and is built during the host build pass.
+    fn set_reg_reset(&mut self, reg_i: PyHcpIdent, reset_val_i: PyHcpIdent) {
+        self.arena.set_reg_reset(reg_i.into(), reset_val_i.into(), get_global_clk_mode());
+    }
+
+    // Record a wire's combinational fallback value (internal-low priority default event).
+    fn set_wire_default(&mut self, wire_i: PyHcpIdent, default_val_i: PyHcpIdent) {
+        self.arena.set_wire_default(wire_i.into(), default_val_i.into());
     }
 
     // Stamp an HCP as an IO port (direction + user-facing name).

@@ -27,6 +27,18 @@ impl VaryVal {
         v
     }
 
+    /// Build from explicit little-endian u64 limbs (limbs[0] = bits 0..63, etc.).
+    /// The limb vec is padded with zeros / truncated to exactly `bit_width` bits,
+    /// so callers need not pre-size it. Used for constant values wider than 64 bits.
+    pub fn from_limbs(limbs: Vec<u64>, bit_width: usize) -> Self {
+        let words     = (bit_width + 63) / 64;
+        let mut limbs = limbs;
+        limbs.resize(words, 0);
+        let mut v = Self { limbs, bit_width };
+        v.apply_mask();
+        v
+    }
+
     /// Returns a VaryVal with every bit set to 1.
     pub fn all_ones(bit_width: usize) -> Self {
         let words   = (bit_width + 63) / 64;

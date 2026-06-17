@@ -6,6 +6,7 @@
 use pyo3::prelude::*;
 use super::model_arena::PyModelArena;
 use super::hw_component::common::hcp_ident_py::PyHcpIdent;
+use crate::util::math::vary_val::VaryVal;
 
 #[pymethods]
 impl PyModelArena {
@@ -28,6 +29,13 @@ impl PyModelArena {
     // Declare a user constant value (≤64 bits) with literal `init_val`.
     fn mk_val(&mut self, name: &str, bit_width: i32, init_val: u64) -> PyHcpIdent {
         self.arena.make_val(true, name, bit_width, init_val).into()
+    }
+
+    // Declare a user constant value of arbitrary width from little-endian u64 limbs
+    // (limbs[0] = bits 0..63, etc.) — the path for values wider than a single u64.
+    fn mk_val_vv(&mut self, name: &str, bit_width: i32, limbs: Vec<u64>) -> PyHcpIdent {
+        let vv = VaryVal::from_limbs(limbs, bit_width as usize);
+        self.arena.make_val_vv(true, name, bit_width, vv).into()
     }
 
     // ---- MemBlk -------------------------------------------------------------

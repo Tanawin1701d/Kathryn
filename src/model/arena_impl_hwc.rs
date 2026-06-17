@@ -1,4 +1,5 @@
 use crate::model::common::identifier::Identifiable;
+use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::hcp_assign::{HcpAssignable, HcpIoMark};
 use crate::model::hw_component::common::hcp_base::HcpBase;
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
@@ -149,6 +150,24 @@ impl ModelArena {
     ) {
         let node_i = self.gen_asm_node(des_i, src_i, des_slice, src_slice);
         self.attach_basic_node_to_current_scope(node_i);
+    }
+
+    // ---- user reset / default events ----
+
+    // Record a reg's reset value (clocked off `reset_clk_mode`); the reset event is
+    // built later from the module clk in `Module::build_flow_base`.
+    pub fn set_reg_reset(&mut self, reg_i: HcpIdent, reset_val_i: HcpIdent, reset_clk_mode: ClockMode) {
+        let mut reg = self.take_reg(reg_i);
+        reg.set_reset_val(reset_val_i, reset_clk_mode);
+        self.replace_back_reg(reg);
+    }
+
+    // Record a wire's combinational fallback value; the default event is built later
+    // (internal-low priority) in `Module::build_flow_base`.
+    pub fn set_wire_default(&mut self, wire_i: HcpIdent, default_val_i: HcpIdent) {
+        let mut wire = self.take_wire(wire_i);
+        wire.set_default_val(default_val_i);
+        self.replace_back_wire(wire);
     }
 
     // ---- IO mark ----

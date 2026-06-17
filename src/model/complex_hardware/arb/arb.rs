@@ -162,7 +162,7 @@ impl Arb {
     fn drive_wire(arena: &mut ModelArena, wire_i: HcpIdent, src_i: HcpIdent) {
         //// we don't have to check size because for this node, we are so sure that it equal to 1
         let mut wire = arena.take_wire(wire_i);
-        wire.bind_src(src_i, None, Slice::new(0,1), arena);
+        wire.bind_src(src_i, None, Slice::new(0,1), None, None, None, arena);
         arena.replace_back_wire(wire);
     }
 

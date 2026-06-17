@@ -245,6 +245,117 @@ def test_par_same_reg_different_priority_orders_writes():
     set_priority_auto()                     # reset global state for later tests
 
 
+def test_reg_reset_and_wire_default_emit():
+    # A reg given reset(v) gets a top-priority clocked write of v; a wire given
+    # default(v) gets an internal-low-priority combinational fallback write of v.
+    # Raw ints are accepted directly — auto-wrapped into a val sized to the dest.
+    reset()
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.r = reg(8)
+            self.w = wire(8)
+
+        @flow
+        def f(self):
+            self.r.reset(0)         # direct int reset value
+            self.w.default(5)       # direct int default value
+
+    set_top(worker())
+    gen_flow()
+    build_flow()
+
+    out_dir = tempfile.mkdtemp()
+    emit_verilog(out_dir, "top")
+    text  = open(os.path.join(out_dir, "top.v")).read()
+    lines = text.splitlines()
+
+    # Reg reset: exactly one clocked non-blocking write of the literal 0.
+    reg_writes = [ln for ln in lines if "REG_reg0" in ln and "<=" in ln]
+    assert len(reg_writes) == 1
+    assert "8'h0" in text                           # reset literal 0 declared
+
+    # Wire default: exactly one write of the literal 5.
+    wire_writes = [ln for ln in lines if "WIRE_wire0" in ln and "<=" in ln]
+    assert len(wire_writes) == 1
+    assert "8'h5" in text                           # default literal 5 declared
+
+
+def test_reset_accepts_value_wider_than_64_bits():
+    # A >64-bit literal is split into u64 limbs and emitted as a sized hex constant.
+    reset()
+    big = (1 << 100) | 0xABCDEF        # bit 100 set + low nibble pattern
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.r = reg(128)
+
+        @flow
+        def f(self):
+            self.r.reset(big)             # direct big int — no manual val(...) needed
+
+    set_top(worker())
+    gen_flow()
+    build_flow()
+
+    out_dir = tempfile.mkdtemp()
+    emit_verilog(out_dir, "top")
+    text = open(os.path.join(out_dir, "top.v")).read()
+
+    # Verilog sized hex literal: 128'h<value> with the bit-100 limb pattern intact.
+    assert f"128'h{big:x}" in text
+
+
+def test_reset_dominates_user_write_on_reg():
+    # reset(v) is bound at DEFAULT_UE_PRI_RST (max), so it sorts LAST in the reg's
+    # always block and dominates a lower-priority user assignment.
+    reset()
+
+    class worker(Module):
+        @flow
+        def f(self):
+            r = reg(8)              # REG_reg0 — shared destination
+            d = wire(8)             # WIRE_wire0 — user-write source
+            r.reset(0)              # reset source (direct int)
+            with seq():
+                r |= d              # ordinary user write (priority USER)
+
+    set_top(worker())
+    gen_flow()
+    build_flow()
+
+    out_dir = tempfile.mkdtemp()
+    emit_verilog(out_dir, "top")
+    lines = open(os.path.join(out_dir, "top.v")).read().splitlines()
+
+    reg_writes = [ln for ln in lines if "REG_reg0" in ln and "<=" in ln]
+    assert len(reg_writes) == 2
+    assert "WIRE_wire0" in reg_writes[0]            # user write first (lower priority)
+    assert "VAL_"       in reg_writes[1]            # reset last (max priority, dominates)
+
+
+def test_reset_default_guards():
+    # reset(...) only on a reg; default(...) only on a wire. Declare the signals
+    # inside a module @init scope (eager), then check the guards on the saved refs.
+    reset()
+    h = {}
+
+    class worker(Module):
+        @init
+        def decl(self):
+            h["r"], h["w"]   = reg(8), wire(8)
+            h["rv"], h["dv"] = val(8, 0), val(8, 1)
+
+    worker()                    # @init runs eagerly, opening/closing its own scope
+
+    with pytest.raises(TypeError):
+        h["w"].reset(h["rv"])   # reset on a wire is wrong
+    with pytest.raises(TypeError):
+        h["r"].default(h["dv"]) # default on a reg is wrong
+
+
 def test_build_flow_runs_end_to_end():
     # gen_flow constructs the deferred flow blocks; build_flow then runs the host
     # build pass (schematics, update events, clk / master-reset wiring) over the

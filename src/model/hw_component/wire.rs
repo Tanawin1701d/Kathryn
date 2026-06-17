@@ -5,6 +5,7 @@ use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HcpSensitiveType, HwComponentType};
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::hw_component::common::slice::Slice;
+use crate::model::hw_component::common::update_event::DEFAULT_UE_PRI_INTERNAL_MIN;
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_ident::NcpIdent;
 
@@ -14,6 +15,10 @@ pub struct Wire {
     assign   : HcpAssign,  // update-event pool and assignable dispatch
     ident    : HcpIdent,   // arena handle + HW type tag
     bit_width: i32,        // signal width in bits
+
+    // User-supplied fallback value driven combinationally at internal-low priority,
+    // so any real assignment (higher priority) overrides it (None = no default).
+    default_val: Option<HcpIdent>,
 }
 
 impl Wire {
@@ -22,9 +27,10 @@ impl Wire {
     /// Full constructor; `is_user_com` false for system-generated wires.
     pub fn new(is_user_com: bool, name: &str, bit_width: i32) -> Self {
         Self {
-            assign   : HcpAssign::new(),
-            ident    : HcpIdent::new(HwComponentType::Wire, HcpSensitiveType::Combinational, is_user_com, name),
+            assign     : HcpAssign::new(),
+            ident      : HcpIdent::new(HwComponentType::Wire, HcpSensitiveType::Combinational, is_user_com, name),
             bit_width,
+            default_val: None,
         }
     }
 
@@ -32,6 +38,28 @@ impl Wire {
 
     pub fn get_ident    (&    self) ->      HcpIdent { self.ident }
     pub fn get_ident_mut(&mut self) -> &mut HcpIdent { &mut self.ident }
+
+    // ---- default event ----
+
+    /// Record the fallback value; the event itself is built later in `try_build_default`.
+    pub fn set_default_val(&mut self, default_val: HcpIdent) {
+        // the caller is responsed to give the match value, we cannot check because arena is not used here
+        if self.default_val.is_some() { panic!("default_val is set already") }
+        self.default_val = Some(default_val);
+    }
+
+    /// Bind the default value at internal-low priority (combinational, ClkFree) so
+    /// it loses to every user assignment. No-op when no default was set.
+    pub fn try_build_default(&mut self, arena: &mut ModelArena) {
+        if self.default_val.is_none() { return }
+        let src_sl = arena.get_hw_slice(self.default_val.as_ref().unwrap());
+        self.bind_src(
+            self.default_val.unwrap(),
+            None, src_sl,
+            Some(DEFAULT_UE_PRI_INTERNAL_MIN),
+            None, None,
+            arena);
+    }
 }
 
 

@@ -60,7 +60,7 @@ impl IoWire {
         // Bind only when an agent source exists.
         if let Some(agent_src_i) = agent_src_i {
             let src_slice = arena.get_hw_slice(&agent_src_i);
-            io_wire.bind_src(agent_src_i, Some(src_slice), src_slice, arena);
+            io_wire.bind_src(agent_src_i, Some(src_slice), src_slice, None, None, None, arena);
         }
 
         io_wire

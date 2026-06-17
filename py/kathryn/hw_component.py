@@ -27,11 +27,28 @@ class wire(SignalRef):
         super().__init__(ident)
 
 
+_U64_MASK = (1 << 64) - 1
+
+
+def _int_to_limbs(n: int, bit_width: int) -> list:
+    # Split an arbitrary-precision int into little-endian u64 limbs, two's-complement
+    # wrapped into `bit_width` bits. limbs[0] = bits 0..63, limbs[1] = 64..127, etc.
+    n    &= (1 << bit_width) - 1
+    words = (bit_width + 63) // 64
+    return [(n >> (64 * i)) & _U64_MASK for i in range(words)]
+
+
 class val(SignalRef):
     __slots__ = ()
     def __init__(self, bit_width: int, init_val: int, name: Optional[str] = None) -> None:
-        name  = name or _session.auto_name("val")
-        ident = _session.arena().mk_val(name, int(bit_width), int(init_val))
+        name      = name or _session.auto_name("val")
+        bit_width = int(bit_width)
+        init_val  = int(init_val) & ((1 << bit_width) - 1)   # two's-complement wrap to width
+        # ≤64-bit literals take the fast u64 path; wider ones go through limbs.
+        if init_val <= _U64_MASK:
+            ident = _session.arena().mk_val(name, bit_width, init_val)
+        else:
+            ident = _session.arena().mk_val_vv(name, bit_width, _int_to_limbs(init_val, bit_width))
         super().__init__(ident)  # constant: not assignable (read-only ident)
 
 
