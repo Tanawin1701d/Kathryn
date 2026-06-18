@@ -38,6 +38,7 @@ pub enum FlowBlockType {
     DoWhile,
     CounterLoop,
     Wait,
+    Pipeline,
 }
 
 impl FlowBlockType {
@@ -55,6 +56,7 @@ impl FlowBlockType {
             Self::DoWhile        => "DO_WHILE",
             Self::CounterLoop    => "COUNTER_LOOP",
             Self::Wait           => "WAIT",
+            Self::Pipeline       => "PIPELINE",
         }
     }
 
@@ -74,6 +76,7 @@ impl FlowBlockType {
             Self::DoWhile        => "DoWhile",
             Self::CounterLoop    => "CounterLoop",
             Self::Wait           => "Wait",
+            Self::Pipeline       => "Pipeline",
         }
     }
 
@@ -92,6 +95,7 @@ impl FlowBlockType {
             Self::DoWhile        => 9,
             Self::CounterLoop    => 10,
             Self::Wait           => 11,
+            Self::Pipeline       => 12,
         }
     }
 
@@ -111,6 +115,7 @@ impl FlowBlockType {
             9  => Self::DoWhile,
             10 => Self::CounterLoop,
             11 => Self::Wait,
+            12 => Self::Pipeline,
             _  => return None,
         };
         Some(t)

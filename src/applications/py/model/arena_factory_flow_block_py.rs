@@ -9,6 +9,7 @@ use super::model_arena::PyModelArena;
 use super::flow_block::flow_block_ident_py::PyFlowBlockIdent;
 use super::hw_component::common::hcp_ident_py::PyHcpIdent;
 use super::hw_component::common::slice_py::PySlice;
+use super::complex_hardware::ccp_ident_py::PyCcpIdent;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::slice::Slice;
 
@@ -190,5 +191,17 @@ impl PyModelArena {
             return Err(PyValueError::new_err(format!("sywait cycle must be positive, got {cycle}")));
         }
         Ok(self.arena.make_flow_block_sywait(name, cycle).into())
+    }
+
+    // ---- pip: pipeline ------------------------------------------------------
+
+    // Pipeline block gated by arbiter `arb_i`; holds exactly one body sub-block.
+    fn mk_flow_block_pip(&mut self, name: &str, arb_i: PyCcpIdent) -> PyFlowBlockIdent {
+        self.arena.make_flow_block_pip(name, arb_i.into()).into()
+    }
+
+    // Pipeline block in auto-restart mode: the arb user-reset re-launches the flow.
+    fn mk_flow_block_pip_auto_restart(&mut self, name: &str, arb_i: PyCcpIdent) -> PyFlowBlockIdent {
+        self.arena.make_flow_block_pip_auto_restart(name, arb_i.into()).into()
     }
 }

@@ -15,6 +15,7 @@ from .flow_block import (
     zstate, zcase,
     cwhile, swhile, cdowhile, cloop,
     scwait, sywait,
+    pip,
 )
 from .module import Module, init, flow, set_top
 from . import priority as _priority
@@ -40,6 +41,7 @@ __all__ = [
     "zstate", "zcase",
     "cwhile", "swhile", "cdowhile", "cloop",
     "scwait", "sywait",
+    "pip",
     # module scope + session
     "Module", "init", "flow", "arena", "reset",
     "gen_flow", "build_flow", "build_model", "set_top", "emit_verilog",

@@ -5,8 +5,9 @@ use crate::model::flow_block::{
     FlowBlockZeroCondIf, FlowBlockZeroCondElif,
     FlowBlockZeroSwitch, FlowBlockZeroSwitchCase,
     FlowBlockWhile, FlowBlockDoWhile, FlowBlockCounterLoop,
-    FlowBlockWait,
+    FlowBlockWait, FlowBlockPip,
 };
+use crate::model::complex_hardware::common::ccp_ident::CcpIdent;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::hw_component::common::slice::Slice;
@@ -169,6 +170,20 @@ impl ModelArena {
     // Stall the flow for a fixed `cycle` clock count (WaitCycleNode).
     pub fn make_flow_block_sywait(&mut self, name: &str, cycle: i32) -> FlowBlockIdent {
         let i = self.add_flow_block_wait(FlowBlockWait::new_cycle_wait(name, cycle));
+        i
+    }
+
+    // ---- pip: pipeline ------------------------------------------------------
+
+    // Pipeline block gated by arbiter `arb_i`; holds exactly one body sub-block.
+    pub fn make_flow_block_pip(&mut self, name: &str, arb_i: CcpIdent) -> FlowBlockIdent {
+        let i = self.add_flow_block_pip(FlowBlockPip::new(name, arb_i));
+        i
+    }
+
+    // Pipeline block in auto-restart mode: the arb user-reset re-launches the flow.
+    pub fn make_flow_block_pip_auto_restart(&mut self, name: &str, arb_i: CcpIdent) -> FlowBlockIdent {
+        let i = self.add_flow_block_pip(FlowBlockPip::new_auto_restart(name, arb_i));
         i
     }
 }

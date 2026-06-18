@@ -433,6 +433,13 @@ self.sync_reg_i: HcpIdent;                     // struct field
 rule. Other files still use bare names (`state`, `asm`, `syn`, …) — fix them
 as you touch those files; do not do a mass rename in a single PR.
 
+**No single-letter handle names.** Even for a short-lived local inside a
+take/replace_back block, do not name an ident `h` / `r` / `s`. Give it the same
+descriptive `_i` name it would have at the use site (e.g. `user_hold_i`,
+`user_reset_i`), so the value reads the same whether it is bound in a scratch
+block or returned. Single letters are only acceptable for the taken object
+itself (e.g. `let arb = arena.take_arb(...)`), never for the handles read off it.
+
 ### 3.3 Functions
 
 - `snake_case`.

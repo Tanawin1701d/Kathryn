@@ -300,8 +300,15 @@ pub trait FlowBlock: Identifiable {
 
     // main build core
     fn build_hw_component(&mut self, arena: &mut ModelArena);
-    fn build_hw_master(&mut self, arena: &mut ModelArena) {
+
+    // the standard build — single source of truth shared by every block.
+    // Overrides of `build_hw_master` must finish by calling this.
+    fn build_hw_master_base(&mut self, arena: &mut ModelArena) {
         self.get_base_mut().build_common_hw(arena);
         self.build_hw_component(arena);
+    }
+
+    fn build_hw_master(&mut self, arena: &mut ModelArena) {
+        self.build_hw_master_base(arena);
     }
 }

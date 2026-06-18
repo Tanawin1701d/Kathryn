@@ -141,3 +141,11 @@ def cloop   (last_loop_cnt: int,   name: Optional[str] = None) -> _FlowBlockCtx:
 # ---- waits (leaf blocks — no body, run as a statement) ----------------------
 def scwait(cond: SignalRef,    name: Optional[str] = None) -> FlowBlockIdent: return _leaf_block("scwait", _session.arena().mk_flow_block_scwait, name, *_cond_args(cond))
 def sywait(cycle: int,         name: Optional[str] = None) -> FlowBlockIdent: return _leaf_block("sywait", _session.arena().mk_flow_block_sywait, name, int(cycle))
+
+# ---- pipeline (complex block — inner skeleton auto-opened) -------------------
+# Gated by arbiter `arb` (a CcpIdent from arena().mk_arb). `auto_restart` routes
+# the arb user-reset into the block's start signal so a reset re-launches the
+# pipeline instead of just clearing it.
+def pip(arb, name: Optional[str] = None, *, auto_restart: bool = False) -> _FlowBlockCtx:
+    make = _session.arena().mk_flow_block_pip_auto_restart if auto_restart else _session.arena().mk_flow_block_pip
+    return _complex_block("pip", make, name, arb)
