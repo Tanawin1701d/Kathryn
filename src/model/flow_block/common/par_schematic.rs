@@ -4,7 +4,7 @@ use crate::model::flow_block::node_wrap::{NodeWrap, NodeWrapCycleDet};
 use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_base::IN_CONSIST_CYCLE_USED;
-use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
+use crate::model::nodes::ncp_ident::NcpIdent;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ParSyncMode {
@@ -57,41 +57,36 @@ impl ParSchematic {
         );
         assert!(base.get_con_blocks_i().is_empty(), "parallel flow block does not support con blocks");
 
-        // Split sub-blocks by join policy: BasicNodeFlow children act as inline
-        // AsmNodes (their summary is an AsmNode), SubFlow children become NodeWraps.
-        let (basic_node_flow_sub_blocks_i, sub_flow_sub_blocks_i) = base.scan_sub_blocks_by_policy();
+        // Split sub-blocks by join policy: only SubFlow children become NodeWraps
+        // here; BasicNodeFlow children are folded into the unified AsmNode below.
+        let (_basic_node_flow_sub_blocks_i, sub_flow_sub_blocks_i) = base.scan_sub_blocks_by_policy();
 
-        // Collect every AsmNode that should hang off the shared StateNode:
-        //   - direct basic_nodes_i (already AsmNodes)
-        //   - BasicNodeFlow sub-blocks resolved via summarize_as_node
-        let mut basic_asm_nodes_i: Vec<NcpIdent> = base.get_basic_nodes_i().to_vec();
-        for &block_i in &basic_node_flow_sub_blocks_i {
-            let sub_block = arena.take_flow_block(block_i);
-            let asm_i     = sub_block.summarize_as_node();
-            arena.replace_back_flow_block(sub_block);
-            assert_eq!(asm_i.get_node_type(), NodeType::Asm,
-                       "ParSchematic: BasicNodeFlow sub-block must summarise as an AsmNode");
-            basic_asm_nodes_i.push(asm_i);
-        }
+        // Merge every basic AsmNode and every BasicNodeFlow sub-block into one
+        // ordered, per-target-unified AssignMeta list (this preserves the original
+        // insertion order between direct nodes and basic-flow blocks), then build a
+        // single clean AsmNode that hangs off the shared StateNode.
+        let grp_asms = base.gen_unified_asm_meta_flat(arena);
 
         // intialize cycle determiner
         let mut cycle_det = NodeWrapCycleDet::new();
 
-        // Group all collected AsmNodes under one shared StateNode (skip if none).
-        if !basic_asm_nodes_i.is_empty() {
-            let state_i = arena.make_state_node(
-                &format!("par_state_{}", base.get_ident().get_global_id()),
-            );
+        // Group the unified AsmNode under one shared StateNode (skip if no asms).
+        if !grp_asms.is_empty() {
+            let id    = base.get_ident().get_global_id();
+            let asm_i = arena.make_asm_node_many(&format!("par_asm_{}", id), &grp_asms);
+            arena.init_node_trigger(asm_i, base.get_ext_trigger_node(), false);
+            //arena.init_asm_node_clk_src(asm_i); you don't have to create clk source because the flow block give you already
+
+            let state_i = arena.make_state_node(&format!("par_state_{}", id));
             arena.init_node_trigger(state_i, base.get_ext_trigger_node(), false);
             base.add_sys_node(state_i);
             self.basic_state_node_i = Some(state_i);
             cycle_det.add_cycle(arena.get_node_cycle_used(&state_i));
             arena.assign_ncp_node(state_i, true, false);
-            // assign slave asm node to it
-            for asm_i in &basic_asm_nodes_i {
-                arena.add_depend_node_to_ncp(*asm_i, state_i, None);
-                arena.assign_asm_from_state_node(*asm_i);
-            }
+
+            // the unified asm node is the state's single slave
+            arena.add_depend_node_to_ncp(asm_i, state_i, None);
+            arena.assign_asm_from_state_node(asm_i);
         }
 
         // Resolve each SubFlow sub-block into a NodeWrap so we have its

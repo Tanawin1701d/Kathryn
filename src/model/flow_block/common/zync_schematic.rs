@@ -7,7 +7,6 @@ use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_base::IN_CONSIST_CYCLE_USED;
-use crate::model::nodes::ncp_ident::{NcpIdent, NodeType};
 
 // Node / arb topology built by `build` (edge label = dependency condition;
 // unlabelled edge = unconditional dependency):
@@ -62,20 +61,15 @@ impl ZyncSchematic {
 
         let id = base.get_ident().get_global_id();
 
-        // ---- stage 1: collect every work AsmNode ----------------------------
-        // Direct basic nodes already had their trigger/clk wired by build_common_hw;
-        // each basic-flow sub-block's summarised AsmNode is wired here to match.
-        let mut asm_nodes_i: Vec<NcpIdent> = base.get_basic_nodes_i().to_vec();
-        for &block_i in &basic_flow_i {
-            let block= arena.take_flow_block(block_i);
-            let asm_node_fb_i= block.summarize_as_node();
-            arena.replace_back_flow_block(block);
-            assert_eq!(asm_node_fb_i.get_node_type(), NodeType::Asm,
-                       "zync basic-flow sub-block must summarize to an AsmNode");
-            arena.init_node_trigger(asm_node_fb_i, base.get_ext_trigger_node(), false);
-            arena.init_asm_node_clk_src(asm_node_fb_i);
-            asm_nodes_i.push(asm_node_fb_i);
-        }
+        // ---- stage 1: build the single unified work AsmNode -----------------
+        // Merge every basic AsmNode and every basic-flow sub-block into one
+        // ordered, per-target-unified AssignMeta list (this preserves the
+        // original insertion order between direct nodes and basic-flow blocks),
+        // then build a single clean AsmNode from it and wire its trigger / clk.
+        let grp_asms   = base.gen_unified_asm_meta_flat(arena);
+        let asm_node_i = arena.make_asm_node_many(&format!("zync_asm_{}", id), &grp_asms);
+        arena.init_node_trigger(asm_node_i, base.get_ext_trigger_node(), false);
+        //arena.init_asm_node_clk_src(asm_node_i); you don't have to create clk source because the flow block give you already
 
         // ---- stage 2: the request-holding state node ------------------------
         let state_i = arena.make_state_node(&format!("zync_state_{}", id));
@@ -117,16 +111,14 @@ impl ZyncSchematic {
             arena.add_depend_node_to_ncp(state_i, start_i, None);
         }
 
-        // ---- stage 4: gate every work node on the grant (state & ACK) -------
-        // Each asm node takes the state node as its single parent depend, gated by
+        // ---- stage 4: gate the unified work node on the grant (state & ACK) --
+        // The asm node takes the state node as its single parent depend, gated by
         // ACK; assign_from_state_node folds in (ack & ~hold & ~reset & state_op).
-        for &asm_node_i in &asm_nodes_i {
-            arena.add_depend_node_to_ncp(asm_node_i, state_i, Some(ack_wire_i));
-            arena.assign_asm_from_state_node(asm_node_i);
-        }
+        arena.add_depend_node_to_ncp(asm_node_i, state_i, Some(ack_wire_i));
+        arena.assign_asm_from_state_node(asm_node_i);
 
         // ---- stage 5: summarise — entrance and exit are the state node ------
-        // (5) the exit node is the one that triggers the basic nodes: the state node.
+        // (5) the exit node is the one that triggers the basic node: the state node.
         NodeWrap::with_single_entrance(state_i, state_i, IN_CONSIST_CYCLE_USED)
     }
 }
