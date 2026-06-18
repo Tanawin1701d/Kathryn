@@ -12,6 +12,7 @@ use super::hw_component::common::slice_py::PySlice;
 use super::complex_hardware::ccp_ident_py::PyCcpIdent;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::slice::Slice;
+use crate::model::hw_component::common::update_event::DEFAULT_UE_PRI_USER;
 
 impl PyModelArena {
     // Validate the condition the block will gate on. The slice (when given) must
@@ -203,5 +204,16 @@ impl PyModelArena {
     // Pipeline block in auto-restart mode: the arb user-reset re-launches the flow.
     fn mk_flow_block_pip_auto_restart(&mut self, name: &str, arb_i: PyCcpIdent) -> PyFlowBlockIdent {
         self.arena.make_flow_block_pip_auto_restart(name, arb_i.into()).into()
+    }
+
+    // ---- zync ---------------------------------------------------------------
+
+    // Zync block contending on arbiter `arb_i`; its request channel (leaf) is
+    // allocated here at creation time. `priority` is optional and defaults to the
+    // user-default UE priority when omitted.
+    #[pyo3(signature = (name, arb_i, priority=None))]
+    fn mk_flow_block_zync(&mut self, name: &str, arb_i: PyCcpIdent, priority: Option<i32>) -> PyFlowBlockIdent {
+        let priority = priority.unwrap_or(DEFAULT_UE_PRI_USER);
+        self.arena.make_flow_block_zync(name, arb_i.into(), priority).into()
     }
 }

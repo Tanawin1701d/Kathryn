@@ -69,6 +69,7 @@ impl ModelArena {
             flow_block_counter_loops     : ArenaGroup::new(),
             flow_block_waits             : ArenaGroup::new(),
             flow_block_pips              : ArenaGroup::new(),
+            flow_block_zyncs             : ArenaGroup::new(),
         }
     }
 
@@ -123,6 +124,7 @@ impl ModelArena {
         self.flow_block_counter_loops     = ArenaGroup::new();
         self.flow_block_waits             = ArenaGroup::new();
         self.flow_block_pips              = ArenaGroup::new();
+        self.flow_block_zyncs             = ArenaGroup::new();
     }
 
     // -----------------------------------------------------------------------

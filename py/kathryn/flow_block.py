@@ -149,3 +149,10 @@ def sywait(cycle: int,         name: Optional[str] = None) -> FlowBlockIdent: re
 def pip(arb, name: Optional[str] = None, *, auto_restart: bool = False) -> _FlowBlockCtx:
     make = _session.arena().mk_flow_block_pip_auto_restart if auto_restart else _session.arena().mk_flow_block_pip
     return _complex_block("pip", make, name, arb)
+
+# ---- zync (plain block — owns its work asm nodes directly) -------------------
+# Contends on one channel of arbiter `arb` (a CcpIdent from arena().mk_arb). The
+# request channel is allocated when the block is created. `priority` is optional
+# and defaults to the user-default UE priority on the host side when omitted.
+def zync(arb, name: Optional[str] = None, *, priority: Optional[int] = None) -> _FlowBlockCtx:
+    return _block("zync", _session.arena().mk_flow_block_zync, name, arb, priority)

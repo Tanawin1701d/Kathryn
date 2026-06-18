@@ -5,7 +5,7 @@ use crate::model::flow_block::{
     FlowBlockZeroCondIf, FlowBlockZeroCondElif,
     FlowBlockZeroSwitch, FlowBlockZeroSwitchCase,
     FlowBlockWhile, FlowBlockDoWhile, FlowBlockCounterLoop,
-    FlowBlockWait, FlowBlockPip,
+    FlowBlockWait, FlowBlockPip, FlowBlockZync,
 };
 use crate::model::complex_hardware::common::ccp_ident::CcpIdent;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
@@ -185,5 +185,14 @@ impl ModelArena {
     pub fn make_flow_block_pip_auto_restart(&mut self, name: &str, arb_i: CcpIdent) -> FlowBlockIdent {
         let i = self.add_flow_block_pip(FlowBlockPip::new_auto_restart(name, arb_i));
         i
+    }
+
+    // ---- zync ---------------------------------------------------------------
+
+    // Zync block contending on arbiter `arb_i`; its request channel (leaf) is
+    // allocated here at creation time with arbitration `priority`.
+    pub fn make_flow_block_zync(&mut self, name: &str, arb_i: CcpIdent, priority: i32) -> FlowBlockIdent {
+        let block = FlowBlockZync::new(name, arb_i, priority, self);
+        self.add_flow_block_zync(block)
     }
 }

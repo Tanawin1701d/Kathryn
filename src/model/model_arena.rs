@@ -36,6 +36,7 @@ use crate::model::flow_block::loops::flow_block_do_while::FlowBlockDoWhile;
 use crate::model::flow_block::loops::flow_block_counter_loop::FlowBlockCounterLoop;
 use crate::model::flow_block::wait::flow_block_wait::FlowBlockWait;
 use crate::model::flow_block::pipeline::flow_block_pip::FlowBlockPip;
+use crate::model::flow_block::zync::flow_block_zync::FlowBlockZync;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ModuleInitStage {
@@ -103,6 +104,7 @@ pub struct ModelArena {
     pub(super) flow_block_counter_loops    : ArenaGroup<FlowBlockCounterLoop>,
     pub(super) flow_block_waits            : ArenaGroup<FlowBlockWait>,
     pub(super) flow_block_pips             : ArenaGroup<FlowBlockPip>,
+    pub(super) flow_block_zyncs            : ArenaGroup<FlowBlockZync>,
 
 
 }

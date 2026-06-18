@@ -8,6 +8,7 @@ use crate::model::flow_block::{
     FlowBlockWhile, FlowBlockDoWhile, FlowBlockCounterLoop,
     FlowBlockWait,
     FlowBlockPip,
+    FlowBlockZync,
 };
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::model_arena::ModelArena;
@@ -235,6 +236,23 @@ impl ModelArena {
         self.flow_block_pips.replace_back(h, block);
     }
 
+    // --- zync (ZYNC) ---
+
+    pub fn add_flow_block_zync(&mut self, block: FlowBlockZync) -> FlowBlockIdent {
+        let h = self.flow_block_zyncs.insert(block);
+        self.flow_block_zyncs.get(h).get_base().get_ident()
+    }
+
+    pub fn take_flow_block_zync(&mut self, ident: FlowBlockIdent) -> FlowBlockZync {
+        assert_eq!(ident.get_block_type(), FlowBlockType::Zync);
+        self.flow_block_zyncs.take(*ident.get_arena_handle())
+    }
+
+    pub fn replace_back_flow_block_zync(&mut self, block: FlowBlockZync) {
+        let h = *block.get_arena_handle();
+        self.flow_block_zyncs.replace_back(h, block);
+    }
+
     // --- polymorphic take / replace / get ---
 
     pub fn take_flow_block(&mut self, ident: FlowBlockIdent) -> Box<dyn FlowBlock> {
@@ -252,6 +270,7 @@ impl ModelArena {
             FlowBlockType::CounterLoop    => Box::new(self.take_flow_block_counter_loop     (ident)),
             FlowBlockType::Wait           => Box::new(self.take_flow_block_wait             (ident)),
             FlowBlockType::Pipeline       => Box::new(self.take_flow_block_pip              (ident)),
+            FlowBlockType::Zync           => Box::new(self.take_flow_block_zync             (ident)),
         }
     }
 

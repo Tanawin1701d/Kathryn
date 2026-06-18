@@ -39,6 +39,7 @@ pub enum FlowBlockType {
     CounterLoop,
     Wait,
     Pipeline,
+    Zync,
 }
 
 impl FlowBlockType {
@@ -57,6 +58,7 @@ impl FlowBlockType {
             Self::CounterLoop    => "COUNTER_LOOP",
             Self::Wait           => "WAIT",
             Self::Pipeline       => "PIPELINE",
+            Self::Zync           => "ZYNC",
         }
     }
 
@@ -77,6 +79,7 @@ impl FlowBlockType {
             Self::CounterLoop    => "CounterLoop",
             Self::Wait           => "Wait",
             Self::Pipeline       => "Pipeline",
+            Self::Zync           => "Zync",
         }
     }
 
@@ -96,6 +99,7 @@ impl FlowBlockType {
             Self::CounterLoop    => 10,
             Self::Wait           => 11,
             Self::Pipeline       => 12,
+            Self::Zync           => 13,
         }
     }
 
@@ -116,6 +120,7 @@ impl FlowBlockType {
             10 => Self::CounterLoop,
             11 => Self::Wait,
             12 => Self::Pipeline,
+            13 => Self::Zync,
             _  => return None,
         };
         Some(t)

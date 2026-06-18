@@ -7,6 +7,7 @@ pub mod cond;
 pub mod loops;
 pub mod wait;
 pub mod pipeline;
+pub mod zync;
 pub mod node_wrap;
 
 pub use common::{CondMode, LoopMode, ParSyncMode, WaitMode};
@@ -18,4 +19,5 @@ pub use cond::{FlowBlockCond, FlowBlockCondElif, FlowBlockZeroCondIf, FlowBlockZ
 pub use loops::{FlowBlockWhile, FlowBlockDoWhile, FlowBlockCounterLoop};
 pub use wait::FlowBlockWait;
 pub use pipeline::FlowBlockPip;
+pub use zync::FlowBlockZync;
 pub use node_wrap::{NodeWrap, NodeWrapCycleDet};
