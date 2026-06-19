@@ -102,7 +102,7 @@ impl StateReg {
         // create the update event for the hold signal
         if let Some(hold_sig_i) = self.get_hold_sig_i() {
             let ue = model_ar.make_ue_full(
-                None                  , Some(hold_sig_i)        , self.set_val_i,
+                Some(hold_sig_i)      , Some(self.ident)        , self.set_val_i,
                 self.get_des_slice()  , src_sl                  ,
                 DEFAULT_UE_PRI_SR_HOLD, self.retrieve_clk_mode(), false, clk_src
             );
@@ -112,7 +112,7 @@ impl StateReg {
         // create the update event for the reset signal
         if let Some(rst_sig_i) = self.get_rst_sig_i() {
             let ue = model_ar.make_ue_full(
-                None                 , Some(rst_sig_i)          , self.unset_val_i,
+                Some(rst_sig_i)      , Some(self.ident)         , self.unset_val_i,
                 self.get_des_slice() , src_sl                   ,
                 DEFAULT_UE_PRI_SR_RST, self.retrieve_clk_mode() , false, clk_src
             );
