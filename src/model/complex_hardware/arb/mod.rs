@@ -2,4 +2,4 @@
 
 pub mod arb;
 
-pub use arb::{Arb, ArbLeaf, ArbSamePriPolicy};
+pub use arb::{Arb, ArbLeaf, ArbLockedChannel, ArbSamePriPolicy};

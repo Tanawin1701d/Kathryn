@@ -40,6 +40,15 @@ impl ArbSamePriPolicy {
     }
 }
 
+// ---- ArbLockedChannel -------------------------------------------------------
+
+/// Which side of a leaf is hard-tied to constant 1 instead of being a wire.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ArbLockedChannel {
+    Req,   // req tied to val 1 (leaf always requests); ack stays a normal wire
+    Ack,   // ack tied to val 1 (leaf always granted);  req stays a normal wire
+}
+
 // ---- ArbLeaf ----------------------------------------------------------------
 
 /// One arbitration client: its request/ack reference wires and its priority
@@ -48,6 +57,7 @@ pub struct ArbLeaf {
     req_wire_i : HcpIdent,
     ack_wire_i : HcpIdent,
     priority   : i32,
+    ack_locked : bool,      // true → ack_wire_i is a const val 1; build must not drive it
 }
 
 impl ArbLeaf {
@@ -55,7 +65,23 @@ impl ArbLeaf {
     fn new(base: &str, idx: usize, priority: i32, arena: &mut ModelArena) -> Self {
         let req_wire_i = arena.make_wire(false, &format!("{}_REQ{}", base, idx), 1);
         let ack_wire_i = arena.make_wire(false, &format!("{}_ACK{}", base, idx), 1);
-        Self { req_wire_i, ack_wire_i, priority }
+        Self { req_wire_i, ack_wire_i, priority, ack_locked: false }
+    }
+
+    /// Create a leaf with one side hard-tied to constant 1; the other side stays
+    /// a freshly-made 1-bit wire.
+    fn new_locked(base: &str, idx: usize, priority: i32, channel: ArbLockedChannel, arena: &mut ModelArena) -> Self {
+        let (req_wire_i, ack_wire_i) = match channel {
+            ArbLockedChannel::Req => (
+                arena.make_val (false, &format!("{}_REQ{}", base, idx), 1, 1),
+                arena.make_wire(false, &format!("{}_ACK{}", base, idx), 1),
+            ),
+            ArbLockedChannel::Ack => (
+                arena.make_wire(false, &format!("{}_REQ{}", base, idx), 1),
+                arena.make_val (false, &format!("{}_ACK{}", base, idx), 1, 1),
+            ),
+        };
+        Self { req_wire_i, ack_wire_i, priority, ack_locked: channel == ArbLockedChannel::Ack }
     }
 
     pub fn get_req_wire_i(&self) -> HcpIdent { self.req_wire_i }
@@ -118,6 +144,16 @@ impl Arb {
         let idx  = self.leaves.len();
         let base = self.ident.get_ident_base().get_rel_name().to_string();
         self.leaves.push(ArbLeaf::new(&base, idx, priority, arena));
+        idx
+    }
+
+    /// Add a leaf with one channel hard-tied to constant 1; returns its index.
+    /// `ArbLockedChannel::Req` → leaf always requests; `Ack` → leaf always granted
+    /// (its ack is a const val 1, so `build` leaves it undriven).
+    pub fn add_leaf_locked(&mut self, priority: i32, channel: ArbLockedChannel, arena: &mut ModelArena) -> usize {
+        let idx  = self.leaves.len();
+        let base = self.ident.get_ident_base().get_rel_name().to_string();
+        self.leaves.push(ArbLeaf::new_locked(&base, idx, priority, channel, arena));
         idx
     }
 
@@ -224,8 +260,9 @@ impl CcpBase for Arb {
         if let Some(r) = master_req_i {
             Self::drive_wire(arena, self.master_req_wire_i, r);
         }
-        // per-leaf ack arbitration
+        // per-leaf ack arbitration (locked-ack leaves are const 1 — never driven)
         for idx in 0..self.leaves.len() {
+            if self.leaves[idx].ack_locked { continue; }
             let ack_res_i  = self.build_leaf_ack(arena, idx);
             let ack_wire_i = self.leaves[idx].ack_wire_i;
             Self::drive_wire(arena, ack_wire_i, ack_res_i);

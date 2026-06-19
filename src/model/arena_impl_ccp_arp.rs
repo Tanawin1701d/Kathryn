@@ -1,3 +1,4 @@
+use crate::model::complex_hardware::arb::ArbLockedChannel;
 use crate::model::complex_hardware::common::ccp_base::CcpBase;
 use crate::model::complex_hardware::common::ccp_ident::CcpIdent;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
@@ -12,6 +13,15 @@ impl ModelArena {
     pub fn arb_add_leaf(&mut self, ident: CcpIdent, priority: i32) -> usize {
         let mut arb = self.take_arb(ident);
         let idx = arb.add_leaf(priority, self);
+        self.replace_back_arb(arb);
+        idx
+    }
+
+    /// Add a leaf with one channel (req or ack) hard-tied to constant 1 to an
+    /// existing Arb; returns its index.
+    pub fn arb_add_leaf_locked(&mut self, ident: CcpIdent, priority: i32, channel: ArbLockedChannel) -> usize {
+        let mut arb = self.take_arb(ident);
+        let idx = arb.add_leaf_locked(priority, channel, self);
         self.replace_back_arb(arb);
         idx
     }
