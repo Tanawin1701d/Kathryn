@@ -2,10 +2,7 @@
 
 This file is auto-loaded by Claude Code (and most agentic dev tools) at session
 start. Read it before making changes. The Rust port of Kathryn lives on the
-`kathryn-rust` branch off `main`. The C++ reference implementation lives at
-`/media/tanawin/tanawin1701e/project2/Kathryn` — use it as a *knowledge source*,
-not a pattern source. Rust patterns deliberately diverge from C++ where pointer
-ownership or inheritance does not map cleanly.
+`kathryn-rust` branch off `main`.
 
 **Crate layout.** All code lives in the library crate (`src/lib.rs`); the native
 binary (`src/main.rs`, bin name `kathryn_cli`) is a thin shell over it, and the
@@ -44,10 +41,9 @@ entire Python layer lives under `src/applications/` and is `#[cfg(feature =
   - [3.5 Identifier prefixes (in `build_unique_name`)](#35-identifier-prefixes-in-build_unique_name)
 - [4. Other things that are relevant](#4-other-things-that-are-relevant)
   - [4.1 Pre-existing build errors](#41-pre-existing-build-errors)
-  - [4.2 What is *not yet* ported from C++](#42-what-is-not-yet-ported-from-c)
+  - [4.2 What is *not yet* implemented](#42-what-is-not-yet-implemented)
   - [4.3 Workflow expectations](#43-workflow-expectations)
-  - [4.4 C++ reference](#44-c-reference)
-  - [4.5 Memory notes](#45-memory-notes)
+  - [4.4 Memory notes](#44-memory-notes)
 - [5. Backends (`src/backends/`)](#5-backends-srcbackends)
   - [5.1 Module tree](#51-module-tree)
   - [5.2 `graph.rs` — module iterator and ancestor utilities](#52-graphrs--module-iterator-and-ancestor-utilities)
@@ -364,8 +360,7 @@ block carries exactly one Clk source per `ext_signals` slot.
   by value or by `Box`. Cross-references are always `*Ident` (Copy).
 - **No `Rc` / `Arc` / `RefCell` for model state.** Mutability is mediated by
   `&mut ModelArena`.
-- **No raw pointers.** The C++ reference uses raw pointers heavily; do not
-  port that. Translate `T*` to `TIdent`.
+- **No raw pointers.** Translate any `T*`-style reference to a `TIdent` handle.
 
 ### 2.2 Lifetime / re-borrow pattern
 
@@ -472,7 +467,7 @@ The current baseline is **0 errors**. `cargo build` should complete cleanly
 (warnings are acceptable). The Python build, `cargo build --features python`,
 must also stay at 0 errors. Any new error you introduce is yours to fix.
 
-### 4.2 What is *not yet* ported from C++
+### 4.2 What is *not yet* implemented
 
 Do not assume these exist on the Rust side; if you need them, check first:
 
@@ -493,17 +488,7 @@ When porting, scope the new struct to fields whose dependencies *do* exist.
 - Default to editing existing files; do not add documentation files unless
   asked. This file is the exception.
 
-### 4.4 C++ reference
-
-`/media/tanawin/tanawin1701e/project2/Kathryn` is the source of truth for
-*semantics* (what a thing should do). It is **not** the source of truth for
-*structure* (how to organise it in Rust). When in doubt:
-
-1. Read the C++ header to understand the contract.
-2. Find the closest Rust analogue already in this repo.
-3. Match the existing Rust pattern, even if it differs from C++.
-
-### 4.5 Memory notes
+### 4.4 Memory notes
 
 The user maintains personal cross-session memory under
 `~/.claude/projects/.../memory/`. Project-scoped facts that belong in the repo
@@ -838,7 +823,7 @@ the host file you are wrapping; do not pile everything into one block.
   register with the enclosing module via `add_user_sub_module`).
   `PyModelArena::new` opens the top module up front. The entire Python
   construction phase runs the active module at `ModuleInitStage::FlowBlockInit`
-  (both HW declaration and top-flow-block finalize work there; the C++
+  (both HW declaration and top-flow-block finalize work there; the separate
   component/flow two-phase split is unused while controller hooks are unported).
   `finalize_module` **must** call `add_user_sub_module` — `mk_module` only
   stamps the parent handle, so without it the build DFS never descends into the

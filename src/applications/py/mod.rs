@@ -16,7 +16,7 @@ use model::flow_block::flow_block_ident_py::PyFlowBlockIdent;
 use model::module::module_ident_py::PyModuleIdent;
 use model::controller::asm_mode_py::add_asm_priority_consts;
 use crate::model::hw_component::common::operation::LogicOp;
-use crate::model::complex_hardware::arb::ArbSamePriPolicy;
+use crate::model::complex_hardware::arb::{ArbLockedChannel, ArbSamePriPolicy};
 use crate::model::flow_block::FlowBlockType;
 
 // Build `kathryn.LogicOp` as a Python IntEnum sourced entirely from the core
@@ -54,6 +54,22 @@ fn add_arb_same_pri_policy_enum(m: &Bound<'_, PyModule>) -> PyResult<()> {
     Ok(())
 }
 
+// Build `kathryn.ArbLockedChannel` as a Python IntEnum sourced entirely from the
+// core `ArbLockedChannel` via `from_index` / `variant_name`. `arb_add_leaf_locked`
+// decodes the int back through the *same* `from_index`, so the two cannot misalign.
+fn add_arb_locked_channel_enum(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    let py      = m.py();
+    let members = PyDict::new(py);
+    let mut idx = 0u32;
+    while let Some(c) = ArbLockedChannel::from_index(idx) {
+        members.set_item(c.variant_name(), idx)?;  // enum member: name = idx
+        idx += 1;
+    }
+    let int_enum = py.import("enum")?.getattr("IntEnum")?;
+    m.add("ArbLockedChannel", int_enum.call1(("ArbLockedChannel", &members))?)?;
+    Ok(())
+}
+
 // Build `kathryn.FlowBlockType` as a Python IntEnum sourced entirely from the
 // core `FlowBlockType` via `from_index` / `variant_name`. Bindings that cross
 // the boundary (e.g. get_last_skeleton_flow_block_type) emit the same `to_index`,
@@ -84,6 +100,7 @@ fn _kathryn(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyBackendVerilog>()?;
     add_logic_op_enum(m)?;
     add_arb_same_pri_policy_enum(m)?;
+    add_arb_locked_channel_enum(m)?;
     add_flow_block_type_enum(m)?;
     add_asm_priority_consts(m)?;
     Ok(())

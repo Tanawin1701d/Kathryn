@@ -10,7 +10,7 @@ use super::model_arena::PyModelArena;
 use super::hw_component::common::hcp_ident_py::PyHcpIdent;
 use super::hw_component::common::slice_py::PySlice;
 use super::complex_hardware::ccp_ident_py::PyCcpIdent;
-use crate::model::complex_hardware::arb::ArbSamePriPolicy;
+use crate::model::complex_hardware::arb::{ArbLockedChannel, ArbSamePriPolicy};
 
 #[pymethods]
 impl PyModelArena {
@@ -22,6 +22,19 @@ impl PyModelArena {
         let policy = ArbSamePriPolicy::from_index(policy)
             .ok_or_else(|| PyValueError::new_err(format!("ArbSamePriPolicy index out of range: {policy}")))?;
         Ok(self.arena.make_arb(true, name, policy).into())
+    }
+
+    // Add a leaf (its own req/ack wires) to `arb_i`; returns the leaf index.
+    fn arb_add_leaf(&mut self, arb_i: PyCcpIdent, priority: i32) -> usize {
+        self.arena.arb_add_leaf(arb_i.into(), priority)
+    }
+
+    // Add a leaf with one channel hard-tied to constant 1 to `arb_i`; `channel`
+    // is a `kathryn.ArbLockedChannel` member. Returns the leaf index.
+    fn arb_add_leaf_locked(&mut self, arb_i: PyCcpIdent, priority: i32, channel: u32) -> PyResult<usize> {
+        let channel = ArbLockedChannel::from_index(channel)
+            .ok_or_else(|| PyValueError::new_err(format!("ArbLockedChannel index out of range: {channel}")))?;
+        Ok(self.arena.arb_add_leaf_locked(arb_i.into(), priority, channel))
     }
 
 }

@@ -49,6 +49,26 @@ pub enum ArbLockedChannel {
     Ack,   // ack tied to val 1 (leaf always granted);  req stays a normal wire
 }
 
+impl ArbLockedChannel {
+    /// Stable variant name — surfaced to other languages. Exhaustive, so a new
+    /// variant fails to compile until it is named here.
+    pub fn variant_name(self) -> &'static str {
+        match self {
+            ArbLockedChannel::Req => "Req",
+            ArbLockedChannel::Ack => "Ack",
+        }
+    }
+
+    /// Map a 0-based declaration-order index back to its variant; `None` past the last.
+    pub fn from_index(idx: u32) -> Option<ArbLockedChannel> {
+        match idx {
+            0 => Some(ArbLockedChannel::Req),
+            1 => Some(ArbLockedChannel::Ack),
+            _ => None,
+        }
+    }
+}
+
 // ---- ArbLeaf ----------------------------------------------------------------
 
 /// One arbitration client: its request/ack reference wires and its priority

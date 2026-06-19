@@ -26,7 +26,7 @@ use crate::model::nodes::ncp_ident::NcpIdent;
 //   │                                    └───┤    exit node          │
 //   │                                        └───────────────────────┘
 //   │
-//   └── master-ack(arb) = pseudo & ~flow_reset & ~flow_hold
+//   └── master-ack(arb) = pseudo
 //
 //   result NodeWrap: entrance = pseudo, exit = [ dummy ] (OprNode bound to 0).
 
@@ -71,8 +71,13 @@ impl PipSchematic {
         );
 
         // 2. state node (wait-for-sync) + pseudo node (the entrancer / OR re-arm).
+        // The wait4syn sync node must NOT inherit the block hold: the arb already
+        // gates every grant on hold via the master-ack, so holding the sync node
+        // too would double-freeze the pipeline.  Copy the trigger minus its hold.
         let wait4syn_i = arena.make_state_node(&format!("pip_wait4syn_{}", id));
-        arena.init_node_trigger(wait4syn_i, base.get_ext_trigger_node(), false);
+        let mut wait_trigger = base.get_ext_trigger_node().clone();
+        wait_trigger.hold_node_i = None;
+        arena.init_node_trigger(wait4syn_i, &wait_trigger, false);
         base.add_sys_node(wait4syn_i);
         let pseudo_i = arena.make_pseudo_node(&format!("pip_entrance_{}", id), 1, LogicOp::BitwiseOr);
         arena.init_node_trigger(pseudo_i, base.get_ext_trigger_node(), false);
@@ -104,7 +109,7 @@ impl PipSchematic {
         base.add_sys_node(dummy_i);
 
         // 8. bind the arb master-ack from the entrance pseudo node.
-        self.set_arb_master_ack(base, arena, pseudo_i);
+        self.set_arb_master_ack(arena, pseudo_i);
 
         // 9. assign nodes.  pseudo is the result entrance → prelim only (the parent
         //    calls assign_final via assign_entrance_nodes); wait4syn and the sub-block
@@ -122,36 +127,10 @@ impl PipSchematic {
         result
     }
 
-    // arb master-ack = pseudo & ~flow_reset & ~flow_hold.  The reset/hold nodes
-    // already join all the block's reset/hold signals, so we only gate when such
-    // a node exists.
-    fn set_arb_master_ack(&self, base: &FlowBlockBase, arena: &mut ModelArena, pseudo_i: NcpIdent) {
-        let id            = base.get_ident().get_global_id();
-        let mut ack_src_i = arena.get_node_exit_opr(&pseudo_i);
-        if let Some(reset_i) = base.get_int_node(ExtSigType::Reset) {
-            let reset_opr_i = arena.get_node_exit_opr(&reset_i);
-            let no_reset_i  = arena.make_expression_single(
-                false,
-                &format!("pip_no_rst_{}",  id),
-                LogicOp::BitwiseInvr,
-                reset_opr_i,
-                None);
-            ack_src_i       = arena.make_expression(
-                false,
-                &format!("pip_ack_rst_{}",  id),
-                LogicOp::BitwiseAnd, ack_src_i, no_reset_i, None, None);
-        }
-        if let Some(hold_i) = base.get_int_node(ExtSigType::Hold) {
-            let hold_opr_i = arena.get_node_exit_opr(&hold_i);
-            let no_hold_i  = arena.make_expression_single(
-                false,
-                &format!("pip_no_hold_{}", id),
-                LogicOp::BitwiseInvr, hold_opr_i, None);
-            ack_src_i      = arena.make_expression(
-                false,
-                &format!("pip_ack_hold_{}", id),
-                LogicOp::BitwiseAnd, ack_src_i, no_hold_i, None, None);
-        }
+    // arb master-ack = pseudo (the entrance node) only.  Reset / hold are not
+    // gated here — they are handled on the nodes themselves.
+    fn set_arb_master_ack(&self, arena: &mut ModelArena, pseudo_i: NcpIdent) {
+        let ack_src_i = arena.get_node_exit_opr(&pseudo_i);
         arena.arb_set_master_ack_src(self.arb_i, ack_src_i);
     }
 }
