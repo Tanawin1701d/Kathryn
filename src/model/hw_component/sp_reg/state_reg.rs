@@ -8,8 +8,8 @@ use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_INTERNAL_M
 
 // ---- UE priority ladder: lower wins on conflict; MRST sits at the global RST band ----
 const DEFAULT_UE_PRI_SR_UNSET : i32 = DEFAULT_UE_PRI_INTERNAL_MIN;     // default-clear, always loses
-const DEFAULT_UE_PRI_SR_SET   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 1; // user trigger sets the bit
-const DEFAULT_UE_PRI_SR_HOLD  : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 2; // hold overrides set
+const DEFAULT_UE_PRI_SR_HOLD  : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 1; // hold holds the bit
+const DEFAULT_UE_PRI_SR_SET   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 2; // user trigger set overrides hold
 const DEFAULT_UE_PRI_SR_RST   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 3; // soft reset overrides hold
 const DEFAULT_UE_PRI_SR_INT   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 4; // interrupt overrides reset
 const DEFAULT_UE_PRI_SR_MRST  : i32 = DEFAULT_UE_PRI_RST;              // master reset wins over all
@@ -84,6 +84,16 @@ impl StateReg {
         );
         self.add_update_event(ue);
 
+        // create the update event for the hold signal
+        if let Some(hold_sig_i) = self.get_hold_sig_i() {
+            let ue = model_ar.make_ue_full(
+                None                  , Some(hold_sig_i)        , self.set_val_i,
+                self.get_des_slice()  , src_sl                  ,
+                DEFAULT_UE_PRI_SR_HOLD, self.retrieve_clk_mode(), false, clk_src
+            );
+            self.add_update_event(ue);
+        }
+
         // create the update event for the set signal
         let nodes: Vec<_> = self.triggers.iter_depend_nodes().collect();
         for (srci, condi) in nodes {
@@ -99,20 +109,10 @@ impl StateReg {
             self.add_update_event(ue);
         }
 
-        // create the update event for the hold signal
-        if let Some(hold_sig_i) = self.get_hold_sig_i() {
-            let ue = model_ar.make_ue_full(
-                Some(hold_sig_i)      , Some(self.ident)        , self.set_val_i,
-                self.get_des_slice()  , src_sl                  ,
-                DEFAULT_UE_PRI_SR_HOLD, self.retrieve_clk_mode(), false, clk_src
-            );
-            self.add_update_event(ue);
-        }
-
         // create the update event for the reset signal
         if let Some(rst_sig_i) = self.get_rst_sig_i() {
             let ue = model_ar.make_ue_full(
-                Some(rst_sig_i)      , Some(self.ident)         , self.unset_val_i,
+                None                 , Some(rst_sig_i)          , self.unset_val_i,
                 self.get_des_slice() , src_sl                   ,
                 DEFAULT_UE_PRI_SR_RST, self.retrieve_clk_mode() , false, clk_src
             );

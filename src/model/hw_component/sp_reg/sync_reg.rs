@@ -13,8 +13,8 @@ use crate::util::math::vary_val::VaryVal;
 
 // ---- UE priority ladder: higher value wins; MRST sits at the global RST band ----
 const DEFAULT_UE_PRI_SY_UNSET    : i32 = DEFAULT_UE_PRI_INTERNAL_MIN;     // clear-on-full, lowest
-const DEFAULT_UE_PRI_SY_ACTIVATE : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 1; // per-bit trigger fill
-const DEFAULT_UE_PRI_SY_HOLD     : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 2; // hold overrides activate
+const DEFAULT_UE_PRI_SY_HOLD     : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 1; // hold holds the bits
+const DEFAULT_UE_PRI_SY_ACTIVATE : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 2; // per-bit trigger fill overrides hold
 const DEFAULT_UE_PRI_SY_RST      : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 3; // soft reset overrides hold
 // INTERRUPT is not supported, so we use the same priority as RST
 const DEFAULT_UE_PRI_SY_MRST     : i32 = DEFAULT_UE_PRI_RST;              // master reset wins over all
@@ -155,6 +155,16 @@ impl SyncReg {
         );
         self.add_update_event(ue_unset);
 
+        // create the update event for the hold signal
+        if let Some(hold_sig_i) = self.get_hold_sig_i() {
+            let ue = model_ar.make_ue_full(
+                None, Some(hold_sig_i), self.ident,
+                full_sl, full_sl,
+                DEFAULT_UE_PRI_SY_HOLD, self.retrieve_clk_mode(), false, clk_src
+            );
+            self.add_update_event(ue);
+        }
+
         // create the update event for the set signal
         // fill_bit_idx walks left→right across the bit_width, assigning one slot per
         // trigger; the assert below enforces #triggers == bit_width so every slot is
@@ -165,7 +175,7 @@ impl SyncReg {
             let des_sl = Slice::new(fill_bit_idx, fill_bit_idx + 1);
 
             // actual condition = should we update this bit into register?
-            let actual_cond = 
+            let actual_cond =
                 match condi {
                     Some(ci) => {
                         let combined = model_ar.make_expression(
@@ -209,16 +219,6 @@ impl SyncReg {
             "SyncReg '{}': {} of {} bit slots filled",
             self.ident.get_ident_base().get_abs_name(), fill_bit_idx, self.bit_width
         );
-
-        // create the update event for the hold signal
-        if let Some(hold_sig_i) = self.get_hold_sig_i() {
-            let ue = model_ar.make_ue_full(
-                None, Some(hold_sig_i), self.ident,
-                full_sl, full_sl,
-                DEFAULT_UE_PRI_SY_HOLD, self.retrieve_clk_mode(), false, clk_src
-            );
-            self.add_update_event(ue);
-        }
 
         // create the update event for the reset signal
         if let Some(rst_sig_i) = self.get_rst_sig_i() {

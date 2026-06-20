@@ -12,15 +12,15 @@ use crate::model::hw_component::sp_reg::trigger_sig::{HasTriggerSig, TriggerSig}
 use crate::model::common::identifier::{IdentBase, Identifiable};
 
 const DEFAULT_UE_PRI_CW_UNSET : i32 = DEFAULT_UE_PRI_INTERNAL_MIN;
-const DEFAULT_UE_PRI_CW_SET   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 1;
-const DEFAULT_UE_PRI_CW_HOLD  : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 2;
+const DEFAULT_UE_PRI_CW_HOLD  : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 1;
+const DEFAULT_UE_PRI_CW_SET   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 2;
 const DEFAULT_UE_PRI_CW_RST   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 3;
 const DEFAULT_UE_PRI_CW_MRST  : i32 = DEFAULT_UE_PRI_RST;
 
 const DEFAULT_UE_PRI_CY_UNSET : i32 = DEFAULT_UE_PRI_INTERNAL_MIN;
 const DEFAULT_UE_PRI_CY_INC   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 1;
-const DEFAULT_UE_PRI_CY_SET   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 2;
-const DEFAULT_UE_PRI_CY_HOLD  : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 3;
+const DEFAULT_UE_PRI_CY_HOLD  : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 2;
+const DEFAULT_UE_PRI_CY_SET   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 3;
 const DEFAULT_UE_PRI_CY_RST   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 4;
 const DEFAULT_UE_PRI_CY_MRST  : i32 = DEFAULT_UE_PRI_RST;
 
@@ -133,6 +133,16 @@ impl CondWaitStateReg {
         );
         self.add_update_event(ue_unset);
 
+        // hold: rewrite self with self when hold_sig fires (suppresses lower-priority UEs)
+        if let Some(hold_sig_i) = self.get_hold_sig_i() {
+            let ue_hold = model_ar.make_ue_full(
+                None                  , Some(hold_sig_i)        , self.ident,
+                bit_sl                , bit_sl                  ,
+                DEFAULT_UE_PRI_CW_HOLD, self.retrieve_clk_mode(), false, clk_src
+            );
+            self.add_update_event(ue_hold);
+        }
+
         // activate: createUE(activateCond, dependState, upState, {0,1}, MAX, cm)
         let nodes: Vec<_> = self.triggers.iter_depend_nodes().collect();
         for (srci, condi) in nodes {
@@ -152,16 +162,6 @@ impl CondWaitStateReg {
                 DEFAULT_UE_PRI_CW_RST, self.retrieve_clk_mode(), false, clk_src
             );
             self.add_update_event(ue_rst);
-        }
-
-        // hold: rewrite self with self when hold_sig fires (suppresses lower-priority UEs)
-        if let Some(hold_sig_i) = self.get_hold_sig_i() {
-            let ue_hold = model_ar.make_ue_full(
-                None                  , Some(hold_sig_i)        , self.ident,
-                bit_sl                , bit_sl                  ,
-                DEFAULT_UE_PRI_CW_HOLD, self.retrieve_clk_mode(), false, clk_src
-            );
-            self.add_update_event(ue_hold);
         }
 
         // master reset: createUE(None, mrst, downState, {0,1}, MRST, cm)
@@ -424,6 +424,16 @@ impl CycleWaitStateReg {
         );
         self.add_update_event(ue_inc);
 
+        // hold: rewrite self with self when hold_sig fires (suppresses lower-priority UEs)
+        if let Some(hold_sig_i) = self.get_hold_sig_i() {
+            let ue_hold = model_ar.make_ue_full(
+                None, Some(hold_sig_i), self.ident,
+                full_sl, full_sl,
+                DEFAULT_UE_PRI_CY_HOLD, cm, false, clk_src
+            );
+            self.add_update_event(ue_hold);
+        }
+
         // set/activate: on trigger, load start_cnt
         let nodes: Vec<_> = self.triggers.iter_depend_nodes().collect();
         for (srci, condi) in nodes {
@@ -433,16 +443,6 @@ impl CycleWaitStateReg {
                 DEFAULT_UE_PRI_CY_SET, cm, false, clk_src
             );
             self.add_update_event(ue);
-        }
-
-        // hold: rewrite self with self when hold_sig fires (suppresses lower-priority UEs)
-        if let Some(hold_sig_i) = self.get_hold_sig_i() {
-            let ue_hold = model_ar.make_ue_full(
-                None, Some(hold_sig_i), self.ident,
-                full_sl, full_sl,
-                DEFAULT_UE_PRI_CY_HOLD, cm, false, clk_src
-            );
-            self.add_update_event(ue_hold);
         }
 
         // user reset
