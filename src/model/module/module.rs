@@ -162,11 +162,14 @@ impl Module {
         // land in the pending buffer and get registered by build_flow_base's drain.
         arena.push_module_trace_stack(self.ident, ModuleInitStage::FlowBlockBuild);
 
-        // clk + master-reset wires, marked as top-level primitive inputs.
+        // clk + master-reset wires, marked as top-level primitive inputs. They are
+        // driven externally, so they carry no fallback default (not even zero).
         let clk_i = arena.make_wire(false, "clk", 1);
         arena.mark_as_io(clk_i, true, "clk".to_string());
+        arena.disable_wire_default(clk_i);
         let mreset_i = arena.make_wire(false, "mrst", 1);
         arena.mark_as_io(mreset_i, true, "mrst".to_string());
+        arena.disable_wire_default(mreset_i);
 
         // Start node, reset by the master-reset wire.
         let start_node_i = arena.make_start_node("start", mreset_i);
@@ -192,6 +195,14 @@ impl Module {
         mreset_i    : HcpIdent,
     ) {
         self.build_flow_base(arena, start_node_i, clk_i, mreset_i);
+    }
+
+    /// Drain HCPs buffered during FlowBlockBuild (deferred because the module was
+    /// taken out of the arena while building) and file each into the right list.
+    fn register_pending_hcps(&mut self, arena: &mut ModelArena) {
+        for (hcp_i, is_user) in arena.drain_hcp_pending_buffer() {
+            if is_user { self.add_user_hws(hcp_i); } else { self.add_internal_hw(hcp_i); }
+        }
     }
 
     /// Build the user-declared reset events for every reg and default events for
@@ -265,17 +276,21 @@ impl Module {
             arena.build_ccp(ccp_i);
         }
 
-        // Build the user reset (regs) / default (wires) fallback events now that
-        // every HCP of this module is registered and the module clk is known.
-        self.build_reset_and_default_events(arena, clk_i, mreset_i);
-
         // pop this module from flow stack
         arena.pop_module_trace_stack();
+        // register HCPs buffered during the flow build (deferred for ownership reasons)
+        self.register_pending_hcps(arena);
 
-        // register HCPs that were created during FlowBlockBuild, we do this because ownership issue
-        for (hcp_i, is_user) in arena.drain_hcp_pending_buffer() {
-            if is_user { self.add_user_hws(hcp_i); } else { self.add_internal_hw(hcp_i); }
-        }
+
+        // Build the user reset (regs) / default (wires) fallback events now that
+        arena.push_module_trace_stack(self.ident, ModuleInitStage::FlowBlockBuild);
+        // every HCP of this module is registered and the module clk is known.
+        self.build_reset_and_default_events(arena, clk_i, mreset_i);
+        arena.pop_module_trace_stack();
+        // register HCPs buffered during the flow build (deferred for ownership reasons)
+        self.register_pending_hcps(arena);
+
+
 
 
 

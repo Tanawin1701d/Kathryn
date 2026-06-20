@@ -170,6 +170,14 @@ impl ModelArena {
         self.replace_back_wire(wire);
     }
 
+    // Opt a wire out of any fallback event (not even the implicit zero); for
+    // externally driven wires such as clk / master-reset IO inputs.
+    pub fn disable_wire_default(&mut self, wire_i: HcpIdent) {
+        let mut wire = self.take_wire(wire_i);
+        wire.disable_default();
+        self.replace_back_wire(wire);
+    }
+
     // ---- IO mark ----
 
     // Stamp an HCP as an IO port (direction + user-facing name). Take/replace_back
