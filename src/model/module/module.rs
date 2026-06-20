@@ -198,12 +198,12 @@ impl Module {
     /// every wire registered in this module. Reg resets clock off the module clk
     /// (`clk_i`); wire defaults are combinational, low-priority fallbacks. Both are
     /// no-ops on HCPs the user never gave a reset / default value to.
-    fn build_reset_and_default_events(&self, arena: &mut ModelArena, clk_i: HcpIdent) {
+    fn build_reset_and_default_events(&self, arena: &mut ModelArena, clk_i: HcpIdent, mreset_i: HcpIdent) {
         for &reg_i in self.get_internal_hws(HwComponentType::Reg).iter()
                           .chain(self.get_user_hws(HwComponentType::Reg).iter())
         {
             let mut reg = arena.take_reg(reg_i);
-            reg.try_build_reset(clk_i, arena);
+            reg.try_build_reset(clk_i, mreset_i, arena);
             arena.replace_back_reg(reg);
         }
         for &wire_i in self.get_internal_hws(HwComponentType::Wire).iter()
@@ -265,6 +265,10 @@ impl Module {
             arena.build_ccp(ccp_i);
         }
 
+        // Build the user reset (regs) / default (wires) fallback events now that
+        // every HCP of this module is registered and the module clk is known.
+        self.build_reset_and_default_events(arena, clk_i, mreset_i);
+
         // pop this module from flow stack
         arena.pop_module_trace_stack();
 
@@ -273,9 +277,7 @@ impl Module {
             if is_user { self.add_user_hws(hcp_i); } else { self.add_internal_hw(hcp_i); }
         }
 
-        // Build the user reset (regs) / default (wires) fallback events now that
-        // every HCP of this module is registered and the module clk is known.
-        self.build_reset_and_default_events(arena, clk_i);
+
 
         // Sub-modules: send the start / clk / master-reset signals down to slaves.
         let sub_module_ids: Vec<ModuleIdent> = self.user_sub_modules.clone();

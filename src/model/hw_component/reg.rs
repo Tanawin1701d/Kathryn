@@ -51,16 +51,25 @@ impl Reg {
         self.reset_clk_mode = Some(reset_clk_mode)
     }
 
-    pub fn try_build_reset(&mut self, clk_src: HcpIdent, arena: &mut ModelArena){
+    /// Build the master-reset event: when `mreset_i` fires, load the reset value at the
+    /// global RST priority (so it wins over every assignment). Edge-clocked resets draw
+    /// the module clk as their source; combinational ones take no clk_src. No-op when the
+    /// user never declared a reset value.
+    pub fn try_build_reset(&mut self, clk_src: HcpIdent, mreset_i: HcpIdent, arena: &mut ModelArena){
         if self.reset_val.is_none(){return}
-        let src_sl = arena.get_hw_slice(self.reset_val.as_ref().unwrap());
-        self.bind_src(
-            self.reset_val.unwrap(),
-            None, src_sl,
-            Some(DEFAULT_UE_PRI_RST),
-            self.reset_clk_mode,
-            Some(clk_src),
-            arena);
+        let reset_val_i = self.reset_val.unwrap();
+        let src_sl      = arena.get_hw_slice(&reset_val_i);
+        let cm          = self.reset_clk_mode.unwrap_or(ClockMode::ClkFree);
+        let clk_src_opt = match cm {
+            ClockMode::PosEdge | ClockMode::NegEdge => Some(clk_src),
+            _                                       => None,
+        };
+        let ue_i = arena.make_ue_full(
+            None                , Some(mreset_i), reset_val_i,
+            self.get_des_slice(), src_sl        ,
+            DEFAULT_UE_PRI_RST  , cm            , false, clk_src_opt,
+        );
+        self.add_update_event(ue_i);
     }
 
 

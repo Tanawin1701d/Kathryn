@@ -5,7 +5,7 @@ use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HcpSensitiveType, HwComponentType};
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::hw_component::common::slice::Slice;
-use crate::model::hw_component::common::update_event::DEFAULT_UE_PRI_INTERNAL_MIN;
+use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_INTERNAL_MIN, DEFAULT_UE_PRI_MIN};
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_ident::NcpIdent;
 
@@ -48,17 +48,36 @@ impl Wire {
         self.default_val = Some(default_val);
     }
 
-    /// Bind the default value at internal-low priority (combinational, ClkFree) so
-    /// it loses to every user assignment. No-op when no default was set.
+    /// Bind the wire's fallback (combinational, ClkFree). When the user set an explicit
+    /// default it wins at internal-low priority; otherwise an implicit zero is bound at
+    /// the absolute-min priority so an undriven wire reads 0. Either way the fallback
+    /// loses to every real assignment.
     pub fn try_build_default(&mut self, arena: &mut ModelArena) {
-        if self.default_val.is_none() { return }
-        let src_sl = arena.get_hw_slice(self.default_val.as_ref().unwrap());
-        self.bind_src(
-            self.default_val.unwrap(),
-            None, src_sl,
-            Some(DEFAULT_UE_PRI_INTERNAL_MIN),
-            None, None,
-            arena);
+        if let Some(default_val_i) = self.default_val {
+            // explicit user default — beats the implicit zero, loses to real assignments
+            let src_sl = arena.get_hw_slice(&default_val_i);
+            self.bind_src(
+                default_val_i,
+                None, src_sl,
+                Some(DEFAULT_UE_PRI_INTERNAL_MIN),
+                None, None,
+                arena);
+        } else {
+            // implicit zero default — last resort, lowest possible priority
+            let zero_val_i = arena.make_val(
+                false,
+                &format!("{}_DEFAULT_ZERO", self.ident.get_ident_base().get_abs_name()),
+                self.bit_width,
+                0,
+            );
+            let zero_sl = arena.get_hw_slice(&zero_val_i);
+            self.bind_src(
+                zero_val_i,
+                None, zero_sl,
+                Some(DEFAULT_UE_PRI_MIN),
+                None, None,
+                arena);
+        }
     }
 }
 
