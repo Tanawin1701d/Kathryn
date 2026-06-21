@@ -10,6 +10,7 @@ from typing import Optional
 
 from .. import _session
 from .._kathryn import ArbLockedChannel, ArbSamePriPolicy
+from ..hw_component import val, wire
 from ..signal import SignalRef, to_ref
 
 
@@ -86,3 +87,19 @@ class Arb:
         # Clear every grant while `sig` is asserted (set once).
         sig = to_ref(sig)
         _session.arena().arb_set_reset(self._ident, sig._ident, sig._slice)
+
+
+    # ---- convenience constant drivers --------------------------------------
+    def stall(self) -> SignalRef:
+        # Drive a fresh 1-bit wire to constant 1 and bind it as the hold gate.
+        hold_wire = wire(1, "arb_stall")
+        hold_wire *= val(1, 1, "arb_hold_val")
+        self.set_hold(hold_wire)
+        return hold_wire
+
+    def flush(self) -> SignalRef:
+        # Drive a fresh 1-bit wire to constant 1 and bind it as the reset gate.
+        flush_wire = wire(1, "arb_flush")
+        flush_wire *= val(1, 1, "arb_flush_val")
+        self.set_reset(flush_wire)
+        return flush_wire

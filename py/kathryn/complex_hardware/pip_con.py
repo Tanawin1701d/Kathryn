@@ -14,3 +14,5 @@ class PipCon(Arb):
     `pip(...)` or `zync(...)` and the host auto-adds the block's locked leaf."""
 
     __slots__ = ()
+
+
