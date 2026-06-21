@@ -143,16 +143,18 @@ def scwait(cond: SignalRef,    name: Optional[str] = None) -> FlowBlockIdent: re
 def sywait(cycle: int,         name: Optional[str] = None) -> FlowBlockIdent: return _leaf_block("sywait", _session.arena().mk_flow_block_sywait, name, int(cycle))
 
 # ---- pipeline (complex block — inner skeleton auto-opened) -------------------
-# Gated by arbiter `arb` (a CcpIdent from arena().mk_arb). `auto_restart` routes
-# the arb user-reset into the block's start signal so a reset re-launches the
-# pipeline instead of just clearing it.
-def pip(arb, name: Optional[str] = None, *, auto_restart: bool = False) -> _FlowBlockCtx:
-    make = _session.arena().mk_flow_block_pip_auto_restart if auto_restart else _session.arena().mk_flow_block_pip
-    return _complex_block("pip", make, name, arb)
+# Gated by `meta` (a PipMeta / arb). The host adds the pip's leaf at `priority`:
+# `auto_req=False` (default) is a normal leaf; `auto_req=True` Req-locks it (always
+# requesting). `auto_restart` routes the arb user-reset into the block's start
+# signal so a reset re-launches the pipeline instead of clearing it.
+def pip(meta, name: Optional[str] = None, *, auto_restart: bool = False, priority: Optional[int] = None, auto_req: bool = False) -> _FlowBlockCtx:
+    return _complex_block("pip", _session.arena().mk_flow_block_pip, name,
+                          getattr(meta, "ident", meta), priority, auto_req, auto_restart)
 
 # ---- zync (plain block — owns its work asm nodes directly) -------------------
-# Contends on one channel of arbiter `arb` (a CcpIdent from arena().mk_arb). The
-# request channel is allocated when the block is created. `priority` is optional
-# and defaults to the user-default UE priority on the host side when omitted.
-def zync(arb, name: Optional[str] = None, *, priority: Optional[int] = None) -> _FlowBlockCtx:
-    return _block("zync", _session.arena().mk_flow_block_zync, name, arb, priority)
+# Contends on `meta` (a PipMeta / arb). The host adds this block's leaf when the
+# block is created: `auto_ack=False` (default) is a normal leaf that waits for the
+# arbiter grant; `auto_ack=True` Ack-locks it (always granted).
+# `priority` is optional and defaults to the user-default UE priority when omitted.
+def zync(meta, name: Optional[str] = None, *, priority: Optional[int] = None, auto_ack: bool = False) -> _FlowBlockCtx:
+    return _block("zync", _session.arena().mk_flow_block_zync, name, getattr(meta, "ident", meta), priority, auto_ack)

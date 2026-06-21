@@ -21,14 +21,13 @@ pub struct FlowBlockPip {
 }
 
 impl Default for FlowBlockPip {
-    fn default() -> Self { Self::new("", CcpIdent::new(CcpType::Arb, false, "")) }
+    fn default() -> Self { Self::new("", CcpIdent::new(CcpType::Arb, false, ""), false) }
 }
 
 impl FlowBlockPip {
-    pub fn new             (name: &str, arb_i: CcpIdent) -> Self { Self::make(name, arb_i, false) }
-    pub fn new_auto_restart(name: &str, arb_i: CcpIdent) -> Self { Self::make(name, arb_i, true)  }
-
-    fn make(name: &str, arb_i: CcpIdent, auto_restart: bool) -> Self {
+    // `auto_restart` routes the arb user-reset into the block's start signal so a
+    // reset re-launches the pipeline instead of just clearing it.
+    pub fn new(name: &str, arb_i: CcpIdent, auto_restart: bool) -> Self {
         Self {
             base        : FlowBlockBase::new(FlowBlockType::Pipeline, FlowBlockJoinPolicy::SubFlow, name, false),
             schematic   : PipSchematic::new(arb_i),

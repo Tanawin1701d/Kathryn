@@ -1,6 +1,7 @@
 // Mirrors `src/model/` — only the parts exposed to Python are present.
 
 pub mod model_arena;
+pub mod validate_py;
 pub mod arena_impl_py;
 pub mod arena_factory_hwc_py;
 pub mod arena_factory_hwc_expr_py;

@@ -7,6 +7,7 @@ use crate::model::flow_block::{
     FlowBlockWhile, FlowBlockDoWhile, FlowBlockCounterLoop,
     FlowBlockWait, FlowBlockPip, FlowBlockZync,
 };
+use crate::model::complex_hardware::arb::ArbLockedChannel;
 use crate::model::complex_hardware::common::ccp_ident::CcpIdent;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::operation::LogicOp;
@@ -175,24 +176,36 @@ impl ModelArena {
 
     // ---- pip: pipeline ------------------------------------------------------
 
-    // Pipeline block gated by arbiter `arb_i`; holds exactly one body sub-block.
-    pub fn make_flow_block_pip(&mut self, name: &str, arb_i: CcpIdent) -> FlowBlockIdent {
-        let i = self.add_flow_block_pip(FlowBlockPip::new(name, arb_i));
-        i
+    // Add the pip's leaf at `priority`: when `auto_req` it is Req-locked (always
+    // requesting); otherwise it is a normal leaf.
+    fn add_pip_leaf(&mut self, arb_i: CcpIdent, priority: i32, auto_req: bool) {
+        if auto_req {
+            self.arb_add_leaf_locked(arb_i, priority, ArbLockedChannel::Req);
+        } else {
+            self.arb_add_leaf(arb_i, priority);
+        }
     }
 
-    // Pipeline block in auto-restart mode: the arb user-reset re-launches the flow.
-    pub fn make_flow_block_pip_auto_restart(&mut self, name: &str, arb_i: CcpIdent) -> FlowBlockIdent {
-        let i = self.add_flow_block_pip(FlowBlockPip::new_auto_restart(name, arb_i));
-        i
+    // Pipeline block gated by arbiter `arb_i`; holds exactly one body sub-block.
+    // Adds the pip's leaf at `priority` (Req-locked when `auto_req`). When
+    // `auto_restart` the arb user-reset re-launches the flow instead of clearing it.
+    pub fn make_flow_block_pip(&mut self, name: &str, arb_i: CcpIdent, priority: i32, auto_req: bool, auto_restart: bool) -> FlowBlockIdent {
+        self.add_pip_leaf(arb_i, priority, auto_req);
+        self.add_flow_block_pip(FlowBlockPip::new(name, arb_i, auto_restart))
     }
 
     // ---- zync ---------------------------------------------------------------
 
-    // Zync block contending on arbiter `arb_i`; its request channel (leaf) is
-    // allocated here at creation time with arbitration `priority`.
-    pub fn make_flow_block_zync(&mut self, name: &str, arb_i: CcpIdent, priority: i32) -> FlowBlockIdent {
-        let block = FlowBlockZync::new(name, arb_i, priority, self);
+    // Zync block contending on arbiter `arb_i`; its channel (leaf) is allocated
+    // here at creation time with arbitration `priority`. When `auto_ack` the leaf
+    // is Ack-locked (always granted); otherwise it is a normal contending leaf.
+    pub fn make_flow_block_zync(&mut self, name: &str, arb_i: CcpIdent, priority: i32, auto_ack: bool) -> FlowBlockIdent {
+        let channel_i = if auto_ack {
+            self.arb_add_leaf_locked(arb_i, priority, ArbLockedChannel::Ack)
+        } else {
+            self.arb_add_leaf(arb_i, priority)
+        };
+        let block = FlowBlockZync::new(name, arb_i, channel_i);
         self.add_flow_block_zync(block)
     }
 }

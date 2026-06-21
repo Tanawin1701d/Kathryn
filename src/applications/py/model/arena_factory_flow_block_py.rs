@@ -11,44 +11,7 @@ use super::hw_component::common::hcp_ident_py::PyHcpIdent;
 use super::hw_component::common::slice_py::PySlice;
 use super::complex_hardware::ccp_ident_py::PyCcpIdent;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
-use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::common::update_event::DEFAULT_UE_PRI_USER;
-
-impl PyModelArena {
-    // Validate the condition the block will gate on. The slice (when given) must
-    // fit inside `cond_i`'s bit-width, and the *effective* condition — the slice
-    // size, or the whole variable when no real range is given — must be exactly
-    // 1 bit. Both mismatches are raised here as ValueError so they surface at
-    // construction rather than as a host panic during build.
-    fn check_cond_slice_match(&self, cond_i: HcpIdent, cond_slice: Option<PySlice>) -> PyResult<()> {
-        let var_width = self.arena.get_hw_bit_sz(&cond_i);
-
-        // Effective condition width: the slice when a real range is given,
-        // otherwise the whole variable (default/invalid slice = whole signal).
-        let cond_width = match cond_slice {
-            Some(s) => {
-                let s: Slice = s.into();
-                if !s.check_valid_slice() {
-                    var_width
-                } else {
-                    if s.stop > var_width {
-                        return Err(PyValueError::new_err(format!(
-                            "cond slice {s:?} does not fit cond variable of width {var_width}")));
-                    }
-                    s.get_size()
-                }
-            }
-            None => var_width,
-        };
-
-        // A flow-block condition must be a single bit.
-        if cond_width != 1 {
-            return Err(PyValueError::new_err(format!(
-                "cond must be 1-bit, got {cond_width} (slice the cond variable down to one bit)")));
-        }
-        Ok(())
-    }
-}
 
 #[pymethods]
 impl PyModelArena {
@@ -197,23 +160,24 @@ impl PyModelArena {
     // ---- pip: pipeline ------------------------------------------------------
 
     // Pipeline block gated by arbiter `arb_i`; holds exactly one body sub-block.
-    fn mk_flow_block_pip(&mut self, name: &str, arb_i: PyCcpIdent) -> PyFlowBlockIdent {
-        self.arena.make_flow_block_pip(name, arb_i.into()).into()
-    }
-
-    // Pipeline block in auto-restart mode: the arb user-reset re-launches the flow.
-    fn mk_flow_block_pip_auto_restart(&mut self, name: &str, arb_i: PyCcpIdent) -> PyFlowBlockIdent {
-        self.arena.make_flow_block_pip_auto_restart(name, arb_i.into()).into()
+    // The pip's leaf is added at `priority` (default user priority); `auto_req`
+    // (default false) keeps a normal leaf, pass true to Req-lock it (always requesting).
+    // `auto_restart` (default false) routes the arb user-reset back into the start.
+    #[pyo3(signature = (name, arb_i, priority=None, auto_req=false, auto_restart=false))]
+    fn mk_flow_block_pip(&mut self, name: &str, arb_i: PyCcpIdent, priority: Option<i32>, auto_req: bool, auto_restart: bool) -> PyFlowBlockIdent {
+        let priority = priority.unwrap_or(DEFAULT_UE_PRI_USER);
+        self.arena.make_flow_block_pip(name, arb_i.into(), priority, auto_req, auto_restart).into()
     }
 
     // ---- zync ---------------------------------------------------------------
 
-    // Zync block contending on arbiter `arb_i`; its request channel (leaf) is
-    // allocated here at creation time. `priority` is optional and defaults to the
-    // user-default UE priority when omitted.
-    #[pyo3(signature = (name, arb_i, priority=None))]
-    fn mk_flow_block_zync(&mut self, name: &str, arb_i: PyCcpIdent, priority: Option<i32>) -> PyFlowBlockIdent {
+    // Zync block contending on arbiter `arb_i`; its channel (leaf) is allocated
+    // here at creation time. `priority` is optional and defaults to the user-default
+    // UE priority when omitted. `auto_ack` (default false) keeps a normal leaf that
+    // waits for the arbiter grant; pass true to Ack-lock it (always granted).
+    #[pyo3(signature = (name, arb_i, priority=None, auto_ack=false))]
+    fn mk_flow_block_zync(&mut self, name: &str, arb_i: PyCcpIdent, priority: Option<i32>, auto_ack: bool) -> PyFlowBlockIdent {
         let priority = priority.unwrap_or(DEFAULT_UE_PRI_USER);
-        self.arena.make_flow_block_zync(name, arb_i.into(), priority).into()
+        self.arena.make_flow_block_zync(name, arb_i.into(), priority, auto_ack).into()
     }
 }

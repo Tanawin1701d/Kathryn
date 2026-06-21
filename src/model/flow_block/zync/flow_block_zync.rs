@@ -33,10 +33,9 @@ impl Default for FlowBlockZync {
 }
 
 impl FlowBlockZync {
-    // Allocate this block's arb request channel (leaf) at creation time and bind
-    // the schematic to it; `priority` is the leaf's arbitration priority.
-    pub fn new(name: &str, arb_i: CcpIdent, priority: i32, arena: &mut ModelArena) -> Self {
-        let channel_i = arena.arb_add_leaf(arb_i, priority);
+    // Bind the schematic to this block's arb channel (leaf). The leaf is allocated
+    // by the caller (the `make_flow_block_zync` factory) and its index passed in.
+    pub fn new(name: &str, arb_i: CcpIdent, channel_i: usize) -> Self {
         Self {
             base     : FlowBlockBase::new(FlowBlockType::Zync, FlowBlockJoinPolicy::SubFlow, name, false),
             schematic: ZyncSchematic::new(arb_i, channel_i),
