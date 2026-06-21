@@ -149,13 +149,5 @@ async def check_reset_clears(dut):
     await Timer(1, unit="ns")
     assert _abc(dut) == (0, 0, 0), f"reset did not clear the pipeline: {_abc(dut)}"
 
-@cocotb.test()
-async def check_debug(dut):
-    # While master reset is held every stage is pinned to its reset value 0.
-    await _reset_and_release(dut)
-    for _ in range(20):
-        await RisingEdge(dut.clk)
-
-
 # ---- register into the shared pool ------------------------------------------
 cocotb_pool.register(NAME, build, __name__)
