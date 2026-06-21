@@ -33,11 +33,14 @@ fn vary_val_to_verilog(val: &VaryVal) -> String {
 // ---- HcpBaseVb impl ----
 
 impl HcpBaseVb for Val {
-    fn gen_type_vb    (&self) -> String { let w = signal_width(self.get_des_slice().get_size()); format!("localparam {w}") }
+    fn gen_type_vb    (&self) -> String { let w = signal_width(self.get_des_slice().get_size()); format!("wire {w}") }
     fn gen_var_name_vb(&self) -> String { self.get_global_name().to_string() }
     fn amt_init_line_vb(&self) -> u32   { 1 }
 
-    /// Full declaration line: `localparam [N-1:0] NAME = VALUE;`
+    /// Full declaration line: `wire [N-1:0] NAME = VALUE;` — a net declaration
+    /// assignment (implicit continuous assign) so `always @(*)` blocks that read
+    /// a constant Val get a real net in their sensitivity list and actually fire
+    /// (a `localparam` is not a net, so a constant-only @(*) would never trigger).
     fn gen_init_line_vb(&self, _idx: u32, _arena: &mut ModelArena, fw: &mut FileWriter) {
         let t    = self.gen_type_vb();
         let name = self.gen_var_name_vb();

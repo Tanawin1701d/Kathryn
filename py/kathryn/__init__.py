@@ -18,7 +18,7 @@ from .flow_block import (
     pip,
     zync,
 )
-from .complex_hardware import Arb, ArbLeaf, PipMeta
+from .complex_hardware import Arb, ArbLeaf, PipCon
 from .module import Module, init, flow, set_top
 from . import priority as _priority
 from .priority import (
@@ -47,7 +47,7 @@ __all__ = [
     "pip",
     "zync",
     # complex hardware (arb)
-    "Arb", "ArbLeaf", "PipMeta",
+    "Arb", "ArbLeaf", "PipCon",
     # module scope + session
     "Module", "init", "flow", "arena", "reset",
     "gen_flow", "build_flow", "build_model", "set_top", "emit_verilog",

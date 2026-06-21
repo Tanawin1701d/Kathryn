@@ -9,6 +9,7 @@ from typing import Callable, Optional
 
 from . import _session
 from ._kathryn import FlowBlockType, FlowBlockIdent
+from .complex_hardware import PipCon
 from .signal import SignalRef, to_ref
 
 
@@ -142,19 +143,26 @@ def cloop   (last_loop_cnt: int,   name: Optional[str] = None) -> _FlowBlockCtx:
 def scwait(cond: SignalRef,    name: Optional[str] = None) -> FlowBlockIdent: return _leaf_block("scwait", _session.arena().mk_flow_block_scwait, name, *_cond_args(cond))
 def sywait(cycle: int,         name: Optional[str] = None) -> FlowBlockIdent: return _leaf_block("sywait", _session.arena().mk_flow_block_sywait, name, int(cycle))
 
+# pip/zync contend on a shared arbiter — it must be a `PipCon`, not a plain arb or
+# raw ident, so the locked-leaf contract the host relies on is guaranteed.
+def _pip_con_ident(meta) -> "object":
+    if not isinstance(meta, PipCon):
+        raise TypeError(f"pip/zync `meta` must be a PipCon, got {type(meta).__name__}")
+    return meta.ident
+
 # ---- pipeline (complex block — inner skeleton auto-opened) -------------------
-# Gated by `meta` (a PipMeta / arb). The host adds the pip's leaf at `priority`:
+# Gated by `meta` (a PipCon). The host adds the pip's leaf at `priority`:
 # `auto_req=False` (default) is a normal leaf; `auto_req=True` Req-locks it (always
 # requesting). `auto_restart` routes the arb user-reset into the block's start
 # signal so a reset re-launches the pipeline instead of clearing it.
 def pip(meta, name: Optional[str] = None, *, auto_restart: bool = False, priority: Optional[int] = None, auto_req: bool = False) -> _FlowBlockCtx:
     return _complex_block("pip", _session.arena().mk_flow_block_pip, name,
-                          getattr(meta, "ident", meta), priority, auto_req, auto_restart)
+                          _pip_con_ident(meta), priority, auto_req, auto_restart)
 
 # ---- zync (plain block — owns its work asm nodes directly) -------------------
-# Contends on `meta` (a PipMeta / arb). The host adds this block's leaf when the
+# Contends on `meta` (a PipCon). The host adds this block's leaf when the
 # block is created: `auto_ack=False` (default) is a normal leaf that waits for the
 # arbiter grant; `auto_ack=True` Ack-locks it (always granted).
 # `priority` is optional and defaults to the user-default UE priority when omitted.
 def zync(meta, name: Optional[str] = None, *, priority: Optional[int] = None, auto_ack: bool = False) -> _FlowBlockCtx:
-    return _block("zync", _session.arena().mk_flow_block_zync, name, getattr(meta, "ident", meta), priority, auto_ack)
+    return _block("zync", _session.arena().mk_flow_block_zync, name, _pip_con_ident(meta), priority, auto_ack)
