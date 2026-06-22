@@ -20,4 +20,4 @@ pub use do_while_schematic::DoWhileSchematic;
 pub use counter_loop_schematic::CounterLoopSchematic;
 pub use wait_schematic::{WaitSchematic, WaitMode};
 pub use pip_schematic::PipSchematic;
-pub use zync_schematic::ZyncSchematic;
+pub use zync_schematic::{ZyncSchematic, ZyncArbBind, ZyncSyncMode};

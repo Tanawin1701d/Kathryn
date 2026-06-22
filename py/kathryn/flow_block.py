@@ -169,9 +169,62 @@ def pip(meta, name: Optional[str] = None, *, auto_restart: bool = False, priorit
                           _pip_con_ident(meta), priority, auto_req, auto_restart)
 
 # ---- zync (plain block — owns its work asm nodes directly) -------------------
-# Contends on `meta` (a PipCon). The host adds this block's leaf when the
-# block is created: `auto_ack=False` (default) is a normal leaf that waits for the
-# arbiter grant; `auto_ack=True` Ack-locks it (always granted).
-# `priority` is optional and defaults to the user-default UE priority when omitted.
-def zync(meta, name: Optional[str] = None, *, priority: Optional[int] = None, auto_ack: bool = False) -> _FlowBlockCtx:
-    return _block("zync", _session.arena().mk_flow_block_zync, name, _pip_con_ident(meta), priority, auto_ack)
+# Contend on one OR several arbiters. `meta` is a single bind or a list of binds;
+# each bind is one of:
+#     PipCon                       -> contend on it, no condition, default priority
+#     (PipCon, cond)               -> gate this arb on the 1-bit `cond` SignalRef
+#     (PipCon, cond, priority)     -> also pin this arb's leaf arbitration priority
+# A bind's `cond` gates both its REQ (`state_exit & cond`) and its grant term
+# (`ack & cond`); pass `None` for an always-on bind. `mode` selects how the binds'
+# grants combine: "any" (default) fires when ANY bind's `ack & cond` is high (OR);
+# "all" fires only when EVERY bind's is high (AND). For a single bind the two coincide.
+# `priority` is the default leaf priority for binds that don't pin their own;
+# `auto_ack` Ack-locks every bind's leaf (always granted) — default is a normal leaf.
+# WARNING (mode="all"): the grant is AND over `ack & cond`, so a bind whose condition
+# is false contributes 0 — the target may fire on a partial set of the arbs.
+def _check_opt_priority(p, where: str):
+    # Priorities are ints (or None to inherit the default); reject bool/float/etc.
+    if p is not None and (not isinstance(p, int) or isinstance(p, bool)):
+        raise TypeError(f"{where} priority must be an int or None, got {type(p).__name__}")
+    return p
+
+def _zync_one_bind(item, auto_ack: bool) -> tuple:
+    # Normalize one bind into (pip_ident, priority|None, auto_ack, cond_ident|None).
+    if isinstance(item, tuple):
+        if not 1 <= len(item) <= 3:
+            raise TypeError("zync bind tuple must be (meta), (meta, cond) or "
+                            f"(meta, cond, priority); got a {len(item)}-tuple")
+        meta     = item[0]
+        cond     = item[1] if len(item) >= 2 else None
+        priority = item[2] if len(item) >= 3 else None
+    else:
+        meta, cond, priority = item, None, None
+
+    pip_i  = _pip_con_ident(meta)                                # raises unless a PipCon
+    cond_i = to_ref(cond)._ident if cond is not None else None   # raises unless a signal
+    _check_opt_priority(priority, "zync bind")
+    return (pip_i, priority, bool(auto_ack), cond_i)
+
+def _zync_binds(meta, auto_ack: bool) -> list:
+    items = meta if isinstance(meta, list) else [meta]
+    if not items:
+        raise ValueError("zync requires at least one arb bind")
+    return [_zync_one_bind(it, auto_ack) for it in items]
+
+def _zync_match_all(mode) -> bool:
+    norm = mode.lower() if isinstance(mode, str) else mode
+    if norm == "all":           return True
+    if norm in ("some", "any"): return False
+    raise ValueError(f"zync mode must be 'all' or 'some', got {mode!r}")
+
+def zync(
+    meta,
+    name    : Optional[str] = None,
+    *,
+    mode    : str           = "any",
+    priority: Optional[int] = None,
+    auto_ack: bool          = False,
+) -> _FlowBlockCtx:
+    _check_opt_priority(priority, "zync")
+    return _block("zync", _session.arena().mk_flow_block_zync_multi, name,
+                  _zync_binds(meta, auto_ack), _zync_match_all(mode), priority)

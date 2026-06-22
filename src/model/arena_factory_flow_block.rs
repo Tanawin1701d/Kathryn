@@ -8,6 +8,7 @@ use crate::model::flow_block::{
     FlowBlockWhile, FlowBlockDoWhile, FlowBlockCounterLoop,
     FlowBlockWait, FlowBlockPip, FlowBlockZync,
 };
+use crate::model::flow_block::common::{ZyncArbBind, ZyncSyncMode};
 use crate::model::complex_hardware::arb::ArbLockedChannel;
 use crate::model::complex_hardware::common::ccp_ident::CcpIdent;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
@@ -219,16 +220,41 @@ impl ModelArena {
 
     // ---- zync ---------------------------------------------------------------
 
-    // Zync block contending on arbiter `arb_i`; its channel (leaf) is allocated
-    // here at creation time with arbitration `priority`. When `auto_ack` the leaf
-    // is Ack-locked (always granted); otherwise it is a normal contending leaf.
+    // Single-arb zync — sugar over the multi path: one unconditional channel on
+    // `arb_i` at `priority`, Ack-locked when `auto_ack`.
     pub fn make_flow_block_zync(&mut self, name: &str, arb_i: CcpIdent, priority: i32, auto_ack: bool) -> FlowBlockIdent {
+        self.make_flow_block_zync_multi(name, vec![(arb_i, priority, auto_ack, None)], ZyncSyncMode::Any)
+    }
+
+    // Allocate one zync channel (leaf) on `arb_i` and pack it into a ZyncArbBind,
+    // gated by the optional raw `condition_i`.  Ack-locked when `auto_ack`.
+    fn add_zync_leaf(&mut self, arb_i: CcpIdent, priority: i32, auto_ack: bool, condition_i: Option<HcpIdent>) -> ZyncArbBind {
         let channel_i = if auto_ack {
             self.arb_add_leaf_locked(arb_i, priority, ArbLockedChannel::Ack)
         } else {
             self.arb_add_leaf(arb_i, priority)
         };
-        let block = FlowBlockZync::new(name, arb_i, channel_i);
+        ZyncArbBind::new(arb_i, channel_i, condition_i)
+    }
+
+    // Multi-arb zync: contend on every `(arb, priority, auto_ack, condition)` entry,
+    // allocating one channel per arb, and combine their grants per `mode` (Any =
+    // "for some", All = "for all").  Each arb's REQ is gated by `state_exit & cond`
+    // and its grant contribution is `ack & cond`.
+    pub fn make_flow_block_zync_multi(
+        &mut self,
+        name : &str,
+        arbs : Vec<(CcpIdent, i32, bool, Option<HcpIdent>)>,
+        mode : ZyncSyncMode,
+    ) -> FlowBlockIdent {
+        assert!(!arbs.is_empty(), "make_flow_block_zync_multi: at least one arb required");
+        let binds: Vec<ZyncArbBind> = arbs
+            .into_iter()
+            .map(|(arb_i, priority, auto_ack, condition_i)| {
+                self.add_zync_leaf(arb_i, priority, auto_ack, condition_i)
+            })
+            .collect();
+        let block = FlowBlockZync::new(name, binds, mode);
         self.add_flow_block_zync(block)
     }
 }

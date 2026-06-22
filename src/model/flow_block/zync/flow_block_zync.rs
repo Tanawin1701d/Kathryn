@@ -1,6 +1,6 @@
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::complex_hardware::common::ccp_ident::{CcpIdent, CcpType};
-use crate::model::flow_block::common::ZyncSchematic;
+use crate::model::flow_block::common::{ZyncArbBind, ZyncSchematic, ZyncSyncMode};
 use crate::model::flow_block::flow_block_base::{FlowBlock, FlowBlockBase};
 use crate::model::flow_block::flow_block_ident::{FlowBlockIdent, FlowBlockJoinPolicy, FlowBlockType};
 use crate::model::flow_block::node_wrap::NodeWrap;
@@ -21,30 +21,28 @@ pub struct FlowBlockZync {
 }
 
 impl Default for FlowBlockZync {
-    // Placeholder for arena take/replace_back only; never contends (channel 0 on
-    // a dummy arb).  Real blocks come from `new`, which allocates a real channel.
+    // Placeholder for arena take/replace_back only; never contends (channel 0 on a
+    // dummy arb).  Real blocks come from `new`, whose binds carry allocated leaves.
     fn default() -> Self {
+        let placeholder_i = ZyncArbBind::new(CcpIdent::new(CcpType::Arb, false, ""), 0, None);
         Self {
             base     : FlowBlockBase::new(FlowBlockType::Zync, FlowBlockJoinPolicy::SubFlow, "", false),
-            schematic: ZyncSchematic::new(CcpIdent::new(CcpType::Arb, false, ""), 0),
+            schematic: ZyncSchematic::new(vec![placeholder_i], ZyncSyncMode::Any),
             result   : None,
         }
     }
 }
 
 impl FlowBlockZync {
-    // Bind the schematic to this block's arb channel (leaf). The leaf is allocated
-    // by the caller (the `make_flow_block_zync` factory) and its index passed in.
-    pub fn new(name: &str, arb_i: CcpIdent, channel_i: usize) -> Self {
+    // Contend on every bind, combining grants per `mode`.  Leaves are allocated by
+    // the `make_flow_block_zync*` factories; their indices ride inside each bind.
+    pub fn new(name: &str, binds: Vec<ZyncArbBind>, mode: ZyncSyncMode) -> Self {
         Self {
             base     : FlowBlockBase::new(FlowBlockType::Zync, FlowBlockJoinPolicy::SubFlow, name, false),
-            schematic: ZyncSchematic::new(arb_i, channel_i),
+            schematic: ZyncSchematic::new(binds, mode),
             result   : None,
         }
     }
-
-    pub fn get_arb_i    (&self) -> CcpIdent { self.schematic.get_arb_i()     }
-    pub fn get_channel_i(&self) -> usize    { self.schematic.get_channel_i() }
 }
 
 impl FlowBlock for FlowBlockZync {
@@ -66,6 +64,18 @@ impl FlowBlock for FlowBlockZync {
     }
 
     fn build_hw_component(&mut self, arena: &mut ModelArena) {
+        // In All ("for all") mode the grant is AND over the binds' (ack & cond): a
+        // bind whose condition is false contributes 0, so the work node can fire on
+        // a partial set of the intended arbs.  Warn that the target may activate
+        // while not every condition is satisfied — but only for a genuine multi-arb
+        // block (with one bind All and Some coincide, so there is nothing to warn).
+        if self.schematic.get_mode() == ZyncSyncMode::All && self.schematic.get_binds().len() > 1 {
+            eprintln!(
+                "[kathryn][warn] zync block '{}': All-mode grant is AND over (ack & cond); \
+                 the target may activate when not all conditions are satisfied",
+                self.base.get_ident().get_rel_name(),
+            );
+        }
         self.result = Some(self.schematic.build(&mut self.base, arena));
     }
 

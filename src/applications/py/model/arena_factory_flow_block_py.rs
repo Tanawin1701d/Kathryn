@@ -12,6 +12,8 @@ use super::hw_component::common::slice_py::PySlice;
 use super::complex_hardware::ccp_ident_py::PyCcpIdent;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::update_event::DEFAULT_UE_PRI_USER;
+use crate::model::complex_hardware::common::ccp_ident::CcpIdent;
+use crate::model::flow_block::common::ZyncSyncMode;
 
 #[pymethods]
 impl PyModelArena {
@@ -199,5 +201,33 @@ impl PyModelArena {
     fn mk_flow_block_zync(&mut self, name: &str, arb_i: PyCcpIdent, priority: Option<i32>, auto_ack: bool) -> PyFlowBlockIdent {
         let priority = priority.unwrap_or(DEFAULT_UE_PRI_USER);
         self.arena.make_flow_block_zync(name, arb_i.into(), priority, auto_ack).into()
+    }
+
+    // Multi-arb zync: contend on every `(arb, bind_priority, auto_ack, condition)`
+    // bind, allocating one channel per arb, and combine their grants per `match_all`
+    // (true = "for all" / AND, false = "for some" / OR).  Each bind's leaf priority
+    // is its own `bind_priority` when set, else the block-level `priority` (which
+    // itself defaults to the user-default UE priority).  Each arb's REQ is gated by
+    // `state_exit & condition` and its grant term is `ack & condition` (None = always).
+    #[pyo3(signature = (name, binds, match_all, priority=None))]
+    fn mk_flow_block_zync_multi(
+        &mut self,
+        name     : &str,
+        binds    : Vec<(PyCcpIdent, Option<i32>, bool, Option<PyHcpIdent>)>,
+        match_all: bool,
+        priority : Option<i32>,
+    ) -> PyResult<PyFlowBlockIdent> {
+        if binds.is_empty() {
+            return Err(PyValueError::new_err("zync requires at least one arb bind"));
+        }
+        let default_priority = priority.unwrap_or(DEFAULT_UE_PRI_USER);
+        let mode             = if match_all { ZyncSyncMode::All } else { ZyncSyncMode::Any };
+        let arbs: Vec<(CcpIdent, i32, bool, Option<HcpIdent>)> = binds
+            .into_iter()
+            .map(|(arb_i, bind_priority, auto_ack, cond_i)| {
+                (arb_i.into(), bind_priority.unwrap_or(default_priority), auto_ack, cond_i.map(Into::into))
+            })
+            .collect();
+        Ok(self.arena.make_flow_block_zync_multi(name, arbs, mode).into())
     }
 }
