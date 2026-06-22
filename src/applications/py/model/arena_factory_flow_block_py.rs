@@ -102,6 +102,26 @@ impl PyModelArena {
         self.arena.make_flow_block_zcase(name, match_val).into()
     }
 
+    // ---- pick: PICK / PIF / PIDEF -------------------------------------------
+
+    // Container that runs whichever branch matches; the exit is NOT auto-synced.
+    fn mk_flow_block_pick(&mut self, name: &str) -> PyFlowBlockIdent {
+        self.arena.make_flow_block_pick(name).into()
+    }
+
+    // One `pif` branch, gated by its raw condition `cond_i[cond_slice]`.
+    #[pyo3(signature = (name, cond_i, cond_slice=None))]
+    fn mk_flow_block_pif(&mut self, name: &str, cond_i: PyHcpIdent, cond_slice: Option<PySlice>) -> PyResult<PyFlowBlockIdent> {
+        let cond_i: HcpIdent = cond_i.into();
+        self.check_cond_slice_match(cond_i, cond_slice)?;
+        Ok(self.arena.make_flow_block_pif(name, cond_i, cond_slice.map(Into::into)).into())
+    }
+
+    // The optional `pidef` default branch (runs when no pif matched).
+    fn mk_flow_block_pidef(&mut self, name: &str) -> PyFlowBlockIdent {
+        self.arena.make_flow_block_pidef(name).into()
+    }
+
     // ---- while: CWHILE / SWHILE ---------------------------------------------
 
     // Combinational `while` gated by `cond_i[cond_slice]`.

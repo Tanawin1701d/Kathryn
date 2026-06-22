@@ -15,7 +15,7 @@ pub use flow_block_base::{FlowBlock, FlowBlockBase, ExtSigType};
 pub use flow_block_ident::{BlockTrackStatus, FlowBlockIdent, FlowBlockJoinPolicy, FlowBlockType};
 pub use seq::FlowBlockSeq;
 pub use par::FlowBlockPar;
-pub use cond::{FlowBlockCond, FlowBlockCondElif, FlowBlockZeroCondIf, FlowBlockZeroCondElif, FlowBlockZeroSwitch, FlowBlockZeroSwitchCase};
+pub use cond::{FlowBlockCond, FlowBlockCondElif, FlowBlockZeroCondIf, FlowBlockZeroCondElif, FlowBlockZeroSwitch, FlowBlockZeroSwitchCase, FlowBlockPick, FlowBlockPickIf};
 pub use loops::{FlowBlockWhile, FlowBlockDoWhile, FlowBlockCounterLoop};
 pub use wait::FlowBlockWait;
 pub use pipeline::FlowBlockPip;

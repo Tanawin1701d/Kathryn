@@ -64,6 +64,8 @@ impl ModelArena {
             flow_block_zero_cond_elifs   : ArenaGroup::new(),
             flow_block_zero_switches     : ArenaGroup::new(),
             flow_block_zero_switch_cases : ArenaGroup::new(),
+            flow_block_picks             : ArenaGroup::new(),
+            flow_block_pick_ifs          : ArenaGroup::new(),
             flow_block_whiles            : ArenaGroup::new(),
             flow_block_do_whiles         : ArenaGroup::new(),
             flow_block_counter_loops     : ArenaGroup::new(),
@@ -119,6 +121,8 @@ impl ModelArena {
         self.flow_block_zero_cond_elifs   = ArenaGroup::new();
         self.flow_block_zero_switches     = ArenaGroup::new();
         self.flow_block_zero_switch_cases = ArenaGroup::new();
+        self.flow_block_picks             = ArenaGroup::new();
+        self.flow_block_pick_ifs          = ArenaGroup::new();
         self.flow_block_whiles            = ArenaGroup::new();
         self.flow_block_do_whiles         = ArenaGroup::new();
         self.flow_block_counter_loops     = ArenaGroup::new();

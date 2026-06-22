@@ -133,6 +133,15 @@ def zelse (                 name: Optional[str] = None) -> _FlowBlockCtx: return
 def zstate(state: SignalRef,   name: Optional[str] = None) -> _FlowBlockCtx: return _block("zstate", _session.arena().mk_flow_block_zstate, name, to_ref(state)._ident)
 def zcase (match_val: int,     name: Optional[str] = None) -> _FlowBlockCtx: return _block("zcase",  _session.arena().mk_flow_block_zcase,  name, int(match_val))
 
+# ---- pick (container + pif / pidef branches) --------------------------------
+# `pick` runs whichever `pif` branch matches its raw condition (no chaining — keep
+# the conditions mutually exclusive yourself). The optional `pidef` runs only when
+# no pif matched. WARNING: the pick exit is NOT auto-synchronized — the branch that
+# fires drives the exit signal. `pif`/`pidef` are complex blocks (auto inner skeleton).
+def pick (                 name: Optional[str] = None) -> _FlowBlockCtx: return _block("pick", _session.arena().mk_flow_block_pick, name)
+def pif  (cond: SignalRef, name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("pif",   _session.arena().mk_flow_block_pif,   name, *_cond_args(cond))
+def pidef(                 name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("pidef", _session.arena().mk_flow_block_pidef, name)
+
 # ---- loops (complex blocks — inner skeleton auto-opened) --------------------
 def cwhile  (cond: SignalRef,      name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cwhile",   _session.arena().mk_flow_block_cwhile,       name, *_cond_args(cond))
 def swhile  (cond: SignalRef,      name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("swhile",   _session.arena().mk_flow_block_swhile,       name, *_cond_args(cond))

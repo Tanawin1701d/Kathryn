@@ -4,6 +4,7 @@ use crate::model::flow_block::{
     FlowBlockCond, FlowBlockCondElif,
     FlowBlockZeroCondIf, FlowBlockZeroCondElif,
     FlowBlockZeroSwitch, FlowBlockZeroSwitchCase,
+    FlowBlockPick, FlowBlockPickIf,
     FlowBlockWhile, FlowBlockDoWhile, FlowBlockCounterLoop,
     FlowBlockWait, FlowBlockPip, FlowBlockZync,
 };
@@ -120,6 +121,28 @@ impl ModelArena {
 
     pub fn make_flow_block_zcase(&mut self, name: &str, match_val: i32) -> FlowBlockIdent {
         let i = self.add_flow_block_zero_switch_case(FlowBlockZeroSwitchCase::new(name, match_val));
+        i
+    }
+
+    // ---- pick: PICK ---------------------------------------------------------
+
+    pub fn make_flow_block_pick(&mut self, name: &str) -> FlowBlockIdent {
+        let i = self.add_flow_block_pick(FlowBlockPick::new(name));
+        i
+    }
+
+    // ---- pick branch: PIF ---------------------------------------------------
+
+    pub fn make_flow_block_pif(&mut self, name: &str, cond_i: HcpIdent, cond_slice: Option<Slice>) -> FlowBlockIdent {
+        let cond_i = self.resolve_cond_slice(name, cond_i, cond_slice);
+        let i = self.add_flow_block_pick_if(FlowBlockPickIf::new_pif(name, cond_i));
+        i
+    }
+
+    // ---- pick branch: PIDEF -------------------------------------------------
+
+    pub fn make_flow_block_pidef(&mut self, name: &str) -> FlowBlockIdent {
+        let i = self.add_flow_block_pick_if(FlowBlockPickIf::new_pidef(name));
         i
     }
 

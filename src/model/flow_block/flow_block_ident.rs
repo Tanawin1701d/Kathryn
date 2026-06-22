@@ -40,6 +40,8 @@ pub enum FlowBlockType {
     Wait,
     Pipeline,
     Zync,
+    Pick,
+    PickIf,
 }
 
 impl FlowBlockType {
@@ -59,6 +61,8 @@ impl FlowBlockType {
             Self::Wait           => "WAIT",
             Self::Pipeline       => "PIPELINE",
             Self::Zync           => "ZYNC",
+            Self::Pick           => "PICK",
+            Self::PickIf         => "PICK_IF",
         }
     }
 
@@ -80,6 +84,8 @@ impl FlowBlockType {
             Self::Wait           => "Wait",
             Self::Pipeline       => "Pipeline",
             Self::Zync           => "Zync",
+            Self::Pick           => "Pick",
+            Self::PickIf         => "PickIf",
         }
     }
 
@@ -100,6 +106,8 @@ impl FlowBlockType {
             Self::Wait           => 11,
             Self::Pipeline       => 12,
             Self::Zync           => 13,
+            Self::Pick           => 14,
+            Self::PickIf         => 15,
         }
     }
 
@@ -121,6 +129,8 @@ impl FlowBlockType {
             11 => Self::Wait,
             12 => Self::Pipeline,
             13 => Self::Zync,
+            14 => Self::Pick,
+            15 => Self::PickIf,
             _  => return None,
         };
         Some(t)

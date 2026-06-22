@@ -9,6 +9,7 @@ import kathryn as k
 from kathryn import (
     reset, set_top, reg, wire, val, mem_blk, mem_ele,
     seq, sif, par, expr,
+    pick, pif, pidef,
     Module, init, flow, gen_flow, build_flow, emit_verilog,
     priority, set_priority, set_priority_auto, get_priority, get_priority_mode,
     DEFAULT_UE_PRI_USER, DEFAULT_UE_PRI_RST, DEFAULT_UE_PRI_MIN,
@@ -354,6 +355,64 @@ def test_reset_default_guards():
         h["w"].reset(h["rv"])   # reset on a wire is wrong
     with pytest.raises(TypeError):
         h["r"].default(h["dv"]) # default on a reg is wrong
+
+
+def test_pick_block_builds_and_gates_branches():
+    # `pick` runs whichever pif branch matches; pidef runs when none match. The
+    # exit is NOT auto-synchronized (a stderr warning is emitted at build time).
+    reset()
+
+    class worker(Module):
+        @flow
+        def f(self):
+            a, b, r = reg(8), reg(8), reg(8)
+            with pick():
+                with pif(a < b):
+                    with seq():        # branch bodies hold sub-blocks, not direct nodes
+                        r |= a
+                with pif(a > b):
+                    with seq():
+                        r |= b
+                with pidef():
+                    with seq():
+                        r |= a + b
+
+    set_top(worker())
+    gen_flow()
+    build_flow()                       # must not panic
+
+    out_dir = tempfile.mkdtemp()
+    emit_verilog(out_dir, "top")
+    text = open(os.path.join(out_dir, "top.v")).read()
+
+    # All three branch destinations write the shared reg; the build completed.
+    assert text.count("REG_reg2") >= 3   # r is the third declared reg
+
+
+def test_pick_rejects_two_defaults():
+    # At most one pidef default is allowed; a second one trips the host assert
+    # during build_flow.
+    reset()
+
+    class worker(Module):
+        @flow
+        def f(self):
+            a, b, r = reg(8), reg(8), reg(8)
+            with pick():
+                with pif(a < b):
+                    with seq():
+                        r |= a
+                with pidef():
+                    with seq():
+                        r |= b
+                with pidef():
+                    with seq():
+                        r |= a
+
+    set_top(worker())
+    gen_flow()
+    with pytest.raises(BaseException):
+        build_flow()
 
 
 def test_build_flow_runs_end_to_end():

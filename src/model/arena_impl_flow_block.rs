@@ -5,6 +5,7 @@ use crate::model::flow_block::{
     FlowBlockCond, FlowBlockCondElif,
     FlowBlockZeroCondIf, FlowBlockZeroCondElif,
     FlowBlockZeroSwitch, FlowBlockZeroSwitchCase,
+    FlowBlockPick, FlowBlockPickIf,
     FlowBlockWhile, FlowBlockDoWhile, FlowBlockCounterLoop,
     FlowBlockWait,
     FlowBlockPip,
@@ -151,6 +152,40 @@ impl ModelArena {
         self.flow_block_zero_switch_cases.replace_back(h, block);
     }
 
+    // --- pick (master) ---
+
+    pub fn add_flow_block_pick(&mut self, block: FlowBlockPick) -> FlowBlockIdent {
+        let h = self.flow_block_picks.insert(block);
+        self.flow_block_picks.get(h).get_base().get_ident()
+    }
+
+    pub fn take_flow_block_pick(&mut self, ident: FlowBlockIdent) -> FlowBlockPick {
+        assert_eq!(ident.get_block_type(), FlowBlockType::Pick);
+        self.flow_block_picks.take(*ident.get_arena_handle())
+    }
+
+    pub fn replace_back_flow_block_pick(&mut self, block: FlowBlockPick) {
+        let h = *block.get_arena_handle();
+        self.flow_block_picks.replace_back(h, block);
+    }
+
+    // --- pick_if (pif / pidef branch) ---
+
+    pub fn add_flow_block_pick_if(&mut self, block: FlowBlockPickIf) -> FlowBlockIdent {
+        let h = self.flow_block_pick_ifs.insert(block);
+        self.flow_block_pick_ifs.get(h).get_base().get_ident()
+    }
+
+    pub fn take_flow_block_pick_if(&mut self, ident: FlowBlockIdent) -> FlowBlockPickIf {
+        assert_eq!(ident.get_block_type(), FlowBlockType::PickIf);
+        self.flow_block_pick_ifs.take(*ident.get_arena_handle())
+    }
+
+    pub fn replace_back_flow_block_pick_if(&mut self, block: FlowBlockPickIf) {
+        let h = *block.get_arena_handle();
+        self.flow_block_pick_ifs.replace_back(h, block);
+    }
+
     // --- while (CWHILE / SWHILE) ---
 
     pub fn add_flow_block_while(&mut self, block: FlowBlockWhile) -> FlowBlockIdent {
@@ -265,6 +300,8 @@ impl ModelArena {
             FlowBlockType::ZeroCondElif   => Box::new(self.take_flow_block_zero_cond_elif   (ident)),
             FlowBlockType::ZeroSwitch     => Box::new(self.take_flow_block_zero_switch      (ident)),
             FlowBlockType::ZeroSwitchCase => Box::new(self.take_flow_block_zero_switch_case (ident)),
+            FlowBlockType::Pick           => Box::new(self.take_flow_block_pick             (ident)),
+            FlowBlockType::PickIf         => Box::new(self.take_flow_block_pick_if          (ident)),
             FlowBlockType::WhileLoop      => Box::new(self.take_flow_block_while            (ident)),
             FlowBlockType::DoWhile        => Box::new(self.take_flow_block_do_while         (ident)),
             FlowBlockType::CounterLoop    => Box::new(self.take_flow_block_counter_loop     (ident)),

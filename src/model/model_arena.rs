@@ -31,6 +31,8 @@ use crate::model::flow_block::cond::flow_block_zero_cond_if::FlowBlockZeroCondIf
 use crate::model::flow_block::cond::flow_block_zero_cond_elif::FlowBlockZeroCondElif;
 use crate::model::flow_block::cond::flow_block_zero_switch::FlowBlockZeroSwitch;
 use crate::model::flow_block::cond::flow_block_zero_switch_case::FlowBlockZeroSwitchCase;
+use crate::model::flow_block::cond::flow_block_pick::FlowBlockPick;
+use crate::model::flow_block::cond::flow_block_pick_if::FlowBlockPickIf;
 use crate::model::flow_block::loops::flow_block_while::FlowBlockWhile;
 use crate::model::flow_block::loops::flow_block_do_while::FlowBlockDoWhile;
 use crate::model::flow_block::loops::flow_block_counter_loop::FlowBlockCounterLoop;
@@ -99,6 +101,8 @@ pub struct ModelArena {
     pub(super) flow_block_zero_cond_elifs  : ArenaGroup<FlowBlockZeroCondElif>,
     pub(super) flow_block_zero_switches    : ArenaGroup<FlowBlockZeroSwitch>,
     pub(super) flow_block_zero_switch_cases: ArenaGroup<FlowBlockZeroSwitchCase>,
+    pub(super) flow_block_picks            : ArenaGroup<FlowBlockPick>,
+    pub(super) flow_block_pick_ifs         : ArenaGroup<FlowBlockPickIf>,
     pub(super) flow_block_whiles           : ArenaGroup<FlowBlockWhile>,
     pub(super) flow_block_do_whiles        : ArenaGroup<FlowBlockDoWhile>,
     pub(super) flow_block_counter_loops    : ArenaGroup<FlowBlockCounterLoop>,
