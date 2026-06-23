@@ -1,4 +1,5 @@
-# tc18 — a 3-stage pip/zync pipeline chained through four shared arbiters.
+# tc19 — pip/zync pipeline that deadlocks on a one-shot flush: a parallel
+# `seq[ sywait(5); arb1.flush() ]` holds arb1's reset high, jamming the pipe at (5,4,4).
 #
 # Each stage is a `pip` (granter half) wrapping a `zync` (requester half). Adjacent
 # stages SHARE an arbiter, so a stage's zync hands off to the next stage's pip:
@@ -8,17 +9,17 @@
 # arb0 (auto_req) is the always-requesting source end; arb3 (auto_ack) is the
 # always-granted sink end.
 #
-# What sets tc18 apart from tc16: a parallel `seq[ sywait(5); arb1.stall() ]`
-# pulses the stage-1/stage-2 arbiter's hold for a single cycle, 5 cycles in. That
-# punches exactly one 1-cycle bubble into the otherwise free-running pipeline —
-# a (and b) freeze for one cycle at a == 5, then free-run again at +1/cycle.
+# What sets tc19 apart from tc16: a parallel `seq[ sywait(5); arb1.flush() ]`
+# drives the stage-1/stage-2 arbiter's reset high once, 5 cycles in. Unlike tc18's
+# one-cycle stall (hold), the reset keeps clearing arb1's grant, so stage 1 never
+# advances again — the whole pipeline deadlocks at (5, 4, 4) for good.
 #
 # Intended behaviour (what this testbench asserts):
-#   * a is a free-running counter once the pipeline is flowing (monotonic, > 0).
+#   * a counts up monotonically from 0 and never steps backwards.
 #   * b tracks a and c tracks b with pipeline latency, so a >= b >= c holds at all
-#     times and data eventually reaches every stage (b, c become non-zero).
-#   * the stall fires once: a single 1-cycle bubble freezing a at 5, then the pipe
-#     releases through (6,5,4) and (7,6,5) and free-runs after.
+#     times and data reaches every stage (b, c become non-zero) before the flush.
+#   * the flush fires once and never clears: the pipeline deadlocks at (5, 4, 4)
+#     and stays there — a is capped at 5.
 #   * under held master reset every stage stays at its reset value 0.
 
 from __future__ import annotations
@@ -32,18 +33,18 @@ from cocotb.triggers import RisingEdge, Timer
 
 import cocotb_pool
 
-NAME = "tc18_pip_zync"
+NAME = "tc19_pip_zync_flush_deadlock"
 
 RUN_CYCLES = 40                         # cycles to run after reset is released
 
-# Stall constants — mirror the model's parallel `seq[ sywait(5); arb1.stall() ]`.
-# a counts one per cycle, so the sywait(5) pulse lands with a frozen at 5.
-STALL_AT   = 5                          # a's value when the lone 1-cycle bubble freezes stage 1
-STALL_SCAN = 16                         # cycles to sample — brackets the lone bubble (~cyc 6)
+# Flush constants — mirror the model's parallel `seq[ sywait(5); arb1.flush() ]`.
+# a counts one per cycle, so the flush lands with a capped at 5 (deadlock at (5,4,4)).
+HALT_AT   = 5                           # a's value where the flush caps the counter
+HALT_SCAN = 20                          # cycles to sample — well past the deadlock (~cyc 6)
 
 
 # ---- model -------------------------------------------------------------------
-class tc18_pip_zync(Module):
+class tc19_pip_zync_flush_deadlock(Module):
     @init
     def com_declare(self):
         # Four arbiters: one per stage boundary. Adjacent stages share one, so each
@@ -87,7 +88,7 @@ class tc18_pip_zync(Module):
 
         with seq():
             sywait(5)
-            self.pip_cons[1].stall()
+            self.pip_cons[1].flush()
 
 
 
@@ -95,7 +96,7 @@ class tc18_pip_zync(Module):
 # ---- build (kathryn model -> verilog) ---------------------------------------
 def build(output_folder: str) -> None:
     reset()
-    module = tc18_pip_zync()
+    module = tc19_pip_zync_flush_deadlock()
     build_model(module)
     emit_verilog(output_folder)
 
@@ -155,38 +156,32 @@ async def check_pipeline_propagates(dut):
 
 
 @cocotb.test()
-async def check_one_shot_stall(dut):
-    # tc18's signature behaviour: a parallel `seq[ sywait(5); arb1.stall() ]` pulses
-    # the stage-1/stage-2 arbiter's hold for a single cycle, 5 cycles in. That
-    # punches exactly one 1-cycle bubble into the otherwise free-running counter:
-    # a freezes for one cycle at STALL_AT, then resumes +1/cycle forever.
+async def check_flush_halts(dut):
+    # tc19's signature behaviour: a parallel `seq[ sywait(5); arb1.flush() ]` drives
+    # the stage-1/stage-2 arbiter's reset high once, 5 cycles in. Unlike tc18's
+    # one-cycle hold, the reset keeps clearing arb1's grant, so stage 1 never gets
+    # another grant: the whole pipeline deadlocks at (5, 4, 4) and stays there.
     await _reset_and_release(dut)
 
     trace = []
-    for _ in range(STALL_SCAN):
+    for _ in range(HALT_SCAN):
         await RisingEdge(dut.clk)
         await Timer(1, unit="ns")
         trace.append(_abc(dut))
 
     a_seq = [a for a, _, _ in trace]
 
-    # Every cycle-to-cycle step is either a free-run advance (+1) or the stall hold
-    # (0) — a never jumps or rewinds.
-    deltas = [cur - prev for prev, cur in zip(a_seq, a_seq[1:])]
-    assert all(d in (0, 1) for d in deltas), f"a stepped illegally: {a_seq}"
+    # a counts up monotonically but never climbs past HALT_AT — the flush caps it.
+    assert all(y >= x for x, y in zip(a_seq, a_seq[1:])), f"a went backwards: {a_seq}"
+    assert max(a_seq) == HALT_AT, f"a should cap at {HALT_AT}, saw {max(a_seq)}: {a_seq}"
 
-    # Exactly one hold, and a is frozen at STALL_AT when it happens.
-    held = [i for i, d in enumerate(deltas) if d == 0]
-    assert len(held) == 1, f"expected exactly one 1-cycle stall, holds at {held}: {a_seq}"
-    assert a_seq[held[0]] == STALL_AT, f"a stalled at {a_seq[held[0]]}, expected {STALL_AT}: {a_seq}"
-
-    # The bubble's three cycles, explicitly: it freezes at (5, 4, 4), then the pipe
-    # releases to (6, 5, 4) and (7, 6, 5).
-    frozen = held[0] + 1                          # index of the held sample (a's second STALL_AT)
-    assert frozen + 2 < len(trace), f"scan too short to see the stall release: {trace}"
-    assert trace[frozen]     == (STALL_AT,     STALL_AT - 1, STALL_AT - 1), f"stall cycle wrong: {trace[frozen]}: {trace}"
-    assert trace[frozen + 1] == (STALL_AT + 1, STALL_AT,     STALL_AT - 1), f"release cycle wrong: {trace[frozen + 1]}: {trace}"
-    assert trace[frozen + 2] == (STALL_AT + 2, STALL_AT + 1, STALL_AT),     f"post-release cycle wrong: {trace[frozen + 2]}: {trace}"
+    # Once the deadlock triple appears it must persist for the rest of the run, and
+    # the scan must still be deadlocked at its end.
+    deadlock = (HALT_AT, HALT_AT - 1, HALT_AT - 1)
+    assert deadlock in trace, f"pipeline never reached the deadlock {deadlock}: {trace}"
+    first = trace.index(deadlock)
+    assert all(s == deadlock for s in trace[first:]), f"pipeline moved after deadlock: {trace}"
+    assert trace[-1] == deadlock, f"expected steady deadlock {deadlock}, got {trace[-1]}: {trace}"
 
 
 @cocotb.test()

@@ -1,18 +1,17 @@
-# tc20 — same pip/zync pipeline shape as tc16, but stage 1 assigns `a` TWICE in
-# the same clocked block to probe override semantics: does the second `a |= ...`
-# win (last-write override), the first win, or do both somehow apply?
+# tc21 — tc20's multi-assign pipeline, but the two `a |= ...` writes in the stage-1
+# block are wrapped in `with priority(...)` at DIFFERENT priorities. tc20 left both
+# writes at the default priority, so program order decided (the LAST write won,
+# a += V2). Here the HIGHEST priority is put on the FIRST-declared write, so if
+# priority overrides program order (as it must), the first write wins instead:
 #
 #   stage 1: pip(arb0, auto_req) → zync(arb1):
-#                a |= a + v     # first  write: a + 1
-#                a |= a + v2    # second write: a + 2
-#   stage 2: pip(arb1)          → zync(arb2):  b <= a       (follows a)
-#   stage 3: pip(arb2)          → zync(arb3, auto_ack):  c <= b   (follows b)
+#                with priority(PRI_HIGH): a |= a + v    # declared FIRST, +1, WINS
+#                with priority(PRI_LOW):  a |= a + v2   # declared LAST,  +2, loses
+#   stage 2: pip(arb1)          → zync(arb2):  b <= a
+#   stage 3: pip(arb2)          → zync(arb3, auto_ack):  c <= b
 #
-# The per-grant step of `a` reveals the winner:
-#   * +2 per cycle  → the LAST write overrides (a + v2),  a = 0, 2, 4, ...
-#   * +1 per cycle  → the FIRST write wins   (a + v),     a = 0, 1, 2, ...
-#   * +3 per cycle  → both writes accumulate (a + v + v2)
-# This testbench pins down whichever the model actually does (see OVERRIDE_STEP).
+# So a steps by V (the high-priority write) per grant, NOT by V2 — proving priority,
+# not declaration order, decides the winner (cf. tc20, where order won at +V2).
 
 from __future__ import annotations
 
@@ -25,20 +24,24 @@ from cocotb.triggers import RisingEdge, Timer
 
 import cocotb_pool
 
-NAME = "tc20_pip_zync_multi_assign"
+NAME = "tc21_pip_zync_multi_assign_priority"
 
 RUN_CYCLES = 20                         # cycles to run after reset is released
 
-V  = 1                                  # first  write addend: a |= a + v
-V2 = 2                                  # second write addend: a |= a + v2
+V  = 1                                  # high-priority write addend: a |= a + v
+V2 = 2                                  # low-priority  write addend: a |= a + v2
 
-# Observed semantics: the second `a |= ...` in the block overrides the first, so a
-# advances by V2 each grant (last-write-wins). Asserted in check_last_write_wins.
-OVERRIDE_STEP = V2
+# Two priorities above the user default; the higher one is placed on the FIRST write.
+PRI_HIGH = DEFAULT_UE_PRI_USER + 3
+PRI_LOW  = DEFAULT_UE_PRI_USER + 1
+
+# Priority decides, so the high-priority (first) write wins: a advances by V per grant.
+WIN_STEP  = V                           # the winning (high-priority) write's addend
+LOSE_STEP = V2                          # the losing (low-priority, last-declared) addend
 
 
 # ---- model -------------------------------------------------------------------
-class tc20_pip_zync_multi_assign(Module):
+class tc21_pip_zync_multi_assign_priority(Module):
     @init
     def com_declare(self):
         # Four arbiters: one per stage boundary. Adjacent stages share one, so each
@@ -64,12 +67,14 @@ class tc20_pip_zync_multi_assign(Module):
         self.b.reset(0)
         self.c.reset(0)
 
-        # stage 1 — assign `a` TWICE in the same clocked block; the second should
-        # override the first if the model is last-write-wins.
+        # stage 1 — assign `a` TWICE at different priorities. The high-priority write
+        # is declared FIRST, so priority (not program order) makes it the winner.
         with pip(self.pip_cons[0], auto_req=True):
             with zync(self.pip_cons[1]):
-                self.a |= self.a + self.v       # first  write: a + 1
-                self.a |= self.a + self.v2      # second write: a + 2 (expected winner)
+                with priority(PRI_HIGH):
+                    self.a |= self.a + self.v       # +1, declared FIRST, highest → WINS
+                with priority(PRI_LOW):
+                    self.a |= self.a + self.v2      # +2, declared LAST,  lowest  → loses
 
         # stage 2
         with pip(self.pip_cons[1]):
@@ -85,7 +90,7 @@ class tc20_pip_zync_multi_assign(Module):
 # ---- build (kathryn model -> verilog) ---------------------------------------
 def build(output_folder: str) -> None:
     reset()
-    module = tc20_pip_zync_multi_assign()
+    module = tc21_pip_zync_multi_assign_priority()
     build_model(module)
     emit_verilog(output_folder)
 
@@ -107,11 +112,12 @@ def _abc(dut):
 
 
 @cocotb.test()
-async def check_last_write_wins(dut):
-    # Two `a |= ...` writes share the stage-1 block. Sample a's per-cycle step once
-    # the pipeline is flowing: it must equal OVERRIDE_STEP (the SECOND write's
-    # addend), proving the later assignment overrode the earlier one rather than the
-    # first winning (+V) or both accumulating (+V+V2).
+async def check_priority_overrides_order(dut):
+    # Two `a |= ...` writes share the stage-1 block at different priorities, with the
+    # HIGH-priority write declared FIRST. Sample a's per-cycle step: it must equal
+    # WIN_STEP (the high-priority write's addend, V), NOT LOSE_STEP (V2, which plain
+    # program order would have picked as in tc20). That proves priority overrides
+    # declaration order.
     await _reset_and_release(dut)
 
     a_seq = []
@@ -123,9 +129,10 @@ async def check_last_write_wins(dut):
     # a must be a clean multiple-of-step ramp; collect the non-stall deltas.
     steps = [y - x for x, y in zip(a_seq, a_seq[1:]) if y != x]
     assert steps, f"a never advanced: {a_seq}"
-    assert all(s == OVERRIDE_STEP for s in steps), \
-        f"a stepped by {set(steps)}, expected only {OVERRIDE_STEP} (last write wins): {a_seq}"
-    assert a_seq[-1] >= OVERRIDE_STEP, f"a did not count: {a_seq}"
+    assert all(s == WIN_STEP for s in steps), \
+        f"a stepped by {set(steps)}, expected only {WIN_STEP} (high-priority write wins): {a_seq}"
+    assert LOSE_STEP not in steps, \
+        f"a stepped by {LOSE_STEP} — the last-declared (low-priority) write wrongly won: {a_seq}"
 
 
 @cocotb.test()

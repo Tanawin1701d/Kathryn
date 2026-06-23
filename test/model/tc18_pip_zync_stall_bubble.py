@@ -1,4 +1,5 @@
-# tc16 — a 3-stage pip/zync pipeline chained through four shared arbiters.
+# tc18 — pip/zync pipeline with a one-cycle stall bubble: a parallel
+# `seq[ sywait(5); arb1.stall() ]` pulses arb1's hold once, freezing the pipe for 1 cycle.
 #
 # Each stage is a `pip` (granter half) wrapping a `zync` (requester half). Adjacent
 # stages SHARE an arbiter, so a stage's zync hands off to the next stage's pip:
@@ -8,15 +9,18 @@
 # arb0 (auto_req) is the always-requesting source end; arb3 (auto_ack) is the
 # always-granted sink end.
 #
+# What sets tc18 apart from tc16: a parallel `seq[ sywait(5); arb1.stall() ]`
+# pulses the stage-1/stage-2 arbiter's hold for a single cycle, 5 cycles in. That
+# punches exactly one 1-cycle bubble into the otherwise free-running pipeline —
+# a (and b) freeze for one cycle at a == 5, then free-run again at +1/cycle.
+#
 # Intended behaviour (what this testbench asserts):
 #   * a is a free-running counter once the pipeline is flowing (monotonic, > 0).
 #   * b tracks a and c tracks b with pipeline latency, so a >= b >= c holds at all
 #     times and data eventually reaches every stage (b, c become non-zero).
+#   * the stall fires once: a single 1-cycle bubble freezing a at 5, then the pipe
+#     releases through (6,5,4) and (7,6,5) and free-runs after.
 #   * under held master reset every stage stays at its reset value 0.
-#
-# NOTE: as of writing the model does not yet flow (a/b/c stay 0) — a one-cycle
-# bootstrap race keeps stages 2/3 from arming. These tests encode the INTENDED
-# behaviour and currently fail red; they pass once the handshake chain is fixed.
 
 from __future__ import annotations
 
@@ -29,13 +33,18 @@ from cocotb.triggers import RisingEdge, Timer
 
 import cocotb_pool
 
-NAME = "tc16_pip_zync"
+NAME = "tc18_pip_zync_stall_bubble"
 
 RUN_CYCLES = 40                         # cycles to run after reset is released
 
+# Stall constants — mirror the model's parallel `seq[ sywait(5); arb1.stall() ]`.
+# a counts one per cycle, so the sywait(5) pulse lands with a frozen at 5.
+STALL_AT   = 5                          # a's value when the lone 1-cycle bubble freezes stage 1
+STALL_SCAN = 16                         # cycles to sample — brackets the lone bubble (~cyc 6)
+
 
 # ---- model -------------------------------------------------------------------
-class tc16_pip_zync(Module):
+class tc18_pip_zync_stall_bubble(Module):
     @init
     def com_declare(self):
         # Four arbiters: one per stage boundary. Adjacent stages share one, so each
@@ -47,6 +56,7 @@ class tc16_pip_zync(Module):
         self.b = reg(8, "b")            # stage-2 follows a
         self.c = reg(8, "c")            # stage-3 follows b
         self.v = val(8, 1, "v")
+        self.v2 = val(8, 6, "v2")
 
         self.a.mark_output("my_a")
         self.b.mark_output("my_b")
@@ -76,11 +86,17 @@ class tc16_pip_zync(Module):
                 self.c |= self.b
 
 
+        with seq():
+            sywait(5)
+            self.pip_cons[1].stall()
+
+
+
 
 # ---- build (kathryn model -> verilog) ---------------------------------------
 def build(output_folder: str) -> None:
     reset()
-    module = tc16_pip_zync()
+    module = tc18_pip_zync_stall_bubble()
     build_model(module)
     emit_verilog(output_folder)
 
@@ -137,6 +153,41 @@ async def check_pipeline_propagates(dut):
     a, b, c = prev
     assert b > 0, f"data never reached stage 2: b stayed {b}"
     assert c > 0, f"data never reached stage 3: c stayed {c}"
+
+
+@cocotb.test()
+async def check_one_shot_stall(dut):
+    # tc18's signature behaviour: a parallel `seq[ sywait(5); arb1.stall() ]` pulses
+    # the stage-1/stage-2 arbiter's hold for a single cycle, 5 cycles in. That
+    # punches exactly one 1-cycle bubble into the otherwise free-running counter:
+    # a freezes for one cycle at STALL_AT, then resumes +1/cycle forever.
+    await _reset_and_release(dut)
+
+    trace = []
+    for _ in range(STALL_SCAN):
+        await RisingEdge(dut.clk)
+        await Timer(1, unit="ns")
+        trace.append(_abc(dut))
+
+    a_seq = [a for a, _, _ in trace]
+
+    # Every cycle-to-cycle step is either a free-run advance (+1) or the stall hold
+    # (0) — a never jumps or rewinds.
+    deltas = [cur - prev for prev, cur in zip(a_seq, a_seq[1:])]
+    assert all(d in (0, 1) for d in deltas), f"a stepped illegally: {a_seq}"
+
+    # Exactly one hold, and a is frozen at STALL_AT when it happens.
+    held = [i for i, d in enumerate(deltas) if d == 0]
+    assert len(held) == 1, f"expected exactly one 1-cycle stall, holds at {held}: {a_seq}"
+    assert a_seq[held[0]] == STALL_AT, f"a stalled at {a_seq[held[0]]}, expected {STALL_AT}: {a_seq}"
+
+    # The bubble's three cycles, explicitly: it freezes at (5, 4, 4), then the pipe
+    # releases to (6, 5, 4) and (7, 6, 5).
+    frozen = held[0] + 1                          # index of the held sample (a's second STALL_AT)
+    assert frozen + 2 < len(trace), f"scan too short to see the stall release: {trace}"
+    assert trace[frozen]     == (STALL_AT,     STALL_AT - 1, STALL_AT - 1), f"stall cycle wrong: {trace[frozen]}: {trace}"
+    assert trace[frozen + 1] == (STALL_AT + 1, STALL_AT,     STALL_AT - 1), f"release cycle wrong: {trace[frozen + 1]}: {trace}"
+    assert trace[frozen + 2] == (STALL_AT + 2, STALL_AT + 1, STALL_AT),     f"post-release cycle wrong: {trace[frozen + 2]}: {trace}"
 
 
 @cocotb.test()
