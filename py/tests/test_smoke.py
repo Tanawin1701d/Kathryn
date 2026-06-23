@@ -13,6 +13,7 @@ from kathryn import (
     Module, init, flow, gen_flow, build_flow, emit_verilog,
     priority, set_priority, set_priority_auto, get_priority, get_priority_mode,
     DEFAULT_UE_PRI_USER, DEFAULT_UE_PRI_RST, DEFAULT_UE_PRI_MIN,
+    Karray, HwComponentType,
 )
 
 
@@ -429,3 +430,162 @@ def test_build_flow_runs_end_to_end():
     worker()
     gen_flow()             # construct flow blocks across every module
     build_flow()           # host build pass from the top module
+
+
+# ---- Karray (typed multi-dimensional array CCP) -----------------------------
+
+def test_karray_field_is_its_own_hcp():
+    # Each field is a distinct HCP sized to the field width (not a bit-slice of a
+    # packed element); elem_width is the sum of field widths.
+    reset()
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.rob = Karray((5, 3), [("valid", 1), ("reg_idx", 5)], HwComponentType.REG, "rob")
+
+    w  = worker()
+    ar = k._session.arena()
+    valid = w.rob[2][1].valid._to_read_ref()
+    ridx  = w.rob[2][1].reg_idx._to_read_ref()
+    assert ar.get_hw_bit_sz(valid._ident) == 1       # valid   -> its own 1-bit HCP
+    assert ar.get_hw_bit_sz(ridx._ident) == 5        # reg_idx -> its own 5-bit HCP
+    assert valid._ident.global_id != ridx._ident.global_id   # distinct hardware
+    with pytest.raises(ValueError):
+        w.rob[2][1].nope._to_read_ref()              # unknown field rejected at resolve
+
+
+def test_karray_reg_backing_emits_per_element_regs():
+    # Reg backing materialises one reg per (element, field) — 15x2 for a 5x3 of two
+    # fields; a whole element (split across fields) and a single field both assign with |=.
+    reset()
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.rob  = Karray((5, 3), [("valid", 1), ("reg_idx", 5)], HwComponentType.REG, "rob")
+            self.src  = reg(6)
+            self.vbit = reg(1)
+
+        @flow
+        def f(self):
+            with seq():
+                self.rob[2][1] |= self.src           # whole 6-bit element (flat idx 7), split per field
+                self.rob[0][0].valid |= self.vbit    # the valid field's own 1-bit HCP
+
+    set_top(worker())
+    gen_flow()
+    build_flow()
+
+    out_dir = tempfile.mkdtemp()
+    emit_verilog(out_dir, "top")
+    text = open(os.path.join(out_dir, "top.v")).read()
+    for flat in range(15):
+        assert f"rob_E{flat}_" in text               # every per-element reg present
+
+
+def test_karray_wire_backing_uses_imul():
+    # Wire backing is combinational — assign with *=; |= must be rejected.
+    reset()
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.bus = Karray((2, 2), [("data", 8)], HwComponentType.WIRE, "bus")
+            self.s   = reg(8)
+
+        @flow
+        def f(self):
+            with seq():
+                self.bus[1][0] *= self.s             # element (1,0) -> flat 2
+
+    set_top(worker())
+    gen_flow()
+    build_flow()
+
+    out_dir = tempfile.mkdtemp()
+    emit_verilog(out_dir, "top")
+    text = open(os.path.join(out_dir, "top.v")).read()
+    assert "bus_E2_" in text
+
+
+def test_karray_memblock_backing_declares_block():
+    # MemBlock backing folds the array onto one addressable block; a write builds
+    # a write MemEle at the constant flattened address.
+    reset()
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.kmem = Karray((5, 3), [("valid", 1), ("reg_idx", 5)], HwComponentType.MEM_BLOCK, "kmem")
+            self.src  = reg(6)
+
+        @flow
+        def f(self):
+            with seq():
+                self.kmem[2][1] |= self.src          # write element at flat addr 7
+
+    set_top(worker())
+    gen_flow()
+    build_flow()
+
+    out_dir = tempfile.mkdtemp()
+    emit_verilog(out_dir, "top")
+    text = open(os.path.join(out_dir, "top.v")).read()
+    assert "kmem_valid_MEM"   in text                # one MemBlk per field
+    assert "kmem_reg_idx_MEM" in text
+
+
+def test_karray_backing_enforces_assignment_operator():
+    # |= requires reg/mem backing; *= requires wire backing. The guard raises in
+    # Python (via the resolved element's clocked-ness) before mutating the model.
+    reset()
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.rk = Karray((2,), [("v", 4)], HwComponentType.REG,  "rk")
+            self.wk = Karray((2,), [("v", 4)], HwComponentType.WIRE, "wk")
+            self.s  = reg(4)
+
+        @flow
+        def f(self):
+            with pytest.raises(TypeError):
+                self.wk[0] |= self.s                 # |= on wire-backed element
+            with pytest.raises(TypeError):
+                self.rk[0] *= self.s                 # *= on reg-backed element
+
+    set_top(worker())
+    gen_flow()
+
+
+def test_karray_1d_element_assignment():
+    # A 1-D Karray subscript lands directly on the Karray (not a KarrayRef), so the
+    # `d[i] |= x` augmented-assign tail goes through Karray.__setitem__. Exercise both
+    # a whole-element and a field assign on a 1-D array end to end.
+    reset()
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.rf  = Karray((4,), [("valid", 1), ("data", 7)], HwComponentType.REG, "rf")
+            self.pk  = reg(8)
+            self.hi  = val(1, 1)
+            self.dat = reg(7)
+
+        @flow
+        def f(self):
+            with seq():
+                self.rf[2] |= self.pk                # whole element (split per field)
+                self.rf[0].valid |= self.hi          # 1-D + field
+                self.rf[0].data  |= self.dat
+
+    set_top(worker())
+    gen_flow()
+    build_flow()
+
+    out_dir = tempfile.mkdtemp()
+    emit_verilog(out_dir, "top")
+    text = open(os.path.join(out_dir, "top.v")).read()
+    assert "rf_E2_valid" in text and "rf_E2_data" in text   # element 2 split across fields
+    assert "rf_E0_valid" in text and "rf_E0_data" in text   # element 0 field-wise

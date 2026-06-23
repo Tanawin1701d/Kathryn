@@ -288,6 +288,8 @@ impl CcpBase for Arb {
             Self::drive_wire(arena, ack_wire_i, ack_res_i);
         }
     }
+    fn set_ccp_ident(&mut self, ident: CcpIdent) { *self.get_ccp_ident_mut() = ident; }
+    fn replace_back_into_arena(self: Box<Self>, arena: &mut ModelArena) { arena.replace_back_arb(*self); }
 }
 
 impl Identifiable for Arb {

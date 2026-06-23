@@ -10,12 +10,14 @@ use crate::model::module::module_ident::ModuleIdent;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CcpType {
     Arb,
+    Karray,
 }
 
 impl CcpType {
     pub fn as_str(&self) -> &'static str {
         match self {
-            CcpType::Arb => "ARB",
+            CcpType::Arb    => "ARB",
+            CcpType::Karray => "KARRAY",
         }
     }
 }

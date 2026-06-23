@@ -67,6 +67,12 @@ impl HwComponentType {
                                      + Self::IO_WIRE_COUNT
                                      + Self::MEM_BLK_COUNT;
 
+    // Map a discriminant back to its variant; `None` past the last. ALL_HW_TYPES is
+    // in discriminant order (asserted at compile time), so position == discriminant.
+    pub fn from_index(idx: usize) -> Option<HwComponentType> {
+        ALL_HW_TYPES.get(idx).copied()
+    }
+
     pub fn global_prefix(self) -> &'static str {
         match self {
             Self::Reg               => "REG",

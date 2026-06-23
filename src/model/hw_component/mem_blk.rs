@@ -68,16 +68,18 @@ impl Identifiable for MemBlk {
     fn get_ident_base_mut(&mut self) -> &mut IdentBase { self.ident.get_ident_base_mut() }
 }
 
-// MemBlk satisfies HcpAssignable only to fit the trait hierarchy — all methods panic
-// because the block itself is never a signal destination.
+// MemBlk is never a signal destination, so the assignment-specific methods panic.
+// But its `assign` still holds read-only metadata (e.g. the io_mark), so the plain
+// accessors return the real field — code that only reads metadata (e.g.
+// gather_io_marked_hcps over every HW type) must not blow up on a memory block.
 impl HcpAssignable for MemBlk {
-    fn get_hcp_assign    (&    self) -> &    HcpAssign { panic!("MemBlk is not HcpAssignable") }
-    fn get_hcp_assign_mut(&mut self) -> &mut HcpAssign { panic!("MemBlk is not HcpAssignable") }
-    fn retrieve_clk_mode (&    self) -> ClockMode      { panic!("MemBlk is not HcpAssignable") }
-    fn get_des_slice     (&    self) -> Slice          { panic!("MemBlk is not HcpAssignable") }
-    fn get_priority      (&    self) -> i32            { panic!("MemBlk is not HcpAssignable") }
+    fn get_hcp_assign    (&    self) -> &    HcpAssign { &self.assign     }
+    fn get_hcp_assign_mut(&mut self) -> &mut HcpAssign { &mut self.assign }
+    fn retrieve_clk_mode (&    self) -> ClockMode      { panic!("MemBlk is not an assignment destination") }
+    fn get_des_slice     (&    self) -> Slice          { panic!("MemBlk is not an assignment destination") }
+    fn get_priority      (&    self) -> i32            { panic!("MemBlk is not an assignment destination") }
     fn do_asm(&self, _: HcpIdent, _: Option<Slice>, _: Slice, _: &mut ModelArena) -> NcpIdent {
-        panic!("MemBlk is not HcpAssignable")
+        panic!("MemBlk is not an assignment destination")
     }
 }
 

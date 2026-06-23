@@ -49,6 +49,7 @@ impl ModelArena {
             opr_nodes                    : ArenaGroup::new(),
             // ---- complex hardware (CCP) ----
             arbs                         : ArenaGroup::new(),
+            karrays                      : ArenaGroup::new(),
             // ---- modules & trace state ----
             modules                      : ArenaGroup::new(),
             top_module                   : None,
@@ -106,6 +107,7 @@ impl ModelArena {
         self.opr_nodes                    = ArenaGroup::new();
         // ---- complex hardware (CCP) ----
         self.arbs                         = ArenaGroup::new();
+        self.karrays                      = ArenaGroup::new();
         // ---- modules & trace state ----
         self.modules                      = ArenaGroup::new();
         self.top_module                   = None;

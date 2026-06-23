@@ -18,6 +18,7 @@ use model::controller::asm_mode_py::add_asm_priority_consts;
 use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::complex_hardware::arb::{ArbLockedChannel, ArbSamePriPolicy};
 use crate::model::flow_block::FlowBlockType;
+use crate::model::hw_component::common::hcp_ident::all_hw_types;
 
 // Build `kathryn.LogicOp` as a Python IntEnum sourced entirely from the core
 // `LogicOp` via `from_index` / `variant_name`. Python never hardcodes op ints,
@@ -87,6 +88,22 @@ fn add_flow_block_type_enum(m: &Bound<'_, PyModule>) -> PyResult<()> {
     Ok(())
 }
 
+// Build `kathryn.HwComponentType` as a Python IntEnum sourced entirely from the
+// core `HwComponentType` (member name = `global_prefix`, value = discriminant).
+// `mk_karray` decodes the int back through `HwComponentType::from_index`, so the
+// two sides share one source of truth and cannot misalign. Reused for the Karray
+// backing selector (Reg / Wire / MemBlock) — no parallel enum is defined.
+fn add_hw_component_type_enum(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    let py      = m.py();
+    let members = PyDict::new(py);
+    for ty in all_hw_types() {
+        members.set_item(ty.global_prefix(), ty as usize)?;  // enum member: PREFIX = discriminant
+    }
+    let int_enum = py.import("enum")?.getattr("IntEnum")?;
+    m.add("HwComponentType", int_enum.call1(("HwComponentType", &members))?)?;
+    Ok(())
+}
+
 // Native extension module `_kathryn` — the pure-Python `kathryn` package
 // (py/kathryn/) re-exports it. Registers every wrapper class + the LogicOp enum.
 #[pymodule]
@@ -101,6 +118,7 @@ fn _kathryn(m: &Bound<'_, PyModule>) -> PyResult<()> {
     add_logic_op_enum(m)?;
     add_arb_same_pri_policy_enum(m)?;
     add_arb_locked_channel_enum(m)?;
+    add_hw_component_type_enum(m)?;
     add_flow_block_type_enum(m)?;
     add_asm_priority_consts(m)?;
     Ok(())

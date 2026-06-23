@@ -4,5 +4,6 @@
 
 from .arb import Arb, ArbLeaf
 from .pip_con import PipCon
+from .karray import Karray, KarrayRef
 
-__all__ = ["Arb", "ArbLeaf", "PipCon"]
+__all__ = ["Arb", "ArbLeaf", "PipCon", "Karray", "KarrayRef"]

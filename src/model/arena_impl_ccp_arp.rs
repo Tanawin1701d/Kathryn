@@ -1,5 +1,4 @@
 use crate::model::complex_hardware::arb::ArbLockedChannel;
-use crate::model::complex_hardware::common::ccp_base::CcpBase;
 use crate::model::complex_hardware::common::ccp_ident::CcpIdent;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::slice::Slice;
@@ -93,13 +92,5 @@ impl ModelArena {
         let wire_i = arb.get_leaf_ack_wire_i(idx);
         self.replace_back_arb(arb);
         wire_i
-    }
-
-    /// Wire the arbitration graph (master_req + every leaf ack). Call once after
-    /// all leaves and the master-ack source are bound.
-    pub fn build_arb(&mut self, ident: CcpIdent) {
-        let mut arb = self.take_arb(ident);
-        arb.build(self);
-        self.replace_back_arb(arb);
     }
 }

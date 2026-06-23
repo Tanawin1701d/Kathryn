@@ -24,6 +24,12 @@ def to_ref(x: SignalRef) -> SignalRef:
     # Accept any SignalRef (signal, slice view, or expression result).
     if isinstance(x, SignalRef):
         return x
+    # Duck-typed read hook: a Karray element ref resolves to a *read* SignalRef
+    # here, so a Karray can be used as an assignment source without signal.py
+    # importing it (avoids an import cycle).
+    rd = getattr(x, "_to_read_ref", None)
+    if rd is not None:
+        return rd()
     raise TypeError(f"expected a kathryn signal, got {type(x).__name__}: {x!r} "
                     f"(wrap constants with val(width, n))")
 

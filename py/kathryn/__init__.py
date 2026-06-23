@@ -4,7 +4,7 @@
 # all model objects stays in Rust and is reached only through opaque idents.
 
 from . import _session                                          # creates the singleton arena
-from ._kathryn import LogicOp, FlowBlockType, ArbSamePriPolicy, ArbLockedChannel, Slice, HcpIdent, FlowBlockIdent, ModuleIdent, BackendVerilog
+from ._kathryn import LogicOp, FlowBlockType, ArbSamePriPolicy, ArbLockedChannel, HwComponentType, Slice, HcpIdent, FlowBlockIdent, ModuleIdent, BackendVerilog
 from ._session import arena, reset, gen_flow, build_flow, build_model, emit_verilog
 from .signal import SignalRef, expr
 from .hw_component import reg, wire, val, mem_blk, mem_ele
@@ -19,7 +19,7 @@ from .flow_block import (
     pip,
     zync,
 )
-from .complex_hardware import Arb, ArbLeaf, PipCon
+from .complex_hardware import Arb, ArbLeaf, PipCon, Karray, KarrayRef
 from .module import Module, init, flow, set_top
 from . import priority as _priority
 from .priority import (
@@ -31,7 +31,7 @@ globals().update({n: getattr(_priority, n) for n in _priority.PRIORITY_CONST_NAM
 
 __all__ = [
     # rust enums / idents
-    "LogicOp", "FlowBlockType", "ArbSamePriPolicy", "ArbLockedChannel",
+    "LogicOp", "FlowBlockType", "ArbSamePriPolicy", "ArbLockedChannel", "HwComponentType",
     "Slice", "HcpIdent", "FlowBlockIdent", "ModuleIdent",
     # backends
     "BackendVerilog",
@@ -50,6 +50,8 @@ __all__ = [
     "zync",
     # complex hardware (arb)
     "Arb", "ArbLeaf", "PipCon",
+    # complex hardware (karray)
+    "Karray", "KarrayRef",
     # module scope + session
     "Module", "init", "flow", "arena", "reset",
     "gen_flow", "build_flow", "build_model", "set_top", "emit_verilog",

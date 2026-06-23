@@ -1,27 +1,28 @@
-use crate::common::arena_base::ArenaGroup;
+use crate::common::arena_base::                       ArenaGroup;
 use crate::model::hw_component::common::update_event::{UeBasic, UeCond, UeGrp, UeSwitch};
-use crate::model::hw_component::expression::Expression;
-use crate::model::hw_component::mem_blk::MemBlk;
-use crate::model::hw_component::mem_ele::MemEle;
-use crate::model::hw_component::reg::Reg;
-use crate::model::hw_component::val::Val;
-use crate::model::hw_component::wire::Wire;
-use crate::model::hw_component::io_wire::IoWire;
-use crate::model::hw_component::sp_reg::cnt_reg::CntReg;
-use crate::model::hw_component::sp_reg::sync_reg::SyncReg;
-use crate::model::hw_component::sp_reg::state_reg::StateReg;
-use crate::model::hw_component::sp_reg::wait_reg::{CondWaitStateReg, CycleWaitStateReg};
-use crate::model::nodes::asm_node::AsmNode;
-use crate::model::nodes::cnt_node::CounterNode;
+use crate::model::hw_component::expression::          Expression;
+use crate::model::hw_component::mem_blk::             MemBlk;
+use crate::model::hw_component::mem_ele::             MemEle;
+use crate::model::hw_component::reg::                 Reg;
+use crate::model::hw_component::val::                 Val;
+use crate::model::hw_component::wire::                Wire;
+use crate::model::hw_component::io_wire::             IoWire;
+use crate::model::hw_component::sp_reg::cnt_reg::     CntReg;
+use crate::model::hw_component::sp_reg::sync_reg::    SyncReg;
+use crate::model::hw_component::sp_reg::state_reg::   StateReg;
+use crate::model::hw_component::sp_reg::wait_reg::    {CondWaitStateReg, CycleWaitStateReg};
+use crate::model::nodes::asm_node::  AsmNode;
+use crate::model::nodes::cnt_node::  CounterNode;
 use crate::model::nodes::logic_node::{OprNode, PseudoNode};
 use crate::model::nodes::start_node::StartNode;
-use crate::model::complex_hardware::arb::Arb;
 use crate::model::nodes::state_node::StateNode;
-use crate::model::nodes::syn_node::SynNode;
-use crate::model::nodes::wait_node::{WaitCondNode, WaitCycleNode};
-use crate::model::module::module::Module;
-use crate::model::module::module_ident::ModuleIdent;
+use crate::model::nodes::syn_node::  SynNode;
+use crate::model::nodes::wait_node:: {WaitCondNode, WaitCycleNode};
+use crate::model::module::module::       Module;
+use crate::model::module::module_ident:: ModuleIdent;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
+use crate::model::complex_hardware::arb::   Arb;
+use crate::model::complex_hardware::karray::Karray;
 use crate::model::flow_block::{BlockTrackStatus, FlowBlockIdent};
 use crate::model::flow_block::par::flow_block_par::FlowBlockPar;
 use crate::model::flow_block::seq::flow_block_seq::FlowBlockSeq;
@@ -82,6 +83,7 @@ pub struct ModelArena {
 
     // complex-hardware (CCP) arenas
     pub(super) arbs             : ArenaGroup<Arb>,
+    pub(super) karrays          : ArenaGroup<Karray>,
 
     // module arena
     pub(super) modules               : ArenaGroup<Module>,
