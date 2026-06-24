@@ -432,6 +432,123 @@ def test_build_flow_runs_end_to_end():
     build_flow()           # host build pass from the top module
 
 
+# ---- int-literal operands (auto-wrapped into width-matched val) -------------
+
+def test_int_literal_operands_build_expressions():
+    # signal ∘ int and int ∘ signal both auto-wrap the int into a val sized to
+    # the signal operand. Reflected ops keep operand order (`5 - a`, not `a - 5`).
+    reset()
+    seen = {}
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.a = reg(8)
+            self.r = reg(8)
+
+        @flow
+        def f(self):
+            a = self.a
+            seen["add"]  = a + 2          # signal + int
+            seen["radd"] = 2 + a          # int + signal  (__radd__)
+            seen["rsub"] = 5 - a          # non-commutative reflected (__rsub__)
+            seen["band"] = a & 0xF        # bitwise with int
+            seen["shl"]  = a << 1         # shift by int
+            seen["eq"]   = a == 3         # relational with int
+            seen["rlt"]  = 3 < a          # auto-reflected compare -> a.__gt__(3)
+            with seq():
+                self.r |= a + 1           # int operand inside a clocked assign
+
+    set_top(worker())
+    gen_flow()
+    assert seen and all(e.hw_type == "EXPR" for e in seen.values())
+    build_flow()                          # full host build must not panic
+
+
+def test_int_literal_assignment_emits_matched_width_const():
+    # `r |= 5` wraps the int into a val sized to the destination (12 bits here),
+    # so the emitted Verilog constant is a 12-bit sized literal.
+    reset()
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.r = reg(12)
+
+        @flow
+        def f(self):
+            with seq():
+                self.r |= 5               # bare int source -> val(12, 5)
+
+    set_top(worker())
+    gen_flow()
+    build_flow()
+
+    out_dir = tempfile.mkdtemp()
+    emit_verilog(out_dir, "top")
+    text = open(os.path.join(out_dir, "top.v")).read()
+    assert "12'h5" in text                # constant sized to the destination width
+
+
+def test_int_literal_wider_than_128_bits():
+    # The literal crosses as an arbitrary-precision BigInt, so a >128-bit constant
+    # auto-wraps with no manual val() — emitted as a width-sized hex literal.
+    reset()
+    big = (1 << 200) | 0xABCDEF        # needs > 128 bits to represent
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.r = reg(256)
+
+        @flow
+        def f(self):
+            with seq():
+                self.r |= big             # bare 201-bit int source -> val(256, big)
+
+    set_top(worker())
+    gen_flow()
+    build_flow()
+
+    out_dir = tempfile.mkdtemp()
+    emit_verilog(out_dir, "top")
+    text = open(os.path.join(out_dir, "top.v")).read()
+    assert f"256'h{big:x}" in text        # full bit-200 pattern survives intact
+
+
+def test_negative_int_literal_wraps_twos_complement():
+    # A negative literal masks to its two's-complement value at the dest width.
+    reset()
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.r = reg(8)
+
+        @flow
+        def f(self):
+            with seq():
+                self.r |= -1              # -> val(8, 0xFF)
+
+    set_top(worker())
+    gen_flow()
+    build_flow()
+
+    out_dir = tempfile.mkdtemp()
+    emit_verilog(out_dir, "top")
+    text = open(os.path.join(out_dir, "top.v")).read()
+    assert "8'hff" in text                # -1 in 8 bits = 0xFF
+
+
+def test_two_int_operands_rejected():
+    # An expression needs at least one signal; two folded ints never reach the
+    # connector through normal Python, but a direct mk_expression call is rejected.
+    reset()
+    ar = k._session.arena()
+    with pytest.raises(ValueError):
+        ar.mk_expression("x", int(k.LogicOp.ArithPlus), 1, 2)
+
+
 # ---- Karray (typed multi-dimensional array CCP) -----------------------------
 
 def test_karray_field_is_its_own_hcp():

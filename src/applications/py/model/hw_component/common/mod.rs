@@ -2,3 +2,4 @@
 
 pub mod hcp_ident_py;
 pub mod slice_py;
+pub mod operand_py;

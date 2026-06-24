@@ -895,8 +895,19 @@ operation routes through one process-wide `ModelArena`.
   (There is no context-manager `module()` form — modules are always classes.)
 - `__init__.py` — defines `__all__` so `from kathryn import *` exposes the whole DSL.
 
-**Operands must be signals** — int literals aren't auto-wrapped (`a >> val(8,2)`,
-not `a >> 2`). **Conditional blocks hold sub-blocks, not direct nodes** — put a
+**Int literals are auto-wrapped** — a Python `int` used as an operand or
+assignment source is wrapped into a `val` sized to match the *other* operand
+(the destination for assignments), so `a + 2`, `2 + a`, `5 - a`, and `r |= 5`
+all work. The wrapping happens in the **Rust connector**: `signal.py` passes the
+raw int through, and `PyOperand` (`operand_py.rs`) + `make_const_val` /
+`resolve_binop_operands` (`arena_factory_hwc_expr_py.rs`) build the constant.
+Reflected dunders (`__radd__` … `__rrshift__`) cover `int ∘ signal`; comparisons
+rely on Python's automatic reflection. The literal crosses the boundary as a
+`num_bigint::BigInt` (PyO3's `num-bigint` feature), so **any** width / magnitude
+works — `make_const_val` masks to the low `width` bits via BigInt two's-complement
+semantics (negatives sign-extend across all limbs). `num-bigint` is an optional
+dep behind the `python` feature, so the default build stays PyO3/bigint-free.
+**Conditional blocks hold sub-blocks, not direct nodes** — put a
 `with seq():` inside an `if`/`while` body (a model constraint).
 
 **Construct then build.** The full pipeline is now:

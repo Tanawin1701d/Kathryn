@@ -17,7 +17,10 @@ path = "src/main.rs"
 [dependencies]
 # Python bindings only — pulled in behind the `python` feature so the default
 # build (and the 0-error baseline) never compiles any PyO3 macros.
-pyo3 = { version = "0.28", optional = true, features = ["extension-module", "multiple-pymethods"] }
+# `num-bigint` (+ pyo3's conversion) lets int operands of any magnitude cross the
+# boundary as arbitrary-precision values, so wide literals need no manual val().
+pyo3       = { version = "0.28", optional = true, features = ["extension-module", "multiple-pymethods", "num-bigint"] }
+num-bigint = { version = "0.4",  optional = true }
 
 [features]
-python = ["dep:pyo3"]
+python = ["dep:pyo3", "dep:num-bigint"]

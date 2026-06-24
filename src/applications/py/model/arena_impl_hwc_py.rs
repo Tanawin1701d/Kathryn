@@ -6,27 +6,39 @@ use pyo3::prelude::*;
 use super::model_arena::PyModelArena;
 use super::hw_component::common::hcp_ident_py::PyHcpIdent;
 use super::hw_component::common::slice_py::PySlice;
+use super::hw_component::common::operand_py::PyOperand;
 use crate::model::controller::clock_mode::get_global_clk_mode;
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
+use crate::model::hw_component::common::slice::Slice;
 
 #[pymethods]
 impl PyModelArena {
     // Build a basic assignment node `des_i <= src_i` and attach it to the active
     // flow block (or the top module if none is building). Slices optional
     // (default = full signal); returns nothing, mirroring the host signature.
-    #[pyo3(signature = (des_i, src_i, src_slice, des_slice=None))]
+    #[pyo3(signature = (des_i, src, src_slice=None, des_slice=None))]
     fn gen_basic_assign(
         &mut self,
         des_i    : PyHcpIdent,
-        src_i    : PyHcpIdent,
-        src_slice: PySlice,
+        src      : PyOperand,
+        src_slice: Option<PySlice>,
         des_slice: Option<PySlice>,
     ) {
+        // An int source is wrapped into a val sized to the destination's width;
+        // its source slice is that val's full range (the size-match assert in the
+        // host runs before any default-slice resolution, so it must be concrete).
+        let (src_i, src_slice) = match src {
+            PyOperand::Ident(x) => (x.into(), src_slice.map(Into::into).unwrap_or_default()),
+            PyOperand::Int(n)   => {
+                let w = self.arena.get_hw_bit_sz(&des_i.into());
+                (self.make_const_val("const", &n, w), Slice::new(0, w))
+            }
+        };
         self.arena.gen_basic_assign(
             des_i.into(),
-            src_i.into(),
+            src_i,
             des_slice.map(Into::into),
-            src_slice.into(),
+            src_slice,
         );
     }
 

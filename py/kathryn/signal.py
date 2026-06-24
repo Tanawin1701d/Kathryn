@@ -86,11 +86,30 @@ class SignalRef:
         return SignalRef(self._ident, _inclusive_slice(key))
 
     # ---- expression building ----------------------------------------------
-    def _binop(self, other: SignalRef, op: LogicOp) -> expr: # two op
-        other = to_ref(other)
+    def _binop(self, other: Union[SignalRef, int], op: LogicOp) -> expr: # two op
+        # An int is passed straight through; the Rust connector wraps it into a
+        # val sized to self's width. Otherwise resolve to a signal handle.
+        if isinstance(other, int):
+            b, b_slice = other, None
+        else:
+            other      = to_ref(other)
+            b, b_slice = other._ident, other._slice
         out = _session.arena().mk_expression(
             _session.auto_name("expr"), int(op),
-            self._ident, other._ident, self._slice, other._slice,
+            self._ident, b, self._slice, b_slice,
+        )
+        return expr(out)
+
+    def _rbinop(self, other: Union[SignalRef, int], op: LogicOp) -> expr: # reflected: other ∘ self
+        # `other` is the LEFT operand (e.g. `2 - a`), so it leads the expression.
+        if isinstance(other, int):
+            a, a_slice = other, None
+        else:
+            other      = to_ref(other)
+            a, a_slice = other._ident, other._slice
+        out = _session.arena().mk_expression(
+            _session.auto_name("expr"), int(op),
+            a, self._ident, a_slice, self._slice,
         )
         return expr(out)
 
@@ -100,26 +119,38 @@ class SignalRef:
         )
         return expr(out)
 
-    # arithmetic
-    def __add__     (self, o: SignalRef) -> expr: return self._binop(o, LogicOp.ArithPlus)
-    def __sub__     (self, o: SignalRef) -> expr: return self._binop(o, LogicOp.ArithMinus)
-    def __mul__     (self, o: SignalRef) -> expr: return self._binop(o, LogicOp.ArithMul)
-    def __truediv__ (self, o: SignalRef) -> expr: return self._binop(o, LogicOp.ArithDiv)
-    def __mod__     (self, o: SignalRef) -> expr: return self._binop(o, LogicOp.ArithDivr)
+    # arithmetic  (int operands are auto-wrapped into a width-matched val)
+    def __add__     (self, o: Union[SignalRef, int]) -> expr: return self._binop(o, LogicOp.ArithPlus)
+    def __sub__     (self, o: Union[SignalRef, int]) -> expr: return self._binop(o, LogicOp.ArithMinus)
+    def __mul__     (self, o: Union[SignalRef, int]) -> expr: return self._binop(o, LogicOp.ArithMul)
+    def __truediv__ (self, o: Union[SignalRef, int]) -> expr: return self._binop(o, LogicOp.ArithDiv)
+    def __mod__     (self, o: Union[SignalRef, int]) -> expr: return self._binop(o, LogicOp.ArithDivr)
     # bitwise
-    def __and__     (self, o: SignalRef) -> expr: return self._binop(o, LogicOp.BitwiseAnd)
-    def __or__      (self, o: SignalRef) -> expr: return self._binop(o, LogicOp.BitwiseOr)
-    def __xor__     (self, o: SignalRef) -> expr: return self._binop(o, LogicOp.BitwiseXor)
-    def __lshift__  (self, o: SignalRef) -> expr: return self._binop(o, LogicOp.BitwiseShl)
-    def __rshift__  (self, o: SignalRef) -> expr: return self._binop(o, LogicOp.BitwiseShr)
-    def __invert__  (self)               -> expr: return self._unop(LogicOp.BitwiseInvr)
+    def __and__     (self, o: Union[SignalRef, int]) -> expr: return self._binop(o, LogicOp.BitwiseAnd)
+    def __or__      (self, o: Union[SignalRef, int]) -> expr: return self._binop(o, LogicOp.BitwiseOr)
+    def __xor__     (self, o: Union[SignalRef, int]) -> expr: return self._binop(o, LogicOp.BitwiseXor)
+    def __lshift__  (self, o: Union[SignalRef, int]) -> expr: return self._binop(o, LogicOp.BitwiseShl)
+    def __rshift__  (self, o: Union[SignalRef, int]) -> expr: return self._binop(o, LogicOp.BitwiseShr)
+    def __invert__  (self)                           -> expr: return self._unop(LogicOp.BitwiseInvr)
+    # reflected arithmetic/bitwise (int ∘ signal, e.g. `2 - a`); comparisons need
+    # none — Python auto-reflects `2 < a` -> `a.__gt__(2)`, `2 == a` -> `a.__eq__(2)`.
+    def __radd__    (self, o: Union[SignalRef, int]) -> expr: return self._rbinop(o, LogicOp.ArithPlus)
+    def __rsub__    (self, o: Union[SignalRef, int]) -> expr: return self._rbinop(o, LogicOp.ArithMinus)
+    def __rmul__    (self, o: Union[SignalRef, int]) -> expr: return self._rbinop(o, LogicOp.ArithMul)
+    def __rtruediv__(self, o: Union[SignalRef, int]) -> expr: return self._rbinop(o, LogicOp.ArithDiv)
+    def __rmod__    (self, o: Union[SignalRef, int]) -> expr: return self._rbinop(o, LogicOp.ArithDivr)
+    def __rand__    (self, o: Union[SignalRef, int]) -> expr: return self._rbinop(o, LogicOp.BitwiseAnd)
+    def __ror__     (self, o: Union[SignalRef, int]) -> expr: return self._rbinop(o, LogicOp.BitwiseOr)
+    def __rxor__    (self, o: Union[SignalRef, int]) -> expr: return self._rbinop(o, LogicOp.BitwiseXor)
+    def __rlshift__ (self, o: Union[SignalRef, int]) -> expr: return self._rbinop(o, LogicOp.BitwiseShl)
+    def __rrshift__ (self, o: Union[SignalRef, int]) -> expr: return self._rbinop(o, LogicOp.BitwiseShr)
     # relational (NOTE: == / != return an expr, not a bool; see __hash__)
-    def __eq__      (self, o: SignalRef) -> expr: return self._binop(o, LogicOp.RelationEq)
-    def __ne__      (self, o: SignalRef) -> expr: return self._binop(o, LogicOp.RelationNeq)
-    def __lt__      (self, o: SignalRef) -> expr: return self._binop(o, LogicOp.RelationLe)
-    def __le__      (self, o: SignalRef) -> expr: return self._binop(o, LogicOp.RelationLeq)
-    def __gt__      (self, o: SignalRef) -> expr: return self._binop(o, LogicOp.RelationGe)
-    def __ge__      (self, o: SignalRef) -> expr: return self._binop(o, LogicOp.RelationGeq)
+    def __eq__      (self, o: Union[SignalRef, int]) -> expr: return self._binop(o, LogicOp.RelationEq)
+    def __ne__      (self, o: Union[SignalRef, int]) -> expr: return self._binop(o, LogicOp.RelationNeq)
+    def __lt__      (self, o: Union[SignalRef, int]) -> expr: return self._binop(o, LogicOp.RelationLe)
+    def __le__      (self, o: Union[SignalRef, int]) -> expr: return self._binop(o, LogicOp.RelationLeq)
+    def __gt__      (self, o: Union[SignalRef, int]) -> expr: return self._binop(o, LogicOp.RelationGe)
+    def __ge__      (self, o: Union[SignalRef, int]) -> expr: return self._binop(o, LogicOp.RelationGeq)
 
     # Ops with no Python operator: logical &&/||/!, signed compares, bit-extend.
     def land  (self, o: SignalRef) -> expr: return self._binop(o, LogicOp.LogicalAnd)
@@ -183,34 +214,44 @@ class SignalRef:
         return _session.arena().is_marked_as_io(self._ident)
 
     # ---- assignment --------------------------------------------------------
-    def _do_assign(self, src: SignalRef) -> Union[SignalRef, _Assigned]:
-        src = to_ref(src)
-        _session.arena().gen_basic_assign(
-            self._ident, src._ident, src._slice, self._slice)
+    def _do_assign(self, src: Union[SignalRef, int]) -> Union[SignalRef, _Assigned]:
+        # An int source passes through; the connector wraps it into a val sized to
+        # this destination. A signal resolves to its handle + slice.
+        if isinstance(src, int):
+            s, s_slice = src, None
+        else:
+            src        = to_ref(src)
+            s, s_slice = src._ident, src._slice
+        _session.arena().gen_basic_assign(self._ident, s, s_slice, self._slice)
         # Whole-signal `a |= x` rebinds name a -> return self (no-op rebind).
         # Sliced `a[h,l] |= x` is desugared to a __setitem__ -> return sentinel.
         return _ASSIGNED if self._is_user_assigned else self
 
-    def __ior__(self, src: SignalRef) -> Union[SignalRef, _Assigned]:
+    def __ior__(self, src: Union[SignalRef, int]) -> Union[SignalRef, _Assigned]:
         if self._clocked is not True:
             raise TypeError("`|=` (clocked assign) requires a reg / mem_blk / mem_ele destination")
         return self._do_assign(src)
 
-    def __imul__(self, src: SignalRef) -> Union[SignalRef, _Assigned]:
+    def __imul__(self, src: Union[SignalRef, int]) -> Union[SignalRef, _Assigned]:
         if self._clocked is not False:
             raise TypeError("`*=` (combinational assign) requires a wire destination")
         return self._do_assign(src)
 
-    def __setitem__(self, key: SliceKey, value: Union[SignalRef, _Assigned]) -> None:
+    def __setitem__(self, key: SliceKey, value: Union[SignalRef, int, _Assigned]) -> None:
         # Implicit tail of `a[h,l] |= x`: the slice view already did the assign.
         if value is _ASSIGNED:
             return
         # Explicit `a[h,l] = rhs`: assign with the destination slice.
         if self._clocked is None:
             raise TypeError(f"{type(self).__name__} is not an assignment destination")
-        rhs = to_ref(value)
+        # An int rhs passes through to be width-matched in the connector.
+        if isinstance(value, int):
+            s, s_slice = value, None
+        else:
+            rhs        = to_ref(value)
+            s, s_slice = rhs._ident, rhs._slice
         _session.arena().gen_basic_assign(
-            self._ident, rhs._ident, rhs._slice, _inclusive_slice(key))
+            self._ident, s, s_slice, _inclusive_slice(key))
 
 
 class expr(SignalRef):
