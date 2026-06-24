@@ -5,8 +5,8 @@
 
 use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
-use super::model_arena::PyModelArena;
-use super::flow_block::flow_block_ident_py::PyFlowBlockIdent;
+use super::super::model_arena::PyModelArena;
+use super::flow_block_ident_py::PyFlowBlockIdent;
 use crate::model::flow_block::BlockTrackStatus;
 
 #[pymethods]

@@ -4,8 +4,8 @@
 // host `mk_*` (is_user_com = true) path.
 
 use pyo3::prelude::*;
-use super::model_arena::PyModelArena;
-use super::module::module_ident_py::PyModuleIdent;
+use super::super::model_arena::PyModelArena;
+use super::module_ident_py::PyModuleIdent;
 
 #[pymethods]
 impl PyModelArena {

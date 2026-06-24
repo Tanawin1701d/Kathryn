@@ -5,11 +5,11 @@
 
 use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
-use super::model_arena::PyModelArena;
-use super::flow_block::flow_block_ident_py::PyFlowBlockIdent;
-use super::hw_component::common::hcp_ident_py::PyHcpIdent;
-use super::hw_component::common::slice_py::PySlice;
-use super::complex_hardware::ccp_ident_py::PyCcpIdent;
+use super::super::model_arena::PyModelArena;
+use super::flow_block_ident_py::PyFlowBlockIdent;
+use super::super::hw_component::common::hcp_ident_py::PyHcpIdent;
+use super::super::hw_component::common::slice_py::PySlice;
+use super::super::complex_hardware::ccp_ident_py::PyCcpIdent;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::update_event::DEFAULT_UE_PRI_USER;
 use crate::model::complex_hardware::common::ccp_ident::CcpIdent;

@@ -6,10 +6,10 @@
 
 use pyo3::prelude::*;
 use pyo3::exceptions::{PyTypeError, PyValueError};
-use super::model_arena::PyModelArena;
-use super::hw_component::common::hcp_ident_py::PyHcpIdent;
-use super::hw_component::common::slice_py::PySlice;
-use super::complex_hardware::ccp_ident_py::PyCcpIdent;
+use super::super::model_arena::PyModelArena;
+use super::super::hw_component::common::hcp_ident_py::PyHcpIdent;
+use super::super::hw_component::common::slice_py::PySlice;
+use super::ccp_ident_py::PyCcpIdent;
 use crate::model::complex_hardware::arb::{ArbLockedChannel, ArbSamePriPolicy};
 use crate::model::complex_hardware::karray::KARRAY_BACKINGS;
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};

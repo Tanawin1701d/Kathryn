@@ -3,10 +3,10 @@
 // model construction.
 
 use pyo3::prelude::*;
-use super::model_arena::PyModelArena;
-use super::hw_component::common::hcp_ident_py::PyHcpIdent;
-use super::hw_component::common::slice_py::PySlice;
-use super::hw_component::common::operand_py::PyOperand;
+use super::super::model_arena::PyModelArena;
+use super::common::hcp_ident_py::PyHcpIdent;
+use super::common::slice_py::PySlice;
+use super::common::operand_py::PyOperand;
 use crate::model::controller::clock_mode::get_global_clk_mode;
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
 use crate::model::hw_component::common::slice::Slice;

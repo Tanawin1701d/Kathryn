@@ -7,10 +7,10 @@
 
 use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
-use super::model_arena::PyModelArena;
-use super::hw_component::common::hcp_ident_py::PyHcpIdent;
-use super::hw_component::common::slice_py::PySlice;
-use super::hw_component::common::operand_py::PyOperand;
+use super::super::model_arena::PyModelArena;
+use super::common::hcp_ident_py::PyHcpIdent;
+use super::common::slice_py::PySlice;
+use super::common::operand_py::PyOperand;
 use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::util::math::vary_val::VaryVal;

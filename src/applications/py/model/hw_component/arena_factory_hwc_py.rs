@@ -4,8 +4,8 @@
 // All wrappers are user-declared, so they pass `is_user_com = true`.
 
 use pyo3::prelude::*;
-use super::model_arena::PyModelArena;
-use super::hw_component::common::hcp_ident_py::PyHcpIdent;
+use super::super::model_arena::PyModelArena;
+use super::common::hcp_ident_py::PyHcpIdent;
 use crate::util::math::vary_val::VaryVal;
 
 #[pymethods]

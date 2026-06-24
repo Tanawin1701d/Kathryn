@@ -4,8 +4,8 @@
 // it, then pop it and register it with its parent module.
 
 use pyo3::prelude::*;
-use super::model_arena::PyModelArena;
-use super::module::module_ident_py::PyModuleIdent;
+use super::super::model_arena::PyModelArena;
+use super::module_ident_py::PyModuleIdent;
 use crate::model::model_arena::ModuleInitStage;
 use crate::model::module::module_ident::ModuleIdent;
 
