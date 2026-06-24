@@ -3,6 +3,7 @@ use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::hcp_assign::{HcpAssignable, HcpIoMark};
 use crate::model::hw_component::common::hcp_base::HcpBase;
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
+use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::expression::Expression;
 use crate::model::hw_component::mem_blk::MemBlk;
@@ -17,6 +18,16 @@ use crate::model::hw_component::sp_reg::state_reg::StateReg;
 use crate::model::hw_component::sp_reg::wait_reg::{CondWaitStateReg, CycleWaitStateReg};
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_ident::NcpIdent;
+
+// How `sanitize_asm_src` adjusted the assignment source so its width matched the
+// destination region. Reported back so a front-end (e.g. the Python DSL) can warn
+// the user about the implicit resize.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum AsmResize {
+    None,                                 // sizes already matched — untouched
+    ZeroExtended { from: i32, to: i32 },  // src narrower than dest — zero-extended (unsigned)
+    TruncatedMsb { from: i32, to: i32 },  // src wider   than dest — high bits dropped
+}
 
 // dispatch_hcp!: two forms.
 //   dispatch_hcp!(self, ident, method) — 11 HCP-assignable types (MemBlock excluded);
@@ -132,24 +143,59 @@ impl ModelArena {
     pub fn replace_back_hcp(&mut self, v: Box<dyn HcpBase>)              { v.replace_back_into_arena(self); }
 
 
-    // Generate an assignment node writing src_i into des_i: take the destination
-    // HCP out (freeing the arena for do_asm), let it build its own asm node, put it back.
+    // Make the assignment source width match the destination region: a too-narrow
+    // source is zero-extended (unsigned) through an ExtendBit expression, a too-wide
+    // one has its MSBs dropped by narrowing the source slice. Returns the (possibly
+    // new) source ident, the source slice to use, and a report of what changed.
+    pub fn sanitize_asm_src(&mut self, des_i    : HcpIdent     , src_i    : HcpIdent,
+                                       des_slice: Option<Slice>, src_slice: Slice   ,
+    ) -> (HcpIdent, Slice, AsmResize) {
+        // destination region width (explicit slice, else the destination's full width)
+        let des_size = match des_slice {
+            Some(s) if s.check_valid_slice() => s.get_size(),
+            _                                => self.get_hw_bit_sz(&des_i),
+        };
+        // source region width (fall back to the source's full slice)
+        let src_eff_slice = if src_slice.check_valid_slice() { src_slice } else { self.get_hw_slice(&src_i) };
+        let src_size      = src_eff_slice.get_size();
+
+        if src_size == des_size {
+            (src_i, src_slice, AsmResize::None)
+        } else if src_size > des_size {
+            // too wide — keep the low des_size bits, drop the MSBs
+            let shrunk_slice = Slice::new(src_eff_slice.start, src_eff_slice.start + des_size);
+            (src_i, shrunk_slice, AsmResize::TruncatedMsb { from: src_size, to: des_size })
+        } else {
+            // too narrow — zero-extend to des_size via an ExtendBit expression
+            let name   = format!("{}_ext", src_i.get_global_name());
+            let ext_i  = self.make_expression_constant(false, &name, LogicOp::ExtendBit, src_i, des_size, Some(src_eff_slice));
+            (ext_i, Slice::new(0, des_size), AsmResize::ZeroExtended { from: src_size, to: des_size })
+        }
+    }
+
+    // Generate an assignment node writing src_i into des_i: sanitize the source to
+    // the destination width, take the destination HCP out (freeing the arena for
+    // do_asm), let it build its own asm node, put it back. Returns the node and the
+    // resize report so callers can surface implicit resizes.
     pub fn gen_asm_node(&mut self, des_i    : HcpIdent     , src_i    : HcpIdent,
                                    des_slice: Option<Slice>, src_slice: Slice   ,
-    ) -> NcpIdent {
-        let des= self.take_hcp(des_i);
+    ) -> (NcpIdent, AsmResize) {
+        let (src_i, src_slice, resize) = self.sanitize_asm_src(des_i, src_i, des_slice, src_slice);
+        let des    = self.take_hcp(des_i);
         let node_i = des.do_asm(src_i, des_slice, src_slice, self);
         self.replace_back_hcp(des);
-        node_i
+        (node_i, resize)
     }
 
     // Build a basic assignment node and attach it where the build is currently
     // pointing (active flow block, or the top module if no block is building).
+    // Returns the resize report (see `sanitize_asm_src`).
     pub fn gen_basic_assign(&mut self, des_i    : HcpIdent     , src_i    : HcpIdent,
                                        des_slice: Option<Slice>, src_slice: Slice   ,
-    ) {
-        let node_i = self.gen_asm_node(des_i, src_i, des_slice, src_slice);
+    ) -> AsmResize {
+        let (node_i, resize) = self.gen_asm_node(des_i, src_i, des_slice, src_slice);
         self.attach_basic_node_to_current_scope(node_i);
+        resize
     }
 
     // ---- user reset / default events ----

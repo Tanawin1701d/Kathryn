@@ -953,3 +953,20 @@ kathryn._kathryn as k; print(k.__file__)"`.
 slice via `arena.get_hw_slice(&srci)` — mirroring how `des_slice` falls back to
 `get_des_slice()`. Previously a full-width source (`Slice::default()` = `(-1,-1)`)
 hit the `get_match_size_sub_slice` validity assert.
+
+**Assignment source auto-resize.** `ModelArena::gen_asm_node` /
+`gen_basic_assign` (`arena_impl_hwc.rs`) now call `sanitize_asm_src` **before**
+`do_asm`, so a source whose width does not match the destination region no longer
+trips the `get_match_size_sub_slice` size assert. The rule is **unsigned**:
+- src **narrower** than dest → zero-extended via an internal `ExtendBit`
+  expression (`make_expression_constant`, fill `1'b0`), assigned at full width.
+- src **wider** than dest → MSBs dropped by narrowing the source slice to the low
+  `des_size` bits.
+- exact match → untouched.
+
+Both helpers return an `AsmResize` report (`None` / `ZeroExtended{from,to}` /
+`TruncatedMsb{from,to}`). Host callers that don't care (e.g. `karray.rs`) drop it.
+The Python connector (`arena_impl_hwc_py.rs::gen_basic_assign`) forwards it to
+`warn_asm_resize`, which raises a Python `warnings.warn` so the DSL user sees any
+implicit width change. Covered by `test/model/tc27_asm_resize.py` (truncate +
+zero-extend, end to end, plus the warning assertions).

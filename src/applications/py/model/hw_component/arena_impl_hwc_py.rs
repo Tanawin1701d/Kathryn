@@ -7,7 +7,9 @@ use super::super::model_arena::PyModelArena;
 use super::common::hcp_ident_py::PyHcpIdent;
 use super::common::slice_py::PySlice;
 use super::common::operand_py::PyOperand;
+use crate::model::common::identifier::Identifiable;
 use crate::model::controller::clock_mode::get_global_clk_mode;
+use crate::model::hw_component::arena_impl_hwc::AsmResize;
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
 use crate::model::hw_component::common::slice::Slice;
 
@@ -19,11 +21,12 @@ impl PyModelArena {
     #[pyo3(signature = (des_i, src, src_slice=None, des_slice=None))]
     fn gen_basic_assign(
         &mut self,
+        py       : Python<'_>,
         des_i    : PyHcpIdent,
         src      : PyOperand,
         src_slice: Option<PySlice>,
         des_slice: Option<PySlice>,
-    ) {
+    ) -> PyResult<()> {
         // An int source is wrapped into a val sized to the destination's width;
         // its source slice is that val's full range (the size-match assert in the
         // host runs before any default-slice resolution, so it must be concrete).
@@ -34,12 +37,15 @@ impl PyModelArena {
                 (self.make_const_val("const", &n, w), Slice::new(0, w))
             }
         };
-        self.arena.gen_basic_assign(
-            des_i.into(),
+        let des_ident: HcpIdent = des_i.into();
+        let resize = self.arena.gen_basic_assign(
+            des_ident,
             src_i,
             des_slice.map(Into::into),
             src_slice,
         );
+        // Surface any implicit width adjustment back to the user's Python code.
+        warn_asm_resize(py, resize, des_ident.get_global_name())
     }
 
     // Full bit-width of the component, used to seed a SignalRef's full slice.
@@ -70,4 +76,22 @@ impl PyModelArena {
     fn is_marked_as_io(&self, hcp_i: PyHcpIdent) -> bool {
         self.arena.is_marked_as_io(&hcp_i.into())
     }
+}
+
+// ---- internal helpers (not exposed to Python) ----
+
+// Emit a Python `warnings.warn` when the host implicitly resized an assignment
+// source to fit the destination; a no-op when no resize happened.
+fn warn_asm_resize(py: Python<'_>, resize: AsmResize, des_name: &str) -> PyResult<()> {
+    let msg = match resize {
+        AsmResize::None => return Ok(()),
+        AsmResize::ZeroExtended { from, to } => format!(
+            "assignment source ({from} bits) is narrower than destination '{des_name}' ({to} bits); \
+             zero-extended (unsigned) to fit"),
+        AsmResize::TruncatedMsb { from, to } => format!(
+            "assignment source ({from} bits) is wider than destination '{des_name}' ({to} bits); \
+             MSBs dropped to fit"),
+    };
+    py.import("warnings")?.call_method1("warn", (msg,))?;
+    Ok(())
 }
