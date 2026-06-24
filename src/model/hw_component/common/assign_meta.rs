@@ -1,4 +1,4 @@
-use crate::model::arena_factory_ue::assert_clk_src_consistent;
+use crate::model::hw_component::common::arena_factory_ue::assert_clk_src_consistent;
 use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::hcp_assign::HcpAssignable;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;

@@ -9,3 +9,5 @@ pub mod state_node;
 pub mod syn_node;
 pub mod asm_node;
 pub mod start_node;
+pub mod arena_factory_node;
+pub mod arena_impl_node;

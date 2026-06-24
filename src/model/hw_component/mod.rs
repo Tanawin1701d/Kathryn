@@ -7,3 +7,5 @@ pub mod io_wire;
 pub mod mem_ele;
 pub mod mem_blk;
 pub mod expression;
+pub mod arena_factory_hwc;
+pub mod arena_impl_hwc;

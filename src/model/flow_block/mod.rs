@@ -9,6 +9,8 @@ pub mod wait;
 pub mod pipeline;
 pub mod zync;
 pub mod node_wrap;
+pub mod arena_factory_flow_block;
+pub mod arena_impl_flow_block;
 
 pub use common::{CondMode, LoopMode, ParSyncMode, WaitMode};
 pub use flow_block_base::{FlowBlock, FlowBlockBase, ExtSigType};
