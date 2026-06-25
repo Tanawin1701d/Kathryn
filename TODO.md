@@ -1,7 +1,6 @@
 ## TODO
 
 ### features
-- mismatch assign ment handler
 - karray dynamic indexing
 
 ### to test

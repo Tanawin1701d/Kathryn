@@ -6,13 +6,13 @@
 # read them back through plain output regs, and check exact values. Two write styles
 # are exercised:
 #   * entry 0 — FIELD-WISE writes: rf[0].valid <= 1, rf[0].data <= 42
-#   * entry 1 — WHOLE-ELEMENT write: rf[1] <= 0x55, split across the fields so
-#               rf[1].valid <= 0x55[0] = 1 and rf[1].data <= 0x55[7:1] = 42
+#   * entry 1 — WHOLE-ELEMENT write: rf[1] <= {"valid": 1, "data": 42}, each named
+#               source connected to the field of that name (no bit-level split)
 #
 # Intended behaviour (what this testbench asserts):
 #   * field-wise path: my_v == 1 and my_d == 42 once the sequence has run.
-#   * whole-element split: my_pv == 1 and my_pd == 42 (the packed source 0x55
-#     splits as valid=1, data=42), proving the per-field split is correct.
+#   * whole-element named write: my_pv == 1 and my_pd == 42, proving each named
+#     source lands on its matching field.
 #   * under held master reset every OUTPUT reg stays at its reset value 0.
 
 from __future__ import annotations
@@ -30,7 +30,6 @@ NAME = "tc25_karray_regfile"
 
 SETTLE_CYCLES = 24                      # cycles for the one-shot sequence to complete
 DATA          = 42                      # 0x2A — the value written into both data fields
-PACK          = 0x55                    # 0b0101_0101 -> valid = 1, data = 0x2A = 42
 
 
 # ---- model -------------------------------------------------------------------
@@ -44,7 +43,8 @@ class tc25_karray_regfile(Module):
         # constants written into the file
         self.c_valid = val(1, 1,    "c_valid")
         self.c_data  = val(7, DATA, "c_data")
-        self.c_pack  = val(8, PACK, "c_pack")    # whole-element source: valid|data packed
+        self.c_pvalid = val(1, 1,    "c_pvalid")  # whole-element named sources (per field)
+        self.c_pdata  = val(7, DATA, "c_pdata")
 
         # outputs that mirror the read-back fields (so cocotb can observe them)
         self.o_valid  = reg(1, "o_valid")        # <- rf[0].valid (field-wise)
@@ -69,8 +69,8 @@ class tc25_karray_regfile(Module):
             self.rf[0].valid |= self.c_valid
             self.rf[0].data  |= self.c_data
 
-            # entry 1 — whole-element write; Rust splits c_pack across the fields
-            self.rf[1] |= self.c_pack
+            # entry 1 — whole-element write; each named source lands on its field
+            self.rf[1] |= {"valid": self.c_pvalid, "data": self.c_pdata}
 
             # read both entries back out through the output regs
             self.o_valid  |= self.rf[0].valid
@@ -118,12 +118,12 @@ async def check_field_write_read(dut):
 
 
 @cocotb.test()
-async def check_whole_element_split(dut):
-    # The whole-element write rf[1] <= 0x55 splits across the fields: the LSB feeds
-    # `valid` (1) and the upper 7 bits feed `data` (42).
+async def check_whole_element_named(dut):
+    # The whole-element write rf[1] <= {"valid": 1, "data": 42} connects each named
+    # source to its matching field: valid <= 1, data <= 42.
     _, _, pv, pd = await _settle(dut)
-    assert pv == (PACK & 1),  f"split valid wrong: my_pv={pv} (want {PACK & 1})"
-    assert pd == (PACK >> 1), f"split data wrong: my_pd={pd} (want {PACK >> 1})"
+    assert pv == 1,    f"named valid wrong: my_pv={pv} (want 1)"
+    assert pd == DATA, f"named data wrong: my_pd={pd} (want {DATA})"
 
 
 @cocotb.test()

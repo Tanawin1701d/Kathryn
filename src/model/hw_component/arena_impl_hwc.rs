@@ -1,5 +1,6 @@
 use crate::model::common::identifier::Identifiable;
 use crate::model::controller::clock_mode::ClockMode;
+use crate::model::hw_component::common::assign_meta::AssignMeta;
 use crate::model::hw_component::common::hcp_assign::{HcpAssignable, HcpIoMark};
 use crate::model::hw_component::common::hcp_base::HcpBase;
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
@@ -185,6 +186,19 @@ impl ModelArena {
         let node_i = des.do_asm(src_i, des_slice, src_slice, self);
         self.replace_back_hcp(des);
         (node_i, resize)
+    }
+
+    // Like `gen_asm_node`, but builds an `AssignMeta` (not a node) so several can be
+    // joined into a single node via `make_asm_node_many`. Same source sanitisation and
+    // resize report; the destination HCP is taken out for the build, then put back.
+    pub fn gen_asm_meta(&mut self, des_i    : HcpIdent     , src_i    : HcpIdent,
+                                   des_slice: Option<Slice>, src_slice: Slice   ,
+    ) -> (AssignMeta, AsmResize) {
+        let (src_i, src_slice, resize) = self.sanitize_asm_src(des_i, src_i, des_slice, src_slice);
+        let des = self.take_hcp(des_i);
+        let am  = des.gen_asm_meta(src_i, des_slice, src_slice, self);
+        self.replace_back_hcp(des);
+        (am, resize)
     }
 
     // Build a basic assignment node and attach it where the build is currently

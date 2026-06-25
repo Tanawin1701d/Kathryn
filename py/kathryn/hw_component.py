@@ -8,6 +8,7 @@ from __future__ import annotations
 from typing import Optional
 
 from . import _session
+from ._kathryn import Slice
 from .signal import SignalRef, to_ref
 
 
@@ -57,7 +58,10 @@ class mem_blk(SignalRef):
     def __init__(self, bit_width: int, index_width: int, name: Optional[str] = None) -> None:
         name  = name or _session.auto_name("mem_blk")
         ident = _session.arena().mk_mem_blk(name, int(bit_width), int(index_width))
-        super().__init__(ident)
+        # A MemBlk is not itself an assignment destination (you read/write it via a
+        # mem_ele), so it has no `get_des_slice`. Pass an explicit data-width slice so
+        # SignalRef.__init__ doesn't query the arena (which would panic on the block).
+        super().__init__(ident, Slice(0, int(bit_width)))
 
 
 class mem_ele(SignalRef):

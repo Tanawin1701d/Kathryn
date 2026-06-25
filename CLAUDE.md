@@ -970,3 +970,29 @@ The Python connector (`arena_impl_hwc_py.rs::gen_basic_assign`) forwards it to
 `warn_asm_resize`, which raises a Python `warnings.warn` so the DSL user sees any
 implicit width change. Covered by `test/model/tc27_asm_resize.py` (truncate +
 zero-extend, end to end, plus the warning assertions).
+
+**Karray-to-karray region assignment.** `ModelArena::karray_assign_karray`
+(`src/model/complex_hardware/arena_impl_ccp_karray.rs`, a dedicated higher-level
+ops file mirroring `arena_impl_ccp_arp.rs`) copies one Karray region into another:
+- **Region selection.** Each side passes per-dimension selectors
+  `(start, stop: Option, is_range)` — an `int` key → `(i, i+1, false)` (collapses
+  the dim), a Python `slice` → `(start, stop|None, true)` (keeps it); trailing
+  un-indexed dims expand to full ranges in Rust. The two **result shapes** (lengths
+  of the `is_range` dims) must be equal.
+- **Field pairing** is by exact `name` + bit-width; unmatched destination fields
+  are skipped and returned so the connector can `warnings.warn`. Zero matches →
+  `ValueError`.
+- Per the joined-node rule, it emits **one `AssignMeta` per (element, matched
+  field)** via `HcpAssignable::gen_asm_meta`, joins them with
+  `make_asm_node_many`, and attaches one basic node via
+  `attach_basic_node_to_current_scope` — not N separate `gen_basic_assign` calls.
+- `KarrayAsmErr::{Type,Value}` lets the connector pick `PyTypeError` (|=/*= vs
+  backing) vs `PyValueError` (shape/bounds/no-match).
+
+DSL (`py/kathryn/complex_hardware/karray.py`): `KarrayRef` stores mixed int/slice
+`_keys`; `_selectors()` feeds the karray path, `_int_indices()` guards the scalar
+field/packed-element paths. `_assign_from` routes a Karray/KarrayRef element-or-
+region source (no field) to `karray_assign_karray`, else to the existing
+scalar/packed `_assign`. `Karray.__ior__`/`__imul__` (whole array) return `self`.
+Covered by `test/model/tc28_karray_to_karray.py` (range-slice + single-element
+copy across differing dtypes, with the skipped-field warning asserted).

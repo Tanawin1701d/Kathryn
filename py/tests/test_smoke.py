@@ -29,44 +29,88 @@ def test_singleton_survives_double_import():
 
 
 def test_hw_constructors_and_types():
-    assert reg(8).hw_type   == "REG"
-    assert wire(8).hw_type  == "WIRE"
-    assert val(8, 3).hw_type == "VAL"
-    blk = mem_blk(8, 4)
-    assert blk.hw_type == "MEM_BLOCK"
-    idx = val(4, 0)
-    ele = mem_ele(blk, idx, 8, True)          # read element
-    assert ele.global_id > 0
-    iow = wire(1)
-    iow.mark_input("test_in")
-    assert iow.is_io
+    # Hardware must be declared inside a module scope; @init opens/closes one
+    # eagerly, so capture the refs into a dict and assert on them afterwards.
+    h = {}
+
+    class worker(Module):
+        @init
+        def decl(self):
+            h["reg"]  = reg(8)
+            h["wire"] = wire(8)
+            h["val"]  = val(8, 3)
+            h["blk"]  = mem_blk(8, 4)
+            h["ele"]  = mem_ele(h["blk"], val(4, 0), 8, True)   # read element
+            iow = wire(1)
+            iow.mark_input("test_in")
+            h["iow"] = iow
+
+    worker()
+    assert h["reg"].hw_type  == "REG"
+    assert h["wire"].hw_type == "WIRE"
+    assert h["val"].hw_type  == "VAL"
+    assert h["blk"].hw_type  == "MEM_BLOCK"
+    assert h["ele"].global_id > 0
+    assert h["iow"].is_io
 
 
 def test_optional_names_autogenerate():
-    a = reg(8)              # no name -> auto
-    b = reg(8, "explicit")
-    assert a.global_id != b.global_id
+    h = {}
+
+    class worker(Module):
+        @init
+        def decl(self):
+            h["a"] = reg(8)              # no name -> auto
+            h["b"] = reg(8, "explicit")
+
+    worker()
+    assert h["a"].global_id != h["b"].global_id
 
 
 def test_binary_operator_builds_expression():
-    a, b = reg(8), wire(8)
-    e = a + b
-    assert isinstance(e, expr)
-    assert e.hw_type == "EXPR"
-    # chaining + bitwise + shift + relational all produce expressions
-    sh = val(8, 2)                          # operands must be signals, not int literals
-    assert ((a & b) >> sh).hw_type == "EXPR"
-    assert (a == b).hw_type == "EXPR"
+    h = {}
+
+    class worker(Module):
+        @init
+        def decl(self):
+            a, b = reg(8), wire(8)
+            h["e"]   = a + b
+            sh       = val(8, 2)            # operands must be signals, not int literals
+            h["shr"] = (a & b) >> sh        # chaining + bitwise + shift
+            h["eq"]  = a == b               # relational
+
+    worker()
+    assert isinstance(h["e"], expr)
+    assert h["e"].hw_type   == "EXPR"
+    assert h["shr"].hw_type == "EXPR"
+    assert h["eq"].hw_type  == "EXPR"
 
 
 def test_unary_invert_builds_expression():
-    a = reg(8)
-    assert (~a).hw_type == "EXPR"
-    assert a.lnot().hw_type == "EXPR"
+    h = {}
+
+    class worker(Module):
+        @init
+        def decl(self):
+            a = reg(8)
+            h["inv"]  = ~a
+            h["lnot"] = a.lnot()
+
+    worker()
+    assert h["inv"].hw_type  == "EXPR"
+    assert h["lnot"].hw_type == "EXPR"
 
 
 def test_inclusive_slicing():
-    a = reg(16)
+    h = {}
+
+    class worker(Module):
+        @init
+        def decl(self):
+            h["a"] = reg(16)
+
+    worker()
+    a = h["a"]
     s = a[8, 0]._slice          # bits 8..0 inclusive
     assert (s.start, s.stop) == (0, 9)
     one = a[3]._slice           # single bit
@@ -76,31 +120,57 @@ def test_inclusive_slicing():
 
 
 def test_clocked_assignment_with_ior():
-    a, b, c = reg(8), wire(8), reg(8)
-    with seq():
-        c |= a + b              # reg <- expr (clocked)
+    class worker(Module):
+        @flow
+        def f(self):
+            a, b, c = reg(8), wire(8), reg(8)
+            with seq():
+                c |= a + b              # reg <- expr (clocked)
+
+    worker()
+    gen_flow()
 
 
 def test_comb_assignment_with_imul():
-    a, b = reg(8), wire(8)
-    with seq():
-        b *= a                  # wire <- reg (combinational)
+    class worker(Module):
+        @flow
+        def f(self):
+            a, b = reg(8), wire(8)
+            with seq():
+                b *= a                  # wire <- reg (combinational)
+
+    worker()
+    gen_flow()
 
 
 def test_assignment_operator_guards():
-    # The guard raises in Python before any arena call, so no scope is needed.
-    r, w = reg(8), wire(8)
+    # The guard raises in Python before any arena assign; signals still need a
+    # scope to be created, so declare them in @init and check the guards after.
+    h = {}
+
+    class worker(Module):
+        @init
+        def decl(self):
+            h["r"], h["w"] = reg(8), wire(8)
+
+    worker()
     with pytest.raises(TypeError):
-        w |= r                  # |= on a wire is wrong
+        h["w"] |= h["r"]                # |= on a wire is wrong
     with pytest.raises(TypeError):
-        r *= w                  # *= on a reg is wrong
+        h["r"] *= h["w"]                # *= on a reg is wrong
 
 
 def test_sliced_assignment():
-    a, b = reg(16), wire(16)
-    with seq():
-        a[7, 0] |= b[7, 0]      # sliced clocked assign
-        b[15, 8] *= a[15, 8]    # sliced comb assign
+    class worker(Module):
+        @flow
+        def f(self):
+            a, b = reg(16), wire(16)
+            with seq():
+                a[7, 0] |= b[7, 0]      # sliced clocked assign
+                b[15, 8] *= a[15, 8]    # sliced comb assign
+
+    worker()
+    gen_flow()
 
 
 def test_nested_module_and_flow_scopes():
@@ -131,7 +201,7 @@ def test_class_based_module_runs_init_eager_flow_deferred():
         def my_flow(self):
             order.append("flow")
             with seq():             # flow block attached to this module's scope
-                pass
+                self.x |= 0         # a seq must hold at least one node
 
     m = my_module()
     assert order == ["init"]                   # @init eager; @flow deferred
@@ -150,15 +220,17 @@ def test_gen_flow_builds_all_modules_from_one_pool():
         @flow
         def f(self):
             order.append("a")
+            r = reg(1)
             with seq():
-                pass
+                r |= 0          # a seq must hold at least one node
 
     class mod_b(Module):
         @flow
         def f(self):
             order.append("b")
+            r = reg(1)
             with seq():
-                pass
+                r |= 0
 
     mod_a(); mod_b()
     assert order == []                         # both deferred into the one pool
@@ -574,21 +646,22 @@ def test_karray_field_is_its_own_hcp():
 
 def test_karray_reg_backing_emits_per_element_regs():
     # Reg backing materialises one reg per (element, field) — 15x2 for a 5x3 of two
-    # fields; a whole element (split across fields) and a single field both assign with |=.
+    # fields; a whole element (per-field named sources) and a single field both assign with |=.
     reset()
 
     class worker(Module):
         @init
         def decl(self):
             self.rob  = Karray((5, 3), [("valid", 1), ("reg_idx", 5)], HwComponentType.REG, "rob")
-            self.src  = reg(6)
+            self.vsrc = reg(1)
+            self.isrc = reg(5)
             self.vbit = reg(1)
 
         @flow
         def f(self):
             with seq():
-                self.rob[2][1] |= self.src           # whole 6-bit element (flat idx 7), split per field
-                self.rob[0][0].valid |= self.vbit    # the valid field's own 1-bit HCP
+                self.rob[2][1] |= {"valid": self.vsrc, "reg_idx": self.isrc}   # whole element (flat idx 7), per field
+                self.rob[0][0].valid |= self.vbit                              # the valid field's own 1-bit HCP
 
     set_top(worker())
     gen_flow()
@@ -614,7 +687,7 @@ def test_karray_wire_backing_uses_imul():
         @flow
         def f(self):
             with seq():
-                self.bus[1][0] *= self.s             # element (1,0) -> flat 2
+                self.bus[1][0] *= {"data": self.s}   # element (1,0) -> flat 2
 
     set_top(worker())
     gen_flow()
@@ -635,12 +708,13 @@ def test_karray_memblock_backing_declares_block():
         @init
         def decl(self):
             self.kmem = Karray((5, 3), [("valid", 1), ("reg_idx", 5)], HwComponentType.MEM_BLOCK, "kmem")
-            self.src  = reg(6)
+            self.vsrc = reg(1)
+            self.isrc = reg(5)
 
         @flow
         def f(self):
             with seq():
-                self.kmem[2][1] |= self.src          # write element at flat addr 7
+                self.kmem[2][1] |= {"valid": self.vsrc, "reg_idx": self.isrc}   # write element at flat addr 7
 
     set_top(worker())
     gen_flow()
@@ -668,9 +742,9 @@ def test_karray_backing_enforces_assignment_operator():
         @flow
         def f(self):
             with pytest.raises(TypeError):
-                self.wk[0] |= self.s                 # |= on wire-backed element
+                self.wk[0] |= {"v": self.s}          # |= on wire-backed element
             with pytest.raises(TypeError):
-                self.rk[0] *= self.s                 # *= on reg-backed element
+                self.rk[0] *= {"v": self.s}          # *= on reg-backed element
 
     set_top(worker())
     gen_flow()
@@ -686,14 +760,13 @@ def test_karray_1d_element_assignment():
         @init
         def decl(self):
             self.rf  = Karray((4,), [("valid", 1), ("data", 7)], HwComponentType.REG, "rf")
-            self.pk  = reg(8)
             self.hi  = val(1, 1)
             self.dat = reg(7)
 
         @flow
         def f(self):
             with seq():
-                self.rf[2] |= self.pk                # whole element (split per field)
+                self.rf[2] |= {"valid": self.hi, "data": self.dat}   # whole element (per-field named sources)
                 self.rf[0].valid |= self.hi          # 1-D + field
                 self.rf[0].data  |= self.dat
 
