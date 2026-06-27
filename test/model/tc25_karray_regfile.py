@@ -33,12 +33,17 @@ DATA          = 42                      # 0x2A — the value written into both d
 
 
 # ---- model -------------------------------------------------------------------
+class RfEntry(Karray):
+    valid = kaf(1)
+    data  = kaf(7)
+
+
 class tc25_karray_regfile(Module):
     @init
     def com_declare(self):
         # 4-entry register file; each entry a {valid:1, data:7} record, each field
         # materialised as its own reg (reg backing -> clocked, assigned with |=).
-        self.rf = Karray((4,), [("valid", 1), ("data", 7)], HwComponentType.REG, "rf")
+        self.rf = RfEntry(HwComponentType.REG, (4,), "rf")
 
         # constants written into the file
         self.c_valid = val(1, 1,    "c_valid")

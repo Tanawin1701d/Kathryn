@@ -12,31 +12,57 @@
 
 from __future__ import annotations
 
-from typing import Iterable, Optional, Tuple, Union
+from typing import Iterable, Optional, Union
 
 from .. import _session
 from .._kathryn import HwComponentType
 from ..signal import _ASSIGNED
+from .karray_field import (
+    KarrayField,
+    get_declared_karray_fields,
+    normalize_karray_field_specs,
+)
 from .karray_ref import KarrayRef
 
 
 # ---- karray -----------------------------------------------------------------
 class Karray:
     """Typed multi-dimensional array (Karray CCP) — a thin handle over the Rust
-    CcpIdent (no cached layout). `shape` is the dimension tuple (e.g. `(5, 3)`);
-    `fields` is the element record as `(name, width)` pairs, in declaration order,
-    each materialised as its OWN hardware component. `backing` is a
+    CcpIdent (no cached layout). Declare element fields with `kaf()` on a subclass;
+    the constructor is `(backing, shape=(1,), name=None)` where `backing` is a
     `kathryn.HwComponentType` member — `REG` / `WIRE` / `MEM_BLOCK`."""
 
-    __slots__ = ("_ident",)
+    __slots__         = ("_ident",)
+    __karray_fields__ = ()
+
+    def __init_subclass__(cls, **kwargs) -> None:
+        super().__init_subclass__(**kwargs)
+
+        # Collect inherited fields first (MRO base→parent order), then cls's own.
+        fields = []
+        seen   = set()
+        for base in reversed(cls.__mro__[1:]):
+            for name, width in get_declared_karray_fields(base):
+                if name not in seen:
+                    fields.append((name, width))
+                    seen.add(name)
+
+        for _, spec in cls.__dict__.items():
+            if not isinstance(spec, KarrayField):
+                continue
+            if spec.name in seen:
+                raise TypeError(f"duplicate Karray field name: {spec.name}")
+            fields.append((spec.name, spec.width))
+            seen.add(spec.name)
+
+        cls.__karray_fields__ = tuple(fields)
 
     def __init__(self,
-                 shape   : Iterable[int],
-                 fields  : Iterable[Tuple[str, int]],
-                 backing : int = HwComponentType.REG,
+                 backing : int,
+                 shape   : Iterable[int] = (1,),
                  name    : Optional[str] = None) -> None:
         name        = name or _session.auto_name("karray")
-        flds        = [(str(n), int(w)) for (n, w) in fields]
+        flds        = normalize_karray_field_specs(get_declared_karray_fields(type(self)))
         self._ident = _session.arena().mk_karray(name, [int(d) for d in shape], flds, int(backing))
 
     @property

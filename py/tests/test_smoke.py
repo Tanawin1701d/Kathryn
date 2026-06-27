@@ -13,7 +13,7 @@ from kathryn import (
     Module, init, flow, gen_flow, build_flow, emit_verilog,
     priority, set_priority, set_priority_auto, get_priority, get_priority_mode,
     DEFAULT_UE_PRI_USER, DEFAULT_UE_PRI_RST, DEFAULT_UE_PRI_MIN,
-    Karray, HwComponentType,
+    Karray, kaf, HwComponentType,
 )
 
 
@@ -628,10 +628,14 @@ def test_karray_field_is_its_own_hcp():
     # packed element); elem_width is the sum of field widths.
     reset()
 
+    class RobEntry(Karray):
+        valid   = kaf(1)
+        reg_idx = kaf(5)
+
     class worker(Module):
         @init
         def decl(self):
-            self.rob = Karray((5, 3), [("valid", 1), ("reg_idx", 5)], HwComponentType.REG, "rob")
+            self.rob = RobEntry(HwComponentType.REG, (5, 3), "rob")
 
     w  = worker()
     ar = k._session.arena()
@@ -644,15 +648,44 @@ def test_karray_field_is_its_own_hcp():
         w.rob[2][1].nope._to_read_ref()              # unknown field rejected at resolve
 
 
+def test_karray_object_oriented_declaration():
+    # Karray subclasses can declare their element record as class fields, keeping
+    # the construction call focused on shape/backing/name.
+    reset()
+
+    class Src(Karray):
+        valid = kaf(1)
+        data  = kaf(8)
+        note  = kaf(4)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.src = Src(HwComponentType.REG, (4,), "src")
+
+    w  = worker()
+    ar = k._session.arena()
+    valid = w.src[0].valid._to_read_ref()
+    data  = w.src[0].data._to_read_ref()
+    note  = w.src[0].note._to_read_ref()
+    assert ar.get_hw_bit_sz(valid._ident) == 1
+    assert ar.get_hw_bit_sz(data._ident)  == 8
+    assert ar.get_hw_bit_sz(note._ident)  == 4
+
+
 def test_karray_reg_backing_emits_per_element_regs():
     # Reg backing materialises one reg per (element, field) — 15x2 for a 5x3 of two
     # fields; a whole element (per-field named sources) and a single field both assign with |=.
     reset()
 
+    class RobEntry(Karray):
+        valid   = kaf(1)
+        reg_idx = kaf(5)
+
     class worker(Module):
         @init
         def decl(self):
-            self.rob  = Karray((5, 3), [("valid", 1), ("reg_idx", 5)], HwComponentType.REG, "rob")
+            self.rob  = RobEntry(HwComponentType.REG, (5, 3), "rob")
             self.vsrc = reg(1)
             self.isrc = reg(5)
             self.vbit = reg(1)
@@ -678,10 +711,13 @@ def test_karray_wire_backing_uses_imul():
     # Wire backing is combinational — assign with *=; |= must be rejected.
     reset()
 
+    class BusEntry(Karray):
+        data = kaf(8)
+
     class worker(Module):
         @init
         def decl(self):
-            self.bus = Karray((2, 2), [("data", 8)], HwComponentType.WIRE, "bus")
+            self.bus = BusEntry(HwComponentType.WIRE, (2, 2), "bus")
             self.s   = reg(8)
 
         @flow
@@ -704,10 +740,14 @@ def test_karray_memblock_backing_declares_block():
     # a write MemEle at the constant flattened address.
     reset()
 
+    class RobEntry(Karray):
+        valid   = kaf(1)
+        reg_idx = kaf(5)
+
     class worker(Module):
         @init
         def decl(self):
-            self.kmem = Karray((5, 3), [("valid", 1), ("reg_idx", 5)], HwComponentType.MEM_BLOCK, "kmem")
+            self.kmem = RobEntry(HwComponentType.MEM_BLOCK, (5, 3), "kmem")
             self.vsrc = reg(1)
             self.isrc = reg(5)
 
@@ -732,11 +772,14 @@ def test_karray_backing_enforces_assignment_operator():
     # Python (via the resolved element's clocked-ness) before mutating the model.
     reset()
 
+    class VEntry(Karray):
+        v = kaf(4)
+
     class worker(Module):
         @init
         def decl(self):
-            self.rk = Karray((2,), [("v", 4)], HwComponentType.REG,  "rk")
-            self.wk = Karray((2,), [("v", 4)], HwComponentType.WIRE, "wk")
+            self.rk = VEntry(HwComponentType.REG,  (2,), "rk")
+            self.wk = VEntry(HwComponentType.WIRE, (2,), "wk")
             self.s  = reg(4)
 
         @flow
@@ -756,10 +799,14 @@ def test_karray_1d_element_assignment():
     # a whole-element and a field assign on a 1-D array end to end.
     reset()
 
+    class RfEntry(Karray):
+        valid = kaf(1)
+        data  = kaf(7)
+
     class worker(Module):
         @init
         def decl(self):
-            self.rf  = Karray((4,), [("valid", 1), ("data", 7)], HwComponentType.REG, "rf")
+            self.rf  = RfEntry(HwComponentType.REG, (4,), "rf")
             self.hi  = val(1, 1)
             self.dat = reg(7)
 

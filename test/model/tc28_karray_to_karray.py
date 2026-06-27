@@ -40,11 +40,23 @@ EXPECT = {
 
 
 # ---- model -------------------------------------------------------------------
+class SrcArray(Karray):
+    valid = kaf(1)
+    data  = kaf(8)
+    note  = kaf(4)
+
+
+class DstArray(Karray):
+    valid = kaf(1)
+    data  = kaf(8)
+    tag   = kaf(4)
+
+
 class tc28_karray_to_karray(Module):
     @init
     def com_declare(self):
-        self.src = Karray((4,), [("valid", 1), ("data", 8), ("note", 4)], HwComponentType.REG, "src")
-        self.dst = Karray((4,), [("valid", 1), ("data", 8), ("tag",  4)], HwComponentType.REG, "dst")
+        self.src = SrcArray(HwComponentType.REG, (4,), "src")
+        self.dst = DstArray(HwComponentType.REG, (4,), "dst")
 
         self.c_v   = val(1, 1,          "c_v")
         self.c_d0  = val(8, DATA[0],    "c_d0")
