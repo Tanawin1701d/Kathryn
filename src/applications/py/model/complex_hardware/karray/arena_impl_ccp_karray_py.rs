@@ -7,8 +7,14 @@ use pyo3::exceptions::{PyTypeError, PyValueError};
 use super::super::super::model_arena::PyModelArena;
 use super::super::super::hw_component::common::hcp_ident_py::PyHcpIdent;
 use super::super::ccp_ident_py::PyCcpIdent;
-use crate::model::complex_hardware::karray::KarrayAsmErr;
+use crate::model::complex_hardware::karray::{KarrayAsmErr, KyIdxType};
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
+
+// Python selector encoding, symmetric for input and the resolved-index output:
+//   ("static", Some(i), None)   compile-time index i
+//   ("bin",    None,    Some(s))  runtime binary-encoded address signal s
+//   ("onehot", None,    Some(s))  runtime one-hot select signal s
+type PyKyIdx = (String, Option<usize>, Option<PyHcpIdent>);
 
 #[pymethods]
 impl PyModelArena {
@@ -77,5 +83,48 @@ impl PyModelArena {
             Err(KarrayAsmErr::Type (m)) => Err(PyTypeError ::new_err(m)),
             Err(KarrayAsmErr::Value(m)) => Err(PyValueError::new_err(m)),
         }
+    }
+
+    // Dynamic (runtime-signal) element read. `indices` carries one selector per
+    // dimension (see PyKyIdx); `selected_fields` are the field names to materialise.
+    // Returns the result scalar Karray's CcpIdent plus the resolved per-dimension
+    // index (same selector encoding — `bin` wire for dynamic dims, `static` for
+    // pinned ones). Reg/Wire backings only.
+    fn karray_dynamic_index_get(
+        &mut self,
+        karray_i       : PyCcpIdent,
+        indices        : Vec<PyKyIdx>,
+        selected_fields: Vec<String>,
+    ) -> PyResult<(PyCcpIdent, Vec<PyKyIdx>)> {
+        // ---- decode Python selectors into KyIdxType ----
+        let mut sels = Vec::with_capacity(indices.len());
+        for (kind, sidx, sig) in indices {
+            let sel = match kind.as_str() {
+                "static" => KyIdxType::Static(sidx.ok_or_else(||
+                    PyValueError::new_err("static index selector needs an integer index"))?),
+                "bin"    => KyIdxType::DynBin(sig.ok_or_else(||
+                    PyValueError::new_err("binary index selector needs a signal"))?.into()),
+                "onehot" => KyIdxType::DynOneHot(sig.ok_or_else(||
+                    PyValueError::new_err("one-hot index selector needs a signal"))?.into()),
+                other    => return Err(PyValueError::new_err(format!("unknown index selector kind '{other}'"))),
+            };
+            sels.push(sel);
+        }
+
+        // ---- resolve + materialise ----
+        let (res_ccp, resolved) = self.arena
+            .karray_dynamic_index_get(karray_i.into(), sels, selected_fields)
+            .map_err(|e| match e {
+                KarrayAsmErr::Type (m) => PyTypeError ::new_err(m),
+                KarrayAsmErr::Value(m) => PyValueError::new_err(m),
+            })?;
+
+        // ---- encode the resolved index back into Python selectors ----
+        let resolved_py: Vec<PyKyIdx> = resolved.into_iter().map(|k| match k {
+            KyIdxType::Static   (i) => ("static".to_string(), Some(i), None),
+            KyIdxType::DynBin   (s) => ("bin"   .to_string(), None,    Some(s.into())),
+            KyIdxType::DynOneHot(s) => ("onehot".to_string(), None,    Some(s.into())),
+        }).collect();
+        Ok((res_ccp.into(), resolved_py))
     }
 }

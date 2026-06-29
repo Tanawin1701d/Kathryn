@@ -10,6 +10,24 @@ from .. import _session
 from ..signal import SignalRef, _ASSIGNED, to_ref
 
 
+# ---- dynamic one-hot index marker -------------------------------------------
+class OneHot:
+    """Marks a signal as a *one-hot* dynamic Karray index: `d[oh(sel)]`. A bare
+    signal index (`d[sel]`) is treated as a binary-encoded address instead."""
+
+    __slots__ = ("sig",)
+
+    def __init__(self, sig: SignalRef) -> None:
+        if not isinstance(sig, SignalRef):
+            raise TypeError("oh() expects a signal (one-hot select line)")
+        self.sig = sig
+
+
+def oh(sig: SignalRef) -> OneHot:
+    """Wrap a select line so a Karray indexes it as a one-hot (not binary) address."""
+    return OneHot(sig)
+
+
 # ---- karray element / field reference ---------------------------------------
 class KarrayRef:
     """A partially- or fully-indexed view into a Karray, optionally narrowed to a
@@ -39,8 +57,10 @@ class KarrayRef:
     def __getitem__(self, key) -> "KarrayRef":
         if self._field is not None:
             raise TypeError("cannot index into a Karray field")
-        if not isinstance(key, (int, slice)):
-            raise TypeError("Karray index must be a static int or slice (dynamic indices are not supported yet)")
+        # int / slice = static; a signal = dynamic binary address; oh(signal) = dynamic one-hot.
+        if not isinstance(key, (int, slice, SignalRef, OneHot)):
+            raise TypeError("Karray index must be an int, slice, a signal (dynamic binary), "
+                            "or oh(signal) (dynamic one-hot)")
         return KarrayRef(self._ident, self._keys + [key], None)
 
     def __getattr__(self, name: str) -> "KarrayRef":
@@ -77,15 +97,52 @@ class KarrayRef:
                 sels.append((ik, ik + 1, False))
         return sels
 
+    # True when any indexed dim uses a runtime signal (binary or one-hot).
+    def _has_dynamic(self) -> bool:
+        return any(isinstance(k, (SignalRef, OneHot)) for k in self._keys)
+
+    # Per-dimension selectors for the dynamic-read path, in the connector's encoding:
+    #   int       -> ("static", i,    None)
+    #   signal    -> ("bin",    None, sig)   binary-encoded address
+    #   oh(signal)-> ("onehot", None, sig)   one-hot select line
+    # A range/slice cannot mix with dynamic indexing, and the index signal must be
+    # whole (a sliced view carries no width here — assign it to a wire first).
+    def _dyn_selectors(self) -> list:
+        sels = []
+        for k in self._keys:
+            if isinstance(k, OneHot):
+                if k.sig._is_user_assigned:
+                    raise TypeError("a sliced signal cannot be a dynamic index; assign it to a wire first")
+                sels.append(("onehot", None, k.sig._ident))
+            elif isinstance(k, SignalRef):
+                if k._is_user_assigned:
+                    raise TypeError("a sliced signal cannot be a dynamic index; assign it to a wire first")
+                sels.append(("bin", None, k._ident))
+            elif isinstance(k, int):
+                sels.append(("static", int(k), None))
+            else:  # slice
+                raise TypeError("a range/slice index cannot be combined with dynamic indexing")
+        return sels
+
     # single hcp access/ref
 
     def _field_hcp(self, is_read: bool):
         return _session.arena().karray_static_index_get_hcp(self._ident, self._int_indices(), self._field, bool(is_read))
 
+    # Dynamic read: resolve the selection into a scalar result Karray holding just
+    # this field, then read field 0 of that result (a fresh mux-output wire).
+    def _dyn_field_hcp(self):
+        result_ccp, _resolved = _session.arena().karray_dynamic_index_get(
+            self._ident, self._dyn_selectors(), [self._field],
+        )
+        return _session.arena().karray_static_index_get_hcp(result_ccp, [0], self._field, True)
+
     # Read hook consumed by signal.to_ref (use a field as an assignment source).
     def _to_read_ref(self) -> SignalRef:
         if self._field is None:
             raise TypeError("read a specific field (d[i][j].field), not a whole Karray element")
+        if self._has_dynamic():
+            return SignalRef(self._dyn_field_hcp())
         return SignalRef(self._field_hcp(is_read=True))
 
     # ---- assignment --------------------------------------------------------
@@ -97,6 +154,9 @@ class KarrayRef:
     #   element           {field_name: source}    -> whole-element field map        d[2][1] |= {"valid": v, "data": x}
     #   element           non-dict / non-karray   -> ERROR (raised in _assign_element_from_map)
     def _assign_from(self, src, expect_clocked: Optional[bool]) -> None:
+        if self._has_dynamic():
+            raise NotImplementedError(
+                "dynamic-index Karray assignment is not supported yet; dynamic indexing is read-only")
         from .karray import Karray            # local import breaks the Karray<->KarrayRef cycle
         if isinstance(src, Karray):
             src = KarrayRef(src._ident)            # whole-array source (no keys -> full-range every dim)

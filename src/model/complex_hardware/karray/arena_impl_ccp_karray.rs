@@ -4,6 +4,7 @@ use crate::model::complex_hardware::karray::Karray;
 use crate::model::complex_hardware::karray::karray_region_sel::{
     flat_to_multi_index, offset_to_abs_indices, resolve_dim_selectors, result_shape, KarrayAsmErr,
 };
+use crate::model::complex_hardware::karray::KyIdxType;
 use crate::model::hw_component::common::assign_meta::AssignMeta;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::slice::Slice;
@@ -43,6 +44,38 @@ impl ModelArena {
             Some(false) if  karray.is_clocked() => Err(KarrayAsmErr::Type(
                 "`*=` (combinational assign) requires a wire-backed Karray".into())),
             _ => Ok(karray.assign_element(indices, sources, self)),
+        };
+        self.replace_back_karray(karray);
+        out
+    }
+
+    // Dynamic (runtime-signal) element read on `karray_i`: resolve the per-dimension
+    // selectors (`KyIdxType` — Static / DynBin / DynOneHot) and the named fields into
+    // a fresh wire-backed scalar Karray, returning its CcpIdent plus the resolved
+    // per-dimension index. Field names are resolved here (Python keeps no layout); an
+    // unknown name is a Value error.
+    pub fn karray_dynamic_index_get(
+        &mut self,
+        karray_i   : CcpIdent,
+        indices    : Vec<KyIdxType>,
+        field_names: Vec<String>,
+    ) -> Result<(CcpIdent, Vec<KyIdxType>), KarrayAsmErr> {
+        let karray = self.take_karray(karray_i);
+
+        // resolve field names -> field indices (collecting any misses for a clean error)
+        let mut field_idxs = Vec::with_capacity(field_names.len());
+        let mut missing    = Vec::new();
+        for name in &field_names {
+            match karray.field_index(name) {
+                Some(field_idx) => field_idxs.push(field_idx),
+                None            => missing.push(name.clone()),
+            }
+        }
+
+        let out = if !missing.is_empty() {
+            Err(KarrayAsmErr::Value(format!("Karray dynamic read: no such field(s): {missing:?}")))
+        } else {
+            Ok(karray.dynamic_index_get_Karray(&indices, field_idxs, self))
         };
         self.replace_back_karray(karray);
         out

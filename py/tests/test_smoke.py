@@ -13,7 +13,7 @@ from kathryn import (
     Module, init, flow, gen_flow, build_flow, emit_verilog,
     priority, set_priority, set_priority_auto, get_priority, get_priority_mode,
     DEFAULT_UE_PRI_USER, DEFAULT_UE_PRI_RST, DEFAULT_UE_PRI_MIN,
-    Karray, kaf, HwComponentType,
+    Karray, kaf, HwComponentType, oh,
 )
 
 
@@ -826,3 +826,143 @@ def test_karray_1d_element_assignment():
     text = open(os.path.join(out_dir, "top.v")).read()
     assert "rf_E2_valid" in text and "rf_E2_data" in text   # element 2 split across fields
     assert "rf_E0_valid" in text and "rf_E0_data" in text   # element 0 field-wise
+
+
+# ---- Karray dynamic (runtime-signal) indexing -------------------------------
+
+def test_karray_dynamic_binary_read():
+    # A bare signal index = binary-encoded address. Reading a field of the
+    # dynamically-selected element yields a fresh mux-output wire of the field width.
+    # The read MATERIALISES mux hardware, so it runs inside the module scope (@init).
+    reset()
+    res = {}
+
+    class RfEntry(Karray):
+        valid = kaf(1)
+        data  = kaf(8)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.rf  = RfEntry(HwComponentType.REG, (4,), "rf")
+            self.sel = reg(2)                       # 2-bit binary address for 4 elements
+            res["got"] = self.rf[self.sel].data._to_read_ref()   # dynamic read of .data
+
+    worker()
+    ar  = k._session.arena()
+    got = res["got"]
+    assert ar.get_hw_bit_sz(got._ident) == 8       # mux output = field width
+    assert got._ident.hw_type == "WIRE"            # combinational mux result
+
+
+def test_karray_dynamic_onehot_read():
+    # oh(sig) marks the index as one-hot: one select bit per element.
+    reset()
+    res = {}
+
+    class RfEntry(Karray):
+        valid = kaf(1)
+        data  = kaf(8)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.rf  = RfEntry(HwComponentType.REG, (4,), "rf")
+            self.sel = reg(4)                       # 4-bit one-hot for 4 elements
+            res["got"] = self.rf[oh(self.sel)].data._to_read_ref()
+
+    worker()
+    ar = k._session.arena()
+    assert ar.get_hw_bit_sz(res["got"]._ident) == 8
+
+
+def test_karray_dynamic_mixed_static_dynamic_read():
+    # 2-D array: one static dim + one dynamic dim resolves to a single element.
+    reset()
+    res = {}
+
+    class Cell(Karray):
+        v = kaf(1)
+        d = kaf(6)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.grid = Cell(HwComponentType.REG, (3, 4), "grid")
+            self.sel  = reg(2)
+            res["got"] = self.grid[2][self.sel].d._to_read_ref()   # row 2 static, col dynamic
+
+    worker()
+    ar = k._session.arena()
+    assert ar.get_hw_bit_sz(res["got"]._ident) == 6
+
+
+def test_karray_dynamic_read_emits_verilog():
+    # End-to-end: a dynamic read feeds a reg; the whole build/emit must not panic.
+    reset()
+
+    class RfEntry(Karray):
+        valid = kaf(1)
+        data  = kaf(8)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.rf  = RfEntry(HwComponentType.REG, (4,), "rf")
+            self.sel = reg(2)
+            self.out = reg(8)
+
+        @flow
+        def f(self):
+            with seq():
+                self.out |= self.rf[self.sel].data
+
+    set_top(worker())
+    gen_flow()
+    build_flow()
+
+    out_dir = tempfile.mkdtemp()
+    emit_verilog(out_dir, "top")
+    text = open(os.path.join(out_dir, "top.v")).read()
+    assert "rf_E0_data" in text and "rf_E3_data" in text   # all elements wired into the mux
+
+
+def test_karray_dynamic_write_rejected():
+    # Dynamic indexing is read-only; assigning through a dynamic index is rejected.
+    reset()
+
+    class RfEntry(Karray):
+        valid = kaf(1)
+        data  = kaf(8)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.rf  = RfEntry(HwComponentType.REG, (4,), "rf")
+            self.sel = reg(2)
+            self.src = reg(8)
+            # the guard raises in pure Python before any arena work, so it needs no
+            # seq scope (and would leave one empty if placed inside).
+            with pytest.raises(NotImplementedError):
+                self.rf[self.sel].data |= self.src
+
+    worker()
+
+
+def test_karray_dynamic_narrow_selector_rejected():
+    # A binary selector too narrow to address the dimension is rejected.
+    reset()
+
+    class RfEntry(Karray):
+        valid = kaf(1)
+        data  = kaf(8)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.rf  = RfEntry(HwComponentType.REG, (4,), "rf")   # needs >= 2 bits
+            self.sel = reg(1)                                     # only 1 bit
+
+    w = worker()
+    with pytest.raises(BaseException):                            # host assert -> panic/exception
+        w.rf[w.sel].data._to_read_ref()
