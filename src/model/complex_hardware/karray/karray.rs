@@ -106,6 +106,7 @@ impl Karray {
     pub fn get_ccp_ident    (&self)     -> CcpIdent           { self.ident                          }
     pub fn get_ccp_ident_mut(&mut self) -> &mut CcpIdent      { &mut self.ident                     }
     pub fn get_shape        (&self)     -> &Vec<usize>        { &self.shape                         }
+    pub fn get_dim_size     (&self)     -> usize              { self.shape.len()                    }
     pub fn get_backing      (&self)     -> HwComponentType    { self.backing                        }
     pub fn get_elem_width   (&self)     -> i32                { self.dtype.get_elem_width()         }
     pub fn get_fields       (&self)     -> &Vec<KarrayField>  { self.dtype.get_fields()             }
