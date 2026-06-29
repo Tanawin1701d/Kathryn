@@ -13,7 +13,7 @@ from kathryn import (
     Module, init, flow, gen_flow, build_flow, emit_verilog,
     priority, set_priority, set_priority_auto, get_priority, get_priority_mode,
     DEFAULT_UE_PRI_USER, DEFAULT_UE_PRI_RST, DEFAULT_UE_PRI_MIN,
-    Karray, kaf, HwComponentType, oh,
+    Karray, kaf, HwComponentType, oh, Reduce,
 )
 
 
@@ -966,3 +966,95 @@ def test_karray_dynamic_narrow_selector_rejected():
     w = worker()
     with pytest.raises(BaseException):                            # host assert -> panic/exception
         w.rf[w.sel].data._to_read_ref()
+
+
+# ---- Karray callback-driven reduce ------------------------------------------
+
+def test_karray_reduce_max_by_field():
+    # reduce a 1-D regfile to the element with the largest `data` (a >= b picks left).
+    reset()
+    res = {}
+
+    class RegFile(Karray):
+        valid = kaf(1)
+        data  = kaf(8)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.rf = RegFile(HwComponentType.REG, (4,), "rf")
+            res["w"] = self.rf.reduce([Reduce], lambda a, b, lvl: a.fields["data"] >= b.fields["data"])
+
+    worker()
+    ar  = k._session.arena()
+    got = res["w"].data._to_read_ref()
+    assert ar.get_hw_bit_sz(got._ident) == 8       # winner field = field width
+    assert got._ident.hw_type == "WIRE"            # mux-tree output
+
+
+def test_karray_reduce_odd_length_carry():
+    # odd element count exercises the "carry-up" of the unpaired node.
+    reset()
+    res = {}
+
+    class RegFile(Karray):
+        data = kaf(8)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.rf = RegFile(HwComponentType.REG, (3,), "rf")
+            res["w"] = self.rf.reduce([Reduce], lambda a, b, lvl: a.fields["data"] >= b.fields["data"])
+
+    worker()
+    ar = k._session.arena()
+    assert ar.get_hw_bit_sz(res["w"].data._to_read_ref()._ident) == 8
+
+
+def test_karray_reduce_2d_mixed_pin_and_fold():
+    # 2-D array: pin one dim (row 1), fold the other — reduce that row only.
+    reset()
+    res = {}
+
+    class Cell(Karray):
+        data = kaf(6)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.grid = Cell(HwComponentType.REG, (2, 3), "grid")
+            res["w"] = self.grid.reduce([1, Reduce], lambda a, b, lvl: a.fields["data"] >= b.fields["data"])
+
+    worker()
+    ar = k._session.arena()
+    assert ar.get_hw_bit_sz(res["w"].data._to_read_ref()._ident) == 6
+
+
+def test_karray_reduce_emits_verilog():
+    # End-to-end: reduce feeds a reg; the whole build/emit must not panic.
+    reset()
+
+    class RegFile(Karray):
+        valid = kaf(1)
+        data  = kaf(8)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.rf  = RegFile(HwComponentType.REG, (4,), "rf")
+            self.out = reg(8)
+
+        @flow
+        def f(self):
+            with seq():
+                w = self.rf.reduce([Reduce], lambda a, b, lvl: a.fields["data"] >= b.fields["data"])
+                self.out |= w.data
+
+    set_top(worker())
+    gen_flow()
+    build_flow()
+
+    out_dir = tempfile.mkdtemp()
+    emit_verilog(out_dir, "top")
+    text = open(os.path.join(out_dir, "top.v")).read()
+    assert "rf_E0_data" in text and "rf_E3_data" in text   # all elements fed into the reduce

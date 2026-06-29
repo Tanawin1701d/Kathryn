@@ -8,71 +8,7 @@ use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
 use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::model_arena::ModelArena;
-// ---- KyIdxType — how a Karray element is selected ---------------------------
-
-/// How a single Karray dimension/element is selected at access time. `Static` is
-/// resolved at build time (compile-time `usize`); the two `Dyn*` variants carry a
-/// runtime signal and differ only in how that signal encodes the element index:
-/// `DynBin` is a binary-encoded address, `DynOneHot` is a one-hot select line.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum KyIdxType {
-    Static   (usize),       // compile-time index
-    DynBin   (HcpIdent),    // runtime binary-encoded address signal
-    DynOneHot(HcpIdent),    // runtime one-hot select signal
-}
-
-impl KyIdxType {
-    /// True for the two runtime (signal-driven) selectors.
-    pub fn is_dynamic(&self) -> bool { !matches!(self, KyIdxType::Static(_)) }
-
-    /// The compile-time index, or `None` for a dynamic selector.
-    pub fn static_index(&self) -> Option<usize> {
-        match self {
-            KyIdxType::Static(i) => Some(*i),
-            _                    => None,
-        }
-    }
-
-    /// The runtime index signal, or `None` for a static selector.
-    pub fn signal(&self) -> Option<HcpIdent> {
-        match self {
-            KyIdxType::DynBin(sig_i) | KyIdxType::DynOneHot(sig_i) => Some(*sig_i),
-            KyIdxType::Static(_)                                   => None,
-        }
-    }
-}
-
-/// A dynamically-selected Karray element: the mux-output HCP for each selected
-/// field (`immediate_hcps` parallel to `field_names`), plus the resolved
-/// per-dimension coordinate (`result_indexed_i`, one entry per dimension — a
-/// `Static` for a statically-pinned dim, a `DynBin` wire holding the chosen index
-/// for a dynamically-selected dim).
-#[derive(Clone, Debug, PartialEq, Eq, Default)]
-pub struct DynSelKarray{
-    immediate_hcps   : Vec<HcpIdent>,
-    field_names      : Vec<String>,
-    result_indexed_i : Vec<KyIdxType>,
-}
-
-impl DynSelKarray {
-    pub fn get_immediate_hcps  (&self) -> &Vec<HcpIdent>  { &self.immediate_hcps   }
-    pub fn get_field_names      (&self) -> &Vec<String>    { &self.field_names      }
-    pub fn get_result_indexed_i(&self) -> &Vec<KyIdxType> { &self.result_indexed_i }
-}
-
-// ---- internal reduction node ------------------------------------------------
-
-// One node of the per-dimension mux reduction: the muxed data wire for each
-// selected field, and the (optional) carried index value for this dimension.
-// `sel_i` is the one-hot path's running select line — the OR of every one-hot bit
-// this subtree covers — carried up so each mux ORs just its two children (instead
-// of re-OR-ing the whole covered set). `None` on the binary path (it selects on a
-// per-level address bit, not a per-subtree OR).
-struct DynReduc {
-    data_i : Vec<HcpIdent>,
-    idx_i  : Option<HcpIdent>,
-    oh_sel_i: Option<HcpIdent>,
-}
+use crate::model::complex_hardware::karray::karray_dyn_sel::{DynReduc, DynSelKarray, KyIdxType};
 
 impl Karray{
 
@@ -234,17 +170,28 @@ impl Karray{
             .map(|&fi| (self.get_fields()[fi].get_name().to_string(), self.get_fields()[fi].get_width()))
             .collect();
         let name    = format!("{}_DYNSEL", self.get_ccp_ident().get_global_name());
-        let res_ccp = arena.make_karray(false, &name, vec![1], fields, HwComponentType::Wire);
-
-        // ---- drive each result field from its mux wire (combinational) ----
-        let res = arena.take_karray(res_ccp);
-        for (field_idx, &src_i) in sel.immediate_hcps.iter().enumerate() {
-            let dst_i = res.static_index_get_hcp(&[0], field_idx, false, arena);
-            dry_bind(arena, dst_i, src_i);
-        }
-        arena.replace_back_karray(res);
+        let res_ccp = pack_scalar_karray(&name, fields, &sel.immediate_hcps, arena);
         (res_ccp, sel.result_indexed_i)
     }
+}
+
+// Pack a row of per-field source signals into a fresh wire-backed scalar Karray
+// (shape [1], named `name`) and drive each field combinationally from its source
+// (parallel to `src_hcps`). Shared by the dynamic-index read and the reduce.
+pub(crate) fn pack_scalar_karray(
+    name     : &str,
+    fields   : Vec<(String, i32)>,
+    src_hcps : &[HcpIdent],
+    arena    : &mut ModelArena,
+) -> CcpIdent {
+    let res_ccp = arena.make_karray(false, name, vec![1], fields, HwComponentType::Wire);
+    let res     = arena.take_karray(res_ccp);
+    for (field_idx, &src_i) in src_hcps.iter().enumerate() {
+        let dst_i = res.static_index_get_hcp(&[0], field_idx, false, arena);
+        dry_bind(arena, dst_i, src_i);
+    }
+    arena.replace_back_karray(res);
+    res_ccp
 }
 
 // ---- mux primitives (combinational, arena-only) -----------------------------
@@ -321,7 +268,7 @@ fn create_wire_asm_meta(arena: &mut ModelArena, dest_i: HcpIdent, src_i: HcpIden
 
 // Mux two sources into `dest_w` and commit the muxed event straight onto the
 // destination's update pool (no asm node — AssignMeta::mux + final_update).
-fn mux_into_wire(arena: &mut ModelArena, dest_w: HcpIdent, l_src: HcpIdent, r_src: HcpIdent, select_left: HcpIdent) {
+pub(crate) fn mux_into_wire(arena: &mut ModelArena, dest_w: HcpIdent, l_src: HcpIdent, r_src: HcpIdent, select_left: HcpIdent) {
     let width  = arena.get_hw_bit_sz(&dest_w);
     let mut lm = create_wire_asm_meta(arena, dest_w, l_src, width);
     let mut rm = create_wire_asm_meta(arena, dest_w, r_src, width);

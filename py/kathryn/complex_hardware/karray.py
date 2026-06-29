@@ -16,13 +16,36 @@ from typing import Iterable, Optional, Union
 
 from .. import _session
 from .._kathryn import HwComponentType
-from ..signal import _ASSIGNED
+from ..signal import _ASSIGNED, SignalRef, to_ref
 from .karray_field import (
     KarrayField,
     get_declared_karray_fields,
     normalize_karray_field_specs,
 )
 from .karray_ref import KarrayRef
+
+
+# ---- reduce: fold marker + the view handed to the user select function -------
+class _ReduceMarker:
+    """Sentinel for a Karray dimension that should be reduced (folded), as opposed
+    to an int that pins it. Use the singleton `Reduce`: `k.reduce([Reduce, 2], fn)`."""
+    __slots__ = ()
+    def __repr__(self) -> str:
+        return "Reduce"
+
+
+Reduce = _ReduceMarker()
+
+
+class ReduceView:
+    """One subtree handed to a reduce select function. `.fields` maps each carried
+    field name to its current SignalRef (a leaf element's field, or a mux-output
+    wire); `.indices` is the list of element coordinates this subtree covers."""
+    __slots__ = ("indices", "fields")
+
+    def __init__(self, indices, fields) -> None:
+        self.indices = indices    # list of [coord] lists
+        self.fields  = fields     # dict: field name -> SignalRef
 
 
 # ---- karray -----------------------------------------------------------------
@@ -71,6 +94,35 @@ class Karray:
 
     def __getitem__(self, key) -> KarrayRef:
         return KarrayRef(self._ident)[key]
+
+    # ---- generic callback-driven reduce ------------------------------------
+    def reduce(self, dims, select_fn, fields=None) -> KarrayRef:
+        """Reduce elements to a single winner via a user select function. `dims` has
+        one entry per dimension: an int pins it, `Reduce` folds (reduces) it. For each
+        compared pair the tree calls `select_fn(a, b, level)` — `a`/`b` are
+        `ReduceView`s (`.fields`, `.indices`), `level` is the tree depth — which must
+        return a 1-bit signal that is true to pick `a` (left). `fields` limits which
+        fields are carried (default: all). Returns the winner as a scalar KarrayRef,
+        so read it as `winner.field`. Reg/Wire backings only."""
+        enc = []
+        for d in dims:
+            if d is Reduce:
+                enc.append(None)
+            elif isinstance(d, int):
+                enc.append(int(d))
+            else:
+                raise TypeError("reduce dim must be an int (pin) or Reduce (fold)")
+
+        flds = list(fields) if fields is not None else [name for (name, _w) in type(self).__karray_fields__]
+
+        # raw callback the Rust loop calls; wraps the user fn with friendly views.
+        def _raw(a_fields, a_indices, b_fields, b_indices, level):
+            a = ReduceView(a_indices, {n: SignalRef(h) for (n, h) in a_fields})
+            b = ReduceView(b_indices, {n: SignalRef(h) for (n, h) in b_fields})
+            return to_ref(select_fn(a, b, level))._ident   # 1-bit select-left HcpIdent
+
+        res_ccp = _session.arena().karray_reduce(self._ident, enc, flds, _raw)
+        return KarrayRef(res_ccp, [0])   # scalar winner -> read fields as winner.field
 
     # Whole-array karray-to-karray assignment (`dst |= src`). The subscript lands on
     # a plain name, so return `self` to keep the variable bound (subscripted forms
