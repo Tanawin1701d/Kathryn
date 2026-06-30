@@ -4,7 +4,7 @@ use crate::model::complex_hardware::karray::Karray;
 use crate::model::complex_hardware::karray::karray_region_sel::{
     flat_to_multi_index, offset_to_abs_indices, resolve_dim_selectors, result_shape, KarrayAsmErr,
 };
-use crate::model::complex_hardware::karray::{KyIdxType, ReduceDim, ReduceNode};
+use crate::model::complex_hardware::karray::KyIdxType;
 use crate::model::hw_component::common::assign_meta::AssignMeta;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::slice::Slice;
@@ -81,58 +81,9 @@ impl ModelArena {
         out
     }
 
-    // ---- generic callback-driven reduce primitives -------------------------
-    // The reduce LOOP is driven by the caller (the Python connector, which must
-    // release the arena borrow around each user select callback). These are the
-    // short take/replace_back primitives it calls between callbacks.
-
-    // Fan out the reduce leaves: one ReduceNode per selected element. Field names
-    // are resolved here (an unknown name is a Value error).
-    pub fn karray_reduce_leaves(
-        &mut self,
-        karray_i   : CcpIdent,
-        dims       : Vec<ReduceDim>,
-        field_names: Vec<String>,
-    ) -> Result<Vec<ReduceNode>, KarrayAsmErr> {
-        let karray = self.take_karray(karray_i);
-        let mut field_idxs = Vec::with_capacity(field_names.len());
-        let mut missing    = Vec::new();
-        for name in &field_names {
-            match karray.field_index(name) {
-                Some(field_idx) => field_idxs.push(field_idx),
-                None            => missing.push(name.clone()),
-            }
-        }
-        let out = if !missing.is_empty() {
-            Err(KarrayAsmErr::Value(format!("Karray reduce: no such field(s): {missing:?}")))
-        } else {
-            Ok(karray.reduce_leaves(&dims, &field_idxs, self))
-        };
-        self.replace_back_karray(karray);
-        out
-    }
-
-    // Mux two reduce subtrees under `select_left`, producing the merged subtree.
-    pub fn karray_reduce_mux(
-        &mut self,
-        karray_i   : CcpIdent,
-        a          : &ReduceNode,
-        b          : &ReduceNode,
-        select_left: HcpIdent,
-    ) -> ReduceNode {
-        let karray = self.take_karray(karray_i);
-        let out    = karray.reduce_mux(a, b, select_left, self);
-        self.replace_back_karray(karray);
-        out
-    }
-
-    // Pack the winning subtree into a fresh wire-backed scalar Karray.
-    pub fn karray_reduce_finish(&mut self, karray_i: CcpIdent, winner: &ReduceNode) -> CcpIdent {
-        let karray = self.take_karray(karray_i);
-        let out    = karray.reduce_finish(winner, self);
-        self.replace_back_karray(karray);
-        out
-    }
+    // (Reduce is driven by `karray_reduce::reduce_run` via the connector's ReduceEnv
+    // impl, which calls `Karray::reduce_leaves` / `reduce_mux` / `reduce_pack` directly
+    // — no per-op arena wrappers live here.)
 
     // Field-matched assignment of one Karray region into another. The two selected
     // regions must have equal result shapes; fields are paired by exact name+width

@@ -2,127 +2,109 @@ use crate::model::common::identifier::Identifiable;
 use crate::model::complex_hardware::common::ccp_ident::CcpIdent;
 use crate::model::complex_hardware::karray::karray::Karray;
 use crate::model::complex_hardware::karray::karray_dynamic_index::{mux_into_wire, pack_scalar_karray};
+use crate::model::complex_hardware::karray::karray_region_sel::KarrayAsmErr;
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
 use crate::model::model_arena::ModelArena;
 
-// ---- generic callback-driven Karray reduce ----------------------------------
+// ===== Generic callback-driven Karray reduce — types + arena building blocks ==
 //
-// Generalises the dynamic-index mux tree (`karray_dynamic_index.rs`): instead of a
-// fixed index-encoded select, the caller decides the select-left at each 2:1 node.
-// The tree is built the same balanced way; only the select signal comes from the
-// caller (in the Python binding, that is a user callback per compared pair). This
-// is the Rust port of the C++ `Table::doReduceBase(..., cusLogic, ...)`. The reduce
-// LOOP itself is driven by the connector (it must release the arena borrow around
-// the Python callback); this file only provides the leaf / mux / pack primitives.
+// Reduce a Karray's elements to a single winner by a user-supplied select rule —
+// the Rust port of the C++ `Table::doReduceBase(..., cusLogic, ...)`. It generalises
+// the dynamic-index mux tree (`karray_dynamic_index.rs`): instead of an index-encoded
+// select, the CALLER decides the select-left at each 2:1 node.
+//
+// This file holds the reduce TYPES and the arena building blocks (`reduce_prepare` /
+// `reduce_leaf`, `reduce_mux`, `reduce_pack`). The `ReduceEnv` trait and the recursive
+// `reduce_run` algorithm that drives them live in `karray_reduce_run.rs`.
 
-/// How a dimension participates in a reduce: pinned to one index, or folded
-/// (fanned out and reduced over its full extent).
+// ---- types ------------------------------------------------------------------
+
+/// A named signal carried through the reduce — a karray field or a user extra.
+pub type NamedHcp = (String, HcpIdent);
+
+/// Per-dimension reduce plan: pin to one index, or fold (reduce over its extent).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ReduceDim {
     Pin (usize),
     Fold,
 }
 
-/// One subtree of the reduction: the element coordinates it covers (`indices`),
-/// and the current per-field signal (`fields`, parallel name+HCP). At a leaf the
-/// HCP is the element's own field HCP; after a mux it is a fresh mux-output wire.
-/// All fields are `Copy`/owned, so a node holds no arena borrow and survives across
-/// the connector's Python callback.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ReduceNode {
-    // The element coordinates this subtree covers: outer vec = the set of covered
-    // elements, inner vec = one element's per-dimension coordinate. A leaf holds one
-    // coordinate; a mux concatenates its two children's coverage. E.g. reducing a 1-D
-    // array of 4: leaves [[0]] [[1]] [[2]] [[3]] -> [[0],[1]] [[2],[3]] -> the winner
-    // [[0],[1],[2],[3]]. For a 2-D (2,3) array a coordinate is [row, col], e.g. [1,2].
-    pub indices : Vec<Vec<usize>>,
-    pub fields  : Vec<(String, HcpIdent)>,
-}
+// (The `ReduceEnv` trait + the `reduce_run` algorithm live in `karray_reduce_run.rs`.)
+
+// ---- arena building blocks (the connector's ReduceEnv impl calls these) ------
 
 impl Karray {
-    /// Fan out the `Fold` dimensions (pinning the `Pin` ones) into one leaf
-    /// `ReduceNode` per selected element, in row-major order. Each leaf reads its
-    /// selected fields' own HCPs. Reg/Wire backings only (mirrors the dynamic read).
-    pub fn reduce_leaves(&self, dim_sels: &[ReduceDim], selected_fields: &[usize], arena: &mut ModelArena) -> Vec<ReduceNode> {
-
-        // integrity check
+    /// Validate a reduce request and resolve it: checks the backing (Reg/Wire), the
+    /// per-dimension selector count and pin bounds, then resolves the field names to
+    /// indices. Returns `(shape, field_idxs)` for the recursive driver to fan over; an
+    /// unknown field name is a `Value` error.
+    ///
+    pub fn reduce_prepare(&self, field_names: &[String], dim_sels: &[ReduceDim])
+        -> Result<(Vec<usize>, Vec<usize>), KarrayAsmErr> {
+               ///   ^-------------^----- shape of karray
+               ///                 |---------- field idx
+        // step1: backing must be Reg or Wire (MemBlock is addressed, not muxed).
         assert!(matches!(self.get_backing(), HwComponentType::Reg | HwComponentType::Wire),
-            "reduce_leaves: only Reg- or Wire-backed Karrays support reduce, got {:?}", self.get_backing());
+            "reduce: only Reg- or Wire-backed Karrays support reduce, got {:?}", self.get_backing());
+
+        // step2: one selector per dimension.
         assert_eq!(dim_sels.len(), self.get_dim_size(),
-            "reduce_leaves: expected {} dim selectors (one per dimension), got {}", self.get_dim_size(), dim_sels.len());
+            "reduce: expected {} dim selectors (one per dimension), got {}", self.get_dim_size(), dim_sels.len());
+
+        // step3: every pinned index must be within its dimension.
         for (d, sel) in dim_sels.iter().enumerate() {
             if let ReduceDim::Pin(i) = sel {
                 assert!(*i < self.get_shape()[d],
-                    "reduce_leaves: pinned index {i} out of bounds for dim {d} of size {}", self.get_shape()[d]);
+                    "reduce: pinned index {i} out of bounds for dim {d} of size {}", self.get_shape()[d]);
             }
         }
 
-        let mut out       = Vec::new();
-        let mut cur_coord = Vec::with_capacity(self.get_dim_size());
-        self.collect_leaves(0, &mut cur_coord, dim_sels, selected_fields, arena, &mut out);
-        out
+        // step4: resolve field names to indices (any miss -> a clean Value error).
+        let mut field_idxs = Vec::with_capacity(field_names.len());
+        let mut missing    = Vec::new();
+        for name in field_names {
+            match self.field_index(name) {
+                Some(field_idx) => field_idxs.push(field_idx),
+                None            => missing.push(name.clone()),
+            }
+        }
+        if !missing.is_empty() {
+            return Err(KarrayAsmErr::Value(format!("reduce: no such field(s): {missing:?}")));
+        }
+
+        // step5: hand back the shape (to fan over) and the resolved field indices.
+        Ok((self.get_shape().clone(), field_idxs))
     }
 
-    // Recursive fan-out: Pin fixes the dim, Fold loops its full extent; at a fully
-    // pinned coordinate read each selected field's HCP into a leaf node.
-    fn collect_leaves(&self, dim_idx        : usize,
-                             cur_coord      : &mut Vec<usize>,
-                             dim_sels       : &[ReduceDim],
-                             selected_fields: &[usize],
-                             arena          : &mut ModelArena,
-                             out            : &mut Vec<ReduceNode> ) {
-        if dim_idx == self.get_dim_size() {
-            // the dead-end case
-            let mut fields = Vec::with_capacity(selected_fields.len());
-            for &field_idx in selected_fields {
-                let hcp = self.static_index_get_hcp(cur_coord, field_idx, true, arena);
-                fields.push((self.get_fields()[field_idx].get_name().to_string(), hcp));
-            }
-            out.push(ReduceNode { indices: vec![cur_coord.clone()], fields });
-            return;
-        }
-
-        match dim_sels[dim_idx] {
-            ReduceDim::Pin(i) => {
-                cur_coord.push(i);
-                self.collect_leaves(dim_idx + 1, cur_coord, dim_sels, selected_fields, arena, out);
-                cur_coord.pop();
-            }
-            ReduceDim::Fold => {
-                for i in 0..self.get_shape()[dim_idx] {
-                    cur_coord.push(i);
-                    self.collect_leaves(dim_idx + 1, cur_coord, dim_sels, selected_fields, arena, out);
-                    cur_coord.pop();
-                }
-            }
-        }
-    }
-
-    /// Mux two subtrees field-by-field under `select_left` (true picks `a`), each
-    /// into a fresh wire. The merged node covers both subtrees' indices.
-    pub fn reduce_mux(&self, a: &ReduceNode, b: &ReduceNode, select_left: HcpIdent, arena: &mut ModelArena) -> ReduceNode {
-        assert_eq!(a.fields.len(), b.fields.len(), "reduce_mux: field count mismatch");
-        let mut fields = Vec::with_capacity(a.fields.len());
-        for (f, (name, a_hcp)) in a.fields.iter().enumerate() {
-            let b_hcp = b.fields[f].1;
-            let width = arena.get_hw_bit_sz(a_hcp);
-            let res_w = arena.make_wire(false, &format!("{}_RMUX", a_hcp.get_global_name()), width);
-            mux_into_wire(arena, res_w, *a_hcp, b_hcp, select_left);
-            fields.push((name.clone(), res_w));
-        }
-        let mut indices = a.indices.clone();
-        indices.extend(b.indices.iter().cloned());
-        ReduceNode { indices, fields }
-    }
-
-    /// Pack the winning subtree's fields into a fresh wire-backed scalar Karray
-    /// (shape `[1]`), returning its CcpIdent (the readable winner element).
-    pub fn reduce_finish(&self, winner: &ReduceNode, arena: &mut ModelArena) -> CcpIdent {
-        let fields: Vec<(String, i32)> = winner.fields.iter()
-            .map(|(name, hcp)| (name.clone(), arena.get_hw_bit_sz(hcp)))
-            .collect();
-        let src: Vec<HcpIdent> = winner.fields.iter().map(|(_, hcp)| *hcp).collect();
-        let name = format!("{}_REDUCE", self.get_ccp_ident().get_global_name());
-        pack_scalar_karray(&name, fields, &src, arena)
+    /// Read ONE element's fields at the fully-pinned `coord` (parallel to `field_idxs`).
+    /// The recursive driver calls this at each leaf — no flat pool of all elements.
+    pub fn reduce_leaf(&self, coord: &[usize], selected_field_idxs: &[usize], arena: &mut ModelArena) -> Vec<NamedHcp> {
+        selected_field_idxs.iter().map(|&fi|
+            ( // named hcp
+             self.get_fields()[fi].get_name().to_string(),
+             self.static_index_get_hcp(coord, fi, true, arena)
+            )
+        ).collect()
     }
 }
+
+/// Mux `(name, a_hcp, b_hcp)` triples under `sel` (true picks `a`), each into a fresh
+/// wire; returns the merged `(name, wire)` list in input order.
+pub fn reduce_mux(arena: &mut ModelArena, pairs: &[(String, HcpIdent, HcpIdent)], sel: HcpIdent) -> Vec<NamedHcp> {
+    pairs.iter().map(|(name, a_hcp, b_hcp)| {
+        let width = arena.get_hw_bit_sz(a_hcp);
+        let wire  = arena.make_wire(false, &format!("{}_RMUX", a_hcp.get_global_name()), width);
+        mux_into_wire(arena, wire, *a_hcp, *b_hcp, sel);
+        (name.clone(), wire)
+    }).collect()
+}
+
+/// Pack the winner's `(name, hcp)` fields into a fresh wire-backed scalar Karray
+/// (shape `[1]`) named `base`, returning its CcpIdent (the readable winner element).
+pub fn reduce_pack(arena: &mut ModelArena, base: &str, fields: &[NamedHcp]) -> CcpIdent {
+    let layout: Vec<(String, i32)> = fields.iter().map(|(n, h)| (n.clone(), arena.get_hw_bit_sz(h))).collect();
+    let src   : Vec<HcpIdent>      = fields.iter().map(|(_, h)| *h).collect();
+    pack_scalar_karray(base, layout, &src, arena)
+}
+
+// The `reduce_run` algorithm (recursive driver + helpers) lives in `karray_reduce_run.rs`.

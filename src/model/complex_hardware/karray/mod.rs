@@ -8,9 +8,11 @@ pub mod karray_static_index;
 pub mod karray_dyn_sel;
 pub mod karray_dynamic_index;
 pub mod karray_reduce;
+pub mod karray_reduce_run;
 
 pub use karray::{Karray, KARRAY_BACKINGS};
 pub use karray_meta::{KarrayField, KarrayType};
 pub use karray_region_sel::KarrayAsmErr;
 pub use karray_dyn_sel::{DynSelKarray, KyIdxType};
-pub use karray_reduce::{ReduceDim, ReduceNode};
+pub use karray_reduce::{reduce_mux, reduce_pack, NamedHcp, ReduceDim};
+pub use karray_reduce_run::{reduce_run, ReduceEnv};

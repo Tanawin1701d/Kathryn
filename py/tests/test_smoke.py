@@ -1058,3 +1058,93 @@ def test_karray_reduce_emits_verilog():
     emit_verilog(out_dir, "top")
     text = open(os.path.join(out_dir, "top.v")).read()
     assert "rf_E0_data" in text and "rf_E3_data" in text   # all elements fed into the reduce
+
+
+# ---- reduce: per-dim functions / extras / request_index ----------------------
+
+def test_karray_reduce_per_dim_nested():
+    # 2-D: each folded dim reduces with its own fn (Reduce(fn)). Nested.
+    reset()
+    res = {}
+
+    class Cell(Karray):
+        data = kaf(8)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.grid = Cell(HwComponentType.REG, (2, 3), "grid")
+            res["w"] = self.grid.reduce([
+                Reduce(lambda a, b, l: a.fields["data"] <= b.fields["data"]),   # rows: min
+                Reduce(lambda a, b, l: a.fields["data"] >= b.fields["data"]),   # cols: max
+            ])
+
+    worker()
+    ar = k._session.arena()
+    assert ar.get_hw_bit_sz(res["w"].data._to_read_ref()._ident) == 8
+
+
+def test_karray_reduce_request_index_coords():
+    # request_index returns (winner, coords): one index signal per folded dim.
+    reset()
+    res = {}
+
+    class Cell(Karray):
+        data = kaf(8)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.grid = Cell(HwComponentType.REG, (2, 3), "grid")
+            w, coords = self.grid.reduce([Reduce, Reduce],
+                                         lambda a, b, l: a.fields["data"] >= b.fields["data"],
+                                         request_index=True)
+            res["w"], res["coords"] = w, coords
+
+    worker()
+    ar = k._session.arena()
+    coords = res["coords"]
+    assert len(coords) == 2                            # one per folded dim
+    assert ar.get_hw_bit_sz(coords[0]._ident) == 1     # dim0 extent 2 -> 1 bit
+    assert ar.get_hw_bit_sz(coords[1]._ident) == 2     # dim1 extent 3 -> 2 bits
+
+
+def test_karray_reduce_extras_carry():
+    # select_fn may return (select, {name: signal}); extras are visible next layer.
+    reset()
+    res = {}
+
+    class Rf(Karray):
+        data = kaf(8)
+
+    def pick_sum(a, b, level):
+        asum = a.fields.get("runsum", a.fields["data"])   # seed from data at leaves
+        bsum = b.fields.get("runsum", b.fields["data"])
+        return (asum >= bsum), {"runsum": asum + bsum}
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.rf = Rf(HwComponentType.REG, (4,), "rf")
+            res["w"] = self.rf.reduce([Reduce], pick_sum)
+
+    worker()
+    ar = k._session.arena()
+    assert ar.get_hw_bit_sz(res["w"].data._to_read_ref()._ident) == 8
+
+
+def test_karray_reduce_fold_needs_fn():
+    # a bare Reduce with no select_fn is an error.
+    reset()
+
+    class Rf(Karray):
+        data = kaf(8)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.rf = Rf(HwComponentType.REG, (4,), "rf")
+            with pytest.raises(TypeError):
+                self.rf.reduce([Reduce])              # no per-dim fn, no select_fn
+
+    worker()

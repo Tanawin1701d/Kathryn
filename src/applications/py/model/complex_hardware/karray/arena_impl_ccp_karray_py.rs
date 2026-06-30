@@ -7,7 +7,7 @@ use pyo3::exceptions::{PyTypeError, PyValueError};
 use super::super::super::model_arena::PyModelArena;
 use super::super::super::hw_component::common::hcp_ident_py::PyHcpIdent;
 use super::super::ccp_ident_py::PyCcpIdent;
-use crate::model::complex_hardware::karray::{KarrayAsmErr, KyIdxType, ReduceDim, ReduceNode};
+use crate::model::complex_hardware::karray::{KarrayAsmErr, KyIdxType};
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 
 // Python selector encoding, symmetric for input and the resolved-index output:
@@ -127,78 +127,4 @@ impl PyModelArena {
         }).collect();
         Ok((res_ccp.into(), resolved_py))
     }
-
-    // Generic callback-driven reduce. `dims` carries one per-dimension selector
-    // (Some(i) = pin, None = fold/reduce); `selected_fields` are the field names to
-    // carry; `select_fn` is a Python callable invoked per compared pair as
-    //   select_fn(a_indices, a_fields, b_indices, b_fields, level) -> HcpIdent (1-bit)
-    // where *_fields is a list of (name, HcpIdent). Returns the winning element as a
-    // wire-backed scalar Karray CcpIdent.
-    //
-    // Takes `slf: &Bound<..>` (NOT &mut self) so the arena pyclass is NOT borrowed for
-    // the method's duration: each primitive borrows in a SCOPED block and the borrow
-    // is dropped before `select_fn` runs, so the callback may re-enter the arena to
-    // build its select expression without an "already borrowed" error.
-    fn karray_reduce(
-        slf            : &Bound<'_, PyModelArena>,
-        karray_i       : PyCcpIdent,
-        dims           : Vec<Option<usize>>,
-        selected_fields: Vec<String>,
-        select_fn      : Py<PyAny>,
-    ) -> PyResult<PyCcpIdent> {
-        let py = slf.py();
-        let dims_r: Vec<ReduceDim> = dims.into_iter()
-            .map(|d| match d { Some(i) => ReduceDim::Pin(i), None => ReduceDim::Fold })
-            .collect();
-
-        // ---- fan out the leaves (scoped borrow) ----
-        let mut nodes: Vec<ReduceNode> = {
-            let mut me = slf.borrow_mut();
-            me.arena.karray_reduce_leaves(karray_i.into(), dims_r, selected_fields)
-                .map_err(|e| match e {
-                    KarrayAsmErr::Type (m) => PyTypeError ::new_err(m),
-                    KarrayAsmErr::Value(m) => PyValueError::new_err(m),
-                })?
-        };
-
-        // ---- balanced pairwise reduction; select is the user callback ----
-        let mut level = 0u32;
-        while nodes.len() > 1 {
-            let mut next = Vec::with_capacity(nodes.len().div_ceil(2));
-            let mut iter = nodes.into_iter();
-            while let Some(a) = iter.next() {
-                match iter.next() {
-                    Some(b) => {
-                        // select-left: call Python with NO arena borrow held
-                        let args        = (fields_to_py(&a.fields), a.indices.clone(),
-                                                fields_to_py(&b.fields), b.indices.clone(), level);
-                        let select_left = select_fn.bind(py).call1(args)?.extract::<PyHcpIdent>()?;
-                        // mux the pair (scoped borrow)
-                        let merged = {
-                            let mut me = slf.borrow_mut();
-                            me.arena.karray_reduce_mux(karray_i.into(), &a, &b, select_left.into())
-                        };
-                        next.push(merged);
-                    }
-                    None => next.push(a),   // odd one out — carried up unchanged
-                }
-            }
-            nodes  = next;
-            level += 1;
-        }
-        let winner = nodes.pop().expect("a reduce has at least one leaf element");
-
-        // ---- pack the winner into a scalar Karray (scoped borrow) ----
-        let res_ccp = {
-            let mut me = slf.borrow_mut();
-            me.arena.karray_reduce_finish(karray_i.into(), &winner)
-        };
-        Ok(res_ccp.into())
-    }
-}
-
-// Convert a reduce node's (name, HcpIdent) fields into the Python-facing
-// (name, PyHcpIdent) list passed to the select callback.
-fn fields_to_py(fields: &[(String, HcpIdent)]) -> Vec<(String, PyHcpIdent)> {
-    fields.iter().map(|(name, hcp)| (name.clone(), (*hcp).into())).collect()
 }
