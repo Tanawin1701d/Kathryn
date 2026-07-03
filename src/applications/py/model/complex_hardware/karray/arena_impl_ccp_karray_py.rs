@@ -96,20 +96,7 @@ impl PyModelArena {
         indices        : Vec<PyKyIdx>,
         selected_fields: Vec<String>,
     ) -> PyResult<(PyCcpIdent, Vec<PyKyIdx>)> {
-        // ---- decode Python selectors into KyIdxType ----
-        let mut sels = Vec::with_capacity(indices.len());
-        for (kind, sidx, sig) in indices {
-            let sel = match kind.as_str() {
-                "static" => KyIdxType::Static(sidx.ok_or_else(||
-                    PyValueError::new_err("static index selector needs an integer index"))?),
-                "bin"    => KyIdxType::DynBin(sig.ok_or_else(||
-                    PyValueError::new_err("binary index selector needs a signal"))?.into()),
-                "onehot" => KyIdxType::DynOneHot(sig.ok_or_else(||
-                    PyValueError::new_err("one-hot index selector needs a signal"))?.into()),
-                other    => return Err(PyValueError::new_err(format!("unknown index selector kind '{other}'"))),
-            };
-            sels.push(sel);
-        }
+        let sels = decode_selectors(indices)?;
 
         // ---- resolve + materialise ----
         let (res_ccp, resolved) = self.arena
@@ -127,4 +114,57 @@ impl PyModelArena {
         }).collect();
         Ok((res_ccp.into(), resolved_py))
     }
+
+    // Whether a Karray's backing is clocked (reg/memblock) vs combinational (wire).
+    // The DSL queries this to resolve a bare `=` dynamic write into a concrete flag.
+    fn karray_is_clocked(&mut self, karray_i: PyCcpIdent) -> bool {
+        self.arena.karray_is_clocked(karray_i.into())
+    }
+
+    // Dynamic (runtime-signal) element WRITE: write each `(field_name, src_i)` into
+    // the element selected by `indices` (see PyKyIdx). Reg-backed + clocked only —
+    // `clocked == false` (a `*=`, or `=` onto a non-clocked backing) raises TypeError.
+    // Source names matching no field raise a warning.
+    fn karray_dynamic_index_assign_element(
+        &mut self,
+        py      : Python<'_>,
+        karray_i: PyCcpIdent,
+        indices : Vec<PyKyIdx>,
+        sources : Vec<(String, PyHcpIdent)>,
+        clocked : bool,
+    ) -> PyResult<()> {
+        let sels = decode_selectors(indices)?;
+        let sources: Vec<(String, HcpIdent)> =
+            sources.into_iter().map(|(name, src_i)| (name, src_i.into())).collect();
+        match self.arena.karray_dynamic_index_assign_element(karray_i.into(), sels, &sources, clocked) {
+            Ok(skipped) => {
+                if !skipped.is_empty() {
+                    let msg = format!("karray dynamic assign: skipped sources with no matching field: {skipped:?}");
+                    py.import("warnings")?.call_method1("warn", (msg,))?;
+                }
+                Ok(())
+            }
+            Err(KarrayAsmErr::Type (m)) => Err(PyTypeError ::new_err(m)),
+            Err(KarrayAsmErr::Value(m)) => Err(PyValueError::new_err(m)),
+        }
+    }
+}
+
+// Decode the Python selector tuples (PyKyIdx) into the host KyIdxType, shared by the
+// dynamic read and dynamic write paths.
+fn decode_selectors(indices: Vec<PyKyIdx>) -> PyResult<Vec<KyIdxType>> {
+    let mut sels = Vec::with_capacity(indices.len());
+    for (kind, sidx, sig) in indices {
+        let sel = match kind.as_str() {
+            "static" => KyIdxType::Static(sidx.ok_or_else(||
+                PyValueError::new_err("static index selector needs an integer index"))?),
+            "bin"    => KyIdxType::DynBin(sig.ok_or_else(||
+                PyValueError::new_err("binary index selector needs a signal"))?.into()),
+            "onehot" => KyIdxType::DynOneHot(sig.ok_or_else(||
+                PyValueError::new_err("one-hot index selector needs a signal"))?.into()),
+            other    => return Err(PyValueError::new_err(format!("unknown index selector kind '{other}'"))),
+        };
+        sels.push(sel);
+    }
+    Ok(sels)
 }

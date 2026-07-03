@@ -1,4 +1,4 @@
-// Python mirror of `complex_hardware::karray::karray_reduce`. The reduce ALGORITHM
+// Python mirror of `complex_hardware::karray::karray_dynamic_reduce_get`. The reduce ALGORITHM
 // lives in the host (`reduce_run`); this file wires it to Python: the `karray_reduce`
 // pymethod sets things up, and `PyReduceEnv` implements `ReduceEnv` over the arena.
 
@@ -15,7 +15,7 @@ use crate::model::hw_component::common::hcp_ident::HcpIdent;
 #[pymethods]
 impl PyModelArena {
     // Generic callback-driven reduce. The ALGORITHM lives in the host
-    // (`karray_reduce::reduce_run`); this method wires it to Python via the `ReduceEnv`
+    // (`karray_dynamic_reduce_get::reduce_run`); this method wires it to Python via the `ReduceEnv`
     // impl below. `dims`: Some(i) pins a dimension, None folds it. `raw_fns` is one entry
     // per dimension (None for pinned) — each a Python callable
     // `(a_fields, a_indices, b_fields, b_indices, level) -> (sel, extras)`. Returns the
@@ -73,7 +73,7 @@ struct PyReduceEnv<'a, 'py> {
 impl ReduceEnv for PyReduceEnv<'_, '_> {
     type Err = PyErr;
 
-    fn leaf(&mut self, coord: &[usize]) -> PyResult<Vec<NamedHcp>> {
+    fn gen_leaf(&mut self, coord: &[usize]) -> PyResult<Vec<NamedHcp>> {
         let mut me = self.slf.borrow_mut();
         let karray = me.arena.take_karray(self.karray_i);
         let out    = karray.reduce_leaf(coord, &self.field_idxs, &mut me.arena);
@@ -81,11 +81,11 @@ impl ReduceEnv for PyReduceEnv<'_, '_> {
         Ok(out)
     }
 
-    fn select(&mut self,
-              dim   : usize,
-              a     : &[NamedHcp], a_at: &[Vec<usize>],
-              b     : &[NamedHcp], b_at: &[Vec<usize>],
-              level : u32) -> PyResult<(HcpIdent, Vec<NamedHcp>)> {
+    fn callback_user_select(&mut self,
+                            dim   : usize,
+                            a     : &[NamedHcp], a_at: &[Vec<usize>],
+                            b     : &[NamedHcp], b_at: &[Vec<usize>],
+                            level : u32) -> PyResult<(HcpIdent, Vec<NamedHcp>)> {
         let py  = self.slf.py();
         let raw = self.raw_fns.get(dim).and_then(|f| f.as_ref())
             .ok_or_else(|| PyValueError::new_err(format!("reduce: dimension {dim} has no select fn")))?;
@@ -104,7 +104,7 @@ impl ReduceEnv for PyReduceEnv<'_, '_> {
         Ok(me.arena.make_val(false, &format!("RIDX{value}"), width, value as u64))
     }
 
-    fn pack(&mut self, fields: Vec<NamedHcp>) -> PyResult<CcpIdent> {
+    fn pack_to_karray(&mut self, fields: Vec<NamedHcp>) -> PyResult<CcpIdent> {
         let mut me = self.slf.borrow_mut();
         Ok(reduce_pack(&mut me.arena, &self.result_name, &fields))
     }

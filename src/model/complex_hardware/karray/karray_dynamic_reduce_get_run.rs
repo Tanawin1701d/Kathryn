@@ -1,6 +1,6 @@
 use crate::model::complex_hardware::common::ccp_ident::CcpIdent;
 use crate::model::complex_hardware::karray::karray_meta::index_width_for;
-use crate::model::complex_hardware::karray::karray_reduce::{NamedHcp, ReduceDim};
+use crate::model::complex_hardware::karray::karray_dynamic_reduce_get::{NamedHcp, ReduceDim};
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 
 // ===== The reduce driver =====================================================
@@ -15,7 +15,7 @@ use crate::model::hw_component::common::hcp_ident::HcpIdent;
 // what makes the re-entrancy safe: the user's select fn builds its select expression
 // with the arena (re-entering it), so the connector's `ReduceEnv` impl borrows the
 // arena only inside each op (scoped) and calls `select` with no borrow held. The arena
-// building blocks the impl wires up live in `karray_reduce.rs`.
+// building blocks the impl wires up live in `karray_dynamic_reduce_get.rs`.
 
 // ---- ReduceEnv — the arena/callback surface the algorithm runs against -------
 
@@ -28,16 +28,16 @@ pub trait ReduceEnv {
     type Err;
 
     /// Read one element's fields at the fully-pinned coordinate `coord`.
-    fn leaf(&mut self, coord: &[usize]) -> Result<Vec<NamedHcp>, Self::Err>;
+    fn gen_leaf(&mut self, coord: &[usize]) -> Result<Vec<NamedHcp>, Self::Err>;
 
     /// Run folded dimension `dim`'s select fn on a compared pair (`a`/`b` are the
     /// carried fields, `a_at`/`b_at` the covered coordinates). Returns the 1-bit
     /// select-left signal (true picks `a`) and any extra fields to carry onward.
-    fn select(&mut self,
-              dim   : usize,
-              a     : &[NamedHcp], a_at: &[Vec<usize>],
-              b     : &[NamedHcp], b_at: &[Vec<usize>],
-              level : u32) -> Result<(HcpIdent, Vec<NamedHcp>), Self::Err>;
+    fn callback_user_select(&mut self,
+                            dim   : usize,
+                            a     : &[NamedHcp], a_at: &[Vec<usize>],
+                            b     : &[NamedHcp], b_at: &[Vec<usize>],
+                            level : u32) -> Result<(HcpIdent, Vec<NamedHcp>), Self::Err>;
 
     /// Mux `(name, a_hcp, b_hcp)` triples under `sel` into fresh wires (order kept).
     fn mux(&mut self, pairs: Vec<(String, HcpIdent, HcpIdent)>, sel: HcpIdent) -> Result<Vec<NamedHcp>, Self::Err>;
@@ -46,7 +46,7 @@ pub trait ReduceEnv {
     fn const_index(&mut self, width: i32, value: usize) -> Result<HcpIdent, Self::Err>;
 
     /// Pack the winner's fields into a scalar result Karray.
-    fn pack(&mut self, fields: Vec<NamedHcp>) -> Result<CcpIdent, Self::Err>;
+    fn pack_to_karray(&mut self, fields: Vec<NamedHcp>) -> Result<CcpIdent, Self::Err>;
 }
 
 // ---- the recursive algorithm ------------------------------------------------
@@ -99,7 +99,7 @@ pub fn reduce_run<E: ReduceEnv>(
     let coords_result = winner_coords(&winner, &folded_dims(dim_sels), request_index);
 
     // step4: pack the winner's fields into the scalar result Karray and return both.
-    let result = env.pack(winner.fields)?;
+    let result = env.pack_to_karray(winner.fields)?;
     Ok((result, coords_result))
 }
 
@@ -109,7 +109,7 @@ fn reduce_dim<E: ReduceEnv>(env: &mut E, plan: &Plan, dim_idx: usize, coord: &mu
     -> Result<WorkNode, E::Err> {
     let ndim = plan.dim_sels.len();
     if dim_idx == ndim {                                   // leaf: every dim is pinned
-        let fields = env.leaf(coord)?;
+        let fields = env.gen_leaf(coord)?;
         return Ok(WorkNode::leaf(coord.clone(), fields, ndim));
     }
     match plan.dim_sels[dim_idx] {
@@ -161,7 +161,7 @@ fn reduce_axis<E: ReduceEnv>(env: &mut E, plan: &Plan, dim: usize, children: Vec
 // the user's extras on top for the next level.
 fn mux_pair<E: ReduceEnv>(env: &mut E, plan: &Plan, dim: usize, level: u32, a: WorkNode, b: WorkNode) -> Result<WorkNode, E::Err> {
     // step1: ask dim `dim`'s select fn which side wins, plus any extra wires to carry.
-    let (sel, extras) = env.select(dim, &a.fields, &a.covered, &b.fields, &b.covered, level)?;
+    let (sel, extras) = env.callback_user_select(dim, &a.fields, &a.covered, &b.fields, &b.covered, level)?;
 
     // step2: mux the karray fields under the select, then layer the user extras on top.
     let field_pairs: Vec<_> = plan.field_names.iter()

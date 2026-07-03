@@ -1,7 +1,7 @@
 use crate::model::common::identifier::Identifiable;
 use crate::model::complex_hardware::common::ccp_ident::CcpIdent;
 use crate::model::complex_hardware::karray::karray::Karray;
-use crate::model::complex_hardware::karray::karray_dynamic_index::{mux_into_wire, pack_scalar_karray};
+use crate::model::complex_hardware::karray::karray_dynamic_get::{mux_into_wire, pack_scalar_karray};
 use crate::model::complex_hardware::karray::karray_region_sel::KarrayAsmErr;
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
 use crate::model::model_arena::ModelArena;
@@ -10,12 +10,12 @@ use crate::model::model_arena::ModelArena;
 //
 // Reduce a Karray's elements to a single winner by a user-supplied select rule —
 // the Rust port of the C++ `Table::doReduceBase(..., cusLogic, ...)`. It generalises
-// the dynamic-index mux tree (`karray_dynamic_index.rs`): instead of an index-encoded
+// the dynamic-index mux tree (`karray_dynamic_get.rs`): instead of an index-encoded
 // select, the CALLER decides the select-left at each 2:1 node.
 //
 // This file holds the reduce TYPES and the arena building blocks (`reduce_prepare` /
 // `reduce_leaf`, `reduce_mux`, `reduce_pack`). The `ReduceEnv` trait and the recursive
-// `reduce_run` algorithm that drives them live in `karray_reduce_run.rs`.
+// `reduce_run` algorithm that drives them live in `karray_dynamic_reduce_get_run.rs`.
 
 // ---- types ------------------------------------------------------------------
 
@@ -29,7 +29,7 @@ pub enum ReduceDim {
     Fold,
 }
 
-// (The `ReduceEnv` trait + the `reduce_run` algorithm live in `karray_reduce_run.rs`.)
+// (The `ReduceEnv` trait + the `reduce_run` algorithm live in `karray_dynamic_reduce_get_run.rs`.)
 
 // ---- arena building blocks (the connector's ReduceEnv impl calls these) ------
 
@@ -107,4 +107,4 @@ pub fn reduce_pack(arena: &mut ModelArena, base: &str, fields: &[NamedHcp]) -> C
     pack_scalar_karray(base, layout, &src, arena)
 }
 
-// The `reduce_run` algorithm (recursive driver + helpers) lives in `karray_reduce_run.rs`.
+// The `reduce_run` algorithm (recursive driver + helpers) lives in `karray_dynamic_reduce_get_run.rs`.

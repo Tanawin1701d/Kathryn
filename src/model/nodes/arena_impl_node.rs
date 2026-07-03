@@ -119,6 +119,15 @@ impl ModelArena {
         self.replace_back_asm_node(asm);
     }
 
+    /// Fold each AssignMeta's deferred pending pre-condition (write-enable) into
+    /// its update event.  Must run after init_asm_node_clk_src.
+    pub fn apply_asm_node_pending_pre_cond(&mut self, ident: NcpIdent) {
+        assert_eq!(ident.get_node_type(), NodeType::Asm);
+        let mut asm = self.take_asm_node(ident);
+        asm.apply_pending_pre_cond(self);
+        self.replace_back_asm_node(asm);
+    }
+
     // assign for asm node
 
     pub fn assign_asm_from_state_node(&mut self, ident: NcpIdent) {

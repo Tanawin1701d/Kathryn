@@ -59,6 +59,15 @@ impl AsmNode {
         self.asm_metas[des_idx].add_specific_pre_condition(cond, arena);
     }
     
+    /// Fold each AssignMeta's deferred pending pre-condition (write-enable) into
+    /// its update event.  Must run after `set_clk_src` so the clk-consistency
+    /// assert in `add_specific_pre_condition` holds.
+    pub fn apply_pending_pre_cond(&mut self, arena: &mut ModelArena) {
+        for am in &mut self.asm_metas {
+            am.apply_pending_pre_cond(arena);
+        }
+    }
+
     /// Propagate the trigger's clock source to every AssignMeta's input UE.
     /// No-op if no clock node is wired to this trigger group.
     pub fn set_clk_src(&mut self, arena: &mut ModelArena) {

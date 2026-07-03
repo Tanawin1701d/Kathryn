@@ -154,9 +154,6 @@ class KarrayRef:
     #   element           {field_name: source}    -> whole-element field map        d[2][1] |= {"valid": v, "data": x}
     #   element           non-dict / non-karray   -> ERROR (raised in _assign_element_from_map)
     def _assign_from(self, src, expect_clocked: Optional[bool]) -> None:
-        if self._has_dynamic():
-            raise NotImplementedError(
-                "dynamic-index Karray assignment is not supported yet; dynamic indexing is read-only")
         from .karray import Karray            # local import breaks the Karray<->KarrayRef cycle
         if isinstance(src, Karray):
             src = KarrayRef(src._ident)            # whole-array source (no keys -> full-range every dim)
@@ -164,6 +161,23 @@ class KarrayRef:
         # Classify both sides up front so each branch states its own full condition.
         src_is_karray_region = isinstance(src , KarrayRef) and src._field  is None  # source: element/region, no field
         des_is_karray_region = isinstance(self, KarrayRef) and self._field is None  # target: element/region (no `.field`)
+
+        # Dynamic-index write: a runtime signal (binary or one-hot) selects which element
+        # receives `src`; non-selected elements hold (reg-backed `|=` only — the Rust layer
+        # rejects `*=`). A Karray region source has no single runtime element, so it is
+        # unsupported here.
+        if self._has_dynamic():
+            if src_is_karray_region:
+                raise TypeError("dynamic-index Karray assignment cannot take a Karray region/element source")
+            # `|=`/`*=` carry the clocked intent directly; a bare `=` carries none, so
+            # resolve it from the destination backing (reg/memblock -> clocked, wire ->
+            # combinational — which the Rust layer then rejects for a dynamic write).
+            clocked = expect_clocked if expect_clocked is not None else _session.arena().karray_is_clocked(self._ident)
+            if des_is_karray_region:                   # element <= {field_name: source} map
+                self._assign_element_from_map_dynamic(src, clocked)
+            else:                                       # field <= one scalar source
+                self._assign_one_field_dynamic(to_ref(src), clocked)
+            return
 
         # First layer branches on the DESTINATION only; the source is resolved inside each arm.
         if des_is_karray_region:                       # target is an element/region
@@ -196,6 +210,23 @@ class KarrayRef:
                             "(per-field, not a packed bit-vector)")
         sources = [(str(name), to_ref(val)._ident) for name, val in src.items()]
         _session.arena().karray_static_index_assign_element(self._ident, self._int_indices(), sources, expect_clocked)
+
+    # ---- dynamic-index assignment (runtime-selected element) ----------------
+    def _assign_one_field_dynamic(self, src: SignalRef, clocked: bool) -> None:
+        # Single field target: write `src` into this field of the runtime-selected element.
+        sources = [(str(self._field), src._ident)]
+        _session.arena().karray_dynamic_index_assign_element(
+            self._ident, self._dyn_selectors(), sources, clocked)
+
+    def _assign_element_from_map_dynamic(self, src, clocked: bool) -> None:
+        # Whole-element target: connect each `{field_name: source}` entry to the field of
+        # that name on the runtime-selected element (matched by name in Rust).
+        if not isinstance(src, dict):
+            raise TypeError("whole-element dynamic Karray assign needs a {field_name: source} mapping "
+                            "(per-field, not a packed bit-vector)")
+        sources = [(str(name), to_ref(val)._ident) for name, val in src.items()]
+        _session.arena().karray_dynamic_index_assign_element(
+            self._ident, self._dyn_selectors(), sources, clocked)
 
     def __ior__(self, src: Union[SignalRef, "KarrayRef", "Karray"]):
         self._assign_from(src, expect_clocked=True)

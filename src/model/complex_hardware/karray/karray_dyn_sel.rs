@@ -1,7 +1,7 @@
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 
 // Selector + result carrier types for Karray dynamic indexing. The build logic that
-// consumes them lives in `karray_dynamic_index.rs`.
+// consumes them lives in `karray_dynamic_get.rs`.
 
 // ---- KyIdxType — how a Karray element is selected ---------------------------
 
@@ -42,7 +42,7 @@ impl KyIdxType {
 /// per-dimension coordinate (`result_indexed_i`, one entry per dimension — a
 /// `Static` for a statically-pinned dim, a `DynBin` wire holding the chosen index
 /// for a dynamically-selected dim). Fields are `pub(super)` so the build logic in
-/// `karray_dynamic_index.rs` can construct/populate them.
+/// `karray_dynamic_get.rs` can construct/populate them.
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
 pub struct DynSelKarray{
     pub(super) immediate_hcps   : Vec<HcpIdent>,
@@ -64,7 +64,7 @@ impl DynSelKarray {
 // this subtree covers — carried up so each mux ORs just its two children (instead
 // of re-OR-ing the whole covered set). `None` on the binary path (it selects on a
 // per-level address bit, not a per-subtree OR). `pub(super)` so the build logic in
-// `karray_dynamic_index.rs` can construct/read it.
+// `karray_dynamic_get.rs` can construct/read it.
 pub(super) struct DynReduc {
     pub(super) data_i  : Vec<HcpIdent>,
     pub(super) idx_i   : Option<HcpIdent>,

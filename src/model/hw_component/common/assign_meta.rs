@@ -11,6 +11,7 @@ pub struct AssignMeta {
     clk_mode        : ClockMode,
     input_event_i   : Option<UpdateEventIdent>, // the basicUpdateEvent of the target HWC, if tehre is complex assignment if () {...} this value should be None
     pre_update_event: UpdateEventIdent,         // the latest update event that has been assigned to the target HWC
+    pending_pre_cond: Option<HcpIdent>,         // per-meta write-enable, folded in at build time (after clk wiring) — see set_pending_pre_cond
 }
 
 impl AssignMeta {
@@ -20,6 +21,7 @@ impl AssignMeta {
             clk_mode,
             input_event_i   : Some(ue),
             pre_update_event: ue,
+            pending_pre_cond: None,
         }
     }
 
@@ -34,6 +36,26 @@ impl AssignMeta {
     pub fn get_input_event_i    (&self)     -> Option<UpdateEventIdent>       { self.input_event_i      }
     pub fn get_input_event_i_mut(&mut self) -> &mut Option<UpdateEventIdent>  { &mut self.input_event_i }
     pub fn get_pre_update_event (&self)     -> UpdateEventIdent               { self.pre_update_event   }
+    pub fn get_pending_pre_cond (&self)     -> Option<HcpIdent>               { self.pending_pre_cond   }
+
+    // Record a per-meta write-enable to be ANDed into this meta's condition at
+    // build time (in AsmNode::assign_from_state_node / dry_assign — i.e. AFTER the
+    // clk source is wired). It cannot be applied at construction: a clocked target's
+    // clk_src is still None then, so add_specific_pre_condition would assert. Used by
+    // the Karray dynamic-assign path so each runtime-selected element holds when its
+    // enable is low. Composing several dynamic dims is done by the caller (one ANDed
+    // `we` per element).
+    pub fn set_pending_pre_cond(&mut self, cond: HcpIdent) {
+        self.pending_pre_cond = Some(cond);
+    }
+
+    // Fold the deferred pending pre-condition (see set_pending_pre_cond) into this
+    // meta's condition, now that the clk source is wired. No-op if none pending.
+    pub fn apply_pending_pre_cond(&mut self, arena: &mut ModelArena) {
+        if let Some(cond) = self.pending_pre_cond.take() {
+            self.add_specific_pre_condition(cond, arena);
+        }
+    }
 
     pub fn add_specific_pre_condition(&mut self, cond: HcpIdent, arena: &mut ModelArena) {
         let cm      = arena.get_ue_common(&self.pre_update_event).get_clk_mode();

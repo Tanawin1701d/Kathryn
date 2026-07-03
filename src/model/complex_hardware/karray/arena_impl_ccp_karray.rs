@@ -81,9 +81,37 @@ impl ModelArena {
         out
     }
 
-    // (Reduce is driven by `karray_reduce::reduce_run` via the connector's ReduceEnv
-    // impl, which calls `Karray::reduce_leaves` / `reduce_mux` / `reduce_pack` directly
-    // — no per-op arena wrappers live here.)
+    // Whether a Karray's backing is clocked (reg/memblock → `|=`) or combinational
+    // (wire → `*=`). Lets the DSL resolve a bare `=` on a dynamic write into a concrete
+    // clocked flag from the destination's own backing.
+    pub fn karray_is_clocked(&mut self, karray_i: CcpIdent) -> bool {
+        let karray = self.take_karray(karray_i);
+        let out    = karray.is_clocked();
+        self.replace_back_karray(karray);
+        out
+    }
+
+    // Dynamic (runtime-signal) element WRITE on `karray_i`: write each `(field_name,
+    // src_i)` into the element selected by `indices` (`KyIdxType` — Static / DynBin /
+    // DynOneHot), guarding every element by its own write-enable so non-selected ones
+    // hold. Reg-backed + clocked only (`clocked == false` is rejected). Returns the
+    // source names that matched no field (caller may warn).
+    pub fn karray_dynamic_index_assign_element(
+        &mut self,
+        karray_i: CcpIdent,
+        indices : Vec<KyIdxType>,
+        sources : &[(String, HcpIdent)],
+        clocked : bool,
+    ) -> Result<Vec<String>, KarrayAsmErr> {
+        let karray = self.take_karray(karray_i);
+        let out    = karray.dynamic_assign_element(&indices, sources, clocked, self);
+        self.replace_back_karray(karray);
+        out
+    }
+
+    // (Reduce and cus_dynamic_assign are driven by `karray_dynamic_reduce_get::reduce_run` /
+    // `karray_dynamic_assign_run::write_run` via the connector's ReduceEnv / WriteEnv
+    // impls, which call Karray building blocks directly — no per-op arena wrappers here.)
 
     // Field-matched assignment of one Karray region into another. The two selected
     // regions must have equal result shapes; fields are paired by exact name+width
@@ -179,9 +207,7 @@ impl ModelArena {
         }
 
         // ---- join all metas into a single basic node, attach to current scope ----
-        let name   = format!("{}_karr_asm", dst.get_ccp_ident().get_global_name());
-        let node_i = self.make_asm_node_many(&name, &metas);
-        self.attach_basic_node_to_current_scope(node_i);
+        dst.attach_metas_as_node("karr_asm", metas, self);
 
         Ok(skipped)
     }

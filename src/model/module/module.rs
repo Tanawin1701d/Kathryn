@@ -264,6 +264,8 @@ impl Module {
         for &node_i in &self.basic_nodes_i {
             assert_eq!(node_i.get_node_type(), NodeType::Asm,
                 "basic_nodes_i must contain only AsmNodes");
+            // Fold each meta's deferred pending pre-condition before the final update.
+            arena.apply_asm_node_pending_pre_cond(node_i);
             arena.dry_assign_asm_node(node_i);
         }
 

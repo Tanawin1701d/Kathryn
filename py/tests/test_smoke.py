@@ -13,7 +13,7 @@ from kathryn import (
     Module, init, flow, gen_flow, build_flow, emit_verilog,
     priority, set_priority, set_priority_auto, get_priority, get_priority_mode,
     DEFAULT_UE_PRI_USER, DEFAULT_UE_PRI_RST, DEFAULT_UE_PRI_MIN,
-    Karray, kaf, HwComponentType, oh, Reduce,
+    Karray, kaf, HwComponentType, oh, Reduce, Spread,
 )
 
 
@@ -927,8 +927,9 @@ def test_karray_dynamic_read_emits_verilog():
     assert "rf_E0_data" in text and "rf_E3_data" in text   # all elements wired into the mux
 
 
-def test_karray_dynamic_write_rejected():
-    # Dynamic indexing is read-only; assigning through a dynamic index is rejected.
+def test_karray_dynamic_binary_write():
+    # Binary-address dynamic write: `rf[sel].data |= src` writes only the selected
+    # element; others hold. Each element's data reg is emitted (guarded by sel==k).
     reset()
 
     class RfEntry(Karray):
@@ -941,10 +942,201 @@ def test_karray_dynamic_write_rejected():
             self.rf  = RfEntry(HwComponentType.REG, (4,), "rf")
             self.sel = reg(2)
             self.src = reg(8)
-            # the guard raises in pure Python before any arena work, so it needs no
-            # seq scope (and would leave one empty if placed inside).
-            with pytest.raises(NotImplementedError):
+
+        @flow
+        def f(self):
+            with seq():
                 self.rf[self.sel].data |= self.src
+
+    set_top(worker())
+    gen_flow()
+    build_flow()
+
+    out_dir = tempfile.mkdtemp()
+    emit_verilog(out_dir, "top")
+    text = open(os.path.join(out_dir, "top.v")).read()
+    assert "rf_E0_data" in text and "rf_E3_data" in text   # every element guarded-driven
+
+
+def test_karray_dynamic_onehot_write():
+    # oh(sig) marks the index one-hot: element i's write-enable is sel[i].
+    reset()
+
+    class RfEntry(Karray):
+        valid = kaf(1)
+        data  = kaf(8)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.rf  = RfEntry(HwComponentType.REG, (4,), "rf")
+            self.sel = reg(4)                       # 4-bit one-hot for 4 elements
+            self.src = reg(8)
+
+        @flow
+        def f(self):
+            with seq():
+                self.rf[oh(self.sel)].data |= self.src
+
+    set_top(worker())
+    gen_flow()
+    build_flow()
+
+    out_dir = tempfile.mkdtemp()
+    emit_verilog(out_dir, "top")
+    text = open(os.path.join(out_dir, "top.v")).read()
+    assert "rf_E0_data" in text and "rf_E3_data" in text
+
+
+def test_karray_dynamic_write_map():
+    # Whole-element map write into the runtime-selected element (per-field by name).
+    reset()
+
+    class RfEntry(Karray):
+        valid = kaf(1)
+        data  = kaf(8)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.rf  = RfEntry(HwComponentType.REG, (4,), "rf")
+            self.sel = reg(2)
+            self.v   = reg(1)
+            self.d   = reg(8)
+
+        @flow
+        def f(self):
+            with seq():
+                self.rf[self.sel] |= {"valid": self.v, "data": self.d}
+
+    set_top(worker())
+    gen_flow()
+    build_flow()
+
+    out_dir = tempfile.mkdtemp()
+    emit_verilog(out_dir, "top")
+    text = open(os.path.join(out_dir, "top.v")).read()
+    assert "rf_E0_valid" in text and "rf_E0_data" in text
+
+
+def test_karray_dynamic_combinational_write_rejected():
+    # Combinational (`*=`) dynamic write is unsupported (would be a feedback loop).
+    reset()
+
+    class RfEntry(Karray):
+        data = kaf(8)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.rf  = RfEntry(HwComponentType.REG, (4,), "rf")
+            self.sel = reg(2)
+            self.src = reg(8)
+            # the backing/intent guard returns before any node is built, so no scope
+            # is needed (and none is left dangling).
+            with pytest.raises(TypeError):
+                self.rf[self.sel].data *= self.src
+
+    worker()
+
+
+def test_karray_dynamic_explicit_assign_resolves_backing():
+    # A bare `=` carries no clocked/comb intent — it is resolved from the destination
+    # backing. On a reg-backed Karray that means clocked, so the write builds fine.
+    reset()
+
+    class RfEntry(Karray):
+        data = kaf(8)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.rf  = RfEntry(HwComponentType.REG, (4,), "rf")
+            self.sel = reg(2)
+            self.src = reg(8)
+
+        @flow
+        def f(self):
+            with seq():
+                self.rf[self.sel].data = self.src          # explicit `=` -> reg -> clocked
+
+    set_top(worker())
+    gen_flow()
+    build_flow()
+
+    out_dir = tempfile.mkdtemp()
+    emit_verilog(out_dir, "top")
+    text = open(os.path.join(out_dir, "top.v")).read()
+    assert "rf_E0_data" in text and "rf_E3_data" in text
+
+
+def test_karray_dynamic_explicit_assign_wire_rejected():
+    # The same bare `=` resolves to combinational on a wire-backed Karray, which the
+    # dynamic-write path rejects (no hold possible on a wire).
+    reset()
+
+    class RfEntry(Karray):
+        data = kaf(8)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.rf  = RfEntry(HwComponentType.WIRE, (4,), "rf")
+            self.sel = reg(2)
+            self.src = reg(8)
+            with pytest.raises(TypeError):
+                self.rf[self.sel].data = self.src
+
+    worker()
+
+
+def test_karray_cus_dynamic_assign_basic():
+    # Custom callback-driven dynamic write: the write fn builds each element's enable
+    # from its static coord and a closed-over runtime index (here `sel == coord`).
+    reset()
+
+    class RfEntry(Karray):
+        data = kaf(8)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.rf  = RfEntry(HwComponentType.REG, (4,), "rf")
+            self.sel = reg(2)
+            self.src = reg(8)
+
+        @flow
+        def f(self):
+            with seq():
+                self.rf.cus_dynamic_assign(
+                    [Spread], {"data": self.src},
+                    lambda v: self.sel == v.coord[0],
+                )
+
+    set_top(worker())
+    gen_flow()
+    build_flow()
+
+    out_dir = tempfile.mkdtemp()
+    emit_verilog(out_dir, "top")
+    text = open(os.path.join(out_dir, "top.v")).read()
+    assert "rf_E0_data" in text and "rf_E3_data" in text
+
+
+def test_karray_cus_dynamic_assign_needs_spread():
+    # cus_dynamic_assign with no Spread dimension is a usage error.
+    reset()
+
+    class RfEntry(Karray):
+        data = kaf(8)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.rf  = RfEntry(HwComponentType.REG, (4,), "rf")
+            self.src = reg(8)
+            with pytest.raises(ValueError):
+                self.rf.cus_dynamic_assign([0], {"data": self.src}, lambda v: self.src)
 
     worker()
 

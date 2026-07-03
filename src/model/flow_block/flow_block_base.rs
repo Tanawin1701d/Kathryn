@@ -195,6 +195,8 @@ impl FlowBlockBase {
         self.init_node_trigger_for_basic_node(arena);
         self.set_clk_src_for_basic_node(arena);
 
+        /// 4. add condition to the basic node
+        self.apply_pending_pre_cond_for_basic_node(arena);
     }
 
     /// Push this block's `ext_trigger_node` (hold / int-reset / mrst / clk) onto
@@ -212,6 +214,16 @@ impl FlowBlockBase {
     pub fn set_clk_src_for_basic_node(&self, arena: &mut ModelArena) {
         for &node_i in self.basic_nodes_i.iter() {
             arena.init_asm_node_clk_src(node_i);
+        }
+    }
+
+    /// After clk sources are wired, fold each basic AsmNode's deferred per-meta
+    /// pending pre-condition (write-enable) into its update event.  Must run after
+    /// `set_clk_src_for_basic_node` so the clk-consistency assert in
+    /// `add_specific_pre_condition` holds.
+    pub fn apply_pending_pre_cond_for_basic_node(&self, arena: &mut ModelArena) {
+        for &node_i in self.basic_nodes_i.iter() {
+            arena.apply_asm_node_pending_pre_cond(node_i);
         }
     }
 

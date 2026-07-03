@@ -52,11 +52,20 @@ impl Karray {
         }
 
         // ---- join all field writes into a single basic node, attach to current scope ----
+        self.attach_metas_as_node("elem_asm", metas, arena);
+        skipped
+    }
+
+    /// Join a batch of per-field `AssignMeta`s into a SINGLE basic node named
+    /// `<ccp>_<suffix>` and attach it to the current scope (no-op when empty). This is
+    /// the one place a Karray turns several field writes into a single-cycle node — so
+    /// a seq block advances once, not once per field. Shared by every Karray assign
+    /// path: element (`elem_asm`), region (`karr_asm`), and dynamic (`dyn_asm`).
+    pub fn attach_metas_as_node(&self, suffix: &str, metas: Vec<AssignMeta>, arena: &mut ModelArena) {
         if !metas.is_empty() {
-            let name   = format!("{}_elem_asm", self.get_ccp_ident().get_global_name());
+            let name   = format!("{}_{suffix}", self.get_ccp_ident().get_global_name());
             let node_i = arena.make_asm_node_many(&name, &metas);
             arena.attach_basic_node_to_current_scope(node_i);
         }
-        skipped
     }
 }

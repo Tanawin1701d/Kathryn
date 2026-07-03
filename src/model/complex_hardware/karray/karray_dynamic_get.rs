@@ -237,11 +237,22 @@ fn create_mux(left: DynReduc, right: DynReduc, layer_sel: Option<HcpIdent>, aren
     DynReduc { data_i, idx_i, oh_sel_i: next_oh_sel_i }
 }
 
-// One-hot select bit for index `idx`: `sig[idx]`.
-fn onehot_bit(sig_i: HcpIdent, idx: usize, arena: &mut ModelArena) -> HcpIdent {
+// One-hot select bit for index `idx`: `sig[idx]`. Shared with the dynamic-assign
+// write-enable path (karray_dynamic_assign.rs).
+pub(crate) fn onehot_bit(sig_i: HcpIdent, idx: usize, arena: &mut ModelArena) -> HcpIdent {
     let bit = idx as i32;
     arena.make_expression_single(false, &format!("{}_OH{idx}", sig_i.get_global_name()),
         LogicOp::SliceBit, sig_i, Some(Slice::new(bit, bit + 1)))
+}
+
+// Binary equality write-enable for index `idx`: `sig == idx` (a 1-bit signal), with
+// the constant sized to the dimension's index width. Used by the dynamic-assign path
+// to enable exactly the runtime-selected element.
+pub(crate) fn bin_eq(sig_i: HcpIdent, idx: usize, len: usize, arena: &mut ModelArena) -> HcpIdent {
+    let iw      = index_width_for(len);
+    let const_i = arena.make_val(false, &format!("{}_EQ{idx}", sig_i.get_global_name()), iw, idx as u64);
+    arena.make_expression(false, &format!("{}_EQ{idx}_C", sig_i.get_global_name()),
+        LogicOp::RelationEq, sig_i, const_i, None, None)
 }
 
 // Binary per-level select-left bit: at tree level `layer`, the two children of a
