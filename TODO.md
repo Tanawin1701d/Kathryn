@@ -4,6 +4,9 @@
 - karray dynamic indexing
 
 ### to test
-- test the hierarchy module implementation
 - test zif multi chain
 - test memblk
+
+### done
+- hierarchy module implementation — routing double-take + expression-operand
+  remap fixed; covered by tc39_hier_basic / tc40_hier_deep_sibling

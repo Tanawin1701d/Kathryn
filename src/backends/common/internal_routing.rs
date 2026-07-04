@@ -66,13 +66,15 @@ fn route_and_remap_io_module(
     module_i    : ModuleIdent,
     model_arena : &mut ModelArena,
 ) {
+    // 1. gather all deps from every HCP in this module (module taken only for the read)
     let module = model_arena.take_module(module_i);
-
-    // 1. gather all deps from every HCP in this module
     let mut deps: HashSet<HcpIdent> = HashSet::new();
     module.gather_dep_hcps(model_arena, &mut deps);
+    model_arena.replace_back_module(module_i, module);
 
-    // 2. route each cross-module dep; build old → new-io-wire map
+    // 2. route each cross-module dep; build old → new-io-wire map.
+    //    module_i must NOT be held taken here — the routing path walks back
+    //    through module_i itself (find_reusable_io_wire re-takes it).
     let mut remap: HashMap<HcpIdent, HcpIdent> = HashMap::new();
     for dep_i in deps {
         if dep_i.get_master_module_i() != module_i {
@@ -82,8 +84,8 @@ fn route_and_remap_io_module(
     }
 
     // 3. rewrite all dep handles inside the module to point at the new IoWires
+    let module = model_arena.take_module(module_i);
     module.remap_dep_hcps(&remap, model_arena);
-
     model_arena.replace_back_module(module_i, module);
 }
 

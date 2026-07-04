@@ -137,7 +137,9 @@ impl Module {
     /// Rewrite every HcpIdent dependency in this module's UpdateEvents according to `map`.
     /// `self` must already be taken out of the arena so arena is free for HCP access.
     pub fn remap_dep_hcps(&self, map: &HashMap<HcpIdent, HcpIdent>, arena: &mut ModelArena) {
-        for &hw_type in &HW_TYPES_WITH_UE {
+        // Must cover the same type set as gather_dep_hcps — manual-dep types
+        // (Expression) carry operand handles that need remapping too.
+        for &hw_type in HW_TYPES_WITH_UE.iter().chain(HW_TYPES_WITH_MAN_DEP.iter()) {
             for &hcp_i in self.get_internal_hws(hw_type).iter()
                               .chain(self.get_user_hws(hw_type).iter())
             {
