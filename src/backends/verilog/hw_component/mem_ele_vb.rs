@@ -11,7 +11,17 @@ use crate::util::file::file_writer::FileWriter;
 impl HcpBaseVb for MemEle {
     fn gen_type_vb         (&self) -> String { let w = signal_width(self.get_des_slice().get_size()); format!("wire {w}") }
     fn gen_var_name_vb     (&self) -> String { self.get_global_name().to_string() }
+    // Only a read port owns a net (`assign name = mem[idx]`); a write port writes
+    // straight into the memory array, so its name never appears as a net.
+    fn amt_init_line_vb    (&self) -> u32    { if self.is_read() { 1 } else { 0 } }
     fn amt_precedure_blk_vb(&self) -> u32    { 1 }
+
+    /// Full declaration: `wire [N-1:0] name;` (read mode only).
+    fn gen_init_line_vb(&self, _idx: u32, _arena: &mut ModelArena, fw: &mut FileWriter) {
+        let t = self.gen_type_vb();
+        let n = self.gen_var_name_vb();
+        fw.write(&format!("{t} {n};"));
+    }
 
     fn gen_procedure_blk_vb(&self, _idx: u32, arena: &mut ModelArena, fw: &mut FileWriter) {
         let name        = self.gen_var_name_vb();

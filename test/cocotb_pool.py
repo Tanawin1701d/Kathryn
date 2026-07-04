@@ -26,6 +26,22 @@ _PY_DIR   = _REPO / "py"                                     # kathryn package
 _MODEL    = _HERE / "model"                                  # tc*.py live here
 OUT_ROOT  = _HERE / ".model_output"                          # per-case build dirs
 
+# Extra dirs other projects need on PYTHONPATH inside the sim subprocess
+# (set via configure(); empty for Kathryn's own tests).
+_EXTRA_PYTHONPATH: list[str] = []
+
+
+def configure(model_dir=None, out_root=None, extra_pythonpath=()) -> None:
+    # Point the pool at ANOTHER project's test tree so downstream projects reuse
+    # this runner unchanged. Every argument is optional; Kathryn's own defaults
+    # stay intact when it is never called.
+    global _MODEL, OUT_ROOT, _EXTRA_PYTHONPATH
+    if model_dir is not None:
+        _MODEL = pathlib.Path(model_dir).resolve()
+    if out_root is not None:
+        OUT_ROOT = pathlib.Path(out_root).resolve()
+    _EXTRA_PYTHONPATH = [str(pathlib.Path(p).resolve()) for p in extra_pythonpath]
+
 
 # cocotb 2.x's stock Icarus runner dumps FST when waves=True. We want a plain
 # VCD, so override the three FST-specific spots: the dump-file path, the generated
@@ -202,7 +218,7 @@ def _run_cases(cases: list[TestCase], simulator: str) -> list[CaseResult]:
     # one summary table.
 
     # The sim subprocess imports both kathryn and the tc module — make both findable.
-    extra_path = os.pathsep.join([str(_PY_DIR), str(_MODEL)])
+    extra_path = os.pathsep.join([str(_PY_DIR), str(_MODEL), *_EXTRA_PYTHONPATH])
     os.environ["PYTHONPATH"] = os.pathsep.join(
         p for p in (extra_path, os.environ.get("PYTHONPATH", "")) if p)
 
@@ -332,10 +348,9 @@ def discover_and_run(simulator: str = "icarus", names: list[str] | None = None) 
     import importlib
     import sys
 
-    if str(_MODEL) not in sys.path:
-        sys.path.insert(0, str(_MODEL))
-    if str(_PY_DIR) not in sys.path:
-        sys.path.insert(0, str(_PY_DIR))
+    for p in (str(_MODEL), str(_PY_DIR), *_EXTRA_PYTHONPATH):
+        if p not in sys.path:
+            sys.path.insert(0, p)
 
     # Natural sort: order by the numeric index in `tcN_...` so tc2 precedes tc10
     # (plain lexicographic sort would yield tc1, tc10, tc2, ...).

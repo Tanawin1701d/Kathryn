@@ -3,7 +3,10 @@ use crate::common::arena_base::ArenaHandle;
 
 static GLOBAL_MODEL_ID: AtomicU64 = AtomicU64::new(0);
 
-pub const MAX_NAME_LEN: usize = 128;
+// 256: deep Karray dynamic-index mux trees compound a "…_DMUXIDX_<id>" per
+// level onto auto-names (32 elements = 5 levels), overflowing the old 128.
+// TODO: make dynamic-index naming non-compounding, then this can shrink again.
+pub const MAX_NAME_LEN: usize = 256;
 
 pub fn get_last_ident_id() -> u64 {
     GLOBAL_MODEL_ID.load(Ordering::Relaxed)
