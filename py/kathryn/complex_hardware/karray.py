@@ -9,82 +9,32 @@
 # each named source to the field of that name (full-width, no bit-level split); a
 # karray-to-karray assign (`d[0:2] |= e[1:3]`) pairs fields by name+width across
 # equal-shaped regions (also inside Rust).
+#
+# This file holds only the CORE handle. The reduce surface (`reduce`, `Reduce`,
+# `ReduceView`) lives in karray_reduce.py and the custom dynamic-write surface
+# (`cus_dynamic_assign`, `Spread`, `WriteView`) in karray_cus_assign.py; both are
+# mixed into `Karray` below and re-exported here for backward compatibility.
 
 from __future__ import annotations
 
 from typing import Iterable, Optional, Union
 
 from .. import _session
-from .._kathryn import HwComponentType
-from ..signal import _ASSIGNED, SignalRef, to_ref
+from ..signal import _ASSIGNED
 from .karray_field import (
     KarrayField,
     get_declared_karray_fields,
     normalize_karray_field_specs,
 )
 from .karray_ref import KarrayRef
+from .karray_reduce import Reduce, ReduceView, _KarrayReduceMixin
+from .karray_cus_assign import Spread, WriteView, _KarrayCusAssignMixin
 
-
-# ---- reduce: fold marker + the view handed to the user select function -------
-class _Reduce:
-    """A folded (reduced) Karray dimension, optionally carrying its own select fn.
-    Use the bare singleton `Reduce` together with a global `select_fn`, or `Reduce(fn)`
-    to attach a per-dimension select fn (so each folded dim reduces with its own rule).
-    Folded dims are reduced innermost-first (highest dim index first)."""
-    __slots__ = ("fn",)
-
-    def __init__(self, fn=None) -> None:
-        self.fn = fn
-
-    def __call__(self, fn) -> "_Reduce":
-        return _Reduce(fn)
-
-    def __repr__(self) -> str:
-        return "Reduce" if self.fn is None else f"Reduce({getattr(self.fn, '__name__', self.fn)})"
-
-
-Reduce = _Reduce()
-
-
-class ReduceView:
-    """One subtree handed to a reduce select function. `.fields` maps each carried
-    field name to its current SignalRef (a leaf element's field, a mux-output wire,
-    or a prior layer's extra); `.indices` is the list of element coordinates this
-    subtree covers."""
-    __slots__ = ("indices", "fields")
-
-    def __init__(self, indices, fields) -> None:
-        self.indices = indices    # list of element coordinates (covered)
-        self.fields  = fields     # dict: field name -> SignalRef
-
-
-# ---- cus_dynamic_assign: spread marker + the view handed to the write fn ------
-class _Spread:
-    """A spread dimension for `cus_dynamic_assign`: fan out over its extent and let
-    the write function decide each element's write-enable. An int pins the dim
-    instead (writes only that index's slice of the array)."""
-    __slots__ = ()
-
-    def __repr__(self) -> str:
-        return "Spread"
-
-
-Spread = _Spread()
-
-
-class WriteView:
-    """The element handed to a `cus_dynamic_assign` write function. `.coord` is the
-    element's static coordinate (a list of ints). Build a 1-bit write-enable from it
-    (and any runtime index signal you close over) and return that signal; the element
-    is written from the supplied `src` only when the enable is high."""
-    __slots__ = ("coord",)
-
-    def __init__(self, coord) -> None:
-        self.coord = coord        # element's static coordinate (list of ints)
+__all__ = ["Karray", "Reduce", "ReduceView", "Spread", "WriteView"]
 
 
 # ---- karray -----------------------------------------------------------------
-class Karray:
+class Karray(_KarrayReduceMixin, _KarrayCusAssignMixin):
     """Typed multi-dimensional array (Karray CCP) — a thin handle over the Rust
     CcpIdent (no cached layout). Declare element fields with `kaf()` on a subclass;
     the constructor is `(backing, shape=(1,), name=None)` where `backing` is a
@@ -129,132 +79,6 @@ class Karray:
 
     def __getitem__(self, key) -> KarrayRef:
         return KarrayRef(self._ident)[key]
-
-    # ---- generic callback-driven reduce (algorithm lives in Rust) ----------
-    def reduce(self, dims, select_fn=None, fields=None, request_index=False):
-        """Reduce elements to a single winner via user select function(s). `dims` has
-        one entry per dimension: an int pins it; `Reduce` / `Reduce(fn)` folds it. Each
-        folded dim reduces with its own `Reduce(fn)` (or the shared `select_fn`), and
-        folded dims are reduced innermost-first (e.g. `[Reduce(fn_row), Reduce(fn_col)]`
-        reduces cols within each row, then rows).
-
-        For each compared pair the dim's fn is called as `fn(a, b, level)`, where `a`/`b`
-        are `ReduceView`s (`.fields` dict, `.indices`). It returns either a 1-bit signal
-        (true picks `a`), or `(select, {name: signal})` whose extras are added to the
-        merged node and visible to the next layer's fn.
-
-        `fields` limits which karray fields are carried (default: all). Returns the
-        winner as a scalar `KarrayRef` (read as `winner.field`); with
-        `request_index=True` returns `(winner, coords)` where `coords` is a list of the
-        winner's index signal per folded dim (in dimension order). Reg/Wire only.
-
-        The reduce ALGORITHM (nesting, the 2:1 tree, extras, per-dim coords) runs in
-        Rust (`karray_reduce::reduce_run`); this method only classifies `dims` and wraps
-        each select fn so the Rust core can call it back."""
-        enc, raw_fns = self._classify_dims(dims, select_fn)
-        kfields      = list(fields) if fields is not None else [name for (name, _w) in type(self).__karray_fields__]
-
-        res_ccp, coord_hcps = _session.arena().karray_reduce(self._ident, enc, raw_fns, kfields, bool(request_index))
-        res = KarrayRef(res_ccp, [0])                    # scalar winner -> read as winner.field
-        if request_index:
-            return res, [SignalRef(h) for h in coord_hcps]
-        return res
-
-    # Turn `dims` into the per-dimension encoding the Rust core wants:
-    #   int       -> (enc=index,  fn=None)            pins the dim
-    #   Reduce/(fn)-> (enc=None,   fn=raw callback)   folds the dim
-    # Returns (enc, raw_fns), both one entry per dimension.
-    def _classify_dims(self, dims, select_fn):
-        enc, raw_fns, have_fold = [], [], False
-        for i, d in enumerate(dims):
-            if isinstance(d, _Reduce):
-                fn = d.fn or select_fn
-                if fn is None:
-                    raise TypeError(f"reduce dim {i}: give a select fn via Reduce(fn) or the select_fn arg")
-                enc.append(None)
-                raw_fns.append(self._wrap_select(fn))
-                have_fold = True
-            elif isinstance(d, int):
-                enc.append(int(d))
-                raw_fns.append(None)
-            else:
-                raise TypeError("reduce dim must be an int (pin) or Reduce / Reduce(fn) (fold)")
-        if not have_fold:
-            raise ValueError("reduce needs at least one Reduce (folded) dimension")
-        return enc, raw_fns
-
-    # Wrap a user select fn into the raw callback the Rust core invokes: build the
-    # ReduceViews, call the user fn, return (select_hcp, [(name, extra_hcp)]).
-    @staticmethod
-    def _wrap_select(user_fn):
-        # Adapter between the Rust core and the user's select fn. The Rust core calls
-        # `_raw` per compared pair with RAW handles (HcpIdent), not DSL objects; `_raw`
-        # dresses them up for the user and undresses the user's result back to handles.
-        def _raw(a_fields, a_indices, b_fields, b_indices, level):
-            # raw side -> friendly: each side's fields arrive as [(name, HcpIdent)];
-            # wrap them as SignalRefs so the user can write `a.fields['data'] >= ...`.
-            a = ReduceView(a_indices, {n: SignalRef(h) for (n, h) in a_fields})
-            b = ReduceView(b_indices, {n: SignalRef(h) for (n, h) in b_fields})
-
-            # call the user's select fn; it returns either a bare select signal, or
-            # `(select, {name: signal})` to also carry extra wires to the next layer.
-            ret = user_fn(a, b, level)
-            if isinstance(ret, tuple):
-                select, extras = ret
-            else:
-                select, extras = ret, {}
-
-            # friendly side -> raw: hand the Rust core back plain HcpIdents — the 1-bit
-            # select-left, and the extras as a [(name, HcpIdent)] list. `to_ref` accepts
-            # a SignalRef/expr (and a Karray field read) and `._ident` is its HcpIdent.
-            return to_ref(select)._ident, [(str(n), to_ref(s)._ident) for n, s in extras.items()]
-        return _raw
-
-    # ---- custom callback-driven dynamic assign (algorithm lives in Rust) ----
-    def cus_dynamic_assign(self, dims, src, write_fn, clocked=True):
-        """Write `src` into elements chosen by a user `write_fn`, exposing the element's
-        static coordinate. `dims` has one entry per dimension: an int pins it; `Spread`
-        fans it out. `src` is a `{field_name: source}` mapping (sources matched to fields
-        by name, full-width). For each spread element the core calls `write_fn(view)`,
-        where `view.coord` is the element's static coordinate; it must return a 1-bit
-        write-enable signal. The element is written from `src` only when that enable is
-        high (others hold) — so close over whatever runtime index signal you like
-        (binary, one-hot, range, …) to build the enable. Reg-backed `|=` only.
-
-        The fan-out ALGORITHM runs in Rust (`karray_dynamic_assign_run::write_run`); this
-        method only classifies `dims` and wraps `write_fn` so the Rust core can call it
-        back per element."""
-        enc     = self._classify_write_dims(dims)
-        sources = [(str(name), to_ref(val)._ident) for name, val in src.items()]
-        raw_fn  = self._wrap_write(write_fn)
-        _session.arena().karray_cus_dynamic_assign(self._ident, enc, raw_fn, sources, clocked)
-
-    # Turn `dims` into the per-dimension encoding the Rust core wants:
-    #   int     -> index   (pins the dim)
-    #   Spread  -> None    (fans the dim out)
-    # Returns the encoding list (one entry per dimension); needs >= 1 Spread.
-    def _classify_write_dims(self, dims):
-        enc, have_spread = [], False
-        for i, d in enumerate(dims):
-            if isinstance(d, _Spread):
-                enc.append(None)
-                have_spread = True
-            elif isinstance(d, int):
-                enc.append(int(d))
-            else:
-                raise TypeError("cus_dynamic_assign dim must be an int (pin) or Spread")
-        if not have_spread:
-            raise ValueError("cus_dynamic_assign needs at least one Spread dimension")
-        return enc
-
-    # Wrap a user write fn into the raw callback the Rust core invokes per element: build
-    # the WriteView from the raw coord, call the user fn, return the write-enable HcpIdent.
-    @staticmethod
-    def _wrap_write(user_fn):
-        def _raw(coord):
-            view = WriteView(list(coord))
-            return to_ref(user_fn(view))._ident
-        return _raw
 
     # Whole-array karray-to-karray assignment (`dst |= src`). The subscript lands on
     # a plain name, so return `self` to keep the variable bound (subscripted forms

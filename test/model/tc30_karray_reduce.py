@@ -1,7 +1,7 @@
 # tc30 — Karray callback-driven reduce. A reg-backed register file
 #   rf element = {valid:1, data:8}, shape (4,)
 # is filled with known data, then reduced to a single winner by a USER select
-# function called per compared pair (host `reduce_*` / connector `karray_reduce`):
+# function called per compared pair (host `reduce_*` / connector `karray_dynamic_reduce_get`):
 #   * pick_max   : a.data >= b.data                       -> element with max data
 #   * pick_valid : a.valid & (~b.valid | a.data>=b.data)  -> max data AMONG VALID ones
 # pick_valid proves the callback consumes BOTH fields: the global max (0x99) is

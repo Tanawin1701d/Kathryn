@@ -7,8 +7,9 @@
 #                   Only the matching element's enable is high, every other holds —
 #                   so writing all four with distinct values proves the callback path
 #                   and coord exposure route writes correctly and never cross-clobber.
-#   * range : one extra write with we = (thr > coord[0]) (thr = const 2) drives a
-#             SENTINEL into elements 0 and 1 only — a multi-element custom enable —
+#   * range : one extra write over a dim-level slice [0, THR) (THR = 2) with an
+#             always-high write-enable drives a SENTINEL into elements 0 and 1 only —
+#             so the RANGE itself (not a callback filter) restricts the fan-out —
 #             into a separate regfile so the per-element checks stay deterministic.
 
 from __future__ import annotations
@@ -53,6 +54,7 @@ class tc33_karray_cus_dynamic_assign(Module):
         self.seli = [val(2, i, f"seli{i}") for i in range(4)]
         self.c_sn = val(8, SENTINEL, "c_sn")
         self.thr  = val(8, THR, "thr")
+        self.we_hi = val(1, 1, "we_hi")           # always-high enable for the range write
 
         # read both regfiles' elements back to outputs
         self.o_d = [reg(8, f"o_d{i}") for i in range(4)]
@@ -79,10 +81,11 @@ class tc33_karray_cus_dynamic_assign(Module):
                     lambda v, i=i: self.seli[i] == v.coord[0],
                 )
 
-            # multi-element custom enable: write SENTINEL where THR > coord[0] (cols 0,1)
+            # dim-level range: fan out only over cols [0, THR) with an always-high
+            # write-enable, so the RANGE restricts the write to cols 0,1 (2,3 untouched)
             self.rg.cus_dynamic_assign(
-                [Spread], {"data": self.c_sn},
-                lambda v: self.thr > v.coord[0],
+                [slice(0, THR)], {"data": self.c_sn},
+                lambda v: self.we_hi,
             )
 
             for i in range(4):

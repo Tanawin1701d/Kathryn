@@ -209,13 +209,13 @@ class KarrayRef:
             raise TypeError("whole-element Karray assign needs a {field_name: source} mapping "
                             "(per-field, not a packed bit-vector)")
         sources = [(str(name), to_ref(val)._ident) for name, val in src.items()]
-        _session.arena().karray_static_index_assign_element(self._ident, self._int_indices(), sources, expect_clocked)
+        _session.arena().karray_static_index_assign_hcps(self._ident, self._int_indices(), sources, expect_clocked)
 
     # ---- dynamic-index assignment (runtime-selected element) ----------------
     def _assign_one_field_dynamic(self, src: SignalRef, clocked: bool) -> None:
         # Single field target: write `src` into this field of the runtime-selected element.
         sources = [(str(self._field), src._ident)]
-        _session.arena().karray_dynamic_index_assign_element(
+        _session.arena().karray_dynamic_index_assign_hcps(
             self._ident, self._dyn_selectors(), sources, clocked)
 
     def _assign_element_from_map_dynamic(self, src, clocked: bool) -> None:
@@ -225,7 +225,7 @@ class KarrayRef:
             raise TypeError("whole-element dynamic Karray assign needs a {field_name: source} mapping "
                             "(per-field, not a packed bit-vector)")
         sources = [(str(name), to_ref(val)._ident) for name, val in src.items()]
-        _session.arena().karray_dynamic_index_assign_element(
+        _session.arena().karray_dynamic_index_assign_hcps(
             self._ident, self._dyn_selectors(), sources, clocked)
 
     def __ior__(self, src: Union[SignalRef, "KarrayRef", "Karray"]):

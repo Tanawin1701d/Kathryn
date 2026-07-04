@@ -1,4 +1,4 @@
-use crate::model::complex_hardware::karray::karray_dynamic_cus_assign::WriteDim;
+use crate::model::complex_hardware::karray::karray_dyn_sel::DynWrCusDim;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 
 // ===== The cus_dynamic_assign driver =========================================
@@ -32,21 +32,23 @@ pub trait WriteEnv {
     fn gen_and_attach_asm_node(&mut self) -> Result<(), Self::Err>;
 }
 
-/// Drive the cus_dynamic_assign fan-out. `dim_sels` marks pin/spread per dimension;
-/// a `Pin` fixes its index and descends, a `Spread` iterates its extent. At each
-/// fully-pinned coordinate the user's callback supplies the write-enable, then the
-/// element is committed. One joined node is attached at the end.
-pub fn write_run<E: WriteEnv>(env: &mut E, dim_sels: &[WriteDim], shape: &[usize]) -> Result<(), E::Err> {
+/// Drive the cus_dynamic_assign fan-out. `dim_sels` marks pin/range/spread per
+/// dimension; a `Pin` fixes its index and descends, a `Range` iterates `[start, stop)`,
+/// a `Spread` iterates the full extent. At each fully-pinned coordinate the user's
+/// callback supplies the write-enable, then the element is committed. One joined node
+/// is attached at the end.
+pub fn write_run<E: WriteEnv>(env: &mut E, dim_sels: &[DynWrCusDim], shape: &[usize]) -> Result<(), E::Err> {
     let mut coord = Vec::with_capacity(dim_sels.len());
     write_dim(env, dim_sels, shape, 0, &mut coord)?;
     env.gen_and_attach_asm_node()
 }
 
-// Resolve dimension `dim_idx`: a `Pin` fixes its index and recurses; a `Spread`
-// fans out over its extent. At the leaf, ask for the write-enable then commit.
+// Resolve dimension `dim_idx`: a `Pin` fixes its index and recurses; a `Range`
+// fans out over `[start, stop)`; a `Spread` fans out over the full extent. At the
+// leaf, ask for the write-enable then commit.
 fn write_dim<E: WriteEnv>(
     env     : &mut E,
-    dim_sels: &[WriteDim],
+    dim_sels: &[DynWrCusDim],
     shape   : &[usize],
     dim_idx : usize,
     coord   : &mut Vec<usize>,
@@ -55,19 +57,17 @@ fn write_dim<E: WriteEnv>(
         let we = env.callback_user_enable(coord)?;
         return env.gen_user_asm_meta(coord, we);
     }
-    match dim_sels[dim_idx] {
-        WriteDim::Pin(i) => {
-            coord.push(i);
-            write_dim(env, dim_sels, shape, dim_idx + 1, coord)?;
-            coord.pop();
-        }
-        WriteDim::Spread => {
-            for i in 0..shape[dim_idx] {
-                coord.push(i);
-                write_dim(env, dim_sels, shape, dim_idx + 1, coord)?;
-                coord.pop();
-            }
-        }
+    // Resolve every mode to a fan-out span: Pin is the single index, Range is
+    // [start, stop), Spread is the whole dim (== Range{0, None}).
+    let (start, stop) = match dim_sels[dim_idx] {
+        DynWrCusDim::Pin(i)                => (i, i + 1),
+        DynWrCusDim::Range { start, stop } => (start, stop.unwrap_or(shape[dim_idx])),
+        DynWrCusDim::Spread                => (0, shape[dim_idx]),
+    };
+    for i in start..stop {
+        coord.push(i);
+        write_dim(env, dim_sels, shape, dim_idx + 1, coord)?;
+        coord.pop();
     }
     Ok(())
 }

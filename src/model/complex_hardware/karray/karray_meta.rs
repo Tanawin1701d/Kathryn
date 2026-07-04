@@ -11,6 +11,11 @@ pub struct KarrayField {
 impl KarrayField {
     pub fn get_name (&self) -> &str { &self.name }
     pub fn get_width(&self) -> i32  { self.width }
+
+    // Two fields pair up (for karray-to-karray assignment) on exact name + width.
+    pub fn matches(&self, other: &KarrayField) -> bool {
+        self.name == other.name && self.width == other.width
+    }
 }
 
 /// The record layout of a Karray element: an ordered list of fields. The total

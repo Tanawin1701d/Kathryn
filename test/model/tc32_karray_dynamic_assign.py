@@ -1,7 +1,7 @@
 # tc32 — Karray dynamic (runtime-signal) element WRITE (the mirror of tc29's read).
 #   rf element = {valid:1, data:8}, shape (4,), reg-backed
 # Each element is written through a DYNAMIC index so the per-element write-enable
-# decode (host `dynamic_assign_element`) is exercised end to end:
+# decode (host `dynamic_assign_hcps`) is exercised end to end:
 #   * binary address : rf[bsel0].data |= D0 and rf[bsel2].data |= D2 (bsel = const 0/2)
 #                      -> proves the (sel == k) enable routes the write to one element
 #                         (and only that one — element 1 / 3 are written by the other

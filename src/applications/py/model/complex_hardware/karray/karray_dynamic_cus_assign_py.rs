@@ -1,42 +1,48 @@
 // Python mirror of `complex_hardware::karray::karray_dynamic_cus_assign_run`. The
 // fan-out ALGORITHM lives in the host (`write_run`); this file wires it to Python: the
-// `karray_cus_dynamic_assign` pymethod sets things up, and `PyWriteEnv` implements
+// `karray_dynamic_cus_assign` pymethod sets things up, and `PyWriteEnv` implements
 // `WriteEnv` over the arena. Mirrors `karray_dynamic_reduce_get_py.rs`.
 
 use pyo3::prelude::*;
-use pyo3::exceptions::{PyTypeError, PyValueError};
 use super::super::super::model_arena::PyModelArena;
 use super::super::super::hw_component::common::hcp_ident_py::PyHcpIdent;
 use super::super::ccp_ident_py::PyCcpIdent;
+use super::karray_util_py::{karray_err_to_py, warn_skipped_fields};
 use crate::model::complex_hardware::common::ccp_ident::CcpIdent;
-use crate::model::complex_hardware::karray::{write_run, KarrayAsmErr, WriteDim, WriteEnv};
+use crate::model::complex_hardware::karray::{write_run, DynWrCusDim, WriteEnv};
 use crate::model::hw_component::common::assign_meta::AssignMeta;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 
 #[pymethods]
 impl PyModelArena {
     // Custom callback-driven dynamic assign. The ALGORITHM lives in the host
-    // (`karray_dynamic_assign_run::write_run`); this method wires it to Python via the
-    // `WriteEnv` impl below. `dims`: Some(i) pins a dimension, None spreads it (fans
-    // out). `raw_fn` is a Python callable `(coord: list[int]) -> write_enable` returning
-    // a 1-bit signal that gates element `coord`'s write of `sources`. Reg-backed +
+    // (`karray_dynamic_cus_assign_run::write_run`); this method wires it to Python via the
+    // `WriteEnv` impl below. `dims` carries one `(start, stop, is_range)` selector per
+    // dimension (same triple as the static side): `(i, _, false)` pins index i,
+    // `(s, stop, true)` fans out over `[s, stop)` (a bare Spread is `(0, None, true)`).
+    // `raw_fn` is a Python callable `(coord: list[int]) -> write_enable` returning a
+    // 1-bit signal that gates element `coord`'s write of `sources`. Reg-backed +
     // clocked only — `expect_clocked == Some(false)` is a TypeError.
     //
     // Takes `slf: &Bound<..>` (NOT &mut self) so the arena pyclass is not borrowed for
     // the method's duration: every WriteEnv arena op borrows in a SCOPED block, and the
     // borrow is dropped before each `enable` callback runs — so the callback may re-enter
     // the arena to build its write-enable expression without an "already borrowed" error.
-    fn karray_cus_dynamic_assign(
+    fn karray_dynamic_cus_assign(
         slf     : &Bound<'_, PyModelArena>,
         py      : Python<'_>,
         karray_i: PyCcpIdent,
-        dims    : Vec<Option<usize>>,
+        dims    : Vec<(usize, Option<usize>, bool)>,
         raw_fn  : Py<PyAny>,
         sources : Vec<(String, PyHcpIdent)>,
         clocked : bool,
     ) -> PyResult<()> {
-        let dim_sels: Vec<WriteDim> = dims.into_iter()
-            .map(|d| match d { Some(i) => WriteDim::Pin(i), None => WriteDim::Spread })
+        let dim_sels: Vec<DynWrCusDim> = dims.into_iter()
+            .map(|(start, stop, is_range)| match (is_range, start, stop) {
+                (false, s, _)   => DynWrCusDim::Pin(s),
+                (true, 0, None) => DynWrCusDim::Spread,
+                (true, s, st)   => DynWrCusDim::Range { start: s, stop: st },
+            })
             .collect();
         let karray_i: CcpIdent = karray_i.into();
         let sources: Vec<(String, HcpIdent)> =
@@ -46,19 +52,11 @@ impl PyModelArena {
         let (shape, resolved_src) = {
             let mut me = slf.borrow_mut();
             let karray   = me.arena.take_karray(karray_i);
-            let prepared = karray.write_prepare(&dim_sels, &sources, clocked);
+            let prepared = karray.write_cus_prepare(&dim_sels, &sources, clocked);
             me.arena.replace_back_karray(karray);
-            match prepared {
-                Ok((shape, resolved, skipped)) => {
-                    if !skipped.is_empty() {
-                        let msg = format!("cus_dynamic_assign: skipped sources with no matching field: {skipped:?}");
-                        py.import("warnings")?.call_method1("warn", (msg,))?;
-                    }
-                    (shape, resolved)
-                }
-                Err(KarrayAsmErr::Type (m)) => return Err(PyTypeError ::new_err(m)),
-                Err(KarrayAsmErr::Value(m)) => return Err(PyValueError::new_err(m)),
-            }
+            let (shape, resolved, skipped) = prepared.map_err(karray_err_to_py)?;
+            warn_skipped_fields(py, "cus_dynamic_assign: skipped sources with no matching field", &skipped)?;
+            (shape, resolved)
         };
 
         let mut env = PyWriteEnv { slf, karray_i, raw_fn, resolved_src, metas: Vec::new() };
@@ -89,7 +87,7 @@ impl WriteEnv for PyWriteEnv<'_, '_> {
     fn gen_user_asm_meta(&mut self, coord: &[usize], we: HcpIdent) -> PyResult<()> {
         let mut me = self.slf.borrow_mut();
         let karray = me.arena.take_karray(self.karray_i);
-        karray.gen_dyn_asm_meta(coord, &self.resolved_src, Some(we), &mut self.metas, &mut me.arena);
+        karray.gen_element_asm_metas(coord, &self.resolved_src, Some(we), &mut self.metas, &mut me.arena);
         me.arena.replace_back_karray(karray);
         Ok(())
     }

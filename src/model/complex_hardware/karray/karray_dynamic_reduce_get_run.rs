@@ -1,6 +1,7 @@
 use crate::model::complex_hardware::common::ccp_ident::CcpIdent;
 use crate::model::complex_hardware::karray::karray_meta::index_width_for;
-use crate::model::complex_hardware::karray::karray_dynamic_reduce_get::{NamedHcp, ReduceDim};
+use crate::model::complex_hardware::karray::karray_dynamic_reduce_get::NamedHcp;
+use crate::model::complex_hardware::karray::karray_dyn_sel::DynRdReduceDim;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 
 // ===== The reduce driver =====================================================
@@ -53,7 +54,7 @@ pub trait ReduceEnv {
 
 // The fixed inputs of one reduce, threaded through the recursion by reference.
 struct Plan<'a> {
-    dim_sels     : &'a [ReduceDim],
+    dim_sels     : &'a [DynRdReduceDim],
     shape        : &'a [usize],
     field_names  : &'a [String],
     request_index: bool,
@@ -83,7 +84,7 @@ impl WorkNode {
 /// dim order).
 pub fn reduce_run<E: ReduceEnv>(
     env          : &mut E,
-    dim_sels     : &[ReduceDim],
+    dim_sels     : &[DynRdReduceDim],
     shape        : &[usize],
     field_names  : &[String],
     request_index: bool,
@@ -113,13 +114,13 @@ fn reduce_dim<E: ReduceEnv>(env: &mut E, plan: &Plan, dim_idx: usize, coord: &mu
         return Ok(WorkNode::leaf(coord.clone(), fields, ndim));
     }
     match plan.dim_sels[dim_idx] {
-        ReduceDim::Pin(i) => {
+        DynRdReduceDim::Pin(i) => {
             coord.push(i);
             let node = reduce_dim(env, plan, dim_idx + 1, coord)?;
             coord.pop();
             Ok(node)
         }
-        ReduceDim::Fold => {
+        DynRdReduceDim::Fold => {
             let dim_extent = plan.shape[dim_idx];
             let idx_width  = index_width_for(dim_extent);
             let mut children = Vec::with_capacity(dim_extent);
@@ -189,8 +190,8 @@ fn mux_pair<E: ReduceEnv>(env: &mut E, plan: &Plan, dim: usize, level: u32, a: W
 // ---- small helpers ----------------------------------------------------------
 
 // Indices of the dimensions to fold (reduce over).
-fn folded_dims(dim_sels: &[ReduceDim]) -> Vec<usize> {
-    (0..dim_sels.len()).filter(|&d| dim_sels[d] == ReduceDim::Fold).collect()
+fn folded_dims(dim_sels: &[DynRdReduceDim]) -> Vec<usize> {
+    (0..dim_sels.len()).filter(|&d| dim_sels[d] == DynRdReduceDim::Fold).collect()
 }
 
 // The winner's index signal per folded dim, in ascending dim order (empty unless requested).

@@ -1,8 +1,9 @@
 use crate::model::common::identifier::Identifiable;
 use crate::model::complex_hardware::common::ccp_ident::CcpIdent;
 use crate::model::complex_hardware::karray::karray::Karray;
-use crate::model::complex_hardware::karray::karray_dynamic_get::{mux_into_wire, pack_scalar_karray};
-use crate::model::complex_hardware::karray::karray_region_sel::KarrayAsmErr;
+use crate::model::complex_hardware::karray::karray_dyn_sel::DynRdReduceDim;
+use crate::model::complex_hardware::karray::karray_hw_build::{mux_into_wire, pack_scalar_karray};
+use crate::model::complex_hardware::karray::karray_static_sel::KarrayAsmErr;
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
 use crate::model::model_arena::ModelArena;
 
@@ -22,14 +23,8 @@ use crate::model::model_arena::ModelArena;
 /// A named signal carried through the reduce — a karray field or a user extra.
 pub type NamedHcp = (String, HcpIdent);
 
-/// Per-dimension reduce plan: pin to one index, or fold (reduce over its extent).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ReduceDim {
-    Pin (usize),
-    Fold,
-}
-
-// (The `ReduceEnv` trait + the `reduce_run` algorithm live in `karray_dynamic_reduce_get_run.rs`.)
+// (The per-dimension `DynRdReduceDim` plan lives in `karray_dyn_sel.rs`; the `ReduceEnv`
+//  trait + the `reduce_run` algorithm live in `karray_dynamic_reduce_get_run.rs`.)
 
 // ---- arena building blocks (the connector's ReduceEnv impl calls these) ------
 
@@ -39,7 +34,7 @@ impl Karray {
     /// indices. Returns `(shape, field_idxs)` for the recursive driver to fan over; an
     /// unknown field name is a `Value` error.
     ///
-    pub fn reduce_prepare(&self, field_names: &[String], dim_sels: &[ReduceDim])
+    pub fn reduce_prepare(&self, field_names: &[String], dim_sels: &[DynRdReduceDim])
         -> Result<(Vec<usize>, Vec<usize>), KarrayAsmErr> {
                ///   ^-------------^----- shape of karray
                ///                 |---------- field idx
@@ -48,12 +43,12 @@ impl Karray {
             "reduce: only Reg- or Wire-backed Karrays support reduce, got {:?}", self.get_backing());
 
         // step2: one selector per dimension.
-        assert_eq!(dim_sels.len(), self.get_dim_size(),
-            "reduce: expected {} dim selectors (one per dimension), got {}", self.get_dim_size(), dim_sels.len());
+        assert_eq!(dim_sels.len(), self.get_dim_count(),
+            "reduce: expected {} dim selectors (one per dimension), got {}", self.get_dim_count(), dim_sels.len());
 
         // step3: every pinned index must be within its dimension.
         for (d, sel) in dim_sels.iter().enumerate() {
-            if let ReduceDim::Pin(i) = sel {
+            if let DynRdReduceDim::Pin(i) = sel {
                 assert!(*i < self.get_shape()[d],
                     "reduce: pinned index {i} out of bounds for dim {d} of size {}", self.get_shape()[d]);
             }

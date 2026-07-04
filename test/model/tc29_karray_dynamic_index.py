@@ -1,7 +1,7 @@
 # tc29 — Karray dynamic (runtime-signal) element read. A reg-backed register file
 #   rf element = {valid:1, data:8}, shape (4,)
 # is filled with known data, then read back through DYNAMIC indices that resolve to
-# a balanced 2:1 mux tree (host `dynamic_index_get_Karray`):
+# a balanced 2:1 mux tree (host `dynamic_index_get`):
 #   * binary address  : rf[bsel_i].data for every i in 0..4  -> proves the binary
 #                        decode picks the right element at all four addresses
 #                        (bsel=2 = 0b10 exercises a non-zero MSB, not just index 0)
