@@ -12,6 +12,7 @@
 #include"simAutoInterface.h"
 #include"testCase/autoTestInterface.h"
 #include "util/termColor/termColor.h"
+#include "util/testReport/testReport.h"
 
 namespace kathryn{
 

@@ -8,6 +8,7 @@
 
 #include "simInterface.h"
 #include "params/simParam.h"
+#include "util/testReport/testReport.h"
 
 
 namespace kathryn{
@@ -196,25 +197,28 @@ namespace kathryn{
 
     void SimInterface::testAndPrint(const std::string& testName, ValRepBase& simValLhs, ValRepBase& testValRhs) {
 
-        if (simValLhs.getVal() == testValRhs.getVal()){
+        bool pass = simValLhs.getVal() == testValRhs.getVal();
+        std::string detail = "expect: " + std::to_string(testValRhs.getVal())
+                           + "  got: " + std::to_string(simValLhs.getVal());
+        if (pass){
             std::cout << TC_GREEN << testName << " pass " << TC_DEF << std::endl;
         }else{
-            std::cout << TC_RED << testName << " fail expect: "
-                      << std::to_string(testValRhs.getVal()) << "  got : "
-                      << std::to_string(simValLhs.getVal())  << TC_DEF << std::endl;
+            std::cout << TC_RED << testName << " fail " << detail << TC_DEF << std::endl;
         }
+        TestReport::instance().record(testName, pass, pass ? "" : detail);
     }
 
     void SimInterface::testAndPrint(const std::string& testName, ull simVal, ull expect) {
 
-        if (simVal == expect) {
+        bool pass = simVal == expect;
+        std::string detail = "expect: " + std::to_string(expect)
+                           + "  got: " + std::to_string(simVal);
+        if (pass) {
             std::cout << TC_GREEN << testName << " pass " << TC_DEF << std::endl;
         } else {
-            std::cout << TC_RED << testName << " fail expect: "
-                      << expect << "  got : "
-                      << simVal << TC_DEF << std::endl;
+            std::cout << TC_RED << testName << " fail " << detail << TC_DEF << std::endl;
         }
-
+        TestReport::instance().record(testName, pass, pass ? "" : detail);
     }
 
 
