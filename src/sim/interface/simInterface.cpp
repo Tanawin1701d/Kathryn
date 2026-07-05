@@ -5,6 +5,9 @@
 #include <iostream>
 
 #include <utility>
+#include <vector>
+#include <cstdio>
+#include <algorithm>
 
 #include "simInterface.h"
 #include "params/simParam.h"
@@ -214,6 +217,34 @@ namespace kathryn{
         std::string detail = "expect: " + std::to_string(expect)
                            + "  got: " + std::to_string(simVal);
         if (pass) {
+            std::cout << TC_GREEN << testName << " pass " << TC_DEF << std::endl;
+        } else {
+            std::cout << TC_RED << testName << " fail " << detail << TC_DEF << std::endl;
+        }
+        TestReport::instance().record(testName, pass, pass ? "" : detail);
+    }
+
+    void SimInterface::testAndPrint(const std::string& testName,
+                                    const std::vector<ull>& simVal,
+                                    const std::vector<ull>& expect) {
+        size_t n = std::max(simVal.size(), expect.size());
+        bool pass = true;
+        for (size_t i = 0; i < n; i++){
+            ull a = (i < simVal.size()) ? simVal[i] : 0;
+            ull b = (i < expect.size()) ? expect[i] : 0;
+            if (a != b){ pass = false; break; }
+        }
+        auto hex = [](const std::vector<ull>& v){
+            std::string s = "0x";
+            for (int i = (int)v.size() - 1; i >= 0; i--){
+                char buf[24];
+                snprintf(buf, sizeof buf, "%016llX", (unsigned long long)v[i]);
+                s += buf;
+            }
+            return s;
+        };
+        std::string detail = "expect: " + hex(expect) + "  got: " + hex(simVal);
+        if (pass){
             std::cout << TC_GREEN << testName << " pass " << TC_DEF << std::endl;
         } else {
             std::cout << TC_RED << testName << " fail " << detail << TC_DEF << std::endl;

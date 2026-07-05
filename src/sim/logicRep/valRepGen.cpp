@@ -73,7 +73,11 @@ ValRepBase genWithBase(int baseRange,
     int continLength   = (amtByte + sizeof(ull)-1)  / sizeof(ull);
     int amtAlignedByte = 1 << log2Ceil(amtByte); ///// at double scale
 
-    ull* dayta = new ull[result.size()];
+    //// allocate the full declared word count (not just the significant words) and
+    //// zero-fill, so the high words the ValRepBase advertises via continLength are
+    //// real, initialized memory — otherwise reads of the top word are out-of-bounds.
+    int wordCount = std::max((int)result.size(), continLength);
+    ull* dayta = new ull[wordCount]();
     std::copy(result.begin(), result.end(), dayta);
     ValRepBase ret(std::min(amtAlignedByte, 8), dayta);
 

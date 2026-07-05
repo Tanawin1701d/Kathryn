@@ -14,7 +14,8 @@ endif ()
 
 
 
-add_definitions(-DNOTEXCEED64)
+####### -DNOTEXCEED64 removed: >64-bit values are now supported end-to-end
+####### (re-enables the wide auto-sim cases simAutoTest9/12/13/22)
 add_compile_definitions(KATHRYN_PROJ_FOLD_PATH=${CMAKE_SOURCE_DIR})
 
 INCLUDE_DIRECTORIES( ./src )

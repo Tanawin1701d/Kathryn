@@ -74,6 +74,10 @@ namespace kathryn{
     std::string cvtNum2HexStr(ull x);
     std::string cvtNum2BinStr(ull x);
 
+    /** wide (>64-bit) literal helpers (LSB-first ull words). */
+    std::vector<ull> parseLiteralToWords(const std::string& lit, int width);
+    std::string      cvtWordsToVerilogLiteral(const std::vector<ull>& words, int width);
+
 
 
 }

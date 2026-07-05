@@ -74,18 +74,11 @@ namespace kathryn{
 
 
             incCycle(6);
-//            sim {
-//                ValRep testVal = NumConverter::cvtStrToValRep(67, 0b100, 0);
-//                testAndPrint("check shifting from slicing", _md->a.sv(), testVal);
-//            };
-//            sim {
-//                ValRep testVal = NumConverter::cvtStrToValRep(8, 2 + 6*2);
-//                testAndPrint("check base line function", _md->a.sv(), testVal);
-//            };
-//            sim{
-//                ValRep testVal = NumConverter::cvtStrToValRep(8, 48 - 6*2);
-//                testAndPrint("check bascheck base line functione line function", _md->b.sv(), testVal);
-//            };
+            sim {
+                //// a2 <<= BNK (=138) into a 67-bit reg -> {138, 0}. Deterministic and
+                //// independent of the 138-iteration loop timing (limitCycle-bound).
+                testAndPrint("wide const into 67-bit reg", _md->a2.v().getLargeVal(), {138ULL, 0ULL});
+            };
 
         }
 

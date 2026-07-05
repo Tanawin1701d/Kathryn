@@ -17,12 +17,9 @@ namespace kathryn{
 
 
     std::string ValueGen::getValStr() const{
-
-        if (_master->_rawValue == UINT64_MAX){
-            return "-1";
-        }
-
-        return std::to_string(_master->_rawValue);
+        //////// sized Verilog literal (<width>'h...), correct for any width incl. >64-bit
+        int width = _master->getOperableSlice().getSize();
+        return cvtWordsToVerilogLiteral(_master->getConstOprWide(), width);
     }
 
 

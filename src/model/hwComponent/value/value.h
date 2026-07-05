@@ -23,7 +23,8 @@ namespace kathryn{
         friend class ValueGen;
     protected:
         int    _size;
-        ull   _rawValue;
+        ull   _rawValue;                    //// low 64-bit word (fast path / getConstOpr)
+        std::vector<ull> _rawValueWide;     //// full value, LSB-first, ceil(size/64) words
         /***the actual value will be assigned to val rep*/
         void com_init() override;
 
@@ -31,7 +32,11 @@ namespace kathryn{
         /** todo we will make value save the value and range more precisly*/
         void com_final() override {};
 
-        explicit Val(int size, ull rawValue = 0);
+        /** primary ctor: LSB-first words (padded/truncated to ceil(size/64)). */
+        explicit Val(int size, std::vector<ull> words);
+        /** ull literal (fast path) and >64-bit string literal ("0x..","0b..",decimal). */
+        Val(int size, ull rawValue = 0);
+        Val(int size, const std::string& literal);
 
         /**
          * override assignable
@@ -68,6 +73,7 @@ namespace kathryn{
         Operable* doSlice(Slice sl) override;
         bool      isConstOpr() override{return true;}
         ull       getConstOpr() override{return _rawValue;}
+        const std::vector<ull>& getConstOprWide() const {return _rawValueWide;}
         Operable* checkShortCircuit() override;
 
         /**override logicc gen base*/
