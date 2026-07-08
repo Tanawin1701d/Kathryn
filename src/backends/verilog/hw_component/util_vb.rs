@@ -12,8 +12,12 @@ use crate::util::file::file_writer::FileWriter;
 // ---- Width / Slice helpers ----
 
 /// "[N-1:0] " for multi-bit, "" for 1-bit (caller appends signal name).
+/// 1-bit signals are declared scalar so simulators expose them as scalars
+/// (Verilator's VPI reports a `[0:0]` net as a 1-element vector, which breaks
+/// cocotb edge triggers; Icarus happens to flatten it).
 pub fn signal_width(size: i32) -> String {
-    let n = size - 1; 
+    if size <= 1 { return String::new(); }
+    let n = size - 1;
     format!("[{n}:0] ")
 }
 
@@ -72,26 +76,31 @@ pub fn fmt_init_var(var_type: String, var_name: String) -> String {
 /// Format one resolved operand as `"var_name[slice]"` (or just `"var_name"` for full-width).
 /// Resolves the Verilog name via `gen_var_name()` so per-type overrides are respected.
 ///
-/// `active_i` / `active_name`: the HCP the caller is currently processing — already taken
-/// from the arena, so it cannot be re-taken.  If `opr` is that same HCP (self-reference),
-/// `active_name` is used directly instead of an arena round-trip.
+/// `active_i` / `active_name` / `active_size`: the HCP the caller is currently processing —
+/// already taken from the arena, so it cannot be re-taken.  If `opr` is that same HCP
+/// (self-reference), `active_name` / `active_size` are used directly instead of an arena
+/// round-trip.
 pub fn fmt_operand(
     opr         : HcpIdent,
     slice       : Option<Slice>,
     arena       : &mut ModelArena,
     active_i    : HcpIdent,
     active_name : &str,
+    active_size : i32,
 ) -> String {
-    let var_name = if opr.get_global_id() == active_i.get_global_id() {
-        // Self-reference: HCP is already out of the arena — use the provided name.
-        active_name.to_string()
+    let (var_name, full_size) = if opr.get_global_id() == active_i.get_global_id() {
+        // Self-reference: HCP is already out of the arena — use the provided name/size.
+        (active_name.to_string(), active_size)
     } else {
+        let size = arena.get_hw_bit_sz(&opr);
         let vb   = arena.take_hcp_vb(opr);
         let name = vb.gen_var_name_vb();
         arena.replace_back_hcp_vb(vb);
-        name
+        (name, size)
     };
-    let sl = slice_to_verilog(&slice.unwrap_or_default());
+    // 1-bit signals are declared scalar (signal_width), so any slice on them must
+    // be elided — a part-select on a scalar net is illegal Verilog.
+    let sl = if full_size <= 1 { String::new() } else { slice_to_verilog(&slice.unwrap_or_default()) };
     format!("{var_name}{sl}")
 }
 
@@ -132,16 +141,17 @@ pub fn gen_procedure_blk(
     if pool.get_update_events().is_empty() { return; }
 
     let active_name = hcp.gen_var_name_vb();
+    let active_size = hcp.get_des_slice().get_size();
     let clk_mode    = pool.get_clock_mode(arena).unwrap_or(ClockMode::ClkFree);
     // Resolve the real per-module clock source name; fmt_operand guards self-reference.
     let clk_name    = pool.get_clk_src_i(arena)
-                          .map(|clk_i| fmt_operand(clk_i, None, arena, active_i, &active_name));
+                          .map(|clk_i| fmt_operand(clk_i, None, arena, active_i, &active_name, active_size));
     let sens        = sensitivity_list(clk_mode, clk_name.as_deref());
     let tmpl        = format!("{active_name}{{DES_SLICE}} <= {{SRC}};");
 
     fw.write(&format!("always @({sens}) begin\n"));
     for &ue_i in pool.get_update_events() {
-        transpile_ue(ue_i, vec![tmpl.clone()], 4, arena, active_i, &active_name, fw);
+        transpile_ue(ue_i, vec![tmpl.clone()], 4, arena, active_i, &active_name, active_size, fw);
     }
     fw.write("end\n");
 }

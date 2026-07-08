@@ -20,6 +20,7 @@ pub trait VerilogUpdateEvent {
         arena       : &mut ModelArena,
         active_i    : HcpIdent, // HCP currently taken from arena by the caller
         active_name : &str,     // gen_var_name() of active_i (can't re-take it)
+        active_size : i32,      // bit width of active_i (can't re-take it either)
         fw          : &mut FileWriter,
     );
 
@@ -38,10 +39,11 @@ pub fn transpile_ue(
     arena       : &mut ModelArena,
     active_i    : HcpIdent,
     active_name : &str,
+    active_size : i32,
     fw          : &mut FileWriter,
 ) {
     let ue = arena.take_ue_vb(ue_i);
-    ue.transpile(op_templates, front_space, arena, active_i, active_name, fw);
+    ue.transpile(op_templates, front_space, arena, active_i, active_name, active_size, fw);
     ue.replace_back_into_arena_vb(arena);
 }
 
@@ -56,13 +58,17 @@ impl VerilogUpdateEvent for UeBasic {
         arena       : &mut ModelArena,
         active_i    : HcpIdent,
         active_name : &str,
+        active_size : i32,
         fw          : &mut FileWriter,
     ) {
         let sp        = " ".repeat(front_space as usize);
-        let des_slice = slice_to_verilog(&self.get_des_slice());
+        // The destination is the active HCP; a 1-bit destination is declared
+        // scalar, so its slice must be elided (part-select on scalar is illegal).
+        let des_slice = if active_size <= 1 { String::new() }
+                        else { slice_to_verilog(&self.get_des_slice()) };
         // Resolve the source name via gen_var_name() — respects per-type name overrides.
         let src_str   = fmt_operand(
-            self.get_srci_val(), Some(self.get_src_slice()), arena, active_i, active_name,
+            self.get_srci_val(), Some(self.get_src_slice()), arena, active_i, active_name, active_size,
         );
 
         for tmpl in &op_templates {
@@ -89,10 +95,11 @@ impl VerilogUpdateEvent for UeGrp {
         arena       : &mut ModelArena,
         active_i    : HcpIdent,
         active_name : &str,
+        active_size : i32,
         fw          : &mut FileWriter,
     ) {
         for &sub_i in self.get_sub_stmts() {
-            transpile_ue(sub_i, op_templates.clone(), front_space, arena, active_i, active_name, fw);
+            transpile_ue(sub_i, op_templates.clone(), front_space, arena, active_i, active_name, active_size, fw);
         }
     }
 
@@ -114,6 +121,7 @@ impl VerilogUpdateEvent for UeCond {
         arena       : &mut ModelArena,
         active_i    : HcpIdent,
         active_name : &str,
+        active_size : i32,
         fw          : &mut FileWriter,
     ) {
         let sp = " ".repeat(front_space as usize);
@@ -127,7 +135,7 @@ impl VerilogUpdateEvent for UeCond {
             if i == 0 {
                 match cond_opt {
                     Some(c) => {
-                        let c_str = fmt_operand(*c, None, arena, active_i, active_name);
+                        let c_str = fmt_operand(*c, None, arena, active_i, active_name, active_size);
                         fw.write(&format!("{sp}if ({c_str}) begin\n"));
                     }
                     None    => fw.write(&format!("{sp}begin\n")),
@@ -135,7 +143,7 @@ impl VerilogUpdateEvent for UeCond {
             } else {
                 match cond_opt {
                     Some(c) => {
-                        let c_str = fmt_operand(*c, None, arena, active_i, active_name);
+                        let c_str = fmt_operand(*c, None, arena, active_i, active_name, active_size);
                         fw.write(&format!(" else if ({c_str}) begin\n"));
                     }
                     None    => fw.write(" else begin\n"),
@@ -144,7 +152,7 @@ impl VerilogUpdateEvent for UeCond {
 
             // ---- body ----
             if let Some(sub_i) = stmt_opt {
-                transpile_ue(*sub_i, op_templates.clone(), front_space + 4, arena, active_i, active_name, fw);
+                transpile_ue(*sub_i, op_templates.clone(), front_space + 4, arena, active_i, active_name, active_size, fw);
             }
 
             // ---- close branch ----
@@ -173,18 +181,19 @@ impl VerilogUpdateEvent for UeSwitch {
         arena       : &mut ModelArena,
         active_i    : HcpIdent,
         active_name : &str,
+        active_size : i32,
         fw          : &mut FileWriter,
     ) {
         let sp      = " ".repeat(front_space as usize);
         let case_sp = " ".repeat((front_space + 4) as usize);
-        let state   = fmt_operand(*self.get_state_iden(), None, arena, active_i, active_name);
+        let state   = fmt_operand(*self.get_state_iden(), None, arena, active_i, active_name, active_size);
         fw.write(&format!("{sp}case ({state})\n"));
 
         for i in 0..self.get_match_num() {
             let val = self.get_sub_stmt_match_idx(i);
             fw.write(&format!("{case_sp}{val}: begin\n"));
             if let Some(sub_i) = self.get_sub_stmt(i) {
-                transpile_ue(sub_i, op_templates.clone(), front_space + 8, arena, active_i, active_name, fw);
+                transpile_ue(sub_i, op_templates.clone(), front_space + 8, arena, active_i, active_name, active_size, fw);
             }
             fw.write(&format!("{case_sp}end\n"));
         }

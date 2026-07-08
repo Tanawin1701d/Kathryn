@@ -15,6 +15,7 @@ import sys
 import shutil
 import pathlib
 import importlib
+import subprocess
 from dataclasses import dataclass
 from typing import Callable
 from xml.etree import ElementTree
@@ -171,11 +172,73 @@ def _status_from_results(results_xml: pathlib.Path) -> str:
     return "FAIL" if n_bad else "PASS"
 
 
+# Per-simulator extra compile flags. Verilator treats lint warnings as fatal by
+# default; the emitted Verilog uses non-blocking `<=` in `always @(*)` blocks
+# (COMBDLY), so keep warnings non-fatal — matching iverilog's tolerance.
+_SIM_BUILD_ARGS = {
+    "verilator": ["-Wno-fatal"],
+}
+
+# cocotb 2.x needs Verilator >= 5.036 (its verilator.cpp uses newer VPI APIs).
+_VERILATOR_MIN   = (5, 36)
+_VERILATOR_CONDA = pathlib.Path.home() / "miniconda3" / "envs" / "verilator" / "bin"
+
+
+def _verilator_version(exe: str) -> tuple[int, int] | None:
+    # `verilator --version` → "Verilator 5.050 2025-..."; None when unparsable.
+    try:
+        out = subprocess.run([exe, "--version"], capture_output=True, text=True).stdout
+        m   = re.match(r"Verilator\s+(\d+)\.(\d+)", out)
+        return (int(m.group(1)), int(m.group(2))) if m else None
+    except OSError:
+        return None
+
+
+def _wheel_verilator_bin() -> pathlib.Path | None:
+    # The PyPI `verilator` wheel bundles the full install tree (perl driver,
+    # verilator_bin, headers) inside the package. Its binary prints no version
+    # number (`rev vUNKNOWN-built...`), so validate via the wheel metadata
+    # instead (e.g. "5.48.0" == Verilator 5.048).
+    try:
+        import verilator as _vl_pkg
+        from importlib.metadata import version
+        ver     = tuple(int(x) for x in version("verilator").split(".")[:2])
+        bin_dir = pathlib.Path(_vl_pkg.__file__).parent / "bin"
+    except Exception:                     # noqa: BLE001 — wheel absent/broken
+        return None
+    return bin_dir if ver >= _VERILATOR_MIN and (bin_dir / "verilator").is_file() else None
+
+
+def _ensure_verilator() -> None:
+    # A PATH verilator that is new enough wins; otherwise fall back to the PyPI
+    # wheel (`pip install verilator`), then a dedicated conda env, by prepending
+    # the chosen bin dir to PATH (cocotb resolves the tool via PATH).
+    exe = shutil.which("verilator")
+    if exe and (_verilator_version(exe) or (0, 0)) >= _VERILATOR_MIN:
+        return
+    bin_dir = _wheel_verilator_bin()
+    if bin_dir is None:
+        conda_exe = _VERILATOR_CONDA / "verilator"
+        if conda_exe.is_file() and (_verilator_version(str(conda_exe)) or (0, 0)) >= _VERILATOR_MIN:
+            bin_dir = _VERILATOR_CONDA
+    if bin_dir is not None:
+        os.environ["PATH"] = os.pathsep.join([str(bin_dir), os.environ.get("PATH", "")])
+        return
+    found = f"{exe} is too old" if exe else "none found in PATH"
+    raise RuntimeError(
+        f"verilator >= {_VERILATOR_MIN[0]}.{_VERILATOR_MIN[1]:03d} required by cocotb 2.x ({found}); "
+        "install one with: pip install verilator"
+    )
+
+
 def _make_runner(simulator: str):
     # icarus is the default; we use a VCD-emitting subclass (cocotb 2.x defaults
-    # icarus waves to FST). Any other simulator falls back to cocotb's stock runner.
+    # icarus waves to FST). verilator uses cocotb's stock runner after resolving
+    # a new-enough binary onto PATH. Anything else falls back to the stock runner.
     if simulator == "icarus":
         return _IcarusVCD()
+    if simulator == "verilator":
+        _ensure_verilator()
     from cocotb_tools.runner import get_runner
     return get_runner(simulator)
 
@@ -244,6 +307,7 @@ def _run_cases(cases: list[TestCase], simulator: str) -> list[CaseResult]:
                 verilog_sources = sources,
                 hdl_toplevel    = toplevel,
                 build_dir       = str(build_dir),
+                build_args      = _SIM_BUILD_ARGS.get(simulator, []),
                 always          = True,
                 waves           = True,
                 timescale       = ("1ns", "1ps"),
@@ -289,7 +353,9 @@ def _run_cases(cases: list[TestCase], simulator: str) -> list[CaseResult]:
 
             # The dump path is baked into the compiled sim, so each run rewrites the
             # same VCD; copy it out under the testcase name before the next run.
-            produced = build_dir / f"{toplevel}.vcd"
+            # The file name is simulator-specific (_IcarusVCD → <toplevel>.vcd,
+            # Verilator → dump.vcd), so ask the runner.
+            produced = build_dir / (runner._waves_file() or f"{toplevel}.vcd")
             if produced.exists():
                 shutil.copyfile(produced, out / f"{dc.name}.vcd")
 

@@ -619,8 +619,17 @@ Shared string helpers live in `util_vb.rs`:
 | `signal_width(size: i32)` | `"[N-1:0] "` for multi-bit, `""` for 1-bit |
 | `slice_to_verilog(s: &Slice)` | `"[stop-1:start]"` or `""` for default `{-1,-1}` |
 | `sensitivity_list(clk_mode)` | `"posedge clk"`, `"negedge clk"`, or `"*"` |
-| `fmt_operand(opr, slice, arena, active_i, active_name)` | `"var_name[slice]"` with self-ref guard |
+| `fmt_operand(opr, slice, arena, active_i, active_name, active_size)` | `"var_name[slice]"` with self-ref guard |
 | `gen_procedure_blk(hcp, active_i, arena, fw)` | write-through always-block helper for clocked HCPs |
+
+**Scalar 1-bit rule.** 1-bit signals are declared **scalar** (no `[0:0]` range) and
+are never sliced at use sites: `signal_width` returns `""` for size 1 and
+`fmt_operand` / `UeBasic::transpile` elide any slice whose signal is 1-bit wide
+(a part-select on a scalar net is illegal Verilog). Rationale: Verilator's VPI
+reports a `[0:0]` net as a 1-element vector (`LogicArrayObject` in cocotb), which
+breaks edge triggers; Icarus happens to flatten it. The width of the *active*
+(already-taken) HCP cannot be read back from the arena, so it is threaded through
+as `active_size` alongside `active_name`.
 
 ### 5.5 Verilog backend — scalable dispatch in `arena_ext_vb.rs`
 
@@ -649,11 +658,10 @@ impl ModelArena {
 The public free function `transpile_ue` (in `update_event_vb.rs`) has **zero match**:
 
 ```rust
-pub fn transpile_ue(ue_i, op_templates, front_space, arena) -> String {
+pub fn transpile_ue(ue_i, op_templates, front_space, arena, active_i, active_name, active_size, fw) {
     let ue = arena.take_ue_vb(ue_i);
-    let s  = ue.transpile(op_templates, front_space, arena);
+    ue.transpile(op_templates, front_space, arena, active_i, active_name, active_size, fw);
     ue.replace_back_into_arena_vb(arena);    // trait dispatch, no match
-    s
 }
 ```
 
@@ -661,7 +669,16 @@ pub fn transpile_ue(ue_i, op_templates, front_space, arena) -> String {
 
 ```rust
 pub trait VerilogUpdateEvent {
-    fn transpile(&self, op_templates: Vec<String>, front_space: u32, arena: &mut ModelArena) -> String;
+    fn transpile(
+        &self,
+        op_templates: Vec<String>,
+        front_space : u32,
+        arena       : &mut ModelArena,
+        active_i    : HcpIdent, // HCP currently taken from arena by the caller
+        active_name : &str,     // gen_var_name() of active_i (can't re-take it)
+        active_size : i32,      // bit width of active_i (can't re-take it either)
+        fw          : &mut FileWriter,
+    );
     fn replace_back_into_arena_vb(self: Box<Self>, arena: &mut ModelArena);
 }
 ```

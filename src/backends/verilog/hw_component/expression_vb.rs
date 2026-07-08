@@ -25,9 +25,10 @@ impl HcpBaseVb for Expression {
         // Hoist once — all fmt_operand calls in this block share the same active context.
         let active_i    = self.get_ident();
         let active_name = self.gen_var_name_vb();
+        let active_size = self.get_des_slice().get_size();
 
         let a_i   = match self.get_operand_a() { Some(x) => x, None => return };
-        let a_str = fmt_operand(a_i, self.get_operand_a_slice(), arena, active_i, &active_name);
+        let a_str = fmt_operand(a_i, self.get_operand_a_slice(), arena, active_i, &active_name, active_size);
 
         let rhs = match self.get_op() {
 
@@ -44,7 +45,7 @@ impl HcpBaseVb for Expression {
             // ---- signed relational: $signed(a) < $signed(b) ----
             LogicOp::RelationSlt | LogicOp::RelationSgt => {
                 let b_i    = match self.get_operand_b() { Some(x) => x, None => return };
-                let b_str  = fmt_operand(b_i, self.get_operand_b_slice(), arena, active_i, &active_name);
+                let b_str  = fmt_operand(b_i, self.get_operand_b_slice(), arena, active_i, &active_name, active_size);
                 let op_tok = logic_op_to_verilog(self.get_op());
                 format!("$signed({a_str}) {op_tok} $signed({b_str})")
             }
@@ -63,7 +64,7 @@ impl HcpBaseVb for Expression {
                     a_str
                 } else {
                     let fill = match self.get_operand_b() {
-                        Some(b_i) => fmt_operand(b_i, self.get_operand_b_slice(), arena, active_i, &active_name),
+                        Some(b_i) => fmt_operand(b_i, self.get_operand_b_slice(), arena, active_i, &active_name, active_size),
                         None      => "1'b0".to_string(),
                     };
                     // Verilog: {{ext_count{fill}}, a_str}
@@ -76,7 +77,7 @@ impl HcpBaseVb for Expression {
             // ---- generic binary: a OP b ----
             op => {
                 let b_i    = match self.get_operand_b() { Some(x) => x, None => return };
-                let b_str  = fmt_operand(b_i, self.get_operand_b_slice(), arena, active_i, &active_name);
+                let b_str  = fmt_operand(b_i, self.get_operand_b_slice(), arena, active_i, &active_name, active_size);
                 let op_tok = logic_op_to_verilog(op);
                 format!("{a_str} {op_tok} {b_str}")
             }

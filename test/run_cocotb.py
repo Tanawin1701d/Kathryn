@@ -5,14 +5,17 @@
 #
 #   PYTHONPATH=py .venv/bin/python test/run_cocotb.py [simulator [tc_name ...]]
 #
-# `simulator` defaults to "icarus" (iverilog). One VCD per `@cocotb.test()`
+# `simulator` defaults to "icarus" (iverilog); "verilator" is also supported
+# (needs verilator >= 5.036 — the pool auto-falls-back to the `verilator` conda
+# env when the PATH one is missing/too old). One VCD per `@cocotb.test()`
 # coroutine lands in test/.model_output/<case>/<testcase>.vcd.
 #
 # Examples:
 #   python test/run_cocotb.py                         # run all
 #   python test/run_cocotb.py icarus                  # run all, explicit sim
+#   python test/run_cocotb.py verilator               # run all under verilator
 #   python test/run_cocotb.py icarus tc2_par          # only tc2_par
-#   python test/run_cocotb.py icarus tc2_par tc3_sif  # tc2_par and tc3_sif
+#   python test/run_cocotb.py verilator tc2_par tc3_sif  # tc2_par and tc3_sif
 
 import sys
 import pathlib
