@@ -22,43 +22,66 @@
 namespace kathryn::o3{
 
 
-    struct Core: Module{
+    struct Core: Module{   ///MD CORE
 
         /////// tagmgmt
-        TagMgmt  tagMgmt;
+        TagMgmt  tagMgmt;   ///MD CORE
         /////// register architecture
-        RegArch  regArch {tagMgmt.mpft};
+        RegArch  regArch                       ///MD CORE
+                 {tagMgmt.mpft};               ///CTRL_HC CORE
         /////// reservation stations
-        Rsvs     rsvs {regArch, tagMgmt.bc};
+        Rsvs     rsvs                          ///MD CORE
+                 {regArch, tagMgmt.bc};        ///CTRL_HC+DATA_HC CORE
         /////// pipeline manager
-        PipStage pm;
+        PipStage pm;   ///MD CORE
         /////// store buffer
-        StoreBuf   storeBuf{pm.ldSt, tagMgmt.bc};
+        StoreBuf storeBuf                      ///MD CORE
+                 {pm.ldSt, tagMgmt.bc};        ///CTRL_HC+DATA_HC CORE
         /////// reorder buffer
-        mMod(prob, Rob, pm, regArch, storeBuf);
+        mMod(prob, Rob,                        ///MD CORE
+             pm,                               ///CTRL_HC+DATA_HC CORE
+             regArch, storeBuf);              ///CTRL_HC+DATA_HC CORE
         /////// front-end
-        mMod(pFetch,  FetchMod  , pm     , tagMgmt,
-                      prob.getBranchUpdateEntry());
-        mMod(pDec  ,  DecMod    , pm     , tagMgmt); //// decoder
-        mMod(pDisp ,  DpMod     , pm     , rsvs ,
-                      regArch   , tagMgmt, prob); //// dispathc
+        mMod(pFetch, FetchMod,                 ///MD CORE
+             pm,                               ///CTRL_HC+DATA_HC CORE
+             tagMgmt, prob.getBranchUpdateEntry());   ///CTRL_HC CORE
+        mMod(pDec, DecMod,                     ///MD CORE
+             pm,                               ///CTRL_HC+DATA_HC CORE
+             tagMgmt); //// decoder            ///CTRL_HC CORE
+        mMod(pDisp, DpMod,                     ///MD CORE
+             pm, rsvs, regArch,                ///CTRL_HC+DATA_HC CORE
+             tagMgmt,                          ///CTRL_HC CORE
+             prob); //// dispathc              ///CTRL_HC+DATA_HC CORE
         /////// back-end
-        mMod(pExAlu1,  ExecAlu   , regArch, prob    , rsvs.alu1); //// exec
-        mMod(pExAlu2,  ExecAlu   , regArch, prob    , rsvs.alu2);
-        mMod(pMulAlu, ExecMul    , regArch, prob    , rsvs.mul ); //// multiplier unit
-        mMod(pExBra,  BranchExec , tagMgmt, regArch ,
-                                   pm     , pDisp   ,
-                                   prob   , storeBuf, rsvs    ); //// branch unit
-        mMod(pExLdSt, ExecLdSt   , pm.ldSt, regArch , tagMgmt.bc,
-                                   prob   , rsvs.ls , storeBuf);
+        mMod(pExAlu1, ExecAlu,                 ///MD CORE
+             regArch,                          ///CTRL_HC+DATA_HC CORE
+             prob, rsvs.alu1); //// exec       ///CTRL_HC+DATA_HC CORE
+        mMod(pExAlu2, ExecAlu,                 ///MD CORE
+             regArch,                          ///CTRL_HC+DATA_HC CORE
+             prob, rsvs.alu2);                 ///CTRL_HC+DATA_HC CORE
+        mMod(pMulAlu, ExecMul,                 ///MD CORE
+             regArch,                          ///CTRL_HC+DATA_HC CORE
+             prob, rsvs.mul); //// multiplier unit   ///CTRL_HC+DATA_HC CORE
+        mMod(pExBra, BranchExec,               ///MD CORE
+             tagMgmt,                          ///CTRL_HC CORE
+             regArch,                          ///CTRL_HC+DATA_HC CORE
+             pm, pDisp, prob,                  ///CTRL_HC+DATA_HC CORE
+             storeBuf,                         ///CTRL_HC+DATA_HC CORE
+             rsvs); //// branch unit           ///CTRL_HC+DATA_HC CORE
+        mMod(pExLdSt, ExecLdSt,                ///MD CORE
+             pm.ldSt,                          ///CTRL_HC+DATA_HC CORE
+             regArch,                          ///CTRL_HC+DATA_HC CORE
+             tagMgmt.bc,                       ///CTRL_HC CORE
+             prob, rsvs.ls,                    ///CTRL_HC+DATA_HC CORE
+             storeBuf);                        ///CTRL_HC+DATA_HC CORE
 
 
-        explicit Core(int x){
+        explicit Core(int x){   ///HLH CORE
             ///// add reservation to bypass and prediction control
-            regArch.bpp.addRsvs(&rsvs);
+            regArch.bpp.addRsvs(&rsvs);   ///CTRL_HC+DATA_HC CORE
         }
 
-        void flow() override{
+        void flow() override{   ///HLH CORE
 
             ///// set sim probe for the exec unit and reservation station
             pExAlu1   .setSimProbe (&pipProbGrp.execAlu1   ); ///DC
@@ -71,7 +94,7 @@ namespace kathryn::o3{
 
             ///// rsv operation
             rsvs.setDebugProbe(); ///DC
-            rsvs.buildIssues(pm, tagMgmt.bc);
+            rsvs.buildIssues(pm, tagMgmt.bc);   ///CTRL_HC+DATA_HC CORE
         }
     };
 }

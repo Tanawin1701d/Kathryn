@@ -19,163 +19,164 @@
 
 namespace kathryn::o3{
 
-    struct FetchStage{
-        mReg (curPc, ADDR_LEN);
-        mWire(iMem0, DATA_LEN);
-        mWire(iMem1, DATA_LEN);
-        mWire(iMem2, DATA_LEN);
-        mWire(iMem3, DATA_LEN);
+    struct FetchStage{            ///MD CORE
+        mReg (curPc, ADDR_LEN);   ///DATA_HWD CORE
+        mWire(iMem0, DATA_LEN);   ///DATA_HWD CORE
+        mWire(iMem1, DATA_LEN);   ///DATA_HWD CORE
+        mWire(iMem2, DATA_LEN);   ///DATA_HWD CORE
+        mWire(iMem3, DATA_LEN);   ///DATA_HWD CORE
 
-        SlotMeta meta{smFetch};
-        RegSlot  raw {smFetch};
+        SlotMeta meta{smFetch};   ///DATA_HWD CORE
+        RegSlot  raw {smFetch};   ///DATA_HWD CORE
 
-        SyncMeta sync    {"fetchSync"}; ///CTRL FETCH
+        SyncMeta sync    {"fetchSync"};   ///MD CORE
 
 
-        FetchStage(){
-            curPc.asOutputGlob("curPc");
-            iMem0.asInputGlob ("iMem0");
-            iMem1.asInputGlob ("iMem1");
-            iMem2.asInputGlob ("iMem2");
-            iMem3.asInputGlob ("iMem3");
-
-        }
-
-        void incPc(opr& nextPc, bool isMisPred = false){
-            SET_ASM_PRI_TO_MANUAL(DEFAULT_UE_PRI_USER + isMisPred);
-            curPc <<= nextPc;
-            SET_ASM_PRI_TO_AUTO();
-        }
-    };
-
-    struct DecodeStage{
-        SlotMeta sharedMeta  {smDecShard};
-        SlotMeta decodedMeta {smDecBase };
-
-        RegSlot   dcd1    {decodedMeta};
-        RegSlot   dcd2    {decodedMeta};
-        WireSlot  dcw1    {decodedMeta};
-        WireSlot  dcw2    {decodedMeta};
-        RegSlot  dcdShared{sharedMeta};
-
-        SyncMeta sync    {"decodeSync"}; ///CTRL DECODE
-
-        Operable& getIsAlocRsv(RegSlot& dcd){ return dcw1(rsIdx_1); }
-
-    };
-
-    struct LdStStage{
-        mWire(dmem_rdata, DATA_LEN);
-        mWire(dmem_we , 1); ///CTRL GROB
-        mWire(dmem_rwaddr, ADDR_LEN); //// must mux with reading
-        mWire(dmem_wdata, DATA_LEN);
-        RegSlot lsRes {smLdSt};
-        SyncPip  sync2 {"ldStLastSync"}; ///CTRL EXEC_LDST
-
-        LdStStage(){
-            dmem_rdata  .asInputGlob ("dmem_rdata");
-            dmem_we     .asOutputGlob("dmem_we"); ///CTRL GROB
-            dmem_rwaddr .asOutputGlob("dmem_rwaddr");
-            dmem_wdata  .asOutputGlob("dmem_wdata");
-
+        FetchStage(){                      ///HLH CORE
+            curPc.asOutputGlob("curPc");   ///DATA_HC CORE
+            iMem0.asInputGlob ("iMem0");   ///DATA_HC CORE
+            iMem1.asInputGlob ("iMem1");   ///DATA_HC CORE
+            iMem2.asInputGlob ("iMem2");   ///DATA_HC CORE
+            iMem3.asInputGlob ("iMem3");   ///DATA_HC CORE
 
         }
 
+        void incPc(opr& nextPc, bool isMisPred = false){              ///DATA_HC CORE
+            SET_ASM_PRI_TO_MANUAL(DEFAULT_UE_PRI_USER + isMisPred);   ///CTRL_CL CORE
+            curPc <<= nextPc;                                         ///DATA_DT CORE
+            SET_ASM_PRI_TO_AUTO();                                    ///CTRL_CL CORE
+        }
     };
 
-    struct ByPass{
-        int bpIdx = -1;
-        mWire(valid, 1);
-        mWire(rrfIdx, RRF_SEL);
-        mWire(val, DATA_LEN);
+    struct DecodeStage{                      ///MD CORE
+        SlotMeta sharedMeta  {smDecShard};   ///CTRL_HWD+DATA_HWD CORE
+        SlotMeta decodedMeta {smDecBase };   ///CTRL_HWD+DATA_HWD CORE
 
-        ByPass(int bpIdx):bpIdx(bpIdx){}
+        RegSlot   dcd1    {decodedMeta};     ///CTRL_HWD+DATA_HWD CORE
+        RegSlot   dcd2    {decodedMeta};     ///CTRL_HWD+DATA_HWD CORE
+        WireSlot  dcw1    {decodedMeta};     ///CTRL_HWD+DATA_HWD CORE
+        WireSlot  dcw2    {decodedMeta};     ///CTRL_HWD+DATA_HWD CORE
+        RegSlot  dcdShared{sharedMeta};      ///CTRL_HWD+DATA_HWD CORE
 
-        void tryAssignByPass(Operable& desIdent, Reg& desVal){
-            zif(valid && (desIdent == rrfIdx)){
-                desVal <<= val;
+        SyncMeta sync    {"decodeSync"};   ///MD CORE
+
+        Operable& getIsAlocRsv(RegSlot& dcd){ return dcw1(rsIdx_1); }   ///CTRL_HC+DATA_HC CORE
+
+    };
+
+    struct LdStStage{                                              ///MD CORE
+        mWire(dmem_rdata, DATA_LEN);                               ///DATA_HWD CORE
+        mWire(dmem_we , 1);                                        ///CTRL_HWD CORE
+        mWire(dmem_rwaddr, ADDR_LEN); //// must mux with reading   ///DATA_HWD CORE
+        mWire(dmem_wdata, DATA_LEN);                               ///DATA_HWD CORE
+        RegSlot lsRes {smLdSt};                                    ///CTRL_HWD CORE
+        SyncPip  sync2 {"ldStLastSync"};                           ///MD CORE
+
+        LdStStage(){   ///HLH CORE
+            dmem_rdata  .asInputGlob ("dmem_rdata");    ///DATA_HC CORE
+            dmem_we     .asOutputGlob("dmem_we");       ///CTRL_HC CORE
+            dmem_rwaddr .asOutputGlob("dmem_rwaddr");   ///DATA_HC CORE
+            dmem_wdata  .asOutputGlob("dmem_wdata");    ///DATA_HC CORE
+
+
+        }
+
+    };
+
+    struct ByPass{                ///MD CORE
+        int bpIdx = -1;           ///HLH CORE
+        mWire(valid, 1);          ///CTRL_HWD CORE
+        mWire(rrfIdx, RRF_SEL);   ///CTRL_HWD CORE
+        mWire(val, DATA_LEN);     ///DATA_HWD CORE
+
+        ByPass(int bpIdx):bpIdx(bpIdx){}   ///HLH CORE
+
+        void tryAssignByPass(Operable& desIdent, Reg& desVal){   ///CTRL_HC+DATA_HC CORE
+            zif(valid && (desIdent == rrfIdx)){   ///CTRL_CL CORE
+                desVal <<= val;   ///DATA_DT CORE
             }
         }
 
-        void addSrc(opr& inRrfIdx, opr& inVal){
-            rrfIdx = inRrfIdx;
-            val    = inVal;
+        void addSrc(opr& inRrfIdx, opr& inVal){   ///CTRL_HC+DATA_HC CORE
+            rrfIdx = inRrfIdx;                    ///CTRL_DT CORE
+            val    = inVal;                       ///DATA_DT CORE
         }
 
     };
 
-    struct Rsvs;
-    struct ByPassPool{
+    struct Rsvs;         ///HLH CORE
+    struct ByPassPool{   ///MD CORE
 
-        std::vector<ByPass*>  _bps;
-        Rsvs*                 _rsvs = nullptr;
+        std::vector<ByPass*>  _bps;   ///HLH CORE
+        Rsvs*                 _rsvs = nullptr;   ///CTRL_HC+DATA_HC CORE
 
-        ByPass& addByPassEle(){
-            _bps.emplace_back(new ByPass(_bps.size()));
-            return **_bps.rbegin();
+        ByPass& addByPassEle(){                           ///CTRL_HC+DATA_HC CORE
+            _bps.emplace_back(new ByPass(_bps.size()));   ///HLH CORE
+            return **_bps.rbegin();                       ///DATA_HC CORE
         }
 
-        ~ByPassPool(){ for (ByPass* bp: _bps){delete bp;}}
+        ~ByPassPool(){ for (ByPass* bp: _bps){delete bp;}}   ///HLH CORE
 
-        void addRsvs(Rsvs* rsvs){
-            _rsvs = rsvs;
+        void addRsvs(Rsvs* rsvs){   ///CTRL_HC+DATA_HC CORE
+            _rsvs = rsvs;   ///HLH CORE
         }
 
-        opr& isByPassing(opr& rrfIdx){
-            opr* result = &(_bps[0]->valid & (rrfIdx == _bps[0]->rrfIdx));
-            for (int i = 1; i < _bps.size(); i++){
-                result = &((*result) | (_bps[i]->valid & (rrfIdx == _bps[i]->rrfIdx)));
+        opr& isByPassing(opr& rrfIdx){   ///CTRL_HC CORE
+            opr* result = &(_bps[0]->valid & (rrfIdx == _bps[0]->rrfIdx));   ///CTRL_CL CORE
+            for (int i = 1; i < _bps.size(); i++){   ///HLH CORE
+                result = &((*result) | (_bps[i]->valid & (rrfIdx == _bps[i]->rrfIdx)));   ///CTRL_CL CORE
             }
-            return *result;
+            return *result;   ///CTRL_HC CORE
         }
 
-        void assByPassData(Wire& desWire, opr& rrfIdx){
-            for (ByPass* bp : _bps){
-                zif(bp->valid && (bp->rrfIdx == rrfIdx)){
-                    desWire = bp->val;
+        void assByPassData(Wire& desWire, opr& rrfIdx){   ///CTRL_HC+DATA_HC CORE
+            for (ByPass* bp : _bps){   ///HLH CORE
+                zif(bp->valid && (bp->rrfIdx == rrfIdx)){   ///CTRL_CL CORE
+                    desWire = bp->val;   ///DATA_DT CORE
                 }
             }
         }
 
-        void doByPass(ByPass& bp);
+        void doByPass(ByPass& bp);   ///CTRL_HC+DATA_HC CORE
 
     };
 
 
 
-    struct TagMgmt{
-        BroadCast bc;
-        TagGen    tagGen{bc};
-        Mpft      mpft;
+    struct TagMgmt{   ///MD CORE
+        BroadCast bc;   ///MD CORE
+        TagGen    tagGen   ///MD CORE
+                  {bc};   ///CTRL_HC CORE
+        Mpft      mpft;   ///MD CORE
 
 
     };
 
-    struct RegArch{
-        Arf arf;
-        Rrf rrf;
-        ByPassPool bpp;
+    struct RegArch{   ///MD CORE
+        Arf arf;   ///MD CORE
+        Rrf rrf;   ///MD CORE
+        ByPassPool bpp;   ///MD CORE
 
-        RegArch(Mpft& mpft): arf(mpft){}
+        RegArch(Mpft& mpft): arf(mpft){}   ///CTRL_HC CORE
     };
 
-    struct PipStage{
-        FetchStage  ft;
-        DecodeStage dc;
-        LdStStage   ldSt;
+    struct PipStage{   ///MD CORE
+        FetchStage  ft;   ///MD CORE
+        DecodeStage dc;   ///MD CORE
+        LdStStage   ldSt;   ///MD CORE
 
-        SyncMeta sync_dp    {"dispSync"}; ///CTRL DECODE
-        SyncMeta sync_rs    {"rsvSync"}; ///CTRL DISPATCH
+        SyncMeta sync_dp    {"dispSync"};   ///MD CORE
+        SyncMeta sync_rs    {"rsvSync"};   ///MD CORE
 
-        SyncMeta sync_cm    {"commitSync"}; ///CTRL ROB
+        SyncMeta sync_cm    {"commitSync"};   ///MD CORE
 
 
-        void onMisPred(){
+        void onMisPred(){   ///HLH CORE
             ////// kill the in-order stage
-            ft.sync.killSlave(true); ///CTRL FETCH
-            dc.sync.killSlave(true); ///CTRL DECODE
-            sync_dp.killSlave(true); ///CTRL DISPATCH
-            sync_cm.holdSlave();     ///CTRL ROB
+            ft.sync.killSlave(true);   ///CTRL_CL CORE
+            dc.sync.killSlave(true);   ///CTRL_CL CORE
+            sync_dp.killSlave(true);   ///CTRL_CL CORE
+            sync_cm.holdSlave();   ///CTRL_CL CORE
 
 
 
@@ -196,10 +197,10 @@ namespace kathryn::o3{
 
 
         }
-        void onSucPred(){
-            dc.sync.holdMaster(); ///CTRL DECODE //// hold fetch <-> decode
-            sync_dp.holdMaster(); ///CTRL DISPATCH //// hold decode <-> dispatch to generate tag, but allowing system to enter decode state
-            sync_rs.holdMaster(); ///CTRL RSV_SHARED //// hold dispatch <-> reservation station
+        void onSucPred(){   ///HLH CORE
+            dc.sync.holdMaster(); //// hold fetch <-> decode   ///CTRL_CL CORE
+            sync_dp.holdMaster(); //// hold decode <-> dispatch to generate tag, but allowing system to enter decode state   ///CTRL_CL CORE
+            sync_rs.holdMaster(); //// hold dispatch <-> reservation station   ///CTRL_CL CORE
         }
 
 

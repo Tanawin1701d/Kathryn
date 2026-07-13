@@ -1,0 +1,533 @@
+=====================================================================
+KATHRYN CODE-PRODUCTIVITY CLASSIFICATION -- REPRODUCIBLE CRITERIA
+=====================================================================
+
+Purpose
+-------
+Every *real-code* line of a hardware design is classified into the 11 categories
+below by a LANGUAGE-AGNOSTIC rule set that applies identically to
+  (a) the Kathryn C++-embedded HDL   (src/example/o3/core), and
+  (b) the reference RIDECORE Verilog (extSim/ridecore/src/fpga).
+
+The scheme is a CROSS-PRODUCT of two independent axes:
+  DOMAIN axis  = is the line about a CONTROL signal or a DATA signal?
+                 Decided by looking the identifiers up in the KEYWORD LIST
+                 below -- NOT by judgment. This is what makes it reproducible.
+  KIND   axis  = what does the line DO: declare (HWD), compute (CL), move (DT),
+                 connect (HC), or instantiate a module (MD)?
+
+  {CTRL, DATA} x {HWD, CL, DT, HC}   +   MD, PARAM, HLH   =   11 categories
+
+    CTRL_HWD  CTRL_CL  CTRL_DT  CTRL_HC      (control domain x 4 kinds)
+    DATA_HWD  DATA_CL  DATA_DT  DATA_HC      (data    domain x 4 kinds)
+    MD        PARAM    HLH                   (standalone, no domain)
+
+There is NO priority / first-match-win (this is the key change from the old
+8-category scheme). A line is tagged for EVERY category it qualifies for. When a
+statement has more than one aspect, LINE-BREAK it so each physical line carries
+exactly ONE clean category (score 1.0). Only a genuinely INSEPARABLE single token
+(one port bundle carrying both a control and a data signal) is score-split 1/N.
+
+Marker syntax (trailing comment, one per physical line):
+    <code>            ///<CAT> <GROUP>              (single category, score 1)
+    <code>            ///CTRL_HC+DATA_HC <GROUP>    (inseparable bundle: 1/2 each)
+  where <CAT> is one of the 11 names above
+  and   <GROUP> is a functional-block name (see GROUPS below).
+
+A line carrying  ///DC  is EXCLUDED from the count (see EXCLUSIONS).
+
+
+=====================================================================
+THE DOMAIN AXIS -- ctrl vs data KEYWORD LIST (the authority)
+=====================================================================
+The DOMAIN of a line = the domain of the ELEMENT it writes / declares / connects
+(its LHS/target for CL/DT/HWD; its port for HC). Look the identifier up here.
+The list is by SEMANTIC ROLE; the names are examples (match the family, not the
+exact spelling -- see the cross-core crosswalk at the end). '*' = prefix/suffix
+wildcard.
+
+CONTROL -- decides WHEN / WHETHER / WHICH:
+  - clock / reset:        clk, reset
+  - validity/occupancy/enable/write-enable:
+        valid, busy, busyvec*, ready*, dstval*, we/we1/we2, wrrfen*, arfwe*,
+        dpen*, issue*, issuevalid*, allocatable*, attachable, notfull*,
+        notempty*, full/empty, hit*, finish, complete*, resolved*, clearbusy*,
+        settagbusy*, renEn, isRenamable/isdispatable/is*Allocatable/isGenable,
+        slotReady/entry_ready, sortReq/sortBit, com*Status/com*Cond/com*Avail,
+        wbFin, rdUse/rsUse_*
+  - stall/flush/kill/mispredict/recovery:
+        stall_*, kill_*, kill_speculative*, prmiss, prsuccess, prcond*, inv*,
+        invalid*, illegal*, holdMaster/holdSlave/killSlave/killIfTagMet,
+        onMisPred/onSucPred, isBrMissPred/isBrSuccPred
+  - speculation / recovery tags:
+        spectag*/specTag, specbit*/spec, sptag*/spTag*Result, tagreg*, mask,
+        mpft_valid*, brdepth, spectagfix, setspec*, isbranch*/isBranch,
+        storebit/storeBit, branchvalid*/branchValid*, isAsRecvGrp
+  - rename/producer tags + structural pointers  (DECISION 3):
+        rrftag*/rrfIdx, prd/prs*, dst*_renamed, settag*, rem[], renRrfPtr,
+        robid, comptr/comPtr*, finptr/finPtr, allocptr/allocPtr, freeptr,
+        freenum, dispatchptr, retptr/retPtr, issueptr, checkIdx, reqPtr
+  - handshake / pipeline sync / issue-request:
+        req*, reqnum, grant/ack, dp1/dp2, exfin_*, stfin, sync*, SyncMeta/
+        SyncPip, pip/zync/zyncc/autoSync/cwhile, onDispatch/onWriteBack/
+        onCommit/onIssue, BroadCast/bc
+  - branch-prediction control:
+        bhr*, brcond*/brCond, brTaken, prediction, taken, *_PRIORITY consts
+
+DATA -- the payload computed / moved:
+  - pc / addresses:
+        pc*, npc*, curPc/nextPc/fixPc/fixedPc/srcPc, praddr*/pred_addr, jmpaddr*,
+        addr/dmem_addr/ldaddr/staddr/storeaddr/retaddr/mem_addr/memAddr/calAddr
+  - operands / results / register-file data:
+        src1/src2*, ex_src*, opr*/srcA/srcB/execSrc, arfdata/adat*/getArfData/
+        archRegs, rrfdata/rdat*/com*data/datarr, wdata*/wrrfdata*/comdata/
+        comData*, result*/exrslt*/res/out, val/data/rrfData/wbData/dpValue,
+        dayta/daytas/stBufData/dmem_wdata/dmem_rdata/lddata*/stdata/storedata/
+        retdata, phyIdx_* (payload-leaning; see note)
+  - immediates:   imm*/imm1/imm2/imm_br/immGen/immBrGen   (the VALUE, not imm_type)
+  - register indices  (DECISION 2):
+        rd/rs1/rs2, rdIdx/rsIdx_*, dst/dstreg/dstarf*/comArcIdx
+  - operation-SELECT fields  (DECISION 4):
+        alu_op/aluOp, funct3/funct7/funct12, imm_type, src_a_sel/src_b_sel/
+        rsSel_*, sel_lohi*, src*_signed/md_req_in_signed*, rs_ent/rsEnt,
+        opcode/opc, md_req_op/md_req_out_sel, dmem_size/dmem_type, uses_rs*/wr_reg
+  - instruction bits:   idata, inst*/instr, iMem*
+
+The four firm decisions (kill the old ambiguity):
+  1. NO first-match-win: tag every category a line qualifies for; line-break to
+     separate, score-split only inseparable bundles.
+  2. Register indices rd/rs1/rs2 (rdIdx/rsIdx_*) = DATA (operand-address payload
+     at decode origin; a line that USES one as a table index is a separate CL/DT
+     line whose domain follows ITS own target).
+  3. Rename/producer tags + structural pointers = CONTROL (wakeup/bypass match,
+     rename/commit bookkeeping -- never enter the ALU).
+  4. Operation-select fields = DATA (decoded instruction fields; the immediate
+     VALUE imm/imm_br is DATA too).
+
+Note on phyIdx_* (the one genuine overload, srcOpr.h): tag the two assignment
+sites individually -- phyIdx = phyEntry.data -> DATA; phyIdx = arfRen.rrfIdx.uext
+-> CONTROL.
+
+DOMAIN determination rule (reproducible):
+  - A CL / DT / HWD line has exactly ONE target, so it is ALWAYS single-domain:
+    CTRL and DATA never share such a line.
+  - The domain follows the TARGET (the LHS being written / declared), NOT the RHS.
+    For  a <<= b  (or  a = b ):  kind = DT (plain move) or CL (RHS computes);
+    DOMAIN = domain of  a  (look  a  up in the list), regardless of  b . E.g.
+    busy <<= b -> CTRL_DT ; pc <<= b -> DATA_DT ; comPtr <<= comPtr+1 -> CTRL_CL.
+    (The RHS identifiers are counted on the lines that PRODUCE them.) If a target
+    is not yet in the list, classify it by role and ADD it to the list.
+  - Control-flow constructs with no data subject (clocked-process wrapper,
+    if(reset)/stall/kill guards, FSM next-state, HDB flow blocks) are CONTROL by
+    nature (kind = CL, so CTRL_CL).
+  - HC domain = per-port. The ONLY line carrying both CTRL and DATA is a single
+    inseparable HC bundle token -> split CTRL_HC + DATA_HC (0.5 each).
+  - MD, PARAM, HLH have NO domain.
+
+
+=====================================================================
+THE KIND AXIS -- tag every kind that applies (do NOT pick one)
+=====================================================================
+Prefer to LINE-BREAK a statement so each physical line is one kind (score 1.0);
+only score-share when a single token is inseparable.
+
+MD  -- Module / struct declaration
+    Concept: declaring or instantiating a MODULE or STRUCT (any composite user
+    type), as opposed to a hardware PRIMITIVE (-> HWD). DOMAIN-LESS -> plain ///MD.
+    Covers:
+      - a struct/class/module TYPE header:  struct X{ ,  struct X: Module{ ,
+        Verilog  module foo
+      - a user-module / struct INSTANCE:  mMod(...) head ;  ModuleType inst
+        (RegArch regArch, Rsvs rsvs, ...) ;  Verilog instance head
+        reorderbuf rob / alu alice
+    Distinct from HWD (a hardware primitive: reg/wire/mem/table/slot) and from HC
+    (the struct members / wired args). NOTE: line-break the connectivity / members
+    off the head -- see MODULE-DECL REFORMATTING.
+
+HC  -- Hardware connectivity  (CTRL_HC / DATA_HC by port domain)
+    Concept: an INTERFACE or CONNECTION -- signatures/parameter (port) lines,
+    constructor-arg / instance connectivity, port-bundle structs + ref members,
+    opr&-returning wrapper signatures, I/O tagging, instance port maps.
+    Kathryn : (opr& op, opr& srcA, ...); struct RenameCmd{ opr& busy; ...};
+              {tagMgmt.mpft} ctor-arg connectivity;  pm, regArch, storeBuf args;
+              inline opr& alu <sig>; asInputGlob/asOutputGlob; ctor init-list binds.
+    Verilog : input/output/inout port decls; instance port maps .op(alu_op).
+    Domain: busy/valid/kill/sync port -> CTRL_HC ; data/pc/operand port -> DATA_HC.
+    Inseparable bundle carrying both (PipStage& pm) -> CTRL_HC+DATA_HC (0.5 each).
+    COMPUTED PORT ARG (Verilog): an instance port map whose arg is not a plain
+    signal but an EXPRESSION -- logic/arith op (.enable(~stall_ID & ~stall_DP)),
+    ternary mux (.wpc((sel)?a:b)), concat ({a,b}), or bit-slice (x[hi:lo]/x[b+:w])
+    -- does TWO things on one line: connects the port (HC) AND computes the value
+    (CL, per the concat/slice/ternary/logic-op = CL rule). Tag both, same domain as
+    the port: X_HC+X_CL (0.5 each). This is symmetric with Kathryn, where such a
+    compute is its own CL line (a zif guard / x = a & b) rather than hidden inside a
+    port map. A plain .port(sig) stays pure HC. (Applied across RIDECORE: 138 lines.)
+    LINE-BROKEN computed arg: when the expression spans multiple physical lines
+    (a long concat .entvec({a[..], b[..],  /  c[..], d[..]})), EVERY physical line
+    that itself carries a compute portion (a slice/concat token) is X_HC+X_CL, not
+    just the first .name( line -- per the per-physical-line rule. (6 such
+    continuation lines: oldest_finder.v, pipeline.v isunt_alu concats.)
+
+HWD -- Hardware declaration  (CTRL_HWD / DATA_HWD by declared-element domain)
+    Concept: declare a PERSISTENT hardware PRIMITIVE that holds data or named nets:
+    data/control register, named wire/net, memory/table/slot storage, SlotMeta
+    field layout. HWD is for ALL hardware types EXCEPT a module or struct -- a
+    struct/class/module (type header OR instance) is MD, not HWD. Named constants
+    -> PARAM.
+    Kathryn : mReg/mWire/mExpr; WireSlot/RegSlot/Table/MemTable/mMem; SlotMeta.
+    Verilog : reg/wire/logic; memory arrays reg[W:0] mem[0:N].
+    Domain: reg busy -> CTRL_HWD ; reg [31:0] pc -> DATA_HWD.
+
+CL  -- Combinational logic  (CTRL_CL / DATA_CL by target domain)
+    Concept: COMPUTE a value via operators (arith/logic/compare/shift/bit-slice/
+    concat/extension/mux/ternary; a datapath-select conditional). ALSO all
+    control-flow / sequencing constructs: clocked-process wrapper
+    always @(posedge ...), if(reset)/enable/stall/flush/kill guards, FSM
+    next-state, HDB flow blocks (seq/par/zif/pip/loop/ztate/zcase), update-
+    scheduling / priority -- these are CTRL_CL.
+    Kathryn : out = srcA + srcB; shamt = srcB.sl(0,W); ~(fullBit >> shamt);
+              ztate(op){zcase...}; g(...) concat; .uext/.sext; pip/zync/cwhile;
+              SET_ASM_PRI_TO_MANUAL/AUTO.
+    Verilog : assign y=a+b; case(op)...; sel?a:b; {31'b0,in1==in2};
+              always @(posedge clk); if(reset); assign stall/kill/valid.
+    Domain: assign kill=... -> CTRL_CL ; assign y=a+b -> DATA_CL.
+
+DT  -- Data transfer  (CTRL_DT / DATA_DT by target domain)
+    Concept: MOVE / COPY / ROUTE / STORE a value with NO operators -- plain
+    signal RHS, struct field, indexed read; register write of a signal; array/
+    table/struct element write; RESET-VALUE write.
+    Kathryn : busyTemp = busySlot; busySlot <<= busyTemp; _table[idx] <<= dpValue;
+              makeResetEvent/makeColResetEvent/makeDefEvent (reset-value reg.).
+    Verilog : assign y=x; q<=d; data[finptr]<=stdata; reset-branch q<=0.
+    Domain: busy<=issue / busy<=0 -> CTRL_DT ; pc<=npc / pc<=0 -> DATA_DT.
+    Boundary vs CL: table/array/struct INDEXING is access -> DT; bit-SLICE /
+    concat / extend is compute -> CL.
+
+PARAM -- Parameter / constant  (domain-less)
+    Concept: a NAMED CONSTANT / PARAMETER definition -- sizes, counts, encodings,
+    constant values. Explicitly-constant forms only.
+    Kathryn : mVal/mPmVal; static/const/constexpr numeric consts (incl *_PRIORITY);
+              O3_PARAM_STR(name) field/opcode/width identifiers.
+    Verilog : parameter; localparam; `define value macros (`REG_SEL, widths, ops).
+    A plain MUTABLE host var (int idx=-1, reassigned later) stays HLH.
+
+HLH -- Host-language helper  (domain-less)
+    Concept: host-language CONTROL-STRUCTURE scaffolding -- neither hardware nor a
+    constant; the glue the host language needs to elaborate the hardware.
+    Kathryn : for/while host loops; std:: containers; templates; structured
+              bindings auto[a,b]=...; glue lambdas; function-like macros
+              (#define str(name)); plain mutable int/bool.
+    Verilog : genvar; generate/for; integer i; initialization loops.
+
+
+=====================================================================
+MODULE-DECL REFORMATTING (line-break MD off HC)
+=====================================================================
+Because MD (the module head) and HC (its wired connectivity) are two kinds, and
+there is no first-match-win, line-break every module-instance declaration so each
+is its own physical line. Layout-only edit -- valid C++/Verilog, no semantics:
+
+  // before
+  RegArch  regArch {tagMgmt.mpft};
+  mMod(prob, Rob, pm, regArch, storeBuf);
+  // after
+  RegArch  regArch            ///MD  <GROUP>
+  {tagMgmt.mpft};             ///HC  <GROUP>   (per-arg domain; tagMgmt/mpft=CTRL_HC)
+  mMod(prob, Rob,             ///MD  <GROUP>
+    pm, regArch, storeBuf);   ///HC  <GROUP>
+
+
+=====================================================================
+KRIDE WORKED CONVENTIONS  (locked from the gold exemplars arf.h + core.h)
+=====================================================================
+These resolve the recurring Kride calls so the two exemplars reproduce exactly:
+  - rename table / renRrfPtr / rrfIdx / rename* = CONTROL (decision 3). So the
+    ARF is mostly control bookkeeping (busy + rename); only archRegs / *data /
+    comData are DATA.
+  - arch-register indices renArcIdx / comArcIdx / archIdx = DATA (decision 2);
+    the index only STEERS, but the identifier itself is DATA payload.
+  - SET_ASM_PRI_TO_MANUAL / _AUTO = CTRL_CL (update-scheduling control). A zif /
+    guard = CTRL_CL when it gates a control action; a datapath zif that SELECTS a
+    value = CL by the selected value's domain.
+  - a struct/class/module header OR instance = MD (RenameCmd, PreRenGrp,
+    PreRenGrp preRenGrp[]); Table / RegSlot / WireSlot / mReg / mWire / mExpr =
+    HWD (domain by target: busy/rename -> CTRL_HWD, archRegs -> DATA_HWD).
+  - a SlotMeta header (inline SlotMeta smX{...}) = HWD, domain by its FIELDS:
+    all-control -> CTRL_HWD (smRsvO/I, smMPFT, smARFBusy/Renamed), all-data ->
+    DATA_HWD (smRsvBranch/Alu/Mul, smARFData), MIXED control+data fields ->
+    CTRL_HWD+DATA_HWD bundle (smFetch, smDecBase, smDecShard, smRsvBase,
+    smStoreBuf, smLdSt, smRRF, smROB). NO majority-collapse: any slot storing
+    both a control field (busy/valid/spec/rdUse/isBranch/*ptr...) AND a data
+    field (pc/inst/imm/operand/rd*Idx...) is a bundle. Its field-name and width
+    list lines = PARAM.
+  - method / ctor SIGNATURE = HC, domain by its params (per-line for multi-line
+    signatures). A ctor with a hardware param (Arf(Mpft&)) = CTRL_HC; a ctor /
+    method with only a host param (Core(int x), flow()) = HLH. A port-bundle
+    param that carries both control and data (RenameCmd: renEn/specTag control +
+    renArcIdx data ; PipStage& pm) = CTRL_HC+DATA_HC (0.5 each). A method-call
+    line wiring several args splits like any connectivity line (per-arg domain,
+    consecutive-arg grouping, no reorder).
+  - reset-value registration makeResetEvent / makeColResetEvent / makeDefEvent =
+    DT, domain by the register written (busy.makeResetEvent -> CTRL_DT).
+  - host scaffolding: for/while host loops, `int idx = -1;`, C++ `if(override)`
+    on a host bool = HLH. A host lambda / structured-binding / std::pair typedef
+    used as elaboration glue = HLH.
+  - MODULE / whole-object domain table (wired arg, member ref, ctor param, bind):
+      CTRL_HC  : bc/BroadCast, mpft, tagMgmt, taggen
+      bundle   : pm/pm.ldSt, rsv/rsvs/RsvBase, rob/Rob, pDisp, regArch/RegArch,
+                 storeBuf/StoreBuf, lss/LdStStage, bp/ByPass -> CTRL_HC+DATA_HC
+                 (each carries both a control routing/rename/tag part AND a data
+                 part -- e.g. ByPass = {rrfIdx tag(CTRL), val(DATA)}; RegArch =
+                 rename/busy(CTRL) + register data(DATA)).
+  - WHOLE-SLOT rule: a whole Slot/RegSlot/WireSlot reference (declaration, bind
+    `RegSlot& x = ...`, whole move `x <<= y`, .makeResetEvent(), or a
+    `RegSlot&/WireSlot& x` param) takes the domain of its SlotMeta -- pure-data
+    meta -> DATA (smRsvAlu/ARFData...), pure-control meta -> CTRL (smRsvO/I,
+    smMPFT, smARFBusy...), MIXED meta -> CTRL+DATA bundle (smFetch/raw,
+    smDecBase/dcd,dcw, smDecShard/dcdShared, smRsvBase/execSrc,src,iw,des,
+    smLdSt/lsRes, smROB/com*Entry,selectedEntry, smStoreBuf/retireSlot). NO
+    predominant-role collapse. A specific sub-FIELD access src(rrftag)/src(rdUse)/
+    src(spec) uses ITS OWN domain (that's how the control fields still get counted
+    as control).
+    A method CALL through a module uses its ARGS' domains, NOT the module's
+    (regArch.rrf.onWback(rrftag, data) = CTRL_HC+DATA_HC by the args; a no-arg
+    whole-object call like stBuf.flow() takes the object's domain = bundle).
+  - RETURN rule: `return <plain signal>` or `return {a,b}` (braced plain refs) =
+    HC (domain by the returned value / bundle); `return <expr with operators or a
+    mux/select>` = CL (domain by the value). A multi-element braced return whose
+    elements are a control+data pair = CTRL_HC+DATA_HC.
+  - a function/lambda CALL that returns a computed value assigned to a wire
+    (srcA = getAluSrcA(src); isKilled = bc.checkIsKill(...)) = CL by target
+    domain. A connectivity call that wires args into another block
+    (rob.onWriteBack(src(rrftag)); bp.addSrc(tag,data)) = HC, per-arg domain.
+  - the flow() method signature = HLH (host method, no hw param).
+  - CYCLE-ADVANCING HDB headers (pip/pipe/zync/zyncc/cwhile/while/loop/wait/seq/
+    state) = CTRL_HWD+CTRL_CL (0.5 each): they BOTH instantiate control-state
+    hardware (the flow-block state/sync/counter register -- SR_ST# in generated
+    Verilog) AND implement control sequencing logic. This keeps the comparison
+    SYMMETRIC with RIDECORE, where the same FSM is two separate lines: reg state
+    (CTRL_HWD) + always@(posedge) case(state) (CTRL_CL). A single Kathryn header
+    replaces both, so it earns both credits.
+  - COMBINATIONAL HDB headers (zif/zelif/zelse, zcase/ztate-as-decode, par, pick)
+    create NO state register = pure CL: a zif gating a control action = CTRL_CL;
+    a datapath zif/ztate SELECTING a value = CL by the selected value's domain.
+
+
+=====================================================================
+EXCLUSIONS -- never marked (not real code, or explicitly excluded)
+=====================================================================
+  - Comment / documentation lines: pure //, ///, /////-only lines and multi-line
+    /** ... */ doc blocks. (A real code line that merely ENDS with a trailing
+    // note still gets its category.)
+  - Lines carrying ///DC = the universal EXCLUDE marker (kept for audit trail):
+      * Kathryn : simulation instrumentation (initProbe, tryInitProbe,
+                  dataStructProbGrp.*.init(...)).
+      * Verilog : (a) dual-issue path DUPLICATION (the 2nd instruction's copy of a
+                  datapath / instance, e.g. src_manager srcmng2) -- the bulk; and
+                  (b) DISABLED-FEATURE logic Kathryn also omits: the gshare branch
+                  predictor's bhr/prcond STORAGE + plumbing (rs_branch.v; predictor
+                  ports are commented out in pipeline.v and prcond is hardwired 0),
+                  mirroring Kathryn's disabled smBtb/gshare = DC. Excluded so both
+                  sides count UNIQUE, LIVE logic once. NUANCE: only the disabled
+                  STORAGE/plumbing is DC -- control scaffolding that still functions
+                  under static not-taken prediction (branchvalid/inv/praddr in
+                  pipeline.v) stays COUNTED.
+  - Soft-deleted files: a WHOLLY-DEAD source file (every module uninstantiated,
+    e.g. the latched ram_sync.v -- module ram_sync_2r2w, never used; the design
+    uses the nolatch BRAM variant) is MOVED to a fpga/deleted/ folder rather than
+    ///DC-tagged line-by-line. countMeasure.py SKIP_DIRS includes "deleted" so the
+    whole folder is pruned from the walk. (Distinct from ///DC, which excludes
+    individual lines inside a live file.)
+  - Preprocessor / structural noise: #include / `include; namespace X {;
+    #ifndef/#define GUARD/#endif include-guards; `timescale; blank lines;
+    lone braces/keywords ( {  }  };  begin  end  endmodule  endcase  endgenerate ).
+    (`define constant lines are NOT noise -- they are PARAM; only `include/directive
+    lines are excluded.)
+  - Host assert(...) / debug.
+
+
+=====================================================================
+MARKING CONVENTION
+=====================================================================
+  - Trailing ///<CAT> <GROUP> on each real-code line, whitespace-aligned.
+  - EVERY real-code physical line is tagged; a statement spanning N lines counts
+    N times. Continuation lines (wrapped expressions, call args, return values,
+    SlotMeta field/width lists) INHERIT the statement's category = the nearest
+    ///<CAT> tag above them (script: tagContinuation.py). A multi-line instance =>
+    MD head line + HC on each wired-arg / .port(x) line (unless the whole instance
+    is ///DC -> all excluded). Only bare closers ( ) } ; , ), structural keywords
+    (begin/end/endmodule/endcase), bare else-junctions (}else{ / }zelse{ /
+    end else begin), host assert(...), comments, and blank lines stay untagged.
+  - <GROUP> reuses the aligned block names below; the CATEGORY axis is primary,
+    the GROUP is the secondary breakdown. Keep Kathryn and RIDECORE group names
+    ALIGNED so per-block comparison is meaningful.
+  - Preserve existing correct markers; fix malformed ones.
+
+
+=====================================================================
+COUNTING
+=====================================================================
+  Category regex : ///\s*(<ALT>(?:\+(?:<ALT>))*)\s+(\w+)
+      where <ALT> = alternation of the 11 category names (longest-first).
+      The whole category expression (with any '+' parts) is capture group 1;
+      the group name is group 2. Split group 1 on '+'; a K-way packed tag credits
+      1/K score to EACH category -- e.g. ///CTRL_HC+DATA_HC -> +0.5 each. A
+      single-category tag scores 1.0.
+  Exclude regex  : ///\s*DC            (skip any line that matches this)
+  Aggregate per-category and per-(category x group); category totals may be
+  FRACTIONAL. countMeasure.py [DIR] reports one side; countCompare.py reports
+  Kathryn (./core) vs RIDECORE (../../../extSim/ridecore/src/fpga) with the
+  derived rollups CTRL total (= sum CTRL_*) and DATA total (= sum DATA_*) and the
+  per-category reduction %. countMeasure.py also WARNS on any stray uppercase
+  ///tag that is not a valid category (catches leftover old tags).
+
+
+=====================================================================
+GROUPS  (functional blocks; keep aligned across both sides)
+=====================================================================
+CORE   FETCH   DECODE   DISPATCH
+RSV_SHARED   RSV_ALU   RSV_BRANCH   RSV_LDST   RSV_MUL
+EXEC_ALU   EXEC_BRANCH   EXEC_LDST   EXEC_MUL
+ROB   COMMIT   ARF   RRF   MPFT   TAG   STOREBUF   SHARED_COMP
+
+pipeline.v decomposition (RIDECORE pools many blocks into one 1935-line file;
+assign each region a GROUP):
+  PRIMARY  -- nearest instantiated submodule wins:
+    pipeline_if pipe_if -> FETCH ; tag_generator taggen -> TAG ;
+    decoder dec1/dec2 -> DECODE ; arf aregfile -> ARF ;
+    rrf rregfile + rrf_freelistmanager rrf_fl -> RRF ;
+    sourceoperand_manager / src_manager / imm_gen / brimm_gen /
+      rs_requestgenerator -> DISPATCH ;
+    rs_alu / rs_ldst / rs_branch / rs_mul + alloc_issue_ino -> RSV_* ;
+    exunit_alu byakko/suzaku / exunit_ldst seiryu / exunit_branch kirin / dmem
+      -> EXEC_* ;  miss_prediction_fix_table mpft -> MPFT ;
+    reorderbuf rob -> ROB / COMMIT .
+  SECONDARY -- signal-suffix prefix clusters for free-standing assign/always
+    lines between instances:
+    *_id -> DECODE ; pc*/npc*/inst*/*_if -> FETCH ; sptag*/spec*/tagreg*/brdepth
+    -> TAG ; mpft_* -> MPFT ; adat*/abusy*/*tag/settag* -> ARF ; rdat*/rvalid*/
+    com*data/*_renamed/rrfptr/freenum -> RRF ; comptr*/comnum/arfwe*/dp*_addr/
+    exfin_*/stcommit -> ROB/COMMIT ; *_alu1/_alu2/_ldst/_branch/_mul incl buf_*
+    -> RSV_*/EXEC_* ; sb_*/st*/hitsb/ldaddr/retptr -> STOREBUF .
+  TIE-BREAK -- inside a .port(sig) map, the instance's group wins over the wire's
+    prefix group.
+
+
+=====================================================================
+RIDECORE (Verilog) WORKED CONVENTIONS
+=====================================================================
+  - PRESERVE every existing ///DC line EXACTLY (never re-tag, never count) --
+    it excludes RIDECORE's dual-issue path DUPLICATION so both sides count UNIQUE
+    logic once (Kathryn covers both instructions with one loop/aggregator body).
+  - module <name> header = MD ; a module INSTANCE head (alu alice / src_a_mux samx
+    / reorderbuf rob) = MD ; its .port(sig) map lines = HC per-port domain.
+  - input/output/inout port decls = HC, domain by the port (crosswalk below):
+      CTRL_HC: clk, reset, *_we/we, dstval, issue, prmiss/prsuccess, valid/busy,
+               spectag/specbit/spectagfix/tagreg*, kill_speculative, brcond,
+               stall_*/kill_*, *ptr, finish, ready, alloc*
+      DATA_HC: ex_src*/rs1/rs2/src*, pc/praddr/npc/jmpaddr*/addr, imm, result/out,
+               *data, inst/idata, rd/rs*(indices), alu_op/src_a/src_b/opcode/
+               funct*/imm_type/*_sel/*_signed (op-select = DATA, decision 4)
+  - reg / wire DECLARATION (no assign) = HWD, domain by the signal (reg busy ->
+    CTRL_HWD ; wire [DATA_LEN] alusrc -> DATA_HWD). `wire x = <expr>;` (decl +
+    continuous assign) = CL by x's domain (the assign dominates).
+  - always @(posedge/negedge clk) wrapper + if(reset)/enable guards = CTRL_CL
+    (clocked sequencing). always @(*) combinational block = CL by the target it
+    computes. case(...) / a ? b : c = CL by target.
+  - assign y = x; (plain copy) = DT ; q <= d; (plain reg write, incl reset q<=0)
+    = DT -- domain by the target y/q. assign y = <operators> = CL by target.
+  - `include / `default_nettype / `timescale / endmodule / endcase / begin / end
+    / lone ) ; = structural, UNTAGGED.
+
+
+=====================================================================
+CROSS-CORE CROSSWALK  (same concept, different spelling -> one class)
+=====================================================================
+  spectag<->specTag  rrftag<->rrfIdx  comptr<->comPtr  dstval<->rdUse
+  robwe/finish<->wbFin  alu_op<->aluOp  rs_ent<->rsEnt  src_a_sel<->rsSel_1
+  rs1<->rsIdx_1  rd<->rdIdx  prmiss<->isBrMissPred  stall_*/kill_*<->holdMaster/
+  killSlave
+
+
+=====================================================================
+RESULTS  (reproduce with:  python3 countCompare.py)
+=====================================================================
+Kathryn Kride core (src/example/o3/core; btb.h/gshare.h disabled and excluded)
+vs RIDECORE Verilog (extSim/ridecore/src/fpga). ///DC lines excluded on both
+sides (Kathryn: sim instrumentation; RIDECORE: dual-issue path duplication).
+
+Both sides RE-DERIVED FROM SCRATCH in the 11-category scheme (Kathryn 34 active
+files; RIDECORE .v modules in fpga/ + 3 .vh constant headers). Verified: code
+byte-identical to committed HEAD once ///tags+whitespace stripped, 0 stray tags on
+both sides, ///DC counts intact (Kathryn 92, RIDECORE 1446), tagContinuation
+idempotent. Totals may be fractional (inseparable CTRL_HC+DATA_HC bundles).
+
+  CATEGORY   KATHRYN  RIDECORE  REDUCTION
+  CTRL_HWD      80.5       292     72.43%
+  CTRL_CL      215.5     575.5     62.55%
+  CTRL_DT        150       289     48.10%
+  CTRL_HC        290    1162.5     75.05%
+  DATA_HWD        39       176     77.84%
+  DATA_CL        122     178.5     31.65%
+  DATA_DT        113       273     58.61%
+  DATA_HC        178     621.5     71.36%
+  MD              66       125     47.20%
+  PARAM          298       174    -71.26%   (Kathryn MORE: C++ DSL named params)
+  HLH            115        27   -325.93%   (Kathryn MORE: host scaffolding)
+  ----------------------------------------
+  CTRL total     736      2319     68.26%   <-- HEADLINE control-flow reduction
+  DATA total     452      1249     63.81%
+  ----------------------------------------
+  TOTAL         1667      3894     57.19%
+  DC(excl)        92      1446
+  (exact decimals may drift slightly with edits; re-run countCompare.py for the
+   authoritative figure. RIDECORE PARAM now INCLUDES the 151 `define constants in
+   the .vh headers alu_ops.vh/constants.vh/rv32_opcodes.vh -- symmetric with
+   Kathryn, whose parameter.h/isaParam.h/slotParam.h are counted. The CAM-wakeup
+   module src_manager.v (operand forward/bypass, instantiated in every RS + dispatch)
+   is now marked -- it was initially missed. The dead latched-BRAM ram_sync.v
+   (module ram_sync_2r2w, never instantiated -- the design uses the nolatch variant)
+   was moved to fpga/deleted/ and is EXCLUDED from the count (see Exclusions).)
+
+Reporting notes:
+  - HEADLINE control-flow reduction = CTRL total (CTRL_HWD+CTRL_CL+CTRL_DT+CTRL_HC)
+    = (2319-736)/2319 = 68.26%. Broken out: control CONNECTIVITY CTRL_HC 75.05%
+    (the largest -- Kathryn's HDBs remove the bulk of hand-wired control ports/
+    handshakes), control-state decl CTRL_HWD 72.43%, control logic CTRL_CL 62.55%,
+    control moves CTRL_DT 48.10%. (RIDECORE computed port-map args carry +CL in the
+    port domain, so ~55 CTRL / ~14 DATA half-lines shift from _HC into _CL vs a
+    naive HC-only tag -- CTRL/DATA totals are unaffected.) (Cycle-advancing HDB headers count as
+    CTRL_HWD+CTRL_CL, symmetric with RIDECORE's reg-state + always-logic pair;
+    mixed sub-modules regArch/storeBuf/lss/bp AND every whole-slot ref from a
+    MIXED SlotMeta count as CTRL_HC+DATA_HC bundles -- each carries a control
+    tag/rename/valid part + a data part; no predominant-role collapse.)
+  - This 68.26% is the NEW rigorous line-for-line figure and it REPLACES the old
+    8-category CTRL 78.76% / abstraction-density 78.81% headline. It is lower
+    because the new scheme counts EVERY control-connectivity port line (CTRL_HC),
+    which the old CTRL bucket did not fully capture, inflating RIDECORE's control
+    denominator, AND because mixed modules/slots are split as bundles (control
+    gets its fair half). Report 68.26% (CTRL total) as the primary; CTRL_HC 75.05%
+    is the connectivity story the dual "Control Flow + Resource Abstraction"
+    thesis wants.
+  - DATA total reduction 63.81%; overall 57.19%. PARAM/HLH negative (Kathryn's
+    embedded-C++ named params + host scaffolding), as expected -- do NOT read
+    these as a Kathryn regression. (RIDECORE PARAM rose 26->174 once the .vh
+    `define constant headers were counted, symmetric with Kathryn's param files.)
+  - The 1446 RIDECORE ///DC lines are EXCLUDED to compare UNIQUE logic once; this
+    is a deliberate handicap to Kathryn (honest). They are two flavors of RIDECORE
+    duplication/dead-code Kathryn writes once or not at all: (a) dual-issue path
+    DUPLICATION (the bulk), and (b) DISABLED-FEATURE logic -- the gshare branch
+    predictor (bhr/prcond plumbing in rs_branch.v; predictor ports commented out in
+    pipeline.v, prcond hardwired 0) mirrors Kathryn's disabled smBtb/gshare=DC.
+    NUANCE: disabled-feature STORAGE/plumbing is DC, but control scaffolding that
+    still functions under static not-taken prediction (branchvalid/inv/praddr in
+    pipeline.v) stays COUNTED. Wholly-dead files (the never-instantiated latched
+    ram_sync.v) are soft-deleted to fpga/deleted/ and skipped, not ///DC-tagged.
+
+Caveat: the GROUP axis is only loosely aligned across the two sides (each side's
+store buffer is now STOREBUF, but some blocks still map imperfectly, e.g. RIDECORE
+folds fetch/decode/rename into pipeline.v); the CATEGORY totals are the reliable
+comparison, per-GROUP is indicative only.
+
+
+- for group that 15 lines duplication, we will not count it

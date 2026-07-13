@@ -12,22 +12,22 @@
 
 namespace kathryn::o3{
 
-    inline void immBrGen(Reg& instr, Wire& result){
+    inline void immBrGen(Reg& instr, Wire& result){   ///DATA_HC DECODE
 
-        mVal(zero1, 1, 0);
-        opr& opc = instr(0, 7);
+        mVal(zero1, 1, 0);        ///PARAM DECODE
+        opr& opc = instr(0, 7);   ///DATA_CL DECODE
 
-        opr& brOffset   = g(instr(31), instr(7), instr(25, 31),
-                            instr(8, 12), zero1).sext(ADDR_LEN);
-        opr& jalOffset  = g(instr(31), instr(12, 20), instr(20),
-                            instr(21, 31), zero1).sext(ADDR_LEN);
-        opr& jalrOffset = g(instr(31), instr(21, 31), zero1).sext(ADDR_LEN);
+        opr& brOffset   = g(instr(31), instr(7), instr(25, 31),                ///DATA_CL DECODE
+                            instr(8, 12), zero1).sext(ADDR_LEN);               ///DATA_CL DECODE
+        opr& jalOffset  = g(instr(31), instr(12, 20), instr(20),               ///DATA_CL DECODE
+                            instr(21, 31), zero1).sext(ADDR_LEN);              ///DATA_CL DECODE
+        opr& jalrOffset = g(instr(31), instr(21, 31), zero1).sext(ADDR_LEN);   ///DATA_CL DECODE
 
-        ztate(opc){
-            zcase(RV32_BRANCH){result = brOffset;}
-            zcase(RV32_JAL   ){result = jalOffset;}
-            zcase(RV32_JALR  ){result = jalrOffset;}
-            zcasedef{ result = 0; }
+        ztate(opc){                                    ///DATA_CL DECODE
+            zcase(RV32_BRANCH){result = brOffset;}     ///DATA_DT DECODE
+            zcase(RV32_JAL   ){result = jalOffset;}    ///DATA_DT DECODE
+            zcase(RV32_JALR  ){result = jalrOffset;}   ///DATA_DT DECODE
+            zcasedef{ result = 0; }                    ///DATA_DT DECODE
         }
     }
 
