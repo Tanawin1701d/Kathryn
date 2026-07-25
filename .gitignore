@@ -22,3 +22,4 @@ tools/*/artifacts/
 test/riscv/.out/
 tools/riscv_tests/riscv-tests/
 tools/riscv_tests/.out/
+tools/linux_image/build/

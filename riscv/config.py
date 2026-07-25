@@ -38,6 +38,9 @@ PRESETS: dict[str, SocConfig] = {
     "rv64i_min": SocConfig(core=CoreConfig()),
     # RV64I + Zicsr/Zifencei — riscv-tests p-env style suites (rv64ui/rv64mi).
     "rv64i_zicsr": SocConfig(core=CoreConfig(ext_zicsr=True, ext_zifencei=True)),
-    # Full Linux-boot target (extensions turned on as milestones land).
-    "linux": SocConfig(core=CoreConfig(ext_m=True, ext_a=True, ext_zicsr=True, ext_zifencei=True)),
+    # Full Linux-boot target: boot regs preset a0=hartid(0), a1=DTB address
+    # (loaded 126 MiB into RAM by the harness; see tools/linux_image/).
+    "linux": SocConfig(core=CoreConfig(
+        ext_m=True, ext_a=True, ext_zicsr=True, ext_zifencei=True,
+        boot_regs={11: 0x87E0_0000})),
 }

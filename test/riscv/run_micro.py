@@ -17,7 +17,7 @@ SW   = HERE / "sw"
 
 CROSS   = "riscv64-unknown-elf-gcc"
 OBJCOPY = "riscv64-unknown-elf-objcopy"
-MARCH   = "rv64i"
+MARCH   = "rv64ima"
 
 RAM_BASE   = 0x8000_0000
 TOHOST     = 0x8000_1000
@@ -32,9 +32,9 @@ def sh(cmd, **kw):
 
 
 def build_core_and_harness() -> pathlib.Path:
-    # zicsr preset: a superset of rv64i_min — all micro tests run on it.
+    # full linux preset (IMA+Zicsr): every micro test runs on the boot target.
     rtl = OUT / "rtl"
-    sh([sys.executable, "-m", "riscv.gen", "--preset", "rv64i_zicsr", "--out", rtl],
+    sh([sys.executable, "-m", "riscv.gen", "--preset", "linux", "--out", rtl],
        cwd=REPO, env={"PYTHONPATH": str(REPO / "py"), "PATH": "/usr/bin:/bin"})
     sh([sys.executable, REPO / "tools/simharness/build.py", "--verilog-dir", rtl])
     return rtl / "sim" / "obj_dir" / "simharness"
@@ -71,8 +71,12 @@ def main() -> None:
     for src in tests:
         rc, out = run_one(exe, build_prog(src))
         status = "PASS" if rc == 0 else ("TIMEOUT" if rc == 124 else f"FAIL({rc})")
+        # optional stdout check: <test>.expect must appear in the UART output
+        expect = src.with_suffix(".expect")
+        if rc == 0 and expect.exists() and expect.read_text() not in out:
+            status = "BAD-OUTPUT"
         print(f"{status:10s} {src.stem}")
-        if rc != 0:
+        if status != "PASS":
             failed.append(src.stem)
     print(f"\n{len(tests) - len(failed)}/{len(tests)} passed")
     sys.exit(1 if failed else 0)

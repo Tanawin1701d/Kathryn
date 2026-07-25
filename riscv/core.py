@@ -113,6 +113,11 @@ class RV64Core(Module):
         self.instr.reset(0)
         self.halted.reset(0)
         self.b_req.reset(0)
+        from kathryn.signal import to_ref
+        for idx, value in cfg.boot_regs.items():           # e.g. a1 = DTB address
+            if not 0 < idx < 32:
+                raise ValueError(f"boot_regs: register index {idx} out of range")
+            to_ref(self.rf[idx].x).reset(value)            # resolve KarrayRef → reg
 
         # instruction fields
         self.dec_op  *= isa.opcode(ins)

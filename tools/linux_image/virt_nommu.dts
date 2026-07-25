@@ -1,0 +1,64 @@
+/* Device tree for the Kathryn RV64 nommu SoC — mirrors the QEMU virt nommu
+   platform contract the mainline nommu_virt_defconfig expects: CLINT at
+   0x2000000, ns16550a UART at 0x10000000, RAM at 0x80000000 (128 MiB).
+   The UART has no interrupt line yet — the 8250 driver falls back to polling. */
+
+/dts-v1/;
+
+/ {
+    #address-cells = <2>;
+    #size-cells    = <2>;
+    compatible     = "riscv-virtio";
+    model          = "kathryn-rv64-nommu";
+
+    chosen {
+        bootargs = "earlycon=uart8250,mmio,0x10000000 console=ttyS0,115200n8 panic=-1";
+    };
+
+    memory@80000000 {
+        device_type = "memory";
+        reg = <0x0 0x80000000 0x0 0x8000000>;
+    };
+
+    cpus {
+        #address-cells     = <1>;
+        #size-cells        = <0>;
+        timebase-frequency = <10000000>;
+
+        cpu@0 {
+            device_type = "cpu";
+            reg         = <0>;
+            status      = "okay";
+            compatible  = "riscv";
+            riscv,isa   = "rv64ima";
+            mmu-type    = "riscv,none";
+
+            cpu0_intc: interrupt-controller {
+                #interrupt-cells     = <1>;
+                compatible           = "riscv,cpu-intc";
+                interrupt-controller;
+            };
+        };
+    };
+
+    soc {
+        #address-cells = <2>;
+        #size-cells    = <2>;
+        compatible     = "simple-bus";
+        ranges;
+
+        clint@2000000 {
+            compatible = "sifive,clint0", "riscv,clint0";
+            reg        = <0x0 0x2000000 0x0 0x10000>;
+            interrupts-extended = <&cpu0_intc 3 &cpu0_intc 7>;
+        };
+
+        uart@10000000 {
+            compatible      = "ns16550a";
+            reg             = <0x0 0x10000000 0x0 0x100>;
+            clock-frequency = <3686400>;
+            reg-shift       = <0>;
+            reg-io-width    = <1>;
+        };
+    };
+};
