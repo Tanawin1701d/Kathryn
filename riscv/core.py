@@ -16,6 +16,7 @@ from kathryn.lib import mux, muxn, or_reduce, sext
 
 from . import isa
 from .config import CoreConfig
+from .csr import CsrFile
 
 
 class RegSet(Karray):
@@ -72,7 +73,12 @@ class RV64Core(Module):
         self.load_val   = wire(XLEN, "load_val")
         self.is_load    = wire(1,    "is_load")
         self.is_store   = wire(1,    "is_store")
-        self.halt_req   = wire(1,    "halt_req")
+        self.op_unknown = wire(1,    "op_unknown")
+        self.pc_redirect = wire(1,   "pc_redirect")   # taken jump/branch this instr
+
+        if cfg.ext_zicsr:
+            self.csr = CsrFile(cfg)
+            self.csr.declare()
 
         # IO: the external-bus contract
         self.b_req  .mark_output("mem_req")
@@ -165,6 +171,19 @@ class RV64Core(Module):
             br_lt, br_lt.lnot(), br_ltu, br_ltu.lnot(),              # BLT/BGE/BLTU/BGEU
         ], "br_mux")
 
+        # ---- opcode legality + control-transfer flag ----
+        self.op_unknown *= or_reduce(
+            [self.dec_op == op for op in isa.known_opcodes(cfg)]).lnot()
+        self.pc_redirect *= or_reduce([
+            self.dec_op == isa.OP_JAL,
+            self.dec_op == isa.OP_JALR,
+            (self.dec_op == isa.OP_BRANCH).land(br_taken),
+        ])
+
+        # ---- CSR file / trap logic ----
+        if cfg.ext_zicsr:
+            self.csr.build_comb(self)
+
         # ---- write-back value / enable ----
         pc_plus4 = self.pc + 4
         with zif(self.dec_op == isa.OP_LUI):
@@ -181,11 +200,16 @@ class RV64Core(Module):
             self.wb_val *= alu_w64
         with zelif(self.dec_op == isa.OP_OP32):
             self.wb_val *= alu_w64
+        if cfg.ext_zicsr:
+            with zelif(self.dec_op == isa.OP_SYSTEM):
+                self.wb_val *= self.csr.csr_rdata                     # old CSR value
         with zelse():
             self.wb_val *= alu_out                                    # OP / OP_IMM
 
-        self.wb_en   *= or_reduce([self.dec_op == op for op in isa.WB_OPCODES])
-        self.halt_req *= or_reduce([self.dec_op == op for op in isa.known_opcodes(cfg)]).lnot()
+        wb_srcs = [self.dec_op == op for op in isa.WB_OPCODES]
+        if cfg.ext_zicsr:
+            wb_srcs.append(self.csr.is_csr)
+        self.wb_en *= or_reduce(wb_srcs)
 
         # ---- next pc ----
         with zif(self.dec_op == isa.OP_JAL):
@@ -215,17 +239,36 @@ class RV64Core(Module):
         ], "ld_mux")
 
     # ---- the fetch/execute FSM ----------------------------------------------
+    def _wb_step(self):
+        # Standard write-back: rf write (gated by wb_en, x0 excluded), pc advance,
+        # CSR commit strobe + instret. Without Zicsr, unknown opcodes halt instead.
+        with par():
+            self.rf.cus_dynamic_assign(
+                [slice(1, 32)], {"x": self.wb_val},
+                lambda v: self.wb_en & (self.dec_rd == v.coord[0]),
+            )
+            self.pc |= self.next_pc
+            if self.cfg.ext_zicsr:
+                self.csr.csr_strobe  *= 1          # state-gated: high in this cycle only
+                self.csr.minstret    |= self.csr.minstret + 1
+            else:
+                self.halted |= self.halted | self.op_unknown
+
+    def _bus_read(self, addr, size):
+        with par():
+            self.b_req  |= 1
+            self.b_we   |= 0
+            self.b_addr |= addr
+            self.b_size |= size
+        scwait(self.b_ack)
+
     @flow
     def fsm(self):
+        cfg = self.cfg
         with seq():
             with cwhile(self.halted == 0):
                 # FETCH: issue a 4-byte read at pc
-                with par():
-                    self.b_req  |= 1
-                    self.b_we   |= 0
-                    self.b_addr |= self.pc
-                    self.b_size |= 2
-                scwait(self.b_ack)
+                self._bus_read(self.pc, 2)
                 with par():
                     self.instr |= self.b_rdata[31, 0]
                     self.b_req |= 0
@@ -233,32 +276,56 @@ class RV64Core(Module):
                 # posedge that latched `instr`, so give the comb decode one cycle
                 sywait(1)
 
-                # MEM: loads / stores make one extra bus access
-                with cif(self.is_load == 1):
-                    with par():
-                        self.b_req  |= 1
-                        self.b_we   |= 0
-                        self.b_addr |= self.mem_addr_c
-                        self.b_size |= self.mem_size_c
-                    scwait(self.b_ack)
-                    with par():
-                        self.ld_raw |= self.b_rdata
-                        self.b_req  |= 0
-                with cselif(self.is_store == 1):
-                    with par():
-                        self.b_req   |= 1
-                        self.b_we    |= 1
-                        self.b_addr  |= self.mem_addr_c
-                        self.b_wdata |= self.rs2_val
-                        self.b_size  |= self.mem_size_c
-                    scwait(self.b_ack)
-                    self.b_req |= 0
-
-                # WB: register write, pc advance, halt latch — one cycle
-                with par():
-                    self.rf.cus_dynamic_assign(
-                        [slice(1, 32)], {"x": self.wb_val},           # x0 excluded
-                        lambda v: self.wb_en & (self.dec_rd == v.coord[0]),
-                    )
-                    self.pc     |= self.next_pc
-                    self.halted |= self.halted | self.halt_req
+                # dispatch: trap / mret preempt; loads & stores add a bus access
+                if cfg.ext_zicsr:
+                    with cif(self.csr.trap_now == 1):
+                        with par():
+                            self.csr.mepc   |= self.pc
+                            self.csr.mcause |= self.csr.trap_cause
+                            self.csr.mtval  |= self.csr.trap_tval
+                            self.csr.mpie   |= self.csr.mie_g
+                            self.csr.mie_g  |= 0
+                            self.pc         |= self.csr.trap_target
+                    with cselif(self.csr.is_mret == 1):
+                        with par():
+                            self.pc           |= self.csr.mepc
+                            self.csr.mie_g    |= self.csr.mpie
+                            self.csr.mpie     |= 1
+                            self.csr.minstret |= self.csr.minstret + 1
+                    with cselif(self.is_load == 1):
+                        self._bus_read(self.mem_addr_c, self.mem_size_c)
+                        with par():
+                            self.ld_raw |= self.b_rdata
+                            self.b_req  |= 0
+                        self._wb_step()
+                    with cselif(self.is_store == 1):
+                        with par():
+                            self.b_req   |= 1
+                            self.b_we    |= 1
+                            self.b_addr  |= self.mem_addr_c
+                            self.b_wdata |= self.rs2_val
+                            self.b_size  |= self.mem_size_c
+                        scwait(self.b_ack)
+                        self.b_req |= 0
+                        self._wb_step()
+                    with cselse():
+                        self._wb_step()
+                else:
+                    with cif(self.is_load == 1):
+                        self._bus_read(self.mem_addr_c, self.mem_size_c)
+                        with par():
+                            self.ld_raw |= self.b_rdata
+                            self.b_req  |= 0
+                        self._wb_step()
+                    with cselif(self.is_store == 1):
+                        with par():
+                            self.b_req   |= 1
+                            self.b_we    |= 1
+                            self.b_addr  |= self.mem_addr_c
+                            self.b_wdata |= self.rs2_val
+                            self.b_size  |= self.mem_size_c
+                        scwait(self.b_ack)
+                        self.b_req |= 0
+                        self._wb_step()
+                    with cselse():
+                        self._wb_step()

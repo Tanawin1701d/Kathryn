@@ -36,6 +36,8 @@ class SocConfig:
 PRESETS: dict[str, SocConfig] = {
     # Minimal RV64I on the external C++ bus — unit tests / bring-up.
     "rv64i_min": SocConfig(core=CoreConfig()),
+    # RV64I + Zicsr/Zifencei — riscv-tests p-env style suites (rv64ui/rv64mi).
+    "rv64i_zicsr": SocConfig(core=CoreConfig(ext_zicsr=True, ext_zifencei=True)),
     # Full Linux-boot target (extensions turned on as milestones land).
     "linux": SocConfig(core=CoreConfig(ext_m=True, ext_a=True, ext_zicsr=True, ext_zifencei=True)),
 }

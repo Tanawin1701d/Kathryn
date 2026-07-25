@@ -1,9 +1,15 @@
-// Minimal CSR-free test environment for riscv-tests, used until the core grows
-// Zicsr (M2). Replaces the stock `p` env: PASS/FAIL talk straight to the HTIF
-// tohost word the simharness watches; TESTNUM (gp) reports the failing case.
+// Minimal M-mode test environment for riscv-tests on the Kathryn core.
+// Mirrors the stock `p` env's contract that rv64mi tests rely on: a trap
+// vector is installed at start and forwards to a test-defined (weak)
+// `mtvec_handler` when present; otherwise any trap fails the test. PASS/FAIL
+// talk straight to the HTIF tohost word the simharness watches; TESTNUM (gp)
+// reports the failing case. No pmp/satp/medeleg touch-and-catch preamble —
+// the core has none of them and tests here never enter S/U mode.
 
 #ifndef _ENV_KATHRYN_TEST_H
 #define _ENV_KATHRYN_TEST_H
+
+#include "../riscv-tests/env/encoding.h"
 
 #define RVTEST_RV64U
 #define RVTEST_RV64M
@@ -11,10 +17,23 @@
 
 #define TESTNUM gp
 
-#define RVTEST_CODE_BEGIN \
-    .section .text.init;  \
-    .globl _start;        \
-_start:
+#define RVTEST_CODE_BEGIN     \
+    .section .text.init;      \
+    .align 6;                 \
+    .weak mtvec_handler;      \
+    .globl _start;            \
+_start:                       \
+    la   t0, _env_trap_vec;   \
+    csrw mtvec, t0;           \
+    li   TESTNUM, 0;          \
+    j    _env_test_start;     \
+    .align 2;                 \
+_env_trap_vec:                \
+    la   t5, mtvec_handler;   \
+    beqz t5, 1f;              \
+    jr   t5;                  \
+1:  RVTEST_FAIL;              \
+_env_test_start:
 
 #define RVTEST_CODE_END
 

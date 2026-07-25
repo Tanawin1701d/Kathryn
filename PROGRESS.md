@@ -19,9 +19,11 @@ Done condition: nommu Linux shell prompt on simulated UART (`ls` / `echo hi` rou
 - [x] All rv64ui pass — `.venv/bin/python tools/riscv_tests/run.py --suite rv64ui` → **52/52**
 - [x] Speed: 17.7 Mcyc/s sustained (trace-built binary) ≈ 2.7 MIPS at CPI≈6.5 → Linux boot ≈ minutes. GO.
 
-### M2 — Zicsr / traps / CLINT
-- [ ] csr.py + trap FSM states + interrupt sampling
-- [ ] `rv64mi-p-*` pass (skips documented); timer-irq payload passes
+### M2 — Zicsr / traps / CLINT  ✅
+- [x] riscv/csr.py (M-mode CSRs, read mux, strobe-gated write chain, trap bundle) + trap/mret FSM branches
+- [x] rv64mi **14/16** — `tools/riscv_tests/run.py --suite rv64mi --preset rv64i_zicsr`
+      (skips: `access` needs bus access faults, `breakpoint` needs debug-trigger CSRs — neither needed for nommu Linux)
+- [x] rv64ui still 52/52 on zicsr preset; timer-irq payload tcr02 PASS (CLINT → mtip → trap → mret)
 
 ### M3 — M + A extensions
 - [ ] `rv64um-p-*` pass
@@ -40,7 +42,7 @@ Done condition: nommu Linux shell prompt on simulated UART (`ls` / `echo hi` rou
 ### M6 (stretch) — C extension front-end, iterative muldiv, pipeline
 
 ## Current task
-M2: csr.py + trap FSM states + interrupt sampling
+M3: M extension (mul/div via lib.arith) then A extension (LR/SC + AMOs) — exit: rv64um + rv64ua suites
 
 ## Blockers
 (none)

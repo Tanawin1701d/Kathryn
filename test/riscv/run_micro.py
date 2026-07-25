@@ -32,8 +32,9 @@ def sh(cmd, **kw):
 
 
 def build_core_and_harness() -> pathlib.Path:
+    # zicsr preset: a superset of rv64i_min — all micro tests run on it.
     rtl = OUT / "rtl"
-    sh([sys.executable, "-m", "riscv.gen", "--preset", "rv64i_min", "--out", rtl],
+    sh([sys.executable, "-m", "riscv.gen", "--preset", "rv64i_zicsr", "--out", rtl],
        cwd=REPO, env={"PYTHONPATH": str(REPO / "py"), "PATH": "/usr/bin:/bin"})
     sh([sys.executable, REPO / "tools/simharness/build.py", "--verilog-dir", rtl])
     return rtl / "sim" / "obj_dir" / "simharness"
