@@ -15,3 +15,8 @@ docs/
 
 # Generated test model output
 /test/.model_output/
+
+# simharness / riscv tool build artifacts
+tools/simharness/smoke/.out/
+tools/*/artifacts/
+test/riscv/.out/

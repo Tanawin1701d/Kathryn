@@ -44,6 +44,16 @@ def _wheel_verilator_bin() -> pathlib.Path | None:
     return bin_dir if ver >= _VERILATOR_MIN and (bin_dir / "verilator").is_file() else None
 
 
+def ensure_verilator() -> str:
+    # Public wrapper: resolve a new-enough verilator onto PATH (PATH binary →
+    # PyPI wheel → conda env) and return the executable path. Shared by the
+    # cocotb runner below and out-of-tree tools (e.g. tools/simharness).
+    _ensure_verilator()
+    exe = shutil.which("verilator")
+    assert exe is not None, "ensure_verilator: resolution succeeded but PATH lookup failed"
+    return exe
+
+
 def _ensure_verilator() -> None:
     # A PATH verilator that is new enough wins; otherwise fall back to the PyPI
     # wheel (`pip install verilator`), then a dedicated conda env, by prepending
