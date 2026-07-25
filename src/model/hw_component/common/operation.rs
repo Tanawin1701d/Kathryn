@@ -29,6 +29,9 @@ pub enum LogicOp {
     ArithMul,    // *
     ArithDiv,    // /
     ArithDivr,   // %
+    ArithShrA,   // >>> arithmetic (sign-preserving) shift right
+    ArithDivS,   // signed /
+    ArithRemS,   // signed %
     ExtendBit,   // bit extender
     SliceBit,    // a[slice] bit/slice selector (single operand)
     // assign
@@ -62,6 +65,9 @@ impl LogicOp {
             LogicOp::ArithMul    => "*",
             LogicOp::ArithDiv    => "/",
             LogicOp::ArithDivr   => "%",
+            LogicOp::ArithShrA   => ">>>",
+            LogicOp::ArithDivS   => "s/",
+            LogicOp::ArithRemS   => "s%",
             LogicOp::ExtendBit   => "ext",
             LogicOp::SliceBit    => "slice",
             LogicOp::Assign      => "=",
@@ -95,6 +101,9 @@ impl LogicOp {
             LogicOp::ArithMul    => "ArithMul",
             LogicOp::ArithDiv    => "ArithDiv",
             LogicOp::ArithDivr   => "ArithDivr",
+            LogicOp::ArithShrA   => "ArithShrA",
+            LogicOp::ArithDivS   => "ArithDivS",
+            LogicOp::ArithRemS   => "ArithRemS",
             LogicOp::ExtendBit   => "ExtendBit",
             LogicOp::SliceBit    => "SliceBit",
             LogicOp::Assign      => "Assign",
@@ -129,10 +138,13 @@ impl LogicOp {
             19 => LogicOp::ArithMul,
             20 => LogicOp::ArithDiv,
             21 => LogicOp::ArithDivr,
-            22 => LogicOp::ExtendBit,
-            23 => LogicOp::SliceBit,
-            24 => LogicOp::Assign,
-            25 => LogicOp::Dummy,
+            22 => LogicOp::ArithShrA,
+            23 => LogicOp::ArithDivS,
+            24 => LogicOp::ArithRemS,
+            25 => LogicOp::ExtendBit,
+            26 => LogicOp::SliceBit,
+            27 => LogicOp::Assign,
+            28 => LogicOp::Dummy,
             _  => return None,
         };
         Some(op)

@@ -42,8 +42,17 @@ impl HcpBaseVb for Expression {
                 format!("{op_tok}{a_str}")
             }
 
-            // ---- signed relational: $signed(a) < $signed(b) ----
-            LogicOp::RelationSlt | LogicOp::RelationSgt => {
+            // ---- arithmetic shift right: $signed(a) >>> b ----
+            // Only the left operand is cast: a shift's result signedness follows
+            // the left operand alone (IEEE 1800), and the amount stays unsigned.
+            LogicOp::ArithShrA => {
+                let b_i   = match self.get_operand_b() { Some(x) => x, None => return };
+                let b_str = fmt_operand(b_i, self.get_operand_b_slice(), arena, active_i, &active_name, active_size);
+                format!("$signed({a_str}) >>> {b_str}")
+            }
+
+            // ---- signed relational / arithmetic: $signed(a) OP $signed(b) ----
+            LogicOp::RelationSlt | LogicOp::RelationSgt | LogicOp::ArithDivS | LogicOp::ArithRemS => {
                 let b_i    = match self.get_operand_b() { Some(x) => x, None => return };
                 let b_str  = fmt_operand(b_i, self.get_operand_b_slice(), arena, active_i, &active_name, active_size);
                 let op_tok = logic_op_to_verilog(self.get_op());

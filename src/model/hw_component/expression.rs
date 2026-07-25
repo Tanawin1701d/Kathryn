@@ -62,7 +62,10 @@ impl Expression {
             | LogicOp::ArithMinus
             | LogicOp::ArithMul
             | LogicOp::ArithDiv
-            | LogicOp::ArithDivr => a_slice.get_size(),
+            | LogicOp::ArithDivr
+            | LogicOp::ArithShrA
+            | LogicOp::ArithDivS
+            | LogicOp::ArithRemS => a_slice.get_size(),
             // other not support for this constructor
             _ => panic!("Expression::new — unsupported op {:?} for this constructor", op),
         };

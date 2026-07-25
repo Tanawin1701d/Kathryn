@@ -15,7 +15,7 @@ from typing import Sequence, Union
 from .. import _session
 from ..hw_component import wire, val
 from ..signal import SignalRef, to_ref
-from ..flow_block import zif, zelse
+from ..flow_block import zif, zelif, zelse
 
 
 def width_of(sig: SignalRef) -> int:
@@ -120,3 +120,58 @@ def mux(cond: SignalRef, a: Union[SignalRef, int], b: Union[SignalRef, int],
     with zelse():
         out *= b_ref
     return out
+
+
+def muxn(sel: SignalRef, items: Sequence[Union[SignalRef, int]],
+         name: str | None = None) -> SignalRef:
+    # N:1 binary-select mux: `out = items[sel]` as a fresh wire. The LAST item is
+    # the zelse arm, so it also covers any sel encoding past len(items)-1 —
+    # full coverage, no default needed.
+    if not items:
+        raise ValueError("muxn: need at least one item")
+    refs = [it if isinstance(it, int) else to_ref(it) for it in items]
+    if len(refs) == 1:
+        ref = refs[0]
+        if isinstance(ref, int):
+            raise ValueError("muxn: a single item must be a signal (ints have no width)")
+        return ref
+    widths = [width_of(s) for s in refs if isinstance(s, SignalRef)]
+    if not widths:
+        raise ValueError("muxn: at least one item must be a signal (ints have no width)")
+    sel = to_ref(sel)
+    out = wire(max(widths), name or _session.auto_name("muxn"))
+    with zif(sel == 0):
+        out *= refs[0]
+    for i in range(1, len(refs) - 1):
+        with zelif(sel == i):
+            out *= refs[i]
+    with zelse():
+        out *= refs[-1]
+    return out
+
+
+def decoder(sel: SignalRef, n: int) -> list[SignalRef]:
+    # Binary → one-hot: n 1-bit expressions, entry i high when sel == i.
+    sel = to_ref(sel)
+    if n < 1:
+        raise ValueError("decoder: n must be >= 1")
+    return [sel == i for i in range(int(n))]
+
+
+def priority_encoder(flags: Sequence[SignalRef],
+                     name: str | None = None) -> tuple[SignalRef, SignalRef]:
+    # Lowest-set-index encoder over 1-bit flags. Returns (index_wire, valid):
+    # index of the first high flag (0 when none), valid = OR of all flags.
+    refs = [to_ref(f) for f in flags]
+    if not refs:
+        raise ValueError("priority_encoder: need at least one flag")
+    iw  = max(1, (len(refs) - 1).bit_length())
+    idx = wire(iw, name or _session.auto_name("prienc"))
+    with zif(refs[0] == 1):
+        idx *= 0
+    for i in range(1, len(refs)):
+        with zelif(refs[i] == 1):
+            idx *= i
+    with zelse():
+        idx *= 0
+    return idx, or_reduce(refs)

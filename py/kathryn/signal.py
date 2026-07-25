@@ -158,6 +158,13 @@ class SignalRef:
     def lnot  (self)               -> expr: return self._unop(LogicOp.LogicalNot)
     def slt   (self, o: SignalRef) -> expr: return self._binop(o, LogicOp.RelationSlt)
     def sgt   (self, o: SignalRef) -> expr: return self._binop(o, LogicOp.RelationSgt)
+    # signed <= / >= composed from the strict compares (no dedicated Rust op)
+    def sle   (self, o: SignalRef) -> expr: return self.sgt(o).lnot()
+    def sge   (self, o: SignalRef) -> expr: return self.slt(o).lnot()
+    # signed arithmetic: >>> (shift amount stays unsigned), signed div/rem
+    def sra   (self, o: Union[SignalRef, int]) -> expr: return self._binop(o, LogicOp.ArithShrA)
+    def sdiv  (self, o: Union[SignalRef, int]) -> expr: return self._binop(o, LogicOp.ArithDivS)
+    def srem  (self, o: Union[SignalRef, int]) -> expr: return self._binop(o, LogicOp.ArithRemS)
     def extend(self, width: int)   -> expr:
         out = _session.arena().mk_extend_bit(
             _session.auto_name("expr"), self._ident, int(width), self._slice)

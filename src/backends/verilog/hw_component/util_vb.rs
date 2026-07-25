@@ -59,6 +59,11 @@ pub fn logic_op_to_verilog(op: LogicOp) -> &'static str {
         LogicOp::ArithMul    => "*",
         LogicOp::ArithDiv    => "/",
         LogicOp::ArithDivr   => "%",
+        // Signed arithmetic: token only — caller wraps operands in $signed()
+        // (arithmetic shift keeps an unsigned shift-amount operand).
+        LogicOp::ArithShrA   => ">>>",
+        LogicOp::ArithDivS   => "/",
+        LogicOp::ArithRemS   => "%",
         LogicOp::Assign      => panic!("logic_op_to_verilog: Assign has no operator token; handle as wire-through"),
         LogicOp::ExtendBit   => panic!("logic_op_to_verilog: ExtendBit has no direct Verilog operator; not yet implemented"),
         LogicOp::SliceBit    => panic!("logic_op_to_verilog: SliceBit has no operator token; handle as wire-through"),
