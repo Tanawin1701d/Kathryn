@@ -12,11 +12,12 @@ Done condition: nommu Linux shell prompt on simulated UART (`ls` / `echo hi` rou
 - [x] M0.4 Verilator C++ harness (`tools/simharness/`) — test: `.venv/bin/python tools/simharness/smoke/run.py`
 - [x] M0 exit: full `test/run_cocotb.py` regression green (82/82 incl. tc41–43); pytest smoke 57/57
 
-### M1 — RV64I core
-- [ ] riscv/ package skeleton (config/isa/bus/regfile/decode/alu/lsu/core/soc/gen)
-- [ ] Unit tests tcr* green on Icarus (dsl-mem config)
-- [ ] tools/riscv_tests fetch+build+run.py
-- [ ] All `rv64ui-p-*` pass on Verilator harness; MIPS measured
+### M1 — RV64I core  ✅
+- [x] riscv/ package (config/isa/core/gen; decode+ALU as comb sections inside RV64Core — no submodules needed yet)
+- [x] Micro tests via harness — `.venv/bin/python test/riscv/run_micro.py` (tcr01 PASS)
+- [x] tools/riscv_tests fetch+build+run.py (custom CSR-free env until M2)
+- [x] All rv64ui pass — `.venv/bin/python tools/riscv_tests/run.py --suite rv64ui` → **52/52**
+- [x] Speed: 17.7 Mcyc/s sustained (trace-built binary) ≈ 2.7 MIPS at CPI≈6.5 → Linux boot ≈ minutes. GO.
 
 ### M2 — Zicsr / traps / CLINT
 - [ ] csr.py + trap FSM states + interrupt sampling
@@ -39,7 +40,7 @@ Done condition: nommu Linux shell prompt on simulated UART (`ls` / `echo hi` rou
 ### M6 (stretch) — C extension front-end, iterative muldiv, pipeline
 
 ## Current task
-M1: riscv/ package skeleton (config/isa/bus/regfile/decode/alu/lsu/core/soc/gen)
+M2: csr.py + trap FSM states + interrupt sampling
 
 ## Blockers
 (none)
@@ -56,3 +57,7 @@ M1: riscv/ package skeleton (config/isa/bus/regfile/decode/alu/lsu/core/soc/gen)
 - 2026-07-25: M0.1+M0.3 green (tc41/tc43) — commit cb17683.
 - 2026-07-25: M0.2 green (tc42) — commit 83b6f34. Full regression 82/82.
 - 2026-07-25: M0.4 harness smoke PASS (Verilator 5.48 wheel).
+- 2026-07-25: M1 bug 1: cif chain samples conditions at the instr-latch posedge → 1-cycle decode-settle (sywait(1)) after latch.
+- 2026-07-25: M1 bug 2 (DSL, reusable fix): sub-slicing a slice view was absolute, not relative — broke lib.sext sign-bit on imm decode. Fixed in signal.py (commit 170d3da).
+- 2026-07-25: M1 DONE — rv64ui 52/52 on Verilator harness; 17.7 Mcyc/s sustained (commit pending).
+- 2026-07-25: Decisions: unit tests run via harness (not cocotb/DSL-RAM) — uniform + avoids sub-word DSL RAM; core is a single Module (comb sections, no submodule hierarchy) for readability; riscv-tests use custom CSR-free env until M2 lands Zicsr.

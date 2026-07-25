@@ -20,3 +20,5 @@ docs/
 tools/simharness/smoke/.out/
 tools/*/artifacts/
 test/riscv/.out/
+tools/riscv_tests/riscv-tests/
+tools/riscv_tests/.out/
