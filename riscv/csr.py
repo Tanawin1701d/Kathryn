@@ -33,6 +33,8 @@ class CsrFile:
 
     # ---- state (call from @init) --------------------------------------------
     def declare(self):
+        self.priv     = reg(1,  "priv")           # current privilege: 1=M, 0=U
+        self.mpp      = reg(2,  "mstatus_mpp")    # mstatus.MPP (real, kernel-written)
         self.mie_g    = reg(1,  "mstatus_mie")    # mstatus.MIE
         self.mpie     = reg(1,  "mstatus_mpie")   # mstatus.MPIE
         self.msie     = reg(1,  "mie_msie")
@@ -52,10 +54,11 @@ class CsrFile:
         cfg = self.cfg
         ins = core.instr
 
-        for r in (self.mie_g, self.mpie, self.msie, self.mtie, self.meie,
+        for r in (self.mpp, self.mie_g, self.mpie, self.msie, self.mtie, self.meie,
                   self.mtvec, self.mscratch, self.mepc, self.mcause, self.mtval,
                   self.mcycle, self.minstret):
             r.reset(0)
+        self.priv.reset(1)                        # boot in M-mode
 
         # free-running cycle counter (constant-true zif: bare clocked assigns panic)
         one = val(1, 1, "const_one")
@@ -66,8 +69,10 @@ class CsrFile:
         misa_val = ((2 << 62) | (1 << 8)                      # MXL=64, I
                     | ((1 << 12) if cfg.ext_m else 0)
                     | ((1 << 0)  if cfg.ext_a else 0))
-        mstatus_rd = cat(val(51, 0), val(2, 3), val(3, 0), self.mpie,
-                         val(3, 0), self.mie_g, val(3, 0), name="mstatus_rd")
+        # UXL (33:32) reads as 2: U-mode exists and UXLEN = 64 (read-only)
+        mstatus_rd = cat(val(30, 0), val(2, 2), val(19, 0), self.mpp,
+                         val(3, 0), self.mpie, val(3, 0), self.mie_g, val(3, 0),
+                         name="mstatus_rd")
         mie_rd     = cat(val(52, 0), self.meie, val(3, 0), self.mtie,
                          val(3, 0), self.msie, val(3, 0), name="mie_rd")
         mip_rd     = cat(val(52, 0), core.irq_meip, val(3, 0), core.irq_mtip,
@@ -138,10 +143,12 @@ class CsrFile:
         self.is_illegal *= core.op_unknown.lor(bad_priv).lor(self.csr_illegal)
         self.is_wfi = is_wfi
 
+        # M-interrupts are always enabled while in U-mode (mstatus.MIE only
+        # gates them in M-mode) — RISC-V privileged spec 3.1.6.1.
         irq_src = wire(1, "irq_any")
-        irq_src *= self.mie_g & ((self.meie & core.irq_meip)
-                                 | (self.mtie & core.irq_mtip)
-                                 | (self.msie & core.irq_msip))
+        irq_src *= (self.mie_g | ~self.priv) & ((self.meie & core.irq_meip)
+                                                | (self.mtie & core.irq_mtip)
+                                                | (self.msie & core.irq_msip))
         self.irq_pending = irq_src
         irq_code = wire(4, "irq_code")                          # MEI > MSI > MTI
         with zif((self.meie & core.irq_meip) == 1):
@@ -175,7 +182,7 @@ class CsrFile:
             cause *= EXC_BREAKPOINT
             tval  *= core.pc
         with zelif(self.is_ecall == 1):
-            cause *= EXC_ECALL_M
+            cause *= mux(self.priv, val(64, EXC_ECALL_M), val(64, 8), "ecall_cause")
             tval  *= 0
         with zelse():
             cause *= EXC_MISALIGNED_FETCH
@@ -195,9 +202,16 @@ class CsrFile:
         # exactly during that state; the clocked writes below fire on its posedge.
         self.csr_strobe = wire(1, "csr_strobe")
         commit = wen.land(self.csr_illegal.lnot()).land(self.csr_strobe)
+        # current privilege encoded as an MPP value, for the FSM's trap entry
+        self.priv_as_mpp = wire(2, "priv_as_mpp")
+        self.priv_as_mpp *= mux(self.priv, val(2, 3), val(2, 0), "priv_mpp_mux")
+
         with zif(commit.land(imm12 == MSTATUS) == 1):
             self.mie_g |= wval[3]
             self.mpie  |= wval[7]
+            # MPP is WARL on an M/U-only machine: S (1) / reserved (2) coerce to
+            # M so riscv-tests' "did S stick?" probes correctly report no S-mode.
+            self.mpp   |= mux(wval[12, 11] == 0, val(2, 0), val(2, 3), "mpp_warl")
         with zelif(commit.land(imm12 == MIE) == 1):
             self.msie |= wval[3]
             self.mtie |= wval[7]

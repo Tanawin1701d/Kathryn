@@ -1,5 +1,10 @@
 # RISC-V RV64 nommu-Linux core — loop progress
 
+## ✅ PROJECT DONE (2026-07-25)
+Linux 6.6.32 boots to an interactive root shell on the Kathryn-generated RV64IMA core:
+login → `ls /` → `echo hi from kathryn core` all round-trip over the simulated UART.
+Reproduce: `tools/linux_image/boot.sh` (build artifacts via `build.sh all`, `rootfs`, `embed`).
+
 Branch: `riscv-linux-core` (off `kathryn-rust-py`). Plan: `~/.claude/plans/i-want-you-to-polished-blum.md`.
 Done condition: nommu Linux shell prompt on simulated UART (`ls` / `echo hi` round-trip).
 
@@ -40,7 +45,9 @@ Done condition: nommu Linux shell prompt on simulated UART (`ls` / `echo hi` rou
 - [x] **M5a: LINUX BOOTS** — clean dmesg to the expected `VFS: unable to mount root fs` panic (no initramfs yet).
       16550A on ttyS0 (polled), CLINT clocksource, 20 BogoMIPS. Repro:
       `test/riscv/.out/rtl/sim/obj_dir/simharness +image=tools/linux_image/artifacts/Image@80000000 +image=tools/linux_image/artifacts/virt_nommu.dtb@87e00000 +max-cycles=8000000000`
-- [ ] M5b: buildroot rv64-nommu rootfs (no RVC!) embedded via INITRAMFS_SOURCE → shell; `ls`/`echo hi`  ← DONE condition
+- [x] **M5b: SHELL** — buildroot rv64ima soft-float (custom ISA, lp64, no RVC/F/D) BFLT userspace embedded via
+      INITRAMFS_SOURCE; root login, `ls /`, `echo hi` round-trip. Required core fix: real M/U privilege tracking
+      (priv reg + stored WARL MPP + ecall cause 8/11 + UXL=2 + U-mode irq gating) — commit below.
 
 ### M6 (stretch) — C extension front-end, iterative muldiv, pipeline
 

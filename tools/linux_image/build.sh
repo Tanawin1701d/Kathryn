@@ -6,6 +6,7 @@
 #   virt_nommu.dtb — device tree  (load at 0x87E00000, matches boot_regs a1)
 set -e
 cd "$(dirname "$0")"
+unset LD_LIBRARY_PATH      # buildroot refuses to run with it set (CUDA profile export)
 
 KVER=6.6.32
 KURL="https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-$KVER.tar.xz"
@@ -69,13 +70,23 @@ build_rootfs() {
     fi
     cd "build/buildroot-$BRVER"
     make qemu_riscv64_nommu_virt_defconfig
-    # Our core is rv64ima: no compressed instructions anywhere in userspace,
-    # and we build only the rootfs (the kernel comes from build_kernel).
+    # Our core is rv64ima soft-float: switch the ISA choice from G (imafdc) to
+    # custom I+M+A, lp64 ABI — no FP or compressed instructions anywhere in
+    # userspace. We build only the rootfs (the kernel comes from build_kernel).
     {
-        echo 'BR2_RISCV_ISA_CUSTOM_RVC=n'
+        echo '# BR2_riscv_g is not set'
+        echo 'BR2_riscv_custom=y'
+        echo 'BR2_RISCV_ISA_RVM=y'
+        echo 'BR2_RISCV_ISA_RVA=y'
+        echo '# BR2_RISCV_ISA_RVF is not set'
+        echo '# BR2_RISCV_ISA_RVD is not set'
+        echo '# BR2_RISCV_ISA_RVC is not set'
+        echo 'BR2_RISCV_ABI_LP64=y'
+        echo '# BR2_RISCV_ABI_LP64D is not set'
         echo '# BR2_LINUX_KERNEL is not set'
         echo 'BR2_TARGET_ROOTFS_CPIO=y'
         echo '# BR2_TARGET_ROOTFS_INITRAMFS is not set'
+        echo '# BR2_PACKAGE_HOST_QEMU is not set'      # our "qemu" is the Kathryn core
     } >> .config
     make olddefconfig
     make -j"$JOBS"

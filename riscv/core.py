@@ -390,12 +390,16 @@ class RV64Core(Module):
                             self.csr.mepc   |= self.pc
                             self.csr.mcause |= self.csr.trap_cause
                             self.csr.mtval  |= self.csr.trap_tval
+                            self.csr.mpp    |= self.csr.priv_as_mpp
+                            self.csr.priv   |= 1                    # enter M-mode
                             self.csr.mpie   |= self.csr.mie_g
                             self.csr.mie_g  |= 0
                             self.pc         |= self.csr.trap_target
                     with cselif(self.csr.is_mret == 1):
                         with par():
                             self.pc           |= self.csr.mepc
+                            self.csr.priv     |= self.csr.mpp == 3  # drop to MPP's mode
+                            self.csr.mpp      |= 0                  # spec: MPP <- U
                             self.csr.mie_g    |= self.csr.mpie
                             self.csr.mpie     |= 1
                             self.csr.minstret |= self.csr.minstret + 1
