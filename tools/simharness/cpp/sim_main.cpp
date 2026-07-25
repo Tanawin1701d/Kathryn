@@ -56,6 +56,7 @@ int main(int argc, char **argv) {
     Verilated::commandArgs(argc, argv);
 
     const bool     quiet        = plusarg_flag(argc, argv, "quiet");
+    const bool     bus_log      = plusarg_flag(argc, argv, "bus-log");
     const uint64_t ram_base     = plusarg_u64(argc, argv, "ram-base",     0x80000000ull);
     const uint64_t ram_size     = plusarg_u64(argc, argv, "ram-size",     0x8000000ull);
     const uint64_t clint_base   = plusarg_u64(argc, argv, "clint-base",   0x2000000ull);
@@ -128,6 +129,11 @@ int main(int argc, char **argv) {
         if (top->mem_req && !top->mem_ack) {
             uint64_t addr = top->mem_addr;
             int      size = 1 << top->mem_size;
+            if (bus_log)
+                std::fprintf(stderr, "[%8llu] %s addr=%llx size=%d wdata=%llx\n",
+                             (unsigned long long)cycle, top->mem_we ? "W" : "R",
+                             (unsigned long long)addr, size,
+                             (unsigned long long)top->mem_wdata);
             if (top->mem_we) {
                 uint64_t v = top->mem_wdata;
                 if      (ram.contains(addr))   ram.write(addr, size, v);
