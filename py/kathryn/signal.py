@@ -83,7 +83,18 @@ class SignalRef:
     # ---- inclusive slicing -------------------------------------------------
     def __getitem__(self, key: SliceKey) -> SignalRef:
         # Slice view shares the same ident, so it inherits the owner's clocked-ness.
-        return SignalRef(self._ident, _inclusive_slice(key))
+        # Sub-slicing an existing view is RELATIVE to that view (`instr[31,20][11]`
+        # is bit 31 of instr, i.e. bit 11 of the view), so views compose like
+        # standalone signals.
+        sl = _inclusive_slice(key)
+        if self._is_user_assigned:
+            base = self._slice
+            if sl.stop > base.stop - base.start:
+                raise IndexError(
+                    f"slice [{sl.stop - 1}, {sl.start}] out of range for a "
+                    f"{base.stop - base.start}-bit view")
+            sl = Slice(base.start + sl.start, base.start + sl.stop)
+        return SignalRef(self._ident, sl)
 
     # ---- expression building ----------------------------------------------
     def _binop(self, other: Union[SignalRef, int], op: LogicOp) -> expr: # two op

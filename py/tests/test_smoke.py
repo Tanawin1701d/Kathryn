@@ -1340,3 +1340,26 @@ def test_karray_reduce_fold_needs_fn():
                 self.rf.reduce([Reduce])              # no per-dim fn, no select_fn
 
     worker()
+
+
+def test_slice_view_subslice_composes():
+    # Sub-slicing a view is relative: instr[31,20][11] must be bit 31 of instr,
+    # and instr[31,20][3,0] bits 23..20. Out-of-range sub-slices raise.
+    import pytest
+    from kathryn import reset, Module, init, wire, set_top
+
+    reset()
+
+    class M(Module):
+        @init
+        def com(self):
+            self.instr = wire(32, "instr")
+
+    m    = M()
+    view = m.instr[31, 20]
+    bit  = view[11]
+    assert (bit._slice.start, bit._slice.stop) == (31, 32)
+    sub = view[3, 0]
+    assert (sub._slice.start, sub._slice.stop) == (20, 24)
+    with pytest.raises(IndexError):
+        view[12]
