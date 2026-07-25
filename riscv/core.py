@@ -12,7 +12,7 @@ from __future__ import annotations
 from kathryn import (Module, init, flow, reg, wire, val, seq, par, cwhile, scwait, sywait,
                      cif, cselif, cselse, zif, zelif, zelse,
                      Karray, kaf, HwComponentType)
-from kathryn.lib import mux, muxn, or_reduce, sext
+from kathryn.lib import mux, muxn, mulh, or_reduce, sext
 
 from . import isa
 from .config import CoreConfig
@@ -75,6 +75,15 @@ class RV64Core(Module):
         self.is_store   = wire(1,    "is_store")
         self.op_unknown = wire(1,    "op_unknown")
         self.pc_redirect = wire(1,   "pc_redirect")   # taken jump/branch this instr
+
+        if cfg.ext_a:
+            self.resv      = reg(1,    "resv")        # LR reservation (single hart)
+            self.resv_addr = reg(XLEN, "resv_addr")
+            self.is_amo    = wire(1,    "is_amo")
+            self.amo_is_lr = wire(1,    "amo_is_lr")
+            self.amo_is_sc = wire(1,    "amo_is_sc")
+            self.sc_fail   = wire(1,    "sc_fail")
+            self.amo_result = wire(XLEN, "amo_result")
 
         if cfg.ext_zicsr:
             self.csr = CsrFile(cfg)
@@ -161,6 +170,45 @@ class RV64Core(Module):
         ], "w_mux")
         alu_w64 = sext(w_res, XLEN, "alu_w64")
 
+        # ---- M extension: mul/div (always reg-reg, funct7 == 1) ----
+        if cfg.ext_m:
+            dec_f7 = wire(7, "dec_f7"); dec_f7 *= ins[31, 25]
+            self.is_md = wire(1, "is_md"); self.is_md *= dec_f7 == 1
+            md_a, md_b = self.rs1_val, self.rs2_val
+
+            zero_b  = md_b == 0
+            negmax  = (md_a == 0x8000_0000_0000_0000).land(md_b == 0xFFFF_FFFF_FFFF_FFFF)
+            md_out  = wire(XLEN, "md_out")
+            md_out *= muxn(self.dec_f3, [
+                md_a * md_b,                                                  # 0 MUL
+                mulh(md_a, md_b, True,  True,  "mulh_ss"),                    # 1 MULH
+                mulh(md_a, md_b, True,  False, "mulh_su"),                    # 2 MULHSU
+                mulh(md_a, md_b, False, False, "mulh_uu"),                    # 3 MULHU
+                mux(zero_b, 0xFFFF_FFFF_FFFF_FFFF,
+                    mux(negmax, md_a, md_a.sdiv(md_b), "div_ovf"), "div_z"),  # 4 DIV
+                mux(zero_b, 0xFFFF_FFFF_FFFF_FFFF, md_a / md_b, "divu_z"),    # 5 DIVU
+                mux(zero_b, md_a, mux(negmax, 0, md_a.srem(md_b), "rem_ovf"), "rem_z"),  # 6 REM
+                mux(zero_b, md_a, md_a % md_b, "remu_z"),                     # 7 REMU
+            ], "md_mux")
+            self.md_out = md_out
+
+            # W variants on materialized 32-bit operand wires
+            md_a32 = wire(32, "md_a32"); md_a32 *= md_a[31, 0]
+            md_b32 = wire(32, "md_b32"); md_b32 *= md_b[31, 0]
+            zero_bw = md_b32 == 0
+            negmaxw = (md_a32 == 0x8000_0000).land(md_b32 == 0xFFFF_FFFF)
+            mulw    = md_a32 * md_b32
+            mdw     = wire(32, "mdw")
+            mdw    *= muxn(self.dec_f3, [
+                mulw, mulw, mulw, mulw,                                       # 0 MULW (1-3 unused)
+                mux(zero_bw, 0xFFFF_FFFF,
+                    mux(negmaxw, md_a32, md_a32.sdiv(md_b32), "divw_ovf"), "divw_z"),   # 4 DIVW
+                mux(zero_bw, 0xFFFF_FFFF, md_a32 / md_b32, "divuw_z"),        # 5 DIVUW
+                mux(zero_bw, md_a32, mux(negmaxw, 0, md_a32.srem(md_b32), "remw_ovf"), "remw_z"),  # 6 REMW
+                mux(zero_bw, md_a32, md_a32 % md_b32, "remuw_z"),             # 7 REMUW
+            ], "mdw_mux")
+            self.mdw_out64 = sext(mdw, XLEN, "mdw_out64")
+
         # ---- branch condition ----
         br_eq  = self.rs1_val == self.rs2_val
         br_lt  = self.rs1_val.slt(self.rs2_val)
@@ -196,6 +244,15 @@ class RV64Core(Module):
             self.wb_val *= pc_plus4
         with zelif(self.dec_op == isa.OP_LOAD):
             self.wb_val *= self.load_val
+        if cfg.ext_m:
+            with zelif((self.dec_op == isa.OP_OP).land(self.is_md)):
+                self.wb_val *= self.md_out
+            with zelif((self.dec_op == isa.OP_OP32).land(self.is_md)):
+                self.wb_val *= self.mdw_out64
+        if cfg.ext_a:
+            with zelif(self.dec_op == isa.OP_AMO):
+                self.wb_val *= mux(self.amo_is_sc, self.sc_fail.extend(XLEN),
+                                   self.load_val, "amo_wb")
         with zelif(self.dec_op == isa.OP_IMM32):
             self.wb_val *= alu_w64
         with zelif(self.dec_op == isa.OP_OP32):
@@ -209,6 +266,8 @@ class RV64Core(Module):
         wb_srcs = [self.dec_op == op for op in isa.WB_OPCODES]
         if cfg.ext_zicsr:
             wb_srcs.append(self.csr.is_csr)
+        if cfg.ext_a:
+            wb_srcs.append(self.is_amo)
         self.wb_en *= or_reduce(wb_srcs)
 
         # ---- next pc ----
@@ -222,8 +281,51 @@ class RV64Core(Module):
             self.next_pc *= pc_plus4
 
         # ---- load/store effective address + size ----
-        self.mem_addr_c *= self.rs1_val + mux(self.is_store, imm_s, imm_i, "ea_imm")
+        ea_off = wire(XLEN, "ea_off")
+        with zif(self.is_store == 1):
+            ea_off *= imm_s
+        if cfg.ext_a:
+            with zelif(self.is_amo == 1):
+                ea_off *= 0                           # AMOs address rs1 directly
+        with zelse():
+            ea_off *= imm_i
+        self.mem_addr_c *= self.rs1_val + ea_off
         self.mem_size_c *= ins[13, 12]
+
+        # ---- A extension: LR/SC + AMO ops ----
+        if cfg.ext_a:
+            amo_f5 = wire(5, "amo_f5"); amo_f5 *= ins[31, 27]
+            self.is_amo    *= self.dec_op == isa.OP_AMO
+            self.amo_is_lr *= amo_f5 == 0x02
+            self.amo_is_sc *= amo_f5 == 0x03
+            self.sc_fail   *= (self.resv.land(self.resv_addr == self.mem_addr_c)).lnot()
+
+            # operate on sign-extended views (load_val already sexts W loads);
+            # unsigned W compares use the zero-extended low words instead
+            is_w   = self.dec_f3 == 2
+            amo_ld = self.load_val
+            amo_rs = mux(is_w, sext(self.rs2_val[31, 0], XLEN, "amo_rs_w"),
+                         self.rs2_val, "amo_rs")
+            u_ld   = mux(is_w, amo_ld[31, 0].extend(XLEN), amo_ld, "amo_uld")
+            u_rs   = mux(is_w, self.rs2_val[31, 0].extend(XLEN), self.rs2_val, "amo_urs")
+
+            AMO_FN = [
+                (0x00, amo_ld + amo_rs),                                  # AMOADD
+                (0x01, amo_rs),                                           # AMOSWAP
+                (0x04, amo_ld ^ amo_rs),                                  # AMOXOR
+                (0x08, amo_ld | amo_rs),                                  # AMOOR
+                (0x0C, amo_ld & amo_rs),                                  # AMOAND
+                (0x10, mux(amo_ld.slt(amo_rs), amo_ld, amo_rs, "amomin")),  # AMOMIN
+                (0x14, mux(amo_ld.slt(amo_rs), amo_rs, amo_ld, "amomax")),  # AMOMAX
+                (0x18, mux(u_ld < u_rs, amo_ld, amo_rs, "amominu")),      # AMOMINU
+                (0x1C, mux(u_ld < u_rs, amo_rs, amo_ld, "amomaxu")),      # AMOMAXU
+            ]
+            first = True
+            for f5, res in AMO_FN:
+                blk = zif(amo_f5 == f5) if first else zelif(amo_f5 == f5)
+                first = False
+                with blk:
+                    self.amo_result *= res
 
         # ---- load-data extension (harness returns addressed bytes in low lanes) ----
         ld = self.ld_raw
@@ -308,6 +410,46 @@ class RV64Core(Module):
                         scwait(self.b_ack)
                         self.b_req |= 0
                         self._wb_step()
+                    if cfg.ext_a:
+                        with cselif((self.is_amo & self.amo_is_lr) == 1):
+                            self._bus_read(self.mem_addr_c, self.mem_size_c)
+                            with par():
+                                self.ld_raw    |= self.b_rdata
+                                self.b_req     |= 0
+                                self.resv      |= 1
+                                self.resv_addr |= self.mem_addr_c
+                            self._wb_step()
+                        with cselif((self.is_amo & self.amo_is_sc) == 1):
+                            # NOTE: _wb_step samples sc_fail, so the reservation
+                            # is cleared one step AFTER write-back, not before.
+                            with cif(self.sc_fail == 0):
+                                with par():
+                                    self.b_req   |= 1
+                                    self.b_we    |= 1
+                                    self.b_addr  |= self.mem_addr_c
+                                    self.b_wdata |= self.rs2_val
+                                    self.b_size  |= self.mem_size_c
+                                scwait(self.b_ack)
+                                self.b_req |= 0
+                                self._wb_step()
+                                self.resv |= 0
+                            with cselse():
+                                self._wb_step()
+                                self.resv |= 0
+                        with cselif(self.is_amo == 1):          # read-modify-write AMOs
+                            self._bus_read(self.mem_addr_c, self.mem_size_c)
+                            with par():
+                                self.ld_raw |= self.b_rdata
+                                self.b_req  |= 0
+                            with par():
+                                self.b_req   |= 1
+                                self.b_we    |= 1
+                                self.b_addr  |= self.mem_addr_c
+                                self.b_wdata |= self.amo_result
+                                self.b_size  |= self.mem_size_c
+                            scwait(self.b_ack)
+                            self.b_req |= 0
+                            self._wb_step()
                     with cselse():
                         self._wb_step()
                 else:

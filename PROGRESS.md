@@ -25,9 +25,10 @@ Done condition: nommu Linux shell prompt on simulated UART (`ls` / `echo hi` rou
       (skips: `access` needs bus access faults, `breakpoint` needs debug-trigger CSRs — neither needed for nommu Linux)
 - [x] rv64ui still 52/52 on zicsr preset; timer-irq payload tcr02 PASS (CLINT → mtip → trap → mret)
 
-### M3 — M + A extensions
-- [ ] `rv64um-p-*` pass
-- [ ] `rv64ua-p-*` pass
+### M3 — M + A extensions  ✅
+- [x] rv64um **13/13** — comb mul/div (lib.arith.mulh widening; div-by-zero/overflow per spec)
+- [x] rv64ua **19/19** — LR/SC (single reservation, cleared post-WB) + all AMOs (RMW FSM branch)
+- [x] Full sweep on `--preset linux`: ui 52/52, um 13/13, ua 19/19, mi 14/16 (skips: access, breakpoint)
 
 ### M4 — SoC contract + bare-metal payloads
 - [ ] virt-nommu memory map + DTS; boot_regs preset
@@ -42,7 +43,7 @@ Done condition: nommu Linux shell prompt on simulated UART (`ls` / `echo hi` rou
 ### M6 (stretch) — C extension front-end, iterative muldiv, pipeline
 
 ## Current task
-M3: M extension (mul/div via lib.arith) then A extension (LR/SC + AMOs) — exit: rv64um + rv64ua suites
+M4: SoC contract — virt-nommu DTS + boot_regs preset + bare-metal payloads (hello_uart, echo, memtest); then M5 Linux image (tools/linux_image/build.sh — kernel nommu_virt_defconfig with RISCV_ISA_C=n, buildroot rv64 nommu initramfs; start the kernel build in background early)
 
 ## Blockers
 (none)
@@ -63,3 +64,5 @@ M3: M extension (mul/div via lib.arith) then A extension (LR/SC + AMOs) — exit
 - 2026-07-25: M1 bug 2 (DSL, reusable fix): sub-slicing a slice view was absolute, not relative — broke lib.sext sign-bit on imm decode. Fixed in signal.py (commit 170d3da).
 - 2026-07-25: M1 DONE — rv64ui 52/52 on Verilator harness; 17.7 Mcyc/s sustained (commit pending).
 - 2026-07-25: Decisions: unit tests run via harness (not cocotb/DSL-RAM) — uniform + avoids sub-word DSL RAM; core is a single Module (comb sections, no submodule hierarchy) for readability; riscv-tests use custom CSR-free env until M2 lands Zicsr.
+- 2026-07-25: M2 DONE (rv64mi 14/16 + timer irq payload). Gotcha class found twice: values must not change between a bus/branch step and the _wb_step that samples them (cif cond stale-instr; SC resv cleared pre-WB). Rule: anything _wb_step samples must stay stable until the WB posedge.
+- 2026-07-25: M3 DONE (um 13/13, ua 19/19). Nested cif inside a cselif branch works fine (SC success/fail paths).
