@@ -230,6 +230,14 @@ impl ModelArena {
         self.replace_back_wire(wire);
     }
 
+    // Record a mem block's $readmemh image; emitted as an `initial` preload by
+    // the Verilog backend so big memories start simulation with real contents.
+    pub fn set_mem_blk_init_file(&mut self, mem_blk_i: HcpIdent, path: &str) {
+        let mut blk = self.take_mem_blk(mem_blk_i);
+        blk.set_init_file(path);
+        self.replace_back_mem_blk(blk);
+    }
+
     // Opt a wire out of any fallback event (not even the implicit zero); for
     // externally driven wires such as clk / master-reset IO inputs.
     pub fn disable_wire_default(&mut self, wire_i: HcpIdent) {

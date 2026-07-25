@@ -19,6 +19,7 @@ pub struct MemBlk {
     bit_width         : i32,          // data width of each word
     index_width       : i32,          // address width (number of index bits)
     mem_ele_track_vec : Vec<HcpIdent>, // idents of all MemEle ops created from this block
+    init_file         : Option<String>, // $readmemh image preloaded at sim start
 
 }
 
@@ -36,15 +37,19 @@ impl MemBlk {
             bit_width,
             index_width,
             mem_ele_track_vec: Vec::new(),
+            init_file        : None,
         }
     }
 
     // ---- accessors ----
 
-    pub fn get_ident      (&self)     -> HcpIdent      { self.ident }
-    pub fn get_ident_mut  (&mut self) -> &mut HcpIdent { &mut self.ident }
-    pub fn get_bit_width  (&self)     -> i32            { self.bit_width   }
-    pub fn get_index_width(&self)     -> i32            { self.index_width }
+    pub fn get_ident      (&self)     -> HcpIdent        { self.ident }
+    pub fn get_ident_mut  (&mut self) -> &mut HcpIdent   { &mut self.ident }
+    pub fn get_bit_width  (&self)     -> i32              { self.bit_width   }
+    pub fn get_index_width(&self)     -> i32              { self.index_width }
+    pub fn get_init_file  (&self)     -> Option<&str>     { self.init_file.as_deref() }
+
+    pub fn set_init_file(&mut self, path: &str) { self.init_file = Some(path.to_string()); }
 
     // ---- MemEle factory ----
 

@@ -41,8 +41,12 @@ impl PyModelArena {
     // ---- MemBlk -------------------------------------------------------------
 
     // Declare a user memory block of `bit_width`-wide cells indexed by `index_width`.
-    fn mk_mem_blk(&mut self, name: &str, bit_width: i32, index_width: i32) -> PyHcpIdent {
-        self.arena.make_mem_blk(true, name, bit_width, index_width).into()
+    // `init_file` (optional) preloads the block at sim start via $readmemh.
+    #[pyo3(signature = (name, bit_width, index_width, init_file=None))]
+    fn mk_mem_blk(&mut self, name: &str, bit_width: i32, index_width: i32, init_file: Option<&str>) -> PyHcpIdent {
+        let mem_blk_i = self.arena.make_mem_blk(true, name, bit_width, index_width);
+        if let Some(path) = init_file { self.arena.set_mem_blk_init_file(mem_blk_i, path); }
+        mem_blk_i.into()
     }
 
     // ---- MemEle -------------------------------------------------------------

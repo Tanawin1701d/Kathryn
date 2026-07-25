@@ -55,9 +55,17 @@ class val(SignalRef):
 
 class mem_blk(SignalRef):
     __slots__ = ()
-    def __init__(self, bit_width: int, index_width: int, name: Optional[str] = None) -> None:
+    def __init__(
+        self,
+        bit_width  : int,
+        index_width: int,
+        name       : Optional[str] = None,
+        init_file  : Optional[str] = None,   # $readmemh image preloaded at sim start
+    ) -> None:
         name  = name or _session.auto_name("mem_blk")
-        ident = _session.arena().mk_mem_blk(name, int(bit_width), int(index_width))
+        ident = _session.arena().mk_mem_blk(
+            name, int(bit_width), int(index_width),
+            None if init_file is None else str(init_file))
         # A MemBlk is not itself an assignment destination (you read/write it via a
         # mem_ele), so it has no `get_des_slice`. Pass an explicit data-width slice so
         # SignalRef.__init__ doesn't query the arena (which would panic on the block).
