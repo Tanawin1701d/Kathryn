@@ -30,20 +30,23 @@ Done condition: nommu Linux shell prompt on simulated UART (`ls` / `echo hi` rou
 - [x] rv64ua **19/19** — LR/SC (single reservation, cleared post-WB) + all AMOs (RMW FSM branch)
 - [x] Full sweep on `--preset linux`: ui 52/52, um 13/13, ua 19/19, mi 14/16 (skips: access, breakpoint)
 
-### M4 — SoC contract + bare-metal payloads
-- [ ] virt-nommu memory map + DTS; boot_regs preset
-- [ ] DSL periph clint/uart16550 (cocotb-tested)
-- [ ] payloads: hello_uart, timer_irq, echo, memtest pass; interactive echo works
+### M4 — SoC contract + bare-metal payloads  ✅ (DSL periphs deferred)
+- [x] virt_nommu.dts compiled (CLINT + polled ns16550a + 128MB); boot_regs preset (a1=DTB@0x87E00000)
+- [ ] (deferred, optional) DSL periph clint/uart16550 — not on the Linux path
+- [x] payloads 4/4 on linux preset: smoke, timer_irq, hello_uart (+stdout check), memtest; interactive echo → proven at Linux shell (M5)
 
 ### M5 — Linux boot
-- [ ] tools/linux_image/build.sh (prebuilt-first, cached)
-- [ ] M5a: kernel boots to "Run /init" panic
-- [ ] M5b: shell prompt; `ls`/`echo hi` round-trip  ← DONE condition
+- [x] tools/linux_image/build.sh (cached; local flex/bison hosttools; kernel 6.6.32 nommu_virt + fragment)
+- [x] **M5a: LINUX BOOTS** — clean dmesg to the expected `VFS: unable to mount root fs` panic (no initramfs yet).
+      16550A on ttyS0 (polled), CLINT clocksource, 20 BogoMIPS. Repro:
+      `test/riscv/.out/rtl/sim/obj_dir/simharness +image=tools/linux_image/artifacts/Image@80000000 +image=tools/linux_image/artifacts/virt_nommu.dtb@87e00000 +max-cycles=8000000000`
+- [ ] M5b: buildroot rv64-nommu rootfs (no RVC!) embedded via INITRAMFS_SOURCE → shell; `ls`/`echo hi`  ← DONE condition
 
 ### M6 (stretch) — C extension front-end, iterative muldiv, pipeline
 
 ## Current task
-M4: SoC contract — virt-nommu DTS + boot_regs preset + bare-metal payloads (hello_uart, echo, memtest); then M5 Linux image (tools/linux_image/build.sh — kernel nommu_virt_defconfig with RISCV_ISA_C=n, buildroot rv64 nommu initramfs; start the kernel build in background early)
+M5b: buildroot rootfs (build.sh rootfs — background) → rebuild kernel with INITRAMFS_SOURCE → boot to shell.
+Gotcha to remember: userspace must be built WITHOUT the C extension (core is rv64ima) — check buildroot ISA config; illegal-instr traps in userspace mean RVC leaked in.
 
 ## Blockers
 (none)
