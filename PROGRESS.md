@@ -4,6 +4,9 @@
 Linux 6.6.32 boots to an interactive root shell on the Kathryn-generated RV64IMA core:
 login → `ls /` → `echo hi from kathryn core` all round-trip over the simulated UART.
 Reproduce: `tools/linux_image/boot.sh` (build artifacts via `build.sh all`, `rootfs`, `embed`).
+Benchmark: CoreMark 1.0 run IN the booted Linux — **2.861 iter/s @10MHz = 0.286 CoreMark/MHz**,
+validated, 40 iterations / 13.98 s (build: `build.sh coremark && build.sh rootfs && build.sh embed`;
+run: `tools/simharness/interact.py ... 'login:=root' '~ #=coremark'`).
 
 Branch: `riscv-linux-core` (off `kathryn-rust-py`). Plan: `~/.claude/plans/i-want-you-to-polished-blum.md`.
 Done condition: nommu Linux shell prompt on simulated UART (`ls` / `echo hi` round-trip).

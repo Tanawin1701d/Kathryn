@@ -87,7 +87,9 @@ build_rootfs() {
         echo 'BR2_TARGET_ROOTFS_CPIO=y'
         echo '# BR2_TARGET_ROOTFS_INITRAMFS is not set'
         echo '# BR2_PACKAGE_HOST_QEMU is not set'      # our "qemu" is the Kathryn core
+        echo "BR2_ROOTFS_OVERLAY=\"$PWD/../../overlay\""  # extra files (e.g. coremark)
     } >> .config
+    mkdir -p ../../overlay
     make olddefconfig
     make -j"$JOBS"
     cd ../..
@@ -108,11 +110,35 @@ embed_initramfs() {
     echo "built artifacts/Image (with embedded initramfs)"
 }
 
+# Cross-compile CoreMark for the target userspace (BFLT, uclibc) and stage it
+# into the rootfs overlay; re-run `rootfs` + `embed` afterwards to pick it up.
+build_coremark() {
+    BRCC="$PWD/build/buildroot-$BRVER/output/host/bin/riscv64-buildroot-linux-uclibc-gcc"
+    [ -x "$BRCC" ] || { echo "buildroot toolchain missing — run 'rootfs' first"; exit 1; }
+    [ -d build/coremark ] || git clone https://github.com/eembc/coremark build/coremark
+    cd build/coremark
+    git checkout --quiet v1.01 2>/dev/null || true
+    mkdir -p ../../overlay/usr/bin
+    # Match buildroot's riscv64 FLAT recipe (package/Makefile.in): -fPIC so
+    # function pointers go through the relocated GOT, elf2flt -r (load-to-RAM)
+    # and a 64K stack (MEM_STACK puts the 2K workload buffer on the stack).
+    "$BRCC" -O2 -fPIC -I. -Ilinux64 \
+        -DFLAGS_STR='"-O2 -fPIC"' -DITERATIONS=0 -DPERFORMANCE_RUN=1 \
+        core_list_join.c core_main.c core_matrix.c core_state.c core_util.c \
+        linux64/core_portme.c -o ../../overlay/usr/bin/coremark \
+        -Wl,-elf2flt="-r -s65536"
+    cd ../..
+    chmod +x overlay/usr/bin/coremark
+    file overlay/usr/bin/coremark
+    echo "built overlay/usr/bin/coremark — now run: build.sh rootfs && build.sh embed"
+}
+
 case "$what" in
-    dtb)    build_dtb ;;
-    kernel) build_kernel ;;
-    rootfs) build_rootfs ;;
-    embed)  embed_initramfs ;;
-    all)    build_dtb; build_kernel ;;
-    *)      echo "usage: build.sh [kernel|dtb|rootfs|embed|all]"; exit 2 ;;
+    dtb)      build_dtb ;;
+    kernel)   build_kernel ;;
+    rootfs)   build_rootfs ;;
+    embed)    embed_initramfs ;;
+    coremark) build_coremark ;;
+    all)      build_dtb; build_kernel ;;
+    *)        echo "usage: build.sh [kernel|dtb|rootfs|embed|coremark|all]"; exit 2 ;;
 esac
