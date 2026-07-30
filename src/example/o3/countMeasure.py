@@ -12,12 +12,13 @@ three standalone kinds:
     MD        PARAM    HLH                   (standalone, no domain)
 
 Marker syntax is a trailing comment:  <code>   ///<CAT> <GROUP>
-There is NO priority / first-match-win: a line is tagged for every category it
-qualifies for.  Multi-aspect statements are line-broken so each physical line is
-one clean category (score 1.0).  The only inseparable case is a single port
-bundle carrying both a control and a data signal, tagged ///CTRL_HC+DATA_HC
-<GROUP>, which credits 1/K score to EACH of its K categories (so per-category
-totals can be fractional).  Lines carrying ///DC are EXCLUDED (audit trail only).
+ONE PHYSICAL LINE = ONE CATEGORY, score 1.0.  Multi-aspect statements are
+line-broken so each physical line is one clean category.  The only inseparable
+case is a single port bundle carrying both a control and a data signal, tagged
+///CTRL_HC+DATA_HC <GROUP>, which credits 1/K score to EACH of its K categories
+-- never 1.0 to each -- so a line always contributes 1.0 in total and
+per-category totals can be fractional.  Lines carrying ///DC are EXCLUDED
+(audit trail only).
 
 Usage:
     python3 countMeasure.py [TARGET_DIR] [--json OUT.json]

@@ -25,7 +25,8 @@ namespace kathryn::o3{
                               SlotWriterBase&          slotWriter,
                               SimState&                state,
                               TopSim&                  topSim,
-                              ResultWriter*            resultWriter = nullptr);
+                              ResultWriter*            resultWriter = nullptr,
+                              int                      simOptLevel  = 3);
 
         void  describeCon  () override;
 

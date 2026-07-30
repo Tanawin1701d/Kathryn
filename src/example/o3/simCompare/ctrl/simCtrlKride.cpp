@@ -17,7 +17,8 @@ namespace kathryn::o3{
                                SlotWriterBase&          slotWriter,
                                SimState&                state,
                                TopSim&                  topSim,
-                               ResultWriter*            resultWriter):
+                               ResultWriter*            resultWriter,
+                               int                      simOptLevel):
 
     O3SimCtrlBase(  limitCycle,
                     prefix,
@@ -33,7 +34,9 @@ namespace kathryn::o3{
                  buildMode,
                  false,
                  false,
-                 1),
+                 simOptLevel),  ///// opt level of the jit built sim .so. keep it at 3 so
+                                ///// the kathryn simulator is measured against verilated
+                                ///// ridecore at the same optimization level.
     _topSim(topSim),
     _core(topSim.myCore){}
 
