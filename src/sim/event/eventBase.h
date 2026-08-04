@@ -6,6 +6,7 @@
 #define KATHRYN_EVENTBASE_H
 
 #include<cassert>
+#include<chrono>
 
 namespace kathryn{
 
@@ -25,6 +26,21 @@ namespace kathryn{
         ///////  limitCycle
         bool  _isLongRangeSim = false;
         CYCLE _amtLimitLongRangeCycle = 1;
+
+        //////// accumulated wall time spent INSIDE this event's own per-cycle sim
+        ///////  calls. the sim controller invokes the timed* wrappers below, so the
+        ///////  model sim event accumulates pure rtl evaluation time while the
+        ///////  concrete trigger event's testbench handshake / cond-var wait time
+        ///////  lands in the trigger's own accumulator and never pollutes the rtl one.
+        double _accRtlSimSec = 0;
+
+        template<typename FN>
+        void timedCall(FN&& fn){
+            auto st = std::chrono::steady_clock::now();
+            fn();
+            _accRtlSimSec +=
+                std::chrono::duration<double>(std::chrono::steady_clock::now() - st).count();
+        }
 
     public:
 
@@ -75,6 +91,22 @@ namespace kathryn{
          * gen next event if there are
          */
         virtual EventBase* genNextEvent() {return nullptr;}
+
+        /**
+         * timed wrappers. the sim controller calls these instead of the raw
+         * virtuals so every event tracks the rtl-only time of its own sim calls
+         * (see _accRtlSimSec)
+         * */
+        void timedSimStartLongRunCycle  (){timedCall([&]{simStartLongRunCycle  ();});}
+        void timedSimStartCurCycleNeg   (){timedCall([&]{simStartCurCycleNeg   ();});}
+        void timedSimStartCurCyclePos   (){timedCall([&]{simStartCurCyclePos   ();});}
+        void timedCurCycleCollectDataNeg(){timedCall([&]{curCycleCollectDataNeg();});}
+        void timedCurCycleCollectDataPos(){timedCall([&]{curCycleCollectDataPos();});}
+        void timedSimStartNextCycleNeg  (){timedCall([&]{simStartNextCycleNeg  ();});}
+        void timedSimStartNextCyclePos  (){timedCall([&]{simStartNextCyclePos  ();});}
+
+        [[nodiscard]] double getRtlSimSec() const {return _accRtlSimSec;}
+        void resetRtlSimSec(){_accRtlSimSec = 0;}
 
 
         /** event base will be schedule by using priority queue

@@ -24,6 +24,25 @@ namespace kathryn::o3{
         ////// change scan that the ridecore side has no counterpart for.
         bool _recordSlot;
 
+        ////// per workload simulation time record
+        struct WorkloadTime{
+            std::string name;
+            ull         cycles;
+            double      kathrynSec; //// RTL-EVAL only: time inside the kathryn model sim
+                                    //// event's cycle calls (EventBase timed wrappers)
+            double      rideSec;    //// RTL-EVAL only: time inside Vpipeline::eval()
+                                    //// (iterateCycle / iterateAtEndCycle)
+            double      wallSec;    //// whole workload wall time (init + sim + testbench
+                                    //// drive/capture + thread sync + compare)
+        };
+
+        ////// describeCon helpers
+        void runWorkload           (std::vector<WorkloadTime>& workloadTimes,
+                                    std::vector<int>&          errorIndexs);
+        bool runCompareCycles      (); //// true = every compared cycle matched
+        void summarizeSimTime      (const std::vector<WorkloadTime>& workloadTimes);
+        void summarizeCompareResult(const std::vector<int>& errorIndexs);
+
     public:
 
         explicit CombCtrl(CYCLE                    limitCycle,
