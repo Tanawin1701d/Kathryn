@@ -39,3 +39,5 @@ synthesisRunner/generatedTcl/*
 synthesisRunner/project/*
 
 #### external simulation
+#### generated o3 verilog
+/KOut/o3Gen/top.v
