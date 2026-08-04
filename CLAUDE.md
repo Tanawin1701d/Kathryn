@@ -127,7 +127,7 @@ multi-aspect statements are LINE-BROKEN so each line is one clean category (1/N 
 for an inseparable ctrl+data bundle, e.g. `///CTRL_HC+DATA_HC`). Firm keyword decisions:
 register indices=DATA, rename-tags/rrfIdx/pointers=CONTROL, op-select fields (alu_op/funct/
 imm_type/rsSel/sel_lohi/signedness/opcode)=DATA, module/struct=MD. `///DC` = excluded
-(Kathryn sim instrumentation; **RIDECORE dual-issue path DUPLICATION + disabled-feature logic** — 1446 lines,
+(Kathryn sim instrumentation; **RIDECORE dual-issue path DUPLICATION + disabled-feature logic** — 1503 lines,
 excluded to compare UNIQUE live logic once, a deliberate honest handicap to Kathryn). The full
 reproducible rule set + keyword list + worked conventions + results is
 `src/example/o3/count_measure` (the Reviewer-#3 artifact); gold exemplars `core/arf.h`,
@@ -140,15 +140,15 @@ Counting:
 
 **Verified counts** (recompute: `python3 src/example/o3/countCompare.py`; 0 stray both sides; totals may be fractional from `+`-bundles):
 - Kathryn core: CTRL_HWD 80.5, CTRL_CL 215.5, CTRL_DT 150, CTRL_HC 290, DATA_HWD 39, DATA_CL 122, DATA_DT 113, DATA_HC 178, MD 66, PARAM 298, HLH 115 → **CTRL 736, DATA 452, total 1667** (DC-excl 92). (Cycle-advancing HDB headers `pip/zync/zyncc/cwhile` = `CTRL_HWD+CTRL_CL`; mixed sub-modules `regArch/storeBuf/lss/bp` and every whole-slot ref from a mixed `SlotMeta` = `CTRL_HC+DATA_HC` bundles — each carries a control tag/rename/valid part + a data part.)
-- RIDECORE fpga: CTRL_HWD 292, CTRL_CL 575.5, CTRL_DT 289, CTRL_HC 1162.5, DATA_HWD 176, DATA_CL 178.5, DATA_DT 273, DATA_HC 621.5, MD 125, PARAM 174, HLH 27 → **CTRL 2319, DATA 1249, total 3894** (DC-excl 1446). (Computed port-map args carry `+CL` in the port domain — see below — shifting ~69 half-lines from `_HC` into `_CL`; CTRL/DATA totals unaffected. PARAM includes the 151 `` `define `` constants in the `.vh` headers `alu_ops.vh`/`constants.vh`/`rv32_opcodes.vh`, symmetric with Kathryn's counted `parameter.h`/`isaParam.h`/`slotParam.h`. The CAM-wakeup module `src_manager.v` (per-RS operand forward/bypass) is now marked — initially missed. The never-instantiated latched BRAM `ram_sync.v` was moved to `fpga/deleted/` (skipped via `SKIP_DIRS`). Disabled gshare `bhr`/`prcond` plumbing in `rs_branch.v` is now `///DC`.)
-- **HEADLINE control-flow reduction = CTRL total (736 vs 2319) = 68.26%.** Broken out: control connectivity CTRL_HC **75.05%** (largest — HDBs remove hand-wired control ports/handshakes), control-state decl CTRL_HWD **72.43%**, control logic CTRL_CL **62.55%**, control moves CTRL_DT **48.10%**. DATA total 63.81%; **TOTAL 57.19%**. PARAM/HLH are higher for Kathryn (embedded-C++ named params + host scaffolding) — not a regression. (Exact decimals drift slightly with edits; recompute via `countCompare.py` is the source of truth.)
+- RIDECORE fpga: CTRL_HWD 292, CTRL_CL 572, CTRL_DT 285, CTRL_HC 1140, DATA_HWD 176, DATA_CL 178.5, DATA_DT 273, DATA_HC 612.5, MD 121, PARAM 172, HLH 25 → **CTRL 2289, DATA 1240, total 3847** (DC-excl 1503, after the 2026-07-30 re-mark that moved 57 more duplicate/disabled lines to `///DC`). (Computed port-map args carry `+CL` in the port domain — see below — shifting ~69 half-lines from `_HC` into `_CL`; CTRL/DATA totals unaffected. PARAM includes the 151 `` `define `` constants in the `.vh` headers `alu_ops.vh`/`constants.vh`/`rv32_opcodes.vh`, symmetric with Kathryn's counted `parameter.h`/`isaParam.h`/`slotParam.h`. The CAM-wakeup module `src_manager.v` (per-RS operand forward/bypass) is now marked — initially missed. The never-instantiated latched BRAM `ram_sync.v` was moved to `fpga/deleted/` (skipped via `SKIP_DIRS`). Disabled gshare `bhr`/`prcond` plumbing in `rs_branch.v` is now `///DC`.)
+- **HEADLINE control-flow reduction = CTRL total (736 vs 2289) = 67.85%.** Broken out: control connectivity CTRL_HC **74.56%** (largest — HDBs remove hand-wired control ports/handshakes), control-state decl CTRL_HWD **72.43%**, control logic CTRL_CL **62.33%**, control moves CTRL_DT **47.37%**. DATA total 63.55%; **TOTAL 56.67%**. PARAM/HLH are higher for Kathryn (embedded-C++ named params + host scaffolding) — not a regression. (Exact decimals drift slightly with edits; recompute via `countCompare.py` is the source of truth.)
 - A Verilog instance port map whose arg is a computed **expression** (logic/arith op, ternary mux, concat, or bit-slice) is tagged `X_HC+X_CL` (0.5 each, same domain as the port): it both connects the port (HC) and computes the value (CL). A plain `.port(sig)` stays pure HC. Symmetric with Kathryn, where such a compute is its own CL line (a `zif` guard / `x = a & b`) rather than hidden in a port map. Applied to 138 RIDECORE lines (incl. line-broken concat continuation lines).
 
-**This 68.26% REPLACES the old 8-category headline (CTRL 78.76% / abstraction ~78.81%).** It
+**This 67.85% REPLACES the old 8-category headline (CTRL 78.76% / abstraction ~78.81%).** It
 is lower because the new scheme counts EVERY control-connectivity port line (CTRL_HC),
 which the old narrow CTRL bucket did not — inflating RIDECORE's control denominator and
-giving a more honest, reproducible figure. Report **68.26% (CTRL total)** as primary and
-**CTRL_HC 75.05%** as the control-connectivity story for the dual "Control Flow + Resource
+giving a more honest, reproducible figure. Report **67.85% (CTRL total)** as primary and
+**CTRL_HC 74.56%** as the control-connectivity story for the dual "Control Flow + Resource
 Abstraction" thesis. (The old abstraction-density ~78.81% survives only as historical context.)
 
 Caveats: the CATEGORY totals are the reliable comparison; the GROUP axis is only loosely

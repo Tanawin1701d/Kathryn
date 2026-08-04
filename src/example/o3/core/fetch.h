@@ -8,7 +8,7 @@
 #include "kathryn.h"
 #include "stageStruct.h"
 #include "parameter.h"
-#include "example/o3/simulation/proberGrp.h" ///DC
+#include "example/o3/simulation/proberGrp.h"
 #include "btb.h"
 #include "gshare.h"
 
