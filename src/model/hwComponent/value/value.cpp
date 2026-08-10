@@ -12,19 +12,34 @@
 
 namespace kathryn{
 
-    Val::Val(int size, ull rawValue):
+    /** pad/truncate LSB-first words to ceil(size/64) elements */
+    static std::vector<ull> padWideWords(int size, std::vector<ull> words){
+        int arrSize = (size + bitSizeOfUll - 1) / bitSizeOfUll;
+        words.resize(arrSize, 0);
+        return words;
+    }
+
+    /** primary constructor — the ull and string forms delegate here */
+    Val::Val(int size, std::vector<ull> words):
             LogicComp({0, size},
                       TYPE_VAL,
-                      new ValSimEngine(this,VST_INTEGER, rawValue),
+                      new ValSimEngine(this, VST_INTEGER, words.empty() ? 0 : words[0]),
                       false),
             _size(size),
-            _rawValue(rawValue)
+            _rawValue(words.empty() ? 0 : words[0]),
+            _rawValueWide(padWideWords(size, std::move(words)))
     {
         assert(size > 0);
         com_init();
         AssignOpr::setMaster(this);
         AssignCallbackFromAgent::setMaster(this);
     }
+
+    Val::Val(int size, ull rawValue):
+            Val(size, std::vector<ull>{rawValue}) {}
+
+    Val::Val(int size, const std::string& literal):
+            Val(size, parseLiteralToWords(literal, size)) {}
 
     void Val::com_init() {
         ctrl->on_value_init(this);

@@ -123,7 +123,7 @@ namespace kathryn{
 
         Operable* incCond = &((*this)(1, _totalBitSize) != (*_endCnt));
         if (holdSignal != nullptr){
-            incCond = &((*holdSignal) & (*incCond));
+            incCond = &((~(*holdSignal)) & (*incCond));
         }
 
         auto* event = createUE(

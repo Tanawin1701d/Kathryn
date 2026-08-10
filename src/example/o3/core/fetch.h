@@ -8,45 +8,45 @@
 #include "kathryn.h"
 #include "stageStruct.h"
 #include "parameter.h"
-#include "example/o3/simulation/proberGrp.h" ///DC
+#include "example/o3/simulation/proberGrp.h"
 #include "btb.h"
 #include "gshare.h"
 
 
 namespace kathryn::o3{
 
-    struct FetchMod : Module{
-        PipStage& pm;
-        Reg&      curPc;
+    struct FetchMod : Module{   ///MD FETCH
+        PipStage& pm;           ///CTRL_HC+DATA_HC FETCH
+        Reg&      curPc;        ///DATA_HC FETCH
 // #ifdef BTB_ENABLE
 //         Btb       btb;
 //         Gshare    gshare;
 // #endif
-        WireSlot& cmSlot;
+        WireSlot& cmSlot;      ///DATA_HC FETCH
 
         // mWire(fetchPredCond   , 1); /// from
         // mWire(fetchBtbHit     , 1);
         // mWire(fetchHitAndTaken, 1);
         // mWire(fetchBtbAddr    , ADDR_LEN);
 
-        explicit FetchMod(PipStage&  pm,
-                          TagMgmt& tagMgmt,
-                          WireSlot& commitSlot) :
-        pm        (pm),
-        curPc     (pm.ft.curPc),
+        explicit FetchMod(PipStage&  pm,            ///CTRL_HC+DATA_HC FETCH
+                          TagMgmt& tagMgmt,         ///CTRL_HC FETCH
+                          WireSlot& commitSlot) :   ///DATA_HC FETCH
+        pm        (pm),                             ///CTRL_HC+DATA_HC FETCH
+        curPc     (pm.ft.curPc),                    ///DATA_HC FETCH
 // #ifdef BTB_ENABLE
 //         gshare    (tagMgmt.mpft),
 // #endif
-        cmSlot    (commitSlot){
-            curPc.makeResetEvent();
-            pm.ft.raw.makeResetEvent();
+        cmSlot(commitSlot){               ///DATA_HC FETCH
+            curPc.makeResetEvent();       ///DATA_DT FETCH
+            pm.ft.raw.makeResetEvent();   ///CTRL_DT+DATA_DT FETCH
         }
 
-        void flow(){
+        void flow(){   ///HLH FETCH
             ///// pipeline manager
-            pip(pm.ft.sync){ autoSync     initProbe(pipProbGrp .fetch); ///CTRL FETCH
-                zync(pm.dc.sync){          initProbe(zyncProbGrp.fetch);///CTRL FETCH
-                    selLog();
+            pip(pm.ft.sync){ autoSync     initProbe(pipProbGrp .fetch);   ///CTRL_HWD+CTRL_CL FETCH
+                zync(pm.dc.sync){          initProbe(zyncProbGrp.fetch);   ///CTRL_HWD+CTRL_CL FETCH
+                    selLog();   ///DATA_HC FETCH
                 }
             }
         }
@@ -102,27 +102,27 @@ namespace kathryn::o3{
 // #endif
 //         }
 
-        void selLog(){
+        void selLog(){   ///HLH FETCH
             ///// ignore first 4 bytes, because instruction is 4 bytes long
-            opr& selIdx = curPc(2, 4);
+            opr& selIdx = curPc(2, 4);   ///DATA_CL FETCH
             ///// cal next pc
-            opr& cal_npc    = mux(selIdx.sl(0), curPc + 4,
-                                  curPc + 8);
-            pm.ft.incPc(cal_npc);
+            opr& cal_npc    = mux(selIdx.sl(0), curPc + 4,   ///DATA_CL FETCH
+                                  curPc + 8); ///DATA_CL FETCH
+            pm.ft.incPc(cal_npc);   ///DATA_HC FETCH
             ///// slot assign
-            RegSlot& raw = pm.ft.raw;
-            raw(invalid2) <<= selIdx.sl(0);
-            raw(pc)       <<= curPc;
+            RegSlot& raw = pm.ft.raw;   ///CTRL_DT+DATA_DT FETCH
+            raw(invalid2) <<= selIdx.sl(0);   ///CTRL_CL FETCH
+            raw(pc)       <<= curPc;   ///DATA_DT FETCH
 
-            raw(npc)      <<= cal_npc;
+            raw(npc)      <<= cal_npc;   ///DATA_DT FETCH
             ////// read instruction from main memory
-            auto& i0 = pm.ft.iMem0;
-            auto& i1 = pm.ft.iMem1;
-            auto& i2 = pm.ft.iMem2;
-            auto& i3 = pm.ft.iMem3;
+            auto& i0 = pm.ft.iMem0;   ///DATA_DT FETCH
+            auto& i1 = pm.ft.iMem1;   ///DATA_DT FETCH
+            auto& i2 = pm.ft.iMem2;   ///DATA_DT FETCH
+            auto& i3 = pm.ft.iMem3;   ///DATA_DT FETCH
 
-            raw(inst1) <<= mux(selIdx, {&i0, &i1, &i2, &i3});
-            raw(inst2) <<= mux(selIdx, {&i1, &i2, &i3, &i0});
+            raw(inst1) <<= mux(selIdx, {&i0, &i1, &i2, &i3});   ///DATA_CL FETCH
+            raw(inst2) <<= mux(selIdx, {&i1, &i2, &i3, &i0});   ///DATA_CL FETCH
         }
 //            raw(prCond)   <<= fetchHitAndTaken;
 // #ifdef BTB_ENABLE

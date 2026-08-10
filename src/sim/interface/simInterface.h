@@ -97,6 +97,10 @@ namespace kathryn{
         /** test value helper*/
         void testAndPrint(const std::string& testName, ValRepBase& simVal, ValRepBase& rhs);
         void testAndPrint(const std::string& testName, ull simVal, ull expect);
+        /** >64-bit compare: LSB-first words (shorter side zero-extended) */
+        void testAndPrint(const std::string& testName,
+                          const std::vector<ull>& simVal,
+                          const std::vector<ull>& expect);
         /** build proxy SimEvent*/
         void createModelSimEvent();
         void initPerfCol();

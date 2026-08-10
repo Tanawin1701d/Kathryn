@@ -54,8 +54,8 @@ namespace kathryn{
 
             incCycle(6);
             sim {
-                // ValRep testVal = NumConverter::createValRep(67, 0b100, 0);
-                // testAndPrint("check shifting from slicing", _md->a.sv(), testVal);
+                //// a = ((129 >> 7) & 0b111) << 66 = 1 << 66  (67-bit) -> word0=0, word1=4
+                testAndPrint("wide slice+shift a = 2^66", _md->a.v().getLargeVal(), {0ULL, 4ULL});
             };
 //            sim {
 //                ValRep testVal = NumConverter::cvtStrToValRep(8, 2 + 6*2);

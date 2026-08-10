@@ -19,6 +19,29 @@ namespace kathryn::o3{
         const int BELAYED_AFTER_MIS_CMP = 1;
         SimCtrlRide& _slaveRide;
         bool _reqRegTest;
+        ////// slot/debug recording. it must be OFF to measure simulation time fairly:
+        ////// the kathryn side dumps extra rsv/dispatch debug slots and an rrf table
+        ////// change scan that the ridecore side has no counterpart for.
+        bool _recordSlot;
+
+        ////// per workload simulation time record
+        struct WorkloadTime{
+            std::string name;
+            ull         cycles;
+            double      kathrynSec; //// RTL-EVAL only: time inside the kathryn model sim
+                                    //// event's cycle calls (EventBase timed wrappers)
+            double      rideSec;    //// RTL-EVAL only: time inside Vpipeline::eval()
+                                    //// (iterateCycle / iterateAtEndCycle)
+            double      wallSec;    //// whole workload wall time (init + sim + testbench
+                                    //// drive/capture + thread sync + compare)
+        };
+
+        ////// describeCon helpers
+        void runWorkload           (std::vector<WorkloadTime>& workloadTimes,
+                                    std::vector<int>&          errorIndexs);
+        bool runCompareCycles      (); //// true = every compared cycle matched
+        void summarizeSimTime      (const std::vector<WorkloadTime>& workloadTimes);
+        void summarizeCompareResult(const std::vector<int>& errorIndexs);
 
     public:
 
@@ -31,7 +54,9 @@ namespace kathryn::o3{
                           TopSim&                  topSim,
                           SimCtrlRide&             slaveRide,
                           bool                     reqRegTest,
-                          ResultWriter*            resultWriter = nullptr
+                          bool                     recordSlot,
+                          ResultWriter*            resultWriter = nullptr,
+                          int                      simOptLevel  = 3
 
                           );
 
@@ -64,6 +89,13 @@ namespace kathryn::o3{
 
             ull limitCycle = stoull(params["limitCycle"]);
             bool reqRegTest = stoi(params["reqRegTest"]) == 1;
+            ////// recordSlot = 0 turns the per cycle slot dump off on BOTH sides.
+            ////// it defaults to on so mismatch debugging keeps working.
+            bool recordSlot = params["recordSlot"] != "0";
+            ////// opt level of the jit built kathryn sim .so. default 3 to match the
+            ////// -O3 that cmake gives the verilated ridecore library.
+            int simOptLevel = params["simOptLevel"].empty()
+                            ? 3 : stoi(params["simOptLevel"]);
 
             std::vector<std::string> slotColumnNames = {"MPFT"    , "ARF","RRF"  , "FETCH"  ,"DECODE",
                                                         "DISPATCH", "RSV","ISSUE", "EXECUTE","COMMIT", "STBUF"};
@@ -110,7 +142,9 @@ namespace kathryn::o3{
                             (TopSim&)o3Top,
                             slaveSimulator,
                             reqRegTest,
-                            &resultWriterKride
+                            recordSlot,
+                            &resultWriterKride,
+                            simOptLevel
             );
             simulator.simStart();
 

@@ -12,6 +12,9 @@
 #include <bitset>
 #include <limits>
 #include <iostream>
+#include <vector>
+#include <algorithm>
+#include <initializer_list>
 
 namespace kathryn{
 
@@ -75,8 +78,13 @@ namespace kathryn{
         void setVarArr(const ull input_value, ull size){
 
             if (_continLength > 0){
-                for (int writeIter = 0; writeIter < size; writeIter++){
-                    setVar(input_value);
+                //// wide elements: each occupies _continLength words. Advance per
+                //// element and set word0 = input_value, upper words = 0 (zero-extend).
+                uint64_t* base = static_cast<uint64_t*>(_val);
+                for (ull e = 0; e < size; e++){
+                    uint64_t* elem = base + e * (ull)_continLength;
+                    elem[0] = (uint64_t)input_value;
+                    for (int w = 1; w < _continLength; w++){ elem[w] = 0; }
                 }
             }else{
                 if (_byteSize == 1){
@@ -342,6 +350,25 @@ namespace kathryn{
             _data[0] = x;
         }
 
+        /** build from LSB-first words (used to inline a >64-bit constant).
+         *  extra words are ignored; missing words are zero. */
+        UintX(const std::vector<ull>& words){
+            int n = std::min((int)words.size(), arrSize);
+            for (int i = 0; i < n; i++){
+                _data[i] = words[i];
+            }
+        }
+
+        /** allocation-free LSB-first braced init — emitted by the sim codegen
+         *  for a >64-bit constant, e.g. UintX<2>({loULL, hiULL}). */
+        UintX(std::initializer_list<ull> words){
+            int i = 0;
+            for (ull w : words){
+                if (i >= arrSize){ break; }
+                _data[i++] = w;
+            }
+        }
+
         UintX<arrSize> doIdxByIdx (const UintX<arrSize>& rhs, const std::function<ull(ull, ull)>& op) const{
             UintX<arrSize> res;
             for (int i = 0; i < arrSize; i++){
@@ -481,8 +508,10 @@ namespace kathryn{
             return 0;
         }
 
+        //// _data[0] is the least-significant word, so unsigned magnitude
+        //// comparison must scan from the most-significant word downwards.
         uint8_t operator < (const UintX<arrSize>& rhs) const{
-            for (int i = 0; i < arrSize; i++){
+            for (int i = arrSize - 1; i >= 0; i--){
                 if (_data[i] < rhs._data[i]){
                     return 1;
                 }
@@ -494,7 +523,7 @@ namespace kathryn{
         }
 
         uint8_t operator <= (const UintX<arrSize>& rhs) const{
-            for (int i = 0; i < arrSize; i++){
+            for (int i = arrSize - 1; i >= 0; i--){
                 if (_data[i] < rhs._data[i]){
                     return 1;
                 }
@@ -506,7 +535,7 @@ namespace kathryn{
         }
 
         uint8_t operator > (const UintX<arrSize>& rhs) const{
-            for (int i = 0; i < arrSize; i++){
+            for (int i = arrSize - 1; i >= 0; i--){
                 if (_data[i] > rhs._data[i]){
                     return 1;
                 }
@@ -518,7 +547,7 @@ namespace kathryn{
         }
 
         uint8_t operator >= (const UintX<arrSize>& rhs) const{
-            for (int i = 0; i < arrSize; i++){
+            for (int i = arrSize - 1; i >= 0; i--){
                 if (_data[i] > rhs._data[i]){
                     return 1;
                 }
@@ -542,23 +571,61 @@ namespace kathryn{
             return result;
         }
 
+        //// two's complement subtraction: a - b == a + (~b) + 1
         UintX<arrSize> operator - (const UintX<arrSize>& rhs) const{
-            assert(false);
+            return (*this) + (~rhs) + UintX<arrSize>((ull)1);
         }
 
+        //// schoolbook multiply, truncated mod 2^(64*arrSize)
         UintX<arrSize> operator * (const UintX<arrSize>& rhs) const{
-            assert(false);
+            UintX<arrSize> result;
+            for (int i = 0; i < arrSize; i++){
+                ull carry = 0;
+                for (int j = 0; (i + j) < arrSize; j++){
+                    __uint128_t cur = (__uint128_t)_data[i] * rhs._data[j]
+                                    + result._data[i+j] + carry;
+                    result._data[i+j] = (ull)cur;
+                    carry             = (ull)(cur >> bitSizeOfUll);
+                }
+            }
+            return result;
+        }
+
+        //// unsigned long division; fills quotient and remainder.
+        //// (divisor is guaranteed non-zero by the generated div/mod guard)
+        void divmod(const UintX<arrSize>& rhs,
+                    UintX<arrSize>& quotient,
+                    UintX<arrSize>& remainder) const{
+            UintX<arrSize> q;
+            UintX<arrSize> r;
+            for (int bit = arrSize * bitSizeOfUll - 1; bit >= 0; bit--){
+                int w = bit / bitSizeOfUll;
+                int b = bit % bitSizeOfUll;
+                r = r << 1;
+                r._data[0] |= (_data[w] >> b) & 1ULL;   //// bring down next bit
+                if (r >= rhs){
+                    r = r - rhs;
+                    q._data[w] |= (1ULL << b);
+                }
+            }
+            quotient  = q;
+            remainder = r;
         }
 
         UintX<arrSize> operator / (const UintX<arrSize>& rhs) const{
-            assert(false);
+            UintX<arrSize> q, r;
+            divmod(rhs, q, r);
+            return q;
         }
 
         UintX<arrSize> operator % (const UintX<arrSize>& rhs) const{
-            assert(false);
+            UintX<arrSize> q, r;
+            divmod(rhs, q, r);
+            return r;
         }
 
-        UintX<arrSize>& operator = (const ull& eq) const{
+        UintX<arrSize>& operator = (const ull& eq){
+            for (int i = 0; i < arrSize; i++){ _data[i] = 0; }
             _data[0] = eq;
             return *this;
         }
@@ -605,6 +672,7 @@ namespace kathryn{
             for (int i = 0; i < std::min(sz, arrSize); i++){
                 result._data[i] = _data[i];
             }
+            return result;
         }
 
     };

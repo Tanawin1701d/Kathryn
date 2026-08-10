@@ -13,13 +13,13 @@ namespace kathryn::o3{
 
 
 
-    struct IRsv: RsvBase{
+    struct IRsv: RsvBase{   ///MD RSV_SHARED
 
-        mWire(checkIdx, _table.getSufficientIdxSize(false));
-        const int  RSV_IDX = 0;
-        Reg& allocPtr;
-        SearchResult b1 ,  e1,  e0;
-        SearchResult nb1, ne1, nb0; /// search to fix alloc pointer
+        mWire(checkIdx, _table.getSufficientIdxSize(false));          ///CTRL_HWD RSV_SHARED
+        const int  RSV_IDX = 0;                                       ///PARAM RSV_SHARED
+        Reg& allocPtr;                                                ///CTRL_HWD RSV_SHARED
+        SearchResult b1 ,  e1,  e0;                                   ///CTRL_HWD RSV_SHARED
+        SearchResult nb1, ne1, nb0; /// search to fix alloc pointer   ///CTRL_HWD RSV_SHARED
 
         mWire(dbg_b1_valid, 1);    ///DC
         mWire(dbg_e1_valid, 1);    ///DC
@@ -35,41 +35,41 @@ namespace kathryn::o3{
         mWire(dbg_ne1_idx, 3);    ///DC
         mWire(dbg_nb0_idx, 3);    ///DC
 
-        IRsv(int rsv_idx  , SlotMeta meta,
-             int indexSize, std::string debugName,
-             BroadCast& bc):
-            RsvBase(smRsvI + meta, 1 << indexSize),
-            RSV_IDX(rsv_idx),
-            allocPtr(mOprReg("allocPtr_" + debugName, indexSize)),
-            b1 (searchIdx(_table, 1, true , bc, false)),
-            e1 (searchIdx(_table, 1, false, bc, false)),
-            e0 (searchIdx(_table, 0, false, bc, false)),
-            nb1(searchIdx(_table, 1, true , bc, true )),
-            ne1(searchIdx(_table, 1, false, bc, true )),
-            nb0(searchIdx(_table, 0, true , bc, true )){
-            allocPtr.makeResetEvent();
+        IRsv(int rsv_idx  , SlotMeta meta,           ///DATA_HC RSV_SHARED
+             int indexSize, std::string debugName,   ///HLH     RSV_SHARED
+             BroadCast& bc):                         ///CTRL_HC RSV_SHARED
+            RsvBase(smRsvI + meta, 1 << indexSize),  ///CTRL_HC+DATA_HC RSV_SHARED
+            RSV_IDX(rsv_idx),   ///HLH RSV_SHARED
+            allocPtr(mOprReg("allocPtr_" + debugName, indexSize)),   ///CTRL_HWD RSV_SHARED
+            b1 (searchIdx(_table, 1, true , bc, false)),   ///CTRL_HC RSV_SHARED
+            e1 (searchIdx(_table, 1, false, bc, false)),   ///CTRL_HC RSV_SHARED
+            e0 (searchIdx(_table, 0, false, bc, false)),   ///CTRL_HC RSV_SHARED
+            nb1(searchIdx(_table, 1, true , bc, true )),   ///CTRL_HC RSV_SHARED
+            ne1(searchIdx(_table, 1, false, bc, true )),   ///CTRL_HC RSV_SHARED
+            nb0(searchIdx(_table, 0, true , bc, true )){   ///CTRL_HC RSV_SHARED
+            allocPtr.makeResetEvent();                     ///CTRL_DT RSV_SHARED
         }
 
 
-        void tryWriteEntry(opr& targetIdx, opr& binIdx, WireSlot& iw){
-            zif (targetIdx == RSV_IDX){
-                allocPtr <<= (binIdx + 1);
-                RsvBase::writeEntry(binIdx, iw);
+        void tryWriteEntry(opr& targetIdx, opr& binIdx, WireSlot& iw){   ///CTRL_HC+DATA_HC RSV_SHARED
+            zif (targetIdx == RSV_IDX){            ///CTRL_CL RSV_SHARED
+                allocPtr <<= (binIdx + 1);         ///CTRL_CL RSV_SHARED
+                RsvBase::writeEntry(binIdx, iw);   ///CTRL_HC+DATA_HC RSV_SHARED
             }
         }
 
-        void onMisPred(opr& fixTag) override{
+        void onMisPred(opr& fixTag) override{   ///CTRL_HC RSV_SHARED
 
-            RsvBase::onMisPred(fixTag);
-            zif (nb0.sValid){ /// there is empty space for next update
+            RsvBase::onMisPred(fixTag);                                            ///CTRL_HC RSV_SHARED
+            zif (nb0.sValid){ /// there is empty space for next update             ///CTRL_CL RSV_SHARED
                 /// if there is no 1 for next cycle  (the )
-                zif(~nb1.sValid){
-                    allocPtr <<= 1; ////// it is empty
-                }zelif((nb1.sIdx == 0) && (ne1.sIdx == (_table.getNumRow()-1))){
+                zif(~nb1.sValid){                                                  ///CTRL_CL RSV_SHARED
+                    allocPtr <<= 1; ////// it is empty                             ///CTRL_DT RSV_SHARED
+                }zelif((nb1.sIdx == 0) && (ne1.sIdx == (_table.getNumRow()-1))){   ///CTRL_CL RSV_SHARED
                     ////// case 0  is bubble there is 1 atstart and 1 at the end
-                    allocPtr <<= nb0.sIdx; ///// nb0
+                    allocPtr <<= nb0.sIdx; ///// nb0                               ///CTRL_DT RSV_SHARED
                 }zelse{
-                    allocPtr <<= (ne1.sIdx+1);
+                    allocPtr <<= (ne1.sIdx+1);                                     ///CTRL_CL RSV_SHARED
                 }
             }
             /// incase update when entrance the filler at rename stage will handle it
@@ -79,37 +79,37 @@ namespace kathryn::o3{
          * ISSUE
          */
 
-        pair<opr&, opr&> buildFreeIndex(opr* reqIdx, RsvBase* friendRsv = nullptr){
+        pair<opr&, opr&> buildFreeIndex(opr* reqIdx, RsvBase* friendRsv = nullptr){   ///CTRL_HC RSV_SHARED
             assert(friendRsv == nullptr); ///DC
 
-            opr* selIdx = (reqIdx == nullptr)? &allocPtr : reqIdx;
-            return {_table[*selIdx](busy).v(), *selIdx};
+            opr* selIdx = (reqIdx == nullptr)? &allocPtr : reqIdx;   ///HLH RSV_SHARED
+            return {_table[*selIdx](busy).v(), *selIdx};             ///CTRL_HC RSV_SHARED
         }
 
-        void buildIssue(BroadCast& bc) override{
+        void buildIssue(BroadCast& bc) override{   ///CTRL_HC RSV_SHARED
 
             /*
              *  the required Idx
              */
-            checkIdx = allocPtr;
-            zif(e0.sValid){ ///  there is empty slot
-                checkIdx = b1.sIdx;
-                zif((b1.sIdx == 0) && (e1.sIdx == (_table.getNumRow()-1))){ ///// zero bubble
+            checkIdx = allocPtr;                                                                ///CTRL_DT RSV_SHARED
+            zif(e0.sValid){ ///  there is empty slot                                            ///CTRL_CL RSV_SHARED
+                checkIdx = b1.sIdx;                                                             ///CTRL_DT RSV_SHARED
+                zif((b1.sIdx == 0) && (e1.sIdx == (_table.getNumRow()-1))){ ///// zero bubble   ///CTRL_CL RSV_SHARED
                     //// it may be entirely zeros but we will check it at slotReady(iw)
-                    checkIdx = (e0.sIdx + 1);
+                    checkIdx = (e0.sIdx + 1);                                                   ///CTRL_CL RSV_SHARED
                 }
             }
 
             /**
              * the issue block
              */
-            WireSlot iw(_table[checkIdx].v());
+            WireSlot iw(_table[checkIdx].v());   ///CTRL_DT+DATA_DT RSV_SHARED
 
-            cwhile(true){                                             ///CTRL RSV_SHARED
-                zyncc(sync, slotReady(iw)){ tryInitProbe(issueProbe); ///CTRL RSV_SHARED
+            cwhile(true){                        ///CTRL_HWD+CTRL_CL RSV_SHARED
+                zyncc(sync, slotReady(iw)){ tryInitProbe(issueProbe);   ///CTRL_HWD+CTRL_CL RSV_SHARED
                     //////// reset the table
-                    onIssue(checkIdx, iw); //// reset busy
-                    tryOwSpecBit(iw, bc);
+                    onIssue(checkIdx, iw); //// reset busy   ///CTRL_HC+DATA_HC RSV_SHARED
+                    tryOwSpecBit(iw, bc);   ///CTRL_HC+DATA_HC RSV_SHARED
                 }
             }
 

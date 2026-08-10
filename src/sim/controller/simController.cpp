@@ -47,23 +47,23 @@ namespace kathryn{
             unlock();
             //////// neg edge first
             for (auto* curEvent: _curCycleEvents){
-                curEvent->simStartCurCycleNeg();
+                curEvent->timedSimStartCurCycleNeg();
             }
             for (auto* curEvent: _curCycleEvents){
-                curEvent->curCycleCollectDataNeg();
+                curEvent->timedCurCycleCollectDataNeg();
             }
             for (auto* curEvent: _curCycleEvents){
-                curEvent->simStartNextCycleNeg();
+                curEvent->timedSimStartNextCycleNeg();
             }
             //////// pos edge first
             for (auto* curEvent: _curCycleEvents){
-                curEvent->simStartCurCyclePos();
+                curEvent->timedSimStartCurCyclePos();
             }
             for (auto* curEvent: _curCycleEvents){
-                curEvent->curCycleCollectDataPos();
+                curEvent->timedCurCycleCollectDataPos();
             }
             for (auto* curEvent: _curCycleEvents){
-                curEvent->simStartNextCyclePos();
+                curEvent->timedSimStartNextCyclePos();
             }
             //////// long run cycle
             for (auto* curEvent: _curCycleEvents){
@@ -75,7 +75,7 @@ namespace kathryn{
                     assert(amtLimitByQueue > 0 && amtUserLimit > 0);
                     curEvent->setLongRangeSim(std::min(amtUserLimit, amtLimitByQueue));
                     ///////////// start running
-                    curEvent->simStartLongRunCycle();
+                    curEvent->timedSimStartLongRunCycle();
                     for (int callBackIdx = 0; callBackIdx < curEvent->getCallBackAmt(); callBackIdx++){
                         int callBackNo = curEvent->getCallBackNo(callBackIdx);
                         assert(callBackNo < _mdTraceMap->size());

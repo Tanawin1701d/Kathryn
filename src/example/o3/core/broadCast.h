@@ -11,24 +11,24 @@
 
 namespace kathryn::o3{
 
-    struct BroadCast{
-        mWire(mis, 1);
-        mWire(fixTag, SPECTAG_LEN);
-        mWire(suc, 1);
-        mWire(sucTag, SPECTAG_LEN);
-        opr& isBrMissPred(){ return mis;}
-        opr& isBrSuccPred(){ return suc;}
-        opr& checkIsKill(opr& specIdx){
-            return mis & ( (fixTag&specIdx) != 0);
+    struct BroadCast{                                ///MD TAG
+        mWire(mis, 1);                               ///CTRL_HWD TAG
+        mWire(fixTag, SPECTAG_LEN);                  ///CTRL_HWD TAG
+        mWire(suc, 1);                               ///CTRL_HWD TAG
+        mWire(sucTag, SPECTAG_LEN);                  ///CTRL_HWD TAG
+        opr& isBrMissPred(){ return mis;}            ///CTRL_HC TAG
+        opr& isBrSuccPred(){ return suc;}            ///CTRL_HC TAG
+        opr& checkIsKill(opr& specIdx){              ///CTRL_HC TAG
+            return mis & ( (fixTag&specIdx) != 0);   ///CTRL_CL TAG
         }
-        opr& checkIsSuc (opr& specIdx){
-            return suc & (sucTag == specIdx);
+        opr& checkIsSuc (opr& specIdx){         ///CTRL_HC TAG
+            return suc & (sucTag == specIdx);   ///CTRL_CL TAG
         }
-        opr& checkIsSuc(Slot& src){
+        opr& checkIsSuc(Slot& src){             ///DATA_HC TAG
 
-            opr& specOpr = *src.hwFieldAt(spec)._opr;
-            opr& specIdx  = *src.hwFieldAt(specTag)._opr;
-            return suc & specOpr & (sucTag == specIdx);
+            opr& specOpr = *src.hwFieldAt(spec)._opr;       ///CTRL_DT TAG
+            opr& specIdx  = *src.hwFieldAt(specTag)._opr;   ///CTRL_DT TAG
+            return suc & specOpr & (sucTag == specIdx);     ///CTRL_CL TAG
         }
     };
 

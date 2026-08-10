@@ -11,11 +11,11 @@ namespace kathryn::o3{
 
     //////// bypass pool
 
-    void ByPassPool::doByPass(ByPass& bp){
-        bp.valid = 1;
+    void ByPassPool::doByPass(ByPass& bp){   ///CTRL_HC+DATA_HC CORE
+        bp.valid = 1;                        ///CTRL_DT CORE
         //////// do override all over rsv
-        for (RsvBase* rsv : _rsvs->rsvs){
-            rsv->onBypass(bp);
+        for (RsvBase* rsv : _rsvs->rsvs){    ///HLH CORE
+            rsv->onBypass(bp);               ///CTRL_HC+DATA_HC CORE
         }
     }
 

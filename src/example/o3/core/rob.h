@@ -9,50 +9,50 @@
 
 namespace kathryn::o3{
 
-    struct StoreBuf;
+    struct StoreBuf;   ///HLH ROB
 
-    struct Rob: Module{
-        Table _table;
+    struct Rob: Module{                                ///MD ROB
+        Table _table;                                  ///CTRL_HWD ROB
 
-        mWire(com1Status, 1      );
-        mWire(com2Status, 1      );
-        mReg (comPtr    , RRF_SEL);
-        mWire(comPtr2   , RRF_SEL);
-        PipStage&  pm;
-        WireSlot   com1Entry{_table[comPtr  ].v()};
-        WireSlot   com2Entry{_table[comPtr+1].v()};
-        WireSlot   selectedEntry{smROB};
-        RegArch&   regArch;
-        StoreBuf&  storeBuf;
+        mWire(com1Status, 1      );                   ///CTRL_HWD ROB
+        mWire(com2Status, 1      );                   ///CTRL_HWD ROB
+        mReg (comPtr    , RRF_SEL);                   ///CTRL_HWD ROB
+        mWire(comPtr2   , RRF_SEL);                   ///CTRL_HWD ROB
+        PipStage&  pm;                                ///CTRL_HC+DATA_HC ROB
+        WireSlot   com1Entry{_table[comPtr  ].v()};   ///CTRL_HWD+DATA_HWD ROB
+        WireSlot   com2Entry{_table[comPtr+1].v()};   ///CTRL_HWD+DATA_HWD ROB
+        WireSlot   selectedEntry{smROB};              ///CTRL_HWD+DATA_HWD ROB
+        RegArch&   regArch;                           ///CTRL_HC+DATA_HC ROB
+        StoreBuf&  storeBuf;                          ///CTRL_HC+DATA_HC ROB
 
-        Rob(PipStage& pipStage, RegArch& regArch,
-            StoreBuf& storeBuf):
-            _table(smROB, RRF_NUM),
-            pm(pipStage),
-            regArch(regArch),
-            storeBuf(storeBuf){
-            _table.makeColResetEvent(wbFin, 0);
-            _table.makeColResetEvent(isBranch, 0);
-            comPtr.makeResetEvent();
+        Rob(PipStage& pipStage, RegArch& regArch,   ///CTRL_HC+DATA_HC ROB
+            StoreBuf& storeBuf):                    ///CTRL_HC+DATA_HC ROB
+            _table(smROB, RRF_NUM),                 ///CTRL_HWD ROB
+            pm(pipStage),                           ///CTRL_HC+DATA_HC ROB
+            regArch(regArch),                       ///CTRL_HC+DATA_HC ROB
+            storeBuf(storeBuf){                     ///CTRL_HC+DATA_HC ROB
+            _table.makeColResetEvent(wbFin, 0);     ///CTRL_DT ROB
+            _table.makeColResetEvent(isBranch, 0);  ///CTRL_DT ROB
+            comPtr.makeResetEvent();                ///CTRL_DT ROB
             dataStructProbGrp.commit.init(&_table); ///DC
         }
 
-        opr& getComPtr(){ return comPtr;}
+        opr& getComPtr(){ return comPtr;}   ///CTRL_HC ROB
 
-        WireSlot& getBranchUpdateEntry(){ return selectedEntry;}
+        WireSlot& getBranchUpdateEntry(){ return selectedEntry;}   ///CTRL_HC ROB
 
-        void flow() override;
+        void flow() override;   ///HLH ROB
 
-        void onDispatch(opr& idx, RegSlot& dpValue, RegSlot& dpShareVal){
-            opr& opc = dpValue(inst)(0, 7);
-            _table[idx](wbFin) <<= 0;
-            _table[idx](storeBit) <<= (opc == RV32_STORE);
-            _table[idx] <<= dpValue;  //// sBranch, rdUse, rdIdx
-            _table[idx] <<= dpShareVal; ///  bhr, pc
+        void onDispatch(opr& idx, RegSlot& dpValue, RegSlot& dpShareVal){   ///CTRL_HC+DATA_HC ROB
+            opr& opc = dpValue(inst)(0, 7);                        ///DATA_CL ROB
+            _table[idx](wbFin) <<= 0;                              ///CTRL_DT ROB
+            _table[idx](storeBit) <<= (opc == RV32_STORE);         ///CTRL_CL ROB
+            _table[idx] <<= dpValue;  //// sBranch, rdUse, rdIdx   ///DATA_DT ROB
+            _table[idx] <<= dpShareVal; ///  bhr, pc               ///DATA_DT ROB
         }
 
-        void onWriteBack(opr& idx){
-            _table[idx](wbFin) <<= 1;
+        void onWriteBack(opr& idx){   ///CTRL_HC ROB
+            _table[idx](wbFin) <<= 1;   ///CTRL_DT ROB
         }
     };
 

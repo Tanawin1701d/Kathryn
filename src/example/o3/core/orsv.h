@@ -9,96 +9,96 @@
 
 namespace kathryn::o3{
 
-        struct ORsv: RsvBase{
-        const int  RSV_IDX = 0;
-        RegArch&   regArch;
-        bool       sortReq = false;
-        mWire(checkIdx, _table.getSufficientIdxSize(true));
+        struct ORsv: RsvBase{                                 ///MD RSV_SHARED
+        const int  RSV_IDX = 0;                               ///PARAM RSV_SHARED
+        RegArch&   regArch;                                   ///CTRL_HC+DATA_HC RSV_SHARED
+        bool       sortReq = false;                           ///HLH RSV_SHARED
+        mWire(checkIdx, _table.getSufficientIdxSize(true));   ///CTRL_HWD RSV_SHARED
         mWire(dbg_isSlotReady, 1); ///DC
 
-        ORsv(int rsv_idx, SlotMeta meta,
-             int amtRow , RegArch& regArch,
-             const SlotMeta& osm = smRsvO):
-            RsvBase(osm + meta, amtRow),
-            RSV_IDX(rsv_idx),
-            regArch(regArch),
-            sortReq(osm.isThereField(sortBit)){}
+        ORsv(int rsv_idx, SlotMeta meta,           ///DATA_HC RSV_SHARED
+             int amtRow , RegArch& regArch,        ///CTRL_HC+DATA_HC RSV_SHARED
+             const SlotMeta& osm = smRsvO):        ///CTRL_HC RSV_SHARED
+            RsvBase(osm + meta, amtRow),           ///CTRL_HC+DATA_HC RSV_SHARED
+            RSV_IDX(rsv_idx),                      ///HLH RSV_SHARED
+            regArch(regArch),                      ///CTRL_HC+DATA_HC RSV_SHARED
+            sortReq(osm.isThereField(sortBit)){}   ///HLH RSV_SHARED
 
-        void resetSortBit(){
-            SET_ASM_PRI_TO_MANUAL(RSV_SORTBIT_RST_PRED_PRIORITY); ///CTRL RSV_SHARED
-            _table.doCusLogic([&](RegSlot& lhs, int rowIdx){
-                lhs(sortBit) <<= lhs(sortBit) & (~regArch.rrf.nextRrfCycle);
+        void resetSortBit(){                                                   ///HLH RSV_SHARED
+            SET_ASM_PRI_TO_MANUAL(RSV_SORTBIT_RST_PRED_PRIORITY);              ///CTRL_CL RSV_SHARED
+            _table.doCusLogic([&](RegSlot& lhs, int rowIdx){                   ///HLH RSV_SHARED
+                lhs(sortBit) <<= lhs(sortBit) & (~regArch.rrf.nextRrfCycle);   ///CTRL_CL RSV_SHARED
             });
-            SET_ASM_PRI_TO_AUTO(); ///CTRL RSV_SHARED
+            SET_ASM_PRI_TO_AUTO();                                             ///CTRL_CL RSV_SHARED
         }
 
 
-        void tryWriteEntry(opr& targetIdx, opr& binIdx, WireSlot& iw){
-            zif (targetIdx == RSV_IDX){
-                RsvBase::writeEntry(binIdx, iw);
+        void tryWriteEntry(opr& targetIdx, opr& binIdx, WireSlot& iw){   ///CTRL_HC+DATA_HC RSV_SHARED
+            zif (targetIdx == RSV_IDX){                                  ///CTRL_CL RSV_SHARED
+                RsvBase::writeEntry(binIdx, iw);   ///CTRL_HC+DATA_HC RSV_SHARED
             }
         }
 
             ////// friend table is used incase of two table join the same index
-        pair<opr&, opr&> buildFreeIndex(opr* exceptIdx, RsvBase* friendRsv = nullptr){
+        pair<opr&, opr&> buildFreeIndex(opr* exceptIdx, RsvBase* friendRsv = nullptr){   ///CTRL_HC RSV_SHARED
 
 
-            Table effTable = _table; //// = will not build new hardware
-            if (friendRsv != nullptr){
-                effTable = (effTable.joinTableByRowInterleave(friendRsv->_table));
+            Table effTable = _table; //// = will not build new hardware              ///DATA_DT RSV_SHARED
+            if (friendRsv != nullptr){                                               ///HLH RSV_SHARED
+                effTable = (effTable.joinTableByRowInterleave(friendRsv->_table));   ///DATA_CL RSV_SHARED
             }
 
-            auto [iw, binIdx] = effTable.doReducBinIdx([&](
-             WireSlot& lhs, Operable* lidx,
-             WireSlot& rhs, Operable* ridx) -> opr&{
-                if (exceptIdx == nullptr){
-                    return ~lhs(busy); //// we don't care rhs
+            auto [iw, binIdx] = effTable.doReducBinIdx([&](       ///HLH RSV_SHARED
+             WireSlot& lhs, Operable* lidx,                       ///CTRL_HC+DATA_HC RSV_SHARED
+             WireSlot& rhs, Operable* ridx) -> opr&{              ///CTRL_HC+DATA_HC RSV_SHARED
+                if (exceptIdx == nullptr){                        ///HLH RSV_SHARED
+                    return ~lhs(busy); //// we don't care rhs     ///CTRL_CL RSV_SHARED
                 }
-                return ~lhs(busy) && ((*lidx) != (*exceptIdx));
+                return ~lhs(busy) && ((*lidx) != (*exceptIdx));   ///CTRL_CL RSV_SHARED
             });
-            return {iw(busy), binIdx};
+            return {iw(busy), binIdx};                            ///CTRL_HC RSV_SHARED
         }
 
-        
 
-        void buildIssue(BroadCast& bc) override{
+
+        void buildIssue(BroadCast& bc) override{      ///CTRL_HC RSV_SHARED
             /*
             * find the free slot
             */
-            auto [iw, ohIdx] = _table.doReducOHIdx(
-                [&](WireSlot& lhs, Operable* lidx,
-                    WireSlot& rhs, Operable* ridx)-> Operable&{
-                    lhs.tryAddWire(entry_ready, slotReady(lhs));
-                    rhs.tryAddWire(entry_ready, slotReady(rhs));
+            auto [iw, ohIdx] = _table.doReducOHIdx(                ///HLH RSV_SHARED
+                [&](WireSlot& lhs, Operable* lidx,                 ///CTRL_HC+DATA_HC RSV_SHARED
+                    WireSlot& rhs, Operable* ridx)-> Operable&{    ///CTRL_HC+DATA_HC RSV_SHARED
+                    lhs.tryAddWire(entry_ready, slotReady(lhs));   ///CTRL_CL RSV_SHARED
+                    rhs.tryAddWire(entry_ready, slotReady(rhs));   ///CTRL_CL RSV_SHARED
 
-                    if (sortReq){
-                        auto& readyEq   = lhs(entry_ready) == rhs(entry_ready);
-                        auto& sortBitEq = lhs(sortBit) == rhs(sortBit);
-                        return
-                            (lhs(entry_ready) && (~rhs(entry_ready))) ||
-                            (readyEq && (lhs(sortBit) < rhs(sortBit))) ||
-                            (readyEq &&  sortBitEq && (lhs(rrftag) < rhs(rrftag)));
+                    if (sortReq){   ///HLH RSV_SHARED
+                        auto& readyEq   = lhs(entry_ready) == rhs(entry_ready);   ///CTRL_CL RSV_SHARED
+                        auto& sortBitEq = lhs(sortBit) == rhs(sortBit);           ///CTRL_CL RSV_SHARED
+                        return   ///CTRL_CL RSV_SHARED
+                            (lhs(entry_ready) && (~rhs(entry_ready))) ||  ///CTRL_CL RSV_SHARED
+                            (readyEq && (lhs(sortBit) < rhs(sortBit))) || ///CTRL_CL RSV_SHARED
+                            (readyEq &&  sortBitEq && (lhs(rrftag) < rhs(rrftag))); ///CTRL_CL RSV_SHARED
                     }
                     ////// no sort request
-                    return lhs(entry_ready);
+                    return lhs(entry_ready);   ///CTRL_HC RSV_SHARED
                 }
             );
 
-            checkIdx = ohIdx.getIdx();
+            checkIdx = ohIdx.getIdx();   ///CTRL_DT RSV_SHARED
             /**
              * issue sync
              */
             dbg_isSlotReady = slotReady(iw); ///DC
 
-            if (sortReq){
-                resetSortBit();
+            if (sortReq){   ///HLH RSV_SHARED
+                resetSortBit();   ///CTRL_CL RSV_SHARED
             }
 
-            cwhile(true){ ///CTRL RSV_SHARED
-                zyncc(sync, dbg_isSlotReady){ tryInitProbe(issueProbe); ///CTRL RSV_SHARED
+            cwhile(true){   ///CTRL_HWD+CTRL_CL RSV_SHARED
+                zyncc(sync, dbg_isSlotReady){ tryInitProbe(issueProbe);   ///CTRL_HWD+CTRL_CL RSV_SHARED
                     //////// reset the table
-                    onIssue(ohIdx, iw);
-                    tryOwSpecBit(iw, bc);
+                    onIssue(ohIdx, iw);     ///CTRL_HC+DATA_HC RSV_SHARED
+                    tryOwSpecBit(iw, bc);   ///CTRL_HC+DATA_HC RSV_SHARED
                 }
             }
         }

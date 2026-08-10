@@ -2,7 +2,13 @@ cmake_minimum_required(VERSION 3.22)
 project(Kathryn)
 set(CMAKE_CXX_STANDARD 17)
 
-#add_compile_options(-O3)
+####### -O3 for EVERY target in this tree, including the verilated ridecore library
+####### added below via add_subdirectory. this must stay on so the kride (kathryn)
+####### and ride (verilator) simulators are always compared at the same
+####### optimization level. the kathryn jit built sim .so is compiled separately by
+####### modelCompile/startGen.sh, whose level is the opLevel argument of SimInterface
+####### (also 3) -- keep the two in sync.
+add_compile_options(-O3)
 #set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 #set(CMAKE_BUILD_TYPE Debug)
 #add_definitions(-DMODELCOMPILEVB) ### model compile verbose
@@ -14,7 +20,8 @@ endif ()
 
 
 
-add_definitions(-DNOTEXCEED64)
+####### -DNOTEXCEED64 removed: >64-bit values are now supported end-to-end
+####### (re-enables the wide auto-sim cases simAutoTest9/12/13/22)
 add_compile_definitions(KATHRYN_PROJ_FOLD_PATH=${CMAKE_SOURCE_DIR})
 
 INCLUDE_DIRECTORIES( ./src )

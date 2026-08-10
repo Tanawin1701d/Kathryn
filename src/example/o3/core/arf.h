@@ -11,40 +11,40 @@
 
 namespace kathryn::o3{
 
-    static int ARF_MIS_PRIORITY = DEFAULT_UE_PRI_USER + 4;
-    static int ARF_SUC_PRIORITY = DEFAULT_UE_PRI_USER + 3;
-    static int ARF_REN_PRIORITY = DEFAULT_UE_PRI_USER + 2;
-    static int ARF_COM_PRIORITY = DEFAULT_UE_PRI_USER + 1;
+    static int ARF_MIS_PRIORITY = DEFAULT_UE_PRI_USER + 4;   ///PARAM ARF
+    static int ARF_SUC_PRIORITY = DEFAULT_UE_PRI_USER + 3;   ///PARAM ARF
+    static int ARF_REN_PRIORITY = DEFAULT_UE_PRI_USER + 2;   ///PARAM ARF
+    static int ARF_COM_PRIORITY = DEFAULT_UE_PRI_USER + 1;   ///PARAM ARF
 
-    struct RenameCmd{
-        opr& renEn;       // 1
-        opr& renRrfPtr;   // RRF_SEL
-        opr& renArcIdx;   // REG_SEL
-        opr& isBranch;
-        opr& specTag;
+    struct RenameCmd{   ///MD ARF
+        opr& renEn;       // 1   ///CTRL_HC ARF
+        opr& renRrfPtr;   // RRF_SEL   ///CTRL_HC ARF
+        opr& renArcIdx;   // REG_SEL   ///DATA_HC ARF
+        opr& isBranch;   ///CTRL_HC ARF
+        opr& specTag;   ///CTRL_HC ARF
     };
 
-    struct RenamedData{
-        opr& busy;
-        opr& rrfIdx;
+    struct RenamedData{   ///MD ARF
+        opr& busy;   ///CTRL_HC ARF
+        opr& rrfIdx;   ///CTRL_HC ARF
     };
 
-    struct PreRenGrp{
-        int idx = -1; //// -1 is for master
-        mExpr(isAsRecvGrp, 1);
-        WireSlot busyTemp  {smARFBusy};
-        WireSlot renameTemp{smARFRenamed};
+    struct PreRenGrp{   ///MD ARF
+        int idx = -1; //// -1 is for master   ///HLH ARF
+        mExpr(isAsRecvGrp, 1);   ///CTRL_HWD ARF
+        WireSlot busyTemp  {smARFBusy};   ///CTRL_HWD ARF
+        WireSlot renameTemp{smARFRenamed};   ///CTRL_HWD ARF
 
 
         /**
         *
         * for master table
         */
-        void tiedToMaster(RegSlot& busySlot, RegSlot& renameSlot){
-            busyTemp      = busySlot;
-            renameTemp    = renameSlot;
-            busySlot    <<= busyTemp;
-            renameSlot  <<= renameTemp;
+        void tiedToMaster(RegSlot& busySlot, RegSlot& renameSlot){   ///CTRL_HC ARF
+            busyTemp      = busySlot;   ///CTRL_DT ARF
+            renameTemp    = renameSlot;   ///CTRL_DT ARF
+            busySlot    <<= busyTemp;   ///CTRL_DT ARF
+            renameSlot  <<= renameTemp;   ///CTRL_DT ARF
         }
 
         /**
@@ -52,88 +52,88 @@ namespace kathryn::o3{
          */
 
         ///// in normal case loop tied it to the system
-        void tiedToTable(Table& busyTable, Table& renameTable){
+        void tiedToTable(Table& busyTable, Table& renameTable){   ///CTRL_HC ARF
             assert(idx != -1);
-            busyTemp           = busyTable(idx);
-            renameTemp         = renameTable(idx);
-            busyTable(idx)   <<= busyTemp;
-            renameTable(idx) <<= renameTemp;
+            busyTemp           = busyTable(idx);   ///CTRL_DT ARF
+            renameTemp         = renameTable(idx);   ///CTRL_DT ARF
+            busyTable(idx)   <<= busyTemp;   ///CTRL_DT ARF
+            renameTable(idx) <<= renameTemp;   ///CTRL_DT ARF
         }
 
-        void onMisPred(opr& misTag,
-                       Table&    rcvTabBusy,
-                       Table&    rcvTabRename){
-            SET_ASM_PRI_TO_MANUAL(ARF_MIS_PRIORITY);  ///CTRL ARF
-            busyTemp   = rcvTabBusy  [OH(misTag)].v();
-            renameTemp = rcvTabRename[OH(misTag)].v();
-            SET_ASM_PRI_TO_AUTO(); ///CTRL ARF
+        void onMisPred(opr&      misTag,                 ///CTRL_HC ARF
+                       Table&    rcvTabBusy,             ///CTRL_HC ARF
+                       Table&    rcvTabRename){          ///CTRL_HC ARF
+            SET_ASM_PRI_TO_MANUAL(ARF_MIS_PRIORITY);     ///CTRL_CL ARF
+            busyTemp   = rcvTabBusy  [OH(misTag)].v();   ///CTRL_DT ARF
+            renameTemp = rcvTabRename[OH(misTag)].v();   ///CTRL_DT ARF
+            SET_ASM_PRI_TO_AUTO();                       ///CTRL_CL ARF
         }
 
         /////// system going to succcess
-        void onSucPred(opr& sucTag, PreRenGrp& masterRenGrp){
-            SET_ASM_PRI_TO_MANUAL(ARF_SUC_PRIORITY); ///CTRL ARF
-            zif(sucTag.sl(idx) | (~isAsRecvGrp)){
-                busyTemp   = masterRenGrp.busyTemp;
-                renameTemp = masterRenGrp.renameTemp;
+        void onSucPred(opr& sucTag, PreRenGrp& masterRenGrp){   ///CTRL_HC ARF
+            SET_ASM_PRI_TO_MANUAL(ARF_SUC_PRIORITY);            ///CTRL_CL ARF
+            zif(sucTag.sl(idx) | (~isAsRecvGrp)){               ///CTRL_CL ARF
+                busyTemp   = masterRenGrp.busyTemp;             ///CTRL_DT ARF
+                renameTemp = masterRenGrp.renameTemp;           ///CTRL_DT ARF
             }
-            SET_ASM_PRI_TO_AUTO(); ///CTRL ARF
+            SET_ASM_PRI_TO_AUTO();                              ///CTRL_CL ARF
         }
 
-        void commitBase(opr& comEn    , opr& comRrfPtr,
-                        opr& comArcIdx, RegSlot& renameBase){
+        void commitBase(opr& comEn    , opr& comRrfPtr,         ///CTRL_HC ARF
+                        opr& comArcIdx, RegSlot& renameBase){   ///CTRL_HC+DATA_HC ARF
 
             ///// busy doesnt have to be set if it unset already, it is ok!
-            opr& comEntryMatch =  (renameBase[comArcIdx].v() == comRrfPtr);
-            zif(comEn && comEntryMatch){
-                busyTemp[comArcIdx] = 0;
+            opr& comEntryMatch =  (renameBase[comArcIdx].v() == comRrfPtr);   ///CTRL_CL ARF
+            zif(comEn && comEntryMatch){                                      ///CTRL_CL ARF
+                busyTemp[comArcIdx] = 0;                                      ///CTRL_DT ARF
             }
 
         }
 
-        void onCommit(opr& comEn1    , opr& comRrfPtr1,
-                      opr& comArcIdx1,
-                      opr& comEn2    , opr& comRrfPtr2,
-                      opr& comArcIdx2,
-                      RegSlot& renameReg){
-            SET_ASM_PRI_TO_MANUAL(ARF_COM_PRIORITY); ///CTRL ARF
-            commitBase(comEn1, comRrfPtr1, comArcIdx1, renameReg);
-            commitBase(comEn2, comRrfPtr2, comArcIdx2, renameReg);
-            SET_ASM_PRI_TO_AUTO(); ///CTRL ARF
+        void onCommit(opr& comEn1    , opr& comRrfPtr1,   ///CTRL_HC ARF
+                      opr& comArcIdx1,   ///DATA_HC ARF
+                      opr& comEn2    , opr& comRrfPtr2,   ///CTRL_HC ARF
+                      opr& comArcIdx2,   ///DATA_HC ARF
+                      RegSlot& renameReg){   ///CTRL_HC ARF
+            SET_ASM_PRI_TO_MANUAL(ARF_COM_PRIORITY);   ///CTRL_CL ARF
+            commitBase(comEn1, comRrfPtr1, comArcIdx1, renameReg);   ///CTRL_HC+DATA_HC ARF
+            commitBase(comEn2, comRrfPtr2, comArcIdx2, renameReg);   ///CTRL_HC+DATA_HC ARF
+            SET_ASM_PRI_TO_AUTO();   ///CTRL_CL ARF
         }
 
-        void renameBase(RenameCmd& renCmd){
-            zif(renCmd.renEn){
-                busyTemp[renCmd.renArcIdx]   = 1;
-                renameTemp[renCmd.renArcIdx] = renCmd.renRrfPtr;
+        void renameBase(RenameCmd& renCmd){                        ///CTRL_HC+DATA_HC ARF
+            zif(renCmd.renEn){                                     ///CTRL_CL ARF
+                busyTemp[renCmd.renArcIdx]   = 1;                  ///CTRL_DT ARF
+                renameTemp[renCmd.renArcIdx] = renCmd.renRrfPtr;   ///CTRL_DT ARF
             }
         }
 
-        void onRename(RenameCmd& renCmd1, RenameCmd& renCmd2, bool override = false){
-            SET_ASM_PRI_TO_MANUAL(ARF_REN_PRIORITY); ///CTRL ARF
-            if (override){
-                renameBase(renCmd1);              //// order cannot be changed
-                renameBase(renCmd2);
+        void onRename(RenameCmd& renCmd1, RenameCmd& renCmd2, bool override = false){   ///CTRL_HC+DATA_HC ARF
+            SET_ASM_PRI_TO_MANUAL(ARF_REN_PRIORITY);   ///CTRL_CL ARF
+            if (override){   ///HLH ARF
+                renameBase(renCmd1);              //// order cannot be changed   ///CTRL_HC+DATA_HC ARF
+                renameBase(renCmd2);                                             ///CTRL_HC+DATA_HC ARF
             }else{
                 ////// the isAsRecvGrp is set from decode stage
                 ////// it should be undone first
-                opr& instr1WantThisSlotToRcv = (renCmd1.isBranch && renCmd1.specTag.sl(idx));
-                opr& instr2WantThisSlotToRcv = (renCmd2.isBranch && renCmd2.specTag.sl(idx));
+                opr& instr1WantThisSlotToRcv = (renCmd1.isBranch && renCmd1.specTag.sl(idx));   ///CTRL_CL ARF
+                opr& instr2WantThisSlotToRcv = (renCmd2.isBranch && renCmd2.specTag.sl(idx));   ///CTRL_CL ARF
                 ////// undo both instruction 1 and instruction 2
-                opr& isAsRecvGrp_undo = (isAsRecvGrp &&
-                                         (!(instr1WantThisSlotToRcv |
-                                            instr2WantThisSlotToRcv))
+                opr& isAsRecvGrp_undo = (isAsRecvGrp &&                                         ///CTRL_CL ARF
+                                         (!(instr1WantThisSlotToRcv |                           ///CTRL_CL ARF
+                                            instr2WantThisSlotToRcv))                           ///CTRL_CL ARF
                                          );
                 ////// rename 1
-                zif(~isAsRecvGrp_undo){
-                    renameBase(renCmd1);
+                zif(~isAsRecvGrp_undo){    ///CTRL_CL ARF
+                    renameBase(renCmd1);   ///CTRL_HC+DATA_HC ARF
                 }
                 ////// rename 2 (if the first instruction is branch and this table is just rcv )
-                opr& isAsRecvGrp_undo_only_second_instr = (isAsRecvGrp_undo |  instr1WantThisSlotToRcv);
-                zif (~isAsRecvGrp_undo_only_second_instr){
-                    renameBase(renCmd2);
+                opr& isAsRecvGrp_undo_only_second_instr = (isAsRecvGrp_undo |  instr1WantThisSlotToRcv);   ///CTRL_CL ARF
+                zif (~isAsRecvGrp_undo_only_second_instr){                                                 ///CTRL_CL ARF
+                    renameBase(renCmd2);                                                                   ///CTRL_HC+DATA_HC ARF
                 }
             }
-            SET_ASM_PRI_TO_AUTO(); ///CTRL ARF
+            SET_ASM_PRI_TO_AUTO();   ///CTRL_CL ARF
         }
 
     };
@@ -146,90 +146,90 @@ namespace kathryn::o3{
     ////// commit update all table that each element is busy except success table must use with after fixed table
 
 
-    struct Arf{
+    struct Arf{   ///MD ARF
 
         ////// rename table
-        Table    busy        {smARFBusy, SPECTAG_LEN};
-        Table    rename      {smARFRenamed, SPECTAG_LEN}; ////// row re recover tag col is reg
-        RegSlot  busyMaster  {smARFBusy};
-        RegSlot  renameMaster{smARFRenamed};
-        PreRenGrp preRenGrp[SPECTAG_LEN];
-        PreRenGrp preRenMaster;
+        Table    busy        {smARFBusy, SPECTAG_LEN};      ///CTRL_HWD ARF
+        Table    rename      {smARFRenamed, SPECTAG_LEN};   ///CTRL_HWD ARF
+        RegSlot  busyMaster  {smARFBusy};                   ///CTRL_HWD ARF
+        RegSlot  renameMaster{smARFRenamed};                ///CTRL_HWD ARF
+        PreRenGrp preRenGrp[SPECTAG_LEN];                   ///MD ARF
+        PreRenGrp preRenMaster;                             ///MD ARF
         ////// architecture data file
-        RegSlot  archRegs    {smARFData};
+        RegSlot  archRegs    {smARFData};                   ///DATA_HWD ARF
 
-        explicit Arf(Mpft& mpft){
+        explicit Arf(Mpft& mpft){                       ///CTRL_HC ARF
             ////// reset the register
-            busy        .makeResetEvent(0);
-            rename      .makeResetEvent(0);
-            busyMaster  .makeResetEvent(0);
-            renameMaster.makeResetEvent(0);
+            busy        .makeResetEvent(0);             ///CTRL_DT ARF
+            rename      .makeResetEvent(0);             ///CTRL_DT ARF
+            busyMaster  .makeResetEvent(0);             ///CTRL_DT ARF
+            renameMaster.makeResetEvent(0);             ///CTRL_DT ARF
             dataStructProbGrp.arfBusy.init(&busy);      ///DC
             dataStructProbGrp.arfRename.init(&rename);  ///DC
 
             ////// initialize preRenGrp
-            for(int i = 0; i < SPECTAG_LEN; i++){
-                preRenGrp[i].idx = i;
-                preRenGrp[i].isAsRecvGrp = mpft.isUsed(i);
-                preRenGrp[i].tiedToTable(busy, rename);
+            for(int i = 0; i < SPECTAG_LEN; i++){          ///HLH ARF
+                preRenGrp[i].idx = i;                      ///HLH ARF
+                preRenGrp[i].isAsRecvGrp = mpft.isUsed(i); ///CTRL_DT ARF
+                preRenGrp[i].tiedToTable(busy, rename);    ///CTRL_HC ARF
             }
-            preRenMaster.idx         = -1;
-            preRenMaster.isAsRecvGrp =  1;
-            preRenMaster.tiedToMaster(busyMaster, renameMaster);
+            preRenMaster.idx         = -1;                         ///HLH ARF
+            preRenMaster.isAsRecvGrp =  1;                         ///CTRL_DT ARF
+            preRenMaster.tiedToMaster(busyMaster, renameMaster);   ///CTRL_HC ARF
         }
 
-        RenamedData getRenamedData(opr& archIdx){
-            return {busyMaster  [archIdx].v(),
-                    renameMaster[archIdx].v()};
+        RenamedData getRenamedData(opr& archIdx){   ///DATA_HC ARF
+            return {busyMaster  [archIdx].v(),   ///CTRL_HC ARF
+                    renameMaster[archIdx].v()};   ///CTRL_HC ARF
         }
 
-        opr& getArfData(opr& archIdx){
-            return archRegs[archIdx].v();
+        opr& getArfData(opr& archIdx){   ///DATA_HC ARF
+            return archRegs[archIdx].v();   ///DATA_HC ARF
         }
 
-        void updateArfReg(opr& comEn, opr& comArcIdx, opr& data){
-            zif(comEn & (comArcIdx != 0)){
-                archRegs[comArcIdx] <<= data;
+        void updateArfReg(opr& comEn, opr& comArcIdx, opr& data){   ///CTRL_HC+DATA_HC ARF
+            zif(comEn & (comArcIdx != 0)){   ///CTRL_CL ARF
+                archRegs[comArcIdx] <<= data;   ///DATA_DT ARF
             }
         }
-        void onMisPred(opr& misTag){
-            for(int specIdx = 0; specIdx < SPECTAG_LEN; specIdx++){
-                preRenGrp[specIdx].onMisPred(misTag, busy, rename);
+        void onMisPred(opr& misTag){   ///CTRL_HC ARF
+            for(int specIdx = 0; specIdx < SPECTAG_LEN; specIdx++){   ///HLH ARF
+                preRenGrp[specIdx].onMisPred(misTag, busy, rename);   ///CTRL_HC ARF
             }
-            preRenMaster.onMisPred(misTag, busy, rename);
+            preRenMaster.onMisPred(misTag, busy, rename);   ///CTRL_HC ARF
         }
 
-        void onSucPred(opr& sucTag){
-            for (int specIdx = 0; specIdx < SPECTAG_LEN; specIdx++){
+        void onSucPred(opr& sucTag){   ///CTRL_HC ARF
+            for (int specIdx = 0; specIdx < SPECTAG_LEN; specIdx++){   ///HLH ARF
                 ///////// it must be data from preMaster because it can be occur with commit at the same time
-                preRenGrp[specIdx].onSucPred(sucTag, preRenMaster);
+                preRenGrp[specIdx].onSucPred(sucTag, preRenMaster);   ///CTRL_HC ARF
             }
         }
 
-        void onRename(RenameCmd& renCmd1, RenameCmd& renCmd2){
-            for (int specIdx = 0; specIdx < SPECTAG_LEN; specIdx++){
-                preRenGrp[specIdx].onRename(renCmd1, renCmd2, false);
+        void onRename(RenameCmd& renCmd1, RenameCmd& renCmd2){   ///CTRL_HC+DATA_HC ARF
+            for (int specIdx = 0; specIdx < SPECTAG_LEN; specIdx++){   ///HLH ARF
+                preRenGrp[specIdx].onRename(renCmd1, renCmd2, false);   ///CTRL_HC+DATA_HC ARF
             }
-            preRenMaster.onRename(renCmd1, renCmd2, true);
+            preRenMaster.onRename(renCmd1, renCmd2, true);   ///CTRL_HC+DATA_HC ARF
         }
 
-        void onCommit(opr& comEn1    , opr& comRrfPtr1,
-                      opr& comArcIdx1, opr& comData1  ,
-                      opr& comEn2    , opr& comRrfPtr2,
-                      opr& comArcIdx2, opr& comData2)
+        void onCommit(opr& comEn1    , opr& comRrfPtr1,   ///CTRL_HC ARF
+                      opr& comArcIdx1, opr& comData1  ,   ///DATA_HC ARF
+                      opr& comEn2    , opr& comRrfPtr2,   ///CTRL_HC ARF
+                      opr& comArcIdx2, opr& comData2)   ///DATA_HC ARF
         {
-            for (int specIdx = 0; specIdx < SPECTAG_LEN; specIdx++){
-                preRenGrp[specIdx].onCommit(comEn1, comRrfPtr1, comArcIdx1,
-                                            comEn2, comRrfPtr2, comArcIdx2,
-                                            rename(specIdx));
+            for (int specIdx = 0; specIdx < SPECTAG_LEN; specIdx++){   ///HLH ARF
+                preRenGrp[specIdx].onCommit(comEn1, comRrfPtr1, comArcIdx1,   ///CTRL_HC+DATA_HC ARF
+                                            comEn2, comRrfPtr2, comArcIdx2, ///CTRL_HC+DATA_HC ARF
+                                            rename(specIdx)); ///CTRL_HC ARF
             }
-            preRenMaster.onCommit(comEn1, comRrfPtr1, comArcIdx1,
-                                  comEn2, comRrfPtr2, comArcIdx2,
-                                  renameMaster);
+            preRenMaster.onCommit(comEn1, comRrfPtr1, comArcIdx1,   ///CTRL_HC+DATA_HC ARF
+                                  comEn2, comRrfPtr2, comArcIdx2, ///CTRL_HC+DATA_HC ARF
+                                  renameMaster); ///CTRL_HC ARF
 
             ////// does not need to update any priority//// order cannot be changed
-            updateArfReg(comEn1, comArcIdx1, comData1); ///   due to it contain commit eneable at the destination
-            updateArfReg(comEn2, comArcIdx2, comData2); ///
+            updateArfReg(comEn1, comArcIdx1, comData1);  //  due to it contain commit eneable at the destination   ///CTRL_HC+DATA_HC ARF
+            updateArfReg(comEn2, comArcIdx2, comData2);   ///CTRL_HC+DATA_HC ARF
 
         }
 

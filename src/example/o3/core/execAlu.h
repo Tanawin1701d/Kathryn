@@ -15,42 +15,42 @@
 
 namespace kathryn::o3{
 
-    struct ExecAlu: Module{
-    RegArch&     regArch;
-    Rob&         rob;
-    RsvBase&     rsv;
-    ByPass&      bp;
+    struct ExecAlu: Module{      ///MD EXEC_ALU
+    RegArch&     regArch;        ///CTRL_HC+DATA_HC EXEC_ALU
+    Rob&         rob;            ///CTRL_HC+DATA_HC EXEC_ALU
+    RsvBase&     rsv;            ///CTRL_HC+DATA_HC EXEC_ALU
+    ByPass&      bp;             ///CTRL_HC+DATA_HC EXEC_ALU
     PipSimProbe* psp = nullptr; ///DC
 
-    explicit ExecAlu(RegArch& regArch,
-                     Rob& rob,
-                     RsvBase& rsvBase) :
-        regArch(regArch),
-        rob(rob),
-        rsv(rsvBase),
-        bp(regArch.bpp.addByPassEle()){
+    explicit ExecAlu(RegArch& regArch,     ///CTRL_HC+DATA_HC EXEC_ALU
+                     Rob& rob,             ///CTRL_HC+DATA_HC EXEC_ALU
+                     RsvBase& rsvBase) :   ///CTRL_HC+DATA_HC EXEC_ALU
+        regArch(regArch),                  ///CTRL_HC+DATA_HC EXEC_ALU
+        rob(rob),                          ///CTRL_HC+DATA_HC EXEC_ALU
+        rsv(rsvBase),                      ///CTRL_HC+DATA_HC EXEC_ALU
+        bp(regArch.bpp.addByPassEle()){    ///CTRL_HC+DATA_HC EXEC_ALU
         // exSync.setTagTracker(src);
     }
 
-    void setSimProbe(PipSimProbe* in_psp){psp = in_psp;}
+    void setSimProbe(PipSimProbe* in_psp){psp = in_psp;} ///DC
 
-    void flow() override{
+    void flow() override{   ///HLH EXEC_ALU
 
-        RegSlot& src    = rsv.execSrc;
-        opr&     srcA   = getAluSrcA(src);
-        opr&     srcB   = getAluSrcB(src);
-        opr&     result = alu(src(aluOp), srcA, srcB);
-        bp.addSrc(src(rrftag), result);
+        RegSlot& src    = rsv.execSrc;       ///CTRL_DT+DATA_DT EXEC_ALU
+        opr&     srcA   = getAluSrcA(src);   ///DATA_CL EXEC_ALU
+        opr&     srcB   = getAluSrcB(src);   ///DATA_CL EXEC_ALU
+        opr&     result = alu(src(aluOp), srcA, srcB);   ///DATA_CL EXEC_ALU
+        bp.addSrc(src(rrftag), result);   ///CTRL_HC+DATA_HC EXEC_ALU
 
         ///// init pip meta data
-        pip(rsv.sync){ tryInitProbe(psp); ///CTRL EXEC_ALU
-            rob.onWriteBack(src(rrftag));
-            zif(src(rdUse)){
-                regArch.rrf.onWback(src(rrftag), result);
-                regArch.bpp.doByPass(bp);
+        pip(rsv.sync){ tryInitProbe(psp);   ///CTRL_HWD+CTRL_CL EXEC_ALU
+            rob.onWriteBack(src(rrftag));   ///CTRL_HC EXEC_ALU
+            zif(src(rdUse)){   ///CTRL_CL EXEC_ALU
+                regArch.rrf.onWback(src(rrftag), result);   ///CTRL_HC+DATA_HC EXEC_ALU
+                regArch.bpp.doByPass(bp);                   ///CTRL_HC+DATA_HC EXEC_ALU
             }
         }
-        
+
     }
 
     };

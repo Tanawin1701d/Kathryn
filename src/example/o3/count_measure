@@ -1,0 +1,509 @@
+=====================================================================
+KATHRYN CODE-PRODUCTIVITY CLASSIFICATION -- REPRODUCIBLE CRITERIA
+=====================================================================
+
+Purpose
+-------
+Every *real-code* line of a hardware design is classified into the 11 categories
+below by a LANGUAGE-AGNOSTIC rule set that applies identically to
+  (a) the Kathryn C++-embedded HDL   (src/example/o3/core), and
+  (b) the reference RIDECORE Verilog (extSim/ridecore/src/fpga).
+
+The scheme is a CROSS-PRODUCT of two independent axes:
+  DOMAIN axis  = is the line about a CONTROL signal or a DATA signal?
+                 Decided by looking the identifiers up in the KEYWORD LIST
+                 below, not by opinion. If a name is not in the list yet,
+                 use the FALLBACK rule there, then ADD the name to the list.
+                 Judgment is allowed ONCE, and it must be written down.
+  KIND   axis  = what does the line DO: declare (HWD), compute (CL), move (DT),
+                 connect (HC), or instantiate a module (MD)?
+
+  {CTRL, DATA} x {HWD, CL, DT, HC}   +   MD, PARAM, HLH   =   11 categories
+
+    CTRL_HWD  CTRL_CL  CTRL_DT  CTRL_HC      (control domain x 4 kinds)
+    DATA_HWD  DATA_CL  DATA_DT  DATA_HC      (data    domain x 4 kinds)
+    MD        PARAM    HLH                   (standalone, no domain)
+
+ONE PHYSICAL LINE = ONE CATEGORY, score 1.0. When a statement has more than one
+aspect, LINE-BREAK it so each resulting line carries exactly one clean category.
+Only a genuinely INSEPARABLE single token (one port bundle carrying both a
+control and a data signal) keeps a combined ///A+B tag, and that tag is
+SCORE-SPLIT 1/K across its K categories -- never 1.0 to each. So a line always
+contributes exactly 1.0 in total, however it is tagged.
+
+Marker syntax (trailing comment, one per physical line):
+    <code>            ///<CAT> <GROUP>              (single category, score 1)
+    <code>            ///CTRL_HC+DATA_HC <GROUP>    (inseparable bundle: 1/2 each)
+  where <CAT> is one of the 11 names above
+  and   <GROUP> is a functional-block name (see GROUPS below).
+
+A line carrying  ///DC  is EXCLUDED from the count (see EXCLUSIONS).
+
+
+=====================================================================
+THE DOMAIN AXIS -- ctrl vs data KEYWORD LIST (the authority)
+=====================================================================
+The DOMAIN of a line = the domain of the ELEMENT it writes / declares / connects
+(its LHS/target for CL/DT/HWD; its port for HC). Look THAT identifier up here.
+
+Look the name up in the keyword list below.
+If it is not there yet, decide it yourself:
+    meta-data of the system                 -> CONTROL
+    the instruction, or a calculated value  -> DATA
+    both, and the line cannot be split      -> CTRL_x+DATA_x (0.5 each)
+Then add the name to the list, so nobody decides it a second time.
+
+
+CONTROL -- decides WHEN / WHETHER / WHICH:
+  - clock / reset:
+        clk    reset
+  - validity/occupancy/enable/write-enable:
+        allocatable*     arfRen           arfwe*
+        attachable       *busy*           busyvec*
+        clearbusy*       com*Avail        com*Cond
+        com*Status       com_en*          complete*
+        dpen*            dstval*          empty
+        en               enable           entry_ready
+        exunit_busynext  finish           full
+        fullsb           hit*             is*Allocatable
+        isdispatable     isGenable        isLoad
+        isRenamable      issue*           issuevalid*
+        memoccupy*       notempty*        notfull*
+        rdUse            rdy              ready*
+        renEn            resolved*        roundOver
+        rsUse_*          settagbusy*      slotReady
+        sortBit          sortBitEq        sortReq
+        *valid*          wbFin            we
+        we1              we2              wrrfen*
+  - table/slot ENTRY state (renaming table, MPFT, RS, store buffer) --
+    these hold rename tags and occupancy, never ALU payload:
+        *_wdec       allocent*    *ent         ent1         ent2
+        entvec       free_ent*    histvect     ldent        mpft_value
+        oldent       oldval       osm          renameSlot   renameTable
+        renameTemp   value*       valvec       wdecdata
+  - stall/flush/kill/mispredict/recovery:
+        checkIsKill        holdMaster         holdSlave
+        illegal*           inv*               invalid*
+        isBrMissPred       isBrSuccPred       isKilled
+        *kill*             kill_speculative*  killIfTagMet
+        killSlave          killspec*          mis*
+        onMisPred          onSucPred          prcond*
+        prmiss             prsuccess          stall_*
+        suc*
+  - speculation / recovery tags:
+        branchValid*  branchvalid*  brdepth       fixTag
+        isAsRecvGrp   isBranch      isbranch*     mask
+        mpft_valid*   phyEntry      setspec*      spec
+        specbit*      specfixtag    specTag       spectag*
+        spectagfix    speculative*  sptag*        spTag*Result
+        st*spec*      storeBit      storebit      stspecbit*
+        stspectag     tagreg*
+    NOTE phyEntry is the RRF entry AS A WHOLE (valid bit + payload), so a
+    whole-entry reference is a CTRL+DATA bundle. The bare phyIdx /
+    phyIdx_* payload field stays DATA -- do NOT widen this keyword to
+    phy*.
+  - rename/producer tags + structural pointers:
+        *_eq_*         addrmatch      allocPtr       allocptr
+        amtFree        amtGen         checkIdx       com*tag
+        comEntryMatch  commit1        commit2        comnum
+        comptr         comPtr*        curCommitPtr   dispatchptr
+        dpaddr*        dst*_renamed   exdst*         finPtr
+        finptr         freenum        *Idx           index
+        issueptr       isTag*         *match*        nextRrf*
+        nextrrfcyc     prs*           prtag          rem[]
+        renRrfPtr      reqPtr         retPtr         retptr
+        rrfIdx         rrfptr*        rrftag*        *RsvIdx*
+        settag*        sIdx           src_eq*        stcom
+        stcommit       stretire       targetIdx
+    NOTE a comparison RESULT is a condition, not a payload
+  - WRITE PORTS of the rename/RRF/MPFT tables (the port carries a tag or a
+    valid bit, not payload -- see the waddr* note in RIDECORE WORKED
+    CONVENTIONS):
+        waddr*     wdstval*   wrrfaddr*  wrrftag*   wspecbit*  wspectag*
+        wvalid*
+  - handshake / pipeline sync / issue-request:
+        _rsvs        autoSync     b1           bc           BroadCast
+        cwhile       desIdent     dp1          dp2          exfin_*
+        friendRsv    hi           hidp         nb1          onCommit
+        onDispatch   onIssue      onWriteBack  pip          req*
+        reqnum       stfin        sync*        SyncMeta     SyncPip
+        uext         vecshamt*    zync         zyncc
+  - pipeline-stage handles (the stage object itself sequences the
+    pipeline):
+        com  dc   dp   ex   ft   iw   pm   wb
+  - branch-prediction control:
+        *_PRIORITY  bhr*        brCond      brcond*     brTaken
+        prediction  taken
+
+DATA -- the payload computed / moved:
+  - pc / addresses:
+        *_offset     *addr*       br_offset    brOffset     calAddr
+        curPc        dmem_addr    dmem_rwaddr  effaddr      fixedPc
+        fixPc        jal_offset   jalOffset    jalr_offset  jalrOffset
+        jmpaddr*     ldaddr       mem_addr     memAddr      nextPc
+        npc*         pc*          praddr*      pred_addr    raddr*
+        retaddr      srcPc        staddr       storeaddr    wpc*
+        wpraddr*
+  - operands / results / register-file data:
+        adat*       alu_src_*   aMsb*       archRegs    arfdata
+        com*data    comData*    comdata*    comreg*     dat0
+        dat1        dat2        dat3        data        datarr
+        dayta       daytas      dmem_rdata  dmem_wdata  dpValue
+        ex_src*     execSrc     exrslt*     getArfData  i0
+        i1          i2          i3          in1         in2
+        lddata*     opr*        out         phyIdx      phyIdx_*
+        rdat*       res         result*     retdata     rrfData
+        rrfdata     src1        src2*       src_a       src_b
+        srcA        srcAS       srcAU       srcB        srcBS
+        srcBU       stBufData   stdata      storedata   val
+        wbData      wdata*      wreg*       wrrfdata*   wsrc*
+    NOTE payload-leaning; see note
+  - immediates:
+        brimm     imm*      imm1      imm2      imm_br    immBrGen
+        immGen    wimm*
+    NOTE the VALUE, not imm_type
+  - register indices:
+        comArcIdx  dst        dstarf*    rd         rdIdx      rs1
+        rs2        rsIdx_*
+  - operation-SELECT fields:
+        add_or_sub         alu_op             alu_op_arith
+        aluOp*             aluOpArith         dmem_size*
+        dmem_type*         funct12            funct3
+        funct7             imm_type           md_req_in_signed*
+        md_req_op          md_req_out_sel     op
+        opc                opcode             rs_ent
+        rs_ent_md          rsEnt              rsSel_*
+        sel*               sel_lohi*          selIdx
+        src*_signed        src_*_sel*         src_a_sel
+        src_b_sel          srcSel             srl_or_sra
+        uses_rs*           walu_op*           wopcode*
+        wr_reg             wsel_lohi*         wsrc*_signed*
+  - memory payload:
+        dmem_data  mem
+  - instruction bits:
+        idata  iMem*  inst*  instr
+  - decode/execute payload slots and buffered operands:
+        buf_*           buf_alu_op_*    buf_sel_lohi_*  buf_src_*
+        dcd*            dcdShare*       dcw*            desWire
+        effTable        shamt           sidedSlot
+    NOTE buffered RS operand copies
+
+
+DOMAIN determination rule:
+  - A CL / DT / HWD line has exactly ONE target, so it is ALWAYS single-domain:
+    CTRL and DATA never share such a line.
+  - The domain follows the TARGET (the LHS being written / declared), NOT the RHS.
+    For  a <<= b  (or  a = b ):  kind = DT (plain move) or CL (RHS computes);
+    DOMAIN = domain of  a  (look  a  up in the list), regardless of  b . E.g.
+    busy <<= b -> CTRL_DT ; pc <<= b -> DATA_DT ; comPtr <<= comPtr+1 -> CTRL_CL.
+    (The RHS identifiers are counted on the lines that PRODUCE them.) If a target
+    is not yet in the list, classify it by role and ADD it to the list.
+  - Control-flow constructs with no data subject (clocked-process wrapper,
+    if(reset)/stall/kill guards, FSM next-state, HDB flow blocks) are CONTROL by
+    nature (kind = CL, so CTRL_CL).
+  - HC domain = per-port. The ONLY line carrying both CTRL and DATA is a single
+    inseparable HC bundle token -> split CTRL_HC + DATA_HC (0.5 each).
+  - MD, PARAM, HLH have NO domain.
+
+
+=====================================================================
+THE KIND AXIS -- what does the line DO?
+=====================================================================
+---------------------------------------------------------------------
+MD -- Module / struct declaration                        (domain-less)
+---------------------------------------------------------------------
+  What     declaring or instantiating a MODULE or STRUCT (any composite
+           user type), as opposed to a hardware PRIMITIVE (that is HWD).
+  Covers   type header   struct X{ | struct X: Module{ | module foo
+           instance      mMod(...) head | ModuleType inst
+                         (RegArch regArch, Rsvs rsvs, ...)
+                         Verilog instance head: reorderbuf rob | alu alice
+  NOT MD   HWD = a hardware primitive (reg / wire / mem / table / slot)
+           HC  = the struct members and the wired args
+  Note     line-break the connectivity / members off the head
+           -- see MODULE-DECL REFORMATTING.
+
+---------------------------------------------------------------------
+HC -- Hardware connectivity                        CTRL_HC / DATA_HC
+---------------------------------------------------------------------
+  What     an INTERFACE or CONNECTION: signature / parameter (port) lines,
+           ctor-arg and instance connectivity, port-bundle structs and
+           their ref members, opr&-returning wrapper signatures, I/O
+           tagging, instance port maps.
+  Kathryn  (opr& op, opr& srcA, ...)
+           struct RenameCmd{ opr& busy; ... }
+           {tagMgmt.mpft}              ctor-arg connectivity
+           pm, regArch, storeBuf       ctor args
+           inline opr& alu <sig>
+           asInputGlob / asOutputGlob  I/O tagging
+           ctor init-list binds
+  Verilog  input / output / inout port decls
+           instance port maps          .op(alu_op)
+  Domain   busy / valid / kill / sync port   -> CTRL_HC
+           data / pc / operand port          -> DATA_HC
+           inseparable bundle (PipStage& pm) -> CTRL_HC+DATA_HC (0.5 each)
+
+  SPECIAL CASE -- computed port arg (Verilog)
+    A port map whose arg is an EXPRESSION rather than a plain signal:
+        logic / arith   .enable(~stall_ID & ~stall_DP)
+        ternary mux     .wpc((sel)?a:b)
+        concat          {a,b}
+        bit-slice       x[hi:lo]   x[b+:w]
+    does TWO things on one line -- it connects the port (HC) AND computes
+    the value (CL, per the concat/slice/ternary/logic-op = CL rule).
+    Tag both, in the SAME domain as the port:   X_HC+X_CL  (0.5 each).
+    A plain .port(sig) stays pure HC.
+    Symmetric with Kathryn, where such a compute is its own CL line (a zif
+    guard, or x = a & b) instead of being hidden inside a port map.
+
+  SPECIAL CASE -- line-broken computed arg
+    When the expression spans several physical lines (a long concat
+    .entvec({a[..], b[..],   /   c[..], d[..]})), EVERY physical line that
+    itself carries a compute portion (a slice or concat token) is
+    X_HC+X_CL -- not just the first .name( line. Per the per-physical-line
+    rule. 6 such continuation lines: oldest_finder.v, pipeline.v isunt_alu
+    concats.
+
+---------------------------------------------------------------------
+HWD -- Hardware declaration                      CTRL_HWD / DATA_HWD
+---------------------------------------------------------------------
+  What     declare a PERSISTENT hardware PRIMITIVE that holds data or
+           named nets: data/control register, named wire/net, memory /
+           table / slot storage, SlotMeta field layout.
+  Kathryn  mReg / mWire / mExpr
+           WireSlot / RegSlot / Table / MemTable / mMem
+           SlotMeta
+  Verilog  reg / wire / logic
+           memory arrays   reg[W:0] mem[0:N]
+  ALSO     the CONTROL-STATE register that a CYCLE-ADVANCING HDB header
+           instantiates -- the flow-block state / sync / counter register,
+           emitted as SR_ST# in the generated Verilog. The header is one
+           line doing two jobs, so it scores CTRL_HWD+CTRL_CL (0.5 each);
+           this HWD half is that register. Cycle-advancing headers are
+           pip / pipe / zync / zyncc / cwhile / while / loop / wait / seq /
+           state. A COMBINATIONAL header (zif / zcase / par / pick) creates
+           no register and is pure CL.
+           Symmetric with RIDECORE, where the same FSM costs two separate
+           lines: reg state (CTRL_HWD) + always@(posedge) (CTRL_CL).
+  Domain   reg busy        -> CTRL_HWD
+           reg [31:0] pc   -> DATA_HWD
+  NOT HWD  a struct/class/module, type header OR instance, is MD
+           a named constant is PARAM
+
+---------------------------------------------------------------------
+CL -- Combinational logic                          CTRL_CL / DATA_CL
+---------------------------------------------------------------------
+  What     COMPUTE a value with operators: arith, logic, compare, shift,
+           bit-slice, concat, extension, mux/ternary, datapath-select
+           conditional.
+           ALSO control-flow / sequencing constructs -> CTRL_CL: clocked-
+           process wrapper always @(posedge ...), if(reset)/enable/stall/
+           flush/kill guards, FSM next-state, update scheduling / priority.
+  HDB      an HDB header is PURE CL only when it creates NO state register:
+             combinational   zif / zelif / zelse / zcase / ztate-as-decode
+                             par / pick            -> CL  (score 1.0)
+             cycle-advancing pip / pipe / zync / zyncc / cwhile / while
+                             loop / wait / seq / state
+                                                   -> CTRL_HWD+CTRL_CL
+                             because it ALSO declares the state register
+                             -- see HWD. Do not tag these as plain CL.
+           A combinational zif gating a control action is CTRL_CL; a
+           datapath zif/ztate SELECTING a value is CL by the selected
+           value's domain.
+  Kathryn  out = srcA + srcB;   shamt = srcB.sl(0,W);  ~(fullBit >> shamt)
+           ztate(op){zcase...};  g(...) concat;  .uext / .sext
+           SET_ASM_PRI_TO_MANUAL / AUTO
+           (pip / zync / cwhile are the HWD+CL case above, not pure CL)
+  Verilog  assign y=a+b;  case(op)...;  sel?a:b;  {31'b0,in1==in2}
+           always @(posedge clk);  if(reset);  assign stall/kill/valid
+  Domain   assign kill=...  -> CTRL_CL
+           assign y=a+b     -> DATA_CL
+
+---------------------------------------------------------------------
+DT -- Data transfer                                CTRL_DT / DATA_DT
+---------------------------------------------------------------------
+  What     MOVE / COPY / ROUTE / STORE a value with NO operators: plain
+           signal RHS, struct field, indexed read, register write of a
+           signal, array/table/struct element write, RESET-VALUE write.
+  Kathryn  busyTemp = busySlot;  busySlot <<= busyTemp
+           _table[idx] <<= dpValue
+           makeResetEvent / makeColResetEvent / makeDefEvent  (reset value)
+  Verilog  assign y=x;  q<=d;  data[finptr]<=stdata;  reset-branch q<=0
+  Domain   busy<=issue / busy<=0  -> CTRL_DT
+           pc<=npc    / pc<=0     -> DATA_DT
+  vs CL    table / array / struct INDEXING is access      -> DT
+           bit-SLICE, concat, extend is compute           -> CL
+
+---------------------------------------------------------------------
+PARAM -- Parameter / constant                            (domain-less)
+---------------------------------------------------------------------
+  What     a NAMED CONSTANT / PARAMETER definition: sizes, counts,
+           encodings, constant values. Explicitly-constant forms only.
+  Kathryn  mVal / mPmVal
+           static / const / constexpr numeric consts (incl *_PRIORITY)
+           O3_PARAM_STR(name) field / opcode / width identifiers
+  Verilog  parameter;  localparam
+           `define value macros (`REG_SEL, widths, ops)
+  NOT      a plain MUTABLE host var (int idx=-1, reassigned later) is HLH
+
+---------------------------------------------------------------------
+HLH -- Host-language helper                              (domain-less)
+---------------------------------------------------------------------
+  What     host-language CONTROL-STRUCTURE scaffolding -- neither hardware
+           nor a constant; the glue the host language needs in order to
+           elaborate the hardware.
+  Kathryn  for / while host loops;  std:: containers;  templates
+           structured bindings auto[a,b]=...;  glue lambdas
+           function-like macros (#define str(name));  plain mutable
+           int / bool
+  Verilog  genvar;  generate/for;  integer i;  initialization loops
+
+=====================================================================
+MODULE-DECL REFORMATTING (line-break MD off HC)
+=====================================================================
+Because MD (the module head) and HC (its wired connectivity) are two kinds, and
+one line may carry only one category, line-break every module-instance
+declaration so each is its own physical line. Layout-only edit -- valid
+C++/Verilog, no semantics:
+
+  // before
+  RegArch  regArch {tagMgmt.mpft};
+  mMod(prob, Rob, pm, regArch, storeBuf);
+  // after
+  RegArch  regArch            ///MD  <GROUP>
+  {tagMgmt.mpft};             ///HC  <GROUP>   (per-arg domain; tagMgmt/mpft=CTRL_HC)
+  mMod(prob, Rob,             ///MD  <GROUP>
+    pm, regArch, storeBuf);   ///HC  <GROUP>
+
+
+=====================================================================
+WORDS USED BELOW
+=====================================================================
+  tag      the comment at the end of a line:  ///CTRL_HC ARF
+  domain   is the line about CONTROL or about DATA?
+  kind     what the line DOES (MD, HC, HWD, CL, DT, PARAM, HLH)
+  target   what the line writes to (usually the left side of "=")
+  bundle   one name holding control AND data. It gets two tags joined
+           by "+", and each one scores 0.5 instead of 1.0.
+  ctor     constructor. In Kathryn its arguments are the wires.
+
+
+
+
+=====================================================================
+EXCLUSIONS -- lines we never tag
+=====================================================================
+  1. COMMENTS. Lines with only //, ///, ///// or a /** ... */ block.
+     A code line that merely ENDS with // still gets its tag.
+
+  2. ///DC = "exclude this line". We keep the marker as a record.
+       Kathryn : simulation prob -- initProbe, tryInitProbe,
+                 dataStructProbGrp.*.init(...)
+       Verilog : a copy of something already counted -- see THE
+                 10-LINE RULE below; and any feature that BOTH designs
+                 switch off ON PURPOSE.
+
+     THE 10-LINE RULE -- what counts as a copy.
+     A duplicate is excluded only when the duplicated UNIT is at least
+     10 lines long. A short edit or a one-line difference is never
+     excluded on its own. The units are:
+       - a whole module instance      src_manager srcmng2
+       - a whole datapath copy        the second issue path in
+                                      pipeline.v
+       - a whole extra RS entry       rs_alu_ent ent1..ent7, and the
+                                      same in rs_branch / rs_ldst /
+                                      rs_mul. Only ent0 is counted,
+                                      because Kathryn describes all N
+                                      entries with ONE Table/Slot body.
+
+  3. DEAD FILES. If no module in a file is used, MOVE the file to
+     fpga/deleted/ Example:
+     ram_sync.v (ram_sync_2r2w) is unused; the design uses the version
+     without latches. The counting step skips the "deleted" folder
+     completely. (///DC removes single lines inside a file still in use.)
+
+  4. STRUCTURE ONLY. #include / `include, namespace X {, include
+     guards (#ifndef / #define GUARD / #endif), `timescale, empty
+     lines, and lines with only { } }; begin end endmodule endcase
+     endgenerate.
+     But a `define that defines a CONSTANT is PARAM, not structure.
+
+  5. Host assert(...) and debug code.
+
+
+=====================================================================
+GROUPS  (use the same names on both sides)
+=====================================================================
+CORE   FETCH   DECODE   DISPATCH
+RSV_SHARED   RSV_ALU   RSV_BRANCH   RSV_LDST   RSV_MUL
+EXEC_ALU   EXEC_BRANCH   EXEC_LDST   EXEC_MUL
+ROB   COMMIT   ARF   RRF   MPFT   TAG   STOREBUF   SHARED_COMP
+
+pipeline.v holds many blocks in one 1935-line file, so give each region
+a GROUP using these steps in order.
+
+  1. NEAREST INSTANTIATED SUBMODULE
+      pipeline_if pipe_if                        -> FETCH
+      tag_generator taggen                       -> TAG
+      decoder dec1 / dec2                        -> DECODE
+      arf aregfile                               -> ARF
+      rrf rregfile + rrf_freelistmanager rrf_fl  -> RRF
+      sourceoperand_manager / src_manager / imm_gen /
+        brimm_gen / rs_requestgenerator          -> DISPATCH
+      rs_alu / rs_ldst / rs_branch / rs_mul +
+        alloc_issue_ino                          -> RSV_*
+      exunit_alu byakko / suzaku, exunit_ldst seiryu,
+        exunit_branch kirin, dmem                -> EXEC_*
+      miss_prediction_fix_table mpft             -> MPFT
+      reorderbuf rob                             -> ROB / COMMIT
+
+  2. SIGNAL PREFIX, for separate assign / always lines between
+     instances
+      *_id                                       -> DECODE
+      pc* / npc* / inst* / *_if                  -> FETCH
+      sptag* / spec* / tagreg* / brdepth         -> TAG
+      mpft_*                                     -> MPFT
+      adat* / abusy* / *tag / settag*            -> ARF
+      rdat* / rvalid* / com*data / *_renamed /
+        rrfptr / freenum                         -> RRF
+      comptr* / comnum / arfwe* / dp*_addr /
+        exfin_* / stcommit                       -> ROB / COMMIT
+      *_alu1 / _alu2 / _ldst / _branch / _mul,
+        including buf_*                          -> RSV_* / EXEC_*
+      sb_* / st* / hitsb / ldaddr / retptr       -> STOREBUF
+
+  3. TIE-BREAK: inside a .port(sig) map use the INSTANCE group, not the
+     wire-name group.
+
+=====================================================================
+RESULTS
+=====================================================================
+Kathryn Kride core (src/example/o3/core; switched-off features excluded)
+vs RIDECORE Verilog (extSim/ridecore/src/fpga). ///DC lines excluded on both
+sides (Kathryn: simulation probes; RIDECORE: copies of already-counted logic
+plus switched-off features -- see EXCLUSIONS).
+
+Both sides RE-DERIVED FROM SCRATCH in the 11-category scheme (Kathryn 34 active
+files; RIDECORE .v modules in fpga/ + 3 .vh constant headers). Verified: code
+byte-identical to committed HEAD once ///tags+whitespace stripped, 0 stray tags
+on both sides, ///DC counts intact (Kathryn 92, RIDECORE 1503). Totals may be
+fractional (inseparable CTRL_HC+DATA_HC bundles).
+
+  CATEGORY   KATHRYN  RIDECORE  REDUCTION
+  CTRL_HWD      80.5       292     72.43%
+  CTRL_CL      215.5       572     62.33%
+  CTRL_DT        150       285     47.37%
+  CTRL_HC        290      1140     74.56%
+  DATA_HWD        39       176     77.84%
+  DATA_CL        122     178.5     31.65%
+  DATA_DT        113       273     58.61%
+  DATA_HC        178     612.5     70.94%
+  MD              66       121     45.45%
+  PARAM          298       172    -73.26%   (Kathryn MORE: C++ DSL named params)
+  HLH            115        25   -360.00%   (Kathryn MORE: host scaffolding)
+  ----------------------------------------
+  CTRL total     736      2289     67.85%   <-- HEADLINE control-flow reduction
+  DATA total     452      1240     63.55%
+  ----------------------------------------
+  TOTAL         1667      3847     56.67%
+  DC(excl)        88      1503
