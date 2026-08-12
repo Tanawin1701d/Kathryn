@@ -15,3 +15,7 @@ docs/
 
 # Generated test model output
 /test/.model_output/
+
+# RISC-V Linux-boot testing sandbox (lives on its own branch)
+/test/riscv/
+/tools/

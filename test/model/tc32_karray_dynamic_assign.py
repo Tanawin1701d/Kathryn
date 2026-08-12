@@ -6,7 +6,7 @@
 #                      -> proves the (sel == k) enable routes the write to one element
 #                         (and only that one — element 1 / 3 are written by the other
 #                          mechanisms, never clobbered by the binary writes)
-#   * one-hot select : rf[oh(osel)].data |= DOH with osel = 1<<1  -> element 1
+#   * custom fn (one-hot style): rf[lambda i: osel[i]].data |= DOH, osel = 1<<1 -> element 1
 #   * whole-element  : rf[msel] |= {valid:1, data:DMAP} with msel = const 3 -> element 3
 # Each element is written by exactly one statement (distinct values), so the final
 # state is deterministic regardless of the seq state machine looping: a write only
@@ -74,7 +74,7 @@ class tc32_karray_dynamic_assign(Module):
             # dynamic writes — each lands on exactly one element via its enable
             self.rf[self.bsel0].data |= self.c_d0           # binary  -> element 0
             self.rf[self.bsel2].data |= self.c_d2           # binary  -> element 2
-            self.rf[oh(self.osel)].data |= self.c_doh       # one-hot -> element 1
+            self.rf[lambda i: self.osel[i]].data |= self.c_doh   # custom fn (one-hot) -> element 1
             self.rf[self.msel] |= {"valid": self.c_mv, "data": self.c_dmp}  # map -> element 3
 
             # static read-back of the final element state

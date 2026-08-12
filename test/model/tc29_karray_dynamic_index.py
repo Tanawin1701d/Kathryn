@@ -5,7 +5,8 @@
 #   * binary address  : rf[bsel_i].data for every i in 0..4  -> proves the binary
 #                        decode picks the right element at all four addresses
 #                        (bsel=2 = 0b10 exercises a non-zero MSB, not just index 0)
-#   * one-hot select   : rf[oh(osel)].data with osel = 1<<2  -> index 2
+#   * reduce (custom fn): rf[lambda a, b, l: a.data >= b.data].data folds the dim
+#                        through a reduce tree -> the max element's data
 # Selectors are constant `val`s, so each mux collapses to its selected element; the
 # read still exercises the full decode wiring end to end through iverilog.
 
@@ -26,10 +27,9 @@ SETTLE_CYCLES = 50
 
 # rf[i] = (valid=1, data=DATA[i])
 DATA = [0x11, 0x22, 0x33, 0x44]
-OH_INDEX = 2                     # one-hot select picks this element
 
 EXPECT = {f"d{i}": DATA[i] for i in range(4)}   # binary read of each address
-EXPECT["od"] = DATA[OH_INDEX]                   # one-hot read of index 2
+EXPECT["od"] = max(DATA)                        # reduce read picks the max element
 
 
 # ---- model -------------------------------------------------------------------
@@ -46,11 +46,10 @@ class tc29_karray_dynamic_index(Module):
         self.c_v = val(1, 1, "c_v")
         self.c_d = [val(8, DATA[i], f"c_d{i}") for i in range(4)]
 
-        # constant index selectors: a binary address per element, plus one one-hot
+        # constant index selectors: a binary address per element
         self.bsel = [val(2, i, f"bsel{i}") for i in range(4)]
-        self.osel = val(4, 1 << OH_INDEX, "osel")
 
-        # one output per binary read, plus the one-hot read
+        # one output per binary read, plus the reduce read
         self.o_d = [reg(8, f"o_d{i}") for i in range(4)]
         for i in range(4):
             self.o_d[i].mark_output(f"d{i}")
@@ -71,8 +70,8 @@ class tc29_karray_dynamic_index(Module):
             for i in range(4):
                 self.o_d[i] |= self.rf[self.bsel[i]].data
 
-            # one-hot dynamic read (rf[oh(osel)].data == DATA[OH_INDEX])
-            self.o_od |= self.rf[oh(self.osel)].data
+            # reduce read: fold the dim with a max-by-data select fn (== max(DATA))
+            self.o_od |= self.rf[lambda a, b, l: a.fields["data"] >= b.fields["data"]].data
 
 
 # ---- build (kathryn model -> verilog) ---------------------------------------

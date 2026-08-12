@@ -988,28 +988,101 @@ The Python connector (`arena_impl_hwc_py.rs::gen_basic_assign`) forwards it to
 implicit width change. Covered by `test/model/tc27_asm_resize.py` (truncate +
 zero-extend, end to end, plus the warning assertions).
 
-**Karray-to-karray region assignment.** `ModelArena::karray_assign_karray`
-(`src/model/complex_hardware/arena_impl_ccp_karray.rs`, a dedicated higher-level
-ops file mirroring `arena_impl_ccp_arp.rs`) copies one Karray region into another:
-- **Region selection.** Each side passes per-dimension selectors
-  `(start, stop: Option, is_range)` — an `int` key → `(i, i+1, false)` (collapses
-  the dim), a Python `slice` → `(start, stop|None, true)` (keeps it); trailing
-  un-indexed dims expand to full ranges in Rust. The two **result shapes** (lengths
-  of the `is_range` dims) must be equal.
-- **Field pairing** is by exact `name` + bit-width; unmatched destination fields
-  are skipped and returned so the connector can `warnings.warn`. Zero matches →
-  `ValueError`.
-- Per the joined-node rule, it emits **one `AssignMeta` per (element, matched
-  field)** via `HcpAssignable::gen_asm_meta`, joins them with
-  `make_asm_node_many`, and attaches one basic node via
-  `attach_basic_node_to_current_scope` — not N separate `gen_basic_assign` calls.
-- `KarrayAsmErr::{Type,Value}` lets the connector pick `PyTypeError` (|=/*= vs
-  backing) vs `PyValueError` (shape/bounds/no-match).
+**Karray — unified `KIdx` indexing.** The Karray CCP
+(`src/model/complex_hardware/karray/`) is a typed multi-dimensional array whose
+element is a record of named fields, each field its **own** HCP (one per
+element-field, `flat * field_count + field_idx`). Backing is **Reg or Wire only**
+(`KARRAY_BACKINGS`; the MemBlock backing was removed — the standalone
+`mem_blk`/`mem_ele` HCPs are unrelated and remain). Every access — read, write,
+karray-to-karray copy — selects each dimension with ONE index type, `KIdx`
+(`kidx.rs`, the single home of index kinds + validation — the engines consume
+the checked `KIdx` selection directly, there is no separate resolved form).
+**Every kind collapses
+its dimension to a single element, every dimension must be indexed, and there
+are NO ranges** (a tuple or colon subscript raises; a selection always names
+exactly one element):
 
-DSL (`py/kathryn/complex_hardware/karray.py`): `KarrayRef` stores mixed int/slice
-`_keys`; `_selectors()` feeds the karray path, `_int_indices()` guards the scalar
-field/packed-element paths. `_assign_from` routes a Karray/KarrayRef element-or-
-region source (no field) to `karray_assign_karray`, else to the existing
-scalar/packed `_assign`. `Karray.__ior__`/`__imul__` (whole array) return `self`.
-Covered by `test/model/tc28_karray_to_karray.py` (range-slice + single-element
-copy across differing dtypes, with the skipped-field warning asserted).
+| Kind | DSL | Effect |
+|------|-----|--------|
+| `Static(i)` | `d[3]` | collapses the dim at compile time |
+| `Dyn(sig)` | `d[addr]` | collapses at runtime — binary address (read → mux tree, write → `sig == i` enables) |
+| `CusWe(bits)` / `CusRd` | `d[fn]` | the single "custom fn" kind, **split by direction** at DSL encode time (see below) |
+
+**Custom fn is direction-split.** On a WRITE destination the fn is a per-index
+enable — the DSL calls `fn(i) -> 1-bit signal` once per index and ships the bits
+as `CusWe`; a write lands only where the enable is high (one-hot write:
+`d[lambda i: sel[i]] |= ...`; subsumes the old `oh()` and `cus_dynamic_assign`).
+On the READ / source side the dim folds through a **REDUCE tree** (`CusRd`): the
+fn is a pair-select `fn(a, b, level) -> pick-a` called per 2:1 node with two
+`ReduceView`s (`.fields` maps every element field name → SignalRef, `.indices`
+lists the covered dim indices); it may return `(select, {name: signal})` whose
+extras replace/append same-named carried fields on the merged node (max element:
+`d[lambda a, b, l: a.fields["data"] >= b.fields["data"]].data`). Because the
+select fn runs while the tree builds, the read engine is generic over
+**`KReadEnv`** (`karray_env.rs`): all arena work goes through scoped
+`with_arena` closures and `reduce_select` is called with NO borrow held — the
+core stays PyO3-free, the connector's `PyKReadEnv` implements it with scoped
+`borrow_mut`s (so the Python select fn may re-enter the arena), and the
+Rust-native `DirectKEnv` errors on reduce dims. When a reduce dim is present the
+tree carries ALL element fields (the select fn may compare any); the winner's
+requested field is returned.
+
+Engines — READ and WRITE are the ONLY two; there is no assign engine.
+`karray_read.rs` resolves a selection to one HCP per requested field
+(static-only → the backing HCP directly; Dyn folds a balanced 2:1 mux tree with
+one shared `~addr[layer]` bit per level; CusRd folds the reduce tree above) and
+wraps them as a **`KView`** (`karray_view.rs`: `(name,width)` fields + one HCP
+per field — engine-internal, never a DSL object). `karray_write.rs::write` is
+THE statement entry and owns all policy: operator guard (`|=` reg / `*=` wire),
+runtime-write-needs-reg guard, field pairing per the view's constructor-stamped
+`KViewPairing` (`Exact` from `read_view`: name + width, unmatched dst skipped +
+warned, zero matches → `ValueError`; `Named` from scalar sources: canonical
+names, widths auto-resize), guarded fan-out (Dyn/CusWe AND their enables into a
+running write-enable parked via `set_pending_pre_cond` — folded in at build once
+the clk is wired; CusRd on a destination is a Type error), and the joined-node
+rule: ONE basic node per statement. A k2k copy is COMPOSITION —
+`check_write_ok` pre-flight, `read_view` on the source, `write` on the dest —
+done by the proxies (`arena_impl_ccp_karray.rs`, which also holds the layout
+queries `karray_shape`/`karray_fields`/`karray_is_clocked`) and the connector.
+`KarrayErr::{Type,Value}` picks `PyTypeError` (operator/backing) vs
+`PyValueError` (rank/bounds/field).
+
+Connector (`src/applications/py/model/complex_hardware/karray/`): `kidx_py.rs`
+is the ONE decode point for the Python selector triples `(kind, ints, sigs)` —
+`"cus"` carries write-enable bits, `"reduce"` marks a read fold whose wrapped
+select fn rides in the pymethod's parallel `fns` list (one entry per dim). The
+read/k2k pymethods take `slf: &Bound<..>` (not `&mut self`) so `PyKReadEnv` can
+borrow scoped. Source **name → field-idx** resolution and **int-literal
+wrapping** (via `make_const_val`, sized to the matched field) happen in the
+connector, so the core stays name- and BigInt-free. A `None` field name means
+"the sole field" (scalar source on a single-field Karray; multi-field →
+`TypeError`). Caveat: the karray is temp-taken while an access resolves, so a
+reduce select fn must not touch the SAME karray (double-take).
+
+**Element records nest (Chisel-Bundle style).** `kaf()` takes a width OR a
+bundle type: `kaf(Vec2)` where `Vec2` subclasses `KBundle` (or any class with
+`__karray_fields__`) flattens the bundle's fields under the spec name with an
+underscore prefix — `pos = kaf(Vec2)` with `Vec2.x` → leaf field `"pos_x"`.
+Bundles nest inside bundles; the Rust core only ever sees the FLAT `(name,
+width)` list (collision of a literal leaf with a flattened name is a
+declaration-time `TypeError`). The flattening walk is shared
+(`collect_declared_karray_fields` in `karray_field.py`); attribute chains
+rebuild the flat name (`d[0].pos.x` → field `"pos_x"`) with no Python-side
+layout; dict sources nest (`d[0] |= {"pos": {"x": a}}`) and a bundle-FIELD
+target takes a sub-field map (`d[1].pos |= {"x": a, "y": 7}`); k2k pairs bundles
+structurally via the flat names+widths.
+
+DSL (`py/kathryn/complex_hardware/karray.py` + `karray_ref.py`): `Karray` holds
+only the CcpIdent (fields declared with `kaf()` on a subclass); `KarrayRef`
+accumulates raw per-dimension keys and classifies them in ONE place
+(`_selectors(for_read)`): int → static, signal → dynamic, callable → custom
+(write: enumerated against `karray_shape` at statement time; read: wrapped
+select fn); tuples/colon slices raise — there are no ranges, every dimension
+must be indexed. Assignment requires `|=` (reg) or
+`*=` (wire); a bare `=` raises. Sliced-view indices/sources are materialised via
+`extend()` so no bits are silently dropped. Covered by `test/model/tc25` (static
+regfile), `tc28` (k2k element copies, name+width pairing), `tc29`/`tc32`
+(dynamic read/write), `tc41` (custom write enables, int sources, map writes,
+reduce read), `tc42` (all three kinds in one k2k statement, both sides), `tc43`
+(reduce read: max, extras running-sum, 2-D pin+fold), `tc44` (bundles end to
+end).

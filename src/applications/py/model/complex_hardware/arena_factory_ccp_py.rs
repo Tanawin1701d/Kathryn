@@ -26,10 +26,10 @@ impl PyModelArena {
 
     // ---- Karray ------------------------------------------------------------
 
-    // Declare a user Karray of `shape` whose element is the packed record `fields`
-    // (`(name, width)` pairs, first field at LSB). `backing` is a `kathryn.HwComponentType`
-    // member — must be Reg / Wire / MemBlock; returns the CCP handle. The backing
-    // hardware is materialised up front.
+    // Declare a user Karray of `shape` whose element is the record `fields`
+    // (`(name, width)` pairs). `backing` is a `kathryn.HwComponentType` member —
+    // must be Reg / Wire; returns the CCP handle. The backing hardware (one HCP
+    // per element-field) is materialised up front.
     fn mk_karray(
         &mut self,
         name   : &str,
@@ -41,7 +41,7 @@ impl PyModelArena {
             .ok_or_else(|| PyValueError::new_err(format!("HwComponentType index out of range: {backing}")))?;
         if !KARRAY_BACKINGS.contains(&backing) {
             return Err(PyValueError::new_err(format!(
-                "Karray backing must be HwComponentType.REG / WIRE / MEM_BLOCK, got {backing}")));
+                "Karray backing must be HwComponentType.REG / WIRE, got {backing}")));
         }
         Ok(self.arena.make_karray(true, name, shape, fields, backing).into())
     }

@@ -13,7 +13,7 @@ from kathryn import (
     Module, init, flow, gen_flow, build_flow, emit_verilog,
     priority, set_priority, set_priority_auto, get_priority, get_priority_mode,
     DEFAULT_UE_PRI_USER, DEFAULT_UE_PRI_RST, DEFAULT_UE_PRI_MIN,
-    Karray, kaf, HwComponentType, oh, Reduce, Spread,
+    Karray, kaf, HwComponentType,
 )
 
 
@@ -622,10 +622,13 @@ def test_two_int_operands_rejected():
 
 
 # ---- Karray (typed multi-dimensional array CCP) -----------------------------
+# Every access selects each dimension with ONE of the four unified index kinds:
+#   d[3]      static int          d[sig]   dynamic binary address
+#   d[2, 5]   inclusive range     d[fn]    custom fn(i) -> 1-bit enable
 
 def test_karray_field_is_its_own_hcp():
     # Each field is a distinct HCP sized to the field width (not a bit-slice of a
-    # packed element); elem_width is the sum of field widths.
+    # packed element).
     reset()
 
     class RobEntry(Karray):
@@ -649,8 +652,8 @@ def test_karray_field_is_its_own_hcp():
 
 
 def test_karray_object_oriented_declaration():
-    # Karray subclasses can declare their element record as class fields, keeping
-    # the construction call focused on shape/backing/name.
+    # Karray subclasses declare their element record as class fields, keeping the
+    # construction call focused on shape/backing/name.
     reset()
 
     class Src(Karray):
@@ -665,12 +668,9 @@ def test_karray_object_oriented_declaration():
 
     w  = worker()
     ar = k._session.arena()
-    valid = w.src[0].valid._to_read_ref()
-    data  = w.src[0].data._to_read_ref()
-    note  = w.src[0].note._to_read_ref()
-    assert ar.get_hw_bit_sz(valid._ident) == 1
-    assert ar.get_hw_bit_sz(data._ident)  == 8
-    assert ar.get_hw_bit_sz(note._ident)  == 4
+    assert ar.get_hw_bit_sz(w.src[0].valid._to_read_ref()._ident) == 1
+    assert ar.get_hw_bit_sz(w.src[0].data._to_read_ref()._ident)  == 8
+    assert ar.get_hw_bit_sz(w.src[0].note._to_read_ref()._ident)  == 4
 
 
 def test_karray_reg_backing_emits_per_element_regs():
@@ -735,41 +735,25 @@ def test_karray_wire_backing_uses_imul():
     assert "bus_E2_" in text
 
 
-def test_karray_memblock_backing_declares_block():
-    # MemBlock backing folds the array onto one addressable block; a write builds
-    # a write MemEle at the constant flattened address.
+def test_karray_memblock_backing_rejected():
+    # MemBlock backing was removed — only Reg and Wire may back a Karray.
     reset()
 
     class RobEntry(Karray):
-        valid   = kaf(1)
-        reg_idx = kaf(5)
+        valid = kaf(1)
 
     class worker(Module):
         @init
         def decl(self):
-            self.kmem = RobEntry(HwComponentType.MEM_BLOCK, (5, 3), "kmem")
-            self.vsrc = reg(1)
-            self.isrc = reg(5)
+            with pytest.raises(ValueError):
+                RobEntry(HwComponentType.MEM_BLOCK, (4,), "kmem")
 
-        @flow
-        def f(self):
-            with seq():
-                self.kmem[2][1] |= {"valid": self.vsrc, "reg_idx": self.isrc}   # write element at flat addr 7
-
-    set_top(worker())
-    gen_flow()
-    build_flow()
-
-    out_dir = tempfile.mkdtemp()
-    emit_verilog(out_dir, "top")
-    text = open(os.path.join(out_dir, "top.v")).read()
-    assert "kmem_valid_MEM"   in text                # one MemBlk per field
-    assert "kmem_reg_idx_MEM" in text
+    worker()
 
 
 def test_karray_backing_enforces_assignment_operator():
-    # |= requires reg/mem backing; *= requires wire backing. The guard raises in
-    # Python (via the resolved element's clocked-ness) before mutating the model.
+    # |= requires the reg backing; *= requires the wire backing. The guard raises
+    # before mutating the model.
     reset()
 
     class VEntry(Karray):
@@ -791,6 +775,44 @@ def test_karray_backing_enforces_assignment_operator():
 
     set_top(worker())
     gen_flow()
+
+
+def test_karray_bare_assign_rejected():
+    # A bare `=` carries no clocked/comb intent — every Karray assign must pick
+    # `|=` or `*=` explicitly.
+    reset()
+
+    class RfEntry(Karray):
+        data = kaf(8)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.rf = RfEntry(HwComponentType.REG, (4,), "rf")
+            self.s  = reg(8)
+            with pytest.raises(TypeError):
+                self.rf[0] = {"data": self.s}
+            with pytest.raises(TypeError):
+                self.rf[0].data = self.s
+
+    worker()
+
+
+def test_karray_colon_slice_rejected():
+    # Ranges are not supported at all — a colon slice raises at the subscript.
+    reset()
+
+    class RfEntry(Karray):
+        data = kaf(8)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.rf = RfEntry(HwComponentType.REG, (4,), "rf")
+            with pytest.raises(TypeError):
+                self.rf[0:2]
+
+    worker()
 
 
 def test_karray_1d_element_assignment():
@@ -828,6 +850,88 @@ def test_karray_1d_element_assignment():
     assert "rf_E0_valid" in text and "rf_E0_data" in text   # element 0 field-wise
 
 
+def test_karray_scalar_and_int_sources():
+    # A single-field Karray takes a bare scalar source (the sole field is implied),
+    # and int literals wrap into field-width vals — both alone and inside a map.
+    reset()
+
+    class RfEntry(Karray):
+        data = kaf(8)
+
+    class TwoField(Karray):
+        a = kaf(4)
+        b = kaf(4)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.rf = RfEntry(HwComponentType.REG, (4,), "rf")
+            self.tf = TwoField(HwComponentType.REG, (2,), "tf")
+            self.s  = reg(8)
+
+        @flow
+        def f(self):
+            with seq():
+                self.rf[0] |= self.s                 # bare signal -> sole field
+                self.rf[1] |= 5                      # bare int    -> sole field, width-matched val
+                self.tf[0] |= {"a": 3, "b": self.s}  # int inside a map (b auto-resizes)
+                with pytest.raises(TypeError):
+                    self.tf[1] |= self.s             # bare scalar on a multi-field Karray
+
+    set_top(worker())
+    gen_flow()
+    build_flow()
+
+    out_dir = tempfile.mkdtemp()
+    emit_verilog(out_dir, "top")
+    text = open(os.path.join(out_dir, "top.v")).read()
+    assert "rf_E0_data" in text and "rf_E1_data" in text
+
+
+# ---- Karray static ranges (inclusive tuples) --------------------------------
+
+def test_karray_range_index_rejected():
+    # Ranges are not supported — every subscript names exactly one element, so a
+    # (start, stop) tuple raises at the subscript itself.
+    reset()
+
+    class Entry(Karray):
+        data = kaf(8)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.rf = Entry(HwComponentType.REG, (4,), "rf")
+            with pytest.raises(TypeError, match="ranges are not supported"):
+                self.rf[0, 1]
+
+    worker()
+
+
+def test_karray_under_indexed_rejected():
+    # Every dimension must be indexed: a 2-D Karray accessed with one index is a
+    # rank error at statement time.
+    reset()
+
+    class Entry(Karray):
+        data = kaf(8)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.rf = Entry(HwComponentType.REG, (2, 3), "rf")
+            self.s  = reg(8)
+
+        @flow
+        def f(self):
+            with seq():
+                self.rf[0].data |= self.s            # dim 1 never indexed
+
+    set_top(worker())
+    with pytest.raises(ValueError, match="index every dimension"):
+        gen_flow()
+
+
 # ---- Karray dynamic (runtime-signal) indexing -------------------------------
 
 def test_karray_dynamic_binary_read():
@@ -855,8 +959,10 @@ def test_karray_dynamic_binary_read():
     assert got._ident.hw_type == "WIRE"            # combinational mux result
 
 
-def test_karray_dynamic_onehot_read():
-    # oh(sig) marks the index as one-hot: one select bit per element.
+def test_karray_reduce_read_max():
+    # A callable index on the READ side folds the dim through a REDUCE tree: the
+    # fn is a pair-select `fn(a, b, level) -> pick-a` over ReduceViews. Reading a
+    # field of the winner yields a fresh mux-output wire of the field width.
     reset()
     res = {}
 
@@ -867,13 +973,86 @@ def test_karray_dynamic_onehot_read():
     class worker(Module):
         @init
         def decl(self):
-            self.rf  = RfEntry(HwComponentType.REG, (4,), "rf")
-            self.sel = reg(4)                       # 4-bit one-hot for 4 elements
-            res["got"] = self.rf[oh(self.sel)].data._to_read_ref()
+            self.rf = RfEntry(HwComponentType.REG, (4,), "rf")
+            res["got"] = self.rf[lambda a, b, l: a.fields["data"] >= b.fields["data"]].data._to_read_ref()
+
+    worker()
+    ar  = k._session.arena()
+    got = res["got"]
+    assert ar.get_hw_bit_sz(got._ident) == 8
+    assert got._ident.hw_type == "WIRE"            # reduce-tree mux output
+
+
+def test_karray_reduce_read_odd_length_carry():
+    # An odd element count exercises the carry-up of the unpaired node.
+    reset()
+    res = {}
+
+    class RfEntry(Karray):
+        data = kaf(8)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.rf = RfEntry(HwComponentType.REG, (3,), "rf")
+            res["got"] = self.rf[lambda a, b, l: a.fields["data"] >= b.fields["data"]].data._to_read_ref()
 
     worker()
     ar = k._session.arena()
     assert ar.get_hw_bit_sz(res["got"]._ident) == 8
+
+
+def test_karray_reduce_2d_pin_and_fold():
+    # 2-D: pin one dim (row 1), reduce the other — only that row folds. The
+    # select fn sees the covered indices of the folding dim on each side.
+    reset()
+    res = {}
+    covered = []
+
+    class Cell(Karray):
+        d = kaf(6)
+
+    def pick(a, b, level):
+        covered.append((list(a.indices), list(b.indices), level))
+        return a.fields["d"] >= b.fields["d"]
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.grid = Cell(HwComponentType.REG, (2, 3), "grid")
+            res["got"] = self.grid[1][pick].d._to_read_ref()
+
+    worker()
+    ar = k._session.arena()
+    assert ar.get_hw_bit_sz(res["got"]._ident) == 6
+    # 3 children -> pairs (0,1) at level 0, then (01, 2) at level 1
+    assert covered == [([0], [1], 0), ([0, 1], [2], 1)]
+
+
+def test_karray_reduce_extras_carry():
+    # A select fn may return (select, {name: signal}); an extra replaces a
+    # same-named carried field, so the next level (and the result) see it.
+    reset()
+    res = {}
+
+    class Rf(Karray):
+        data = kaf(8)
+
+    def pick_sum(a, b, level):
+        asum = a.fields["data"]
+        bsum = b.fields["data"]
+        return (asum >= bsum), {"data": asum + bsum}   # winner's data = running sum
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.rf = Rf(HwComponentType.REG, (4,), "rf")
+            res["got"] = self.rf[pick_sum].data._to_read_ref()
+
+    worker()
+    ar = k._session.arena()
+    assert ar.get_hw_bit_sz(res["got"]._ident) == 8
+    assert res["got"]._ident.hw_type == "EXPR"     # top extra (a+b) replaced the muxed wire
 
 
 def test_karray_dynamic_mixed_static_dynamic_read():
@@ -958,25 +1137,28 @@ def test_karray_dynamic_binary_write():
     assert "rf_E0_data" in text and "rf_E3_data" in text   # every element guarded-driven
 
 
-def test_karray_dynamic_onehot_write():
-    # oh(sig) marks the index one-hot: element i's write-enable is sel[i].
+def test_karray_cus_fn_write():
+    # A callable index on a write gates each element with its fn(i) enable — the
+    # custom kind subsumes both one-hot writes (fn = lambda i: sel[i]) and the old
+    # coordinate-callback assign (fn = lambda i: sel == i).
     reset()
 
     class RfEntry(Karray):
-        valid = kaf(1)
-        data  = kaf(8)
+        data = kaf(8)
 
     class worker(Module):
         @init
         def decl(self):
             self.rf  = RfEntry(HwComponentType.REG, (4,), "rf")
-            self.sel = reg(4)                       # 4-bit one-hot for 4 elements
+            self.oh  = reg(4)                       # one-hot select line
+            self.sel = reg(2)                       # binary index for the compare form
             self.src = reg(8)
 
         @flow
         def f(self):
             with seq():
-                self.rf[oh(self.sel)].data |= self.src
+                self.rf[lambda i: self.oh[i]].data  |= self.src     # one-hot style
+                self.rf[lambda i: self.sel == i].data |= self.src   # compare style
 
     set_top(worker())
     gen_flow()
@@ -1019,60 +1201,9 @@ def test_karray_dynamic_write_map():
     assert "rf_E0_valid" in text and "rf_E0_data" in text
 
 
-def test_karray_dynamic_combinational_write_rejected():
-    # Combinational (`*=`) dynamic write is unsupported (would be a feedback loop).
-    reset()
-
-    class RfEntry(Karray):
-        data = kaf(8)
-
-    class worker(Module):
-        @init
-        def decl(self):
-            self.rf  = RfEntry(HwComponentType.REG, (4,), "rf")
-            self.sel = reg(2)
-            self.src = reg(8)
-            # the backing/intent guard returns before any node is built, so no scope
-            # is needed (and none is left dangling).
-            with pytest.raises(TypeError):
-                self.rf[self.sel].data *= self.src
-
-    worker()
-
-
-def test_karray_dynamic_explicit_assign_resolves_backing():
-    # A bare `=` carries no clocked/comb intent — it is resolved from the destination
-    # backing. On a reg-backed Karray that means clocked, so the write builds fine.
-    reset()
-
-    class RfEntry(Karray):
-        data = kaf(8)
-
-    class worker(Module):
-        @init
-        def decl(self):
-            self.rf  = RfEntry(HwComponentType.REG, (4,), "rf")
-            self.sel = reg(2)
-            self.src = reg(8)
-
-        @flow
-        def f(self):
-            with seq():
-                self.rf[self.sel].data = self.src          # explicit `=` -> reg -> clocked
-
-    set_top(worker())
-    gen_flow()
-    build_flow()
-
-    out_dir = tempfile.mkdtemp()
-    emit_verilog(out_dir, "top")
-    text = open(os.path.join(out_dir, "top.v")).read()
-    assert "rf_E0_data" in text and "rf_E3_data" in text
-
-
-def test_karray_dynamic_explicit_assign_wire_rejected():
-    # The same bare `=` resolves to combinational on a wire-backed Karray, which the
-    # dynamic-write path rejects (no hold possible on a wire).
+def test_karray_dynamic_write_on_wire_rejected():
+    # A runtime-collapsed (dynamic/custom) write needs a reg backing: non-selected
+    # elements hold, and a wire cannot hold.
     reset()
 
     class RfEntry(Karray):
@@ -1085,64 +1216,13 @@ def test_karray_dynamic_explicit_assign_wire_rejected():
             self.sel = reg(2)
             self.src = reg(8)
             with pytest.raises(TypeError):
-                self.rf[self.sel].data = self.src
-
-    worker()
-
-
-def test_karray_cus_dynamic_assign_basic():
-    # Custom callback-driven dynamic write: the write fn builds each element's enable
-    # from its static coord and a closed-over runtime index (here `sel == coord`).
-    reset()
-
-    class RfEntry(Karray):
-        data = kaf(8)
-
-    class worker(Module):
-        @init
-        def decl(self):
-            self.rf  = RfEntry(HwComponentType.REG, (4,), "rf")
-            self.sel = reg(2)
-            self.src = reg(8)
-
-        @flow
-        def f(self):
-            with seq():
-                self.rf.cus_dynamic_assign(
-                    [Spread], {"data": self.src},
-                    lambda v: self.sel == v.coord[0],
-                )
-
-    set_top(worker())
-    gen_flow()
-    build_flow()
-
-    out_dir = tempfile.mkdtemp()
-    emit_verilog(out_dir, "top")
-    text = open(os.path.join(out_dir, "top.v")).read()
-    assert "rf_E0_data" in text and "rf_E3_data" in text
-
-
-def test_karray_cus_dynamic_assign_needs_spread():
-    # cus_dynamic_assign with no Spread dimension is a usage error.
-    reset()
-
-    class RfEntry(Karray):
-        data = kaf(8)
-
-    class worker(Module):
-        @init
-        def decl(self):
-            self.rf  = RfEntry(HwComponentType.REG, (4,), "rf")
-            self.src = reg(8)
-            with pytest.raises(ValueError):
-                self.rf.cus_dynamic_assign([0], {"data": self.src}, lambda v: self.src)
+                self.rf[self.sel].data *= self.src
 
     worker()
 
 
 def test_karray_dynamic_narrow_selector_rejected():
-    # A binary selector too narrow to address the dimension is rejected.
+    # A binary selector too narrow to address the dimension is a clean ValueError.
     reset()
 
     class RfEntry(Karray):
@@ -1156,91 +1236,55 @@ def test_karray_dynamic_narrow_selector_rejected():
             self.sel = reg(1)                                     # only 1 bit
 
     w = worker()
-    with pytest.raises(BaseException):                            # host assert -> panic/exception
+    with pytest.raises(ValueError):
         w.rf[w.sel].data._to_read_ref()
 
 
-# ---- Karray callback-driven reduce ------------------------------------------
-
-def test_karray_reduce_max_by_field():
-    # reduce a 1-D regfile to the element with the largest `data` (a >= b picks left).
+def test_karray_cus_fn_wide_enable_rejected():
+    # A custom WRITE index fn must return a 1-bit enable per index.
     reset()
-    res = {}
 
-    class RegFile(Karray):
-        valid = kaf(1)
-        data  = kaf(8)
-
-    class worker(Module):
-        @init
-        def decl(self):
-            self.rf = RegFile(HwComponentType.REG, (4,), "rf")
-            res["w"] = self.rf.reduce([Reduce], lambda a, b, lvl: a.fields["data"] >= b.fields["data"])
-
-    worker()
-    ar  = k._session.arena()
-    got = res["w"].data._to_read_ref()
-    assert ar.get_hw_bit_sz(got._ident) == 8       # winner field = field width
-    assert got._ident.hw_type == "WIRE"            # mux-tree output
-
-
-def test_karray_reduce_odd_length_carry():
-    # odd element count exercises the "carry-up" of the unpaired node.
-    reset()
-    res = {}
-
-    class RegFile(Karray):
+    class RfEntry(Karray):
         data = kaf(8)
 
     class worker(Module):
         @init
         def decl(self):
-            self.rf = RegFile(HwComponentType.REG, (3,), "rf")
-            res["w"] = self.rf.reduce([Reduce], lambda a, b, lvl: a.fields["data"] >= b.fields["data"])
+            self.rf  = RfEntry(HwComponentType.REG, (4,), "rf")
+            self.src = reg(8)
+            with pytest.raises(TypeError):
+                self.rf[lambda i: self.src].data |= self.src      # 8-bit enable
 
     worker()
-    ar = k._session.arena()
-    assert ar.get_hw_bit_sz(res["w"].data._to_read_ref()._ident) == 8
 
 
-def test_karray_reduce_2d_mixed_pin_and_fold():
-    # 2-D array: pin one dim (row 1), fold the other — reduce that row only.
+# ---- Karray mixed-kind k2k (the full unified form) ---------------------------
+
+def test_karray_mixed_kinds_k2k():
+    # All three kinds in ONE statement, on both sides:
+    #   a[1][2][1][dyn_w]  |=  b[reduce_fn][dyn_r][1]
+    # the source's reduce dim folds at runtime (select fn per pair) and its dyn
+    # dim muxes; the destination's dynamic dim guards with write enables.
     reset()
-    res = {}
 
     class Cell(Karray):
-        data = kaf(6)
+        data = kaf(8)
+
+    def pick_max(av, bv, level):
+        return av.fields["data"] >= bv.fields["data"]
 
     class worker(Module):
         @init
         def decl(self):
-            self.grid = Cell(HwComponentType.REG, (2, 3), "grid")
-            res["w"] = self.grid.reduce([1, Reduce], lambda a, b, lvl: a.fields["data"] >= b.fields["data"])
-
-    worker()
-    ar = k._session.arena()
-    assert ar.get_hw_bit_sz(res["w"].data._to_read_ref()._ident) == 6
-
-
-def test_karray_reduce_emits_verilog():
-    # End-to-end: reduce feeds a reg; the whole build/emit must not panic.
-    reset()
-
-    class RegFile(Karray):
-        valid = kaf(1)
-        data  = kaf(8)
-
-    class worker(Module):
-        @init
-        def decl(self):
-            self.rf  = RegFile(HwComponentType.REG, (4,), "rf")
-            self.out = reg(8)
+            self.a  = Cell(HwComponentType.REG, (2, 3, 2, 3), "a")
+            self.b  = Cell(HwComponentType.REG, (2, 3, 2), "b")
+            self.aw = reg(2)                         # binary address into a's dim 3 (extent 3)
+            self.br = reg(2)                         # binary address into b's dim 1 (extent 3)
 
         @flow
         def f(self):
             with seq():
-                w = self.rf.reduce([Reduce], lambda a, b, lvl: a.fields["data"] >= b.fields["data"])
-                self.out |= w.data
+                self.a[1][2][1][self.aw] |= self.b[pick_max][self.br][1]
 
     set_top(worker())
     gen_flow()
@@ -1249,15 +1293,13 @@ def test_karray_reduce_emits_verilog():
     out_dir = tempfile.mkdtemp()
     emit_verilog(out_dir, "top")
     text = open(os.path.join(out_dir, "top.v")).read()
-    assert "rf_E0_data" in text and "rf_E3_data" in text   # all elements fed into the reduce
+    assert "a_E" in text and "b_E" in text
 
 
-# ---- reduce: per-dim functions / extras / request_index ----------------------
-
-def test_karray_reduce_per_dim_nested():
-    # 2-D: each folded dim reduces with its own fn (Reduce(fn)). Nested.
+def test_karray_k2k_dynamic_element_source():
+    # A dynamically-selected source ELEMENT feeds a static destination element —
+    # k2k with a runtime source side (rejected by the old design, native now).
     reset()
-    res = {}
 
     class Cell(Karray):
         data = kaf(8)
@@ -1265,78 +1307,119 @@ def test_karray_reduce_per_dim_nested():
     class worker(Module):
         @init
         def decl(self):
-            self.grid = Cell(HwComponentType.REG, (2, 3), "grid")
-            res["w"] = self.grid.reduce([
-                Reduce(lambda a, b, l: a.fields["data"] <= b.fields["data"]),   # rows: min
-                Reduce(lambda a, b, l: a.fields["data"] >= b.fields["data"]),   # cols: max
-            ])
+            self.dst = Cell(HwComponentType.REG, (4,), "dst")
+            self.src = Cell(HwComponentType.REG, (4,), "src")
+            self.sel = reg(2)
 
-    worker()
-    ar = k._session.arena()
-    assert ar.get_hw_bit_sz(res["w"].data._to_read_ref()._ident) == 8
+        @flow
+        def f(self):
+            with seq():
+                self.dst[0] |= self.src[self.sel]
+
+    set_top(worker())
+    gen_flow()
+    build_flow()
+
+    out_dir = tempfile.mkdtemp()
+    emit_verilog(out_dir, "top")
 
 
-def test_karray_reduce_request_index_coords():
-    # request_index returns (winner, coords): one index signal per folded dim.
+# ---- Karray bundles (nested kaf, Chisel-Bundle style) ------------------------
+
+def test_karray_bundle_nested_fields():
+    # kaf(Bundle) flattens the bundle's fields under the spec name; bundles nest
+    # inside bundles; attribute chains walk into the flat leaf names.
     reset()
-    res = {}
+    from kathryn import KBundle
 
-    class Cell(Karray):
-        data = kaf(8)
+    class Vec2(KBundle):
+        x = kaf(8)
+        y = kaf(8)
+
+    class Payload(KBundle):
+        pos = kaf(Vec2)              # bundle inside bundle
+        tag = kaf(4)
+
+    class Entry(Karray):
+        valid = kaf(1)
+        pay   = kaf(Payload)
+
+    assert Entry.__karray_fields__ == (
+        ("valid", 1), ("pay_pos_x", 8), ("pay_pos_y", 8), ("pay_tag", 4))
 
     class worker(Module):
         @init
         def decl(self):
-            self.grid = Cell(HwComponentType.REG, (2, 3), "grid")
-            w, coords = self.grid.reduce([Reduce, Reduce],
-                                         lambda a, b, l: a.fields["data"] >= b.fields["data"],
-                                         request_index=True)
-            res["w"], res["coords"] = w, coords
+            self.e = Entry(HwComponentType.REG, (2,), "e")
 
-    worker()
+    w  = worker()
     ar = k._session.arena()
-    coords = res["coords"]
-    assert len(coords) == 2                            # one per folded dim
-    assert ar.get_hw_bit_sz(coords[0]._ident) == 1     # dim0 extent 2 -> 1 bit
-    assert ar.get_hw_bit_sz(coords[1]._ident) == 2     # dim1 extent 3 -> 2 bits
+    x = w.e[0].pay.pos.x._to_read_ref()          # chained attrs -> flat leaf "pay_pos_x"
+    assert ar.get_hw_bit_sz(x._ident) == 8
+    t = w.e[1].pay.tag._to_read_ref()
+    assert ar.get_hw_bit_sz(t._ident) == 4
+    with pytest.raises(ValueError):
+        w.e[0].pay.pos.z._to_read_ref()          # no such leaf
 
 
-def test_karray_reduce_extras_carry():
-    # select_fn may return (select, {name: signal}); extras are visible next layer.
+def test_karray_bundle_duplicate_flat_name_rejected():
+    # A literal leaf colliding with a bundle's flattened name is caught at class
+    # declaration time.
     reset()
-    res = {}
+    from kathryn import KBundle
 
-    class Rf(Karray):
-        data = kaf(8)
+    class Vec(KBundle):
+        x = kaf(8)
 
-    def pick_sum(a, b, level):
-        asum = a.fields.get("runsum", a.fields["data"])   # seed from data at leaves
-        bsum = b.fields.get("runsum", b.fields["data"])
-        return (asum >= bsum), {"runsum": asum + bsum}
+    with pytest.raises(TypeError):
+        class Bad(Karray):
+            pos   = kaf(Vec)         # -> pos_x
+            pos_x = kaf(8)           # collides
+
+
+def test_karray_bundle_map_assign_and_k2k():
+    # Nested dict sources flatten to the leaf names; a bundle FIELD target takes
+    # a sub-field map; k2k pairs bundles structurally (same flat names+widths).
+    reset()
+    from kathryn import KBundle
+
+    class Vec2(KBundle):
+        x = kaf(8)
+        y = kaf(8)
+
+    class Entry(Karray):
+        valid = kaf(1)
+        pos   = kaf(Vec2)
 
     class worker(Module):
         @init
         def decl(self):
-            self.rf = Rf(HwComponentType.REG, (4,), "rf")
-            res["w"] = self.rf.reduce([Reduce], pick_sum)
+            self.a  = Entry(HwComponentType.REG, (2,), "a")
+            self.b  = Entry(HwComponentType.REG, (2,), "b")
+            self.v  = reg(1)
+            self.sx = reg(8)
+            self.sy = reg(8)
 
-    worker()
-    ar = k._session.arena()
-    assert ar.get_hw_bit_sz(res["w"].data._to_read_ref()._ident) == 8
+        @flow
+        def f(self):
+            with seq():
+                # whole element via nested dicts
+                self.a[0] |= {"valid": self.v, "pos": {"x": self.sx, "y": self.sy}}
+                # bundle-field target via a sub-field map (+ int literal)
+                self.a[1].pos |= {"x": self.sx, "y": 7}
+                # leaf write through the chain
+                self.a[1].pos.y |= self.sy
+                # k2k: bundles pair by flat name+width
+                self.b[0] |= self.a[0]
+
+    set_top(worker())
+    gen_flow()
+    build_flow()
+
+    out_dir = tempfile.mkdtemp()
+    emit_verilog(out_dir, "top")
+    text = open(os.path.join(out_dir, "top.v")).read()
+    assert "a_E0_pos_x" in text and "a_E0_pos_y" in text
+    assert "b_E0_pos_x" in text
 
 
-def test_karray_reduce_fold_needs_fn():
-    # a bare Reduce with no select_fn is an error.
-    reset()
-
-    class Rf(Karray):
-        data = kaf(8)
-
-    class worker(Module):
-        @init
-        def decl(self):
-            self.rf = Rf(HwComponentType.REG, (4,), "rf")
-            with pytest.raises(TypeError):
-                self.rf.reduce([Reduce])              # no per-dim fn, no select_fn
-
-    worker()

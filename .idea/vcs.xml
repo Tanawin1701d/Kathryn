@@ -2,5 +2,8 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tools/linux_image/build/coremark" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tools/riscv_tests/riscv-tests" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tools/riscv_tests/riscv-tests/env" vcs="Git" />
   </component>
 </project>

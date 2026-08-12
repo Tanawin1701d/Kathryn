@@ -1,253 +1,253 @@
-# KarrayRef — a partially/fully-indexed view into a Karray (see karray.py). Holds
-# only the Karray's CcpIdent plus the accumulated index/slice keys and an optional
-# field name; all shape/field validation happens in Rust at resolution time.
+# KarrayRef — a partially/fully-indexed view into a Karray (see karray.py).
+# Holds only the Karray's CcpIdent plus the accumulated per-dimension keys and
+# an optional (flattened) field name; all layout validation happens in Rust at
+# resolution time.
+#
+# ONE unified index — each `[]` hop selects ONE dimension with one of three
+# kinds, and EVERY kind collapses its dimension to a single element (there are
+# no ranges — a selection always names exactly one element, every dim indexed):
+#   d[3]        int             static index
+#   d[sig]      signal          dynamic binary-encoded address
+#   d[fn]       callable        custom fn
+#
+# The CUSTOM FN kind splits by direction at the statement:
+#   * WRITE destination — `fn(i) -> 1-bit enable`, called once per index of the
+#     dim; a write lands only where the enable is high (others hold). One-hot
+#     write: `d[lambda i: sel[i]] |= ...`.
+#   * READ / source side — the dim folds through a REDUCE tree: `fn(a, b, level)
+#     -> pick-a` is called per 2:1 node with two `ReduceView`s (`.fields` maps
+#     every element field name to its current SignalRef, `.indices` lists the dim
+#     indices each side covers). It may return `(select, {name: signal})` to
+#     carry user-computed extras to the next level (an extra replaces a
+#     same-named field). Max element: `d[lambda a, b, l: a.fields["data"] >=
+#     b.fields["data"]].data`.
+#
+# Fields may be BUNDLES (see karray_field.py): attribute hops chain into the
+# flattened leaf name (`d[0].pos.x` -> field "pos_x") and dict sources nest
+# (`d[0] |= {"pos": {"x": a, "y": b}}`).
 
 from __future__ import annotations
 
-from typing import Optional, Sequence, Union
+from typing import Optional, Sequence
 
 from .. import _session
 from ..signal import SignalRef, _ASSIGNED, to_ref
 
 
-# ---- dynamic one-hot index marker -------------------------------------------
-class OneHot:
-    """Marks a signal as a *one-hot* dynamic Karray index: `d[oh(sel)]`. A bare
-    signal index (`d[sel]`) is treated as a binary-encoded address instead."""
+# ---- reduce view --------------------------------------------------------------
+class ReduceView:
+    """One subtree handed to a reduce select fn. `.fields` maps each carried
+    field name to its current SignalRef (a leaf element's field, a mux-output
+    wire, or a prior level's extra); `.indices` is the list of this dimension's
+    indices the subtree covers."""
+    __slots__ = ("indices", "fields")
 
-    __slots__ = ("sig",)
-
-    def __init__(self, sig: SignalRef) -> None:
-        if not isinstance(sig, SignalRef):
-            raise TypeError("oh() expects a signal (one-hot select line)")
-        self.sig = sig
+    def __init__(self, indices, fields) -> None:
+        self.indices = indices    # covered indices of the folding dim
+        self.fields  = fields     # dict: field name -> SignalRef
 
 
-def oh(sig: SignalRef) -> OneHot:
-    """Wrap a select line so a Karray indexes it as a one-hot (not binary) address."""
-    return OneHot(sig)
+# ---- key classification (the ONE Python home of the four index kinds) --------
+
+def _check_key_type(key) -> None:
+    # Validate a single [] key at subscript time so errors point at the use site.
+    if isinstance(key, bool):
+        raise TypeError("Karray index must not be a bool")
+    if isinstance(key, (slice, tuple)):
+        raise TypeError("Karray ranges are not supported — index exactly one element per dimension")
+    if isinstance(key, (int, SignalRef)) or callable(key):
+        return
+    raise TypeError("Karray index must be an int (static), a signal (dynamic binary), "
+                    "or a callable (custom fn)")
+
+
+def _whole_signal(ref: SignalRef) -> SignalRef:
+    # A sliced view (`sig[hi, lo]`) carries its slice only on the Python side;
+    # materialise it into a real expression so no bits are silently dropped when
+    # only the ident crosses the boundary.
+    if ref._is_user_assigned:
+        return ref.extend(ref._slice.stop - ref._slice.start)
+    return ref
+
+
+def _enable_bit(x, dim: int, idx: int) -> SignalRef:
+    # One custom write-enable: whatever the user's fn returned, resolved to a
+    # whole 1-bit signal.
+    ref   = to_ref(x)
+    width = ref._slice.stop - ref._slice.start
+    if width != 1:
+        raise TypeError(f"custom write index fn for dim {dim} must return a 1-bit enable, "
+                        f"got {width} bits at index {idx}")
+    return _whole_signal(ref)
+
+
+def _wrap_select(user_fn):
+    # Adapter between the Rust reduce fold and the user's select fn. The engine
+    # calls `_raw` per compared pair with RAW handles; `_raw` dresses them up as
+    # ReduceViews, calls the user fn, and undresses the result back to handles.
+    def _raw(a_fields, a_indices, b_fields, b_indices, level):
+        a = ReduceView(a_indices, {n: SignalRef(h) for (n, h) in a_fields})
+        b = ReduceView(b_indices, {n: SignalRef(h) for (n, h) in b_fields})
+
+        ret = user_fn(a, b, level)
+        if isinstance(ret, tuple):
+            select, extras = ret
+        else:
+            select, extras = ret, {}
+
+        return (_whole_signal(to_ref(select))._ident,
+                [(str(n), _whole_signal(to_ref(s))._ident) for n, s in extras.items()])
+    return _raw
+
+
+def _to_operand(x):
+    # An assignment source for the connector: a raw int passes through (wrapped
+    # into a field-width val in Rust); anything else resolves to a whole signal.
+    if isinstance(x, int) and not isinstance(x, bool):
+        return x
+    return _whole_signal(to_ref(x))._ident
+
+
+def _flatten_field_map(mapping: dict, prefix: str = ""):
+    # Bundle-aware source map: nested dicts flatten into the underscore-joined
+    # leaf names the Rust layout stores ({"pos": {"x": a}} -> ("pos_x", a)).
+    for name, value in mapping.items():
+        key = f"{prefix}{name}"
+        if isinstance(value, dict):
+            yield from _flatten_field_map(value, key + "_")
+        else:
+            yield (key, _to_operand(value))
 
 
 # ---- karray element / field reference ---------------------------------------
 class KarrayRef:
-    """A partially- or fully-indexed view into a Karray, optionally narrowed to a
-    field. Holds only the Karray's CcpIdent plus the accumulated keys (int or
-    slice, one per indexed dimension) and field name; shape/field validation
-    happens in Rust at resolution time."""
+    """A partially- or fully-indexed view into a Karray, optionally narrowed to
+    a (possibly bundle-nested) field. Holds only the Karray's CcpIdent plus the
+    accumulated keys and flattened field name; layout validation happens in Rust."""
 
     __slots__ = ("_ident", "_keys", "_field")
 
     def __init__(self, ident, keys: Optional[Sequence] = None, field: Optional[str] = None) -> None:
+        # Bypass our own __setattr__ (reserved for the assignment tail).
         object.__setattr__(self, "_ident", ident)
         object.__setattr__(self, "_keys" , list(keys) if keys else [])
         object.__setattr__(self, "_field", field)
-        # Bypass our own __setattr__ (reserved for the assignment tail).
-        # _keys holds one entry per indexed dim; each entry is an int or a slice:
-        #   d[2]        -> _keys=[2]                  int             single element of the dim
-        #   d[0:2]      -> _keys=[slice(0, 2)]        slice start:stop  range (stop exclusive)
-        #   d[0:]       -> _keys=[slice(0, None)]     slice start:      open end -> to last
-        #   d[:2]       -> _keys=[slice(None, 2)]     slice :stop       open start -> from 0
-        #   d[:]        -> _keys=[slice(None, None)]  slice :           whole dim
-        #   d[2][1]     -> _keys=[2, 1]               nested -> one key appended per [] hop
-        # _field is the trailing dtype field name, or None:
-        #   d[2][1].valid -> _ident=<d>, _keys=[2, 1], _field="valid".
-
 
     # ---- indexing / field selection ----------------------------------------
     def __getitem__(self, key) -> "KarrayRef":
         if self._field is not None:
             raise TypeError("cannot index into a Karray field")
-        # int / slice = static; a signal = dynamic binary address; oh(signal) = dynamic one-hot.
-        if not isinstance(key, (int, slice, SignalRef, OneHot)):
-            raise TypeError("Karray index must be an int, slice, a signal (dynamic binary), "
-                            "or oh(signal) (dynamic one-hot)")
+        _check_key_type(key)
         return KarrayRef(self._ident, self._keys + [key], None)
 
     def __getattr__(self, name: str) -> "KarrayRef":
         # Only reached when normal (slot) lookup fails, so this is a field name.
-        # The name is validated in Rust when the ref is resolved (see karray_static_index_get_hcp).
+        # Chained attributes walk INTO a bundle by joining with '_' — the flat
+        # leaf name the Rust layout stores. Validated in Rust at resolve time.
         if name.startswith("_"):
             raise AttributeError(name)
-        return KarrayRef(self._ident, self._keys, name)
+        merged = name if self._field is None else f"{self._field}_{name}"
+        return KarrayRef(self._ident, self._keys, merged)
 
-    # ---- key resolution ----------------------------------------------------
-    # Scalar paths (a single field / packed element) require every key to be a
-    # plain int; a range slice only makes sense for a karray-to-karray region.
-    def _int_indices(self) -> list:
-        idx = []
-        for k in self._keys:
-            if isinstance(k, slice):
-                raise TypeError("a sliced Karray region cannot be used as a scalar field/element")
-            idx.append(int(k))
-        return idx
-
-    # Per-dimension selectors for the karray-to-karray path: int -> (i, i+1, False)
-    # (collapses the dim); slice -> (start, stop|None, True) (keeps it).
-    def _region_selectors(self) -> list:
-        sels = []
-        for key in self._keys:
-            if isinstance(key, slice):
-                if key.step not in (None, 1):
-                    raise ValueError("Karray slice step must be 1")
-                start = 0 if key.start is None else int(key.start)
-                stop  = None if key.stop is None else int(key.stop)
-                sels.append((start, stop, True))
-            else:
-                ik = int(key)
-                sels.append((ik, ik + 1, False))
-        return sels
-
-    # True when any indexed dim uses a runtime signal (binary or one-hot).
-    def _has_dynamic(self) -> bool:
-        return any(isinstance(k, (SignalRef, OneHot)) for k in self._keys)
-
-    # Per-dimension selectors for the dynamic-read path, in the connector's encoding:
-    #   int       -> ("static", i,    None)
-    #   signal    -> ("bin",    None, sig)   binary-encoded address
-    #   oh(signal)-> ("onehot", None, sig)   one-hot select line
-    # A range/slice cannot mix with dynamic indexing, and the index signal must be
-    # whole (a sliced view carries no width here — assign it to a wire first).
-    def _dyn_selectors(self) -> list:
-        sels = []
-        for k in self._keys:
-            if isinstance(k, OneHot):
-                if k.sig._is_user_assigned:
-                    raise TypeError("a sliced signal cannot be a dynamic index; assign it to a wire first")
-                sels.append(("onehot", None, k.sig._ident))
-            elif isinstance(k, SignalRef):
-                if k._is_user_assigned:
-                    raise TypeError("a sliced signal cannot be a dynamic index; assign it to a wire first")
-                sels.append(("bin", None, k._ident))
-            elif isinstance(k, int):
-                sels.append(("static", int(k), None))
-            else:  # slice
-                raise TypeError("a range/slice index cannot be combined with dynamic indexing")
-        return sels
-
-    # single hcp access/ref
-
-    def _field_hcp(self, is_read: bool):
-        return _session.arena().karray_static_index_get_hcp(self._ident, self._int_indices(), self._field, bool(is_read))
-
-    # Dynamic read: resolve the selection into a scalar result Karray holding just
-    # this field, then read field 0 of that result (a fresh mux-output wire).
-    def _dyn_field_hcp(self):
-        result_ccp, _resolved = _session.arena().karray_dynamic_index_get(
-            self._ident, self._dyn_selectors(), [self._field],
-        )
-        return _session.arena().karray_static_index_get_hcp(result_ccp, [0], self._field, True)
+    # ---- key resolution -----------------------------------------------------
+    # Encode the raw keys into the connector's (kind, ints, sigs) triples, plus
+    # the parallel per-dim fns list (reduce selects on the read side). A callable
+    # key is direction-split HERE: write -> fn(i) evaluated per index into "cus"
+    # enables; read -> a "reduce" marker plus the wrapped select fn.
+    def _selectors(self, for_read: bool):
+        shape = None
+        sels, fns = [], []
+        for dim, key in enumerate(self._keys):
+            fn_entry = None
+            if isinstance(key, bool):                   # bool is an int subclass — never an index
+                raise TypeError("Karray index must not be a bool")
+            if isinstance(key, int):
+                sels.append(("static", [int(key)], []))
+            elif isinstance(key, SignalRef):
+                sels.append(("dyn", [], [_whole_signal(key)._ident]))
+            elif callable(key):
+                if for_read:
+                    sels.append(("reduce", [], []))
+                    fn_entry = _wrap_select(key)
+                else:
+                    if shape is None:
+                        shape = _session.arena().karray_shape(self._ident)
+                    if dim >= len(shape):
+                        raise ValueError(f"too many indices: got {len(self._keys)} for a {len(shape)}-D Karray")
+                    bits = [_enable_bit(key(i), dim, i)._ident for i in range(shape[dim])]
+                    sels.append(("cus", [], bits))
+            else:                                       # unreachable: __getitem__ validated the key
+                raise TypeError(f"unsupported Karray index: {key!r}")
+            fns.append(fn_entry)
+        return sels, fns
 
     # Read hook consumed by signal.to_ref (use a field as an assignment source).
+    # Every dimension must be indexed (static / dynamic / reduce).
     def _to_read_ref(self) -> SignalRef:
         if self._field is None:
             raise TypeError("read a specific field (d[i][j].field), not a whole Karray element")
-        if self._has_dynamic():
-            return SignalRef(self._dyn_field_hcp())
-        return SignalRef(self._field_hcp(is_read=True))
+        sels, fns = self._selectors(for_read=True)
+        hcp = _session.arena().karray_read_field_hcp(self._ident, sels, fns, self._field)
+        return SignalRef(hcp)
 
     # ---- assignment --------------------------------------------------------
-    # Route every operator (`|=`, `*=`, `=`) through here. Cases by (target, source):
-    #   target            source                  -> path
-    #   element/region    Karray element/region   -> karray-to-karray copy (k2k)   d[0:2] |= s[4:6] ; d[2][1] |= s[5][3]
-    #   field             Karray element/region   -> ERROR (field target, karray source not allowed)
-    #   field             scalar signal/value     -> single-field assign            d[2][1].data |= sig ; d[2][1].x |= s[5].y
-    #   element           {field_name: source}    -> whole-element field map        d[2][1] |= {"valid": v, "data": x}
-    #   element           non-dict / non-karray   -> ERROR (raised in _assign_element_from_map)
+    # Route every operator through here. Cases by (target, source):
+    #   target          source                 -> path
+    #   element/region  Karray element/region  -> karray-to-karray copy (k2k)
+    #   field           Karray element/region  -> ERROR
+    #   field           scalar signal/int      -> single-field assign
+    #   field (bundle)  {sub_field: source}    -> bundle map assign (prefixed)
+    #   element         {field_name: source}   -> per-field map assign (dicts nest)
+    #   element         scalar signal/int      -> sole-field assign (single-field Karray only)
     def _assign_from(self, src, expect_clocked: Optional[bool]) -> None:
         from .karray import Karray            # local import breaks the Karray<->KarrayRef cycle
+        if expect_clocked is None:
+            raise TypeError("Karray assignment requires `|=` (clocked) or `*=` (combinational), "
+                            "not a bare `=`")
         if isinstance(src, Karray):
-            src = KarrayRef(src._ident)            # whole-array source (no keys -> full-range every dim)
+            src = KarrayRef(src._ident)            # no keys -> the Rust rank check rejects it clearly
 
-        # Classify both sides up front so each branch states its own full condition.
-        src_is_karray_region = isinstance(src , KarrayRef) and src._field  is None  # source: element/region, no field
-        des_is_karray_region = isinstance(self, KarrayRef) and self._field is None  # target: element/region (no `.field`)
-
-        # Dynamic-index write: a runtime signal (binary or one-hot) selects which element
-        # receives `src`; non-selected elements hold (reg-backed `|=` only — the Rust layer
-        # rejects `*=`). A Karray region source has no single runtime element, so it is
-        # unsupported here.
-        if self._has_dynamic():
-            if src_is_karray_region:
-                raise TypeError("dynamic-index Karray assignment cannot take a Karray region/element source")
-            # `|=`/`*=` carry the clocked intent directly; a bare `=` carries none, so
-            # resolve it from the destination backing (reg/memblock -> clocked, wire ->
-            # combinational — which the Rust layer then rejects for a dynamic write).
-            clocked = expect_clocked if expect_clocked is not None else _session.arena().karray_is_clocked(self._ident)
-            if des_is_karray_region:                   # element <= {field_name: source} map
-                self._assign_element_from_map_dynamic(src, clocked)
-            else:                                       # field <= one scalar source
-                self._assign_one_field_dynamic(to_ref(src), clocked)
+        if isinstance(src, KarrayRef) and src._field is None:
+            # ---- k2k: element/region source -> paired region copy ----
+            if self._field is not None:
+                raise TypeError("karray-to-karray assignment target must be an array/element, not a field")
+            dst_sels, _        = self._selectors(for_read=False)
+            src_sels, src_fns  = src ._selectors(for_read=True)
+            _session.arena().karray_assign_k2k(
+                self._ident, dst_sels,
+                src ._ident, src_sels, src_fns,
+                expect_clocked,
+            )
             return
 
-        # First layer branches on the DESTINATION only; the source is resolved inside each arm.
-        if des_is_karray_region:                       # target is an element/region
-            if src_is_karray_region:                   # region <= region : karray-to-karray copy
-                _session.arena().karray_static_index_assign_k2k(
-                    self._ident, self._region_selectors(),
-                    src ._ident, src ._region_selectors(),  # empty list -> whole array (full-range every dim)
-                    expect_clocked,
-                )
-            else:                                      # element <= {field_name: source} map
-                self._assign_element_from_map(src, expect_clocked)
-        else:                                          # target is a single field
-            if src_is_karray_region:                   # field <= karray region is not permitted
-                raise TypeError("karray-to-karray assignment target must be an array/element, not a field")
-            self._assign_one_field(to_ref(src), expect_clocked)  # field <= one scalar source
+        # ---- scalar path: field ref / signal / expr / int / {field: source} map ----
+        if isinstance(src, dict):
+            # element target: names are field names; bundle-field target: names
+            # are sub-fields, prefixed with the bundle path. Dicts nest either way.
+            prefix  = "" if self._field is None else self._field + "_"
+            sources = list(_flatten_field_map(src, prefix))
+        else:
+            sources = [(self._field, _to_operand(src))]   # field name, or None -> the sole field
+        dst_sels, _ = self._selectors(for_read=False)
+        _session.arena().karray_assign_hcps(self._ident, dst_sels, sources, expect_clocked)
 
-    def _assign_one_field(self, src: SignalRef, expect_clocked: Optional[bool]) -> None:
-        # Single field → drive its own HCP; SignalRef enforces |= vs *=.
-        ar  = _session.arena()
-        tgt = SignalRef(self._field_hcp(is_read=False))
-        if   expect_clocked is True:  tgt |= src
-        elif expect_clocked is False: tgt *= src
-        else:                         ar.gen_basic_assign(tgt._ident, src._ident, src._slice, None)
-
-    def _assign_element_from_map(self, src, expect_clocked: Optional[bool]) -> None:
-        # Whole-element assign: connect each `{field_name: source}` entry to the field
-        # of that name. Sources are matched by name in Rust (full-width connect).
-        if not isinstance(src, dict):
-            raise TypeError("whole-element Karray assign needs a {field_name: source} mapping "
-                            "(per-field, not a packed bit-vector)")
-        sources = [(str(name), to_ref(val)._ident) for name, val in src.items()]
-        _session.arena().karray_static_index_assign_hcps(self._ident, self._int_indices(), sources, expect_clocked)
-
-    # ---- dynamic-index assignment (runtime-selected element) ----------------
-    def _assign_one_field_dynamic(self, src: SignalRef, clocked: bool) -> None:
-        # Single field target: write `src` into this field of the runtime-selected element.
-        sources = [(str(self._field), src._ident)]
-        _session.arena().karray_dynamic_index_assign_hcps(
-            self._ident, self._dyn_selectors(), sources, clocked)
-
-    def _assign_element_from_map_dynamic(self, src, clocked: bool) -> None:
-        # Whole-element target: connect each `{field_name: source}` entry to the field of
-        # that name on the runtime-selected element (matched by name in Rust).
-        if not isinstance(src, dict):
-            raise TypeError("whole-element dynamic Karray assign needs a {field_name: source} mapping "
-                            "(per-field, not a packed bit-vector)")
-        sources = [(str(name), to_ref(val)._ident) for name, val in src.items()]
-        _session.arena().karray_dynamic_index_assign_hcps(
-            self._ident, self._dyn_selectors(), sources, clocked)
-
-    def __ior__(self, src: Union[SignalRef, "KarrayRef", "Karray"]):
+    def __ior__(self, src):
         self._assign_from(src, expect_clocked=True)
         return _ASSIGNED
 
-    def __imul__(self, src: Union[SignalRef, "KarrayRef", "Karray"]):
+    def __imul__(self, src):
         self._assign_from(src, expect_clocked=False)
         return _ASSIGNED
-
-    def _explicit_assign(self, value: Union[SignalRef, "KarrayRef", "Karray"]) -> None:
-        self._assign_from(value, expect_clocked=None)
 
     # ---- augmented-assignment tails ----------------------------------------
     # `d[2][1] |= x` desugars to `d[2].__setitem__(1, d[2][1].__ior__(x))`;
     # `d[2][1].valid |= x` desugars to `setattr(d[2][1], 'valid', ....__ior__(x))`.
-    # The inner op already did the work and returns the _ASSIGNED sentinel, so the
-    # tail is a no-op. A real value means an explicit `=` assignment.
+    # The inner op already did the work and returns the _ASSIGNED sentinel, so
+    # the tail is a no-op. A real value means a bare `=`, which is rejected.
     def __setitem__(self, key, value) -> None:
         if value is _ASSIGNED:
             return
-        self.__getitem__(key)._explicit_assign(value)
+        self.__getitem__(key)._assign_from(value, expect_clocked=None)
 
     def __setattr__(self, name: str, value) -> None:
         if name in KarrayRef.__slots__:
@@ -255,4 +255,4 @@ class KarrayRef:
             return
         if value is _ASSIGNED:
             return
-        self.__getattr__(name)._explicit_assign(value)
+        self.__getattr__(name)._assign_from(value, expect_clocked=None)

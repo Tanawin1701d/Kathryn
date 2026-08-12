@@ -5,9 +5,9 @@
 # Fields are paired by exact name+width, so `valid` and `data` copy across while the
 # non-matching `tag` (dst) / `note` (src) are skipped (a Python warning fires).
 #
-# The one-shot `seq` fills src, pre-sets dst[0].tag, then copies:
-#   * dst[0:2] |= src[1:3]   range slice, shapes [2]==[2]: dst0<-src1, dst1<-src2
-#   * dst[3]   |= src[0]     single element
+# The one-shot `seq` fills src, pre-sets dst[0].tag, then copies element by
+# element (every selection names exactly one element):
+#   * dst[0] |= src[1],  dst[1] |= src[2],  dst[3] |= src[0]
 # tag is never copied, so dst[0].tag keeps its pre-set value — proving the skip.
 
 from __future__ import annotations
@@ -86,9 +86,9 @@ class tc28_karray_to_karray(Module):
             # pre-set dst[0].tag so we can prove the copy leaves it alone
             self.dst[0].tag |= self.c_tag
 
-            # range-slice copy (valid+data matched; tag/note skipped -> warning)
-            self.dst[0:2] |= self.src[1:3]
-            # single-element copy
+            # element copies (valid+data matched; tag/note skipped -> warning)
+            self.dst[0] |= self.src[1]
+            self.dst[1] |= self.src[2]
             self.dst[3] |= self.src[0]
 
             # read back

@@ -1,32 +1,30 @@
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::complex_hardware::common::ccp_base::CcpBase;
 use crate::model::complex_hardware::common::ccp_ident::{CcpIdent, CcpType};
-use crate::model::complex_hardware::karray::karray_meta::{index_width_for, KarrayField, KarrayType};
+use crate::model::complex_hardware::karray::karray_meta::{KarrayField, KarrayType};
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
 use crate::model::model_arena::ModelArena;
 
-// Which kinds of hardware may back a Karray's elements (a subset of HwComponentType):
-// Reg/Wire materialise one HCP per element; MemBlock materialises one addressable MemBlk.
-pub const KARRAY_BACKINGS: [HwComponentType; 3] =
-    [HwComponentType::Reg, HwComponentType::Wire, HwComponentType::MemBlock];
+// Which kinds of hardware may back a Karray's elements: Reg (clocked, `|=`) or
+// Wire (combinational, `*=`). Each materialises one HCP per (element, field).
+pub const KARRAY_BACKINGS: [HwComponentType; 2] =
+    [HwComponentType::Reg, HwComponentType::Wire];
 
 // ---- Karray -----------------------------------------------------------------
 
 /// A typed multi-dimensional array — a complex component property (CCP). Each
-/// field of each element is its **own** HCP (not a bit-slice of a packed element):
-/// Reg/Wire materialise `total * field_count` per-field HCPs (row-major element,
-/// then field), and MemBlock materialises one MemBlk per field (depth = element
-/// count, width = field width). Indexing + field selection resolves to that field's
-/// HCP so the usual `|=` / `*=` path applies. Backing HCPs are fixed at
-/// construction; there is no internal graph to wire, so `build` is a no-op.
+/// field of each element is its **own** HCP (not a bit-slice of a packed
+/// element): `total * field_count` per-field HCPs, row-major element then field.
+/// Every access selects each dimension with a `KIdx` (see `kidx.rs`); the
+/// read/write engines resolve that selection to these backing HCPs. Backing
+/// hardware is fixed at construction; there is no internal graph to wire, so
+/// `build` is a no-op.
 pub struct Karray {
     ident        : CcpIdent,
     shape        : Vec<usize>,        // e.g. [5, 3]
     dtype        : KarrayType,
-    backing      : HwComponentType,   // one of KARRAY_BACKINGS (Reg / Wire / MemBlock)
-    // Reg/Wire: one HCP per (element, field), index = flat * field_count + field_idx.
-    // MemBlock: one MemBlk per field, index = field_idx.
-    backing_hcps : Vec<HcpIdent>,
+    backing      : HwComponentType,   // one of KARRAY_BACKINGS (Reg / Wire)
+    backing_hcps : Vec<HcpIdent>,     // index = flat * field_count + field_idx
 }
 
 impl Default for Karray {
@@ -42,9 +40,8 @@ impl Default for Karray {
 }
 
 impl Karray {
-    /// Build a Karray of the given `shape` whose element is the packed record
-    /// `fields`, materialising the backing hardware immediately (mirrors how
-    /// `Arb::new` makes the wires it owns up front).
+    /// Build a Karray of the given `shape` whose element is the record `fields`,
+    /// materialising the backing hardware immediately.
     pub fn new(
         is_user_com: bool,
         name       : &str,
@@ -54,43 +51,24 @@ impl Karray {
         arena      : &mut ModelArena,
     ) -> Self {
         assert!(KARRAY_BACKINGS.contains(&backing),
-            "Karray '{name}': backing must be Reg, Wire, or MemBlock, got {backing:?}");
+            "Karray '{name}': backing must be Reg or Wire, got {backing:?}");
         assert!(!shape.is_empty(), "Karray '{name}': shape must have at least one dimension");
         let total = shape.iter().product::<usize>();
         assert!(total > 0, "Karray '{name}': every dimension must be positive");
 
-        let dtype      = KarrayType::new(fields);
-        let elem_width = dtype.get_elem_width();
-        assert!(elem_width > 0, "Karray '{name}': element must have at least one field");
+        let dtype = KarrayType::new(fields);
+        assert!(dtype.field_count() > 0, "Karray '{name}': element must have at least one field");
 
-        /// create hardware component
-
-        let mut backing_hcps = Vec::new();
-        match backing {
-            HwComponentType::Reg => {
-                for flat in 0..total {
-                    for field in dtype.get_fields() {
-                        let nm = format!("{name}_E{flat}_{}", field.get_name());
-                        backing_hcps.push(arena.make_reg(false, &nm, field.get_width()));
-                    }
-                }
+        let mut backing_hcps = Vec::with_capacity(total * dtype.field_count());
+        for flat in 0..total {
+            for field in dtype.get_fields() {
+                let nm = format!("{name}_E{flat}_{}", field.get_name());
+                let hcp_i = match backing {
+                    HwComponentType::Reg => arena.make_reg (false, &nm, field.get_width()),
+                    _                    => arena.make_wire(false, &nm, field.get_width()),
+                };
+                backing_hcps.push(hcp_i);
             }
-            HwComponentType::Wire => {
-                for flat in 0..total {
-                    for field in dtype.get_fields() {
-                        let nm = format!("{name}_E{flat}_{}", field.get_name());
-                        backing_hcps.push(arena.make_wire(false, &nm, field.get_width()));
-                    }
-                }
-            }
-            HwComponentType::MemBlock => {
-                let iw = index_width_for(total);
-                for field in dtype.get_fields() {
-                    let nm = format!("{name}_{}_MEM", field.get_name());
-                    backing_hcps.push(arena.make_mem_blk(false, &nm, field.get_width(), iw));
-                }
-            }
-            _ => unreachable!("backing validated against KARRAY_BACKINGS above"),
         }
 
         Self {
@@ -103,17 +81,13 @@ impl Karray {
     }
 
     // ---- accessors ---------------------------------------------------------
-    pub fn get_ccp_ident    (&self)     -> CcpIdent           { self.ident                          }
-    pub fn get_ccp_ident_mut(&mut self) -> &mut CcpIdent      { &mut self.ident                     }
-    pub fn get_shape        (&self)     -> &Vec<usize>        { &self.shape                         }
-    pub fn get_dim_count    (&self)     -> usize              { self.shape.len()                    }
-    pub fn get_backing      (&self)     -> HwComponentType    { self.backing                        }
-    pub fn get_elem_width   (&self)     -> i32                { self.dtype.get_elem_width()         }
-    pub fn get_fields       (&self)     -> &Vec<KarrayField>  { self.dtype.get_fields()             }
-    pub fn get_backing_hcps (&self)     -> &Vec<HcpIdent>     { &self.backing_hcps                  }
-    pub fn total_elems      (&self)     -> usize              { self.shape.iter().product()         }
-    pub fn index_width      (&self)     -> i32                { index_width_for(self.total_elems()) }
-    pub fn field_count      (&self)     -> usize              { self.dtype.field_count()            }
+    pub fn get_ccp_ident    (&self)     -> CcpIdent           { self.ident                  }
+    pub fn get_ccp_ident_mut(&mut self) -> &mut CcpIdent      { &mut self.ident             }
+    pub fn get_shape        (&self)     -> &Vec<usize>        { &self.shape                 }
+    pub fn get_dim_count    (&self)     -> usize              { self.shape.len()            }
+    pub fn get_backing      (&self)     -> HwComponentType    { self.backing                }
+    pub fn get_fields       (&self)     -> &Vec<KarrayField>  { self.dtype.get_fields()     }
+    pub fn field_count      (&self)     -> usize              { self.dtype.field_count()    }
 
     /// Row-major flatten of a full multi-dimensional index, with dim-count and
     /// bounds asserts (`shape [5,3]`, index `[2,1]` → `2*3 + 1 = 7`).
@@ -133,13 +107,18 @@ impl Karray {
         self.dtype.get_fields().iter().position(|f| f.get_name() == name)
     }
 
-    /// Whether this Karray's fields are clocked (reg/memblock → `|=`) or
-    /// combinational (wire → `*=`). Uniform across all fields.
-    pub fn is_clocked(&self) -> bool {
-        matches!(self.backing, HwComponentType::Reg | HwComponentType::MemBlock)
+    /// The backing HCP of one field at a fully-pinned coordinate — the leaf every
+    /// read and write resolves to. Pure lookup, no hardware is created.
+    pub(crate) fn element_hcp(&self, coord: &[usize], field_idx: usize) -> HcpIdent {
+        let nf = self.field_count();
+        assert!(field_idx < nf, "Karray: field index {field_idx} out of range (have {nf})");
+        self.backing_hcps[self.flat_index(coord) * nf + field_idx]
     }
 
-
+    /// Whether the backing is clocked (reg → `|=`) or combinational (wire → `*=`).
+    pub fn is_clocked(&self) -> bool {
+        matches!(self.backing, HwComponentType::Reg)
+    }
 }
 
 impl CcpBase for Karray {
