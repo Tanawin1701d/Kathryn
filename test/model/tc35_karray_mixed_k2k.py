@@ -1,4 +1,4 @@
-# tc42 — Karray MIXED-kind karray-to-karray copy: the three unified index kinds
+# tc35 — Karray MIXED-kind karray-to-karray copy: the three unified index kinds
 # (static / dynamic binary / custom fn) in ONE statement, on BOTH sides:
 #
 #     a[1][en_fn][1][aw]  |=  b[max_fn][bw][1]
@@ -25,7 +25,7 @@ from cocotb.triggers import RisingEdge, Timer
 
 import cocotb_pool
 
-NAME = "tc42_karray_mixed_k2k"
+NAME = "tc35_karray_mixed_k2k"
 
 SETTLE_CYCLES = 60
 
@@ -45,7 +45,7 @@ class Cell(Karray):
     data = kaf(8)
 
 
-class tc42_karray_mixed_k2k(Module):
+class tc35_karray_mixed_k2k(Module):
     @init
     def com_declare(self):
         self.a = Cell(HwComponentType.REG, (2, 3, 2, 3), "a")
@@ -86,7 +86,7 @@ class tc42_karray_mixed_k2k(Module):
 # ---- build (kathryn model -> verilog) ---------------------------------------
 def build(output_folder: str) -> None:
     reset()
-    build_model(tc42_karray_mixed_k2k())
+    build_model(tc35_karray_mixed_k2k())
     emit_verilog(output_folder)
 
 

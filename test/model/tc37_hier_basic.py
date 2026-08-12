@@ -1,4 +1,4 @@
-# tc39 — basic module hierarchy: Top + one child, cross-module routing both ways.
+# tc37 — basic module hierarchy: Top + one child, cross-module routing both ways.
 #
 # Covers:
 #   * parent → child routing: child's comb wire and clocked reg read Top's input wire
@@ -21,7 +21,7 @@ from cocotb.triggers import RisingEdge, Timer
 
 import cocotb_pool
 
-NAME = "tc39_hier_basic"
+NAME = "tc37_hier_basic"
 
 
 # ---- model -------------------------------------------------------------------
@@ -41,7 +41,7 @@ class HierChild(Module):
             self.acc |= self.dbl                # clocked — needs forwarded clk
 
 
-class tc39_hier_basic(Module):
+class tc37_hier_basic(Module):
     @init
     def com_declare(self):
         self.src = wire(8, "src")
@@ -64,7 +64,7 @@ class tc39_hier_basic(Module):
 # ---- build -------------------------------------------------------------------
 def build(output_folder: str) -> None:
     reset()
-    module = tc39_hier_basic()
+    module = tc37_hier_basic()
     build_model(module)
     emit_verilog(output_folder)
 

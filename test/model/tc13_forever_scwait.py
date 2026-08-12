@@ -1,4 +1,4 @@
-# tc38 — the "processor loop" pattern: an endless cwhile whose body handshakes
+# tc13 — the "processor loop" pattern: an endless cwhile whose body handshakes
 # with the outside world through scwait, plus always-on comb logic beside the
 # loop (bare assigns outside any flow block).
 #   with cwhile(halted == 0):      # spins until halted is set
@@ -18,12 +18,12 @@ from cocotb.triggers import RisingEdge, Timer
 
 import cocotb_pool
 
-NAME  = "tc38_forever_scwait"
+NAME  = "tc13_forever_scwait"
 LIMIT = 3
 
 
 # ---- model -------------------------------------------------------------------
-class tc38_forever_scwait(Module):
+class tc13_forever_scwait(Module):
     @init
     def com_declare(self):
         self.cnt    = reg (8, "cnt")
@@ -55,7 +55,7 @@ class tc38_forever_scwait(Module):
 # ---- build -------------------------------------------------------------------
 def build(output_folder: str) -> None:
     reset()
-    build_model(tc38_forever_scwait())
+    build_model(tc13_forever_scwait())
     emit_verilog(output_folder)
 
 

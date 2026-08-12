@@ -1,4 +1,4 @@
-# tc29 — Karray dynamic (runtime-signal) element read. A reg-backed register file
+# tc30 — Karray dynamic (runtime-signal) element read. A reg-backed register file
 #   rf element = {valid:1, data:8}, shape (4,)
 # is filled with known data, then read back through DYNAMIC indices that resolve to
 # a balanced 2:1 mux tree (host `dynamic_index_get`):
@@ -21,7 +21,7 @@ from cocotb.triggers import RisingEdge, Timer
 
 import cocotb_pool
 
-NAME = "tc29_karray_dynamic_index"
+NAME = "tc30_karray_dynamic_index"
 
 SETTLE_CYCLES = 50
 
@@ -38,7 +38,7 @@ class RegFile(Karray):
     data  = kaf(8)
 
 
-class tc29_karray_dynamic_index(Module):
+class tc30_karray_dynamic_index(Module):
     @init
     def com_declare(self):
         self.rf = RegFile(HwComponentType.REG, (4,), "rf")
@@ -77,7 +77,7 @@ class tc29_karray_dynamic_index(Module):
 # ---- build (kathryn model -> verilog) ---------------------------------------
 def build(output_folder: str) -> None:
     reset()
-    build_model(tc29_karray_dynamic_index())
+    build_model(tc30_karray_dynamic_index())
     emit_verilog(output_folder)
 
 

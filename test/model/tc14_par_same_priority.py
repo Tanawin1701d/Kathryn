@@ -1,4 +1,4 @@
-# tc12 — parallel auto-sync, three branches assigning the SAME register at the
+# tc14 — parallel auto-sync, three branches assigning the SAME register at the
 # SAME priority. Priorities are written relative to the default user priority so
 # the relationship is explicit: all three sit at DEFAULT_UE_PRI_USER + 1. When the
 # priority (and sub-priority) tie, the update pool's stable sort keeps program
@@ -16,14 +16,14 @@ from cocotb.triggers import RisingEdge, Timer
 
 import cocotb_pool
 
-NAME = "tc12_par_same_priority"
+NAME = "tc14_par_same_priority"
 
 # All branches share one priority — pick a single offset above the user default.
 SAME_PRI = DEFAULT_UE_PRI_USER + 1
 
 
 # ---- model -------------------------------------------------------------------
-class tc12_par_same_priority(Module):
+class tc14_par_same_priority(Module):
     @init
     def com_declare(self):
         self.x      = reg(8, "x")
@@ -49,7 +49,7 @@ class tc12_par_same_priority(Module):
 # ---- build -------------------------------------------------------------------
 def build(output_folder: str) -> None:
     reset()
-    module = tc12_par_same_priority()
+    module = tc14_par_same_priority()
     build_model(module)
     emit_verilog(output_folder)
 

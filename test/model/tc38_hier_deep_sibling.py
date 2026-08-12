@@ -1,4 +1,4 @@
-# tc40 — deep hierarchy + sibling routing: Top { ChildA { GrandChild }, ChildB }.
+# tc38 — deep hierarchy + sibling routing: Top { ChildA { GrandChild }, ChildB }.
 #
 # Covers:
 #   * 2-level input chains: GrandChild reads Top's src (Top -> A -> G IoWires)
@@ -28,7 +28,7 @@ from cocotb.triggers import RisingEdge, Timer
 
 import cocotb_pool
 
-NAME = "tc40_hier_deep_sibling"
+NAME = "tc38_hier_deep_sibling"
 
 
 # ---- model -------------------------------------------------------------------
@@ -69,7 +69,7 @@ class ChildB(Module):
         self.result.default(self.a_stage + 2)   # sibling read, routed via Top
 
 
-class tc40_hier_deep_sibling(Module):
+class tc38_hier_deep_sibling(Module):
     @init
     def com_declare(self):
         self.src = wire(8, "src")
@@ -97,7 +97,7 @@ class tc40_hier_deep_sibling(Module):
 # ---- build -------------------------------------------------------------------
 def build(output_folder: str) -> None:
     reset()
-    module = tc40_hier_deep_sibling()
+    module = tc38_hier_deep_sibling()
     build_model(module)
     emit_verilog(output_folder)
 

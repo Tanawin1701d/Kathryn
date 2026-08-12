@@ -1,4 +1,4 @@
-# tc44 — Karray BUNDLES (nested kaf, Chisel-Bundle style), end to end.
+# tc36 — Karray BUNDLES (nested kaf, Chisel-Bundle style), end to end.
 #   Vec2  = {x:8, y:8}                 (a KBundle)
 #   Entry = {valid:1, pos: kaf(Vec2)}  -> flat leaf fields valid, pos_x, pos_y
 # Exercised:
@@ -19,7 +19,7 @@ from cocotb.triggers import RisingEdge, Timer
 
 import cocotb_pool
 
-NAME = "tc44_karray_bundle"
+NAME = "tc36_karray_bundle"
 
 SETTLE_CYCLES = 50
 
@@ -45,7 +45,7 @@ class Entry(Karray):
     pos   = kaf(Vec2)
 
 
-class tc44_karray_bundle(Module):
+class tc36_karray_bundle(Module):
     @init
     def com_declare(self):
         self.a = Entry(HwComponentType.REG, (2,), "a")
@@ -88,7 +88,7 @@ class tc44_karray_bundle(Module):
 # ---- build (kathryn model -> verilog) ---------------------------------------
 def build(output_folder: str) -> None:
     reset()
-    build_model(tc44_karray_bundle())
+    build_model(tc36_karray_bundle())
     emit_verilog(output_folder)
 
 

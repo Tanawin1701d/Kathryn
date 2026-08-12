@@ -1,4 +1,4 @@
-# tc43 — Karray REDUCE read (the read-side custom-fn index): a callable index
+# tc33 — Karray REDUCE read (the read-side custom-fn index): a callable index
 # folds its dimension through a balanced 2:1 reduce tree; the user's select fn
 # is called per compared pair (`fn(a, b, level) -> pick-a` over ReduceViews) and
 # may carry extras (`(select, {name: signal})` — an extra replaces a same-named
@@ -20,7 +20,7 @@ from cocotb.triggers import RisingEdge, Timer
 
 import cocotb_pool
 
-NAME = "tc43_karray_reduce_read"
+NAME = "tc33_karray_reduce_read"
 
 SETTLE_CYCLES = 50
 
@@ -58,7 +58,7 @@ class Cell(Karray):
     d = kaf(6)
 
 
-class tc43_karray_reduce_read(Module):
+class tc33_karray_reduce_read(Module):
     @init
     def com_declare(self):
         self.rf   = RegFile(HwComponentType.REG, (4,), "rf")
@@ -90,7 +90,7 @@ class tc43_karray_reduce_read(Module):
 # ---- build (kathryn model -> verilog) ---------------------------------------
 def build(output_folder: str) -> None:
     reset()
-    build_model(tc43_karray_reduce_read())
+    build_model(tc33_karray_reduce_read())
     emit_verilog(output_folder)
 
 

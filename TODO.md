@@ -5,11 +5,11 @@
 
 ### to test
 - test zif multi chain
-- test memblk (basic coverage now in tc37_mem_blk)
+- test memblk (basic coverage now in tc28_mem_blk)
 
 ### done
 - hierarchy module implementation — routing double-take + expression-operand
-  remap fixed; covered by tc39_hier_basic / tc40_hier_deep_sibling
+  remap fixed; covered by tc37_hier_basic / tc38_hier_deep_sibling
 
 ### known issues (found while building cupg, 2026-07)
 - **mem_ele drops slice views on its index signal** (keeps only the ident):

@@ -1,4 +1,4 @@
-# tc37 — mem_blk + mem_ele: first coverage of the memory primitives.
+# tc28 — mem_blk + mem_ele: first coverage of the memory primitives.
 #   * gated clocked write  : `with zif(wen == 1): wport |= wdata` (bare, outside seq)
 #   * combinational read   : `rdata *= rport` — data visible the same cycle
 #   * hierarchical poke    : the testbench preloads the memory array directly
@@ -16,11 +16,11 @@ from cocotb.triggers import RisingEdge, Timer
 
 import cocotb_pool
 
-NAME = "tc37_mem_blk"
+NAME = "tc28_mem_blk"
 
 
 # ---- model -------------------------------------------------------------------
-class tc37_mem_blk(Module):
+class tc28_mem_blk(Module):
     @init
     def com_declare(self):
         self.spad  = mem_blk(8, 4, "spad")
@@ -49,7 +49,7 @@ class tc37_mem_blk(Module):
 # ---- build -------------------------------------------------------------------
 def build(output_folder: str) -> None:
     reset()
-    build_model(tc37_mem_blk())
+    build_model(tc28_mem_blk())
     emit_verilog(output_folder)
 
 

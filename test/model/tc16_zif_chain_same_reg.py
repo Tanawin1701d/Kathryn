@@ -1,4 +1,4 @@
-# tc14 — zero-cycle if/elif/else (zif / zelif / zelse) chain writing the SAME
+# tc16 — zero-cycle if/elif/else (zif / zelif / zelse) chain writing the SAME
 # register three different values. The chain lowers to one clocked priority
 # mux on REG x:
 #     if (c1)      x <= 5
@@ -18,11 +18,11 @@ from cocotb.triggers import RisingEdge, Timer
 
 import cocotb_pool
 
-NAME = "tc14_zif_chain_same_reg"
+NAME = "tc16_zif_chain_same_reg"
 
 
 # ---- model -------------------------------------------------------------------
-class tc14_zif_chain_same_reg(Module):
+class tc16_zif_chain_same_reg(Module):
     @init
     def com_declare(self):
         self.x      = reg (8, "x")
@@ -51,7 +51,7 @@ class tc14_zif_chain_same_reg(Module):
 # ---- build -------------------------------------------------------------------
 def build(output_folder: str) -> None:
     reset()
-    module = tc14_zif_chain_same_reg()
+    module = tc16_zif_chain_same_reg()
     build_model(module)
     emit_verilog(output_folder)
 

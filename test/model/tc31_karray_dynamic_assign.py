@@ -1,4 +1,4 @@
-# tc32 — Karray dynamic (runtime-signal) element WRITE (the mirror of tc29's read).
+# tc31 — Karray dynamic (runtime-signal) element WRITE (the mirror of tc30's read).
 #   rf element = {valid:1, data:8}, shape (4,), reg-backed
 # Each element is written through a DYNAMIC index so the per-element write-enable
 # decode (host `dynamic_assign_hcps`) is exercised end to end:
@@ -23,7 +23,7 @@ from cocotb.triggers import RisingEdge, Timer
 
 import cocotb_pool
 
-NAME = "tc32_karray_dynamic_assign"
+NAME = "tc31_karray_dynamic_assign"
 
 SETTLE_CYCLES = 50
 
@@ -42,7 +42,7 @@ class RegFile(Karray):
     data  = kaf(8)
 
 
-class tc32_karray_dynamic_assign(Module):
+class tc31_karray_dynamic_assign(Module):
     @init
     def com_declare(self):
         self.rf = RegFile(HwComponentType.REG, (4,), "rf")
@@ -86,7 +86,7 @@ class tc32_karray_dynamic_assign(Module):
 # ---- build (kathryn model -> verilog) ---------------------------------------
 def build(output_folder: str) -> None:
     reset()
-    build_model(tc32_karray_dynamic_assign())
+    build_model(tc31_karray_dynamic_assign())
     emit_verilog(output_folder)
 
 

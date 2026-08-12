@@ -1,4 +1,4 @@
-# tc13 — parallel auto-sync, three branches assigning the SAME register at THREE
+# tc15 — parallel auto-sync, three branches assigning the SAME register at THREE
 # DIFFERENT priorities, written relative to the default user priority so the
 # gradient is explicit: DEFAULT_UE_PRI_USER + 1 / + 2 / + 3. Priority overrides
 # program order: the highest-priority write is sorted last in the update pool and
@@ -19,7 +19,7 @@ from cocotb.triggers import RisingEdge, Timer
 
 import cocotb_pool
 
-NAME = "tc13_par_diff_priority"
+NAME = "tc15_par_diff_priority"
 
 # Three distinct priorities, each one step above the user default.
 PRI_LOW  = DEFAULT_UE_PRI_USER + 1
@@ -28,7 +28,7 @@ PRI_HIGH = DEFAULT_UE_PRI_USER + 3
 
 
 # ---- model -------------------------------------------------------------------
-class tc13_par_diff_priority(Module):
+class tc15_par_diff_priority(Module):
     @init
     def com_declare(self):
         self.x      = reg(8, "x")
@@ -54,7 +54,7 @@ class tc13_par_diff_priority(Module):
 # ---- build -------------------------------------------------------------------
 def build(output_folder: str) -> None:
     reset()
-    module = tc13_par_diff_priority()
+    module = tc15_par_diff_priority()
     build_model(module)
     emit_verilog(output_folder)
 

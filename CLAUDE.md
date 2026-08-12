@@ -985,7 +985,7 @@ Both helpers return an `AsmResize` report (`None` / `ZeroExtended{from,to}` /
 `TruncatedMsb{from,to}`). Host callers that don't care (e.g. `karray.rs`) drop it.
 The Python connector (`arena_impl_hwc_py.rs::gen_basic_assign`) forwards it to
 `warn_asm_resize`, which raises a Python `warnings.warn` so the DSL user sees any
-implicit width change. Covered by `test/model/tc27_asm_resize.py` (truncate +
+implicit width change. Covered by `test/model/tc19_asm_resize.py` (truncate +
 zero-extend, end to end, plus the warning assertions).
 
 **Karray — unified `KIdx` indexing.** The Karray CCP
@@ -1080,9 +1080,9 @@ accumulates raw per-dimension keys and classifies them in ONE place
 select fn); tuples/colon slices raise — there are no ranges, every dimension
 must be indexed. Assignment requires `|=` (reg) or
 `*=` (wire); a bare `=` raises. Sliced-view indices/sources are materialised via
-`extend()` so no bits are silently dropped. Covered by `test/model/tc25` (static
-regfile), `tc28` (k2k element copies, name+width pairing), `tc29`/`tc32`
-(dynamic read/write), `tc41` (custom write enables, int sources, map writes,
-reduce read), `tc42` (all three kinds in one k2k statement, both sides), `tc43`
-(reduce read: max, extras running-sum, 2-D pin+fold), `tc44` (bundles end to
+`extend()` so no bits are silently dropped. Covered by `test/model/tc29` (static
+regfile), `tc34` (k2k element copies, name+width pairing), `tc30`/`tc31`
+(dynamic read/write), `tc32` (custom write enables, int sources, map writes,
+reduce read), `tc35` (all three kinds in one k2k statement, both sides), `tc33`
+(reduce read: max, extras running-sum, 2-D pin+fold), `tc36` (bundles end to
 end).

@@ -1,23 +1,17 @@
-# tc16 — pip/zync pipeline baseline: 3 stages chained through four shared arbiters,
-# free-running with no stall, flush, or guard.
+# tc25 — tc24's multi-assign pipeline, but the two `a |= ...` writes in the stage-1
+# block are wrapped in `with priority(...)` at DIFFERENT priorities. tc24 left both
+# writes at the default priority, so program order decided (the LAST write won,
+# a += V2). Here the HIGHEST priority is put on the FIRST-declared write, so if
+# priority overrides program order (as it must), the first write wins instead:
 #
-# Each stage is a `pip` (granter half) wrapping a `zync` (requester half). Adjacent
-# stages SHARE an arbiter, so a stage's zync hands off to the next stage's pip:
-#   * stage 1: pip(arb0, auto_req) → zync(arb1):  a <= a + 1   (counter)
-#   * stage 2: pip(arb1)           → zync(arb2):  b <= a       (follows a)
-#   * stage 3: pip(arb2)           → zync(arb3, auto_ack):  c <= b   (follows b)
-# arb0 (auto_req) is the always-requesting source end; arb3 (auto_ack) is the
-# always-granted sink end.
+#   stage 1: pip(arb0, auto_req) → zync(arb1):
+#                with priority(PRI_HIGH): a |= a + v    # declared FIRST, +1, WINS
+#                with priority(PRI_LOW):  a |= a + v2   # declared LAST,  +2, loses
+#   stage 2: pip(arb1)          → zync(arb2):  b <= a
+#   stage 3: pip(arb2)          → zync(arb3, auto_ack):  c <= b
 #
-# Intended behaviour (what this testbench asserts):
-#   * a is a free-running counter once the pipeline is flowing (monotonic, > 0).
-#   * b tracks a and c tracks b with pipeline latency, so a >= b >= c holds at all
-#     times and data eventually reaches every stage (b, c become non-zero).
-#   * under held master reset every stage stays at its reset value 0.
-#
-# NOTE: as of writing the model does not yet flow (a/b/c stay 0) — a one-cycle
-# bootstrap race keeps stages 2/3 from arming. These tests encode the INTENDED
-# behaviour and currently fail red; they pass once the handshake chain is fixed.
+# So a steps by V (the high-priority write) per grant, NOT by V2 — proving priority,
+# not declaration order, decides the winner (cf. tc24, where order won at +V2).
 
 from __future__ import annotations
 
@@ -30,24 +24,35 @@ from cocotb.triggers import RisingEdge, Timer
 
 import cocotb_pool
 
-NAME = "tc16_pip_zync_baseline"
+NAME = "tc25_pip_zync_multi_assign_priority"
 
-RUN_CYCLES = 40                         # cycles to run after reset is released
+RUN_CYCLES = 20                         # cycles to run after reset is released
+
+V  = 1                                  # high-priority write addend: a |= a + v
+V2 = 2                                  # low-priority  write addend: a |= a + v2
+
+# Two priorities above the user default; the higher one is placed on the FIRST write.
+PRI_HIGH = DEFAULT_UE_PRI_USER + 3
+PRI_LOW  = DEFAULT_UE_PRI_USER + 1
+
+# Priority decides, so the high-priority (first) write wins: a advances by V per grant.
+WIN_STEP  = V                           # the winning (high-priority) write's addend
+LOSE_STEP = V2                          # the losing (low-priority, last-declared) addend
 
 
 # ---- model -------------------------------------------------------------------
-class tc16_pip_zync_baseline(Module):
+class tc25_pip_zync_multi_assign_priority(Module):
     @init
     def com_declare(self):
         # Four arbiters: one per stage boundary. Adjacent stages share one, so each
         # stage's zync hands off to the next stage's pip (arb0 = source, arb3 = sink).
         self.pip_cons = [PipCon() for i in range(4)]
 
-
-        self.a = reg(8, "a")            # stage-1 counter (a += 1 per grant)
+        self.a = reg(8, "a")            # stage-1 counter, assigned twice per grant
         self.b = reg(8, "b")            # stage-2 follows a
         self.c = reg(8, "c")            # stage-3 follows b
-        self.v = val(8, 1, "v")
+        self.v  = val(8, V,  "v")
+        self.v2 = val(8, V2, "v2")
 
         self.a.mark_output("my_a")
         self.b.mark_output("my_b")
@@ -62,10 +67,14 @@ class tc16_pip_zync_baseline(Module):
         self.b.reset(0)
         self.c.reset(0)
 
-        # stage 1
+        # stage 1 — assign `a` TWICE at different priorities. The high-priority write
+        # is declared FIRST, so priority (not program order) makes it the winner.
         with pip(self.pip_cons[0], auto_req=True):
             with zync(self.pip_cons[1]):
-                self.a |= self.a + self.v
+                with priority(PRI_HIGH):
+                    self.a |= self.a + self.v       # +1, declared FIRST, highest → WINS
+                with priority(PRI_LOW):
+                    self.a |= self.a + self.v2      # +2, declared LAST,  lowest  → loses
 
         # stage 2
         with pip(self.pip_cons[1]):
@@ -81,7 +90,7 @@ class tc16_pip_zync_baseline(Module):
 # ---- build (kathryn model -> verilog) ---------------------------------------
 def build(output_folder: str) -> None:
     reset()
-    module = tc16_pip_zync_baseline()
+    module = tc25_pip_zync_multi_assign_priority()
     build_model(module)
     emit_verilog(output_folder)
 
@@ -103,20 +112,27 @@ def _abc(dut):
 
 
 @cocotb.test()
-async def check_stage1_counts(dut):
-    # Stage 1 latches a <= a + 1 on every grant, so a must climb above 0 and never
-    # step backwards once the pipeline is flowing (8-bit, no wrap within the run).
+async def check_priority_overrides_order(dut):
+    # Two `a |= ...` writes share the stage-1 block at different priorities, with the
+    # HIGH-priority write declared FIRST. Sample a's per-cycle step: it must equal
+    # WIN_STEP (the high-priority write's addend, V), NOT LOSE_STEP (V2, which plain
+    # program order would have picked as in tc24). That proves priority overrides
+    # declaration order.
     await _reset_and_release(dut)
 
-    prev_a = 0
+    a_seq = []
     for _ in range(RUN_CYCLES):
         await RisingEdge(dut.clk)
         await Timer(1, unit="ns")
-        a, _, _ = _abc(dut)
-        assert a >= prev_a, f"a went backwards: {prev_a} -> {a}"
-        prev_a = a
+        a_seq.append(_abc(dut)[0])
 
-    assert prev_a > 0, f"stage 1 never counted: a stayed {prev_a}"
+    # a must be a clean multiple-of-step ramp; collect the non-stall deltas.
+    steps = [y - x for x, y in zip(a_seq, a_seq[1:]) if y != x]
+    assert steps, f"a never advanced: {a_seq}"
+    assert all(s == WIN_STEP for s in steps), \
+        f"a stepped by {set(steps)}, expected only {WIN_STEP} (high-priority write wins): {a_seq}"
+    assert LOSE_STEP not in steps, \
+        f"a stepped by {LOSE_STEP} — the last-declared (low-priority) write wrongly won: {a_seq}"
 
 
 @cocotb.test()

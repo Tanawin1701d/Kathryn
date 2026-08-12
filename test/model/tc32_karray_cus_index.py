@@ -1,4 +1,4 @@
-# tc41 — Karray CUSTOM-FN index (the unified replacement for cus_dynamic_assign)
+# tc32 — Karray CUSTOM-FN index (the unified replacement for cus_dynamic_assign)
 # plus int-literal sources and element map writes.
 #   rf/rg element = {data:8}, shape (4,), reg-backed
 # A callable index fans its dimension out with one user-built 1-bit enable per
@@ -25,7 +25,7 @@ from cocotb.triggers import RisingEdge, Timer
 
 import cocotb_pool
 
-NAME = "tc41_karray_cus_index"
+NAME = "tc32_karray_cus_index"
 
 SETTLE_CYCLES = 50
 
@@ -47,7 +47,7 @@ class RegFile(Karray):
     data = kaf(8)
 
 
-class tc41_karray_cus_index(Module):
+class tc32_karray_cus_index(Module):
     @init
     def com_declare(self):
         self.rf = RegFile(HwComponentType.REG, (4,), "rf")
@@ -98,7 +98,7 @@ class tc41_karray_cus_index(Module):
 # ---- build (kathryn model -> verilog) ---------------------------------------
 def build(output_folder: str) -> None:
     reset()
-    build_model(tc41_karray_cus_index())
+    build_model(tc32_karray_cus_index())
     emit_verilog(output_folder)
 
 

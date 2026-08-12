@@ -1,7 +1,7 @@
-# tc24 — conditional fan-out: one producer `a` routes to a DIFFERENT consumer
+# tc27 — conditional fan-out: one producer `a` routes to a DIFFERENT consumer
 # pipeline depending on its parity, via a per-bind-conditioned multi-arb zync.
 #
-# Like tc23 the producer's zync contends on two downstream arbiters, but here each
+# Like tc26 the producer's zync contends on two downstream arbiters, but here each
 # bind carries a `cond` that gates both its REQ (`state_exit & cond`) and its grant
 # term (`ack & cond`). With mode="any" (OR) exactly one bind fires per grant — the
 # one whose parity condition is currently true:
@@ -22,7 +22,7 @@
 #     always even) and the odd path only ODD values (bo is 0 or odd).
 #   * under held master reset every register stays at its reset value 0.
 #
-# NOTE: like tc16/tc23, the model may not yet flow (a/be/bo stay 0) pending the
+# NOTE: like tc20/tc26, the model may not yet flow (a/be/bo stay 0) pending the
 # handshake bootstrap fix. These tests encode the INTENDED behaviour.
 
 from __future__ import annotations
@@ -36,13 +36,13 @@ from cocotb.triggers import RisingEdge, Timer
 
 import cocotb_pool
 
-NAME = "tc24_zync_parity_fanout"
+NAME = "tc27_zync_parity_fanout"
 
 RUN_CYCLES = 40                         # cycles to run after reset is released
 
 
 # ---- model -------------------------------------------------------------------
-class tc24_zync_parity_fanout(Module):
+class tc27_zync_parity_fanout(Module):
     @init
     def com_declare(self):
         # Five arbiters: arb0 = source, arb_e/arb_o = the even/odd fan-out
@@ -94,7 +94,7 @@ class tc24_zync_parity_fanout(Module):
 # ---- build (kathryn model -> verilog) ---------------------------------------
 def build(output_folder: str) -> None:
     reset()
-    module = tc24_zync_parity_fanout()
+    module = tc27_zync_parity_fanout()
     build_model(module)
     emit_verilog(output_folder)
 

@@ -1,4 +1,4 @@
-# tc23 — multi-pipeline fan-out: one producer `a` fires TWO consumer pipelines,
+# tc26 — multi-pipeline fan-out: one producer `a` fires TWO consumer pipelines,
 # b0 and b1, in lockstep via a multi-arb zync (mode="all").
 #
 # Stage 1's zync contends on BOTH downstream arbiters at once, so a single grant
@@ -18,7 +18,7 @@
 #     latency, locked by mode="all").
 #   * under held master reset every register stays at its reset value 0.
 #
-# NOTE: like tc16, the model may not yet flow (a/b0/b1 stay 0) pending the handshake
+# NOTE: like tc20, the model may not yet flow (a/b0/b1 stay 0) pending the handshake
 # bootstrap fix. These tests encode the INTENDED behaviour and pass once it lands.
 
 from __future__ import annotations
@@ -32,13 +32,13 @@ from cocotb.triggers import RisingEdge, Timer
 
 import cocotb_pool
 
-NAME = "tc23_zync_fanout"
+NAME = "tc26_zync_fanout"
 
 RUN_CYCLES = 40                         # cycles to run after reset is released
 
 
 # ---- model -------------------------------------------------------------------
-class tc23_zync_fanout(Module):
+class tc26_zync_fanout(Module):
     @init
     def com_declare(self):
         # Five arbiters: arb0 = source, arb1a/arb1b = the two fan-out boundaries
@@ -83,7 +83,7 @@ class tc23_zync_fanout(Module):
 # ---- build (kathryn model -> verilog) ---------------------------------------
 def build(output_folder: str) -> None:
     reset()
-    module = tc23_zync_fanout()
+    module = tc26_zync_fanout()
     build_model(module)
     emit_verilog(output_folder)
 

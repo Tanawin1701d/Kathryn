@@ -1,4 +1,4 @@
-# tc15 — reg reset values and wire default values, exercising the fallback events
+# tc17 — reg reset values and wire default values, exercising the fallback events
 # built during build_flow. Reset values are fed as DIRECT int literals (no manual
 # val(...) wrapper), including one WIDER than 64 bits.
 #
@@ -26,7 +26,7 @@ from cocotb.triggers import RisingEdge, Timer
 
 import cocotb_pool
 
-NAME = "tc15_reset_default"
+NAME = "tc17_reset_default"
 
 # Direct int values fed straight to reset(...).
 RESET_X   = 7
@@ -36,7 +36,7 @@ WIDE_VAL  = (1 << 71) | (1 << 64) | 0xABCDEF    # spans the 2nd u64 limb + low b
 
 
 # ---- model -------------------------------------------------------------------
-class tc15_reset_default(Module):
+class tc17_reset_default(Module):
     @init
     def com_declare(self):
         # 8-bit reg whose reset value is the literal 7 (no val(...) needed).
@@ -62,7 +62,7 @@ class tc15_reset_default(Module):
 # ---- build (kathryn model -> verilog) ---------------------------------------
 def build(output_folder: str) -> None:
     reset()
-    module = tc15_reset_default()
+    module = tc17_reset_default()
     build_model(module)
     emit_verilog(output_folder)
 

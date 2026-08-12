@@ -1,4 +1,4 @@
-# tc27 — assignment-source auto-resize. When a source's width does not match the
+# tc19 — assignment-source auto-resize. When a source's width does not match the
 # destination region, the Rust connector sanitizes it before building the asm:
 #
 #   src narrower than dest  -> zero-extended (unsigned): high bits become 0
@@ -21,7 +21,7 @@ from cocotb.triggers import RisingEdge, Timer
 
 import cocotb_pool
 
-NAME = "tc27_asm_resize"
+NAME = "tc19_asm_resize"
 
 WIDE   = 0xAB   # 8-bit pinned source (1010_1011)
 NARROW = 0xD    # 4-bit pinned source (1101)
@@ -37,7 +37,7 @@ EXPECT = {
 
 
 # ---- model -------------------------------------------------------------------
-class tc27_asm_resize(Module):
+class tc19_asm_resize(Module):
     @init
     def com_declare(self):
         self.wide   = reg(8, "wide");   self.wide.reset(WIDE)
@@ -58,7 +58,7 @@ class tc27_asm_resize(Module):
 # ---- build (kathryn model -> verilog) ---------------------------------------
 def build(output_folder: str) -> None:
     reset()
-    module = tc27_asm_resize()
+    module = tc19_asm_resize()
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
         build_model(module)

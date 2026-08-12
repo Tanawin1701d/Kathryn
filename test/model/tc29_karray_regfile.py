@@ -1,4 +1,4 @@
-# tc25 — Karray (typed multi-dimensional array CCP) as a tiny register file.
+# tc29 — Karray (typed multi-dimensional array CCP) as a tiny register file.
 #
 # `rf` is a 4-entry Karray whose element is a {valid:1, data:7} record — each field
 # is its OWN reg (per-field HCP, not a packed bit-slice). The top `seq` runs ONCE
@@ -26,7 +26,7 @@ from cocotb.triggers import RisingEdge, Timer
 
 import cocotb_pool
 
-NAME = "tc25_karray_regfile"
+NAME = "tc29_karray_regfile"
 
 SETTLE_CYCLES = 24                      # cycles for the one-shot sequence to complete
 DATA          = 42                      # 0x2A — the value written into both data fields
@@ -38,7 +38,7 @@ class RfEntry(Karray):
     data  = kaf(7)
 
 
-class tc25_karray_regfile(Module):
+class tc29_karray_regfile(Module):
     @init
     def com_declare(self):
         # 4-entry register file; each entry a {valid:1, data:7} record, each field
@@ -87,7 +87,7 @@ class tc25_karray_regfile(Module):
 # ---- build (kathryn model -> verilog) ---------------------------------------
 def build(output_folder: str) -> None:
     reset()
-    module = tc25_karray_regfile()
+    module = tc29_karray_regfile()
     build_model(module)
     emit_verilog(output_folder)
 

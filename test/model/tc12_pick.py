@@ -1,4 +1,4 @@
-# tc22 — pick block: a multi-way combinational select that is NOT mutex-chained.
+# tc12 — pick block: a multi-way combinational select that is NOT mutex-chained.
 #
 # Unlike `cif`/`cselif` (which chain branches so at most one fires), a `pick` runs
 # EVERY `pif` whose raw condition is high — the user is responsible for keeping the
@@ -25,7 +25,7 @@ from cocotb.triggers import RisingEdge, Timer
 
 import cocotb_pool
 
-NAME = "tc22_pick"
+NAME = "tc12_pick"
 
 V_A   = 11                              # pif(sel0) writes this
 V_B   = 22                              # pif(sel1) writes this
@@ -35,7 +35,7 @@ SETTLE = 2                              # cycles to let the picked branch latch 
 
 
 # ---- model -------------------------------------------------------------------
-class tc22_pick(Module):
+class tc12_pick(Module):
     @init
     def com_declare(self):
         self.r     = reg (8, "r")       # shared output, driven by the picked branch
@@ -67,7 +67,7 @@ class tc22_pick(Module):
 # ---- build (kathryn model -> verilog) ---------------------------------------
 def build(output_folder: str) -> None:
     reset()
-    module = tc22_pick()
+    module = tc12_pick()
     build_model(module)
     emit_verilog(output_folder)
 

@@ -1,4 +1,4 @@
-# tc26 — int literals as operands / assignment sources are auto-wrapped into a
+# tc18 — int literals as operands / assignment sources are auto-wrapped into a
 # width-matched val (no manual val(...) needed). Exhaustively exercises EVERY
 # overloaded operator, end to end in simulation:
 #
@@ -21,7 +21,7 @@ from cocotb.triggers import RisingEdge, Timer
 
 import cocotb_pool
 
-NAME = "tc26_int_operand_autowrap"
+NAME = "tc18_int_operand_autowrap"
 
 A = 10        # a is reset-pinned here (8-bit)
 B = 2         # b is reset-pinned here (8-bit) — small shift amount for reflected shifts
@@ -68,7 +68,7 @@ EXPECT = {
 
 
 # ---- model -------------------------------------------------------------------
-class tc26_int_operand_autowrap(Module):
+class tc18_int_operand_autowrap(Module):
     @init
     def com_declare(self):
         self.a = reg(8, "a"); self.a.reset(A)      # pinned source
@@ -127,7 +127,7 @@ class tc26_int_operand_autowrap(Module):
 # ---- build (kathryn model -> verilog) ---------------------------------------
 def build(output_folder: str) -> None:
     reset()
-    module = tc26_int_operand_autowrap()
+    module = tc18_int_operand_autowrap()
     build_model(module)
     emit_verilog(output_folder)
 

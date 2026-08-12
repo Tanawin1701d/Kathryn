@@ -1,4 +1,4 @@
-# tc28 — karray-to-karray region assignment. Two reg-backed Karrays whose element
+# tc34 — karray-to-karray region assignment. Two reg-backed Karrays whose element
 # layouts OVERLAP but differ:
 #   src element = {valid:1, data:8, note:4}
 #   dst element = {valid:1, data:8, tag:4}
@@ -23,7 +23,7 @@ from cocotb.triggers import RisingEdge, Timer
 
 import cocotb_pool
 
-NAME = "tc28_karray_to_karray"
+NAME = "tc34_karray_to_karray"
 
 SETTLE_CYCLES = 50
 
@@ -52,7 +52,7 @@ class DstArray(Karray):
     tag   = kaf(4)
 
 
-class tc28_karray_to_karray(Module):
+class tc34_karray_to_karray(Module):
     @init
     def com_declare(self):
         self.src = SrcArray(HwComponentType.REG, (4,), "src")
@@ -104,7 +104,7 @@ class tc28_karray_to_karray(Module):
 # ---- build (kathryn model -> verilog) ---------------------------------------
 def build(output_folder: str) -> None:
     reset()
-    module = tc28_karray_to_karray()
+    module = tc34_karray_to_karray()
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
         build_model(module)
