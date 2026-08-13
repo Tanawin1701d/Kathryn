@@ -19,7 +19,7 @@ from .flow_block import (
     pip,
     zync,
 )
-from .complex_hardware import Arb, ArbLeaf, PipCon, Karray, KarrayField, KBundle, kaf, KarrayRef, ReduceView
+from .complex_hardware import Arb, ArbLeaf, PipCon, Karray, KarrayField, KBundle, kaf, KarrayRef, ReduceView, counter
 from .module import Module, init, flow, set_top
 from . import priority as _priority
 from .priority import (
@@ -52,6 +52,8 @@ __all__ = [
     "Arb", "ArbLeaf", "PipCon",
     # complex hardware (karray)
     "Karray", "KarrayField", "KBundle", "kaf", "KarrayRef", "ReduceView",
+    # complex hardware (counter)
+    "counter",
     # module scope + session
     "Module", "init", "flow", "arena", "reset",
     "gen_flow", "build_flow", "build_model", "set_top", "emit_verilog",

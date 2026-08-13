@@ -21,8 +21,9 @@ use crate::model::nodes::wait_node:: {WaitCondNode, WaitCycleNode};
 use crate::model::module::module::       Module;
 use crate::model::module::module_ident:: ModuleIdent;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
-use crate::model::complex_hardware::arb::   Arb;
-use crate::model::complex_hardware::karray::Karray;
+use crate::model::complex_hardware::arb::        Arb;
+use crate::model::complex_hardware::karray::     Karray;
+use crate::model::complex_hardware::dyn_counter::DynCounter;
 use crate::model::flow_block::{BlockTrackStatus, FlowBlockIdent};
 use crate::model::flow_block::par::flow_block_par::FlowBlockPar;
 use crate::model::flow_block::seq::flow_block_seq::FlowBlockSeq;
@@ -84,6 +85,7 @@ pub struct ModelArena {
     // complex-hardware (CCP) arenas
     pub(super) arbs             : ArenaGroup<Arb>,
     pub(super) karrays          : ArenaGroup<Karray>,
+    pub(super) dyn_counters     : ArenaGroup<DynCounter>,
 
     // module arena
     pub(super) modules               : ArenaGroup<Module>,

@@ -1,5 +1,6 @@
 use crate::model::complex_hardware::arb::{Arb, ArbSamePriPolicy};
 use crate::model::complex_hardware::common::ccp_ident::CcpIdent;
+use crate::model::complex_hardware::dyn_counter::DynCounter;
 use crate::model::complex_hardware::karray::Karray;
 use crate::model::hw_component::common::hcp_ident::HwComponentType;
 use crate::model::model_arena::ModelArena;
@@ -30,6 +31,13 @@ impl ModelArena {
     ) -> CcpIdent {
         let k = Karray::new(is_user_com, name, shape, fields, backing, self);
         let i = self.add_karray(k);
+        self.stamp_ccp_to_parent_module(i)
+    }
+
+    // ---- DynCounter --------------------------------------------------------
+    pub fn make_dyn_counter(&mut self, is_user_com: bool, name: &str, width: i32) -> CcpIdent {
+        let c = DynCounter::new(is_user_com, name, width, self);
+        let i = self.add_dyn_counter(c);
         self.stamp_ccp_to_parent_module(i)
     }
 }

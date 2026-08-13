@@ -50,6 +50,7 @@ impl ModelArena {
             // ---- complex hardware (CCP) ----
             arbs                         : ArenaGroup::new(),
             karrays                      : ArenaGroup::new(),
+            dyn_counters                 : ArenaGroup::new(),
             // ---- modules & trace state ----
             modules                      : ArenaGroup::new(),
             top_module                   : None,
@@ -108,6 +109,7 @@ impl ModelArena {
         // ---- complex hardware (CCP) ----
         self.arbs                         = ArenaGroup::new();
         self.karrays                      = ArenaGroup::new();
+        self.dyn_counters                 = ArenaGroup::new();
         // ---- modules & trace state ----
         self.modules                      = ArenaGroup::new();
         self.top_module                   = None;

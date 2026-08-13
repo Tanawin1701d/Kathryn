@@ -1072,6 +1072,25 @@ layout; dict sources nest (`d[0] |= {"pos": {"x": a}}`) and a bundle-FIELD
 target takes a sub-field map (`d[1].pos |= {"x": a, "y": 7}`); k2k pairs bundles
 structurally via the flat names+widths.
 
+**DynCounter — accumulate counter CCP.** (`src/model/complex_hardware/dyn_counter/`,
+DSL class `counter` in `py/kathryn/complex_hardware/counter.py`.) One internal
+clocked reg (`<name>_CNT`) plus a combinational add chain grown statement by
+statement: `add(k, en)` chains `en ? prev + k : prev` (a 2:1 comb mux stage;
+without `en` the stage is the bare adder expression), `update()` commits the
+chain head into the reg via `gen_basic_assign` — ONE basic node in the current
+flow scope — and restarts the chain from the reg, so simultaneous enables
+accumulate in a single cycle and the value wraps mod 2^width. Int amounts are
+wrapped by the DSL into width-matched `val`s (signal amounts pass through;
+partial slices resolve via `resolve_cond_slice`; enables must be 1-bit —
+`ValueError`). Read `.value` (committed reg) or `.now` (chain head); `.reset(v)`
+mirrors `reg.reset`. The generic 2:1 comb mux (`mux_into_wire`) lives in
+`complex_hardware/common/ccp_hw_build.rs`; `karray_hw_build.rs` re-exports it
+for the read engine. **Module-level bare clocked nodes:** `Module::build_flow_base`
+hands the module clk straight to each bare basic node
+(`set_asm_node_clk_src_direct`) before pre-cond folding, so a bare `update()` /
+`|=` at flow top level emits `always @(posedge clk)` instead of a combinational
+feedback loop. Covered by `test/model/tc39_dyn_counter.py`.
+
 DSL (`py/kathryn/complex_hardware/karray.py` + `karray_ref.py`): `Karray` holds
 only the CcpIdent (fields declared with `kaf()` on a subclass); `KarrayRef`
 accumulates raw per-dimension keys and classifies them in ONE place

@@ -45,4 +45,16 @@ impl PyModelArena {
         }
         Ok(self.arena.make_karray(true, name, shape, fields, backing).into())
     }
+
+    // ---- DynCounter --------------------------------------------------------
+
+    // Declare a user dynamic counter: a `width`-bit clocked register plus a
+    // per-statement conditional add chain (see `dyn_counter_add` / `_update`).
+    fn mk_dyn_counter(&mut self, name: &str, width: i32) -> PyResult<PyCcpIdent> {
+        if width < 1 {
+            return Err(PyValueError::new_err(format!(
+                "counter width must be >= 1, got {width}")));
+        }
+        Ok(self.arena.make_dyn_counter(true, name, width).into())
+    }
 }

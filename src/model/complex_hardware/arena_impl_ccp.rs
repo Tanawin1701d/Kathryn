@@ -2,31 +2,36 @@ use crate::model::common::identifier::Identifiable;
 use crate::model::complex_hardware::arb::Arb;
 use crate::model::complex_hardware::common::ccp_base::CcpBase;
 use crate::model::complex_hardware::common::ccp_ident::{CcpIdent, CcpType};
+use crate::model::complex_hardware::dyn_counter::DynCounter;
 use crate::model::complex_hardware::karray::Karray;
 use crate::model::model_arena::{ModelArena, ModuleInitStage};
 
 // CRUD + module stamping + build dispatch for complex component properties
-// (CCPs).  Only one CCP type exists today (Arb); the type-keyed helpers carry a
-// single match arm so a new CCP type is a one-line addition.
+// (CCPs): Arb, Karray, DynCounter.  The type-keyed helpers carry a single match
+// so a new CCP type is a one-line addition per helper.
 
 impl ModelArena {
     // ----- inserts ---------------------------------------------------------
-    pub fn add_arb   (&mut self, a: Arb)    -> CcpIdent { let h = self.arbs   .insert(a); self.arbs   .get(h).get_ccp_ident() }
-    pub fn add_karray(&mut self, k: Karray) -> CcpIdent { let h = self.karrays.insert(k); self.karrays.get(h).get_ccp_ident() }
+    pub fn add_arb        (&mut self, a: Arb)        -> CcpIdent { let h = self.arbs        .insert(a); self.arbs        .get(h).get_ccp_ident() }
+    pub fn add_karray     (&mut self, k: Karray)     -> CcpIdent { let h = self.karrays     .insert(k); self.karrays     .get(h).get_ccp_ident() }
+    pub fn add_dyn_counter(&mut self, c: DynCounter) -> CcpIdent { let h = self.dyn_counters.insert(c); self.dyn_counters.get(h).get_ccp_ident() }
 
     // ----- take / replace_back (use these instead of typed get/get_mut) ----
-    pub fn take_arb           (&mut self, i: CcpIdent) -> Arb    { self.arbs   .take(*i.get_arena_handle()) }
-    pub fn replace_back_arb   (&mut self, v: Arb)                { let h = *v.get_arena_handle(); self.arbs   .replace_back(h, v) }
-    pub fn take_karray        (&mut self, i: CcpIdent) -> Karray { self.karrays.take(*i.get_arena_handle()) }
-    pub fn replace_back_karray(&mut self, v: Karray)             { let h = *v.get_arena_handle(); self.karrays.replace_back(h, v) }
+    pub fn take_arb                (&mut self, i: CcpIdent) -> Arb        { self.arbs        .take(*i.get_arena_handle()) }
+    pub fn replace_back_arb        (&mut self, v: Arb)                    { let h = *v.get_arena_handle(); self.arbs        .replace_back(h, v) }
+    pub fn take_karray             (&mut self, i: CcpIdent) -> Karray     { self.karrays     .take(*i.get_arena_handle()) }
+    pub fn replace_back_karray     (&mut self, v: Karray)                 { let h = *v.get_arena_handle(); self.karrays     .replace_back(h, v) }
+    pub fn take_dyn_counter        (&mut self, i: CcpIdent) -> DynCounter { self.dyn_counters.take(*i.get_arena_handle()) }
+    pub fn replace_back_dyn_counter(&mut self, v: DynCounter)             { let h = *v.get_arena_handle(); self.dyn_counters.replace_back(h, v) }
 
     // ----- polymorphic take / replace_back (CcpBase dispatch) --------------
     // ONE match for CCP → CcpBase. Add one arm per new CCP type; nothing else in
     // the CCP plumbing changes. replace_back needs no match (each type knows its slot).
     pub fn take_ccp(&mut self, i: CcpIdent) -> Box<dyn CcpBase> {
         match i.get_ccp_type() {
-            CcpType::Arb    => Box::new(self.take_arb(i)),
-            CcpType::Karray => Box::new(self.take_karray(i)),
+            CcpType::Arb        => Box::new(self.take_arb(i)),
+            CcpType::Karray     => Box::new(self.take_karray(i)),
+            CcpType::DynCounter => Box::new(self.take_dyn_counter(i)),
         }
     }
     pub fn replace_back_ccp(&mut self, ccp: Box<dyn CcpBase>) { ccp.replace_back_into_arena(self); }

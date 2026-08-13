@@ -11,13 +11,15 @@ use crate::model::module::module_ident::ModuleIdent;
 pub enum CcpType {
     Arb,
     Karray,
+    DynCounter,
 }
 
 impl CcpType {
     pub fn as_str(&self) -> &'static str {
         match self {
-            CcpType::Arb    => "ARB",
-            CcpType::Karray => "KARRAY",
+            CcpType::Arb        => "ARB",
+            CcpType::Karray     => "KARRAY",
+            CcpType::DynCounter => "DCNT",
         }
     }
 }
