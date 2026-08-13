@@ -80,6 +80,15 @@ impl AsmNode {
         }
     }
 
+    /// Propagate a concrete clock signal to every clocked AssignMeta's input UE.
+    /// For module-level bare nodes, which have no trigger clock node — the owning
+    /// module hands its clk in directly during build.
+    pub fn set_clk_src_direct(&mut self, clk_src: HcpIdent, arena: &mut ModelArena) {
+        for am in &mut self.asm_metas {
+            am.try_set_clk_src(clk_src, arena);
+        }
+    }
+
     /// Gate each AssignMeta's pre-update event with the parent StateNode's
     /// state-operating signal, hold inverse, and reset inverse, then finalise.
     /// Requires exactly one depend node (the parent StateNode).

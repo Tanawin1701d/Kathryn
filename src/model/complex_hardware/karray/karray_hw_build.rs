@@ -1,7 +1,6 @@
 use crate::model::common::identifier::Identifiable;
 use crate::model::complex_hardware::karray::karray::Karray;
 use crate::model::complex_hardware::karray::karray_meta::index_width_for;
-use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::assign_meta::AssignMeta;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::hw_component::common::operation::LogicOp;
@@ -12,18 +11,12 @@ use crate::model::model_arena::ModelArena;
 // by both engines: the mux builders the READ tree folds with (`karray_read.rs`)
 // and the write-enable primitives the guarded WRITE fans out with
 // (`karray_write.rs`), plus the single-node join every assign path ends in.
+// The generic 2:1 comb mux lives in `common/ccp_hw_build.rs` (shared with other
+// CCPs) and is re-exported here for the read engine.
 
 // ---- combinational mux builders (read path) ---------------------------------
 
-// Mux two sources into `dest_w` and commit the muxed event straight onto the
-// destination's update pool (no asm node — AssignMeta::mux + final_update).
-pub(crate) fn mux_into_wire(arena: &mut ModelArena, dest_w: HcpIdent, l_src: HcpIdent, r_src: HcpIdent, select_left: HcpIdent) {
-    let width  = arena.get_hw_bit_sz(&dest_w);
-    let mut lm = build_comb_asm_meta(arena, dest_w, l_src, width);
-    let mut rm = build_comb_asm_meta(arena, dest_w, r_src, width);
-    let muxed  = lm.mux(&mut rm, select_left, arena);
-    muxed.final_update(arena);
-}
+pub(crate) use crate::model::complex_hardware::common::ccp_hw_build::mux_into_wire;
 
 // Binary per-level select-left bit: at tree level `layer`, the two children of a
 // node differ in bit `layer` of the address (left = 0, right = 1), so pick left
@@ -34,17 +27,6 @@ pub(crate) fn bin_layer_select_left(sig_i: HcpIdent, layer: u32, arena: &mut Mod
         LogicOp::SliceBit, sig_i, Some(Slice::new(bit, bit + 1)));
     arena.make_expression_single(false, &format!("{}_B{layer}_N", sig_i.get_global_name()),
         LogicOp::BitwiseInvr, bit_sig, None)
-}
-
-// Build a combinational AssignMeta (ClkUnused, so it can feed AssignMeta::mux)
-// driving `dest_i` from `src_i` over the full destination width.
-fn build_comb_asm_meta(arena: &mut ModelArena, dest_i: HcpIdent, src_i: HcpIdent, width: i32) -> AssignMeta {
-    let des      = arena.take_hcp(dest_i);
-    let priority = des.get_priority();
-    let uei      = des.gen_update_event_with_pri(src_i, None, Slice::new(0, width), priority, ClockMode::ClkUnused, arena);
-    let am       = AssignMeta::new(dest_i, uei, ClockMode::ClkUnused);
-    arena.replace_back_hcp(des);
-    am
 }
 
 // ---- write-enable primitives (write path) -----------------------------------

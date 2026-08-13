@@ -128,6 +128,15 @@ impl ModelArena {
         self.replace_back_asm_node(asm);
     }
 
+    // Hand a concrete clk signal to a bare (module-level) asm node's clocked
+    // metas; flow-block nodes get theirs from the trigger clk node instead.
+    pub fn set_asm_node_clk_src_direct(&mut self, ident: NcpIdent, clk_i: HcpIdent) {
+        assert_eq!(ident.get_node_type(), NodeType::Asm);
+        let mut asm = self.take_asm_node(ident);
+        asm.set_clk_src_direct(clk_i, self);
+        self.replace_back_asm_node(asm);
+    }
+
     // assign for asm node
 
     pub fn assign_asm_from_state_node(&mut self, ident: NcpIdent) {
