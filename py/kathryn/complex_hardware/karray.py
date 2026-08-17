@@ -21,9 +21,10 @@ from typing import Iterable, Optional, Union
 from .. import _session
 from ..signal import _ASSIGNED
 from .karray_field import (
+    RESERVED_FIELD_NAMES,
     collect_declared_karray_fields,
     get_declared_karray_fields,
-    normalize_karray_field_specs,
+    resolve_karray_field_specs,
 )
 from .karray_ref import KarrayRef
 
@@ -34,9 +35,28 @@ __all__ = ["Karray"]
 class Karray:
     """Typed multi-dimensional array (Karray CCP) — a thin handle over the Rust
     CcpIdent (no cached layout). Declare element fields with `kaf()` on a subclass;
-    the constructor is `(backing, shape=(1,), name=None)` where `backing` is a
-    `kathryn.HwComponentType` member — `REG` (clocked, `|=`) or `WIRE`
-    (combinational, `*=`)."""
+    the constructor is `(backing, shape=(1,), name=None, **fields)` where `backing`
+    is a `kathryn.HwComponentType` member — `REG` (clocked, `|=`) or `WIRE`
+    (combinational, `*=`).
+
+    The class body states the shape a record usually has; the call finishes it.
+    A keyword's VALUE picks what it does — an int sets the width of a DECLARED
+    field, a `kaf()` ADDS a field this array has and the class does not:
+
+        class Entry(Karray):
+            pc    = kaf(32)        # 32 by default
+            instr = kaf()          # no default: every instantiation says
+
+        Entry(HwComponentType.REG, (lanes,), "fetch",
+              pc=64, instr=16,     # widths for what the class declares
+              spectag=kaf(8))      # a field only this array carries
+
+    Added fields land after the declared ones in keyword order, flatten like any
+    bundle (`tag=kaf(Vec2)` -> "tag_x", "tag_y"), and read back through the same
+    attribute chain (`d[0].spectag`). An int naming no declared field raises, so
+    a typo cannot silently do nothing, and a `kaf()` naming one that IS declared
+    raises rather than shadowing it. The class's own field list is never
+    mutated."""
 
     __slots__         = ("_ident",)
     __karray_fields__ = ()
@@ -46,13 +66,26 @@ class Karray:
         # Shared walk with KBundle: inherited flat fields first, then cls's own
         # kaf() specs, nested bundles flattened with an underscore prefix.
         cls.__karray_fields__ = collect_declared_karray_fields(cls)
+        # Field arguments ride in as keywords, so a field may not be named after
+        # one of __init__'s own parameters. Caught here, when the class is
+        # written, rather than at a confusing call site later.
+        clash = [name for name, _ in cls.__karray_fields__
+                 if name in RESERVED_FIELD_NAMES]
+        if clash:
+            raise TypeError(
+                f"{cls.__name__}: field name(s) {', '.join(clash)} collide with "
+                f"Karray.__init__ parameters ({', '.join(RESERVED_FIELD_NAMES)}) "
+                f"— rename the field, or give it another name with kaf(w, 'other')")
 
     def __init__(self,
                  backing : int,
                  shape   : Iterable[int] = (1,),
-                 name    : Optional[str] = None) -> None:
+                 name    : Optional[str] = None,
+                 **fields) -> None:
         name        = name or _session.auto_name("karray")
-        flds        = normalize_karray_field_specs(get_declared_karray_fields(type(self)))
+        flds        = resolve_karray_field_specs(
+            get_declared_karray_fields(type(self)), fields,
+            f"{type(self).__name__} '{name}'")
         self._ident = _session.arena().mk_karray(name, [int(d) for d in shape], flds, int(backing))
 
     @property

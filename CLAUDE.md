@@ -1072,6 +1072,37 @@ layout; dict sources nest (`d[0] |= {"pos": {"x": a}}`) and a bundle-FIELD
 target takes a sub-field map (`d[1].pos |= {"x": a, "y": 7}`); k2k pairs bundles
 structurally via the flat names+widths.
 
+**The record is finished at INSTANTIATION.** A class body states the shape a
+record usually has; the call that builds one array settles it. Two things move
+to the call, and the keyword's VALUE is what picks between them:
+
+```python
+Entry(REG, (4,), "e", data=16,          # an int  -> width for a DECLARED field
+                      spectag=kaf(8))   # a kaf() -> a field only THIS array has
+```
+
+So a `kaf(w)` width in a class body is a DEFAULT, `kaf()` with no width declares
+a field every instantiation must size (it rides the flat list as `(name, None)`),
+and a `kaf()` at the call ADDS one the class never mentioned — appended after the
+declared fields in keyword order, flattened through the same `_expand_field_spec`
+walk a class-body bundle takes (`pos=kaf(Vec2)` -> `pos_x`, `pos_y`) and read
+back through the same attribute chain (`d[0].spectag`), since `KarrayRef.
+__getattr__` never consults the Python class — Rust resolves the name against
+the array's own layout. Reason: `__init_subclass__` stamps `__karray_fields__`
+when the CLASS is created, so a class body cannot see a caller's parameters —
+without this, one record shape at two widths meant two classes built by hand with
+`type()`, and a record that grows one field for one pipeline meant a third.
+`resolve_karray_field_specs` (`karray_field.py`) is the ONE place a final width
+is decided and the ONE place a field is added; it never mutates the class's own
+list, so two arrays of one class may differ. It rejects an int naming no declared
+field (a typo cannot silently do nothing), a `kaf()` naming one that IS declared
+(pass a width instead of shadowing it), a `kaf()` with no width (nothing can size
+it later), a flattened addition colliding with an existing leaf, a non-int or
+`bool` width, and a width `< 1`. Field arguments arrive as **keyword arguments**,
+so a field may not be named `backing`/`shape`/`name` — `Karray.__init_subclass__`
+raises when such a class is written, rather than letting the call site mean two
+things.
+
 **DynCounter — accumulate counter CCP.** (`src/model/complex_hardware/dyn_counter/`,
 DSL class `counter` in `py/kathryn/complex_hardware/counter.py`.) One internal
 clocked reg (`<name>_CNT`) plus a combinational add chain grown statement by

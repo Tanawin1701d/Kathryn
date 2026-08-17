@@ -13,7 +13,7 @@ from kathryn import (
     Module, init, flow, gen_flow, build_flow, emit_verilog,
     priority, set_priority, set_priority_auto, get_priority, get_priority_mode,
     DEFAULT_UE_PRI_USER, DEFAULT_UE_PRI_RST, DEFAULT_UE_PRI_MIN,
-    Karray, kaf, HwComponentType,
+    Karray, KBundle, kaf, HwComponentType,
 )
 
 
@@ -671,6 +671,164 @@ def test_karray_object_oriented_declaration():
     assert ar.get_hw_bit_sz(w.src[0].valid._to_read_ref()._ident) == 1
     assert ar.get_hw_bit_sz(w.src[0].data._to_read_ref()._ident)  == 8
     assert ar.get_hw_bit_sz(w.src[0].note._to_read_ref()._ident)  == 4
+
+
+def test_karray_widths_may_be_set_at_instantiation():
+    # A kaf() width in a class body is a DEFAULT: the same record class serves
+    # any width, which is what a generator sizing arrays from a description
+    # needs. Without this, one shape at two widths meant two classes.
+    reset()
+
+    class Entry(Karray):
+        pc    = kaf(32)                 # default
+        instr = kaf(32)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.wide = Entry(HwComponentType.REG, (2,), "wide", pc=64, instr=16)
+            self.dflt = Entry(HwComponentType.REG, (1,), "dflt")
+
+    w  = worker()
+    ar = k._session.arena()
+    assert ar.get_hw_bit_sz(w.wide[0].pc._to_read_ref()._ident)    == 64
+    assert ar.get_hw_bit_sz(w.wide[1].instr._to_read_ref()._ident) == 16
+    # One class, two live arrays, unrelated widths — and the class is untouched.
+    assert ar.get_hw_bit_sz(w.dflt[0].pc._to_read_ref()._ident)    == 32
+    assert Entry.__karray_fields__ == (("pc", 32), ("instr", 32))
+
+
+def test_karray_field_declared_without_a_width_must_be_given_one():
+    # kaf() with no width is a record saying "this number is the caller's".
+    reset()
+
+    class Entry(Karray):
+        tag  = kaf(4)
+        data = kaf()                    # no default: every instantiation says
+
+    assert Entry.__karray_fields__ == (("tag", 4), ("data", None))
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.ok = Entry(HwComponentType.REG, (2,), "ok", data=12)
+
+    w = worker()
+    assert k._session.arena().get_hw_bit_sz(w.ok[0].data._to_read_ref()._ident) == 12
+
+    class lazy(Module):
+        @init
+        def decl(self):
+            self.bad = Entry(HwComponentType.REG, (2,), "bad")
+
+    with pytest.raises(TypeError, match="must give it one"):
+        lazy()
+
+
+def test_karray_width_override_is_checked():
+    reset()
+
+    class Entry(Karray):
+        data = kaf(8)
+
+    def build(**widths):
+        class worker(Module):
+            @init
+            def decl(self):
+                self.e = Entry(HwComponentType.REG, (2,), "e", **widths)
+        return worker()
+
+    with pytest.raises(TypeError, match="no field named 'dat'"):
+        build(dat=16)                   # a typo cannot silently do nothing
+    with pytest.raises(TypeError, match="must be an int"):
+        build(data="16")
+    with pytest.raises(ValueError, match="must be >= 1"):
+        build(data=0)
+
+
+def test_karray_field_may_be_added_at_instantiation():
+    # The keyword's VALUE picks: an int sets a declared field's width, a kaf()
+    # adds a field only this array has. One record class, two shapes.
+    reset()
+
+    class Entry(Karray):
+        pc    = kaf(32)
+        instr = kaf(32)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.spec  = Entry(HwComponentType.REG, (2,), "spec",
+                               pc=64, spectag=kaf(8))
+            self.plain = Entry(HwComponentType.REG, (1,), "plain")
+
+    w  = worker()
+    ar = k._session.arena()
+    assert ar.get_hw_bit_sz(w.spec[0].pc._to_read_ref()._ident)      == 64
+    assert ar.get_hw_bit_sz(w.spec[1].spectag._to_read_ref()._ident) == 8
+    # The class is never mutated: a sibling array has neither the width nor the
+    # added field.
+    assert Entry.__karray_fields__ == (("pc", 32), ("instr", 32))
+    assert ar.get_hw_bit_sz(w.plain[0].pc._to_read_ref()._ident) == 32
+    with pytest.raises(ValueError):
+        w.plain[0].spectag._to_read_ref()
+
+
+def test_karray_added_field_may_be_a_bundle():
+    # An added field flattens through the same walk a declared one takes, so the
+    # attribute chain reads it back identically.
+    reset()
+
+    class Vec2(KBundle):
+        x = kaf(4)
+        y = kaf(6)
+
+    class Entry(Karray):
+        data = kaf(8)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.e = Entry(HwComponentType.REG, (2,), "e", pos=kaf(Vec2))
+
+    w  = worker()
+    ar = k._session.arena()
+    assert ar.get_hw_bit_sz(w.e[0].pos.x._to_read_ref()._ident) == 4
+    assert ar.get_hw_bit_sz(w.e[0].pos.y._to_read_ref()._ident) == 6
+
+
+def test_karray_added_field_is_checked():
+    reset()
+
+    class Vec2(KBundle):
+        x = kaf(4)
+
+    class Entry(Karray):
+        data  = kaf(8)
+        pos_x = kaf(2)          # a literal leaf an added bundle would collide with
+
+    def build(**fields):
+        class worker(Module):
+            @init
+            def decl(self):
+                self.e = Entry(HwComponentType.REG, (2,), "e", **fields)
+        return worker()
+
+    with pytest.raises(TypeError, match="already declared on the class"):
+        build(data=kaf(16))     # use data=16 to change a declared field
+    with pytest.raises(TypeError, match="an added field must state one"):
+        build(spectag=kaf())    # nothing left to size it later
+    with pytest.raises(TypeError, match="duplicate field name 'pos_x'"):
+        build(pos=kaf(Vec2))    # flattens onto the declared leaf
+
+
+def test_karray_field_may_not_shadow_a_constructor_parameter():
+    # Overrides ride in as kwargs, so `Entry(REG, (2,), name=8)` must not be
+    # able to mean two things. Caught when the class is written.
+    reset()
+    with pytest.raises(TypeError, match="collide with Karray.__init__"):
+        class Bad(Karray):
+            name = kaf(8)
 
 
 def test_karray_reg_backing_emits_per_element_regs():
