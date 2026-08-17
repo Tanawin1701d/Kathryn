@@ -889,6 +889,17 @@ operation routes through one process-wide `ModelArena`.
 - `flow_block.py` — flow blocks are context managers: `with seq(): …`,
   `with sif(cond): …`. `__enter__` opens the scope (initialize), `__exit__`
   finalizes. There is no block-build hook (see below).
+- `combinational.py` — combinators assembled from the primitives, no new Rust
+  node type. `mux(cond, a, b)` is a wire plus a `zif`/`zelse` pair, not a mask
+  expression: there is no ternary `LogicOp`, `mk_extend_bit` fills with `1'b0`
+  (zero-extension, never replication) so `extend` cannot build a mask, and the
+  zif chain is the tested priority-mux path that emits a plain `if/else`. It
+  therefore DECLARES hardware — it needs an open flow scope, and inside a `seq()`
+  the emitted always-block is gated on that step's state, so read it in the step
+  that built it. `sum_cnt(bits)` is a BALANCED adder tree (log2(n) depth, not n)
+  over 1-bit signals and is a pure expression; its default width is derived so
+  the sum cannot overflow. This module sits above signal/hw_component/flow_block
+  in the import order, which is why `mux` is not in `signal.py`.
 - `module.py` — modules use a **class form**: extend `Module` and decorate methods
   with `@init` (hardware declaration) and `@flow` (flow-block construction).
   Construction is **two-phase**:
