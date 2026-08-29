@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Optional, Union
 
 from .. import _session
+from .._kathryn import CcpIdent
 from ..hw_component import val
 from ..signal import SignalRef, to_ref
 
@@ -20,6 +21,8 @@ class counter:
     the register. Read `.value` (committed) or `.now` (chain head, comb)."""
 
     __slots__ = ("_ident", "_width")
+    _ident : CcpIdent
+    _width : int
 
     def __init__(self, bit_width: int, name: Optional[str] = None) -> None:
         name        = name or _session.auto_name("counter")
@@ -28,9 +31,9 @@ class counter:
 
     # ---- identity ----------------------------------------------------------
     @property
-    def ident(self):        return self._ident       # the underlying CcpIdent
+    def ident(self) -> CcpIdent: return self._ident
     @property
-    def width(self) -> int: return self._width
+    def width(self) -> int:      return self._width
 
     # ---- views -------------------------------------------------------------
     @property

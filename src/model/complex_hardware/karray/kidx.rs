@@ -2,14 +2,13 @@ use crate::model::hw_component::common::hcp_ident::HcpIdent;
 
 // ===== KIdx — the ONE unified Karray index type ===============================
 //
-// Every Karray access — read, write, and karray-to-karray copy — selects each
-// dimension with a `KIdx`, and EVERY kind collapses its dimension to a single
-// (possibly runtime-chosen) element: a selection always names exactly one
-// element, and every dimension must be indexed. This file is the single home of
-// the index kinds and their validation; the read/write engines
-// (`karray_read.rs` / `karray_write.rs`) consume the checked selection
-// directly. Adding an index kind touches exactly: one variant here, one arm in
-// `check_kidx`, one arm in each engine.
+// Every access (read / write / k2k copy) selects each dimension with a KIdx.
+// - EVERY kind collapses its dim to ONE (possibly runtime-chosen) element;
+//   every dim must be indexed — a selection always names exactly one element.
+// - Single home of the index kinds + validation; the engines (`karray_read.rs`
+//   / `karray_write.rs`) consume the checked selection directly.
+// - Adding a kind touches exactly: one variant here, one arm in `check_kidx`,
+//   one arm in each engine.
 //
 //   KIdx::Static(i)   a[3]         compile-time index
 //   KIdx::Dyn(sig)    a[addr]      runtime binary address
@@ -17,13 +16,12 @@ use crate::model::hw_component::common::hcp_ident::HcpIdent;
 //   KIdx::CusRd       a[fn]  READ  reduce fold, fn picks pairs
 //
 // The DSL's single "custom fn" kind splits by DIRECTION at encode time:
-//   * write destination — the fn is called once per index (`fn(i) -> 1-bit
-//     signal`) and the pre-evaluated bits arrive as `CusWe`; each index's bit
-//     gates that element's write enable.
-//   * read / source side — the dim folds through a REDUCE tree: the fn is a
-//     pair-select (`fn(a, b, level) -> pick-a`) called per 2:1 node while the
-//     tree builds, so it cannot be pre-evaluated; `CusRd` marks the dim and the
-//     select callback rides in via the `KReadEnv` (see karray_env.rs).
+// - write dest  : fn(i) -> 1-bit enable, PRE-evaluated per index -> `CusWe`;
+//                 each bit gates that element's write enable.
+// - read/source : the dim folds through a REDUCE tree; the pair-select
+//                 fn(a, b, level) runs per 2:1 node WHILE the tree builds, so
+//                 it cannot be pre-evaluated — `CusRd` marks the dim, the
+//                 callback rides in via `KReadEnv` (karray_env.rs).
 
 // ---- error ------------------------------------------------------------------
 

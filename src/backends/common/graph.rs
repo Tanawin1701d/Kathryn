@@ -6,13 +6,10 @@ use crate::model::module::module_ident::ModuleIdent;
 
 // ---- Module-tree traversal ----
 
-/// Lazy DFS iterator over the module subtree rooted at `root_i`.
-/// Yields each `ModuleIdent` in pre-order (parent before children,
-/// siblings in declaration order).
-///
-/// The arena is **not** stored inside the struct — it is passed in on each
-/// `next_module` call.  This means the arena borrow is held only for the
-/// duration of one step, leaving it free for callers to use between steps.
+/// Lazy pre-order DFS iterator over the module subtree rooted at `root_i`
+/// (parent before children, siblings in declaration order).
+/// - The arena is NOT stored in the struct: it is passed per `next_module`
+///   call, so the borrow lasts one step and callers keep the arena in between.
 ///
 /// ```ignore
 /// let mut iter = DfsModuleIter::new(top_i);

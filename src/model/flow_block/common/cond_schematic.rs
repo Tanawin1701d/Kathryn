@@ -14,6 +14,7 @@ pub enum CondMode {
     Sequential,    // SIF — state cond node (registered)
 }
 
+// Branch-condition ladder + diamond exit wiring: see the diagram in cond_chain.rs.
 #[derive(Clone, Debug)]
 pub struct CondSchematic {
     mode  : CondMode,

@@ -15,13 +15,7 @@ use crate::model::common::identifier::Identifiable;
 // (always `self`) directly, so callers never pass it in.
 pub trait HcpAssignable: HcpIdentifiable {
 
-    /// ///////////////
-    /// common function
-    /// ///////////////
-
-    /// ////////////////
-    /// virtual function
-    /// ////////////////
+    // ---- virtual functions ----
 
     fn get_hcp_assign    (&self)     -> &    HcpAssign;
     fn get_hcp_assign_mut(&mut self) -> &mut HcpAssign;
@@ -37,6 +31,8 @@ pub trait HcpAssignable: HcpIdentifiable {
               des_slice  : Option<Slice>,
               src_slice  : Slice,
               arena      : &mut ModelArena) -> NcpIdent;
+
+    // ---- common (provided) functions ----
 
     fn gen_update_event(&self,
                         srci     : HcpIdent,

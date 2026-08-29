@@ -9,22 +9,19 @@ use crate::model::model_arena::ModelArena;
 
 // ===== Karray WRITE engine ====================================================
 //
-// `write` is THE statement entry: it owns the operator/backing guards, field
+// `write` is THE statement entry — it owns the operator/backing guards, field
 // pairing (per the source KView's stamped policy), and the ONE-joined-node
-// rule. Below it, the fan-out machinery turns the selection into guarded
-// per-element writes. Dims by kind:
+// rule. Fan-out below it turns the selection into guarded per-element writes:
 //   * `Static` — descends into its single element.
 //   * `Dyn`    — iterates every index, ANDing `sig == i` into the running
 //                write-enable so only the runtime-selected element takes the write.
 //   * `CusWe`  — iterates every index, ANDing that index's user-built enable bit
 //                (the DSL pre-evaluated the user's fn(i) per index).
-// At each fully-pinned coordinate one `AssignMeta` per source field is emitted
-// with the accumulated enable parked as a pending pre-condition (folded in at
-// build time, once the clk is wired — see `gen_element_asm_metas`).
-//
-// Because a non-selected element must HOLD, any selection containing a runtime
-// dim (Dyn/Cus) requires a reg backing — an unfired clocked event keeps its
-// value, a wire cannot.
+// - Each fully-pinned coordinate emits ONE `AssignMeta` per source field, the
+//   accumulated enable parked as a pending pre-condition (folded in at build
+//   time once the clk is wired — see `gen_element_asm_metas`).
+// - LIMIT: a runtime dim (Dyn/Cus) requires a REG backing. A non-selected
+//   element must HOLD — an unfired clocked event keeps its value, a wire cannot.
 
 impl Karray {
     // ---- statement guards --------------------------------------------------

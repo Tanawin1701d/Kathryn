@@ -10,25 +10,34 @@ use crate::model::model_arena::ModelArena;
 
 // ===== Karray READ engine =====================================================
 //
-// Resolve a selection (every dimension collapses to one element) to one HCP per
-// requested field. A static-only selection returns the backing HCPs directly
-// (zero extra hardware). Each runtime dim folds its fan-out with a balanced
-// 2:1 tree:
-//   * `Dyn` (binary address) — mux tree with ONE shared select bit per level
-//                              (`~sig[layer]` picks the left child).
-//   * `CusRd` (reduce)       — REDUCE tree: the user's select fn is called per
-//                              pair via `KReadEnv::reduce_select` with each
-//                              side's carried fields + covered indices; it
-//                              returns the pick-a select plus optional extras
-//                              layered onto the merged node for the next level.
-// All carried fields ride the SAME tree (one wire per field per node), so a
-// multi-field read shares the select logic. When a reduce dim is present the
-// tree carries EVERY karray field (the select fn may compare any of them);
-// otherwise only the requested ones. Works for reg and wire backings.
+// Resolve a selection (every dim collapses to ONE element) to one HCP per
+// requested field.
+// - all-Static selection -> the backing HCPs directly (ZERO extra hardware).
+// - each runtime dim     -> fan out over its indices, fold with a balanced
+//   2:1 tree (diagram below). Works for reg and wire backings.
+// - carried fields ride the SAME tree — one fresh wire per field per node; a
+//   reduce dim carries EVERY field (its select fn may compare any of them),
+//   else only the requested ones.
+// - arena borrows are scoped through the env (`with_arena`) and NEVER held
+//   across `reduce_select` — the Python select fn may re-enter the arena to
+//   build its select expression (see karray_env.rs).
 //
-// Arena access is scoped through the env (`with_arena`) and never held across a
-// `reduce_select` call — that is what lets the Python select fn re-enter the
-// arena to build its select expression (see karray_env.rs).
+// Balanced 2:1 fold of one runtime dim — e.g. 5 elements (each box = a
+// ReadNode carrying ALL its fields; the odd node rides up unpaired):
+//
+//   e0     e1     e2     e3     e4
+//    ╲     ╱       ╲     ╱      │
+//    [ m01 ]       [ m23 ]      │     level 0 select: ~addr[0]           (Dyn)
+//        ╲          ╱           │                     reduce_select(a,b,0) (CusRd)
+//         [ m0123 ]             │     level 1 select: ~addr[1] / (a,b,1)
+//              ╲________________│
+//                    │
+//                [ root ]             level 2 select: ~addr[2] / (a,b,2)
+//
+// - `Dyn`   — ONE shared select bit per level: `~addr[level]` picks the LEFT child.
+// - `CusRd` — the user select fn runs PER PAIR with each side's carried fields
+//   + covered indices; it returns pick-left plus optional extras layered onto
+//   the merged node for the next level.
 
 // One subtree of the fold: the carried named fields (muxed wires or, at a leaf,
 // the backing HCPs) plus — for the reduce fold — the indices of the folding dim
@@ -194,11 +203,7 @@ impl Karray {
     ) -> Result<ReadNode, E::Err> {
         let base = self.get_ccp_ident().get_global_name().to_string();   // stem for the mux-wire names
 
-        // One pass per tree level: merge adjacent pairs until a single root
-        // remains. e.g. 5 elements:
-        //   layer 0: [e0 e1 e2 e3 e4] -> [m01 m23 e4]
-        //   layer 1: [m01 m23 e4]     -> [m0123 e4]
-        //   layer 2: [m0123 e4]       -> [root]
+        // One pass per tree level (see the fold diagram in the file header);
         // `layer` doubles as the address bit steering that level (see
         // bin_layer_select_left), so it starts at bit 0 (the LSB).
         let mut layer: u32 = 0;

@@ -4,14 +4,13 @@ use crate::model::model_arena::ModelArena;
 
 // ===== KReadEnv — the read engine's arena/callback surface ====================
 //
-// A `CusRd` (reduce) dim needs the user's SELECT FN called per 2:1 node while
-// the tree builds — from Python, that fn re-enters the arena to build its select
-// expression. The engine therefore never holds a long-lived arena borrow:
-// every arena touch goes through `with_arena` (a SCOPED borrow) and every
-// select through `reduce_select` (called with NO borrow held). The engine stays
-// PyO3-free; the Python connector implements this trait over the arena pyclass
-// with scoped `borrow_mut`s, and the Rust-native `DirectKEnv` wraps a plain
-// `&mut ModelArena`.
+// A `CusRd` (reduce) dim calls the user's SELECT FN per 2:1 node while the tree
+// builds; from Python that fn re-enters the arena. Rules the engine lives by:
+// - NEVER hold a long-lived arena borrow — every touch goes through
+//   `with_arena` (a SCOPED borrow).
+// - Every select goes through `reduce_select`, called with NO borrow held.
+// - The engine stays PyO3-free: the Python connector implements this trait
+//   with scoped `borrow_mut`s; Rust-native `DirectKEnv` wraps `&mut ModelArena`.
 
 pub trait KReadEnv {
     type Err: From<KarrayErr>;

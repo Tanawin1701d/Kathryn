@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import List, Optional
 
 from . import _session
 from ._kathryn import Slice
@@ -31,7 +31,7 @@ class wire(SignalRef):
 _U64_MASK = (1 << 64) - 1
 
 
-def _int_to_limbs(n: int, bit_width: int) -> list:
+def _int_to_limbs(n: int, bit_width: int) -> List[int]:
     # Split an arbitrary-precision int into little-endian u64 limbs, two's-complement
     # wrapped into `bit_width` bits. limbs[0] = bits 0..63, limbs[1] = 64..127, etc.
     n    &= (1 << bit_width) - 1

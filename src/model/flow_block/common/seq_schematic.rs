@@ -119,13 +119,10 @@ impl SequenceEle {
     }
 }
 
-// =============================================================================
-// ============================  SeqSchematic  =================================
-// =============================================================================
+// ---- SeqSchematic -----------------------------------------------------------
 // Linear sequence wiring helper.  Owns the ordered list of SequenceEle entries
 // (Basic asm-node or SubBlock) and turns them into a chain of State / Sync nodes
 // during `build`.  Lives by value inside FlowBlockSeq; not arena-stored.
-// =============================================================================
 
 #[derive(Clone, Debug, Default)]
 pub struct SeqSchematic {

@@ -17,17 +17,19 @@
 from __future__ import annotations
 
 from itertools import product
-from typing import Iterable, Optional, Union
+from typing import Any, Iterable, Optional, Tuple, Union
 
 from .. import _session
-from ..signal import SignalRef, _ASSIGNED
+from .._kathryn import CcpIdent
+from ..signal import SignalRef, _ASSIGNED, _Assigned
 from .karray_field import (
     RESERVED_FIELD_NAMES,
+    KarrayField,
     collect_declared_karray_fields,
     get_declared_karray_fields,
     resolve_karray_field_specs,
 )
-from .karray_ref import KarrayRef
+from .karray_ref import FieldSource, KarrayKey, KarrayRef
 
 __all__ = ["Karray"]
 
@@ -35,34 +37,35 @@ __all__ = ["Karray"]
 # ---- karray -----------------------------------------------------------------
 class Karray:
     """Typed multi-dimensional array (Karray CCP) — a thin handle over the Rust
-    CcpIdent (no cached layout). Declare element fields with `kaf()` on a subclass;
-    the constructor is `(backing, shape=(1,), name=None, **fields)` where `backing`
-    is a `kathryn.HwComponentType` member — `REG` (clocked, `|=`) or `WIRE`
-    (combinational, `*=`).
+    CcpIdent (no cached layout).
 
-    The class body states the shape a record usually has; the call finishes it.
-    A keyword's VALUE picks what it does — an int sets the width of a DECLARED
-    field, a `kaf()` ADDS a field this array has and the class does not:
+    - Declare element fields with `kaf()` on a subclass; construct with
+      `(backing, shape=(1,), name=None, **fields)`.
+    - `backing` is a `kathryn.HwComponentType` member: `REG` (clocked, `|=`)
+      or `WIRE` (combinational, `*=`).
+    - THE CALL FINISHES THE RECORD — a keyword's VALUE picks what it does:
 
         class Entry(Karray):
             pc    = kaf(32)        # 32 by default
             instr = kaf()          # no default: every instantiation says
 
         Entry(HwComponentType.REG, (lanes,), "fetch",
-              pc=64, instr=16,     # widths for what the class declares
-              spectag=kaf(8))      # a field only this array carries
+              pc=64, instr=16,     # int   -> width of a DECLARED field
+              spectag=kaf(8))      # kaf() -> a field only THIS array carries
 
-    Added fields land after the declared ones in keyword order, flatten like any
-    bundle (`tag=kaf(Vec2)` -> "tag_x", "tag_y"), and read back through the same
-    attribute chain (`d[0].spectag`). An int naming no declared field raises, so
-    a typo cannot silently do nothing, and a `kaf()` naming one that IS declared
-    raises rather than shadowing it. The class's own field list is never
-    mutated."""
+    - Added fields append after declared ones (keyword order), flatten like any
+      bundle (`tag=kaf(Vec2)` -> "tag_x"/"tag_y"), read back via the same
+      attribute chain (`d[0].spectag`).
+    - GUARDS: an int naming no declared field raises (a typo cannot silently do
+      nothing); a kaf() naming a DECLARED field raises rather than shadowing
+      it. The class's own field list is never mutated."""
 
     __slots__         = ("_ident",)
-    __karray_fields__ = ()
+    _ident            : CcpIdent
+    # Flat (name, width) leaves; width None = kaf() with no default.
+    __karray_fields__ : Tuple[Tuple[str, Optional[int]], ...] = ()
 
-    def __init_subclass__(cls, **kwargs) -> None:
+    def __init_subclass__(cls, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)
         # Shared walk with KBundle: inherited flat fields first, then cls's own
         # kaf() specs, nested bundles flattened with an underscore prefix.
@@ -78,11 +81,16 @@ class Karray:
                 f"Karray.__init__ parameters ({', '.join(RESERVED_FIELD_NAMES)}) "
                 f"— rename the field, or give it another name with kaf(w, 'other')")
 
+    # `backing` is an HwComponentType member — REG or WIRE only. Typed `int`
+    # because the enum is BUILT AT RUNTIME from Rust (an IntEnum a static checker
+    # cannot resolve); the connector rejects any other member.
+    # Each `**fields` value picks its own meaning: an int RE-WIDTHS a declared
+    # field, a kaf() ADDS one this array alone carries.
     def __init__(self,
                  backing : int,
                  shape   : Iterable[int] = (1,),
                  name    : Optional[str] = None,
-                 **fields) -> None:
+                 **fields: Union[int, KarrayField]) -> None:
         name        = name or _session.auto_name("karray")
         flds        = resolve_karray_field_specs(
             get_declared_karray_fields(type(self)), fields,
@@ -90,25 +98,21 @@ class Karray:
         self._ident = _session.arena().mk_karray(name, [int(d) for d in shape], flds, int(backing))
 
     @property
-    def ident(self):                          # the underlying CcpIdent
+    def ident(self) -> CcpIdent:
         return self._ident
 
     # ---- reset ---------------------------------------------------------------
-    def reset(self, **fields) -> "Karray":
+    def reset(self, **fields: Union[SignalRef, int]) -> "Karray":
         """Reset value for EVERY element of a reg-backed Karray, one keyword per
         field: `rat.reset(renamed=0, prf_idx=0)`.
 
-        It records the value on each element's own backing register and calls
-        `reg.reset`, so the reset event, its priority (DEFAULT_UE_PRI_RST) and its
-        clock are the register's own — a Karray adds NO reset mechanism of its
-        own, it only says which registers to point the existing one at. A field
-        left out of the call keeps no reset value and powers up undefined, the
-        same as a bare `reg`.
-
-        Whole-array only: one value per field, shared by every element. That is
-        what a state array wants (a rename table's valid bits all reset to 0);
-        a per-element reset would need a static element handle, which is a
-        different feature and is left until something needs it."""
+        - Delegates to each element's OWN register (`reg.reset`), so the reset
+          event, its priority (DEFAULT_UE_PRI_RST) and its clock stay the
+          register's — a Karray adds NO reset mechanism of its own.
+        - A field left out keeps no reset value and powers up UNDEFINED, exactly
+          like a bare `reg`.
+        - WHOLE-ARRAY only: one value per field, shared by every element (a
+          rename table's valid bits all reset to 0). NOT here: per-element reset."""
         arena = _session.arena()
         if not arena.karray_is_clocked(self._ident):
             raise TypeError("reset(...) requires a reg-backed Karray "
@@ -123,21 +127,21 @@ class Karray:
                 SignalRef(arena.karray_element_hcp(self._ident, coord, name)).reset(value)
         return self
 
-    def __getitem__(self, key) -> KarrayRef:
+    def __getitem__(self, key: KarrayKey) -> KarrayRef:
         return KarrayRef(self._ident)[key]
 
     # Whole-array karray-to-karray assignment (`dst |= src`). The subscript lands
     # on a plain name, so return `self` to keep the variable bound (subscripted
     # forms return the _ASSIGNED sentinel instead — see KarrayRef).
-    def __ior__(self, src: Union["Karray", KarrayRef]):
+    def __ior__(self, src: Union["Karray", KarrayRef]) -> "Karray":
         KarrayRef(self._ident)._assign_from(src, expect_clocked=True)
         return self
 
-    def __imul__(self, src: Union["Karray", KarrayRef]):
+    def __imul__(self, src: Union["Karray", KarrayRef]) -> "Karray":
         KarrayRef(self._ident)._assign_from(src, expect_clocked=False)
         return self
 
-    def __setitem__(self, key, value) -> None:
+    def __setitem__(self, key: KarrayKey, value: Union[FieldSource, _Assigned]) -> None:
         # Tail of `d[i] |= x`, where the subscript lands directly on the Karray
         # (not a KarrayRef): the KarrayRef already did the assign and returned
         # the sentinel. A real value is a bare `=`, which is rejected.

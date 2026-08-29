@@ -227,9 +227,29 @@ impl ModelArena {
         res
     }
 
+    // Flow-block init-stack lifecycle (one frame = (FlowBlockIdent, BlockTrackStatus);
+    // the stack TOP is where new sub-blocks / basic nodes attach):
+    //
+    //   initialize_flow_block ──── push ────► [ OpenForSubBlock ]
+    //     (a non-ConFlow init first retires a         │
+    //      lingering LazyClosed top — try_clean)      │  finalize_flow_block (pop)
+    //                                                 v
+    //                   chain master? ──yes──► re-push [ LazyClosed ]
+    //                        │                   (lingers to catch the next elif/else
+    //                        no                   ConFlow branch; retired by try_clean,
+    //                        │                    by the next finalize's recursion, or
+    //                        v                    by finalize_flow_procedure)
+    //               attach popped block:
+    //               - stack non-empty -> parent block  (SubFlow / BasicNodeFlow =
+    //                 sub-flow; ConFlow = continuation branch of the chain)
+    //               - stack empty     -> module on the trace stack
+    //                                    (must be at FlowBlockInit stage)
+    //
+    // Mismatch rule: finalize may find ONE LazyClosed chain master above `expected`;
+    // a single recursion (is_recur) retires it — never two, because a conditional
+    // always wraps a seq sub-block, so two chain masters are never adjacent.
     pub fn try_clean_lazy_closed_in_flow_block_stack(&mut self){
-        // a lazy-closed chain master lingers on the stack only to catch a following
-        // continuation branch; once the caller knows none will follow it retires it.
+        // retire a lingering lazy-closed chain master (see lifecycle diagram above)
         if !self.flow_block_init_stack.is_empty()
             && self.peek_flow_block_init_status() == BlockTrackStatus::LazyClosed {
             self.finalize_flow_block(self.peek_flow_block_init_stack(), false);
@@ -250,10 +270,8 @@ impl ModelArena {
     /// - to the module on the trace stack (must be in FlowBlockInit stage) as a top flow block.
     pub fn finalize_flow_block(&mut self, expected: FlowBlockIdent, is_recur: bool) {
 
-        // The only legal mismatch is a single lazy-closed chain master lingering above
-        // `expected` (its continuation chain ended without a trailing sibling). The model
-        // constraint that a conditional always wraps a seq sub-block guarantees no two
-        // chain masters are ever adjacent, so one recursion level always resolves it.
+        // Only legal mismatch: ONE lingering LazyClosed chain master above
+        // `expected` — one recursion retires it (mismatch rule, diagram above).
         if self.peek_flow_block_init_stack() != expected {
             assert!(!is_recur, "finalize_flow_block: recursive finalize must not mismatch the expected block");
             self.finalize_flow_block(self.peek_flow_block_init_stack(), true);
@@ -263,8 +281,8 @@ impl ModelArena {
         let popped_fb = self.pop_flow_block_init_stack();
         assert_eq!(popped_fb, expected, "finalize_flow_block: ident mismatch — wrong block finalized");
 
-        // a chain master that is still open keeps lingering on the stack (now lazy-closed)
-        // so a following continuation branch can attach to it; defer its real finalize.
+        // open chain master -> linger as LazyClosed for a following continuation
+        // branch (diagram above); its real finalize is deferred.
         if popped_status == BlockTrackStatus::OpenForSubBlock && popped_fb.get_chain_master() {
             self.push_flow_block_init_stack(popped_fb, BlockTrackStatus::LazyClosed);
             return;

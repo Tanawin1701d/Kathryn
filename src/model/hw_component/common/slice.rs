@@ -71,7 +71,6 @@ impl Slice {
     /// |--- SIZE_OF(B) ---|
     /// |-------- C -------|  <----- result
 
-
     pub fn get_match_size_sub_slice(&self, b: &Slice) -> Slice {
         assert!(self.is_size_in_range_rel(b.get_size()));
         Slice::new(self.start, std::cmp::min(self.stop, self.start + b.get_size()))

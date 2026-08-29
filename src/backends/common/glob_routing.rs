@@ -12,21 +12,16 @@ use crate::model::model_arena::ModelArena;
 use crate::model::module::module_ident::ModuleIdent;
 
 // Route `actual_src_i` from its own module up to the top module, building a
-// fresh IoWire at each level along the path (no reuse lookup). `actual_src_i`
-// must be IO-marked; the mark's direction selects how the chain is wired:
-//
-//   - Output: `actual_src_i` is the real source. The chain is built bottom-up
-//     (own → top); each IoWire carries the actual source and is driven by the
-//     wire one level below it (the lowest is driven by `actual_src_i` itself).
-//
-//   - Input: `actual_src_i` is the destination, not a source — so the chain has
-//     no actual source signal. It is built top-down (top → own): the top port is
-//     a primitive input (unbound) and each lower level is driven by the wire one
-//     level above it.
-//
-// Returns `(nearest_io_i, top_io_i)`:
-//   - nearest_io_i: the IoWire nearest the target HCP (built in its own module),
-//   - top_io_i    : the IoWire on the top module.
+// fresh IoWire at each level (NO reuse lookup). `actual_src_i` must be
+// IO-marked; the mark's direction picks the chain wiring:
+// - Output: `actual_src_i` IS the real source. Chain builds BOTTOM-UP
+//   (own → top); each IoWire carries the actual source, driven by the wire one
+//   level below it (the lowest by `actual_src_i` itself).
+// - Input : `actual_src_i` is the destination — the chain has NO actual source.
+//   Chain builds TOP-DOWN (top → own); the top port is a primitive input
+//   (unbound), each lower level driven by the wire one level above it.
+// Returns `(nearest_io_i, top_io_i)` — the IoWire in the HCP's own module, and
+// the one on the top module.
 pub fn route_glob_io_hw_comp(
     actual_target_i: HcpIdent,
     model_arena  : &mut ModelArena,

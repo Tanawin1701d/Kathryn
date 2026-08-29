@@ -111,14 +111,14 @@ impl ArbLeaf {
 
 // ---- Arb --------------------------------------------------------------------
 
-/// Priority arbiter — a complex component property (CCP).  Each leaf raises
-/// `req` and is granted on `ack` when it is requesting, the master ack is
-/// asserted, and no higher-priority leaf is also requesting.  Ties at equal
-/// priority are broken by `same_pri_policy`.  `master_req` is the OR of every
-/// leaf request; `master_ack_src` is the single global grant source.
-///
-/// It owns its req/ack/master wires directly and is **not** stamped into a
-/// module — `build` wires the combinational arbitration graph.
+/// Priority arbiter — a complex component property (CCP).
+/// - A leaf raises `req`; it is granted on `ack` when requesting AND master
+///   ack is asserted AND no higher-priority leaf also requests. Equal-priority
+///   ties break per `same_pri_policy`.
+/// - `master_req` = OR of every leaf request; `master_ack_src` = the single
+///   global grant source.
+/// - NOT stamped into a module — it owns its req/ack/master wires directly;
+///   `build` wires the combinational arbitration graph.
 pub struct Arb {
     ident             : CcpIdent         ,
     leaves            : Vec<ArbLeaf>     ,

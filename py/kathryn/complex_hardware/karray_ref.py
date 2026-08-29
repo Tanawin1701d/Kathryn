@@ -1,37 +1,53 @@
 # KarrayRef — a partially/fully-indexed view into a Karray (see karray.py).
-# Holds only the Karray's CcpIdent plus the accumulated per-dimension keys and
-# an optional (flattened) field name; all layout validation happens in Rust at
-# resolution time.
+# Holds ONLY the Karray's CcpIdent + accumulated per-dim keys + an optional
+# flattened field name; all layout validation happens in Rust at resolve time.
 #
-# ONE unified index — each `[]` hop selects ONE dimension with one of three
-# kinds, and EVERY kind collapses its dimension to a single element (there are
-# no ranges — a selection always names exactly one element, every dim indexed):
-#   d[3]        int             static index
-#   d[sig]      signal          dynamic binary-encoded address
-#   d[fn]       callable        custom fn
+# ONE unified index — each `[]` hop selects ONE dimension; every kind collapses
+# it to a single element (NO ranges — every dim must be indexed):
+#   d[3]    int       static index
+#   d[sig]  signal    dynamic binary-encoded address
+#   d[fn]   callable  custom fn — direction-split at the statement:
+#     - WRITE dest : `fn(i) -> 1-bit enable`, called once per index; the write
+#       lands only where high (one-hot: `d[lambda i: sel[i]] |= ...`).
+#     - READ source: the dim folds through a REDUCE tree — `fn(a, b, level) ->
+#       pick_a` per 2:1 node over two ReduceViews; may return
+#       `(select, {name: signal})` extras that replace same-named carried
+#       fields (max element: `d[lambda a, b, l: a.fields["data"] >=
+#       b.fields["data"]].data`).
 #
-# The CUSTOM FN kind splits by direction at the statement:
-#   * WRITE destination — `fn(i) -> 1-bit enable`, called once per index of the
-#     dim; a write lands only where the enable is high (others hold). One-hot
-#     write: `d[lambda i: sel[i]] |= ...`.
-#   * READ / source side — the dim folds through a REDUCE tree: `fn(a, b, level)
-#     -> pick-a` is called per 2:1 node with two `ReduceView`s (`.fields` maps
-#     every element field name to its current SignalRef, `.indices` lists the dim
-#     indices each side covers). It may return `(select, {name: signal})` to
-#     carry user-computed extras to the next level (an extra replaces a
-#     same-named field). Max element: `d[lambda a, b, l: a.fields["data"] >=
-#     b.fields["data"]].data`.
-#
-# Fields may be BUNDLES (see karray_field.py): attribute hops chain into the
-# flattened leaf name (`d[0].pos.x` -> field "pos_x") and dict sources nest
-# (`d[0] |= {"pos": {"x": a, "y": b}}`).
+# Fields may be BUNDLES (karray_field.py): attribute hops chain the flat leaf
+# name (`d[0].pos.x` -> "pos_x"); dict sources nest (`{"pos": {"x": a}}`).
 
 from __future__ import annotations
 
-from typing import Optional, Sequence
+from typing import Any, Callable, Dict, Iterator, List, Mapping, Optional, Sequence, Tuple, Union
 
 from .. import _session
-from ..signal import SignalRef, _ASSIGNED, to_ref
+from .._kathryn import CcpIdent, HcpIdent
+from ..signal import SignalRef, _ASSIGNED, _Assigned, to_ref
+
+# ---- shared types -------------------------------------------------------------
+# One `[]` key: int (static) / SignalRef (dynamic) / callable (custom fn).
+KarrayKey   = Union[int, SignalRef, Callable[..., Any]]
+# One assignment source: scalar signal/int, a karray view, or a field map
+# (values are themselves FieldSources — dicts nest for bundles).
+FieldSource = Union[SignalRef, "KarrayRef", int, Mapping[str, Any]]
+# The connector's per-dim selector triple `(kind, ints, sigs)`. Per-kind arity
+# rule lives in kidx_py.rs: "static" -> 1 int, "dyn" -> 1 sig, "cus" -> n sigs,
+# "reduce" -> none (its select fn rides the parallel fns list).
+Selector    = Tuple[str, List[int], List[HcpIdent]]
+# Rust reduce-fold callback ABI (see arena_impl_ccp_karray_py.rs::reduce_select):
+# (a_fields, a_indices, b_fields, b_indices, level) -> (select_hcp, extras),
+# fields travelling as flat (name, hcp) pairs.
+RawSelectFn = Callable[
+    [List[Tuple[str, HcpIdent]], List[int], List[Tuple[str, HcpIdent]], List[int], int],
+    Tuple[HcpIdent, List[Tuple[str, HcpIdent]]],
+]
+# The user's select fn: (a, b, level) -> select, or (select, {name: extra}).
+UserSelectFn = Callable[
+    ["ReduceView", "ReduceView", int],
+    Union[SignalRef, Tuple[SignalRef, Dict[str, SignalRef]]],
+]
 
 
 # ---- reduce view --------------------------------------------------------------
@@ -41,15 +57,17 @@ class ReduceView:
     wire, or a prior level's extra); `.indices` is the list of this dimension's
     indices the subtree covers."""
     __slots__ = ("indices", "fields")
+    indices : List[int]             # covered indices of the folding dim
+    fields  : Dict[str, SignalRef]  # field name -> current SignalRef
 
-    def __init__(self, indices, fields) -> None:
-        self.indices = indices    # covered indices of the folding dim
-        self.fields  = fields     # dict: field name -> SignalRef
+    def __init__(self, indices: List[int], fields: Dict[str, SignalRef]) -> None:
+        self.indices = indices
+        self.fields  = fields
 
 
 # ---- key classification (the ONE Python home of the four index kinds) --------
 
-def _check_key_type(key) -> None:
+def _check_key_type(key: object) -> None:
     # Validate a single [] key at subscript time so errors point at the use site.
     if isinstance(key, bool):
         raise TypeError("Karray index must not be a bool")
@@ -70,7 +88,7 @@ def _whole_signal(ref: SignalRef) -> SignalRef:
     return ref
 
 
-def _enable_bit(x, dim: int, idx: int) -> SignalRef:
+def _enable_bit(x: Union[SignalRef, "KarrayRef"], dim: int, idx: int) -> SignalRef:
     # One custom write-enable: whatever the user's fn returned, resolved to a
     # whole 1-bit signal.
     ref   = to_ref(x)
@@ -81,11 +99,16 @@ def _enable_bit(x, dim: int, idx: int) -> SignalRef:
     return _whole_signal(ref)
 
 
-def _wrap_select(user_fn):
+def _wrap_select(user_fn: UserSelectFn) -> RawSelectFn:
     # Adapter between the Rust reduce fold and the user's select fn. The engine
     # calls `_raw` per compared pair with RAW handles; `_raw` dresses them up as
     # ReduceViews, calls the user fn, and undresses the result back to handles.
-    def _raw(a_fields, a_indices, b_fields, b_indices, level):
+    def _raw(a_fields  : List[Tuple[str, HcpIdent]],
+             a_indices : List[int],
+             b_fields  : List[Tuple[str, HcpIdent]],
+             b_indices : List[int],
+             level     : int,
+             ) -> Tuple[HcpIdent, List[Tuple[str, HcpIdent]]]:
         a = ReduceView(a_indices, {n: SignalRef(h) for (n, h) in a_fields})
         b = ReduceView(b_indices, {n: SignalRef(h) for (n, h) in b_fields})
 
@@ -100,7 +123,7 @@ def _wrap_select(user_fn):
     return _raw
 
 
-def _to_operand(x):
+def _to_operand(x: Union[SignalRef, "KarrayRef", int]) -> Union[int, HcpIdent]:
     # An assignment source for the connector: a raw int passes through (wrapped
     # into a field-width val in Rust); anything else resolves to a whole signal.
     if isinstance(x, int) and not isinstance(x, bool):
@@ -108,7 +131,7 @@ def _to_operand(x):
     return _whole_signal(to_ref(x))._ident
 
 
-def _flatten_field_map(mapping: dict, prefix: str = ""):
+def _flatten_field_map(mapping: Mapping[str, FieldSource], prefix: str = "") -> Iterator[Tuple[str, Union[int, HcpIdent]]]:
     # Bundle-aware source map: nested dicts flatten into the underscore-joined
     # leaf names the Rust layout stores ({"pos": {"x": a}} -> ("pos_x", a)).
     for name, value in mapping.items():
@@ -126,15 +149,18 @@ class KarrayRef:
     accumulated keys and flattened field name; layout validation happens in Rust."""
 
     __slots__ = ("_ident", "_keys", "_field")
+    _ident : CcpIdent
+    _keys  : List[KarrayKey]
+    _field : Optional[str]
 
-    def __init__(self, ident, keys: Optional[Sequence] = None, field: Optional[str] = None) -> None:
+    def __init__(self, ident: CcpIdent, keys: Optional[Sequence[KarrayKey]] = None, field: Optional[str] = None) -> None:
         # Bypass our own __setattr__ (reserved for the assignment tail).
         object.__setattr__(self, "_ident", ident)
         object.__setattr__(self, "_keys" , list(keys) if keys else [])
         object.__setattr__(self, "_field", field)
 
     # ---- indexing / field selection ----------------------------------------
-    def __getitem__(self, key) -> "KarrayRef":
+    def __getitem__(self, key: KarrayKey) -> "KarrayRef":
         if self._field is not None:
             raise TypeError("cannot index into a Karray field")
         _check_key_type(key)
@@ -154,9 +180,10 @@ class KarrayRef:
     # the parallel per-dim fns list (reduce selects on the read side). A callable
     # key is direction-split HERE: write -> fn(i) evaluated per index into "cus"
     # enables; read -> a "reduce" marker plus the wrapped select fn.
-    def _selectors(self, for_read: bool):
-        shape = None
-        sels, fns = [], []
+    def _selectors(self, for_read: bool) -> Tuple[List[Selector], List[Optional[RawSelectFn]]]:
+        shape: Optional[List[int]] = None
+        sels : List[Selector]              = []
+        fns  : List[Optional[RawSelectFn]] = []
         for dim, key in enumerate(self._keys):
             fn_entry = None
             if isinstance(key, bool):                   # bool is an int subclass — never an index
@@ -199,7 +226,7 @@ class KarrayRef:
     #   field (bundle)  {sub_field: source}    -> bundle map assign (prefixed)
     #   element         {field_name: source}   -> per-field map assign (dicts nest)
     #   element         scalar signal/int      -> sole-field assign (single-field Karray only)
-    def _assign_from(self, src, expect_clocked: Optional[bool]) -> None:
+    def _assign_from(self, src: FieldSource, expect_clocked: Optional[bool]) -> None:
         from .karray import Karray            # local import breaks the Karray<->KarrayRef cycle
         if expect_clocked is None:
             raise TypeError("Karray assignment requires `|=` (clocked) or `*=` (combinational), "
@@ -231,11 +258,11 @@ class KarrayRef:
         dst_sels, _ = self._selectors(for_read=False)
         _session.arena().karray_assign_hcps(self._ident, dst_sels, sources, expect_clocked)
 
-    def __ior__(self, src):
+    def __ior__(self, src: FieldSource) -> _Assigned:
         self._assign_from(src, expect_clocked=True)
         return _ASSIGNED
 
-    def __imul__(self, src):
+    def __imul__(self, src: FieldSource) -> _Assigned:
         self._assign_from(src, expect_clocked=False)
         return _ASSIGNED
 
@@ -244,12 +271,12 @@ class KarrayRef:
     # `d[2][1].valid |= x` desugars to `setattr(d[2][1], 'valid', ....__ior__(x))`.
     # The inner op already did the work and returns the _ASSIGNED sentinel, so
     # the tail is a no-op. A real value means a bare `=`, which is rejected.
-    def __setitem__(self, key, value) -> None:
+    def __setitem__(self, key: KarrayKey, value: Union[_Assigned, FieldSource]) -> None:
         if value is _ASSIGNED:
             return
         self.__getitem__(key)._assign_from(value, expect_clocked=None)
 
-    def __setattr__(self, name: str, value) -> None:
+    def __setattr__(self, name: str, value: Union[_Assigned, FieldSource]) -> None:
         if name in KarrayRef.__slots__:
             object.__setattr__(self, name, value)
             return

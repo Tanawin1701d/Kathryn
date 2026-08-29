@@ -5,12 +5,26 @@
 from __future__ import annotations
 
 from types import TracebackType
-from typing import Callable, Optional
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 from . import _session
-from ._kathryn import FlowBlockType, FlowBlockIdent
+from ._kathryn import CcpIdent, FlowBlockType, FlowBlockIdent, HcpIdent, Slice
 from .complex_hardware import PipCon
-from .signal import SignalRef, to_ref
+from .signal import Source, to_ref
+
+# One zync arb binding, in any of the accepted spellings:
+#   PipCon                  contend always, default priority
+#   (PipCon,)               same
+#   (PipCon, cond)             gate REQ and grant on the 1-bit `cond`
+#   (PipCon, cond, priority)   also pin this arb's leaf priority
+ZyncBind = Union[
+    PipCon,
+    Tuple[PipCon],
+    Tuple[PipCon, Optional[Source]],
+    Tuple[PipCon, Optional[Source], Optional[int]],
+]
+# Normalized form handed to the connector: (arb, priority, auto_ack, cond).
+ZyncBindArgs = Tuple[CcpIdent, Optional[int], bool, Optional[HcpIdent]]
 
 
 class _FlowBlockCtx:
@@ -20,6 +34,9 @@ class _FlowBlockCtx:
     # matching the enclosing skeleton — the body's nodes attach to it — and finalize
     # that inner skeleton first on exit.
     __slots__ = ("_ident", "_is_req_auto_sub_blk", "_inner_i")
+    _ident               : FlowBlockIdent
+    _is_req_auto_sub_blk : bool
+    _inner_i             : Optional[FlowBlockIdent]   # the auto-opened skeleton, if any
 
     def __init__(self, ident: FlowBlockIdent, is_req_auto_sub_blk: bool = False) -> None:
         self._ident              = ident
@@ -71,11 +88,18 @@ class _FlowBlockCtx:
         return False
 
 
+# `*args` is the chosen factory's OWN tail, so it varies per block type:
+#   (HcpIdent, Slice)               conditions / loops / waits — see _cond_args
+#   int                             zcase match value, cloop count, sywait cycles
+#   HcpIdent                        zstate switch variable
+#   (CcpIdent, priority, bool, bool)   pip
+#   (binds, match_all, priority)       zync
+# Typed `Any` because no single signature covers all of them.
 def _block(
     prefix: str,
     make  : Callable[..., FlowBlockIdent],
     name  : Optional[str],
-    *args : object,
+    *args : Any,
 ) -> _FlowBlockCtx:
     return _FlowBlockCtx(make(name or _session.auto_name(prefix), *args))
 
@@ -83,7 +107,7 @@ def _complex_block(
     prefix: str,
     make  : Callable[..., FlowBlockIdent],
     name  : Optional[str],
-    *args : object,
+    *args : Any,
 ) -> _FlowBlockCtx:
     return _FlowBlockCtx(make(name or _session.auto_name(prefix), *args), is_req_auto_sub_blk=True)
 
@@ -91,7 +115,7 @@ def _leaf_block(
     prefix: str,
     make  : Callable[..., FlowBlockIdent],
     name  : Optional[str],
-    *args : object,
+    *args : Any,
 ) -> FlowBlockIdent:
     # Leaf blocks (wait) own no body, so they are not context managers: create,
     # open, validate, and immediately close so the block attaches to the
@@ -113,118 +137,115 @@ def par_no_sync(name: Optional[str] = None) -> _FlowBlockCtx: return _block("par
 # Thread a condition signal through as (ident, slice): a sliced SignalRef (e.g.
 # cond[3, 0]) carries the partial range, which the host wraps in a SliceBit
 # expression when it doesn't cover the whole variable.
-def _cond_args(cond: SignalRef) -> tuple:
+def _cond_args(cond: Source) -> Tuple[HcpIdent, Slice]:
     r = to_ref(cond)
     return (r._ident, r._slice)
 
 # ---- conditional (combinational / sequential if-elif-else) ------------------
 # Complex blocks — an inner skeleton (seq/par) is auto-opened (is_req_auto_sub_blk).
-def cif   (cond: SignalRef, name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cif",    _session.arena().mk_flow_block_cif,    name, *_cond_args(cond))
-def sif   (cond: SignalRef, name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("sif",    _session.arena().mk_flow_block_sif,    name, *_cond_args(cond))
-def cselif(cond: SignalRef, name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cselif", _session.arena().mk_flow_block_cselif, name, *_cond_args(cond))
-def cselse(                 name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cselse", _session.arena().mk_flow_block_cselse, name)
+def cif   (cond: Source, name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cif",    _session.arena().mk_flow_block_cif,    name, *_cond_args(cond))
+def sif   (cond: Source, name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("sif",    _session.arena().mk_flow_block_sif,    name, *_cond_args(cond))
+def cselif(cond: Source, name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cselif", _session.arena().mk_flow_block_cselif, name, *_cond_args(cond))
+def cselse(              name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cselse", _session.arena().mk_flow_block_cselse, name)
 
 # ---- zero-cycle conditional -------------------------------------------------
-def zif   (cond: SignalRef, name: Optional[str] = None) -> _FlowBlockCtx: return _block("zif",   _session.arena().mk_flow_block_zif,   name, *_cond_args(cond))
-def zelif (cond: SignalRef, name: Optional[str] = None) -> _FlowBlockCtx: return _block("zelif", _session.arena().mk_flow_block_zelif, name, *_cond_args(cond))
-def zelse (                 name: Optional[str] = None) -> _FlowBlockCtx: return _block("zelse", _session.arena().mk_flow_block_zelse, name)
+def zif   (cond: Source, name: Optional[str] = None) -> _FlowBlockCtx: return _block("zif",   _session.arena().mk_flow_block_zif,   name, *_cond_args(cond))
+def zelif (cond: Source, name: Optional[str] = None) -> _FlowBlockCtx: return _block("zelif", _session.arena().mk_flow_block_zelif, name, *_cond_args(cond))
+def zelse (              name: Optional[str] = None) -> _FlowBlockCtx: return _block("zelse", _session.arena().mk_flow_block_zelse, name)
 
 # ---- zero-cycle switch ------------------------------------------------------
-def zstate(state: SignalRef,   name: Optional[str] = None) -> _FlowBlockCtx: return _block("zstate", _session.arena().mk_flow_block_zstate, name, to_ref(state)._ident)
-def zcase (match_val: int,     name: Optional[str] = None) -> _FlowBlockCtx: return _block("zcase",  _session.arena().mk_flow_block_zcase,  name, int(match_val))
+def zstate(state: Source,  name: Optional[str] = None) -> _FlowBlockCtx: return _block("zstate", _session.arena().mk_flow_block_zstate, name, to_ref(state)._ident)
+def zcase (match_val: int, name: Optional[str] = None) -> _FlowBlockCtx: return _block("zcase",  _session.arena().mk_flow_block_zcase,  name, int(match_val))
 
 # ---- pick (container + pif / pidef branches) --------------------------------
 # `pick` runs whichever `pif` branch matches its raw condition (no chaining — keep
 # the conditions mutually exclusive yourself). The optional `pidef` runs only when
 # no pif matched. WARNING: the pick exit is NOT auto-synchronized — the branch that
 # fires drives the exit signal. `pif`/`pidef` are complex blocks (auto inner skeleton).
-def pick (                 name: Optional[str] = None) -> _FlowBlockCtx: return _block("pick", _session.arena().mk_flow_block_pick, name)
-def pif  (cond: SignalRef, name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("pif",   _session.arena().mk_flow_block_pif,   name, *_cond_args(cond))
-def pidef(                 name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("pidef", _session.arena().mk_flow_block_pidef, name)
+def pick (              name: Optional[str] = None) -> _FlowBlockCtx: return _block("pick", _session.arena().mk_flow_block_pick, name)
+def pif  (cond: Source, name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("pif",   _session.arena().mk_flow_block_pif,   name, *_cond_args(cond))
+def pidef(              name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("pidef", _session.arena().mk_flow_block_pidef, name)
 
 # ---- loops (complex blocks — inner skeleton auto-opened) --------------------
-def cwhile  (cond: SignalRef,      name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cwhile",   _session.arena().mk_flow_block_cwhile,       name, *_cond_args(cond))
-def swhile  (cond: SignalRef,      name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("swhile",   _session.arena().mk_flow_block_swhile,       name, *_cond_args(cond))
-def cdowhile(cond: SignalRef,      name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cdowhile", _session.arena().mk_flow_block_do_while,     name, *_cond_args(cond))
-def cloop   (last_loop_cnt: int,   name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cloop",    _session.arena().mk_flow_block_counter_loop, name, int(last_loop_cnt))
+def cwhile  (cond: Source,       name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cwhile",   _session.arena().mk_flow_block_cwhile,       name, *_cond_args(cond))
+def swhile  (cond: Source,       name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("swhile",   _session.arena().mk_flow_block_swhile,       name, *_cond_args(cond))
+def cdowhile(cond: Source,       name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cdowhile", _session.arena().mk_flow_block_do_while,     name, *_cond_args(cond))
+def cloop   (last_loop_cnt: int, name: Optional[str] = None) -> _FlowBlockCtx: return _complex_block("cloop",    _session.arena().mk_flow_block_counter_loop, name, int(last_loop_cnt))
 
 # ---- waits (leaf blocks — no body, run as a statement) ----------------------
-def scwait(cond: SignalRef,    name: Optional[str] = None) -> FlowBlockIdent: return _leaf_block("scwait", _session.arena().mk_flow_block_scwait, name, *_cond_args(cond))
-def sywait(cycle: int,         name: Optional[str] = None) -> FlowBlockIdent: return _leaf_block("sywait", _session.arena().mk_flow_block_sywait, name, int(cycle))
+def scwait(cond: Source, name: Optional[str] = None) -> FlowBlockIdent: return _leaf_block("scwait", _session.arena().mk_flow_block_scwait, name, *_cond_args(cond))
+def sywait(cycle: int,   name: Optional[str] = None) -> FlowBlockIdent: return _leaf_block("sywait", _session.arena().mk_flow_block_sywait, name, int(cycle))
 
 # pip/zync contend on a shared arbiter — it must be a `PipCon`, not a plain arb or
 # raw ident, so the locked-leaf contract the host relies on is guaranteed.
-def _pip_con_ident(meta) -> "object":
+def _pip_con_ident(meta: PipCon) -> CcpIdent:
     if not isinstance(meta, PipCon):
         raise TypeError(f"pip/zync `meta` must be a PipCon, got {type(meta).__name__}")
     return meta.ident
 
 # ---- pipeline (complex block — inner skeleton auto-opened) -------------------
-# Gated by `meta` (a PipCon). The host adds the pip's leaf at `priority`:
-# `auto_req=False` (default) is a normal leaf; `auto_req=True` Req-locks it (always
-# requesting). `auto_restart` routes the arb user-reset into the block's start
-# signal so a reset re-launches the pipeline instead of clearing it.
-def pip(meta, name: Optional[str] = None, *, auto_restart: bool = False, priority: Optional[int] = None, auto_req: bool = False) -> _FlowBlockCtx:
+# Gated by `meta` (a PipCon); the host adds the pip's leaf at `priority`.
+# - `auto_req=True` Req-locks the leaf (ALWAYS requesting); default is a normal leaf.
+# - `auto_restart` routes the arb user-reset into the block's start signal, so a
+#   reset RE-LAUNCHES the pipeline instead of clearing it.
+def pip(meta: PipCon, name: Optional[str] = None, *, auto_restart: bool = False, priority: Optional[int] = None, auto_req: bool = False) -> _FlowBlockCtx:
     return _complex_block("pip", _session.arena().mk_flow_block_pip, name,
-                          _pip_con_ident(meta), priority, auto_req, auto_restart)
+                       _pip_con_ident(meta), priority, auto_req, auto_restart)
 
 # ---- zync (plain block — owns its work asm nodes directly) -------------------
-# Contend on one OR several arbiters. `meta` is a single bind or a list of binds;
-# each bind is one of:
-#     PipCon                       -> contend on it, no condition, default priority
-#     (PipCon, cond)               -> gate this arb on the 1-bit `cond` SignalRef
-#     (PipCon, cond, priority)     -> also pin this arb's leaf arbitration priority
-# A bind's `cond` gates both its REQ (`state_exit & cond`) and its grant term
-# (`ack & cond`); pass `None` for an always-on bind. `mode` selects how the binds'
-# grants combine: "any" (default) fires when ANY bind's `ack & cond` is high (OR);
-# "all" fires only when EVERY bind's is high (AND). For a single bind the two coincide.
-# `priority` is the default leaf priority for binds that don't pin their own;
-# `auto_ack` Ack-locks every bind's leaf (always granted) — default is a normal leaf.
-# WARNING (mode="all"): the grant is AND over `ack & cond`, so a bind whose condition
-# is false contributes 0 — the target may fire on a partial set of the arbs.
-def _check_opt_priority(p, where: str):
+# Contend on one OR several arbiters. `meta` is one ZyncBind or a list of them
+# (see the ZyncBind alias at the top of this file for the accepted spellings).
+# - A bind's `cond` gates BOTH its REQ (`state_exit & cond`) and its grant term
+#   (`ack & cond`); pass None for an always-on bind.
+# - `mode` combines the binds' grants: "any" (default) = OR, "all" = AND. They
+#   coincide for a single bind.
+# - `priority` is the default leaf priority for binds that don't pin their own;
+#   `auto_ack` Ack-locks every bind's leaf (always granted).
+# WARNING (mode="all"): the grant ANDs `ack & cond`, so a bind whose condition is
+# false contributes 0 — the target may fire on a PARTIAL set of the arbs.
+def _check_opt_priority(p: Optional[int], where: str) -> Optional[int]:
     # Priorities are ints (or None to inherit the default); reject bool/float/etc.
     if p is not None and (not isinstance(p, int) or isinstance(p, bool)):
         raise TypeError(f"{where} priority must be an int or None, got {type(p).__name__}")
     return p
 
-def _zync_one_bind(item, auto_ack: bool) -> tuple:
+def _zync_one_bind(item: ZyncBind, auto_ack: bool) -> ZyncBindArgs:
     # Normalize one bind into (pip_ident, priority|None, auto_ack, cond_ident|None).
     if isinstance(item, tuple):
         if not 1 <= len(item) <= 3:
             raise TypeError("zync bind tuple must be (meta), (meta, cond) or "
-                            f"(meta, cond, priority); got a {len(item)}-tuple")
+                         f"(meta, cond, priority); got a {len(item)}-tuple")
         meta     = item[0]
         cond     = item[1] if len(item) >= 2 else None
         priority = item[2] if len(item) >= 3 else None
     else:
         meta, cond, priority = item, None, None
 
-    pip_i  = _pip_con_ident(meta)                                # raises unless a PipCon
+    pip_i  = _pip_con_ident(meta)                             # raises unless a PipCon
     cond_i = to_ref(cond)._ident if cond is not None else None   # raises unless a signal
     _check_opt_priority(priority, "zync bind")
     return (pip_i, priority, bool(auto_ack), cond_i)
 
-def _zync_binds(meta, auto_ack: bool) -> list:
+def _zync_binds(meta: Union[ZyncBind, List[ZyncBind]], auto_ack: bool) -> List[ZyncBindArgs]:
     items = meta if isinstance(meta, list) else [meta]
     if not items:
         raise ValueError("zync requires at least one arb bind")
     return [_zync_one_bind(it, auto_ack) for it in items]
 
-def _zync_match_all(mode) -> bool:
+def _zync_match_all(mode: object) -> bool:      # accepts non-str and raises
     norm = mode.lower() if isinstance(mode, str) else mode
     if norm == "all":           return True
     if norm in ("some", "any"): return False
     raise ValueError(f"zync mode must be 'all' or 'some', got {mode!r}")
 
 def zync(
-    meta,
+    meta    : Union[ZyncBind, List[ZyncBind]],
     name    : Optional[str] = None,
     *,
-    mode    : str           = "any",
+    mode    : str           = "any",    # "all" | "any" | "some"
     priority: Optional[int] = None,
     auto_ack: bool          = False,
 ) -> _FlowBlockCtx:
     _check_opt_priority(priority, "zync")
     return _block("zync", _session.arena().mk_flow_block_zync_multi, name,
-                  _zync_binds(meta, auto_ack), _zync_match_all(mode), priority)
+               _zync_binds(meta, auto_ack), _zync_match_all(mode), priority)

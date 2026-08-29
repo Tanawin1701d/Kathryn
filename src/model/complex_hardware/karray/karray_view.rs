@@ -4,15 +4,14 @@ use crate::model::hw_component::common::hcp_ident::HcpIdent;
 
 // ===== KView — the result of a Karray READ ====================================
 //
-// The ONE value that flows between the two engines: `karray_read.rs` produces a
-// KView, `karray_write.rs` consumes one. A karray-to-karray copy is just that
-// composition, done by the thin arena/connector proxies — there is no third
-// engine. KView is engine-internal: it never crosses into the DSL.
-//
-// Every selection collapses to a single element, so a view is simply that
-// element's fields: one HCP per field (the backing HCP when the selection is
-// static, else the mux/reduce tree's root). Scalar / int / map sources wrap
-// into the same form.
+// The ONE value flowing between the engines: `karray_read.rs` produces it,
+// `karray_write.rs` consumes it.
+// - A k2k copy is just that composition (done by the arena/connector proxies);
+//   NOT here: no third engine exists.
+// - Engine-internal — a KView never crosses into the DSL.
+// - Every selection collapses to one element, so a view is that element's
+//   fields: one HCP per field (the backing HCP when static, else the
+//   mux/reduce tree root). Scalar / int / map sources wrap into the same form.
 
 // How the write engine pairs destination fields against this view's fields.
 // Stamped by the constructor (constructor-declares-its-own-trait pattern):

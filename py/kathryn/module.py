@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from typing import Callable, Optional
+from typing import Any, Callable, List, Optional, TypeVar
 
 from . import _session
 from ._kathryn import ModuleIdent
@@ -15,44 +15,36 @@ from ._kathryn import ModuleIdent
 _INIT_PHASE = "init"
 _FLOW_PHASE = "flow"
 
+# Decorators are IDENTITY functions, so the decorated method keeps its own
+# signature for callers and type checkers.
+PhaseFn = TypeVar("PhaseFn", bound=Callable[..., Any])
 
-# The @init / @flow decorators don't wrap the method — they just *tag* the
-# function object with a `_kathryn_phase` attribute (a plain string). The tag is
-# what _phase_methods() below looks for to decide which methods to call, and when.
-def init(fn: Callable[..., object]) -> Callable[..., object]:
+
+# @init / @flow do NOT wrap the method — they TAG the function object with a
+# `_kathryn_phase` string that _phase_methods() reads back. Wrapping would hide
+# the method's signature and break `getattr(self, name)()` dispatch.
+def init(fn: PhaseFn) -> PhaseFn:
     # Mark a method as a hardware-declaration phase method (runs first, inside scope).
-    fn._kathryn_phase = _INIT_PHASE
+    setattr(fn, "_kathryn_phase", _INIT_PHASE)      # setattr: a bare Callable has no such field
     return fn
 
 
-def flow(fn: Callable[..., object]) -> Callable[..., object]:
+def flow(fn: PhaseFn) -> PhaseFn:
     # Mark a method as a flow-block construction phase method (runs after @init).
-    fn._kathryn_phase = _FLOW_PHASE
+    setattr(fn, "_kathryn_phase", _FLOW_PHASE)
     return fn
 
 
-def _phase_methods(cls: type, phase: str) -> list[str]:
-    # Return the *names* of methods tagged with this phase (see @init / @flow),
-    # ordered so that base-class methods come before derived ones and each name
-    # appears once. `Module.__init__` then calls them via getattr(self, name)().
+def _phase_methods(cls: type, phase: str) -> List[str]:
+    # NAMES of the methods tagged with `phase`, in the order they must run.
+    # `Module.__init__` calls them back via getattr(self, name)().
     #
-    # Two pieces of Python introspection do the work:
-    #   - cls.__mro__       : the class's inheritance chain, e.g. for
-    #                         `class B(A)` where `A(Module)` it is
-    #                         (B, A, Module, object). reversed(...) makes us visit
-    #                         the oldest ancestor first, so an inherited @init runs
-    #                         before the subclass's own — matching declaration order.
-    #   - klass.__dict__    : the methods/attributes defined *directly* on one
-    #                         class (NOT inherited ones). Keys are names ('my_init'),
-    #                         values are the function objects. It preserves the order
-    #                         the methods were written in the class body. That's why
-    #                         we loop the MRO and read each class's own __dict__,
-    #                         rather than reading one combined dict.
-    #
-    # `name` is the method name string; `attr` is the function object the decorator
-    # tagged. getattr(attr, "_kathryn_phase", None) reads that tag back (None for
-    # untagged entries like '__module__'). `seen` dedupes so an overridden method is
-    # listed once; getattr(self, name) later resolves to the most-derived override.
+    # - reversed(cls.__mro__): oldest ancestor FIRST, so an inherited @init runs
+    #   before the subclass's own.
+    # - each class's OWN __dict__ (not a merged one): it preserves class-body
+    #   declaration order, which a combined dict would lose.
+    # - `seen` dedupes an override to one entry; getattr later resolves it to the
+    #   MOST-DERIVED binding, so a subclass override wins at its base's position.
     seen, out = set(), []
     for klass in reversed(cls.__mro__):
         for name, attr in klass.__dict__.items():

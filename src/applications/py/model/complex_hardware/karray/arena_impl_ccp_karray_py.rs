@@ -1,15 +1,12 @@
-// Python-facing Karray operations. Mirrors the host `karray/arena_impl_ccp_karray.rs`;
-// every method receives per-dimension `KIdx` selectors in the encoding decoded by
-// `kidx_py.rs` (the one place index kinds cross the boundary). Source name / int
-// literal resolution lives HERE (the connector), so the core stays name- and
-// BigInt-free: names resolve against `karray_fields`, int literals wrap into a
-// `val` sized to the matched field via `make_const_val`.
-//
-// The READ paths (`karray_read_field_hcp` / the k2k source side) take
-// `slf: &Bound<..>` (NOT &mut self) so the arena pyclass is not borrowed for the
-// method's duration: `PyKReadEnv` below implements the engine's `KReadEnv` with
-// SCOPED borrows, and each reduce-select callback runs with NO borrow held — so
-// the user's select fn may re-enter the arena to build its select expression.
+// Python-facing Karray operations — mirrors the host `karray/arena_impl_ccp_karray.rs`.
+// - Every method receives per-dim `KIdx` selectors encoded/decoded by
+//   `kidx_py.rs` (the ONE place index kinds cross the boundary).
+// - Source name / int-literal resolution lives HERE so the core stays name- and
+//   BigInt-free: names resolve via `karray_fields`, int literals wrap into a
+//   `val` sized to the matched field (`make_const_val`).
+// - READ paths take `slf: &Bound<..>` (NOT &mut self): `PyKReadEnv` below
+//   implements `KReadEnv` with SCOPED borrows, and each reduce-select callback
+//   runs with NO borrow held — so the user's select fn may re-enter the arena.
 
 use pyo3::prelude::*;
 use pyo3::exceptions::{PyTypeError, PyValueError};

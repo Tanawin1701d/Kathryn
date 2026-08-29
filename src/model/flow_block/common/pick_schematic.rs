@@ -12,6 +12,7 @@ use crate::model::nodes::ncp_base::{add_logic_with_output, IN_CONSIST_CYCLE_USED
 /// branch (pidef) is gated on `~cond1 & ~cond2 & …` (all pifs false); when there
 /// is no default the entry falls straight through to the exit on that same
 /// "nothing matched" signal. The exit is NOT auto-synchronized.
+/// (Same diamond shape as the cond_chain.rs diagram, but with RAW conditions.)
 #[derive(Clone, Debug, Default)]
 pub struct PickSchematic;
 

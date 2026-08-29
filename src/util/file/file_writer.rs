@@ -4,12 +4,10 @@ use std::path::PathBuf;
 
 // ---- FileWriter — batched, auto-flushing file sink ----
 //
-// Accumulates output in `pending` (application-level batch); flushes to the
-// OS-buffered `inner` when the batch reaches `batch_cap` bytes, on an explicit
-// `flush()` call, or when the instance is dropped.
-//
-// Panic / crash safety: Rust unwinds the stack on panic by default, so
-// `Drop::drop` fires and flushes any remaining data automatically.
+// Accumulates into `pending`; flushes to the OS-buffered `inner` when the
+// batch reaches `batch_cap` bytes, on explicit `flush()`, or on drop.
+// - Panic safety: Rust unwinds by default, so `Drop::drop` still fires and
+//   flushes any remaining data.
 
 pub struct FileWriter {
     path      : PathBuf,

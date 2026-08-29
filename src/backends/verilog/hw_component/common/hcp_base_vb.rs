@@ -3,14 +3,12 @@ use crate::util::file::file_writer::FileWriter;
 
 // ---- HcpBaseVb — Verilog-backend capability trait ----
 //
-// Each HCP type implements this to expose the atomic strings the emitter
-// needs.  Two-phase design:
+// Each HCP type exposes the atomic strings the emitter needs. Two-phase design:
 //   1. Declaration — gen_type_vb + gen_var_name_vb → `reg [7:0] foo_reg;`
 //   2. Behaviour   — amt_precedure_blk_vb procedural always blocks
-//
-// gen_io_line_vb / gen_init_line_vb / gen_procedure_blk_vb write directly
-// into the supplied FileWriter instead of returning a String, so the emitter
-// never allocates a full-module string.
+// - Writers (gen_io_line_vb / gen_init_line_vb / gen_procedure_blk_vb) write
+//   into the supplied FileWriter, NOT a returned String — the emitter never
+//   allocates a full-module string.
 
 pub trait HcpBaseVb {
 

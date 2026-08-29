@@ -136,9 +136,7 @@ impl ParSchematic {
         nodes
     }
 
-    /////////////////////////////
-    /// static exit decision ////
-    /////////////////////////////
+    // ---- static exit decision ----
 
     /// Pick a single path-exit whose cycle count equals this block's overall
     /// `cycle_used`.  Returns None when `cycle_used` is inconsistent
@@ -155,7 +153,7 @@ impl ParSchematic {
 
     fn build_auto_sync_exit(&mut self, base: &mut FlowBlockBase, arena: &mut ModelArena) -> NcpIdent {
 
-        ///// in this case we cannot statically determine the number of cycle usage
+        // in this case we cannot statically determine the number of cycle usage
         if self.cycle_used == IN_CONSIST_CYCLE_USED && self.amount_of_paths() > 1 {
             let syn_i = arena.make_syn_node(
                 &format!("par_syn_{}", base.get_ident().get_global_id()),

@@ -6,6 +6,24 @@ use crate::model::nodes::ncp_base::add_logic_with_output;
 /// Tracks the rolling `prev_false` signal through a mutual-exclusion condition chain
 /// (if / elif* / else?). Callers drive the chain with `step` and use the returned
 /// absolute condition for each branch however they need.
+///
+/// Absolute branch conditions the chain hands out, as wired by the cond
+/// schematics (every labelled edge leaves the cond node — the entrance):
+///
+/// ```text
+///                        [ cond node ]
+///          cond ╱      elif1 ╱        ╲ elif2             ╲ (no else?)
+///              ╱      & ~cond ╲        ╲ & ~cond & ~elif1  ╲ prev_false =
+///             v                v        v                   ╲ ~cond&~elif1&~elif2
+///       [ main body ]  [ elif1 body ]  [ elif2 body ]        ╲
+///             │                │        │                     v
+///             └──────────────► [ exit node (OR) ] ◄───────────┘
+/// ```
+///
+/// - `step(Some(c))` returns `c & prev_false`, then advances `prev_false &= ~c`.
+/// - `step(None)` (else) consumes `prev_false` — always the last step.
+/// - `remaining_false()` is the residual — the fall-through edge drawn on the
+///   right; `None` once an else consumed it.
 pub struct CondChain {
     prev_false: Option<HcpIdent>,
 }

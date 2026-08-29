@@ -5,9 +5,32 @@ use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::model_arena::ModelArena;
 use crate::model::module::module_ident::ModuleIdent;
 
-// Creates IoWires along both sides of a cross-module path.
-// output_paths and input_paths come from find_common_ancestor_module_paths;
-// the last element of each is the LCA (shared crossing point) and is skipped.
+// Creates IoWires along both sides of a cross-module path. output_paths and
+// input_paths come from find_common_ancestor_module_paths.
+//
+// IoWire chain built (every hop binds the SAME actual_src_i; only agent_src —
+// the immediate driver — changes; ▲ / ◄ = "agent drives this wire"):
+//
+//                           [ LCA ]      last element of BOTH paths — SKIPPED
+//                          ╱       ╲     (no wire built in it; the two chains
+//          out-leg (rises)          ╲     meet directly across it)
+//                        ╱   seed    ╲
+//         ┌───────────┐    edge       ┌───────────┐
+//         │  mid_out  │ io_out2 ────► │  mid_in   │ io_in1
+//         └───────────┘               └───────────┘
+//               ▲ agent                     │ agent
+//         ┌───────────┐               ┌───────────┐
+//         │  src_mod  │ io_out1       │  des_mod  │ io_in2  ◄── returned ident
+//         └───────────┘               └───────────┘
+//               ▲ agent
+//          actual_src_i  (the HCP being exported)
+//
+// - out-leg: output_paths walked front→back (source upward); each level's agent
+//   is the io_out built ONE LEVEL BELOW (seeded by actual_src_i itself).
+// - in-leg : input_paths walked back-1→front (just-below-LCA downward); each
+//   level's agent is the io_in ONE LEVEL ABOVE (seeded by the out-leg's TOP wire).
+// - reuse  : every hop consults find_reusable_io_wire(actual_src_i, direction)
+//   first, so one exported signal never grows two parallel chains.
 fn route_io_base(
     input_paths      : &mut Vec<ModuleIdent>,
     output_paths     : &mut Vec<ModuleIdent>,
@@ -25,7 +48,6 @@ fn route_io_base(
     }
 
     // ---- Output side (source → LCA): export actual_src_i upward ----
-    // Each level's agent is the IoWire produced one level below it.
     let mut output_agent_wire_i = actual_src_i;
     let output_len = output_paths.len().saturating_sub(1);
     for &module_i in &output_paths[..output_len] {
@@ -36,7 +58,6 @@ fn route_io_base(
     }
 
     // ---- Input side (LCA → destination): import actual_src_i downward ----
-    // Iterate from just-below-LCA (back-1) toward dest (front); seed agent from the output chain's top wire.
     let mut input_agent_wire_i = output_agent_wire_i;
     let input_back1_to_front = (0..input_paths.len().saturating_sub(1)).rev();
     for idx in input_back1_to_front {

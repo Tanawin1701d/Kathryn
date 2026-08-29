@@ -1,30 +1,22 @@
-// Combinational combinator builders — a select (`gen_mux`), a rotation
-// (`gen_rotate_left`), an OR reduce (`gen_any_of`) and a population count /
-// adder tree (`gen_sum_cnt`). None adds a node type: each is a small assembly
-// of the wire / expression / flow-block primitives this arena already has,
-// kept HERE so every frontend (the Python DSL, a future one) builds the same
-// hardware from the same rules instead of re-implementing them per language.
+// Combinational combinator builders — gen_mux / gen_rotate_left / gen_any_of /
+// gen_sum_cnt on ModelArena, so EVERY frontend builds the same hardware from
+// the same rules (topology, width defaults, validation all live here).
 //
-// Decisions (moved verbatim from the former Python-only implementation):
-// - `gen_mux` is a WIRE plus `zif`/`zelse`, not a mask expression. Kathryn has
-//   no ternary LogicOp, and `ExtendBit` fills with 1'b0 (zero-extension, never
-//   replication) so a bit-replicated mask cannot be built. The zif chain is
-//   the tested priority-mux path and emits a plain `if/else`. COST: it
-//   declares hardware, so an open flow scope is required.
-// - `gen_rotate_left` is shifts and an OR, not slice-and-concatenate: an
-//   expression follows its LEFT operand's width, so `x << k` and
-//   `x >> (w-k)` are both x-wide and the bits shifted off one end are exactly
-//   the bits the other end supplies.
-// - `gen_any_of` / `gen_sum_cnt` build BALANCED trees (log2(n) depth, not n);
-//   the odd element of a level rides to the next level unchanged. `gen_any_of`
-//   over nothing is FALSE (a defined value with a defined width); a sum over
-//   nothing has neither and errors.
-// - `gen_sum_cnt`'s default width is exactly wide enough for the largest sum
-//   the inputs can make, so it can never overflow.
-//
-// Frontend split: int-literal operands never reach here — a connector wraps
-// them into width-matched `val`s first (the Python one via `make_const_val`,
-// BigInt and all). This file only ever sees `HcpIdent` + `Slice`.
+// - NO new node type: each combinator assembles the existing wire /
+//   expression / flow-block primitives.
+// - `gen_mux` = wire + zif/zelse, not a mask expression: no ternary LogicOp
+//   exists and ExtendBit fills 1'b0 (never replicates), so a mask CANNOT be
+//   built. COST: it declares hardware — an open flow scope is required.
+// - `gen_rotate_left` = (x << k) | (x >> w-k), not slice-and-concat: an
+//   expression follows its LEFT operand's width, so both halves come out
+//   x-wide and the bits one end drops are exactly what the other supplies.
+// - `gen_any_of` / `gen_sum_cnt` fold BALANCED trees (log2(n) depth, not n);
+//   the odd node of a level rides up unchanged. Empty any_of = const 0 (a
+//   defined value + width); empty sum_cnt = error (neither).
+// - `gen_sum_cnt`'s default width fits the largest possible sum — it can
+//   never overflow.
+// - NOT here: int-literal operands. A connector wraps them into width-matched
+//   `val`s first (Python: `make_const_val`); this file sees HcpIdent + Slice.
 
 use crate::model::hw_component::arena_impl_hwc::AsmResize;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;

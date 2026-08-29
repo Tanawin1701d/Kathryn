@@ -6,16 +6,18 @@
 from __future__ import annotations
 
 from types import TracebackType
-from typing import Optional
+from typing import List, Optional
 
 from . import _session
 from . import _kathryn
 
-# Mirror every UE-priority constant from the extension into this module's globals,
-# driven by the authoritative name list the Rust binding publishes. No constant
-# name is hardcoded on the Python side, so adding a row to the host macro flows
-# through to `from kathryn import DEFAULT_UE_...` automatically.
-PRIORITY_CONST_NAMES = list(_kathryn._ASM_PRIORITY_CONST_NAMES)
+# Every UE-priority constant is mirrored from the extension, driven by the name
+# list Rust publishes — no constant name is hardcoded here, so a new row in the
+# host macro reaches `from kathryn import DEFAULT_UE_...` on its own.
+# LIMIT: injected via globals(), so an editor cannot see these names and will
+# mark `DEFAULT_UE_PRI_RST` as unresolved. The trade is deliberate: one
+# authoritative list in Rust beats a second one drifting here.
+PRIORITY_CONST_NAMES: List[str] = list(_kathryn._ASM_PRIORITY_CONST_NAMES)
 globals().update({n: getattr(_kathryn, n) for n in PRIORITY_CONST_NAMES})
 
 
@@ -33,7 +35,7 @@ def get_priority() -> int:
     return _session.arena().get_asm_pri_val()
 
 def get_priority_mode() -> str:
-    # "Auto" or "Manual".
+    # Exactly "Auto" or "Manual" — `priority.__exit__` branches on the string.
     return _session.arena().get_asm_pri_mode()
 
 
@@ -43,6 +45,9 @@ class priority:
     mode/value on exit. `with priority(100): r |= a` governs only that assign."""
 
     __slots__ = ("_p", "_prev_mode", "_prev_val")
+    _p         : int
+    _prev_mode : str   # "Auto" | "Manual", captured on enter
+    _prev_val  : int
 
     def __init__(self, p: int) -> None:
         self._p = int(p)

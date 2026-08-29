@@ -766,6 +766,42 @@ defined in `~/.claude/skills/codestyle-skill/SKILL.md`. Key rules:
 - **`_i` suffix** on any variable or field whose type is a `*Ident` handle.
 - **Brief comments** — one sentence, explain why not what; no multi-paragraph docstrings.
 
+### 6.1 Comments — scannable, never narrative
+
+A comment block is ONE summary line, then short `-` bullets. A bullet states a
+rule the reader would break without it (WHY, not WHAT). Load-bearing facts take
+CAPS emphasis: `LIMIT:` for known incompleteness, `NOT here:` for a deliberate
+absence, `WARNING:` for a footgun, `TODO:` for planned work (greppable).
+
+**No design history in source.** What was tried, what it replaced, and
+cost/benefit prose belong in THIS file, not in a `//` block. A comment says what
+today's reader must know to not break the code; CLAUDE.md says why it is shaped
+that way. When you compress a comment, move the history here rather than
+deleting it.
+
+### 6.2 ASCII diagrams for core mechanisms
+
+A mechanism with a real TOPOLOGY — a node/edge graph, a tree fold, a chain, a
+stack state machine — gets a text diagram above the code, not a paragraph
+describing it. Reference style: `flow_block/common/zync_schematic.rs`; edge
+labels are the dependency conditions. Keep them under ~25 lines and draw the
+code that exists, not the intent.
+
+Current diagrams (add to this list when you draw one):
+
+| File | Shows |
+| ---- | ----- |
+| `flow_block/common/zync_schematic.rs`        | arb REQ / grant / work-node firing |
+| `flow_block/common/pip_schematic.rs`         | pipeline OR-join + wait4syn |
+| `flow_block/common/cond_chain.rs`            | if/elif/else ladder, ABSOLUTE branch conditions, fall-through |
+| `flow_block/common/counter_loop_schematic.rs`| loop-back / increment / exit edges off one `body_exit` |
+| `backends/common/internal_routing.rs`        | IoWire chain: source → LCA (skipped) → destination |
+| `complex_hardware/karray/karray_read.rs`     | per-dim fan-out + balanced 2:1 fold (Dyn mux / CusRd reduce) |
+| `model/arena_impl.rs`                        | flow-block init-stack state machine (LazyClosed, attach targets) |
+
+`cond_schematic.rs` and `pick_schematic.rs` carry one-line pointers to the
+`cond_chain.rs` diagram instead of repeating it.
+
 ---
 
 ## 7. Python bindings (`src/applications/py/`)
@@ -947,6 +983,28 @@ semantics (negatives sign-extend across all limbs). `num-bigint` is an optional
 dep behind the `python` feature, so the default build stays PyO3/bigint-free.
 **Conditional blocks hold sub-blocks, not direct nodes** — put a
 `with seq():` inside an `if`/`while` body (a model constraint).
+
+**Typing the DSL.** Every `def` in `py/kathryn/` carries full parameter and
+return annotations — a reader must never have to guess a type. Rules:
+
+- **Shared aliases beat repeated unions.** `signal.py` owns `Source`
+  (`SignalRef` | anything with `_to_read_ref`) and `Operand` (`Source` | `int`);
+  `karray_ref.py` owns `KarrayKey`, `FieldSource`, `Selector`, `RawSelectFn`,
+  `UserSelectFn`; `flow_block.py` owns `ZyncBind` / `ZyncBindArgs`. Annotate
+  against these, don't re-spell the union.
+- **`Source`, not `SignalRef`, wherever the body calls `to_ref`** — a `KarrayRef`
+  is legal there, so `SignalRef` would be a lie.
+- **`Readable` is a `Protocol`, not an import.** `karray_ref` imports `signal`,
+  so naming `KarrayRef` in `signal.py` would cycle; the structural protocol
+  (`_to_read_ref() -> SignalRef`) types the duck-typing without the import.
+- **`__slots__` classes annotate their slots** at class level, so an editor can
+  hover a field.
+- **NO `.pyi` stub** (deliberate — one more thing to keep in sync). Where a type
+  is therefore statically unresolvable, say so in a comment at the site: the
+  enums crossing from Rust (`LogicOp`, `HwComponentType`, `ArbSamePriPolicy`,
+  `ArbLockedChannel`) are IntEnums BUILT AT RUNTIME, so they are typed `int` plus
+  a comment naming the member set, and the `DEFAULT_UE_PRI_*` constants injected
+  via `globals().update` carry a `LIMIT:` note in `priority.py`.
 
 **Construct then build.** The full pipeline is now:
 

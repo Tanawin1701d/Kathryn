@@ -44,13 +44,12 @@ impl Module {
         fw.write("// Phase 1 : module header & IO ports\n");
         fw.write(&format!("module {mod_name}(\n"));
 
-        // Each IoWire is taken from the arena so `arena` stays free for recursive access
-        // inside gen_io_line_vb, then put back immediately after.
-        // amt_io_line_vb() tells how many port declaration lines this HCP contributes
-        // (usually 1, but a future multi-port IoWire could emit more).
-        // Verilog forbids a trailing comma after the last port, so commas are written
-        // *before* each port except the first (need_comma gate); the final port's line
-        // is closed with a bare "\n" after the loop.
+        // Port-list emission rules:
+        // - each IoWire is TAKEN from the arena (gen_io_line_vb may recurse
+        //   into it) and put back right after.
+        // - amt_io_line_vb() = port lines this HCP contributes (usually 1).
+        // - Verilog forbids a trailing comma: commas go BEFORE each port except
+        //   the first (`need_comma`); the last line closes with a bare "\n".
         // Emits:  "    portA,\n    portB,\n    portC\n);\n"
         let mut need_comma = false;
         for &io_i in &self.collect_hcp_idents_vb(HwComponentType::IoWire) {

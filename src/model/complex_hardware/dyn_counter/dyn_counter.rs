@@ -18,9 +18,9 @@ use crate::model::model_arena::ModelArena;
 ///   update()            -> reg <= chain head, ONE basic node attached to the
 ///                          current scope (clk wired by the enclosing build)
 ///
-/// `prev` is the previous stage (the register itself for the first add), so
-/// simultaneously-enabled adds accumulate in one cycle.  `update` consumes the
-/// chain: the next `add` starts again from the register.
+/// - `prev` = the previous stage (the register itself for the first add), so
+///   simultaneously-enabled adds accumulate in ONE cycle.
+/// - `update` CONSUMES the chain: the next `add` restarts from the register.
 pub struct DynCounter {
     ident     : CcpIdent         ,
     width     : i32              ,

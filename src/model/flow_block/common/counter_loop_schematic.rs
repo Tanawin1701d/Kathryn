@@ -25,6 +25,25 @@ impl CounterLoopSchematic {
         self.loop_id_expr_i.expect("counter loop has not been built yet")
     }
 
+    // Node topology built by `build` (edge label = dependency condition;
+    // unlabelled edge = unconditional dependency):
+    //
+    //       int-start ─────────────┐
+    //                              v
+    //       ┌───────────────► [ loop node ]   (pseudo OR — the entrance;
+    //       │                      │           the PARENT assigns it)
+    //       │  body_exit           v
+    //       │  & ~cnt_at_last  [ body NodeWrap ]
+    //       │                      │ body_exit
+    //       └──────────────────────┼───────────► [ counter node ] ─► cnt_at_last
+    //                              │               (+1 per body_exit,
+    //                              │ body_exit      tops at last_loop_cnt)
+    //                              │ & cnt_at_last
+    //                              v
+    //                         [ exit node ]   (pseudo OR)
+    //
+    //   result NodeWrap: entrance = loop node, exit = exit node;
+    //   cycle_used = body_cycle * last_loop_cnt (an inconsistent body stays so).
     pub fn build(&mut self, base: &mut FlowBlockBase, arena: &mut ModelArena) -> NodeWrap {
         assert_eq!(base.get_sub_blocks_i().len(), 1, "counter loop must have exactly one body block");
         assert!(base.get_con_blocks_i().is_empty(), "counter loop does not support con blocks");

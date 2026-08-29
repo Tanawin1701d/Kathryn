@@ -1,65 +1,43 @@
-# Karray element-record declaration: `kaf()` field descriptors, the reusable
-# `KBundle` record type (Chisel-Bundle style — bundles nest inside bundles), and
-# the shared field-collection walk both `KBundle` and `Karray` subclasses use.
+# Karray element-record declaration — `kaf()` field descriptors, the reusable
+# `KBundle` record (Chisel-Bundle style, bundles nest), and the shared
+# field-collection walk both `KBundle` and `Karray` subclasses use.
 #
-# The Rust core only ever sees a FLAT `(name, width)` list: a nested bundle
-# field flattens at declaration time with an underscore-joined prefix
-# (`pos = kaf(Vec2)` with `Vec2.x` -> leaf field "pos_x"), and attribute access
-# rebuilds the same flat name (`d[0].pos.x` -> field "pos_x"). Duplicate flat
-# names (e.g. a literal leaf "pos_x" next to bundle pos{x}) are rejected here.
-#
-# THE RECORD IS FINISHED AT INSTANTIATION. A class body states the shape a
-# record USUALLY has; the call that builds one array settles it. Two things move
-# to the call, and the keyword's VALUE is what picks between them:
-#
-#     Entry(REG, (4,), "e", data=16,          # an int  -> width for a DECLARED field
-#                           spectag=kaf(8))   # a kaf() -> a field only THIS array has
-#
-# A `kaf(w)` width in a class body is therefore a default, `kaf()` with no width
-# declares a field every instantiation must size, and a kaf() at the call adds
-# one the class never mentioned (appended after the declared fields, in keyword
-# order, flattened through the same walk a class-body bundle takes).
-#
-# The reason is that a class body cannot see a caller's parameters —
-# `__init_subclass__` stamps `__karray_fields__` when the class is created — so
-# without this, one record shape at two widths meant two classes built by hand
-# with `type()`, and a record that grows one field for one pipeline meant a
-# third. A generator sizing its arrays from a description (a CPU's PC width, an
-# ISA's instruction length, a speculation tag only the out-of-order build has)
-# would write a class factory for every record it owns. The declaration stays
-# the readable class body; the variable part moves to the call.
-#
-# A pending width rides through the flat list as `(name, None)`.
-# `resolve_karray_field_specs` below is the ONE place a final width is decided
-# and the ONE place a field is added; the class's own field list is never
-# mutated, so two arrays of one class can differ and the class still reads as
-# what every array has in common.
+# - The Rust core only ever sees a FLAT `(name, width)` list: a nested bundle
+#   flattens at declaration with an underscore prefix (`pos = kaf(Vec2)` ->
+#   leaf "pos_x"); attribute access rebuilds the same flat name (`d[0].pos.x`).
+#   Duplicate flat names are rejected here.
+# - THE RECORD IS FINISHED AT INSTANTIATION — the keyword's VALUE picks:
+#       Entry(REG, (4,), "e", data=16,          # int   -> width of a DECLARED field
+#                             spectag=kaf(8))   # kaf() -> a field only THIS array has
+#   A class-body `kaf(w)` width is a DEFAULT; `kaf()` with no width must be
+#   sized by every instantiation (it rides the flat list as `(name, None)`);
+#   a call-site kaf() APPENDS after the declared fields, in keyword order,
+#   flattened through the same walk a class-body bundle takes.
+# - `resolve_karray_field_specs` is the ONE place a final width is decided and
+#   the ONE place a field is added; the class's own list is never mutated, so
+#   two arrays of one class may differ.
 
 from __future__ import annotations
 
-from typing import Optional, Tuple
+from typing import Any, Callable, Dict, Final, Iterable, List, Optional, Sequence, Set, Tuple, Union
 
 
 class KarrayField:
-    """Field descriptor used by Karray/KBundle subclasses. Holds a leaf bit
-    width, a nested bundle type (any class declaring __karray_fields__), or
-    nothing at all — a leaf whose width arrives at instantiation.
-
-    Example:
-        class Vec2(KBundle):
-            x = kaf(8)
-            y = kaf(8)
+    """Field descriptor for Karray/KBundle subclasses — one kaf() spec.
 
         class Entry(Karray):
             valid = kaf(1)
-            pos   = kaf(Vec2)          # nested bundle -> leaf fields pos_x, pos_y
-            data  = kaf()              # width required at instantiation
-            tag   = kaf(8)             # 8 unless the instantiation says otherwise
+            pos   = kaf(Vec2)   # nested bundle -> leaf fields pos_x, pos_y
+            data  = kaf()       # width required at instantiation
+            tag   = kaf(8)      # 8 unless the instantiation says otherwise
     """
 
     __slots__ = ("width", "subtype", "name")
+    width   : Optional[int]     # leaf width; None = bundle OR pending width
+    subtype : Optional[type]    # bundle class (declares __karray_fields__), else None
+    name    : Optional[str]     # field name; filled by __set_name__ in a class body
 
-    def __init__(self, width_or_type=None, name: Optional[str] = None) -> None:
+    def __init__(self, width_or_type: Union[int, type, None] = None, name: Optional[str] = None) -> None:
         if width_or_type is None:
             # kaf(): a leaf with no declared width. It reaches the flat list as
             # (name, None) and Karray.__init__ demands a width for it.
@@ -79,26 +57,23 @@ class KarrayField:
             raise TypeError("kaf() takes a bit width (int) or a KBundle/Karray subclass")
         self.name = None if name is None else str(name)
 
-    def __set_name__(self, owner, attr_name: str) -> None:
+    def __set_name__(self, owner: type, attr_name: str) -> None:
         if self.name is None:
             self.name = attr_name
 
 
-def kaf(width_or_type=None, name: Optional[str] = None) -> KarrayField:
+def kaf(width_or_type: Union[int, type, None] = None, name: Optional[str] = None) -> KarrayField:
     """Declare one element field.
 
-    `kaf(width)`      — a leaf; the width is the DEFAULT and an instantiation
-                        may override it (`Entry(REG, (4,), "e", data=16)`).
-    `kaf(BundleType)` — nests that bundle's fields under this field's name,
-                        flattened with '_'.
-    `kaf()`           — a leaf with NO default: every instantiation must give
-                        it a width, which is how a record says "this number is
-                        the caller's to choose".
-
-    In a class body the attribute name becomes the field name; `name` overrides
-    it, which is the only way to reach a field name that is not a Python
-    identifier. The same spec passed to an instantiation ADDS a field to that
-    one array (`Entry(REG, (4,), "e", spectag=kaf(8))`).
+    - `kaf(width)`      — a leaf; the width is a DEFAULT an instantiation may
+                          override (`Entry(REG, (4,), "e", data=16)`).
+    - `kaf(BundleType)` — nests that bundle's fields under this name ('_'-flat).
+    - `kaf()`           — a leaf with NO default: every instantiation must size
+                          it ("this number is the caller's to choose").
+    - In a class body the attribute name becomes the field name; `name`
+      overrides it (the only route to a non-identifier field name).
+    - Passed at an instantiation, the same spec ADDS a field to that one array
+      (`Entry(REG, (4,), "e", spectag=kaf(8))`).
     """
     return KarrayField(width_or_type, name)
 
@@ -106,17 +81,17 @@ def kaf(width_or_type=None, name: Optional[str] = None) -> KarrayField:
 # Karray.__init__ takes field arguments as keywords, so a field may not be named
 # after one of its own parameters — `Entry(REG, (4,), name=8)` cannot mean two
 # things. Declaring one raises when the class is created, not here.
-RESERVED_FIELD_NAMES = ("backing", "shape", "name")
+RESERVED_FIELD_NAMES : Final[Tuple[str, ...]] = ("backing", "shape", "name")
 
 
-def _expand_field_spec(name: str, spec: KarrayField, add) -> None:
+def _expand_field_spec(name: str, spec: KarrayField, add: Callable[[str, Optional[int]], None]) -> None:
     """Emit the flat leaves one kaf() spec stands for, under `name`.
 
-    A leaf is itself; a bundle splices in the bundle's already-flat fields with
-    `name + '_'` (pos = kaf(Vec2) -> "pos_x", "pos_y"). Deeper nesting was
-    flattened when the bundle class was defined, so ONE prefix level is all that
-    is ever needed. Shared by the class-body walk and the instantiation path, so
-    a field added at a call flattens exactly like a declared one.
+    - Leaf: itself. Bundle: splices its already-flat fields under `name + '_'`
+      (pos = kaf(Vec2) -> "pos_x", "pos_y"); deeper nesting flattened when the
+      bundle class was defined, so ONE prefix level is ever needed.
+    - Shared by the class-body walk AND the instantiation path, so an added
+      field flattens exactly like a declared one.
     """
     if spec.subtype is None:
         add(name, spec.width)
@@ -125,7 +100,7 @@ def _expand_field_spec(name: str, spec: KarrayField, add) -> None:
             add(f"{name}_{sub_name}", sub_width)
 
 
-def _final_width(width, name: str, where: str, added: bool) -> int:
+def _final_width(width: Optional[int], name: str, where: str, added: bool) -> int:
     """Validate one resolved width. `added` only changes the advice on None."""
     if width is None:
         if added:
@@ -145,25 +120,25 @@ def _final_width(width, name: str, where: str, added: bool) -> int:
     return int(width)
 
 
-def resolve_karray_field_specs(fields, overrides, where: str) -> list:
-    """Final (name, width) list for ONE instantiation. The one place a width is
-    decided, and the one place a field is added.
+def resolve_karray_field_specs(
+    fields    : Sequence[Tuple[str, Optional[int]]],
+    overrides : Dict[str, Union[int, KarrayField]],
+    where     : str,
+) -> List[Tuple[str, int]]:
+    """Final (name, width) list for ONE instantiation — the one place a width
+    is decided and the one place a field is added.
 
-    `fields` is the class's flat declaration list, whose widths may be None
-    (kaf() with no width). `overrides` maps a keyword to either:
-
-        an int        — the width for a field the class DECLARES
-        a kaf() spec  — a field this array has and the class does not
-
-    The value's type is what picks: a number changes a field, a kaf() declares
-    one. Added fields are appended after the declared ones, in the order the
-    keywords were written.
+    - `fields`: the class's flat declaration list (width None = kaf() with no
+      default).
+    - `overrides` keyword VALUE picks: int -> width for a DECLARED field;
+      kaf() spec -> a field this array has and the class does not.
+    - Added fields append after the declared ones, in keyword order.
     """
     declared_names = [name for name, _ in fields]
     declared       = set(declared_names)
 
-    widths : dict = {}      # declared field -> width
-    added  : list = []      # (field name, spec), in keyword order
+    widths : Dict[str, int]                = {}   # declared field -> width
+    added  : List[Tuple[str, KarrayField]] = []   # (field name, spec), keyword order
     for key, value in overrides.items():
         if isinstance(value, KarrayField):
             if key in declared:
@@ -183,10 +158,10 @@ def resolve_karray_field_specs(fields, overrides, where: str) -> list:
                     f"{key}=kaf(<bits>) to add it to this array")
             widths[key] = value
 
-    resolved : list = []
-    seen     : set  = set()
+    resolved : List[Tuple[str, int]] = []
+    seen     : Set[str]              = set()
 
-    def emit(name: str, width, is_added: bool) -> None:
+    def emit(name: str, width: Optional[int], is_added: bool) -> None:
         if name in seen:
             raise TypeError(
                 f"{where}: duplicate field name '{name}' "
@@ -201,7 +176,7 @@ def resolve_karray_field_specs(fields, overrides, where: str) -> list:
     return resolved
 
 
-def get_declared_karray_fields(cls) -> Tuple[Tuple[str, Optional[int]], ...]:
+def get_declared_karray_fields(cls: type) -> Tuple[Tuple[str, Optional[int]], ...]:
     """Return the normalized FLAT field declarations collected on a subclass.
 
     A width of None means kaf() declared no default — see resolve_karray_field_specs.
@@ -209,12 +184,12 @@ def get_declared_karray_fields(cls) -> Tuple[Tuple[str, Optional[int]], ...]:
     return tuple(getattr(cls, "__karray_fields__", ()))
 
 
-def collect_declared_karray_fields(cls) -> Tuple[Tuple[str, Optional[int]], ...]:
+def collect_declared_karray_fields(cls: type) -> Tuple[Tuple[str, Optional[int]], ...]:
     """The shared __init_subclass__ walk: inherited flat fields first (MRO
     base→parent order), then cls's own kaf() specs — a bundle spec expands to
     its (already flat) fields prefixed with the spec name + '_'."""
-    fields: list = []
-    seen  : set  = set()
+    fields : List[Tuple[str, Optional[int]]] = []
+    seen   : Set[str]                        = set()
 
     def add(name: str, width: Optional[int]) -> None:
         if name in seen:
@@ -256,14 +231,15 @@ class KBundle:
     in a Karray (or another bundle) via `kaf(TheBundle)`. Pure type: never
     instantiated, it only carries the flattened field list."""
 
-    __karray_fields__ = ()
+    # Flat (name, width) leaves; width None = kaf() with no default.
+    __karray_fields__ : Tuple[Tuple[str, Optional[int]], ...] = ()
 
-    def __init_subclass__(cls, **kwargs) -> None:
+    def __init_subclass__(cls, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)
         cls.__karray_fields__ = collect_declared_karray_fields(cls)
 
 
-def normalize_karray_field_specs(fields) -> list:
+def normalize_karray_field_specs(fields: Iterable[Tuple[str, int]]) -> List[Tuple[str, int]]:
     """Convert (name, width) pair iterables into a list of (str, int) tuples.
 
     Kept for a caller holding a raw pair list. Karray.__init__ goes through

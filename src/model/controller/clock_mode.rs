@@ -53,16 +53,13 @@ pub fn set_global_clk_mode(mode: ClockMode) {
 
 // ---- Clock-signal policy ----------------------------------------------------
 //
-// ClkFree update events / assign metas need no wiring: their `clk_signal` stays
-// `None` and the event is emitted combinationally wherever it lives.
-//
-// PosEdge / NegEdge events do need a concrete clock source.  Two cases:
-//
-//   1. User-level assignment (AssignMeta + its UpdateEvent).  Both are created
-//      with `clk_signal = None`.  The signal is filled in during the enclosing
-//      flow block's build phase (`FlowBlockBase::build_common_hw`), drawn from
-//      the block's ext_trigger_node clk.
-//
-//   2. Flow-block internal registers (UpdateEvent only — no AssignMeta).  The
-//      clock signal is set when the owning node asks the register to build its
-//      update event; the source is again the node's trigger clk.
+// How an update event / assign meta gets its clock source:
+// - ClkFree           : no wiring — `clk_signal` stays None, the event is
+//                       emitted combinationally wherever it lives.
+// - PosEdge / NegEdge : needs a concrete source, filled in LATER:
+//     1. user-level assignment (AssignMeta + UpdateEvent) — created with
+//        clk_signal = None, wired during the enclosing flow block's build
+//        (`FlowBlockBase::build_common_hw`, from the block's ext_trigger clk).
+//     2. flow-block internal register (UpdateEvent only, no AssignMeta) —
+//        wired when the owning node asks the register to build its update
+//        event, from that node's trigger clk.

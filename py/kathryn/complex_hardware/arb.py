@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Optional
 
 from .. import _session
-from .._kathryn import ArbLockedChannel, ArbSamePriPolicy
+from .._kathryn import ArbSamePriPolicy, CcpIdent
 from ..hw_component import val, wire
 from ..signal import SignalRef, to_ref
 
@@ -24,6 +24,9 @@ class ArbLeaf:
     """
 
     __slots__ = ("index", "req", "ack")
+    index : int         # leaf position, as allocated by add_leaf
+    req   : SignalRef   # 1-bit: USER drives it
+    ack   : SignalRef   # 1-bit: the BUILD PASS drives it — read only
 
     def __init__(self, index: int, req: SignalRef, ack: SignalRef) -> None:
         self.index = index
@@ -38,14 +41,18 @@ class Arb:
     `kathryn.ArbSamePriPolicy` member resolving same-priority ties."""
 
     __slots__ = ("_ident",)
+    _ident : CcpIdent
 
+    # `policy` is an ArbSamePriPolicy member (AckAll / AckOne / NotAck). Typed
+    # `int` because the enum is BUILT AT RUNTIME from Rust — an IntEnum a static
+    # checker cannot resolve. Same for `channel: ArbLockedChannel` below.
     def __init__(self, policy: int = ArbSamePriPolicy.AckOne, name: Optional[str] = None) -> None:
         name        = name or _session.auto_name("arb")
         self._ident = _session.arena().mk_arb(name, int(policy))
 
     # ---- identity ----------------------------------------------------------
     @property
-    def ident(self):     return self._ident          # the underlying CcpIdent (pip/zync take this)
+    def ident(self) -> CcpIdent: return self._ident   # pip / zync take this
 
     @property
     def leaf_count(self) -> int: return _session.arena().arb_leaf_count(self._ident)
@@ -61,7 +68,7 @@ class Arb:
         idx = _session.arena().arb_add_leaf(self._ident, int(priority))
         return self._leaf(idx)
 
-    def add_leaf_locked(self, priority: int, channel: ArbLockedChannel) -> ArbLeaf:
+    def add_leaf_locked(self, priority: int, channel: int) -> ArbLeaf:
         # Add a leaf with one channel hard-tied to 1 (ArbLockedChannel.Req → always
         # requesting; .Ack → always granted); returns its handle.
         idx = _session.arena().arb_add_leaf_locked(self._ident, int(priority), int(channel))
