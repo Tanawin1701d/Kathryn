@@ -20,7 +20,7 @@ from .flow_block import (
     zync,
 )
 from .complex_hardware import Arb, ArbLeaf, PipCon, Karray, KarrayField, KBundle, kaf, KarrayRef, ReduceView, counter
-from .combinational import mux, sum_cnt
+from .combinational import any_of, mux, rotate_left, sum_cnt
 from .module import Module, init, flow, set_top
 from . import priority as _priority
 from .priority import (
@@ -56,7 +56,7 @@ __all__ = [
     # complex hardware (counter)
     "counter",
     # combinational combinators
-    "mux", "sum_cnt",
+    "any_of", "mux", "rotate_left", "sum_cnt",
     # module scope + session
     "Module", "init", "flow", "arena", "reset",
     "gen_flow", "build_flow", "build_model", "set_top", "emit_verilog",

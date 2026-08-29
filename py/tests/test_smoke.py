@@ -14,6 +14,7 @@ from kathryn import (
     priority, set_priority, set_priority_auto, get_priority, get_priority_mode,
     DEFAULT_UE_PRI_USER, DEFAULT_UE_PRI_RST, DEFAULT_UE_PRI_MIN,
     Karray, KBundle, kaf, HwComponentType,
+    any_of, mux, rotate_left, sum_cnt,
 )
 
 
@@ -1581,3 +1582,95 @@ def test_karray_bundle_map_assign_and_k2k():
     assert "b_E0_pos_x" in text
 
 
+
+
+# ---- combinational combinators (built in the Rust core, arena_impl_comb.rs) --
+
+
+def test_comb_pure_expression_widths_and_identities():
+    # rotate_left/any_of/sum_cnt are pure expressions but still declare
+    # expression HCPs, so they run inside a module scope (@init is enough).
+    h = {}
+
+    class worker(Module):
+        @init
+        def decl(self):
+            a    = reg(8, "a")
+            sel  = reg(1, "sel")
+            bits = [reg(1) for _ in range(5)]
+            ar   = k._session.arena()
+
+            # a full (or zero) turn is the identity: the SAME signal comes back
+            assert rotate_left(a, 8)._ident.global_id == a._ident.global_id
+            assert rotate_left(a, 0)._ident.global_id == a._ident.global_id
+            h["rot"] = rotate_left(a, 3)
+
+            # single-term any_of is the identity; empty is a 1-bit constant 0
+            assert any_of([sel])._ident.global_id == sel._ident.global_id
+            empty = any_of([])
+            assert empty.hw_type == "VAL" and ar.get_hw_bit_sz(empty._ident) == 1
+
+            # default sum width is exactly big enough for the largest sum:
+            # 5x 1-bit count 0..5 in 3 bits; 4x 8-bit need (4*255).bit_length()=10
+            h["w5x1"] = ar.get_hw_bit_sz(sum_cnt(bits)._ident)
+            h["w4x8"] = ar.get_hw_bit_sz(sum_cnt([a, a, a, a])._ident)
+
+            # validation now raised from the Rust core
+            with pytest.raises(ValueError, match="sum_cnt of no signals"):
+                sum_cnt([])
+            with pytest.raises(ValueError, match="exceeds the signal's"):
+                rotate_left(a, 1, width=9)
+            with pytest.raises(ValueError, match="needs a width >= 1"):
+                rotate_left(a, 1, width=0)
+            with pytest.raises(TypeError, match="amount must be an int"):
+                rotate_left(a, 1.5)
+
+    worker()
+    assert h["rot"].hw_type == "EXPR"
+    assert h["w5x1"] == 3
+    assert h["w4x8"] == 10
+
+
+def test_comb_mux_emits_priority_if_else():
+    # mux declares hardware (wire + zif/zelse), so it lives in a flow scope.
+    # An int arm is wrapped to the mux width by the connector; two int arms
+    # cannot infer a width and must say one.
+    reset()
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.sel  = reg(1, "sel")
+            self.a    = reg(8, "a")
+            self.b    = reg(8, "b")
+            self.o    = wire(8, "o")
+            self.o2   = wire(4, "o2")
+            self.rot  = wire(8, "rot")
+            self.cnt  = wire(3, "cnt")
+            self.anyb = wire(1, "anyb")
+            self.bits = [reg(1) for _ in range(5)]
+
+        @flow
+        def f(self):
+            with seq():
+                self.o  *= mux(self.sel, self.a, self.b, name="pickab")
+                self.o2 *= mux(self.sel, 5, 9, width=4)
+                with pytest.raises(TypeError, match="cannot infer a width"):
+                    mux(self.sel, 3, 4)              # two ints, no width
+                self.rot  *= rotate_left(self.a, 3)
+                self.cnt  *= sum_cnt(self.bits)
+                self.anyb *= any_of(self.bits)
+
+    set_top(worker())
+    gen_flow()
+    build_flow()
+
+    out_dir = tempfile.mkdtemp()
+    emit_verilog(out_dir, "top")
+    text = open(os.path.join(out_dir, "top.v")).read()
+    # the named mux wire exists and both arms assign it (zif arm + zelse arm)
+    assert "WIRE_pickab" in text
+    assert len([ln for ln in text.splitlines()
+                if "WIRE_pickab" in ln and "=" in ln and "always" not in ln]) >= 2
+    # rotate = shl | shr of the same source
+    assert "<<" in text and ">>" in text

@@ -5,7 +5,7 @@ use crate::model::hw_component::common::hcp_assign::{HcpAssign, HcpAssignable};
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HcpIdentifiable, HcpSensitiveType, HwComponentType};
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::hw_component::common::slice::Slice;
-use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_INTERNAL_MIN, DEFAULT_UE_PRI_MIN};
+use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_FALLBACK, DEFAULT_UE_PRI_MIN};
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_ident::NcpIdent;
 
@@ -68,12 +68,16 @@ impl Wire {
     pub fn try_build_default(&mut self, arena: &mut ModelArena) {
         if !self.build_default { return }
         if let Some(default_val_i) = self.default_val {
-            // explicit user default — beats the implicit zero, loses to real assignments
+            // explicit user default — beats the implicit zero, loses to real assignments.
+            // FALLBACK (1), not INTERNAL_MIN (50): events are emitted in ascending
+            // priority order and the LAST one written wins, so a fallback above
+            // DEFAULT_UE_PRI_USER would override the very assignments it exists to
+            // back up (it did, until 2026-08-18).
             let src_sl = arena.get_hw_slice(&default_val_i);
             self.bind_src(
                 default_val_i,
                 None, src_sl,
-                Some(DEFAULT_UE_PRI_INTERNAL_MIN),
+                Some(DEFAULT_UE_PRI_FALLBACK),
                 None, None,
                 arena);
         } else {

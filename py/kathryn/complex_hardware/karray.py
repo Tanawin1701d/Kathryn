@@ -16,10 +16,11 @@
 
 from __future__ import annotations
 
+from itertools import product
 from typing import Iterable, Optional, Union
 
 from .. import _session
-from ..signal import _ASSIGNED
+from ..signal import SignalRef, _ASSIGNED
 from .karray_field import (
     RESERVED_FIELD_NAMES,
     collect_declared_karray_fields,
@@ -91,6 +92,36 @@ class Karray:
     @property
     def ident(self):                          # the underlying CcpIdent
         return self._ident
+
+    # ---- reset ---------------------------------------------------------------
+    def reset(self, **fields) -> "Karray":
+        """Reset value for EVERY element of a reg-backed Karray, one keyword per
+        field: `rat.reset(renamed=0, prf_idx=0)`.
+
+        It records the value on each element's own backing register and calls
+        `reg.reset`, so the reset event, its priority (DEFAULT_UE_PRI_RST) and its
+        clock are the register's own — a Karray adds NO reset mechanism of its
+        own, it only says which registers to point the existing one at. A field
+        left out of the call keeps no reset value and powers up undefined, the
+        same as a bare `reg`.
+
+        Whole-array only: one value per field, shared by every element. That is
+        what a state array wants (a rename table's valid bits all reset to 0);
+        a per-element reset would need a static element handle, which is a
+        different feature and is left until something needs it."""
+        arena = _session.arena()
+        if not arena.karray_is_clocked(self._ident):
+            raise TypeError("reset(...) requires a reg-backed Karray "
+                            "(a wire has no state to reset; use default(...))")
+        coords = [list(c) for c in product(*(range(d) for d in arena.karray_shape(self._ident)))]
+        for name, value in fields.items():
+            # Coerce ONCE: every element of a field has the same width, so one
+            # val backs all of them rather than one val per element.
+            value = SignalRef(
+                arena.karray_element_hcp(self._ident, coords[0], name))._coerce_value(value)
+            for coord in coords:
+                SignalRef(arena.karray_element_hcp(self._ident, coord, name)).reset(value)
+        return self
 
     def __getitem__(self, key) -> KarrayRef:
         return KarrayRef(self._ident)[key]

@@ -50,6 +50,42 @@ impl ModelArena {
         self.with_karray(karray_i, |karray, _| karray.is_clocked())
     }
 
+    // The backing HCP of ONE field at a FULLY-STATIC coordinate — the leaf a read
+    // or write of that element would resolve to. Pure lookup, no hardware.
+    // It exists so a caller can reach an element's own component and use the
+    // component's API on it (the DSL's `Karray.reset`): the reset value, its
+    // priority and its clock stay the Reg's, and no Karray-specific reset
+    // mechanism is added here. Static only — there is no runtime element to
+    // hand back for a Dyn/Cus selection.
+    pub fn karray_element_hcp(
+        &mut self,
+        karray_i: CcpIdent,
+        coord   : &[usize],
+        field   : &str,
+    ) -> Result<HcpIdent, KarrayErr> {
+        self.with_karray(karray_i, |karray, _| {
+            let shape = karray.get_shape();
+            if coord.len() != shape.len() {
+                return Err(KarrayErr::Value(format!(
+                    "a Karray coordinate must name every dimension: got {} for a {}-D Karray",
+                    coord.len(), shape.len())));
+            }
+            for (dim_idx, (&dim_sz, &idx)) in shape.iter().zip(coord.iter()).enumerate() {
+                if idx >= dim_sz {
+                    return Err(KarrayErr::Value(format!(
+                        "index {idx} out of bounds for dimension {dim_idx} of size {dim_sz}")));
+                }
+            }
+            match karray.field_index(field) {
+                Some(field_idx) => Ok(karray.element_hcp(coord, field_idx)),
+                None            => Err(KarrayErr::Value(format!(
+                    "Karray has no field '{field}' (fields: {})",
+                    karray.get_fields().iter()
+                          .map(|f| f.get_name()).collect::<Vec<_>>().join(", ")))),
+            }
+        })
+    }
+
     // ---- read --------------------------------------------------------------
 
     // Resolve a fully-collapsed selection + field NAME to that field's (possibly

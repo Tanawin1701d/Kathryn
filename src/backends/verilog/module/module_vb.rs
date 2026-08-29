@@ -191,8 +191,10 @@ impl Module {
         for io_i in io_idents {
             let io_wire = arena.take_io_wire(io_i);
             if !io_wire.get_is_input() {
-                // Output port of a child → declare as a wire in this parent scope.
-                io_wire.gen_init_line_vb(0, arena, fw);
+                // Output port of a child → declare as a WIRE in this parent scope,
+                // because the instantiation drives it. gen_init_line_vb declares a
+                // reg (right inside the driving module, wrong out here).
+                io_wire.gen_parent_net_line_vb(fw);
                 fw.write("\n");
             }
             arena.replace_back_io_wire(io_wire);

@@ -81,8 +81,9 @@ impl PyModelArena {
 // ---- internal helpers (not exposed to Python) ----
 
 // Emit a Python `warnings.warn` when the host implicitly resized an assignment
-// source to fit the destination; a no-op when no resize happened.
-fn warn_asm_resize(py: Python<'_>, resize: AsmResize, des_name: &str) -> PyResult<()> {
+// source to fit the destination; a no-op when no resize happened. Shared with
+// the combinational connector (`arena_impl_comb_py.rs`), hence pub(crate).
+pub(crate) fn warn_asm_resize(py: Python<'_>, resize: AsmResize, des_name: &str) -> PyResult<()> {
     let msg = match resize {
         AsmResize::None => return Ok(()),
         AsmResize::ZeroExtended { from, to } => format!(

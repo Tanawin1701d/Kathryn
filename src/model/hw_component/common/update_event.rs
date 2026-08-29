@@ -20,6 +20,10 @@ define_asm_priority_consts! {
     DEFAULT_UE_PRI_INTERNAL_MIN  : i32 = 50,
     DEFAULT_UE_PRI_RST           : i32 = i32::MAX,
     DEFAULT_UE_PRI_MIN           : i32 = 0,
+    // A wire's EXPLICIT fallback (`wire.default(v)`): above the implicit zero
+    // (MIN), below every user assignment (USER), so the fallback is what the wire
+    // takes when nothing else drives it and loses the moment something does.
+    DEFAULT_UE_PRI_FALLBACK      : i32 = 1,
     DEFAULT_UE_SUB_PRIORITY_USER : u64 = 0,
 }
 

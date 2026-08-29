@@ -44,6 +44,18 @@ impl HcpBaseVb for IoWire {
 
 impl IoWire {
 
+    // The PARENT-side receiver net for this — a CHILD module's output port. It is
+    // driven by the instantiation, so it must be a `wire`: Verilog forbids
+    // connecting a module output to a `reg`. Deliberately NOT `gen_init_line_vb`,
+    // which declares the same signal INSIDE the module that drives it from an
+    // always block and must therefore be a `reg` — same signal, opposite side of
+    // the port, opposite net kind.
+    pub(crate) fn gen_parent_net_line_vb(&self, fw: &mut FileWriter) {
+        let w    = signal_width(self.get_des_slice().get_size());
+        let name = self.gen_var_name_vb();
+        fw.write(&format!("wire {w}{name};"));
+    }
+
     pub(crate) fn gen_agent_input_vb(&self, arena: &mut ModelArena) -> String {
         assert!(self.get_is_input(), "gen_agent_input_vb called on output IoWire");
         let agent_i = self.get_agent_src_signal_i();

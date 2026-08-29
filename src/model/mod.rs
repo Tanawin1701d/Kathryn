@@ -3,6 +3,7 @@ pub mod controller;
 pub mod common;
 pub mod model_arena;
 pub mod arena_impl;
+pub mod arena_impl_comb;
 pub mod nodes;
 pub mod complex_hardware;
 pub mod module;

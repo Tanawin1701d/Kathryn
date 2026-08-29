@@ -38,6 +38,20 @@ impl PyModelArena {
         self.arena.karray_is_clocked(karray_i.into())
     }
 
+    // The backing HCP of one field at a fully-static coordinate. `Karray.reset`
+    // reaches an element's register with this and then calls the REG's own
+    // reset — so the DSL grows no second reset mechanism (see the host method).
+    fn karray_element_hcp(
+        &mut self,
+        karray_i: PyCcpIdent,
+        coord   : Vec<usize>,
+        field   : &str,
+    ) -> PyResult<PyHcpIdent> {
+        self.arena.karray_element_hcp(karray_i.into(), &coord, field)
+            .map(Into::into)
+            .map_err(karray_err_to_py)
+    }
+
     // ---- read --------------------------------------------------------------
 
     // Resolve a fully-collapsed selection + field NAME to that field's (possibly

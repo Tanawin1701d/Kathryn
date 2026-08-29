@@ -889,17 +889,27 @@ operation routes through one process-wide `ModelArena`.
 - `flow_block.py` — flow blocks are context managers: `with seq(): …`,
   `with sif(cond): …`. `__enter__` opens the scope (initialize), `__exit__`
   finalizes. There is no block-build hook (see below).
-- `combinational.py` — combinators assembled from the primitives, no new Rust
-  node type. `mux(cond, a, b)` is a wire plus a `zif`/`zelse` pair, not a mask
-  expression: there is no ternary `LogicOp`, `mk_extend_bit` fills with `1'b0`
+- `combinational.py` — thin DSL face over the CORE combinators
+  (`mux`/`rotate_left`/`any_of`/`sum_cnt`). The topology, width rules and
+  validation live in `src/model/arena_impl_comb.rs` (`gen_mux`,
+  `gen_rotate_left`, `gen_any_of`, `gen_sum_cnt` on `ModelArena`) so every
+  frontend builds the same hardware; the connector
+  (`src/applications/py/model/arena_impl_comb_py.rs`) only wraps int-literal
+  operands into `val`s (shared `make_const_val`), infers the mux width while
+  ints are still ints, and surfaces resize reports as Python warnings. No new
+  Rust node type: `gen_mux` is a wire plus a `zif`/`zelse` pair, not a mask
+  expression — there is no ternary `LogicOp`, `ExtendBit` fills with `1'b0`
   (zero-extension, never replication) so `extend` cannot build a mask, and the
   zif chain is the tested priority-mux path that emits a plain `if/else`. It
   therefore DECLARES hardware — it needs an open flow scope, and inside a `seq()`
   the emitted always-block is gated on that step's state, so read it in the step
   that built it. `sum_cnt(bits)` is a BALANCED adder tree (log2(n) depth, not n)
   over 1-bit signals and is a pure expression; its default width is derived so
-  the sum cannot overflow. This module sits above signal/hw_component/flow_block
-  in the import order, which is why `mux` is not in `signal.py`.
+  the sum cannot overflow. The identity cases (a full-turn rotate, a single-term
+  `any_of`) come back from the core as `None` and the DSL returns the input ref
+  unchanged, slice view intact. `combinational.py` sits above
+  signal/hw_component in the import order, which is why `mux` is not in
+  `signal.py`.
 - `module.py` — modules use a **class form**: extend `Module` and decorate methods
   with `@init` (hardware declaration) and `@flow` (flow-block construction).
   Construction is **two-phase**:
@@ -1146,4 +1156,24 @@ regfile), `tc34` (k2k element copies, name+width pairing), `tc30`/`tc31`
 (dynamic read/write), `tc32` (custom write enables, int sources, map writes,
 reduce read), `tc35` (all three kinds in one k2k statement, both sides), `tc33`
 (reduce read: max, extras running-sum, 2-D pin+fold), `tc36` (bundles end to
-end).
+end). **`Karray.reset(**field_values)`** (2026-08-18) gives a reg-backed array a
+reset value per field, one value shared by every element: it looks each element's
+backing HCP up through `karray_element_hcp` (a pure layout query, static
+coordinates only) and calls the REG's own `reset`, so the reset event, its
+priority and its clock stay the register's and the Karray grows no reset
+mechanism of its own. A field left out powers up undefined, exactly like a bare
+`reg`. Before it a Karray could not be reset at all, which is fatal for any state
+array whose valid bits must start at 0.
+
+**Two fixes on 2026-08-18, both contradicting the code's own stated intent:**
+- `wire.default(v)` bound its fallback at `DEFAULT_UE_PRI_INTERNAL_MIN` (50),
+  ABOVE `DEFAULT_UE_PRI_USER` (10). Events are emitted in ascending priority and
+  the last one wins, so the fallback overrode every real assignment to the wire —
+  the opposite of "loses to every real assignment". Now bound at the new
+  `DEFAULT_UE_PRI_FALLBACK` (1), above the implicit zero and below user code.
+- `Module::gen_var_sub_mod_declaration_vb` declared a CHILD's output net in the
+  PARENT scope with `gen_init_line_vb`, i.e. as a `reg`. Verilog forbids driving a
+  `reg` from an instance output, so NO hierarchical design passed iverilog or
+  verilator (reproduced on `tc37`). The parent-side net now has its own emitter,
+  `IoWire::gen_parent_net_line_vb`, which writes a `wire`; `gen_init_line_vb`
+  stays the reg form for the module that drives it.
