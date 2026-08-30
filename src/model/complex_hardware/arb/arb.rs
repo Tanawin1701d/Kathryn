@@ -1,4 +1,6 @@
 use crate::model::common::identifier::{IdentBase, Identifiable};
+use crate::model::complex_hardware::arb::arb_leaf::ArbLeaf;
+use crate::model::complex_hardware::arb::arb_policy::{ArbLockedChannel, ArbSamePriPolicy};
 use crate::model::complex_hardware::common::ccp_ident::{CcpIdent, CcpType};
 use crate::model::complex_hardware::common::ccp_base::CcpBase;
 use crate::model::hw_component::common::hcp_assign::HcpAssignable;
@@ -7,107 +9,6 @@ use crate::model::hw_component::common::operation::LogicOp;
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_base::add_logic;
-
-// ---- ArbSamePriPolicy -------------------------------------------------------
-
-/// How to resolve a tie when several requesting leaves share the same priority.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ArbSamePriPolicy {
-    AckOne,   // grant only the earliest leaf in vector order
-    AckAll,   // grant every same-priority requester
-    NotAck,   // grant none while a same-priority conflict exists
-}
-
-impl ArbSamePriPolicy {
-    /// Stable variant name — surfaced to other languages. Exhaustive, so a new
-    /// variant fails to compile until it is named here.
-    pub fn variant_name(self) -> &'static str {
-        match self {
-            ArbSamePriPolicy::AckOne => "AckOne",
-            ArbSamePriPolicy::AckAll => "AckAll",
-            ArbSamePriPolicy::NotAck => "NotAck",
-        }
-    }
-
-    /// Map a 0-based declaration-order index back to its variant; `None` past the last.
-    pub fn from_index(idx: u32) -> Option<ArbSamePriPolicy> {
-        match idx {
-            0 => Some(ArbSamePriPolicy::AckOne),
-            1 => Some(ArbSamePriPolicy::AckAll),
-            2 => Some(ArbSamePriPolicy::NotAck),
-            _ => None,
-        }
-    }
-}
-
-// ---- ArbLockedChannel -------------------------------------------------------
-
-/// Which side of a leaf is hard-tied to constant 1 instead of being a wire.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ArbLockedChannel {
-    Req,   // req tied to val 1 (leaf always requests); ack stays a normal wire
-    Ack,   // ack tied to val 1 (leaf always granted);  req stays a normal wire
-}
-
-impl ArbLockedChannel {
-    /// Stable variant name — surfaced to other languages. Exhaustive, so a new
-    /// variant fails to compile until it is named here.
-    pub fn variant_name(self) -> &'static str {
-        match self {
-            ArbLockedChannel::Req => "Req",
-            ArbLockedChannel::Ack => "Ack",
-        }
-    }
-
-    /// Map a 0-based declaration-order index back to its variant; `None` past the last.
-    pub fn from_index(idx: u32) -> Option<ArbLockedChannel> {
-        match idx {
-            0 => Some(ArbLockedChannel::Req),
-            1 => Some(ArbLockedChannel::Ack),
-            _ => None,
-        }
-    }
-}
-
-// ---- ArbLeaf ----------------------------------------------------------------
-
-/// One arbitration client: its request/ack reference wires and its priority
-/// (same scale as the UE priority — larger value wins).
-pub struct ArbLeaf {
-    req_wire_i : HcpIdent,
-    ack_wire_i : HcpIdent,
-    priority   : i32,
-    ack_locked : bool,      // true → ack_wire_i is a const val 1; build must not drive it
-}
-
-impl ArbLeaf {
-    /// Create a leaf with freshly-made 1-bit req/ack wires named off `base`/`idx`.
-    fn new(base: &str, idx: usize, priority: i32, arena: &mut ModelArena) -> Self {
-        let req_wire_i = arena.make_wire(false, &format!("{}_REQ{}", base, idx), 1);
-        let ack_wire_i = arena.make_wire(false, &format!("{}_ACK{}", base, idx), 1);
-        Self { req_wire_i, ack_wire_i, priority, ack_locked: false }
-    }
-
-    /// Create a leaf with one side hard-tied to constant 1; the other side stays
-    /// a freshly-made 1-bit wire.
-    fn new_locked(base: &str, idx: usize, priority: i32, channel: ArbLockedChannel, arena: &mut ModelArena) -> Self {
-        let (req_wire_i, ack_wire_i) = match channel {
-            ArbLockedChannel::Req => (
-                arena.make_val (false, &format!("{}_REQ{}", base, idx), 1, 1),
-                arena.make_wire(false, &format!("{}_ACK{}", base, idx), 1),
-            ),
-            ArbLockedChannel::Ack => (
-                arena.make_wire(false, &format!("{}_REQ{}", base, idx), 1),
-                arena.make_val (false, &format!("{}_ACK{}", base, idx), 1, 1),
-            ),
-        };
-        Self { req_wire_i, ack_wire_i, priority, ack_locked: channel == ArbLockedChannel::Ack }
-    }
-
-    pub fn get_req_wire_i(&self) -> HcpIdent { self.req_wire_i }
-    pub fn get_ack_wire_i(&self) -> HcpIdent { self.ack_wire_i }
-    pub fn get_priority  (&self) -> i32      { self.priority   }
-}
 
 // ---- Arb --------------------------------------------------------------------
 
@@ -209,8 +110,8 @@ impl Arb {
     pub fn get_user_reset_i     (&self)             -> Option<HcpIdent>  { self.user_reset_i      }
     pub fn leaf_count           (&self)             -> usize             { self.leaves.len() }
     pub fn get_leaf             (&self, idx: usize) -> &ArbLeaf          { &self.leaves[idx] }
-    pub fn get_leaf_req_wire_i  (&self, idx: usize) -> HcpIdent          { self.leaves[idx].req_wire_i }
-    pub fn get_leaf_ack_wire_i  (&self, idx: usize) -> HcpIdent          { self.leaves[idx].ack_wire_i }
+    pub fn get_leaf_req_wire_i  (&self, idx: usize) -> HcpIdent          { self.leaves[idx].get_req_wire_i() }
+    pub fn get_leaf_ack_wire_i  (&self, idx: usize) -> HcpIdent          { self.leaves[idx].get_ack_wire_i() }
 
     // ---- build helpers -----------------------------------------------------
 
@@ -226,8 +127,8 @@ impl Arb {
     /// Higher-priority requests block the grant; same-priority ties are resolved
     /// by `same_pri_policy`.  Returns the assembled ack operand.
     fn build_leaf_ack(&self, arena: &mut ModelArena, idx: usize) -> HcpIdent {
-        let leaf_pri = self.leaves[idx].priority;
-        let mut ack_res_i = self.leaves[idx].req_wire_i;
+        let leaf_pri = self.leaves[idx].get_priority();
+        let mut ack_res_i = self.leaves[idx].get_req_wire_i();
 
         // gate on the global grant (its single source, when bound)
         if let Some(mack) = self.master_ack_src_i {
@@ -237,8 +138,8 @@ impl Arb {
         // any higher-priority requester blocks this leaf
         let mut higher_req_i: Option<HcpIdent> = None;
         for other_leaf in &self.leaves {
-            if other_leaf.priority > leaf_pri {
-                add_logic(arena, &mut higher_req_i, other_leaf.req_wire_i, LogicOp::BitwiseOr);
+            if other_leaf.get_priority() > leaf_pri {
+                add_logic(arena, &mut higher_req_i, other_leaf.get_req_wire_i(), LogicOp::BitwiseOr);
             }
         }
         if let Some(h) = higher_req_i {
@@ -249,14 +150,14 @@ impl Arb {
         // same-priority resolution
         let mut same_req_i: Option<HcpIdent> = None;
         for (j, other_leaf) in self.leaves.iter().enumerate() {
-            if other_leaf.priority != leaf_pri { continue; }
+            if other_leaf.get_priority() != leaf_pri { continue; }
             let blocks = match self.same_pri_policy {
                 ArbSamePriPolicy::AckAll => false,      // never block an equal peer
                 ArbSamePriPolicy::AckOne => j < idx,    // an earlier peer wins the tie
                 ArbSamePriPolicy::NotAck => j != idx,   // any other peer cancels the grant
             };
             if blocks {
-                add_logic(arena, &mut same_req_i, other_leaf.req_wire_i, LogicOp::BitwiseOr);
+                add_logic(arena, &mut same_req_i, other_leaf.get_req_wire_i(), LogicOp::BitwiseOr);
             }
         }
         if let Some(s) = same_req_i {
@@ -275,16 +176,16 @@ impl CcpBase for Arb {
         // master_req = OR of every leaf request
         let mut master_req_i: Option<HcpIdent> = None;
         for leaf in &self.leaves {
-            add_logic(arena, &mut master_req_i, leaf.req_wire_i, LogicOp::BitwiseOr);
+            add_logic(arena, &mut master_req_i, leaf.get_req_wire_i(), LogicOp::BitwiseOr);
         }
         if let Some(r) = master_req_i {
             Self::drive_wire(arena, self.master_req_wire_i, r);
         }
         // per-leaf ack arbitration (locked-ack leaves are const 1 — never driven)
         for idx in 0..self.leaves.len() {
-            if self.leaves[idx].ack_locked { continue; }
+            if self.leaves[idx].is_ack_locked() { continue; }
             let ack_res_i  = self.build_leaf_ack(arena, idx);
-            let ack_wire_i = self.leaves[idx].ack_wire_i;
+            let ack_wire_i = self.leaves[idx].get_ack_wire_i();
             Self::drive_wire(arena, ack_wire_i, ack_res_i);
         }
     }
