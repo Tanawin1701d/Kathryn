@@ -16,9 +16,8 @@ from .flow_block import (
     pick, pif, pidef,
     cwhile, swhile, cdowhile, cloop,
     scwait, sywait,
-    pip,
-    zync,
 )
+from .pip_zync import pip, zync
 from .complex_hardware import Arb, ArbLeaf, PipCon, Karray, KarrayField, KBundle, kaf, KarrayRef, ReduceView, counter
 from .combinational import any_of, mux, rotate_left, sum_cnt
 from .module import Module, init, flow, set_top

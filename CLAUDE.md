@@ -926,7 +926,9 @@ operation routes through one process-wide `ModelArena`.
   `name` optional+last (auto-named when omitted).
 - `flow_block.py` — flow blocks are context managers: `with seq(): …`,
   `with sif(cond): …`. `__enter__` opens the scope (initialize), `__exit__`
-  finalizes. There is no block-build hook (see below).
+  finalizes. There is no block-build hook (see below). The arbiter-gated blocks
+  live in `pip_zync.py` (`pip`/`zync` + the `ZyncBind` spellings + PipCon type
+  guard), reusing `_FlowBlockCtx` / `_block` / `_complex_block` from here.
 - `combinational.py` — thin DSL face over the CORE combinators
   (`mux`/`rotate_left`/`any_of`/`sum_cnt`). The topology, width rules and
   validation live in `src/model/arena_impl_comb.rs` (`gen_mux`,
@@ -992,7 +994,7 @@ return annotations — a reader must never have to guess a type. Rules:
 - **Shared aliases beat repeated unions.** `signal.py` owns `Source`
   (`SignalRef` | anything with `_to_read_ref`) and `Operand` (`Source` | `int`);
   `karray_ref.py` owns `KarrayKey`, `FieldSource`, `Selector`, `RawSelectFn`,
-  `UserSelectFn`; `flow_block.py` owns `ZyncBind` / `ZyncBindArgs`. Annotate
+  `UserSelectFn`; `pip_zync.py` owns `ZyncBind` / `ZyncBindArgs`. Annotate
   against these, don't re-spell the union.
 - **`Source`, not `SignalRef`, wherever the body calls `to_ref`** — a `KarrayRef`
   is legal there, so `SignalRef` would be a lie.
