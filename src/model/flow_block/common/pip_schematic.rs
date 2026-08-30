@@ -79,6 +79,7 @@ impl PipSchematic {
         wait_trigger.hold_node_i = None;
         arena.init_node_trigger(wait4syn_i, &wait_trigger, false);
         base.add_sys_node(wait4syn_i);
+
         let pseudo_i = arena.make_pseudo_node(&format!("pip_entrance_{}", id), 1, LogicOp::BitwiseOr);
         arena.init_node_trigger(pseudo_i, base.get_ext_trigger_node(), false);
         base.add_sys_node(pseudo_i);
