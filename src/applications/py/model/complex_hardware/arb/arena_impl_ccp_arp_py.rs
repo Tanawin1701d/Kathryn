@@ -33,6 +33,11 @@ impl PyModelArena {
     // raises a ValueError at construction instead of letting the host panic on
     // its 1-bit assert during build.
 
+    // Hard-tie the master-ack gate to constant 1 — a PipCon no pip block masters.
+    fn arb_lock_master_ack(&mut self, arb_i: PyCcpIdent) {
+        self.arena.arb_lock_master_ack(arb_i.into());
+    }
+
     // Bind the single master-ack gate source (optionally a bit-slice of it).
     #[pyo3(signature = (arb_i, src_i, src_slice=None))]
     fn arb_set_master_ack(&mut self, arb_i: PyCcpIdent, src_i: PyHcpIdent, src_slice: Option<PySlice>) -> PyResult<()> {

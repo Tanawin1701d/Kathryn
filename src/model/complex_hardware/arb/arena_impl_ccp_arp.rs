@@ -32,6 +32,13 @@ impl ModelArena {
         self.replace_back_arb(arb);
     }
 
+    /// Hard-tie the master-ack gate to constant 1 (no pip block masters this arb).
+    pub fn arb_lock_master_ack(&mut self, ident: CcpIdent) {
+        let mut arb = self.take_arb(ident);
+        arb.set_master_ack_locked(self);
+        self.replace_back_arb(arb);
+    }
+
     /// Bind the master-ack source, resolving `src_slice` to a single bit first
     /// (mirrors the hold/reset slice handling).
     pub fn arb_set_master_ack(&mut self, ident: CcpIdent, src_i: HcpIdent, src_slice: Option<Slice>) {

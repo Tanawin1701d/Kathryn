@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+from .. import _session
 from .arb import Arb
 
 
@@ -15,4 +16,10 @@ class PipCon(Arb):
 
     __slots__ = ()
 
-
+    def no_pip_master(self) -> None:
+        # Declare that NO pip block masters this PipCon: the master-ack gate is
+        # hard-tied to constant 1, so a zync leaf is granted the moment it wins
+        # arbitration (a lone zync's ack simply mirrors its req).
+        # - call inside a module scope (@init), like the PipCon constructor;
+        # - a pip built on this PipCon afterwards fails the set-once assert.
+        _session.arena().arb_lock_master_ack(self._ident)

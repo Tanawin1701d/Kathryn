@@ -85,6 +85,15 @@ impl Arb {
         self.master_ack_src_i = Some(src_i);
     }
 
+    /// Hard-tie the master-ack gate to constant 1 (set once) — declare that NO pip
+    /// block masters this arb, so every grant is decided by leaf arbitration alone.
+    /// A pip built on this arb afterwards fails the already-set assert by design.
+    pub fn set_master_ack_locked(&mut self, arena: &mut ModelArena) {
+        assert!(self.master_ack_src_i.is_none(), "Arb::set_master_ack_locked: master ack already set");
+        let base = self.ident.get_ident_base().get_rel_name().to_string();
+        self.master_ack_src_i = Some(arena.make_val(false, &format!("{}_MACK", base), 1, 1));
+    }
+
     /// Bind the optional 1-bit hold signal (set once). The caller is responsible
     /// for resolving any slice down to a single bit before calling this.
     pub fn set_user_hold(&mut self, sig_i: HcpIdent, arena: &ModelArena) {

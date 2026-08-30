@@ -15,6 +15,7 @@ from kathryn import (
     DEFAULT_UE_PRI_USER, DEFAULT_UE_PRI_RST, DEFAULT_UE_PRI_MIN,
     Karray, KBundle, kaf, HwComponentType,
     any_of, mux, rotate_left, sum_cnt,
+    PipCon, pip, zync,
 )
 
 
@@ -1674,3 +1675,80 @@ def test_comb_mux_emits_priority_if_else():
                 if "WIRE_pickab" in ln and "=" in ln and "always" not in ln]) >= 2
     # rotate = shl | shr of the same source
     assert "<<" in text and ">>" in text
+
+
+# ---- PipCon.no_pip_master (master-ack hard-tied to 1) ------------------------
+
+def test_no_pip_master_zync_only_builds_and_emits_const_one():
+    # A PipCon no pip block masters: no_pip_master() ties the master-ack gate to
+    # a const-1 val, so a zync-only arb builds and its grant is gated on 1'b1.
+    reset()
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.src  = PipCon()
+            self.sink = PipCon(name="sink")
+            self.sink.no_pip_master()
+            self.a = reg(8, "a")
+
+        @flow
+        def f(self):
+            self.a.reset(0)
+            with pip(self.src, auto_req=True):
+                with zync(self.sink):
+                    self.a |= self.a + 1
+
+    set_top(worker())
+    gen_flow()
+    build_flow()
+
+    out_dir = tempfile.mkdtemp()
+    emit_verilog(out_dir, "top")
+    text = open(os.path.join(out_dir, "top.v")).read()
+    # the const-1 master-ack val exists and the leaf ack is AND-gated on it
+    assert any("sink_MACK" in ln and "1'b1" in ln for ln in text.splitlines())
+    assert "arb_ack_mack" in text
+
+
+def test_no_pip_master_is_set_once():
+    # A second no_pip_master call must fail the set-once assert. Nothing is built
+    # afterwards — the caught panic leaves the arb slot taken, and the next
+    # test's reset() rebuilds the arena.
+    reset()
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.xx = PipCon()
+            self.xx.no_pip_master()
+            with pytest.raises(BaseException, match="master ack already set"):
+                self.xx.no_pip_master()
+
+    worker()
+
+
+def test_no_pip_master_rejects_pip():
+    # A pip on a no_pip_master PipCon must fail the set-once assert when it tries
+    # to claim the master-ack during build_flow — that PipCon declared no pip
+    # masters it.
+    reset()
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.xx = PipCon()
+            self.xx.no_pip_master()
+            self.b = reg(8, "b")
+
+        @flow
+        def f(self):
+            self.b.reset(0)
+            with pip(self.xx, auto_req=True):
+                with seq():
+                    self.b |= self.b + 1
+
+    set_top(worker())
+    gen_flow()
+    with pytest.raises(BaseException, match="master ack already set"):
+        build_flow()
