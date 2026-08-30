@@ -27,22 +27,34 @@ from .._kathryn import CcpIdent, HcpIdent
 from ..signal import SignalRef, _ASSIGNED, _Assigned, to_ref
 
 # ---- shared types -------------------------------------------------------------
+
 # One `[]` key: int (static) / SignalRef (dynamic) / callable (custom fn).
 KarrayKey   = Union[int, SignalRef, Callable[..., Any]]
+
 # One assignment source: scalar signal/int, a karray view, or a field map
 # (values are themselves FieldSources — dicts nest for bundles).
 FieldSource = Union[SignalRef, "KarrayRef", int, Mapping[str, Any]]
+
 # The connector's per-dim selector triple `(kind, ints, sigs)`. Per-kind arity
 # rule lives in kidx_py.rs: "static" -> 1 int, "dyn" -> 1 sig, "cus" -> n sigs,
 # "reduce" -> none (its select fn rides the parallel fns list).
 Selector    = Tuple[str, List[int], List[HcpIdent]]
+
+# ---- reduce-select fn signatures ----------------------------------------------
+# Named pieces first, so the two Callable shapes below read argument by argument.
+
+FlatFields  = List[Tuple[str, HcpIdent]]   # a subtree's fields as flat (name, hcp) pairs
+CoveredIdxs = List[int]                    # the folding dim's indices a subtree covers
+
 # Rust reduce-fold callback ABI (see arena_impl_ccp_karray_py.rs::reduce_select):
-# (a_fields, a_indices, b_fields, b_indices, level) -> (select_hcp, extras),
-# fields travelling as flat (name, hcp) pairs.
+# (a_fields, a_indices, b_fields, b_indices, level) -> (select_hcp, extras).
 RawSelectFn = Callable[
-    [List[Tuple[str, HcpIdent]], List[int], List[Tuple[str, HcpIdent]], List[int], int],
-    Tuple[HcpIdent, List[Tuple[str, HcpIdent]]],
+    [FlatFields, CoveredIdxs,      # subtree a
+     FlatFields, CoveredIdxs,      # subtree b
+     int],                         # level in the 2:1 fold tree (0 = leaves)
+    Tuple[HcpIdent, FlatFields],   # pick-a select + replace/append extras
 ]
+
 # The user's select fn: (a, b, level) -> select, or (select, {name: extra}).
 UserSelectFn = Callable[
     ["ReduceView", "ReduceView", int],

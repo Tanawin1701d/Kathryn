@@ -16,7 +16,6 @@
 
 from __future__ import annotations
 
-from itertools import product
 from typing import Any, Iterable, Optional, Tuple, Union
 
 from .. import _session
@@ -112,19 +111,15 @@ class Karray:
         - A field left out keeps no reset value and powers up UNDEFINED, exactly
           like a bare `reg`.
         - WHOLE-ARRAY only: one value per field, shared by every element (a
-          rename table's valid bits all reset to 0). NOT here: per-element reset."""
+          rename table's valid bits all reset to 0). NOT here: per-element reset.
+        The element walk lives in the host (`karray_reset_field`); this method
+        only splits the kwargs and unwraps signal refs (ints wrap in the
+        connector, once per field)."""
         arena = _session.arena()
-        if not arena.karray_is_clocked(self._ident):
-            raise TypeError("reset(...) requires a reg-backed Karray "
-                            "(a wire has no state to reset; use default(...))")
-        coords = [list(c) for c in product(*(range(d) for d in arena.karray_shape(self._ident)))]
         for name, value in fields.items():
-            # Coerce ONCE: every element of a field has the same width, so one
-            # val backs all of them rather than one val per element.
-            value = SignalRef(
-                arena.karray_element_hcp(self._ident, coords[0], name))._coerce_value(value)
-            for coord in coords:
-                SignalRef(arena.karray_element_hcp(self._ident, coord, name)).reset(value)
+            arena.karray_reset_field(
+                self._ident, name,
+                value._ident if isinstance(value, SignalRef) else value)
         return self
 
     def __getitem__(self, key: KarrayKey) -> KarrayRef:

@@ -2,6 +2,8 @@ use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::complex_hardware::common::ccp_base::CcpBase;
 use crate::model::complex_hardware::common::ccp_ident::{CcpIdent, CcpType};
 use crate::model::complex_hardware::karray::karray_meta::{KarrayField, KarrayType};
+use crate::model::complex_hardware::karray::kidx::KarrayErr;
+use crate::model::controller::clock_mode::ClockMode;
 use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
 use crate::model::model_arena::ModelArena;
 
@@ -107,12 +109,56 @@ impl Karray {
         self.dtype.get_fields().iter().position(|f| f.get_name() == name)
     }
 
+    /// Position of a named field, or a Value error listing the available fields.
+    pub fn field_index_checked(&self, name: &str) -> Result<usize, KarrayErr> {
+        self.field_index(name).ok_or_else(|| KarrayErr::Value(format!(
+            "Karray has no field '{name}' (fields: {})",
+            self.get_fields().iter()
+                .map(|f| f.get_name()).collect::<Vec<_>>().join(", "))))
+    }
+
+    /// Width of a named field, or a Value error listing the available fields.
+    pub fn field_width(&self, name: &str) -> Result<i32, KarrayErr> {
+        Ok(self.get_fields()[self.field_index_checked(name)?].get_width())
+    }
+
     /// The backing HCP of one field at a fully-pinned coordinate — the leaf every
     /// read and write resolves to. Pure lookup, no hardware is created.
     pub(crate) fn element_hcp(&self, coord: &[usize], field_idx: usize) -> HcpIdent {
         let nf = self.field_count();
         assert!(field_idx < nf, "Karray: field index {field_idx} out of range (have {nf})");
         self.backing_hcps[self.flat_index(coord) * nf + field_idx]
+    }
+
+    /// All backing HCPs of ONE field, one per element in row-major flat order.
+    /// Pure lookup, no hardware is created.
+    fn field_backing_hcps(&self, field_idx: usize) -> impl Iterator<Item = HcpIdent> + '_ {
+        let nf = self.field_count();
+        assert!(field_idx < nf, "Karray: field index {field_idx} out of range (have {nf})");
+        self.backing_hcps.iter().skip(field_idx).step_by(nf).copied()
+    }
+
+    /// Reset value for EVERY element of ONE field (reg backing only): call each
+    /// backing REG's own reset, so the reset event, its priority and its clock
+    /// stay the register's — the Karray grows no reset mechanism of its own.
+    /// WHOLE-ARRAY only: one shared value per field.
+    pub fn reset_field(
+        &self,
+        field         : &str,
+        reset_val_i   : HcpIdent,
+        reset_clk_mode: ClockMode,
+        arena         : &mut ModelArena,
+    ) -> Result<(), KarrayErr> {
+        if !self.is_clocked() {
+            return Err(KarrayErr::Type(
+                "reset(...) requires a reg-backed Karray \
+                 (a wire has no state to reset; use default(...))".to_string()));
+        }
+        let field_idx = self.field_index_checked(field)?;
+        for element_i in self.field_backing_hcps(field_idx) {
+            arena.set_reg_reset(element_i, reset_val_i, reset_clk_mode);
+        }
+        Ok(())
     }
 
     /// Whether the backing is clocked (reg → `|=`) or combinational (wire → `*=`).

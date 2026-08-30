@@ -224,6 +224,12 @@ code that must read an ident without taking ownership. The only current example
 is `get_module_ident_by_handle(h: ArenaHandle) -> ModuleIdent` in `arena_impl.rs`.
 Keep these `pub(crate)`, read-only, and few.
 
+**arena_impl* methods are PROXIES, not logic.** Real behaviour (guards, name
+resolution, element walks, graph wiring) belongs on the stored type itself
+(`Karray::reset_field`, `Karray::write`, `Arb::add_leaf`); the `ModelArena`
+method only does the take/delegate/replace_back sandwich. If an arena method
+grows an `if` beyond that sandwich, move the body onto the type.
+
 ### 1.6 Trait-object dispatch (the get-style exception)
 
 Polymorphic accessors that return a borrow of a trait object — e.g.
@@ -1219,13 +1225,19 @@ regfile), `tc34` (k2k element copies, name+width pairing), `tc30`/`tc31`
 reduce read), `tc35` (all three kinds in one k2k statement, both sides), `tc33`
 (reduce read: max, extras running-sum, 2-D pin+fold), `tc36` (bundles end to
 end). **`Karray.reset(**field_values)`** (2026-08-18) gives a reg-backed array a
-reset value per field, one value shared by every element: it looks each element's
-backing HCP up through `karray_element_hcp` (a pure layout query, static
-coordinates only) and calls the REG's own `reset`, so the reset event, its
-priority and its clock stay the register's and the Karray grows no reset
-mechanism of its own. A field left out powers up undefined, exactly like a bare
-`reg`. Before it a Karray could not be reset at all, which is fatal for any state
-array whose valid bits must start at 0.
+reset value per field, one value shared by every element. The element walk lives
+in the CORE on the type itself (`Karray::reset_field` in `karray.rs`, moved from
+the DSL 2026-08-30 so every frontend resets the same way; the arena's
+`karray_reset_field` is only the take/replace_back proxy): it iterates the
+field's backing regs (`Karray::field_backing_hcps`) and calls each REG's own `reset`, so
+the reset event, its priority and its clock stay the register's and the Karray
+grows no reset mechanism of its own. The connector wraps an int value ONCE into
+a field-width val; the DSL method only splits the kwargs. A field left out powers
+up undefined, exactly like a bare `reg`. Reset guards come from the core
+(`KarrayErr`): wire backing → TypeError, unknown field → ValueError. Before it a
+Karray could not be reset at all, which is fatal for any state array whose valid
+bits must start at 0. (`karray_element_hcp` remains as a general static-element
+layout query, no longer on the reset path.)
 
 **Two fixes on 2026-08-18, both contradicting the code's own stated intent:**
 - `wire.default(v)` bound its fallback at `DEFAULT_UE_PRI_INTERNAL_MIN` (50),

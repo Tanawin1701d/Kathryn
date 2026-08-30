@@ -17,6 +17,7 @@ use super::super::ccp_ident_py::PyCcpIdent;
 use super::kidx_py::{decode_kidx, karray_err_to_py, warn_skipped_fields, PyKIdx};
 use crate::model::complex_hardware::common::ccp_ident::CcpIdent;
 use crate::model::complex_hardware::karray::KReadEnv;
+use crate::model::controller::clock_mode::get_global_clk_mode;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::model_arena::ModelArena;
 
@@ -35,9 +36,9 @@ impl PyModelArena {
         self.arena.karray_is_clocked(karray_i.into())
     }
 
-    // The backing HCP of one field at a fully-static coordinate. `Karray.reset`
-    // reaches an element's register with this and then calls the REG's own
-    // reset — so the DSL grows no second reset mechanism (see the host method).
+    // The backing HCP of one field at a fully-static coordinate — reach an
+    // element's own component to use the component's API on it (see the host
+    // method; not on the reset path — that walk lives in karray_reset_field).
     fn karray_element_hcp(
         &mut self,
         karray_i: PyCcpIdent,
@@ -46,6 +47,30 @@ impl PyModelArena {
     ) -> PyResult<PyHcpIdent> {
         self.arena.karray_element_hcp(karray_i.into(), &coord, field)
             .map(Into::into)
+            .map_err(karray_err_to_py)
+    }
+
+    // ---- reset -------------------------------------------------------------
+
+    // Reset one field of a reg-backed Karray across EVERY element (the host walks
+    // the field's backing regs). An int value wraps ONCE into a val sized to the
+    // field — one val backs all elements rather than one per element.
+    fn karray_reset_field(
+        &mut self,
+        karray_i: PyCcpIdent,
+        field   : &str,
+        value   : PyOperand,
+    ) -> PyResult<()> {
+        let karray_i: CcpIdent = karray_i.into();
+        let reset_val_i: HcpIdent = match value {
+            PyOperand::Ident(sig) => sig.into(),
+            PyOperand::Int(n)     => {
+                let width = self.arena.karray_field_width(karray_i, field)
+                    .map_err(karray_err_to_py)?;
+                self.make_const_val("kconst", &n, width)
+            }
+        };
+        self.arena.karray_reset_field(karray_i, field, reset_val_i, get_global_clk_mode())
             .map_err(karray_err_to_py)
     }
 

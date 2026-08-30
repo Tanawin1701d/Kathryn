@@ -1752,3 +1752,66 @@ def test_no_pip_master_rejects_pip():
     gen_flow()
     with pytest.raises(BaseException, match="master ack already set"):
         build_flow()
+
+
+# ---- Karray.reset (host-side element walk) -----------------------------------
+
+def test_karray_reset_keyword_form_emits_per_element_reset():
+    # rat.reset(valid=0, data=3): the host walks every element of each named
+    # field and calls the REG's own reset — each backing reg gets a reset event
+    # against mrst in the emitted Verilog.
+    reset()
+
+    class rec(Karray):
+        valid = kaf(1)
+        data  = kaf(8)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.t = rec(HwComponentType.REG, (2, 2), "t")
+            self.t.reset(valid=0, data=3)
+
+        @flow
+        def f(self):
+            with seq():
+                self.t[0][0].valid |= 1
+
+    set_top(worker())
+    gen_flow()
+    build_flow()
+
+    out_dir = tempfile.mkdtemp()
+    emit_verilog(out_dir, "top")
+    text = open(os.path.join(out_dir, "top.v")).read()
+    # every element of both fields resets (the valid|=1 write also emits a kconst
+    # line, so match per element-field rather than counting the lines)
+    kconst_lines = [ln for ln in text.splitlines() if "REG_t_E" in ln and "kconst" in ln]
+    for element in range(4):
+        for field in ("valid", "data"):
+            assert any(f"REG_t_E{element}_{field}" in ln for ln in kconst_lines), \
+                f"element {element} field {field} got no reset"
+    # coerce ONCE: all 4 data-field resets share one val (not one val per element)
+    data_vals = {ln.split("<=")[1].strip() for ln in kconst_lines if "_data_" in ln}
+    assert len(data_vals) == 1, f"data resets use {len(data_vals)} vals, expected 1 shared"
+
+
+def test_karray_reset_guards():
+    # Wire backing has no state to reset (TypeError); an unknown field name is a
+    # ValueError. Both come from the host through the KarrayErr mapping.
+    reset()
+
+    class rec(Karray):
+        data = kaf(8)
+
+    class worker(Module):
+        @init
+        def decl(self):
+            self.w = rec(HwComponentType.WIRE, (2,), "w")
+            with pytest.raises(TypeError, match="reg-backed"):
+                self.w.reset(data=0)
+            self.r = rec(HwComponentType.REG, (2,), "r")
+            with pytest.raises(ValueError, match="no field 'dta'"):
+                self.r.reset(dta=0)
+
+    worker()

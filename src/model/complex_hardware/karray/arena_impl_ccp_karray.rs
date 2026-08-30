@@ -1,5 +1,6 @@
 use crate::model::complex_hardware::common::ccp_ident::CcpIdent;
 use crate::model::complex_hardware::karray::karray::Karray;
+use crate::model::controller::clock_mode::ClockMode;
 use crate::model::complex_hardware::karray::karray_env::DirectKEnv;
 use crate::model::complex_hardware::karray::karray_view::KView;
 use crate::model::complex_hardware::karray::kidx::{KarrayErr, KIdx};
@@ -53,9 +54,7 @@ impl ModelArena {
     // The backing HCP of ONE field at a FULLY-STATIC coordinate — the leaf a read
     // or write of that element would resolve to. Pure lookup, no hardware.
     // It exists so a caller can reach an element's own component and use the
-    // component's API on it (the DSL's `Karray.reset`): the reset value, its
-    // priority and its clock stay the Reg's, and no Karray-specific reset
-    // mechanism is added here. Static only — there is no runtime element to
+    // component's API on it. Static only — there is no runtime element to
     // hand back for a Dyn/Cus selection.
     pub fn karray_element_hcp(
         &mut self,
@@ -76,14 +75,30 @@ impl ModelArena {
                         "index {idx} out of bounds for dimension {dim_idx} of size {dim_sz}")));
                 }
             }
-            match karray.field_index(field) {
-                Some(field_idx) => Ok(karray.element_hcp(coord, field_idx)),
-                None            => Err(KarrayErr::Value(format!(
-                    "Karray has no field '{field}' (fields: {})",
-                    karray.get_fields().iter()
-                          .map(|f| f.get_name()).collect::<Vec<_>>().join(", ")))),
-            }
+            karray.field_index_checked(field)
+                  .map(|field_idx| karray.element_hcp(coord, field_idx))
         })
+    }
+
+    // Width of one named field — proxy to `Karray::field_width`.
+    pub fn karray_field_width(&mut self, karray_i: CcpIdent, field: &str) -> Result<i32, KarrayErr> {
+        self.with_karray(karray_i, |karray, _| karray.field_width(field))
+    }
+
+    // ---- reset -------------------------------------------------------------
+
+    // Reset one field of a reg-backed Karray across every element. All logic
+    // (backing guard, field resolution, the element walk) lives in
+    // `Karray::reset_field` — this is only the take/replace_back proxy.
+    pub fn karray_reset_field(
+        &mut self,
+        karray_i      : CcpIdent,
+        field         : &str,
+        reset_val_i   : HcpIdent,
+        reset_clk_mode: ClockMode,
+    ) -> Result<(), KarrayErr> {
+        self.with_karray(karray_i, |karray, arena|
+            karray.reset_field(field, reset_val_i, reset_clk_mode, arena))
     }
 
     // ---- read --------------------------------------------------------------
