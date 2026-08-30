@@ -278,7 +278,9 @@ Flow blocks (`src/model/flow_block/`) use a specialised dispatch pattern that
   `BasicNodeFlow` (block lowered to a single basic asm node, same entrance as
   `SubFlow`).
   Adding a new block type requires: (1) new variant in `FlowBlockType`,
-  (2) new `ArenaGroup` field + CRUD in `arena_impl_flow_block.rs`,
+  (2) new `ArenaGroup` field + one `flow_block_crud!` row in
+  `arena_impl_flow_block.rs` (the macro expands the typed add/take/replace_back
+  triplet; fn names are spelled out per row — no `paste` dep),
   (3) new arm in the ONE match inside `take_flow_block`,
   (4) `impl FlowBlock` on the new type — nothing else changes.
 

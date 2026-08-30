@@ -15,278 +15,64 @@ use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_ident::NcpIdent;
 
+// One typed CRUD triplet (add / take / replace_back) per flow-block type.
+// - fn names are spelled out per row (no `paste` dep for ident concatenation)
+// - the assert in take_* pins the ident's FlowBlockType to the slot it indexes
+macro_rules! flow_block_crud {
+    ($block_struct:ident, $fb_storage:ident, $type_enum      :ident,
+     $add_fn      :ident, $take_fn   :ident, $replace_back_fn:ident) => {
+
+        pub fn $add_fn(&mut self, block: $block_struct) -> FlowBlockIdent {
+            let h = self.$fb_storage.insert(block);
+            self.$fb_storage.get(h).get_base().get_ident()
+        }
+        pub fn $take_fn(&mut self, ident: FlowBlockIdent) -> $block_struct {
+            assert_eq!(ident.get_block_type(), FlowBlockType::$type_enum);
+            self.$fb_storage.take(*ident.get_arena_handle())
+        }
+        pub fn $replace_back_fn(&mut self, block: $block_struct) {
+            let h = *block.get_arena_handle();
+            self.$fb_storage.replace_back(h, block);
+        }
+
+    };
+}
+
 impl ModelArena {
-    // --- seq ---
+    // ---- typed CRUD — one row per flow-block type ----
 
-    pub fn add_flow_block_seq(&mut self, block: FlowBlockSeq) -> FlowBlockIdent {
-        let h = self.flow_block_seqs.insert(block);
-        self.flow_block_seqs.get(h).get_base().get_ident()
-    }
-
-    pub fn take_flow_block_seq(&mut self, ident: FlowBlockIdent) -> FlowBlockSeq {
-        assert_eq!(ident.get_block_type(), FlowBlockType::Sequential);
-        self.flow_block_seqs.take(*ident.get_arena_handle())
-    }
-
-    pub fn replace_back_flow_block_seq(&mut self, block: FlowBlockSeq) {
-        let h = *block.get_arena_handle();
-        self.flow_block_seqs.replace_back(h, block);
-    }
-
-    // --- par ---
-
-    pub fn add_flow_block_par(&mut self, block: FlowBlockPar) -> FlowBlockIdent {
-        let h = self.flow_block_pars.insert(block);
-        self.flow_block_pars.get(h).get_base().get_ident()
-    }
-
-    pub fn take_flow_block_par(&mut self, ident: FlowBlockIdent) -> FlowBlockPar {
-        assert_eq!(ident.get_block_type(), FlowBlockType::Parallel);
-        self.flow_block_pars.take(*ident.get_arena_handle())
-    }
-
-    pub fn replace_back_flow_block_par(&mut self, block: FlowBlockPar) {
-        let h = *block.get_arena_handle();
-        self.flow_block_pars.replace_back(h, block);
-    }
-
-    // --- cond (CIF / SIF) ---
-
-    pub fn add_flow_block_cond(&mut self, block: FlowBlockCond) -> FlowBlockIdent {
-        let h = self.flow_block_conds.insert(block);
-        self.flow_block_conds.get(h).get_base().get_ident()
-    }
-
-    pub fn take_flow_block_cond(&mut self, ident: FlowBlockIdent) -> FlowBlockCond {
-        assert_eq!(ident.get_block_type(), FlowBlockType::CondIf);
-        self.flow_block_conds.take(*ident.get_arena_handle())
-    }
-
-    pub fn replace_back_flow_block_cond(&mut self, block: FlowBlockCond) {
-        let h = *block.get_arena_handle();
-        self.flow_block_conds.replace_back(h, block);
-    }
-
-    // --- cond_elif (CSELIF / CSELSE) ---
-
-    pub fn add_flow_block_cond_elif(&mut self, block: FlowBlockCondElif) -> FlowBlockIdent {
-        let h = self.flow_block_cond_elifs.insert(block);
-        self.flow_block_cond_elifs.get(h).get_base().get_ident()
-    }
-
-    pub fn take_flow_block_cond_elif(&mut self, ident: FlowBlockIdent) -> FlowBlockCondElif {
-        assert_eq!(ident.get_block_type(), FlowBlockType::CondElif);
-        self.flow_block_cond_elifs.take(*ident.get_arena_handle())
-    }
-
-    pub fn replace_back_flow_block_cond_elif(&mut self, block: FlowBlockCondElif) {
-        let h = *block.get_arena_handle();
-        self.flow_block_cond_elifs.replace_back(h, block);
-    }
-
-    // --- zero_cond_if (ZIF master) ---
-
-    pub fn add_flow_block_zero_cond_if(&mut self, block: FlowBlockZeroCondIf) -> FlowBlockIdent {
-        let h = self.flow_block_zero_cond_ifs.insert(block);
-        self.flow_block_zero_cond_ifs.get(h).get_base().get_ident()
-    }
-
-    pub fn take_flow_block_zero_cond_if(&mut self, ident: FlowBlockIdent) -> FlowBlockZeroCondIf {
-        assert_eq!(ident.get_block_type(), FlowBlockType::ZeroCondIf);
-        self.flow_block_zero_cond_ifs.take(*ident.get_arena_handle())
-    }
-
-    pub fn replace_back_flow_block_zero_cond_if(&mut self, block: FlowBlockZeroCondIf) {
-        let h = *block.get_arena_handle();
-        self.flow_block_zero_cond_ifs.replace_back(h, block);
-    }
-
-    // --- zero_cond_elif (ZELIF / ZELSE) ---
-
-    pub fn add_flow_block_zero_cond_elif(&mut self, block: FlowBlockZeroCondElif) -> FlowBlockIdent {
-        let h = self.flow_block_zero_cond_elifs.insert(block);
-        self.flow_block_zero_cond_elifs.get(h).get_base().get_ident()
-    }
-
-    pub fn take_flow_block_zero_cond_elif(&mut self, ident: FlowBlockIdent) -> FlowBlockZeroCondElif {
-        assert_eq!(ident.get_block_type(), FlowBlockType::ZeroCondElif);
-        self.flow_block_zero_cond_elifs.take(*ident.get_arena_handle())
-    }
-
-    pub fn replace_back_flow_block_zero_cond_elif(&mut self, block: FlowBlockZeroCondElif) {
-        let h = *block.get_arena_handle();
-        self.flow_block_zero_cond_elifs.replace_back(h, block);
-    }
-
-    // --- zero_switch (master) ---
-
-    pub fn add_flow_block_zero_switch(&mut self, block: FlowBlockZeroSwitch) -> FlowBlockIdent {
-        let h = self.flow_block_zero_switches.insert(block);
-        self.flow_block_zero_switches.get(h).get_base().get_ident()
-    }
-
-    pub fn take_flow_block_zero_switch(&mut self, ident: FlowBlockIdent) -> FlowBlockZeroSwitch {
-        assert_eq!(ident.get_block_type(), FlowBlockType::ZeroSwitch);
-        self.flow_block_zero_switches.take(*ident.get_arena_handle())
-    }
-
-    pub fn replace_back_flow_block_zero_switch(&mut self, block: FlowBlockZeroSwitch) {
-        let h = *block.get_arena_handle();
-        self.flow_block_zero_switches.replace_back(h, block);
-    }
-
-    // --- zero_switch_case ---
-
-    pub fn add_flow_block_zero_switch_case(&mut self, block: FlowBlockZeroSwitchCase) -> FlowBlockIdent {
-        let h = self.flow_block_zero_switch_cases.insert(block);
-        self.flow_block_zero_switch_cases.get(h).get_base().get_ident()
-    }
-
-    pub fn take_flow_block_zero_switch_case(&mut self, ident: FlowBlockIdent) -> FlowBlockZeroSwitchCase {
-        assert_eq!(ident.get_block_type(), FlowBlockType::ZeroSwitchCase);
-        self.flow_block_zero_switch_cases.take(*ident.get_arena_handle())
-    }
-
-    pub fn replace_back_flow_block_zero_switch_case(&mut self, block: FlowBlockZeroSwitchCase) {
-        let h = *block.get_arena_handle();
-        self.flow_block_zero_switch_cases.replace_back(h, block);
-    }
-
-    // --- pick (master) ---
-
-    pub fn add_flow_block_pick(&mut self, block: FlowBlockPick) -> FlowBlockIdent {
-        let h = self.flow_block_picks.insert(block);
-        self.flow_block_picks.get(h).get_base().get_ident()
-    }
-
-    pub fn take_flow_block_pick(&mut self, ident: FlowBlockIdent) -> FlowBlockPick {
-        assert_eq!(ident.get_block_type(), FlowBlockType::Pick);
-        self.flow_block_picks.take(*ident.get_arena_handle())
-    }
-
-    pub fn replace_back_flow_block_pick(&mut self, block: FlowBlockPick) {
-        let h = *block.get_arena_handle();
-        self.flow_block_picks.replace_back(h, block);
-    }
-
-    // --- pick_if (pif / pidef branch) ---
-
-    pub fn add_flow_block_pick_if(&mut self, block: FlowBlockPickIf) -> FlowBlockIdent {
-        let h = self.flow_block_pick_ifs.insert(block);
-        self.flow_block_pick_ifs.get(h).get_base().get_ident()
-    }
-
-    pub fn take_flow_block_pick_if(&mut self, ident: FlowBlockIdent) -> FlowBlockPickIf {
-        assert_eq!(ident.get_block_type(), FlowBlockType::PickIf);
-        self.flow_block_pick_ifs.take(*ident.get_arena_handle())
-    }
-
-    pub fn replace_back_flow_block_pick_if(&mut self, block: FlowBlockPickIf) {
-        let h = *block.get_arena_handle();
-        self.flow_block_pick_ifs.replace_back(h, block);
-    }
-
-    // --- while (CWHILE / SWHILE) ---
-
-    pub fn add_flow_block_while(&mut self, block: FlowBlockWhile) -> FlowBlockIdent {
-        let h = self.flow_block_whiles.insert(block);
-        self.flow_block_whiles.get(h).get_base().get_ident()
-    }
-
-    pub fn take_flow_block_while(&mut self, ident: FlowBlockIdent) -> FlowBlockWhile {
-        assert_eq!(ident.get_block_type(), FlowBlockType::WhileLoop);
-        self.flow_block_whiles.take(*ident.get_arena_handle())
-    }
-
-    pub fn replace_back_flow_block_while(&mut self, block: FlowBlockWhile) {
-        let h = *block.get_arena_handle();
-        self.flow_block_whiles.replace_back(h, block);
-    }
-
-    // --- do_while ---
-
-    pub fn add_flow_block_do_while(&mut self, block: FlowBlockDoWhile) -> FlowBlockIdent {
-        let h = self.flow_block_do_whiles.insert(block);
-        self.flow_block_do_whiles.get(h).get_base().get_ident()
-    }
-
-    pub fn take_flow_block_do_while(&mut self, ident: FlowBlockIdent) -> FlowBlockDoWhile {
-        assert_eq!(ident.get_block_type(), FlowBlockType::DoWhile);
-        self.flow_block_do_whiles.take(*ident.get_arena_handle())
-    }
-
-    pub fn replace_back_flow_block_do_while(&mut self, block: FlowBlockDoWhile) {
-        let h = *block.get_arena_handle();
-        self.flow_block_do_whiles.replace_back(h, block);
-    }
-
-    // --- counter_loop ---
-
-    pub fn add_flow_block_counter_loop(&mut self, block: FlowBlockCounterLoop) -> FlowBlockIdent {
-        let h = self.flow_block_counter_loops.insert(block);
-        self.flow_block_counter_loops.get(h).get_base().get_ident()
-    }
-
-    pub fn take_flow_block_counter_loop(&mut self, ident: FlowBlockIdent) -> FlowBlockCounterLoop {
-        assert_eq!(ident.get_block_type(), FlowBlockType::CounterLoop);
-        self.flow_block_counter_loops.take(*ident.get_arena_handle())
-    }
-
-    pub fn replace_back_flow_block_counter_loop(&mut self, block: FlowBlockCounterLoop) {
-        let h = *block.get_arena_handle();
-        self.flow_block_counter_loops.replace_back(h, block);
-    }
-
-    // --- wait (SCWAIT / SYWAIT) ---
-
-    pub fn add_flow_block_wait(&mut self, block: FlowBlockWait) -> FlowBlockIdent {
-        let h = self.flow_block_waits.insert(block);
-        self.flow_block_waits.get(h).get_base().get_ident()
-    }
-
-    pub fn take_flow_block_wait(&mut self, ident: FlowBlockIdent) -> FlowBlockWait {
-        assert_eq!(ident.get_block_type(), FlowBlockType::Wait);
-        self.flow_block_waits.take(*ident.get_arena_handle())
-    }
-
-    pub fn replace_back_flow_block_wait(&mut self, block: FlowBlockWait) {
-        let h = *block.get_arena_handle();
-        self.flow_block_waits.replace_back(h, block);
-    }
-
-    // --- pipeline (PIP) ---
-
-    pub fn add_flow_block_pip(&mut self, block: FlowBlockPip) -> FlowBlockIdent {
-        let h = self.flow_block_pips.insert(block);
-        self.flow_block_pips.get(h).get_base().get_ident()
-    }
-
-    pub fn take_flow_block_pip(&mut self, ident: FlowBlockIdent) -> FlowBlockPip {
-        assert_eq!(ident.get_block_type(), FlowBlockType::Pipeline);
-        self.flow_block_pips.take(*ident.get_arena_handle())
-    }
-
-    pub fn replace_back_flow_block_pip(&mut self, block: FlowBlockPip) {
-        let h = *block.get_arena_handle();
-        self.flow_block_pips.replace_back(h, block);
-    }
-
-    // --- zync (ZYNC) ---
-
-    pub fn add_flow_block_zync(&mut self, block: FlowBlockZync) -> FlowBlockIdent {
-        let h = self.flow_block_zyncs.insert(block);
-        self.flow_block_zyncs.get(h).get_base().get_ident()
-    }
-
-    pub fn take_flow_block_zync(&mut self, ident: FlowBlockIdent) -> FlowBlockZync {
-        assert_eq!(ident.get_block_type(), FlowBlockType::Zync);
-        self.flow_block_zyncs.take(*ident.get_arena_handle())
-    }
-
-    pub fn replace_back_flow_block_zync(&mut self, block: FlowBlockZync) {
-        let h = *block.get_arena_handle();
-        self.flow_block_zyncs.replace_back(h, block);
-    }
+    flow_block_crud!(FlowBlockSeq                   , flow_block_seqs                 , Sequential    ,
+                     add_flow_block_seq             , take_flow_block_seq             , replace_back_flow_block_seq             );
+    flow_block_crud!(FlowBlockPar                   , flow_block_pars                 , Parallel      ,
+                     add_flow_block_par             , take_flow_block_par             , replace_back_flow_block_par             );
+    flow_block_crud!(FlowBlockCond                  , flow_block_conds                , CondIf        ,   // CIF / SIF
+                     add_flow_block_cond            , take_flow_block_cond            , replace_back_flow_block_cond            );
+    flow_block_crud!(FlowBlockCondElif              , flow_block_cond_elifs           , CondElif      ,   // CSELIF / CSELSE
+                     add_flow_block_cond_elif       , take_flow_block_cond_elif       , replace_back_flow_block_cond_elif       );
+    flow_block_crud!(FlowBlockZeroCondIf            , flow_block_zero_cond_ifs        , ZeroCondIf    ,   // ZIF master
+                     add_flow_block_zero_cond_if    , take_flow_block_zero_cond_if    , replace_back_flow_block_zero_cond_if    );
+    flow_block_crud!(FlowBlockZeroCondElif          , flow_block_zero_cond_elifs      , ZeroCondElif  ,   // ZELIF / ZELSE
+                     add_flow_block_zero_cond_elif  , take_flow_block_zero_cond_elif  , replace_back_flow_block_zero_cond_elif  );
+    flow_block_crud!(FlowBlockZeroSwitch            , flow_block_zero_switches        , ZeroSwitch    ,   // master
+                     add_flow_block_zero_switch     , take_flow_block_zero_switch     , replace_back_flow_block_zero_switch     );
+    flow_block_crud!(FlowBlockZeroSwitchCase        , flow_block_zero_switch_cases    , ZeroSwitchCase,
+                     add_flow_block_zero_switch_case, take_flow_block_zero_switch_case, replace_back_flow_block_zero_switch_case);
+    flow_block_crud!(FlowBlockPick                  , flow_block_picks                , Pick          ,   // master
+                     add_flow_block_pick            , take_flow_block_pick            , replace_back_flow_block_pick            );
+    flow_block_crud!(FlowBlockPickIf                , flow_block_pick_ifs             , PickIf        ,   // pif / pidef branch
+                     add_flow_block_pick_if         , take_flow_block_pick_if         , replace_back_flow_block_pick_if         );
+    flow_block_crud!(FlowBlockWhile                 , flow_block_whiles               , WhileLoop     ,   // CWHILE / SWHILE
+                     add_flow_block_while           , take_flow_block_while           , replace_back_flow_block_while           );
+    flow_block_crud!(FlowBlockDoWhile               , flow_block_do_whiles            , DoWhile       ,
+                     add_flow_block_do_while        , take_flow_block_do_while        , replace_back_flow_block_do_while        );
+    flow_block_crud!(FlowBlockCounterLoop           , flow_block_counter_loops        , CounterLoop   ,
+                     add_flow_block_counter_loop    , take_flow_block_counter_loop    , replace_back_flow_block_counter_loop    );
+    flow_block_crud!(FlowBlockWait                  , flow_block_waits                , Wait          ,   // SCWAIT / SYWAIT
+                     add_flow_block_wait            , take_flow_block_wait            , replace_back_flow_block_wait            );
+    flow_block_crud!(FlowBlockPip                   , flow_block_pips                 , Pipeline      ,   // PIP
+                     add_flow_block_pip             , take_flow_block_pip             , replace_back_flow_block_pip             );
+    flow_block_crud!(FlowBlockZync                  , flow_block_zyncs                , Zync          ,   // ZYNC
+                     add_flow_block_zync            , take_flow_block_zync            , replace_back_flow_block_zync            );
 
     // --- polymorphic take / replace / get ---
 

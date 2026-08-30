@@ -192,6 +192,7 @@ impl FlowBlockBase {
         self.gen_trigger_node(arena);
         
         /// 3. manage clock source for basic node
+        ///    we do not do that for sub and cond because it is sub-block's responsibility
         self.init_node_trigger_for_basic_node(arena);
         self.set_clk_src_for_basic_node(arena);
 

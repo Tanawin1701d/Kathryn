@@ -52,16 +52,16 @@ pub enum ModuleInitStage {
 pub struct ModelArena {
 
     // basic hardware components
-    pub(super) regs       : ArenaGroup<Reg>,
-    pub(super) wires      : ArenaGroup<Wire>,
-    pub(super) io_wires   : ArenaGroup<IoWire>,
-    pub(super) vals       : ArenaGroup<Val>,
-    pub(super) mem_eles   : ArenaGroup<MemEle>,
-    pub(super) mem_blks   : ArenaGroup<MemBlk>,
-    pub(super) expressions: ArenaGroup<Expression>,
-    pub(super) state_regs : ArenaGroup<StateReg>,
-    pub(super) sync_regs  : ArenaGroup<SyncReg>,
-    pub(super) cnt_regs   : ArenaGroup<CntReg>,
+    pub(super) regs           : ArenaGroup<Reg>,
+    pub(super) wires          : ArenaGroup<Wire>,
+    pub(super) io_wires       : ArenaGroup<IoWire>,
+    pub(super) vals           : ArenaGroup<Val>,
+    pub(super) mem_eles       : ArenaGroup<MemEle>,
+    pub(super) mem_blks       : ArenaGroup<MemBlk>,
+    pub(super) expressions    : ArenaGroup<Expression>,
+    pub(super) state_regs     : ArenaGroup<StateReg>,
+    pub(super) sync_regs      : ArenaGroup<SyncReg>,
+    pub(super) cnt_regs       : ArenaGroup<CntReg>,
     pub(super) cond_wait_regs : ArenaGroup<CondWaitStateReg>,
     pub(super) cycle_wait_regs: ArenaGroup<CycleWaitStateReg>,
 
@@ -88,7 +88,7 @@ pub struct ModelArena {
     pub(super) dyn_counters     : ArenaGroup<DynCounter>,
 
     // module arena
-    pub(super) modules               : ArenaGroup<Module>,
+    pub(super) modules : ArenaGroup<Module>,
 
 
     pub(super) top_module              : Option<ModuleIdent>,
@@ -97,22 +97,22 @@ pub struct ModelArena {
     pub(super) flow_block_init_stack   : Vec<(FlowBlockIdent, BlockTrackStatus)>, // tracks active flow block + its track status during build traversal
 
     // flow-block arenas
-    pub(super) flow_block_seqs             : ArenaGroup<FlowBlockSeq>,
-    pub(super) flow_block_pars             : ArenaGroup<FlowBlockPar>,
-    pub(super) flow_block_conds            : ArenaGroup<FlowBlockCond>,
-    pub(super) flow_block_cond_elifs       : ArenaGroup<FlowBlockCondElif>,
-    pub(super) flow_block_zero_cond_ifs    : ArenaGroup<FlowBlockZeroCondIf>,
-    pub(super) flow_block_zero_cond_elifs  : ArenaGroup<FlowBlockZeroCondElif>,
-    pub(super) flow_block_zero_switches    : ArenaGroup<FlowBlockZeroSwitch>,
-    pub(super) flow_block_zero_switch_cases: ArenaGroup<FlowBlockZeroSwitchCase>,
-    pub(super) flow_block_picks            : ArenaGroup<FlowBlockPick>,
-    pub(super) flow_block_pick_ifs         : ArenaGroup<FlowBlockPickIf>,
-    pub(super) flow_block_whiles           : ArenaGroup<FlowBlockWhile>,
-    pub(super) flow_block_do_whiles        : ArenaGroup<FlowBlockDoWhile>,
-    pub(super) flow_block_counter_loops    : ArenaGroup<FlowBlockCounterLoop>,
-    pub(super) flow_block_waits            : ArenaGroup<FlowBlockWait>,
-    pub(super) flow_block_pips             : ArenaGroup<FlowBlockPip>,
-    pub(super) flow_block_zyncs            : ArenaGroup<FlowBlockZync>,
+    pub(super) flow_block_seqs              : ArenaGroup<FlowBlockSeq>,
+    pub(super) flow_block_pars              : ArenaGroup<FlowBlockPar>,
+    pub(super) flow_block_conds             : ArenaGroup<FlowBlockCond>,
+    pub(super) flow_block_cond_elifs        : ArenaGroup<FlowBlockCondElif>,
+    pub(super) flow_block_zero_cond_ifs     : ArenaGroup<FlowBlockZeroCondIf>,
+    pub(super) flow_block_zero_cond_elifs   : ArenaGroup<FlowBlockZeroCondElif>,
+    pub(super) flow_block_zero_switches     : ArenaGroup<FlowBlockZeroSwitch>,
+    pub(super) flow_block_zero_switch_cases : ArenaGroup<FlowBlockZeroSwitchCase>,
+    pub(super) flow_block_picks             : ArenaGroup<FlowBlockPick>,
+    pub(super) flow_block_pick_ifs          : ArenaGroup<FlowBlockPickIf>,
+    pub(super) flow_block_whiles            : ArenaGroup<FlowBlockWhile>,
+    pub(super) flow_block_do_whiles         : ArenaGroup<FlowBlockDoWhile>,
+    pub(super) flow_block_counter_loops     : ArenaGroup<FlowBlockCounterLoop>,
+    pub(super) flow_block_waits             : ArenaGroup<FlowBlockWait>,
+    pub(super) flow_block_pips              : ArenaGroup<FlowBlockPip>,
+    pub(super) flow_block_zyncs             : ArenaGroup<FlowBlockZync>,
 
 
 }
