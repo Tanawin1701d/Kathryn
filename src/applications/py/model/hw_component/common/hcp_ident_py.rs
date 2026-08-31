@@ -30,6 +30,8 @@ impl PyHcpIdent {
     // True only for clocked elements (driven on a clock edge); False otherwise.
     #[getter]
     fn clocked(&self) -> bool { self.inner.get_sensitive_type().is_clocked() }
+    // NOT here: the emitted signal name. That is a BACKEND property (each
+    // emitter names things its own way) — query `arena.hcp_verilog_name(...)`.
 
     fn __repr__(&self) -> String {
         format!("HcpIdent(global_id={}, hw_type={})",

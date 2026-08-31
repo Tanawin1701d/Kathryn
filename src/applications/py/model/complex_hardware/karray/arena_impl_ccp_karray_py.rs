@@ -36,6 +36,12 @@ impl PyModelArena {
         self.arena.karray_is_clocked(karray_i.into())
     }
 
+    // The Karray's flat (field_name, width) layout, in declaration order — the
+    // sim-manifest walker pairs this with karray_element_hcp per element.
+    fn karray_fields(&mut self, karray_i: PyCcpIdent) -> Vec<(String, i32)> {
+        self.arena.karray_fields(karray_i.into())
+    }
+
     // The backing HCP of one field at a fully-static coordinate — reach an
     // element's own component to use the component's API on it (see the host
     // method; not on the reset path — that walk lives in karray_reset_field).

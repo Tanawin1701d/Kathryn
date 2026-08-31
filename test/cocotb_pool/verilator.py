@@ -74,7 +74,9 @@ class VerilatorBackend(SimBackend):
         # Verilator treats lint warnings as fatal by default; the emitted Verilog
         # uses non-blocking `<=` in `always @(*)` blocks (COMBDLY), so keep
         # warnings non-fatal — matching iverilog's tolerance.
-        return ["-Wno-fatal"]
+        # --public-flat-rw keeps INTERNAL nets visible and forceable over VPI
+        # (sim assist reads/deposits them by hierarchical path; icarus needs no flag).
+        return ["-Wno-fatal", "--public-flat-rw"]
 
     def waves_file(self, toplevel: str) -> str:
         # cocotb's Verilator runner always dumps to a fixed "dump.vcd".

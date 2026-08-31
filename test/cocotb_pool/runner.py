@@ -59,6 +59,11 @@ def _run_cases(cases: list[TestCase], simulator: str) -> list[CaseResult]:
         #    here (model panic or iverilog error) marks the whole case COMPILE.
         try:
             tc.build_fn(str(out))
+            # The sim subprocess re-imports the tc module, so live build objects
+            # never reach it — KSim (kathryn/sim_assist.py) finds the manifest
+            # emit_verilog wrote through this env var. Literal name on purpose:
+            # cocotb_pool must not import kathryn at module scope.
+            os.environ["KATHRYN_SIM_MANIFEST"] = str(out / "sim_manifest.json")
             sources   = sorted(str(p) for p in out.glob("*.v"))
             toplevel  = toplevel_from_verilog(out / "top.v")
             backend   = get_backend(simulator)

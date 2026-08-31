@@ -33,14 +33,19 @@ def _set_top(module: Module) -> Module:
     # `@init` / `@flow` methods — a bare top-level declaration outside a class has no
     # open module on the trace stack and is meant to panic. Call once, after
     # constructing the top Module.
+    global _top_module
     top_i = module.ident
     a     = arena()
     a.set_top_module(top_i)
+    _top_module = module     # kept for the sim-manifest harvest at emit time
     return module
 
 
-_arena    : ModelArena                                = _make_arena()
-_counters : dict[str, int]                            = {}
+_arena     : ModelArena                               = _make_arena()
+_counters  : dict[str, int]                           = {}
+# The top Module PYTHON object (not just its ident): emit_verilog walks its
+# attribute tree to write the sim manifest before the arena moves away.
+_top_module: "Module | None"                          = None
 # Process-wide deferred-flow pool: every Module's @flow methods register here as
 # (module_ident, bound_method) so a single gen_flow() can build them all. (See
 # module.py — flow construction is deferred, not run at instantiation.)
@@ -55,10 +60,11 @@ def arena() -> ModelArena:
 def reset() -> ModelArena:
     # Rebuild the arena from scratch with NO top module (call `set_top` after);
     # mainly for tests. Clears auto-name counters and the deferred-flow pool.
-    global _arena, _counters, _flow_pool
-    _arena     = _make_arena()
-    _counters  = {}
-    _flow_pool = []
+    global _arena, _counters, _flow_pool, _top_module
+    _arena      = _make_arena()
+    _counters   = {}
+    _flow_pool  = []
+    _top_module = None
     return _arena
 
 
@@ -111,5 +117,12 @@ def emit_verilog(output_dir: str, top_file_name: str = "top") -> None:
     # EMPTY afterwards (call `reset` + rebuild to run again). `output_dir` must
     # already exist; one `<output_dir>/<module>.v` is written per module, except
     # the top module which is written to `<output_dir>/<top_file_name>.v`. Call
-    # after `build_flow` / `build_model`.
+    # after `build_flow` / `build_model`. Writes `sim_manifest.json` alongside
+    # the .v files first — the harvest needs the arena, which the backend
+    # construction moves away.
+    if _top_module is None:
+        raise RuntimeError("emit_verilog: no top Module registered — call set_top(...) "
+                           "or build_model(...) before emitting")
+    from .sim_manifest import write_sim_manifest   # lazy: sim_manifest imports module.py
+    write_sim_manifest(_top_module, output_dir, backend="verilog")
     BackendVerilog(arena()).emit(output_dir, top_file_name)

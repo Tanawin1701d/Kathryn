@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -26,8 +27,8 @@ class tc11_wait(Module):
         self.two   = val (8, 2, "two")
         self.three = val (8, 3, "three")
 
-        self.go.mark_input("go_in")
-        self.x.mark_output("my_x")
+        self.go.mark_input("go_in")     # real stimulus still needs a port
+        # x is observed through sim assist (KSim) — no output port needed.
 
     @flow
     def my_flow(self):
@@ -50,6 +51,7 @@ def build(output_folder: str) -> None:
 # ---- simulation (cocotb) -----------------------------------------------------
 @cocotb.test()
 async def check_wait(dut):
+    k = KSim(dut)                        # internal x, no port
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
     dut.mrst.value  = 1
@@ -65,20 +67,21 @@ async def check_wait(dut):
     for _ in range(12):
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_x.value == 2, f"sywait/scwait wrong: expected x stuck at 2, got {dut.my_x.value!s}"
+    assert k.x.value == 2, f"sywait/scwait wrong: expected x stuck at 2, got {k.x.value!s}"
 
     # release the condition wait → x advances to 3.
     dut.go_in.value = 1
     for _ in range(6):
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_x.value == 3, f"x did not reach 3 after go=1: {dut.my_x.value!s}"
+    assert k.x.value == 3, f"x did not reach 3 after go=1: {k.x.value!s}"
 
 
 @cocotb.test()
 async def check_sywait_delays(dut):
     # Focused sywait check: x must hold at 1 for the sywait stall before it can
     # become 2, proving the cycle wait actually delays the next assignment.
+    k = KSim(dut)
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
     dut.mrst.value  = 1
@@ -96,9 +99,9 @@ async def check_sywait_delays(dut):
     for _ in range(14):
         await RisingEdge(dut.clk)
         await Timer(1, unit="ns")
-        if not dut.my_x.value.is_resolvable:    # x still settling after reset
+        if not k.x.value.is_resolvable:         # x still settling after reset
             continue
-        v = int(dut.my_x.value)
+        v = int(k.x.value)
         if v == 1:
             saw_one = True
             one_streak += 1

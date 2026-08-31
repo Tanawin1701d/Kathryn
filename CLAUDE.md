@@ -806,6 +806,7 @@ Current diagrams (add to this list when you draw one):
 | `backends/common/internal_routing.rs`        | IoWire chain: source → LCA (skipped) → destination |
 | `complex_hardware/karray/karray_read.rs`     | per-dim fan-out + balanced 2:1 fold (Dyn mux / CusRd reduce) |
 | `model/arena_impl.rs`                        | flow-block init-stack state machine (LazyClosed, attach targets) |
+| `py/kathryn/sim_assist.py`                   | build→sim manifest handoff + KSim per-hop attribute resolution |
 
 `cond_schematic.rs` and `pick_schematic.rs` carry one-line pointers to the
 `cond_chain.rs` diagram instead of repeating it.
@@ -1053,6 +1054,37 @@ cp target/debug/libkathryn.so py/kathryn/_kathryn.so                            
 
 To see which file is actually imported: `PYTHONPATH=py python3 -c "import
 kathryn._kathryn as k; print(k.__file__)"`.
+
+**Sim assist — internal-signal access from cocotb** (2026-08-31). Tests no
+longer need `mark_output` just to observe a signal: `emit_verilog` writes
+`sim_manifest.json` next to the `.v` files (BEFORE the arena moves into the
+backend — `_session._top_module` stashes the top Module object for the walk),
+mapping the model's own attribute names to emitted Verilog names. Split:
+`sim_manifest.py` is the WRITER (build side, walks `vars(module)` recursively;
+only non-`_` attributes are visible — a local-variable signal is out of scope
+by design, reachable via raw `dut` + its emitted name); `sim_assist.py` is the
+READER (sim side, stdlib-only, owns the `sim_manifest.json` /
+`KATHRYN_SIM_MANIFEST` constants — the cocotb_pool runner sets the env var per
+case). Usage: `k = KSim(dut); k.sub.x.value`, `k.rf[1].data.value = 9` (raw
+cocotb handles → observe AND force both work; a sliced-view attribute is a
+read-only computed window; `counter` maps to its committed reg). This works
+because names are frozen at construction, nothing is dead-code-eliminated, and
+a sub-module's INSTANCE name equals its module name — but a reg no hardware
+reads is elided from the sim hierarchy by icarus, so give a force-target a
+reader (see tc41's `w2`). Verilator needs `--public-flat-rw`
+(`cocotb_pool/verilator.py::build_args`) for internal VPI access; icarus needs
+nothing. `mark_input` stays the way to DRIVE real stimulus ports.
+**Emitted names are a BACKEND property, never read off the ident**: the
+Verilog authority is `arena_ext_vb.rs::hcp_sim_name_vb` / `module_sim_name_vb`
+(routed through the emitter's own `gen_var_name_vb` / `get_mod_name_vb`, so
+per-type overrides like an IoWire's explicit port name hold), exposed to Python
+as `arena.hcp_verilog_name` / `module_verilog_name`
+(`applications/py/backends/verilog/arena_ext_vb_py.rs`). The walker consumes
+them through a per-backend `SimNamer` (`SIM_NAMERS` registry in
+`sim_manifest.py`; the manifest records `"backend"`): a future backend (vhdl,
+chisel, ...) adds its own arena name queries + one `SimNamer` subclass and the
+walk itself is untouched. Also new: the `karray_fields` layout proxy. Covered
+by `test/model/tc41_sim_assist.py`; `tc11` is the migration reference.
 
 **Model fix made for the DSL:** `HcpAssignable::gen_update_event`
 (`hcp_assign.rs`) now resolves a default/invalid `src_slice` to the source's full

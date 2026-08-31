@@ -22,6 +22,8 @@ impl PyModuleIdent {
     // Nesting depth: 0 = top module, +1 per sub-module level.
     #[getter]
     fn depth_level(&self) -> u32 { self.inner.get_depth_level() }
+    // NOT here: the emitted module name. That is a BACKEND property — query
+    // `arena.module_verilog_name(...)`.
 
     fn __repr__(&self) -> String {
         format!("ModuleIdent(global_id={}, depth_level={})",

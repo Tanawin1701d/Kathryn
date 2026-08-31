@@ -67,10 +67,10 @@ def _inclusive_slice(key: SliceKey) -> Slice:
 class SignalRef:
     """A signal handle plus optional bit-slice. Holds only the Rust HcpIdent."""
 
-    __slots__ = ("_ident", "_slice", "_is_user_assigned")
+    __slots__ = ("_ident", "_slice", "_is_user_sliced")
     _ident            : HcpIdent
     _slice            : Slice   # always concrete — seeded to the full width below
-    _is_user_assigned : bool    # True = a slice VIEW (`a[hi,lo]`), not the whole signal
+    _is_user_sliced : bool    # True = a slice VIEW (`a[hi,lo]`), not the whole signal
 
     def __init__(self, ident: HcpIdent, slc: Optional[Slice] = None) -> None:
         self._ident = ident
@@ -78,8 +78,8 @@ class SignalRef:
         # full width [0, bitwidth) read from the arena. An explicit slc marks a
         # slice *view* (`a[hi, lo]`), tracked separately so assignment can tell a
         # whole-signal rebind from a sliced write.
-        self._is_user_assigned = slc is not None
-        self._slice            = slc if slc is not None else Slice(0, _session.arena().get_hw_bit_sz(ident))
+        self._is_user_sliced = slc is not None
+        self._slice          = slc if slc is not None else Slice(0, _session.arena().get_hw_bit_sz(ident))
 
     # Assignability, read straight off the Rust ident: True = reg/mem (assign
     # with |=), False = wire/io_wire (assign with *=).
@@ -99,7 +99,7 @@ class SignalRef:
     def hw_type  (self) -> str:      return self._ident.hw_type
 
     def __repr__(self) -> str:
-        sl = f"[{self._slice.start},{self._slice.stop})" if self._is_user_assigned else ""
+        sl = f"[{self._slice.start},{self._slice.stop})" if self._is_user_sliced else ""
         return f"{type(self).__name__}({self._ident!r}{sl})"
 
     # ---- inclusive slicing -------------------------------------------------
@@ -251,7 +251,7 @@ class SignalRef:
         _session.arena().gen_basic_assign(self._ident, s, s_slice, self._slice)
         # Whole-signal `a |= x` rebinds name a -> return self (no-op rebind).
         # Sliced `a[h,l] |= x` is desugared to a __setitem__ -> return sentinel.
-        return _ASSIGNED if self._is_user_assigned else self
+        return _ASSIGNED if self._is_user_sliced else self
 
     def __ior__(self, src: Operand) -> Union[SignalRef, _Assigned]:
         if self._clocked is not True:

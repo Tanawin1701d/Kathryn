@@ -4,10 +4,11 @@ use crate::model::hw_component::common::hcp_ident::{HcpIdent, HwComponentType};
 use crate::model::hw_component::common::update_event::UeType;
 use crate::model::hw_component::common::update_event_ident::UpdateEventIdent;
 use crate::model::model_arena::ModelArena;
-
-// ---- HcpBaseVb arena extension ----
+use crate::model::module::module_ident::ModuleIdent;
 
 impl ModelArena {
+
+    // ---- HcpBaseVb dispatch ----
 
     /// Take any HCP as a `HcpBaseVb` trait object.
     /// ONE match lives here — callers stay match-free.
@@ -33,11 +34,32 @@ impl ModelArena {
 
     /// Put the HCP back — zero match, each type knows its own arena slot.
     pub fn replace_back_hcp_vb(&mut self, v: Box<dyn HcpBaseVb>) { v.replace_back_into_arena_vb(self); }
-}
 
-// ---- VerilogUpdateEvent arena extension ----
+    // ---- emitted-name queries ----
+    // The ONE authority on what identifier the Verilog emitter writes — routed
+    // through the same gen_* the emitter uses, so per-type overrides (e.g. an
+    // IoWire's explicit port name) always hold. Sim tooling (the sim-manifest
+    // writer) must resolve names HERE, never off the raw ident: another backend
+    // (vhdl, chisel, ...) adds its own pair in its own arena extension.
 
-impl ModelArena {
+    /// The exact identifier the Verilog emitter writes for this HCP.
+    pub fn hcp_sim_name_vb(&mut self, hcp_i: HcpIdent) -> String {
+        let hcp_vb = self.take_hcp_vb(hcp_i);
+        let name   = hcp_vb.gen_var_name_vb();
+        self.replace_back_hcp_vb(hcp_vb);
+        name
+    }
+
+    /// The exact module name the Verilog emitter writes — also the INSTANCE
+    /// name in the parent (the emitter uses the same string for both).
+    pub fn module_sim_name_vb(&mut self, module_i: ModuleIdent) -> String {
+        let module = self.take_module(module_i);
+        let name   = module.get_mod_name_vb();
+        self.replace_back_module(module_i, module);
+        name
+    }
+
+    // ---- VerilogUpdateEvent dispatch ----
 
     /// Take an update event as a `VerilogUpdateEvent` trait object.
     /// ONE match lives here — `transpile_ue` stays match-free.

@@ -33,7 +33,7 @@ def _whole_signal(ref: SignalRef) -> SignalRef:
     # A sliced view (`sig[hi, lo]`) carries its slice only on the Python side;
     # materialise it into a real expression so no bits are silently dropped when
     # only the ident crosses the boundary.
-    if ref._is_user_assigned:
+    if ref._is_user_sliced:
         return ref.extend(ref._slice.stop - ref._slice.start)
     return ref
 
