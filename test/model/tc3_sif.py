@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -29,9 +30,6 @@ class tc3_sif(Module):
         self.cond_in .mark_input("cond_in")
         self.cond_in2.mark_input("cond_in2")
 
-        self.x.mark_output("my_x")
-        self.y.mark_output("my_y")
-
     @flow
     def my_flow(self):
         with seq():
@@ -54,6 +52,7 @@ def build(output_folder: str) -> None:
 # ---- simulation (cocotb) -----------------------------------------------------
 @cocotb.test()
 async def check_sif_taken(dut):
+    k = KSim(dut)
     # Branch taken: cond_in=1 after reset -> x should latch 42.
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
@@ -69,23 +68,24 @@ async def check_sif_taken(dut):
     # E3: seq_state0 <= 1; sif condition sampled sequentially next cycle.
     await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_x.value != 42, f"my_x latched too early: {dut.my_x.value!s}"
+    assert k.x.value != 42, f"my_x latched too early: {k.x.value!s}"
 
     # E4: sif condition result captured -> branch body active.
     await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_x.value != 42, f"my_x latched too early (E4): {dut.my_x.value!s}"
+    assert k.x.value != 42, f"my_x latched too early (E4): {k.x.value!s}"
 
     # E5: x <= 42 latched.
     await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_x.value == 42, f"my_x = {dut.my_x.value!s} (expected 42)"
+    assert k.x.value == 42, f"my_x = {k.x.value!s} (expected 42)"
     await RisingEdge(dut.clk)
 
 
 
 @cocotb.test()
 async def check_sif_not_taken(dut):
+    k = KSim(dut)
     # Branch taken: cond_in=1 after reset -> x should latch 42.
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
@@ -101,20 +101,20 @@ async def check_sif_not_taken(dut):
     # E3: seq_state0 <= 1; sif condition sampled sequentially next cycle.
     await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_x.value != 48, f"my_x latched too early: {dut.my_x.value!s}"
-    assert dut.my_x.value != 48, f"my_x latched too early: {dut.my_x.value!s}"
+    assert k.x.value != 48, f"my_x latched too early: {k.x.value!s}"
+    assert k.x.value != 48, f"my_x latched too early: {k.x.value!s}"
 
     # E4: sif condition result captured -> branch body active.
     await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_x.value != 48, f"my_x latched too early (E4): {dut.my_x.value!s}"
-    assert dut.my_x.value != 48, f"my_x latched too early: {dut.my_x.value!s}"
+    assert k.x.value != 48, f"my_x latched too early (E4): {k.x.value!s}"
+    assert k.x.value != 48, f"my_x latched too early: {k.x.value!s}"
 
     # E5: x <= 42 latched.
     await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_x.value == 48, f"my_x = {dut.my_x.value!s} (expected 48)"
-    assert dut.my_x.value == 48, f"my_x = {dut.my_x.value!s} (expected 48)"
+    assert k.x.value == 48, f"my_x = {k.x.value!s} (expected 48)"
+    assert k.x.value == 48, f"my_x = {k.x.value!s} (expected 48)"
     await RisingEdge(dut.clk)
 
 

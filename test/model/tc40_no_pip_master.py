@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -38,8 +39,6 @@ class tc40_no_pip_master(Module):
 
         self.a = reg(8, "a")            # producer counter (a += 1 per grant)
         self.v = val(8, 1, "v")
-
-        self.a.mark_output("my_a")
 
     @flow
     def my_flow(self):
@@ -75,6 +74,7 @@ async def _reset_and_release(dut):
 async def check_never_stalls(dut):
     # The no-master sink acks every request, so once the counter starts moving it
     # gains exactly 1 per cycle — a repeated value means a grant was lost.
+    k = KSim(dut)
     await _reset_and_release(dut)
 
     prev_a  = 0
@@ -82,7 +82,7 @@ async def check_never_stalls(dut):
     for _ in range(RUN_CYCLES):
         await RisingEdge(dut.clk)
         await Timer(1, unit="ns")
-        a = int(dut.my_a.value)
+        a = int(k.a.value)
         if started:
             assert a == prev_a + 1, f"producer stalled: {prev_a} -> {a}"
         elif a != 0:
@@ -96,12 +96,13 @@ async def check_never_stalls(dut):
 @cocotb.test()
 async def check_reset_clears(dut):
     # While master reset is held the counter is pinned to its reset value 0.
+    k = KSim(dut)
     await _reset_and_release(dut)
     dut.mrst.value = 1                   # re-assert and keep it asserted
     for _ in range(4):
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert int(dut.my_a.value) == 0, f"reset did not clear the counter: {int(dut.my_a.value)}"
+    assert int(k.a.value) == 0, f"reset did not clear the counter: {int(k.a.value)}"
 
 
 # ---- register into the shared pool ------------------------------------------

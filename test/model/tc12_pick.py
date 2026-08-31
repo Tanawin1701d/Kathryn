@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -47,8 +48,6 @@ class tc12_pick(Module):
 
         self.sel0.mark_input("sel0")
         self.sel1.mark_input("sel1")
-
-        self.r.mark_output("my_r")
 
     @flow
     def my_flow(self):
@@ -93,22 +92,25 @@ async def _reset_with_sel(dut, sel0, sel1):
 @cocotb.test()
 async def check_pif0_selected(dut):
     # sel0 high, sel1 low -> only branch a fires, so r latches v_a.
+    k = KSim(dut)
     await _reset_with_sel(dut, 1, 0)
-    assert dut.my_r.value == V_A, f"my_r = {dut.my_r.value!s} (expected {V_A})"
+    assert k.r.value == V_A, f"my_r = {k.r.value!s} (expected {V_A})"
 
 
 @cocotb.test()
 async def check_pif1_selected(dut):
     # sel1 high, sel0 low -> only branch b fires, so r latches v_b.
+    k = KSim(dut)
     await _reset_with_sel(dut, 0, 1)
-    assert dut.my_r.value == V_B, f"my_r = {dut.my_r.value!s} (expected {V_B})"
+    assert k.r.value == V_B, f"my_r = {k.r.value!s} (expected {V_B})"
 
 
 @cocotb.test()
 async def check_pidef_default(dut):
     # Neither select high -> no pif matched, so the pidef default drives r to v_def.
+    k = KSim(dut)
     await _reset_with_sel(dut, 0, 0)
-    assert dut.my_r.value == V_DEF, f"my_r = {dut.my_r.value!s} (expected {V_DEF})"
+    assert k.r.value == V_DEF, f"my_r = {k.r.value!s} (expected {V_DEF})"
 
 
 # ---- register into the shared pool ------------------------------------------

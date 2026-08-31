@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -34,7 +35,6 @@ class tc16_zif_chain_same_reg(Module):
 
         self.c1.mark_input("c1_in")
         self.c2.mark_input("c2_in")
-        self.x.mark_output("my_x")
 
     @flow
     def my_flow(self):
@@ -79,29 +79,33 @@ async def _reset_then_hold(dut, c1: int, c2: int):
 @cocotb.test()
 async def check_zif_branch(dut):
     # c1=1 → first arm wins → x = 5.
+    k = KSim(dut)
     await _reset_then_hold(dut, c1=1, c2=0)
-    assert dut.my_x.value == 5, f"my_x = {dut.my_x.value!s} (expected 5 — zif arm)"
+    assert k.x.value == 5, f"my_x = {k.x.value!s} (expected 5 — zif arm)"
 
 
 @cocotb.test()
 async def check_zelif_branch(dut):
     # c1=0, c2=1 → second arm wins → x = 10.
+    k = KSim(dut)
     await _reset_then_hold(dut, c1=0, c2=1)
-    assert dut.my_x.value == 10, f"my_x = {dut.my_x.value!s} (expected 10 — zelif arm)"
+    assert k.x.value == 10, f"my_x = {k.x.value!s} (expected 10 — zelif arm)"
 
 
 @cocotb.test()
 async def check_zelse_branch(dut):
     # c1=0, c2=0 → else arm wins → x = 15.
+    k = KSim(dut)
     await _reset_then_hold(dut, c1=0, c2=0)
-    assert dut.my_x.value == 15, f"my_x = {dut.my_x.value!s} (expected 15 — zelse arm)"
+    assert k.x.value == 15, f"my_x = {k.x.value!s} (expected 15 — zelse arm)"
 
 
 @cocotb.test()
 async def check_zif_priority_over_zelif(dut):
     # c1=1 AND c2=1 → the chain is a priority mux, so the zif arm still wins → x = 5.
+    k = KSim(dut)
     await _reset_then_hold(dut, c1=1, c2=1)
-    assert dut.my_x.value == 5, f"my_x = {dut.my_x.value!s} (expected 5 — zif outranks zelif)"
+    assert k.x.value == 5, f"my_x = {k.x.value!s} (expected 5 — zif outranks zelif)"
 
 
 # ---- register into the shared pool ------------------------------------------

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -28,8 +29,8 @@ SETTLE_CYCLES = 50
 # rf[i] = (valid=1, data=DATA[i])
 DATA = [0x11, 0x22, 0x33, 0x44]
 
-EXPECT = {f"d{i}": DATA[i] for i in range(4)}   # binary read of each address
-EXPECT["od"] = max(DATA)                        # reduce read picks the max element
+EXPECT = {f"o_d[{i}]": DATA[i] for i in range(4)}   # binary read of each address
+EXPECT["o_od"] = max(DATA)                          # reduce read picks the max element
 
 
 # ---- model -------------------------------------------------------------------
@@ -51,9 +52,7 @@ class tc30_karray_dynamic_index(Module):
 
         # one output per binary read, plus the reduce read
         self.o_d = [reg(8, f"o_d{i}") for i in range(4)]
-        for i in range(4):
-            self.o_d[i].mark_output(f"d{i}")
-        self.o_od = reg(8, "o_od"); self.o_od.mark_output("od")
+        self.o_od = reg(8, "o_od")
 
     @flow
     def my_flow(self):
@@ -84,6 +83,7 @@ def build(output_folder: str) -> None:
 # ---- simulation (cocotb) -----------------------------------------------------
 @cocotb.test()
 async def check_karray_dynamic_index(dut):
+    k = KSim(dut)
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
     dut.mrst.value = 1
@@ -96,9 +96,11 @@ async def check_karray_dynamic_index(dut):
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
 
-    for port, want in EXPECT.items():
-        got = int(getattr(dut, port).value)
-        assert got == want, f"{port} = {got} (expected {want})"
+    sigs = {f"o_d[{i}]": k.o_d[i] for i in range(4)}
+    sigs["o_od"] = k.o_od
+    for name, want in EXPECT.items():
+        got = int(sigs[name].value)
+        assert got == want, f"{name} = {got} (expected {want})"
 
 
 # ---- register into the shared pool ------------------------------------------

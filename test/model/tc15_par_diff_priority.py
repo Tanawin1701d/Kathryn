@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -35,8 +36,6 @@ class tc15_par_diff_priority(Module):
         self.val_5  = val(8, 5,  "val_5")
         self.val_10 = val(8, 10, "val_10")
         self.val_15 = val(8, 15, "val_15")
-
-        self.x.mark_output("my_x")
 
     @flow
     def my_flow(self):
@@ -63,6 +62,7 @@ def build(output_folder: str) -> None:
 @cocotb.test()
 async def check_par_diff_priority(dut):
     # 10ns clock; two cycles of master-reset.
+    k = KSim(dut)
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
     dut.mrst.value = 1
@@ -74,20 +74,20 @@ async def check_par_diff_priority(dut):
     # E3: start -> par_auto body entered next cycle; x not latched yet.
     await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_x.value != 5, f"my_x latched too early: {dut.my_x.value!s}"
+    assert k.x.value != 5, f"my_x latched too early: {k.x.value!s}"
 
     # E4: all three writes fire this cycle; the highest-priority one (+3, x<=5)
     # wins even though x<=15 was declared last.
     await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_x.value == 5,  f"my_x = {dut.my_x.value!s} (expected 5 — highest-priority write wins)"
-    assert dut.my_x.value != 15, f"my_x = {dut.my_x.value!s} (last-declared must not win over higher priority)"
+    assert k.x.value == 5,  f"my_x = {k.x.value!s} (expected 5 — highest-priority write wins)"
+    assert k.x.value != 15, f"my_x = {k.x.value!s} (last-declared must not win over higher priority)"
 
     # x holds 5 — nothing else drives it.
     for _ in range(10):
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_x.value == 5, f"my_x drifted off 5: {dut.my_x.value!s}"
+    assert k.x.value == 5, f"my_x drifted off 5: {k.x.value!s}"
 
 
 # ---- register into the shared pool ------------------------------------------

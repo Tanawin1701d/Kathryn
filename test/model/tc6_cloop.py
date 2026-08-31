@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -22,8 +23,6 @@ class tc6_cloop(Module):
         self.x    = reg(8, "x")
         self.one  = val(8, 1, "one")
         self.zero = val(8, 0, "zero")
-
-        self.x.mark_output("my_x")
 
     @flow
     def my_flow(self):
@@ -45,6 +44,7 @@ def build(output_folder: str) -> None:
 # ---- simulation (cocotb) -----------------------------------------------------
 @cocotb.test()
 async def check_cloop(dut):
+    k = KSim(dut)
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
     dut.mrst.value = 1
@@ -63,7 +63,7 @@ async def check_cloop(dut):
     await RisingEdge(dut.clk)            # E4
     # loop state
     await Timer(1, unit="ns")
-    assert dut.my_x.value == 1, f"my_x = {dut.my_x.value!s} (expected 1)"
+    assert k.x.value == 1, f"my_x = {k.x.value!s} (expected 1)"
 
     # E5-E8: 4 cloop iterations increment x from 0 to 4.
     # Give extra margin for loop overhead cycles.
@@ -71,7 +71,7 @@ async def check_cloop(dut):
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
 
-    assert dut.my_x.value == 3, f"my_x = {dut.my_x.value!s} (expected 4 after 4 iterations)"
+    assert k.x.value == 3, f"my_x = {k.x.value!s} (expected 4 after 4 iterations)"
 
 
 # ---- register into the shared pool ------------------------------------------

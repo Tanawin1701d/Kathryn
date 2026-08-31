@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -26,7 +27,6 @@ class tc10_zswitch(Module):
         self.val_c = val(8, 30, "val_c")
 
         self.sel.mark_input ("my_sel")
-        self.out.mark_output("my_out")
 
     @flow
     def my_flow(self):
@@ -54,6 +54,7 @@ async def check_zswitch(dut):
     # zstate/zcase is combinational: out changes the same cycle sel changes.
     # sel is a real input port; drive it and verify out reflects the matching
     # val after a delta.
+    k = KSim(dut)
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
     dut.mrst.value  = 1
@@ -65,7 +66,7 @@ async def check_zswitch(dut):
     dut.my_sel.value = 1
     await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_out.value == 20, f"sel=1: my_out = {dut.my_out.value!s} (expected 20)"
+    assert k.out.value == 20, f"sel=1: my_out = {k.out.value!s} (expected 20)"
 
 
 

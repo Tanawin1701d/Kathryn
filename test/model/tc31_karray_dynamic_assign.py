@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -33,7 +34,7 @@ DOH  = 0xAB      # one-hot write -> element 1
 DMAP = 0xCD      # map write     -> element 3
 MAP_V = 1
 
-EXPECT = {"d0": D0, "d1": DOH, "d2": D2, "d3": DMAP, "v3": MAP_V}
+EXPECT = {"o_d[0]": D0, "o_d[1]": DOH, "o_d[2]": D2, "o_d[3]": DMAP, "o_v3": MAP_V}
 
 
 # ---- model -------------------------------------------------------------------
@@ -61,9 +62,7 @@ class tc31_karray_dynamic_assign(Module):
 
         # read every element's data back to an output, plus element 3's valid
         self.o_d = [reg(8, f"o_d{i}") for i in range(4)]
-        for i in range(4):
-            self.o_d[i].mark_output(f"d{i}")
-        self.o_v3 = reg(1, "o_v3"); self.o_v3.mark_output("v3")
+        self.o_v3 = reg(1, "o_v3")
 
     @flow
     def my_flow(self):
@@ -93,6 +92,7 @@ def build(output_folder: str) -> None:
 # ---- simulation (cocotb) -----------------------------------------------------
 @cocotb.test()
 async def check_karray_dynamic_assign(dut):
+    k = KSim(dut)
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
     dut.mrst.value = 1
@@ -105,9 +105,11 @@ async def check_karray_dynamic_assign(dut):
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
 
-    for port, want in EXPECT.items():
-        got = int(getattr(dut, port).value)
-        assert got == want, f"{port} = {got} (expected {want})"
+    sigs = {f"o_d[{i}]": k.o_d[i] for i in range(4)}
+    sigs["o_v3"] = k.o_v3
+    for name, want in EXPECT.items():
+        got = int(sigs[name].value)
+        assert got == want, f"{name} = {got} (expected {want})"
 
 
 # ---- register into the shared pool ------------------------------------------

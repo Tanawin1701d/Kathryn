@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -32,9 +33,6 @@ class tc13_forever_scwait(Module):
         self.mirror = wire(8, "mirror")
 
         self.go.mark_input     ("go_in")
-        self.cnt.mark_output   ("cnt_out")
-        self.halted.mark_output("halted_out")
-        self.mirror.mark_output("mirror_out")
 
     @flow
     def my_flow(self):
@@ -82,14 +80,15 @@ async def _pulse_go(dut, cycles_high=1):
 async def check_loop_handshake(dut):
     # Each go strobe advances cnt exactly once; after LIMIT strobes the loop
     # sets halted and stops reacting to further strobes.
+    k = KSim(dut)
     await _reset(dut)
 
     # no strobe → cnt must stay put
     for _ in range(6):
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert int(dut.cnt_out.value) == 0, f"cnt moved without go: {dut.cnt_out.value!s}"
-    assert int(dut.halted_out.value) == 0
+    assert int(k.cnt.value) == 0, f"cnt moved without go: {k.cnt.value!s}"
+    assert int(k.halted.value) == 0
 
     # strobe LIMIT times → cnt counts each one
     for i in range(1, LIMIT + 1):
@@ -97,11 +96,11 @@ async def check_loop_handshake(dut):
         for _ in range(4):                     # let the loop swing back around
             await RisingEdge(dut.clk)
         await Timer(1, unit="ns")
-        assert int(dut.cnt_out.value) == i, \
-            f"after strobe {i}: cnt = {dut.cnt_out.value!s} (expected {i})"
+        assert int(k.cnt.value) == i, \
+            f"after strobe {i}: cnt = {k.cnt.value!s} (expected {i})"
 
     await Timer(1, unit="ns")
-    assert int(dut.halted_out.value) == 1, "halted did not set after LIMIT strobes"
+    assert int(k.halted.value) == 1, "halted did not set after LIMIT strobes"
 
     # further strobes must be ignored once halted
     for _ in range(2):
@@ -109,19 +108,20 @@ async def check_loop_handshake(dut):
         for _ in range(3):
             await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert int(dut.cnt_out.value) == LIMIT, \
-        f"cnt advanced after halt: {dut.cnt_out.value!s} (expected {LIMIT})"
+    assert int(k.cnt.value) == LIMIT, \
+        f"cnt advanced after halt: {k.cnt.value!s} (expected {LIMIT})"
 
 
 @cocotb.test()
 async def check_bare_comb_always_active(dut):
     # mirror = cnt + 100 must track cnt in EVERY state (waiting, working, halted)
     # — proves bare comb assigns are not gated by the loop's state machine.
+    k = KSim(dut)
     await _reset(dut)
 
     async def expect_mirror():
         await Timer(1, unit="ns")
-        c, m = int(dut.cnt_out.value), int(dut.mirror_out.value)
+        c, m = int(k.cnt.value), int(k.mirror.value)
         assert m == c + 100, f"mirror = {m} but cnt = {c}"
 
     await expect_mirror()                      # while parked in scwait

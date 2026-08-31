@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -22,9 +23,6 @@ class tc2_par(Module):
         self.y     = reg(8, "y")
         self.val_5  = val(8, 5,  "val_5")
         self.val_10 = val(8, 10, "val_10")
-
-        self.x.mark_output("my_x")
-        self.y.mark_output("my_y")
 
     @flow
     def my_flow(self):
@@ -45,6 +43,7 @@ def build(output_folder: str) -> None:
 # ---- simulation (cocotb) -----------------------------------------------------
 @cocotb.test()
 async def check_par(dut):
+    k = KSim(dut)
     # 10ns clock; two cycles of master-reset.
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
@@ -57,14 +56,14 @@ async def check_par(dut):
     # E3: seq_state0 <= 1  (start -> par_auto body entered next cycle)
     await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_x.value != 5,  f"my_x latched too early: {dut.my_x.value!s}"
-    assert dut.my_y.value != 10, f"my_y latched too early: {dut.my_y.value!s}"
+    assert k.x.value != 5,  f"my_x latched too early: {k.x.value!s}"
+    assert k.y.value != 10, f"my_y latched too early: {k.y.value!s}"
 
     # E4: both branches latch on the same cycle (auto-sync).
     await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_x.value == 5,  f"my_x = {dut.my_x.value!s} (expected 5)"
-    assert dut.my_y.value == 10, f"my_y = {dut.my_y.value!s} (expected 10)"
+    assert k.x.value == 5,  f"my_x = {k.x.value!s} (expected 5)"
+    assert k.y.value == 10, f"my_y = {k.y.value!s} (expected 10)"
 
     for i in range(10):
         await RisingEdge(dut.clk)

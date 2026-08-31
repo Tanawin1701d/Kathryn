@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -37,7 +38,7 @@ AW   = 2         # a's dynamic write address (last dim, extent 3)
 BW   = 1         # b's dynamic read address (middle dim, extent 3)
 ENJ  = 1         # a's custom-enable target on dim 1 (extent 3)
 
-EXPECT = {"k": max(B0, B1), "hold": PRE, "othr": PRE2}
+EXPECT = {"o_k": max(B0, B1), "o_hold": PRE, "o_othr": PRE2}
 
 
 # ---- model -------------------------------------------------------------------
@@ -55,9 +56,9 @@ class tc35_karray_mixed_k2k(Module):
         self.bw    = val(2, BW,  "bw")       # binary address into b's dim 1
         self.ensel = val(2, ENJ, "ensel")    # custom-enable compare for a's dim 1
 
-        self.o_k    = reg(8, "o_k");    self.o_k   .mark_output("k")
-        self.o_hold = reg(8, "o_hold"); self.o_hold.mark_output("hold")
-        self.o_othr = reg(8, "o_othr"); self.o_othr.mark_output("othr")
+        self.o_k    = reg(8, "o_k")
+        self.o_hold = reg(8, "o_hold")
+        self.o_othr = reg(8, "o_othr")
 
     @flow
     def my_flow(self):
@@ -93,6 +94,7 @@ def build(output_folder: str) -> None:
 # ---- simulation (cocotb) -----------------------------------------------------
 @cocotb.test()
 async def check_karray_mixed_k2k(dut):
+    k = KSim(dut)
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
     dut.mrst.value = 1
@@ -105,9 +107,9 @@ async def check_karray_mixed_k2k(dut):
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
 
-    for port, want in EXPECT.items():
-        got = int(getattr(dut, port).value)
-        assert got == want, f"{port} = {got} (expected {want})"
+    for name, want in EXPECT.items():
+        got = int(getattr(k, name).value)
+        assert got == want, f"{name} = {got} (expected {want})"
 
 
 # ---- register into the shared pool ------------------------------------------

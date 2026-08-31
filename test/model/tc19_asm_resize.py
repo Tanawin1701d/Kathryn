@@ -14,6 +14,7 @@ import warnings
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -43,9 +44,9 @@ class tc19_asm_resize(Module):
         self.wide   = reg(8, "wide");   self.wide.reset(WIDE)
         self.narrow = reg(4, "narrow"); self.narrow.reset(NARROW)
 
-        self.trunc  = reg(4, "trunc_r");  self.trunc .mark_output("trunc")
-        self.extend = reg(8, "extend_r"); self.extend.mark_output("extend")
-        self.exact  = reg(8, "exact_r");  self.exact .mark_output("exact")
+        self.trunc  = reg(4, "trunc_r")
+        self.extend = reg(8, "extend_r")
+        self.exact  = reg(8, "exact_r")
 
     @flow
     def my_flow(self):
@@ -78,6 +79,7 @@ def build(output_folder: str) -> None:
 # ---- simulation (cocotb) -----------------------------------------------------
 @cocotb.test()
 async def check_asm_resize(dut):
+    k = KSim(dut)
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
     dut.mrst.value = 1
@@ -90,9 +92,9 @@ async def check_asm_resize(dut):
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
 
-    for port, want in EXPECT.items():
-        got = int(getattr(dut, port).value)
-        assert got == want, f"{port} = {got} (expected {want})"
+    for name, want in EXPECT.items():
+        got = int(getattr(k, name).value)
+        assert got == want, f"{name} = {got} (expected {want})"
 
 
 # ---- register into the shared pool ------------------------------------------

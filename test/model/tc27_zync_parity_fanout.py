@@ -29,6 +29,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -53,10 +54,6 @@ class tc27_zync_parity_fanout(Module):
         self.be = reg(8, "be")          # even path: captures a when the delivered a is even
         self.bo = reg(8, "bo")          # odd  path: captures a when the delivered a is odd
         self.v  = val(8, 1, "v")
-
-        self.a.mark_output("my_a")
-        self.be.mark_output("my_be")
-        self.bo.mark_output("my_bo")
 
     @flow
     def my_flow(self):
@@ -111,21 +108,22 @@ async def _reset_and_release(dut):
     dut.mrst.value = 0
 
 
-def _vals(dut):
-    return int(dut.my_a.value), int(dut.my_be.value), int(dut.my_bo.value)
+def _vals(k):
+    return int(k.a.value), int(k.be.value), int(k.bo.value)
 
 
 @cocotb.test()
 async def check_producer_counts(dut):
     # a advances on every grant (one parity is always true), so it must climb above
     # 0 and never step backwards once the pipeline is flowing (8-bit, no wrap in run).
+    k = KSim(dut)
     await _reset_and_release(dut)
 
     prev_a = 0
     for _ in range(RUN_CYCLES):
         await RisingEdge(dut.clk)
         await Timer(1, unit="ns")
-        a, _, _ = _vals(dut)
+        a, _, _ = _vals(k)
         assert a >= prev_a, f"a went backwards: {prev_a} -> {a}"
         prev_a = a
 
@@ -136,13 +134,14 @@ async def check_producer_counts(dut):
 async def check_both_paths_fire(dut):
     # Both consumers lag the producer (a >= be, a >= bo), each is monotonic, and
     # since a alternates parity both paths eventually capture data.
+    k = KSim(dut)
     await _reset_and_release(dut)
 
     prev = (0, 0, 0)
     for _ in range(RUN_CYCLES):
         await RisingEdge(dut.clk)
         await Timer(1, unit="ns")
-        cur = _vals(dut)
+        cur = _vals(k)
         a, be, bo = cur
         assert a >= be, f"even path outran producer: a={a} be={be}"
         assert a >= bo, f"odd path outran producer: a={a} bo={bo}"
@@ -158,12 +157,13 @@ async def check_both_paths_fire(dut):
 async def check_parity_routing(dut):
     # The cond on each bind routes by parity: the even path only captures even a
     # (be is always even), the odd path only odd a (bo is 0 at reset, else odd).
+    k = KSim(dut)
     await _reset_and_release(dut)
 
     for _ in range(RUN_CYCLES):
         await RisingEdge(dut.clk)
         await Timer(1, unit="ns")
-        _, be, bo = _vals(dut)
+        _, be, bo = _vals(k)
         assert be % 2 == 0, f"even path captured an odd value: be={be}"
         assert bo == 0 or bo % 2 == 1, f"odd path captured an even value: bo={bo}"
 
@@ -171,12 +171,13 @@ async def check_parity_routing(dut):
 @cocotb.test()
 async def check_reset_clears(dut):
     # While master reset is held every register is pinned to its reset value 0.
+    k = KSim(dut)
     await _reset_and_release(dut)
     dut.mrst.value = 1                   # re-assert and keep it asserted
     for _ in range(4):
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert _vals(dut) == (0, 0, 0), f"reset did not clear the registers: {_vals(dut)}"
+    assert _vals(k) == (0, 0, 0), f"reset did not clear the registers: {_vals(k)}"
 
 # ---- register into the shared pool ------------------------------------------
 cocotb_pool.register(NAME, build, __name__)

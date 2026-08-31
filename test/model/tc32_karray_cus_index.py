@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -33,13 +34,13 @@ DATA     = [0x10, 0x21, 0x32, 0x43]   # per-element custom-enable write
 SENTINEL = 0x7E                       # range broadcast into elements 0,1
 INTSRC   = 0x5A                       # int-literal source through a dynamic write
 
-EXPECT = {f"d{i}": DATA[i] for i in range(4)}
-EXPECT["g0"] = SENTINEL
-EXPECT["g1"] = SENTINEL
-EXPECT["g2"] = DATA[2]                 # rg seeded per-element first; 2,3 keep it
-EXPECT["g3"] = DATA[3]
-EXPECT["h3"] = INTSRC
-EXPECT["rd"] = max(DATA)               # reduce read folds rf to its max element
+EXPECT = {f"o_d[{i}]": DATA[i] for i in range(4)}
+EXPECT["o_g[0]"] = SENTINEL
+EXPECT["o_g[1]"] = SENTINEL
+EXPECT["o_g[2]"] = DATA[2]             # rg seeded per-element first; 2,3 keep it
+EXPECT["o_g[3]"] = DATA[3]
+EXPECT["o_h3"] = INTSRC
+EXPECT["o_rd"] = max(DATA)             # reduce read folds rf to its max element
 
 
 # ---- model -------------------------------------------------------------------
@@ -61,11 +62,8 @@ class tc32_karray_cus_index(Module):
         # read the regfiles' elements back to outputs
         self.o_d  = [reg(8, f"o_d{i}") for i in range(4)]
         self.o_g  = [reg(8, f"o_g{i}") for i in range(4)]
-        for i in range(4):
-            self.o_d[i].mark_output(f"d{i}")
-            self.o_g[i].mark_output(f"g{i}")
-        self.o_h3 = reg(8, "o_h3"); self.o_h3.mark_output("h3")
-        self.o_rd = reg(8, "o_rd"); self.o_rd.mark_output("rd")
+        self.o_h3 = reg(8, "o_h3")
+        self.o_rd = reg(8, "o_rd")
 
     @flow
     def my_flow(self):
@@ -105,6 +103,7 @@ def build(output_folder: str) -> None:
 # ---- simulation (cocotb) -----------------------------------------------------
 @cocotb.test()
 async def check_karray_cus_index(dut):
+    k = KSim(dut)
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
     dut.mrst.value = 1
@@ -117,9 +116,13 @@ async def check_karray_cus_index(dut):
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
 
-    for port, want in EXPECT.items():
-        got = int(getattr(dut, port).value)
-        assert got == want, f"{port} = {got} (expected {want})"
+    sigs = {f"o_d[{i}]": k.o_d[i] for i in range(4)}
+    sigs.update({f"o_g[{i}]": k.o_g[i] for i in range(4)})
+    sigs["o_h3"] = k.o_h3
+    sigs["o_rd"] = k.o_rd
+    for name, want in EXPECT.items():
+        got = int(sigs[name].value)
+        assert got == want, f"{name} = {got} (expected {want})"
 
 
 # ---- register into the shared pool ------------------------------------------

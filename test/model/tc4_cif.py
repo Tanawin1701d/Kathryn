@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -29,9 +30,6 @@ class tc4_cif(Module):
         self.cond_in .mark_input("cond_in")
         self.cond_in2.mark_input("cond_in2")
 
-        self.x.mark_output("my_x")
-        self.y.mark_output("my_y")
-
     @flow
     def my_flow(self):
         with seq():
@@ -54,6 +52,7 @@ def build(output_folder: str) -> None:
 # ---- simulation (cocotb) -----------------------------------------------------
 @cocotb.test()
 async def check_cif_taken(dut):
+    k = KSim(dut)
     # cif samples the condition combinationally — one cycle earlier than sif.
     # Branch taken: cond_in=1 -> x latches 42 at E4 (vs E5 for sif).
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
@@ -70,17 +69,18 @@ async def check_cif_taken(dut):
     # E3: seq_state0 <= 1; cif condition is combinational, body active same cycle.
     await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_x.value != 42, f"my_x latched too early: {dut.my_x.value!s}"
+    assert k.x.value != 42, f"my_x latched too early: {k.x.value!s}"
 
     # E4: x <= 42 latched (one cycle earlier than sif).
     await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_x.value == 42, f"my_x = {dut.my_x.value!s} (expected 42)"
+    assert k.x.value == 42, f"my_x = {k.x.value!s} (expected 42)"
     await RisingEdge(dut.clk)
 
 
 @cocotb.test()
 async def check_cif_not_taken(dut):
+    k = KSim(dut)
     # Neither branch taken: cond_in=0, cond_in2=0 -> x stays at reset value.
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
@@ -96,12 +96,13 @@ async def check_cif_not_taken(dut):
     for _ in range(10):
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_x.value != 42, f"my_x became 42 but cond_in was 0: {dut.my_x.value!s}"
-    assert dut.my_x.value != 48, f"my_x became 48 but neither cond was set: {dut.my_x.value!s}"
+    assert k.x.value != 42, f"my_x became 42 but cond_in was 0: {k.x.value!s}"
+    assert k.x.value != 48, f"my_x became 48 but neither cond was set: {k.x.value!s}"
 
 
 @cocotb.test()
 async def check_elif_taken(dut):
+    k = KSim(dut)
     # elif branch taken: cond_in=0, cond_in2=1 -> x and y latch 48 at E4.
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
@@ -118,14 +119,14 @@ async def check_elif_taken(dut):
     # E3: seq_state0 <= 1; elif condition combinational, par body active same cycle.
     await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_x.value != 48, f"my_x latched too early (E3): {dut.my_x.value!s}"
-    assert dut.my_y.value != 48, f"my_y latched too early (E3): {dut.my_y.value!s}"
+    assert k.x.value != 48, f"my_x latched too early (E3): {k.x.value!s}"
+    assert k.y.value != 48, f"my_y latched too early (E3): {k.y.value!s}"
 
     # E4: x and y <= 48 latched in parallel.
     await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_x.value == 48, f"my_x = {dut.my_x.value!s} (expected 48)"
-    assert dut.my_y.value == 48, f"my_y = {dut.my_y.value!s} (expected 48)"
+    assert k.x.value == 48, f"my_x = {k.x.value!s} (expected 48)"
+    assert k.y.value == 48, f"my_y = {k.y.value!s} (expected 48)"
     await RisingEdge(dut.clk)
 
 

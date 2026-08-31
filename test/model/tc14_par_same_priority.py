@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -30,8 +31,6 @@ class tc14_par_same_priority(Module):
         self.val_5  = val(8, 5,  "val_5")
         self.val_10 = val(8, 10, "val_10")
         self.val_15 = val(8, 15, "val_15")
-
-        self.x.mark_output("my_x")
 
     @flow
     def my_flow(self):
@@ -58,6 +57,7 @@ def build(output_folder: str) -> None:
 @cocotb.test()
 async def check_par_same_priority(dut):
     # 10ns clock; two cycles of master-reset.
+    k = KSim(dut)
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
     dut.mrst.value = 1
@@ -69,18 +69,18 @@ async def check_par_same_priority(dut):
     # E3: start -> par_auto body entered next cycle; x not latched yet.
     await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_x.value != 15, f"my_x latched too early: {dut.my_x.value!s}"
+    assert k.x.value != 15, f"my_x latched too early: {k.x.value!s}"
 
     # E4: all three same-priority writes fire this cycle; the last one (x<=15) wins.
     await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_x.value == 15, f"my_x = {dut.my_x.value!s} (expected 15 — last same-priority write wins)"
+    assert k.x.value == 15, f"my_x = {k.x.value!s} (expected 15 — last same-priority write wins)"
 
     # x holds 15 — nothing else drives it.
     for _ in range(10):
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_x.value == 15, f"my_x drifted off 15: {dut.my_x.value!s}"
+    assert k.x.value == 15, f"my_x drifted off 15: {k.x.value!s}"
 
 
 # ---- register into the shared pool ------------------------------------------

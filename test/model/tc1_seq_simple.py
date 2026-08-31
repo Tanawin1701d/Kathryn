@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -26,9 +27,6 @@ class tc1_seq_simple(Module):
         self.x          = reg(8, "x")
         self.y          = reg(8, "y")
         self.simple_val = val(8, 48, "simple_val")
-
-        self.x.mark_output("my_x")
-        self.y.mark_output("my_y")
 
     @flow
     def my_flow(self):
@@ -48,6 +46,7 @@ def build(output_folder: str) -> None:
 # ---- simulation (cocotb) -----------------------------------------------------
 @cocotb.test()
 async def check_seq(dut):
+    k = KSim(dut)
     # 10ns clock; assert master-reset for two cycles to launch the sequence.
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
@@ -62,18 +61,18 @@ async def check_seq(dut):
     # use `!= 48` (X-safe) for the "not yet" guards, not `== 0`.
     await RisingEdge(dut.clk)            # E3: seq_state0 <= 1
     await Timer(1, unit="ns")
-    assert dut.my_x.value != 48, f"my_x latched too early = {dut.my_x.value!s}"
-    assert dut.my_y.value != 48, f"my_y latched too early = {dut.my_y.value!s}"
+    assert k.x.value != 48, f"my_x latched too early = {k.x.value!s}"
+    assert k.y.value != 48, f"my_y latched too early = {k.y.value!s}"
 
     await RisingEdge(dut.clk)            # E4: x <= 48 — first cycle my_x is asserted
     await Timer(1, unit="ns")
-    assert dut.my_x.value == 48, f"my_x at first assert = {dut.my_x.value!s} (expected 48)"
-    assert dut.my_y.value != 48, f"my_y latched too early = {dut.my_y.value!s}"
+    assert k.x.value == 48, f"my_x at first assert = {k.x.value!s} (expected 48)"
+    assert k.y.value != 48, f"my_y latched too early = {k.y.value!s}"
 
     await RisingEdge(dut.clk)            # E5: y <= x — first cycle my_y is asserted
     await Timer(1, unit="ns")
-    assert dut.my_y.value == 48, f"my_y at first assert = {dut.my_y.value!s} (expected 48)"
-    assert dut.my_x.value == 48, f"my_x held = {dut.my_x.value!s} (expected 48)"
+    assert k.y.value == 48, f"my_y at first assert = {k.y.value!s} (expected 48)"
+    assert k.x.value == 48, f"my_x held = {k.x.value!s} (expected 48)"
 
 
 # ---- register into the shared pool ------------------------------------------

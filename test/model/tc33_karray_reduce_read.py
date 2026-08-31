@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -29,9 +30,9 @@ ROW0 = [0x05, 0x01, 0x03]             # grid row 0
 ROW1 = [0x02, 0x06, 0x04]             # grid row 1
 
 EXPECT = {
-    "mx": max(DATA),                   # 0x04
-    "sm": sum(DATA),                   # 0x0A
-    "r1": max(ROW1),                   # 0x06
+    "o_mx": max(DATA),                 # 0x04
+    "o_sm": sum(DATA),                 # 0x0A
+    "o_r1": max(ROW1),                 # 0x06
 }
 
 
@@ -64,9 +65,9 @@ class tc33_karray_reduce_read(Module):
         self.rf   = RegFile(HwComponentType.REG, (4,), "rf")
         self.grid = Cell(HwComponentType.REG, (2, 3), "grid")
 
-        self.o_mx = reg(8, "o_mx"); self.o_mx.mark_output("mx")
-        self.o_sm = reg(8, "o_sm"); self.o_sm.mark_output("sm")
-        self.o_r1 = reg(6, "o_r1"); self.o_r1.mark_output("r1")
+        self.o_mx = reg(8, "o_mx")
+        self.o_sm = reg(8, "o_sm")
+        self.o_r1 = reg(6, "o_r1")
 
     @flow
     def my_flow(self):
@@ -97,6 +98,7 @@ def build(output_folder: str) -> None:
 # ---- simulation (cocotb) -----------------------------------------------------
 @cocotb.test()
 async def check_karray_reduce_read(dut):
+    k = KSim(dut)
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
     dut.mrst.value = 1
@@ -109,9 +111,9 @@ async def check_karray_reduce_read(dut):
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
 
-    for port, want in EXPECT.items():
-        got = int(getattr(dut, port).value)
-        assert got == want, f"{port} = {got} (expected {want})"
+    for name, want in EXPECT.items():
+        got = int(getattr(k, name).value)
+        assert got == want, f"{name} = {got} (expected {want})"
 
 
 # ---- register into the shared pool ------------------------------------------

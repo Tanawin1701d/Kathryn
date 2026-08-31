@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -50,10 +51,6 @@ class tc24_pip_zync_multi_assign_order(Module):
         self.c = reg(8, "c")            # stage-3 follows b
         self.v  = val(8, V,  "v")
         self.v2 = val(8, V2, "v2")
-
-        self.a.mark_output("my_a")
-        self.b.mark_output("my_b")
-        self.c.mark_output("my_c")
 
     @flow
     def my_flow(self):
@@ -102,8 +99,8 @@ async def _reset_and_release(dut):
     dut.mrst.value = 0
 
 
-def _abc(dut):
-    return int(dut.my_a.value), int(dut.my_b.value), int(dut.my_c.value)
+def _abc(k):
+    return int(k.a.value), int(k.b.value), int(k.c.value)
 
 
 @cocotb.test()
@@ -112,13 +109,14 @@ async def check_last_write_wins(dut):
     # the pipeline is flowing: it must equal OVERRIDE_STEP (the SECOND write's
     # addend), proving the later assignment overrode the earlier one rather than the
     # first winning (+V) or both accumulating (+V+V2).
+    k = KSim(dut)
     await _reset_and_release(dut)
 
     a_seq = []
     for _ in range(RUN_CYCLES):
         await RisingEdge(dut.clk)
         await Timer(1, unit="ns")
-        a_seq.append(_abc(dut)[0])
+        a_seq.append(_abc(k)[0])
 
     # a must be a clean multiple-of-step ramp; collect the non-stall deltas.
     steps = [y - x for x, y in zip(a_seq, a_seq[1:]) if y != x]
@@ -132,13 +130,14 @@ async def check_last_write_wins(dut):
 async def check_pipeline_propagates(dut):
     # b follows a and c follows b, each a stage behind, so a >= b >= c holds at every
     # sample, all three are monotonic, and data eventually reaches the last stage.
+    k = KSim(dut)
     await _reset_and_release(dut)
 
     prev = (0, 0, 0)
     for _ in range(RUN_CYCLES):
         await RisingEdge(dut.clk)
         await Timer(1, unit="ns")
-        cur = _abc(dut)
+        cur = _abc(k)
         a, b, c = cur
         assert a >= b >= c, f"pipeline order broken: a={a} b={b} c={c}"
         assert all(n >= p for n, p in zip(cur, prev)), f"a stage went backwards: {prev} -> {cur}"
@@ -152,12 +151,13 @@ async def check_pipeline_propagates(dut):
 @cocotb.test()
 async def check_reset_clears(dut):
     # While master reset is held every stage is pinned to its reset value 0.
+    k = KSim(dut)
     await _reset_and_release(dut)
     dut.mrst.value = 1                   # re-assert and keep it asserted
     for _ in range(4):
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert _abc(dut) == (0, 0, 0), f"reset did not clear the pipeline: {_abc(dut)}"
+    assert _abc(k) == (0, 0, 0), f"reset did not clear the pipeline: {_abc(k)}"
 
 # ---- register into the shared pool ------------------------------------------
 cocotb_pool.register(NAME, build, __name__)

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -55,7 +56,6 @@ class tc36_karray_bundle(Module):
         for name, width in (("ax0", 8), ("ay0", 8), ("ax1", 8), ("ay1", 8),
                             ("av1", 1), ("bx0", 8), ("by0", 8), ("bv0", 1)):
             r = reg(width, f"o_{name}")
-            r.mark_output(name)
             self.o[name] = r
 
     @flow
@@ -95,6 +95,7 @@ def build(output_folder: str) -> None:
 # ---- simulation (cocotb) -----------------------------------------------------
 @cocotb.test()
 async def check_karray_bundle(dut):
+    k = KSim(dut)
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
     dut.mrst.value = 1
@@ -107,9 +108,9 @@ async def check_karray_bundle(dut):
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
 
-    for port, want in EXPECT.items():
-        got = int(getattr(dut, port).value)
-        assert got == want, f"{port} = {got} (expected {want})"
+    for name, want in EXPECT.items():
+        got = int(k.o[name].value)
+        assert got == want, f"{name} = {got} (expected {want})"
 
 
 # ---- register into the shared pool ------------------------------------------

@@ -25,6 +25,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -49,10 +50,6 @@ class tc26_zync_fanout(Module):
         self.b0 = reg(8, "b0")          # consumer 0 follows a
         self.b1 = reg(8, "b1")          # consumer 1 follows a
         self.v  = val(8, 1, "v")
-
-        self.a.mark_output("my_a")
-        self.b0.mark_output("my_b0")
-        self.b1.mark_output("my_b1")
 
     @flow
     def my_flow(self):
@@ -100,21 +97,22 @@ async def _reset_and_release(dut):
     dut.mrst.value = 0
 
 
-def _vals(dut):
-    return int(dut.my_a.value), int(dut.my_b0.value), int(dut.my_b1.value)
+def _vals(k):
+    return int(k.a.value), int(k.b0.value), int(k.b1.value)
 
 
 @cocotb.test()
 async def check_producer_counts(dut):
     # Stage 1 latches a <= a + 1 on every (joint) grant, so a must climb above 0
     # and never step backwards once the pipeline is flowing (8-bit, no wrap in run).
+    k = KSim(dut)
     await _reset_and_release(dut)
 
     prev_a = 0
     for _ in range(RUN_CYCLES):
         await RisingEdge(dut.clk)
         await Timer(1, unit="ns")
-        a, _, _ = _vals(dut)
+        a, _, _ = _vals(k)
         assert a >= prev_a, f"a went backwards: {prev_a} -> {a}"
         prev_a = a
 
@@ -125,13 +123,14 @@ async def check_producer_counts(dut):
 async def check_fanout_propagates(dut):
     # b0 and b1 each follow a a stage behind, so a >= b0 and a >= b1 at every
     # sample, all three are monotonic, and both consumers eventually fire.
+    k = KSim(dut)
     await _reset_and_release(dut)
 
     prev = (0, 0, 0)
     for _ in range(RUN_CYCLES):
         await RisingEdge(dut.clk)
         await Timer(1, unit="ns")
-        cur = _vals(dut)
+        cur = _vals(k)
         a, b0, b1 = cur
         assert a >= b0, f"consumer 0 outran producer: a={a} b0={b0}"
         assert a >= b1, f"consumer 1 outran producer: a={a} b1={b1}"
@@ -147,24 +146,26 @@ async def check_fanout_propagates(dut):
 async def check_fanout_symmetric(dut):
     # mode="all" locks both consumers to the same producer grant, so the two
     # pipelines stay identical: b0 == b1 at every sample.
+    k = KSim(dut)
     await _reset_and_release(dut)
 
     for _ in range(RUN_CYCLES):
         await RisingEdge(dut.clk)
         await Timer(1, unit="ns")
-        _, b0, b1 = _vals(dut)
+        _, b0, b1 = _vals(k)
         assert b0 == b1, f"fan-out diverged: b0={b0} b1={b1}"
 
 
 @cocotb.test()
 async def check_reset_clears(dut):
     # While master reset is held every register is pinned to its reset value 0.
+    k = KSim(dut)
     await _reset_and_release(dut)
     dut.mrst.value = 1                   # re-assert and keep it asserted
     for _ in range(4):
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert _vals(dut) == (0, 0, 0), f"reset did not clear the registers: {_vals(dut)}"
+    assert _vals(k) == (0, 0, 0), f"reset did not clear the registers: {_vals(k)}"
 
 # ---- register into the shared pool ------------------------------------------
 cocotb_pool.register(NAME, build, __name__)

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -23,8 +24,6 @@ class tc9_cdowhile(Module):
         self.limit = val(8, 3, "limit")
         self.one   = val(8, 1, "one")
         self.zero  = val(8, 0, "zero")
-
-        self.x.mark_output("my_x")
 
     @flow
     def my_flow(self):
@@ -45,6 +44,7 @@ def build(output_folder: str) -> None:
 # ---- simulation (cocotb) -----------------------------------------------------
 @cocotb.test()
 async def check_cdowhile(dut):
+    k = KSim(dut)
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
     dut.mrst.value = 1
@@ -59,7 +59,7 @@ async def check_cdowhile(dut):
     for i in range(1, 5):
         await RisingEdge(dut.clk)
         await Timer(1, unit="ns")
-        assert dut.my_x.value == i, f"my_x = {dut.my_x.value!s} (expected {i})"
+        assert k.x.value == i, f"my_x = {k.x.value!s} (expected {i})"
 
     await RisingEdge(dut.clk)
 

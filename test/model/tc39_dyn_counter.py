@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -35,9 +36,6 @@ class tc39_dyn_counter(Module):
 
         self.en1.mark_input        ("en1_in")
         self.en2.mark_input        ("en2_in")
-        self.cnt.value.mark_output ("cnt_out")
-        self.free.value.mark_output("free_out")
-        self.now_probe.mark_output ("now_out")
 
     @flow
     def my_flow(self):
@@ -79,8 +77,9 @@ async def _reset(dut):
 async def check_conditional_adds(dut):
     # Walk every enable combination a few times over; cnt must track
     # (cnt + 2*en1 + 3*en2) mod 8 and now_out must preview it combinationally.
+    k = KSim(dut)
     await _reset(dut)
-    exp = int(dut.cnt_out.value)
+    exp = int(k.cnt.value)
 
     pattern = [(0, 0), (1, 0), (0, 1), (1, 1), (1, 1), (1, 0), (0, 1), (1, 1), (0, 0), (1, 1)]
     for step, (en1, en2) in enumerate(pattern):
@@ -88,30 +87,31 @@ async def check_conditional_adds(dut):
         dut.en2_in.value = en2
         await Timer(1, unit="ns")                       # comb settle
         nxt = (exp + 2 * en1 + 3 * en2) % 8
-        assert int(dut.now_out.value) == nxt, \
-            f"step {step}: now_out = {dut.now_out.value!s} (expected {nxt})"
-        assert int(dut.cnt_out.value) == exp, \
-            f"step {step}: cnt_out moved before the edge: {dut.cnt_out.value!s}"
+        assert int(k.now_probe.value) == nxt, \
+            f"step {step}: now_probe = {k.now_probe.value!s} (expected {nxt})"
+        assert int(k.cnt.value) == exp, \
+            f"step {step}: cnt moved before the edge: {k.cnt.value!s}"
 
         await RisingEdge(dut.clk)
         await Timer(1, unit="ns")
         exp = nxt
-        assert int(dut.cnt_out.value) == exp, \
-            f"step {step}: cnt_out = {dut.cnt_out.value!s} (expected {exp})"
+        assert int(k.cnt.value) == exp, \
+            f"step {step}: cnt = {k.cnt.value!s} (expected {exp})"
 
 
 @cocotb.test()
 async def check_free_running_wrap(dut):
     # The enable-less counter adds 1 every cycle and wraps mod 16.
+    k = KSim(dut)
     await _reset(dut)
-    exp = int(dut.free_out.value)
+    exp = int(k.free.value)
 
     for step in range(20):                              # > 16 → crosses the wrap
         await RisingEdge(dut.clk)
         await Timer(1, unit="ns")
         exp = (exp + 1) % 16
-        assert int(dut.free_out.value) == exp, \
-            f"step {step}: free_out = {dut.free_out.value!s} (expected {exp})"
+        assert int(k.free.value) == exp, \
+            f"step {step}: free = {k.free.value!s} (expected {exp})"
 
 
 # ---- register into the shared pool ------------------------------------------

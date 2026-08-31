@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -29,9 +30,6 @@ class tc5_zif(Module):
         self.cond_in .mark_input("cond_in")
         self.cond_in2.mark_input("cond_in2")
 
-        self.x.mark_output("my_x")
-        self.y.mark_output("my_y")
-
     @flow
     def my_flow(self):
         with seq():
@@ -53,6 +51,7 @@ def build(output_folder: str) -> None:
 # ---- simulation (cocotb) -----------------------------------------------------
 @cocotb.test()
 async def check_zif_taken(dut):
+    k = KSim(dut)
     # zif branch: cond_in=1 -> x reflects 24 combinationally; drop -> x stops.
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
@@ -67,13 +66,14 @@ async def check_zif_taken(dut):
     # Settle past start state with no conditions active.
     await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_x.value == 24, f"my_x is not set to correct value: {dut.my_x.value!s}"
-    assert dut.my_y.value != 48, f"my_y should not be set"
+    assert k.x.value == 24, f"my_x is not set to correct value: {k.x.value!s}"
+    assert k.y.value != 48, f"my_y should not be set"
     await RisingEdge(dut.clk)
 
 
 @cocotb.test()
 async def check_zif_not_taken(dut):
+    k = KSim(dut)
     # Neither branch active: outputs stay at default (0) the whole time.
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
@@ -88,14 +88,15 @@ async def check_zif_not_taken(dut):
     # Settle past start state with no conditions active.
     await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_x.value != 24, f"my_x should not be set"
-    assert dut.my_y.value != 48, f"my_y should not be set"
+    assert k.x.value != 24, f"my_x should not be set"
+    assert k.y.value != 48, f"my_y should not be set"
     await RisingEdge(dut.clk)
 
 
 
 @cocotb.test()
 async def check_zelif_taken(dut):
+    k = KSim(dut)
     # zelif branch: cond_in=0, cond_in2=1 -> x and y reflect 48 combinationally.
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
@@ -110,8 +111,8 @@ async def check_zelif_taken(dut):
     # Settle past start state with no conditions active.
     await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_x.value == 48, f"my_x is not set to correct value: {dut.my_x.value!s}"
-    assert dut.my_y.value == 48, f"my_y should not be set"
+    assert k.x.value == 48, f"my_x is not set to correct value: {k.x.value!s}"
+    assert k.y.value == 48, f"my_y should not be set"
     await RisingEdge(dut.clk)
 
 

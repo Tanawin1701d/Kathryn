@@ -26,6 +26,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -58,10 +59,6 @@ class tc21_pip_zync_cond_stall(Module):
         self.c = reg(8, "c")            # stage-3 follows b
         self.v = val(8, 1, "v")
         self.v2 = val(8, 6, "v2")
-
-        self.a.mark_output("my_a")
-        self.b.mark_output("my_b")
-        self.c.mark_output("my_c")
 
     @flow
     def my_flow(self):
@@ -111,21 +108,22 @@ async def _reset_and_release(dut):
     dut.mrst.value = 0
 
 
-def _abc(dut):
-    return int(dut.my_a.value), int(dut.my_b.value), int(dut.my_c.value)
+def _abc(k):
+    return int(k.a.value), int(k.b.value), int(k.c.value)
 
 
 @cocotb.test()
 async def check_stage1_counts(dut):
     # Stage 1 latches a <= a + 1 on every grant, so a must climb above 0 and never
     # step backwards once the pipeline is flowing (8-bit, no wrap within the run).
+    k = KSim(dut)
     await _reset_and_release(dut)
 
     prev_a = 0
     for _ in range(RUN_CYCLES):
         await RisingEdge(dut.clk)
         await Timer(1, unit="ns")
-        a, _, _ = _abc(dut)
+        a, _, _ = _abc(k)
         assert a >= prev_a, f"a went backwards: {prev_a} -> {a}"
         prev_a = a
 
@@ -136,13 +134,14 @@ async def check_stage1_counts(dut):
 async def check_pipeline_propagates(dut):
     # b follows a and c follows b, each a stage behind, so a >= b >= c holds at every
     # sample, all three are monotonic, and data eventually reaches the last stage.
+    k = KSim(dut)
     await _reset_and_release(dut)
 
     prev = (0, 0, 0)
     for _ in range(RUN_CYCLES):
         await RisingEdge(dut.clk)
         await Timer(1, unit="ns")
-        cur = _abc(dut)
+        cur = _abc(k)
         a, b, c = cur
         assert a >= b >= c, f"pipeline order broken: a={a} b={b} c={c}"
         assert all(n >= p for n, p in zip(cur, prev)), f"a stage went backwards: {prev} -> {cur}"
@@ -160,13 +159,14 @@ async def check_conditional_stall(dut):
     # frozen at v2 for exactly HOLD_CYCLES samples (the entry cycle + the 5 sywait
     # holds); the cycle it releases the pipeline steps to (7, 6, 5) and the next
     # to (8, 7, 6). Walk (a, b, c) and pin down that exact shape.
+    k = KSim(dut)
     await _reset_and_release(dut)
 
     trace = []
     for _ in range(STALL_SCAN):
         await RisingEdge(dut.clk)
         await Timer(1, unit="ns")
-        trace.append(_abc(dut))
+        trace.append(_abc(k))
 
     a_seq = [a for a, _, _ in trace]
 
@@ -188,12 +188,13 @@ async def check_conditional_stall(dut):
 @cocotb.test()
 async def check_reset_clears(dut):
     # While master reset is held every stage is pinned to its reset value 0.
+    k = KSim(dut)
     await _reset_and_release(dut)
     dut.mrst.value = 1                   # re-assert and keep it asserted
     for _ in range(4):
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert _abc(dut) == (0, 0, 0), f"reset did not clear the pipeline: {_abc(dut)}"
+    assert _abc(k) == (0, 0, 0), f"reset did not clear the pipeline: {_abc(k)}"
 
 # ---- register into the shared pool ------------------------------------------
 cocotb_pool.register(NAME, build, __name__)

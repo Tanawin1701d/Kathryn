@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -74,18 +75,18 @@ class tc18_int_operand_autowrap(Module):
         self.a = reg(8, "a"); self.a.reset(A)      # pinned source
         self.b = reg(8, "b"); self.b.reset(B)      # pinned shift amount
 
-        # One output reg per case (8-bit, except the 1-bit relational results).
-        self._out = {}
+        # One result reg per case (8-bit, except the 1-bit relational results).
+        # A non-underscore dict attribute becomes a "dict" manifest node, so the
+        # sim reads every reg through KSim (`k.out[name]`) — no ports needed.
+        self.out = {}
         for name in EXPECT:
             width = 1 if name in ("my_eq", "my_ne", "my_lt", "my_le", "my_gt",
                                   "my_ge", "my_alt", "my_agt", "my_aeq") else 8
-            r = reg(width, name + "_r")
-            r.mark_output(name)
-            self._out[name] = r
+            self.out[name] = reg(width, name + "_r")
 
     @flow
     def my_flow(self):
-        a, b, o = self.a, self.b, self._out
+        a, b, o = self.a, self.b, self.out
         with seq():
             # forward arithmetic
             o["my_add"] |= a + 5
@@ -136,6 +137,7 @@ def build(output_folder: str) -> None:
 @cocotb.test()
 async def check_int_operand_autowrap(dut):
     # 10ns clock; assert master-reset for two cycles to launch the sequence.
+    k = KSim(dut)
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
     dut.mrst.value = 1
@@ -149,9 +151,9 @@ async def check_int_operand_autowrap(dut):
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
 
-    for port, want in EXPECT.items():
-        got = int(getattr(dut, port).value)
-        assert got == want, f"{port} = {got} (expected {want})"
+    for name, want in EXPECT.items():
+        got = int(k.out[name].value)
+        assert got == want, f"{name} = {got} (expected {want})"
 
 
 # ---- register into the shared pool ------------------------------------------

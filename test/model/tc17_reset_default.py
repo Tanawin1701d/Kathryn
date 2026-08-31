@@ -19,6 +19,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -42,12 +43,10 @@ class tc17_reset_default(Module):
         # 8-bit reg whose reset value is the literal 7 (no val(...) needed).
         self.x = reg(8, "x")
         self.x.reset(RESET_X)
-        self.x.mark_output("my_x")
 
         # 72-bit reg reset from a >64-bit literal — exercises the u64-limb path.
         self.big = reg(WIDE_BITS, "big")
         self.big.reset(WIDE_VAL)
-        self.big.mark_output("my_big")
 
         # Clocked source for the wire default (reset to 9), then a wire defaulting
         # to it. A reg source keeps the wire's @(*) block sensitive to a real net.
@@ -56,7 +55,6 @@ class tc17_reset_default(Module):
 
         self.w = wire(8, "w")
         self.w.default(self.src)
-        self.w.mark_output("my_w")
 
 
 # ---- build (kathryn model -> verilog) ---------------------------------------
@@ -72,31 +70,33 @@ def build(output_folder: str) -> None:
 async def check_reg_reset(dut):
     # reg.reset binds unconditionally at max priority, so my_x loads 7 on the first
     # posedge and holds it every cycle thereafter.
+    k = KSim(dut)
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
     dut.mrst.value = 1
     await RisingEdge(dut.clk)            # E1: first posedge — x <= 7
     await Timer(1, unit="ns")
-    assert dut.my_x.value == RESET_X, f"my_x = {dut.my_x.value!s} (expected {RESET_X})"
+    assert k.x.value == RESET_X, f"my_x = {k.x.value!s} (expected {RESET_X})"
 
     dut.mrst.value = 0
     for _ in range(10):                 # x is pinned to its reset value forever.
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_x.value == RESET_X, f"my_x drifted off {RESET_X}: {dut.my_x.value!s}"
+    assert k.x.value == RESET_X, f"my_x drifted off {RESET_X}: {k.x.value!s}"
 
 
 @cocotb.test()
 async def check_wide_reset(dut):
     # A reset value wider than 64 bits is split into u64 limbs and reassembled; the
     # 72-bit reg must read back the exact literal after its first posedge.
+    k = KSim(dut)
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
     dut.mrst.value = 1
     await RisingEdge(dut.clk)           # E1: big <= WIDE_VAL
     await Timer(1, unit="ns")
-    assert int(dut.my_big.value) == WIDE_VAL, \
-        f"my_big = {int(dut.my_big.value):#x} (expected {WIDE_VAL:#x})"
+    assert int(k.big.value) == WIDE_VAL, \
+        f"my_big = {int(k.big.value):#x} (expected {WIDE_VAL:#x})"
 
 
 @cocotb.test()
@@ -104,18 +104,19 @@ async def check_wire_default(dut):
     # wire.default(src) drives the wire combinationally from the source reg. Once
     # src latches its reset value (9) on the first posedge, the wire's @(*) block
     # fires and my_w tracks it.
+    k = KSim(dut)
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
     dut.mrst.value = 1
     await RisingEdge(dut.clk)           # src <= 9, wire follows
     await Timer(1, unit="ns")
-    assert dut.my_w.value == WIRE_SRC, f"my_w = {dut.my_w.value!s} (expected {WIRE_SRC})"
+    assert k.w.value == WIRE_SRC, f"my_w = {k.w.value!s} (expected {WIRE_SRC})"
 
     dut.mrst.value = 0
     for _ in range(5):                  # nothing else drives the wire — holds 9.
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    assert dut.my_w.value == WIRE_SRC, f"my_w drifted off {WIRE_SRC}: {dut.my_w.value!s}"
+    assert k.w.value == WIRE_SRC, f"my_w drifted off {WIRE_SRC}: {k.w.value!s}"
 
 
 # ---- register into the shared pool ------------------------------------------

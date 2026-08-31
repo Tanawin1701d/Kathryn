@@ -16,6 +16,7 @@ import warnings
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -32,10 +33,10 @@ TAG_PRESET = 0x5
 DATA = [0x11, 0x22, 0x33]
 
 EXPECT = {
-    "v0": 1,        "d0": DATA[1],   # dst[0] <- src[1]
-    "v1": 1,        "d1": DATA[2],   # dst[1] <- src[2]
-    "v3": 1,        "d3": DATA[0],   # dst[3] <- src[0]
-    "tag0": TAG_PRESET,              # dst[0].tag untouched by the copies
+    "o_v0": 1,      "o_d0": DATA[1],   # dst[0] <- src[1]
+    "o_v1": 1,      "o_d1": DATA[2],   # dst[1] <- src[2]
+    "o_v3": 1,      "o_d3": DATA[0],   # dst[3] <- src[0]
+    "o_tag0": TAG_PRESET,              # dst[0].tag untouched by the copies
 }
 
 
@@ -64,13 +65,13 @@ class tc34_karray_to_karray(Module):
         self.c_d2  = val(8, DATA[2],    "c_d2")
         self.c_tag = val(4, TAG_PRESET, "c_tag")
 
-        self.o_v0   = reg(1, "o_v0");   self.o_v0  .mark_output("v0")
-        self.o_d0   = reg(8, "o_d0");   self.o_d0  .mark_output("d0")
-        self.o_v1   = reg(1, "o_v1");   self.o_v1  .mark_output("v1")
-        self.o_d1   = reg(8, "o_d1");   self.o_d1  .mark_output("d1")
-        self.o_v3   = reg(1, "o_v3");   self.o_v3  .mark_output("v3")
-        self.o_d3   = reg(8, "o_d3");   self.o_d3  .mark_output("d3")
-        self.o_tag0 = reg(4, "o_tag0"); self.o_tag0.mark_output("tag0")
+        self.o_v0   = reg(1, "o_v0")
+        self.o_d0   = reg(8, "o_d0")
+        self.o_v1   = reg(1, "o_v1")
+        self.o_d1   = reg(8, "o_d1")
+        self.o_v3   = reg(1, "o_v3")
+        self.o_d3   = reg(8, "o_d3")
+        self.o_tag0 = reg(4, "o_tag0")
 
     @flow
     def my_flow(self):
@@ -118,6 +119,7 @@ def build(output_folder: str) -> None:
 # ---- simulation (cocotb) -----------------------------------------------------
 @cocotb.test()
 async def check_karray_to_karray(dut):
+    k = KSim(dut)
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
     dut.mrst.value = 1
@@ -130,9 +132,9 @@ async def check_karray_to_karray(dut):
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
 
-    for port, want in EXPECT.items():
-        got = int(getattr(dut, port).value)
-        assert got == want, f"{port} = {got} (expected {want})"
+    for name, want in EXPECT.items():
+        got = int(getattr(k, name).value)
+        assert got == want, f"{name} = {got} (expected {want})"
 
 
 # ---- register into the shared pool ------------------------------------------

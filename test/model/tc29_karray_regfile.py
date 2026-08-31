@@ -19,6 +19,7 @@ from __future__ import annotations
 
 from kathryn import *
 from kathryn import emit_verilog
+from kathryn.sim_assist import KSim
 
 import cocotb
 from cocotb.clock import Clock
@@ -56,11 +57,6 @@ class tc29_karray_regfile(Module):
         self.o_data   = reg(7, "o_data")         # <- rf[0].data  (field-wise)
         self.o_pvalid = reg(1, "o_pvalid")       # <- rf[1].valid (whole-element split)
         self.o_pdata  = reg(7, "o_pdata")        # <- rf[1].data  (whole-element split)
-
-        self.o_valid.mark_output("my_v")
-        self.o_data.mark_output("my_d")
-        self.o_pvalid.mark_output("my_pv")
-        self.o_pdata.mark_output("my_pd")
 
     @flow
     def my_flow(self):
@@ -104,20 +100,21 @@ async def _reset_and_release(dut):
     dut.mrst.value = 0
 
 
-async def _settle(dut):
+async def _settle(dut, k):
     # Run the one-shot sequence to completion, then return the final outputs.
     await _reset_and_release(dut)
     for _ in range(SETTLE_CYCLES):
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    return (int(dut.my_v.value), int(dut.my_d.value),
-            int(dut.my_pv.value), int(dut.my_pd.value))
+    return (int(k.o_valid.value), int(k.o_data.value),
+            int(k.o_pvalid.value), int(k.o_pdata.value))
 
 
 @cocotb.test()
 async def check_field_write_read(dut):
     # Field-wise writes land in the per-field regs and read back exactly.
-    v, d, _, _ = await _settle(dut)
+    k = KSim(dut)
+    v, d, _, _ = await _settle(dut, k)
     assert v == 1,    f"valid field wrong: my_v={v} (want 1)"
     assert d == DATA, f"data field wrong: my_d={d} (want {DATA})"
 
@@ -126,7 +123,8 @@ async def check_field_write_read(dut):
 async def check_whole_element_named(dut):
     # The whole-element write rf[1] <= {"valid": 1, "data": 42} connects each named
     # source to its matching field: valid <= 1, data <= 42.
-    _, _, pv, pd = await _settle(dut)
+    k = KSim(dut)
+    _, _, pv, pd = await _settle(dut, k)
     assert pv == 1,    f"named valid wrong: my_pv={pv} (want 1)"
     assert pd == DATA, f"named data wrong: my_pd={pd} (want {DATA})"
 
@@ -134,13 +132,14 @@ async def check_whole_element_named(dut):
 @cocotb.test()
 async def check_reset_clears(dut):
     # While master reset is held every output reg is pinned to its reset value 0.
+    k = KSim(dut)
     await _reset_and_release(dut)
     dut.mrst.value = 1                   # re-assert and keep it asserted
     for _ in range(4):
         await RisingEdge(dut.clk)
     await Timer(1, unit="ns")
-    vals = (int(dut.my_v.value), int(dut.my_d.value),
-            int(dut.my_pv.value), int(dut.my_pd.value))
+    vals = (int(k.o_valid.value), int(k.o_data.value),
+            int(k.o_pvalid.value), int(k.o_pdata.value))
     assert vals == (0, 0, 0, 0), f"reset did not clear the outputs: {vals}"
 
 
