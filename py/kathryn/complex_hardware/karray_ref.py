@@ -1,6 +1,8 @@
 # KarrayRef — a partially/fully-indexed view into a Karray (see karray.py).
 # Holds ONLY the Karray's CcpIdent + accumulated per-dim keys + an optional
 # flattened field name; all layout validation happens in Rust at resolve time.
+# Split companions: shared aliases + ReduceView in karray_types.py; key/source
+# marshalling helpers in karray_marshal.py.
 #
 # ONE unified index — each `[]` hop selects ONE dimension; every kind collapses
 # it to a single element (NO ranges — every dim must be indexed):
@@ -20,138 +22,20 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, Iterator, List, Mapping, Optional, Sequence, Tuple, Union
+from typing import List, Optional, Sequence, Tuple, Union
 
 from .. import _session
-from .._kathryn import CcpIdent, HcpIdent
-from ..signal import SignalRef, _ASSIGNED, _Assigned, to_ref
-
-# ---- shared types -------------------------------------------------------------
-
-# One `[]` key: int (static) / SignalRef (dynamic) / callable (custom fn).
-KarrayKey   = Union[int, SignalRef, Callable[..., Any]]
-
-# One assignment source: scalar signal/int, a karray view, or a field map
-# (values are themselves FieldSources — dicts nest for bundles).
-FieldSource = Union[SignalRef, "KarrayRef", int, Mapping[str, Any]]
-
-# The connector's per-dim selector triple `(kind, ints, sigs)`. Per-kind arity
-# rule lives in kidx_py.rs: "static" -> 1 int, "dyn" -> 1 sig, "cus" -> n sigs,
-# "reduce" -> none (its select fn rides the parallel fns list).
-Selector    = Tuple[str, List[int], List[HcpIdent]]
-
-# ---- reduce-select fn signatures ----------------------------------------------
-# Named pieces first, so the two Callable shapes below read argument by argument.
-
-FlatFields  = List[Tuple[str, HcpIdent]]   # a subtree's fields as flat (name, hcp) pairs
-CoveredIdxs = List[int]                    # the folding dim's indices a subtree covers
-
-# Rust reduce-fold callback ABI (see arena_impl_ccp_karray_py.rs::reduce_select):
-# (a_fields, a_indices, b_fields, b_indices, level) -> (select_hcp, extras).
-RawSelectFn = Callable[
-    [FlatFields, CoveredIdxs,      # subtree a
-     FlatFields, CoveredIdxs,      # subtree b
-     int],                         # level in the 2:1 fold tree (0 = leaves)
-    Tuple[HcpIdent, FlatFields],   # pick-a select + replace/append extras
-]
-
-# The user's select fn: (a, b, level) -> select, or (select, {name: extra}).
-UserSelectFn = Callable[
-    ["ReduceView", "ReduceView", int],
-    Union[SignalRef, Tuple[SignalRef, Dict[str, SignalRef]]],
-]
-
-
-# ---- reduce view --------------------------------------------------------------
-class ReduceView:
-    """One subtree handed to a reduce select fn. `.fields` maps each carried
-    field name to its current SignalRef (a leaf element's field, a mux-output
-    wire, or a prior level's extra); `.indices` is the list of this dimension's
-    indices the subtree covers."""
-    __slots__ = ("indices", "fields")
-    indices : List[int]             # covered indices of the folding dim
-    fields  : Dict[str, SignalRef]  # field name -> current SignalRef
-
-    def __init__(self, indices: List[int], fields: Dict[str, SignalRef]) -> None:
-        self.indices = indices
-        self.fields  = fields
-
-
-# ---- key classification (the ONE Python home of the four index kinds) --------
-
-def _check_key_type(key: object) -> None:
-    # Validate a single [] key at subscript time so errors point at the use site.
-    if isinstance(key, bool):
-        raise TypeError("Karray index must not be a bool")
-    if isinstance(key, (slice, tuple)):
-        raise TypeError("Karray ranges are not supported — index exactly one element per dimension")
-    if isinstance(key, (int, SignalRef)) or callable(key):
-        return
-    raise TypeError("Karray index must be an int (static), a signal (dynamic binary), "
-                    "or a callable (custom fn)")
-
-
-def _whole_signal(ref: SignalRef) -> SignalRef:
-    # A sliced view (`sig[hi, lo]`) carries its slice only on the Python side;
-    # materialise it into a real expression so no bits are silently dropped when
-    # only the ident crosses the boundary.
-    if ref._is_user_assigned:
-        return ref.extend(ref._slice.stop - ref._slice.start)
-    return ref
-
-
-def _enable_bit(x: Union[SignalRef, "KarrayRef"], dim: int, idx: int) -> SignalRef:
-    # One custom write-enable: whatever the user's fn returned, resolved to a
-    # whole 1-bit signal.
-    ref   = to_ref(x)
-    width = ref._slice.stop - ref._slice.start
-    if width != 1:
-        raise TypeError(f"custom write index fn for dim {dim} must return a 1-bit enable, "
-                        f"got {width} bits at index {idx}")
-    return _whole_signal(ref)
-
-
-def _wrap_select(user_fn: UserSelectFn) -> RawSelectFn:
-    # Adapter between the Rust reduce fold and the user's select fn. The engine
-    # calls `_raw` per compared pair with RAW handles; `_raw` dresses them up as
-    # ReduceViews, calls the user fn, and undresses the result back to handles.
-    def _raw(a_fields  : List[Tuple[str, HcpIdent]],
-             a_indices : List[int],
-             b_fields  : List[Tuple[str, HcpIdent]],
-             b_indices : List[int],
-             level     : int,
-             ) -> Tuple[HcpIdent, List[Tuple[str, HcpIdent]]]:
-        a = ReduceView(a_indices, {n: SignalRef(h) for (n, h) in a_fields})
-        b = ReduceView(b_indices, {n: SignalRef(h) for (n, h) in b_fields})
-
-        ret = user_fn(a, b, level)
-        if isinstance(ret, tuple):
-            select, extras = ret
-        else:
-            select, extras = ret, {}
-
-        return (_whole_signal(to_ref(select))._ident,
-                [(str(n), _whole_signal(to_ref(s))._ident) for n, s in extras.items()])
-    return _raw
-
-
-def _to_operand(x: Union[SignalRef, "KarrayRef", int]) -> Union[int, HcpIdent]:
-    # An assignment source for the connector: a raw int passes through (wrapped
-    # into a field-width val in Rust); anything else resolves to a whole signal.
-    if isinstance(x, int) and not isinstance(x, bool):
-        return x
-    return _whole_signal(to_ref(x))._ident
-
-
-def _flatten_field_map(mapping: Mapping[str, FieldSource], prefix: str = "") -> Iterator[Tuple[str, Union[int, HcpIdent]]]:
-    # Bundle-aware source map: nested dicts flatten into the underscore-joined
-    # leaf names the Rust layout stores ({"pos": {"x": a}} -> ("pos_x", a)).
-    for name, value in mapping.items():
-        key = f"{prefix}{name}"
-        if isinstance(value, dict):
-            yield from _flatten_field_map(value, key + "_")
-        else:
-            yield (key, _to_operand(value))
+from .._kathryn import CcpIdent
+from ..signal import SignalRef, _ASSIGNED, _Assigned
+from .karray_marshal import (
+    _check_key_type,
+    _enable_bit,
+    _flatten_field_map,
+    _to_operand,
+    _whole_signal,
+    _wrap_select,
+)
+from .karray_types import EncodedKIdx, FieldSource, KarrayKey, RawSelectFn
 
 
 # ---- karray element / field reference ---------------------------------------
@@ -188,36 +72,42 @@ class KarrayRef:
         return KarrayRef(self._ident, self._keys, merged)
 
     # ---- key resolution -----------------------------------------------------
-    # Encode the raw keys into the connector's (kind, ints, sigs) triples, plus
-    # the parallel per-dim fns list (reduce selects on the read side). A callable
-    # key is direction-split HERE: write -> fn(i) evaluated per index into "cus"
-    # enables; read -> a "reduce" marker plus the wrapped select fn.
-    def _selectors(self, for_read: bool) -> Tuple[List[Selector], List[Optional[RawSelectFn]]]:
-        shape: Optional[List[int]] = None
-        sels : List[Selector]              = []
-        fns  : List[Optional[RawSelectFn]] = []
+    def _selectors(self, for_read: bool) -> Tuple[List[EncodedKIdx], List[Optional[RawSelectFn]]]:
+        # Encode the raw keys into the connector's (kind, ints, sigs) triples,
+        # plus the parallel per-dim fns list. A callable key is direction-split HERE:
+        #
+        #   raw key         | kind     | ints | sigs                 | fns[dim]
+        #   ----------------|----------|------|----------------------|-----------------
+        #   int             | "static" | [i]  | []                   | None
+        #   SignalRef       | "dyn"    | []   | [addr]               | None
+        #   callable, read  | "reduce" | []   | []                   | wrapped select fn
+        #   callable, write | "cus"    | []   | fn(i) per-idx enable | None
+        shape: Optional[List[int]] = None                        # dim sizes, fetched lazily (first "cus" key only)
+        sels : List[EncodedKIdx]           = []                  # one (kind, ints, sigs) triple per dim
+        fns  : List[Optional[RawSelectFn]] = []                  # parallel to sels: select fn or None per dim
         for dim, key in enumerate(self._keys):
             fn_entry = None
             if isinstance(key, bool):                   # bool is an int subclass — never an index
                 raise TypeError("Karray index must not be a bool")
             if isinstance(key, int):
-                sels.append(("static", [int(key)], []))
+                sels.append(("static", [int(key)], []))          # compile-time index: ship just the number
             elif isinstance(key, SignalRef):
-                sels.append(("dyn", [], [_whole_signal(key)._ident]))
+                sels.append(("dyn", [], [_whole_signal(key)._ident]))  # runtime address (slice materialised first)
             elif callable(key):
                 if for_read:
-                    sels.append(("reduce", [], []))
-                    fn_entry = _wrap_select(key)
+                    sels.append(("reduce", [], []))              # marker only — the fn itself rides in fns
+                    fn_entry = _wrap_select(key)                 # adapt user (a, b, level) fn to the raw ABI
                 else:
-                    if shape is None:
+                    if shape is None:                            # ask Rust for the dim sizes, once
                         shape = _session.arena().karray_shape(self._ident)
                     if dim >= len(shape):
                         raise ValueError(f"too many indices: got {len(self._keys)} for a {len(shape)}-D Karray")
+                    # user fn evaluated NOW, once per index of this dim -> one 1-bit write enable each
                     bits = [_enable_bit(key(i), dim, i)._ident for i in range(shape[dim])]
                     sels.append(("cus", [], bits))
             else:                                       # unreachable: __getitem__ validated the key
                 raise TypeError(f"unsupported Karray index: {key!r}")
-            fns.append(fn_entry)
+            fns.append(fn_entry)                                 # keeps fns index-aligned with sels
         return sels, fns
 
     # Read hook consumed by signal.to_ref (use a field as an assignment source).

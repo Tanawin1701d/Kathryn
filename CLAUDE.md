@@ -999,7 +999,7 @@ return annotations — a reader must never have to guess a type. Rules:
 
 - **Shared aliases beat repeated unions.** `signal.py` owns `Source`
   (`SignalRef` | anything with `_to_read_ref`) and `Operand` (`Source` | `int`);
-  `karray_ref.py` owns `KarrayKey`, `FieldSource`, `Selector`, `RawSelectFn`,
+  `karray_types.py` owns `KarrayKey`, `FieldSource`, `EncodedKIdx`, `RawSelectFn`,
   `UserSelectFn`; `pip_zync.py` owns `ZyncBind` / `ZyncBindArgs`. Annotate
   against these, don't re-spell the union.
 - **`Source`, not `SignalRef`, wherever the body calls `to_ref`** — a `KarrayRef`
@@ -1211,13 +1211,16 @@ hands the module clk straight to each bare basic node
 `|=` at flow top level emits `always @(posedge clk)` instead of a combinational
 feedback loop. Covered by `test/model/tc39_dyn_counter.py`.
 
-DSL (`py/kathryn/complex_hardware/karray.py` + `karray_ref.py`): `Karray` holds
-only the CcpIdent (fields declared with `kaf()` on a subclass); `KarrayRef`
-accumulates raw per-dimension keys and classifies them in ONE place
-(`_selectors(for_read)`): int → static, signal → dynamic, callable → custom
-(write: enumerated against `karray_shape` at statement time; read: wrapped
-select fn); tuples/colon slices raise — there are no ranges, every dimension
-must be indexed. Assignment requires `|=` (reg) or
+DSL (`py/kathryn/complex_hardware/`, split across the karray files): `karray.py` holds
+`Karray` (only the CcpIdent; fields declared with `kaf()` on a subclass);
+`karray_ref.py` holds `KarrayRef`, which accumulates raw per-dimension keys and
+classifies them in ONE place (`_selectors(for_read)`): int → static, signal →
+dynamic, callable → custom (write: enumerated against `karray_shape` at
+statement time; read: wrapped select fn); tuples/colon slices raise — there are
+no ranges, every dimension must be indexed. `karray_types.py` owns the shared
+aliases + `ReduceView`; `karray_marshal.py` owns the key/source marshalling helpers
+(`_check_key_type`, `_whole_signal`, `_enable_bit`, `_wrap_select`,
+`_to_operand`, `_flatten_field_map`). Assignment requires `|=` (reg) or
 `*=` (wire); a bare `=` raises. Sliced-view indices/sources are materialised via
 `extend()` so no bits are silently dropped. Covered by `test/model/tc29` (static
 regfile), `tc34` (k2k element copies, name+width pairing), `tc30`/`tc31`

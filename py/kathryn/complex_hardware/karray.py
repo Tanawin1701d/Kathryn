@@ -28,7 +28,8 @@ from .karray_field import (
     get_declared_karray_fields,
     resolve_karray_field_specs,
 )
-from .karray_ref import FieldSource, KarrayKey, KarrayRef
+from .karray_ref import KarrayRef
+from .karray_types import FieldSource, KarrayKey
 
 __all__ = ["Karray"]
 
