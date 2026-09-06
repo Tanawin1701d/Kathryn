@@ -1,4 +1,5 @@
-# Combinational combinators: `mux`, `rotate_left`, `any_of`, `sum_cnt`.
+# Combinational combinators: `mux`, `rotate_left`, `rotate_right`, `any_of`,
+# `sum_cnt`.
 #
 # THE LOGIC IS IN THE RUST CORE (src/model/arena_impl_comb.rs), NOT here —
 # topology, width rules and validation are frontend-agnostic, so every frontend
@@ -9,7 +10,8 @@
 #   SCOPE. It composes: `mux(c1, x, mux(c2, y, z))`.
 # - Inside a `seq()` a mux's always-block is gated on THAT STEP's state, so read
 #   it in the step that built it; a value a later step needs belongs in a reg.
-# - `rotate_left` / `any_of` / `sum_cnt` are pure expressions — legal anywhere.
+# - `rotate_left` / `rotate_right` / `any_of` / `sum_cnt` are pure expressions —
+#   legal anywhere.
 # - Identity cases (full-turn rotate, single-term `any_of`) come back from the
 #   core as None; the input ref is returned unchanged, slice view intact.
 
@@ -71,17 +73,43 @@ def rotate_left(signal : Source,
 
         self.next_tag |= rotate_left(self.next_tag)     # one-hot tag, step one
     """
-    ref = to_ref(signal)
+    return _rotate(signal, amount, width, right=False)
+
+
+def rotate_right(signal : Source,
+                 amount : int = 1,
+                 width  : Optional[int] = None) -> SignalRef:
+    """`signal` rotated right by `amount`, as a pure expression.
+
+    - the same rules as `rotate_left`, the ring walked the other way; say what
+      you MEAN rather than `rotate_left(x, width - 1)`.
+
+        last = rotate_right(self.next_tag)              # one-hot tag, step back
+    """
+    return _rotate(signal, amount, width, right=True)
+
+
+def _rotate(signal : Source,
+            amount : int,
+            width  : Optional[int],
+            right  : bool) -> SignalRef:
+    # One body for both directions: the flag picks the core builder, the error
+    # wording and the auto-name prefix, so an error reads in the direction the
+    # user asked for.
+    what = "rotate_right" if right else "rotate_left"
+    ref  = to_ref(signal)
     # Python-type guards only — the numeric rules (width >= 1, width fits the
     # signal, amount mod width) are the core's.
     if width is not None and (isinstance(width, bool) or not isinstance(width, int)):
-        raise ValueError(f"rotate_left needs a width >= 1, got {width!r}")
+        raise ValueError(f"{what} needs a width >= 1, got {width!r}")
     if isinstance(amount, bool) or not isinstance(amount, int):
         raise TypeError(
-            f"rotate_left amount must be an int, got {type(amount).__name__}")
+            f"{what} amount must be an int, got {type(amount).__name__}")
 
-    out = _session.arena().gen_rotate_left(
-        _session.auto_name("rol"), ref._ident, ref._slice, amount, width)
+    arena = _session.arena()
+    gen   = arena.gen_rotate_right if right else arena.gen_rotate_left
+    out   = gen(_session.auto_name("ror" if right else "rol"),
+                ref._ident, ref._slice, amount, width)
     return ref if out is None else expr(out)    # None = full turn: identity
 
 

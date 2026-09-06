@@ -937,10 +937,10 @@ operation routes through one process-wide `ModelArena`.
   live in `pip_zync.py` (`pip`/`zync` + the `ZyncBind` spellings + PipCon type
   guard), reusing `_FlowBlockCtx` / `_block` / `_complex_block` from here.
 - `combinational.py` — thin DSL face over the CORE combinators
-  (`mux`/`rotate_left`/`any_of`/`sum_cnt`). The topology, width rules and
-  validation live in `src/model/arena_impl_comb.rs` (`gen_mux`,
-  `gen_rotate_left`, `gen_any_of`, `gen_sum_cnt` on `ModelArena`) so every
-  frontend builds the same hardware; the connector
+  (`mux`/`rotate_left`/`rotate_right`/`any_of`/`sum_cnt`). The topology, width
+  rules and validation live in `src/model/arena_impl_comb.rs` (`gen_mux`,
+  `gen_rotate_left`, `gen_rotate_right`, `gen_any_of`, `gen_sum_cnt` on
+  `ModelArena`) so every frontend builds the same hardware; the connector
   (`src/applications/py/model/arena_impl_comb_py.rs`) only wraps int-literal
   operands into `val`s (shared `make_const_val`), infers the mux width while
   ints are still ints, and surfaces resize reports as Python warnings. No new
@@ -954,7 +954,12 @@ operation routes through one process-wide `ModelArena`.
   over 1-bit signals and is a pure expression; its default width is derived so
   the sum cannot overflow. The identity cases (a full-turn rotate, a single-term
   `any_of`) come back from the core as `None` and the DSL returns the input ref
-  unchanged, slice view intact. `combinational.py` sits above
+  unchanged, slice view intact. `rotate_right` is ONE builder with
+  `rotate_left` — a right turn is a left turn the other way round the ring, so
+  the core negates the amount (already taken mod width) and the direction only
+  picks the error wording and the auto-name prefix (`rol` / `ror`); write it
+  rather than `rotate_left(x, width - 1)`, which says the same thing in a way
+  the reader has to decode. `combinational.py` sits above
   signal/hw_component in the import order, which is why `mux` is not in
   `signal.py`.
 - `module.py` — modules use a **class form**: extend `Module` and decorate methods

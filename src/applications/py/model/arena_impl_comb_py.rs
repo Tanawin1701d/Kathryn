@@ -75,6 +75,22 @@ impl PyModelArena {
             .map_err(PyValueError::new_err)
     }
 
+    // `sig` rotated right by the constant `amount` — same contract as
+    // `gen_rotate_left`, `None` = a full turn.
+    #[pyo3(signature = (name, sig_i, sig_slice, amount, width=None))]
+    fn gen_rotate_right(
+        &mut self,
+        name      : &str,
+        sig_i     : PyHcpIdent,
+        sig_slice : PySlice,
+        amount    : i64,
+        width     : Option<i32>,
+    ) -> PyResult<Option<PyHcpIdent>> {
+        self.arena.gen_rotate_right(name, sig_i.into(), Some(sig_slice.into()), amount, width)
+            .map(|rot_i| rot_i.map(Into::into))
+            .map_err(PyValueError::new_err)
+    }
+
     // Balanced OR reduce over `terms`. Empty -> a constant-0 val; a single
     // term -> `None` (the DSL keeps using that term unchanged).
     fn gen_any_of(

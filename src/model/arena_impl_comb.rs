@@ -1,6 +1,7 @@
-// Combinational combinator builders — gen_mux / gen_rotate_left / gen_any_of /
-// gen_sum_cnt on ModelArena, so EVERY frontend builds the same hardware from
-// the same rules (topology, width defaults, validation all live here).
+// Combinational combinator builders — gen_mux / gen_rotate_left /
+// gen_rotate_right / gen_any_of / gen_sum_cnt on ModelArena, so EVERY frontend
+// builds the same hardware from the same rules (topology, width defaults,
+// validation all live here).
 //
 // - NO new node type: each combinator assembles the existing wire /
 //   expression / flow-block primitives.
@@ -10,6 +11,8 @@
 // - `gen_rotate_left` = (x << k) | (x >> w-k), not slice-and-concat: an
 //   expression follows its LEFT operand's width, so both halves come out
 //   x-wide and the bits one end drops are exactly what the other supplies.
+//   `gen_rotate_right` is the SAME builder with a negated amount — a right
+//   turn is a left turn the other way round the ring.
 // - `gen_any_of` / `gen_sum_cnt` fold BALANCED trees (log2(n) depth, not n);
 //   the odd node of a level rides up unchanged. Empty any_of = const 0 (a
 //   defined value + width); empty sum_cnt = error (neither).
@@ -118,13 +121,42 @@ impl ModelArena {
         amount    : i64,
         width     : Option<i32>,
     ) -> Result<Option<HcpIdent>, String> {
+        self.gen_rotate("rotate_left", name, sig_i, sig_slice, amount, width)
+    }
+
+    // `sig` rotated RIGHT by `amount` — same rules and same return contract as
+    // `gen_rotate_left`.
+    // - a right turn IS a left turn the other way round the ring, so it is the
+    //   NEGATED amount: `gen_rotate` takes it mod `width`, so no wrap here
+    pub fn gen_rotate_right(
+        &mut self,
+        name      : &str,
+        sig_i     : HcpIdent,
+        sig_slice : Option<Slice>,
+        amount    : i64,
+        width     : Option<i32>,
+    ) -> Result<Option<HcpIdent>, String> {
+        self.gen_rotate("rotate_right", name, sig_i, sig_slice, amount.wrapping_neg(), width)
+    }
+
+    // The rotate both directions share, LEFT by `amount`; `what` names the
+    // caller so an error reads in the direction the user asked for.
+    fn gen_rotate(
+        &mut self,
+        what      : &str,
+        name      : &str,
+        sig_i     : HcpIdent,
+        sig_slice : Option<Slice>,
+        amount    : i64,
+        width     : Option<i32>,
+    ) -> Result<Option<HcpIdent>, String> {
         let sig_slice = self.resolve_read_slice(sig_i, sig_slice);
         let actual    = sig_slice.get_size();
         let width     = match width {
             None                 => actual,
-            Some(w) if w < 1     => return Err(format!("rotate_left needs a width >= 1, got {w}")),
+            Some(w) if w < 1     => return Err(format!("{what} needs a width >= 1, got {w}")),
             Some(w) if w > actual => return Err(format!(
-                "rotate_left width {w} exceeds the signal's {actual} bits — \
+                "{what} width {w} exceeds the signal's {actual} bits — \
                  a rotate is only a rotate over bits that are there")),
             Some(w)              => w,
         };

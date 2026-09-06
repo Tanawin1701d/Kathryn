@@ -2,6 +2,7 @@
 # first for isolation. Run with: pytest py/tests  (after `maturin develop`).
 
 import os
+import re
 import tempfile
 
 import pytest
@@ -14,7 +15,7 @@ from kathryn import (
     priority, set_priority, set_priority_auto, get_priority, get_priority_mode,
     DEFAULT_UE_PRI_USER, DEFAULT_UE_PRI_RST, DEFAULT_UE_PRI_MIN,
     Karray, KBundle, kaf, HwComponentType,
-    any_of, mux, rotate_left, sum_cnt,
+    any_of, mux, rotate_left, rotate_right, sum_cnt,
     PipCon, pip, zync,
 )
 
@@ -1602,9 +1603,12 @@ def test_comb_pure_expression_widths_and_identities():
             ar   = k._session.arena()
 
             # a full (or zero) turn is the identity: the SAME signal comes back
-            assert rotate_left(a, 8)._ident.global_id == a._ident.global_id
-            assert rotate_left(a, 0)._ident.global_id == a._ident.global_id
-            h["rot"] = rotate_left(a, 3)
+            assert rotate_left (a, 8)._ident.global_id == a._ident.global_id
+            assert rotate_left (a, 0)._ident.global_id == a._ident.global_id
+            assert rotate_right(a, 8)._ident.global_id == a._ident.global_id
+            assert rotate_right(a, 0)._ident.global_id == a._ident.global_id
+            h["rot"]  = rotate_left (a, 3)
+            h["rotr"] = rotate_right(a, 3)
 
             # single-term any_of is the identity; empty is a 1-bit constant 0
             assert any_of([sel])._ident.global_id == sel._ident.global_id
@@ -1625,9 +1629,14 @@ def test_comb_pure_expression_widths_and_identities():
                 rotate_left(a, 1, width=0)
             with pytest.raises(TypeError, match="amount must be an int"):
                 rotate_left(a, 1.5)
+            # the same guards, worded in the direction that was asked for
+            with pytest.raises(ValueError, match="rotate_right width 9 exceeds"):
+                rotate_right(a, 1, width=9)
+            with pytest.raises(TypeError, match="rotate_right amount must be an int"):
+                rotate_right(a, 1.5)
 
     worker()
-    assert h["rot"].hw_type == "EXPR"
+    assert h["rot"].hw_type == "EXPR" and h["rotr"].hw_type == "EXPR"
     assert h["w5x1"] == 3
     assert h["w4x8"] == 10
 
@@ -1647,6 +1656,7 @@ def test_comb_mux_emits_priority_if_else():
             self.o    = wire(8, "o")
             self.o2   = wire(4, "o2")
             self.rot  = wire(8, "rot")
+            self.rotr = wire(8, "rotr")
             self.cnt  = wire(3, "cnt")
             self.anyb = wire(1, "anyb")
             self.bits = [reg(1) for _ in range(5)]
@@ -1658,7 +1668,8 @@ def test_comb_mux_emits_priority_if_else():
                 self.o2 *= mux(self.sel, 5, 9, width=4)
                 with pytest.raises(TypeError, match="cannot infer a width"):
                     mux(self.sel, 3, 4)              # two ints, no width
-                self.rot  *= rotate_left(self.a, 3)
+                self.rot  *= rotate_left (self.a, 3)
+                self.rotr *= rotate_right(self.a, 3)
                 self.cnt  *= sum_cnt(self.bits)
                 self.anyb *= any_of(self.bits)
 
@@ -1675,6 +1686,15 @@ def test_comb_mux_emits_priority_if_else():
                 if "WIRE_pickab" in ln and "=" in ln and "always" not in ln]) >= 2
     # rotate = shl | shr of the same source
     assert "<<" in text and ">>" in text
+    # DIRECTION: an 8-bit rotate right by 3 shifts RIGHT 3 and left 5, the
+    # left-hand rotate the mirror of that — so the two are not one hardware.
+    consts = dict(re.findall(r"wire \[7:0\]\s+(VAL_\w+) = (8'h\w+);", text))
+    def shift_amt(prefix, half):
+        line = next(ln for ln in text.splitlines()
+                    if ln.strip().startswith(f"assign EXPR_{prefix}0_{half}_"))
+        return consts[re.search(r"(VAL_\w+)\[", line).group(1)]
+    assert (shift_amt("ror", "shr"), shift_amt("ror", "shl")) == ("8'h3", "8'h5")
+    assert (shift_amt("rol", "shl"), shift_amt("rol", "shr")) == ("8'h3", "8'h5")
 
 
 # ---- PipCon.no_pip_master (master-ack hard-tied to 1) ------------------------
