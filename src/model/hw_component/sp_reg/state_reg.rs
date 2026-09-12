@@ -6,13 +6,20 @@ use crate::model::hw_component::sp_reg::trigger_sig::{HasTriggerSig, TriggerSig}
 use crate::model::hw_component::common::slice::Slice;
 use crate::model::hw_component::common::update_event::{DEFAULT_UE_PRI_INTERNAL_MIN, DEFAULT_UE_PRI_RST};
 
-// ---- UE priority ladder: lower wins on conflict; MRST sits at the global RST band ----
+// ---- UE priority ladder: higher value wins; MRST sits at the global RST band ----
+// - events are emitted into one always block in ASCENDING priority and the last
+//   write wins, so a higher number is a later line
+// - SET sits ABOVE RST: a reset clears the state it found, a set admits new state,
+//   and the two are different things.  A block that is cleared and re-entered in
+//   one cycle must come out entered, or it can never restart itself.
 const DEFAULT_UE_PRI_SR_UNSET : i32 = DEFAULT_UE_PRI_INTERNAL_MIN;     // default-clear, always loses
 const DEFAULT_UE_PRI_SR_HOLD  : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 1; // hold holds the bit
-const DEFAULT_UE_PRI_SR_SET   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 2; // user trigger set overrides hold
-const DEFAULT_UE_PRI_SR_RST   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 3; // soft reset overrides hold
-const DEFAULT_UE_PRI_SR_INT   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 4; // interrupt overrides reset
+const DEFAULT_UE_PRI_SR_RST   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 2; // soft reset overrides hold
+const DEFAULT_UE_PRI_SR_SET   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 3; // a set overrides the reset it races
+const DEFAULT_UE_PRI_SR_INT   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 4; // interrupt: forces set, beats even SET
 const DEFAULT_UE_PRI_SR_MRST  : i32 = DEFAULT_UE_PRI_RST;              // master reset wins over all
+// LIMIT: no call site feeds int_start today (every init_node_trigger passes
+// with_int_start = false), so the INT rung is reachable but currently unused.
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_ident::NcpIdent;

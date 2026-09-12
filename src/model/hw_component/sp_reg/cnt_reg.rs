@@ -10,6 +10,9 @@ use crate::model::nodes::ncp_ident::NcpIdent;
 use crate::model::common::identifier::{IdentBase, Identifiable};
 use crate::model::hw_component::sp_reg::trigger_sig::{HasTriggerSig, TriggerSig};
 
+// ---- UE priority ladder: higher value wins; MRST sits at the global RST band ----
+// - INC stays BELOW RST, unlike the SET rung of StateReg / WaitReg: an increment
+//   accumulates on the OLD count, which a reset discards, so it must not survive one
 const DEFAULT_UE_PRI_CNT_INC  : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 1;
 const DEFAULT_UE_PRI_CNT_HOLD : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 2;
 const DEFAULT_UE_PRI_CNT_RST  : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 3;

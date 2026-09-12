@@ -14,8 +14,8 @@ use crate::util::math::vary_val::VaryVal;
 // ---- UE priority ladder: higher value wins; MRST sits at the global RST band ----
 const DEFAULT_UE_PRI_SY_UNSET    : i32 = DEFAULT_UE_PRI_INTERNAL_MIN;     // clear-on-full, lowest
 const DEFAULT_UE_PRI_SY_HOLD     : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 1; // hold holds the bits
-const DEFAULT_UE_PRI_SY_ACTIVATE : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 2; // per-bit trigger fill overrides hold
-const DEFAULT_UE_PRI_SY_RST      : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 3; // soft reset overrides hold
+const DEFAULT_UE_PRI_SY_RST      : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 2; // soft reset overrides hold
+const DEFAULT_UE_PRI_SY_ACTIVATE : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 3; // a fill overrides the reset it races
 // INTERRUPT is not supported, so we use the same priority as RST
 const DEFAULT_UE_PRI_SY_MRST     : i32 = DEFAULT_UE_PRI_RST;              // master reset wins over all
 

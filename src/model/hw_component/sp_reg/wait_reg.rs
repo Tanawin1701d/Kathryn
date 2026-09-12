@@ -11,17 +11,21 @@ use crate::model::nodes::ncp_ident::NcpIdent;
 use crate::model::hw_component::sp_reg::trigger_sig::{HasTriggerSig, TriggerSig};
 use crate::model::common::identifier::{IdentBase, Identifiable};
 
+// ---- UE priority ladder: higher value wins; MRST sits at the global RST band ----
+// - SET sits ABOVE RST, matching StateReg: a reset clears the state it found, a
+//   set admits new state, so a wait entered in the cycle it is cleared stays entered
+// - INC stays BELOW RST: it accumulates on the OLD count, which a reset discards
 const DEFAULT_UE_PRI_CW_UNSET : i32 = DEFAULT_UE_PRI_INTERNAL_MIN;
 const DEFAULT_UE_PRI_CW_HOLD  : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 1;
-const DEFAULT_UE_PRI_CW_SET   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 2;
-const DEFAULT_UE_PRI_CW_RST   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 3;
+const DEFAULT_UE_PRI_CW_RST   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 2;
+const DEFAULT_UE_PRI_CW_SET   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 3;
 const DEFAULT_UE_PRI_CW_MRST  : i32 = DEFAULT_UE_PRI_RST;
 
 const DEFAULT_UE_PRI_CY_UNSET : i32 = DEFAULT_UE_PRI_INTERNAL_MIN;
 const DEFAULT_UE_PRI_CY_INC   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 1;
 const DEFAULT_UE_PRI_CY_HOLD  : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 2;
-const DEFAULT_UE_PRI_CY_SET   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 3;
-const DEFAULT_UE_PRI_CY_RST   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 4;
+const DEFAULT_UE_PRI_CY_RST   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 3;
+const DEFAULT_UE_PRI_CY_SET   : i32 = DEFAULT_UE_PRI_INTERNAL_MIN + 4;
 const DEFAULT_UE_PRI_CY_MRST  : i32 = DEFAULT_UE_PRI_RST;
 
 // ---- helpers ----------------------------------------------------------------
