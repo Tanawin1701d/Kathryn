@@ -54,8 +54,9 @@ class val(SignalRef):
 
 
 class mem_blk(SignalRef):
-    __slots__ = ()
+    __slots__ = ("index_width",)              # kept so the sim manifest can state the depth
     def __init__(self, bit_width: int, index_width: int, name: Optional[str] = None) -> None:
+        self.index_width = int(index_width)
         name  = name or _session.auto_name("mem_blk")
         ident = _session.arena().mk_mem_blk(name, int(bit_width), int(index_width))
         # A MemBlk is not itself an assignment destination (you read/write it via a

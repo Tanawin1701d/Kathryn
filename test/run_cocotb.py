@@ -9,6 +9,8 @@
 # (needs verilator >= 5.036 — the pool auto-falls-back to the `verilator` conda
 # env when the PATH one is missing/too old). One VCD per `@cocotb.test()`
 # coroutine lands in test/.model_output/<case>/<testcase>.vcd.
+# The simulator is built through kathryn.sim.runner_cocotb's cache (<case>/sim_build/<fingerprint>/),
+# so a case whose emit did not change is not recompiled.
 #
 # Examples:
 #   python test/run_cocotb.py                         # run all

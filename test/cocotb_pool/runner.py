@@ -1,4 +1,8 @@
 # The run loop: build + simulate the pooled cases and collect their results.
+# - The simulator is built through kathryn.sim.runner_cocotb's fingerprint cache, so a
+#   case whose emit did not change is not recompiled.
+# - kathryn is imported INSIDE _run_cases: discover_and_run puts py/ on
+#   sys.path first, and nothing here may import kathryn at module scope.
 
 from __future__ import annotations
 
@@ -11,15 +15,8 @@ import importlib
 
 from . import paths
 from .registry  import TestCase, pool
-from .backend   import get_backend
-from .discovery import (
-    DiscoveredCase,
-    discover_testcases,
-    module_description,
-    toplevel_from_verilog,
-    status_from_results,
-)
-from .summary import CaseResult, print_summary
+from .discovery import DiscoveredCase, discover_testcases, module_description
+from .summary   import CaseResult, print_summary
 
 
 def run_all(simulator: str = "icarus") -> list[CaseResult]:
@@ -39,6 +36,9 @@ def _run_cases(cases: list[TestCase], simulator: str) -> list[CaseResult]:
     # its own VCD under <OUT_ROOT>/<name>/<testcase>.vcd. Build and simulation
     # failures are captured (not raised) so every case runs and the run ends with
     # one summary table.
+    from kathryn.sim.backend.cocotb import get_backend
+    from kathryn.sim.rtl     import open_rtl
+    from kathryn.sim.runner_cocotb  import CocotbSim
 
     # The sim subprocess imports both kathryn and the tc module — make both findable.
     extra_path = os.pathsep.join([str(paths.PY_DIR), str(paths.MODEL), *paths.EXTRA_PYTHONPATH])
@@ -55,29 +55,12 @@ def _run_cases(cases: list[TestCase], simulator: str) -> list[CaseResult]:
         out.mkdir(parents=True, exist_ok=True)
         discovered = discover_testcases(tc.test_module)
 
-        # 1. kathryn model build + verilog emit, then cocotb compile. Any failure
-        #    here (model panic or iverilog error) marks the whole case COMPILE.
+        # 1. kathryn model build + verilog emit, then the (cached) cocotb compile.
+        #    Any failure here (model panic or compile error) marks the whole case COMPILE.
         try:
             tc.build_fn(str(out))
-            # The sim subprocess re-imports the tc module, so live build objects
-            # never reach it — KSim (kathryn/sim_assist.py) finds the manifest
-            # emit_verilog wrote through this env var. Literal name on purpose:
-            # cocotb_pool must not import kathryn at module scope.
-            os.environ["KATHRYN_SIM_MANIFEST"] = str(out / "sim_manifest.json")
-            sources   = sorted(str(p) for p in out.glob("*.v"))
-            toplevel  = toplevel_from_verilog(out / "top.v")
-            backend   = get_backend(simulator)
-            runner    = backend.make_runner()
-            build_dir = out / "sim_build"
-            runner.build(
-                verilog_sources = sources,
-                hdl_toplevel    = toplevel,
-                build_dir       = str(build_dir),
-                build_args      = backend.build_args(),
-                always          = True,
-                waves           = True,
-                timescale       = ("1ns", "1ps"),
-            )
+            backend = get_backend(simulator)
+            build   = CocotbSim.build(open_rtl(out), backend, cache_root=out / "sim_build", waves=True)
         except Exception as e:                       # noqa: BLE001 — report any build failure
             detail = f"{type(e).__name__}: {e}".splitlines()[0]
             print(f"[{tc.name}] build/compile failed: {detail}", file=sys.stderr)
@@ -92,36 +75,16 @@ def _run_cases(cases: list[TestCase], simulator: str) -> list[CaseResult]:
             if dc.skip:
                 results.append(CaseResult(ident, dc.description, "SKIP"))
                 continue
-
-            # absolute results file so we can classify pass/fail regardless of cwd.
-            rxml = (build_dir / f"{dc.name}.results.xml").resolve()
             try:
-                rxml.unlink()
-            except OSError:
-                pass
-
-            try:
-                runner.test(
-                    hdl_toplevel = toplevel,
-                    test_module  = tc.test_module,
-                    testcase     = dc.name,
-                    build_dir    = str(build_dir),
-                    results_xml  = str(rxml),
-                    waves        = True,
-                    timescale    = ("1ns", "1ps"),
-                )
-            except SystemExit:
-                pass    # cocotb exits non-zero on a failing test; status comes from the xml
+                status = build.run_test(tc.test_module, dc.name, waves=True)
             except Exception as e:                   # noqa: BLE001 — unexpected harness error
                 print(f"[{ident}] test harness error: {e}", file=sys.stderr)
-
-            results.append(CaseResult(ident, dc.description, status_from_results(rxml)))
+                status = "NO_RESULT"
+            results.append(CaseResult(ident, dc.description, status))
 
             # The dump path is baked into the compiled sim, so each run rewrites the
-            # same VCD; copy it out under the testcase name before the next run.
-            # The file name is simulator-specific (icarus → <toplevel>.vcd,
-            # verilator → dump.vcd), so ask the backend.
-            produced = build_dir / backend.waves_file(toplevel)
+            # same file; copy it out under the testcase name before the next run.
+            produced = build.build_dir / backend.waves_file(build.top_module)
             if produced.exists():
                 shutil.copyfile(produced, out / f"{dc.name}.vcd")
 

@@ -1,6 +1,6 @@
-# Sim-assist READER — cocotb-side access to INTERNAL signals by the attribute
+# KSim — the SIM-side reader: cocotb access to INTERNAL signals by the attribute
 # names the model already uses (`k = KSim(dut); k.sub.x.value`), no
-# mark_input/mark_output port needed. Counterpart: sim_manifest.py (writer).
+# mark_input/mark_output port needed. Counterpart: manifest/write.py (writer).
 # - Runs in the SIMULATOR subprocess: stdlib-only, never imports _kathryn,
 #   cocotb, or the writer. Handles come in through `dut`.
 # - Signal/counter lookups return the RAW cocotb handle, so `.value` works for
@@ -15,7 +15,7 @@
 #  set_top(Top()) / build_model()            k = KSim(dut) ── loads ────┐
 #  emit_verilog(out)                                                    │
 #    └─ write_sim_manifest ───> out/sim_manifest.json  <────────────────┘
-#         (sim_manifest.py)       ▲ path handed over via $KATHRYN_SIM_MANIFEST
+#         (sim/manifest/write.py) ▲ path handed over via $KATHRYN_SIM_MANIFEST
 #                                   (set per case by cocotb_pool/runner.py)
 #
 #  resolving `k.sub.rf[1].data.value = 9`, one manifest node per hop:
@@ -32,8 +32,11 @@ import json
 import os
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-SIM_MANIFEST_FILE = "sim_manifest.json"       # written next to the .v files
-SIM_MANIFEST_ENV  = "KATHRYN_SIM_MANIFEST"    # set by the test runner for the sim subprocess
+from .manifest.schema import CHILDREN_KEY_OF          # the shape shared with the writer and read.py
+
+SIM_MANIFEST_ENV = "KATHRYN_SIM_MANIFEST"     # set by the test runner for the sim subprocess
+TOP_CLOCK_PORT   = "clk"                      # the two ports every emitted top has
+TOP_RESET_PORT   = "mrst"
 
 # LIMIT: cocotb handle types are unknowable here (cocotb is never imported), so
 # handles and resolved children are typed Any.
@@ -47,13 +50,13 @@ def _resolve(node: Dict[str, Any], handle: _Handle, name_key: str) -> Any:
     # `name_key` is the manifest's backend tag ("verilog", ...): the writer keys
     # each emitted name under the backend that produced it.
     kind = node["kind"]
-    if kind == "module" : return KSimModule(getattr(handle, node["instance"]), node["children"], name_key)
+    if kind == "module" : return KSimModule(getattr(handle, node["instance"]), node[CHILDREN_KEY_OF[kind]], name_key)
     if kind == "signal" : return getattr(handle, node[name_key])
     if kind == "counter": return getattr(handle, node["value"])       # committed reg; "now" stays manifest-only
     if kind == "slice"  : return KSimSlice(getattr(handle, node[name_key]), node["msb"], node["lsb"])
     if kind == "karray" : return KSimKarray(handle, node["shape"], node["elements"])
-    if kind == "list"   : return [_resolve(item, handle, name_key) for item in node["items"]]
-    if kind == "dict"   : return {name: _resolve(sub, handle, name_key) for name, sub in node["entries"].items()}
+    if kind == "list"   : return [_resolve(item, handle, name_key) for item in node[CHILDREN_KEY_OF[kind]]]
+    if kind == "dict"   : return {name: _resolve(sub, handle, name_key) for name, sub in node[CHILDREN_KEY_OF[kind]].items()}
     raise ValueError(f"sim manifest: unknown node kind {kind!r} (reader older than writer?)")
 
 
@@ -88,6 +91,7 @@ class KSimModule:
 class KSim(KSimModule):
     """Root of the sim tree over `dut`. The manifest path defaults to the
     KATHRYN_SIM_MANIFEST env var (set by the test runner)."""
+    # dut is cocotb dut
     def __init__(self, dut: _Handle, manifest_path: Optional[str] = None) -> None:
         path = manifest_path or os.environ.get(SIM_MANIFEST_ENV)
         if path is None:

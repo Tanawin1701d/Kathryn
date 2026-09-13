@@ -1,24 +1,13 @@
-# Introspection helpers: pull the top module name out of emitted Verilog, find
-# the @cocotb.test() coroutines in a tc module, and classify a JUnit results file.
+# Introspection helpers: find the @cocotb.test() coroutines in a tc module and
+# describe them. (The top-module name and the junit status now come from
+# kathryn.sim.runner_cocotb.)
 
 from __future__ import annotations
 
-import re
 import importlib
-import pathlib
 from dataclasses import dataclass
-from xml.etree import ElementTree
 
 from . import paths
-
-
-def toplevel_from_verilog(top_v: pathlib.Path) -> str:
-    # The emitted top file is `top.v`, but the module name inside is auto-generated
-    # (e.g. MODULE_tc1_seq_simple0_0). cocotb needs that real module name.
-    m = re.search(r"^\s*module\s+(\w+)", top_v.read_text(), re.MULTILINE)
-    if not m:
-        raise RuntimeError(f"no `module` declaration found in {top_v}")
-    return m.group(1)
 
 
 @dataclass
@@ -66,22 +55,3 @@ def discover_testcases(test_module: str) -> list[DiscoveredCase]:
         desc = doc.splitlines()[0].strip() if doc else mod_desc
         out.append(DiscoveredCase(obj.name, desc, bool(getattr(obj, "skip", False))))
     return out
-
-
-def status_from_results(results_xml: pathlib.Path) -> str:
-    # Classify a single-testcase JUnit results file: PASS, FAIL, or NO_RESULT
-    # (file missing / unparsable → the sim crashed before writing results).
-    if not results_xml.is_file():
-        return "NO_RESULT"
-    try:
-        tree = ElementTree.parse(results_xml)
-    except ElementTree.ParseError:
-        return "NO_RESULT"
-    n_tc = n_bad = 0
-    for tc in tree.iter("testcase"):
-        n_tc += 1
-        if any(True for _ in tc.iter("failure")) or any(True for _ in tc.iter("error")):
-            n_bad += 1
-    if n_tc == 0:
-        return "NO_RESULT"
-    return "FAIL" if n_bad else "PASS"

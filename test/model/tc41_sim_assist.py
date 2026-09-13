@@ -8,7 +8,7 @@ from __future__ import annotations
 from kathryn import *
 from kathryn import emit_verilog
 from kathryn.complex_hardware.counter import counter
-from kathryn.sim_assist import KSim
+from kathryn.sim.ksim import KSim
 
 import cocotb
 from cocotb.clock import Clock

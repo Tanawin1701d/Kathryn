@@ -1,6 +1,7 @@
 # Sim-assist WRITER — walks the top Module's attribute tree at emit time and
 # dumps an attribute-name -> emitted-name manifest next to the generated HDL.
-# Counterpart: sim_assist.py (the sim-side reader; owns the shared constants).
+# Counterparts: read.py (the build-side reader) and ../ksim.py (the sim-side one);
+# the shape all three agree on is schema.py.
 # - Called by _session.emit_verilog BEFORE the arena moves into the backend —
 #   the name/layout queries here need the live arena.
 # - Names come from a per-backend SimNamer, NEVER off the raw ident: each
@@ -19,13 +20,52 @@ import os
 from itertools import product
 from typing import Any, Dict, Optional
 
-from . import _session
-from .complex_hardware.counter import counter
-from .complex_hardware.karray import Karray
-from .hw_component import mem_blk
-from .module import Module
-from .signal import SignalRef
-from .sim_assist import SIM_MANIFEST_FILE
+from ... import _session
+from ...complex_hardware.counter import counter
+from ...complex_hardware.karray import Karray
+from ...hw_component import mem_blk
+from ...module import Module
+from ...signal import SignalRef
+from .schema import CHILDREN_KEY_OF, SCHEMA_VERSION, SIM_MANIFEST_FILE
+
+
+# ---- public entry ------------------------------------------------------------
+
+def harvest_sim_tree(module: Module, namer: SimNamer) -> Dict[str, Any]:
+    # The full manifest for one top module; root "instance" is None (it IS `dut`).
+    # Example output (verilog backend, model from the _attr_node table):
+    #
+    #   {"schema_version": 1,
+    #    "backend"       : "verilog",
+    #    "top_module"    : "MODULE_Top0_0",
+    #    "root": {"kind": "module", "instance": null, "children": {
+    #      "x"   : {"kind": "signal" , "verilog" : "REG_x_1"        , "hw_type": "REG", "width": 8, "clocked": true},
+    #      "mem" : {"kind": "signal" , "verilog" : "MEM_BLOCK_mem_9", "hw_type": "MEM_BLOCK",
+    #               "width": 8, "clocked": true, "depth": 16},
+    #      "hi"  : {"kind": "slice"  , "verilog" : "REG_x_1"        , "msb"    : 7    , "lsb"  : 4},
+    #      "cnt" : {"kind": "counter", "value"   : "REG_c_CNT_2"    , "now"    : "WIRE_...", "width": 8},
+    #      "rf"  : {"kind": "karray" , "shape"   : [2]              , "fields" : [["data", 8]],
+    #               "elements": [{"data": "REG_rf_E0_data_5"},
+    #                            {"data": "REG_rf_E1_data_6"}]},
+    #      "sub" : {"kind": "module" , "instance": "MODULE_Child0_10",
+    #               "children": {"acc": {"kind": "signal", "verilog": "REG_acc_11",
+    #                                    "hw_type": "REG", "width": 8, "clocked": true}}},
+    #      "rows": {"kind": "list"   , "items"   : [{"kind": "module", "instance": "MODULE_Child1_12", "children": {...}},
+    #                                               {"kind": "module", "instance": "MODULE_Child2_14", "children": {...}}]},
+    #      "tag" : {"kind": "dict"   , "entries" : {"a": {"kind": "signal", "verilog": "REG_ta_16",
+    #                                                     "hw_type": "REG", "width": 8, "clocked": true}}}}}}
+    return {"schema_version": SCHEMA_VERSION,
+            "backend"       : namer.backend,
+            "top_module"    : namer.module_name(module.ident),
+            "root"          : _module_node(module, "top", namer, set())}
+
+
+def write_sim_manifest(module: Module, output_dir: str, backend: str) -> None:
+    # Emit-time entry: pick the emitting backend's namer and drop the manifest
+    # next to that backend's generated HDL (a KeyError = backend has no namer yet).
+    namer = SIM_NAMERS[backend]()
+    with open(os.path.join(output_dir, SIM_MANIFEST_FILE), "w", encoding="utf-8") as f:
+        json.dump(harvest_sim_tree(module, namer), f, indent=1)
 
 
 # ---- per-backend naming ------------------------------------------------------
@@ -53,13 +93,19 @@ SIM_NAMERS: Dict[str, type[SimNamer]] = {"verilog": VerilogSimNamer}
 
 # ---- attribute -> manifest node ------------------------------------------------
 
+def _container_node(kind: str, children: Any, **extra: Any) -> Dict[str, Any]:
+    # A module / list / dict node.  Its children sit under the key the shared
+    # schema names, so the writer cannot drift from the two readers.
+    return {"kind": kind, **extra, CHILDREN_KEY_OF[kind]: children}
+
+
 def _attr_node(value: object, path: str, namer: SimNamer, visiting: set) -> Optional[Dict[str, Any]]:
     # One attribute value -> its manifest node, or None for non-hardware values:
     #
     #   attribute example               | node kind | reader (KSim) access
     #   --------------------------------|-----------|--------------------------------
     #   self.sub  = Child()             | "module"  | k.sub.<child attr>
-    #   self.mem  = mem_blk(8, 4)       | "signal"  | k.mem[i].value (memory array)
+    #   self.mem  = mem_blk(8, 4)       | "signal"  | k.mem[i].value (memory array, + depth)
     #   self.x    = reg(8)              | "signal"  | k.x.value      (read AND force)
     #   self.hi   = self.x[7, 4]        | "slice"   | k.hi.value     (read-only window)
     #   self.rf   = Rf(REG, (2,), "rf") | "karray"  | k.rf[1].data.value
@@ -72,7 +118,9 @@ def _attr_node(value: object, path: str, namer: SimNamer, visiting: set) -> Opti
     if isinstance(value, mem_blk):
         # BEFORE the slice test: mem_blk seeds an explicit data-width slice, so
         # `_is_user_sliced` is True even though it is a whole component.
-        return _signal_node(value, namer)
+        node = _signal_node(value, namer)
+        node["depth"] = 1 << value.index_width          # words; a loader checks an image fits
+        return node
     if isinstance(value, SignalRef):
         if value._is_user_sliced:                    # a slice VIEW — no net of its own
             # The emitted-name key IS the backend tag ("verilog": ...), so a
@@ -94,14 +142,14 @@ def _attr_node(value: object, path: str, namer: SimNamer, visiting: set) -> Opti
         # the model's when the list is homogeneous hardware.
         items = [_attr_node(item, f"{path}[{n}]", namer, visiting) for n, item in enumerate(value)]
         items = [node for node in items if node is not None]
-        return {"kind": "list", "items": items} if items else None
+        return _container_node("list", items) if items else None
     if isinstance(value, dict) and all(isinstance(key, str) for key in value):
         entries: Dict[str, Any] = {}
         for key, item in value.items():
             node = _attr_node(item, f"{path}.{key}", namer, visiting)
             if node is not None:
                 entries[key] = node
-        return {"kind": "dict", "entries": entries} if entries else None
+        return _container_node("dict", entries) if entries else None
     return None                                        # ints, callables, KarrayRef access views, ...
 
 
@@ -145,41 +193,7 @@ def _module_node(module: Module, path: str, namer: SimNamer, visiting: set) -> D
         if node is not None:                            # None = not a hardware attribute
             children[name] = node
     visiting.remove(id(module))
-    return {"kind"    : "module",
-            # top has no hierarchy hop to resolve — cocotb hands it in as `dut`;
-            # every other instance name is the reader's getattr step.
-            "instance": None if path == "top" else namer.module_name(module.ident),
-            "children": children}
-
-
-# ---- public entry ------------------------------------------------------------
-
-def harvest_sim_tree(module: Module, namer: SimNamer) -> Dict[str, Any]:
-    # The full manifest for one top module; root "instance" is None (it IS `dut`).
-    # Example output (verilog backend, model from the _attr_node table):
-    #
-    #   {"schema_version": 1,
-    #    "backend"       : "verilog",
-    #    "top_module"    : "MODULE_Top0_0",
-    #    "root": {"kind": "module", "instance": null, "children": {
-    #      "x"  : {"kind": "signal" , "verilog" : "REG_x_1"    , "hw_type": "REG", "width": 8, "clocked": true},
-    #      "hi" : {"kind": "slice"  , "verilog" : "REG_x_1"    , "msb"    : 7    , "lsb"  : 4},
-    #      "cnt": {"kind": "counter", "value"   : "REG_c_CNT_2", "now"    : "WIRE_...", "width": 8},
-    #      "rf" : {"kind": "karray" , "shape"   : [2]          , "fields" : [["data", 8]],
-    #              "elements": [{"data": "REG_rf_E0_data_5"},
-    #                           {"data": "REG_rf_E1_data_6"}]},
-    #      "sub": {"kind": "module" , "instance": "MODULE_Child0_15",
-    #              "children": {"acc": {"kind": "signal", "verilog": "REG_acc_16",
-    #                                   "hw_type": "REG", "width": 8, "clocked": true}}}}}}
-    return {"schema_version": 1,
-            "backend"       : namer.backend,
-            "top_module"    : namer.module_name(module.ident),
-            "root"          : _module_node(module, "top", namer, set())}
-
-
-def write_sim_manifest(module: Module, output_dir: str, backend: str) -> None:
-    # Emit-time entry: pick the emitting backend's namer and drop the manifest
-    # next to that backend's generated HDL (a KeyError = backend has no namer yet).
-    namer = SIM_NAMERS[backend]()
-    with open(os.path.join(output_dir, SIM_MANIFEST_FILE), "w", encoding="utf-8") as f:
-        json.dump(harvest_sim_tree(module, namer), f, indent=1)
+    # top has no hierarchy hop to resolve — cocotb hands it in as `dut`;
+    # every other instance name is the reader's getattr step.
+    instance = None if path == "top" else namer.module_name(module.ident)
+    return _container_node("module", children, instance=instance)

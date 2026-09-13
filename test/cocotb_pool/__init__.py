@@ -9,28 +9,25 @@
 #
 # The implementation is split across this package for readability:
 #   paths.py      — path constants + configure() (mutable pool config)
-#   backend.py    — SimBackend abstraction + get_backend() factory
-#   icarus.py     — IcarusVCD runner subclass + IcarusBackend
-#   verilator.py  — verilator tool discovery + VerilatorBackend
 #   registry.py   — TestCase pool + register()/pool()
-#   discovery.py  — verilog/testcase introspection + results classification
+#   discovery.py  — testcase introspection
 #   summary.py    — CaseResult + the summary table
 #   runner.py     — the build + simulate loop (run_all / run_selected / discover_and_run)
+# The simulator backends and the cached build are kathryn's own
+# (kathryn.sim.backend.cocotb, kathryn.sim.runner_cocotb); runner.py imports them lazily.
 
 from __future__ import annotations
 
 from .paths      import configure
 from .registry   import TestCase, register, pool
-from .discovery  import DiscoveredCase, toplevel_from_verilog, discover_testcases
-from .backend    import SimBackend, get_backend
+from .discovery  import DiscoveredCase, discover_testcases
 from .summary    import CaseResult, print_summary
 from .runner     import run_all, run_selected, discover_and_run
 
 __all__ = [
     "configure",
     "TestCase", "register", "pool",
-    "DiscoveredCase", "toplevel_from_verilog", "discover_testcases",
-    "SimBackend", "get_backend",
+    "DiscoveredCase", "discover_testcases",
     "CaseResult", "print_summary",
     "run_all", "run_selected", "discover_and_run",
 ]

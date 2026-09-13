@@ -16,7 +16,7 @@ import warnings
 
 from kathryn import *
 from kathryn import emit_verilog
-from kathryn.sim_assist import KSim
+from kathryn.sim.ksim import KSim
 
 import cocotb
 from cocotb.clock import Clock

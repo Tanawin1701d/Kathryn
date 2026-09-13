@@ -123,6 +123,6 @@ def emit_verilog(output_dir: str, top_file_name: str = "top") -> None:
     if _top_module is None:
         raise RuntimeError("emit_verilog: no top Module registered — call set_top(...) "
                            "or build_model(...) before emitting")
-    from .sim_manifest import write_sim_manifest   # lazy: sim_manifest imports module.py
+    from .sim.manifest.write import write_sim_manifest   # lazy: the writer imports module.py
     write_sim_manifest(_top_module, output_dir, backend="verilog")
     BackendVerilog(arena()).emit(output_dir, top_file_name)
