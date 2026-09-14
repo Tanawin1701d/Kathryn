@@ -7,6 +7,8 @@ name            = "kathryn"
 version         = "0.1.0"
 description     = "Cycle-accurate hardware design in Python: control-flow blocks and resource abstractions, emitted as Verilog from a Rust core."
 readme          = "README.md"                   # becomes the PyPI project page
+license         = "Apache-2.0"
+license-files   = ["LICENSE"]
 requires-python = ">=3.9"
 authors         = [{ name = "Tanawin", email = "tanawin1701d@outlook.com" }]
 keywords        = ["hdl", "hardware", "verilog", "rtl", "eda", "fpga", "asic"]
@@ -36,6 +38,3 @@ features    = ["python"]
 # re-exports it as the public DSL.
 python-source = "py"
 module-name   = "kathryn._kathryn"
-
-license         = "Apache-2.0"
-license-files   = ["LICENSE"]
