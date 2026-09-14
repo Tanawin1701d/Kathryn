@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Optional
 
 from .. import _session
-from .._kathryn import ArbSamePriPolicy, CcpIdent
+from .._kathryn import ArbSamePriPolicy, CcpIdent, HcpIdent
 from ..hw_component import val, wire
 from ..signal import SignalRef, to_ref
 
@@ -32,6 +32,12 @@ class ArbLeaf:
         self.index = index
         self.req   = req
         self.ack   = ack
+
+
+# ---- helpers ------------------------------------------------------------------
+def _opt_ref(hcp_i: Optional[HcpIdent]) -> Optional[SignalRef]:
+    # An unbound gate comes back as None; a bound one as a whole-signal ref.
+    return SignalRef(hcp_i) if hcp_i is not None else None
 
 
 # ---- arb --------------------------------------------------------------------
@@ -61,6 +67,18 @@ class Arb:
     def master_req(self) -> SignalRef:
         # OR of every leaf request (1-bit wire), readable once leaves are added.
         return SignalRef(_session.arena().arb_get_master_req_wire(self._ident))
+
+    # ---- bound gate sources (None until bound) ------------------------------
+    # - `master_ack` is bound by a pip DURING build_flow (None before), or is the
+    #   const 1 of no_pip_master();
+    # - hold / reset are bound at set_hold / set_reset time. An unsliced signal
+    #   resolves to the SAME ident: `con.hold.global_id == hold_wire.global_id`.
+    @property
+    def master_ack(self) -> Optional[SignalRef]: return _opt_ref(_session.arena().arb_get_master_ack(self._ident))
+    @property
+    def hold      (self) -> Optional[SignalRef]: return _opt_ref(_session.arena().arb_get_hold      (self._ident))
+    @property
+    def reset     (self) -> Optional[SignalRef]: return _opt_ref(_session.arena().arb_get_reset     (self._ident))
 
     # ---- leaves ------------------------------------------------------------
     def add_leaf(self, priority: int) -> ArbLeaf:

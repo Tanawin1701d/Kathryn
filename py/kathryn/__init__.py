@@ -5,7 +5,7 @@
 
 from . import _session                                          # creates the singleton arena
 from ._kathryn import LogicOp, FlowBlockType, ArbSamePriPolicy, ArbLockedChannel, HwComponentType, Slice, HcpIdent, FlowBlockIdent, ModuleIdent, BackendVerilog
-from ._session import arena, reset, gen_flow, build_flow, build_model, emit_verilog
+from ._session import arena, reset, gen_flow, gen_dbg, build_flow, build_model, emit_verilog
 from .signal import SignalRef, expr
 from .hw_component import reg, wire, val, mem_blk, mem_ele
 from .flow_block import (
@@ -20,7 +20,7 @@ from .flow_block import (
 from .pip_zync import pip, zync
 from .complex_hardware import Arb, ArbLeaf, PipCon, Karray, KarrayField, KBundle, kaf, KarrayRef, ReduceView, counter
 from .combinational import any_of, mux, rotate_left, rotate_right, sum_cnt
-from .module import Module, init, flow, set_top
+from .module import Module, init, flow, dbg, set_top
 from . import priority as _priority
 from .priority import (
     priority, set_priority, set_priority_auto, get_priority, get_priority_mode,
@@ -57,8 +57,8 @@ __all__ = [
     # combinational combinators
     "any_of", "mux", "rotate_left", "rotate_right", "sum_cnt",
     # module scope + session
-    "Module", "init", "flow", "arena", "reset",
-    "gen_flow", "build_flow", "build_model", "set_top", "emit_verilog",
+    "Module", "init", "flow", "dbg", "arena", "reset",
+    "gen_flow", "gen_dbg", "build_flow", "build_model", "set_top", "emit_verilog",
     # asm-node priority
     "priority", "set_priority", "set_priority_auto", "get_priority", "get_priority_mode",
     *_priority.PRIORITY_CONST_NAMES,

@@ -859,7 +859,7 @@ src/applications/py/
     arena_factory_hwc_expr_py.rs   — mk_expression (binary) / mk_expression_single (unary ~,!) / mk_extend_bit
     arena_impl_hwc_py.rs           — gen_basic_assign and other higher-level HWC ops
     arena_factory_flow_block_py.rs — mk_flow_block_* (seq/par/cond/zero/while/do_while/counter)
-    arena_impl_flow_block_py.rs    — initialize_flow_block / finalize_flow_block
+    arena_impl_flow_block_py.rs    — initialize_flow_block / finalize_flow_block / get_pip_wait_reg
     arena_factory_module_py.rs     — mk_module (sub-module; top is made in PyModelArena::new)
     arena_impl_module_py.rs        — initialize_module / finalize_module
     hw_component/common/{hcp_ident_py.rs, slice_py.rs} — PyHcpIdent, PySlice
@@ -926,7 +926,7 @@ operation routes through one process-wide `ModelArena`.
   `@init` / `@flow` methods; a bare top-level declaration outside a class finds no
   open module on the trace stack and **panics by design**. Also holds the
   `arena()` accessor, `reset()`, the per-prefix auto-name counter, `gen_flow()`,
-  and `build_flow()`.
+  `gen_dbg()` and `build_flow()`.
 - `signal.py` — `SignalRef` (ident + optional `Slice`) with operator overloading:
   binary `+ - * / % & | ^ << >> < <= > >= == !=` → `mk_expression`; unary `~` →
   `mk_expression_single`; `.land/.lor/.lnot/.slt/.sgt/.extend` for ops with no
@@ -984,6 +984,14 @@ operation routes through one process-wide `ModelArena`.
     `track_module_at_flow_init`/`untrack_module_at_flow_init` pair), so those two
     calls fire many times across modules. The pool is non-consuming, so
     `gen_flow()` is safely re-runnable; `_session.reset()` clears it.
+  - `@dbg` (2026-09-14) is the THIRD phase: deferred into `_session.dbg_pool`
+    and run ONCE by `gen_dbg()`, a DEDICATED call after `build_flow()` — never
+    inside it (Tanawin's call, 2026-09-14): `build_model(module, debug=True)`
+    makes it; `build_model(module)` and a bare `build_flow()` run no `@dbg`
+    body. No module scope is open. A body only READS built
+    idents into attributes (`self.wait = self.con.pip_wait_reg`) so the sim
+    manifest lists them; declaring hardware there panics ("module trace stack
+    is empty"). `reset()` clears the pool.
 
   Phase methods run in definition order, base classes first
   (`Module._phase_methods` walks the reversed MRO), so an inherited `@init` runs
@@ -1035,6 +1043,7 @@ return annotations — a reader must never have to guess a type. Rules:
 set_top(Top())   # register the user's top Module
 gen_flow()       # construct every module's deferred @flow blocks (re-runnable)
 build_flow()     # host build pass over the whole module tree (run once)
+gen_dbg()        # OPTIONAL: run every @dbg body — build_model(m, debug=True) does all four
 ```
 
 `build_flow()` (`_session.build_flow` → `PyModelArena::build_flow` →
@@ -1601,3 +1610,39 @@ imports only `schema.py`; `rtl/base.py` wants the two top-level keys
 wanted again, `read.py` at `2bfd217` is the reference, and the rule it kept
 still applies: the reader imports no model layer, so it can load beside the
 writer without a cycle.
+
+**Post-build status reads: `@dbg`, `PipCon.pip_*`, `Arb` gate getters**
+(2026-09-14, for Carolyne's o3 debugger; NO new hardware). A model reads a pip's
+status signals back AFTER `build_flow` as `SignalRef`s and stores them as Module
+attributes, so `sim_manifest.json` lists them. Four pieces. `@dbg` (`module.py`)
+is a third module phase beside `@init` / `@flow`: deferred into
+`_session.dbg_pool`, run once by a dedicated `gen_dbg()` after `build_flow()`
+(`build_model(m, debug=True)`; NOT inside `build_flow` — debug is opt-in), no
+module scope open (a declaration there panics). `pip()` records its block and leaf on
+the PipCon (`PipCon.pip_block_i` / `pip_leaf_idx` / `pip_leaf` / `pip_wait_reg`,
+pure Python): `make_flow_block_pip` adds the leaf FIRST, so the index is
+`arb_leaf_count` read before the block is made, and a second `pip()` on one
+PipCon raises before any hardware. `Arb.master_ack` / `hold` / `reset`
+(`arb_get_master_ack` / `arb_get_hold` / `arb_get_reset`; host
+`arb_get_master_ack_src_i` / `arb_get_user_hold_i` / `arb_get_user_reset_i`) are
+None until bound: master-ack by the pip's build or `no_pip_master()`'s const 1,
+hold / reset at set time, an unsliced signal resolving to the SAME ident.
+`arena.get_pip_wait_reg(block_i)` (host `get_pip_wait_reg_i`): `PipSchematic`
+keeps `wait4syn_i` as an explicit field (not `sys_nodes[0]`), the proxy reads
+the block type off the `FlowBlockIdent`, Errs for a non-`Pipeline`, and takes
+the TYPED pip (`take_flow_block_pip`) to call the inherent
+`FlowBlockPip::get_wait4syn_reg_i(arena)`, which resolves its own
+`get_wait4syn_node_i` (Err until built) and reads the StateNode's
+`get_state_reg_i` — never `get_node_state_operating`, which panics unbuilt.
+The proxy is ONLY the take / delegate / replace_back sandwich (§1.5).
+RULE (Tanawin, 2026-09-14): a query only one block type can answer is
+an inherent method on that type, reached through its typed take — NEVER a
+defaulted method on the `FlowBlock` trait. The trait is the generic contract;
+a pip-only getter there stops it generalising.
+Pinned by `py/tests/test_pip_dbg_signals.py`: the emit is byte-identical with
+and without the `@dbg` method (two subprocesses, both models given the same
+explicit name, since a subclass auto-names itself apart), the manifest lists the
+four attributes, the wait register's name starts `SR_ST_pip_wait4syn`, and the
+master-ack of a pip-mastered PipCon is an `EXPR` (the entrance pseudo node).
+This CLOSES the gap the deleted `VerilogScope` existed for: a library-internal
+register (`pip_wait4syn`) now reaches the manifest through an attribute.

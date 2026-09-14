@@ -155,4 +155,17 @@ impl ModelArena {
         self.replace_back_flow_block(block);
         wrap
     }
+
+    /// The wait4syn StateReg of a BUILT pipeline block: high while the pipeline
+    /// is parked on an idle arb. Err for a non-pip block or an unbuilt pip.
+    /// - the block type is read off the ident, so the FlowBlock trait stays pip-free
+    pub fn get_pip_wait_reg_i(&mut self, ident: FlowBlockIdent) -> Result<HcpIdent, String> {
+        if ident.get_block_type() != FlowBlockType::Pipeline {
+            return Err(format!("flow block '{}' is not a pipeline block", ident.get_rel_name()));
+        }
+        let pip          = self.take_flow_block_pip(ident);
+        let wait_reg_res = pip.get_wait4syn_reg_i(self);
+        self.replace_back_flow_block_pip(pip);
+        wait_reg_res
+    }
 }

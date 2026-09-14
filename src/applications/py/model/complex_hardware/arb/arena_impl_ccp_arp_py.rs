@@ -77,6 +77,24 @@ impl PyModelArena {
         self.arena.arb_get_master_req_wire_i(arb_i.into()).into()
     }
 
+    // ---- bound gate sources (None until bound; pair with the setters above) --
+
+    // The master-ack source: a pip binds it DURING build_flow (None before),
+    // `arb_lock_master_ack` ties it to constant 1 at once.
+    fn arb_get_master_ack(&mut self, arb_i: PyCcpIdent) -> Option<PyHcpIdent> {
+        self.arena.arb_get_master_ack_src_i(arb_i.into()).map(Into::into)
+    }
+
+    // The hold signal `arb_set_hold` bound, or None.
+    fn arb_get_hold(&mut self, arb_i: PyCcpIdent) -> Option<PyHcpIdent> {
+        self.arena.arb_get_user_hold_i(arb_i.into()).map(Into::into)
+    }
+
+    // The reset signal `arb_set_reset` bound, or None.
+    fn arb_get_reset(&mut self, arb_i: PyCcpIdent) -> Option<PyHcpIdent> {
+        self.arena.arb_get_user_reset_i(arb_i.into()).map(Into::into)
+    }
+
     // The request wire of leaf `idx` (driven by the user to contend).
     fn arb_get_leaf_req_wire(&mut self, arb_i: PyCcpIdent, idx: usize) -> PyHcpIdent {
         self.arena.arb_get_leaf_req_wire_i(arb_i.into(), idx).into()

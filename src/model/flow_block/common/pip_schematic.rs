@@ -36,16 +36,18 @@ use crate::model::nodes::ncp_ident::NcpIdent;
 // graph and returns the block's NodeWrap.
 #[derive(Clone, Debug)]
 pub struct PipSchematic {
-    arb_i: CcpIdent,
+    arb_i      : CcpIdent,
+    wait4syn_i : Option<NcpIdent>,   // the wait-for-sync StateNode; None until `build` makes it
 }
 
 impl PipSchematic {
     pub fn new(ccp_i: CcpIdent) -> Self {
         assert_eq!(ccp_i.get_ccp_type(), CcpType::Arb, "PipSchematic::new: ccp must be an Arb");
-        Self { arb_i: ccp_i }
+        Self { arb_i: ccp_i, wait4syn_i: None }
     }
 
-    pub fn get_arb_i(&self) -> CcpIdent { self.arb_i }
+    pub fn get_arb_i     (&self) -> CcpIdent         { self.arb_i }
+    pub fn get_wait4syn_i(&self) -> Option<NcpIdent> { self.wait4syn_i }
 
     // for the reset and hold node, the flow block will join with the signal
     //
@@ -79,6 +81,7 @@ impl PipSchematic {
         wait_trigger.hold_node_i = None;
         arena.init_node_trigger(wait4syn_i, &wait_trigger, false);
         base.add_sys_node(wait4syn_i);
+        self.wait4syn_i = Some(wait4syn_i);
 
         let pseudo_i = arena.make_pseudo_node(&format!("pip_entrance_{}", id), 1, LogicOp::BitwiseOr);
         arena.init_node_trigger(pseudo_i, base.get_ext_trigger_node(), false);

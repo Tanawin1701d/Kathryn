@@ -7,6 +7,7 @@ use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
 use super::super::model_arena::PyModelArena;
 use super::flow_block_ident_py::PyFlowBlockIdent;
+use super::super::hw_component::common::hcp_ident_py::PyHcpIdent;
 use crate::model::flow_block::BlockTrackStatus;
 
 #[pymethods]
@@ -42,5 +43,13 @@ impl PyModelArena {
     // uses it to auto-open a matching skeleton inside complex blocks.
     fn get_last_skeleton_flow_block_type(&self) -> u32 {
         self.arena.get_last_skeleton_flow_block_type().to_index()
+    }
+
+    // The wait4syn StateReg of a BUILT pipeline block (host `get_pip_wait_reg_i`);
+    // ValueError for a non-pip block or a pip built before `build_flow`.
+    fn get_pip_wait_reg(&mut self, block_i: PyFlowBlockIdent) -> PyResult<PyHcpIdent> {
+        self.arena.get_pip_wait_reg_i(block_i.into())
+            .map(Into::into)
+            .map_err(PyValueError::new_err)
     }
 }

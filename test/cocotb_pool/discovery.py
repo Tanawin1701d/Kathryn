@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import importlib
 from dataclasses import dataclass
+from typing import Any
 
 from . import paths
 
@@ -40,18 +41,30 @@ def module_description(test_module: str) -> str:
 
 
 def discover_testcases(test_module: str) -> list[DiscoveredCase]:
-    # A `@cocotb.test()`-decorated coroutine becomes a `cocotb._decorators.Test`
-    # instance carrying a `.name`. Return them in definition order so each can be
-    # simulated on its own and dump a separate VCD, each tagged with a description.
-    from cocotb._decorators import Test
-
+    # The module's cocotb tests (each a `cocotb._decorators.Test` carrying a
+    # `.name`) in definition order, so each can be simulated on its own and
+    # dump a separate VCD, each tagged with a description.
     mod      = importlib.import_module(test_module)
     mod_desc = module_description(test_module)
     out: list[DiscoveredCase] = []
     for obj in vars(mod).values():
-        if not isinstance(obj, Test):
-            continue
-        doc  = (getattr(obj.func, "__doc__", None) or getattr(obj, "doc", None) or "").strip()
-        desc = doc.splitlines()[0].strip() if doc else mod_desc
-        out.append(DiscoveredCase(obj.name, desc, bool(getattr(obj, "skip", False))))
+        for test in list_cocotb_tests(obj):
+            doc  = (getattr(test.func, "__doc__", None) or getattr(test, "doc", None) or "").strip()
+            desc = doc.splitlines()[0].strip() if doc else mod_desc
+            out.append(DiscoveredCase(test.name, desc, bool(getattr(test, "skip", False))))
     return out
+
+
+def list_cocotb_tests(obj: Any) -> list[Any]:
+    """The `Test`s one module attribute stands for, else [].
+
+    - cocotb 2.0's @cocotb.test() IS a Test; 2.1's is a TestGenerator (and
+      2.0's @parametrize a Parameterized), which generate their Tests
+    """
+    from cocotb import _decorators
+    test_types = tuple(t for t in (getattr(_decorators, name, None)
+                                   for name in ("Test", "Parameterized", "TestGenerator"))
+                       if t is not None)
+    if not isinstance(obj, test_types):
+        return []
+    return list(obj.generate_tests()) if hasattr(obj, "generate_tests") else [obj]

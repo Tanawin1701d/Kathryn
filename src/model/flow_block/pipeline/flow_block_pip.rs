@@ -4,6 +4,7 @@ use crate::model::flow_block::common::PipSchematic;
 use crate::model::flow_block::flow_block_base::{ExtSigType, FlowBlock, FlowBlockBase};
 use crate::model::flow_block::flow_block_ident::{FlowBlockIdent, FlowBlockJoinPolicy, FlowBlockType};
 use crate::model::flow_block::node_wrap::NodeWrap;
+use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::model_arena::ModelArena;
 use crate::model::nodes::ncp_ident::NcpIdent;
 
@@ -34,6 +35,23 @@ impl FlowBlockPip {
             result      : None,
             auto_restart,
         }
+    }
+
+    // the wait4syn StateNode; Err (recoverable) until `build_flow` has made it
+    pub fn get_wait4syn_node_i(&self) -> Result<NcpIdent, String> {
+        self.schematic.get_wait4syn_i().ok_or_else(|| format!(
+            "pipeline block '{}' is not built yet: call build_flow first",
+            self.base.get_ident_ref().get_rel_name(),
+        ))
+    }
+
+    // the wait4syn StateReg: high while the pipeline is parked on an idle arb
+    pub fn get_wait4syn_reg_i(&self, arena: &mut ModelArena) -> Result<HcpIdent, String> {
+        let wait4syn_i  = self.get_wait4syn_node_i()?;
+        let node        = arena.take_state_node(wait4syn_i);
+        let state_reg_i = node.get_state_reg_i();     // set in the ctor, so safe on an unbuilt node
+        arena.replace_back_state_node(node);
+        Ok(state_reg_i)
     }
 
     // Route the backing arb's optional user hold / reset into this block's

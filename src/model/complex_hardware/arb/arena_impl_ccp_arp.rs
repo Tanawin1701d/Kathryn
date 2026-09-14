@@ -85,6 +85,31 @@ impl ModelArena {
         wire_i
     }
 
+    /// The bound master-ack source: None until a pip's build binds it or
+    /// `arb_lock_master_ack` ties it to constant 1.
+    pub fn arb_get_master_ack_src_i(&mut self, ident: CcpIdent) -> Option<HcpIdent> {
+        let arb   = self.take_arb(ident);
+        let src_i = arb.get_master_ack_src_i();
+        self.replace_back_arb(arb);
+        src_i
+    }
+
+    /// The bound user hold signal (None when never set).
+    pub fn arb_get_user_hold_i(&mut self, ident: CcpIdent) -> Option<HcpIdent> {
+        let arb    = self.take_arb(ident);
+        let hold_i = arb.get_user_hold_i();
+        self.replace_back_arb(arb);
+        hold_i
+    }
+
+    /// The bound user reset signal (None when never set).
+    pub fn arb_get_user_reset_i(&mut self, ident: CcpIdent) -> Option<HcpIdent> {
+        let arb     = self.take_arb(ident);
+        let reset_i = arb.get_user_reset_i();
+        self.replace_back_arb(arb);
+        reset_i
+    }
+
     /// The request wire of leaf `idx` (the user drives this to contend).
     pub fn arb_get_leaf_req_wire_i(&mut self, ident: CcpIdent, idx: usize) -> HcpIdent {
         let arb    = self.take_arb(ident);

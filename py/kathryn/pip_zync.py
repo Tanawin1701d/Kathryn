@@ -40,6 +40,9 @@ def _pip_con_ident(meta: PipCon) -> CcpIdent:
 # - `auto_req=True` Req-locks the leaf (ALWAYS requesting); default is a normal leaf.
 # - `auto_restart` routes the arb user-reset into the block's start signal, so a
 #   reset RE-LAUNCHES the pipeline instead of clearing it.
+# - ONE pip per PipCon: a second raises before any hardware is made. The block
+#   and its leaf index are recorded on the PipCon (`pip_block_i` / `pip_leaf_idx`)
+#   so its status signals can be read back after build_flow.
 def pip(
     meta        : PipCon,
     name        : Optional[str] = None,
@@ -48,8 +51,16 @@ def pip(
     priority    : Optional[int] = None,
     auto_req    : bool          = False,
 ) -> _FlowBlockCtx:
-    return _complex_block("pip", _session.arena().mk_flow_block_pip, name,
-                       _pip_con_ident(meta), priority, auto_req, auto_restart)
+    arb_i = _pip_con_ident(meta)
+    if meta.pip_block_i is not None:
+        raise ValueError(f"pip: PipCon {arb_i!r} already masters pip block "
+                         f"{meta.pip_block_i!r}; one pip per PipCon")
+    arena    = _session.arena()
+    leaf_idx = arena.arb_leaf_count(arb_i)     # the host adds the pip's leaf FIRST, at this index
+    ctx      = _complex_block("pip", arena.mk_flow_block_pip, name, arb_i, priority, auto_req, auto_restart)
+    assert arena.arb_leaf_count(arb_i) == leaf_idx + 1, "pip: the host must add exactly one leaf"
+    meta._bind_pip(ctx.ident, leaf_idx)
+    return ctx
 
 # ---- zync (plain block — owns its work asm nodes directly) -------------------
 # Contend on one OR several arbiters. `meta` is one ZyncBind or a list of them

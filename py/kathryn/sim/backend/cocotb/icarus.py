@@ -24,15 +24,21 @@ def make_icarus_runner():
 
     - three FST-specific spots are overridden: the dump-file name, the
       generated $dumpfile module, and the `-fst` vvp plusarg
+    - the dump-file name reads `sim_hdl_toplevel`: test() calls it on a
+      runner that never saw build(), so `hdl_toplevel` is unset there
     """
-    from cocotb_tools.runner import Icarus, _as_sv_literal
+    from cocotb_tools.runner import Icarus
+    try:
+        from cocotb_tools.runner import as_sv_literal                    # cocotb >= 2.1
+    except ImportError:
+        from cocotb_tools.runner import _as_sv_literal as as_sv_literal  # cocotb 2.0
 
     class IcarusVcd(Icarus):
         def _waves_file(self):
-            return f"{self.hdl_toplevel}.vcd"
+            return f"{self.sim_hdl_toplevel}.vcd"
 
         def _create_iverilog_dump_file(self):
-            dumpfile = _as_sv_literal(str(self.build_dir / f"{self.hdl_toplevel}.vcd"))
+            dumpfile = as_sv_literal(str(self.build_dir / f"{self.hdl_toplevel}.vcd"))
             with open(self.iverilog_dump_file, "w") as f:
                 f.write("module cocotb_iverilog_dump();\n"
                         "initial begin\n"

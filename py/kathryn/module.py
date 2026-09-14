@@ -1,8 +1,9 @@
 # `Module` — a base class the user extends, marking methods with `@init`
-# (hardware declaration) and `@flow` (flow-block construction). Instantiating the
-# subclass opens the module scope, runs the `@init` methods then the `@flow`
-# methods (both inside the scope, so `self.x = reg(...)` and the flow blocks
-# attach to this module), then finalizes it. The top module is the arena itself.
+# (hardware declaration), `@flow` (flow-block construction) and `@dbg` (post-build
+# reads). Instantiating the subclass opens the module scope and runs the `@init`
+# methods inside it, so `self.x = reg(...)` attaches to this module; `@flow` and
+# `@dbg` are deferred into the session pools (see _session.gen_flow / gen_dbg).
+# The top module is registered with `set_top`.
 
 from __future__ import annotations
 
@@ -14,6 +15,7 @@ from ._kathryn import ModuleIdent
 
 _INIT_PHASE = "init"
 _FLOW_PHASE = "flow"
+_DBG_PHASE  = "dbg"
 
 # Decorators are IDENTITY functions, so the decorated method keeps its own
 # signature for callers and type checkers.
@@ -32,6 +34,13 @@ def init(fn: PhaseFn) -> PhaseFn:
 def flow(fn: PhaseFn) -> PhaseFn:
     # Mark a method as a flow-block construction phase method (runs after @init).
     setattr(fn, "_kathryn_phase", _FLOW_PHASE)
+    return fn
+
+
+def dbg(fn: PhaseFn) -> PhaseFn:
+    # Mark a method as a post-build read phase method: runs ONCE after build_flow,
+    # with NO module scope open (see Module).
+    setattr(fn, "_kathryn_phase", _DBG_PHASE)
     return fn
 
 
@@ -64,6 +73,12 @@ class Module:
     #     each registers into ONE process-wide pool (_session.flow_pool) keyed by
     #     this module's ident. A single top-level _session.gen_flow() then builds
     #     every module's flows from that pool — there is no per-instance build.
+    #   - @dbg is DEFERRED too (_session.dbg_pool) and runs ONCE by gen_dbg(), a
+    #     dedicated call after build_flow (`build_model(m, debug=True)`), with NO
+    #     module scope open: a body only READS built idents into
+    #     attributes (`self.wait = self.con.pip_wait_reg`) so the sim manifest
+    #     lists them. Creating hardware there panics ("module trace stack is
+    #     empty"): there is no module to attach it to.
     def __init__(self, name: Optional[str] = None) -> None:
         name        = name or _session.auto_name(type(self).__name__)
         self._ident = _session.arena().mk_module(name)
@@ -80,6 +95,10 @@ class Module:
         # ---- flow phase: deferred — register into the global pool -----------
         for m in _phase_methods(type(self), _FLOW_PHASE):
             _session.register_flow(self._ident, getattr(self, m))
+
+        # ---- dbg phase: deferred — register into the global pool ------------
+        for m in _phase_methods(type(self), _DBG_PHASE):
+            _session.register_dbg(self._ident, getattr(self, m))
 
     @property
     def ident(self) -> ModuleIdent:

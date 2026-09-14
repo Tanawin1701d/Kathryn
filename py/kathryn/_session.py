@@ -50,6 +50,9 @@ _top_module: "Module | None"                          = None
 # (module_ident, bound_method) so a single gen_flow() can build them all. (See
 # module.py — flow construction is deferred, not run at instantiation.)
 _flow_pool: list[tuple[ModuleIdent, Callable[[], None]]] = []
+# Process-wide deferred-dbg pool, the same shape: every Module's @dbg methods,
+# run once by gen_dbg() — a DEDICATED call after build_flow, never inside it.
+_dbg_pool : list[tuple[ModuleIdent, Callable[[], None]]] = []
 
 
 def arena() -> ModelArena:
@@ -59,11 +62,12 @@ def arena() -> ModelArena:
 
 def reset() -> ModelArena:
     # Rebuild the arena from scratch with NO top module (call `set_top` after);
-    # mainly for tests. Clears auto-name counters and the deferred-flow pool.
-    global _arena, _counters, _flow_pool, _top_module
+    # mainly for tests. Clears auto-name counters and both deferred pools.
+    global _arena, _counters, _flow_pool, _dbg_pool, _top_module
     _arena      = _make_arena()
     _counters   = {}
     _flow_pool  = []
+    _dbg_pool   = []
     _top_module = None
     return _arena
 
@@ -93,21 +97,44 @@ def gen_flow() -> None:
             _arena.untrack_module_at_flow_init(module_i)
 
 
+def register_dbg(module_i: ModuleIdent, fn: Callable[[], None]) -> None:
+    # Append one module's deferred @dbg method to the global pool.
+    _dbg_pool.append((module_i, fn))
+
+
+def dbg_pool() -> list[tuple[ModuleIdent, Callable[[], None]]]:
+    # The global (module_ident, bound_method) dbg pool, in registration order.
+    return _dbg_pool
+
+
+def gen_dbg() -> None:
+    # Run EVERY module's @dbg methods once, in registration order. Call AFTER
+    # build_flow; build_model(module, debug=True) does it for you. Opt-in: a
+    # bare build_flow runs no @dbg body. No module scope is opened: a body READS
+    # built idents and declares nothing (a declaration here panics).
+    for _module_i, dbg_fun in _dbg_pool:
+        dbg_fun()
+
+
 def build_flow() -> None:
     # Run the host build pass: starting from the top module, build the hardware
     # for every flow block across the module tree (schematics, update events,
     # clk / master-reset wiring). Call once, AFTER `gen_flow` has constructed all
     # flow blocks. Not re-runnable — the top build asserts a fresh start node.
+    # NOT here: gen_dbg — the @dbg phase is a separate, opt-in call.
     arena().build_flow()
 
 
-def build_model(module: Module) -> Module:
+def build_model(module: Module, debug: bool = False) -> Module:
     # One-shot convenience: register `module` as the top, construct every module's
     # deferred @flow blocks, then run the host build pass. Equivalent to
-    # `set_top(module); gen_flow(); build_flow()`. Not re-runnable (see build_flow).
+    # `set_top(module); gen_flow(); build_flow()`, plus `gen_dbg()` when `debug`
+    # is set. Not re-runnable (see build_flow).
     _set_top(module)
     gen_flow()
     build_flow()
+    if debug:
+        gen_dbg()
     return module
 
 
