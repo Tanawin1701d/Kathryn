@@ -204,11 +204,17 @@ Kathryn exists in two implementations.
 
 ## Getting started
 
-Needs:
+```sh
+pip install kathryn                                  # the DSL and the compiled core
+pip install "kathryn[sim]"                           # adds cocotb and Verilator
+```
 
-- Rust, edition 2024.
-- Python 3.9+.
-- Icarus Verilog, or Verilator 5.036+, for simulation.
+The wheel carries the Rust core already built, so Python 3.9+ is the only
+requirement. Icarus Verilog or Verilator 5.036+ is needed to simulate.
+
+### From source
+
+Also needs Rust, edition 2024.
 
 ```sh
 python -m venv .venv && source .venv/bin/activate
