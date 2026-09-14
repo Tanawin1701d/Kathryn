@@ -1,0 +1,135 @@
+# Build the wheels users install, and publish them on a version tag.
+#
+# Started from `maturin generate-ci github`, then cut to the targets this
+# project is used on (x86_64 / arm64 desktops and CI). A new target is one more
+# matrix row. Every wheel is tested against py/tests before release.
+#
+# Publishing uses PyPI trusted publishing (OIDC): register this repository and
+# the `release` job on PyPI once, and no token is stored here.
+
+name: wheels
+
+on:
+  push:
+    branches: ["kathryn-production"]    # build + test the production branch
+    tags:     ["v*"]                    # a tag on it is what publishes
+  pull_request:
+    branches: ["kathryn-production"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        target: [x86_64, aarch64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          args: --release --out dist --find-interpreter
+          manylinux: auto
+          sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
+      - name: Test the wheel
+        if: matrix.target == 'x86_64'
+        run: |
+          pip install kathryn --no-index --find-links dist --force-reinstall
+          pip install pytest
+          pytest py/tests
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-linux-${{ matrix.target }}
+          path: dist
+
+  macos:
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          - runner: macos-13         # intel
+            target: x86_64
+          - runner: macos-latest     # apple silicon
+            target: aarch64
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          args: --release --out dist --find-interpreter
+          sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
+      - name: Test the wheel
+        run: |
+          pip install kathryn --no-index --find-links dist --force-reinstall
+          pip install pytest
+          pytest py/tests
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-macos-${{ matrix.target }}
+          path: dist
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: x64
+          args: --release --out dist --find-interpreter
+          sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
+      - name: Test the wheel
+        shell: bash
+        run: |
+          pip install kathryn --no-index --find-links dist --force-reinstall
+          pip install pytest
+          pytest py/tests
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-windows-x64
+          path: dist
+
+  # Source fallback for any platform with no wheel. Building it needs Rust
+  # 1.85+ on the user's machine (edition 2024).
+  sdist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: PyO3/maturin-action@v1
+        with:
+          command: sdist
+          args: --out dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-sdist
+          path: dist
+
+  release:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [linux, macos, windows, sdist]
+    environment: pypi
+    permissions:
+      id-token: write               # trusted publishing; no API token needed
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: wheels-*
+          merge-multiple: true
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@release/v1

@@ -5,8 +5,24 @@ build-backend = "maturin"
 [project]
 name            = "kathryn"
 version         = "0.1.0"
+description     = "Cycle-accurate hardware design in Python: control-flow blocks and resource abstractions, emitted as Verilog from a Rust core."
+readme          = "README.md"                   # becomes the PyPI project page
 requires-python = ">=3.9"
-classifiers     = ["Programming Language :: Rust"]
+authors         = [{ name = "Tanawin", email = "tanawin1701d@outlook.com" }]
+keywords        = ["hdl", "hardware", "verilog", "rtl", "eda", "fpga", "asic"]
+classifiers     = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Rust",
+    "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
+]
+
+[project.urls]
+Homepage      = "https://www.kathryn-tools.org/"
+Documentation = "https://www.kathryn-tools.org/userbook/getting-started/introduction/"
+Repository    = "https://github.com/Tanawin1701d/Kathryn"
 
 [project.optional-dependencies]
 dev = ["pytest"]
