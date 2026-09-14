@@ -19,3 +19,6 @@ docs/
 # RISC-V Linux-boot testing sandbox (lives on its own branch)
 /test/riscv/
 /tools/
+
+# Peer-repo binding for the AI pair workflow (machine-local paths)
+/.claude/peer.md
