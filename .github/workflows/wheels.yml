@@ -27,8 +27,8 @@ jobs:
       matrix:
         target: [x86_64, aarch64]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.9"
       - name: Build wheels
@@ -44,7 +44,7 @@ jobs:
           pip install kathryn --no-index --find-links dist --force-reinstall
           pip install pytest
           pytest py/tests
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: wheels-linux-${{ matrix.target }}
           path: dist
@@ -54,13 +54,13 @@ jobs:
     strategy:
       matrix:
         include:
-          - runner: macos-13         # intel
+          - runner: macos-15-intel   # intel; macos-13 images are retired
             target: x86_64
           - runner: macos-latest     # apple silicon
             target: aarch64
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.9"
       - name: Build wheels
@@ -74,7 +74,7 @@ jobs:
           pip install kathryn --no-index --find-links dist --force-reinstall
           pip install pytest
           pytest py/tests
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: wheels-macos-${{ matrix.target }}
           path: dist
@@ -82,8 +82,8 @@ jobs:
   windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.9"
       - name: Build wheels
@@ -98,7 +98,7 @@ jobs:
           pip install kathryn --no-index --find-links dist --force-reinstall
           pip install pytest
           pytest py/tests
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: wheels-windows-x64
           path: dist
@@ -108,12 +108,12 @@ jobs:
   sdist:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: PyO3/maturin-action@v1
         with:
           command: sdist
           args: --out dist
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: wheels-sdist
           path: dist
@@ -127,7 +127,7 @@ jobs:
     permissions:
       id-token: write               # trusted publishing; no API token needed
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           pattern: wheels-*
           merge-multiple: true
