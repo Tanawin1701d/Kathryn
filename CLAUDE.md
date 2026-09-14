@@ -1515,7 +1515,8 @@ from `kathryn.sim.backend_cocotb` to `kathryn.sim.backend.cocotb`:
 `test/cocotb_pool/runner.py`, Carolyne's `examples/o3_riscv32/sim/{smoke,
 harness,cli}.py` and `tests/test_sim_e2e.py`.
 
-**`kathryn.sim.manifest` is a package** (2026-09-13, Tanawin's call). `manifest.py`
+**`kathryn.sim.manifest` is a package** (2026-09-13, Tanawin's call). `read.py`
+DELETED 2026-09-14, see the entry at the end of this file. `manifest.py`
 (the writer) and `manifest_tree.py` (the build-side reader) were two flat files
 whose names said nothing about which was which, while the schema they share sat
 in `ksim.py` only because that was the stdlib-only leaf everyone already
@@ -1534,7 +1535,8 @@ since the positive prefix `..sim.manifest` would otherwise admit it.
 `tests/test_debugger_probes.py` and `test_debugger_verilog_scope.py` moved in
 the same pass.
 
-**`Manifest`, not `ManifestTree`** (2026-09-13, Tanawin's call). Now that the
+**`Manifest`, not `ManifestTree`** (2026-09-13, Tanawin's call). DELETED
+2026-09-14 with `read.py`, see the entry at the end of this file. Now that the
 reader lives in `manifest/read.py`, "Tree" only described the data's shape; the
 fact the object holds is the manifest. `kathryn.sim.manifest.Manifest` is the
 parsed file, `Manifest.load(path)` reads it, `manifest.node(path)` walks it.
@@ -1582,3 +1584,20 @@ with `VerilogScope`, `Declaration`, `LocateError` and `find_home_module` out of
 asks "which module declares this net" any more. If that question returns, the
 answer is the arena (`master_module_i` on every HCP), not a regex over the `.v`.
 `kathryn.sim` is now: `ksim`, `manifest/`, `rtl/`, `backend/`, `runner_cocotb`.
+
+**`manifest/read.py` DELETED** (2026-09-14, Tanawin's call). The build-side
+reader — `Manifest`, `ManifestError`, `parse_path`, `walk_path`, `child_node`
+and the `Node` / `Token` aliases — is gone, with `py/tests/test_sim_manifest_read.py`.
+It existed so a probe declaration could ask "what is at this model path" off the
+FILE, with no arena; its only consumers were `observe/session` (27 uses) and
+`verilog_scope.py` (3), both deleted the same day, and nothing in Carolyne ever
+imported it. The two modules that still read the manifest never needed it:
+`ksim.py` resolves paths against live cocotb handles with its own walker and
+imports only `schema.py`; `rtl/base.py` wants the two top-level keys
+(`backend`, `top_module`) and json-loads the file through its own
+`read_manifest`. `kathryn.sim.manifest` is now a schema plus a writer —
+`manifest/__init__.py` re-exports the four schema names and nothing else, and
+`sim/__init__.py` lost the five reader names. If a build-side path reader is
+wanted again, `read.py` at `2bfd217` is the reference, and the rule it kept
+still applies: the reader imports no model layer, so it can load beside the
+writer without a cycle.

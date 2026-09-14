@@ -6,7 +6,7 @@
 # - This is the bottom layer of the Python side: nothing here imports a package above it.
 #
 #   ksim.py           SIM side: KSim(dut) — reach internal signals by model name
-#   manifest/         sim_manifest.json: schema.py · write.py (BUILD side, needs the model) · read.py (as a tree)
+#   manifest/         sim_manifest.json: schema.py · write.py (BUILD side, needs the model)
 #   rtl/              one emitted design per generated language: sources, top, fingerprint
 #   backend/          which simulator: a harness-neutral base, then one sub-package per harness (cocotb/)
 #   runner_cocotb.py  CocotbSim: the fingerprint-cached build, and its run_test
@@ -21,8 +21,7 @@ from .ksim import (KSim, KSimKarray, KSimKarrayElement, KSimModule, KSimSlice,
 from .backend import SimBackend
 from .backend.cocotb import (BACKENDS, CocotbBackend, IcarusBackend, VerilatorBackend, cocotb_is_available,
                              get_backend, icarus_is_available, verilator_is_available)
-from .manifest import (CHILDREN_KEY_OF, ManifestError, Manifest, NODE_KINDS, SCHEMA_VERSION,
-                       SIM_MANIFEST_FILE, child_node, parse_path, walk_path)
+from .manifest import CHILDREN_KEY_OF, NODE_KINDS, SCHEMA_VERSION, SIM_MANIFEST_FILE
 from .rtl import RTL_BY_BACKEND, Rtl, VerilogRtl, open_rtl
 from .runner_cocotb import CocotbSim, read_test_status
 
@@ -31,6 +30,5 @@ __all__ = ["KSim"             , "KSimKarray"         , "KSimKarrayElement"     ,
            "SCHEMA_VERSION"   , "NODE_KINDS"         , "CHILDREN_KEY_OF"       ,
            "BACKENDS"         , "IcarusBackend"      , "SimBackend"            , "VerilatorBackend"    , "cocotb_is_available",
            "get_backend"      , "icarus_is_available", "verilator_is_available", "CocotbBackend"       ,
-           "ManifestError"    , "Manifest"       , "child_node"            , "parse_path"          , "walk_path",
            "CocotbSim"        , "read_test_status"   ,
            "Rtl"              , "VerilogRtl"         , "RTL_BY_BACKEND"        , "open_rtl"]

@@ -1,7 +1,6 @@
 # Sim-assist WRITER — walks the top Module's attribute tree at emit time and
 # dumps an attribute-name -> emitted-name manifest next to the generated HDL.
-# Counterparts: read.py (the build-side reader) and ../ksim.py (the sim-side one);
-# the shape all three agree on is schema.py.
+# Counterpart: ../ksim.py (the sim-side reader); the shape both agree on is schema.py.
 # - Called by _session.emit_verilog BEFORE the arena moves into the backend —
 #   the name/layout queries here need the live arena.
 # - Names come from a per-backend SimNamer, NEVER off the raw ident: each

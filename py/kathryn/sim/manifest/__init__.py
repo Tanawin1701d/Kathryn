@@ -1,10 +1,9 @@
 # manifest — sim_manifest.json: the attribute names a model uses, mapped to the
-# names the emitter gave them.  One file, one writer, two readers.
+# names the emitter gave them.  One file, one writer, one reader.
 #
 #   schema.py   the shape both sides agree on            (stdlib)
 #   write.py    BUILD side: walks the live Module tree    (needs the model layer)
-#   read.py     BUILD side: the file back as a tree, addressed by model path  (stdlib)
-#   ../ksim.py  SIM side: the same paths, resolved to live cocotb handles     (stdlib)
+#   ../ksim.py  SIM side: the same paths, resolved to live cocotb handles  (stdlib)
 #
 # NOT re-exported here: write.py.  It is the one module that needs the model
 # layer, and `_session` imports it back lazily — keeping it out of this file is
@@ -12,8 +11,5 @@
 # as `from kathryn.sim.manifest.write import write_sim_manifest`.
 
 from .schema import CHILDREN_KEY_OF, NODE_KINDS, SCHEMA_VERSION, SIM_MANIFEST_FILE
-from .read   import ManifestError, Manifest, Node, Token, child_node, parse_path, walk_path
 
-__all__ = ["CHILDREN_KEY_OF", "NODE_KINDS"   , "SCHEMA_VERSION", "SIM_MANIFEST_FILE",
-           "ManifestError"  , "Manifest" , "Node"          , "Token"            ,
-           "child_node"     , "parse_path"   , "walk_path"]
+__all__ = ["CHILDREN_KEY_OF", "NODE_KINDS", "SCHEMA_VERSION", "SIM_MANIFEST_FILE"]

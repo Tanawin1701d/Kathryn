@@ -1,7 +1,7 @@
 # Manifest SCHEMA — the ONE definition of sim_manifest.json's shape and name.
-# - The writer (write.py) builds nodes from it and both readers (read.py here,
-#   ksim.py in the simulator) dispatch on it, so a renamed key or a new kind
-#   cannot land on one side only.
+# - The writer (write.py) builds nodes from it and the reader (ksim.py, in the
+#   simulator) dispatches on it, so a renamed key or a new kind cannot land on
+#   one side only.
 # - Stdlib-only, and imports nothing from this package: everything else here
 #   imports it, so it must not import back.
 

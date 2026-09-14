@@ -32,7 +32,7 @@ import json
 import os
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from .manifest.schema import CHILDREN_KEY_OF          # the shape shared with the writer and read.py
+from .manifest.schema import CHILDREN_KEY_OF          # the shape shared with the writer
 
 SIM_MANIFEST_ENV = "KATHRYN_SIM_MANIFEST"     # set by the test runner for the sim subprocess
 TOP_CLOCK_PORT   = "clk"                      # the two ports every emitted top has
