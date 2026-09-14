@@ -759,6 +759,13 @@ rewrites all handles using the resulting `old → IoWire` map.
 `find_reusable_io_wire` is consulted before `build_io_wire` at every hop so duplicate
 IO wires are never created for the same `(actual_src_signal, direction)` pair.
 
+`route_and_remap_io_module` walks the gathered dependency set in ASCENDING GLOBAL
+ID (since 2026-09-11): a `HashSet` iterates in a per-process order, and the IoWire
+ids and the module port order followed it, so two emits of one design differed
+in every `IO_WIRE_IO_IN/OUT_*` name. Sorted, two emits are byte-identical
+(`py/tests/test_sim_runner.py` pins it), which is what lets a compiled simulator
+be cached by the rtl's content.
+
 ---
 
 ## 6. Code style
@@ -800,13 +807,13 @@ Current diagrams (add to this list when you draw one):
 | File | Shows |
 | ---- | ----- |
 | `flow_block/common/zync_schematic.rs`        | arb REQ / grant / work-node firing |
-| `flow_block/common/pip_schematic.rs`         | pipeline OR-join + wait4syn |
+| `flow_block/common/pip_schematic.rs`         | pipeline OR-join + wait4syn re-arm on the block Start |
 | `flow_block/common/cond_chain.rs`            | if/elif/else ladder, ABSOLUTE branch conditions, fall-through |
 | `flow_block/common/counter_loop_schematic.rs`| loop-back / increment / exit edges off one `body_exit` |
 | `backends/common/internal_routing.rs`        | IoWire chain: source → LCA (skipped) → destination |
 | `complex_hardware/karray/karray_read.rs`     | per-dim fan-out + balanced 2:1 fold (Dyn mux / CusRd reduce) |
 | `model/arena_impl.rs`                        | flow-block init-stack state machine (LazyClosed, attach targets) |
-| `py/kathryn/sim_assist.py`                   | build→sim manifest handoff + KSim per-hop attribute resolution |
+| `py/kathryn/sim/ksim.py`                     | build→sim manifest handoff + KSim per-hop attribute resolution |
 
 `cond_schematic.rs` and `pick_schematic.rs` carry one-line pointers to the
 `cond_chain.rs` diagram instead of repeating it.
@@ -1065,9 +1072,9 @@ longer need `mark_output` just to observe a signal: `emit_verilog` writes
 `sim_manifest.json` next to the `.v` files (BEFORE the arena moves into the
 backend — `_session._top_module` stashes the top Module object for the walk),
 mapping the model's own attribute names to emitted Verilog names. Split:
-`sim_manifest.py` is the WRITER (build side, walks `vars(module)` recursively;
+`sim/manifest/write.py` is the WRITER (build side, walks `vars(module)` recursively;
 only non-`_` attributes are visible — a local-variable signal is out of scope
-by design, reachable via raw `dut` + its emitted name); `sim_assist.py` is the
+by design, reachable via raw `dut` + its emitted name); `sim/ksim.py` is the
 READER (sim side, stdlib-only, owns the `sim_manifest.json` /
 `KATHRYN_SIM_MANIFEST` constants — the cocotb_pool runner sets the env var per
 case). Usage: `k = KSim(dut); k.sub.x.value`, `k.rf[1].data.value = 9` (raw
@@ -1086,7 +1093,7 @@ per-type overrides like an IoWire's explicit port name hold), exposed to Python
 as `arena.hcp_verilog_name` / `module_verilog_name`
 (`applications/py/backends/verilog/arena_ext_vb_py.rs`). The walker consumes
 them through a per-backend `SimNamer` (`SIM_NAMERS` registry in
-`sim_manifest.py`; the manifest records `"backend"`): a future backend (vhdl,
+`sim/manifest/write.py`; the manifest records `"backend"`): a future backend (vhdl,
 chisel, ...) adds its own arena name queries + one `SimNamer` subclass and the
 walk itself is untouched. Also new: the `karray_fields` layout proxy. Covered
 by `test/model/tc41_sim_assist.py`; `tc11` is the migration reference.
@@ -1291,3 +1298,287 @@ layout query, no longer on the reset path.)
   verilator (reproduced on `tc37`). The parent-side net now has its own emitter,
   `IoWire::gen_parent_net_line_vb`, which writes a `wire`; `gen_init_line_vb`
   stays the reg form for the module that drives it.
+
+**A SET outranks the RST it races** (2026-09-12, Tanawin's call). `pip(auto_restart
+=True)` routes the arb's user-reset into the block's Start, which is OR-ed into the
+pipeline's combinational entrance (`pseudo`, also the arb master-ack). The latches
+that carry an entrance into the next cycle — the `wait4syn` StateNode and the
+sub-block's zync state — take that same wire as their reset. Update events are
+emitted into one always block in ASCENDING priority and the last write wins, so
+with `SET < RST` the reset overwrote the entry every time: the pipeline was
+granted for the flush cycle, latched nothing, and was dead from the next cycle on
+(the entrance is a pure OR of those two state bits, so once both are 0 with no
+pulse left, nothing can ever set them again — a self-sustaining zero).
+
+The fix is the ladder, not the wiring: in `state_reg.rs`, `DEFAULT_UE_PRI_SR_SET`
+and `DEFAULT_UE_PRI_SR_RST` swap, so SET sits above RST. A reset clears the state
+it found; a set admits new state; a block cleared and re-entered in one cycle must
+come out entered. `pip_schematic.rs` is untouched — the original `pseudo <- start`
+edge was right all along, and what `auto_restart` adds is only the edge that
+asserts a SET while the flush is up. A plain pip has no such edge, so it is
+cleared and stays dead, unchanged.
+
+`sync_reg.rs` (ACTIVATE) and both `wait_reg.rs` ladders (CW/CY SET) swap the same
+way for consistency. `cnt_reg.rs` INC deliberately does NOT: an increment
+accumulates on the OLD count, which a reset discards, so it must not survive one.
+`DEFAULT_UE_PRI_SR_INT` still sits above SET (it forces a set, beating even a
+set), but no call site feeds `int_start` today — every `init_node_trigger` passes
+`with_int_start = false`.
+
+Pinned by `test/model/tc42_pip_auto_restart.py` (verified under icarus: `live`
+counts 5, 6, 6, 7 across the flush — exactly one lost cycle, the flush itself,
+which cannot carry work since the same wire is clearing the stage; a plain pip
+stays dead, the control; the flush is a `zif` inside an always-active zync, since
+a one-step `seq` is a one-cycle pulse after start) and by
+`py/tests/test_pip_auto_restart_emit.py` (on the flushed wait register AND the
+sub-block state, the `if (flush) UNSET` is emitted BEFORE the SET; mrst is still
+the last write; the restart pip's entrance names the flush and a plain pip's does
+not). WARNING for anyone writing such a test: a design with two pips emits several
+`EXPR_pseudo_init_expr_*`, so never anchor on the first one in the file — find the
+state register the flush clears and read its SET condition back to the entrance.
+
+**Observe and view** (2026-09-11, moved in from Carolyne, Tanawin's call).
+SUPERSEDED 2026-09-14: `kathryn.observe` and `kathryn.view` were DELETED — see the
+entry at the end of this file. The first bullet below (the `kathryn.sim` package)
+still holds; the `observe` / `view` bullets are history. The
+build-and-record tooling is Kathryn's own, in three layers, all pure Python
+(no rebuild; Carolyne reaches them through its `kathryn.pth`):
+- the `kathryn.sim` package (`py/kathryn/sim/`), which also holds the older
+  `assist.py` / `manifest/write.py`:
+  `manifest/read.py` (the manifest as a tree addressed by model paths,
+  `walk_path` for the live model and the KSim tree alike), `verilog_scope.py`
+  (which module declares a net, read off the emitted .v — hardware built while a
+  `@flow` runs is declared in the module whose flow runs, so an arb leaf's REQ
+  belongs to the requester), the `backend/` package — `base.py` holds the
+harness-neutral `SimBackend`; `cocotb/` is the cocotb harness (`CocotbBackend`,
+then one file per simulator, the switch in its `__init__`
+(Verilator via the PyPI wheel or a
+  conda env with the `CFG_CXXFLAGS_PCH_I=-include` repair, Icarus writing VCD,
+  `BACKENDS`), `rtl/` (one `Rtl` per generated language, `VerilogRtl` today,
+  chosen by `open_rtl` from the manifest's backend tag: the sources, the top,
+  the normalised sources digest — it imports no simulator), `runner_cocotb.py` (`CocotbSim` —
+  the simulator built ONCE per rtl content under `<cache>/<fingerprint>/`,
+  carrying the backend that built it; its `run_test` passing
+  `$KATHRYN_SIM_MANIFEST`).
+  `test/cocotb_pool` builds through them now — its `backend/verilator/icarus.py`
+  are gone — so a tc whose emit did not change is not recompiled.
+- `kathryn.observe`: probe types (`BlockProbe`/`ScalarProbe` by model path,
+  `ModuleAlias`/`SignalProbe`/`LeafProbe`/`NamedRegProbe` for what the manifest
+  cannot see), `session.py` (`build_session`: attach aliases -> harvest emitted
+  names off the arena -> `emit_verilog` -> manifest + scope -> resolve, to
+  `session.json`; `RunLimits`, `ClockFacts`, `MemoryImage`, `StopFacts`,
+  `SessionFacts`), `recorder.py` (handles once, gate-first reads), `trace.py`
+  (JSON lines: header / cycle / footer; `row` blocks whole, `queue` blocks
+  occupied rows only, `state` blocks keyframe + `[row, field, value]` deltas;
+  `TraceHeader`; schema 2), `stage_status.py` (IDLE / HELD / STALL / RUNNING from
+  rule data), `cycle_events.py`, `rule_loader.py` (a machine's rules by import
+  path), `consistency.py`, `record_test.py` (the one `@cocotb.test`, the only
+  cocotb import). `mem_blk` nodes carry `depth` now (`mem_blk.index_width`).
+- `kathryn.view`: `text_columns.py` / `text_view.py` (one column-table row per
+  cycle through a machine's `ColumnSpec` list), `stepper.py`
+  (`python -m kathryn.view.stepper trace.jsonl`; the column set comes from the
+  trace's `facts["view"]["text_columns"]` or `--columns`), `page_plan.py`
+  (bands / columns / panels with named ports / arrows, `validate(header)`),
+  `page_view.py` + `viewer/` (one self-contained page; `viewer_headless.js` runs
+  it under node for the tests). The viewer names no machine: formats are
+  `hex bin bit int label:<group> prefix:<text> annotate:<kind>`.
+Import rule that survives the deletion: `kathryn.sim` is the bottom layer of the
+Python side and imports nothing above it (its `__init__` says so; the guard test
+went with `observe`).
+`pyproject.toml` grew `sim = ["cocotb>=2.0,<3", "verilator>=5.36"]`, `dev =
+["pytest"]` and a maturin `include` for the viewer assets. A session names its
+machine's rules module and its renderers ("package.module:NAME"), so nothing
+here has a default machine. Carolyne keeps only `carolyne/debugger/o3` and
+`carolyne/view/o3`.
+
+**`kathryn.sim` package** (2026-09-13, Tanawin's call). The six flat `sim_*.py`
+modules moved into `py/kathryn/sim/` and dropped the stuttering prefix —
+`kathryn.sim_assist` is now `kathryn.sim.ksim` (named for the `KSim` it defines,
+per §3.1), and the rest drop the prefix: `manifest`, `manifest`,
+`verilog_scope`, and — later the same day — `runner_cocotb`, with the cocotb
+suffix because the compile and the run are cocotb's. The simulator backends
+are `backend/`: a harness-neutral `base.py`, then `cocotb/` for the cocotb
+harness — so "backend" here is always qualified as `kathryn.sim.backend`, and
+never collides with the EMITTER sense of the word (`src/backends/`, the
+manifest's `"backend"` tag). Six files flat beside the
+DSL modules was noise, and `observe/` and `view/` were already packages. **No
+shims** — the old paths are gone, so Carolyne was updated in the same pass (it
+reads `py/` live through `kathryn.pth`, with no rebuild to hide behind).
+`sim/__init__.py` re-exports the common names, with ONE deliberate absence:
+`manifest/write.py` (the writer) is the only module here that needs the model layer
+(`..module`, `.._session`), and `_session` imports it back lazily — re-exporting
+it eagerly would turn that into a cycle, so it is reachable only as
+`kathryn.sim.manifest`. `py/tests/test_observe_import_layers.py` pins the
+package's import rules the way it used to pin the flat modules'.
+
+**`VerilogScope` is scheduled for DELETION** (2026-09-13, Tanawin's call).
+DONE 2026-09-14: deleted, see the entry at the end of this file. It
+answers "which module declares this net" by regex-scanning the emitted `.v`
+text — a line scanner, not a parser, that leans on the emitter's fixed layout
+(`module X(` at line start, instance name == module name, one declaration per
+line) and on exactly one parentless module per directory. It exists only
+because the manifest walker sees Module ATTRIBUTES, so a net built inside a
+`@flow` (an arb leaf's REQ, which belongs to the REQUESTER) or a
+library-internal register (`pip_wait4syn`) is not in the manifest at all.
+
+The arena already knows the answer exactly, at emit time, with no parsing:
+every HCP carries `master_module_i`, every module holds its HCP lists
+(`get_internal_hws` / `get_user_hws`), and `hcp_verilog_name` /
+`module_verilog_name` already cross into Python. The replacement is an
+arena-harvested "every net -> its module path" index written into
+`sim_manifest.json` beside the attribute tree; `resolve_signal`,
+`resolve_leaf` and `resolve_named` in `observe/session.py` then read the
+manifest like `resolve_block` / `resolve_scalar` already do, and
+`verilog_scope.py` goes, taking `LocateError`, `Declaration`,
+`find_home_module` and the one-top assertion with it. That also removes the
+failure seen on 2026-09-13: `test/cocotb_pool` never wipes a case's output
+dir, so `.model_output/<case>/` accumulates per-module `.v` files from every
+emit and the scanner refuses the directory ("expected one top module, found
+[7]").
+
+Constraints on the migration: `SignalProbe` / `LeafProbe` / `NamedRegProbe`
+must keep resolving — Carolyne's o3 debugger declares 8 / 4 / 2 of them and the
+leaf probes feed `stage_status`. `LeafProbe.home_path` ("the module that
+REQUESTS on it") is exactly what `master_module_i` gives for free. The HCP
+enumeration is a `src/` change, so Carolyne rebuilds. Until it lands: build
+nothing new on `VerilogScope`, extend no regex in it.
+
+**`CocotbSim` and the per-language `Rtl`** (2026-09-13, Tanawin's call). What
+was `SimBuild` — a record of a build with four language-specific free functions
+beside it (`read_top_module`, `list_verilog_sources`, `normalize_verilog`,
+`fingerprint_rtl`) — is now two things, because those functions run BEFORE any
+build exists: the fingerprint is what decides whether to build at all.
+
+- `kathryn.sim.rtl` — `Rtl` is one emitted design (`dir`, `top_module`,
+  `sources_digest()` — a sha256 over the normalised text and NOTHING else; the
+  harness appends its own facts in `runner_cocotb.cache_key`), with the hooks a
+  generated language fills: `sources()` and `normalize(text)`. `VerilogRtl` is
+  the one subclass today. An `Rtl` knows NO simulator: how cocotb spells a
+  language (`hdl_toplevel_lang`, the `verilog_sources=` keyword) is cocotb's
+  vocabulary, so it is a table in `backend/cocotb/base.py` (`COCOTB_HDL_OF`)
+  keyed by `backend_tag`, not attributes on the emit. `open_rtl(dir)`
+  picks the class from the manifest's `"backend"` tag through `RTL_BY_BACKEND`,
+  the same switch shape as `SIM_NAMERS` and `BACKENDS`, so no caller names a
+  language. A VHDL emit is `rtl/vhdl.py` plus one row.
+- `CocotbSim` (`runner_cocotb.py`) is the frozen result: the `Rtl` it was built from,
+  the `SimBackend` that built it, `build_dir`, `reused`, `seconds`. cocotb is
+  IN the name because it is a fact of the design,
+  not a detail: `SimBackend.make_runner` returns a cocotb runner, the compile
+  is cocotb's `runner.build()`, and the output links cocotb's VPI library so
+  nothing but its own `run_test` can run it. "simulator" would also collide
+  with `ModuleSimEngine` (§4.2), the native engine still to be ported. Carrying the
+  backend removes the old `run_cocotb_test(build, backend, ...)` pair, which let
+  a caller run a build under a simulator that did not compile it. The run is
+  a METHOD, `CocotbSim.run_test(test_module, testcase, ...)`: its only input
+  is the sim, and on that receiver "cocotb" in the name would stutter.
+- `CocotbSim.build(rtl, backend, cache_root, ...)` takes an `Rtl`, not a dir — a
+  classmethod constructor, the same shape as `Manifest.load` and
+  `VerilogScope.scan`; `run_test` is its instance-side twin.
+  Callers: `test/cocotb_pool/runner.py`, Carolyne's
+  `examples/o3_riscv32/sim/{smoke,harness}.py` (updated in the same pass).
+
+**The backend drives cocotb's runner; `SimBackend` is a base class** (2026-09-13,
+Tanawin's call). `CocotbSim.build` and `run_test` were hand-driving cocotb's
+runner API — the `verilog_sources=` spelling, `always=True`, the timescale, the
+`SystemExit` a failing test raises. That is the backend's job: it already MAKES
+the runner, so it now drives it, in two concrete methods on the base,
+`CocotbBackend.compile(rtl, build_dir, ...)` and `CocotbBackend.run(rtl, build_dir,
+test_module, testcase, results_xml, env, ...)`. Both simulators drive the runner
+identically (only `make_runner` differs), so the bodies are shared — which is why
+`SimBackend` stopped being a `Protocol` and became an `ABC`: shared behaviour
+needs a class, and a Protocol enforced nothing anyway in a repo that runs no
+type checker. `VerilatorBackend` and `IcarusBackend` inherit it; an incomplete
+subclass now fails at instantiation instead of at first use. `COCOTB_HDL_OF`,
+`cocotb_hdl_of` and `TIMESCALE` moved with the code that reads them.
+`CocotbSim` keeps only the cache and the verdict: `cache_key` → cached or
+`backend.compile` → `ok` marker; `backend.run` → `read_test_status`. NOT here
+anymore: any `runner.` call outside `backend/cocotb/`. A duck-typed fake (the
+test's `_Backend`) still works with `cache_key`, which only reads
+`name` / `build_args` / `describe`.
+
+**`backend/` is two levels: a neutral base, then one sub-package per harness**
+(2026-09-13, Tanawin's call). `backend_cocotb/` became `backend/` with
+`backend/cocotb/` inside it, and its base split in two. `backend/base.py` is
+what ANY simulator backend is, whichever harness drives it — `SimBackend(ABC)`:
+`name`, `build_args`, `waves_file`, `describe`, and an abstract
+`compile(rtl, build_dir, ...)`. `cache_key` reads only this level, so a future
+native harness (`ModuleSimEngine`, §4.2) reuses the cache scheme untouched.
+`backend/cocotb/base.py` is the cocotb harness — `CocotbBackend(SimBackend)`
+adds the abstract `make_runner` and the concrete `compile` / `run` that drive
+cocotb's runner, plus `COCOTB_HDL_OF` and `TIMESCALE`; `verilator.py` and
+`icarus.py` extend it. The switch (`BACKENDS`, `get_backend`) lives in
+`backend/cocotb/__init__.py`, and `backend/__init__.py` deliberately does NOT
+re-export it: `get_backend` is `kathryn.sim.backend.cocotb.get_backend`, so a
+caller always names the harness. `CocotbSim.backend` is typed `CocotbBackend`
+(it calls `run`); `cache_key`'s parameter stays `SimBackend`. Callers moved
+from `kathryn.sim.backend_cocotb` to `kathryn.sim.backend.cocotb`:
+`test/cocotb_pool/runner.py`, Carolyne's `examples/o3_riscv32/sim/{smoke,
+harness,cli}.py` and `tests/test_sim_e2e.py`.
+
+**`kathryn.sim.manifest` is a package** (2026-09-13, Tanawin's call). `manifest.py`
+(the writer) and `manifest_tree.py` (the build-side reader) were two flat files
+whose names said nothing about which was which, while the schema they share sat
+in `ksim.py` only because that was the stdlib-only leaf everyone already
+imported. They could not be ONE file: the writer imports the model layer, the
+reader must not (`observe/` and `verilog_scope` import it for free, and the
+import-layer test pins that). So they are one PACKAGE, the shape `rtl/` and
+`backend/` already have: `schema.py` (`SCHEMA_VERSION`, `NODE_KINDS`,
+`CHILDREN_KEY_OF`, and `SIM_MANIFEST_FILE`, which is part of the contract),
+`write.py`, `read.py`. `manifest/__init__.py` re-exports schema + read and NOT
+write, for the same cycle reason `sim/__init__.py` never re-exported the writer
+— and it is what lets `ksim.py` import the schema: `ksim -> manifest/__init__ ->
+read -> schema`, with `read` importing nothing from `ksim`. The import-layer
+guard gained a NEGATIVE rule, `observe` may not import `..sim.manifest.write`,
+since the positive prefix `..sim.manifest` would otherwise admit it.
+`test_sim_manifest_tree.py` is `test_sim_manifest_read.py`. Carolyne's
+`tests/test_debugger_probes.py` and `test_debugger_verilog_scope.py` moved in
+the same pass.
+
+**`Manifest`, not `ManifestTree`** (2026-09-13, Tanawin's call). Now that the
+reader lives in `manifest/read.py`, "Tree" only described the data's shape; the
+fact the object holds is the manifest. `kathryn.sim.manifest.Manifest` is the
+parsed file, `Manifest.load(path)` reads it, `manifest.node(path)` walks it.
+`ManifestError` keeps its name. Carolyne's two debugger tests moved in the same
+pass. LIMIT: the locals that hold one are still called `tree` (`session.py`,
+`verilog_scope.py`, the tests) — a rename for a later pass.
+
+**`kathryn.observe.session` is a package** (2026-09-14, Tanawin's call). `session.py`
+had grown to 425 lines holding five different things: what a run is told
+(`RunLimits`, `ClockFacts`, `StopFacts`, `SessionFacts`, ...), what a probe became
+(`Resolved*`, `Unresolved`), the `Session` record with its file names, the
+resolvers, and `build_session`. They are now `session/facts.py`, `resolved.py`,
+`session.py`, `resolve.py` and `build.py`, the shape `manifest/`, `rtl/` and
+`backend/` already have. The package `__init__` re-exports the WHOLE surface, so
+`kathryn.observe.session` keeps every name it had and no importer moved —
+Carolyne's harness, probe set, smoke and tests included. The dependency order
+inside is facts / resolved → session → resolve → build; `build.py` is the only
+module that reaches the arena, through local imports, so the simulator process
+never loads that half. `py/tests/test_observe_import_layers.py` now resolves
+relative imports to absolute names and walks `observe/` with `rglob`, so the
+sub-package is pinned by the same rules as the flat modules were.
+
+**`kathryn.observe` and `kathryn.view` DELETED** (2026-09-14, Tanawin's call —
+"the design is not practical"). The probe / session / recorder / trace layer and
+the text + page renderers are gone, with their seven test files, `toy_trace.py`
+and `viewer_find_cases.json`. Nothing else in this repo imported them:
+`kathryn.sim` never did (that was the layering rule), so `ksim`, `manifest`,
+`rtl`, `backend`, `runner_cocotb` and `test/cocotb_pool` are untouched and the
+suite drops from 148 to 92. The `pyproject.toml` maturin `include` for the viewer
+assets went too; the `sim` / `dev` extras stay, `kathryn.sim` still needs cocotb.
+`verilog_scope.py` (already marked DELETE) now has NO production consumer here —
+`observe/session.py` was the only one — only `py/tests/test_sim_verilog_scope.py`
+and Carolyne's `test_debugger_verilog_scope.py` still touch it. Carolyne's
+`carolyne/debugger/`, `carolyne/view/`, `examples/o3_riscv32/sim/` and ten tests
+were built on the deleted packages and break through the live `kathryn.pth`
+link; what happens to them is a Carolyne decision. A backup of the deleted
+trees was taken to the session scratchpad before the delete.
+
+**`verilog_scope.py` DELETED** (2026-09-14, Tanawin's call). Its only production
+consumer was `observe/session.py`, deleted the same day, so the TODO above came
+due early: `verilog_scope.py` and `py/tests/test_sim_verilog_scope.py` are gone,
+with `VerilogScope`, `Declaration`, `LocateError` and `find_home_module` out of
+`kathryn.sim`. No arena-side replacement was built — the probes it resolved
+(`SignalProbe` / `LeafProbe` / `NamedRegProbe`) went with `observe`, so nothing
+asks "which module declares this net" any more. If that question returns, the
+answer is the arena (`master_module_i` on every HCP), not a regex over the `.v`.
+`kathryn.sim` is now: `ksim`, `manifest/`, `rtl/`, `backend/`, `runner_cocotb`.

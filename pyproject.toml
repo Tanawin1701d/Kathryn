@@ -8,6 +8,10 @@ version         = "0.1.0"
 requires-python = ">=3.9"
 classifiers     = ["Programming Language :: Rust"]
 
+[project.optional-dependencies]
+dev = ["pytest"]
+sim = ["cocotb>=2.0,<3", "verilator>=5.36"]     # the PyPI wheel; 5.048 reports as "5.48.0"
+
 [tool.maturin]
 # Build the PyO3 layer; the binding is gated behind this Cargo feature.
 features    = ["python"]

@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use crate::backends::common::graph::{find_common_ancestor_module_paths, DfsModuleIter};
 use crate::backends::common::io_op::{build_io_wire, find_reusable_io_wire};
+use crate::model::common::identifier::Identifiable;
 use crate::model::hw_component::common::hcp_ident::HcpIdent;
 use crate::model::model_arena::ModelArena;
 use crate::model::module::module_ident::ModuleIdent;
@@ -96,8 +97,12 @@ fn route_and_remap_io_module(
     // 2. route each cross-module dep; build old → new-io-wire map.
     //    module_i must NOT be held taken here — the routing path walks back
     //    through module_i itself (find_reusable_io_wire re-takes it).
+    //    The set is walked in ascending global id: a HashSet's order changes from
+    //    process to process, and the IoWire ids and port order must not.
+    let mut deps_by_id: Vec<HcpIdent> = deps.into_iter().collect();
+    deps_by_id.sort_by_key(|dep_i| dep_i.get_global_id());
     let mut remap: HashMap<HcpIdent, HcpIdent> = HashMap::new();
-    for dep_i in deps {
+    for dep_i in deps_by_id {
         if dep_i.get_master_module_i() != module_i {
             let io_wire_i = route_io_hw_comp(dep_i, module_i, model_arena);
             remap.insert(dep_i, io_wire_i);

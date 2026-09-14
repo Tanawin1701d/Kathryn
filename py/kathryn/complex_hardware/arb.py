@@ -66,15 +66,16 @@ class Arb:
     def add_leaf(self, priority: int) -> ArbLeaf:
         # Add a leaf with its own req/ack wires; returns its handle.
         idx = _session.arena().arb_add_leaf(self._ident, int(priority))
-        return self._leaf(idx)
+        return self.leaf(idx)
 
     def add_leaf_locked(self, priority: int, channel: int) -> ArbLeaf:
         # Add a leaf with one channel hard-tied to 1 (ArbLockedChannel.Req → always
         # requesting; .Ack → always granted); returns its handle.
         idx = _session.arena().arb_add_leaf_locked(self._ident, int(priority), int(channel))
-        return self._leaf(idx)
+        return self.leaf(idx)
 
-    def _leaf(self, idx: int) -> ArbLeaf:
+    def leaf(self, idx: int) -> ArbLeaf:
+        # The leaf at `idx`, as add_leaf returned it: read its req/ack after the fact.
         req_i = _session.arena().arb_get_leaf_req_wire(self._ident, idx)
         ack_i = _session.arena().arb_get_leaf_ack_wire(self._ident, idx)
         return ArbLeaf(idx, SignalRef(req_i), SignalRef(ack_i))
