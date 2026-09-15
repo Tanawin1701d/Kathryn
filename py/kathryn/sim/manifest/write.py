@@ -9,8 +9,9 @@
 #   explicit port name holds). A future backend (vhdl, chisel, ...) adds one
 #   SimNamer subclass + its own arena name queries; the walk itself is shared.
 # - Visibility rule: only values stored as (non-underscore) Module attributes
-#   are harvested. A signal held in a local variable is out of scope by design;
-#   it stays reachable through the raw `dut` by its emitted name.
+#   are harvested; a DebugProbe is walked the same way, in the holding Module's
+#   scope. A signal held in a local variable is out of scope by design; it
+#   stays reachable through the raw `dut` by its emitted name.
 
 from __future__ import annotations
 
@@ -22,6 +23,7 @@ from typing import Any, Dict, Optional
 from ... import _session
 from ...complex_hardware.counter import counter
 from ...complex_hardware.karray import Karray
+from ...debug_probe import DebugProbe
 from ...hw_component import mem_blk
 from ...module import Module
 from ...signal import SignalRef
@@ -49,6 +51,8 @@ def harvest_sim_tree(module: Module, namer: SimNamer) -> Dict[str, Any]:
     #      "sub" : {"kind": "module" , "instance": "MODULE_Child0_10",
     #               "children": {"acc": {"kind": "signal", "verilog": "REG_acc_11",
     #                                    "hw_type": "REG", "width": 8, "clocked": true}}},
+    #      "pipe": {"kind": "probe"  , "children": {"wait": {"kind": "signal", "verilog": "SR_ST_pip_wait4syn_20",
+    #                                                        "hw_type": "SR_ST", "width": 1, "clocked": true}}},
     #      "rows": {"kind": "list"   , "items"   : [{"kind": "module", "instance": "MODULE_Child1_12", "children": {...}},
     #                                               {"kind": "module", "instance": "MODULE_Child2_14", "children": {...}}]},
     #      "tag" : {"kind": "dict"   , "entries" : {"a": {"kind": "signal", "verilog": "REG_ta_16",
@@ -104,6 +108,7 @@ def _attr_node(value: object, path: str, namer: SimNamer, visiting: set) -> Opti
     #   attribute example               | node kind | reader (KSim) access
     #   --------------------------------|-----------|--------------------------------
     #   self.sub  = Child()             | "module"  | k.sub.<child attr>
+    #   self.pipe = DebugProbe(wait=w)  | "probe"   | k.pipe.wait.value (holding Module's scope, no hop)
     #   self.mem  = mem_blk(8, 4)       | "signal"  | k.mem[i].value (memory array, + depth)
     #   self.x    = reg(8)              | "signal"  | k.x.value      (read AND force)
     #   self.hi   = self.x[7, 4]        | "slice"   | k.hi.value     (read-only window)
@@ -114,6 +119,8 @@ def _attr_node(value: object, path: str, namer: SimNamer, visiting: set) -> Opti
     #   anything else (int, fn, ...)    | None      | not in the manifest
     if isinstance(value, Module):
         return _module_node(value, path, namer, visiting)
+    if isinstance(value, DebugProbe):
+        return _probe_node(value, path, namer, visiting)
     if isinstance(value, mem_blk):
         # BEFORE the slice test: mem_blk seeds an explicit data-width slice, so
         # `_is_user_sliced` is True even though it is a whole component.
@@ -175,24 +182,36 @@ def _karray_node(karray: Karray, namer: SimNamer) -> Dict[str, Any]:
             "elements": elements}
 
 
-def _module_node(module: Module, path: str, namer: SimNamer, visiting: set) -> Dict[str, Any]:
-    # `visiting` holds id()s along the CURRENT path only — the same sub-module
+def _attr_children(owner: object, path: str, namer: SimNamer, visiting: set) -> Dict[str, Any]:
+    # The attribute walk a Module and a DebugProbe share.
+    # `visiting` holds id()s along the CURRENT path only — the same object
     # under two different attributes is fine (two valid entries), a loop is not.
-    if id(module) in visiting:
-        raise ValueError(f"sim manifest: module attribute cycle at {path!r}")
-    visiting.add(id(module))
-    # vars(module) is the instance __dict__: every `self.x = ...` an @init made.
+    if id(owner) in visiting:
+        raise ValueError(f"sim manifest: attribute cycle at {path!r}")
+    visiting.add(id(owner))
+    # vars(owner) is the instance __dict__: every `self.x = ...` a phase made.
     # The attribute names the user typed ARE the manifest keys — that is what
     # makes sim assist seamless (no per-signal registration call).
     children: Dict[str, Any] = {}
-    for name, value in vars(module).items():
+    for name, value in vars(owner).items():
         if name.startswith("_"):                        # _ident + reader-internal names
             continue
         node = _attr_node(value, f"{path}.{name}", namer, visiting)
         if node is not None:                            # None = not a hardware attribute
             children[name] = node
-    visiting.remove(id(module))
+    visiting.remove(id(owner))
+    return children
+
+
+def _module_node(module: Module, path: str, namer: SimNamer, visiting: set) -> Dict[str, Any]:
+    children = _attr_children(module, path, namer, visiting)
     # top has no hierarchy hop to resolve — cocotb hands it in as `dut`;
     # every other instance name is the reader's getattr step.
     instance = None if path == "top" else namer.module_name(module.ident)
     return _container_node("module", children, instance=instance)
+
+
+def _probe_node(probe: DebugProbe, path: str, namer: SimNamer, visiting: set) -> Dict[str, Any]:
+    # A DebugProbe declares no hardware, so there is no instance to hop into:
+    # its children resolve in the scope of the Module that holds it.
+    return _container_node("probe", _attr_children(probe, path, namer, visiting))

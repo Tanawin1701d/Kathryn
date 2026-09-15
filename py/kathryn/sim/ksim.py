@@ -21,6 +21,7 @@
 #  resolving `k.sub.rf[1].data.value = 9`, one manifest node per hop:
 #    k       = KSimModule(dut, root children)
 #    .sub  ─> "module"  node ─> KSimModule(getattr(dut, "MODULE_Child0_15"))
+#    .pipe ─> "probe"   node ─> KSimModule(dut, children)      a DebugProbe: NO hop
 #    .rf   ─> "karray"  node ─> KSimKarray(handle, shape, elements)
 #    [1]   ─> full rank      ─> KSimKarrayElement(elements[flat])   row-major
 #    .data ─> field map      ─> getattr(handle, "REG_rf_E1_data_6") RAW handle
@@ -51,20 +52,22 @@ def _resolve(node: Dict[str, Any], handle: _Handle, name_key: str) -> Any:
     # each emitted name under the backend that produced it.
     kind = node["kind"]
     if kind == "module" : return KSimModule(getattr(handle, node["instance"]), node[CHILDREN_KEY_OF[kind]], name_key)
+    if kind == "probe"  : return KSimModule(handle                           , node[CHILDREN_KEY_OF[kind]], name_key)   # a DebugProbe: same scope, no hop
     if kind == "signal" : return getattr(handle, node[name_key])
     if kind == "counter": return getattr(handle, node["value"])       # committed reg; "now" stays manifest-only
-    if kind == "slice"  : return KSimSlice(getattr(handle, node[name_key]), node["msb"], node["lsb"])
+    if kind == "slice"  : return KSimSlice (getattr(handle, node[name_key]), node["msb"], node["lsb"])
     if kind == "karray" : return KSimKarray(handle, node["shape"], node["elements"])
     if kind == "list"   : return [_resolve(item, handle, name_key) for item in node[CHILDREN_KEY_OF[kind]]]
-    if kind == "dict"   : return {name: _resolve(sub, handle, name_key) for name, sub in node[CHILDREN_KEY_OF[kind]].items()}
+    if kind == "dict"   : return {name: _resolve(sub, handle, name_key)
+                                  for name, sub in node[CHILDREN_KEY_OF[kind]].items()}
     raise ValueError(f"sim manifest: unknown node kind {kind!r} (reader older than writer?)")
 
 
 # ---- module view -------------------------------------------------------------
 
 class KSimModule:
-    """One module level of the sim tree: attribute access mirrors the model's
-    own attribute names and resolves to cocotb handles / nested views."""
+    """One module (or DebugProbe) level of the sim tree: attribute access mirrors
+    the model's own attribute names and resolves to cocotb handles / nested views."""
     def __init__(self, handle: _Handle, children: Dict[str, Any], name_key: str) -> None:
         self._handle   = handle
         self._children = children
@@ -80,7 +83,7 @@ class KSimModule:
             if node is None:
                 raise AttributeError(
                     f"{name!r} is not in the sim manifest — only signals stored as "
-                    f"Module attributes are visible (available: {sorted(self._children)})")
+                    f"Module / DebugProbe attributes are visible (available: {sorted(self._children)})")
             self._cache[name] = _resolve(node, self._handle, self._name_key)
         return self._cache[name]
 

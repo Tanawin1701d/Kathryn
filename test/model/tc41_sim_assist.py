@@ -1,7 +1,8 @@
 # tc41 — sim assist: observe and force INTERNAL signals through KSim, with no
 # mark_output port. Covers every manifest node kind: plain reg, sliced view,
-# counter, karray element field, and a sub-module's internal reg; plus a
-# combinational wire that proves a forced value propagates downstream.
+# counter, karray element field, a sub-module's internal reg, and a DebugProbe
+# grouping built signals under one attribute; plus a combinational wire that
+# proves a forced value propagates downstream.
 
 from __future__ import annotations
 
@@ -59,12 +60,18 @@ class tc41_sim_assist(Module):
             self.cnt.update()
             self.rf[0] |= 3               # rf[1] left unwritten (force target)
 
+    @dbg
+    def dbg_probe(self):
+        # A DebugProbe groups built signals under ONE attribute (k.probe.x); it
+        # declares nothing, so it reads the same handles as k.x / k.hi.
+        self.probe = DebugProbe(x=self.x, hi=self.hi)
+
 
 # ---- build -------------------------------------------------------------------
 def build(output_folder: str) -> None:
     reset()
     module = tc41_sim_assist()
-    build_model(module)
+    build_model(module, debug=True)
     emit_verilog(output_folder)
 
 
@@ -93,6 +100,8 @@ async def check_observe(dut):
     assert k.cnt.value     == 5,    f"counter committed reg: {k.cnt.value!s}"
     assert k.rf[0].data.value == 3, f"karray element: {k.rf[0].data.value!s}"
     assert k.sub.acc.value == 7,    f"sub-module internal reg: {k.sub.acc.value!s}"
+    assert k.probe.x.value  == 0xA5, f"probe: {k.probe.x.value!s}"
+    assert k.probe.hi.value == 0xA,  f"probe slice: {k.probe.hi.value}"
 
     # A sliced view has no net of its own — writing it must refuse loudly.
     try:
@@ -108,7 +117,7 @@ async def check_force(dut):
     k = KSim(dut)
     await _reset_and_run(dut, 12)         # seq done — nothing overwrites x anymore
 
-    k.x.value = 0x30                      # force the internal reg...
+    k.probe.x.value = 0x30                # force the internal reg through the probe...
     await Timer(1, unit="ns")
     assert k.x.value == 0x30, f"forced reg did not hold: {k.x.value!s}"
     assert k.w.value == 0x31, f"comb logic missed the forced value: {k.w.value!s}"

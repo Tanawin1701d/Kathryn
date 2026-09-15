@@ -1646,3 +1646,25 @@ four attributes, the wait register's name starts `SR_ST_pip_wait4syn`, and the
 master-ack of a pip-mastered PipCon is an `EXPR` (the entrance pseudo node).
 This CLOSES the gap the deleted `VerilogScope` existed for: a library-internal
 register (`pip_wait4syn`) now reaches the manifest through an attribute.
+
+**`DebugProbe` — a plain class the manifest walks like a Module** (2026-09-15,
+Tanawin's call). `kathryn.DebugProbe` (`py/kathryn/debug_probe.py`) declares no
+hardware and holds no ident: it is an attribute holder (`DebugProbe(wait=...,
+ack=...)`, or a subclass with its own `__init__`) that a `@dbg` body stores on a
+Module so a group of built signals reaches `sim_manifest.json` under ONE name
+(`k.pipe.wait.value`). The writer walks its `vars()` with the same rules as a
+Module (`_attr_children` in `manifest/write.py`: `_` attributes skipped,
+non-hardware dropped, the cycle guard shared) and emits kind `"probe"`; the
+reader resolves it as a `KSimModule` on the SAME handle — no `getattr` hop, since
+there is no instance — so a probe's signal is the same raw handle as the Module
+attribute that owns it (observe and force both work). `NODE_KINDS` /
+`CHILDREN_KEY_OF` in `schema.py` carry the kind, so an older reader fails loudly
+on it. Probes nest; a probe under two attributes is two entries. LIMIT: the
+scope rule is unchanged — a signal on a probe resolves in the Module that holds
+the probe, so a sub-module's signal is probed from that sub-module. Before this,
+Carolyne's `DbgPipCon` had to subclass `dict` to be walked as a `"dict"` node; a
+`DebugProbe` subclass is the intended replacement (a Carolyne decision). Pinned
+by `py/tests/test_debug_probe.py` (node shape, nesting, cycle refusal, the
+reader on a fake dut), `test/model/tc41_sim_assist.py` (observe and force
+through `k.probe` under icarus) and `test_pip_dbg_signals.py` (the emit stays
+byte-identical with a probe in the `@dbg` body).

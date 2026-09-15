@@ -1,7 +1,7 @@
 # A @dbg body reads a pip's status signals back AFTER build_flow — the arb's
 # bound gates (master-ack / hold / reset) and the pip's wait4syn register — as
 # SignalRefs with NO new hardware, so a Module attribute holding one reaches
-# sim_manifest.json.
+# sim_manifest.json — bare, or grouped under a DebugProbe.
 #   src  pip(auto_req) > zync(con)             con leaf 0, added BEFORE con's pip
 #   con  pip           > zync(sink, auto_ack)  con leaf 1; sink is no_pip_master
 # The emit must be byte-identical with and without the @dbg method, compared
@@ -16,8 +16,8 @@ import textwrap
 
 import pytest
 
-from kathryn import (Module, PipCon, SignalRef, arena, build_flow, build_model, dbg, emit_verilog,
-                     flow, gen_dbg, gen_flow, init, pip, reg, reset, seq, set_top, wire, zync)
+from kathryn import (DebugProbe, Module, PipCon, SignalRef, arena, build_flow, build_model, dbg,
+                     emit_verilog, flow, gen_dbg, gen_flow, init, pip, reg, reset, seq, set_top, wire, zync)
 
 ran: list = []      # one entry per @dbg run
 
@@ -56,6 +56,7 @@ class two_pips_dbg(two_pips):
         self.hold     = self.con.hold
         self.flush    = self.con.reset
         self.pip_wait = self.con.pip_wait_reg
+        self.gates    = DebugProbe(mack=self.con.master_ack, wait=self.con.pip_wait_reg)
 
 
 def _build(cls, debug: bool = True):
@@ -195,3 +196,5 @@ def test_the_manifest_lists_the_dbg_attributes(tmp_path):
     assert children["pip_wait"]["verilog"].startswith("SR_ST_pip_wait4syn")
     for name in ("mack", "hold", "flush"):
         assert children[name]["kind"] == "signal", name
+    assert children["gates"]["kind"] == "probe"
+    assert children["gates"]["children"]["wait"] == children["pip_wait"]   # the same signal, grouped

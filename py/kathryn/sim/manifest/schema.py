@@ -7,7 +7,8 @@
 
 SCHEMA_VERSION    = 1
 SIM_MANIFEST_FILE = "sim_manifest.json"       # written next to the emitted HDL
-NODE_KINDS        = ("module", "signal", "slice", "counter", "karray", "list", "dict")
+NODE_KINDS        = ("module", "probe", "signal", "slice", "counter", "karray", "list", "dict")
 CHILDREN_KEY_OF   = {"module": "children",    # the key a container kind keeps its children under
+                     "probe" : "children",    # a DebugProbe: Module-shaped, no hierarchy hop
                      "dict"  : "entries",
                      "list"  : "items"}

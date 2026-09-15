@@ -21,6 +21,7 @@ from .pip_zync import pip, zync
 from .complex_hardware import Arb, ArbLeaf, PipCon, Karray, KarrayField, KBundle, kaf, KarrayRef, ReduceView, counter
 from .combinational import any_of, mux, rotate_left, rotate_right, sum_cnt
 from .module import Module, init, flow, dbg, set_top
+from .debug_probe import DebugProbe
 from . import priority as _priority
 from .priority import (
     priority, set_priority, set_priority_auto, get_priority, get_priority_mode,
@@ -57,7 +58,7 @@ __all__ = [
     # combinational combinators
     "any_of", "mux", "rotate_left", "rotate_right", "sum_cnt",
     # module scope + session
-    "Module", "init", "flow", "dbg", "arena", "reset",
+    "Module", "init", "flow", "dbg", "DebugProbe", "arena", "reset",
     "gen_flow", "gen_dbg", "build_flow", "build_model", "set_top", "emit_verilog",
     # asm-node priority
     "priority", "set_priority", "set_priority_auto", "get_priority", "get_priority_mode",
